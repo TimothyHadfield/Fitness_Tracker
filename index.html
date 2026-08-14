@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover lets the layout run under the iPhone notch / home indicator,
+       which the CSS then pads back with env(safe-area-inset-*). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+  <title>Fitness Tracker</title>
+  <meta name="description" content="Track your lifts, build your own workouts, and see your progress over time.">
+
+  <meta name="theme-color" content="#0F1214" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#EDEEEB" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Add to Home Screen on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fitness">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+  <noscript>
+    <div style="padding:40px 24px;text-align:center;font-family:system-ui;color:#ECEFEE">
+      <h1>JavaScript required</h1>
+      <p>This app needs JavaScript to record and display your workouts.</p>
+    </div>
+  </noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

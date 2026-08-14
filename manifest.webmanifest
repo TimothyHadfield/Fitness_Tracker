@@ -1,0 +1,19 @@
+{
+  "name": "Fitness Tracker",
+  "short_name": "Fitness",
+  "description": "Track your lifts, build your own workouts, and see your progress over time.",
+  "start_url": "./index.html#/home",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1214",
+  "theme_color": "#0F1214",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

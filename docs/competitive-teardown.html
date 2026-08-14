@@ -1,0 +1,739 @@
+<title>The Iron Ledger Brief</title>
+<style>
+  :root {
+    --ground:      #E9EAE6;
+    --surface:     #FDFDFC;
+    --surface-alt: #E1E3DE;
+    --ink:         #1A1D1F;
+    --ink-soft:    #5A6167;
+    --ink-faint:   #838A90;
+    --rule:        #CDD0CA;
+    --rule-soft:   #DCDED8;
+    --accent:      #A6402E;
+    --accent-soft: #F0DED9;
+    --good:        #2F6B4F;
+    --good-soft:   #DCE7E0;
+    --warn:        #8A6316;
+    --warn-soft:   #EDE4CE;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #141618;
+      --surface:     #1C1F21;
+      --surface-alt: #24282B;
+      --ink:         #E8EAE7;
+      --ink-soft:    #A0A7AC;
+      --ink-faint:   #767D83;
+      --rule:        #2E3336;
+      --rule-soft:   #262A2D;
+      --accent:      #E0654E;
+      --accent-soft: #3A231D;
+      --good:        #6BB791;
+      --good-soft:   #1E2E26;
+      --warn:        #D3A14A;
+      --warn-soft:   #2E2617;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #141618;
+    --surface:     #1C1F21;
+    --surface-alt: #24282B;
+    --ink:         #E8EAE7;
+    --ink-soft:    #A0A7AC;
+    --ink-faint:   #767D83;
+    --rule:        #2E3336;
+    --rule-soft:   #262A2D;
+    --accent:      #E0654E;
+    --accent-soft: #3A231D;
+    --good:        #6BB791;
+    --good-soft:   #1E2E26;
+    --warn:        #D3A14A;
+    --warn-soft:   #2E2617;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0 24px 96px;
+  }
+
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 72px;
+  }
+
+  .prose { max-width: var(--measure); }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding-top: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 6.2vw, 4.1rem);
+    line-height: 1.02;
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+    margin: 0;
+    max-width: 16ch;
+  }
+
+  .standfirst {
+    font-family: var(--serif);
+    font-size: clamp(1.12rem, 2.1vw, 1.34rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 56ch;
+    margin: 0;
+  }
+
+  .masthead-rule {
+    height: 3px;
+    background: var(--accent);
+    width: 88px;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { display: flex; flex-direction: column; gap: 28px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.75rem, 3.4vw, 2.3rem);
+    line-height: 1.14;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+    margin: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 620;
+    font-size: 1.03rem;
+    letter-spacing: -0.005em;
+    margin: 0;
+  }
+
+  p { margin: 0 0 1.05em; }
+  p:last-child { margin-bottom: 0; }
+
+  a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2.5px;
+  }
+  a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  strong { font-weight: 620; }
+
+  /* ---------- app teardown cards ---------- */
+
+  .teardowns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 18px;
+  }
+
+  .app {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 22px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .app-head {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .app-name {
+    font-family: var(--serif);
+    font-size: 1.42rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .app-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .split { display: flex; flex-direction: column; gap: 14px; }
+
+  .line {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 13px;
+    border-left: 3px solid var(--rule);
+  }
+  .line.best { border-left-color: var(--good); }
+  .line.gap  { border-left-color: var(--warn); }
+
+  .line-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .line.best .line-label { color: var(--good); }
+  .line.gap  .line-label { color: var(--warn); }
+
+  .line p { font-size: 15.2px; line-height: 1.53; margin: 0; color: var(--ink-soft); }
+
+  .steal {
+    background: var(--accent-soft);
+    border-radius: 2px;
+    padding: 11px 13px;
+    font-size: 14.6px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .steal b {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
+
+  /* ---------- comparison table ---------- */
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 560px;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 11px 16px 11px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    border-bottom-color: var(--rule);
+  }
+
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  td.num { font-family: var(--mono); font-size: 14px; color: var(--ink-soft); }
+
+  /* ---------- failure list ---------- */
+
+  .failures { display: flex; flex-direction: column; gap: 2px; }
+
+  .failure {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 6px 32px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    align-items: start;
+  }
+  .failure:first-child { border-top: 1px solid var(--rule); }
+
+  .failure h3 { padding-top: 1px; }
+  .failure p { font-size: 15.6px; color: var(--ink-soft); margin: 0; }
+
+  @media (max-width: 620px) {
+    .failure { grid-template-columns: 1fr; gap: 6px; }
+  }
+
+  /* ---------- principle blocks ---------- */
+
+  .principles { display: flex; flex-direction: column; gap: 18px; }
+
+  .principle {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .principle h3 { font-size: 1.08rem; }
+  .principle p { font-size: 15.6px; color: var(--ink-soft); }
+
+  .principle code, .inline-code {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--surface-alt);
+    padding: 1.5px 5px;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  /* ---------- formula block ---------- */
+
+  .formula {
+    background: var(--surface-alt);
+    border-radius: 3px;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.85;
+    color: var(--ink);
+    overflow-x: auto;
+  }
+  .formula span { color: var(--ink-faint); }
+
+  /* ---------- build tiers (a real sequence) ---------- */
+
+  .tiers { display: flex; flex-direction: column; gap: 0; }
+
+  .tier {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    gap: 0 24px;
+    padding: 24px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .tier:last-child { border-bottom: 1px solid var(--rule); }
+
+  .tier-num {
+    font-family: var(--serif);
+    font-size: 2.5rem;
+    line-height: 0.86;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tier-body { display: flex; flex-direction: column; gap: 11px; }
+  .tier-body h3 { font-size: 1.14rem; }
+  .tier-body p { font-size: 15.6px; color: var(--ink-soft); margin: 0; }
+
+  .tier-list {
+    margin: 0;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15.4px;
+    color: var(--ink-soft);
+  }
+  .tier-list li::marker { color: var(--accent); }
+
+  @media (max-width: 620px) {
+    .tier { grid-template-columns: 1fr; gap: 10px; }
+    .tier-num { font-size: 1.6rem; }
+  }
+
+  /* ---------- closing ---------- */
+
+  .closing {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 30px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .closing h2 { border: 0; padding: 0; font-size: clamp(1.4rem, 2.6vw, 1.75rem); }
+  .closing p { font-size: 16px; color: var(--ink-soft); max-width: 62ch; }
+
+  .footnote {
+    font-size: 13.6px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+    max-width: var(--measure);
+  }
+  .footnote a { color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Competitive teardown &middot; Strength training software</p>
+    <h1>The Iron Ledger Brief</h1>
+    <div class="masthead-rule"></div>
+    <p class="standfirst">Seven apps, what each one solved, and what all of them left on the table &mdash; read as a build spec for a tracker that has to beat a spreadsheet before it beats anything else.</p>
+  </header>
+
+  <section>
+    <h2>The teardowns</h2>
+    <div class="prose">
+      <p>Every app here is good at exactly one thing and mediocre at the rest. That's the opportunity: nobody has assembled the good parts, because each company's business model quietly prevents it.</p>
+    </div>
+
+    <div class="teardowns">
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">Strong</h3>
+          <span class="app-meta">iOS &middot; freemium</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>The logging loop. Set entry is genuinely frictionless &mdash; previous set pre-filled, rest timer auto-starts on completion, no confirmation taps. This is the interaction gold standard.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>Stops at data capture. Charts a lift and nothing more. Free tier caps custom routines. Development has been slow for years.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>Auto-start the rest timer the instant a set is marked done. Never make the user press "start timer."</div>
+      </article>
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">Hevy</h3>
+          <span class="app-meta">iOS + web &middot; freemium</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>Feel and polish. Clean typography, unlimited free logging, exercise animations, real cross-device web app. Most people's default recommendation for good reason.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>Reported to need a connection to log &mdash; brutal in a basement gym. Three-month graph history on free. A social feed users repeatedly say they didn't want.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>The visual density &mdash; large tap targets, generous spacing, high contrast. Skip the social layer entirely.</div>
+      </article>
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">Boostcamp</h3>
+          <span class="app-meta">iOS + web &middot; free tier is real</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>Solves "what should I run?" for free. 11,000+ programs including the community classics &mdash; nSuns, GZCLP, PPL, 5/3/1 &mdash; with a desktop program builder that syncs to mobile.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>Program-centric to a fault. Weaker at freeform logging and at analysis once you're off-plan or improvising.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>Build programs on a big screen, run them on a small one. The two contexts need different interfaces.</div>
+      </article>
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">Liftosaur</h3>
+          <span class="app-meta">iOS + web &middot; open source</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>Progression as code. Liftoscript expresses any progression rule you can describe &mdash; AMRAP-driven jumps, double progression, autoregulated backoffs. The only app with no ceiling on program logic.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>Demands a programmer's mindset. A beginner cannot use the thing that makes it special, so its best feature is invisible to most of its audience.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>The expressive progression engine &mdash; but drive it from a visual builder, with the script as an escape hatch underneath.</div>
+      </article>
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">Alpha Progression</h3>
+          <span class="app-meta">iOS + Android &middot; ~$79.99/yr</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>The right primary metric. Tracks <em>weekly sets per muscle group</em> against evidence-based hypertrophy targets, rather than charting individual lifts in isolation. Uses logged RPE/RIR to adjust the next session.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>Everything meaningful sits behind the subscription, and the analysis is presented as verdicts rather than as something you can interrogate.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>Muscle-group volume as the headline number. This is the single most important idea on this page.</div>
+      </article>
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">RP Hypertrophy</h3>
+          <span class="app-meta">~$34.99/mo &middot; the science flagship</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>True autoregulation. Asks after each session about pump, soreness, and joint feel, then moves your volume inside MEV&ndash;MAV&ndash;MRV landmarks across a 4&ndash;6 week wave into a deload.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>A jargon wall on day one, an aggressive price, and reports of being web-only mid-session. It teaches the vocabulary <em>after</em> demanding you use it.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>Post-session subjective feedback as an input to next week's volume. Leave the jargon behind.</div>
+      </article>
+
+      <article class="app">
+        <div class="app-head">
+          <h3 class="app-name">Fitbod</h3>
+          <span class="app-meta">iOS + Android &middot; ~$95.99/yr</span>
+        </div>
+        <div class="split">
+          <div class="line best">
+            <span class="line-label">Does best</span>
+            <p>Zero-decision onboarding. Generates a session on the spot around your available equipment and recovery state. The lowest-friction start in the category.</p>
+          </div>
+          <div class="line gap">
+            <span class="line-label">Falls short</span>
+            <p>A fresh workout every time actively undermines progressive overload &mdash; you can't beat last week's numbers on a lift you didn't do last week. Convenience sold at the cost of the mechanism.</p>
+          </div>
+        </div>
+        <div class="steal"><b>Steal</b>The equipment-aware substitution prompt: "no cable machine today &mdash; here are three swaps that train the same thing."</div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Why the spreadsheet still wins</h2>
+    <div class="prose">
+      <p>You set the bar at "better than Google Sheets," which is the correct bar and a harder one than it sounds. Serious lifters keep going back to spreadsheets despite a decade of apps, and it isn't nostalgia &mdash; it's four specific capabilities that no app on the list fully replicates.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What a spreadsheet gives you</th>
+            <th>Why apps lose it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Whole-block visibility</td>
+            <td class="num">You see twelve weeks at once. Apps show you today, and maybe a chart. You cannot see the shape of your training.</td>
+          </tr>
+          <tr>
+            <td>Structural freedom</td>
+            <td class="num">Myo-reps, cluster sets, tempo work, drop sets, AMRAP finishers &mdash; apps model sets&times;reps&times;weight and choke on anything else.</td>
+          </tr>
+          <tr>
+            <td>Formulas you control</td>
+            <td class="num">Your own e1RM math, your own progression rule, visible and editable. Apps hide the logic and ask for trust.</td>
+          </tr>
+          <tr>
+            <td>Permanence</td>
+            <td class="num">The file is yours forever. No history paywall, no shutdown, no export request.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>What spreadsheets are genuinely terrible at is the one moment that matters most: <strong>pinch-zooming a grid with chalky hands, ninety seconds into rest, trying to tap the right cell.</strong> No rest timer, no auto-fill of last week's numbers, no charts without building them yourself.</p>
+      <p>So the target isn't "a nicer spreadsheet" or "another Hevy." It's <strong>spreadsheet transparency with app ergonomics</strong> &mdash; keep the whole-block view and the visible math, add the ten-second logging loop.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Five failures shared by all of them</h2>
+    <div class="failures">
+
+      <div class="failure">
+        <h3>Data goes in, insight doesn't come out</h3>
+        <p>You log two hundred sessions and get a line chart. Nothing says "your bench e1RM has been flat for five weeks while your volume climbed &mdash; that's a recovery problem, not an effort problem." The analysis layer is where every one of these apps stops.</p>
+      </div>
+
+      <div class="failure">
+        <h3>Offline is an afterthought</h3>
+        <p>Gyms are basements. An app that needs a connection to record a set is broken at the exact moment it's needed. This should be non-negotiable and it repeatedly isn't.</p>
+      </div>
+
+      <div class="failure">
+        <h3>Analysis is per-exercise, not per-muscle</h3>
+        <p>Hypertrophy responds to weekly sets per muscle group, but almost every app charts individual lifts. Your chest volume is spread across bench, incline, dips and flyes, and nothing sums it for you. Alpha Progression is the lone exception.</p>
+      </div>
+
+      <div class="failure">
+        <h3>The jargon wall</h3>
+        <p>Science-based apps open with MEV, MRV, RIR and stimulus-to-fatigue ratio, then explain them later or never. Beginners bounce. The knowledge is real; the sequencing is backwards.</p>
+      </div>
+
+      <div class="failure">
+        <h3>You can't answer "is this working?"</h3>
+        <p>The actual question every lifter has. It requires comparing a block against the block before it &mdash; volume, intensity, and outcome together. No app frames its data around the training block as a unit.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>What to build differently</h2>
+    <div class="principles">
+
+      <div class="principle">
+        <h3>Ten seconds, one thumb, no connection</h3>
+        <p>Hard budget for logging a set: <strong>under ten seconds, one-handed, offline.</strong> Pre-fill last session's weight and reps so the common case is a single tap to confirm. Rest timer starts itself. If any interaction pushes past ten seconds, that interaction is the bug &mdash; people either rush their logging or blow out their rest periods, and both corrupt the data you're collecting.</p>
+      </div>
+
+      <div class="principle">
+        <h3>Weekly sets per muscle is the headline number</h3>
+        <p>Make muscle-group volume the primary view, with per-exercise charts secondary. Every exercise maps to primary and secondary muscles; a set of incline press counts fully to chest and partially to front delts and triceps. Show the week's running total per muscle against a target band &mdash; the commonly cited hypertrophy range is roughly <span class="inline-code">10&ndash;20 hard sets per muscle per week</span>, with individual variation. This one decision puts you ahead of every free app.</p>
+      </div>
+
+      <div class="principle">
+        <h3>Show the math, and show its error bars</h3>
+        <p>Estimated 1RM is the honest measure of strength progress, because it normalizes across rep ranges. Compute it, but be honest about where it breaks:</p>
+        <div class="formula">
+Epley&nbsp;&nbsp;&nbsp;1RM = w &times; (1 + r / 30)&nbsp;&nbsp;&nbsp;&nbsp;<span>best at 2&ndash;5 reps</span>
+Brzycki&nbsp;1RM = w &times; 36 / (37 &minus; r)&nbsp;&nbsp;<span>best at 6&ndash;10 reps</span>
+        </div>
+        <p style="margin-top:12px">Both land within roughly 2&ndash;10% of a tested max inside the 2&ndash;10 rep window, and degrade badly above it. So pick the formula by rep count, and <strong>visually de-emphasize any e1RM derived from a set above 10 reps</strong> rather than plotting it as though it were equally trustworthy. Nobody else does this, and it's the difference between a number and an honest number.</p>
+      </div>
+
+      <div class="principle">
+        <h3>Teach at the moment of use, never in a manual</h3>
+        <p>The first time the app asks for RIR, it explains RIR &mdash; inline, in one sentence, with a tap for more. Not in an onboarding carousel, not in a help section. Every recommendation carries its "why" behind a disclosure: <em>"Suggesting 3 sets not 4 &mdash; your chest volume is already at 18 sets this week."</em> This is how you serve a new lifter and an advanced one from the same interface, and it's exactly what RP gets backwards.</p>
+      </div>
+
+      <div class="principle">
+        <h3>The block is the unit of analysis</h3>
+        <p>Build around training blocks, not infinite scroll. At the end of a block, produce a real summary: volume by muscle, e1RM change per lift, sessions completed, where you stalled. Then let people compare this block to the last one. That single screen answers "is this working?" &mdash; the question nothing on the market answers.</p>
+      </div>
+
+      <div class="principle">
+        <h3>Model the set flexibly from day one</h3>
+        <p>The reason spreadsheets survive is that apps hardcode <span class="inline-code">weight &times; reps</span>. Give a set optional fields for RIR/RPE, tempo, and a type flag (straight, drop, myo-rep, cluster, AMRAP, backoff). Retrofitting this later means a painful migration; allowing for it now costs a few extra nullable columns.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Build order</h2>
+    <div class="prose">
+      <p>Sequenced deliberately &mdash; each tier is usable on its own, and each one earns the right to build the next.</p>
+    </div>
+
+    <div class="tiers">
+
+      <div class="tier">
+        <span class="tier-num">1</span>
+        <div class="tier-body">
+          <h3>Beat the spreadsheet</h3>
+          <p>This alone clears the bar you set, and it's the tier most apps never get truly right.</p>
+          <ul class="tier-list">
+            <li>Exercise library with custom exercises, each mapped to primary/secondary muscles</li>
+            <li>Fast offline set logging with last-session pre-fill and an auto-starting rest timer</li>
+            <li>Body weight tracking with a trend line, not just raw daily points</li>
+            <li>Per-exercise history and e1RM chart with the rep-range honesty above</li>
+            <li>Full data export &mdash; your permanence guarantee, and the promise no competitor makes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tier">
+        <span class="tier-num">2</span>
+        <div class="tier-body">
+          <h3>Programs and analysis</h3>
+          <p>Where it stops being a log and starts being a training tool.</p>
+          <ul class="tier-list">
+            <li>Program builder on desktop, execution on mobile</li>
+            <li>Progression rules &mdash; start with linear and double progression, leave room for expression later</li>
+            <li>Weekly volume per muscle group against target bands</li>
+            <li>Block summary and block-over-block comparison</li>
+            <li>Stall detection: flag a lift whose e1RM hasn't moved in three-plus weeks, and say what that usually means</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tier">
+        <span class="tier-num">3</span>
+        <div class="tier-body">
+          <h3>Teach and guide</h3>
+          <p>The differentiator, and the part that serves the new lifters you mentioned.</p>
+          <ul class="tier-list">
+            <li>A small set of well-explained starter programs rather than a library of thousands</li>
+            <li>Just-in-time concept explanations wired to first use</li>
+            <li>Post-session check-in feeding next week's volume, in plain language &mdash; no landmark jargon</li>
+            <li>Deload prompting driven by accumulated fatigue and performance decrement</li>
+            <li>Equipment-aware exercise substitution</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="closing">
+    <h2>The one-sentence version</h2>
+    <p>The logging loop is a solved, commoditized problem &mdash; copy Strong's and move on. The unsolved problem is turning a year of logged sets into an answer to "is this working?", and it's unsolved because the honest answer sometimes costs a subscription its renewal.</p>
+    <p>That's your opening, and it's also the reason to build rather than install: the analysis layer is the part everyone paywalls, and it's the part you actually want.</p>
+  </div>
+
+  <p class="footnote">
+    Sources and figures: pricing and free-tier limits per vendor pages and third-party reviews (Aug 2026); 1RM formula accuracy per <a href="https://opensiuc.lib.siu.edu/cgi/viewcontent.cgi?article=1744&amp;context=gs_rp">Brzycki/Epley validation work</a>; volume landmark and autoregulation concepts per Renaissance Periodization. Reported behaviors marked as such &mdash; verify Hevy's offline handling and Liftosaur's sync tier directly before treating either as settled.
+  </p>
+
+</div>

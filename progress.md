@@ -1,0 +1,285 @@
+# Fitness Tracker — Progress & Context
+
+> **If you are a fresh Claude session: read this whole file first.** It is the single source of
+> truth for where this project stands. Then skim `docs/spec.md` for the product detail.
+> `chat.md` is a human-readable conversation log — you do not need it to work, only to answer
+> "what did we say about X."
+
+**Last updated:** 2026-08-14
+**Status:** v1 app built and working locally. Not yet on GitHub. Firebase not connected.
+
+**To run it:** `python -m http.server 8765` from the project root, then open
+`http://127.0.0.1:8765`. It needs a server — ES modules do not load over `file://`.
+
+---
+
+## 1. Working agreement
+
+Tim is the **manager**; Claude is the **builder**.
+
+- Tim describes the vision. Claude designs and implements it.
+- Claude is expected to make recommendations, not present menus of options.
+- **If Claude has a good recommendation, Claude does not ask — it recommends and proceeds**,
+  stating the assumption plainly.
+- Claude asks questions *only* when it genuinely cannot infer the vision and the different
+  readings would lead to materially different work.
+- **Questions go in the interactive question box (AskUserQuestion tool), never in prose.**
+  Tim often doesn't read a full reply, so questions written in the text get missed. This does not
+  mean ask more — it means the few genuinely open questions get routed where he'll see them.
+- Keep key conclusions short and near the top of replies, for the same reason.
+- Claude maintains `progress.md` and `chat.md` continuously, without being reminded.
+
+### File upkeep protocol
+
+| File | Job | When to update |
+|---|---|---|
+| `progress.md` | State, decisions, next steps. The catch-up file. | After any decision, milestone, or scope change |
+| `chat.md` | Chronological human-readable summary of the conversation | After each substantive exchange |
+| `docs/spec.md` | The evolving product + technical spec | When a feature or model decision is made |
+| `docs/competitive-teardown.html` | Competitive research (formatted, published) | Only if research is revisited |
+
+---
+
+## 2. The vision
+
+A **lifting tracker** — web-based — that is genuinely better than a Google Sheet.
+
+Tim's stated wants, verbatim in substance:
+
+- Log weight, reps, time, and other metrics for any exercise
+- Track things over time, including body weight
+- Set up lifting **"programs"** that make it easy to measure how you're doing
+- Enter data **while mid-workout** (this is the critical UX moment)
+- Cares a lot about **usability and formatting**
+- Cares a lot about **scientific accuracy**
+
+**Minimum bar:** a place to track lifting data that beats Google Sheets.
+**Stretch goals:** educate new lifters; provide ready-made workouts/programs.
+
+### Audience (confirmed 2026-08-14)
+
+- **Who:** Tim and friends to start, **open to anyone, potentially many people eventually.**
+- **Experience level:** must serve **any level** — beginner through advanced.
+- **Training goal:** **the user chooses** — hypertrophy, strength, or general fitness.
+
+This is a **product for other people**, not a personal tool. Three consequences that ripple through
+everything below: onboarding has to work for a stranger, progressive disclosure becomes core
+architecture rather than a nicety, and the dashboard has to reconfigure itself around the user's
+stated goal.
+
+### Explicitly out of scope
+
+**Diet / nutrition tracking — cut, decided 2026-08-14.** Reasoning below in Decisions.
+
+---
+
+## 3. Decisions locked
+
+| # | Decision | Rationale |
+|---|---|---|
+| D1 | **No diet/nutrition feature.** Point users to Cronometer (free tier) instead. | Free nutrition apps are not meaningfully crippled — diet tracking is present-tense, so the "history paywall" that ruins free lifting apps doesn't bite. The food database is also the one asset that genuinely can't be replicated. |
+| D2 | **Lifting only.** | Focus. See D1. |
+| D3 | **Weekly sets per muscle group is the headline metric**, not per-exercise charts. | This is what hypertrophy actually responds to (~10–20 hard sets/muscle/week). Only Alpha Progression ($79.99/yr) does it. Biggest single differentiator available. |
+| D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets survive because of whole-block visibility, structural freedom, visible formulas, and permanence. Apps win only on the logging loop. Take both. |
+| D5 | **e1RM must be rep-range honest.** Epley for 2–5 reps, Brzycki for 6–10, visually de-emphasize anything derived from >10 reps. | Formulas are ±2–10% inside 2–10 reps and degrade badly above. Nobody else shows this. Directly serves Tim's "scientific knowledge" priority. |
+| D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. Hevy is reported to require a connection to log — a real, cited failure. |
+| D7 | **No social feed.** | Repeatedly cited as unwanted in Hevy reviews. |
+| D8 | **Teach at the moment of use**, never via a manual or onboarding carousel. | RP Hypertrophy has the best science and the worst delivery — jargon wall on day one. Inverting this is how one interface serves beginners and advanced lifters at once. |
+| D9 | **Progressive disclosure is core architecture, not a Tier 3 feature.** Every advanced control (RIR, tempo, set types, volume landmarks) is hidden by default and revealed on demand or as the user demonstrates readiness. | Audience is "any level." A beginner and an advanced lifter must both feel the app was built for them, from the same interface. This is the hardest requirement in the project and it can't be bolted on later. |
+| D10 | **Training goal is a user setting that reconfigures the primary dashboard.** Hypertrophy → weekly volume per muscle is the headline. Strength → e1RM progression is the headline. General fitness → broader mix incl. time/distance work. | Users choose their goal, so a single fixed dashboard would be wrong for most of them. D3 still holds as the *default*, since hypertrophy is the most common goal. |
+
+### Recommendations made and proceeding on (not blocking)
+
+- **R1 — Build as a web app (PWA), not native iOS.** Tim is iOS-only personally, but every other
+  project in this portfolio is an HTML site, the project already contains `fitness_tracker.html`,
+  and a PWA installs to the iOS home screen, works offline, and costs nothing to distribute.
+- **R2 — Local-first storage** (IndexedDB) with full export for v1. No backend, no accounts *yet*.
+  This still fully serves "me and friends" — each person's browser holds their own data, and sharing
+  the app is just sharing a URL. Accounts and cloud sync solve **cross-device use and backup**, not
+  multi-user, so they are a real roadmap item (Tier 2/3) rather than a v1 requirement. Schema carries
+  UUIDs and timestamps from day one so that layer drops in without a migration.
+- **R3 — Ship Tier 1 before anything else** (see build order below). It alone clears the stated bar.
+
+---
+
+## 4. Research findings (summary)
+
+Full teardown: `docs/competitive-teardown.html` —
+also published at https://claude.ai/code/artifact/e3a7adce-c1cf-4284-8eff-762db7da6bbd
+
+**Apps analyzed:** Strong, Hevy, Boostcamp, Liftosaur, Alpha Progression, RP Hypertrophy, Fitbod.
+
+**What each does best:**
+- **Strong** — the logging loop. Pre-filled sets, auto-starting rest timer. The interaction gold standard.
+- **Hevy** — polish, feel, free unlimited logging, real web app.
+- **Boostcamp** — solves "what program do I run" for free. 11,000+ programs. Desktop builder → mobile execution.
+- **Liftosaur** — progression as code (Liftoscript). No ceiling on program logic.
+- **Alpha Progression** — weekly volume per muscle vs evidence-based targets. The right metric.
+- **RP Hypertrophy** — true autoregulation via post-session subjective feedback.
+- **Fitbod** — zero-decision onboarding; equipment-aware substitution.
+
+**Five failures shared by all:**
+1. Data goes in, insight doesn't come out
+2. Offline is an afterthought
+3. Analysis is per-exercise, not per-muscle
+4. The jargon wall
+5. You can't answer "is this working?"
+
+**Free tier reality check:** Hevy caps free at 4 routines / 7 custom exercises / **3 months of graph
+history**. Four of five commercial apps monetize by restricting access to your own accumulated data.
+That is the gap being built into.
+
+### Unverified claims (flagged, do not treat as settled)
+
+- Hevy requiring an internet connection to log — from review aggregators, not the vendor.
+- Whether Liftosaur's cloud sync/backup is a paid feature — sources conflict; App Store listing ambiguous.
+
+---
+
+## 5. Build order
+
+**Tier 1 — Beat the spreadsheet** *(clears the stated minimum bar)*
+- Exercise library + custom exercises, each mapped to primary/secondary muscles
+- Fast offline set logging: last-session pre-fill, auto-starting rest timer, <10s one-handed
+- Body weight tracking with a trend line (not raw daily points)
+- Per-exercise history + rep-range-honest e1RM chart
+- Full data export
+
+**Tier 2 — Programs and analysis**
+- Program builder (desktop) → execution (mobile)
+- Progression rules: linear + double progression first
+- Weekly volume per muscle group vs target bands
+- Block summary + block-over-block comparison
+- Stall detection (e1RM flat 3+ weeks → flag and explain)
+
+**Tier 3 — Teach and guide**
+- Small set of well-explained starter programs (not a library of thousands)
+- Just-in-time concept explanations wired to first use
+- Post-session check-in feeding next week's volume, in plain language
+- Deload prompting from accumulated fatigue / performance decrement
+- Equipment-aware exercise substitution
+
+---
+
+## 6. Current state
+
+**v1 is built and passing tests.** Scope for this build was deliberately narrowed by Tim
+(2026-08-14): *"work on the overall format of the site, ignore all of the smart features."*
+No pre-built programs, no hypertrophy targets, no autoregulation — those stay in Tier 2/3.
+
+### What works
+
+| Area | State |
+|---|---|
+| Custom workout builder | Name it, add any number of exercises, reorder, edit, delete |
+| Exercise library | **265 exercises**, searchable, filterable by 15 muscle groups |
+| Custom exercises | User-created, choose which fields to track |
+| Session runner | Prefills last time's numbers, ±steppers, next/back arrows, finish → calendar |
+| Draft recovery | In-progress workout survives an app switch; expires at end of day |
+| Benchmarks | Any date (default today), any exercise, saves to graph + calendar |
+| Calendar | Month grid, dots for workouts vs benchmarks, tap a day for full detail |
+| Graphs | Pick exercise + metric, SVG line chart, start/now/change/change-% summary |
+| Settings | Dark/light, export backup, restore backup, delete all |
+
+### Stepper increments (as specified)
+Reps ±1 · Weight ±5 lbs · Time ±10 sec · Distance ±0.1 mi. Press-and-hold repeats.
+
+### Verified
+- All 9 JS modules pass syntax check
+- 23 data-layer assertions pass (`scratchpad/test-store.mjs`) covering prefill, series
+  building, best-set-per-day collapsing, the ≥2-points graph rule, calendar indexing,
+  and export/import round trip
+- All assets serve 200 over HTTP
+
+### NOT yet verified
+- **No browser run.** I cannot open a browser here, so the visual layout and touch
+  interactions have not been seen working. Tim needs to click through it once.
+- **Firebase adapter is written but never executed** — see `docs/firebase-setup.md`.
+
+**Repo contents:**
+```
+Fitness_Tracker/
+├── index.html                  ← entry point
+├── manifest.webmanifest        ← PWA, installs to iPhone home screen
+├── icon.svg
+├── progress.md                 ← this file
+├── chat.md                     ← conversation log
+├── fitness_tracker.html        ← empty 0-byte leftover, safe to delete
+├── css/
+│   └── app.css                 ← all styling; mobile-first, desktop in one media query
+├── js/
+│   ├── app.js                  ← hash router + boot
+│   ├── store.js                ← data layer, backend-agnostic async API
+│   ├── exercises.js            ← 265-exercise library
+│   ├── ui.js                   ← el(), icons, sheets, toasts, stepper, formatters
+│   ├── views-workouts.js       ← home, workout list, builder, exercise picker
+│   ├── views-session.js        ← session runner, benchmark form
+│   ├── views-data.js           ← calendar, day detail, graphs, settings
+│   ├── firebase-config.js      ← EMPTY placeholder for keys
+│   └── firebase-backend.js     ← complete Firestore adapter, UNTESTED
+└── docs/
+    ├── spec.md
+    ├── firebase-setup.md       ← what Tim must do in the Firebase console
+    └── competitive-teardown.html
+```
+
+### Architecture notes for future sessions
+
+- **No build step, no dependencies.** Plain ES modules. Serve the folder, it runs.
+- **Everything goes through `store.js`.** Its API is async so the Firebase swap touches no
+  view code — only the `BACKEND` constant at the top of that file.
+- **Hash router** in `app.js`. Routes listed in `FULLSCREEN` hide the bottom nav.
+- **The chart is hand-rolled SVG** in `views-data.js` — no charting library.
+
+---
+
+## 7. Next steps
+
+1. **Tim clicks through the app on his iPhone** and reports what feels wrong. Nothing else should
+   be built until the core loop has been used in a real gym at least once.
+2. **Decide the GitHub repo** — the folder currently sits inside a repo pointed at
+   `Estimator_Quiz`, which is wrong for this project. See §9.
+3. **Firebase**, once Tim creates the project and pastes the config (`docs/firebase-setup.md`).
+4. Then Tier 2: programs, progression rules, volume-per-muscle, block comparison.
+
+### Known gaps in v1 (deliberate, not bugs)
+
+- Sets are a flat list — no RIR, tempo, or set types yet, though `docs/spec.md` specifies them
+  and the schema has room. Adding them is additive.
+- Only one exercise-level metric set per exercise; no supersets.
+- Weight is hard-coded to lbs in display. The unit setting exists in the store but is not wired
+  to the UI yet.
+- No rest timer. It's in the spec (P1) and belongs in the session runner, but Tim's described
+  flow didn't call for it, so it was left out of this pass.
+
+## 9. GitHub
+
+`gh` is authenticated as **TimothyHadfield**.
+
+**Problem:** the git repo root is `Code Projects/`, and its only remote is
+`https://github.com/TimothyHadfield/Estimator_Quiz.git`. Every project folder on the desktop sits
+inside that one repo. Committing Fitness_Tracker as-is would push it into the Estimator_Quiz
+repository, which is almost certainly not intended.
+
+**Recommendation:** give Fitness_Tracker its own repo. It is a standalone static site and
+GitHub Pages can serve it directly, which also gives Tim a URL to open on his iPhone — much
+better than running a local Python server.
+
+*Awaiting Tim's decision on repo name and public/private.*
+
+---
+
+## 8. Open questions for Tim
+
+*(All previously open questions answered 2026-08-14 — see Audience under §2. None outstanding.)*
+
+**Note for future sessions:** ask questions through the interactive question box, never in prose.
+Only ask what genuinely can't be inferred — if a good recommendation exists, proceed on it.
+
+### Resolved by Claude, not asked (leanings acted on)
+
+- **Drop sets / myo-reps count as one hard set**, with the extensions logged but not double-counted
+  toward weekly volume. Counting each extension would inflate volume totals and break the P2 target
+  bands, which are defined in terms of hard sets.
+- **Secondary-muscle weighting is fixed at 0.5** with an advanced override available. Making it
+  configurable by default is exactly the jargon wall D8 exists to prevent.
