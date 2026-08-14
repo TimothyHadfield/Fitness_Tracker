@@ -6,10 +6,15 @@
 > "what did we say about X."
 
 **Last updated:** 2026-08-14
-**Status:** v1 app built and working locally. Not yet on GitHub. Firebase not connected.
+**Status:** v1 built, deployed, and live. Firebase not connected (needs Tim's credentials).
 
-**To run it:** `python -m http.server 8765` from the project root, then open
+**Live app:** https://timothyhadfield.github.io/Fitness_Tracker/
+**Repo:** https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root)
+
+**To run locally:** `python -m http.server 8765` from the project root, then open
 `http://127.0.0.1:8765`. It needs a server — ES modules do not load over `file://`.
+
+**Deploying:** commit and push to `main`. Pages rebuilds automatically, live in ~40 seconds.
 
 ---
 
@@ -252,20 +257,22 @@ Fitness_Tracker/
 - No rest timer. It's in the spec (P1) and belongs in the session runner, but Tim's described
   flow didn't call for it, so it was left out of this pass.
 
-## 9. GitHub
+## 9. GitHub — done
 
 `gh` is authenticated as **TimothyHadfield**.
 
-**Problem:** the git repo root is `Code Projects/`, and its only remote is
-`https://github.com/TimothyHadfield/Estimator_Quiz.git`. Every project folder on the desktop sits
-inside that one repo. Committing Fitness_Tracker as-is would push it into the Estimator_Quiz
-repository, which is almost certainly not intended.
+**Resolved 2026-08-14.** The `Code Projects/` folder is itself a git repo whose remote points at
+`Estimator_Quiz`, so committing there would have pushed this project into the wrong repository.
+Tim chose a separate repo, so `Fitness_Tracker/` now has **its own nested git repo** with its own
+remote. The parent repo simply sees the folder as untracked; the two do not interfere.
 
-**Recommendation:** give Fitness_Tracker its own repo. It is a standalone static site and
-GitHub Pages can serve it directly, which also gives Tim a URL to open on his iPhone — much
-better than running a local Python server.
+- Repo: https://github.com/TimothyHadfield/Fitness_Tracker (public)
+- Pages: serving from `main` at root → https://timothyhadfield.github.io/Fitness_Tracker/
+- Verified: all assets return 200 with correct MIME types (`application/javascript` on the
+  modules, which is what ES module loading requires)
 
-*Awaiting Tim's decision on repo name and public/private.*
+**Always run git commands from inside `Fitness_Tracker/`**, never from `Code Projects/`, or you
+will be operating on the Estimator_Quiz repo instead.
 
 ---
 

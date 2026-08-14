@@ -157,5 +157,13 @@ Also surfaced a repo problem: the `Code Projects` folder is itself a git repo wh
 `Estimator_Quiz`, so committing here would push the fitness tracker into the wrong repository.
 Flagged for Tim to decide rather than acting on it.
 
-**State at end of session:** v1 built and locally tested, awaiting a real browser run, a GitHub
-repo decision, and Firebase credentials.
+### Shipped
+
+Tim chose a new public repo with GitHub Pages, and to delete the leftover empty
+`fitness_tracker.html`. Both done. The project now has its own nested git repo (separate from the
+`Estimator_Quiz` repo that owns the parent folder), and the app is live at
+**https://timothyhadfield.github.io/Fitness_Tracker/** — all assets verified serving with correct
+MIME types.
+
+**State at end of session:** v1 built, deployed, and live. Still awaiting a real browser/phone run
+by Tim, and Firebase credentials before cloud sync can be switched on.
