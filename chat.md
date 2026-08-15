@@ -586,3 +586,26 @@ accounts and documents cleaned up; the project holds zero users and zero documen
 
 45 checks now cover the Firebase stack. The interface is still the whole remaining risk — no browser
 has rendered any of this, including the button itself.
+
+### Profile button moved into the sidebar
+
+Tim: *"the account icon should be in the upper left left, next to the fitness tracker on the side
+bar."*
+
+He was on desktop, where `#app` flips to a row and the navbar becomes a 200px left sidebar. The
+button had been in the content header — which on mobile *is* the top-left, but on desktop sits to
+the right of the sidebar. Not the upper-left he meant.
+
+The sidebar's "Fitness Tracker" title was a `.navbar::before` pseudo-element, and a pseudo-element
+cannot contain a real focusable button. So it became a proper `.nav-brand` element holding the
+avatar and the name, rendered as the first child of the navbar.
+
+One button on screen at a time: `.nav-brand` is hidden below 860px, and above it
+`.topbar .avatar-btn` stands down. Mobile keeps the header button, since a bottom tab bar is the
+wrong home for an app title and an account control.
+
+**Fixed a leak the move exposed.** `navbar()` runs on every navigation, so each one built a profile
+button that subscribed to `auth.onChange` and never unsubscribed — listeners accumulating for the
+session, each pinning a detached node. The subscription now ends when its button leaves the
+document, with a `wasMounted` guard so a change arriving between construction and insertion doesn't
+cancel it early.

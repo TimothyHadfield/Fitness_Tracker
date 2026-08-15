@@ -128,7 +128,19 @@ export function profileButton() {
   import('./store.js')
     .then(async ({ auth }) => {
       paint(await auth.state());
-      auth.onChange(async () => paint(await auth.state()));
+
+      // A new button is built on every navigation, so the subscription has to
+      // die with the node it belongs to — otherwise listeners accumulate for
+      // the life of the session, each pinning a detached element.
+      // `wasMounted` guards the gap between creating the button and appending
+      // it, so a change arriving in that window doesn't cancel it early.
+      let wasMounted = false;
+      let stop = null;
+      stop = auth.onChange(async () => {
+        if (btn.isConnected) wasMounted = true;
+        else if (wasMounted) { if (stop) stop(); return; }
+        paint(await auth.state());
+      });
     })
     .catch((err) => console.error('Could not read account state', err));
 

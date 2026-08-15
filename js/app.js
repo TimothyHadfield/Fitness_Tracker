@@ -1,7 +1,7 @@
 // Router + boot.
 
 import { store } from './store.js';
-import { el, icon, clear } from './ui.js';
+import { el, icon, clear, profileButton } from './ui.js';
 import { HomeView, StartPickerView, WorkoutsView, WorkoutBuilderView } from './views-workouts.js';
 import { SessionView, BenchmarkView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
@@ -25,6 +25,14 @@ function parse(hash) {
 
 function navbar(active) {
   return el('nav', { class: 'navbar' },
+    // Desktop only. The sidebar is the true top-left of the window, so the
+    // account button belongs here beside the app name rather than in the
+    // content header. Hidden on mobile, where the navbar is a bottom tab bar
+    // and the topbar carries the profile button instead.
+    el('div', { class: 'nav-brand' },
+      profileButton(),
+      el('span', { class: 'nav-brand-name', text: 'Fitness Tracker' }),
+    ),
     NAV.map((n) =>
       el('a', {
         href: n.hash,
