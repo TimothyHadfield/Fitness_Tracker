@@ -16,7 +16,7 @@ upgrade preserving data. Only **Google sign-in** still needs a console toggle.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 139 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 153 assertions, all passing |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
@@ -123,7 +123,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Draft recovery | In-progress workout survives an app switch; expires at end of day |
 | Benchmarks | Any date (default today), any exercise → graph + calendar |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
-| Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**). Weight+reps exercises are **rep-normalised** — see below |
+| Graphs | Two modes — **Over time** (measured SVG line) and **Start vs now** (paired bars). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
 | Accounts | **Live.** Profile button in the true top-left — beside “Fitness Tracker” in the desktop sidebar, in the header on mobile (never both) — with a dot badge when data is not backed up. Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, **change password**, **delete account**, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
 | Settings | Dark/light, account status, export backup, restore backup, delete all |
@@ -133,7 +133,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 ### Verified
 - All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
   (catches missing exports without a browser)
-- **139 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- **153 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
@@ -263,7 +263,19 @@ Budget the screen for the content, then fit controls into what remains. Applied:
 - The calendar is the one place that scrolls by design: months run continuously with sticky
   headings, opening on the current month, spanning at least 12 months back.
 
-### Rule 4 — a marker means measured
+### Rule 4 — never mix benchmarks with workout sets
+
+A benchmark is a deliberate test taken fresh. A set logged mid-workout comes after whatever else the
+session had already done. They are **different measurements**, and charting them as one line makes
+strength look like it swings wildly when it hasn't.
+
+Every graph shows **one source at a time**, benchmarks by default (D14). The toggle appears only
+when an exercise genuinely has both — no control for a choice that doesn't exist.
+
+Mixing also silently destroyed data: the series keeps one point per day, so on a day with both a
+benchmark and a workout, one reading was dropped. Asserted in the test suite.
+
+### Rule 5 — a marker means measured
 
 On the rep-normalised chart, a circle means *you actually lifted this, at this rep count*.
 Estimated points carry no marker and are held by the line alone. Bars mark estimates with a
@@ -319,6 +331,7 @@ Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have
 
 | D12 | **Accounts are anonymous-first: log immediately, upgrade to email or Google later.** Upgrading *links* the anonymous account, so the uid and all existing data carry over. | Chosen by Tim 2026-08-15. A signup wall on first open is the single biggest killer of new-app retention, and D8/D9 say no wall on day one. The cost is that un-upgraded data lives in one browser and nothing recovers it — so the UI states that plainly rather than implying it is backed up. |
 | D13 | **Backend selection is `'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set mid-workout (D6). Settings then reports "Not connected" instead of pretending things are synced. |
+| D14 | **Graphs never mix benchmarks with workout sets. One source at a time, benchmarks by default.** | Reported by Tim 2026-08-15: a bench workout set sat far off his benchmark trend and made the line lurch. Two further problems fell out of it — on a day carrying both, the shown point flipped between sources as the rep target changed, and the one-point-per-day rule silently discarded the losing reading. |
 
 ### Standing recommendations (acted on, not blocking)
 

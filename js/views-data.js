@@ -2,7 +2,7 @@
 
 import {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
-  normalizedSeries, defaultTargetReps,
+  normalizedSeries, defaultTargetReps, SOURCE_LABEL,
 } from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
@@ -221,7 +221,17 @@ let graphMode = 'trend'; // 'trend' | 'compare'
 let compareField = null;
 // exerciseId -> rep count everything is compared at. Seeded from the most
 // frequently recorded rep count, then whatever the user steps it to.
+// Keyed by exercise AND source, because the two sources can have different
+// habitual rep counts.
 const targetReps = new Map();
+// exerciseId -> 'benchmark' | 'workout'. Benchmarks win by default.
+const sourceChoice = new Map();
+
+function pickSource(opt) {
+  const chosen = sourceChoice.get(opt.id);
+  if (chosen && opt.usableSources.includes(chosen)) return chosen;
+  return opt.usableSources.includes('benchmark') ? 'benchmark' : opt.usableSources[0];
+}
 
 export async function GraphView() {
   const [options, comparison] = await Promise.all([chartableExercises(2), benchmarkComparison(2)]);
@@ -271,23 +281,38 @@ export async function GraphView() {
         graphChoice.exerciseId = e.target.value;
         const next = options.find((o) => o.id === e.target.value);
         graphChoice.field = next.fields[0];
-        targetReps.delete(e.target.value); // recompute the default for the new exercise
+        targetReps.clear();          // recompute defaults for the new exercise
         render();
       },
     }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId })));
 
-    if (opt.normalizable) return renderNormalized(opt, picker);
+    const source = pickSource(opt);
+
+    // Only offered when the exercise genuinely has both. No control for a
+    // choice that doesn't exist (D9).
+    const sourceChips = opt.usableSources.length > 1
+      ? el('div', { class: 'chips tight' }, opt.usableSources.map((s) =>
+          el('button', {
+            class: 'chip', 'aria-pressed': String(s === source),
+            text: SOURCE_LABEL[s],
+            onClick: () => { sourceChoice.set(opt.id, s); render(); },
+          })))
+      : null;
+
+    if (opt.sources[source].normalizable) return renderNormalized(opt, picker, source, sourceChips);
 
     // Everything else keeps a plain metric selector: for a weighted carry or a
     // run, the two metrics do not trade off against each other the way weight
     // and reps do, so choosing between them is a real choice.
-    if (!opt.fields.includes(graphChoice.field)) graphChoice.field = opt.fields[0];
+    const fields = opt.sources[source].fields;
+    if (!fields.includes(graphChoice.field)) graphChoice.field = fields[0];
 
     top.replaceChildren(
       el('div', { class: 'control-row' },
         picker,
-        opt.fields.length > 1
-          ? el('div', { class: 'chips tight' }, opt.fields.map((f) =>
+        sourceChips,
+        fields.length > 1
+          ? el('div', { class: 'chips tight' }, fields.map((f) =>
               el('button', {
                 class: 'chip', 'aria-pressed': String(f === graphChoice.field),
                 text: FIELD_META[f].label,
@@ -297,7 +322,13 @@ export async function GraphView() {
       ),
     );
 
-    const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field);
+    if (!graphChoice.field) {
+      host.replaceChildren(emptyState('Nothing to chart from this source',
+        `No ${SOURCE_LABEL[source].toLowerCase()} recorded for this exercise yet.`));
+      return;
+    }
+
+    const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field, source);
     if (points.length < 2) {
       host.replaceChildren(emptyState('Only one data point', 'Record this exercise on another day to see a line.'));
       return;
@@ -324,33 +355,36 @@ export async function GraphView() {
 
   /* ---------- rep-normalised trend (weight + reps exercises) ---------- */
 
-  async function renderNormalized(opt, picker) {
-    let target = targetReps.get(opt.id);
+  async function renderNormalized(opt, picker, source, sourceChips) {
+    const key = opt.id + '|' + source;
+    let target = targetReps.get(key);
     if (target == null) {
-      target = clampReps(await defaultTargetReps(opt.id)) || 10;
-      targetReps.set(opt.id, target);
+      target = clampReps(await defaultTargetReps(opt.id, source)) || 10;
+      targetReps.set(key, target);
     }
 
     top.replaceChildren(
       el('div', { class: 'control-row' },
         picker,
+        sourceChips,
         el('div', { class: 'rep-target' },
           miniStepper({
             value: target,
             min: MIN_TARGET_REPS,
             max: MAX_TARGET_REPS,
             label: 'reps',
-            onChange: (v) => { targetReps.set(opt.id, v); render(); },
+            onChange: (v) => { targetReps.set(key, v); render(); },
           }),
           el('span', { class: 'rep-target-label', text: 'reps' }),
         ),
       ),
     );
 
-    const points = await normalizedSeries(opt.id, target);
+    const points = await normalizedSeries(opt.id, target, source);
     if (points.length < 2) {
       host.replaceChildren(emptyState('Only one data point',
-        'Record this exercise with a weight and a rep count on another day to see a line.'));
+        `Record this exercise with a weight and a rep count on another day to see a line. `
+        + `Showing ${SOURCE_LABEL[source].toLowerCase()} only.`));
       return;
     }
 
@@ -366,7 +400,7 @@ export async function GraphView() {
           opt.loadType ? loadBadge(opt.loadType) : null,
           el('span', { class: 'pt-key' }),
           el('span', {
-            text: `${measured} measured at ${target} reps · rest estimated`
+            text: `${SOURCE_LABEL[source]} only · ${measured} measured at ${target} reps · rest estimated`
               + (opt.loadType ? ` · ${LOAD_LABEL[opt.loadType]}` : ''),
           }),
         ),

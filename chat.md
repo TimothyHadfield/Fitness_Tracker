@@ -609,3 +609,40 @@ button that subscribed to `auth.onChange` and never unsubscribed — listeners a
 session, each pinning a detached node. The subscription now ends when its button leaves the
 document, with a `wasMounted` guard so a change arriving between construction and insertion doesn't
 cancel it early.
+
+### Graphs stopped mixing benchmarks with workout sets
+
+Tim: *"for the graph about benchmarks, only use data that is from the same source... I recorded 3
+bench press benchmarks, but I also recorded a bench press measurement from a workout that was
+drastically different than the benchmark trends... Also, what's weird is that it changes between
+which measurement it uses depending on what number of sets you use."*
+
+He found two things, and the second was a real bug.
+
+**Mixing sources was wrong on its own.** A benchmark is a deliberate test taken fresh; a set logged
+mid-workout comes after everything else the session had already done. Charting them as one line
+makes strength look like it lurches. Every graph now shows **one source at a time**, benchmarks by
+default, with a toggle that appears only when an exercise actually has both (D9 — no control for a
+choice that doesn't exist). Logged as **D14** and design **Rule 4**.
+
+**The flipping was the per-day selection rule.** `normalizedSeries` keeps one point per day, and
+prefers a set genuinely performed at the target rep count over an estimate. On a day carrying both a
+benchmark and a workout, changing the rep target changed which of the two qualified as "actual" —
+so the point jumped between sources. Exactly what he described. The test suite now reproduces it on
+mixed data and proves it is gone once filtered:
+
+```
+PASS  mixed sources: the point for a day flips with the rep target — the reported bug
+PASS  benchmarks only: the source no longer changes with the rep target
+```
+
+**A third problem surfaced while testing, which he hadn't seen.** One point per day means that on a
+day with both a benchmark and a workout, **one reading was silently discarded** — 2 benchmark days
+plus 4 workout days collapsed to 5 points, not 6. Mixing wasn't just noisy, it was dropping data.
+Also asserted.
+
+Availability is tracked per source, so the picker never offers a source with nothing behind it, and
+an exercise only appears at all if at least one source can draw a line by itself. Rep targets are
+now keyed by exercise **and** source, since the two can have different habitual rep counts.
+
+153 assertions.

@@ -214,6 +214,65 @@ const aug20b = (await normalizedSeries(bench.id, 4)).find((p) => p.date === '202
 ok(aug20b.actual === false && aug20b.value > 145,
    'with no measurement at the target, the best set that day is estimated instead');
 
+/* ---------- one source at a time (Tim, 2026-08-15) ---------- */
+// The bug he hit: a workout logged on the SAME DAY as a benchmark meant the
+// point shown for that day flipped between the two depending on the rep target,
+// because a real measurement at the target outranks an estimate. Mixing the
+// sources also made the line lurch, since a mid-workout set and a fresh
+// benchmark are not the same measurement.
+await store.saveSession({
+  workoutId: w.id, workoutName: 'Push', date: '2026-08-12',
+  entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 95, reps: 12 }] }],
+});
+
+// Reproduce the flip on mixed data.
+const mixedAt12 = (await normalizedSeries(bench.id, 12)).find((p) => p.date === '2026-08-12');
+const mixedAt3 = (await normalizedSeries(bench.id, 3)).find((p) => p.date === '2026-08-12');
+ok(mixedAt12.source === 'workout' && mixedAt3.source === 'benchmark',
+   'mixed sources: the point for a day flips with the rep target — the reported bug');
+
+// Filtering to one source removes it entirely.
+const benchOnly12 = (await normalizedSeries(bench.id, 12, 'benchmark')).find((p) => p.date === '2026-08-12');
+const benchOnly3 = (await normalizedSeries(bench.id, 3, 'benchmark')).find((p) => p.date === '2026-08-12');
+ok(benchOnly12.source === 'benchmark' && benchOnly3.source === 'benchmark',
+   'benchmarks only: the source no longer changes with the rep target');
+
+const allBench = await normalizedSeries(bench.id, 5, 'benchmark');
+ok(allBench.every((p) => p.source === 'benchmark'), 'benchmark series contains no workout points');
+ok(allBench.length === 2, `benchmark series covers only benchmark days (${allBench.length})`);
+
+const allWork = await normalizedSeries(bench.id, 5, 'workout');
+ok(allWork.every((p) => p.source === 'workout'), 'workout series contains no benchmark points');
+ok(allWork.length === 4, `workout series covers only workout days (${allWork.length})`);
+// The mixed series is one point per DAY, so on 2026-08-12 — which has both a
+// benchmark and a workout — one of the two readings is silently discarded.
+// 2 + 4 separate days collapse to 5. That lost reading is a second reason to
+// chart one source at a time, beyond the jaggedness.
+const mixedAll = await normalizedSeries(bench.id, 5);
+ok(mixedAll.length === 5, `mixing collapses the shared day (${mixedAll.length} points)`);
+ok(allBench.length + allWork.length === mixedAll.length + 1,
+   'mixing silently drops exactly one reading — the shared day loses whichever source lost');
+
+// The plain (non-normalised) path filters too.
+ok((await seriesForExercise(bench.id, 'weight', 'benchmark')).every((p) => p.source === 'benchmark'),
+   'seriesForExercise filters by source as well');
+
+// Each source keeps its own habitual rep count.
+ok(await defaultTargetReps(bench.id, 'benchmark') !== await defaultTargetReps(bench.id, 'workout'),
+   'the two sources can default to different rep counts');
+
+// Availability is reported per source so the picker never offers an empty one.
+const chart2 = await chartableExercises(2);
+const benchOpt = chart2.find((c) => c.id === bench.id);
+ok(benchOpt.sources.benchmark.normalizable && benchOpt.sources.workout.normalizable,
+   'both sources reported as chartable for the bench');
+ok(benchOpt.usableSources.length === 2, 'bench offers a source choice');
+
+const soloOpt = chart2.find((c) => c.id === squat.id);
+ok(soloOpt.usableSources.length === 1 && soloOpt.usableSources[0] === 'benchmark',
+   'squat has benchmarks only, so no pointless source toggle');
+ok(soloOpt.sources.workout.normalizable === false, 'squat reports no workout data');
+
 /* ---------- benchmark comparison (bar chart) ---------- */
 const cmp = await benchmarkComparison(2);
 
@@ -281,7 +340,7 @@ const dump = await store.exportAll();
 await store.clearAll();
 ok((await store.getSessions()).length === 0, 'clearAll wipes sessions');
 await store.importAll(dump);
-ok((await store.getSessions()).length === 3, 'import restores sessions');
+ok((await store.getSessions()).length === 4, 'import restores sessions');
 ok((await store.getWorkout(w.id)).exercises[0].sets === 4, 'import preserves planned set counts');
 
 /* ---------- custom exercises ---------- */

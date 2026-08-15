@@ -411,25 +411,29 @@ export const auth = {
 
 // Flattens sessions and benchmarks into one time series per exercise.
 // Session value for a given field = the best set that day (max, except time-only which uses max too).
-export async function seriesForExercise(exerciseId, field) {
+export async function seriesForExercise(exerciseId, field, source = null) {
   const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);
   const points = [];
 
-  for (const s of sessions) {
-    const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
-    if (!entry) continue;
-    const vals = (entry.sets || [])
-      .map((set) => set[field])
-      .filter((v) => typeof v === 'number' && !Number.isNaN(v));
-    if (!vals.length) continue;
-    points.push({ date: s.date, value: Math.max(...vals), source: 'workout', label: s.workoutName });
+  if (source !== 'benchmark') {
+    for (const s of sessions) {
+      const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
+      if (!entry) continue;
+      const vals = (entry.sets || [])
+        .map((set) => set[field])
+        .filter((v) => typeof v === 'number' && !Number.isNaN(v));
+      if (!vals.length) continue;
+      points.push({ date: s.date, value: Math.max(...vals), source: 'workout', label: s.workoutName });
+    }
   }
 
-  for (const b of benchmarks) {
-    if (b.exerciseId !== exerciseId) continue;
-    const v = b.values ? b.values[field] : undefined;
-    if (typeof v !== 'number' || Number.isNaN(v)) continue;
-    points.push({ date: b.date, value: v, source: 'benchmark', label: 'Benchmark' });
+  if (source !== 'workout') {
+    for (const b of benchmarks) {
+      if (b.exerciseId !== exerciseId) continue;
+      const v = b.values ? b.values[field] : undefined;
+      if (typeof v !== 'number' || Number.isNaN(v)) continue;
+      points.push({ date: b.date, value: v, source: 'benchmark', label: 'Benchmark' });
+    }
   }
 
   // one point per day — keep the best
@@ -446,37 +450,49 @@ export async function seriesForExercise(exerciseId, field) {
  * Rep-normalised series
  * ------------------------------------------------------------------ */
 
+// A benchmark is a deliberate test taken fresh; a set logged mid-workout comes
+// after whatever else the session had already done. They are not the same
+// measurement and charting them as one line is misleading — benchmarks are the
+// default because that is the series someone means when they ask "am I getting
+// stronger?".
+export const SOURCES = ['benchmark', 'workout'];
+export const SOURCE_LABEL = { benchmark: 'Benchmarks', workout: 'Workouts' };
+
 // Every recorded (weight, reps) pair for one exercise, one row per SET.
 // Sets are kept individually rather than reduced per day, because the rep count
 // that appears most often is counted over real observations — a workout of
 // 3 x 10 genuinely contributes three tens.
-export async function weightRepObservations(exerciseId) {
+export async function weightRepObservations(exerciseId, source = null) {
   const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);
   const out = [];
 
-  const push = (date, weight, reps, source, label) => {
+  const push = (date, weight, reps, src, label) => {
     const w = Number(weight), r = Number(reps);
     if (!(w > 0) || !(r >= 1) || Number.isNaN(w) || Number.isNaN(r)) return;
-    out.push({ date, weight: w, reps: Math.round(r), source, label });
+    out.push({ date, weight: w, reps: Math.round(r), source: src, label });
   };
 
-  for (const s of sessions) {
-    const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
-    if (!entry) continue;
-    for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', s.workoutName);
+  if (source !== 'benchmark') {
+    for (const s of sessions) {
+      const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
+      if (!entry) continue;
+      for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', s.workoutName);
+    }
   }
-  for (const b of benchmarks) {
-    if (b.exerciseId !== exerciseId) continue;
-    const v = b.values || {};
-    push(b.date, v.weight, v.reps, 'benchmark', 'Benchmark');
+  if (source !== 'workout') {
+    for (const b of benchmarks) {
+      if (b.exerciseId !== exerciseId) continue;
+      const v = b.values || {};
+      push(b.date, v.weight, v.reps, 'benchmark', 'Benchmark');
+    }
   }
 
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // The rep count everything gets compared at, by default.
-export async function defaultTargetReps(exerciseId) {
-  return modalReps(await weightRepObservations(exerciseId));
+export async function defaultTargetReps(exerciseId, source = null) {
+  return modalReps(await weightRepObservations(exerciseId, source));
 }
 
 // One point per day, every point expressed as the weight you would have lifted
@@ -486,12 +502,12 @@ export async function defaultTargetReps(exerciseId) {
 // that set wins (heaviest of them) and the point is marked `actual` — a real
 // measurement always beats an estimate. Otherwise the set with the highest
 // estimated 1RM wins and the point is marked as an estimate.
-export async function normalizedSeries(exerciseId, targetReps) {
+export async function normalizedSeries(exerciseId, targetReps, source = null) {
   const target = clampReps(targetReps);
   if (target === null) return [];
 
   const byDate = new Map();
-  for (const o of await weightRepObservations(exerciseId)) {
+  for (const o of await weightRepObservations(exerciseId, source)) {
     const isActual = o.reps === target;
     const value = isActual ? o.weight : normalizeWeight(o.weight, o.reps, target);
     if (!(value > 0)) continue;
@@ -525,49 +541,67 @@ export async function chartableExercises(min = 2) {
     store.getExerciseMap(),
   ]);
 
-  const counts = new Map(); // exerciseId -> { field -> Set(dates) }
-  const paired = new Map(); // exerciseId -> Set(dates carrying BOTH weight and reps)
+  // Everything is tracked PER SOURCE. A benchmark is a deliberate test; a set
+  // logged mid-workout is whatever the session called for. Mixing them into one
+  // line makes a jagged mess that looks like wild swings in strength, so the
+  // graph now charts one source at a time and this has to know which sources
+  // actually have enough data to offer.
+  const counts = new Map(); // exerciseId -> source -> field -> Set(dates)
 
-  const bump = (exId, field, date) => {
-    if (!counts.has(exId)) counts.set(exId, {});
-    const rec = counts.get(exId);
-    if (!rec[field]) rec[field] = new Set();
-    rec[field].add(date);
+  const rec = (exId) => {
+    if (!counts.has(exId)) counts.set(exId, { benchmark: {}, workout: {} });
+    return counts.get(exId);
   };
-  const bumpPair = (exId, date, rec) => {
-    const w = rec.weight, r = rec.reps;
+  const bump = (exId, src, field, date) => {
+    const r = rec(exId)[src];
+    if (!r[field]) r[field] = new Set();
+    r[field].add(date);
+  };
+  const bumpPair = (exId, src, date, values) => {
+    const w = values.weight, r = values.reps;
     if (typeof w !== 'number' || Number.isNaN(w) || !(w > 0)) return;
     if (typeof r !== 'number' || Number.isNaN(r) || !(r >= 1)) return;
-    if (!paired.has(exId)) paired.set(exId, new Set());
-    paired.get(exId).add(date);
+    const rr = rec(exId)[src];
+    if (!rr.__paired) rr.__paired = new Set();
+    rr.__paired.add(date);
   };
 
   for (const s of sessions) {
     for (const e of s.entries || []) {
       for (const set of e.sets || []) {
         for (const f of ['weight', 'reps', 'time', 'distance']) {
-          if (typeof set[f] === 'number' && !Number.isNaN(set[f])) bump(e.exerciseId, f, s.date);
+          if (typeof set[f] === 'number' && !Number.isNaN(set[f])) bump(e.exerciseId, 'workout', f, s.date);
         }
-        bumpPair(e.exerciseId, s.date, set);
+        bumpPair(e.exerciseId, 'workout', s.date, set);
       }
     }
   }
   for (const b of benchmarks) {
     for (const f of ['weight', 'reps', 'time', 'distance']) {
       const v = b.values ? b.values[f] : undefined;
-      if (typeof v === 'number' && !Number.isNaN(v)) bump(b.exerciseId, f, b.date);
+      if (typeof v === 'number' && !Number.isNaN(v)) bump(b.exerciseId, 'benchmark', f, b.date);
     }
-    bumpPair(b.exerciseId, b.date, b.values || {});
+    bumpPair(b.exerciseId, 'benchmark', b.date, b.values || {});
   }
 
   const out = [];
-  for (const [exId, rec] of counts) {
-    const fields = Object.keys(rec).filter((f) => rec[f].size >= min);
+  for (const [exId, perSource] of counts) {
     const ex = exMap.get(exId);
-    // Normalising needs enough days carrying a weight AND a rep count together.
-    const pairedDays = (paired.get(exId) || new Set()).size;
-    const normalizable = canNormalize(ex) && pairedDays >= min;
-    if (!fields.length && !normalizable) continue;
+    const canNorm = canNormalize(ex);
+
+    const sources = {};
+    for (const src of SOURCES) {
+      const r = perSource[src];
+      const fields = Object.keys(r).filter((f) => f !== '__paired' && r[f].size >= min);
+      const pairedDays = (r.__paired || new Set()).size;
+      sources[src] = { fields, pairedDays, normalizable: canNorm && pairedDays >= min };
+    }
+
+    // Offer the exercise only if at least ONE source can draw a line on its own.
+    // Otherwise it sits in the dropdown leading to an empty chart.
+    const usable = SOURCES.filter((s) => sources[s].fields.length || sources[s].normalizable);
+    if (!usable.length) continue;
+
     out.push({
       id: exId,
       name: ex ? ex.name : 'Unknown exercise',
@@ -575,8 +609,11 @@ export async function chartableExercises(min = 2) {
       equipment: ex ? ex.equipment : '',
       loadType: ex ? ex.loadType : null,
       exercise: ex || null,
-      normalizable,
-      fields,
+      sources,
+      usableSources: usable,
+      // Union across sources, kept so callers that ignore source still work.
+      normalizable: SOURCES.some((s) => sources[s].normalizable),
+      fields: [...new Set(SOURCES.flatMap((s) => sources[s].fields))],
     });
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
