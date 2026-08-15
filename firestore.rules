@@ -27,7 +27,7 @@ service cloud.firestore {
     // modified client cannot invent new ones and use the project as free
     // storage.
     function knownCollection(name) {
-      return name in ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings'];
+      return name in ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight'];
     }
 
     // Shape check. The app writes one document per collection, holding the

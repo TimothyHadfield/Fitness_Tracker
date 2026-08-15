@@ -12,7 +12,7 @@ const { BUILT_IN_EXERCISES, makeCustomExercise } = await import('../js/exercises
 const {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizeWorkout, DEFAULT_SETS, benchmarkComparison,
-  normalizedSeries, defaultTargetReps, weightRepObservations,
+  normalizedSeries, defaultTargetReps, weightRepObservations, ageFromBirthYear,
 } = await import('../js/store.js');
 const {
   e1rm, weightForReps, normalizeWeight, modalReps, canNormalize,
@@ -350,6 +350,57 @@ ok(makeCustomExercise({ name: 'Odd Lift', muscle: 'Back', equipment: 'Other', fi
    'custom weighted exercise keeps chosen load type');
 
 ok(/^\d{4}-\d{2}-\d{2}$/.test(todayISO()), `todayISO format (${todayISO()})`);
+
+/* ---------- profile + body weight ---------- */
+// Needed before the Muscle Groups map can rank anything: standards are ratios
+// to body weight and differ by sex.
+const blank = await store.getProfile();
+ok(blank.gender === null && blank.bodyWeight === null, 'a fresh profile is empty');
+ok(blank.missing.includes('gender') && blank.missing.includes('body weight'),
+   'the profile reports exactly what the map is still waiting on');
+
+await store.saveProfile({ gender: 'male', birthYear: 1994 });
+await store.logBodyWeight(181.5, '2026-08-10');
+const filled = await store.getProfile();
+ok(filled.gender === 'male', 'gender saved');
+ok(filled.birthYear === 1994, 'birth year saved');
+ok(filled.age === new Date().getFullYear() - 1994, `age derived from birth year (${filled.age})`);
+ok(filled.bodyWeight === 181.5, 'latest body weight surfaced on the profile');
+ok(filled.missing.length === 0, 'nothing missing once gender and weight exist');
+
+// Age is DERIVED, never stored — a stored age silently goes stale and quietly
+// moves someone into the wrong comparison band.
+ok(ageFromBirthYear(1994) === new Date().getFullYear() - 1994, 'ageFromBirthYear works');
+ok(ageFromBirthYear(null) === null && ageFromBirthYear('abc') === null, 'junk birth year yields no age');
+ok(ageFromBirthYear(1500) === null, 'implausible birth year rejected');
+ok((await store.getSettings()).age === undefined, 'age is never persisted, only birth year');
+
+// Body weight is a dated series, so the Tier 1 trend comes free.
+await store.logBodyWeight(179, '2026-08-14');
+await store.logBodyWeight(178, '2026-08-15');
+const weights = await store.getBodyWeights();
+ok(weights.length === 3, `body weight keeps every weigh-in (${weights.length})`);
+ok(weights[0].date === '2026-08-10' && weights[2].date === '2026-08-15', 'weigh-ins sorted by date');
+ok((await store.latestBodyWeight()).weight === 178, 'latest weigh-in wins for the profile');
+
+// A second weigh-in on the same day replaces the first rather than making the
+// trend jagged with intra-day noise.
+await store.logBodyWeight(177.5, '2026-08-15');
+const afterSameDay = await store.getBodyWeights();
+ok(afterSameDay.length === 3, 'same-day weigh-in replaces rather than appends');
+ok((await store.latestBodyWeight()).weight === 177.5, 'the replacement is what counts');
+
+let badWeight = false;
+try { await store.logBodyWeight(0); } catch { badWeight = true; }
+ok(badWeight, 'a non-positive weight is refused');
+
+await store.saveProfile({ birthYear: 3000 });
+ok((await store.getProfile()).birthYear === null, 'a future birth year is rejected');
+await store.saveProfile({ birthYear: 1994 });
+
+const toDelete = (await store.getBodyWeights())[0];
+await store.deleteBodyWeight(toDelete.id);
+ok((await store.getBodyWeights()).length === 2, 'a weigh-in can be deleted');
 
 /* ---------- accounts / cloud backend ---------- */
 // Only the pure helpers are testable headlessly — anything touching the

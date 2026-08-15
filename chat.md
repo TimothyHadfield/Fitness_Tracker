@@ -750,3 +750,44 @@ router for nothing a user can see.
 Watch: the segmented control lives in the header where a title would go. Three options is tighter
 than two, and "Muscle Groups" is the longest label — it may need to shorten to "Muscles" or become
 icons.
+
+### Seven levels, and the profile that unblocks the map
+
+Tim: *"add a level between the big gaps in categories"* and *"when setting up your profile, it should
+now ask your gender, age, and weight."*
+
+**Seven levels.** The five industry anchors (5/20/50/80/95) stay exactly where Strength Level and
+Gravitus put them — so our tier names still agree with the two biggest strength calculators — and one
+level is inserted into each of the two widest gaps: **Proficient** at 65 and **Expert** at 90.
+
+| | worst step | spread |
+|---|---|---|
+| 5 levels | +86 lb | 47 lb |
+| 7 levels | **+53 lb** | **24 lb** |
+
+The spread halves. Seven fills plus grey is the ceiling for a sequential ramp, so the `dataviz`
+validator has to confirm all seven stay separable under deuteranopia before the palette is fixed; if
+any pair fails, the inserted levels are the ones to drop, not the anchors.
+
+**Profile built** — `js/views-profile.js`, reached from Settings. Gender, birth year, body weight,
+each with a one-line explanation of why it is being asked for (D8: no unexplained demands for
+personal data in a fitness app).
+
+Three decisions worth recording:
+
+- **Birth year is stored, never age.** A stored age silently goes stale and quietly moves someone
+  into the wrong comparison band. Asserted in the tests.
+- **Body weight is a dated series, not a profile field.** It is needed as one current number for the
+  standards, but storing only that would throw away the Tier 1 trend line and force a migration
+  later. One row per weigh-in costs nothing now. A second weigh-in on the same day replaces the
+  first rather than making the trend jagged.
+- **The profile says what is missing**, and so does the Settings row — *"Add your gender and body
+  weight to rank your muscle groups"*. A silently empty profile is exactly why the map would later
+  look broken.
+
+**A trap caught on the way.** Adding a sixth collection meant `firestore.rules` would have denied
+every cloud write to it while localStorage worked fine — a bug that hides completely until someone
+signs in. Rules updated, redeployed, and verified live: `bodyWeight` writes accepted, unknown
+collections still refused. `COLLECTIONS` in `store.js` now carries a warning comment.
+
+172 assertions, up from 153.

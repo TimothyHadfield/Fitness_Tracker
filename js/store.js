@@ -14,7 +14,9 @@ import { IS_CONFIGURED } from './firebase-config.js';
 const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
 const NS = 'ftrack:v1:';
 
-const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings'];
+// ⚠️ Adding a collection here also requires adding it to knownCollection() in
+// firestore.rules and redeploying, or every cloud write to it is denied.
+const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight'];
 
 /* ------------------------------------------------------------------ *
  * Local backend
@@ -311,10 +313,88 @@ export const store = {
     }
   },
 
+  /* --- profile + body weight --- */
+
+  // Body weight is stored as a DATED SERIES rather than one number on the
+  // profile. It is needed as a single current value for strength standards, but
+  // storing only that would throw away the trend line Tier 1 wants — and it
+  // would be a migration later. One row per weigh-in costs nothing now.
+  async getBodyWeights() {
+    const rows = await backend.read('bodyWeight');
+    return rows
+      .filter((r) => r && typeof r.weight === 'number' && r.weight > 0 && r.date)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+
+  async logBodyWeight(weight, date) {
+    const w = Number(weight);
+    if (!(w > 0)) throw new Error('Enter a weight.');
+    const day = date || todayISO();
+    const rows = await backend.read('bodyWeight');
+    // One weigh-in per day; a second on the same day replaces the first rather
+    // than making the trend jagged with intra-day noise.
+    const existing = rows.find((r) => r.date === day);
+    const row = existing
+      ? { ...existing, weight: w, updatedAt: new Date().toISOString() }
+      : { id: uid('bw'), date: day, weight: w, createdAt: new Date().toISOString() };
+    await backend.write('bodyWeight', upsert(rows, row));
+    return row;
+  },
+
+  async deleteBodyWeight(id) {
+    const rows = await backend.read('bodyWeight');
+    await backend.write('bodyWeight', rows.filter((r) => r.id !== id));
+  },
+
+  async latestBodyWeight() {
+    const rows = await this.getBodyWeights();
+    return rows.length ? rows[rows.length - 1] : null;
+  },
+
+  // Everything the strength map needs about the person, in one call.
+  async getProfile() {
+    const [settings, latest] = await Promise.all([this.getSettings(), this.latestBodyWeight()]);
+    return {
+      gender: settings.gender || null,          // 'male' | 'female' | null
+      birthYear: settings.birthYear || null,
+      age: ageFromBirthYear(settings.birthYear),
+      bodyWeight: latest ? latest.weight : null,
+      bodyWeightDate: latest ? latest.date : null,
+      units: settings.units || 'lbs',
+      // What the strength map is still waiting on. Gender and body weight are
+      // required; age only changes which population you are compared against.
+      missing: [
+        !settings.gender && 'gender',
+        !latest && 'body weight',
+      ].filter(Boolean),
+    };
+  },
+
+  async saveProfile({ gender, birthYear }) {
+    const patch = {};
+    if (gender !== undefined) patch.gender = gender || null;
+    if (birthYear !== undefined) {
+      const y = Number(birthYear);
+      patch.birthYear = Number.isFinite(y) && y >= 1900 && y <= new Date().getFullYear()
+        ? Math.round(y)
+        : null;
+    }
+    return this.saveSettings(patch);
+  },
+
   async clearAll() {
     for (const c of COLLECTIONS) await backend.write(c, []);
   },
 };
+
+// Birth year is stored, never age. Age would silently go stale — someone who
+// entered 34 stays 34 forever and quietly drifts into the wrong comparison band.
+export function ageFromBirthYear(year) {
+  const y = Number(year);
+  if (!Number.isFinite(y) || y < 1900) return null;
+  const age = new Date().getFullYear() - y;
+  return age >= 5 && age <= 120 ? age : null;
+}
 
 /* ------------------------------------------------------------------ *
  * Accounts

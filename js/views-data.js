@@ -747,8 +747,17 @@ function describeAccount(state, configured) {
 }
 
 export async function SettingsView() {
-  const [settings, accountState] = await Promise.all([store.getSettings(), auth.state()]);
+  const [settings, accountState, profile] = await Promise.all([
+    store.getSettings(), auth.state(), store.getProfile(),
+  ]);
   const accountLine = describeAccount(accountState, auth.configured());
+  // Say what is missing rather than just "Profile" — this is what gates the
+  // Muscle Groups map, and a silent empty profile is why it would look broken.
+  const profileLine = profile.missing.length
+    ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
+    : `${profile.gender === 'female' ? 'Female' : 'Male'}`
+      + (profile.age ? `, ${profile.age}` : '')
+      + `, ${trimNum(profile.bodyWeight)} ${profile.units}`;
 
   async function doExport() {
     const data = await store.exportAll();
@@ -798,7 +807,14 @@ export async function SettingsView() {
         el('div', { class: 'field-help', text: 'Dark is easier to read under gym lighting.' }),
       ),
 
-      el('div', { class: 'section-label', text: 'Account' }),
+      el('div', { class: 'section-label', text: 'You' }),
+      el('a', { class: 'row', href: '#/profile' },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'Profile' }),
+          el('div', { class: 'row-sub', text: profileLine }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      ),
       el('a', { class: 'row', href: '#/account' },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: accountLine.title }),

@@ -16,7 +16,7 @@ upgrade preserving data. Only **Google sign-in** still needs a console toggle.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 153 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 172 assertions, all passing |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
@@ -127,14 +127,15 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Data (nav) | Renamed from Graphs 2026-08-15. Two modes so far — **Graph** (measured SVG line, **hover crosshair** snapping to the nearest point with its value and date) and **Bar Chart** (paired bars). A third, **Muscle Groups**, is planned (`docs/strength-map-plan.md`). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
 | Accounts | **Live.** Profile button in the true top-left — beside “Fitness Tracker” in the desktop sidebar, in the header on mobile (never both) — with a dot badge when data is not backed up. Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, **change password**, **delete account**, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
-| Settings | Dark/light, account status, export backup, restore backup, delete all |
+| Profile | Gender, birth year, and **body weight as a dated series** — prerequisites for Muscle Groups, and the Tier 1 body-weight trend in the same table. Says what is still missing rather than failing silently |
+| Settings | Dark/light, profile, account status, export backup, restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
 
 ### Verified
 - All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
   (catches missing exports without a browser)
-- **153 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- **172 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
@@ -418,9 +419,9 @@ rest timer.
 
 ## 9. Known gaps — deliberate, not bugs
 
-- **No body-weight tracking UI yet.** It's in Tier 1 and the store has no table for it. This is the
-  most visible Tier 1 hole, and it also blocks rep normalisation for the 14 bodyweight/assisted
-  exercises (their logged weight is added or assisted load, not total resistance).
+- **Body-weight tracking is now stored** (dated series, Profile screen) but **not yet charted**, and
+  it is not yet wired into rep normalisation for the 14 bodyweight/assisted exercises — their logged
+  weight is added or assisted load, not total resistance, and total resistance is now computable.
 - **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in
   an iOS home-screen app, so the code falls back to `signInWithRedirect` — which itself depends on
   third-party cookies while the auth domain differs from the site origin, and browsers are
@@ -450,11 +451,11 @@ rest timer.
 2. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
    not survived one real gym session, and neither the rep-normalised graph nor the account screens
    have ever been rendered.
-3. **Body-weight tracking** — the biggest remaining Tier 1 gap, and it now unblocks *three* things:
-   rep normalisation for bodyweight/assisted exercises (the logged weight is added load, not total
-   resistance), and both prerequisites of the **strength map** — which needs body weight and a
-   gender/age profile before it can compute anything at all. Plan in `docs/strength-map-plan.md`,
-   awaiting Tim's sign-off on four open questions.
+3. **Muscle Groups map** — the profile prerequisite is now built, so this is unblocked. Plan and
+   decisions in `docs/strength-map-plan.md`. Remaining open question: which muscle group the
+   deadlift fills.
+4. **Body-weight trend chart** and wiring body weight into rep normalisation for
+   bodyweight/assisted exercises. The data is now being collected for both.
 4. Then Tier 2, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim

@@ -9,8 +9,8 @@ benchmarks only for now; click a muscle to see the weight needed for each level 
 **Decided by Tim, 2026-08-15:**
 - Levels are ranked against **people who lift and log**, with an **optional second readout** showing
   the equivalent percentile among the general population (§2.1).
-- **Five levels**, the industry-standard scheme — and they stay lifter-based. The general-population
-  view shows a percentile, not a re-tiering (§3).
+- **Seven levels** — the five industry-standard anchors, plus one inserted into each of the two
+  widest gaps. Lifter-based; the general-population view shows a percentile, not a re-tiering (§3).
 - The map lives as a **third mode inside Data**, called **Muscle Groups**, beside **Graph** and
   **Bar Chart** (§7.1).
 
@@ -124,7 +124,11 @@ Also: the scheme has no band below the 25th, which is where a genuine beginner w
 exactly the person who most needs a near goal. Strength Level puts Beginner at the 5th and Novice at
 the 20th for that reason.
 
-### Decided: 5 levels, the industry-standard scheme
+### Decided: 7 levels
+
+The five industry anchors stay exactly where Strength Level and Gravitus put them, so our tier names
+still agree with the two biggest strength calculators on the internet. Two levels are inserted into
+the widest gaps — nothing existing moves.
 
 | Level | Lifter percentile | 180 lb male bench | Step |
 |---|---|---|---|
@@ -132,27 +136,34 @@ the 20th for that reason.
 | Beginner | 5 | 133 | — |
 | Novice | 20 | 172 | +39 |
 | Intermediate | 50 | 225 | +53 |
-| Advanced | 80 | 295 | +70 |
-| Elite | 95 | 381 | +86 |
+| **Proficient** | **65** | **255** | **+30** |
+| Advanced | 80 | 295 | +40 |
+| **Expert** | **90** | **339** | **+45** |
+| Elite | 95 | 381 | +42 |
 
-Matching Strength Level and Gravitus exactly has a practical benefit worth more than extra
-granularity: a user who checks their bench on either of those sites will see **the same word we
-show them**. Contradicting the two biggest strength calculators on the internet would cost more
-trust than a finer ramp would buy.
+Inserted levels in bold. The effect on spacing:
 
-### This makes the progress readout mandatory, not optional
+| | worst step | spread |
+|---|---|---|
+| 5 levels | +86 lb | 47 lb |
+| 7 levels | +53 lb | **24 lb** |
 
-Five levels means wide gaps — +70 lb from Intermediate to Advanced, +86 lb from Advanced to Elite.
-Somebody could train for a year without the colour changing, which is exactly the failure Tim was
-trying to avoid with more bands.
+The spread halves and the worst gap drops from +86 to +53 lb. No level now costs a year of training
+to clear.
 
-So the "nearby goal" has to come from the number instead, and it is **not** a nice-to-have:
+**Seven fills plus grey is the ceiling.** People reliably distinguish about 5–7 steps on a sequential
+ramp, so this sits right at the limit — the `dataviz` validator has to confirm all seven stay
+separable, including under deuteranopia, before the palette is committed. If any pair fails, the
+inserted levels are the ones to drop, not the anchors.
+
+### The progress readout is still required
+
+Even at +30 to +53 lb a step, somebody mid-band needs to know how far they are from the next one:
 
 > **Chest — Intermediate** · 240 lb
-> `██████░░░░░░░░` **55 lb to Advanced**
+> `██████░░░░░░░░` **15 lb to Proficient**
 
-Progress within the band, always visible. That is what gives a near goal to someone who just entered
-Intermediate and has 70 lb of runway ahead of them.
+The colour gives standing; the number gives the near goal.
 
 ## 4. Age — yes, collect it, and make the basis visible
 
