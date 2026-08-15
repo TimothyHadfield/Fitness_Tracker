@@ -668,3 +668,43 @@ Three details worth recording:
   a horizontal drag scrubs the chart.
 
 The readout flips its text anchor near the left and right edges so it never clips out of the plot.
+
+### Strength map — planned, not built
+
+Tim asked for a body diagram with each muscle group coloured by strength percentile against people
+of the same gender and weight, grey where nothing is recorded, benchmarks only, with per-level weight
+targets on click. He asked for a plan first, and for an opinion on his percentile bands and on
+whether to include age.
+
+Plan written to `docs/strength-map-plan.md`; the underlying research went into `docs/research.md`
+§11. Headlines:
+
+**Two hard blockers.** The app stores neither body weight nor gender, and every strength standard is
+a ratio to body weight. Body-weight tracking was already the top Tier 1 gap; it is now a hard
+prerequisite for this. So the map is two features away, not one.
+
+**The reference population is the whole feature.** "Stronger than 80 % of people your weight" is
+essentially false as usually written. Competition data puts the general population below its 50th
+percentile; general-population data would make every user Elite. The honest comparison is *people who
+lift and log*, and the UI has to say those words.
+
+**Tim's bands hold up better than expected.** Modelling the distribution as log-normal (σ ≈ 0.32,
+anchored to a 225 lb median bench at 180 lb bodyweight) shows his 25/50/70/80/90/95 steps are ~40 lb
+apart each — genuinely even in the units that matter. Three objections: nine colours is more than a
+sequential ramp can carry when the point is comparing regions at a glance; 99.5 is one in 200 and
+costs a colour better spent low down; and above ~97 the data thins out so publishing those thresholds
+implies precision that does not exist. Recommended seven levels, and pointed out that colour count is
+the wrong lever for his actual goal — a permanent "39 lb to Proficient" readout gives a near goal to
+everyone regardless of how wide the band is.
+
+**Age: yes.** Optional birth year, McCulloch-style age grading on by default, with a visible toggle
+between "my age group" and "everyone".
+
+**The image can't be used** — watermarked Dreamstime stock (© Vectorville). The body has to be
+hand-authored SVG, roughly 26 paths, which is the single largest piece of work in the feature.
+
+**A caveat carried forward:** research §1.3 notes the e1RM formula was optimised for internal
+consistency, *not* absolute accuracy. Rep normalisation only needed relative structure so that was
+harmless; percentile placement needs absolute accuracy, which is a stronger claim than the formula
+has been shown to support. Mitigation is to prefer ≤5-rep benchmarks and mark high-rep-derived
+levels as low confidence rather than pretend.

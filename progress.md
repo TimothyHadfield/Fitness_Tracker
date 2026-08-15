@@ -74,6 +74,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `chat.md` | Chronological human-readable log | After each substantive exchange |
 | `docs/spec.md` | Product + technical spec, data model | A feature or model decision is made |
 | `docs/research.md` | **All research, by category**, with evidence quality and sources | Anything is researched. Append — don't start new research files |
+| `docs/strength-map-plan.md` | Design for the muscle-map strength ranking | While that feature is being designed/built |
 | `docs/firebase-setup.md` | What Tim must do in the Firebase console | Firebase work |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) | Only if research is revisited |
 
@@ -449,10 +450,11 @@ rest timer.
 2. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
    not survived one real gym session, and neither the rep-normalised graph nor the account screens
    have ever been rendered.
-3. **Body-weight tracking** — the biggest remaining Tier 1 gap, and it now unblocks a second thing:
-   rep normalisation is switched off for bodyweight and assisted exercises because the logged
-   weight is added/assisted load rather than total resistance. Knowing the user's body weight makes
-   those computable.
+3. **Body-weight tracking** — the biggest remaining Tier 1 gap, and it now unblocks *three* things:
+   rep normalisation for bodyweight/assisted exercises (the logged weight is added load, not total
+   resistance), and both prerequisites of the **strength map** — which needs body weight and a
+   gender/age profile before it can compute anything at all. Plan in `docs/strength-map-plan.md`,
+   awaiting Tim's sign-off on four open questions.
 4. Then Tier 2, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim

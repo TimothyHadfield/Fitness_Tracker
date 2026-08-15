@@ -17,6 +17,7 @@ Each finding carries its evidence base, so it's clear which claims are solid and
 | Competitive landscape | [§7](#7-competitive-landscape) |
 | Data-viz colour validation | [§8](#8-data-viz-colour-validation) |
 | Unverified / open | [§9](#9-unverified-claims-and-open-questions) |
+| Strength standards & percentiles | [§11](#11-strength-standards-and-percentile-ranking) |
 | Full source list | [§10](#10-sources) |
 
 **Status legend** — 🟢 solid, multiple independent sources · 🟡 single good source · 🔴 thin or
@@ -485,3 +486,55 @@ Don't treat these as settled.
 **Competitive**
 
 - `docs/competitive-teardown.html` — full teardown of seven apps.
+
+---
+
+## 11. Strength standards and percentile ranking
+
+*Researched 2026-08-15 for the strength-map feature. Full design in `docs/strength-map-plan.md`.*
+
+**The reference population is the whole ballgame.** 🟢 Three different populations are used by three
+different sources, and they disagree enormously:
+
+| Source | Population | Size |
+|---|---|---|
+| Strength Level | app users who log lifts | 153 M lifts, 13 M lifters (Apr 2026) |
+| Gravitus | app users who log lifts | 10 M workouts, 300 k lifters |
+| Barbell Medicine | drug-tested competition entries | 809,986 entries, 15 federations, 1968–2022 |
+| ExRx | published bodyweight-multiple standards | methodology-based, conservative at upper tiers |
+
+Barbell Medicine states outright that **the general adult population sits well below the 50th
+percentile of competition data**. Strength Level and Gravitus both define tiers as fixed percentiles
+of their own logging population: **Beginner 5th, Novice 20th, Intermediate 50th, Advanced 80th,
+Elite 95th.** Those two agree with each other, which is reassuring for the middle of the range.
+
+**Cross-check at 180 lb male** — ExRx-style ratios vs Gravitus measured medians:
+
+| Lift | ExRx ratio → lb | Gravitus median |
+|---|---|---|
+| Bench press | 1.25× → 225 | 225 |
+| Back squat | 1.50× → 275 | 275 |
+| Deadlift | 1.75× → 315 | 320 |
+| Overhead press | 0.70× → 126 | 130 |
+| Barbell row | 1.10× → 198 | 205 |
+
+Independent methods landing within ~3 % is good evidence the middle of the distribution is solid.
+The tails are not — above roughly the 97th percentile the data thins and estimates diverge.
+
+**Sex.** 🟢 Women's standards run roughly 20–30 % lower in absolute ratio terms at the same body
+weight and training tier. Barbell Medicine's 90th percentile bench: 1.95× bodyweight male vs 1.35×
+female.
+
+**Age.** 🟢 Strength peaks ~23–40 and declines after. Powerlifting age-grades with the **McCulloch
+coefficients** (1.00 at 40, 1.130 at 50, 1.381 at 60) and **Foster** coefficients for ages 14–23.
+Trained populations decline substantially more slowly than untrained ones. Note this is *absolute
+strength* — distinct from Nuzzo et al. (§2) finding age did not moderate the reps–%1RM relationship.
+
+**Distribution shape.** 🟡 Roughly log-normal. Fitting σ ≈ 0.32 in log space to a 225 lb median
+reproduces the published tier anchors closely, and is what the band-spacing analysis in the plan
+document uses. Treat anything above the 97th percentile as unreliable.
+
+**Licensing.** Strength Level's dataset is proprietary — not scrapeable. ExRx standards are published
+and widely republished; OpenPowerlifting is openly licensed and allows computing percentiles
+directly. The stock anatomy image Tim referenced is a watermarked Dreamstime asset
+(ID 142535635, © Vectorville) and cannot be used — the body must be hand-authored SVG.
