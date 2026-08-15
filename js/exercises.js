@@ -323,22 +323,75 @@ export function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+/* ------------------------------------------------------------------ *
+ * How the weight is counted.
+ *
+ *   'per_side' — the number you enter is the load on ONE side.
+ *                Two 50 lb dumbbells = enter 50.
+ *   'total'    — the number you enter is the whole load.
+ *                A machine stack at 120 = enter 120.
+ *
+ * Default is derived from equipment; the two override lists below cover the
+ * cases where equipment alone gets it wrong.
+ * ------------------------------------------------------------------ */
+
+// Held in one hand / loaded one side at a time, despite not being a dumbbell.
+// Cable flys and crossovers each pull from their own stack, so the displayed
+// number is per side.
+const FORCE_PER_SIDE = new Set([
+  'Cable Fly', 'Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Cable Crossover',
+  'Cable Rear Delt Fly', 'Cable Lateral Raise', 'Bayesian Cable Curl', 'Cable Kickback',
+  'Machine Lateral Raise', 'Single-Arm Lat Pulldown', 'Meadows Row', 'Landmine Press',
+  'Suitcase Carry', 'Farmer Carry', 'Overhead Carry', 'Plate Pinch Hold',
+]);
+
+// One implement held with both hands, or a machine that moves one carriage —
+// so the number is the whole load even though the equipment suggests otherwise.
+const FORCE_TOTAL = new Set([
+  'Goblet Squat', 'Dumbbell Pullover', 'Kettlebell Swing', 'Svend Press',
+  'Russian Twist', 'Medicine Ball Slam', 'Single-Leg Press', 'Single-Leg Extension',
+  'Sumo Squat', 'Single-Leg Calf Raise', 'Single-Leg Hip Thrust', 'Wrist Roller',
+]);
+
+export function loadTypeFor(name, equipment, fields) {
+  if (!fields.includes('weight')) return null;      // nothing to disambiguate
+  if (FORCE_TOTAL.has(name)) return 'total';
+  if (FORCE_PER_SIDE.has(name)) return 'per_side';
+  if (/single-arm|one-arm/i.test(name)) return 'per_side';
+  if (equipment === 'Dumbbell' || equipment === 'Kettlebell') return 'per_side';
+  return 'total';
+}
+
+export const LOAD_LABEL = {
+  per_side: 'per side',
+  total: 'total',
+};
+
+// Longer form, used where there's room to be explicit.
+export const LOAD_HELP = {
+  per_side: 'Enter the weight of one side — one dumbbell, one stack, one hand.',
+  total: 'Enter the whole load — the bar plus plates, or the full stack.',
+};
+
 export const BUILT_IN_EXERCISES = RAW.map(([name, muscle, equipment, code]) => ({
   id: slugify(name) + '--' + slugify(muscle),
   name,
   muscle,
   equipment,
   fields: FIELDS[code],
+  loadType: loadTypeFor(name, equipment, FIELDS[code]),
   isCustom: false,
 }));
 
-export function makeCustomExercise({ name, muscle, equipment, fields }) {
+export function makeCustomExercise({ name, muscle, equipment, fields, loadType }) {
+  const f = fields && fields.length ? fields : ['weight', 'reps'];
   return {
     id: 'custom-' + slugify(name) + '-' + Date.now().toString(36),
     name: name.trim(),
     muscle: muscle || 'Other',
     equipment: equipment || 'Other',
-    fields: fields && fields.length ? fields : ['weight', 'reps'],
+    fields: f,
+    loadType: f.includes('weight') ? (loadType || 'total') : null,
     isCustom: true,
   };
 }

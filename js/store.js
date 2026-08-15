@@ -82,6 +82,29 @@ function upsert(rows, row) {
   return rows;
 }
 
+export const DEFAULT_SETS = 3;
+
+// Workouts used to be a bare list of exercise ids. They now carry a planned set
+// count and notes per exercise, so older saved workouts are upgraded on read.
+export function normalizeWorkout(w) {
+  if (!w) return w;
+  if (Array.isArray(w.exercises) && w.exercises.length) {
+    return {
+      ...w,
+      exercises: w.exercises.map((e) => ({
+        exerciseId: e.exerciseId,
+        sets: Number(e.sets) > 0 ? Number(e.sets) : DEFAULT_SETS,
+        notes: e.notes || '',
+      })),
+    };
+  }
+  const ids = Array.isArray(w.exerciseIds) ? w.exerciseIds : [];
+  return {
+    ...w,
+    exercises: ids.map((id) => ({ exerciseId: id, sets: DEFAULT_SETS, notes: '' })),
+  };
+}
+
 /* ------------------------------------------------------------------ *
  * Public API
  * ------------------------------------------------------------------ */
@@ -115,17 +138,19 @@ export const store = {
 
   async getWorkouts() {
     const rows = await backend.read('workouts');
-    return rows.sort((a, b) => a.name.localeCompare(b.name));
+    return rows.map(normalizeWorkout).sort((a, b) => a.name.localeCompare(b.name));
   },
 
   async getWorkout(id) {
     const rows = await backend.read('workouts');
-    return rows.find((r) => r.id === id) || null;
+    const row = rows.find((r) => r.id === id);
+    return row ? normalizeWorkout(row) : null;
   },
 
   async saveWorkout(workout) {
     const rows = await backend.read('workouts');
-    const row = { ...workout, updatedAt: new Date().toISOString() };
+    const row = { ...normalizeWorkout(workout), updatedAt: new Date().toISOString() };
+    delete row.exerciseIds; // superseded by `exercises`
     if (!row.id) row.id = uid('w');
     if (!row.createdAt) row.createdAt = row.updatedAt;
     await backend.write('workouts', upsert(rows, row));
@@ -312,6 +337,7 @@ export async function chartableExercises(min = 2) {
       id: exId,
       name: ex ? ex.name : 'Unknown exercise',
       muscle: ex ? ex.muscle : '',
+      loadType: ex ? ex.loadType : null,
       fields,
     });
   }

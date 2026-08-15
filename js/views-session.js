@@ -1,9 +1,10 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, todayISO, uid } from './store.js';
+import { store, todayISO } from './store.js';
+import { LOAD_LABEL } from './exercises.js';
 import {
   el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  fmtSet, confirmSheet, fmtDateLong,
+  fmtSet, confirmSheet, fmtDateLong, loadBadge,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
 
@@ -33,22 +34,34 @@ export async function SessionView(workoutId) {
   if (!workout) {
     return screenShell({
       title: 'Not found', back: () => go('#/home'),
-      body: emptyState('That workout no longer exists', 'It may have been deleted.'),
+      scroll: emptyState('That workout no longer exists', 'It may have been deleted.'),
     });
   }
 
   const exMap = await store.getExerciseMap();
-  const exercises = workout.exerciseIds.map((id) => exMap.get(id)).filter(Boolean);
+  const planned = workout.exercises
+    .map((item) => ({ item, ex: exMap.get(item.exerciseId) }))
+    .filter((p) => p.ex);
 
-  if (!exercises.length) {
+  if (!planned.length) {
     return screenShell({
       title: workout.name, back: () => go('#/home'),
-      body: emptyState('This workout has no exercises', 'Add some before running it.',
+      scroll: emptyState('This workout has no exercises', 'Add some before running it.',
         el('button', { class: 'btn primary', text: 'Edit workout', onClick: () => go('#/workout/' + workout.id) })),
     });
   }
 
-  // ---- build state, resuming a draft for this workout if one exists ----
+  function blankSet(fields) {
+    const s = {};
+    for (const f of fields) s[f] = 0;
+    return s;
+  }
+  function pickFields(src, fields) {
+    const s = {};
+    for (const f of fields) s[f] = typeof src[f] === 'number' ? src[f] : 0;
+    return s;
+  }
+
   // A draft only resumes on the same day. Yesterday's abandoned session should not
   // silently reappear and get saved with today's date.
   const rawDraft = loadDraft();
@@ -69,39 +82,36 @@ export async function SessionView(workoutId) {
       index: 0,
       entries: [],
     };
-    for (const ex of exercises) {
+
+    for (const { item, ex } of planned) {
       const last = await store.lastSetsFor(workout.id, ex.id);
-      const sets = last && last.length
-        ? last.map((s) => pickFields(s, ex.fields))
-        : [blankSet(ex.fields)];
+      // Build exactly the number of sets the workout plans for. Where history
+      // runs out, repeat the last recorded set rather than dropping to zero.
+      const sets = Array.from({ length: item.sets }, (_, i) => {
+        if (!last || !last.length) return blankSet(ex.fields);
+        return pickFields(last[Math.min(i, last.length - 1)], ex.fields);
+      });
+
       state.entries.push({
         exerciseId: ex.id,
         exerciseName: ex.name,
         fields: ex.fields,
+        loadType: ex.loadType,
+        notes: item.notes || '',
+        plannedSets: item.sets,
         sets,
         active: 0,
         hadHistory: Boolean(last && last.length),
-        lastSummary: last && last.length ? fmtSet(last[0], ex.fields) : null,
+        lastSummary: last && last.length ? fmtSet(last[0], ex.fields, ex.loadType) : null,
       });
     }
     saveDraft(state);
   }
 
-  function blankSet(fields) {
-    const s = {};
-    for (const f of fields) s[f] = 0;
-    return s;
-  }
-  function pickFields(src, fields) {
-    const s = {};
-    for (const f of fields) s[f] = typeof src[f] === 'number' ? src[f] : 0;
-    return s;
-  }
-
   /* ---- DOM scaffold ---- */
 
   const progress = el('div', { class: 'session-progress' });
-  const pane = el('div', { class: 'body' });
+  const pane = el('div', { class: 'pane-scroll' });
   const footer = el('div', { class: 'session-footer' });
 
   function renderProgress() {
@@ -125,10 +135,6 @@ export async function SessionView(workoutId) {
             class: 'btn primary',
             onClick: () => { state.index++; saveDraft(state); renderAll(); },
           }, 'Next exercise', icon('right')),
-      isLast ? null : el('button', {
-        class: 'nav-arrow', 'aria-label': 'Skip to next exercise',
-        onClick: () => { state.index++; saveDraft(state); renderAll(); },
-      }, icon('right')),
     );
   }
 
@@ -147,7 +153,7 @@ export async function SessionView(workoutId) {
               class: 'set-num', text: String(i + 1), 'aria-label': `Edit set ${i + 1}`,
               onClick: () => { entry.active = i; saveDraft(state); renderPane(); },
             }),
-            el('div', { class: 'set-vals', text: fmtSet(s, entry.fields) }),
+            el('div', { class: 'set-vals', text: fmtSet(s, entry.fields, entry.loadType) }),
             entry.sets.length > 1
               ? el('button', {
                   class: 'set-del', 'aria-label': `Delete set ${i + 1}`,
@@ -168,45 +174,56 @@ export async function SessionView(workoutId) {
       stepper({
         field: f,
         value: active[f],
+        suffix: f === 'weight' && entry.loadType ? LOAD_LABEL[entry.loadType] : null,
         onChange: (v) => { active[f] = v; saveDraft(state); renderSets(); },
       }).node);
 
     pane.replaceChildren(
-      el('div', {},
+      el('div', { class: 'session-head' },
         el('h2', { class: 'session-ex-name', text: entry.exerciseName }),
-        el('div', { class: 'session-ex-meta', text: `${ex ? ex.muscle : ''}${ex ? ' · ' + ex.equipment : ''} · Exercise ${state.index + 1} of ${state.entries.length}` }),
+        el('div', { class: 'session-ex-meta' },
+          `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${state.index + 1} of ${state.entries.length}`,
+        ),
+        entry.loadType ? el('div', { class: 'session-load' },
+          loadBadge(entry.loadType),
+          el('span', { text: entry.loadType === 'per_side' ? 'Enter one side’s weight' : 'Enter the whole load' }),
+        ) : null,
       ),
+
+      entry.notes
+        ? el('div', { class: 'note-card' }, el('b', { text: 'Note' }), el('span', { text: entry.notes }))
+        : null,
 
       entry.hadHistory
         ? el('div', { class: 'prefill-note' }, icon('check', 16),
-            el('span', {}, 'Filled in from last time: ', el('b', { text: entry.lastSummary })))
+            el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
         : el('div', { class: 'prefill-note' },
-            el('span', { text: 'First time logging this — enter your numbers and they will be remembered.' })),
+            el('span', { text: 'First time logging this — your numbers will be remembered.' })),
 
-      el('div', { class: 'section-label', text: `Set ${entry.active + 1}` }),
+      el('div', { class: 'section-label', text: `Set ${entry.active + 1} of ${entry.sets.length}` }),
       el('div', { class: 'steppers' }, steppers),
 
-      el('div', { class: 'section-label', text: 'Sets this exercise' }),
+      el('div', { class: 'section-label', text: 'Sets' }),
       setList,
 
       el('button', {
         class: 'btn block',
         onClick: () => {
-          const copy = { ...entry.sets[entry.sets.length - 1] };
-          entry.sets.push(copy);
+          entry.sets.push({ ...entry.sets[entry.sets.length - 1] });
           entry.active = entry.sets.length - 1;
           saveDraft(state);
           renderPane();
         },
       }, icon('plus'), 'Add another set'),
     );
+
+    pane.scrollTop = 0;
   }
 
   function renderAll() {
     renderProgress();
     renderPane();
     renderFooter();
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   }
 
   async function finish() {
@@ -237,18 +254,17 @@ export async function SessionView(workoutId) {
   }
 
   function showFinished(entries) {
-    const totalSets = entries.reduce((n, e) => n + e.sets.length, 0);
-    const root = document.getElementById('app');
-    root.replaceChildren(screenShell({
+    const setCount = entries.reduce((n, e) => n + e.sets.length, 0);
+    document.getElementById('app').replaceChildren(screenShell({
       title: 'Workout complete',
       noNav: true,
-      body: [
-        el('div', { class: 'finish-hero' },
-          el('div', { class: 'finish-check' }, icon('check')),
-          el('h2', { text: 'Nice work' }),
-          el('p', { text: `${state.workoutName} · ${entries.length} exercise${entries.length === 1 ? '' : 's'} · ${totalSets} set${totalSets === 1 ? '' : 's'}` }),
-          el('p', { text: `Saved to ${fmtDateLong(state.date)}` }),
-        ),
+      scroll: el('div', { class: 'finish-hero' },
+        el('div', { class: 'finish-check' }, icon('check')),
+        el('h2', { text: 'Nice work' }),
+        el('p', { text: `${state.workoutName} · ${entries.length} exercise${entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` }),
+        el('p', { text: `Saved to ${fmtDateLong(state.date)}` }),
+      ),
+      bottom: [
         el('button', { class: 'btn primary block', text: 'View this workout', onClick: () => go('#/day/' + state.date) }),
         el('button', { class: 'btn block', text: 'Back to home', onClick: () => go('#/home') }),
       ],
@@ -258,7 +274,7 @@ export async function SessionView(workoutId) {
   function quit() {
     confirmSheet({
       title: 'Leave this workout?',
-      message: 'Your progress is saved as a draft — you can pick up where you left off by starting this workout again.',
+      message: 'Your progress is saved as a draft — start this workout again today and you will pick up where you left off.',
       confirmLabel: 'Leave',
       danger: false,
       onConfirm: () => go('#/home'),
@@ -267,7 +283,7 @@ export async function SessionView(workoutId) {
 
   renderAll();
 
-  const screen = el('div', { class: 'screen no-nav' },
+  return el('div', { class: 'screen no-nav' },
     el('header', { class: 'topbar' },
       iconBtn('x', 'Leave workout', quit),
       el('div', { style: 'flex:1;min-width:0' },
@@ -279,8 +295,6 @@ export async function SessionView(workoutId) {
     pane,
     footer,
   );
-
-  return screen;
 }
 
 /* ================================================================== *
@@ -289,7 +303,6 @@ export async function SessionView(workoutId) {
 
 export async function BenchmarkView() {
   const exMap = await store.getExerciseMap();
-
   const state = { date: todayISO(), exercise: null, values: {} };
 
   const dateInput = el('input', {
@@ -317,7 +330,8 @@ export async function BenchmarkView() {
         state.values = {};
         for (const f of ex.fields) state.values[f] = 0;
         exBtn.querySelector('.row-title').textContent = ex.name;
-        exBtn.querySelector('.row-sub').textContent = `${ex.muscle} · ${ex.equipment}`;
+        exBtn.querySelector('.row-sub').textContent =
+          `${ex.muscle} · ${ex.equipment}${ex.loadType ? ' · weight ' + LOAD_LABEL[ex.loadType] : ''}`;
         renderSteppers();
         submitBtn.disabled = false;
         document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
@@ -329,14 +343,18 @@ export async function BenchmarkView() {
   function renderSteppers() {
     stepWrap.replaceChildren(
       ...state.exercise.fields.map((f) =>
-        stepper({ field: f, value: 0, onChange: (v) => { state.values[f] = v; } }).node),
+        stepper({
+          field: f,
+          value: 0,
+          suffix: f === 'weight' && state.exercise.loadType ? LOAD_LABEL[state.exercise.loadType] : null,
+          onChange: (v) => { state.values[f] = v; },
+        }).node),
     );
   }
 
   async function submit() {
     if (!state.exercise) { toast('Pick an exercise first'); return; }
-    const any = Object.values(state.values).some((v) => Number(v) > 0);
-    if (!any) { toast('Enter at least one number'); return; }
+    if (!Object.values(state.values).some((v) => Number(v) > 0)) { toast('Enter at least one number'); return; }
 
     await store.saveBenchmark({
       date: state.date,
@@ -353,12 +371,11 @@ export async function BenchmarkView() {
     title: 'Record a benchmark',
     sub: 'A one-off record, past or present',
     back: () => go('#/home'),
-    body: [
+    top: [
       el('div', { class: 'field' }, el('label', { text: 'Date' }), dateInput),
       el('div', { class: 'field' }, el('label', { text: 'Exercise' }), exBtn),
-      stepWrap,
-      el('div', { style: 'height:2px' }),
-      submitBtn,
     ],
+    scroll: stepWrap,
+    bottom: submitBtn,
   });
 }

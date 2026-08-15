@@ -62,14 +62,18 @@ async function render() {
   try {
     const screen = await resolve(route);
     clear(app);
-    if (!FULLSCREEN.includes(route.name)) app.append(navbar(route.name));
+    if (FULLSCREEN.includes(route.name)) {
+      // No bottom nav on these, so the screen itself owes the safe-area padding.
+      screen.classList.add('no-nav');
+    } else {
+      app.append(navbar(route.name));
+    }
     app.append(screen);
-    window.scrollTo(0, 0);
   } catch (err) {
     console.error(err);
     clear(app);
     app.append(el('div', { class: 'screen no-nav' },
-      el('div', { class: 'body' },
+      el('div', { class: 'pane-scroll' },
         el('div', { class: 'empty' },
           el('div', { class: 'empty-title', text: 'Something went wrong' }),
           el('p', { text: err.message || 'That screen could not be opened.' }),

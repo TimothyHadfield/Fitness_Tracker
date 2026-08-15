@@ -173,9 +173,11 @@ export function trimNum(n) {
   return Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100);
 }
 
-export function fmtSet(set, fields) {
+export function fmtSet(set, fields, loadType) {
   const parts = [];
-  if (fields.includes('weight') && set.weight != null) parts.push(`${trimNum(set.weight)} lbs`);
+  if (fields.includes('weight') && set.weight != null) {
+    parts.push(`${trimNum(set.weight)} lbs${loadType === 'per_side' ? '/side' : ''}`);
+  }
   if (fields.includes('reps') && set.reps != null) parts.push(`× ${trimNum(set.reps)}`);
   if (fields.includes('time') && set.time != null) parts.push(fmtTime(set.time));
   if (fields.includes('distance') && set.distance != null) parts.push(`${Number(set.distance).toFixed(2)} mi`);
@@ -210,7 +212,7 @@ export function relativeDay(iso) {
  * Big targets, tap-and-hold to repeat, direct typing allowed.
  * ------------------------------------------------------------------ */
 
-export function stepper({ field, value, onChange }) {
+export function stepper({ field, value, onChange, suffix }) {
   const meta = FIELD_META[field];
   let current = value == null ? 0 : Number(value);
 
@@ -264,7 +266,10 @@ export function stepper({ field, value, onChange }) {
   const plus = holdable(el('button', { class: 'step-btn', type: 'button', 'aria-label': `Increase ${meta.label}` }, icon('plus')), 1);
 
   const node = el('div', { class: 'stepper' },
-    el('div', { class: 'stepper-label', text: meta.label }),
+    el('div', { class: 'stepper-label' },
+      meta.label,
+      suffix ? el('em', { class: 'stepper-suffix', text: suffix }) : null,
+    ),
     el('div', { class: 'stepper-controls' }, minus, input, plus),
     el('div', { class: 'step-unit', text: stepHint(field, meta) }),
   );
@@ -277,6 +282,42 @@ function stepHint(field, meta) {
   if (field === 'weight') return `${meta.step} lb steps`;
   if (field === 'distance') return `${meta.step} mi steps`;
   return `1 rep steps`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Mini stepper — compact inline counter, used for planned set counts
+ * ------------------------------------------------------------------ */
+
+export function miniStepper({ value, min = 1, max = 20, onChange, label = 'Sets' }) {
+  let current = value;
+  const out = el('span', { class: 'mini-value mono', text: String(current) });
+
+  const step = (dir) => {
+    const next = Math.min(max, Math.max(min, current + dir));
+    if (next === current) return;
+    current = next;
+    out.textContent = String(current);
+    onChange(current);
+    if (navigator.vibrate) navigator.vibrate(6);
+  };
+
+  return el('div', { class: 'mini-stepper', role: 'group', 'aria-label': label },
+    el('button', { type: 'button', class: 'mini-btn', 'aria-label': `One fewer ${label}`, onClick: () => step(-1) }, icon('minus')),
+    out,
+    el('button', { type: 'button', class: 'mini-btn', 'aria-label': `One more ${label}`, onClick: () => step(1) }, icon('plus')),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Load-type badge — says whether a weight is per side or the whole load
+ * ------------------------------------------------------------------ */
+
+export function loadBadge(loadType) {
+  if (!loadType) return null;
+  return el('span', {
+    class: 'load-badge' + (loadType === 'per_side' ? ' per-side' : ''),
+    text: loadType === 'per_side' ? 'PER SIDE' : 'TOTAL',
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -295,7 +336,10 @@ export function emptyState(title, message, action) {
  * Screen shell — topbar + body, shared by every view
  * ------------------------------------------------------------------ */
 
-export function screenShell({ title, sub, back, actions, body, noNav, extraTop }) {
+// The page itself never scrolls. A screen is a fixed header, an optional fixed
+// region under it, exactly one scrolling region, and an optional fixed footer.
+// Anything that overflows scrolls inside `scroll` — never the window.
+export function screenShell({ title, sub, back, actions, top, scroll, bottom, body, noNav }) {
   const heading = el('div', { style: 'flex:1;min-width:0' },
     el('h1', { text: title }),
     sub ? el('div', { class: 'topbar-sub', text: sub }) : null,
@@ -307,7 +351,8 @@ export function screenShell({ title, sub, back, actions, body, noNav, extraTop }
       heading,
       ...(actions || []),
     ),
-    extraTop || null,
-    el('div', { class: 'body' }, body),
+    top ? el('div', { class: 'pane-top' }, top) : null,
+    el('div', { class: 'pane-scroll' }, scroll || body),
+    bottom ? el('div', { class: 'pane-bottom' }, bottom) : null,
   );
 }

@@ -1,13 +1,16 @@
 // Home, workout list, workout builder, exercise picker.
 
-import { store, uid } from './store.js';
-import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise } from './exercises.js';
+import { store, DEFAULT_SETS } from './store.js';
+import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
 import {
   el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
-  emptyState, relativeDay, fmtSet,
+  emptyState, relativeDay, miniStepper, loadBadge,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const totalSets = (w) => w.exercises.reduce((n, e) => n + e.sets, 0);
 
 /* ================================================================== *
  * Home
@@ -15,43 +18,42 @@ const go = (hash) => { location.hash = hash; };
 
 export async function HomeView() {
   const [workouts, sessions] = await Promise.all([store.getWorkouts(), store.getSessions()]);
-  const recent = sessions.slice(0, 5);
+  const recent = sessions.slice(0, 20);
 
-  const body = [
+  const top = [
     el('button', {
       class: 'btn primary lg block',
       onClick: () => (workouts.length ? go('#/start') : go('#/workout/new')),
     }, icon('play'), workouts.length ? 'Start a workout' : 'Create your first workout'),
 
-    el('button', {
-      class: 'btn block',
-      onClick: () => go('#/benchmark'),
-    }, icon('flag'), 'Record a benchmark'),
+    el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
+      icon('flag'), 'Record a benchmark'),
+  ];
 
+  const scroll = [
     el('div', { class: 'section-label', text: 'Recent activity' }),
-
     recent.length
-      ? el('div', { class: 'list' }, recent.map((s) => sessionRow(s)))
-      : emptyState(
-          'Nothing recorded yet',
-          'Once you finish a workout or log a benchmark, it will show up here and on your calendar.',
-        ),
+      ? el('div', { class: 'list' }, recent.map(sessionRow))
+      : emptyState('Nothing recorded yet',
+          'Once you finish a workout or log a benchmark, it will show up here and on your calendar.'),
   ];
 
   return screenShell({
     title: 'Fitness Tracker',
-    sub: workouts.length ? `${workouts.length} workout${workouts.length === 1 ? '' : 's'} saved` : 'Get started below',
+    sub: workouts.length ? `${plural(workouts.length, 'workout')} saved` : 'Get started below',
     actions: [iconBtn('sliders', 'Settings', () => go('#/settings'))],
-    body,
+    top,
+    scroll,
   });
 }
 
 function sessionRow(s) {
   const count = (s.entries || []).filter((e) => (e.sets || []).length).length;
+  const sets = (s.entries || []).reduce((n, e) => n + (e.sets || []).length, 0);
   return el('button', { class: 'row', onClick: () => go('#/day/' + s.date) },
     el('div', { class: 'row-main' },
       el('div', { class: 'row-title', text: s.workoutName || 'Workout' }),
-      el('div', { class: 'row-sub', text: `${relativeDay(s.date)} · ${count} exercise${count === 1 ? '' : 's'}` }),
+      el('div', { class: 'row-sub', text: `${relativeDay(s.date)} · ${plural(count, 'exercise')} · ${plural(sets, 'set')}` }),
     ),
     chevron(),
   );
@@ -64,19 +66,19 @@ function sessionRow(s) {
 export async function StartPickerView() {
   const workouts = await store.getWorkouts();
 
-  const body = workouts.length
+  const scroll = workouts.length
     ? el('div', { class: 'list' }, workouts.map((w) =>
         el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
           el('div', { class: 'row-main' },
             el('div', { class: 'row-title', text: w.name }),
-            el('div', { class: 'row-sub', text: `${w.exerciseIds.length} exercise${w.exerciseIds.length === 1 ? '' : 's'}` }),
+            el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
           ),
           chevron(),
         )))
     : emptyState('No workouts yet', 'Build a workout first, then you can run it here.',
         el('button', { class: 'btn primary', text: 'Build a workout', onClick: () => go('#/workout/new') }));
 
-  return screenShell({ title: 'Start a workout', back: () => go('#/home'), body });
+  return screenShell({ title: 'Start a workout', back: () => go('#/home'), scroll });
 }
 
 /* ================================================================== *
@@ -86,26 +88,23 @@ export async function StartPickerView() {
 export async function WorkoutsView() {
   const workouts = await store.getWorkouts();
 
-  const body = [
-    el('button', { class: 'btn primary block', onClick: () => go('#/workout/new') },
+  return screenShell({
+    title: 'Workouts',
+    sub: workouts.length ? plural(workouts.length, 'workout') : null,
+    top: el('button', { class: 'btn primary block', onClick: () => go('#/workout/new') },
       icon('plus'), 'New workout'),
-
-    workouts.length
+    scroll: workouts.length
       ? el('div', { class: 'list' }, workouts.map((w) =>
           el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
             el('div', { class: 'row-main' },
               el('div', { class: 'row-title', text: w.name }),
-              el('div', { class: 'row-sub', text: `${w.exerciseIds.length} exercise${w.exerciseIds.length === 1 ? '' : 's'}` }),
+              el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
             ),
             chevron(),
           )))
-      : emptyState(
-          'No workouts yet',
-          'A workout is a named list of exercises — Push, Legs, Upper, whatever you call it. Make as many as you like.',
-        ),
-  ];
-
-  return screenShell({ title: 'Workouts', body });
+      : emptyState('No workouts yet',
+          'A workout is a named list of exercises — Push, Legs, Upper, whatever you call it. Make as many as you like.'),
+  });
 }
 
 /* ================================================================== *
@@ -120,13 +119,13 @@ export async function WorkoutBuilderView(id) {
   if (!isNew && !existing) {
     return screenShell({
       title: 'Not found', back: () => go('#/workouts'),
-      body: emptyState('That workout no longer exists', 'It may have been deleted.'),
+      scroll: emptyState('That workout no longer exists', 'It may have been deleted.'),
     });
   }
 
   const draft = existing
-    ? { ...existing, exerciseIds: [...existing.exerciseIds] }
-    : { id: null, name: '', exerciseIds: [] };
+    ? { ...existing, exercises: existing.exercises.map((e) => ({ ...e })) }
+    : { id: null, name: '', exercises: [] };
 
   const nameInput = el('input', {
     class: 'input', type: 'text', value: draft.name, maxlength: '60',
@@ -135,33 +134,62 @@ export async function WorkoutBuilderView(id) {
   });
 
   const listWrap = el('div', { class: 'list' });
+  const countLabel = el('div', { class: 'section-label' });
 
   function renderList() {
+    countLabel.textContent = draft.exercises.length
+      ? `Exercises · ${plural(totalSets(draft), 'set')} total`
+      : 'Exercises';
+
     listWrap.replaceChildren();
-    if (!draft.exerciseIds.length) {
-      listWrap.append(emptyState('No exercises yet', 'Add exercises below. You can reorder them — that is the order you will see them in during the workout.'));
+
+    if (!draft.exercises.length) {
+      listWrap.append(emptyState('No exercises yet',
+        'Add exercises below. The order here is the order you will see them in during the workout.'));
       return;
     }
-    draft.exerciseIds.forEach((exId, i) => {
-      const ex = exMap.get(exId);
+
+    draft.exercises.forEach((item, i) => {
+      const ex = exMap.get(item.exerciseId);
+      const name = ex ? ex.name : 'Unknown exercise';
+
       listWrap.append(el('div', { class: 'builder-item' },
         el('div', { class: 'builder-main' },
-          el('div', { class: 'row-title', text: ex ? ex.name : 'Unknown exercise' }),
+          el('div', { class: 'row-title', text: name }),
           el('div', { class: 'row-sub', text: ex ? `${ex.muscle} · ${ex.equipment}` : 'Missing from library' }),
         ),
         el('div', { class: 'move-btns' },
           el('button', { type: 'button', 'aria-label': 'Move up', disabled: i === 0, onClick: () => move(i, -1) }, icon('up')),
-          el('button', { type: 'button', 'aria-label': 'Move down', disabled: i === draft.exerciseIds.length - 1, onClick: () => move(i, 1) }, icon('down')),
+          el('button', { type: 'button', 'aria-label': 'Move down', disabled: i === draft.exercises.length - 1, onClick: () => move(i, 1) }, icon('down')),
         ),
-        iconBtn('trash', 'Remove', () => { draft.exerciseIds.splice(i, 1); renderList(); }, 'icon-btn'),
+        iconBtn('trash', `Remove ${name}`, () => { draft.exercises.splice(i, 1); renderList(); }),
+
+        el('div', { class: 'builder-controls' },
+          el('span', { class: 'builder-control-label', text: 'Sets' }),
+          miniStepper({
+            value: item.sets, min: 1, max: 20,
+            label: 'planned sets',
+            onChange: (v) => { item.sets = v; countLabel.textContent = `Exercises · ${plural(totalSets(draft), 'set')} total`; },
+          }),
+          ex && ex.loadType ? loadBadge(ex.loadType) : null,
+        ),
+
+        el('textarea', {
+          class: 'builder-note',
+          rows: '1',
+          maxlength: '200',
+          placeholder: 'Notes — cues, seat height, rest, anything',
+          value: item.notes || '',
+          onInput: (e) => { item.notes = e.target.value; },
+        }),
       ));
     });
   }
 
   function move(i, dir) {
     const j = i + dir;
-    if (j < 0 || j >= draft.exerciseIds.length) return;
-    [draft.exerciseIds[i], draft.exerciseIds[j]] = [draft.exerciseIds[j], draft.exerciseIds[i]];
+    if (j < 0 || j >= draft.exercises.length) return;
+    [draft.exercises[i], draft.exercises[j]] = [draft.exercises[j], draft.exercises[i]];
     renderList();
   }
 
@@ -169,7 +197,7 @@ export async function WorkoutBuilderView(id) {
 
   async function save() {
     if (!draft.name.trim()) { toast('Give your workout a name first'); nameInput.focus(); return; }
-    if (!draft.exerciseIds.length) { toast('Add at least one exercise'); return; }
+    if (!draft.exercises.length) { toast('Add at least one exercise'); return; }
     await store.saveWorkout({ ...draft, name: draft.name.trim() });
     toast(isNew ? 'Workout created' : 'Workout saved');
     go('#/workouts');
@@ -183,31 +211,30 @@ export async function WorkoutBuilderView(id) {
     });
   }
 
-  const body = [
-    el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
-    el('div', { class: 'section-label', text: 'Exercises' }),
-    listWrap,
-    el('button', {
-      class: 'btn block',
-      onClick: () => openExercisePicker({
-        exMap,
-        onPick: (ex) => {
-          if (draft.exerciseIds.includes(ex.id)) { toast('Already in this workout'); return false; }
-          draft.exerciseIds.push(ex.id);
-          renderList();
-          return true;
-        },
-      }),
-    }, icon('plus'), 'Add exercise'),
-    el('div', { style: 'height:4px' }),
-    el('button', { class: 'btn primary block', text: isNew ? 'Create workout' : 'Save changes', onClick: save }),
-    isNew ? null : el('button', { class: 'btn danger block', text: 'Delete workout', onClick: remove }),
-  ];
-
   return screenShell({
     title: isNew ? 'New workout' : 'Edit workout',
     back: () => go('#/workouts'),
-    body,
+    top: el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
+    scroll: [
+      countLabel,
+      listWrap,
+      el('button', {
+        class: 'btn block',
+        onClick: () => openExercisePicker({
+          exMap,
+          onPick: (ex) => {
+            if (draft.exercises.some((e) => e.exerciseId === ex.id)) { toast('Already in this workout'); return false; }
+            draft.exercises.push({ exerciseId: ex.id, sets: DEFAULT_SETS, notes: '' });
+            renderList();
+            return true;
+          },
+        }),
+      }, icon('plus'), 'Add exercise'),
+    ],
+    bottom: [
+      el('button', { class: 'btn primary block', text: isNew ? 'Create workout' : 'Save changes', onClick: save }),
+      isNew ? null : el('button', { class: 'btn danger block', text: 'Delete workout', onClick: remove }),
+    ],
   });
 }
 
@@ -223,7 +250,7 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
   const results = el('div', { class: 'search-results' });
 
   const search = el('input', {
-    class: 'input', type: 'search', placeholder: 'Search 250+ exercises…',
+    class: 'input', type: 'search', placeholder: `Search ${all.length} exercises…`,
     autocomplete: 'off',
     onInput: (e) => { query = e.target.value.trim().toLowerCase(); render(); },
   });
@@ -245,15 +272,13 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
     let list = all;
     if (filterMuscle) list = list.filter((e) => e.muscle === filterMuscle);
     if (query) list = list.filter((e) => e.name.toLowerCase().includes(query) || e.equipment.toLowerCase().includes(query));
-    list = list.slice(0, 120);
+    list = list.slice(0, 150);
 
     results.replaceChildren();
 
     if (!list.length) {
-      results.append(emptyState(
-        'No exercise matches that',
-        query ? `Nothing found for “${query}”. You can create it as a custom exercise instead.` : 'Try a different filter.',
-      ));
+      results.append(emptyState('No exercise matches that',
+        query ? `Nothing found for “${query}”. You can create it as a custom exercise instead.` : 'Try a different filter.'));
       return;
     }
 
@@ -267,8 +292,11 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
       } },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: ex.name }),
-          el('div', { class: 'row-sub', text: `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}` }),
+          el('div', { class: 'row-sub' },
+            `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}`,
+          ),
         ),
+        ex.loadType ? loadBadge(ex.loadType) : null,
         chevron(),
       );
       results.append(btn);
@@ -279,11 +307,7 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
 
   const { close } = openSheet({
     title,
-    body: [
-      search,
-      chipRow,
-      results,
-    ],
+    body: [search, chipRow, results],
     footer: el('div', { class: 'btn-row' },
       el('button', { class: 'btn ghost', text: 'Create custom', onClick: () => { close(); openCustomExerciseSheet(onPick); } }),
       el('button', { class: 'btn primary', text: 'Done', onClick: () => close() }),
@@ -303,6 +327,32 @@ export function openCustomExerciseSheet(onPick) {
   const equip = el('select', { class: 'input' }, EQUIPMENT.map((m) => el('option', { value: m, text: m })));
 
   const chosen = new Set(['weight', 'reps']);
+  let loadType = 'total';
+
+  const help = el('div', { class: 'field-help', text: LOAD_HELP[loadType] });
+
+  const loadField = el('div', { class: 'field' },
+    el('label', { text: 'How is the weight counted?' }),
+    el('div', { class: 'chips' },
+      ['total', 'per_side'].map((lt) =>
+        el('button', {
+          class: 'chip', 'aria-pressed': String(lt === loadType),
+          text: lt === 'total' ? 'Total load' : 'Per side',
+          onClick: (e) => {
+            loadType = lt;
+            e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+            e.target.setAttribute('aria-pressed', 'true');
+            help.textContent = LOAD_HELP[loadType];
+          },
+        })),
+    ),
+    help,
+  );
+
+  function syncLoadVisibility() {
+    loadField.style.display = chosen.has('weight') ? '' : 'none';
+  }
+
   const fieldChips = el('div', { class: 'chips' },
     ['weight', 'reps', 'time', 'distance'].map((f) =>
       el('button', {
@@ -312,9 +362,12 @@ export function openCustomExerciseSheet(onPick) {
         onClick: (e) => {
           if (chosen.has(f)) chosen.delete(f); else chosen.add(f);
           e.target.setAttribute('aria-pressed', String(chosen.has(f)));
+          syncLoadVisibility();
         },
       })),
   );
+
+  syncLoadVisibility();
 
   const { close } = openSheet({
     title: 'Create custom exercise',
@@ -325,9 +378,9 @@ export function openCustomExerciseSheet(onPick) {
       el('div', { class: 'field' },
         el('label', { text: 'What do you want to track?' }),
         fieldChips,
-        el('div', { style: 'font-size:13px;color:var(--ink-faint);line-height:1.45' },
-          'These become the steppers you see during a workout.'),
+        el('div', { class: 'field-help', text: 'These become the steppers you see during a workout.' }),
       ),
+      loadField,
     ],
     footer: el('button', {
       class: 'btn primary block',
@@ -340,6 +393,7 @@ export function openCustomExerciseSheet(onPick) {
           muscle: muscle.value,
           equipment: equip.value,
           fields: ['weight', 'reps', 'time', 'distance'].filter((f) => chosen.has(f)),
+          loadType,
         });
         await store.addCustomExercise(ex);
         close();

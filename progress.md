@@ -176,23 +176,55 @@ No pre-built programs, no hypertrophy targets, no autoregulation — those stay 
 
 | Area | State |
 |---|---|
-| Custom workout builder | Name it, add any number of exercises, reorder, edit, delete |
+| Custom workout builder | Name it, add exercises, reorder, **set planned set count per exercise**, **per-exercise notes**, edit, delete |
 | Exercise library | **265 exercises**, searchable, filterable by 15 muscle groups |
-| Custom exercises | User-created, choose which fields to track |
-| Session runner | Prefills last time's numbers, ±steppers, next/back arrows, finish → calendar |
+| Custom exercises | User-created; choose tracked fields and how weight is counted |
+| Session runner | Builds the planned number of sets, prefills last time's numbers, ±steppers, next/back arrows, finish → calendar |
+| Load type | Every weighted exercise is labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires at end of day |
 | Benchmarks | Any date (default today), any exercise, saves to graph + calendar |
-| Calendar | Month grid, dots for workouts vs benchmarks, tap a day for full detail |
+| Calendar | Month grid; active days are colour-filled and **named** — workout title, or the word "Benchmark" |
 | Graphs | Pick exercise + metric, SVG line chart, start/now/change/change-% summary |
 | Settings | Dark/light, export backup, restore backup, delete all |
 
 ### Stepper increments (as specified)
 Reps ±1 · Weight ±5 lbs · Time ±10 sec · Distance ±0.1 mi. Press-and-hold repeats.
 
+### Layout rule (added 2026-08-14, round 2)
+
+**The window never scrolls.** `html, body { overflow: hidden }` and `#app` is a fixed
+`100dvh` flex container. Every screen is built by `screenShell({ top, scroll, bottom })`:
+
+- `.topbar` — fixed
+- `.pane-top` — fixed region under the header (name fields, primary actions, selectors)
+- `.pane-scroll` — **the one scrolling region**, `flex: 1; min-height: 0; overflow-y: auto`
+- `.pane-bottom` — fixed footer (save/delete, submit)
+
+`#app` uses `flex-direction: column-reverse` on mobile so the nav (first DOM child) sits at the
+bottom, and flips to `row` on desktop so the same element becomes a left sidebar. The session
+screen's set list has its own `max-height` + scroll so it can't push the steppers off-screen.
+
+**When adding a screen: never let content spill out of `scroll`.** Anything that must always be
+visible belongs in `top` or `bottom`.
+
+### Load-type rules (`js/exercises.js`)
+
+`loadTypeFor(name, equipment, fields)` returns `'per_side'`, `'total'`, or `null` (no weight
+tracked). Derived from equipment, with two explicit override sets for cases equipment gets wrong:
+
+- Dumbbell / kettlebell → per side; barbell / machine / plate → total
+- `FORCE_PER_SIDE` — cable flys and crossovers (two stacks), single-arm work, carries
+- `FORCE_TOTAL` — one implement held in two hands (goblet squat, KB swing, DB pullover),
+  single-limb *machines* (single-leg press)
+
+Recorded sets display as `50 lbs/side × 10` when per side. Tested: all 265 weighted exercises
+have a load type, and the tricky cases are asserted individually.
+
 ### Verified
 - All 9 JS modules pass syntax check
-- 23 data-layer assertions pass (`scratchpad/test-store.mjs`) covering prefill, series
-  building, best-set-per-day collapsing, the ≥2-points graph rule, calendar indexing,
+- **45 data-layer assertions pass** (`scratchpad/test-store.mjs`) covering load-type derivation,
+  planned set counts, legacy-workout migration, prefill, set-count building from short history,
+  series building, best-set-per-day collapsing, the ≥2-points graph rule, calendar indexing,
   and export/import round trip
 - All assets serve 200 over HTTP
 
@@ -247,15 +279,17 @@ Fitness_Tracker/
 3. **Firebase**, once Tim creates the project and pastes the config (`docs/firebase-setup.md`).
 4. Then Tier 2: programs, progression rules, volume-per-muscle, block comparison.
 
-### Known gaps in v1 (deliberate, not bugs)
+### Known gaps (deliberate, not bugs)
 
 - Sets are a flat list — no RIR, tempo, or set types yet, though `docs/spec.md` specifies them
   and the schema has room. Adding them is additive.
-- Only one exercise-level metric set per exercise; no supersets.
+- No supersets.
 - Weight is hard-coded to lbs in display. The unit setting exists in the store but is not wired
   to the UI yet.
 - No rest timer. It's in the spec (P1) and belongs in the session runner, but Tim's described
-  flow didn't call for it, so it was left out of this pass.
+  flow didn't call for it, so it was left out.
+- On a very small phone in a 6-row month, the calendar card may still scroll inside
+  `.pane-scroll`. That is the intended degradation — the inner box scrolls, never the page.
 
 ## 9. GitHub — done
 

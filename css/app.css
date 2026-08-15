@@ -62,11 +62,14 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* The window never scrolls. Every screen fits the viewport and any overflow
+   scrolls inside its own region instead. */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overscroll-behavior-y: none;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -95,24 +98,28 @@ button { cursor: pointer; border: 0; background: none; }
    Shell
    ========================================================================== */
 
-#app { min-height: 100%; display: flex; flex-direction: column; }
+/* column-reverse puts the nav (first child in the DOM) at the bottom on phones,
+   while the desktop media query flips it to a row so it becomes a left sidebar. */
+#app {
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
+}
 
 .screen {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(var(--bar-h) + var(--safe-b) + 12px);
+  overflow: hidden;
 }
-.screen.no-nav { padding-bottom: var(--safe-b); }
 
 .topbar {
-  position: sticky;
-  top: 0;
+  flex: none;
   z-index: 20;
-  background: var(--ground); /* fallback for browsers without color-mix */
-  background: color-mix(in srgb, var(--ground) 88%, transparent);
-  -webkit-backdrop-filter: saturate(150%) blur(12px);
-  backdrop-filter: saturate(150%) blur(12px);
+  background: var(--ground);
   border-bottom: 1px solid var(--rule-soft);
   padding: calc(env(safe-area-inset-top, 0px) + 12px) var(--pad) 12px;
   display: flex;
@@ -120,6 +127,41 @@ button { cursor: pointer; border: 0; background: none; }
   gap: 12px;
   min-height: 56px;
 }
+
+/* Exactly one of these scrolls. */
+.pane-top {
+  flex: none;
+  padding: var(--pad) var(--pad) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pane-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pane-top + .pane-scroll { padding-top: 4px; }
+
+.pane-bottom {
+  flex: none;
+  padding: 10px var(--pad) 12px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Without a bottom nav there is nothing else covering the home indicator, so
+   whichever region sits last has to clear it itself. */
+.screen.no-nav .pane-bottom { padding-bottom: calc(12px + var(--safe-b)); }
+.screen.no-nav .pane-scroll:last-child { padding-bottom: calc(var(--pad) + var(--safe-b)); }
 
 .topbar h1 {
   font-size: 21px;
@@ -150,6 +192,7 @@ button { cursor: pointer; border: 0; background: none; }
 .icon-btn:active { background: var(--raised); }
 .icon-btn svg { width: 22px; height: 22px; }
 
+/* Legacy alias — screenShell routes `body` into .pane-scroll now. */
 .body { padding: var(--pad); display: flex; flex-direction: column; gap: 16px; }
 
 /* ==========================================================================
@@ -157,16 +200,12 @@ button { cursor: pointer; border: 0; background: none; }
    ========================================================================== */
 
 .navbar {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
+  flex: none;
   z-index: 30;
   height: calc(var(--bar-h) + var(--safe-b));
   padding-bottom: var(--safe-b);
   display: flex;
-  background: var(--surface); /* fallback for browsers without color-mix */
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  -webkit-backdrop-filter: saturate(150%) blur(16px);
-  backdrop-filter: saturate(150%) blur(16px);
+  background: var(--surface);
   border-top: 1px solid var(--rule);
 }
 
@@ -282,6 +321,7 @@ button { cursor: pointer; border: 0; background: none; }
 
 .field { display: flex; flex-direction: column; gap: 7px; }
 .field label { font-size: 13px; font-weight: 620; color: var(--ink-soft); }
+.field-help { font-size: 13px; color: var(--ink-faint); line-height: 1.45; }
 
 .input, select.input, textarea.input {
   width: 100%;
@@ -343,6 +383,45 @@ select.input {
   color: var(--ink-faint);
   text-align: center;
 }
+.stepper-suffix {
+  font-style: normal;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+.stepper-suffix::before { content: " · "; color: var(--ink-faint); }
+
+/* ---- session header extras ---- */
+
+.session-head { display: flex; flex-direction: column; gap: 5px; }
+
+.session-load {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-top: 3px;
+}
+
+.note-card {
+  background: var(--raised);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.note-card b {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
 
 .stepper-controls { display: flex; align-items: center; gap: 10px; }
 
@@ -384,9 +463,10 @@ select.input {
    ========================================================================== */
 
 .session-progress {
+  flex: none;
   display: flex;
   gap: 4px;
-  padding: 0 var(--pad) 4px;
+  padding: 8px var(--pad) 4px;
 }
 .session-progress span {
   flex: 1;
@@ -419,7 +499,9 @@ select.input {
 }
 .prefill-note b { color: var(--accent); font-weight: 650; }
 
-.set-list { display: flex; flex-direction: column; gap: 6px; }
+/* The set list is the one part of the session screen allowed to grow, so it
+   gets its own scroll rather than pushing the steppers off-screen. */
+.set-list { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow-y: auto; overscroll-behavior: contain; }
 .set-item {
   display: flex;
   align-items: center;
@@ -446,14 +528,10 @@ select.input {
 .set-del svg { width: 16px; height: 16px; display: block; }
 
 .session-footer {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
+  flex: none;
   z-index: 30;
   padding: 12px var(--pad) calc(12px + var(--safe-b));
-  background: var(--surface); /* fallback for browsers without color-mix */
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  background: var(--surface);
   border-top: 1px solid var(--rule);
   display: flex;
   gap: 10px;
@@ -487,52 +565,91 @@ select.input {
 
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
 }
 .cal-dow {
   text-align: center;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--ink-faint);
-  padding-bottom: 4px;
+  padding-bottom: 2px;
   text-transform: uppercase;
 }
+
 .cal-cell {
-  aspect-ratio: 1;
-  border-radius: var(--r-sm);
+  min-height: 58px;
+  border-radius: 7px;
   background: var(--surface);
   border: 1px solid var(--rule-soft);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  font-size: 14px;
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-soft);
-  padding: 0;
+  align-items: stretch;
+  gap: 2px;
+  padding: 3px 3px 4px;
+  overflow: hidden;
+  text-align: left;
+  color: var(--ink-faint);
 }
 .cal-cell.blank { background: transparent; border-color: transparent; pointer-events: none; }
-.cal-cell.today { border-color: var(--accent); color: var(--accent); font-weight: 700; }
-.cal-cell.has-data { background: var(--raised); color: var(--ink); font-weight: 600; }
-.cal-cell:active:not(.blank) { background: var(--raised-hi); }
-.cal-dots { display: flex; gap: 3px; height: 5px; }
-.cal-dots i { width: 5px; height: 5px; border-radius: 50%; display: block; }
-.cal-dots i.w { background: var(--accent); }
-.cal-dots i.b { background: var(--good); }
+.cal-cell:active:not(.blank) { filter: brightness(1.25); }
 
-.legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--ink-faint); justify-content: center; }
+.cal-day {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 1px 2px;
+  flex: none;
+}
+.cal-cell.today { border-color: var(--accent); }
+.cal-cell.today .cal-day { color: var(--accent); font-weight: 800; }
+
+.cal-tags { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow: hidden; }
+
+/* Named, colour-filled labels instead of dots: the workout's own title for a
+   workout, the plain word "Benchmark" for a benchmark. */
+.cal-tag {
+  font-size: 8.5px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: 0.005em;
+  padding: 2.5px 3px;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+.cal-tag.w { background: var(--accent); color: var(--accent-ink); }
+.cal-tag.b { background: var(--good); color: #08130D; }
+.cal-tag.more { background: transparent; color: var(--ink-faint); padding: 0 3px; font-weight: 650; }
+
+:root[data-theme="light"] .cal-tag.b { color: #FFFFFF; }
+
+/* Whole-day tint so an active day reads at a glance from across the month. */
+.cal-cell.has-workout { background: var(--accent-dim); border-color: var(--accent); }
+.cal-cell.has-benchmark-only { background: var(--good-dim); border-color: var(--good); }
+
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-faint); justify-content: center; flex-wrap: wrap; }
 .legend span { display: flex; align-items: center; gap: 6px; }
-.legend i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+.legend i { width: 9px; height: 9px; border-radius: 3px; display: block; }
 .legend i.w { background: var(--accent); }
 .legend i.b { background: var(--good); }
 
 /* ==========================================================================
    Graph
    ========================================================================== */
+
+.chart-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
 
 .chart-wrap { width: 100%; overflow: hidden; }
 .chart { width: 100%; height: auto; display: block; touch-action: pan-y; }
@@ -568,6 +685,7 @@ select.input {
    ========================================================================== */
 
 .detail-ex { display: flex; flex-direction: column; gap: 8px; }
+.detail-ex-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .detail-ex-name { font-weight: 650; font-size: 16px; }
 .detail-sets { display: flex; flex-direction: column; gap: 5px; }
 .detail-set {
@@ -650,6 +768,50 @@ select.input {
    Reorderable exercise list in the workout builder
    ========================================================================== */
 
+/* ---- mini stepper (planned set counts) ---- */
+
+.mini-stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  padding: 2px;
+  flex: none;
+}
+.mini-btn {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 6px;
+  color: var(--ink-soft);
+}
+.mini-btn:active { background: var(--raised-hi); color: var(--ink); }
+.mini-btn svg { width: 15px; height: 15px; }
+.mini-value {
+  min-width: 22px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- load-type badge ---- */
+
+.load-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2.5px 6px;
+  border-radius: 4px;
+  background: var(--rule);
+  color: var(--ink-soft);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.load-badge.per-side { background: var(--accent-dim); color: var(--accent); }
+
 .builder-item {
   display: flex;
   align-items: center;
@@ -658,7 +820,36 @@ select.input {
   background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: var(--r);
+  flex-wrap: wrap;
 }
+.builder-controls {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.builder-control-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.builder-note {
+  flex-basis: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 14px;
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  resize: none;
+  width: 100%;
+}
+.builder-note::placeholder { color: var(--ink-faint); }
+.builder-note:focus { border-color: var(--accent); outline: none; }
 .builder-item .grip { color: var(--ink-faint); flex: none; display: grid; gap: 3px; }
 .builder-item .grip i { display: block; width: 14px; height: 2px; background: currentColor; border-radius: 1px; }
 .builder-main { flex: 1; min-width: 0; }
@@ -695,22 +886,22 @@ select.input {
 @media (min-width: 860px) {
   :root { --pad: 24px; }
 
-  #app { flex-direction: row; min-height: 100vh; }
+  /* row instead of column-reverse turns the bottom bar into a left sidebar */
+  #app { flex-direction: row; }
 
   .navbar {
-    position: sticky;
-    top: 0;
-    left: auto; right: auto; bottom: auto;
-    height: 100vh;
+    height: auto;
     width: 216px;
     flex: none;
     flex-direction: column;
     justify-content: flex-start;
     gap: 4px;
     padding: 24px 12px;
+    padding-bottom: 24px;
     border-top: 0;
     border-right: 1px solid var(--rule);
     background: var(--surface);
+    overflow-y: auto;
   }
   .navbar a {
     flex: none;
@@ -732,46 +923,38 @@ select.input {
     color: var(--ink);
   }
 
-  .screen { padding-bottom: 48px; min-width: 0; }
-  .screen.no-nav { padding-bottom: 0; }
+  .screen { min-width: 0; }
 
-  .topbar {
-    padding-top: 22px;
-    padding-bottom: 18px;
-    position: static;
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
+  .topbar { padding-top: 22px; padding-bottom: 18px; background: transparent; }
   .topbar h1 { font-size: 27px; }
 
+  /* Centre the content column while the scroll container keeps full width, so
+     the scrollbar sits at the edge of the pane rather than mid-page. */
+  .pane-top > *, .pane-scroll > *, .pane-bottom > * {
+    max-width: 880px; width: 100%; margin-inline: auto;
+  }
+  .pane-scroll { gap: 18px; }
   .body { max-width: 880px; gap: 20px; }
 
   .summary-grid { grid-template-columns: repeat(4, 1fr); }
   .stat.wide { grid-column: auto; }
 
-  .cal-grid { gap: 8px; }
-  .cal-cell { font-size: 15px; }
+  .cal-grid { gap: 6px; }
+  .cal-cell { min-height: 84px; padding: 5px; }
+  .cal-day { font-size: 13px; }
+  .cal-tag { font-size: 11px; padding: 3px 5px; }
 
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 16px; border-bottom: 1px solid var(--rule); max-height: 84vh; }
 
-  .session-footer {
-    position: sticky;
-    max-width: 880px;
-    margin: 0 auto;
-    border-radius: var(--r);
-    border: 1px solid var(--rule);
-    bottom: 24px;
-  }
+  .session-footer { padding-bottom: 14px; justify-content: center; }
+  .session-footer .btn { max-width: 720px; }
 
   .toast { bottom: 28px; }
-
-  /* two-up where the content genuinely pairs */
-  .split-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 }
 
 @media (min-width: 1200px) {
+  .pane-top > *, .pane-scroll > *, .pane-bottom > * { max-width: 1000px; }
   .body { max-width: 1000px; }
 }
 

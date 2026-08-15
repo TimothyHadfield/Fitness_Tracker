@@ -165,5 +165,27 @@ Tim chose a new public repo with GitHub Pages, and to delete the leftover empty
 **https://timothyhadfield.github.io/Fitness_Tracker/** — all assets verified serving with correct
 MIME types.
 
-**State at end of session:** v1 built, deployed, and live. Still awaiting a real browser/phone run
-by Tim, and Firebase credentials before cloud sync can be switched on.
+### Round 2 — four improvements
+
+Tim asked for four changes:
+
+1. **Sets and details in the workout builder** — each exercise in a workout now carries a planned
+   set count (mini +/− stepper) and a free-text note. The session runner builds exactly that many
+   sets, repeating the last recorded set where history runs short. Old workouts saved under the
+   previous shape migrate automatically on read.
+2. **No page scrolling, ever** — the window is now locked (`overflow: hidden`, `100dvh`). Each
+   screen is a fixed header, an optional fixed region, exactly one scrolling region, and an
+   optional fixed footer. Lists scroll inside their own box. The session set list got its own
+   capped scroll so it can't push the steppers off-screen.
+3. **Per-side vs total weight** — every weighted exercise is now labelled `PER SIDE` or `TOTAL`,
+   derived from equipment with explicit overrides for the cases equipment gets wrong (cable
+   crossovers are per side because they pull two stacks; a goblet squat is total because it's one
+   bell in two hands). Recorded sets read `50 lbs/side × 10`. Custom exercises let the user pick.
+4. **Named calendar days** — replaced the dots. A day with a workout is filled in accent and shows
+   the workout's own title; a benchmark day is filled green and reads "Benchmark". Multiple
+   workouts show the first two plus a "+N".
+
+Test coverage grew from 23 to 45 assertions, including every tricky load-type case individually.
+
+**State at end of session:** v1 + round 2 built, deployed, and live. Still awaiting a real
+browser/phone run by Tim, and Firebase credentials before cloud sync can be switched on.
