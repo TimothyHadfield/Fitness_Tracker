@@ -374,7 +374,23 @@ deliberately not the UI accent.
 Thresholds: OKLCH L in [0.48, 0.67] dark / [0.43, 0.77] light; chroma ≥ 0.10; CVD ΔE ≥ 8;
 normal-vision ΔE ≥ 15; contrast ≥ 3:1.
 
-**Before building any new chart, load the `dataviz` skill and run its validator.** Bars carry direct
+**Before building any new chart, load the `dataviz` skill and run its validator.**
+
+### Chart text contrast (checked 2026-08-15)
+
+The hover readout's halo is `--ground`, so its effective contrast is just the text colour against
+`--ground`:
+
+| Token | Dark | Light | |
+|---|---|---|---|
+| `--ink` | 16.25:1 | 15.84:1 | AA — used for the value |
+| `--ink-soft` | 7.15:1 | 5.46:1 | AA — used for the date |
+| `--ink-faint` | 3.94:1 | **3.05:1** | fails AA at small sizes |
+
+`--ink-faint` is fine for static captions and is used that way throughout the app, but it was
+switched to `--ink-soft` for the hover date — a 10.5px label someone is actively reading a number
+off deserves better than 3.05:1.
+ Bars carry direct
 value labels and text tags so identity is never colour-alone. A third series — needed if estimated
 and measured points get distinct colours — must be re-validated as a set of three, not bolted on.
 
