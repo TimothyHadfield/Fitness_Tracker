@@ -236,5 +236,23 @@ of 8). Bars also carry direct value labels and text tags so identity is never co
 
 Test suite moved into the repo at `tests/data-layer.test.mjs` and grew to 50 assertions.
 
-**State at end of session:** v1 + rounds 2–4 built, deployed, and live. Still awaiting a real
+### Round 5 — content first
+
+Tim: the graph and calendar screens gave roughly a third of the page each to selectors and
+"random details", squeezing the actual chart. His rule: **plan within the space you have — put the
+most important thing in as big as it will go, then fit the controls into what's left, not the
+other way round.**
+
+- The line chart is now **measured rather than fixed-size**: `fillChart()` reads the container's
+  real pixel dimensions and draws the SVG at exactly that, with a `ResizeObserver` handling
+  rotation. Gridlines and date labels scale with the available size. The plot went from a ~350px
+  cap to roughly 500px on a normal phone.
+- `screenShell({ title })` now accepts a DOM node, so a screen can put its primary control in the
+  header instead of a heading that just repeats the nav label. Graphs puts the mode switch there;
+  Calendar puts its legend there — each reclaiming a full row.
+- Graph controls collapsed from three stacked rows into one.
+- Bars thicken with the viewport (`clamp(13px, 2.4dvh, 24px)`) and rows flex to share the height,
+  so a short list fills the screen instead of clustering at the top.
+
+**State at end of session:** v1 + rounds 2–5 built, deployed, and live. Still awaiting a real
 browser/phone run by Tim, and Firebase credentials before cloud sync can be switched on.

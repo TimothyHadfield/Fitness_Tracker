@@ -136,6 +136,14 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   white-space: nowrap;
 }
 
+/* A screen may put a control in the header instead of a heading. */
+.topbar-slot { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+.topbar-slot h1 { flex: none; }
+
+.cal-topbar { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cal-topbar h1 { flex: none; }
+.cal-topbar .legend { flex: 1; justify-content: flex-end; gap: 10px; }
+
 .icon-btn {
   width: 36px; height: 36px;
   display: grid; place-items: center;
@@ -584,7 +592,23 @@ select.input {
   --series-now:   #96660F;
 }
 
-.graph-controls { display: flex; flex-direction: column; gap: 8px; }
+/* The chart claims the screen; controls take what's left. */
+.graph-controls { display: flex; flex-direction: column; gap: 6px; }
+
+.control-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.control-row .input.compact {
+  flex: 1 1 150px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+.chips.tight { gap: 4px; flex: none; }
+.chips.tight .chip { padding: 6px 10px; font-size: 12.5px; }
+
+.graph-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.chart-foot { flex: none; display: flex; flex-direction: column; gap: 5px; }
 
 .segmented {
   display: flex;
@@ -610,8 +634,25 @@ select.input {
 .bar-legend i.k-start { background: var(--series-start); }
 .bar-legend i.k-now { background: var(--series-now); }
 
-.bars { display: flex; flex-direction: column; }
-.bar-row { display: flex; flex-direction: column; gap: 3px; padding: 9px 0; }
+/* Bars fill the available height: rows share the space, and the bars themselves
+   thicken with the viewport instead of leaving a band of dead space. */
+.bars {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+.bar-row {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0;
+  min-height: 62px;
+}
 .bar-row + .bar-row { border-top: 1px solid var(--rule-soft); }
 
 .bar-head { display: flex; align-items: baseline; gap: 8px; }
@@ -638,9 +679,9 @@ select.input {
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-.bar-track { flex: 1; min-width: 0; height: 14px; display: flex; align-items: center; }
+.bar-track { flex: 1; min-width: 0; display: flex; align-items: center; }
 /* 4px rounded data-end, anchored flat to the baseline at the start */
-.bar { height: 14px; border-radius: 0 4px 4px 0; min-width: 3px; }
+.bar { height: clamp(13px, 2.4dvh, 24px); border-radius: 0 4px 4px 0; min-width: 3px; }
 .bar.start { background: var(--series-start); }
 .bar.now { background: var(--series-now); }
 .bar-val {
@@ -653,8 +694,10 @@ select.input {
 }
 
 .chart-caption { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-faint); }
-.chart-wrap { width: 100%; min-height: 0; }
-.chart { width: 100%; height: auto; display: block; max-height: 42dvh; }
+/* The plot area takes every pixel left over; JS measures it and draws the SVG
+   at that exact size, so the chart never letterboxes. */
+.chart-wrap { flex: 1; min-height: 120px; width: 100%; position: relative; }
+.chart { display: block; }
 .chart .grid-line { stroke: var(--rule); stroke-width: 1; }
 .chart .axis-text { fill: var(--ink-faint); font-size: 10px; font-family: var(--mono); }
 .chart .series-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -671,12 +714,12 @@ select.input {
   border-radius: var(--r);
   overflow: hidden;
 }
-.stat { background: var(--ground); padding: 8px 9px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.stat-label { font-size: 9.5px; font-weight: 750; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
+.stat { background: var(--ground); padding: 6px 8px; display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.stat-label { font-size: 9px; font-weight: 750; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
 .stat-value {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  font-size: 17px;
+  font-size: 15.5px;
   font-weight: 650;
   letter-spacing: -0.03em;
   overflow: hidden;

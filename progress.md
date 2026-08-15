@@ -230,6 +230,25 @@ bottom, and flips to `row` on desktop so the same element becomes a left sidebar
 **When adding a screen:** anything that must always be visible goes in `top` or `bottom`, and the
 default assumption is that `scroll` will not scroll.
 
+### Rule 3 — content first, controls in the leftover (round 5)
+
+Tim's instruction: *"start with the most important thing and put it as big as you can, and then put
+the selectors or whatever other things in the leftover space, not the opposite."*
+
+Budget the screen for the content, then fit controls into what remains — never the reverse.
+Applied so far:
+
+- **The line chart is measured, not fixed.** `fillChart()` reads the container's real pixel size
+  and draws the SVG at exactly that, via a `ResizeObserver` that also handles rotation. Gridline
+  count and date-label density scale with the size. On a ~850px viewport the plot gets ~500px,
+  against ~350px capped before.
+- **`screenShell({ title })` accepts a DOM node**, so a screen can put its primary control in the
+  header instead of a heading that repeats the nav label. Graphs puts the Over-time/Start-vs-now
+  switch there; Calendar puts its legend there.
+- Graph controls collapsed from three stacked rows to one `.control-row`.
+- Bars use `clamp(13px, 2.4dvh, 24px)` so they thicken with the viewport instead of leaving dead
+  space, and rows flex to share the height.
+
 **The calendar is the deliberate exception** (round 4): months run as one continuous vertical
 scroll with sticky per-month headings, opening scrolled to the current month. The range is at
 least 12 months, extended back to the earliest recorded day.

@@ -93,15 +93,16 @@ export async function CalendarView() {
   const activity = await activityByDate();
   const today = todayISO();
   const months = monthRange(activity);
-  const totalDays = activity.size;
 
+  // The grid is the content, so the legend rides in the header rather than
+  // costing a row of its own.
   const screen = screenShell({
-    title: 'Calendar',
-    sub: totalDays ? `${totalDays} day${totalDays === 1 ? '' : 's'} recorded` : 'Nothing recorded yet',
-    top: el('div', { class: 'legend' },
-      el('span', {}, el('i', { class: 'w' }), 'Workout'),
-      el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
-      el('span', { text: 'Scroll for other months' }),
+    title: el('div', { class: 'cal-topbar' },
+      el('h1', { text: 'Calendar' }),
+      el('div', { class: 'legend' },
+        el('span', {}, el('i', { class: 'w' }), 'Workout'),
+        el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
+      ),
     ),
     scroll: months.map(({ year, month }) => monthBlock(year, month, activity, today)),
   });
@@ -231,8 +232,10 @@ export async function GraphView() {
   if (!options.length) graphMode = 'compare';
   if (!comparison.fields.length) graphMode = 'trend';
 
+  // The chart owns the screen. Controls are one compact row, and the mode switch
+  // lives in the header instead of a redundant "Graphs" heading.
   const top = el('div', { class: 'graph-controls' });
-  const host = el('div', { class: 'card' });
+  const host = el('div', { class: 'graph-host' });
 
   const modeSwitch = el('div', { class: 'segmented', role: 'tablist' },
     [['trend', 'Over time'], ['compare', 'Start vs now']].map(([m, label]) =>
@@ -254,22 +257,25 @@ export async function GraphView() {
     if (!opt.fields.includes(graphChoice.field)) graphChoice.field = opt.fields[0];
 
     top.replaceChildren(
-      modeSwitch,
-      el('select', {
-        class: 'input',
-        'aria-label': 'Exercise',
-        onChange: (e) => {
-          graphChoice.exerciseId = e.target.value;
-          graphChoice.field = options.find((o) => o.id === e.target.value).fields[0];
-          render();
-        },
-      }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId }))),
-      el('div', { class: 'chips' }, opt.fields.map((f) =>
-        el('button', {
-          class: 'chip', 'aria-pressed': String(f === graphChoice.field),
-          text: FIELD_META[f].label,
-          onClick: () => { graphChoice.field = f; render(); },
-        }))),
+      el('div', { class: 'control-row' },
+        el('select', {
+          class: 'input compact',
+          'aria-label': 'Exercise',
+          onChange: (e) => {
+            graphChoice.exerciseId = e.target.value;
+            graphChoice.field = options.find((o) => o.id === e.target.value).fields[0];
+            render();
+          },
+        }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId }))),
+        opt.fields.length > 1
+          ? el('div', { class: 'chips tight' }, opt.fields.map((f) =>
+              el('button', {
+                class: 'chip', 'aria-pressed': String(f === graphChoice.field),
+                text: FIELD_META[f].label,
+                onClick: () => { graphChoice.field = f; render(); },
+              })))
+          : null,
+      ),
     );
 
     const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field);
@@ -278,14 +284,18 @@ export async function GraphView() {
       return;
     }
 
+    const plot = el('div', { class: 'chart-wrap' });
     host.replaceChildren(
-      graphChoice.field === 'weight' && opt.loadType
-        ? el('div', { class: 'chart-caption' }, loadBadge(opt.loadType),
-            el('span', { text: `Weight shown is ${LOAD_LABEL[opt.loadType]}` }))
-        : null,
-      el('div', { class: 'chart-wrap' }, lineChart(points, graphChoice.field)),
-      summaryStats(points, graphChoice.field),
+      plot,
+      el('div', { class: 'chart-foot' },
+        summaryStats(points, graphChoice.field),
+        graphChoice.field === 'weight' && opt.loadType
+          ? el('div', { class: 'chart-caption' }, loadBadge(opt.loadType),
+              el('span', { text: `weight shown is ${LOAD_LABEL[opt.loadType]}` }))
+          : null,
+      ),
     );
+    fillChart(plot, points, graphChoice.field);
   }
 
   /* ---------- compare (paired bars, benchmarks only) ---------- */
@@ -295,28 +305,29 @@ export async function GraphView() {
     const rows = comparison.byField[compareField];
 
     top.replaceChildren(
-      modeSwitch,
-      comparison.fields.length > 1
-        ? el('div', { class: 'chips' }, comparison.fields.map((f) =>
-            el('button', {
-              class: 'chip', 'aria-pressed': String(f === compareField),
-              text: FIELD_META[f].label,
-              onClick: () => { compareField = f; render(); },
-            })))
-        : null,
-      el('div', { class: 'bar-legend' },
-        el('span', {}, el('i', { class: 'k-start' }), 'First benchmark'),
-        el('span', {}, el('i', { class: 'k-now' }), 'Latest benchmark'),
+      el('div', { class: 'control-row' },
+        comparison.fields.length > 1
+          ? el('div', { class: 'chips tight' }, comparison.fields.map((f) =>
+              el('button', {
+                class: 'chip', 'aria-pressed': String(f === compareField),
+                text: FIELD_META[f].label,
+                onClick: () => { compareField = f; render(); },
+              })))
+          : null,
+        el('div', { class: 'bar-legend' },
+          el('span', {}, el('i', { class: 'k-start' }), 'First'),
+          el('span', {}, el('i', { class: 'k-now' }), 'Latest'),
+        ),
       ),
     );
 
+    const note = comparison.incomplete[compareField];
     host.replaceChildren(
-      el('div', { class: 'chart-caption' },
-        el('span', { text: `Benchmarks only — workout logs are not included.` })),
       barChart(rows, compareField),
-      comparison.incomplete[compareField]
-        ? el('div', { class: 'field-help', text: `${comparison.incomplete[compareField]} more exercise${comparison.incomplete[compareField] === 1 ? '' : 's'} need a second benchmark before they can be compared.` })
-        : null,
+      el('div', { class: 'chart-foot' },
+        el('div', { class: 'chart-caption' },
+          el('span', { text: 'Benchmarks only' + (note ? ` · ${note} more need a second benchmark` : '') })),
+      ),
     );
   }
 
@@ -330,13 +341,36 @@ export async function GraphView() {
   await render();
 
   return screenShell({
-    title: 'Graphs',
-    sub: graphMode === 'compare'
-      ? `${(comparison.byField[compareField || comparison.fields[0]] || []).length} exercise${(comparison.byField[compareField || comparison.fields[0]] || []).length === 1 ? '' : 's'} benchmarked twice`
-      : `${options.length} exercise${options.length === 1 ? '' : 's'} with enough data to chart`,
+    title: modeSwitch,
     top,
     scroll: host,
   });
+}
+
+/* ---- draw the line chart at the pixel size of its container ---- */
+
+let chartObserver = null;
+
+function fillChart(host, points, field) {
+  let lastW = 0, lastH = 0;
+
+  const draw = () => {
+    const w = Math.round(host.clientWidth);
+    const h = Math.round(host.clientHeight);
+    if (w < 60 || h < 60) return;          // not laid out yet
+    if (w === lastW && h === lastH) return; // nothing changed
+    lastW = w; lastH = h;
+    host.replaceChildren(lineChart(points, field, w, h));
+  };
+
+  // The observer is the reliable trigger — it fires once the element is in the
+  // document and again on rotation or resize. The rAF just avoids a blank frame.
+  if (chartObserver) chartObserver.disconnect();
+  requestAnimationFrame(draw);
+  if (typeof ResizeObserver !== 'undefined') {
+    chartObserver = new ResizeObserver(draw);
+    chartObserver.observe(host);
+  }
 }
 
 /* ---- paired horizontal bars: first benchmark vs latest ---- */
@@ -380,8 +414,8 @@ function barChart(rows, field) {
 
 /* ---- SVG line chart ---- */
 
-function lineChart(points, field) {
-  const W = 360, H = 220, padL = 42, padR = 14, padT = 16, padB = 30;
+function lineChart(points, field, W = 360, H = 220) {
+  const padL = 44, padR = 12, padT = 12, padB = 26;
   const iw = W - padL - padR, ih = H - padT - padB;
 
   const ts = points.map((p) => new Date(p.date + 'T00:00:00').getTime());
@@ -399,6 +433,8 @@ function lineChart(points, field) {
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
   svg.setAttribute('class', 'chart');
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `${FIELD_META[field].label} over time`);
@@ -411,8 +447,10 @@ function lineChart(points, field) {
     return n;
   };
 
-  for (let i = 0; i <= 3; i++) {
-    const v = vMin + ((vMax - vMin) * i) / 3;
+  // More gridlines when there is more height to fill.
+  const steps = ih > 300 ? 5 : ih > 170 ? 4 : 3;
+  for (let i = 0; i <= steps; i++) {
+    const v = vMin + ((vMax - vMin) * i) / steps;
     const yy = y(v);
     add('line', { x1: padL, x2: W - padR, y1: yy, y2: yy }, 'grid-line');
     const t = add('text', { x: padL - 7, y: yy + 3.5, 'text-anchor': 'end' }, 'axis-text');
@@ -425,13 +463,16 @@ function lineChart(points, field) {
 
   points.forEach((p, i) => {
     const last = i === points.length - 1;
-    add('circle', { cx: x(ts[i]).toFixed(1), cy: y(p.value).toFixed(1), r: last ? 5 : 3.6 },
+    add('circle', { cx: x(ts[i]).toFixed(1), cy: y(p.value).toFixed(1), r: last ? 5.5 : 4 },
       last ? 'pt pt-last' : 'pt' + (p.source === 'benchmark' ? ' bench' : ''));
   });
 
-  const labelIdx = points.length > 3
-    ? [0, Math.floor((points.length - 1) / 2), points.length - 1]
-    : [0, points.length - 1];
+  // Roughly one date label per 90px of width.
+  const maxLabels = Math.max(2, Math.min(points.length, Math.floor(iw / 90)));
+  const labelIdx = points.length <= 2
+    ? [0, points.length - 1]
+    : Array.from({ length: maxLabels }, (_, i) =>
+        Math.round((i * (points.length - 1)) / (maxLabels - 1)));
   [...new Set(labelIdx)].forEach((i) => {
     const t = add('text', {
       x: x(ts[i]).toFixed(1),

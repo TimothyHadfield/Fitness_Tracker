@@ -339,11 +339,16 @@ export function emptyState(title, message, action) {
 // The page itself never scrolls. A screen is a fixed header, an optional fixed
 // region under it, exactly one scrolling region, and an optional fixed footer.
 // Anything that overflows scrolls inside `scroll` — never the window.
+// `title` may be a string or a DOM node. Passing a node lets a screen put its
+// primary control in the header instead of a redundant heading, which buys back
+// a whole row for the content.
 export function screenShell({ title, sub, back, actions, top, scroll, bottom, body, noNav }) {
-  const heading = el('div', { style: 'flex:1;min-width:0' },
-    el('h1', { text: title }),
-    sub ? el('div', { class: 'topbar-sub', text: sub }) : null,
-  );
+  const heading = title instanceof Node
+    ? el('div', { class: 'topbar-slot' }, title)
+    : el('div', { style: 'flex:1;min-width:0' },
+        el('h1', { text: title }),
+        sub ? el('div', { class: 'topbar-sub', text: sub }) : null,
+      );
 
   return el('div', { class: 'screen' + (noNav ? ' no-nav' : '') },
     el('header', { class: 'topbar' },
