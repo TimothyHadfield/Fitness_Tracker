@@ -5,15 +5,15 @@
 > conversation log you only need in order to answer "what did we say about X".
 
 **Last updated:** 2026-08-15
-**Status:** Working app, deployed and live. Five rounds of refinement done. Firebase written but
-not connected. **Never yet seen running in a real browser.**
+**Status:** Working app, deployed and live. Five rounds of refinement, plus rep normalisation (D11)
+shipped 2026-08-15. Firebase written but not connected. **Never yet seen running in a real browser.**
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 50 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 108 assertions, all passing |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
 It needs a server — ES modules do not load over `file://`.
@@ -58,6 +58,9 @@ Tim is the **manager**; Claude is the **builder**.
   so questions buried in text get missed.
 - **Keep replies short with the conclusion first**, for the same reason.
 - Maintain `progress.md` and `chat.md` continuously, unprompted.
+- **Always commit and push when a piece of work is finished — don't ask.** Standing instruction from
+  Tim, 2026-08-15. Pages redeploys in ~40s, so pushing is how he sees the work at all. Update the
+  docs in the same commit. (Run git from inside `Fitness_Tracker/` — see §0.1.)
 
 ### File upkeep
 
@@ -66,6 +69,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `progress.md` | State, decisions, rules, next steps. **The catch-up file.** | Any decision, milestone, or scope change |
 | `chat.md` | Chronological human-readable log | After each substantive exchange |
 | `docs/spec.md` | Product + technical spec, data model | A feature or model decision is made |
+| `docs/research.md` | **All research, by category**, with evidence quality and sources | Anything is researched. Append — don't start new research files |
 | `docs/firebase-setup.md` | What Tim must do in the Firebase console | Firebase work |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) | Only if research is revisited |
 
@@ -115,16 +119,18 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Draft recovery | In-progress workout survives an app switch; expires at end of day |
 | Benchmarks | Any date (default today), any exercise → graph + calendar |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
-| Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**) |
+| Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**). Weight+reps exercises are **rep-normalised** — see below |
+| Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
 | Settings | Dark/light, export backup, restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
 
 ### Verified
-- All 9 JS modules pass syntax check
-- **50 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- All 10 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
+  (catches missing exports without a browser)
+- **108 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
 - Every class referenced in JS has a matching CSS rule
-- All assets serve 200 with correct MIME types from Pages
+- All assets serve 200 with correct MIME types
 
 ### NOT verified
 - **No browser has ever rendered this.** Layout, touch behaviour, and the measured-chart sizing are
@@ -150,6 +156,7 @@ Fitness_Tracker/
 ├── js/
 │   ├── app.js                  hash router + boot
 │   ├── store.js                data layer — async API, backend-agnostic
+│   ├── e1rm.js                 rep normalisation — pure maths, no DOM (D11)
 │   ├── exercises.js            265-exercise library + load-type rules
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, formatters, screenShell
 │   ├── views-workouts.js       home, workout list, builder, exercise picker
@@ -239,6 +246,16 @@ Budget the screen for the content, then fit controls into what remains. Applied:
 - The calendar is the one place that scrolls by design: months run continuously with sticky
   headings, opening on the current month, spanning at least 12 months back.
 
+### Rule 4 — a marker means measured
+
+On the rep-normalised chart, a circle means *you actually lifted this, at this rep count*.
+Estimated points carry no marker and are held by the line alone. Bars mark estimates with a
+diagonal hatch, not a fade — texture survives greyscale and colour-blindness, and the validated
+series colours stay untouched.
+
+The general form of the rule: **never let an inference look like a measurement.** Anything derived
+must be visually separable from anything recorded, by a cue that is not colour alone.
+
 ### Chart colours — validate, never eyeball
 
 `--series-start` / `--series-now` in `css/app.css`. Deliberately **not** the UI accent.
@@ -275,7 +292,8 @@ Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have
 | D2 | **Lifting only.** | Focus. |
 | D3 | **Weekly sets per muscle group is the headline metric**, not per-exercise charts. | What hypertrophy responds to (~10–20 hard sets/muscle/week). Only Alpha Progression ($79.99/yr) does it. Biggest differentiator available. **Not built yet — Tier 2.** |
 | D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets survive on whole-block visibility, structural freedom, visible formulas, permanence. Apps only win the logging loop. Take both. |
-| D5 | **e1RM must be rep-range honest.** Epley for 2–5 reps, Brzycki for 6–10, de-emphasize anything above 10. | Formulas are ±2–10% inside 2–10 reps and degrade badly above. Nobody else shows this. **Not built yet.** |
+| D5 | **e1RM must be rep-range honest.** Full confidence 2–10 reps, flag 11–15, don't normalise above 15. | Formulas degrade badly above ~10 reps. **Superseded the Epley/Brzycki split — see D11.** Not built yet. |
+| D11 | **Use the Marzagão (2026) weight-dependent formula for all e1RM work**, not Epley/Brzycki. `1RM = w × (1 + (r−1)^0.85 / k(w))`, `k(w) = max(0.5, −2.55 + 4.58·ln(w_kg))`. | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator — not sex, age, or training status). Every classical formula uses one fixed factor for all 265 exercises. This one varies it with load and is 17–22% more internally consistent across 388 exercises, positive for all 183 tested, biggest gains on the light isolation work that dominates our library. Full write-up + limits in `docs/research.md` §1. |
 | D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. |
 | D7 | **No social feed.** | Repeatedly cited as unwanted in Hevy reviews. |
 | D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery — jargon wall on day one. |
@@ -306,7 +324,14 @@ Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have
 
 ## 7. Research summary
 
-Full teardown: `docs/competitive-teardown.html`, also at
+**All research now lives in `docs/research.md`**, by category, with evidence quality graded and
+sources listed. Append to it rather than starting new research files. Categories so far:
+rep-normalisation/e1RM, reps↔%1RM, proximity to failure, fatigue & rest, velocity-based training,
+volume & the rep continuum, competitive landscape, data-viz colour, and an explicit
+unverified-claims list.
+
+Competitive teardown below is the condensed version; full one is
+`docs/competitive-teardown.html`, also at
 https://claude.ai/code/artifact/e3a7adce-c1cf-4284-8eff-762db7da6bbd
 
 **Analyzed:** Strong, Hevy, Boostcamp, Liftosaur, Alpha Progression, RP Hypertrophy, Fitbod.
@@ -327,14 +352,17 @@ working?"
 own accumulated data (Hevy caps free at 3 months of graph history).
 
 **Unverified claims — don't treat as settled:** that Hevy requires a connection to log; whether
-Liftosaur's cloud sync is paid.
+Liftosaur's cloud sync is paid. Fuller list in `docs/research.md` §9.
+
+**Note:** Fitbod published the weight-dependent e1RM formula (D11) from its own user data. If they
+ship it in-product, it stops being a differentiator.
 
 ---
 
 ## 8. Roadmap
 
 **Tier 1 — beat the spreadsheet** — mostly DONE. Remaining: body-weight tracking with a trend line,
-rep-range-honest e1RM chart, rest timer.
+rest timer.
 
 **Tier 2 — programs and analysis**
 - Program builder (desktop) → execution (mobile)
@@ -355,7 +383,12 @@ rep-range-honest e1RM chart, rest timer.
 ## 9. Known gaps — deliberate, not bugs
 
 - **No body-weight tracking UI yet.** It's in Tier 1 and the store has no table for it. This is the
-  most visible Tier 1 hole.
+  most visible Tier 1 hole, and it also blocks rep normalisation for the 14 bodyweight/assisted
+  exercises (their logged weight is added or assisted load, not total resistance).
+- **Rep normalisation assumes near-failure effort.** Every rep-based 1RM formula does. The bias is
+  systematic per user per exercise so trend and ordering survive, but inconsistent effort between
+  benchmarks is noise the chart cannot see. There is no RIR/RPE field to correct with — deliberate,
+  D9 (progressive disclosure), but worth revisiting if the numbers look erratic in real use.
 - **No rest timer.** In the spec, but Tim's described flow didn't call for it.
 - Sets are a flat list — no RIR, tempo, or set types. `docs/spec.md` specifies them and the schema
   has room; adding them is additive.
@@ -368,15 +401,22 @@ rep-range-honest e1RM chart, rest timer.
 
 ## 10. Next steps
 
-1. **Tim clicks through the app on his phone** and reports what's wrong. Nothing else should be
-   built until the core loop has survived one real gym session.
+1. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
+   not survived one real gym session, and the rep-normalised graph has never been rendered.
 2. **Firebase**, once Tim creates the project and pastes config into `js/firebase-config.js`
    (`docs/firebase-setup.md` has the 5-minute console walkthrough). The adapter is written and
    waiting; flip `BACKEND` in `store.js` and test.
-3. **Body-weight tracking** — the biggest Tier 1 gap.
+3. **Body-weight tracking** — the biggest remaining Tier 1 gap, and it now unblocks a second thing:
+   rep normalisation is switched off for bodyweight and assisted exercises because the logged
+   weight is added/assisted load rather than total resistance. Knowing the user's body weight makes
+   those computable.
 4. Then Tier 2, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
 None outstanding. All prior questions were answered on 2026-08-14 (see §2 Audience).
 When something genuinely open arises, use the AskUserQuestion box, not prose.
+
+One thing to raise when the feature is built: whether to also expose **raw e1RM** as a chart mode
+alongside normalised equivalent load. Lean is no for now — normalised load keeps the numbers in
+units the user actually recognises.

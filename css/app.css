@@ -668,6 +668,8 @@ select.input {
 .bar-delta { font-size: 12.5px; font-weight: 650; color: var(--ink-faint); flex: none; }
 .bar-delta.up { color: var(--good); }
 .bar-delta.down { color: var(--danger); }
+/* The rep count this row's weights were normalised to. */
+.bar-reps { font-size: 11px; color: var(--ink-faint); flex: none; }
 
 .bar-line { display: flex; align-items: center; gap: 7px; }
 .bar-tag {
@@ -684,6 +686,14 @@ select.input {
 .bar { height: clamp(13px, 2.4dvh, 24px); border-radius: 0 4px 4px 0; min-width: 3px; }
 .bar.start { background: var(--series-start); }
 .bar.now { background: var(--series-now); }
+/* An estimated endpoint is hatched, not just faded — texture survives
+   greyscale and colour-blindness, and the series colours stay unaltered.
+   Must follow .bar.start/.bar.now: those set background shorthand, which
+   would otherwise clear this image. */
+.bar.est {
+  background-image: repeating-linear-gradient(135deg,
+    transparent 0 4px, var(--ground) 4px 6px);
+}
 .bar-val {
   width: 54px;
   flex: none;
@@ -692,8 +702,24 @@ select.input {
   font-weight: 620;
   color: var(--ink-soft);
 }
+.bar-val.est { color: var(--ink-faint); font-style: italic; }
 
 .chart-caption { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-faint); }
+.chart-caption.warn { color: var(--ink-soft); }
+
+/* The rep count every point on the chart is compared at. Sits beside the
+   exercise name because it is part of reading the y-axis, not a filter. */
+.rep-target { display: flex; align-items: center; gap: 6px; flex: none; }
+.rep-target-label {
+  font-size: 9px; font-weight: 750; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* Legend swatch drawn to match the chart's own marker: a ring means measured. */
+.pt-key {
+  width: 9px; height: 9px; border-radius: 50%; flex: none;
+  background: var(--ground); border: 2.5px solid var(--accent); box-sizing: content-box;
+}
 /* The plot area takes every pixel left over; JS measures it and draws the SVG
    at that exact size, so the chart never letterboxes. */
 .chart-wrap { flex: 1; min-height: 120px; width: 100%; position: relative; }

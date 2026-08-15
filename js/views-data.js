@@ -2,10 +2,14 @@
 
 import {
   store, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
+  normalizedSeries, defaultTargetReps,
 } from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
-  el, iconBtn, toast, screenShell, emptyState, confirmSheet,
+  clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
+} from './e1rm.js';
+import {
+  el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper,
   fmtSet, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 
@@ -214,6 +218,9 @@ function refresh() {
 let graphChoice = { exerciseId: null, field: null };
 let graphMode = 'trend'; // 'trend' | 'compare'
 let compareField = null;
+// exerciseId -> rep count everything is compared at. Seeded from the most
+// frequently recorded rep count, then whatever the user steps it to.
+const targetReps = new Map();
 
 export async function GraphView() {
   const [options, comparison] = await Promise.all([chartableExercises(2), benchmarkComparison(2)]);
@@ -254,19 +261,29 @@ export async function GraphView() {
       graphChoice = { exerciseId: options[0].id, field: options[0].fields[0] };
     }
     const opt = options.find((o) => o.id === graphChoice.exerciseId);
+
+    const picker = el('select', {
+      class: 'input compact',
+      'aria-label': 'Exercise',
+      onChange: (e) => {
+        graphChoice.exerciseId = e.target.value;
+        const next = options.find((o) => o.id === e.target.value);
+        graphChoice.field = next.fields[0];
+        targetReps.delete(e.target.value); // recompute the default for the new exercise
+        render();
+      },
+    }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId })));
+
+    if (opt.normalizable) return renderNormalized(opt, picker);
+
+    // Everything else keeps a plain metric selector: for a weighted carry or a
+    // run, the two metrics do not trade off against each other the way weight
+    // and reps do, so choosing between them is a real choice.
     if (!opt.fields.includes(graphChoice.field)) graphChoice.field = opt.fields[0];
 
     top.replaceChildren(
       el('div', { class: 'control-row' },
-        el('select', {
-          class: 'input compact',
-          'aria-label': 'Exercise',
-          onChange: (e) => {
-            graphChoice.exerciseId = e.target.value;
-            graphChoice.field = options.find((o) => o.id === e.target.value).fields[0];
-            render();
-          },
-        }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId }))),
+        picker,
         opt.fields.length > 1
           ? el('div', { class: 'chips tight' }, opt.fields.map((f) =>
               el('button', {
@@ -284,6 +301,7 @@ export async function GraphView() {
       return;
     }
 
+    const blocked = normalizeBlockedReason(opt.exercise);
     const plot = el('div', { class: 'chart-wrap' });
     host.replaceChildren(
       plot,
@@ -293,9 +311,73 @@ export async function GraphView() {
           ? el('div', { class: 'chart-caption' }, loadBadge(opt.loadType),
               el('span', { text: `weight shown is ${LOAD_LABEL[opt.loadType]}` }))
           : null,
+        blocked
+          ? el('div', { class: 'chart-caption' },
+              el('span', { text: `Not compared at a fixed rep count — ${blocked}.` }))
+          : null,
       ),
     );
     fillChart(plot, points, graphChoice.field);
+  }
+
+  /* ---------- rep-normalised trend (weight + reps exercises) ---------- */
+
+  async function renderNormalized(opt, picker) {
+    let target = targetReps.get(opt.id);
+    if (target == null) {
+      target = clampReps(await defaultTargetReps(opt.id)) || 10;
+      targetReps.set(opt.id, target);
+    }
+
+    top.replaceChildren(
+      el('div', { class: 'control-row' },
+        picker,
+        el('div', { class: 'rep-target' },
+          miniStepper({
+            value: target,
+            min: MIN_TARGET_REPS,
+            max: MAX_TARGET_REPS,
+            label: 'reps',
+            onChange: (v) => { targetReps.set(opt.id, v); render(); },
+          }),
+          el('span', { class: 'rep-target-label', text: 'reps' }),
+        ),
+      ),
+    );
+
+    const points = await normalizedSeries(opt.id, target);
+    if (points.length < 2) {
+      host.replaceChildren(emptyState('Only one data point',
+        'Record this exercise with a weight and a rep count on another day to see a line.'));
+      return;
+    }
+
+    const measured = points.filter((p) => p.actual).length;
+    const conf = repConfidence(target);
+    const plot = el('div', { class: 'chart-wrap' });
+
+    host.replaceChildren(
+      plot,
+      el('div', { class: 'chart-foot' },
+        summaryStats(points, 'weight'),
+        el('div', { class: 'chart-caption' },
+          opt.loadType ? loadBadge(opt.loadType) : null,
+          el('span', { class: 'pt-key' }),
+          el('span', {
+            text: `${measured} measured at ${target} reps · rest estimated`
+              + (opt.loadType ? ` · ${LOAD_LABEL[opt.loadType]}` : ''),
+          }),
+        ),
+        conf !== 'good'
+          ? el('div', { class: 'chart-caption warn' }, el('span', {
+              text: conf === 'poor'
+                ? `Above 15 reps a set is limited by breathing and grip more than strength — estimates here are unreliable.`
+                : `Estimates get looser above 10 reps.`,
+            }))
+          : null,
+      ),
+    );
+    fillChart(plot, points, 'weight');
   }
 
   /* ---------- compare (paired bars, benchmarks only) ---------- */
@@ -322,11 +404,16 @@ export async function GraphView() {
     );
 
     const note = comparison.incomplete[compareField];
+    const anyNormalized = rows.some((r) => r.atReps);
     host.replaceChildren(
       barChart(rows, compareField),
       el('div', { class: 'chart-foot' },
         el('div', { class: 'chart-caption' },
-          el('span', { text: 'Benchmarks only' + (note ? ` · ${note} more need a second benchmark` : '') })),
+          el('span', {
+            text: 'Benchmarks only'
+              + (anyNormalized ? ' · @N reps means weight compared at that rep count, faded bars estimated' : '')
+              + (note ? ` · ${note} more need a second benchmark` : ''),
+          })),
       ),
     );
   }
@@ -385,15 +472,15 @@ function barChart(rows, field) {
   const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(Math.round(v * 100) / 100));
   const judged = field !== 'time';
 
-  const bar = (kind, value, label) =>
+  const bar = (kind, value, label, estimated) =>
     el('div', { class: 'bar-line' },
       el('span', { class: 'bar-tag', text: label }),
       el('div', { class: 'bar-track' },
         el('div', {
-          class: 'bar ' + kind,
+          class: 'bar ' + kind + (estimated ? ' est' : ''),
           style: `width:${Math.max(2, (value / max) * 100)}%`,
         })),
-      el('span', { class: 'bar-val mono', text: fmt(value) }),
+      el('span', { class: 'bar-val mono' + (estimated ? ' est' : ''), text: fmt(value) }),
     );
 
   return el('div', { class: 'bars' },
@@ -403,10 +490,11 @@ function barChart(rows, field) {
       return el('div', { class: 'bar-row' },
         el('div', { class: 'bar-head' },
           el('span', { class: 'bar-name', text: r.name }),
+          r.atReps ? el('span', { class: 'bar-reps mono', text: `@${r.atReps} reps` }) : null,
           el('span', { class: 'bar-delta mono' + cls, text: `${sign}${fmt(Math.abs(r.delta))}${r.pct === null ? '' : ` · ${r.delta > 0 ? '+' : ''}${r.pct.toFixed(0)}%`}` }),
         ),
-        bar('start', r.start, 'Start'),
-        bar('now', r.now, 'Now'),
+        bar('start', r.start, 'Start', r.startActual === false),
+        bar('now', r.now, 'Now', r.nowActual === false),
       );
     }),
   );
@@ -461,7 +549,12 @@ function lineChart(points, field, W = 360, H = 220) {
   add('path', { d: `${d} L${x(ts[ts.length - 1]).toFixed(1)},${padT + ih} L${x(ts[0]).toFixed(1)},${padT + ih} Z` }, 'series-area');
   add('path', { d }, 'series-line');
 
+  // A marker means "you actually lifted this, at this rep count". Estimated
+  // points are carried by the line alone and get no marker, so a glance
+  // separates measurement from inference. `actual` is undefined on charts that
+  // are not rep-normalised, where every point is a measurement.
   points.forEach((p, i) => {
+    if (p.actual === false) return;
     const last = i === points.length - 1;
     add('circle', { cx: x(ts[i]).toFixed(1), cy: y(p.value).toFixed(1), r: last ? 5.5 : 4 },
       last ? 'pt pt-last' : 'pt' + (p.source === 'benchmark' ? ' bench' : ''));

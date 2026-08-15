@@ -8,6 +8,7 @@
 // See docs/firebase-setup.md.
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
+import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps } from './e1rm.js';
 
 const BACKEND = 'local'; // 'local' | 'firebase'
 const NS = 'ftrack:v1:';
@@ -296,6 +297,81 @@ export async function seriesForExercise(exerciseId, field) {
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/* ------------------------------------------------------------------ *
+ * Rep-normalised series
+ * ------------------------------------------------------------------ */
+
+// Every recorded (weight, reps) pair for one exercise, one row per SET.
+// Sets are kept individually rather than reduced per day, because the rep count
+// that appears most often is counted over real observations — a workout of
+// 3 x 10 genuinely contributes three tens.
+export async function weightRepObservations(exerciseId) {
+  const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);
+  const out = [];
+
+  const push = (date, weight, reps, source, label) => {
+    const w = Number(weight), r = Number(reps);
+    if (!(w > 0) || !(r >= 1) || Number.isNaN(w) || Number.isNaN(r)) return;
+    out.push({ date, weight: w, reps: Math.round(r), source, label });
+  };
+
+  for (const s of sessions) {
+    const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
+    if (!entry) continue;
+    for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', s.workoutName);
+  }
+  for (const b of benchmarks) {
+    if (b.exerciseId !== exerciseId) continue;
+    const v = b.values || {};
+    push(b.date, v.weight, v.reps, 'benchmark', 'Benchmark');
+  }
+
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// The rep count everything gets compared at, by default.
+export async function defaultTargetReps(exerciseId) {
+  return modalReps(await weightRepObservations(exerciseId));
+}
+
+// One point per day, every point expressed as the weight you would have lifted
+// at `targetReps`.
+//
+// Per-day pick: if any set that day was actually done at the target rep count,
+// that set wins (heaviest of them) and the point is marked `actual` — a real
+// measurement always beats an estimate. Otherwise the set with the highest
+// estimated 1RM wins and the point is marked as an estimate.
+export async function normalizedSeries(exerciseId, targetReps) {
+  const target = clampReps(targetReps);
+  if (target === null) return [];
+
+  const byDate = new Map();
+  for (const o of await weightRepObservations(exerciseId)) {
+    const isActual = o.reps === target;
+    const value = isActual ? o.weight : normalizeWeight(o.weight, o.reps, target);
+    if (!(value > 0)) continue;
+
+    const cand = {
+      date: o.date,
+      value,
+      actual: isActual,
+      weight: o.weight,
+      reps: o.reps,
+      source: o.source,
+      label: o.label,
+      rank: e1rm(o.weight, o.reps) || 0,
+    };
+
+    const prev = byDate.get(o.date);
+    if (!prev) { byDate.set(o.date, cand); continue; }
+    // A real measurement at the target always outranks an estimate.
+    if (prev.actual !== cand.actual) { if (cand.actual) byDate.set(o.date, cand); continue; }
+    if (cand.actual ? cand.value > prev.value : cand.rank > prev.rank) byDate.set(o.date, cand);
+  }
+
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // Every exercise that has at least `min` recorded data points, per field.
 export async function chartableExercises(min = 2) {
   const [sessions, benchmarks, exMap] = await Promise.all([
@@ -305,11 +381,20 @@ export async function chartableExercises(min = 2) {
   ]);
 
   const counts = new Map(); // exerciseId -> { field -> Set(dates) }
+  const paired = new Map(); // exerciseId -> Set(dates carrying BOTH weight and reps)
+
   const bump = (exId, field, date) => {
     if (!counts.has(exId)) counts.set(exId, {});
     const rec = counts.get(exId);
     if (!rec[field]) rec[field] = new Set();
     rec[field].add(date);
+  };
+  const bumpPair = (exId, date, rec) => {
+    const w = rec.weight, r = rec.reps;
+    if (typeof w !== 'number' || Number.isNaN(w) || !(w > 0)) return;
+    if (typeof r !== 'number' || Number.isNaN(r) || !(r >= 1)) return;
+    if (!paired.has(exId)) paired.set(exId, new Set());
+    paired.get(exId).add(date);
   };
 
   for (const s of sessions) {
@@ -318,6 +403,7 @@ export async function chartableExercises(min = 2) {
         for (const f of ['weight', 'reps', 'time', 'distance']) {
           if (typeof set[f] === 'number' && !Number.isNaN(set[f])) bump(e.exerciseId, f, s.date);
         }
+        bumpPair(e.exerciseId, s.date, set);
       }
     }
   }
@@ -326,18 +412,25 @@ export async function chartableExercises(min = 2) {
       const v = b.values ? b.values[f] : undefined;
       if (typeof v === 'number' && !Number.isNaN(v)) bump(b.exerciseId, f, b.date);
     }
+    bumpPair(b.exerciseId, b.date, b.values || {});
   }
 
   const out = [];
   for (const [exId, rec] of counts) {
     const fields = Object.keys(rec).filter((f) => rec[f].size >= min);
-    if (!fields.length) continue;
     const ex = exMap.get(exId);
+    // Normalising needs enough days carrying a weight AND a rep count together.
+    const pairedDays = (paired.get(exId) || new Set()).size;
+    const normalizable = canNormalize(ex) && pairedDays >= min;
+    if (!fields.length && !normalizable) continue;
     out.push({
       id: exId,
       name: ex ? ex.name : 'Unknown exercise',
       muscle: ex ? ex.muscle : '',
+      equipment: ex ? ex.equipment : '',
       loadType: ex ? ex.loadType : null,
+      exercise: ex || null,
+      normalizable,
       fields,
     });
   }
@@ -366,6 +459,39 @@ export async function benchmarkComparison(minPoints = 2) {
     }
   }
 
+  // Exercises whose weight is comparable only after rep normalisation. For
+  // these the raw weight is replaced by equivalent load at their own modal rep
+  // count, and the bare `reps` comparison is suppressed — "reps went 10 -> 4"
+  // is not a result, it is half of one.
+  const normalized = new Map(); // exerciseId -> { target, ordered: [...] }
+  for (const b of benchmarks) {
+    const ex = exMap.get(b.exerciseId);
+    if (!canNormalize(ex) || normalized.has(b.exerciseId)) continue;
+
+    const obs = benchmarks
+      .filter((x) => x.exerciseId === b.exerciseId)
+      .map((x) => ({ date: x.date, weight: Number((x.values || {}).weight), reps: Number((x.values || {}).reps) }))
+      .filter((o) => o.weight > 0 && o.reps >= 1 && !Number.isNaN(o.weight) && !Number.isNaN(o.reps));
+    if (!obs.length) continue;
+
+    const target = modalReps(obs);
+    const byDate = new Map();
+    for (const o of obs) {
+      const isActual = Math.round(o.reps) === target;
+      const value = isActual ? o.weight : normalizeWeight(o.weight, o.reps, target);
+      if (!(value > 0)) continue;
+      const cand = { date: o.date, value, actual: isActual, rank: e1rm(o.weight, o.reps) || 0 };
+      const prev = byDate.get(o.date);
+      if (!prev) { byDate.set(o.date, cand); continue; }
+      if (prev.actual !== cand.actual) { if (cand.actual) byDate.set(o.date, cand); continue; }
+      if (cand.actual ? cand.value > prev.value : cand.rank > prev.rank) byDate.set(o.date, cand);
+    }
+    normalized.set(b.exerciseId, {
+      target,
+      ordered: [...byDate.values()].sort((a, b2) => a.date.localeCompare(b2.date)),
+    });
+  }
+
   const byField = {};
   const incomplete = {};
 
@@ -374,16 +500,25 @@ export async function benchmarkComparison(minPoints = 2) {
     let pending = 0;
 
     for (const [exId, rec] of grouped) {
-      const points = rec[f];
+      const norm = normalized.get(exId);
+      if (norm && f === 'reps') continue;          // meaningless once weight is normalised
+
+      const useNorm = Boolean(norm) && f === 'weight' && norm.ordered.length > 0;
+      const points = useNorm ? norm.ordered : rec[f];
       if (!points) continue;
 
       // One entry per day; if a day has several, keep the best.
-      const byDate = new Map();
-      for (const p of points) {
-        const prev = byDate.get(p.date);
-        if (!prev || p.value > prev.value) byDate.set(p.date, p);
+      // Normalised points arrive already reduced per day.
+      let ordered;
+      if (useNorm) ordered = points;
+      else {
+        const byDate = new Map();
+        for (const p of points) {
+          const prev = byDate.get(p.date);
+          if (!prev || p.value > prev.value) byDate.set(p.date, p);
+        }
+        ordered = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
       }
-      const ordered = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 
       if (ordered.length < minPoints) { pending++; continue; }
 
@@ -394,6 +529,9 @@ export async function benchmarkComparison(minPoints = 2) {
         id: exId,
         name: ex ? ex.name : 'Unknown exercise',
         loadType: ex ? ex.loadType : null,
+        atReps: useNorm ? norm.target : null,
+        startActual: useNorm ? first.actual : true,
+        nowActual: useNorm ? last.actual : true,
         start: first.value,
         startDate: first.date,
         now: last.value,

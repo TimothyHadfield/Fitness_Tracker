@@ -12,11 +12,17 @@ const { BUILT_IN_EXERCISES, makeCustomExercise } = await import('../js/exercises
 const {
   store, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizeWorkout, DEFAULT_SETS, benchmarkComparison,
+  normalizedSeries, defaultTargetReps, weightRepObservations,
 } = await import('../js/store.js');
+const {
+  e1rm, weightForReps, normalizeWeight, modalReps, canNormalize,
+  kFactor, clampReps, repConfidence, K_FLOOR, LB_PER_KG,
+} = await import('../js/e1rm.js');
 
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'PASS  ' : 'FAIL  ') + msg); if (!cond) fails++; };
 const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
+const near = (a, b, tol = 0.01) => Math.abs(a - b) <= tol;
 
 /* ---------- library ---------- */
 ok(BUILT_IN_EXERCISES.length > 200, `library has ${BUILT_IN_EXERCISES.length} exercises`);
@@ -39,6 +45,70 @@ ok(
   BUILT_IN_EXERCISES.filter((e) => e.fields.includes('weight')).every((e) => e.loadType),
   'every weighted exercise has a load type',
 );
+
+/* ---------- e1RM math (Marzagao 2026) ---------- */
+// 1RM = w * (1 + (r-1)^0.85 / k(w)),  k(w) = max(K_FLOOR, -2.55 + 4.58*ln(w_kg))
+ok(e1rm(100, 1) === 100, 'a single rep is its own 1RM — no extrapolation');
+ok(near(e1rm(135, 5), 161.92), `e1rm(135x5) = 161.9 (${e1rm(135, 5).toFixed(2)})`);
+ok(near(e1rm(25, 10), 43.88), `e1rm(25x10) = 43.9 (${e1rm(25, 10).toFixed(2)})`);
+ok(e1rm(0, 5) === null && e1rm(-10, 5) === null, 'non-positive weight has no e1RM');
+ok(e1rm(100, 0) === null, 'zero reps has no e1RM');
+
+// Published k values, converted from the paper's kg reference points.
+ok(near(kFactor(70), 16.9, 0.05), `k(70kg barbell bench) = 16.9 (${kFactor(70).toFixed(2)})`);
+ok(near(kFactor(150), 20.4, 0.05), `k(150kg deadlift) = 20.4 (${kFactor(150).toFixed(2)})`);
+ok(kFactor(1) === K_FLOOR, 'k is floored below the turning point');
+
+// The floor exists to keep the curve invertible. Above the turning point the
+// published curve applies; below it, k is held constant so e1rm stays
+// increasing in weight. Without this a heavier lift could score LOWER.
+let prev = 0, monotonic = true;
+for (let lb = 1; lb <= 400; lb += 1) {
+  const v = e1rm(lb, 12);
+  if (v <= prev) { monotonic = false; break; }
+  prev = v;
+}
+ok(monotonic, 'e1rm is strictly increasing in weight across 1-400 lbs (invertible)');
+
+// Inversion round-trips.
+ok(near(weightForReps(e1rm(185, 6), 6), 185), 'weightForReps inverts e1rm');
+ok(weightForReps(200, 1) === 200, 'inverting at 1 rep returns the 1RM itself');
+ok(normalizeWeight(100, 5, 5) === 100, 'normalising to the same rep count is the identity');
+ok(normalizeWeight(135, 5, 3) > 135, 'fewer reps means more weight');
+ok(normalizeWeight(135, 5, 10) < 135, 'more reps means less weight');
+
+// Tim's worked example: 25x10, 45x4, 35x10, 60x1, 45x10 -> compared at 10 reps.
+ok(near(normalizeWeight(45, 4, 10), 33.34), `45x4 at 10 reps = 33.3 (${normalizeWeight(45, 4, 10).toFixed(2)})`);
+ok(near(normalizeWeight(60, 1, 10), 36.92), `60x1 at 10 reps = 36.9 (${normalizeWeight(60, 1, 10).toFixed(2)})`);
+const worked = [[25, 10], [45, 4], [35, 10], [60, 1], [45, 10]].map(([w, r]) => normalizeWeight(w, r, 10));
+ok(worked.every((v, i) => i === 0 || v > worked[i - 1]), 'the worked example comes out monotonically rising');
+
+/* ---------- choosing the rep count ---------- */
+ok(modalReps([{ reps: 10, date: '2026-01-01' }, { reps: 4, date: '2026-02-01' }, { reps: 10, date: '2026-03-01' }]) === 10,
+   'modal reps picks the most frequent');
+ok(modalReps([{ reps: 5, date: '2026-01-01' }, { reps: 3, date: '2026-02-01' }]) === 3,
+   'ties go to the most recently used');
+ok(modalReps([]) === null, 'no observations means no default');
+ok(modalReps([{ reps: 'x' }, { reps: null }]) === null, 'junk rep values ignored');
+ok(clampReps(0) === 1 && clampReps(99) === 20, 'target reps clamped to 1-20');
+ok(repConfidence(8) === 'good' && repConfidence(13) === 'fair' && repConfidence(18) === 'poor',
+   'confidence degrades past 10 and 15 reps');
+
+/* ---------- where normalising is honest ---------- */
+ok(canNormalize(byName('Barbell Bench Press')), 'barbell bench can be normalised');
+ok(canNormalize(byName('Dumbbell Curl')), 'dumbbell isolation work can be normalised');
+ok(
+  BUILT_IN_EXERCISES.filter((e) => e.equipment === 'Bodyweight').every((e) => !canNormalize(e)),
+  'no bodyweight exercise is ever normalised',
+);
+ok(!canNormalize(byName('Pull-Up')),
+   'bodyweight excluded — logged weight is added load, not total resistance');
+ok(!canNormalize(byName('Assisted Pull-Up')),
+   'assisted excluded — logged weight is assistance, so more weight is easier');
+ok(!canNormalize(byName('Plank')), 'time-only exercise cannot be normalised');
+ok(!canNormalize(byName('Push-Up')), 'reps-only exercise has no weight to normalise');
+ok(!canNormalize(byName('Running')), 'cardio cannot be normalised');
+ok(near(LB_PER_KG, 2.2046, 0.001), 'pound/kilogram constant');
 
 /* ---------- workout: set counts + notes ---------- */
 const bench = byName('Barbell Bench Press');
@@ -97,27 +167,82 @@ ok(series[series.length - 1].value === 175, 'series ends at latest value');
 const chartable = await chartableExercises(2);
 ok(chartable.find((c) => c.id === bench.id), 'bench is chartable');
 ok(chartable.find((c) => c.id === bench.id).loadType === 'total', 'chartable carries loadType');
+ok(chartable.find((c) => c.id === bench.id).normalizable, 'bench is flagged normalisable');
+ok(chartable.find((c) => c.id === plank.id) === undefined
+   || !chartable.find((c) => c.id === plank.id).normalizable, 'plank is not normalisable');
+
+/* ---------- rep-normalised series (line chart) ---------- */
+// bench observations: 135x5 bench, 135x8 + 135x7 workout, 155x6 workout, 175x3 bench
+const obs = await weightRepObservations(bench.id);
+ok(obs.length === 5, `every SET is one observation, not one per day (${obs.length})`);
+ok(obs.filter((o) => o.date === '2026-08-01').length === 2, 'both sets of a session are kept');
+
+// Every rep count appears once except none repeat, so the tie goes to the most
+// recent — 3 reps, logged 2026-08-12.
+ok(await defaultTargetReps(bench.id) === 3, `default target reps = 3 (${await defaultTargetReps(bench.id)})`);
+
+const norm8 = await normalizedSeries(bench.id, 8);
+ok(norm8.length === 4, `one point per day (${norm8.length})`);
+ok(norm8.every((p, i) => i === 0 || p.date >= norm8[i - 1].date), 'points ordered by date');
+
+const aug1 = norm8.find((p) => p.date === '2026-08-01');
+ok(aug1.actual === true, '135x8 is a real measurement at the 8-rep target');
+ok(aug1.value === 135, 'a measured point is shown at its logged weight, untouched');
+
+const jun1 = norm8.find((p) => p.date === '2026-06-01');
+ok(jun1.actual === false, '135x5 is an estimate when compared at 8 reps');
+ok(jun1.value < 135, `estimated down from 5 reps to 8 (${jun1.value.toFixed(1)})`);
+ok(near(jun1.value, normalizeWeight(135, 5, 8)), 'series value matches the formula directly');
+
+// Every point round-trips to its own logged weight when the target matches.
+for (const r of [3, 5, 6, 7, 8]) {
+  const s = await normalizedSeries(bench.id, r);
+  ok(s.filter((p) => p.actual).every((p) => p.value === p.weight),
+     `measured points untouched at a ${r}-rep target`);
+}
+
+// A real measurement at the target beats a higher-scoring estimate on the same
+// day, so the chart never replaces a fact with an inference.
+await store.saveSession({
+  workoutId: w.id, workoutName: 'Push', date: '2026-08-20',
+  entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 145, reps: 9 }, { weight: 200, reps: 2 }] }],
+});
+const aug20 = (await normalizedSeries(bench.id, 9)).find((p) => p.date === '2026-08-20');
+ok(aug20.actual === true && aug20.value === 145,
+   'measured 145x9 preferred over the stronger 200x2 estimate at a 9-rep target');
+const aug20b = (await normalizedSeries(bench.id, 4)).find((p) => p.date === '2026-08-20');
+ok(aug20b.actual === false && aug20b.value > 145,
+   'with no measurement at the target, the best set that day is estimated instead');
 
 /* ---------- benchmark comparison (bar chart) ---------- */
 const cmp = await benchmarkComparison(2);
 
 ok(cmp.fields.includes('weight'), 'weight is a comparable field');
 ok(!cmp.fields.includes('time'), 'time excluded — plank has only one benchmark');
+ok(!cmp.fields.includes('reps'),
+   'reps dropped as a standalone comparison once weight is rep-normalised');
 
 const weightRows = cmp.byField.weight;
 ok(weightRows.length === 2, `two exercises comparable by weight (${weightRows.length})`);
 
 const benchRow = weightRows.find((r) => r.id === bench.id);
-ok(benchRow.start === 135, 'start = first benchmark, not the first workout set');
-ok(benchRow.now === 175, 'now = latest benchmark');
-ok(benchRow.delta === 40, 'delta computed');
-ok(Math.round(benchRow.pct) === 30, `pct computed (${benchRow.pct.toFixed(1)}%)`);
+// Benchmarks are 135x5 (June) and 175x3 (August); the modal count over those
+// two ties and resolves to the more recent, 3.
+ok(benchRow.atReps === 3, 'row reports the rep count it was compared at');
+ok(benchRow.nowActual === true && benchRow.now === 175, 'latest benchmark was measured at 3 reps');
+ok(benchRow.startActual === false, 'first benchmark (5 reps) is an estimate at 3 reps');
+ok(near(benchRow.start, 146.11), `start normalised 135x5 -> 146.1 at 3 reps (${benchRow.start.toFixed(2)})`);
+ok(near(benchRow.delta, 28.89), `delta uses normalised weights (${benchRow.delta.toFixed(2)})`);
+ok(Math.round(benchRow.pct) === 20, `pct computed (${benchRow.pct.toFixed(1)}%)`);
+// Raw weight would have claimed +40 / +30%. Normalising shows the smaller,
+// honest gain: some of that 40 lbs was just doing fewer reps.
+ok(benchRow.delta < 40, 'normalising deflates the apparent gain from dropping reps');
 
-// The bench also has 135/155 logged in SESSIONS. If sessions leaked in, start
-// would still be 135 but the 155 session would change `now` or the count.
+// The bench also has sets logged in SESSIONS. If sessions leaked in, the count
+// would exceed the two benchmark days.
 ok(benchRow.count === 2, 'session data excluded from the comparison (2 benchmark days only)');
 
-ok(weightRows[0].id === squat.id, 'rows sorted by biggest mover (squat +90 before bench +40)');
+ok(weightRows[0].id === squat.id, 'rows sorted by biggest mover (squat before bench)');
 ok(cmp.incomplete.weight === 0, 'no incomplete weight exercises');
 
 // An exercise with a single benchmark must not appear.
@@ -127,11 +252,17 @@ const cmp2 = await benchmarkComparison(2);
 ok(!cmp2.byField.weight.find((r) => r.id === solo.id), 'single-benchmark exercise excluded');
 ok(cmp2.incomplete.weight === 1, 'incomplete count reports the excluded exercise');
 
-// Same-day duplicates collapse to the best value.
+// Same-day duplicates collapse to one point. Adding 165x4 alongside 175x3 on
+// 2026-08-12 makes 4 the most recent of the tied rep counts, so the target
+// moves to 4 — and the day then resolves to the set actually done at 4 reps
+// rather than an estimate off the 3-rep set.
 await store.saveBenchmark({ date: '2026-08-12', exerciseId: bench.id, exerciseName: bench.name, values: { weight: 165, reps: 4 } });
 const cmp3 = await benchmarkComparison(2);
-ok(cmp3.byField.weight.find((r) => r.id === bench.id).now === 175,
-   'same-day benchmarks collapse to the best, not the last written');
+const benchRow3 = cmp3.byField.weight.find((r) => r.id === bench.id);
+ok(benchRow3.count === 2, 'same-day benchmarks collapse to one point');
+ok(benchRow3.atReps === 4, 'target moves to the newly most-recent tied rep count');
+ok(benchRow3.now === 165 && benchRow3.nowActual === true,
+   'the measured 4-rep set wins the day over an estimate from the 3-rep set');
 
 /* ---------- calendar ---------- */
 const activity = await activityByDate();
@@ -150,7 +281,7 @@ const dump = await store.exportAll();
 await store.clearAll();
 ok((await store.getSessions()).length === 0, 'clearAll wipes sessions');
 await store.importAll(dump);
-ok((await store.getSessions()).length === 2, 'import restores sessions');
+ok((await store.getSessions()).length === 3, 'import restores sessions');
 ok((await store.getWorkout(w.id)).exercises[0].sets === 4, 'import preserves planned set counts');
 
 /* ---------- custom exercises ---------- */
