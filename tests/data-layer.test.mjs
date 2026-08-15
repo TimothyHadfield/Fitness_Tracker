@@ -351,6 +351,85 @@ ok(makeCustomExercise({ name: 'Odd Lift', muscle: 'Back', equipment: 'Other', fi
 
 ok(/^\d{4}-\d{2}-\d{2}$/.test(todayISO()), `todayISO format (${todayISO()})`);
 
+/* ---------- strength standards ---------- */
+const ss = await import('../js/strength-standards.js');
+const bm = await import('../js/body-map.js');
+
+ok(ss.LEVELS.length === 7, 'seven levels');
+ok(ss.LEVELS.map((l) => l.percentile).join() === '5,20,50,65,80,90,95', 'level percentiles as decided');
+ok(ss.LEVELS.every((l, i) => i === 0 || l.percentile > ss.LEVELS[i - 1].percentile),
+   'levels strictly increase');
+
+// Every key lift must resolve to a real exercise, or that muscle silently never
+// ranks — the failure would be invisible in the UI.
+for (const muscle of Object.keys(ss.MUSCLE_LIFTS)) {
+  const lift = ss.keyLiftFor(muscle);
+  ok(lift && lift.id, `${muscle} key lift "${ss.MUSCLE_LIFTS[muscle].lift}" resolves to a real exercise`);
+}
+ok(ss.muscleForLift(byName('Barbell Bench Press').id) === 'Chest', 'reverse lookup works');
+ok(!ss.canRank('Core') && !ss.canRank('Neck'), 'Core and Neck are deliberately unrankable');
+
+// Every muscle drawn on the body must either be rankable or explicitly
+// unrankable — otherwise a region would be permanently grey for no stated reason.
+for (const m of bm.MAPPED_MUSCLES) {
+  ok(ss.canRank(m) || ss.UNRANKABLE.includes(m), `drawn muscle "${m}" is rankable or declared unrankable`);
+}
+
+const male180 = { gender: 'male', bodyWeight: 180, age: 30 };
+ok(near(ss.medianFor('Chest', male180), 225, 1), `median bench at 180 lb = 225 (${ss.medianFor('Chest', male180).toFixed(1)})`);
+
+// Allometric scaling, not a flat ratio. A flat ratio would say 187 at 150 lb;
+// the surface law says ~199, which is what published standards actually show.
+const male150 = { gender: 'male', bodyWeight: 150, age: 30 };
+ok(near(ss.medianFor('Chest', male150), 199, 1.5), `median scales allometrically (${ss.medianFor('Chest', male150).toFixed(1)} at 150 lb)`);
+ok(ss.medianFor('Chest', male150) > 225 * (150 / 180), 'allometric beats a flat bodyweight ratio');
+ok(ss.medianFor('Chest', { gender: 'female', bodyWeight: 140, age: 30 }) === 100,
+   'female standards are their own numbers, not a blanket multiplier');
+ok(ss.medianFor('Chest', { gender: 'male' }) === null, 'no body weight means no standard');
+ok(ss.medianFor('Core', male180) === null, 'unrankable muscle has no standard');
+
+// Percentiles round-trip against the thresholds.
+for (const l of ss.LEVELS) {
+  const w = ss.weightForPercentile(l.percentile, 'Chest', male180);
+  const p = ss.percentileFor(w, 'Chest', male180);
+  ok(near(p, l.percentile, 0.2), `${l.name}: ${Math.round(w)} lb round-trips to the ${l.percentile}th`);
+}
+ok(near(ss.percentileFor(225, 'Chest', male180), 50, 0.2), 'the median lift is the 50th percentile');
+ok(ss.percentileFor(400, 'Chest', male180) > ss.percentileFor(300, 'Chest', male180),
+   'more weight is a higher percentile');
+
+// The published tier weights, which are the whole feature.
+const tiers = ss.LEVELS.map((l) => Math.round(ss.weightForPercentile(l.percentile, 'Chest', male180)));
+ok(tiers.join() === '133,172,225,255,295,339,381', `bench tiers at 180 lb: ${tiers.join(' / ')}`);
+ok(tiers.every((v, i) => i === 0 || v > tiers[i - 1]), 'tier weights strictly increase');
+
+ok(ss.levelFor(50).key === 'intermediate', 'the 50th is Intermediate');
+ok(ss.levelFor(96).key === 'elite', 'above the top threshold stays Elite');
+ok(ss.levelFor(3) === null, 'below the first threshold has no level');
+ok(ss.nextLevelAfter(ss.levelFor(96)) === null, 'nothing comes after Elite');
+ok(ss.nextLevelAfter(null).key === 'beginner', 'the first goal is Beginner');
+ok(near(ss.levelProgress(65, ss.levelFor(50)), 1, 0.001), 'progress fills at the next threshold');
+ok(near(ss.levelProgress(50, ss.levelFor(50)), 0, 0.001), 'progress is empty at the current threshold');
+
+// Age grading. Without it a 55-year-old is measured against 25-35 year olds.
+ok(ss.ageCoefficient(30) === 1 && ss.ageCoefficient(40) === 1, 'no adjustment in the 23-40 prime');
+ok(near(ss.ageCoefficient(50), 1.13, 0.001), 'McCulloch coefficient at 50');
+ok(near(ss.ageCoefficient(60), 1.381, 0.001), 'McCulloch coefficient at 60');
+ok(ss.ageCoefficient(55) > ss.ageCoefficient(50), 'the coefficient rises with age');
+ok(ss.ageCoefficient(18) > 1, 'juniors are graded up too (Foster)');
+ok(ss.ageCoefficient(null) === 1, 'no age means no adjustment');
+ok(ss.medianFor('Chest', { gender: 'male', bodyWeight: 180, age: 60 })
+   < ss.medianFor('Chest', male180), 'a 60-year-old is held to a lower bar than a 30-year-old');
+ok(ss.percentileFor(225, 'Chest', { gender: 'male', bodyWeight: 180, age: 60 }) > 50,
+   'the same lift ranks higher for an older lifter');
+
+// General-population readout.
+ok(near(ss.generalPopulationPercentile(50), 84, 0.5), 'the median lifter is ~84th of all adults');
+ok(near(ss.generalPopulationPercentile(5), 69.7, 0.5), 'even a beginner lifter is ~70th of all adults');
+ok(ss.generalPopulationPercentile(95) < 100, 'the general readout never reaches 100');
+ok(ss.generalPopulationPercentile(95) - ss.generalPopulationPercentile(5) < 30,
+   'the whole scale compresses into a narrow band of the general population — why levels stay lifter-based');
+
 /* ---------- profile + body weight ---------- */
 // Needed before the Muscle Groups map can rank anything: standards are ratios
 // to body weight and differ by sex.

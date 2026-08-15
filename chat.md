@@ -791,3 +791,42 @@ signs in. Rules updated, redeployed, and verified live: `bodyWeight` writes acce
 collections still refused. `COLLECTIONS` in `store.js` now carries a warning comment.
 
 172 assertions, up from 153.
+
+### Muscle Groups built
+
+Tim confirmed deadlift → glutes and said to just go with recommendations. Built the whole map.
+
+**Three new modules**, all pure logic except the view:
+
+- `js/strength-standards.js` — levels, muscle→key-lift mapping, allometric body-weight scaling,
+  McCulloch/Foster age grading, percentile lookup, per-level weight targets. No DOM, no store.
+- `js/body-map.js` — hand-authored SVG body, front and back, ~30 regions. Deliberately stylised:
+  regions have to be big enough to tap on a phone, and an anatomically faithful drawing would have
+  slivers nobody can hit.
+- `js/views-muscles.js` — the third Data mode.
+
+**The palette was computed, not chosen.** Strength level is *ordinal* — swapping the levels changes
+the meaning — so it takes a one-hue sequential ramp, not the reference image's categorical rainbow
+(that rainbow encodes muscle *identity*, which position already gives us). Seven steps generated in
+OKLCH at the app's accent hue and run through the dataviz validator in `--ordinal` mode. It failed
+twice before passing: the light ramp's pale end sat at 1.23:1 against a near-white surface, and after
+darkening it the adjacent ΔL came out at 0.059 against a 0.06 floor because high chroma was clipping
+in gamut. Third attempt passes all four checks in both themes. Dark is a *selected* ramp with the
+anchor flipped, not an inversion.
+
+**Two real bugs caught by writing the tests:**
+
+1. `Number(null)` is `0`, which is finite — so a user with no birth year was being graded as a
+   **14-year-old** and shown inflated levels everywhere. Same trap as `clampReps` earlier; now
+   type-guarded in both places.
+2. The `--lv-*` custom properties were declared with bare `:root` holding the *light* ramp, inverting
+   this stylesheet's convention (bare `:root` is dark). It worked only because `data-theme` is always
+   set explicitly — the moment that stopped, dark mode would have rendered the light ramp.
+
+**Honesty carried into the UI**, per D15: every caption says "of people who lift", the
+general-population line is labelled a rough estimate, and a level derived from a set of more than 5
+reps is flagged — percentile placement leans on the e1RM formula being *absolutely* accurate, which
+`docs/research.md` §1.3 says was never validated.
+
+236 assertions, up from 172, including every key lift resolving to a real exercise, every drawn
+muscle being rankable or explicitly declared unrankable, and all seven tier weights round-tripping.

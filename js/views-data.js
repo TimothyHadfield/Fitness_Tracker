@@ -12,6 +12,7 @@ import {
   el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
+import { muscleGroupsPane } from './views-muscles.js';
 
 const go = (hash) => { location.hash = hash; };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -217,7 +218,7 @@ function refresh() {
  * ================================================================== */
 
 let graphChoice = { exerciseId: null, field: null };
-let graphMode = 'trend'; // 'trend' | 'compare'
+let graphMode = 'trend'; // 'trend' | 'compare' | 'muscles'
 let compareField = null;
 // exerciseId -> rep count everything is compared at. Seeded from the most
 // frequently recorded rep count, then whatever the user steps it to.
@@ -236,7 +237,9 @@ function pickSource(opt) {
 export async function GraphView() {
   const [options, comparison] = await Promise.all([chartableExercises(2), benchmarkComparison(2)]);
 
-  if (!options.length && !comparison.fields.length) {
+  // Only bail out entirely when there is nothing at all AND no profile to act
+  // on; Muscles is useful before any chart is.
+  if (!options.length && !comparison.fields.length && graphMode !== 'muscles') {
     return screenShell({
       profile: true,
       title: 'Data',
@@ -248,8 +251,8 @@ export async function GraphView() {
     });
   }
 
-  if (!options.length) graphMode = 'compare';
-  if (!comparison.fields.length) graphMode = 'trend';
+  if (!options.length && graphMode === 'trend') graphMode = comparison.fields.length ? 'compare' : 'muscles';
+  if (!comparison.fields.length && graphMode === 'compare') graphMode = options.length ? 'trend' : 'muscles';
 
   // The chart owns the screen. Controls are one compact row, and the mode switch
   // lives in the header instead of a redundant "Graphs" heading.
@@ -257,9 +260,11 @@ export async function GraphView() {
   const host = el('div', { class: 'graph-host' });
 
   const modeSwitch = el('div', { class: 'segmented', role: 'tablist' },
-    [['trend', 'Graph'], ['compare', 'Bar Chart']].map(([m, label]) =>
+    [['trend', 'Graph'], ['compare', 'Bar Chart'], ['muscles', 'Muscles']].map(([m, label]) =>
       el('button', {
         class: 'seg', role: 'tab', 'aria-selected': String(graphMode === m),
+        // Muscles is never disabled: with no data it explains what to record,
+        // which is more use than a dead tab.
         disabled: (m === 'trend' && !options.length) || (m === 'compare' && !comparison.fields.length),
         text: label,
         onClick: () => { graphMode = m; render(); },
@@ -455,9 +460,11 @@ export async function GraphView() {
   }
 
   async function render() {
+    const order = ['trend', 'compare', 'muscles'];
     modeSwitch.querySelectorAll('.seg').forEach((b, i) =>
-      b.setAttribute('aria-selected', String(graphMode === (i === 0 ? 'trend' : 'compare'))));
-    if (graphMode === 'compare') renderCompare();
+      b.setAttribute('aria-selected', String(graphMode === order[i])));
+    if (graphMode === 'muscles') await muscleGroupsPane(host, top);
+    else if (graphMode === 'compare') renderCompare();
     else await renderTrend();
   }
 

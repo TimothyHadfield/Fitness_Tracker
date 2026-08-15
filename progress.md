@@ -16,7 +16,7 @@ upgrade preserving data. Only **Google sign-in** still needs a console toggle.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 172 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 236 assertions, all passing |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
@@ -124,9 +124,10 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Draft recovery | In-progress workout survives an app switch; expires at end of day |
 | Benchmarks | Any date (default today), any exercise → graph + calendar |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
-| Data (nav) | Renamed from Graphs 2026-08-15. Two modes so far — **Graph** (measured SVG line, **hover crosshair** snapping to the nearest point with its value and date) and **Bar Chart** (paired bars). A third, **Muscle Groups**, is planned (`docs/strength-map-plan.md`). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
+| Data (nav) | Renamed from Graphs 2026-08-15. Three modes — **Graph** (measured SVG line, **hover crosshair**), **Bar Chart** (paired bars) and **Muscles** (body map, below). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
 | Accounts | **Live.** Profile button in the true top-left — beside “Fitness Tracker” in the desktop sidebar, in the header on mobile (never both) — with a dot badge when data is not backed up. Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, **change password**, **delete account**, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
+| Muscles | Hand-authored SVG body, front and back. Each group filled by where its key lift sits among **people who lift** at your weight, sex and age; grey with no benchmark. Tap for the level, percentile, progress to the next level, and per-level weight targets. Optional general-population readout | 
 | Profile | Gender, birth year, and **body weight as a dated series** — prerequisites for Muscle Groups, and the Tier 1 body-weight trend in the same table. Says what is still missing rather than failing silently |
 | Settings | Dark/light, profile, account status, export backup, restore backup, delete all |
 
@@ -135,7 +136,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 ### Verified
 - All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
   (catches missing exports without a browser)
-- **172 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- **236 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
@@ -175,6 +176,8 @@ Fitness_Tracker/
 │   ├── app.js                  hash router + boot
 │   ├── store.js                data layer — async API, backend-agnostic
 │   ├── e1rm.js                 rep normalisation — pure maths, no DOM (D11)
+│   ├── strength-standards.js   percentile ranking — pure maths, no DOM (D15)
+│   ├── body-map.js             hand-authored SVG body, front + back
 │   ├── exercises.js            265-exercise library + load-type rules
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, formatters, screenShell
 │   ├── views-workouts.js       home, workout list, builder, exercise picker
@@ -336,6 +339,7 @@ Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have
 
 | D12 | **Accounts are anonymous-first: log immediately, upgrade to email or Google later.** Upgrading *links* the anonymous account, so the uid and all existing data carry over. | Chosen by Tim 2026-08-15. A signup wall on first open is the single biggest killer of new-app retention, and D8/D9 say no wall on day one. The cost is that un-upgraded data lives in one browser and nothing recovers it — so the UI states that plainly rather than implying it is backed up. |
 | D13 | **Backend selection is `'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set mid-workout (D6). Settings then reports "Not connected" instead of pretending things are synced. |
+| D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; true general-population data would make every user Elite. The whole seven-level scale compresses into ~70–98 % of all adults, so as a ranking it carries no information. The UI must say "of people who lift". |
 | D14 | **Graphs never mix benchmarks with workout sets. One source at a time, benchmarks by default.** | Reported by Tim 2026-08-15: a bench workout set sat far off his benchmark trend and made the line lurch. Two further problems fell out of it — on a day carrying both, the shown point flipped between sources as the rep target changed, and the one-point-per-day rule silently discarded the losing reading. |
 
 ### Standing recommendations (acted on, not blocking)

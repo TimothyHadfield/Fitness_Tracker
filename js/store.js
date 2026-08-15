@@ -613,6 +613,72 @@ export async function normalizedSeries(exerciseId, targetReps, source = null) {
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/* ------------------------------------------------------------------ *
+ * Muscle-group strength ranking
+ * ------------------------------------------------------------------ */
+
+// Benchmarks only, for now — a benchmark is a deliberate test, a mid-workout set
+// is not (D14, and Tim's own instruction). Incorporating workout lifts is a
+// later step.
+//
+// Returns one entry per rankable muscle group that has usable data.
+export async function muscleStrength() {
+  const [profile, benchmarks] = await Promise.all([store.getProfile(), store.getBenchmarks()]);
+  const {
+    MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
+    levelProgress, weightForPercentile, generalPopulationPercentile,
+  } = await import('./strength-standards.js');
+
+  const out = new Map();
+  if (profile.missing.length) return { profile, muscles: out, ready: false };
+
+  for (const muscle of Object.keys(MUSCLE_LIFTS)) {
+    const lift = keyLiftFor(muscle);
+    if (!lift || !lift.id) continue;
+
+    // Every benchmark on this muscle's key lift, best e1RM wins — a muscle is
+    // as strong as the best evidence for it, and averaging would punish someone
+    // for a bad day they honestly logged.
+    let best = null;
+    for (const b of benchmarks) {
+      if (b.exerciseId !== lift.id) continue;
+      const v = b.values || {};
+      const est = e1rm(v.weight, v.reps);
+      if (est === null) continue;
+      if (!best || est > best.e1rm) {
+        best = { e1rm: est, weight: v.weight, reps: Math.round(Number(v.reps)), date: b.date };
+      }
+    }
+    if (!best) continue;
+
+    const percentile = percentileFor(best.e1rm, muscle, profile);
+    if (percentile === null) continue;
+    const level = levelFor(percentile);
+    const next = nextLevelAfter(level);
+    const nextWeight = next ? weightForPercentile(next.percentile, muscle, profile) : null;
+
+    out.set(muscle, {
+      muscle,
+      lift,
+      best,
+      percentile,
+      level,
+      next,
+      nextWeight,
+      toNext: nextWeight ? Math.max(0, nextWeight - best.e1rm) : null,
+      progress: levelProgress(percentile, level),
+      generalPercentile: generalPopulationPercentile(percentile),
+      // Percentile placement leans on the e1RM formula being absolutely
+      // accurate, which docs/research.md §1.3 says was never validated. It is
+      // most trustworthy at low reps, so anything derived from a high-rep set
+      // is flagged rather than presented as equally solid.
+      confident: best.reps <= 5,
+    });
+  }
+
+  return { profile, muscles: out, ready: true };
+}
+
 // Every exercise that has at least `min` recorded data points, per field.
 export async function chartableExercises(min = 2) {
   const [sessions, benchmarks, exMap] = await Promise.all([

@@ -1107,3 +1107,128 @@ select.input {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ==========================================================================
+   Muscle Groups — the body map
+   ==========================================================================
+   The level ramp is ORDINAL, so it is one hue light→dark, not a rainbow.
+   Both themes were generated in OKLCH at hue 70 (the app accent) and validated
+   with the dataviz skill's validator: monotone lightness, adjacent ΔL ≥ 0.06,
+   single hue, and the end step clearing its surface. All four checks pass in
+   both modes. Dark is a SELECTED ramp, not an inversion of light — its anchor
+   flips so low levels are dim and high levels bright.
+   Do not hand-edit these values; regenerate and re-validate. */
+
+/* Matches this sheet's convention: bare :root is DARK, [data-theme="light"]
+   overrides. Getting this backwards would ship the light ramp into dark mode
+   the moment the explicit data-theme attribute stopped being set. */
+:root {
+  --lv-beginner:     #674519;
+  --lv-novice:       #875814;
+  --lv-intermediate: #a76c12;
+  --lv-proficient:   #c6811c;
+  --lv-advanced:     #df9b44;
+  --lv-expert:       #f2b772;
+  --lv-elite:        #ffd6a8;
+  /* Below the 5th percentile — an 8th step continuing the ramp past its dim
+     end, so it still reads as "lowest" rather than as a separate category. */
+  --lv-below:        #3a2a12;
+  /* No data sits OUTSIDE the ramp entirely: neutral, zero chroma, so it can
+     never be mistaken for a low level. */
+  --lv-none:         #282F33;
+}
+:root[data-theme="light"] {
+  --lv-beginner:     #d1a066;
+  --lv-novice:       #c08843;
+  --lv-intermediate: #ad721c;
+  --lv-proficient:   #975d00;
+  --lv-advanced:     #7e4b00;
+  --lv-expert:       #643a00;
+  --lv-elite:        #4b2a00;
+  --lv-below:        #dcc7ad;
+  --lv-none:         #DBDED7;
+}
+
+.body-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.body-map { width: 100%; height: 100%; max-height: 100%; display: block; }
+.body-outline { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+.body-caption {
+  fill: var(--ink-faint); font-size: 9px; font-family: var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.body-region {
+  stroke: var(--ground); stroke-width: 1.2; cursor: pointer;
+  transition: opacity .12s ease;
+}
+.body-region:hover { opacity: .82; }
+/* Selection is a ring, not a colour change — the fill is carrying the level and
+   must not be overwritten by the interaction state. */
+.body-region.is-selected { stroke: var(--ink); stroke-width: 2.4; }
+.body-region:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.4; }
+
+.lv-beginner, .body-region.lv-beginner         { fill: var(--lv-beginner); }
+.lv-novice, .body-region.lv-novice             { fill: var(--lv-novice); }
+.lv-intermediate, .body-region.lv-intermediate { fill: var(--lv-intermediate); }
+.lv-proficient, .body-region.lv-proficient     { fill: var(--lv-proficient); }
+.lv-advanced, .body-region.lv-advanced         { fill: var(--lv-advanced); }
+.lv-expert, .body-region.lv-expert             { fill: var(--lv-expert); }
+.lv-elite, .body-region.lv-elite               { fill: var(--lv-elite); }
+.body-region.lv-below                          { fill: var(--lv-below); }
+.body-region.lv-none                           { fill: var(--lv-none); }
+
+/* Legend. Always present, so a level is never communicated by colour alone. */
+.lv-key { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.lv-key-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-soft); }
+.lv-sw { width: 10px; height: 10px; border-radius: 2px; flex: none; display: inline-block; }
+.lv-sw.lv-beginner { background: var(--lv-beginner); }
+.lv-sw.lv-novice { background: var(--lv-novice); }
+.lv-sw.lv-intermediate { background: var(--lv-intermediate); }
+.lv-sw.lv-proficient { background: var(--lv-proficient); }
+.lv-sw.lv-advanced { background: var(--lv-advanced); }
+.lv-sw.lv-expert { background: var(--lv-expert); }
+.lv-sw.lv-elite { background: var(--lv-elite); }
+.lv-sw.lv-none { background: var(--lv-none); }
+.lv-pct { color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
+
+.body-foot { flex: none; display: flex; flex-direction: column; gap: 8px; max-height: 46%; overflow-y: auto; }
+
+.basis { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.basis-main { font-size: 14px; font-weight: 650; }
+.basis-sub { font-size: 11.5px; color: var(--ink-faint); }
+
+.muscle-head { display: flex; align-items: baseline; gap: 8px; }
+.muscle-name { font-size: 16px; font-weight: 700; flex: 1; }
+.muscle-level { font-size: 13px; font-weight: 700; }
+.field-help.general { font-style: italic; }
+
+/* Progress toward the next level — this is what supplies a near goal when the
+   colour has not moved for months. */
+.to-next { display: flex; flex-direction: column; gap: 4px; }
+.to-next-bar { height: 6px; background: var(--raised); border-radius: 3px; overflow: hidden; }
+.to-next-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+.to-next-label { font-size: 12.5px; font-weight: 650; color: var(--ink-soft); }
+
+.targets { display: flex; flex-direction: column; }
+.target-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; font-size: 13px; color: var(--ink-faint);
+  border-top: 1px solid var(--rule-soft);
+}
+.target-row.reached { color: var(--ink); font-weight: 620; }
+.target-name { flex: 1; min-width: 0; }
+.target-pct { font-size: 11px; color: var(--ink-faint); }
+.target-wt { width: 74px; text-align: right; }
+
+.lv-name { white-space: nowrap; }
+
+/* The level word beside a muscle name. Uses the ramp colour, but the word is
+   always present — identity is never colour-alone. Steps at the dim end of the
+   dark ramp and the light end of the light ramp are too low-contrast for text,
+   so those fall back to ink. */
+.lv-text-below, .lv-text-beginner, .lv-text-novice { color: var(--ink-soft); }
+.lv-text-intermediate { color: var(--ink); }
+.lv-text-proficient { color: var(--lv-proficient); }
+.lv-text-advanced { color: var(--lv-advanced); }
+.lv-text-expert { color: var(--lv-expert); }
+.lv-text-elite { color: var(--lv-elite); }

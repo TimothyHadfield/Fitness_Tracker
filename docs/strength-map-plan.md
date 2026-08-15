@@ -4,7 +4,9 @@
 strong it is relative to people of the same gender and weight; grey where nothing is recorded;
 benchmarks only for now; click a muscle to see the weight needed for each level on a named lift.*
 
-**Nothing here is built yet.** This is the design for review.
+**Built 2026-08-15.** `js/strength-standards.js`, `js/body-map.js`, `js/views-muscles.js`. This
+document is now the record of why it works the way it does. Phase 5 (incorporating workout lifts,
+weighted secondary muscles) is still outstanding.
 
 **Decided by Tim, 2026-08-15:**
 - Levels are ranked against **people who lift and log**, with an **optional second readout** showing
