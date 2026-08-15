@@ -6,14 +6,17 @@
 
 **Last updated:** 2026-08-15
 **Status:** Working app, deployed and live. Five rounds of refinement, plus rep normalisation (D11)
-shipped 2026-08-15. Accounts + Firestore backend written and pushed, **blocked only on Tim creating the Firebase project** (docs/firebase-setup.md). **Never yet seen running in a real browser.**
+shipped 2026-08-15. **Firebase project `fitness-tracker-th` is live** — Firestore created, rules
+deployed and verified enforcing. **One console click left: enable Authentication** (docs/firebase-setup.md).
+**Never yet seen running in a real browser.**
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 137 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 139 assertions, all passing |
+| **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
 It needs a server — ES modules do not load over `file://`.
@@ -121,7 +124,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
 | Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**). Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
-| Accounts | **Code complete, waiting on Tim's Firebase project.** Anonymous-first with email + Google upgrade, sign-in, password reset, sign-out, local→cloud merge. Falls back to local storage if the cloud is unreachable |
+| Accounts | Anonymous-first with email + Google upgrade, sign-in, password reset, sign-out, local→cloud merge, automatic adoption of existing local data. Falls back to local storage if the cloud is unreachable. **Backend live; Auth needs one console click** |
 | Settings | Dark/light, account status, export backup, restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
@@ -129,7 +132,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 ### Verified
 - All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
   (catches missing exports without a browser)
-- **137 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- **139 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
@@ -417,11 +420,16 @@ rest timer.
 
 ## 10. Next steps
 
-1. **Tim does the Firebase console steps** — `docs/firebase-setup.md`, about 10 minutes. Everything
-   in code is done and pushed; the only blocker is that creating a project needs his Google login.
-   Pasting six values into `js/firebase-config.js` switches the whole app over — `BACKEND` is
-   already `'auto'`. **The step people forget is adding `timothyhadfield.github.io` to Auth →
-   authorised domains**, without which sign-in works on localhost and fails on the live site.
+1. **Tim enables Authentication in the console** — 30 seconds, and it is the only thing standing
+   between the app and working accounts.
+   [Authentication](https://console.firebase.google.com/project/fitness-tracker-th/authentication)
+   → Get started → enable Email/Password. **This cannot be automated:** the only public API for
+   provisioning Auth is `identityPlatform:initializeAuth`, which is the *paid* Identity Platform
+   upgrade and returns `BILLING_NOT_ENABLED` on Spark. The legacy config endpoints are retired.
+   After that click, Anonymous + the authorised domain can be set over the API; Google needs its own
+   toggle because it requires an OAuth client the API cannot create.
+   **Don't skip adding `timothyhadfield.github.io` to authorised domains** — without it sign-in
+   works on localhost and fails on the live site.
 2. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
    not survived one real gym session, and neither the rep-normalised graph nor the account screens
    have ever been rendered.

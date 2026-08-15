@@ -465,3 +465,52 @@ tested code** — no project exists to run it against.
 **Blocked on Tim:** creating the project needs his Google login. `docs/firebase-setup.md` rewritten
 as a 10-minute walkthrough, including the step everyone forgets — adding `timothyhadfield.github.io`
 to Auth → authorised domains, without which sign-in works on localhost and fails on the live site.
+
+### Firebase actually provisioned
+
+Tim: *"you have access firebase tools and extensions that allow you to do all this work on your own.
+check them out."*
+
+He was right to push. There was no Firebase MCP server, but the **Firebase CLI was installed
+(v15.24.0) and already authenticated** as timhadfield7@gmail.com. That changed the job from writing
+instructions to doing the work. Two permanent choices went through the question box first —
+**us-central1** (matches his existing Estimator-Quiz database, cheapest, US-latency) and how to
+handle Google sign-in.
+
+**Provisioned end to end:**
+
+- Google Cloud + Firebase project **`fitness-tracker-th`**
+- Web app registered; SDK config pulled with `apps:sdkconfig` and written into `js/firebase-config.js`
+- APIs enabled via the Service Usage API — firestore, identitytoolkit, firebaserules
+- Firestore database created in **us-central1**
+- `firestore.rules` compiled and deployed
+- `.firebaserc` added so deploys no longer need `--project`
+
+**The rules were verified, not assumed.** Three unauthenticated calls — reading another user's
+sessions, listing the whole `users` tree, writing into another user's account — all came back
+`403 Missing or insufficient permissions`. Deliberately tested *without* an OAuth token, because a
+project owner bypasses rules through IAM and testing with one would have proved nothing.
+
+**Where it stopped, and why.** Firebase Authentication cannot be provisioned from any public API on
+the free plan. The only method that exists, `identityPlatform:initializeAuth`, is the *paid*
+Identity Platform upgrade and returns `BILLING_NOT_ENABLED`; the legacy `setProjectConfig` endpoints
+are retired and 404. This was established by reading the API discovery documents rather than
+guessing — the answer is genuinely "console only". Enabling billing to work around it was never on
+the table: that is a financial commitment on Tim's account, and Firebase Auth is free anyway.
+
+So one 30-second console click remains: **Authentication → Get started → Email/Password.**
+
+**A UX cliff closed on the way.** Once Auth switches on, everyone currently logging locally would
+open the app to a brand-new empty cloud account and reasonably conclude their history had been
+destroyed. `adoptLocalData()` now carries local data up on the first successful cloud connection —
+guarded so it only runs when *every* cloud collection is empty, so it cannot overwrite anything, and
+marked so it never repeats.
+
+**An accidental win in the tests.** Filling in real config made the suite exercise the D13 fallback
+for real: Node cannot import the Firebase SDK over https, so the cloud is now genuinely *wanted and
+unreachable* during tests. The assertions were rewritten to check exactly that — falls back to local,
+reports itself degraded rather than passing it off as normal, keeps the error for Settings, and
+still saves a workout. 139 assertions.
+
+**Still unverified:** every Firebase *client* path — sign-up, sign-in, linking, redirect handling,
+the automatic adoption. There was no Auth to run them against. The server side is verified.

@@ -298,11 +298,21 @@ ok(/^\d{4}-\d{2}-\d{2}$/.test(todayISO()), `todayISO format (${todayISO()})`);
 // down; the network imports live inside init().
 const fb = await import('../js/firebase-backend.js');
 
-ok(auth.configured() === false, 'cloud stays off until real keys are pasted in');
+// Project fitness-tracker-th is configured, so the app WANTS the cloud. Node
+// cannot load the Firebase SDK (it is imported over https from gstatic), which
+// makes this suite an unintentionally perfect test of the D13 fallback: the
+// cloud is wanted, unreachable, and must degrade instead of breaking.
+ok(auth.configured() === true, 'cloud is configured');
 const st = await auth.state();
-ok(st.mode === 'local', 'unconfigured app reports local storage');
-ok(st.degraded === false, 'local-by-choice is not a degraded state');
-ok(st.user === null, 'no user when running locally');
+ok(st.mode === 'local', 'unreachable cloud falls back to local storage rather than throwing');
+ok(st.degraded === true, 'the fallback is reported as degraded, not passed off as normal');
+ok(st.error !== null, 'the reason is kept so Settings can show it');
+ok(st.user === null, 'no user while disconnected');
+
+// The whole point of the fallback: logging still works with no cloud.
+const offlineWorkout = await store.saveWorkout({ name: 'Offline test', exercises: [] });
+ok((await store.getWorkout(offlineWorkout.id)).name === 'Offline test',
+   'a workout still saves while the cloud is unreachable');
 
 // Calling an account action without a cloud must fail loudly, not silently no-op.
 let threw = false;

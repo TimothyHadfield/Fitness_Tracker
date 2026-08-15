@@ -65,6 +65,7 @@ async function active() {
       await mod.FirebaseBackend.ready();
       remoteImpl = mod.FirebaseBackend;
       remoteFailure = null;
+      await adoptLocalData(mod);
       return remoteImpl;
     } catch (err) {
       // Losing the cloud must never stop someone logging a set mid-workout.
@@ -76,6 +77,40 @@ async function active() {
   })();
 
   return activePromise;
+}
+
+// The day the cloud is switched on, everyone who has been logging locally would
+// otherwise open the app to a brand-new empty account and conclude their history
+// was destroyed. So on the FIRST successful cloud connection, if the account is
+// empty and this device is not, carry the data up automatically.
+//
+// Deliberately narrow, because silent data movement is worth being paranoid
+// about: it only runs when every cloud collection is empty, so it cannot
+// overwrite anything, and a marker stops it ever running twice. Failure is
+// swallowed — the manual "Upload from this device" button in Account remains,
+// and a failed migration must not stop the app loading.
+const ADOPTED_KEY = NS + 'adoptedIntoCloud';
+
+async function adoptLocalData(mod) {
+  try {
+    if (localStorage.getItem(ADOPTED_KEY)) return;
+
+    const localCounts = await Promise.all(COLLECTIONS.map((c) => LocalBackend.read(c)));
+    const hasLocal = localCounts.some((rows, i) => COLLECTIONS[i] !== 'settings' && rows.length);
+    if (!hasLocal) { localStorage.setItem(ADOPTED_KEY, 'nothing-to-adopt'); return; }
+
+    const remote = await Promise.all(COLLECTIONS.map((c) => mod.FirebaseBackend.read(c)));
+    const cloudEmpty = remote.every((rows, i) => COLLECTIONS[i] === 'settings' || !rows.length);
+    if (!cloudEmpty) { localStorage.setItem(ADOPTED_KEY, 'cloud-already-had-data'); return; }
+
+    for (let i = 0; i < COLLECTIONS.length; i++) {
+      if (localCounts[i].length) await mod.FirebaseBackend.write(COLLECTIONS[i], localCounts[i]);
+    }
+    localStorage.setItem(ADOPTED_KEY, new Date().toISOString());
+    console.info('Local data carried into your new cloud account.');
+  } catch (err) {
+    console.error('Could not carry local data into the cloud automatically.', err);
+  }
 }
 
 const backend = {
