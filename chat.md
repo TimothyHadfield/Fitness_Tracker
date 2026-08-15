@@ -933,3 +933,57 @@ not a layout, and it still proves nothing about how any of it looks.
 
 250 data-layer assertions, 42 render assertions, both green. Tier 1 now has one item left: a rest
 timer.
+
+---
+
+## Anatomical body map + a bright level ramp — 2026-08-15
+
+Tim, on the Muscle Groups map: *"Everything right now is funky disconnected ovals and rectangles that
+don't resemble muscles in any way… the human looks exactly like a human, and all the muscles look
+exactly what they look like in real life. That is what I want."* Plus: *"the coloring is just
+different shades of orange and yellow… I want a wide range of different colors that are bright."*
+
+He was right about the shapes — the old map was literally `<ellipse>` and `<rect>`.
+
+**On copying the reference image:** it is a watermarked Dreamstime stock vector (ID 142535635,
+© Vectorville), so it can't go in the site. The anatomy in it isn't anyone's property though, so the
+figure was redrawn from scratch to show the same things: the pec fan, the deltoid cap, the lat V, the
+three heads of the quadriceps, the two heads of the gastrocnemius.
+
+**The thing that unlocked it: Chrome is installed on this machine.** Every previous session drew
+blind. Rendering the SVG headless and *looking at it* turned this from guesswork into eleven
+iterations, each one fixing something visible — a gingerbread-man silhouette, arms fused to the ribs,
+limbs too thin to hold a muscle, muscles overhanging the leg they were meant to be inside.
+
+**Two structural decisions came out of that loop:**
+
+1. **Everything is drawn as the left half and mirrored by transform.** Symmetry is exact and free,
+   and there is half as much geometry to get wrong. The silhouette is one half-contour: closed it
+   fills the body, drawn open it is the outline with no seam down the middle — so the fill and the
+   outline can never disagree.
+2. **Muscles are cross-section tables, not path data.** `[y, xLeft, xRight]` rows, turned into a
+   smooth closed curve by `belly()`. This was forced by measuring the render: hand-written bezier
+   handles were pinching muscles to *half* the width they were meant to be, and it was invisible
+   until the shapes were sampled numerically. A cross-section says exactly how wide a muscle is at a
+   given height and can be checked against the silhouette it has to fit inside.
+
+**Colour.** The old ramp was one hue, per the standing rule that an ordinal scale isn't a rainbow.
+Tim wants range, and there is a way to have both: a multi-hue ramp with strictly monotone lightness —
+blue → violet → magenta → red → orange → gold → green — which is exactly how viridis and plasma are
+built. Generated in OKLCH at the gamut edge and validated. It fails the validator's *single hue*
+check by design, so it was also stress-tested against the categorical all-pairs checks the old ramp
+was never held to, and it wins on normal vision (worst ΔE 13.8 vs 8.0) while matching under colour
+blindness.
+
+One trap recorded in `progress.md` §5: that validator's single-hue check wraps its hue arithmetic, so
+a ramp crossing 0° can report a 40° spread and PASS while actually sweeping 250°. That PASS means
+nothing.
+
+**A false alarm worth remembering.** The first real-app screenshot looked like the back figure and
+the legend were cut off — textbook horizontal overflow. It wasn't: `--window-size` doesn't change the
+layout viewport in this headless build, so it was cropping a 512px layout. Measuring said
+`VW=512 SW=512`, no overflow anywhere. The fix for actually testing phone widths is an `<iframe>` of
+fixed width; at a true 360 and 390 everything fits and the legend wraps.
+
+Home, Workouts, Calendar, Settings and Muscles now all screenshotted in both themes. 250 data-layer
+assertions, 44 render assertions, green.

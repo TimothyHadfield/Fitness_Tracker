@@ -113,7 +113,15 @@ const svg = data.querySelector('svg.body-map');
 ok(Boolean(svg), 'the body SVG renders');
 const regions = svg ? svg.querySelectorAll('.body-region') : [];
 ok(regions.length >= 25, `body has ${regions.length} tappable regions across both views`);
-ok(svg && svg.querySelectorAll('.body-outline').length >= 10, 'outline pieces render (head, neck, limbs)');
+// The silhouette is a filled half-body plus its open outline, each emitted
+// twice through the mirror transform. Both must be present: the fill is what
+// stops an uncoloured muscle reading as a hole, the outline is what keeps a
+// coloured one inside the body.
+ok(svg && svg.querySelectorAll('.body-skin').length === 4,
+   'the filled silhouette renders as two mirrored halves per view, front and back');
+ok(svg && svg.querySelectorAll('.body-edge').length >= 2, 'the silhouette outline renders on top');
+ok(svg && [...svg.querySelectorAll('.body-skin')].some((p) => p.getAttribute('transform')),
+   'exactly one half is mirrored — symmetry comes from the transform, not duplicated path data');
 
 // Every muscle drawn shows up in both views where expected, and each region
 // carries exactly one level class.

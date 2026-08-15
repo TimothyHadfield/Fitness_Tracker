@@ -8,8 +8,9 @@
 
 **Status:** Live and working. Tier 1 is complete except for a rest timer. Firebase is provisioned and
 verified end to end. The **Muscle Groups** strength map and the **body-weight trend chart** both
-shipped today. What has *not* happened is anyone opening this in a real browser — see §0.5, it is
-the whole remaining risk.
+shipped today, and the body map was then **redrawn anatomically** with a bright multi-hue level
+ramp. **A browser has now rendered it** (headless Chrome, screenshots eyeballed) — see §0.5 for
+exactly what that does and does not cover. The remaining risk is a real device, not a real browser.
 
 | | |
 |---|---|
@@ -17,7 +18,8 @@ the whole remaining risk.
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
 | **Data tests** | `node tests/data-layer.test.mjs` — 250 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 42 assertions, mounts every screen |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 44 assertions, mounts every screen |
+| **Look at it** | headless Chrome + an `<iframe>` at phone width — §0.6. Chrome and Edge are both installed |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |
 
@@ -44,11 +46,20 @@ It needs a server — ES modules do not load over `file://`.
    from the CLI's stored refresh token — that is how Auth providers were configured. Don't assume
    console-only until you've checked.
 
-5. **No BROWSER has rendered this app.** `tests/render.test.mjs` mounts every screen in jsdom and
-   asserts real DOM structure, which caught two real bugs — but that covers *logic and structure*,
-   not layout, spacing, touch, or whether anything looks right. Be precise about which you mean;
-   never claim the UI is verified. The test stubs `clientWidth`/`clientHeight` so the SVG line chart
-   actually runs — that is a *size*, not a layout, and proves nothing about how it looks.
+5. **A browser HAS now rendered this app — headless Chrome, 2026-08-15.** Chrome and Edge are both
+   installed on this machine, which changes what can be verified. See §0.6 for the recipe. Home,
+   Workouts, Calendar, Settings and Muscles were screenshotted and eyeballed at 360 / 390 / 512 px in
+   both themes: nothing overflows, nothing scrolls that shouldn't, the legend wraps. **Still
+   unverified:** any real device, iOS Safari, touch, the installed PWA, and every screen not listed
+   above. jsdom remains the *structural* check; a screenshot is the *visual* one. Be precise about
+   which you mean.
+
+6. **How to actually look at the app.** `--window-size` does NOT change the layout viewport in this
+   headless build — it crops the screenshot of a 512px layout, which reads exactly like an overflow
+   bug and cost half an hour. To get a true phone viewport, load the app in an `<iframe>` of fixed
+   width and screenshot the wrapper page. Also: the app's real `firebase-config.js` makes boot await
+   a gstatic import that never resolves without network, leaving `#app` empty — copy the app to a
+   scratch dir and blank the config there. Never blank the real one.
 
 ---
 
@@ -121,7 +132,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | Hand-authored SVG body, front + back, 29 tappable regions. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
+| **Muscles** | Hand-authored **anatomical** SVG body, front + back, 46 tappable regions. Real muscle shapes — pec fan, deltoid cap, lat V, three quadriceps heads, two gastrocnemius heads — drawn as cross-section tables, not path data (see `body-map.js`). Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
@@ -133,9 +144,11 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 
 - All **15 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
 - **250 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies)
-- **42 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
-  29 regions with correct level classes, tapping a muscle opens its detail, and the SVG line chart
-  now genuinely runs (gridlines, one marker per measured point, correct aria label)
+- **44 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
+  46 regions with correct level classes, tapping a muscle opens its detail, and the SVG line chart
+  genuinely runs (gridlines, one marker per measured point, correct aria label)
+- **Screenshots, headless Chrome** — Home, Workouts, Calendar, Settings and Muscles at 360/390/512 px
+  in dark and light. Layout holds, nothing overflows, the legend wraps
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -147,8 +160,9 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 
 ### NOT verified
 
-- **No browser.** Layout, spacing, touch, chart sizing, whether the body looks like a body, the
-  Google popup/redirect branch, `adoptLocalData()` against real local data.
+- **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
+  branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
+  only — it says nothing about how a phone actually behaves in the hand.
 - **Google sign-in** — not enabled in the console, so untested.
 
 ---
@@ -287,11 +301,21 @@ eventually earn the app an opinion here.
 | Dark | `#3D8FC0` | `#C08430` | 19.6 | 23.2 | 5.3 / 5.9 |
 | Light | `#2C7CB0` | `#96660F` | 20.7 | 22.1 | 4.1 / 4.5 |
 
-*Strength ramp* (`--lv-*`): strength level is **ordinal**, so it is a **one-hue sequential ramp**,
-not a categorical rainbow. Seven steps generated in OKLCH at the accent hue and validated with
-`--ordinal` in both themes — monotone lightness, adjacent ΔL ≥ 0.06, single hue, end step clearing
-its surface. Dark is a *selected* ramp with the anchor flipped, not an inversion. **Regenerate and
-re-validate; never hand-edit those hexes.** Bare `:root` is DARK in this stylesheet.
+*Strength ramp* (`--lv-*`): strength level is **ordinal**, and it is now a **multi-hue** ramp —
+seven steps sweeping ~250° of hue with **strictly monotone lightness**. Tim asked for bright, varied
+colour (2026-08-15); monotone lightness is what keeps it a scale rather than a rainbow, and it is the
+same construction viridis and plasma use. Generated in OKLCH at the gamut edge and validated in both
+themes: monotone L, adjacent ΔL ≥ 0.06, light end clearing its surface — all pass. *Single hue*
+fails by design, so the ramp was additionally stress-tested against the **categorical all-pairs**
+checks the old one-hue ramp was never held to, and it beats it comfortably on normal vision
+(worst ΔE 13.8 / 11.4 vs 8.0 / 6.9) while matching it under colour blindness. Both land in the CVD
+floor band, which is legal only with secondary encoding — this screen always shows the legend and
+names the level in text on tap. Dark is a *selected* ramp with the anchor flipped, not an inversion.
+**Regenerate and re-validate; never hand-edit those hexes.** Bare `:root` is DARK in this stylesheet.
+
+⚠️ The validator's *Single hue* check computes hue spread with a naive min/max that wraps: a ramp
+crossing 0° can be reported as a 40° spread and PASS when it actually sweeps 250°. Don't read that
+particular PASS as meaning anything.
 
 ### Load-type rules (`js/exercises.js`)
 
@@ -385,6 +409,7 @@ being a differentiator.
   computable. `canNormalize()` in `e1rm.js` still refuses them.
 - **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
   step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
+  Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
   `docs/research.md` §1.3 says was never validated — it was optimised for *internal consistency*.
   Harmless for rep normalisation, a stronger claim here. Mitigated by preferring ≤5-rep benchmarks
@@ -404,10 +429,10 @@ being a differentiator.
 
 ## 10. Next steps
 
-1. **Tim opens the app on his phone.** This is the entire remaining risk. Everything below the
-   interface is verified; nothing about the interface is. Most likely to be wrong: whether the body
-   map reads as a body, whether the Data control row (exercise picker + source toggle + rep stepper)
-   fits, and whether the desktop sidebar squeezes "Fitness Tracker" beside a 30px avatar.
+1. **Tim opens the app on his phone.** Still the biggest remaining risk, but a smaller one than it
+   was: the layout has now been seen at phone widths in Chrome (§0.5). What a screenshot cannot tell
+   us is touch — tap target sizes on the body map, press-and-hold on the steppers, scroll feel — plus
+   iOS Safari and the installed PWA.
 2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
    support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
    anonymous both work.
