@@ -9,7 +9,7 @@
 // site data destroys it permanently. That is stated plainly rather than buried.
 
 import { store, auth } from './store.js';
-import { el, screenShell, toast, confirmSheet, emptyState } from './ui.js';
+import { el, screenShell, toast, confirmSheet, emptyState, openSheet } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -148,6 +148,47 @@ function anonymousScreen() {
 async function signedInScreen(user) {
   const local = await auth.localRowCounts();
   const localTotal = Object.values(local).reduce((n, v) => n + v, 0);
+  // Only an email/password account has a password to change. A Google account
+  // has nothing here to adjust — its details live in the Google account.
+  const hasPassword = (user.providers || []).includes('password');
+
+  const deleteBtn = el('button', {
+    class: 'btn danger block',
+    text: 'Delete account',
+    onClick: () => {
+      // Requires the password because it is irreversible, and because Firebase
+      // refuses the operation on a stale session anyway.
+      const pw = hasPassword
+        ? el('input', { class: 'input', type: 'password', autocomplete: 'current-password', placeholder: 'Your password' })
+        : null;
+
+      let handle = null;
+      const confirmBtn = el('button', {
+        class: 'btn danger block',
+        text: 'Delete everything permanently',
+        onClick: async () => {
+          if (hasPassword && !pw.value) { toast('Enter your password'); return; }
+          const ok = await run(confirmBtn, 'Deleting…', async () => {
+            await auth.deleteAccount(pw ? pw.value : null);
+            toast('Account deleted');
+          });
+          if (ok) { if (handle) handle.close(); go('#/home'); }
+        },
+      });
+
+      handle = openSheet({
+        title: 'Delete your account?',
+        body: el('div', { class: 'card' },
+          el('p', { class: 'field-help' },
+            'This erases every workout, record, benchmark and custom exercise from your account, '
+            + 'permanently, on every device. It cannot be undone. Download a backup first if there '
+            + 'is any chance you want this data later.'),
+          pw ? el('div', { class: 'field' }, el('label', { text: 'Confirm your password' }), pw) : null,
+        ),
+        footer: confirmBtn,
+      });
+    },
+  });
 
   const uploadBtn = localTotal
     ? el('button', {
@@ -205,9 +246,38 @@ async function signedInScreen(user) {
         : null,
 
       el('div', { class: 'section-label', text: 'Account' }),
+      hasPassword ? passwordCard() : null,
       signOutBtn,
+      deleteBtn,
     ],
   });
+}
+
+/* ---- change password (email accounts only) ---- */
+
+function passwordCard() {
+  const current = el('input', { class: 'input', type: 'password', autocomplete: 'current-password', placeholder: 'Current password' });
+  const next = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: 'New password, 6+ characters' });
+
+  const saveBtn = el('button', {
+    class: 'btn block',
+    text: 'Change password',
+    onClick: async () => {
+      if (!current.value || !next.value) { toast('Fill in both passwords'); return; }
+      if (next.value.length < 6) { toast('Use at least 6 characters'); return; }
+      const ok = await run(saveBtn, 'Saving…', async () => {
+        await auth.changePassword(current.value, next.value);
+        toast('Password changed');
+      });
+      if (ok) { current.value = ''; next.value = ''; saveBtn.disabled = false; saveBtn.textContent = 'Change password'; }
+    },
+  });
+
+  return el('div', { class: 'card' },
+    el('div', { class: 'field' }, el('label', { text: 'Current password' }), current),
+    el('div', { class: 'field' }, el('label', { text: 'New password' }), next),
+    saveBtn,
+  );
 }
 
 /* ------------------------------------------------------------------ *

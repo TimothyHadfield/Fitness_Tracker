@@ -362,6 +362,10 @@ export const auth = {
   async signInGoogle() { return requireRemote().signInGoogle(); },
   async sendPasswordReset(email) { return requireRemote().sendPasswordReset(email); },
   async signOut() { return requireRemote().signOut(); },
+  async changePassword(currentPassword, newPassword) {
+    return requireRemote().changePassword(currentPassword, newPassword);
+  },
+  async deleteAccount(currentPassword) { return requireRemote().deleteAccount(currentPassword); },
 
   // Anything still sitting in this browser's local storage — data logged before
   // the cloud was switched on, or while it was unreachable.

@@ -226,6 +226,43 @@ export const FirebaseBackend = {
     const c = await init();
     await c.auth.sendPasswordResetEmail(c.authClient, email);
   },
+
+  // Changing a password or deleting an account are "recent login" operations.
+  // Firebase rejects them on a stale session, so take the current password and
+  // re-authenticate first rather than surfacing a confusing error.
+  async changePassword(currentPassword, newPassword) {
+    const c = await init();
+    const u = c.authClient.currentUser;
+    if (!u || !u.email) throw new Error('You need an email account to set a password.');
+    await c.auth.reauthenticateWithCredential(
+      u, c.auth.EmailAuthProvider.credential(u.email, currentPassword));
+    await c.auth.updatePassword(u, newPassword);
+  },
+
+  // Wipe the data first, then the account. Doing it the other way round would
+  // leave the documents orphaned with no signed-in user able to reach them —
+  // the rules scope everything to a uid that would no longer exist.
+  async deleteAccount(currentPassword) {
+    const c = await init();
+    const u = c.authClient.currentUser;
+    if (!u) throw new Error('Not signed in.');
+
+    if (currentPassword && u.email) {
+      await c.auth.reauthenticateWithCredential(
+        u, c.auth.EmailAuthProvider.credential(u.email, currentPassword));
+    }
+
+    for (const name of ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings']) {
+      try { await this.write(name, []); } catch (err) { console.error('clearing ' + name, err); }
+    }
+    await c.auth.deleteUser(u);
+
+    // Leave a working anonymous account behind so the app still runs.
+    const res = await c.auth.signInAnonymously(c.authClient);
+    user = res.user;
+    notify();
+    return describeUser(user);
+  },
 };
 
 /* ------------------------------------------------------------------ *

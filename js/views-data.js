@@ -101,6 +101,7 @@ export async function CalendarView() {
   // The grid is the content, so the legend rides in the header rather than
   // costing a row of its own.
   const screen = screenShell({
+    profile: true,
     title: el('div', { class: 'cal-topbar' },
       el('h1', { text: 'Calendar' }),
       el('div', { class: 'legend' },
@@ -227,6 +228,7 @@ export async function GraphView() {
 
   if (!options.length && !comparison.fields.length) {
     return screenShell({
+      profile: true,
       title: 'Graphs',
       scroll: emptyState(
         'Not enough data yet',
@@ -428,6 +430,7 @@ export async function GraphView() {
   await render();
 
   return screenShell({
+    profile: true,
     title: modeSwitch,
     top,
     scroll: host,

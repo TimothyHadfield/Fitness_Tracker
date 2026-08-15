@@ -53,6 +53,7 @@ const PATHS = {
   play: 'M7.5 5.5v13l11-6.5z',
   edit: 'M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z',
   flag: 'M5 21V4h13l-2.5 4L18 12H5',
+  person: 'M12 12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0',
 };
 
 export function icon(name, size) {
@@ -78,6 +79,60 @@ export function iconBtn(name, label, onClick, cls = 'icon-btn') {
 
 export function chevron() {
   return el('span', { class: 'row-chev' }, icon('right'));
+}
+
+/* ------------------------------------------------------------------ *
+ * Profile button — top-left of every main screen
+ * ------------------------------------------------------------------ */
+
+// Returns immediately with a neutral avatar and fills itself in once the
+// account state is known, so no view has to await anything to render.
+//
+// It carries a warning dot whenever the data is NOT backed up — an anonymous
+// account, or no cloud at all. That is the one status worth interrupting
+// someone about, because it is the only one where they can lose everything.
+//
+// store.js is imported dynamically rather than at the top: ui.js is otherwise
+// pure presentation, and a lazy import keeps that true and rules out any
+// import cycle.
+export function profileButton() {
+  const glyph = el('span', { class: 'avatar-glyph' }, icon('person'));
+  const btn = el('a', {
+    class: 'avatar-btn at-risk',
+    href: '#/account',
+    'aria-label': 'Account',
+    title: 'Account',
+  }, glyph);
+
+  const paint = (state) => {
+    const user = state && state.user;
+    const secured = Boolean(user && user.secured);
+    btn.classList.toggle('secured', secured);
+    btn.classList.toggle('at-risk', !secured);
+
+    if (secured && user.email) {
+      glyph.replaceChildren(document.createTextNode(user.email.trim()[0].toUpperCase()));
+      btn.setAttribute('aria-label', `Account — signed in as ${user.email}`);
+      btn.setAttribute('title', user.email);
+    } else if (secured) {
+      glyph.replaceChildren(icon('person'));
+      btn.setAttribute('aria-label', 'Account — signed in');
+      btn.setAttribute('title', 'Account');
+    } else {
+      glyph.replaceChildren(icon('person'));
+      btn.setAttribute('aria-label', 'Account — your data is not backed up');
+      btn.setAttribute('title', 'Your data is not backed up');
+    }
+  };
+
+  import('./store.js')
+    .then(async ({ auth }) => {
+      paint(await auth.state());
+      auth.onChange(async () => paint(await auth.state()));
+    })
+    .catch((err) => console.error('Could not read account state', err));
+
+  return btn;
 }
 
 /* ------------------------------------------------------------------ *
@@ -342,7 +397,7 @@ export function emptyState(title, message, action) {
 // `title` may be a string or a DOM node. Passing a node lets a screen put its
 // primary control in the header instead of a redundant heading, which buys back
 // a whole row for the content.
-export function screenShell({ title, sub, back, actions, top, scroll, bottom, body, noNav }) {
+export function screenShell({ title, sub, back, actions, top, scroll, bottom, body, noNav, profile }) {
   const heading = title instanceof Node
     ? el('div', { class: 'topbar-slot' }, title)
     : el('div', { style: 'flex:1;min-width:0' },
@@ -352,7 +407,10 @@ export function screenShell({ title, sub, back, actions, top, scroll, bottom, bo
 
   return el('div', { class: 'screen' + (noNav ? ' no-nav' : '') },
     el('header', { class: 'topbar' },
-      back ? iconBtn('left', 'Back', back) : null,
+      // Left slot: back where there is somewhere to go back to, otherwise the
+      // profile button. Never both — two things competing for the top-left
+      // corner is how you get people tapping the wrong one.
+      back ? iconBtn('left', 'Back', back) : (profile ? profileButton() : null),
       heading,
       ...(actions || []),
     ),

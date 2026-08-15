@@ -39,6 +39,7 @@ export async function HomeView() {
   ];
 
   return screenShell({
+    profile: true,
     title: 'Fitness Tracker',
     sub: workouts.length ? `${plural(workouts.length, 'workout')} saved` : 'Get started below',
     actions: [iconBtn('sliders', 'Settings', () => go('#/settings'))],
@@ -89,6 +90,7 @@ export async function WorkoutsView() {
   const workouts = await store.getWorkouts();
 
   return screenShell({
+    profile: true,
     title: 'Workouts',
     sub: workouts.length ? plural(workouts.length, 'workout') : null,
     top: el('button', { class: 'btn primary block', onClick: () => go('#/workout/new') },

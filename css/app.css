@@ -154,6 +154,37 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .icon-btn:active { background: var(--raised); }
 .icon-btn svg { width: 21px; height: 21px; }
 
+/* Profile button — top-left of every main screen. Round, so it reads as an
+   account rather than another toolbar control. */
+.avatar-btn {
+  width: 34px; height: 34px;
+  flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--raised);
+  color: var(--ink-soft);
+  text-decoration: none;
+  position: relative;
+}
+.avatar-btn:active { background: var(--raised-hi); }
+.avatar-btn svg { width: 19px; height: 19px; }
+.avatar-glyph {
+  display: grid; place-items: center;
+  font-size: 14.5px; font-weight: 700; line-height: 1;
+}
+/* Signed in: filled, and showing the initial. */
+.avatar-btn.secured { background: var(--accent); color: var(--accent-ink); }
+/* Not backed up: a dot you notice, not a subtlety you don't. This is the only
+   state where a user can lose everything, so it gets the one badge in the app. */
+.avatar-btn.at-risk::after {
+  content: '';
+  position: absolute; top: -1px; right: -1px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px var(--ground);
+}
+
 /* Exactly one flexible middle. It scrolls only if it has to. */
 .pane-top {
   flex: none;

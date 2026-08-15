@@ -549,3 +549,40 @@ nothing is blocked.
 
 **The remaining risk is now entirely the interface.** The backend is verified; no browser has
 rendered a single screen of this app.
+
+### Profile button, and account management
+
+Tim: *"now on the actual cite, make a profile icon in the upper left that the user can click on to
+create an account and adjust details. This is how I'll know you're finished with the account setup."*
+
+**The button.** `profileButton()` in `ui.js`, rendered by `screenShell` into the top-left of Home,
+Workouts, Calendar and Graphs. It returns immediately with a neutral avatar and fills itself in once
+the account state resolves, so no view has to await anything to render, and it re-paints on
+`auth.onChange`. Signed in, it fills with the accent colour and shows the email's initial. Not
+signed in, it carries a **red dot** — the only badge in the app, reserved for the one state where a
+user can actually lose everything.
+
+It shares the top-left slot with the back button and never both: two things competing for that
+corner is how people tap the wrong one. `store.js` is imported lazily inside the function so `ui.js`
+stays presentation-only and no import cycle is possible.
+
+**"Adjust details"** meant the account screen needed more than create/sign-in/sign-out, so:
+
+- **Change password** — takes the current password, re-authenticates, then updates. Only shown for
+  accounts with a `password` provider; a Google account has nothing to adjust here.
+- **Delete account** — closes the gap flagged two commits ago. Clears every collection *first*, then
+  deletes the auth user; doing it the other way round would orphan the documents behind a uid that
+  no longer exists and no rule could ever reach. Requires the password, warns that it is permanent
+  and applies to every device, and leaves a working anonymous account behind so the app still runs.
+
+Both are re-authenticating operations that Firebase rejects on a stale session, which is why they
+take the current password rather than failing with something cryptic.
+
+**Verified against the live project** — 12 more checks, all passing: a wrong current password is
+rejected, the change works, **the old password stops working**, the new one signs into the same
+account, data survives, deletion leaves a working anonymous account with a different uid, the
+deleted account cannot sign in, and an admin read confirms **no data was left behind**. Test
+accounts and documents cleaned up; the project holds zero users and zero documents.
+
+45 checks now cover the Firebase stack. The interface is still the whole remaining risk — no browser
+has rendered any of this, including the button itself.

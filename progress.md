@@ -125,7 +125,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
 | Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**). Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
-| Accounts | **Live.** Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, sign-out, local→cloud merge, automatic adoption of existing local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
+| Accounts | **Live.** Profile button top-left of every main screen — dot badge when data is not backed up. Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, **change password**, **delete account**, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
 | Settings | Dark/light, account status, export backup, restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
@@ -137,11 +137,13 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
-- **Firebase verified end to end against the live project** — 33 checks. `js/firebase-backend.js`
+- **Firebase verified end to end against the live project** — 45 checks. `js/firebase-backend.js`
   itself was exercised (its gstatic imports redirected to a local SDK), not a lookalike: anonymous
   sign-in, read/write round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking
-  preserving uid *and* data, sign-out, sign-back-in, error mapping. Seven rule violations all
-  refused. Test users and documents deleted afterwards. Details in `docs/firebase-setup.md`.
+  preserving uid *and* data, sign-out, sign-back-in, password change (old password stops working,
+  data survives), account deletion (data gone, cannot sign back in), error mapping. Seven rule
+  violations all refused. Test users and documents deleted afterwards — the project holds zero users
+  and zero documents. Details in `docs/firebase-setup.md`.
 
 ### NOT verified
 - **No browser has ever rendered this.** Layout, touch behaviour, the measured-chart sizing, the
@@ -402,8 +404,6 @@ rest timer.
 - **No body-weight tracking UI yet.** It's in Tier 1 and the store has no table for it. This is the
   most visible Tier 1 hole, and it also blocks rep normalisation for the 14 bodyweight/assisted
   exercises (their logged weight is added or assisted load, not total resistance).
-- **No account deletion.** Users can sign out but cannot delete their account or erase their cloud
-  data themselves. Fine for friends; needs building before real strangers use it.
 - **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in
   an iOS home-screen app, so the code falls back to `signInWithRedirect` — which itself depends on
   third-party cookies while the auth domain differs from the site origin, and browsers are
