@@ -190,22 +190,45 @@ No pre-built programs, no hypertrophy targets, no autoregulation — those stay 
 ### Stepper increments (as specified)
 Reps ±1 · Weight ±5 lbs · Time ±10 sec · Distance ±0.1 mi. Press-and-hold repeats.
 
-### Layout rule (added 2026-08-14, round 2)
+### Layout + visual rules (rounds 2–3, 2026-08-14)
 
-**The window never scrolls.** `html, body { overflow: hidden }` and `#app` is a fixed
-`100dvh` flex container. Every screen is built by `screenShell({ top, scroll, bottom })`:
+**Rule 1 — the window never scrolls, and screens should not need to either.**
+`html, body { overflow: hidden }` and `#app` is a fixed `100dvh` flex container. Every screen is
+built by `screenShell({ top, scroll, bottom })`:
 
 - `.topbar` — fixed
 - `.pane-top` — fixed region under the header (name fields, primary actions, selectors)
-- `.pane-scroll` — **the one scrolling region**, `flex: 1; min-height: 0; overflow-y: auto`
+- `.pane-scroll` — the flexible middle; it *only* gains a scrollbar when content genuinely
+  overflows
 - `.pane-bottom` — fixed footer (save/delete, submit)
 
-`#app` uses `flex-direction: column-reverse` on mobile so the nav (first DOM child) sits at the
-bottom, and flips to `row` on desktop so the same element becomes a left sidebar. The session
-screen's set list has its own `max-height` + scroll so it can't push the steppers off-screen.
+Tim's instruction (round 3): **scrolling is a last resort, not a layout tool.** Prefer shrinking
+and tightening until a screen fits. Inner scrolling is acceptable only for genuinely unbounded
+lists — the exercise list in the builder, recent activity, search results.
 
-**When adding a screen: never let content spill out of `scroll`.** Anything that must always be
-visible belongs in `top` or `bottom`.
+Measured against an ~850px viewport, the session screen (the densest) comes to roughly 640px with
+three sets, so it fits without scrolling.
+
+**Rule 2 — no boxes.** Structure comes from hairline rules, spacing and type weight, never
+nested bordered cards. `.card` is kept as a semantic grouping but draws nothing. `.list` uses
+negative inline margins so hairlines run full-bleed while text stays on the gutter. Every removed
+border was ~2px of height and one more thing between the reader and the number.
+
+**Density decisions that bought the most space:**
+
+- Steppers are a `repeat(auto-fit, minmax(148px, 1fr))` grid, so **weight and reps sit side by
+  side** instead of stacked — roughly 140px saved on every session screen
+- Cards → hairlines throughout (calendar, day detail, graph, set list, rows)
+- Summary stats are a 4-across hairline grid, not four boxes
+- Dropped the redundant "per side / total" line from the session head — the stepper's own label
+  carries it
+- Dropped the calendar hint line; folded into the legend
+
+`#app` uses `flex-direction: column-reverse` on mobile so the nav (first DOM child) sits at the
+bottom, and flips to `row` on desktop so the same element becomes a left sidebar.
+
+**When adding a screen:** anything that must always be visible goes in `top` or `bottom`, and the
+default assumption is that `scroll` will not scroll.
 
 ### Load-type rules (`js/exercises.js`)
 

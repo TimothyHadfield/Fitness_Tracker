@@ -187,5 +187,25 @@ Tim asked for four changes:
 
 Test coverage grew from 23 to 45 assertions, including every tricky load-type case individually.
 
-**State at end of session:** v1 + round 2 built, deployed, and live. Still awaiting a real
+### Round 3 — flatten and compress
+
+Tim revised his round-2 instruction: rather than letting inner boxes scroll, **resize pages so
+scrolling isn't needed at all** unless content is genuinely about twice the screen. He also asked
+to **remove the boxes entirely** and blend everything together for page efficiency.
+
+Rewrote the stylesheet around two rules — nothing scrolls unless it truly must, and no bordered
+cards. Structure now comes from hairline rules, spacing and type weight.
+
+Biggest space wins:
+- **Steppers became a two-column grid**, so weight and reps sit side by side instead of stacked —
+  about 140px back on every session screen
+- Every card border removed (calendar, day detail, graph, set list, rows, stats)
+- Summary stats became a 4-across hairline grid
+- Cut redundant copy: the "per side / total" line in the session head (the stepper label already
+  says it) and the calendar hint line
+
+Session screen now measures roughly 640px of an ~850px viewport with three sets, so it fits.
+Verified that every class referenced in JS still has a CSS rule after the rewrite.
+
+**State at end of session:** v1 + rounds 2 and 3 built, deployed, and live. Still awaiting a real
 browser/phone run by Tim, and Firebase credentials before cloud sync can be switched on.

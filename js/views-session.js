@@ -4,7 +4,7 @@ import { store, todayISO } from './store.js';
 import { LOAD_LABEL } from './exercises.js';
 import {
   el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  fmtSet, confirmSheet, fmtDateLong, loadBadge,
+  fmtSet, confirmSheet, fmtDateLong,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
 
@@ -179,15 +179,13 @@ export async function SessionView(workoutId) {
       }).node);
 
     pane.replaceChildren(
+      // The per-side / total distinction is carried by the stepper's own label,
+      // so it isn't repeated here.
       el('div', { class: 'session-head' },
         el('h2', { class: 'session-ex-name', text: entry.exerciseName }),
         el('div', { class: 'session-ex-meta' },
           `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${state.index + 1} of ${state.entries.length}`,
         ),
-        entry.loadType ? el('div', { class: 'session-load' },
-          loadBadge(entry.loadType),
-          el('span', { text: entry.loadType === 'per_side' ? 'Enter one side’s weight' : 'Enter the whole load' }),
-        ) : null,
       ),
 
       entry.notes

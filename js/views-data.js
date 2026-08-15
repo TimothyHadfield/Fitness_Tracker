@@ -100,11 +100,9 @@ export async function CalendarView() {
         el('div', { class: 'legend' },
           el('span', {}, el('i', { class: 'w' }), 'Workout'),
           el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
+          el('span', { text: 'Tap a day for detail' }),
         ),
       ),
-      el('div', { style: 'font-size:13px;color:var(--ink-faint);text-align:center' },
-        totalDays ? 'Tap any day to see everything you did.'
-                  : 'Finish a workout or log a benchmark and the day fills in here.'),
     ],
   });
 }
@@ -127,9 +125,9 @@ export async function DayView(date) {
   for (const s of rec.sessions) {
     const setCount = s.entries.reduce((n, e) => n + e.sets.length, 0);
     scroll.push(el('div', { class: 'card' },
-      el('div', { style: 'display:flex;align-items:center;gap:10px' },
+      el('div', { class: 'day-head' },
         el('div', { style: 'flex:1;min-width:0' },
-          el('div', { style: 'font-size:18px;font-weight:680;letter-spacing:-0.01em', text: s.workoutName || 'Workout' }),
+          el('div', { class: 'day-title', text: s.workoutName || 'Workout' }),
           el('div', { class: 'row-sub', text: `${s.entries.length} exercise${s.entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` }),
         ),
         iconBtn('trash', 'Delete this workout record', () => confirmSheet({
@@ -166,7 +164,7 @@ export async function DayView(date) {
       const fields = ex ? ex.fields : Object.keys(b.values || {});
       const loadType = ex ? ex.loadType : null;
       scroll.push(el('div', { class: 'card' },
-        el('div', { style: 'display:flex;align-items:center;gap:10px' },
+        el('div', { class: 'day-head' },
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'detail-ex-head' },
               el('span', { class: 'detail-ex-name', text: b.exerciseName }),
@@ -270,7 +268,7 @@ export async function GraphView() {
 
   return screenShell({
     title: 'Graphs',
-    sub: `${options.length} exercise${options.length === 1 ? '' : 's'} with enough data`,
+    sub: `${options.length} exercise${options.length === 1 ? '' : 's'} with enough data to chart`,
     top: [
       el('div', { class: 'field' }, el('label', { text: 'Exercise' }), select),
       fieldChips,
@@ -365,10 +363,6 @@ function summaryStats(points, field) {
     stat('Now', fmt(last), '', fmtDateShort(points[points.length - 1].date)),
     stat('Change', (diff > 0 ? '+' : diff < 0 ? '−' : '') + fmt(Math.abs(diff)), cls),
     stat('Change %', pct === null ? '—' : `${sign}${pct.toFixed(1)}%`, cls),
-    el('div', { class: 'stat wide' },
-      el('div', { class: 'stat-label', text: 'Records' }),
-      el('div', { style: 'font-size:14px;color:var(--ink-soft)', text: `${points.length} days recorded · ${FIELD_META[field].label.toLowerCase()} shown` }),
-    ),
   );
 }
 
