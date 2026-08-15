@@ -5,6 +5,7 @@ import { el, icon, clear } from './ui.js';
 import { HomeView, StartPickerView, WorkoutsView, WorkoutBuilderView } from './views-workouts.js';
 import { SessionView, BenchmarkView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
+import { AccountView, SignInView } from './views-account.js';
 
 const NAV = [
   { hash: '#/home',     label: 'Home',     icon: 'home' },
@@ -14,7 +15,7 @@ const NAV = [
 ];
 
 // Routes that take over the whole screen (no bottom nav).
-const FULLSCREEN = ['session', 'workout', 'benchmark', 'settings', 'day', 'start'];
+const FULLSCREEN = ['session', 'workout', 'benchmark', 'settings', 'day', 'start', 'account', 'signin'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -44,6 +45,8 @@ async function resolve(route) {
     case 'day':       return DayView(route.param);
     case 'graphs':    return GraphView();
     case 'settings':  return SettingsView();
+    case 'account':   return AccountView();
+    case 'signin':    return SignInView();
     default:          return HomeView();
   }
 }

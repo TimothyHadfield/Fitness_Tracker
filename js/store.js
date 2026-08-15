@@ -9,8 +9,9 @@
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
 import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps } from './e1rm.js';
+import { IS_CONFIGURED } from './firebase-config.js';
 
-const BACKEND = 'local'; // 'local' | 'firebase'
+const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
 const NS = 'ftrack:v1:';
 
 const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings'];
@@ -45,22 +46,42 @@ const LocalBackend = {
  * Firebase backend — loaded lazily, only when switched on
  * ------------------------------------------------------------------ */
 
-const RemoteBackend = {
-  async load() {
-    if (this._impl) return this._impl;
-    const { IS_CONFIGURED } = await import('./firebase-config.js');
-    if (!IS_CONFIGURED) {
-      throw new Error('Firebase is not configured yet. See docs/firebase-setup.md');
-    }
-    const { FirebaseBackend } = await import('./firebase-backend.js');
-    this._impl = FirebaseBackend;
-    return this._impl;
-  },
-  async read(collection) { return (await this.load()).read(collection); },
-  async write(collection, rows) { return (await this.load()).write(collection, rows); },
-};
+// 'auto' means: use the cloud the moment real keys are pasted into
+// js/firebase-config.js, and stay on this device until then. Nothing else has
+// to change to switch over.
+const wantRemote = () => BACKEND === 'firebase' || (BACKEND === 'auto' && IS_CONFIGURED);
 
-const backend = BACKEND === 'firebase' ? RemoteBackend : LocalBackend;
+let activePromise = null;
+let remoteImpl = null;
+let remoteFailure = null;
+
+async function active() {
+  if (activePromise) return activePromise;
+
+  activePromise = (async () => {
+    if (!wantRemote()) return LocalBackend;
+    try {
+      const mod = await import('./firebase-backend.js');
+      await mod.FirebaseBackend.ready();
+      remoteImpl = mod.FirebaseBackend;
+      remoteFailure = null;
+      return remoteImpl;
+    } catch (err) {
+      // Losing the cloud must never stop someone logging a set mid-workout.
+      // Fall back to this device and surface it in Settings instead of failing.
+      console.error('Cloud backend unavailable — using this device only.', err);
+      remoteFailure = err;
+      return LocalBackend;
+    }
+  })();
+
+  return activePromise;
+}
+
+const backend = {
+  async read(collection) { return (await active()).read(collection); },
+  async write(collection, rows) { return (await active()).write(collection, rows); },
+};
 
 /* ------------------------------------------------------------------ *
  * Helpers
@@ -257,6 +278,91 @@ export const store = {
 
   async clearAll() {
     for (const c of COLLECTIONS) await backend.write(c, []);
+  },
+};
+
+/* ------------------------------------------------------------------ *
+ * Accounts
+ *
+ * A thin facade so views never import the Firebase module directly. Every
+ * method is safe to call when the cloud is off — it just reports "local".
+ * ------------------------------------------------------------------ */
+
+function requireRemote() {
+  if (!remoteImpl) {
+    throw new Error(remoteFailure
+      ? 'Not connected to your account right now. Check your connection and try again.'
+      : 'Cloud accounts are not switched on yet.');
+  }
+  return remoteImpl;
+}
+
+export const auth = {
+  // Is the cloud even meant to be on? False until real keys are pasted in.
+  configured: () => wantRemote(),
+
+  // Where the data actually lives right now, after any fallback.
+  async state() {
+    const impl = await active();
+    if (impl === LocalBackend) {
+      return {
+        mode: 'local',
+        user: null,
+        // Configured but not connected means something failed — the user is
+        // still logging fine, but nothing is syncing. Say so plainly.
+        degraded: wantRemote(),
+        error: remoteFailure ? remoteFailure.message : null,
+      };
+    }
+    return { mode: 'cloud', user: impl.currentUser(), degraded: false, error: null };
+  },
+
+  onChange(fn) {
+    if (!remoteImpl) return () => {};
+    return remoteImpl.onUserChange(fn);
+  },
+
+  async signUpEmail(email, password) { return requireRemote().signUpEmail(email, password); },
+  async signInEmail(email, password) { return requireRemote().signInEmail(email, password); },
+  async signInGoogle() { return requireRemote().signInGoogle(); },
+  async sendPasswordReset(email) { return requireRemote().sendPasswordReset(email); },
+  async signOut() { return requireRemote().signOut(); },
+
+  // Anything still sitting in this browser's local storage — data logged before
+  // the cloud was switched on, or while it was unreachable.
+  async localRowCounts() {
+    const out = {};
+    for (const c of COLLECTIONS) {
+      const rows = await LocalBackend.read(c);
+      if (rows.length && c !== 'settings') out[c] = rows.length;
+    }
+    return out;
+  },
+
+  // Merge this device's local data into the signed-in account. Merges by id and
+  // keeps whichever copy is newer, so running it twice is harmless and it can
+  // never delete something the cloud already had.
+  async uploadLocalData() {
+    const impl = requireRemote();
+    const { mergeRows } = await import('./firebase-backend.js');
+    const report = {};
+    for (const c of COLLECTIONS) {
+      const local = await LocalBackend.read(c);
+      if (!local.length) continue;
+      const remote = await impl.read(c);
+      // Settings is a single row and not worth fighting over — an existing
+      // cloud preference wins, because it reflects a device already signed in.
+      const merged = c === 'settings' ? (remote.length ? remote : local) : mergeRows(remote, local);
+      await impl.write(c, merged);
+      report[c] = merged.length - remote.length;
+    }
+    return report;
+  },
+
+  // Wipe the local copy after a successful upload, so one device stops being a
+  // second source of truth. Never called automatically.
+  async clearLocalData() {
+    for (const c of COLLECTIONS) await LocalBackend.write(c, []);
   },
 };
 

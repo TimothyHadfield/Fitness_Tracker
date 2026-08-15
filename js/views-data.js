@@ -1,7 +1,7 @@
 // Calendar, day detail, graphs, settings.
 
 import {
-  store, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
+  store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
   normalizedSeries, defaultTargetReps,
 } from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
@@ -9,7 +9,7 @@ import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
 } from './e1rm.js';
 import {
-  el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper,
+  el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper, chevron,
   fmtSet, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 
@@ -613,8 +613,41 @@ function stat(label, value, cls = '', sub) {
  * Settings
  * ================================================================== */
 
+// What Settings says about where the data lives. It must never claim a backup
+// exists when it doesn't — an anonymous account is one browser-clear from gone.
+function describeAccount(state, configured) {
+  if (!configured) {
+    return {
+      title: 'This device only',
+      sub: 'Cloud accounts not switched on',
+      dataHelp: 'Everything is stored on this device. Download a backup regularly — and always before clearing your browser data.',
+    };
+  }
+  if (state.mode === 'local') {
+    return {
+      title: 'Not connected',
+      sub: 'Saving to this device — nothing is syncing',
+      dataHelp: 'Your account could not be reached, so changes are being saved on this device. Download a backup until it reconnects.',
+    };
+  }
+  const u = state.user || {};
+  if (u.isAnonymous) {
+    return {
+      title: 'No account yet',
+      sub: 'Your data is not backed up — tap to secure it',
+      dataHelp: 'Your data lives only in this browser. Clearing your browsing data will erase it permanently. Add an account, or download a backup.',
+    };
+  }
+  return {
+    title: u.email || 'Signed in',
+    sub: 'Synced to your account',
+    dataHelp: 'Your data syncs to your account and works offline. A downloaded backup is still the only copy you control directly.',
+  };
+}
+
 export async function SettingsView() {
-  const settings = await store.getSettings();
+  const [settings, accountState] = await Promise.all([store.getSettings(), auth.state()]);
+  const accountLine = describeAccount(accountState, auth.configured());
 
   async function doExport() {
     const data = await store.exportAll();
@@ -664,10 +697,18 @@ export async function SettingsView() {
         el('div', { class: 'field-help', text: 'Dark is easier to read under gym lighting.' }),
       ),
 
+      el('div', { class: 'section-label', text: 'Account' }),
+      el('a', { class: 'row', href: '#/account' },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: accountLine.title }),
+          el('div', { class: 'row-sub', text: accountLine.sub }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      ),
+
       el('div', { class: 'section-label', text: 'Your data' }),
       el('div', { class: 'card' },
-        el('div', { class: 'field-help' },
-          'Everything is stored on this device. Download a backup regularly — and always before clearing your browser data.'),
+        el('div', { class: 'field-help', text: accountLine.dataHelp }),
         el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
         el('button', { class: 'btn ghost block', text: 'Restore from backup', onClick: () => fileInput.click() }),
         fileInput,
@@ -685,7 +726,7 @@ export async function SettingsView() {
       }),
 
       el('div', { style: 'font-size:12.5px;color:var(--ink-faint);text-align:center;line-height:1.5' },
-        'Fitness Tracker · data stored locally in this browser'),
+        'Fitness Tracker · ' + accountLine.sub.toLowerCase()),
     ],
   });
 }

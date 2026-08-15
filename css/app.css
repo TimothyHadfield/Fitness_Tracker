@@ -304,6 +304,10 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    Forms
    ========================================================================== */
 
+/* "or" divider between two sign-in routes. Hairline, per Rule 2 — no boxes. */
+.or-rule { display: flex; align-items: center; gap: 10px; color: var(--ink-faint); font-size: 12px; }
+.or-rule::before, .or-rule::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 12px; font-weight: 650; color: var(--ink-faint); letter-spacing: 0.03em; text-transform: uppercase; }
 .field-help { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }

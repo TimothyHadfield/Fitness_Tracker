@@ -399,3 +399,69 @@ Also fixed a real bug found while testing: `Number(null)` is `0`, so a null rep 
 under a stub DOM, every JS class has a CSS rule, all assets serve 200 with correct MIME types.
 **Still never rendered in a browser** — layout of the new stepper row and the marker/hatch treatment
 are unconfirmed.
+
+---
+
+## Session — 2026-08-15 (cont.) · accounts and a real backend
+
+Tim: *"start deploying the firebase features so that there is a backend that secures accounts and
+keeps the user's data stored and safe."*
+
+Two decisions taken via the question box: **email + Google** for sign-in, and **anonymous-first**
+onboarding (logged as D12).
+
+### What was already there, and what was wrong with it
+
+`js/firebase-backend.js` existed but had never run, and reviewing it turned up real defects:
+`initializeApp` was called on every reconnect and throws the second time; `initializeFirestore`
+likewise; `signIn` reset the connection *after* using it. More importantly there was **no account
+UI at all** — the adapter had `signIn`/`linkEmail` methods that nothing in the app ever called.
+"Deploy the Firebase features" was mostly unwritten work, not a flag flip.
+
+### Built
+
+- **`firestore.rules`** — the actual security boundary, now a version-controlled file rather than
+  text living in a console box. Scopes every user to `users/{their-uid}/**`, restricts writes to
+  the five known collections, enforces document shape, caps rows so a bad client cannot balloon a
+  document toward the 1 MB limit and lock someone out of their own history, and denies deletes.
+  Default deny everywhere else. `firebase.json` added so `firebase deploy --only firestore:rules`
+  works.
+- **`js/firebase-backend.js`** — rewritten. App/Firestore singletons, live auth subscription,
+  anonymous fallback, email + Google, popup with redirect fallback for installed PWAs, redirect
+  result handling, password reset, and human error messages instead of raw `auth/` codes.
+- **`js/views-account.js`** — account screen, sign-in screen, upgrade-from-anonymous flow.
+- **`js/store.js`** — `BACKEND = 'auto'` (switches itself on when real keys appear), an `auth`
+  facade so views never import Firebase directly, and local→cloud merge.
+- **Settings** now reports where data actually lives instead of hard-coding "stored on this device".
+
+### Three judgement calls
+
+**A cloud failure falls back to local storage** rather than erroring (D13). Losing signal must never
+stop someone logging a set mid-workout. Settings then says "Not connected" rather than pretending
+things are synced.
+
+**`read` deliberately does not swallow errors.** The store does read-modify-write, so a failed read
+that quietly returned `[]` would let the next write persist an empty list over real cloud data.
+Failing loudly is the safe behaviour here.
+
+**Anonymous data is described honestly.** The account screen says outright that an un-upgraded
+account lives in one browser and clearing site data destroys it permanently. The temptation is to
+soften that; it would be the one thing in this feature that could actually cost someone their
+training history.
+
+### Flagged, not hidden
+
+- **Google sign-in inside the installed PWA is the riskiest path.** Popups are blocked there, so
+  the code redirects — but `signInWithRedirect` leans on third-party cookies while the auth domain
+  differs from the site origin, and browsers are restricting those. Test on the home screen first.
+- **The API key is not a secret** and never was. Documented explicitly, because treating it as one
+  leads people to skip the rules, which are the only real protection.
+- **No account deletion** yet. Fine for friends, needed before strangers.
+
+**Verified:** 137 assertions (up from 108), 11 modules parse, full import graph resolves, every CSS
+class has a rule, all assets serve 200. **Every Firebase network path remains reviewed code, not
+tested code** — no project exists to run it against.
+
+**Blocked on Tim:** creating the project needs his Google login. `docs/firebase-setup.md` rewritten
+as a 10-minute walkthrough, including the step everyone forgets — adding `timothyhadfield.github.io`
+to Auth → authorised domains, without which sign-in works on localhost and fails on the live site.

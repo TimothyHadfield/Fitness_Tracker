@@ -6,14 +6,14 @@
 
 **Last updated:** 2026-08-15
 **Status:** Working app, deployed and live. Five rounds of refinement, plus rep normalisation (D11)
-shipped 2026-08-15. Firebase written but not connected. **Never yet seen running in a real browser.**
+shipped 2026-08-15. Accounts + Firestore backend written and pushed, **blocked only on Tim creating the Firebase project** (docs/firebase-setup.md). **Never yet seen running in a real browser.**
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 108 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 137 assertions, all passing |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
 It needs a server — ES modules do not load over `file://`.
@@ -121,21 +121,25 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
 | Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**). Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
-| Settings | Dark/light, export backup, restore backup, delete all |
+| Accounts | **Code complete, waiting on Tim's Firebase project.** Anonymous-first with email + Google upgrade, sign-in, password reset, sign-out, local→cloud merge. Falls back to local storage if the cloud is unreachable |
+| Settings | Dark/light, account status, export backup, restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
 
 ### Verified
-- All 10 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
+- All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
   (catches missing exports without a browser)
-- **108 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- **137 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
 ### NOT verified
 - **No browser has ever rendered this.** Layout, touch behaviour, and the measured-chart sizing are
   all unconfirmed.
-- **Firebase adapter written but never executed.**
+- **Every Firebase network path is reviewed code, not tested code.** No project has existed to run
+  it against. The pure helpers around it (error mapping, `describeUser`, `mergeRows`) *are* tested.
+  Expect something to be wrong on first connection — the local-storage fallback means it can't lose
+  data while it gets sorted.
 
 ---
 
@@ -147,6 +151,8 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 Fitness_Tracker/
 ├── index.html                  entry point
 ├── manifest.webmanifest        PWA — installs to iPhone home screen
+├── firestore.rules             security rules — THE thing protecting user data
+├── firebase.json               so `firebase deploy --only firestore:rules` works
 ├── icon.svg
 ├── progress.md                 ← this file
 ├── chat.md                     conversation log
@@ -162,8 +168,9 @@ Fitness_Tracker/
 │   ├── views-workouts.js       home, workout list, builder, exercise picker
 │   ├── views-session.js        session runner, benchmark form
 │   ├── views-data.js           calendar, day detail, graphs, settings
-│   ├── firebase-config.js      EMPTY placeholder for keys
-│   └── firebase-backend.js     complete Firestore adapter — UNTESTED
+│   ├── views-account.js        account, sign-in, upgrade-from-anonymous
+│   ├── firebase-config.js      EMPTY placeholder for keys — the only blocker
+│   └── firebase-backend.js     Firestore + auth adapter; network paths UNTESTED
 ├── tests/
 │   └── data-layer.test.mjs     50 headless assertions, no DOM needed
 └── docs/
@@ -300,13 +307,15 @@ Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have
 | D9 | **Progressive disclosure is core architecture**, not a late feature. Advanced controls hidden by default. | Audience is "any level". Can't be bolted on later. |
 | D10 | **Training goal is a user setting that reconfigures the dashboard.** Hypertrophy → volume; strength → e1RM; general → mixed. | Users choose their goal, so one fixed dashboard would be wrong for most. D3 remains the default. |
 
+| D12 | **Accounts are anonymous-first: log immediately, upgrade to email or Google later.** Upgrading *links* the anonymous account, so the uid and all existing data carry over. | Chosen by Tim 2026-08-15. A signup wall on first open is the single biggest killer of new-app retention, and D8/D9 say no wall on day one. The cost is that un-upgraded data lives in one browser and nothing recovers it — so the UI states that plainly rather than implying it is backed up. |
+| D13 | **Backend selection is `'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set mid-workout (D6). Settings then reports "Not connected" instead of pretending things are synced. |
+
 ### Standing recommendations (acted on, not blocking)
 
 - **R1 — Web app (PWA), not native iOS.** Installs to the home screen, works offline, zero
   distribution cost, matches the rest of Tim's portfolio.
-- **R2 — Local-first storage, no accounts yet.** This already serves "me and friends" — each browser
-  holds its own data. Accounts/sync solve *cross-device and backup*, not multi-user. Schema carries
-  UUIDs + timestamps so the layer drops in without migration.
+- ~~**R2 — Local-first storage, no accounts yet.**~~ **Superseded 2026-08-15** — Tim asked for
+  accounts and secure storage. Local-first survives as the *fallback* (D13), not the only mode.
 - **R3 — Ship Tier 1 before anything else.**
 
 ### Resolved by Claude without asking
@@ -385,6 +394,13 @@ rest timer.
 - **No body-weight tracking UI yet.** It's in Tier 1 and the store has no table for it. This is the
   most visible Tier 1 hole, and it also blocks rep normalisation for the 14 bodyweight/assisted
   exercises (their logged weight is added or assisted load, not total resistance).
+- **No account deletion.** Users can sign out but cannot delete their account or erase their cloud
+  data themselves. Fine for friends; needs building before real strangers use it.
+- **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in
+  an iOS home-screen app, so the code falls back to `signInWithRedirect` — which itself depends on
+  third-party cookies while the auth domain differs from the site origin, and browsers are
+  restricting those. Test it on the home screen first. Fallbacks: email/password in the PWA, or a
+  custom domain with `authDomain` on a subdomain of it.
 - **Rep normalisation assumes near-failure effort.** Every rep-based 1RM formula does. The bias is
   systematic per user per exercise so trend and ordering survive, but inconsistent effort between
   benchmarks is noise the chart cannot see. There is no RIR/RPE field to correct with — deliberate,
@@ -401,11 +417,14 @@ rest timer.
 
 ## 10. Next steps
 
-1. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
-   not survived one real gym session, and the rep-normalised graph has never been rendered.
-2. **Firebase**, once Tim creates the project and pastes config into `js/firebase-config.js`
-   (`docs/firebase-setup.md` has the 5-minute console walkthrough). The adapter is written and
-   waiting; flip `BACKEND` in `store.js` and test.
+1. **Tim does the Firebase console steps** — `docs/firebase-setup.md`, about 10 minutes. Everything
+   in code is done and pushed; the only blocker is that creating a project needs his Google login.
+   Pasting six values into `js/firebase-config.js` switches the whole app over — `BACKEND` is
+   already `'auto'`. **The step people forget is adding `timothyhadfield.github.io` to Auth →
+   authorised domains**, without which sign-in works on localhost and fails on the live site.
+2. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
+   not survived one real gym session, and neither the rep-normalised graph nor the account screens
+   have ever been rendered.
 3. **Body-weight tracking** — the biggest remaining Tier 1 gap, and it now unblocks a second thing:
    rep normalisation is switched off for bodyweight and assisted exercises because the logged
    weight is added/assisted load rather than total resistance. Knowing the user's body weight makes

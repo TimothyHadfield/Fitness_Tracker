@@ -1,0 +1,54 @@
+rules_version = '2';
+
+// Fitness Tracker — Firestore security rules.
+//
+// These are the ONLY thing standing between one user's training history and
+// everyone else's. The Firebase API key in js/firebase-config.js is not a
+// secret and is not a security control — it identifies the project, nothing
+// more. Anyone can read it out of the deployed JavaScript. Security comes from
+// exactly two places: Firebase Auth proving who the caller is, and this file
+// deciding what that caller may touch.
+//
+// Deploy with:  firebase deploy --only firestore:rules
+// Test with:    the Rules Playground in the Firebase console.
+//
+// Default is deny. Anything not explicitly allowed below is refused, including
+// every path that does not appear here at all.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The signed-in caller is the owner of this path.
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Only the five collections the app actually uses. A compromised or
+    // modified client cannot invent new ones and use the project as free
+    // storage.
+    function knownCollection(name) {
+      return name in ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings'];
+    }
+
+    // Shape check. The app writes one document per collection, holding the
+    // whole row list. Reject anything that is not that shape, and cap the row
+    // count so a runaway client cannot push a document toward the 1 MB limit
+    // and lock the user out of their own data.
+    function validPayload() {
+      return request.resource.data.keys().hasOnly(['rows', 'updatedAt'])
+          && request.resource.data.rows is list
+          && request.resource.data.rows.size() <= 5000
+          && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/collections/{name} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+                            && knownCollection(name)
+                            && validPayload();
+      // Clearing data is a write of an empty list, never a document delete —
+      // so nothing needs delete permission.
+      allow delete: if false;
+    }
+  }
+}

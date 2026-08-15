@@ -10,7 +10,7 @@ globalThis.localStorage = {
 
 const { BUILT_IN_EXERCISES, makeCustomExercise } = await import('../js/exercises.js');
 const {
-  store, seriesForExercise, chartableExercises, activityByDate, todayISO,
+  store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizeWorkout, DEFAULT_SETS, benchmarkComparison,
   normalizedSeries, defaultTargetReps, weightRepObservations,
 } = await import('../js/store.js');
@@ -291,6 +291,73 @@ ok(makeCustomExercise({ name: 'Odd Lift', muscle: 'Back', equipment: 'Other', fi
    'custom weighted exercise keeps chosen load type');
 
 ok(/^\d{4}-\d{2}-\d{2}$/.test(todayISO()), `todayISO format (${todayISO()})`);
+
+/* ---------- accounts / cloud backend ---------- */
+// Only the pure helpers are testable headlessly — anything touching the
+// Firebase SDK needs a real project. Importing the module must NOT pull the SDK
+// down; the network imports live inside init().
+const fb = await import('../js/firebase-backend.js');
+
+ok(auth.configured() === false, 'cloud stays off until real keys are pasted in');
+const st = await auth.state();
+ok(st.mode === 'local', 'unconfigured app reports local storage');
+ok(st.degraded === false, 'local-by-choice is not a degraded state');
+ok(st.user === null, 'no user when running locally');
+
+// Calling an account action without a cloud must fail loudly, not silently no-op.
+let threw = false;
+try { await auth.signOut(); } catch { threw = true; }
+ok(threw, 'account actions refuse to run with no cloud configured');
+ok(typeof auth.onChange(() => {}) === 'function', 'onChange returns an unsubscribe even when local');
+
+// describeUser must never hand a raw Firebase user to a view.
+ok(fb.describeUser(null) === null, 'no user describes as null');
+const anon = fb.describeUser({ uid: 'a1', isAnonymous: true, providerData: [] });
+ok(anon.isAnonymous && anon.secured === false, 'anonymous account is reported as NOT secured');
+const real = fb.describeUser({ uid: 'a2', isAnonymous: false, email: 'x@y.z', providerData: [{ providerId: 'password' }] });
+ok(real.secured === true && real.email === 'x@y.z', 'email account is reported as secured');
+ok(real.providers.includes('password'), 'providers surfaced for the UI');
+ok(fb.describeUser({ uid: 'a3', isAnonymous: false }).uid === 'a3', 'a user with no providerData still describes');
+
+// Error codes must never reach the user raw.
+ok(fb.authErrorMessage({ code: 'auth/wrong-password' }) === 'Wrong email or password.', 'known code maps to plain English');
+ok(fb.authErrorMessage({ code: 'auth/email-already-in-use' }).includes('signing in'), 'duplicate email suggests signing in');
+ok(!fb.authErrorMessage({ code: 'auth/some-new-code' }).includes('auth/'), 'unmapped codes never leak into the UI');
+ok(fb.authErrorMessage(null) === 'Something went wrong.', 'a missing error still yields a message');
+ok(fb.authErrorMessage({ code: 'unavailable' }).includes('saved on this device'),
+   'offline is framed as safe, because it is');
+
+ok(fb.isPopupFailure({ code: 'auth/popup-blocked' }), 'popup-blocked triggers the redirect fallback');
+ok(!fb.isPopupFailure({ code: 'auth/wrong-password' }), 'unrelated errors do not trigger redirect');
+ok(fb.isAlreadyLinked({ code: 'auth/credential-already-in-use' }), 'already-linked detected');
+ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect preference');
+
+/* ---------- merging a device into an account ---------- */
+// Uploading local data must never destroy something the cloud already had.
+const remoteRows = [{ id: 'a', name: 'Cloud A', updatedAt: '2026-08-10T00:00:00Z' }];
+const localRows = [
+  { id: 'a', name: 'Local A newer', updatedAt: '2026-08-14T00:00:00Z' },
+  { id: 'b', name: 'Local only' },
+];
+const merged = fb.mergeRows(remoteRows, localRows);
+ok(merged.length === 2, 'merge keeps both sides, keyed by id');
+ok(merged.find((r) => r.id === 'a').name === 'Local A newer', 'newer timestamp wins');
+ok(merged.find((r) => r.id === 'b'), 'local-only rows are added');
+
+const olderLocal = fb.mergeRows(
+  [{ id: 'a', name: 'Cloud', updatedAt: '2026-08-20T00:00:00Z' }],
+  [{ id: 'a', name: 'Local', updatedAt: '2026-08-01T00:00:00Z' }],
+);
+ok(olderLocal[0].name === 'Cloud', 'older local data never overwrites newer cloud data');
+ok(fb.mergeRows([{ id: 'a', name: 'Cloud' }], [{ id: 'a', name: 'Local' }])[0].name === 'Cloud',
+   'with no timestamps the cloud wins — other devices already agree on it');
+ok(fb.mergeRows(null, null).length === 0, 'merging nothing yields nothing');
+ok(fb.mergeRows([], [{ name: 'no id' }]).length === 0, 'rows without an id are skipped');
+ok(fb.mergeRows([{ id: 'a' }], []).length === 1, 'an empty upload leaves the cloud intact');
+
+// Idempotence: uploading the same device twice must not duplicate anything.
+const once = fb.mergeRows(remoteRows, localRows);
+ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a no-op');
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);
