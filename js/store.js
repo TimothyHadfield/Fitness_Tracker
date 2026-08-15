@@ -344,6 +344,76 @@ export async function chartableExercises(min = 2) {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// Start-vs-now comparison built from BENCHMARKS ONLY — workout sessions are
+// deliberately excluded, so this answers "how has my tested best moved?" rather
+// than mixing in whatever happened to get logged on a training day.
+//
+// Returns { fields: [...], byField: { weight: [{...}], ... } }.
+export async function benchmarkComparison(minPoints = 2) {
+  const [benchmarks, exMap] = await Promise.all([store.getBenchmarks(), store.getExerciseMap()]);
+  const FIELDS = ['weight', 'reps', 'time', 'distance'];
+
+  // exerciseId -> field -> [{date, value}]
+  const grouped = new Map();
+  for (const b of benchmarks) {
+    for (const f of FIELDS) {
+      const v = b.values ? b.values[f] : undefined;
+      if (typeof v !== 'number' || Number.isNaN(v)) continue;
+      if (!grouped.has(b.exerciseId)) grouped.set(b.exerciseId, {});
+      const rec = grouped.get(b.exerciseId);
+      if (!rec[f]) rec[f] = [];
+      rec[f].push({ date: b.date, value: v });
+    }
+  }
+
+  const byField = {};
+  const incomplete = {};
+
+  for (const f of FIELDS) {
+    const rows = [];
+    let pending = 0;
+
+    for (const [exId, rec] of grouped) {
+      const points = rec[f];
+      if (!points) continue;
+
+      // One entry per day; if a day has several, keep the best.
+      const byDate = new Map();
+      for (const p of points) {
+        const prev = byDate.get(p.date);
+        if (!prev || p.value > prev.value) byDate.set(p.date, p);
+      }
+      const ordered = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+
+      if (ordered.length < minPoints) { pending++; continue; }
+
+      const first = ordered[0];
+      const last = ordered[ordered.length - 1];
+      const ex = exMap.get(exId);
+      rows.push({
+        id: exId,
+        name: ex ? ex.name : 'Unknown exercise',
+        loadType: ex ? ex.loadType : null,
+        start: first.value,
+        startDate: first.date,
+        now: last.value,
+        nowDate: last.date,
+        delta: last.value - first.value,
+        pct: first.value === 0 ? null : ((last.value - first.value) / Math.abs(first.value)) * 100,
+        count: ordered.length,
+      });
+    }
+
+    if (rows.length) {
+      // Biggest movers first — the chart's job is to show change.
+      byField[f] = rows.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+      incomplete[f] = pending;
+    }
+  }
+
+  return { fields: Object.keys(byField), byField, incomplete };
+}
+
 // Everything recorded on a given date.
 export async function activityByDate() {
   const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);

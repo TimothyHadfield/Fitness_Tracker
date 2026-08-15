@@ -1,9 +1,11 @@
 // Calendar, day detail, graphs, settings.
 
-import { store, seriesForExercise, chartableExercises, activityByDate, todayISO } from './store.js';
+import {
+  store, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
+} from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
-  el, icon, iconBtn, toast, screenShell, emptyState, confirmSheet,
+  el, iconBtn, toast, screenShell, emptyState, confirmSheet,
   fmtSet, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 
@@ -15,96 +17,103 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
  * Calendar
  * ================================================================== */
 
-let calCursor = null; // persists while navigating months
+// Months run as one continuous vertical scroll rather than paging with arrows.
+// The range covers at least the last 12 months, extended back to the earliest
+// thing recorded, and opens scrolled to the current month.
+function monthRange(activity) {
+  const now = new Date();
+  const endIdx = now.getFullYear() * 12 + now.getMonth();
+  let startIdx = endIdx - 11;
+
+  const dates = [...activity.keys()].sort();
+  if (dates.length) {
+    const [y, m] = dates[0].split('-').map(Number);
+    startIdx = Math.min(startIdx, y * 12 + (m - 1));
+  }
+
+  const out = [];
+  for (let i = startIdx; i <= endIdx; i++) out.push({ year: Math.floor(i / 12), month: i % 12 });
+  return out;
+}
+
+function monthBlock(year, month, activity, today) {
+  const first = new Date(year, month, 1).getDay();
+  const days = new Date(year, month + 1, 0).getDate();
+  const isCurrent = today.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`);
+
+  const cells = [
+    ...Array.from({ length: first }, () => el('div', { class: 'cal-cell blank' })),
+    ...Array.from({ length: days }, (_, i) => {
+      const day = i + 1;
+      const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const rec = activity.get(iso);
+
+      const cls = ['cal-cell'];
+      if (iso === today) cls.push('today');
+      if (rec && rec.sessions.length) cls.push('has-workout');
+      else if (rec && rec.benchmarks.length) cls.push('has-benchmark-only');
+
+      const tags = [];
+      if (rec) {
+        const shown = rec.sessions.slice(0, 2);
+        for (const s of shown) {
+          tags.push(el('span', { class: 'cal-tag w', text: s.workoutName || 'Workout', title: s.workoutName }));
+        }
+        if (rec.sessions.length > shown.length) {
+          tags.push(el('span', { class: 'cal-tag more', text: `+${rec.sessions.length - shown.length}` }));
+        }
+        if (rec.benchmarks.length) tags.push(el('span', { class: 'cal-tag b', text: 'Benchmark' }));
+      }
+
+      const label = rec
+        ? `${MONTHS[month]} ${day}: ${rec.sessions.map((s) => s.workoutName).join(', ')}${rec.benchmarks.length ? (rec.sessions.length ? ', ' : '') + 'benchmark' : ''}`
+        : `${MONTHS[month]} ${day}, nothing recorded`;
+
+      return el('button', { class: cls.join(' '), onClick: () => go('#/day/' + iso), 'aria-label': label },
+        el('span', { class: 'cal-day', text: String(day) }),
+        el('span', { class: 'cal-tags' }, tags),
+      );
+    }),
+  ];
+
+  return el('section', {
+    class: 'cal-month' + (isCurrent ? ' is-current' : ''),
+    dataset: isCurrent ? { currentMonth: 'true' } : {},
+  },
+    el('div', { class: 'cal-month-head' },
+      el('h2', { class: 'cal-title', text: `${MONTHS[month]} ${year}` }),
+      el('div', { class: 'cal-dows' },
+        ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => el('div', { class: 'cal-dow', text: d }))),
+    ),
+    el('div', { class: 'cal-grid' }, cells),
+  );
+}
 
 export async function CalendarView() {
   const activity = await activityByDate();
-  const now = new Date();
-  if (!calCursor) calCursor = { year: now.getFullYear(), month: now.getMonth() };
-
-  const grid = el('div', { class: 'cal-grid' });
-  const title = el('div', { class: 'cal-title' });
-
-  function render() {
-    const { year, month } = calCursor;
-    title.textContent = `${MONTHS[month]} ${year}`;
-
-    const first = new Date(year, month, 1).getDay();
-    const days = new Date(year, month + 1, 0).getDate();
-    const today = todayISO();
-
-    grid.replaceChildren(
-      ...['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => el('div', { class: 'cal-dow', text: d })),
-      ...Array.from({ length: first }, () => el('div', { class: 'cal-cell blank' })),
-      ...Array.from({ length: days }, (_, i) => {
-        const day = i + 1;
-        const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const rec = activity.get(iso);
-
-        const cls = ['cal-cell'];
-        if (iso === today) cls.push('today');
-        if (rec && rec.sessions.length) cls.push('has-workout');
-        else if (rec && rec.benchmarks.length) cls.push('has-benchmark-only');
-
-        // Named labels rather than dots: the workout's own title, and the plain
-        // word "Benchmark" for benchmarks.
-        const tags = [];
-        if (rec) {
-          const shown = rec.sessions.slice(0, 2);
-          for (const s of shown) {
-            tags.push(el('span', { class: 'cal-tag w', text: s.workoutName || 'Workout', title: s.workoutName }));
-          }
-          if (rec.sessions.length > shown.length) {
-            tags.push(el('span', { class: 'cal-tag more', text: `+${rec.sessions.length - shown.length}` }));
-          }
-          if (rec.benchmarks.length) {
-            tags.push(el('span', { class: 'cal-tag b', text: 'Benchmark' }));
-          }
-        }
-
-        const label = rec
-          ? `${MONTHS[month]} ${day}: ${rec.sessions.map((s) => s.workoutName).join(', ')}${rec.benchmarks.length ? (rec.sessions.length ? ', ' : '') + 'benchmark' : ''}`
-          : `${MONTHS[month]} ${day}, nothing recorded`;
-
-        return el('button', { class: cls.join(' '), onClick: () => go('#/day/' + iso), 'aria-label': label },
-          el('span', { class: 'cal-day', text: String(day) }),
-          el('span', { class: 'cal-tags' }, tags),
-        );
-      }),
-    );
-  }
-
-  function shift(n) {
-    let m = calCursor.month + n, y = calCursor.year;
-    if (m < 0) { m = 11; y--; }
-    if (m > 11) { m = 0; y++; }
-    calCursor = { year: y, month: m };
-    render();
-  }
-
-  render();
-
+  const today = todayISO();
+  const months = monthRange(activity);
   const totalDays = activity.size;
 
-  return screenShell({
+  const screen = screenShell({
     title: 'Calendar',
     sub: totalDays ? `${totalDays} day${totalDays === 1 ? '' : 's'} recorded` : 'Nothing recorded yet',
-    scroll: [
-      el('div', { class: 'card' },
-        el('div', { class: 'cal-head' },
-          iconBtn('left', 'Previous month', () => shift(-1)),
-          title,
-          iconBtn('right', 'Next month', () => shift(1)),
-        ),
-        grid,
-        el('div', { class: 'legend' },
-          el('span', {}, el('i', { class: 'w' }), 'Workout'),
-          el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
-          el('span', { text: 'Tap a day for detail' }),
-        ),
-      ),
-    ],
+    top: el('div', { class: 'legend' },
+      el('span', {}, el('i', { class: 'w' }), 'Workout'),
+      el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
+      el('span', { text: 'Scroll for other months' }),
+    ),
+    scroll: months.map(({ year, month }) => monthBlock(year, month, activity, today)),
   });
+
+  // Land on the current month once the screen is in the document.
+  setTimeout(() => {
+    const pane = screen.querySelector('.pane-scroll');
+    const current = screen.querySelector('[data-current-month]');
+    if (pane && current) pane.scrollTop = current.offsetTop - pane.offsetTop;
+  }, 0);
+
+  return screen;
 }
 
 /* ================================================================== *
@@ -202,11 +211,13 @@ function refresh() {
  * ================================================================== */
 
 let graphChoice = { exerciseId: null, field: null };
+let graphMode = 'trend'; // 'trend' | 'compare'
+let compareField = null;
 
 export async function GraphView() {
-  const options = await chartableExercises(2);
+  const [options, comparison] = await Promise.all([chartableExercises(2), benchmarkComparison(2)]);
 
-  if (!options.length) {
+  if (!options.length && !comparison.fields.length) {
     return screenShell({
       title: 'Graphs',
       scroll: emptyState(
@@ -217,44 +228,57 @@ export async function GraphView() {
     });
   }
 
-  if (!graphChoice.exerciseId || !options.find((o) => o.id === graphChoice.exerciseId)) {
-    graphChoice = { exerciseId: options[0].id, field: options[0].fields[0] };
-  }
+  if (!options.length) graphMode = 'compare';
+  if (!comparison.fields.length) graphMode = 'trend';
 
-  const chartHost = el('div', { class: 'card' });
+  const top = el('div', { class: 'graph-controls' });
+  const host = el('div', { class: 'card' });
 
-  const select = el('select', {
-    class: 'input',
-    onChange: (e) => {
-      graphChoice.exerciseId = e.target.value;
-      graphChoice.field = options.find((o) => o.id === e.target.value).fields[0];
-      draw();
-    },
-  }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId })));
+  const modeSwitch = el('div', { class: 'segmented', role: 'tablist' },
+    [['trend', 'Over time'], ['compare', 'Start vs now']].map(([m, label]) =>
+      el('button', {
+        class: 'seg', role: 'tab', 'aria-selected': String(graphMode === m),
+        disabled: (m === 'trend' && !options.length) || (m === 'compare' && !comparison.fields.length),
+        text: label,
+        onClick: () => { graphMode = m; render(); },
+      })),
+  );
 
-  const fieldChips = el('div', { class: 'chips' });
+  /* ---------- trend (line, all sources) ---------- */
 
-  async function draw() {
+  async function renderTrend() {
+    if (!graphChoice.exerciseId || !options.find((o) => o.id === graphChoice.exerciseId)) {
+      graphChoice = { exerciseId: options[0].id, field: options[0].fields[0] };
+    }
     const opt = options.find((o) => o.id === graphChoice.exerciseId);
     if (!opt.fields.includes(graphChoice.field)) graphChoice.field = opt.fields[0];
 
-    fieldChips.replaceChildren(...opt.fields.map((f) =>
-      el('button', {
-        class: 'chip',
-        'aria-pressed': String(f === graphChoice.field),
-        text: FIELD_META[f].label,
-        onClick: () => { graphChoice.field = f; draw(); },
-      })));
+    top.replaceChildren(
+      modeSwitch,
+      el('select', {
+        class: 'input',
+        'aria-label': 'Exercise',
+        onChange: (e) => {
+          graphChoice.exerciseId = e.target.value;
+          graphChoice.field = options.find((o) => o.id === e.target.value).fields[0];
+          render();
+        },
+      }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId }))),
+      el('div', { class: 'chips' }, opt.fields.map((f) =>
+        el('button', {
+          class: 'chip', 'aria-pressed': String(f === graphChoice.field),
+          text: FIELD_META[f].label,
+          onClick: () => { graphChoice.field = f; render(); },
+        }))),
+    );
 
     const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field);
-
     if (points.length < 2) {
-      chartHost.replaceChildren(emptyState('Only one data point',
-        'Record this exercise on another day to see a line.'));
+      host.replaceChildren(emptyState('Only one data point', 'Record this exercise on another day to see a line.'));
       return;
     }
 
-    chartHost.replaceChildren(
+    host.replaceChildren(
       graphChoice.field === 'weight' && opt.loadType
         ? el('div', { class: 'chart-caption' }, loadBadge(opt.loadType),
             el('span', { text: `Weight shown is ${LOAD_LABEL[opt.loadType]}` }))
@@ -264,17 +288,94 @@ export async function GraphView() {
     );
   }
 
-  await draw();
+  /* ---------- compare (paired bars, benchmarks only) ---------- */
+
+  function renderCompare() {
+    if (!compareField || !comparison.fields.includes(compareField)) compareField = comparison.fields[0];
+    const rows = comparison.byField[compareField];
+
+    top.replaceChildren(
+      modeSwitch,
+      comparison.fields.length > 1
+        ? el('div', { class: 'chips' }, comparison.fields.map((f) =>
+            el('button', {
+              class: 'chip', 'aria-pressed': String(f === compareField),
+              text: FIELD_META[f].label,
+              onClick: () => { compareField = f; render(); },
+            })))
+        : null,
+      el('div', { class: 'bar-legend' },
+        el('span', {}, el('i', { class: 'k-start' }), 'First benchmark'),
+        el('span', {}, el('i', { class: 'k-now' }), 'Latest benchmark'),
+      ),
+    );
+
+    host.replaceChildren(
+      el('div', { class: 'chart-caption' },
+        el('span', { text: `Benchmarks only — workout logs are not included.` })),
+      barChart(rows, compareField),
+      comparison.incomplete[compareField]
+        ? el('div', { class: 'field-help', text: `${comparison.incomplete[compareField]} more exercise${comparison.incomplete[compareField] === 1 ? '' : 's'} need a second benchmark before they can be compared.` })
+        : null,
+    );
+  }
+
+  async function render() {
+    modeSwitch.querySelectorAll('.seg').forEach((b, i) =>
+      b.setAttribute('aria-selected', String(graphMode === (i === 0 ? 'trend' : 'compare'))));
+    if (graphMode === 'compare') renderCompare();
+    else await renderTrend();
+  }
+
+  await render();
 
   return screenShell({
     title: 'Graphs',
-    sub: `${options.length} exercise${options.length === 1 ? '' : 's'} with enough data to chart`,
-    top: [
-      el('div', { class: 'field' }, el('label', { text: 'Exercise' }), select),
-      fieldChips,
-    ],
-    scroll: chartHost,
+    sub: graphMode === 'compare'
+      ? `${(comparison.byField[compareField || comparison.fields[0]] || []).length} exercise${(comparison.byField[compareField || comparison.fields[0]] || []).length === 1 ? '' : 's'} benchmarked twice`
+      : `${options.length} exercise${options.length === 1 ? '' : 's'} with enough data to chart`,
+    top,
+    scroll: host,
   });
+}
+
+/* ---- paired horizontal bars: first benchmark vs latest ---- */
+
+function barChart(rows, field) {
+  if (!rows || !rows.length) {
+    return emptyState('Nothing to compare yet',
+      'Record the same exercise as a benchmark on two different days and it will appear here.');
+  }
+
+  const max = Math.max(...rows.flatMap((r) => [r.start, r.now])) || 1;
+  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(Math.round(v * 100) / 100));
+  const judged = field !== 'time';
+
+  const bar = (kind, value, label) =>
+    el('div', { class: 'bar-line' },
+      el('span', { class: 'bar-tag', text: label }),
+      el('div', { class: 'bar-track' },
+        el('div', {
+          class: 'bar ' + kind,
+          style: `width:${Math.max(2, (value / max) * 100)}%`,
+        })),
+      el('span', { class: 'bar-val mono', text: fmt(value) }),
+    );
+
+  return el('div', { class: 'bars' },
+    rows.map((r) => {
+      const cls = !judged || r.delta === 0 ? '' : r.delta > 0 ? ' up' : ' down';
+      const sign = r.delta > 0 ? '+' : r.delta < 0 ? '−' : '';
+      return el('div', { class: 'bar-row' },
+        el('div', { class: 'bar-head' },
+          el('span', { class: 'bar-name', text: r.name }),
+          el('span', { class: 'bar-delta mono' + cls, text: `${sign}${fmt(Math.abs(r.delta))}${r.pct === null ? '' : ` · ${r.delta > 0 ? '+' : ''}${r.pct.toFixed(0)}%`}` }),
+        ),
+        bar('start', r.start, 'Start'),
+        bar('now', r.now, 'Now'),
+      );
+    }),
+  );
 }
 
 /* ---- SVG line chart ---- */

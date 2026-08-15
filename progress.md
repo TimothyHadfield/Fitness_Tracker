@@ -183,8 +183,8 @@ No pre-built programs, no hypertrophy targets, no autoregulation — those stay 
 | Load type | Every weighted exercise is labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires at end of day |
 | Benchmarks | Any date (default today), any exercise, saves to graph + calendar |
-| Calendar | Month grid; active days are colour-filled and **named** — workout title, or the word "Benchmark" |
-| Graphs | Pick exercise + metric, SVG line chart, start/now/change/change-% summary |
+| Calendar | **Continuous vertical scroll through months** (no arrows); active days are colour-filled and **named** — workout title, or the word "Benchmark" |
+| Graphs | Two modes: **Over time** (SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**) |
 | Settings | Dark/light, export backup, restore backup, delete all |
 
 ### Stepper increments (as specified)
@@ -230,6 +230,25 @@ bottom, and flips to `row` on desktop so the same element becomes a left sidebar
 **When adding a screen:** anything that must always be visible goes in `top` or `bottom`, and the
 default assumption is that `scroll` will not scroll.
 
+**The calendar is the deliberate exception** (round 4): months run as one continuous vertical
+scroll with sticky per-month headings, opening scrolled to the current month. The range is at
+least 12 months, extended back to the earliest recorded day.
+
+### Chart colours (`css/app.css`, `--series-start` / `--series-now`)
+
+The bar chart's two series are **not** the UI accent. They were validated against the data-viz
+six checks in both themes before use:
+
+| Theme | Start | Now | CVD ΔE | Normal ΔE | Contrast |
+|---|---|---|---|---|---|
+| Dark | `#3D8FC0` | `#C08430` | 19.6 | 23.2 | 5.3 / 5.9 |
+| Light | `#2C7CB0` | `#96660F` | 20.7 | 22.1 | 4.1 / 4.5 |
+
+Thresholds: OKLCH L in [0.48, 0.67] dark / [0.43, 0.77] light, chroma ≥ 0.10, CVD ΔE ≥ 8,
+normal-vision ΔE ≥ 15, contrast ≥ 3:1. **Re-validate if these are ever changed** — do not
+eyeball them. Bars also carry direct value labels and text tags, so identity is never
+colour-alone.
+
 ### Load-type rules (`js/exercises.js`)
 
 `loadTypeFor(name, equipment, fields)` returns `'per_side'`, `'total'`, or `null` (no weight
@@ -245,10 +264,12 @@ have a load type, and the tricky cases are asserted individually.
 
 ### Verified
 - All 9 JS modules pass syntax check
-- **45 data-layer assertions pass** (`scratchpad/test-store.mjs`) covering load-type derivation,
-  planned set counts, legacy-workout migration, prefill, set-count building from short history,
-  series building, best-set-per-day collapsing, the ≥2-points graph rule, calendar indexing,
-  and export/import round trip
+- **50 data-layer assertions pass** — run with `node tests/data-layer.test.mjs`. Covers load-type
+  derivation, planned set counts, legacy-workout migration, prefill, set-count building from short
+  history, line-series building, best-set-per-day collapsing, the ≥2-points graph rule, the
+  benchmark-only comparison (including an explicit assertion that session data does **not** leak
+  into it), same-day benchmark collapsing, month-range math, calendar indexing, and export/import
+- Every class referenced in JS has a matching CSS rule
 - All assets serve 200 over HTTP
 
 ### NOT yet verified

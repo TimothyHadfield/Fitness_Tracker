@@ -207,5 +207,34 @@ Biggest space wins:
 Session screen now measures roughly 640px of an ~850px viewport with three sets, so it fits.
 Verified that every class referenced in JS still has a CSS rule after the rewrite.
 
-**State at end of session:** v1 + rounds 2 and 3 built, deployed, and live. Still awaiting a real
+### Round 4 — scrolling calendar + benchmark bar chart
+
+Tim asked for two changes, plus flagged that Claude Code kept asking permission for bash commands
+despite his settings.
+
+**Permissions.** His `~/.claude/settings.json` already allowed all Bash — the prompts fired because
+some commands `cd`'d into directories *outside* the project (the bundled-skill temp folder), which
+triggers its own scope check. Added `additionalDirectories` to his user settings and changed
+approach to keep every command inside the workspace. Permission changes need a reload
+(Shift+Tab to bypass mode, `/permissions`, or restart) — Claude can't grant itself permission
+mid-session.
+
+**Calendar → vertical scroll.** Replaced the prev/next arrows with one continuous scroll through
+months, each with a sticky heading. Range covers at least 12 months, extended back to the earliest
+recorded day, and opens scrolled to the current month.
+
+**Benchmark bar chart.** Graphs now has two modes: *Over time* (the existing line chart, all
+sources) and *Start vs now* (new). The bar chart shows every exercise benchmarked on two or more
+days, with paired horizontal bars — first benchmark and latest — sorted by biggest mover. It reads
+**benchmarks only**; workout logs are deliberately excluded, and there's an explicit test asserting
+session data does not leak in. Exercises with a single benchmark are excluded with a visible count
+explaining why.
+
+Chart colours were validated rather than eyeballed: dark `#3D8FC0`/`#C08430` and light
+`#2C7CB0`/`#96660F`, all six data-viz checks passing in both themes (CVD ΔE ~20 against a threshold
+of 8). Bars also carry direct value labels and text tags so identity is never colour-alone.
+
+Test suite moved into the repo at `tests/data-layer.test.mjs` and grew to 50 assertions.
+
+**State at end of session:** v1 + rounds 2–4 built, deployed, and live. Still awaiting a real
 browser/phone run by Tim, and Firebase credentials before cloud sync can be switched on.

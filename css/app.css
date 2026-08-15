@@ -484,8 +484,25 @@ select.input {
    Calendar
    ========================================================================== */
 
-.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.cal-title { font-size: 16.5px; font-weight: 700; letter-spacing: -0.015em; }
+/* Months are one continuous vertical scroll; each month's heading sticks to the
+   top of the pane while that month is in view. */
+.cal-month { display: flex; flex-direction: column; gap: 4px; }
+
+.cal-month-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--ground);
+  padding: 4px 0 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.cal-title { font-size: 15.5px; font-weight: 750; letter-spacing: -0.015em; }
+.cal-month.is-current .cal-title { color: var(--accent); }
+
+.cal-dows { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
 
 .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
 .cal-dow {
@@ -493,7 +510,6 @@ select.input {
   font-size: 9.5px;
   font-weight: 750;
   color: var(--ink-faint);
-  padding-bottom: 1px;
   text-transform: uppercase;
 }
 
@@ -555,6 +571,86 @@ select.input {
 /* ==========================================================================
    Graph
    ========================================================================== */
+
+/* Chart series colours — validated for both themes against the six data-viz
+   checks (OKLCH band + chroma floor, CVD ΔE 19.6, normal ΔE 23.2, contrast 5.3:1).
+   These are chart-only and deliberately distinct from the UI accent. */
+:root {
+  --series-start: #3D8FC0;
+  --series-now:   #C08430;
+}
+:root[data-theme="light"] {
+  --series-start: #2C7CB0;
+  --series-now:   #96660F;
+}
+
+.graph-controls { display: flex; flex-direction: column; gap: 8px; }
+
+.segmented {
+  display: flex;
+  gap: 2px;
+  background: var(--raised);
+  border-radius: var(--r);
+  padding: 2px;
+}
+.seg {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--ink-faint);
+}
+.seg[aria-selected="true"] { background: var(--ground); color: var(--ink); }
+.seg:disabled { opacity: .35; pointer-events: none; }
+
+.bar-legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--ink-faint); }
+.bar-legend span { display: flex; align-items: center; gap: 5px; }
+.bar-legend i { width: 9px; height: 9px; border-radius: 2px; display: block; }
+.bar-legend i.k-start { background: var(--series-start); }
+.bar-legend i.k-now { background: var(--series-now); }
+
+.bars { display: flex; flex-direction: column; }
+.bar-row { display: flex; flex-direction: column; gap: 3px; padding: 9px 0; }
+.bar-row + .bar-row { border-top: 1px solid var(--rule-soft); }
+
+.bar-head { display: flex; align-items: baseline; gap: 8px; }
+.bar-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-delta { font-size: 12.5px; font-weight: 650; color: var(--ink-faint); flex: none; }
+.bar-delta.up { color: var(--good); }
+.bar-delta.down { color: var(--danger); }
+
+.bar-line { display: flex; align-items: center; gap: 7px; }
+.bar-tag {
+  width: 34px;
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.bar-track { flex: 1; min-width: 0; height: 14px; display: flex; align-items: center; }
+/* 4px rounded data-end, anchored flat to the baseline at the start */
+.bar { height: 14px; border-radius: 0 4px 4px 0; min-width: 3px; }
+.bar.start { background: var(--series-start); }
+.bar.now { background: var(--series-now); }
+.bar-val {
+  width: 54px;
+  flex: none;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 620;
+  color: var(--ink-soft);
+}
 
 .chart-caption { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-faint); }
 .chart-wrap { width: 100%; min-height: 0; }
