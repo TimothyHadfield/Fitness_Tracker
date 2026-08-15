@@ -1,8 +1,10 @@
 # Conversation Log
 
 A running human-readable summary of what has been discussed. Newest session at the bottom.
-For project state and decisions, see `progress.md` — this file is for "what did we actually say
-about X."
+
+**For a fresh Claude session: you do not need this file to work.** `progress.md` is the catch-up
+file and carries everything operative. Come here only to answer "what did we actually say about X"
+or to recover reasoning that didn't make it into a decision.
 
 ---
 
@@ -254,5 +256,20 @@ other way round.**
 - Bars thicken with the viewport (`clamp(13px, 2.4dvh, 24px)`) and rows flex to share the height,
   so a short list fills the screen instead of clustering at the top.
 
-**State at end of session:** v1 + rounds 2–5 built, deployed, and live. Still awaiting a real
-browser/phone run by Tim, and Firebase credentials before cloud sync can be switched on.
+### Handoff prepared
+
+Tim announced a chat reset — the new session will be given only *"catch up with progress.md"*.
+`progress.md` was rewritten from scratch as a standalone handoff: stale entries removed (the
+deleted placeholder file, the already-resolved GitHub question), section order fixed, and a
+new §0 added up front carrying the five things that bite a fresh session — the nested git repo,
+not `cd`-ing outside the workspace, the pending permissions restart, the upkeep obligation, and
+the fact that nothing has ever been seen in a browser.
+
+`docs/spec.md` was corrected too: its data model still showed the original *draft* schema rather
+than what was actually built. It now shows the as-built shape, an explicit gap table, and the
+target shape — with a note that the weighted muscle mapping is the only change carrying real cost,
+and that it blocks D3 (volume per muscle).
+
+**State at end of session:** rounds 1–5 built, deployed, and live at
+https://timothyhadfield.github.io/Fitness_Tracker/ — 50 tests passing, nothing visually verified,
+Firebase written but not connected.

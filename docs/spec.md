@@ -106,32 +106,62 @@ migration.
 | Unit system per user | kg / lb, stored canonically, displayed per preference |
 | Sync-ready identity | stable UUIDs + timestamps so a sync layer can be added without migration |
 
-### Draft schema — NOT FINAL, first pass for discussion
+### Schema AS BUILT (current, in `js/store.js` + `js/exercises.js`)
+
+This is what the code actually does today. The target schema below it is where this needs to go.
 
 ```
 Exercise
   id, name, isCustom
+  muscle              ONE string — not yet the weighted primary/secondary mapping
+  equipment           ONE string
+  fields[]            which of weight | reps | time | distance are tracked
+  loadType            'per_side' | 'total' | null   → how the weight is counted
+
+Workout               (a template, not a performed session)
+  id, name, createdAt, updatedAt
+  exercises[]         { exerciseId, sets, notes }   ← planned set count + note per exercise
+
+Session               (a performed workout)
+  id, workoutId, workoutName, date, startedAt, finishedAt
+  entries[]           { exerciseId, exerciseName, sets[] }
+
+Set                   (flat — see gaps below)
+  weight?, reps?, time?, distance?
+
+Benchmark
+  id, date, exerciseId, exerciseName, values{ weight?, reps?, time?, distance? }
+
+Settings
+  id, units, theme
+```
+
+`normalizeWorkout()` in `store.js` migrates the older `exerciseIds[]` shape to `exercises[]` on
+read. Keep it — saved data in the wild still uses the old shape.
+
+### Gaps between as-built and target
+
+| Missing | Blocks | Difficulty |
+|---|---|---|
+| `BodyWeightEntry` table | Tier 1 body-weight tracking | Easy, additive |
+| `rir` / `rpe` / `tempo` / `setType` on Set | Autoregulation, warmup exclusion | Easy, additive — nullable columns |
+| Weighted primary/secondary muscle mapping | **D3 (weekly volume per muscle)** — the headline metric | Medium; changes `exercises.js` shape and needs a migration for custom exercises |
+| `UserProfile` | D9 disclosure level, D10 goal-driven dashboard | Easy, additive |
+| `Program` / `Block` | Tier 2 | Not designed yet |
+
+**The muscle-mapping change is the one with real cost.** Everything else is nullable columns.
+
+### Target schema (where this is going)
+
+```
+Exercise
   primaryMuscles[]    { muscle, weight: 1.0 }
   secondaryMuscles[]  { muscle, weight: 0.5 }
-  metricType          weight_reps | time | distance | bodyweight | assisted
-  equipment[]         for substitution (Tier 3)
-
-Workout
-  id, date, programId?, blockId?, notes
-  entries[]  → Entry
-
-Entry                 (one exercise within a workout)
-  id, exerciseId, order, notes
-  sets[]  → Set
+  equipment[]         array, for substitution (Tier 3)
 
 Set
-  id, order
   setType             straight | warmup | drop | myorep | cluster | amrap | backoff
-  weight?, reps?      nullable — depends on metricType
-  timeSec?, distance?
-  rir?, rpe?
-  tempo?
-  completed           bool
+  rir?, rpe?, tempo?
   countsAsHardSet     derived: false for warmup
 
 BodyWeightEntry
@@ -162,16 +192,16 @@ UserProfile
 
 ---
 
-## 3. Tech stack
+## 3. Tech stack — as built
 
-**Recommendation, proceeding on this unless overridden:**
-
-- **Web app / PWA** — installs to the iOS home screen, works offline, zero distribution cost,
-  consistent with the rest of this portfolio's HTML projects
-- **IndexedDB** for storage (localStorage is too small and synchronous for set-level history)
-- **Local-first, single user, no backend** to start — with UUIDs and timestamps in the schema so a
-  sync layer drops in later without migration
-- Framework choice deferred until the logging loop is prototyped
+- **Web app / PWA**, no build step, no dependencies. Plain ES modules; serve the folder and it runs.
+- **`localStorage`** behind an async API in `store.js`. *(The original plan said IndexedDB; the
+  async API means swapping is a one-file change if volume ever demands it. Workout data is small
+  text — roughly 300 bytes a session — so this is not urgent.)*
+- **Local-first, no accounts.** A complete Firestore adapter sits in `js/firebase-backend.js`,
+  activated by filling `js/firebase-config.js` and flipping `BACKEND` in `store.js`. Untested.
+- **No framework.** DOM built with the `el()` helper in `ui.js`.
+- **Charts hand-rolled** — SVG for the line chart, HTML/CSS for the bars.
 
 ---
 
