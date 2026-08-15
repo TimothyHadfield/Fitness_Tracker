@@ -11,7 +11,9 @@ const NAV = [
   { hash: '#/home',     label: 'Home',     icon: 'home' },
   { hash: '#/workouts', label: 'Workouts', icon: 'dumbbell' },
   { hash: '#/calendar', label: 'Calendar', icon: 'calendar' },
-  { hash: '#/graphs',   label: 'Graphs',   icon: 'chart' },
+  // Route stays #/graphs; only the label changed. Renaming the hash would
+  // break nothing visible and churn the router for no user-facing gain.
+  { hash: '#/graphs',   label: 'Data',     icon: 'chart' },
 ];
 
 // Routes that take over the whole screen (no bottom nav).

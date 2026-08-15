@@ -239,7 +239,7 @@ export async function GraphView() {
   if (!options.length && !comparison.fields.length) {
     return screenShell({
       profile: true,
-      title: 'Graphs',
+      title: 'Data',
       scroll: emptyState(
         'Not enough data yet',
         'A graph needs at least two recorded days for the same exercise. Record a workout or benchmark twice and it will appear here.',
@@ -257,7 +257,7 @@ export async function GraphView() {
   const host = el('div', { class: 'graph-host' });
 
   const modeSwitch = el('div', { class: 'segmented', role: 'tablist' },
-    [['trend', 'Over time'], ['compare', 'Start vs now']].map(([m, label]) =>
+    [['trend', 'Graph'], ['compare', 'Bar Chart']].map(([m, label]) =>
       el('button', {
         class: 'seg', role: 'tab', 'aria-selected': String(graphMode === m),
         disabled: (m === 'trend' && !options.length) || (m === 'compare' && !comparison.fields.length),

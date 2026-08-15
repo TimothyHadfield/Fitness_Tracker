@@ -6,6 +6,14 @@ benchmarks only for now; click a muscle to see the weight needed for each level 
 
 **Nothing here is built yet.** This is the design for review.
 
+**Decided by Tim, 2026-08-15:**
+- Levels are ranked against **people who lift and log**, with an **optional second readout** showing
+  the equivalent percentile among the general population (§2.1).
+- **Five levels**, the industry-standard scheme — and they stay lifter-based. The general-population
+  view shows a percentile, not a re-tiering (§3).
+- The map lives as a **third mode inside Data**, called **Muscle Groups**, beside **Graph** and
+  **Bar Chart** (§7.1).
+
 ---
 
 ## 1. Read this first — two hard blockers
@@ -43,6 +51,39 @@ which means the caption carries the meaning.
 
 This also sets expectations correctly: a beginner is *supposed* to start near the bottom of a scale
 made of people who already train.
+
+### 2.1 The general-population readout
+
+Tim asked for a second, optional view: what percentile that same lift would be **among everyone**,
+not just people who lift.
+
+There is no dataset of "what fraction of all adults can bench 225" — nobody has measured it. But it
+can be approximated from participation. NHIS 2020 found **31.9 % of US adults do muscle-strengthening
+activity on 2+ days a week**. Treating non-trainers as sitting below trainers:
+
+```
+general_percentile ≈ (1 − 0.319) + 0.319 × lifter_percentile
+```
+
+| Level | Lifter %ile | ≈ all adults |
+|---|---|---|
+| Beginner | 5 | 70 % |
+| Novice | 20 | 74 % |
+| Intermediate | 50 | 84 % |
+| Advanced | 80 | 94 % |
+| Elite | 95 | 98 % |
+
+**This is exactly why the levels stay lifter-based.** The whole five-level range compresses into
+70–98 % of the general population — as a scale it carries almost no information, and every user would
+sit in the top third. As a single contextual line it is genuinely nice to see.
+
+Two caveats that must reach the UI:
+
+- It assumes every non-trainer is weaker than every trainer, which is false at the margins — plenty
+  of untrained people are naturally strong. So it **overstates** slightly. Show it rounded
+  ("roughly the top 16 % of adults"), never as a decimal.
+- The 31.9 % figure counts *any* muscle-strengthening activity, including bands and bodyweight work,
+  so the pool of people with a trackable barbell lift is smaller still.
 
 ---
 
@@ -83,35 +124,35 @@ Also: the scheme has no band below the 25th, which is where a genuine beginner w
 exactly the person who most needs a near goal. Strength Level puts Beginner at the 5th and Novice at
 the 20th for that reason.
 
-### Recommended: 7 levels
+### Decided: 5 levels, the industry-standard scheme
 
-| Level | Percentile | 180 lb male bench |
-|---|---|---|
-| *(no data)* | — | grey |
-| Untrained | below 5 | under 133 |
-| Beginner | 5 | 133 |
-| Novice | 20 | 172 |
-| Intermediate | 50 | 225 |
-| Proficient | 75 | 279 |
-| Advanced | 90 | 339 |
-| Elite | 97 | 411 |
+| Level | Lifter percentile | 180 lb male bench | Step |
+|---|---|---|---|
+| *(no data)* | — | grey | |
+| Beginner | 5 | 133 | — |
+| Novice | 20 | 172 | +39 |
+| Intermediate | 50 | 225 | +53 |
+| Advanced | 80 | 295 | +70 |
+| Elite | 95 | 381 | +86 |
 
-Steps of +39, +53, +54, +60, +72 — each level slightly harder than the last, which is both true and
-motivating. Seven fills plus grey is at the top of what a ramp can carry.
+Matching Strength Level and Gravitus exactly has a practical benefit worth more than extra
+granularity: a user who checks their bench on either of those sites will see **the same word we
+show them**. Contradicting the two biggest strength calculators on the internet would cost more
+trust than a finer ramp would buy.
 
-### The part that actually solves "everyone needs a nearby goal"
+### This makes the progress readout mandatory, not optional
 
-**Colour count is the wrong lever.** However many bands exist, always show the number:
+Five levels means wide gaps — +70 lb from Intermediate to Advanced, +86 lb from Advanced to Elite.
+Somebody could train for a year without the colour changing, which is exactly the failure Tim was
+trying to avoid with more bands.
 
-> **Chest — Intermediate.** 240 lb. **39 lb to Proficient.**
+So the "nearby goal" has to come from the number instead, and it is **not** a nice-to-have:
 
-with a progress bar inside the current level. That gives a near goal even to someone who just entered
-a band, which no amount of extra colours can do. Decoupling the two means the ramp can stay readable
-*and* the goal stays close.
+> **Chest — Intermediate** · 240 lb
+> `██████░░░░░░░░` **55 lb to Advanced**
 
-If Tim still wants his eight, dropping only 99.5 gets it to seven and I would build that happily.
-
----
+Progress within the band, always visible. That is what gives a near goal to someone who just entered
+Intermediate and has 70 lb of runway ahead of them.
 
 ## 4. Age — yes, collect it, and make the basis visible
 
@@ -197,6 +238,15 @@ Mitigations:
 
 ---
 
+## 7.1 Placement and naming — decided
+
+The nav item is **Data** (was Graphs), and its three modes are **Graph**, **Bar Chart** and
+**Muscle Groups**. Renamed in the app on 2026-08-15; the route stays `#/graphs` internally.
+
+Consequence to watch: the segmented control holds the modes and lives in the header where the screen
+title would be. Three options is tighter than two — "Muscle Groups" is also the longest label — so
+the switch may need to shorten to "Muscles", become icons, or move out of the header.
+
 ## 7. Drawing the body
 
 **The reference image cannot be used** — it is a watermarked Dreamstime stock illustration
@@ -268,9 +318,12 @@ of 225 / 275 / 320 / 130 / 205. Close enough to trust the middle of the table.
 
 ## 11. Open questions for Tim
 
-1. **Reference population** — confirm "people who lift and log" (§2). It is the honest choice and it
-   is also the least flattering one, so it should be a deliberate decision.
-2. **Seven levels or eight** (§3).
-3. **Deadlift's muscle group** (§5) — glutes, or hold it back until the weighted mapping exists.
-4. **Does the map replace the Graphs screen, or sit beside it?** A body map is a natural home
-   screen; it is also a fifth nav item, and the nav is currently four.
+Answered 2026-08-15: reference population, level count, and placement — see the decisions at the top.
+
+Still open:
+
+1. **Deadlift's muscle group** (§5) — it is the best-documented lift in existence and belongs to
+   glutes, hamstrings and back at once. Proposal is to let it fill **Glutes**, since hip-thrust
+   standards are thin, and revisit when the weighted primary/secondary muscle map exists.
+2. **Whether the general-population readout is per-muscle or one figure for the whole body.**
+   Per-muscle is more informative; one figure is less clutter on an already busy screen.

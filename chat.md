@@ -708,3 +708,45 @@ consistency, *not* absolute accuracy. Rep normalisation only needed relative str
 harmless; percentile placement needs absolute accuracy, which is a stronger claim than the formula
 has been shown to support. Mitigation is to prefer ≤5-rep benchmarks and mark high-rep-derived
 levels as low confidence rather than pretend.
+
+### Decisions on the strength map, plus a rename
+
+Tim answered the three open questions:
+
+- **Rank against people who lift** — with an *optional* second readout showing the equivalent
+  percentile among the general population.
+- **Five levels**, the industry-standard scheme, **lifter-based only** — the general-population view
+  shows a percentile, not a re-tiering.
+- The map is a **third mode inside Data**, not a new nav item.
+
+That split is the right one, and the numbers show why. There is no dataset of "what fraction of all
+adults can bench 225" — nobody has measured it — but it can be approximated from participation. NHIS
+2020 puts **31.9 % of US adults** doing muscle-strengthening activity 2+ days a week, so treating
+non-trainers as sitting below trainers gives `general ≈ 0.681 + 0.319 × lifter`. Run the five levels
+through that and the entire scale compresses into **70–98 % of the general population**. As a ranking
+it would carry almost no information; as one contextual line it is genuinely nice to see. Exactly the
+call Tim made.
+
+Two caveats recorded for the UI: it assumes every non-trainer is weaker than every trainer, which is
+false at the margins, so it overstates slightly and should be shown rounded — "roughly the top 16 % of
+adults", never a decimal. And 31.9 % counts *any* muscle-strengthening activity, so the pool with a
+trackable barbell lift is smaller still.
+
+**Five levels has a consequence worth naming:** the gaps are wide (+70 lb Intermediate→Advanced,
++86 lb Advanced→Elite). Someone could train a year without the colour moving — the exact failure Tim
+was trying to avoid by asking for more bands. So the within-level progress readout
+(`55 lb to Advanced`) is now a hard requirement of the design, not a nice-to-have. That is what
+supplies the near goal; the colour supplies the standing.
+
+### Renames
+
+Tim, mid-turn: *"Rename the graphs section to Data, the Over Time to Graph, Start vs Now to Bar
+Chart, and then the new section with body to Muscle Groups."*
+
+Applied. The nav item is **Data**, its modes are **Graph** and **Bar Chart**, and the planned third
+mode is **Muscle Groups**. The route stays `#/graphs` internally — renaming the hash would churn the
+router for nothing a user can see.
+
+Watch: the segmented control lives in the header where a title would go. Three options is tighter
+than two, and "Muscle Groups" is the longest label — it may need to shorten to "Muscles" or become
+icons.
