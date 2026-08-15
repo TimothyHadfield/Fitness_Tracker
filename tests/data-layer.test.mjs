@@ -395,6 +395,19 @@ for (const l of ss.LEVELS) {
   ok(near(p, l.percentile, 0.2), `${l.name}: ${Math.round(w)} lb round-trips to the ${l.percentile}th`);
 }
 ok(near(ss.percentileFor(225, 'Chest', male180), 50, 0.2), 'the median lift is the 50th percentile');
+
+// Boundary: the normal CDF is an approximation, so an exactly-median lift comes
+// back as 49.999999947. A strict >= showed that person Novice while the screen
+// beside it read "50th percentile" — and hitting the exact weight the targets
+// panel asked for failed to grant the level.
+ok(ss.percentileFor(225, 'Chest', male180) < 50, 'the CDF really does undershoot at the boundary');
+ok(ss.levelFor(ss.percentileFor(225, 'Chest', male180)).key === 'intermediate',
+   'an exactly-median lift still lands in Intermediate, not the level below');
+for (const l of ss.LEVELS) {
+  const exact = ss.weightForPercentile(l.percentile, 'Chest', male180);
+  ok(ss.levelFor(ss.percentileFor(exact, 'Chest', male180)).key === l.key,
+     `lifting exactly the ${l.name} target grants ${l.name}`);
+}
 ok(ss.percentileFor(400, 'Chest', male180) > ss.percentileFor(300, 'Chest', male180),
    'more weight is a higher percentile');
 

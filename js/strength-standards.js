@@ -213,11 +213,24 @@ export function weightForPercentile(percentile, muscle, profile) {
 
 // Which level a percentile falls in. Below the first threshold is `null` —
 // "Untrained" would be a rude thing to call somebody who just started.
+// The epsilon is not cosmetic. The normal CDF is a rational approximation, so a
+// lift sitting exactly on a threshold comes back as 49.999999947 rather than 50
+// — and a strict `>=` would show that person Novice while the screen beside it
+// reads "50th percentile". Worse, hitting the exact weight the targets panel
+// asked for would fail to grant the level, which reads as the app being broken.
+// Sized from measurement, not guesswork. The Abramowitz–Stegun CDF used here
+// has an absolute error around 7.5e-8 in probability — 7.5e-6 in percentage
+// points — and composing it with the inverse pushes the observed round-trip
+// error to ~6.6e-6 at the tails. 1e-4 clears that with room to spare while
+// staying four orders of magnitude below any percentile difference a person
+// could care about.
+const BOUNDARY_EPSILON = 1e-4;
+
 export function levelFor(percentile) {
   const p = Number(percentile);
   if (!Number.isFinite(p)) return null;
   let found = null;
-  for (const l of LEVELS) if (p >= l.percentile) found = l;
+  for (const l of LEVELS) if (p >= l.percentile - BOUNDARY_EPSILON) found = l;
   return found;
 }
 

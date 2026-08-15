@@ -237,20 +237,11 @@ function pickSource(opt) {
 export async function GraphView() {
   const [options, comparison] = await Promise.all([chartableExercises(2), benchmarkComparison(2)]);
 
-  // Only bail out entirely when there is nothing at all AND no profile to act
-  // on; Muscles is useful before any chart is.
-  if (!options.length && !comparison.fields.length && graphMode !== 'muscles') {
-    return screenShell({
-      profile: true,
-      title: 'Data',
-      scroll: emptyState(
-        'Not enough data yet',
-        'A graph needs at least two recorded days for the same exercise. Record a workout or benchmark twice and it will appear here.',
-        el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
-      ),
-    });
-  }
-
+  // No early return. An earlier version bailed out to a bare empty state when
+  // there was nothing to chart, which took the mode switch with it and made
+  // Muscles unreachable — precisely when it is the most useful thing here,
+  // since it works off a single benchmark and explains what to record next.
+  // Each mode now renders its own empty state inside the normal shell.
   if (!options.length && graphMode === 'trend') graphMode = comparison.fields.length ? 'compare' : 'muscles';
   if (!comparison.fields.length && graphMode === 'compare') graphMode = options.length ? 'trend' : 'muscles';
 
@@ -274,6 +265,16 @@ export async function GraphView() {
   /* ---------- trend (line, all sources) ---------- */
 
   async function renderTrend() {
+    if (!options.length) {
+      top.replaceChildren();
+      host.replaceChildren(emptyState(
+        'Nothing to chart yet',
+        'A line needs the same exercise recorded on two different days. Record a workout or a '
+        + 'benchmark twice and it will appear here.',
+        el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
+      ));
+      return;
+    }
     if (!graphChoice.exerciseId || !options.find((o) => o.id === graphChoice.exerciseId)) {
       graphChoice = { exerciseId: options[0].id, field: options[0].fields[0] };
     }
@@ -424,6 +425,16 @@ export async function GraphView() {
   /* ---------- compare (paired bars, benchmarks only) ---------- */
 
   function renderCompare() {
+    if (!comparison.fields.length) {
+      top.replaceChildren();
+      host.replaceChildren(emptyState(
+        'Nothing to compare yet',
+        'This compares your first benchmark against your latest, so it needs the same exercise '
+        + 'benchmarked on two different days.',
+        el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
+      ));
+      return;
+    }
     if (!compareField || !comparison.fields.includes(compareField)) compareField = comparison.fields[0];
     const rows = comparison.byField[compareField];
 

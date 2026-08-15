@@ -1,0 +1,162 @@
+// Renders the real views in a DOM. Until this existed, nothing in this app had
+// ever been rendered by anything — every check was syntax, data-layer or HTTP,
+// and two real bugs were sitting in the view code as a result.
+//
+//   npm install jsdom          (anywhere; it is a TEST-only dependency)
+//   node tests/render.test.mjs
+//
+// The APP still has zero dependencies and no build step — that rule is about
+// what ships, not about what verifies it. tests/data-layer.test.mjs stays
+// dependency-free and is the one to run if jsdom is not installed.
+import { JSDOM } from 'jsdom';
+
+const dom = new JSDOM('<!doctype html><html><body><div id="app"></div></body></html>', {
+  url: 'http://localhost/#/home',
+  pretendToBeVisual: true,
+});
+const { window } = dom;
+
+globalThis.window = window;
+globalThis.document = window.document;
+globalThis.location = window.location;
+globalThis.Node = window.Node;
+globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0);
+globalThis.ResizeObserver = class { observe() {} disconnect() {} };
+Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true });
+
+const mem = new Map();
+globalThis.localStorage = {
+  getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+  setItem: (k, v) => mem.set(k, String(v)),
+  removeItem: (k) => mem.delete(k),
+};
+
+const BASE = new URL('../js/', import.meta.url).href;
+const { BUILT_IN_EXERCISES } = await import(BASE + 'exercises.js');
+const { store } = await import(BASE + 'store.js');
+const { GraphView, CalendarView, SettingsView } = await import(BASE + 'views-data.js');
+const { ProfileView } = await import(BASE + 'views-profile.js');
+const { HomeView, WorkoutsView } = await import(BASE + 'views-workouts.js');
+const { LEVELS } = await import(BASE + 'strength-standards.js');
+const { MAPPED_MUSCLES } = await import(BASE + 'body-map.js');
+
+let pass = 0, fail = 0;
+const ok = (c, m) => { console.log((c ? 'PASS  ' : 'FAIL  ') + m); c ? pass++ : fail++; };
+const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
+const settle = () => new Promise((r) => setTimeout(r, 30));
+
+async function mount(viewPromise) {
+  const node = await viewPromise;
+  document.getElementById('app').replaceChildren(node);
+  await settle();
+  return node;
+}
+
+/* ================= every screen renders at all ================= */
+for (const [name, view] of [
+  ['Home', HomeView], ['Workouts', WorkoutsView], ['Calendar', CalendarView],
+  ['Settings', SettingsView], ['Profile', ProfileView], ['Data', GraphView],
+]) {
+  try {
+    const n = await mount(view());
+    ok(n && n.querySelector('.topbar'), `${name} renders with a header`);
+  } catch (e) {
+    ok(false, `${name} THREW: ${e.message}`);
+  }
+}
+
+/* ============ the bug Tim hit: Muscles unreachable ============ */
+// Empty account, no chartable data at all.
+let data = await mount(GraphView());
+let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
+ok(tabs.length === 3, `mode switch shows all three tabs with NO data (${JSON.stringify(tabs)})`);
+ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
+
+const musclesTab = [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
+ok(!musclesTab.disabled, 'Muscles tab is not disabled');
+musclesTab.click();
+await settle();
+ok(/profile|body weight|gender/i.test(data.textContent),
+   'with no profile, Muscles explains what is missing instead of rendering nothing');
+ok(Boolean(data.querySelector('a[href="#/profile"]')), 'and links straight to the profile');
+
+/* ================= now give it a real profile ================= */
+await store.saveProfile({ gender: 'male', birthYear: 1994 });
+await store.logBodyWeight(180, '2026-08-15');
+
+data = await mount(GraphView());
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles').click();
+await settle();
+ok(/benchmark/i.test(data.textContent),
+   'profile set but no benchmarks: Muscles says which lifts to record');
+
+/* ================= and a real benchmark ================= */
+const bench = byName('Barbell Bench Press');
+const squat = byName('Back Squat');
+await store.saveBenchmark({ date: '2026-08-15', exerciseId: bench.id, exerciseName: bench.name, values: { weight: 225, reps: 1 } });
+await store.saveBenchmark({ date: '2026-08-15', exerciseId: squat.id, exerciseName: squat.name, values: { weight: 405, reps: 1 } });
+
+data = await mount(GraphView());
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles').click();
+await settle();
+
+const svg = data.querySelector('svg.body-map');
+ok(Boolean(svg), 'the body SVG renders');
+const regions = svg ? svg.querySelectorAll('.body-region') : [];
+ok(regions.length >= 25, `body has ${regions.length} tappable regions across both views`);
+ok(svg && svg.querySelectorAll('.body-outline').length >= 10, 'outline pieces render (head, neck, limbs)');
+
+// Every muscle drawn shows up in both views where expected, and each region
+// carries exactly one level class.
+const levelClasses = new Set(LEVELS.map((l) => 'lv-' + l.key).concat(['lv-none', 'lv-below']));
+let everyRegionClassed = true;
+for (const r of regions) {
+  const cls = [...r.classList].filter((c) => levelClasses.has(c));
+  if (cls.length !== 1) { everyRegionClassed = false; break; }
+}
+ok(everyRegionClassed, 'every region carries exactly one level class');
+
+// Chest was benchmarked at 225x1 for a 180 lb male — dead on the 50th, so
+// Intermediate. This is the whole feature working end to end.
+const chest = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Chest'));
+ok(chest && chest.classList.contains('lv-intermediate'),
+   `chest at 225x1 for a 180 lb male reads Intermediate (${chest && [...chest.classList].join(' ')})`);
+
+const quads = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Quads'));
+ok(quads && !quads.classList.contains('lv-none'), 'quads coloured from the squat benchmark');
+
+const biceps = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Biceps'));
+ok(biceps && biceps.classList.contains('lv-none'), 'biceps stays grey with no benchmark');
+
+const core = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Core'));
+ok(core && core.classList.contains('lv-none'), 'core is grey — no published standards');
+
+// Legend present, so level is never colour-alone.
+ok(data.querySelectorAll('.lv-key-item').length === LEVELS.length + 1,
+   'legend lists every level plus No data');
+
+/* ================= tapping a muscle ================= */
+chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+await settle();
+ok(/Chest/.test(data.textContent), 'tapping chest opens its detail');
+ok(/people who lift/i.test(data.textContent),
+   'the caption says "people who lift" — never implies the general population');
+ok(/\d+ lbs to (Beginner|Novice|Intermediate|Proficient|Advanced|Expert|Elite)/.test(data.textContent),
+   'the detail shows the weight needed for the next level');
+ok(data.querySelectorAll('.target-row').length === LEVELS.length,
+   'all seven per-level weight targets are listed');
+ok(Boolean(data.querySelector('.to-next-fill')), 'progress bar toward the next level renders');
+const selectedNow = data.querySelectorAll('.body-region.is-selected');
+ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length} regions)`);
+
+/* ================= the other two modes still work ================= */
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Graph').click();
+await settle();
+ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard change');
+
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bar Chart').click();
+await settle();
+ok(data.querySelectorAll('.seg').length === 3, 'Bar Chart mode keeps the mode switch');
+
+console.log(`\n${pass} passed, ${fail} failed`);
+process.exit(fail ? 1 : 0);

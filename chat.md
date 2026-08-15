@@ -830,3 +830,39 @@ reps is flagged — percentile placement leans on the e1RM formula being *absolu
 
 236 assertions, up from 172, including every key lift resolving to a real exercise, every drawn
 muscle being rankable or explicitly declared unrankable, and all seven tier weights round-tripping.
+
+### The Muscles tab was already built — but unreachable
+
+Tim: *"I think we're ready to add the entire muscle group tab."* It had shipped the turn before, so
+either he had not seen it or it was not showing. It was not showing, and the reason was a real bug.
+
+`GraphView` bailed out to a bare "Not enough data yet" empty state when there was nothing to chart —
+**and that early return took the mode switch with it**, so Muscles was unreachable exactly when it
+is most useful: it works off a single benchmark and explains what to record next. Anyone signed into
+a fresh cloud account hit this. Each mode now renders its own empty state inside the normal shell,
+and the two chart modes gained the guards the early return had been providing.
+
+### Rendered for the first time
+
+Nothing in this app had ever been rendered by anything. `tests/render.test.mjs` now mounts every
+screen in jsdom and asserts real DOM structure — 29 assertions. jsdom is a **test-only** dependency;
+the app still ships zero dependencies and no build step, and `data-layer.test.mjs` stays
+dependency-free.
+
+It found two bugs on the first run:
+
+1. **The unreachable Muscles tab**, confirmed and now covered by a regression test that renders an
+   empty account and asserts all three tabs are present.
+2. **A boundary bug worth the whole exercise.** A 225 lb bench at 180 lb bodyweight is *exactly* the
+   50th percentile, but the screen showed **Novice**. The normal CDF is a rational approximation, so
+   it returned 49.999999947 and a strict `>=` dropped the user a whole level. Measuring the
+   round-trip error at every threshold showed up to 6.6e-6 percentage points — the
+   Abramowitz–Stegun CDF's known ~7.5e-8 probability error, expressed in percent. The epsilon is now
+   sized from that measurement rather than guessed, and every threshold is asserted to grant its own
+   level.
+
+Also made the targets panel **ceil** rather than round: if it says 295 lb, lifting 295 has to
+actually grant the level. Rounding 295.4 down would have displayed a target that does not clear its
+own threshold — the same class of bug, one layer up.
+
+245 data-layer assertions plus 29 render assertions.

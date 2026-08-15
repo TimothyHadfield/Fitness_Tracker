@@ -158,7 +158,10 @@ function detail(m, muscle, profile) {
       el('i', { class: 'lv-sw lv-' + l.key }),
       el('span', { class: 'target-name', text: l.name }),
       el('span', { class: 'target-pct mono', text: `top ${100 - l.percentile}%` }),
-      el('span', { class: 'target-wt mono', text: `${Math.round(target)} ${profile.units}` }),
+      // Ceil, never round. If the panel says 295 lb, lifting 295 has to be
+      // enough — rounding 295.4 down to 295 would show a target that does not
+      // actually clear the threshold.
+      el('span', { class: 'target-wt mono', text: `${Math.ceil(target)} ${profile.units}` }),
     );
   });
 

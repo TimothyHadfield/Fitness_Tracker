@@ -16,7 +16,8 @@ upgrade preserving data. Only **Google sign-in** still needs a console toggle.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 236 assertions, all passing |
+| **Test** | `node tests/data-layer.test.mjs` — 245 assertions, no dependencies |
+| **Render test** | `npm i jsdom` then `node tests/render.test.mjs` — 29 assertions. **The only thing that has ever rendered this app.** |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
 
@@ -44,9 +45,10 @@ Five things that will bite you otherwise.
    reset the chat and say only *"catch up with progress.md"*. If this file is stale, the next
    session starts blind.
 
-5. **Nothing has been visually verified.** No browser has ever rendered this app. All confidence
-   comes from syntax checks, headless data tests, and HTTP checks. Say so plainly rather than
-   implying the UI is known-good.
+5. **Still no BROWSER has rendered this**, but `tests/render.test.mjs` now mounts every screen in
+   jsdom and asserts real DOM structure — it caught two bugs immediately. That covers logic and
+   structure; it does not cover layout, spacing, touch, or whether anything actually looks right.
+   Say which of the two you mean rather than claiming the UI is verified.
 
 ---
 
@@ -136,7 +138,9 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 ### Verified
 - All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
   (catches missing exports without a browser)
-- **236 data-layer assertions pass** (`node tests/data-layer.test.mjs`)
+- **245 data-layer assertions pass** (`node tests/data-layer.test.mjs`, no dependencies)
+- **29 render assertions pass** (`tests/render.test.mjs`, needs jsdom) — every screen mounts, the
+  body map draws 29 tappable regions with correct level classes, tapping a muscle opens its detail
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
@@ -187,7 +191,8 @@ Fitness_Tracker/
 │   ├── firebase-config.js      EMPTY placeholder for keys — the only blocker
 │   └── firebase-backend.js     Firestore + auth adapter; network paths UNTESTED
 ├── tests/
-│   └── data-layer.test.mjs     50 headless assertions, no DOM needed
+│   ├── data-layer.test.mjs     245 headless assertions, no dependencies
+│   └── render.test.mjs         29 jsdom assertions — mounts every screen
 └── docs/
     ├── spec.md
     ├── firebase-setup.md
