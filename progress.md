@@ -123,7 +123,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Draft recovery | In-progress workout survives an app switch; expires at end of day |
 | Benchmarks | Any date (default today), any exercise → graph + calendar |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
-| Graphs | Two modes — **Over time** (measured SVG line) and **Start vs now** (paired bars). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
+| Graphs | Two modes — **Over time** (measured SVG line, **hover crosshair** snapping to the nearest point with its value and date) and **Start vs now** (paired bars). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
 | Accounts | **Live.** Profile button in the true top-left — beside “Fitness Tracker” in the desktop sidebar, in the header on mobile (never both) — with a dot badge when data is not backed up. Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, **change password**, **delete account**, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
 | Settings | Dark/light, account status, export backup, restore backup, delete all |
@@ -238,6 +238,9 @@ bottom, and flips to `row` on desktop so the same element becomes a left sidebar
 ### Rule 2 — no boxes
 
 Structure comes from hairline rules, spacing, and type weight — never nested bordered cards.
+
+The chart's hover readout is the test case: it is plain SVG text with a ground-coloured halo
+(`paint-order: stroke`), not a boxed tooltip. Legible over gridlines and the area fill, still no box.
 `.card` survives as a semantic grouping but **draws nothing**. `.list` uses negative inline margins
 so hairlines run full-bleed while text stays on the gutter.
 

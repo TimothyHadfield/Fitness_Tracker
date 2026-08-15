@@ -646,3 +646,25 @@ an exercise only appears at all if at least one source can draw a line by itself
 now keyed by exercise **and** source, since the two can have different habitual rep counts.
 
 153 assertions.
+
+### Hover crosshair on the line chart
+
+Tim: *"if the user hovers their mouse over the graph, put a vertical line that appears by the nearest
+point on the graph and then displays the weight at that point."*
+
+Built. Moving the pointer over the chart snaps to the **nearest point by date**, drops a dashed
+vertical line through it, highlights the point, and shows the value with its date underneath.
+
+Three details worth recording:
+
+- **No tooltip box.** The readout is plain SVG text with a ground-coloured halo via
+  `paint-order: stroke`, so it stays legible over gridlines and the area fill without a panel. A
+  boxed tooltip is the obvious solution and would have broken Rule 2.
+- **Estimates stay identifiable.** The hover dot is hollow and dashed for an estimated point, and
+  the readout appends `est`. Rule 5 applies on hover exactly as it does on the line — an inference
+  must never read as a measurement.
+- **Works on touch without breaking scroll.** `pointer*` events cover mouse, pen and touch in one
+  path, nothing is prevented, and `touch-action: pan-y` lets a vertical drag scroll the screen while
+  a horizontal drag scrubs the chart.
+
+The readout flips its text anchor near the left and right edges so it never clips out of the plot.

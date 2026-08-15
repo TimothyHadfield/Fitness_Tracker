@@ -772,6 +772,29 @@ select.input {
 .chart .pt.bench { stroke: var(--good); }
 .chart .pt-last { fill: var(--accent); stroke: var(--ground); stroke-width: 3; }
 
+/* Hover crosshair. The chart is the one place a precise number matters, and
+   reading one off a line by eye is guesswork. */
+.chart { cursor: crosshair; touch-action: pan-y; }
+.chart .hover-line { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 3 4; }
+.chart .hover-dot { fill: var(--accent); stroke: var(--ground); stroke-width: 2.5; }
+/* An estimated point stays hollow and dashed, exactly as it is on the line. */
+.chart .hover-dot.est {
+  fill: var(--ground); stroke: var(--accent);
+  stroke-width: 2; stroke-dasharray: 2.5 2.5;
+}
+/* paint-order puts the ground-coloured stroke behind the glyphs, giving the
+   text a halo so it reads over gridlines and the area fill. A tooltip box would
+   be the obvious solution and the wrong one — see Rule 2, no boxes. */
+.chart .hover-val, .chart .hover-date {
+  font-family: var(--mono);
+  paint-order: stroke;
+  stroke: var(--ground);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+.chart .hover-val { fill: var(--ink); font-size: 13.5px; font-weight: 700; }
+.chart .hover-date { fill: var(--ink-faint); font-size: 10.5px; font-weight: 600; }
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

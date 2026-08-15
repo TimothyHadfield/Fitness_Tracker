@@ -10,7 +10,7 @@ import {
 } from './e1rm.js';
 import {
   el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper, chevron,
-  fmtSet, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
+  fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -564,10 +564,14 @@ function lineChart(points, field, W = 360, H = 220) {
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `${FIELD_META[field].label} over time`);
 
-  const add = (tag, attrs, cls) => {
+  const mk = (tag, attrs, cls) => {
     const n = document.createElementNS(NS, tag);
     for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
     if (cls) n.setAttribute('class', cls);
+    return n;
+  };
+  const add = (tag, attrs, cls) => {
+    const n = mk(tag, attrs, cls);
     svg.append(n);
     return n;
   };
@@ -611,6 +615,66 @@ function lineChart(points, field, W = 360, H = 220) {
     }, 'axis-text');
     t.textContent = fmtDateShort(points[i].date);
   });
+
+  /* ---- hover crosshair ---- */
+  // Reading a value off a line chart by eye is guesswork, and these numbers are
+  // the whole point of the screen. Hovering snaps to the nearest point and says
+  // exactly what it is.
+  //
+  // The readout is plain text with a ground-coloured halo (paint-order: stroke)
+  // rather than a boxed tooltip — it stays legible over gridlines and the area
+  // fill without violating Rule 2.
+  const hoverG = mk('g', { visibility: 'hidden', 'pointer-events': 'none' }, 'hover');
+  const hLine = mk('line', { y1: padT, y2: padT + ih }, 'hover-line');
+  const hDot = mk('circle', { r: 5 }, 'hover-dot');
+  const hVal = mk('text', { y: padT + 14 }, 'hover-val');
+  const hDate = mk('text', { y: padT + 28 }, 'hover-date');
+  hoverG.append(hLine, hDot, hVal, hDate);
+  svg.append(hoverG);
+
+  const showAt = (i) => {
+    const p = points[i];
+    const px = x(ts[i]), py = y(p.value);
+
+    hLine.setAttribute('x1', px.toFixed(1));
+    hLine.setAttribute('x2', px.toFixed(1));
+    hDot.setAttribute('cx', px.toFixed(1));
+    hDot.setAttribute('cy', py.toFixed(1));
+    // An estimate keeps its dashed identity here too — never let an inference
+    // read as a measurement (Rule 5).
+    hDot.setAttribute('class', 'hover-dot' + (p.actual === false ? ' est' : ''));
+
+    // Keep the readout inside the plot instead of letting it clip at the edges.
+    const anchor = px > W - padR - 64 ? 'end' : px < padL + 64 ? 'start' : 'middle';
+    for (const t of [hVal, hDate]) {
+      t.setAttribute('x', px.toFixed(1));
+      t.setAttribute('text-anchor', anchor);
+    }
+
+    hVal.textContent = fmtField(field, Math.round(p.value * 10) / 10)
+      + (p.actual === false ? '  est' : '');
+    hDate.textContent = fmtDateShort(p.date);
+    hoverG.setAttribute('visibility', 'visible');
+  };
+
+  const nearest = (clientX) => {
+    const r = svg.getBoundingClientRect();
+    if (!r.width) return 0;
+    const px = ((clientX - r.left) / r.width) * W;
+    let best = 0, bestD = Infinity;
+    for (let i = 0; i < ts.length; i++) {
+      const d = Math.abs(x(ts[i]) - px);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+  };
+
+  // pointer* covers mouse, pen and touch in one path. Nothing is prevented, so
+  // a finger dragging over the chart still scrolls the screen.
+  svg.addEventListener('pointermove', (ev) => showAt(nearest(ev.clientX)));
+  svg.addEventListener('pointerdown', (ev) => showAt(nearest(ev.clientX)));
+  svg.addEventListener('pointerleave', () => hoverG.setAttribute('visibility', 'hidden'));
+  svg.addEventListener('pointercancel', () => hoverG.setAttribute('visibility', 'hidden'));
 
   return svg;
 }
