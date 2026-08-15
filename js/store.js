@@ -526,6 +526,14 @@ export async function seriesForExercise(exerciseId, field, source = null) {
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+// Body weight as a chartable series, in the same {date, value} shape the line
+// chart takes for everything else. Already one row per day and already sorted,
+// so this is a rename — but it keeps the view out of the storage shape.
+export async function bodyWeightSeries() {
+  const rows = await store.getBodyWeights();
+  return rows.map((r) => ({ date: r.date, value: r.weight, source: 'bodyweight' }));
+}
+
 /* ------------------------------------------------------------------ *
  * Rep-normalised series
  * ------------------------------------------------------------------ */

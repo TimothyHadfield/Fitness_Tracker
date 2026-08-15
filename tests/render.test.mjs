@@ -22,6 +22,15 @@ globalThis.location = window.location;
 globalThis.Node = window.Node;
 globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0);
 globalThis.ResizeObserver = class { observe() {} disconnect() {} };
+
+// jsdom does no layout, so every element measures 0 and `fillChart` — which
+// deliberately refuses to draw into a container it cannot measure — would skip
+// the SVG builder entirely. Giving elements a fixed size is what lets the line
+// chart actually run here. It is a size, not a layout: nothing in this file
+// asserts anything about position or spacing, and nothing can.
+for (const [prop, value] of [['clientWidth', 420], ['clientHeight', 320]]) {
+  Object.defineProperty(window.HTMLElement.prototype, prop, { get: () => value, configurable: true });
+}
 Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true });
 
 const mem = new Map();
@@ -157,6 +166,56 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bar Chart').click();
 await settle();
 ok(data.querySelectorAll('.seg').length === 3, 'Bar Chart mode keeps the mode switch');
+
+/* ================= body-weight trend ================= */
+// One weigh-in so far, and a line needs two.
+data = await mount(GraphView());
+ok(![...data.querySelectorAll('option')].some((o) => o.textContent === 'Body weight'),
+   'a single weigh-in offers no body-weight chart');
+
+// Dated EARLIER than the existing 180, so the latest body weight — and every
+// ranking above that depends on it — is untouched. Second bench benchmark so
+// there is a real exercise in the picker to sit beside.
+await store.logBodyWeight(190, '2026-06-15');
+await store.logBodyWeight(185, '2026-07-15');
+await store.saveBenchmark({ date: '2026-06-15', exerciseId: bench.id, exerciseName: bench.name, values: { weight: 205, reps: 1 } });
+
+data = await mount(GraphView());
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Graph').click();
+await settle();
+
+const select = data.querySelector('select');
+const bwOpt = [...data.querySelectorAll('option')].find((o) => o.textContent === 'Body weight');
+ok(Boolean(bwOpt), 'three weigh-ins put "Body weight" in the chart picker');
+ok(bwOpt && bwOpt.parentElement.tagName === 'OPTGROUP' && bwOpt.parentElement.label === 'You',
+   'it is grouped apart from the exercises rather than posing as one');
+ok(select && select.options[0].textContent !== 'Body weight',
+   'an exercise is still the default chart — body weight sits last');
+
+// The exercise chart itself, drawn for the first time now that the container
+// has a measurable size.
+const exChart = data.querySelector('svg.chart');
+ok(Boolean(exChart), 'the exercise line chart draws an SVG');
+ok(exChart && exChart.querySelectorAll('.grid-line').length >= 3, 'it has gridlines and axis labels');
+
+select.value = bwOpt.value;
+select.dispatchEvent(new window.Event('change', { bubbles: true }));
+await settle();
+
+const bwChart = data.querySelector('svg.chart');
+ok(Boolean(bwChart), 'selecting body weight draws a chart');
+ok(bwChart && /body weight/i.test(bwChart.getAttribute('aria-label') || ''),
+   `the chart is labelled body weight, not "Weight" (${bwChart && bwChart.getAttribute('aria-label')})`);
+ok(bwChart && bwChart.querySelectorAll('.pt').length === 3,
+   `all three weigh-ins carry a marker — nothing here is estimated (${bwChart && bwChart.querySelectorAll('.pt').length})`);
+ok(/3 weigh-ins over 61 days/.test(data.textContent),
+   'the caption counts the weigh-ins and the span they cover');
+ok(/190/.test(data.textContent) && /180/.test(data.textContent),
+   'the summary shows the first and latest weights');
+ok(!data.querySelector('.stat-value.up') && !data.querySelector('.stat-value.down'),
+   'losing 10 lbs is not coloured bad — the app has no opinion on which way body weight should go');
+ok(!data.querySelector('.rep-target'),
+   'no rep-target stepper — there is nothing to normalise about standing on a scale');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -13,6 +13,7 @@ const {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizeWorkout, DEFAULT_SETS, benchmarkComparison,
   normalizedSeries, defaultTargetReps, weightRepObservations, ageFromBirthYear,
+  bodyWeightSeries,
 } = await import('../js/store.js');
 const {
   e1rm, weightForReps, normalizeWeight, modalReps, canNormalize,
@@ -493,6 +494,17 @@ await store.saveProfile({ birthYear: 1994 });
 const toDelete = (await store.getBodyWeights())[0];
 await store.deleteBodyWeight(toDelete.id);
 ok((await store.getBodyWeights()).length === 2, 'a weigh-in can be deleted');
+
+// The chart takes {date, value} like every other series, so the view never
+// touches the storage shape.
+const bwSeries = await bodyWeightSeries();
+ok(bwSeries.length === 2, `body weight charts as a series (${bwSeries.length} points)`);
+ok(bwSeries.every((p) => typeof p.value === 'number' && typeof p.date === 'string'),
+   'every point is {date, value} — the shape the line chart takes');
+ok(bwSeries[0].date < bwSeries[1].date, 'the series is in date order');
+ok(bwSeries[bwSeries.length - 1].value === 177.5, 'the last point is the latest weigh-in');
+ok(bwSeries.every((p) => p.actual !== false),
+   'no body-weight point is an estimate — a scale reading is always a measurement');
 
 /* ---------- accounts / cloud backend ---------- */
 // Only the pure helpers are testable headlessly — anything touching the

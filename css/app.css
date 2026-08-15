@@ -348,6 +348,11 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .field label { font-size: 12px; font-weight: 650; color: var(--ink-faint); letter-spacing: 0.03em; text-transform: uppercase; }
 .field-help { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }
 
+/* Inline text link, for when a sentence needs to point somewhere and a button
+   would shout. Underlined on the words only — the accent alone is not enough
+   to mark a link. */
+.text-link { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
 .input, select.input, textarea.input {
   width: 100%;
   min-height: 44px;

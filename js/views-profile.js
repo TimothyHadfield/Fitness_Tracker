@@ -94,7 +94,10 @@ export async function ProfileView() {
         return el('div', { class: 'field-help' },
           `${trimNum(first.weight)} on ${fmtDateShort(first.date)} → `
           + `${trimNum(last.weight)} on ${fmtDateShort(last.date)} `
-          + `(${sign}${trimNum(Math.abs(diff))} ${profile.units})`);
+          + `(${sign}${trimNum(Math.abs(diff))} ${profile.units}) · `,
+          // Two weigh-ins is exactly when the chart becomes available, so this
+          // is the moment to say where it is (D8 — teach at the point of use).
+          el('a', { class: 'text-link', href: '#/graphs', text: 'see the chart' }));
       })()
     : null;
 

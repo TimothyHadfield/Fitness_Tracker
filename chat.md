@@ -900,3 +900,36 @@ verification.
 Also softened the "recommend and proceed" line: Tim said to just go with recommendations, but the
 record shows he found the source-mixing bug and correctly diagnosed the level-flipping bug, so the
 agreement now says take it as licence to decide, not licence to stop listening.
+
+---
+
+## Body-weight trend chart — 2026-08-15
+
+Tim: *"catch up with progress.md"*. Items 1 and 2 in Next steps are his to do (open it on a phone,
+flip the Google sign-in toggle), so the first thing actually buildable was item 3.
+
+**It is not a fourth tab.** The mode switch is already three wide on a phone, and body weight asks
+exactly the same question as every other trend — a number over time. So it rides in the *same*
+picker as the exercises, in a **You** optgroup after them, reusing the measured line chart, the
+summary stats and the hover crosshair whole. It only appears at two weigh-ins, the same bar every
+exercise has to clear, and it sits **last** so the default chart on the Data screen is still a lift.
+
+**Direction is deliberately not judged.** `summaryStats()` coloured any increase green and any
+decrease red, which is right for weight lifted and wrong for weight carried — gaining is the goal for
+one person and losing it for the next, and nothing has ever asked which. It now takes a `judged`
+flag, body weight passes `false`, and this went into `progress.md` as **Rule 6 — no unearned
+opinions**. It is the same instinct as Rule 5: don't let the app assert more than it knows.
+
+Small pieces: `bodyWeightSeries()` in `store.js` so the view never touches the storage shape; an
+`aria-label` override on the chart so a screen reader hears "Body weight over time" and not "Weight";
+`.text-link` plus a "see the chart" link on the Profile screen, shown at exactly the moment the
+second weigh-in makes the chart exist (D8 — teach at the point of use).
+
+**The render test now actually draws the chart.** jsdom does no layout, so everything measures 0 and
+`fillChart` — which correctly refuses to draw into a container it cannot measure — had been skipping
+the entire SVG builder every run. Stubbing `clientWidth`/`clientHeight` means `lineChart()` executes
+for the first time anywhere: gridlines, one marker per measured point, the label. That is a *size*,
+not a layout, and it still proves nothing about how any of it looks.
+
+250 data-layer assertions, 42 render assertions, both green. Tier 1 now has one item left: a rest
+timer.

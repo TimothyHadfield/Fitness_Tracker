@@ -2,7 +2,7 @@
 
 import {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
-  normalizedSeries, defaultTargetReps, SOURCE_LABEL,
+  normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL,
 } from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
@@ -17,6 +17,11 @@ import { muscleGroupsPane } from './views-muscles.js';
 const go = (hash) => { location.hash = hash; };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
+
+// Whole days between two ISO dates. Noon avoids a DST shift turning a clean
+// multiple of 24h into 23 and rounding a day away.
+const dayGap = (a, b) =>
+  Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
 
 /* ================================================================== *
  * Calendar
@@ -217,6 +222,12 @@ function refresh() {
  * Graphs
  * ================================================================== */
 
+// Body weight is charted through the same exercise picker rather than taking a
+// fourth tab — it is the same question, a number over time, and the mode switch
+// is already three wide on a phone. It sits LAST so the default chart on the
+// Data screen is still a lift.
+const BODY_WEIGHT_ID = '__bodyweight';
+
 let graphChoice = { exerciseId: null, field: null };
 let graphMode = 'trend'; // 'trend' | 'compare' | 'muscles'
 let compareField = null;
@@ -235,15 +246,23 @@ function pickSource(opt) {
 }
 
 export async function GraphView() {
-  const [options, comparison] = await Promise.all([chartableExercises(2), benchmarkComparison(2)]);
+  const [options, comparison, bwPoints] = await Promise.all([
+    chartableExercises(2), benchmarkComparison(2), bodyWeightSeries(),
+  ]);
+
+  // Two weigh-ins to make a line, the same bar every exercise has to clear.
+  const bwOption = bwPoints.length >= 2
+    ? { id: BODY_WEIGHT_ID, name: 'Body weight', fields: ['weight'] }
+    : null;
+  const trendOptions = bwOption ? [...options, bwOption] : options;
 
   // No early return. An earlier version bailed out to a bare empty state when
   // there was nothing to chart, which took the mode switch with it and made
   // Muscles unreachable — precisely when it is the most useful thing here,
   // since it works off a single benchmark and explains what to record next.
   // Each mode now renders its own empty state inside the normal shell.
-  if (!options.length && graphMode === 'trend') graphMode = comparison.fields.length ? 'compare' : 'muscles';
-  if (!comparison.fields.length && graphMode === 'compare') graphMode = options.length ? 'trend' : 'muscles';
+  if (!trendOptions.length && graphMode === 'trend') graphMode = comparison.fields.length ? 'compare' : 'muscles';
+  if (!comparison.fields.length && graphMode === 'compare') graphMode = trendOptions.length ? 'trend' : 'muscles';
 
   // The chart owns the screen. Controls are one compact row, and the mode switch
   // lives in the header instead of a redundant "Graphs" heading.
@@ -256,7 +275,7 @@ export async function GraphView() {
         class: 'seg', role: 'tab', 'aria-selected': String(graphMode === m),
         // Muscles is never disabled: with no data it explains what to record,
         // which is more use than a dead tab.
-        disabled: (m === 'trend' && !options.length) || (m === 'compare' && !comparison.fields.length),
+        disabled: (m === 'trend' && !trendOptions.length) || (m === 'compare' && !comparison.fields.length),
         text: label,
         onClick: () => { graphMode = m; render(); },
       })),
@@ -265,32 +284,44 @@ export async function GraphView() {
   /* ---------- trend (line, all sources) ---------- */
 
   async function renderTrend() {
-    if (!options.length) {
+    if (!trendOptions.length) {
       top.replaceChildren();
       host.replaceChildren(emptyState(
         'Nothing to chart yet',
-        'A line needs the same exercise recorded on two different days. Record a workout or a '
-        + 'benchmark twice and it will appear here.',
+        'A line needs the same thing recorded on two different days. Record a workout, a '
+        + 'benchmark, or your body weight twice and it will appear here.',
         el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
       ));
       return;
     }
-    if (!graphChoice.exerciseId || !options.find((o) => o.id === graphChoice.exerciseId)) {
-      graphChoice = { exerciseId: options[0].id, field: options[0].fields[0] };
+    if (!graphChoice.exerciseId || !trendOptions.find((o) => o.id === graphChoice.exerciseId)) {
+      graphChoice = { exerciseId: trendOptions[0].id, field: trendOptions[0].fields[0] };
     }
-    const opt = options.find((o) => o.id === graphChoice.exerciseId);
+    const opt = trendOptions.find((o) => o.id === graphChoice.exerciseId);
+
+    const mkOption = (o) =>
+      el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId });
 
     const picker = el('select', {
       class: 'input compact',
-      'aria-label': 'Exercise',
+      'aria-label': 'What to chart',
       onChange: (e) => {
         graphChoice.exerciseId = e.target.value;
-        const next = options.find((o) => o.id === e.target.value);
+        const next = trendOptions.find((o) => o.id === e.target.value);
         graphChoice.field = next.fields[0];
         targetReps.clear();          // recompute defaults for the new exercise
         render();
       },
-    }, options.map((o) => el('option', { value: o.id, text: o.name, selected: o.id === graphChoice.exerciseId })));
+    },
+      // Grouped only when there is something to separate — a lone group label
+      // over one item is noise.
+      bwOption && options.length
+        ? [el('optgroup', { label: 'Exercises' }, options.map(mkOption)),
+           el('optgroup', { label: 'You' }, mkOption(bwOption))]
+        : trendOptions.map(mkOption),
+    );
+
+    if (opt.id === BODY_WEIGHT_ID) return renderBodyWeight(picker);
 
     const source = pickSource(opt);
 
@@ -422,6 +453,33 @@ export async function GraphView() {
     fillChart(plot, points, 'weight');
   }
 
+  /* ---------- body weight ---------- */
+
+  // No sources to choose between and nothing to normalise, so the control row
+  // is just the picker and the chart gets the rest of the screen (Rule 3).
+  function renderBodyWeight(picker) {
+    top.replaceChildren(el('div', { class: 'control-row' }, picker));
+
+    const days = dayGap(bwPoints[0].date, bwPoints[bwPoints.length - 1].date);
+    const plot = el('div', { class: 'chart-wrap' });
+    host.replaceChildren(
+      plot,
+      el('div', { class: 'chart-foot' },
+        // Direction is deliberately NOT judged here. Gaining is the goal for one
+        // person and losing it for the next, and nothing has ever asked which —
+        // colouring a gain red would be the app inventing an opinion it has no
+        // basis for. Every point is a real weigh-in, so every point keeps a
+        // marker (Rule 5); nothing here is estimated.
+        summaryStats(bwPoints, 'weight', false),
+        el('div', { class: 'chart-caption' }, el('span', {
+          text: `${bwPoints.length} weigh-ins over ${days} day${days === 1 ? '' : 's'} · one per day, `
+            + 'the last one that day wins',
+        })),
+      ),
+    );
+    fillChart(plot, bwPoints, 'weight', 'Body weight over time');
+  }
+
   /* ---------- compare (paired bars, benchmarks only) ---------- */
 
   function renderCompare() {
@@ -493,7 +551,7 @@ export async function GraphView() {
 
 let chartObserver = null;
 
-function fillChart(host, points, field) {
+function fillChart(host, points, field, label) {
   let lastW = 0, lastH = 0;
 
   const draw = () => {
@@ -502,7 +560,7 @@ function fillChart(host, points, field) {
     if (w < 60 || h < 60) return;          // not laid out yet
     if (w === lastW && h === lastH) return; // nothing changed
     lastW = w; lastH = h;
-    host.replaceChildren(lineChart(points, field, w, h));
+    host.replaceChildren(lineChart(points, field, w, h, label));
   };
 
   // The observer is the reliable trigger — it fires once the element is in the
@@ -557,7 +615,7 @@ function barChart(rows, field) {
 
 /* ---- SVG line chart ---- */
 
-function lineChart(points, field, W = 360, H = 220) {
+function lineChart(points, field, W = 360, H = 220, label = null) {
   const padL = 44, padR = 12, padT = 12, padB = 26;
   const iw = W - padL - padR, ih = H - padT - padB;
 
@@ -580,7 +638,7 @@ function lineChart(points, field, W = 360, H = 220) {
   svg.setAttribute('height', H);
   svg.setAttribute('class', 'chart');
   svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', `${FIELD_META[field].label} over time`);
+  svg.setAttribute('aria-label', label || `${FIELD_META[field].label} over time`);
 
   const mk = (tag, attrs, cls) => {
     const n = document.createElementNS(NS, tag);
@@ -699,15 +757,15 @@ function lineChart(points, field, W = 360, H = 220) {
 
 /* ---- summary beside the graph ---- */
 
-function summaryStats(points, field) {
+function summaryStats(points, field, judged = field !== 'time') {
   const first = points[0].value;
   const last = points[points.length - 1].value;
   const diff = last - first;
   const pct = first === 0 ? null : (diff / Math.abs(first)) * 100;
 
   // Direction is only good/bad when bigger is clearly better. Time is ambiguous
-  // (a faster mile is better, a longer plank is better) so it stays neutral.
-  const judged = field !== 'time';
+  // (a faster mile is better, a longer plank is better) so it stays neutral, and
+  // callers can force neutral for anything else the app has no opinion on.
   const cls = !judged || diff === 0 ? '' : diff > 0 ? ' up' : ' down';
   const sign = diff > 0 ? '+' : '';
   const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(Math.round(v * 100) / 100));

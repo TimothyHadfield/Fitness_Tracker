@@ -6,17 +6,18 @@
 
 **Last updated:** 2026-08-15
 
-**Status:** Live and working. Tier 1 is essentially complete. Firebase is provisioned and verified
-end to end. The **Muscle Groups** strength map shipped today. What has *not* happened is anyone
-opening this in a real browser — see §0.5, it is the whole remaining risk.
+**Status:** Live and working. Tier 1 is complete except for a rest timer. Firebase is provisioned and
+verified end to end. The **Muscle Groups** strength map and the **body-weight trend chart** both
+shipped today. What has *not* happened is anyone opening this in a real browser — see §0.5, it is
+the whole remaining risk.
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 245 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 29 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 250 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 42 assertions, mounts every screen |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |
 
@@ -46,7 +47,8 @@ It needs a server — ES modules do not load over `file://`.
 5. **No BROWSER has rendered this app.** `tests/render.test.mjs` mounts every screen in jsdom and
    asserts real DOM structure, which caught two real bugs — but that covers *logic and structure*,
    not layout, spacing, touch, or whether anything looks right. Be precise about which you mean;
-   never claim the UI is verified.
+   never claim the UI is verified. The test stubs `clientWidth`/`clientHeight` so the SVG line chart
+   actually runs — that is a *size*, not a layout, and proves nothing about how it looks.
 
 ---
 
@@ -117,6 +119,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Benchmarks | Any date, any exercise → feeds Data + calendar |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named |
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
+| Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | Hand-authored SVG body, front + back, 29 tappable regions. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
@@ -129,9 +132,10 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 ### Verified
 
 - All **15 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **245 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies)
-- **29 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
-  29 regions with correct level classes, tapping a muscle opens its detail
+- **250 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies)
+- **42 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
+  29 regions with correct level classes, tapping a muscle opens its detail, and the SVG line chart
+  now genuinely runs (gridlines, one marker per measured point, correct aria label)
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -264,6 +268,14 @@ estimates with a diagonal hatch, not a fade — texture survives greyscale and c
 General form: **never let an inference look like a measurement.** Anything derived must be visually
 separable from anything recorded, by a cue that is not colour alone.
 
+### Rule 6 — no unearned opinions
+
+Change is coloured good or bad only where bigger is genuinely better. Time was already neutral (a
+faster mile is better, a longer plank is better) and **body weight is neutral too** — gaining is the
+goal for one user and losing it for the next, and nothing has ever asked which. `summaryStats()`
+takes a `judged` flag for exactly this. The training goal that D10 will introduce is what would
+eventually earn the app an opinion here.
+
 ### Colour — validate, never eyeball
 
 **Before building any chart, load the `dataviz` skill and run its validator.**
@@ -349,8 +361,7 @@ being a differentiator.
 
 ## 8. Roadmap
 
-**Tier 1 — beat the spreadsheet.** Essentially done. Remaining: **body-weight trend chart** (data is
-being collected, nothing plots it yet) and a **rest timer**.
+**Tier 1 — beat the spreadsheet.** Done except for a **rest timer**.
 
 **Tier 2 — programs and analysis**
 - Program builder (desktop) → execution (mobile)
@@ -369,9 +380,9 @@ being collected, nothing plots it yet) and a **rest timer**.
 
 ## 9. Known gaps — deliberate, not bugs
 
-- **Body weight is stored but not charted**, and not yet wired into rep normalisation for the 14
-  bodyweight/assisted exercises. Their logged weight is added or assisted load, not total
-  resistance — which is now computable.
+- **Body weight is charted but not yet wired into rep normalisation** for the 14 bodyweight/assisted
+  exercises. Their logged weight is added or assisted load, not total resistance — which is now
+  computable. `canNormalize()` in `e1rm.js` still refuses them.
 - **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
   step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
@@ -400,7 +411,7 @@ being collected, nothing plots it yet) and a **rest timer**.
 2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
    support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
    anonymous both work.
-3. **Body-weight trend chart** — the data is already being collected.
+3. **Rest timer** — the last Tier 1 item.
 4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
 5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
