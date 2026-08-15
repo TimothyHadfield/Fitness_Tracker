@@ -28,34 +28,28 @@ firebase deploy --only firestore:rules
 
 ---
 
-## ⚠️ The one step left — Tim, ~30 seconds
+## Authentication — live
 
-**Firebase Authentication has to be switched on from the console.** This cannot be automated. The
-only public API method for provisioning it — `identityPlatform:initializeAuth` — is the *paid*
-Identity Platform upgrade and returns `BILLING_NOT_ENABLED` on the free Spark plan. Free Firebase
-Auth provisioning is console-internal. The legacy config endpoints are retired (they 404).
+Tim enabled Email/Password in the console on 2026-08-15 (the one step that cannot be automated —
+the only public provisioning API, `identityPlatform:initializeAuth`, is the *paid* Identity Platform
+upgrade and returns `BILLING_NOT_ENABLED` on Spark; the legacy config endpoints are retired). The
+rest was then done over the Identity Toolkit admin API:
 
-1. Open **[Authentication](https://console.firebase.google.com/project/fitness-tracker-th/authentication)**
-   → **Get started**.
-2. Choose **Email/Password** and enable it. Save.
+| Provider / setting | State |
+|---|---|
+| Email/Password | ✅ enabled (console) |
+| Anonymous | ✅ enabled (API) |
+| Authorised domains | ✅ `localhost`, `fitness-tracker-th.firebaseapp.com`, `fitness-tracker-th.web.app`, **`timothyhadfield.github.io`** |
+| Google | ❌ **not enabled** — see below |
 
-That's it — that click provisions Auth. Then tell me and I'll turn on Anonymous and add the
-GitHub Pages domain over the API, or do them yourself:
+### Google sign-in still needs one toggle
 
-3. **Sign-in method → Anonymous → Enable.** *(Required — the app signs users in anonymously on
-   first visit so they can log immediately.)*
-4. **Sign-in method → Google → Enable**, pick a support email. *(This is the one that needs an OAuth
-   client the API can't create for me.)*
-5. **Settings → Authorised domains → Add domain → `timothyhadfield.github.io`.**
-   **Without this, sign-in works on localhost and fails on the live site** with
-   `auth/unauthorized-domain`.
+**Sign-in method → Google → Enable**, then pick a support email. This is the only piece the API
+cannot do: enabling Google requires an OAuth client ID and secret that the console auto-provisions
+but the API makes you supply.
 
-### Until then
-
-The app still works. `BACKEND` is `'auto'`, so it tries the cloud, fails to sign in, and **falls
-back to local storage** (D13). Settings reports "Not connected" rather than pretending things are
-syncing. Nothing is lost, and no redeploy is needed once auth is on — it starts working on the next
-page load.
+Until then the Google buttons will fail with *"That sign-in method is not enabled in Firebase yet."*
+Email/password and anonymous both work.
 
 ---
 
@@ -131,10 +125,38 @@ document means opening the app costs about five reads.
 
 ---
 
-## What is still NOT verified
+## Verified end to end
 
-The Firebase **client** paths in `js/firebase-backend.js` have never run against a live project —
-there was no Auth to run them against. Sign-up, sign-in, linking, redirect handling, and the
-automatic local-data adoption are all reviewed code, not tested code. The *server* side (project,
-database, rules) is verified. Expect to find something wrong on the first real sign-in; the
-local-storage fallback means it cannot lose data while it gets sorted.
+`js/firebase-backend.js` was run against the live project by redirecting its gstatic imports to a
+locally installed SDK, so **the shipped module itself** was exercised, not a lookalike. 33 checks
+across two suites, all passing:
+
+**The client path**
+- anonymous sign-in on first visit; reported as anonymous and NOT secured
+- `read` / `write` round-trip through the module
+- `setDoc` with `serverTimestamp()` **passes the rules** — the likeliest subtle failure, since the
+  transform resolves server-side after the write is submitted
+- `updatedAt` comes back as a real server timestamp
+- `onUserChange` fires on upgrade and returns a working unsubscribe
+- **`signUpEmail` LINKS the anonymous account — same uid, and data logged anonymously survives**
+  (D12's core promise)
+- `signOut` leaves a fresh working anonymous account with a different uid that sees no prior data
+- `signInEmail` returns the original account with its data intact
+- a wrong password maps to *"Wrong email or password."* — no raw `auth/` code reaches the UI
+- `getRedirectResult` failing in an unsupported environment is caught, not fatal
+
+**The rules** — every one of these was refused with `permission-denied`:
+- reading another user's data · writing to another user's account
+- writing to a collection name outside the known five
+- a document carrying an unexpected field · `rows` that isn't a list
+- an oversized write (5,001 rows) · deleting a document
+
+Test accounts and their documents were deleted afterwards; the project holds zero users and zero
+documents.
+
+### Still not verified
+
+- **Google sign-in** — not enabled yet, so untested.
+- **Anything in a real browser.** No browser has rendered this app at all. The account screens,
+  the popup/redirect branch, and `adoptLocalData()` running against genuine local data are all
+  unexercised.

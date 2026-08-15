@@ -6,8 +6,9 @@
 
 **Last updated:** 2026-08-15
 **Status:** Working app, deployed and live. Five rounds of refinement, plus rep normalisation (D11)
-shipped 2026-08-15. **Firebase project `fitness-tracker-th` is live** — Firestore created, rules
-deployed and verified enforcing. **One console click left: enable Authentication** (docs/firebase-setup.md).
+shipped 2026-08-15. **Firebase is live and verified end to end** — project `fitness-tracker-th`,
+Firestore in us-central1, rules enforcing, anonymous + email accounts working, anonymous→email
+upgrade preserving data. Only **Google sign-in** still needs a console toggle.
 **Never yet seen running in a real browser.**
 
 | | |
@@ -124,7 +125,7 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
 | Graphs | Two modes — **Over time** (measured SVG line, all sources) and **Start vs now** (paired bars, **benchmarks only**). Weight+reps exercises are **rep-normalised** — see below |
 | Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
-| Accounts | Anonymous-first with email + Google upgrade, sign-in, password reset, sign-out, local→cloud merge, automatic adoption of existing local data. Falls back to local storage if the cloud is unreachable. **Backend live; Auth needs one console click** |
+| Accounts | **Live.** Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, sign-out, local→cloud merge, automatic adoption of existing local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
 | Settings | Dark/light, account status, export backup, restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
@@ -136,13 +137,17 @@ smart features."* No programs, volume targets, or autoregulation yet — those a
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types
 
+- **Firebase verified end to end against the live project** — 33 checks. `js/firebase-backend.js`
+  itself was exercised (its gstatic imports redirected to a local SDK), not a lookalike: anonymous
+  sign-in, read/write round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking
+  preserving uid *and* data, sign-out, sign-back-in, error mapping. Seven rule violations all
+  refused. Test users and documents deleted afterwards. Details in `docs/firebase-setup.md`.
+
 ### NOT verified
-- **No browser has ever rendered this.** Layout, touch behaviour, and the measured-chart sizing are
-  all unconfirmed.
-- **Every Firebase network path is reviewed code, not tested code.** No project has existed to run
-  it against. The pure helpers around it (error mapping, `describeUser`, `mergeRows`) *are* tested.
-  Expect something to be wrong on first connection — the local-storage fallback means it can't lose
-  data while it gets sorted.
+- **No browser has ever rendered this.** Layout, touch behaviour, the measured-chart sizing, the
+  account screens, the Google popup/redirect branch, and `adoptLocalData()` against real local data
+  are all unconfirmed. This is now the entire remaining risk.
+- **Google sign-in** — not enabled, so untested.
 
 ---
 
@@ -420,16 +425,11 @@ rest timer.
 
 ## 10. Next steps
 
-1. **Tim enables Authentication in the console** — 30 seconds, and it is the only thing standing
-   between the app and working accounts.
-   [Authentication](https://console.firebase.google.com/project/fitness-tracker-th/authentication)
-   → Get started → enable Email/Password. **This cannot be automated:** the only public API for
-   provisioning Auth is `identityPlatform:initializeAuth`, which is the *paid* Identity Platform
-   upgrade and returns `BILLING_NOT_ENABLED` on Spark. The legacy config endpoints are retired.
-   After that click, Anonymous + the authorised domain can be set over the API; Google needs its own
-   toggle because it requires an OAuth client the API cannot create.
-   **Don't skip adding `timothyhadfield.github.io` to authorised domains** — without it sign-in
-   works on localhost and fails on the live site.
+1. **Tim clicks through the app on his phone.** This is now the whole remaining risk. The backend is
+   verified; the *interface* has never been rendered by any browser — not the graphs, not the
+   account screens, not one workout.
+   Optional while he's there: **Sign-in method → Google → Enable** (needs an OAuth client the API
+   cannot create). Email and anonymous already work, so nothing is blocked on it.
 2. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
    not survived one real gym session, and neither the rep-normalised graph nor the account screens
    have ever been rendered.

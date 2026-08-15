@@ -514,3 +514,38 @@ still saves a workout. 139 assertions.
 
 **Still unverified:** every Firebase *client* path — sign-up, sign-in, linking, redirect handling,
 the automatic adoption. There was no Auth to run them against. The server side is verified.
+
+### Auth switched on — and verified for real
+
+Tim: *"I fixed the email thing."*
+
+Over the Identity Toolkit admin API: **Anonymous enabled**, **Email/Password confirmed enabled**,
+and **`timothyhadfield.github.io` appended to authorised domains** (appended, not replaced — wiping
+the defaults would have broken localhost and the auth handler).
+
+Then the part that actually matters: **the shipped module was tested against the live project.**
+Rather than write a lookalike script, a small Node loader redirected `js/firebase-backend.js`'s
+gstatic imports to a locally installed SDK, so the real code ran. 33 checks across two suites, all
+passing.
+
+Two results were worth the effort specifically:
+
+- **`setDoc` with `serverTimestamp()` passes the rules.** This was the likeliest subtle failure —
+  the timestamp transform resolves server-side after the write is submitted, so a rule asserting
+  `updatedAt is timestamp` could plausibly have rejected every write in the app. It doesn't.
+- **`signUpEmail` links the anonymous account: same uid, and data logged anonymously survives.**
+  That is D12's entire promise, and it now has a test rather than a comment.
+
+Seven rule violations were all refused with `permission-denied`: reading another user, writing to
+another user, an unknown collection name, an unexpected field, a non-list `rows`, a 5,001-row
+document, and a document delete.
+
+The three test accounts and their two Firestore documents were deleted afterwards — the project
+holds zero users and zero documents, so Tim starts clean.
+
+**Left:** Google sign-in needs one console toggle, because enabling it requires an OAuth client ID
+and secret the console auto-provisions but the API makes you supply. Email and anonymous work, so
+nothing is blocked.
+
+**The remaining risk is now entirely the interface.** The backend is verified; no browser has
+rendered a single screen of this app.
