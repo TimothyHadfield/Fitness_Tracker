@@ -133,7 +133,10 @@ Benchmark
   id, date, exerciseId, exerciseName, values{ weight?, reps?, time?, distance? }
 
 Settings
-  id, units, theme
+  id, units, theme, gender, birthYear      ← birth year, NEVER age (age goes stale)
+
+BodyWeight                                 ← added 2026-08-15
+  id, date, weight, createdAt              one row per weigh-in; same-day replaces
 ```
 
 `normalizeWorkout()` in `store.js` migrates the older `exerciseIds[]` shape to `exercises[]` on
@@ -143,10 +146,10 @@ read. Keep it — saved data in the wild still uses the old shape.
 
 | Missing | Blocks | Difficulty |
 |---|---|---|
-| `BodyWeightEntry` table | Tier 1 body-weight tracking | Easy, additive |
+| ~~`BodyWeightEntry` table~~ | — | **Built 2026-08-15** as the `bodyWeight` collection |
 | `rir` / `rpe` / `tempo` / `setType` on Set | Autoregulation, warmup exclusion | Easy, additive — nullable columns |
-| Weighted primary/secondary muscle mapping | **D3 (weekly volume per muscle)** — the headline metric | Medium; changes `exercises.js` shape and needs a migration for custom exercises |
-| `UserProfile` | D9 disclosure level, D10 goal-driven dashboard | Easy, additive |
+| Weighted primary/secondary muscle mapping | **D3 (weekly volume per muscle)**, and better muscle-map coverage than one-lift-one-muscle | Medium; changes `exercises.js` shape and needs a migration for custom exercises |
+| `UserProfile` — `goal`, `experience`, `disclosureLevel` | D9 disclosure level, D10 goal-driven dashboard | Easy, additive. **Partially done**: `gender` and `birthYear` now live on Settings for the strength map |
 | `Program` / `Block` | Tier 2 | Not designed yet |
 
 **The muscle-mapping change is the one with real cost.** Everything else is nullable columns.

@@ -866,3 +866,37 @@ actually grant the level. Rounding 295.4 down would have displayed a target that
 own threshold — the same class of bug, one layer up.
 
 245 data-layer assertions plus 29 render assertions.
+
+---
+
+## Session close — 2026-08-15
+
+Prepared for a chat reset. `progress.md` was rewritten from scratch rather than patched again: it had
+been edited incrementally about a dozen times across this session and had drifted badly.
+
+**Errors found and fixed in the handoff docs:**
+
+- **D11 recorded the wrong formula.** It said `k(w) = max(0.5, …)` — the *paper's* floor. Ours is
+  `max(4.58, …)`, and the difference is not cosmetic: below k = B the published curve *decreases* in
+  weight, so a heavier lift scores lower and the inverse stops being unique. A fresh session reading
+  the old line would have reimplemented a broken formula.
+- `firebase-config.js` was still described as an **empty placeholder and "the only blocker"** — it
+  has real keys and the project is live.
+- `firebase-backend.js` was still marked **UNTESTED** — it has 45 passing checks against the live
+  project.
+- Module count said 11; there are **15**. Architecture tree was missing `views-profile.js`,
+  `views-muscles.js`, `.firebaserc`, and three of the five docs.
+- Data model was missing `BodyWeight`, `gender` and `birthYear`.
+- Next steps had a **duplicated item**, two items numbered 4, and claimed the Muscles map was
+  unbuilt.
+- `spec.md` listed `BodyWeightEntry` as a gap; it shipped today.
+- Decision table had D11 wedged between D5 and D6, and D15 before D14.
+
+**Added to the handoff:** D16 (deadlift → Glutes), the Firebase-CLI-is-authenticated note in §0 so a
+fresh session doesn't assume console-only, the `COLLECTIONS`/`firestore.rules` trap, the ordinal
+strength ramp under the colour rule, and the nuance that jsdom rendering is *not* browser
+verification.
+
+Also softened the "recommend and proceed" line: Tim said to just go with recommendations, but the
+record shows he found the source-mixing bug and correctly diagnosed the level-flipping bug, so the
+agreement now says take it as licence to decide, not licence to stop listening.

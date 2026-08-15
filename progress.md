@@ -1,25 +1,24 @@
 # Fitness Tracker — Progress & Context
 
-> **Fresh session: read this entire file before doing anything.** It is written to be the only
-> thing you need. `docs/spec.md` has product/technical detail; `chat.md` is a human-readable
-> conversation log you only need in order to answer "what did we say about X".
+> **Fresh session: read this entire file before doing anything.** It is written to be the only thing
+> you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
+> answer "what did we say about X".
 
 **Last updated:** 2026-08-15
-**Status:** Working app, deployed and live. Five rounds of refinement, plus rep normalisation (D11)
-shipped 2026-08-15. **Firebase is live and verified end to end** — project `fitness-tracker-th`,
-Firestore in us-central1, rules enforcing, anonymous + email accounts working, anonymous→email
-upgrade preserving data. Only **Google sign-in** still needs a console toggle.
-**Never yet seen running in a real browser.**
+
+**Status:** Live and working. Tier 1 is essentially complete. Firebase is provisioned and verified
+end to end. The **Muscle Groups** strength map shipped today. What has *not* happened is anyone
+opening this in a real browser — see §0.5, it is the whole remaining risk.
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Test** | `node tests/data-layer.test.mjs` — 245 assertions, no dependencies |
-| **Render test** | `npm i jsdom` then `node tests/render.test.mjs` — 29 assertions. **The only thing that has ever rendered this app.** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 245 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 29 assertions, mounts every screen |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
-| **Deploy** | commit + push to `main`; Pages rebuilds in ~40s |
+| **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |
 
 It needs a server — ES modules do not load over `file://`.
 
@@ -27,28 +26,27 @@ It needs a server — ES modules do not load over `file://`.
 
 ## 0. Read this before your first tool call
 
-Five things that will bite you otherwise.
-
 1. **Git: this folder has its own nested repo.** The parent `Code Projects/` folder is a *separate*
-   repo whose remote is `Estimator_Quiz`. **Always run git from inside `Fitness_Tracker/`**, never
-   from the parent, or you will commit to the wrong repository.
+   repo whose remote is `Estimator_Quiz`. **Always run git from inside `Fitness_Tracker/`**, or you
+   will commit to the wrong repository.
 
-2. **Don't `cd` outside the workspace in Bash.** Tim's settings allow all Bash, but commands that
-   leave the project directory trigger a separate scope check and prompt him. Use absolute paths
-   from within the project instead. He has asked twice not to be prompted — respect it.
+2. **Don't `cd` outside the workspace in Bash.** Commands that leave the project directory trigger a
+   scope check and prompt Tim. Use absolute paths from within the project. He has asked repeatedly
+   not to be prompted.
 
-3. **A permissions fix is pending a restart.** `additionalDirectories` was added to
-   `~/.claude/settings.json` on 2026-08-14 but settings only load at startup. If Tim is still
-   getting prompts, he needs to restart Claude Code. Don't re-edit the settings.
+3. **Keep `progress.md` and `chat.md` current without being asked, and push when done.** Tim's whole
+   workflow is to reset the chat and say only *"catch up with progress.md"*. If this file is stale,
+   the next session starts blind.
 
-4. **Keep `progress.md` and `chat.md` current without being asked.** Tim's whole workflow is to
-   reset the chat and say only *"catch up with progress.md"*. If this file is stale, the next
-   session starts blind.
+4. **The Firebase CLI is installed and already authenticated** as `timhadfield7@gmail.com`. You can
+   create projects, deploy rules, and call the admin APIs directly. An access token can be minted
+   from the CLI's stored refresh token — that is how Auth providers were configured. Don't assume
+   console-only until you've checked.
 
-5. **Still no BROWSER has rendered this**, but `tests/render.test.mjs` now mounts every screen in
-   jsdom and asserts real DOM structure — it caught two bugs immediately. That covers logic and
-   structure; it does not cover layout, spacing, touch, or whether anything actually looks right.
-   Say which of the two you mean rather than claiming the UI is verified.
+5. **No BROWSER has rendered this app.** `tests/render.test.mjs` mounts every screen in jsdom and
+   asserts real DOM structure, which caught two real bugs — but that covers *logic and structure*,
+   not layout, spacing, touch, or whether anything looks right. Be precise about which you mean;
+   never claim the UI is verified.
 
 ---
 
@@ -57,163 +55,151 @@ Five things that will bite you otherwise.
 Tim is the **manager**; Claude is the **builder**.
 
 - Tim describes the vision. Claude designs and implements it.
-- **Recommend and proceed — don't ask.** If a good recommendation exists, act on it and state the
-  assumption plainly. Only ask when the vision genuinely can't be inferred *and* the readings would
-  lead to materially different work.
-- **Questions go in the AskUserQuestion box, never in prose.** Tim often doesn't read a full reply,
-  so questions buried in text get missed.
-- **Keep replies short with the conclusion first**, for the same reason.
-- Maintain `progress.md` and `chat.md` continuously, unprompted.
-- **Always commit and push when a piece of work is finished — don't ask.** Standing instruction from
-  Tim, 2026-08-15. Pages redeploys in ~40s, so pushing is how he sees the work at all. Update the
-  docs in the same commit. (Run git from inside `Fitness_Tracker/` — see §0.1.)
+- **Recommend and proceed — don't ask.** Tim, 2026-08-15: *"Just stick to what you recommend, it's
+  going to be better than what I say 90% of the time."* Take that as licence to decide, **not** as
+  licence to stop listening — he found the source-mixing bug, correctly diagnosed the level-flipping
+  bug, and his percentile spacing held up under modelling. Say so when he is right.
+- **Questions go in the AskUserQuestion box, never in prose.** Tim often doesn't read a full reply.
+- **Keep replies short, conclusion first.**
+- **Always commit and push when a piece of work is finished — don't ask.** Pages redeploys in ~40s,
+  so pushing is how he sees anything. Update the docs in the same commit.
+- **State what is unverified.** This project's whole credibility rests on not overclaiming.
 
 ### File upkeep
 
-| File | Job | Update when |
-|---|---|---|
-| `progress.md` | State, decisions, rules, next steps. **The catch-up file.** | Any decision, milestone, or scope change |
-| `chat.md` | Chronological human-readable log | After each substantive exchange |
-| `docs/spec.md` | Product + technical spec, data model | A feature or model decision is made |
-| `docs/research.md` | **All research, by category**, with evidence quality and sources | Anything is researched. Append — don't start new research files |
-| `docs/strength-map-plan.md` | Design for the muscle-map strength ranking | While that feature is being designed/built |
-| `docs/firebase-setup.md` | What Tim must do in the Firebase console | Firebase work |
-| `docs/competitive-teardown.html` | Competitive research (published artifact) | Only if research is revisited |
+| File | Job |
+|---|---|
+| `progress.md` | State, decisions, rules, next steps. **The catch-up file.** |
+| `chat.md` | Chronological human-readable log, appended after each substantive exchange |
+| `docs/spec.md` | Product + technical spec, data model |
+| `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
+| `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map |
+| `docs/firebase-setup.md` | Firebase state and the one remaining console step |
+| `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
 ---
 
 ## 2. Vision & audience
 
-A **lifting tracker**, web-based, that is genuinely better than a Google Sheet.
+A **lifting tracker**, web-based, genuinely better than a Google Sheet.
 
-Tim's stated wants:
-- Log weight, reps, time, and other metrics for any exercise
-- Track things over time, including body weight
-- Set up lifting **"programs"** that make it easy to measure how you're doing
-- Enter data **while mid-workout** — the critical UX moment
-- He cares a lot about **usability and formatting**, and about **scientific accuracy**
+Tim's stated wants: log weight/reps/time for any exercise · track over time including body weight ·
+lifting **programs** · enter data **mid-workout** · he cares a lot about **usability and formatting**
+and about **scientific accuracy**.
 
-**Minimum bar:** beats Google Sheets. **Stretch:** educate new lifters, provide ready-made programs.
+**Minimum bar:** beats Google Sheets. **Stretch:** educate new lifters, ready-made programs.
 
-### Audience (confirmed 2026-08-14, via question box)
+### Audience (confirmed 2026-08-14)
 
-- **Who:** Tim and friends to start, **open to anyone, potentially many people eventually**
-- **Level:** must serve **any level**, beginner through advanced
+- **Who:** Tim and friends to start, **open to anyone, potentially many people**
+- **Level:** must serve **any level**
 - **Goal:** **the user chooses** — hypertrophy, strength, or general fitness
 
-This is a **product for other people**, not a personal tool. Consequences: onboarding must work for
-a stranger, progressive disclosure is core architecture, and the dashboard reconfigures around the
-user's goal.
+A **product for other people**, not a personal tool. So: onboarding must work for a stranger,
+progressive disclosure is core architecture, the dashboard reconfigures around the user's goal.
 
 ### Out of scope
 
-**Diet / nutrition tracking — cut** (D1 below). Point users at Cronometer's free tier.
+**Diet / nutrition — cut** (D1). Point users at Cronometer's free tier.
 
 ---
 
-## 3. Current state — what actually works
-
-Scope was deliberately narrowed by Tim: *"work on the overall format of the site, ignore all of the
-smart features."* No programs, volume targets, or autoregulation yet — those are Tier 2/3.
+## 3. Current state
 
 | Area | State |
 |---|---|
-| Workout builder | Name it, add exercises, reorder, **planned set count per exercise**, **per-exercise notes**, edit, delete |
-| Exercise library | **265 exercises**, searchable, filterable by 15 muscle groups |
+| Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete |
+| Exercise library | **265 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
-| Session runner | Builds the planned number of sets, pre-fills last time's numbers, ±steppers, next/back arrows, finish → calendar |
+| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
-| Draft recovery | In-progress workout survives an app switch; expires at end of day |
-| Benchmarks | Any date (default today), any exercise → graph + calendar |
-| Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days colour-filled and **named** (workout title, or "Benchmark") |
-| Data (nav) | Renamed from Graphs 2026-08-15. Three modes — **Graph** (measured SVG line, **hover crosshair**), **Bar Chart** (paired bars) and **Muscles** (body map, below). Both chart **one source at a time**, benchmarks by default — never mixed. Weight+reps exercises are **rep-normalised** — see below |
-| Rep normalisation | Y-axis is always weight. Every point is converted to the equivalent load at one rep count (D11), set automatically to the most-recorded count and adjustable with arrows beside the exercise name. Markers mean measured; estimates carry no marker |
-| Accounts | **Live.** Profile button in the true top-left — beside “Fitness Tracker” in the desktop sidebar, in the header on mobile (never both) — with a dot badge when data is not backed up. Anonymous-first; email upgrade preserves uid and data; sign-in, password reset, **change password**, **delete account**, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable. **Google sign-in needs one console toggle** |
-| Muscles | Hand-authored SVG body, front and back. Each group filled by where its key lift sits among **people who lift** at your weight, sex and age; grey with no benchmark. Tap for the level, percentile, progress to the next level, and per-level weight targets. Optional general-population readout | 
-| Profile | Gender, birth year, and **body weight as a dated series** — prerequisites for Muscle Groups, and the Tier 1 body-weight trend in the same table. Says what is still missing rather than failing silently |
-| Settings | Dark/light, profile, account status, export backup, restore backup, delete all |
+| Draft recovery | In-progress workout survives an app switch; expires end of day |
+| Benchmarks | Any date, any exercise → feeds Data + calendar |
+| Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named |
+| **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
+| Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
+| **Muscles** | Hand-authored SVG body, front + back, 29 tappable regions. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
+| Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
+| Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
+| Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
+| Settings | Dark/light, profile, account, export/restore backup, delete all |
 
 **Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
 
 ### Verified
-- All 11 JS modules pass syntax check, and the whole import graph resolves under a stub DOM
-  (catches missing exports without a browser)
-- **245 data-layer assertions pass** (`node tests/data-layer.test.mjs`, no dependencies)
-- **29 render assertions pass** (`tests/render.test.mjs`, needs jsdom) — every screen mounts, the
-  body map draws 29 tappable regions with correct level classes, tapping a muscle opens its detail
-- Every class referenced in JS has a matching CSS rule
-- All assets serve 200 with correct MIME types
 
-- **Firebase verified end to end against the live project** — 45 checks. `js/firebase-backend.js`
-  itself was exercised (its gstatic imports redirected to a local SDK), not a lookalike: anonymous
-  sign-in, read/write round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking
-  preserving uid *and* data, sign-out, sign-back-in, password change (old password stops working,
-  data survives), account deletion (data gone, cannot sign back in), error mapping. Seven rule
-  violations all refused. Test users and documents deleted afterwards — the project holds zero users
-  and zero documents. Details in `docs/firebase-setup.md`.
+- All **15 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **245 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies)
+- **29 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
+  29 regions with correct level classes, tapping a muscle opens its detail
+- Every class referenced in JS has a matching CSS rule
+- All assets serve 200 with correct MIME types from Pages
+- **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
+  its gstatic imports redirected to a local SDK — not a lookalike: anonymous sign-in, read/write
+  round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking preserving uid and
+  data, sign-out, sign-back-in, password change, account deletion leaving no data, error mapping.
+  Seven rule violations all refused. Test users and documents deleted; the project holds **zero users
+  and zero documents**.
 
 ### NOT verified
-- **No browser has ever rendered this.** Layout, touch behaviour, the measured-chart sizing, the
-  account screens, the Google popup/redirect branch, and `adoptLocalData()` against real local data
-  are all unconfirmed. This is now the entire remaining risk.
-- **Google sign-in** — not enabled, so untested.
+
+- **No browser.** Layout, spacing, touch, chart sizing, whether the body looks like a body, the
+  Google popup/redirect branch, `adoptLocalData()` against real local data.
+- **Google sign-in** — not enabled in the console, so untested.
 
 ---
 
 ## 4. Architecture
 
-**No build step, no dependencies.** Plain ES modules. Serve the folder and it runs.
+**No build step, no dependencies in the app.** Plain ES modules. Serve the folder and it runs.
+(jsdom is a *test-only* dependency and is not required for `data-layer.test.mjs`.)
 
 ```
 Fitness_Tracker/
-├── index.html                  entry point
-├── manifest.webmanifest        PWA — installs to iPhone home screen
-├── firestore.rules             security rules — THE thing protecting user data
-├── firebase.json               so `firebase deploy --only firestore:rules` works
-├── icon.svg
-├── progress.md                 ← this file
-├── chat.md                     conversation log
-├── README.md
-├── css/
-│   └── app.css                 ALL styling. Mobile-first; desktop in one media query.
+├── index.html · manifest.webmanifest · icon.svg
+├── firestore.rules             THE thing protecting user data
+├── firebase.json · .firebaserc  so `firebase deploy` needs no flags
+├── progress.md  ← this file · chat.md · README.md
+├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
 │   ├── app.js                  hash router + boot
-│   ├── store.js                data layer — async API, backend-agnostic
-│   ├── e1rm.js                 rep normalisation — pure maths, no DOM (D11)
-│   ├── strength-standards.js   percentile ranking — pure maths, no DOM (D15)
+│   ├── store.js                data layer — async, backend-agnostic
+│   ├── e1rm.js                 rep normalisation — pure maths (D11)
+│   ├── strength-standards.js   percentile ranking — pure maths (D15)
 │   ├── body-map.js             hand-authored SVG body, front + back
 │   ├── exercises.js            265-exercise library + load-type rules
-│   ├── ui.js                   el(), icons, sheets, toasts, steppers, formatters, screenShell
+│   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
 │   ├── views-workouts.js       home, workout list, builder, exercise picker
 │   ├── views-session.js        session runner, benchmark form
-│   ├── views-data.js           calendar, day detail, graphs, settings
+│   ├── views-data.js           calendar, day detail, Data screen, settings
+│   ├── views-muscles.js        the Muscles pane
+│   ├── views-profile.js        gender, birth year, body weight
 │   ├── views-account.js        account, sign-in, upgrade-from-anonymous
-│   ├── firebase-config.js      EMPTY placeholder for keys — the only blocker
-│   └── firebase-backend.js     Firestore + auth adapter; network paths UNTESTED
+│   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
+│   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     245 headless assertions, no dependencies
+│   ├── data-layer.test.mjs     245 assertions, no dependencies
 │   └── render.test.mjs         29 jsdom assertions — mounts every screen
-└── docs/
-    ├── spec.md
-    ├── firebase-setup.md
-    └── competitive-teardown.html
+└── docs/  spec.md · research.md · strength-map-plan.md · firebase-setup.md · competitive-teardown.html
 ```
 
 ### Key patterns
 
-- **Everything goes through `store.js`.** Its API is async so swapping to Firebase touches no view
-  code — only the `BACKEND` constant at the top of that file.
-- **Hash router** in `app.js`. Routes named in `FULLSCREEN` hide the bottom nav and get the
-  `no-nav` class (which owes the iPhone safe-area padding).
-- **`screenShell({ title, sub, back, actions, top, scroll, bottom })`** in `ui.js` builds every
-  screen. `title` accepts a **string or a DOM node** — passing a node lets a screen put its primary
-  control in the header instead of a redundant heading.
-- **Charts are hand-rolled.** The line chart is SVG in `views-data.js`; the bar chart is HTML/CSS.
-  No charting library.
-- **`el(tag, props, ...children)`** is the DOM builder. `class`, `text`, `html`, `dataset`, and
-  `onX` handlers are special-cased; falsy children are skipped.
+- **Everything goes through `store.js`.** Async API, so the backend swaps without touching views.
+  `BACKEND = 'auto'` — cloud when `firebase-config.js` has keys, local otherwise, **and local as a
+  fallback if the cloud fails** (D13).
+- **Hash router** in `app.js`. Routes in `FULLSCREEN` hide the nav and take the `no-nav` class
+  (which owes the iPhone safe-area padding).
+- **`screenShell({ title, sub, back, actions, top, scroll, bottom, profile })`** builds every screen.
+  `title` accepts a string *or a DOM node*, letting a screen put its primary control in the header.
+- **Charts are hand-rolled.** SVG line chart in `views-data.js`; bar chart in HTML/CSS; body map in
+  `body-map.js`. No charting library.
+- **`el(tag, props, ...children)`** is the DOM builder. `class`, `text`, `html`, `dataset` and `onX`
+  are special-cased; falsy children skipped.
+- **Pure-maths modules are the pattern that works.** `e1rm.js` and `strength-standards.js` have no
+  DOM or store dependency, so they are fully testable headlessly. Both caught real bugs that way.
 
-### Data model (current shape)
+### Data model
 
 ```
 Exercise    id, name, muscle, equipment, fields[], loadType, isCustom
@@ -221,108 +207,85 @@ Workout     id, name, exercises[{ exerciseId, sets, notes }], createdAt, updated
 Session     id, workoutId, workoutName, date, startedAt, finishedAt,
             entries[{ exerciseId, exerciseName, sets[{weight,reps,time,distance}] }]
 Benchmark   id, date, exerciseId, exerciseName, values{}
-Settings    id, units, theme
+BodyWeight  id, date, weight, createdAt          ← one row per weigh-in
+Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 ```
 
-`normalizeWorkout()` in `store.js` migrates the old `exerciseIds[]` shape to `exercises[]` on read —
-keep it. `fields[]` drives which steppers appear; `loadType` is `'per_side' | 'total' | null`.
+`normalizeWorkout()` in `store.js` migrates the old `exerciseIds[]` shape on read — keep it.
+
+⚠️ **Adding a collection to `COLLECTIONS` also requires adding it to `knownCollection()` in
+`firestore.rules` and redeploying**, or every cloud write to it is denied while localStorage keeps
+working — invisible until someone signs in.
 
 ---
 
 ## 5. Design rules — binding
 
-These came from Tim directly over rounds 2–5. Violating them means redoing work.
-
 ### Rule 1 — the window never scrolls, and screens shouldn't need to
 
-`html, body { overflow: hidden }`; `#app` is a fixed `100dvh` flex container. Every screen is
-a fixed header, an optional fixed `top`, one flexible `pane-scroll`, and an optional fixed `bottom`.
+`html, body { overflow: hidden }`; `#app` is a fixed `100dvh` flex container. Every screen is a fixed
+header, an optional fixed `top`, one flexible `pane-scroll`, an optional fixed `bottom`.
 
-**Scrolling is a last resort, not a layout tool.** Shrink and tighten until a screen fits. Inner
-scrolling is only acceptable for genuinely unbounded lists: the builder's exercise list, recent
-activity, search results, and the calendar (the deliberate exception — see below).
+**Scrolling is a last resort, not a layout tool.** Inner scrolling is acceptable only for genuinely
+unbounded lists: the builder's exercise list, recent activity, search results, and the calendar.
 
-`#app` uses `flex-direction: column-reverse` on mobile so the nav (first DOM child) sits at the
-bottom, and flips to `row` on desktop so the same element becomes a left sidebar.
+`#app` is `column-reverse` on mobile so the nav sits at the bottom, and flips to `row` on desktop so
+the same element becomes a left sidebar.
 
 ### Rule 2 — no boxes
 
-Structure comes from hairline rules, spacing, and type weight — never nested bordered cards.
+Structure comes from hairline rules, spacing and type weight — never nested bordered cards. `.card`
+survives as a semantic grouping but **draws nothing**.
 
-The chart's hover readout is the test case: it is plain SVG text with a ground-coloured halo
-(`paint-order: stroke`), not a boxed tooltip. Legible over gridlines and the area fill, still no box.
-`.card` survives as a semantic grouping but **draws nothing**. `.list` uses negative inline margins
-so hairlines run full-bleed while text stays on the gutter.
+The chart's hover readout is the test case: plain SVG text with a ground-coloured halo
+(`paint-order: stroke`), not a boxed tooltip. Legible over gridlines, still no box.
 
 ### Rule 3 — content first, controls in the leftover
 
 *"Start with the most important thing and put it as big as you can, then put the selectors in the
 leftover space, not the opposite."*
 
-Budget the screen for the content, then fit controls into what remains. Applied:
-
-- **The line chart is measured, not fixed.** `fillChart()` reads the container's real pixel size and
-  draws the SVG at exactly that, with a `ResizeObserver` for rotation/resize. Gridline count and
-  date-label density scale with size. Plot gets ~500px on a ~850px viewport.
-- Graph controls collapsed from three stacked rows to one `.control-row`.
-- Mode switch and calendar legend live in the header, not in rows of their own.
-- Bars use `clamp(13px, 2.4dvh, 24px)` so they thicken with the viewport.
-
-### Density decisions worth preserving
-
-- Steppers are a `repeat(auto-fit, minmax(148px, 1fr))` grid, so **weight and reps sit side by side**
-  — ~140px saved on every session screen.
-- Summary stats are a 4-across hairline grid.
-- The calendar is the one place that scrolls by design: months run continuously with sticky
-  headings, opening on the current month, spanning at least 12 months back.
+The line chart is **measured, not fixed**: `fillChart()` reads the container's real pixel size and
+draws at exactly that, with a `ResizeObserver`. Gridline and date-label density scale with size.
 
 ### Rule 4 — never mix benchmarks with workout sets
 
-A benchmark is a deliberate test taken fresh. A set logged mid-workout comes after whatever else the
-session had already done. They are **different measurements**, and charting them as one line makes
-strength look like it swings wildly when it hasn't.
+A benchmark is a deliberate test taken fresh; a mid-workout set comes after everything else the
+session did. Charting them as one line makes strength look like it swings wildly. **One source at a
+time, benchmarks by default** (D14). The toggle appears only when an exercise has both.
 
-Every graph shows **one source at a time**, benchmarks by default (D14). The toggle appears only
-when an exercise genuinely has both — no control for a choice that doesn't exist.
-
-Mixing also silently destroyed data: the series keeps one point per day, so on a day with both a
-benchmark and a workout, one reading was dropped. Asserted in the test suite.
+Mixing also silently destroyed data — one point per day meant a day with both lost one reading.
 
 ### Rule 5 — a marker means measured
 
-On the rep-normalised chart, a circle means *you actually lifted this, at this rep count*.
-Estimated points carry no marker and are held by the line alone. Bars mark estimates with a
-diagonal hatch, not a fade — texture survives greyscale and colour-blindness, and the validated
-series colours stay untouched.
+A circle means *you actually lifted this, at this rep count*. Estimates carry no marker. Bars mark
+estimates with a diagonal hatch, not a fade — texture survives greyscale and colour-blindness.
 
-The general form of the rule: **never let an inference look like a measurement.** Anything derived
-must be visually separable from anything recorded, by a cue that is not colour alone.
+General form: **never let an inference look like a measurement.** Anything derived must be visually
+separable from anything recorded, by a cue that is not colour alone.
 
-### Chart colours — validate, never eyeball
+### Colour — validate, never eyeball
 
-`--series-start` / `--series-now` in `css/app.css`. Deliberately **not** the UI accent.
+**Before building any chart, load the `dataviz` skill and run its validator.**
+
+*Series colours* (`--series-start` / `--series-now`), deliberately not the UI accent:
 
 | Theme | Start | Now | CVD ΔE | Normal ΔE | Contrast |
 |---|---|---|---|---|---|
 | Dark | `#3D8FC0` | `#C08430` | 19.6 | 23.2 | 5.3 / 5.9 |
 | Light | `#2C7CB0` | `#96660F` | 20.7 | 22.1 | 4.1 / 4.5 |
 
-Thresholds: OKLCH L in [0.48, 0.67] dark / [0.43, 0.77] light, chroma ≥ 0.10, CVD ΔE ≥ 8,
-normal-vision ΔE ≥ 15, contrast ≥ 3:1.
-
-**Before building any new chart, load the `dataviz` skill and run its validator.** Bars also carry
-direct value labels and text tags so identity is never colour-alone.
+*Strength ramp* (`--lv-*`): strength level is **ordinal**, so it is a **one-hue sequential ramp**,
+not a categorical rainbow. Seven steps generated in OKLCH at the accent hue and validated with
+`--ordinal` in both themes — monotone lightness, adjacent ΔL ≥ 0.06, single hue, end step clearing
+its surface. Dark is a *selected* ramp with the anchor flipped, not an inversion. **Regenerate and
+re-validate; never hand-edit those hexes.** Bare `:root` is DARK in this stylesheet.
 
 ### Load-type rules (`js/exercises.js`)
 
-`loadTypeFor(name, equipment, fields)` → `'per_side' | 'total' | null`.
-
-- Dumbbell / kettlebell → per side; barbell / machine / plate → total
-- `FORCE_PER_SIDE` — cable flys and crossovers (two stacks), single-arm work, carries
-- `FORCE_TOTAL` — one implement in two hands (goblet squat, KB swing, DB pullover), single-limb
-  *machines* (single-leg press)
-
-Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have a load type.
+Dumbbell/kettlebell → per side; barbell/machine/plate → total. `FORCE_PER_SIDE` for two-stack cable
+work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands and single-limb
+*machines*. Displays as `50 lbs/side × 10`.
 
 ---
 
@@ -330,148 +293,121 @@ Displays as `50 lbs/side × 10`. All 265 weighted exercises are asserted to have
 
 | # | Decision | Rationale |
 |---|---|---|
-| D1 | **No diet/nutrition feature.** Point at Cronometer's free tier. | Free nutrition apps aren't meaningfully crippled — diet tracking is present-tense, so the history paywall that ruins free lifting apps doesn't bite. The food database also can't be replicated. |
+| D1 | **No diet/nutrition.** Point at Cronometer. | Free nutrition apps aren't crippled — diet tracking is present-tense, so the history paywall doesn't bite. The food database can't be replicated. |
 | D2 | **Lifting only.** | Focus. |
-| D3 | **Weekly sets per muscle group is the headline metric**, not per-exercise charts. | What hypertrophy responds to (~10–20 hard sets/muscle/week). Only Alpha Progression ($79.99/yr) does it. Biggest differentiator available. **Not built yet — Tier 2.** |
-| D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets survive on whole-block visibility, structural freedom, visible formulas, permanence. Apps only win the logging loop. Take both. |
-| D5 | **e1RM must be rep-range honest.** Full confidence 2–10 reps, flag 11–15, don't normalise above 15. | Formulas degrade badly above ~10 reps. **Superseded the Epley/Brzycki split — see D11.** Not built yet. |
-| D11 | **Use the Marzagão (2026) weight-dependent formula for all e1RM work**, not Epley/Brzycki. `1RM = w × (1 + (r−1)^0.85 / k(w))`, `k(w) = max(0.5, −2.55 + 4.58·ln(w_kg))`. | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator — not sex, age, or training status). Every classical formula uses one fixed factor for all 265 exercises. This one varies it with load and is 17–22% more internally consistent across 388 exercises, positive for all 183 tested, biggest gains on the light isolation work that dominates our library. Full write-up + limits in `docs/research.md` §1. |
+| D3 | **Weekly sets per muscle group is the headline metric.** | What hypertrophy responds to (~10–20 hard sets/muscle/week). Only Alpha Progression does it. **Not built — Tier 2, and blocked on the weighted muscle mapping.** |
+| D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets win on whole-block visibility, structural freedom, permanence. Apps only win the logging loop. Take both. |
+| D5 | **e1RM must be rep-range honest.** Full confidence 2–10 reps, flag 11–15, don't normalise above 15. | Formulas degrade badly above ~10 reps. Built. |
 | D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. |
-| D7 | **No social feed.** | Repeatedly cited as unwanted in Hevy reviews. |
-| D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery — jargon wall on day one. |
-| D9 | **Progressive disclosure is core architecture**, not a late feature. Advanced controls hidden by default. | Audience is "any level". Can't be bolted on later. |
-| D10 | **Training goal is a user setting that reconfigures the dashboard.** Hypertrophy → volume; strength → e1RM; general → mixed. | Users choose their goal, so one fixed dashboard would be wrong for most. D3 remains the default. |
+| D7 | **No social feed.** | Repeatedly unwanted in Hevy reviews. |
+| D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery. |
+| D9 | **Progressive disclosure is core architecture.** | Audience is "any level". Can't be bolted on later. |
+| D10 | **Training goal is a user setting that reconfigures the dashboard.** | One fixed dashboard would be wrong for most users. |
+| D11 | **Marzagão (2026) weight-dependent e1RM**, not Epley/Brzycki.<br>`1RM = w × (1 + (r−1)^0.85 / k(w))`<br>`k(w) = max(4.58, −2.55 + 4.58·ln(w_kg))` | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator). Classical formulas use one fixed factor for all 265 exercises. **⚠️ Our k-floor is 4.58, NOT the paper's 0.5** — below k = B the published curve *decreases* in weight, so a heavier lift would score lower and the inverse stops being unique. Asserted monotone across 1–400 lb. See `docs/research.md` §1. |
+| D12 | **Accounts are anonymous-first**; upgrading *links* the account so uid and data carry over. | A signup wall on first open is the biggest killer of retention, and D8/D9 say no wall on day one. Cost: un-upgraded data lives in one browser — the UI states that plainly. |
+| D13 | **`BACKEND = 'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set (D6). Settings says "Not connected" rather than pretending to sync. |
+| D14 | **Graphs never mix benchmarks with workout sets.** One source at a time, benchmarks by default. | Reported by Tim: a workout set sat far off his benchmark trend. Two more problems fell out — the shown point flipped between sources as the rep target changed, and one-point-per-day silently discarded the loser. |
+| D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; general-population data would make every user Elite. The seven-level scale compresses into ~70–98 % of all adults. **The UI must say "of people who lift".** |
+| D16 | **Deadlift fills Glutes** on the muscle map. | It belongs to glutes, hamstrings and back at once. Hip-thrust standards are the thinnest of the three. Revisit with the weighted mapping. |
 
-| D12 | **Accounts are anonymous-first: log immediately, upgrade to email or Google later.** Upgrading *links* the anonymous account, so the uid and all existing data carry over. | Chosen by Tim 2026-08-15. A signup wall on first open is the single biggest killer of new-app retention, and D8/D9 say no wall on day one. The cost is that un-upgraded data lives in one browser and nothing recovers it — so the UI states that plainly rather than implying it is backed up. |
-| D13 | **Backend selection is `'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set mid-workout (D6). Settings then reports "Not connected" instead of pretending things are synced. |
-| D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; true general-population data would make every user Elite. The whole seven-level scale compresses into ~70–98 % of all adults, so as a ranking it carries no information. The UI must say "of people who lift". |
-| D14 | **Graphs never mix benchmarks with workout sets. One source at a time, benchmarks by default.** | Reported by Tim 2026-08-15: a bench workout set sat far off his benchmark trend and made the line lurch. Two further problems fell out of it — on a day carrying both, the shown point flipped between sources as the rep target changed, and the one-point-per-day rule silently discarded the losing reading. |
+### Standing recommendations
 
-### Standing recommendations (acted on, not blocking)
-
-- **R1 — Web app (PWA), not native iOS.** Installs to the home screen, works offline, zero
-  distribution cost, matches the rest of Tim's portfolio.
-- ~~**R2 — Local-first storage, no accounts yet.**~~ **Superseded 2026-08-15** — Tim asked for
-  accounts and secure storage. Local-first survives as the *fallback* (D13), not the only mode.
+- **R1 — Web app (PWA), not native.** Home-screen install, offline, zero distribution cost.
+- ~~**R2 — Local-first, no accounts.**~~ Superseded 2026-08-15; local-first survives as the *fallback* (D13).
 - **R3 — Ship Tier 1 before anything else.**
 
-### Resolved by Claude without asking
+### Resolved without asking
 
-- **Drop sets / myo-reps count as one hard set**, extensions logged but not double-counted — else
-  volume totals inflate and break the target bands.
-- **Secondary-muscle weighting fixed at 0.5** with an advanced override — configurable-by-default
-  is exactly the jargon wall D8 exists to prevent.
-- **Sets exist in the session runner** even though Tim's described flow implied one entry per
-  exercise. An app that can't log 3×8 would be useless.
-- **Bar chart requires 2+ benchmarks** per exercise. One benchmark draws two identical bars, which
-  says nothing. Excluded ones surface as a visible count.
+- Drop sets / myo-reps count as **one** hard set — else volume totals inflate.
+- Secondary-muscle weighting fixed at **0.5** with an advanced override.
+- **Sets exist in the session runner** — an app that can't log 3×8 would be useless.
+- **Bar chart requires 2+ benchmarks**; excluded ones surface as a visible count.
 
 ---
 
-## 7. Research summary
+## 7. Research
 
-**All research now lives in `docs/research.md`**, by category, with evidence quality graded and
-sources listed. Append to it rather than starting new research files. Categories so far:
-rep-normalisation/e1RM, reps↔%1RM, proximity to failure, fatigue & rest, velocity-based training,
-volume & the rep continuum, competitive landscape, data-viz colour, and an explicit
-unverified-claims list.
+**All research lives in `docs/research.md`**, graded 🟢🟡🔴 with sources. Sections: e1RM /
+rep-normalisation · reps↔%1RM · proximity to failure · fatigue & rest · velocity-based training ·
+volume & the rep continuum · competitive landscape · data-viz colour · unverified claims ·
+strength standards & percentiles.
 
-Competitive teardown below is the condensed version; full one is
-`docs/competitive-teardown.html`, also at
-https://claude.ai/code/artifact/e3a7adce-c1cf-4284-8eff-762db7da6bbd
-
-**Analyzed:** Strong, Hevy, Boostcamp, Liftosaur, Alpha Progression, RP Hypertrophy, Fitbod.
-
-- **Strong** — the logging loop; the interaction gold standard
-- **Hevy** — polish and feel, free unlimited logging, real web app
-- **Boostcamp** — solves "what program do I run" for free, 11,000+ programs
-- **Liftosaur** — progression as code; no ceiling on program logic
-- **Alpha Progression** — weekly volume per muscle vs evidence-based targets; the right metric
-- **RP Hypertrophy** — true autoregulation from post-session subjective feedback
-- **Fitbod** — zero-decision onboarding; equipment-aware substitution
+Competitive teardown: `docs/competitive-teardown.html`. Analysed Strong, Hevy, Boostcamp, Liftosaur,
+Alpha Progression, RP Hypertrophy, Fitbod.
 
 **Five failures shared by all:** data goes in but insight doesn't come out; offline is an
 afterthought; analysis is per-exercise not per-muscle; the jargon wall; you can't answer "is this
 working?"
 
-**The gap being built into:** four of five commercial apps monetize by restricting access to your
-own accumulated data (Hevy caps free at 3 months of graph history).
+**The gap being built into:** four of five commercial apps monetise by restricting access to your own
+accumulated data (Hevy caps free graph history at 3 months).
 
-**Unverified claims — don't treat as settled:** that Hevy requires a connection to log; whether
-Liftosaur's cloud sync is paid. Fuller list in `docs/research.md` §9.
-
-**Note:** Fitbod published the weight-dependent e1RM formula (D11) from its own user data. If they
-ship it in-product, it stops being a differentiator.
+**Note:** Fitbod published the D11 formula from its own data. If they ship it in-product it stops
+being a differentiator.
 
 ---
 
 ## 8. Roadmap
 
-**Tier 1 — beat the spreadsheet** — mostly DONE. Remaining: body-weight tracking with a trend line,
-rest timer.
+**Tier 1 — beat the spreadsheet.** Essentially done. Remaining: **body-weight trend chart** (data is
+being collected, nothing plots it yet) and a **rest timer**.
 
 **Tier 2 — programs and analysis**
 - Program builder (desktop) → execution (mobile)
 - Progression rules: linear + double progression first
-- Weekly volume per muscle group vs target bands (D3)
+- Weekly volume per muscle group vs target bands (D3) — **blocked on the weighted muscle mapping**
 - Block summary + block-over-block comparison
 - Stall detection (e1RM flat 3+ weeks → flag and explain)
 
 **Tier 3 — teach and guide**
-- Small set of well-explained starter programs, not a library of thousands
+- A small set of well-explained starter programs, not thousands
 - Just-in-time concept explanations wired to first use (D8)
-- Post-session check-in feeding next week's volume, in plain language
-- Deload prompting from accumulated fatigue
-- Equipment-aware exercise substitution
+- Post-session check-in feeding next week's volume
+- Deload prompting; equipment-aware substitution
 
 ---
 
 ## 9. Known gaps — deliberate, not bugs
 
-- **Body-weight tracking is now stored** (dated series, Profile screen) but **not yet charted**, and
-  it is not yet wired into rep normalisation for the 14 bodyweight/assisted exercises — their logged
-  weight is added or assisted load, not total resistance, and total resistance is now computable.
-- **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in
-  an iOS home-screen app, so the code falls back to `signInWithRedirect` — which itself depends on
-  third-party cookies while the auth domain differs from the site origin, and browsers are
-  restricting those. Test it on the home screen first. Fallbacks: email/password in the PWA, or a
+- **Body weight is stored but not charted**, and not yet wired into rep normalisation for the 14
+  bodyweight/assisted exercises. Their logged weight is added or assisted load, not total
+  resistance — which is now computable.
+- **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
+  step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
+- **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
+  `docs/research.md` §1.3 says was never validated — it was optimised for *internal consistency*.
+  Harmless for rep normalisation, a stronger claim here. Mitigated by preferring ≤5-rep benchmarks
+  and flagging levels derived from high-rep sets.
+- **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in an
+  iOS home-screen app, so the code falls back to `signInWithRedirect`, which depends on third-party
+  cookies while the auth domain differs from the origin. Fallbacks: email/password in the PWA, or a
   custom domain with `authDomain` on a subdomain of it.
-- **Rep normalisation assumes near-failure effort.** Every rep-based 1RM formula does. The bias is
-  systematic per user per exercise so trend and ordering survive, but inconsistent effort between
-  benchmarks is noise the chart cannot see. There is no RIR/RPE field to correct with — deliberate,
-  D9 (progressive disclosure), but worth revisiting if the numbers look erratic in real use.
-- **No rest timer.** In the spec, but Tim's described flow didn't call for it.
-- Sets are a flat list — no RIR, tempo, or set types. `docs/spec.md` specifies them and the schema
-  has room; adding them is additive.
-- No supersets.
-- Weight display is hard-coded to lbs. The unit setting exists in the store but isn't wired to the UI.
-- Exercise→muscle mapping is a single `muscle` string, not the primary/secondary weighted mapping
-  `docs/spec.md` specifies. **This must change before D3 (volume per muscle) can be built.**
+- **Rep normalisation assumes near-failure effort.** Every rep-based formula does. Bias is systematic
+  per user per exercise, so trend and ordering survive. There is no RIR/RPE field — deliberate (D9).
+- **No rest timer. No supersets.** Sets are a flat list — no RIR, tempo, or set types.
+- **Weight display is hard-coded to lbs.** The unit setting exists in the store but isn't wired up.
+- **Exercise→muscle is a single string**, not the primary/secondary weighted mapping. **This must
+  change before D3.**
 
 ---
 
 ## 10. Next steps
 
-1. **Tim clicks through the app on his phone.** This is now the whole remaining risk. The backend is
-   verified; the *interface* has never been rendered by any browser — not the graphs, not the
-   account screens, not one workout.
-   Optional while he's there: **Sign-in method → Google → Enable** (needs an OAuth client the API
-   cannot create). Email and anonymous already work, so nothing is blocked on it.
-2. **Tim clicks through the app on his phone** and reports what's wrong. The core loop still has
-   not survived one real gym session, and neither the rep-normalised graph nor the account screens
-   have ever been rendered.
-3. **Muscle Groups map** — the profile prerequisite is now built, so this is unblocked. Plan and
-   decisions in `docs/strength-map-plan.md`. Remaining open question: which muscle group the
-   deadlift fills.
-4. **Body-weight trend chart** and wiring body weight into rep normalisation for
-   bodyweight/assisted exercises. The data is now being collected for both.
-4. Then Tier 2, starting with the exercise→muscle mapping change that D3 depends on.
+1. **Tim opens the app on his phone.** This is the entire remaining risk. Everything below the
+   interface is verified; nothing about the interface is. Most likely to be wrong: whether the body
+   map reads as a body, whether the Data control row (exercise picker + source toggle + rep stepper)
+   fits, and whether the desktop sidebar squeezes "Fitness Tracker" beside a 30px avatar.
+2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
+   support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
+   anonymous both work.
+3. **Body-weight trend chart** — the data is already being collected.
+4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
+5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
-None outstanding. All prior questions were answered on 2026-08-14 (see §2 Audience).
-When something genuinely open arises, use the AskUserQuestion box, not prose.
+None outstanding.
 
-One thing to raise when the feature is built: whether to also expose **raw e1RM** as a chart mode
-alongside normalised equivalent load. Lean is no for now — normalised load keeps the numbers in
-units the user actually recognises.
+One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
+alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user
+recognises.
