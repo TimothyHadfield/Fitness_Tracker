@@ -1563,3 +1563,33 @@ rep gate that was already decided. It removes the single worst distortion for fi
 Anyone whose level was inflated by a high-rep set will see it drop, which is correct.
 
 355 data-layer + 116 render assertions, green.
+
+---
+
+## 2026-08-16 — end of session, prepared for a chat reset
+
+Swept `progress.md` for staleness and contradiction rather than just appending to it. What was wrong:
+
+- The **Status** block had two paragraphs run together from separate edits and read as nonsense.
+- **Test counts** were stale in three places (275/49 in Verified, 245/29 in the file tree, against a
+  real 355/116), and the module count said 16 when there are 18.
+- The **Muscles** row still said "grey with no benchmark" — contradicting the same file's §9, which
+  says it now ranks from workout sets too.
+- The **Data** row said "benchmarks by default" without noting that an exercise with only workout
+  sets already charts those, which is exactly the question Tim asked at the end of the session.
+- `docs/firebase-setup.md` was described as holding "the one remaining console step". Google sign-in
+  is enabled and in use, so that pointer was actively misleading.
+- A §9 bullet had swallowed the following bullet (Core/Neck/Cardio) into its own last line.
+- The file tree was missing `strength-estimate-plan.md` and listed `units.js` and
+  `views-edit-session.js` in the wrong places.
+
+Added to **Key patterns**, because both are traps a fresh session would otherwise walk into:
+`setChildren()` rather than `replaceChildren()` (the literal-"null" bug), and weights being stored in
+pounds always with conversion at exactly two edges.
+
+Rewrote **§10 Next steps** so the first item is the one that is actually blocked on nothing — Phase 0
+of the estimate plan — and recorded that the graph still defaults to benchmarks when both sources
+exist, which is the one part of Tim's last request still unmet.
+
+State at close: **355 data-layer + 116 render assertions green**, everything pushed and live,
+Tier 1 complete, one decision (D18) waiting on Tim.

@@ -7,13 +7,22 @@
 **Last updated:** 2026-08-16
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
-end. The app now works with **no network** (D6, finally real), records weights in **lbs or kg**, and
-the body map ranks from **workout sets as well as benchmarks**. The body map is now **Tim's own illustration**, split into a recolourable fill
-layer and an ink layer that carries every keyline, striation and shadow — so the four look-and-feel
-gaps that were §9 are closed by construction. Screenshotted at 360/390/1180 in both themes.
+end.
 
-**Open work:** **Tier 1 is complete.** Next is Tier 2, whose first move is the weighted
-exercise→muscle mapping that D3 depends on.
+The body map is **Tim's own illustration**, split into a recolourable fill layer and an ink layer
+carrying every keyline, striation and shadow. The app works with **no network** (D6 — a service
+worker, so this is finally true rather than claimed), records weights in **lbs or kg**, has a rest
+timer, lets a workout be logged for another day, lets a past record be edited from the calendar, and
+can mark a whole workout as a benchmark. The body map ranks from **workout sets as well as
+benchmarks**.
+
+**Open work — start here:**
+
+1. **`docs/strength-estimate-plan.md` is written and nothing is built.** It is the plan for measuring
+   strength from ordinary workouts reliably. It **proposes D18** (narrowing D14), which Tim has not
+   yet ratified — see §10 open questions. Phase 0 (pure maths + a simulator, nothing user-visible) is
+   the recommended start.
+2. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on.
 
 | | |
 |---|---|
@@ -50,13 +59,13 @@ It needs a server — ES modules do not load over `file://`.
    from the CLI's stored refresh token — that is how Auth providers were configured. Don't assume
    console-only until you've checked.
 
-5. **A browser HAS now rendered this app — headless Chrome, 2026-08-15.** Chrome and Edge are both
-   installed on this machine, which changes what can be verified. See §0.6 for the recipe. Home,
-   Workouts, Calendar, Settings and Muscles were screenshotted and eyeballed at 360 / 390 / 512 px in
-   both themes: nothing overflows, nothing scrolls that shouldn't, the legend wraps. **Still
-   unverified:** any real device, iOS Safari, touch, the installed PWA, and every screen not listed
-   above. jsdom remains the *structural* check; a screenshot is the *visual* one. Be precise about
-   which you mean.
+5. **A browser really does render this app, and can be driven.** Chrome and Edge are both installed.
+   Screenshotted and eyeballed across sessions: Home, Workouts, Calendar, Settings, Muscles, the line
+   chart, the session runner, the edit-record screen and the account screen, at 360 / 390 / 880 /
+   1180 / 1280 px in both themes. **Still unverified: any real device, iOS Safari, touch, and the
+   installed PWA.** jsdom is the *structural* check; a screenshot is the *visual* one; CDP is the
+   *behavioural* one. Be precise about which you mean — several real bugs this project has shipped
+   were invisible to two of the three.
 
 6. **How to actually look at the app.** `--window-size` does NOT change the layout viewport in this
    headless build — it crops the screenshot of a 512px layout, which reads exactly like an overflow
@@ -123,7 +132,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `docs/strength-estimate-plan.md` | **Plan, not built.** How to measure strength from ordinary workout sets rather than benchmarks, and how to keep it stable. Proposes D18 |
-| `docs/firebase-setup.md` | Firebase state and the one remaining console step |
+| `docs/firebase-setup.md` | Firebase state. ⚠️ Says a Google console toggle is outstanding; it is not — Google sign-in is enabled and in use |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
 ---
@@ -165,15 +174,16 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks |
-| **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
+| **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — best e1RM across both, source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
+| Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so and reveals **Continue in this window instead**, a redirect-only route |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
 | Settings | Dark/light, **lbs/kg**, profile, account, export/restore backup, delete all |
 
@@ -182,12 +192,12 @@ Press-and-hold repeats.
 
 ### Verified
 
-- All **16 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **275 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- All **18 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **355 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **49 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **116 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -236,13 +246,12 @@ Fitness_Tracker/
 │                               JPG. Dev-only; needs pillow/numpy/scipy/potracer
 ├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
-│   ├── views-edit-session.js   editing a workout already recorded
-│   ├── units.js                lbs/kg. EVERYTHING IS STORED IN POUNDS; this converts
-│   │                           only at the edges, so switching units is lossless
 │   ├── app.js                  hash router + boot
 │   ├── store.js                data layer — async, backend-agnostic
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
+│   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
+│   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
 │   ├── body-map.js             composes the fill paths + the ink masks
 │   ├── exercises.js            265-exercise library + load-type rules
@@ -251,14 +260,16 @@ Fitness_Tracker/
 │   ├── views-session.js        session runner, benchmark form
 │   ├── views-data.js           calendar, day detail, Data screen, settings
 │   ├── views-muscles.js        the Muscles pane
+│   ├── views-edit-session.js   editing a workout already recorded (calendar → day → pencil)
 │   ├── views-profile.js        gender, birth year, body weight
 │   ├── views-account.js        account, sign-in, upgrade-from-anonymous
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     245 assertions, no dependencies
-│   └── render.test.mjs         29 jsdom assertions — mounts every screen
-└── docs/  spec.md · research.md · strength-map-plan.md · firebase-setup.md · competitive-teardown.html
+│   ├── data-layer.test.mjs     355 assertions, no dependencies
+│   └── render.test.mjs         116 jsdom assertions — mounts every screen
+└── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
+         firebase-setup.md · competitive-teardown.html
 ```
 
 ### Key patterns
@@ -274,8 +285,16 @@ Fitness_Tracker/
   `body-map.js`. No charting library.
 - **`el(tag, props, ...children)`** is the DOM builder. `class`, `text`, `html`, `dataset` and `onX`
   are special-cased; falsy children skipped.
-- **Pure-maths modules are the pattern that works.** `e1rm.js` and `strength-standards.js` have no
-  DOM or store dependency, so they are fully testable headlessly. Both caught real bugs that way.
+- **⚠️ Use `setChildren(node, ...)`, never `node.replaceChildren(...)`.** `replaceChildren`
+  stringifies anything that is not a Node, so a `cond ? el(...) : null` child renders the literal
+  text **"null"** on the page — which it had been doing under the exercise name on the session
+  screen for every exercise without a note. `el()` guards this; the direct calls did not.
+- **Weights are STORED IN POUNDS, always** (`units.js`). kg is a display choice, converted at exactly
+  two edges: what is shown and what is typed. `e1rm.js` and `strength-standards.js` are pounds
+  throughout. Anything that stores a number the user typed must go through `units.fromDisplay()`.
+- **Pure-maths modules are the pattern that works.** `e1rm.js`, `strength-standards.js` and
+  `units.js` have no DOM or store dependency, so they are fully testable headlessly. They have
+  caught real bugs that way, and `docs/strength-estimate-plan.md` follows the same shape.
 
 ### Data model
 
@@ -486,12 +505,15 @@ being a differentiator.
   best estimate wins, and the panel names the source. Not a breach of D14: that rule is about
   charting a TREND (two sources on one line, one point per day discarding the loser); a single best
   estimate has neither problem. Still limited to each muscle's ONE key lift — someone who only
-  dumbbell-benches still gets nothing for Chest, which needs cross-exercise equivalence to fix. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
+  dumbbell-benches still gets nothing for Chest, which needs cross-exercise equivalence to fix
+  (`docs/strength-estimate-plan.md` §10, flagged there as the weakest part of that plan).
+- **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
   `docs/research.md` §1.3 says was never validated — it was optimised for *internal consistency*.
-  Harmless for rep normalisation, a stronger claim here. Mitigated by preferring ≤5-rep benchmarks
-  and flagging levels derived from high-rep sets.
+  Harmless for rep normalisation, a stronger claim here. Mitigated by flagging levels derived from
+  high-rep sets, and since 2026-08-16 by refusing sets above 15 reps as evidence at all
+  (`MAX_EVIDENCE_REPS`, D5).
 - **A cancelled Google sign-in must never be silent.** `auth/popup-closed-by-user` is raised both
   when a person closes the window AND when the SDK loses its handle on it (Cross-Origin-Opener-
   Policy), so it is not reliably a decision. Treating it as "do nothing" made the button look dead
@@ -521,13 +543,19 @@ being a differentiator.
 
 ## 10. Next steps
 
-1. **Tim opens the app on his phone.** Still the biggest remaining risk, but a smaller one than it
-   was: the layout has now been seen at phone widths in Chrome (§0.5). What a screenshot cannot tell
-   us is touch — tap target sizes on the body map, press-and-hold on the steppers, scroll feel — plus
-   iOS Safari and the installed PWA.
-2. ~~**Google sign-in** — console toggle.~~ Done; Tim signs in with it.
-3. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
-4. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+1. **`docs/strength-estimate-plan.md`, Phase 0** — the pure-maths estimator plus its simulator.
+   Nothing user-visible, and it is where all the risk in that plan lives: the simulator says whether
+   the rest is worth building before any of it ships. **Blocked on nothing.** Phase 2 onwards is
+   blocked on Tim ratifying D18 (below).
+2. **Tim opens the app on his phone.** Still the biggest remaining risk. The layout has been seen at
+   phone widths in Chrome, but a screenshot says nothing about touch — tap targets on the body map,
+   press-and-hold on the steppers, scroll feel — nor about iOS Safari or the installed PWA.
+3. **The graph still defaults to benchmarks when an exercise has both sources.** That is the opposite
+   of what Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and is the
+   one part of that request still unmet. Fixing it properly is Phase 3 of the estimate plan; fixing
+   it cheaply is one line in `pickSource()` in `views-data.js`.
+4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
+5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
@@ -540,6 +568,6 @@ One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user
 recognises.
 
-Also noticed while screenshotting, unrelated and **pre-existing at `868fdb0`**: the Data screen's
-mode switch wraps "Bar Chart" onto two lines at every width tested, desktop included. It doesn't
-overflow, it just looks broken. Not touched — it is nothing to do with the body map.
+**Small, known, untouched:** the Data screen's mode switch wraps "Bar Chart" onto two lines at every
+width tested, desktop included. Pre-existing at `868fdb0`. It doesn't overflow, it just looks
+broken.
