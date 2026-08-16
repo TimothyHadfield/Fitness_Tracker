@@ -1050,3 +1050,95 @@ eyes on the result — use the screenshot loop in `progress.md` §0.6, because t
 and there is no other way to check it.
 
 State at close: 250 data-layer assertions, 46 render assertions, both green. Working tree clean.
+
+---
+
+## 2026-08-16 — Tim's own illustration replaces the hand-drawn figure
+
+Tim opened with "catch up with progress.md", then supplied `Human_Muscle_Groups.jpg` and a brief that
+was tighter than the previous one:
+
+> "I created an image that I want to use for the human muscle groups section. The thing is, I want to
+> follow it **exactly**, not just make a similar version of it. You'll have to know that you still
+> need to separate each muscle group and be able to recolor them to any of the available colors
+> independently of each other. Additionally I need you to keep the texture, details, and shading of
+> every part of the body no matter the color or adjustment, as they are extremely important."
+
+That is three constraints that pull against each other: exact fidelity, independent recolour, and
+texture that survives any colour. Tracing the picture into flat vector shapes satisfies the first two
+and destroys the third — a traced fill is a flat sticker.
+
+### The approach: separate the ink from the colour
+
+The drawing is flat colour with black keylines, fibre striations and shadows laid **over** it. So it
+splits into two layers that recombine to the original:
+
+- **Fill** — one traced vector path per muscle group per view. Colour and hit-testing only.
+- **Ink** — one greyscale image per view, used as an SVG **luminance mask** over a rect of ink
+  colour. Every keyline, every striation, all the shading.
+
+Recolouring changes a fill. It *cannot* touch the texture, because the texture is not in the fill —
+it is in the mask sitting on top of it. And head, hands, feet and knees simply have no fill under
+them, so they stay unpainted, which was gap 3 of the old brief, solved by construction rather than by
+remembering to leave them alone.
+
+`tools/build-body-art.py` does the separation and is checked in, so the art is reproducible.
+
+### Four things that had to be got right, none of them obvious
+
+**Segmenting by colour doesn't work.** Pecs, deltoids and abs share one orange, and the back's traps
+and lats share another, so hue clustering merged them into single blobs. The artwork separates them
+with heavy black keylines — but cutting on absolute darkness fails too, because the violet muscles
+are darker overall than an orange muscle's *striations*. What works is darkness **relative to the
+local colour**: a keyline is dark compared to its own muscle. That cut the back's largest merged
+component from 35,577 px to 15,290.
+
+**Per-channel multiply breaks on recolour.** The obvious ink encoding is `original / base` per
+channel, which reproduces the source exactly. It also renders **green striations over a blue muscle**
+— where a base colour has a near-zero channel, the ratio in that channel is noise. The fix is a
+*scalar*: how much the artwork darkens its own base. Applied to any fill it gives a darker version of
+**that** fill. It gives up some chroma against the source (p50 error 11.5/255) and that is the right
+trade, because the recolour is the feature and the exact reproduction is not.
+
+**A fill may only grow under ink darker than itself.** Fills are grown a few px under the keylines so
+no white hairline shows. Ink can darken but never lighten, so a grown pixel *brighter* than its base
+clips to zero ink and renders as raw fill — which bridged the white channel between two ab blocks
+with a bar of colour. Handing those pixels back fixed it.
+
+**Every painted pixel must be owned by some muscle.** A leftover keeps its *original* colour through
+the ink layer, so a recoloured figure sprouted stray orange and green fringes.
+
+### Muscles the app has no group for
+
+The drawing separates sternocleidomastoid, teres, infraspinatus, erectors, sartorius, adductors and
+tibialis anterior. The app has 13 groups and none of those. Each joins the group it trains with, and
+every choice is written down in the tool's `SEEDS` table rather than left implicit.
+
+One real loss, stated plainly: the quadriceps is drawn as four heads in four hues. The app gives the
+whole group one strength colour, so the hue difference between heads goes. Shading *inside* each head
+survives. In the source that difference is decoration; in the app hue means strength level, and it
+cannot mean both.
+
+### Verified
+
+275 data-layer assertions and 49 render assertions, both green. Screenshotted at 360/390/1180 in dark
+and light, selected and unselected. Unranked muscles needed their own `--body-none`: `--lv-none` is
+tuned to sit on the dark *page*, and on light *paper* it painted them near-black so they read as
+holes punched in the body.
+
+Also spotted while screenshotting, and confirmed pre-existing at `868fdb0` by shooting HEAD side by
+side: the Data mode switch wraps "Bar Chart" onto two lines at every width. Left alone — unrelated.
+
+### The one open thing, and it stopped the push
+
+`docs/strength-map-plan.md` §7 already said — from an earlier session — that the reference image for
+this feature was a watermarked Dreamstime stock illustration, **ID 142535635, © Vectorville**, and
+ruled it out as copyright infringement. The file Tim supplied is the same composition, without the
+watermark, with a blue bar across the bottom.
+
+He said he created it, and that is taken at face value. But the earlier finding is specific enough,
+and about this exact picture, that it goes to him rather than getting quietly overridden — the source
+JPG is git-ignored, but `img/ink-*.webp` and `js/body-art.js` are derived from it and would be served
+from a public repo and a live site.
+
+**Committed, not pushed.** See `progress.md` §11.

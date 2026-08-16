@@ -112,16 +112,29 @@ await settle();
 const svg = data.querySelector('svg.body-map');
 ok(Boolean(svg), 'the body SVG renders');
 const regions = svg ? svg.querySelectorAll('.body-region') : [];
-ok(regions.length >= 25, `body has ${regions.length} tappable regions across both views`);
-// The silhouette is a filled half-body plus its open outline, each emitted
-// twice through the mirror transform. Both must be present: the fill is what
-// stops an uncoloured muscle reading as a hole, the outline is what keeps a
-// coloured one inside the body.
-ok(svg && svg.querySelectorAll('.body-skin').length === 4,
-   'the filled silhouette renders as two mirrored halves per view, front and back');
-ok(svg && svg.querySelectorAll('.body-edge').length >= 2, 'the silhouette outline renders on top');
-ok(svg && [...svg.querySelectorAll('.body-skin')].some((p) => p.getAttribute('transform')),
-   'exactly one half is mirrored — symmetry comes from the transform, not duplicated path data');
+ok(regions.length >= 15, `body has ${regions.length} tappable regions across both views`);
+// One path per muscle group per view, and every one carries real geometry.
+ok(svg && [...regions].every((r) => (r.getAttribute('d') || '').length > 200),
+   'every region is a traced path, not an empty placeholder');
+ok(svg && svg.querySelectorAll('.body-paper').length === 2,
+   'each view is printed on its own sheet of paper');
+
+// The ink is the drawing itself — keylines, striations, shading — carried as a
+// luminance mask over a rectangle of ink colour. If the mask reference or the
+// image goes missing the figure renders as flat silhouettes with no detail at
+// all, which is the one failure that would not look like a bug in a screenshot.
+const inkRects = svg ? [...svg.querySelectorAll('.body-ink')] : [];
+ok(inkRects.length === 2, 'both views carry an ink layer');
+ok(inkRects.every((r) => /^url\(#bm-ink-/.test(r.getAttribute('mask') || '')),
+   'the ink layer is masked');
+const maskIds = svg ? [...svg.querySelectorAll('mask')].map((m) => m.id) : [];
+ok(inkRects.every((r) => maskIds.includes(
+     (r.getAttribute('mask') || '').slice(5, -1))),
+   'every ink mask reference resolves to a mask in the same SVG');
+const inkImgs = svg ? [...svg.querySelectorAll('mask image')] : [];
+ok(inkImgs.length === 2
+   && inkImgs.every((i) => /^img\/ink-(front|back)\.webp$/.test(i.getAttribute('href'))),
+   'each mask loads its view\'s ink image');
 
 // Every muscle drawn shows up in both views where expected, and each region
 // carries exactly one level class.

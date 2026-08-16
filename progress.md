@@ -7,21 +7,22 @@
 **Last updated:** 2026-08-16
 
 **Status:** Live and working. Tier 1 is complete except for a rest timer. Firebase is provisioned and
-verified end to end. The **Muscle Groups** strength map and the **body-weight trend chart** both
-shipped, and the body map was then **redrawn anatomically** with a bright multi-hue level ramp and
-given a side detail panel on desktop. **A browser has now rendered it** (headless Chrome,
-screenshots eyeballed) — see §0.5 for exactly what that does and does not cover.
+verified end to end. The body map is now **Tim's own illustration**, split into a recolourable fill
+layer and an ink layer that carries every keyline, striation and shadow — so the four look-and-feel
+gaps that were §9 are closed by construction. Screenshotted at 360/390/1180 in both themes.
 
-**Open work:** the Muscles figure is anatomically right but its *look* is not signed off — see §9.
-Everything else in Tier 1 is done bar a rest timer.
+**Open work — read §11 first.** There is an **unresolved licensing question about the body-map
+artwork** that is blocking the push, and it is the only thing blocking it. Everything else in Tier 1
+is done bar a rest timer.
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 250 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 46 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 275 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 49 assertions, mounts every screen |
+| **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome + an `<iframe>` at phone width — §0.6. Chrome and Edge are both installed |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |
@@ -89,7 +90,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
-| `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map |
+| `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `docs/firebase-setup.md` | Firebase state and the one remaining console step |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
@@ -135,7 +136,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | Hand-authored **anatomical** SVG body, front + back, 46 tappable regions. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. **The drawing's style is not finished — see §9.** Real muscle shapes — pec fan, deltoid cap, lat V, three quadriceps heads, two gastrocnemius heads — drawn as cross-section tables, not path data (see `body-map.js`). Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. **See §11 — the artwork's licence is unresolved.** |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
@@ -145,14 +146,20 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 
 ### Verified
 
-- All **15 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **250 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies)
-- **46 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
-  46 regions with correct level classes, tapping a muscle opens its detail, and the SVG line chart
-  genuinely runs (gridlines, one marker per measured point, correct aria label)
+- All **16 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **275 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+  directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
+  **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
+  muscle group would otherwise fail silently on a screen nobody re-checks
+- **49 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+  opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
+  correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
+  one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
+  detail at all, which is the one failure that would not look like a bug in a screenshot
 - **Screenshots, headless Chrome** — Home, Workouts, Calendar, Settings, Muscles and the line chart
   at 360 / 390 / 880 / 1180 / 1280 px in dark and light. Layout holds, nothing overflows, the legend
-  wraps, and the Muscles side column holds its figure size whether or not a muscle is selected
+  wraps, and the Muscles side column holds its figure size whether or not a muscle is selected. The
+  new body map was re-shot at 360/390/1180 in both themes, selected and unselected
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -182,13 +189,19 @@ Fitness_Tracker/
 ├── firestore.rules             THE thing protecting user data
 ├── firebase.json · .firebaserc  so `firebase deploy` needs no flags
 ├── progress.md  ← this file · chat.md · README.md
+├── Human_Muscle_Groups.jpg     body-map source. GIT-IGNORED (*.jpg) — see §11
+├── img/ink-front.webp          the body map's ink layer, ~100 KB each. GENERATED
+│   └── ink-back.webp           the only binary assets in the app
+├── tools/build-body-art.py     regenerates js/body-art.js + img/ink-*.webp from the
+│                               JPG. Dev-only; needs pillow/numpy/scipy/potracer
 ├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
 │   ├── app.js                  hash router + boot
 │   ├── store.js                data layer — async, backend-agnostic
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
-│   ├── body-map.js             hand-authored SVG body, front + back
+│   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
+│   ├── body-map.js             composes the fill paths + the ink masks
 │   ├── exercises.js            265-exercise library + load-type rules
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
 │   ├── views-workouts.js       home, workout list, builder, exercise picker
@@ -417,18 +430,12 @@ being a differentiator.
 - **Body weight is charted but not yet wired into rep normalisation** for the 14 bodyweight/assisted
   exercises. Their logged weight is added or assisted load, not total resistance — which is now
   computable. `canNormalize()` in `e1rm.js` still refuses them.
-- **The Muscles figure is drawn but its LOOK is not signed off.** It currently reads as a clinical
-  diagram; Tim wants a bold training-poster illustration. Four specific gaps, and he has said twice
-  that **shading and texture matter more to him than outline accuracy**:
-    1. **Heavy black keylines** around every muscle group — the single biggest thing making it read
-       as graphic rather than medical.
-    2. **Dense fibre striations** inside each muscle, following the fibre direction.
-    3. **Head, hands, feet and knees left white/unpainted**, so colour stops at the joints and the
-       coloured masses pop.
-    4. **More heroic proportions** — wider shoulders, narrower waist, bigger arms.
-  `belly()` in `body-map.js` takes cross-sections, so proportions are cheap to change; keylines and
-  striations are a CSS/`FIBRES` job. Use the §0.6 screenshot loop to check every pass — this is
-  pure visual work and cannot be verified any other way.
+- ~~**The Muscles figure's look is not signed off.**~~ **Closed 2026-08-16.** All four gaps — heavy
+  keylines, dense striations, unpainted head/hands/feet/knees, heroic proportions — came in with
+  Tim's illustration and are satisfied by construction rather than by drawing code: the ink layer
+  *is* the keylines and striations, and unpainted parts are simply parts with no fill. Nothing about
+  the figure's look is authored in this repo any more, so there is no styling knob to keep in sync.
+  What replaces it as the open question is the artwork's licence — §11.
 
 - **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
   step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
@@ -452,22 +459,57 @@ being a differentiator.
 
 ## 10. Next steps
 
-1. **Tim opens the app on his phone.** Still the biggest remaining risk, but a smaller one than it
+1. **Answer §11.** It is holding an unpushed commit, and nothing else is blocked on anything.
+2. **Tim opens the app on his phone.** Still the biggest remaining risk, but a smaller one than it
    was: the layout has now been seen at phone widths in Chrome (§0.5). What a screenshot cannot tell
    us is touch — tap target sizes on the body map, press-and-hold on the steppers, scroll feel — plus
    iOS Safari and the installed PWA.
-2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
+3. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
    support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
    anonymous both work.
-3. **Finish the look of the Muscles figure** — the four gaps in §9. Highest-value visual work left.
 4. **Rest timer** — the last Tier 1 item.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
 6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
-None outstanding.
+**One, and it is blocking — see §11.**
 
 One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user
 recognises.
+
+Also noticed while screenshotting, unrelated and **pre-existing at `868fdb0`**: the Data screen's
+mode switch wraps "Bar Chart" onto two lines at every width tested, desktop included. It doesn't
+overflow, it just looks broken. Not touched — it is nothing to do with the body map.
+
+---
+
+## 11. BLOCKING — the body-map artwork's licence
+
+**The work is committed but NOT pushed, and this is the only reason.**
+
+Tim supplied `Human_Muscle_Groups.jpg` on 2026-08-16, said he created it, and asked that the figure
+follow it exactly. That shipped and it looks right.
+
+**But `docs/strength-map-plan.md` §7 already recorded, in an earlier session, that the reference
+image for this exact feature was a watermarked Dreamstime stock illustration — ID 142535635,
+© Vectorville — and ruled it out as copyright infringement.** The supplied file is the same
+composition: same pose, same rainbow scheme, same front/back pairing, no watermark, and a solid blue
+bar across the bottom where a stock-site brand strip usually sits.
+
+It may be that image. It may be an independent work in the same style. **Nobody has checked, and it
+is not a technical question.**
+
+What is at stake: the source JPG is git-ignored and unpublished, but `img/ink-*.webp` and
+`js/body-art.js` are *derived from it*, are committed, and would be served from a public repo and a
+public site. A derivative carries the original's licence.
+
+- **If Tim made it** → push, delete this section, done.
+- **If it is stock** → `js/body-map.js` depends on nothing but the `ART` and `FIGURE` exports of
+  `js/body-art.js`. Any replacement producing those two exports drops straight in, and
+  `tests/data-layer.test.mjs` asserts the muscle names against `MUSCLE_LIFTS` so a substitute cannot
+  quietly lose a group. The previous hand-authored figure is recoverable at `53f1b0b`.
+
+Do not push this without an answer. Raising it once and proceeding would be exactly the
+overclaiming §1 says this project's credibility rests on not doing.

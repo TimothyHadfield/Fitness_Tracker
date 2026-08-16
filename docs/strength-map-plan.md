@@ -262,17 +262,79 @@ the switch may need to shorten to "Muscles", become icons, or move out of the he
 
 ## 7. Drawing the body
 
-**The reference image cannot be used** — it is a watermarked Dreamstime stock illustration
-(ID 142535635, © Vectorville). Using it would be copyright infringement, and it carries someone
-else's visual identity into the app.
+### 7.0 SUPERSEDED 2026-08-16 — and an unresolved licensing question
 
-Instead: **hand-author an inline SVG**, front and back, one `<path>` per muscle region with a
-`data-muscle` attribute. Fill comes from a CSS custom property per level. This keeps the no-build,
-no-dependency architecture, scales cleanly, themes properly, and makes each region a real click
-target for the tap-to-inspect behaviour.
+Tim supplied `Human_Muscle_Groups.jpg` on 2026-08-16, said he created it, and asked that the app
+follow it **exactly** rather than approximate it. That is what now ships (7.2).
 
-It is the largest single piece of work here — a simplified, stylised body, not an anatomy textbook.
-Roughly 26 paths (13 groups × front/back where visible).
+⚠️ **This has not been reconciled with the finding below.** An earlier session identified the
+*reference* image for this feature as a watermarked Dreamstime stock illustration,
+**ID 142535635, © Vectorville**, and ruled it out on those grounds. The supplied file is the same
+composition — same pose, same rainbow scheme, same front/back pairing — with no watermark and a
+solid blue bar across the bottom. It may be that image, or an independent work in the same style.
+
+Nobody has verified which. Until somebody does:
+
+- the source JPG is **git-ignored** (`*.jpg`) and is not published,
+- but `img/ink-*.webp` and `js/body-art.js` **are derived from it**, are committed, and are served
+  from a public repo and a public site. A derivative carries the original's licence.
+
+**This is a decision for Tim, not a technical question.** If the image is licensed stock, the assets
+have to come out. See §7.3 for what that costs.
+
+### 7.1 The original plan (not taken)
+
+Hand-author an inline SVG, front and back, one `<path>` per muscle region. Roughly 26 paths. This
+was built and shipped on 2026-08-15, then replaced — it was anatomically correct but read as a
+clinical diagram, and Tim wanted a training poster.
+
+### 7.2 What ships now — fill and ink, separated
+
+The artwork is one flat image, and the app needs each muscle to take its own colour while every
+keyline, striation and shadow survives whatever colour it is given. So `tools/build-body-art.py`
+splits it into two layers:
+
+| Layer | What it is | Where |
+|---|---|---|
+| **Fill** | one traced vector path per muscle group per view. Colour and hit-testing only | `js/body-art.js` |
+| **Ink** | one greyscale image per view, used as an SVG **luminance mask** over a rect of ink colour. Every keyline, striation and shadow | `img/ink-*.webp` |
+
+Compositing them reproduces the drawing. Changing a fill recolours exactly one muscle and cannot
+touch the texture, because the texture is not in the fill — it is in the mask on top of it.
+
+**Ink is a scalar**, not a per-channel multiply: how much the artwork darkens *its own base colour*
+at that pixel. Applied to any fill it yields a darker version of **that** fill. A per-channel
+multiply reproduced the source more exactly but broke on recolour — where a base colour has a
+near-zero channel the ratio there is noise, and the striations came out **green over a blue muscle**.
+
+Consequences worth knowing:
+
+- **Head, hands, feet and knees carry ink but no fill**, so they stay unpainted. That is what makes
+  the coloured masses read, and it is Tim's own §9 requirement, satisfied by construction.
+- **The quadriceps is drawn as four heads in four hues.** The app gives the whole group one strength
+  colour, so each head is normalised against its own base. Shading *inside* each head is preserved;
+  the hue difference *between* heads is dropped. In the source that difference is decoration — in
+  the app hue means strength level, and it cannot mean both.
+- **Muscles the app has no group for** join the group they train with, recorded in the tool's
+  `SEEDS` table: sternocleidomastoid → Neck, teres/infraspinatus/erectors → Back, sartorius and the
+  front adductors → Quads, adductor magnus → Hamstrings, glute medius/TFL → Glutes, tibialis
+  anterior and peroneals → Calves.
+- **The figure is a poster in both themes** — dark ink on light paper. The shading assumes shadows
+  are darker than the paper, so inverting for dark mode would turn every striation into a highlight.
+  Dark mode gets a dimmer sheet (`--body-paper`), not a dark one.
+- `--body-none` exists because `--lv-none` is tuned to sit on the dark *page*; on light *paper* it
+  painted the unranked muscles near-black and they read as holes punched in the body.
+
+Reconstruction error against the source, measured by the tool on every build: unpainted areas are
+**exact**; muscle interiors are exact at the median (p50 0/255) with p99 ≈ 62/255, which is the
+chroma the scalar encoding deliberately gives up.
+
+### 7.3 If the image has to be withdrawn
+
+`js/body-map.js` consumes `ART` and `FIGURE` from `js/body-art.js` and nothing else about the
+artwork. Any replacement that produces the same two exports drops straight in; the muscle names are
+asserted against `MUSCLE_LIFTS` in `tests/data-layer.test.mjs`, so a substitute cannot quietly lose
+a group. The previous hand-authored figure is recoverable from git at `53f1b0b`.
 
 ---
 

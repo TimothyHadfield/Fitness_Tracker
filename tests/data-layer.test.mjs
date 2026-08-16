@@ -375,6 +375,21 @@ ok(!ss.canRank('Core') && !ss.canRank('Neck'), 'Core and Neck are deliberately u
 for (const m of bm.MAPPED_MUSCLES) {
   ok(ss.canRank(m) || ss.UNRANKABLE.includes(m), `drawn muscle "${m}" is rankable or declared unrankable`);
 }
+// And the converse. The figure is generated from an illustration by
+// tools/build-body-art.py; if a regeneration lost a group, the app would rank
+// that muscle and then have nowhere to show it — silently, and only on a screen
+// nobody thinks to re-check. Cardio is the one lift-less group and is not drawn.
+for (const m of Object.keys(ss.MUSCLE_LIFTS)) {
+  ok(bm.MAPPED_MUSCLES.includes(m), `rankable muscle "${m}" is drawn on the body`);
+}
+// Every drawn muscle carries real geometry in at least one view.
+const art = await import('../js/body-art.js');
+for (const m of bm.MAPPED_MUSCLES) {
+  const drawn = Object.values(art.ART)
+    .map((v) => v.muscles[m] || '')
+    .filter((d) => d.length > 200);
+  ok(drawn.length >= 1, `"${m}" has a traced path (${drawn.length} view(s))`);
+}
 
 const male180 = { gender: 'male', bodyWeight: 180, age: 30 };
 ok(near(ss.medianFor('Chest', male180), 225, 1), `median bench at 180 lb = 225 (${ss.medianFor('Chest', male180).toFixed(1)})`);

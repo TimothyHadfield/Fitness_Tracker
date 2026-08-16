@@ -23,10 +23,17 @@
   --rule:        #242A2E;
   --rule-soft:   #1C2225;
 
-  /* The body diagram's silhouette: a neutral that reads as "body" and lets an
-     uncoloured muscle sit on it without looking like a hole. */
-  --skin:        #232A2E;
-  --skin-edge:   #47525A;
+  /* The body diagram is a printed poster: dark ink on light paper, in BOTH
+     themes. Its shading assumes shadows are darker than the paper, so inverting
+     for dark mode would turn every fibre striation into a highlight. Dark mode
+     gets a dimmer sheet instead, so it reads as paper rather than glare. */
+  --body-paper:  #C2C6C0;
+  --body-ink:    #121618;
+  /* "No data" ON THE FIGURE is not the same swatch as "no data" in the legend:
+     the legend sits on the dark page, the muscle sits on light paper. Reusing
+     --lv-none here painted the unranked muscles near-black and they read as
+     holes punched in the body. */
+  --body-none:   #A5AAA6;
 
   --accent:      #D99A3E;
   --accent-ink:  #1A1206;
@@ -59,8 +66,9 @@
   --rule:        #D6D9D3;
   --rule-soft:   #E3E5E0;
 
-  --skin:        #E3E5E0;
-  --skin-edge:   #9AA2A6;
+  --body-paper:  #FFFFFF;
+  --body-ink:    #121618;
+  --body-none:   #DBDED7;
 
   --accent:      #96660F;
   --accent-ink:  #FFFFFF;
@@ -1210,46 +1218,44 @@ select.input {
 }
 
 /* min-width:0 guards the flexbox trap where an item's automatic minimum size is
-   its INTRINSIC width: this SVG's viewBox is 420 wide, so without it a narrow
-   phone could be pushed wider than its own viewport. Measured at 390/412/512
-   and the layout holds. */
+   its INTRINSIC width: this SVG's viewBox is over 1000 wide, so without it a
+   narrow phone could be pushed wider than its own viewport. */
 .body-wrap {
   flex: 1; min-height: 0; min-width: 0;
   display: flex; align-items: center; justify-content: center;
 }
 .body-map { width: 100%; height: 100%; max-width: 100%; max-height: 100%; display: block; }
-/* Skin is the silhouette the muscles sit inside — filled, so a muscle with no
-   data reads as part of a body rather than as a hole in one. */
-/* The stroke is the same colour as the fill: it fattens each half by half a
-   pixel so the two mirrored halves overlap and no hairline seam shows down the
-   centre line. */
-.body-skin { fill: var(--skin); stroke: var(--skin); stroke-width: 1; }
-/* The outline rides on top of the fills, so a muscle is contained by the body
-   rather than bleeding over its edge. */
-.body-edge {
-  fill: none; stroke: var(--skin-edge); stroke-width: 1.8;
-  stroke-linejoin: round; stroke-linecap: round; pointer-events: none;
-}
-/* Fibre direction. Decorative, non-interactive, and deliberately faint: it is
-   what stops a filled shape reading as a flat sticker. */
-.body-fibre {
-  fill: none; stroke: var(--ground); stroke-width: 1.4; opacity: .55;
-  pointer-events: none; stroke-linecap: round;
+
+/* The paper the figure is printed on, and the ink printed on it. Both stay
+   dark-on-light in EITHER theme: the drawing is lit as a poster, its shading
+   assumes shadows are darker than the paper, and inverting the ink would turn
+   every striation into a highlight. Dark mode gets a dimmer paper, not a dark
+   one, so the sheet doesn't glare. */
+.body-paper { fill: var(--body-paper); }
+.body-ink {
+  fill: var(--body-ink);
+  /* The ink is the whole drawing — keylines, striations, shading. It must never
+     swallow taps meant for the muscle underneath it. */
+  pointer-events: none;
 }
 .body-caption {
-  fill: var(--ink-faint); font-size: 9px; font-family: var(--mono);
+  fill: var(--ink-faint); font-size: 26px; font-family: var(--mono);
   letter-spacing: 0.08em; text-transform: uppercase;
 }
 
-.body-region {
-  stroke: var(--ground); stroke-width: 1.2; cursor: pointer;
-  transition: opacity .12s ease;
-}
+.body-region { cursor: pointer; transition: opacity .12s ease; }
 .body-region:hover { opacity: .82; }
-/* Selection is a ring, not a colour change — the fill is carrying the level and
-   must not be overwritten by the interaction state. */
-.body-region.is-selected { stroke: var(--ink); stroke-width: 2.4; }
-.body-region:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.4; }
+/* Selection dims the others rather than recolouring the one — the fill is
+   carrying the level and must not be overwritten by the interaction state. */
+.body-map[data-selected] .body-region:not(.is-selected) { opacity: .38; }
+/* The ring is a separate path drawn on top of the ink. Under it, it would land
+   exactly beneath the muscle's own black keyline and never be seen. */
+.body-pick {
+  fill: none; stroke: var(--accent); stroke-width: 6;
+  stroke-linejoin: round; pointer-events: none;
+}
+.body-region:focus-visible { outline: none; }
+.body-region:focus-visible ~ .body-pick { stroke: var(--ink); }
 
 .lv-beginner, .body-region.lv-beginner         { fill: var(--lv-beginner); }
 .lv-novice, .body-region.lv-novice             { fill: var(--lv-novice); }
@@ -1259,7 +1265,7 @@ select.input {
 .lv-expert, .body-region.lv-expert             { fill: var(--lv-expert); }
 .lv-elite, .body-region.lv-elite               { fill: var(--lv-elite); }
 .body-region.lv-below                          { fill: var(--lv-below); }
-.body-region.lv-none                           { fill: var(--lv-none); }
+.body-region.lv-none                           { fill: var(--body-none); }
 
 /* Legend. Always present, so a level is never communicated by colour alone. */
 .lv-key { display: flex; flex-wrap: wrap; gap: 4px 10px; }

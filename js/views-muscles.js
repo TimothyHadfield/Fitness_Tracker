@@ -12,7 +12,7 @@ import { store, muscleStrength } from './store.js';
 import {
   LEVELS, MUSCLE_LIFTS, UNRANKABLE, weightForPercentile, keyLiftFor,
 } from './strength-standards.js';
-import { bodySvg } from './body-map.js';
+import { bodySvg, setSelected } from './body-map.js';
 import { el, emptyState, trimNum, fmtDateShort } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -76,19 +76,25 @@ export async function muscleGroupsPane(host, top) {
     });
   }
 
-  function render() {
-    const body = bodySvg(levelMap, selected, (muscle) => {
-      selected = selected === muscle ? null : muscle;
-      render();
-    });
+  // The figure is built ONCE. Rebuilding it on every tap would re-attach the
+  // two ink mask images and flash the drawing; only the panel below changes.
+  const body = bodySvg(levelMap, selected, (muscle) => {
+    selected = selected === muscle ? null : muscle;
+    setSelected(body, selected);
+    renderPanel();
+  });
+  const foot = el('div', { class: 'body-foot' });
 
-    host.replaceChildren(
-      el('div', { class: 'body-wrap' }, body),
-      el('div', { class: 'body-foot' },
-        legend(),
-        selected ? detail(muscles.get(selected), selected, profile) : summary(muscles),
-      ),
+  function renderPanel() {
+    foot.replaceChildren(
+      legend(),
+      selected ? detail(muscles.get(selected), selected, profile) : summary(muscles),
     );
+  }
+
+  function render() {
+    host.replaceChildren(el('div', { class: 'body-wrap' }, body), foot);
+    renderPanel();
   }
 
   render();
