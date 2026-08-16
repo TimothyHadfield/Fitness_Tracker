@@ -1185,3 +1185,60 @@ Deleting an accessible focus indicator to satisfy a visual note would have been 
 request; Tim asked for the box gone, not for keyboard users to lose their place.
 
 State at close: 275 data-layer assertions, 49 render assertions, both green. Pushed.
+
+---
+
+## 2026-08-16 (cont.) — offline, and the session's date
+
+Tim asked for my read on the biggest remaining improvements, then: *"Yes I think all of those
+improvements are great. Start with the ones you need the most and move from there."* Plus one
+specific ask — a workout should record for **today** by default, with the date editable for the
+session you forgot to log.
+
+### Offline was a claim, not a feature
+
+D6 says offline-first logging is non-negotiable, "gyms are basements". There was **no service worker
+at all**. `store.js` falls back to localStorage when the *cloud* is unreachable, but with no signal
+the app never BOOTED, so that fallback never got to run. A basement got a blank page.
+
+`sw.js` precaches the whole shell. Deliberately **stale-while-revalidate, not cache-first**: with no
+build step, cache-first plus a hand-bumped VERSION has a nasty failure mode — edit `app.css`, forget
+the bump, and every install is frozen on the old file forever with no way to tell. SWR's worst case
+is one stale load and it self-heals. Cross-origin is left alone entirely, because Firestore streams
+over long-polling and the SDK comes from gstatic.
+
+A hand-written precache list rots, so `tests/data-layer.test.mjs` now walks `js/ css/ img/` and fails
+if anything shipped is not listed. A file added and forgotten would otherwise be invisible until
+someone opened the app in a basement — the exact case the file exists for, and the exact case nobody
+tests.
+
+**Two things went wrong while verifying, both worth keeping:**
+
+1. **`Network.emulateNetworkConditions` is per-target, and a service worker is its own target.** Its
+   fetches sail straight past the page's emulated offline state. My first offline test *passed* while
+   the app was quietly still loading over the network. The canary caught it — request a URL that
+   cannot be cached, assert it fails. Without that the test proved nothing. The real test kills the
+   origin server.
+2. **`caches.open()` failed with "Unexpected internal error"** for half an hour of debugging. Not the
+   app: Chrome's `--user-data-dir` was the ~180-character session scratchpad, and Chrome appends
+   hashed CacheStorage directories under it until it blows past Windows MAX_PATH. A short profile
+   path fixes it. It presents *exactly* as a broken service worker.
+
+Verified with the server killed: the app boots, renders, saves a workout, and the Muscles map draws
+all 18 regions from the cached 100 KB image.
+
+### The session's date
+
+Defaults to today, editable in the header, future dates refused. It sits in the header rather than
+behind the Finish button so a workout being logged for another day says so the whole way through
+instead of springing it at the end — quiet when it is today, accent plus "NOT TODAY" when it is not.
+
+The trap was the draft. Draft expiry compared `draft.date` to today, so moving the date back would
+have made the session throw its own draft away the moment you switched apps. Split into two fields:
+`date` is the day it is recorded FOR and is editable; `startedOn` is the day it was created and is
+what decides whether a draft is still today's. Old drafts without `startedOn` fall back to `date`.
+
+Tested end to end — back-date a session, leave, resume, finish, and it is filed under the chosen day
+while `startedAt` still honestly records when it was actually typed in.
+
+279 data-layer + 65 render assertions, green.

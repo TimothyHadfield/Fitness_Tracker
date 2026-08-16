@@ -18,8 +18,8 @@ gaps that were §9 are closed by construction. Screenshotted at 360/390/1180 in 
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 275 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 49 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 279 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 65 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -79,6 +79,19 @@ It needs a server — ES modules do not load over `file://`.
    Also: the app's real `firebase-config.js` makes boot await a gstatic import that never resolves
    without network, leaving `#app` empty — copy the app to a scratch dir and blank the config there.
    Never blank the real one.
+
+7. **Testing offline: kill the server, do NOT emulate it.** `Network.emulateNetworkConditions` is
+   applied **per target**, and a service worker is its own target — so its fetches sail straight past
+   the page's emulated offline state. The first version of the offline test passed while the app was
+   quietly still loading over the network. Start a throwaway `python -m http.server` on its own port,
+   let the worker install, then kill the server. Nothing can fake that. Always include a canary —
+   request a URL that cannot be cached and assert it fails — or you are testing nothing.
+
+8. **Chrome's `--user-data-dir` must be a SHORT absolute path.** The session scratchpad is ~180
+   characters deep; Chrome appends hashed `Service Worker/CacheStorage` directories under it, blows
+   past Windows MAX_PATH, and `caches.open()` fails with "Unexpected internal error". That presents
+   exactly as a broken service worker and is nothing of the sort. `C:/Users/timha/AppData/Local/Temp/cdp-<pid>`
+   works. A *relative* user-data-dir makes Chrome fail to start at all.
 
 ---
 
@@ -143,9 +156,9 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete |
 | Exercise library | **265 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
-| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar |
+| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
-| Draft recovery | In-progress workout survives an app switch; expires end of day |
+| Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named |
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
@@ -201,6 +214,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 ```
 Fitness_Tracker/
 ├── index.html · manifest.webmanifest · icon.svg
+├── sw.js                       service worker — what makes D6 true. Precaches the
+│                               shell; stale-while-revalidate, NOT cache-first
 ├── firestore.rules             THE thing protecting user data
 ├── firebase.json · .firebaserc  so `firebase deploy` needs no flags
 ├── progress.md  ← this file · chat.md · README.md
@@ -372,7 +387,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D3 | **Weekly sets per muscle group is the headline metric.** | What hypertrophy responds to (~10–20 hard sets/muscle/week). Only Alpha Progression does it. **Not built — Tier 2, and blocked on the weighted muscle mapping.** |
 | D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets win on whole-block visibility, structural freedom, permanence. Apps only win the logging loop. Take both. |
 | D5 | **e1RM must be rep-range honest.** Full confidence 2–10 reps, flag 11–15, don't normalise above 15. | Formulas degrade badly above ~10 reps. Built. |
-| D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. |
+| D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. **Built 2026-08-16** — `sw.js` precaches the whole shell. Until then this was a claim, not a feature: store.js falls back to localStorage when the *cloud* fails, but with no signal the app never BOOTED, so that fallback never ran. Verified by killing the origin server, not by emulating offline — see §0.7. |
 | D7 | **No social feed.** | Repeatedly unwanted in Hevy reviews. |
 | D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery. |
 | D9 | **Progressive disclosure is core architecture.** | Audience is "any level". Can't be bolted on later. |

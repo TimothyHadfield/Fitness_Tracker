@@ -464,6 +464,26 @@ select.input {
    Session runner
    ========================================================================== */
 
+/* The day a session is recorded for. Reads as part of the subtitle, not as a
+   form field — it is right nearly every time and should not shout. It only
+   gains the accent when it has been moved off today, which is exactly when
+   someone needs to notice it. */
+.session-sub { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.session-sub-dot { opacity: .5; }
+.session-date {
+  font: inherit; font-family: var(--mono); color: var(--ink-soft);
+  background: none; border: 0; border-bottom: 1px dashed var(--rule);
+  padding: 0 0 1px; cursor: pointer; min-width: 0;
+}
+.session-date::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
+.session-date.is-moved {
+  color: var(--accent); border-bottom-color: var(--accent); font-weight: 650;
+}
+.session-date-note {
+  color: var(--accent); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+
 .session-progress { flex: none; display: flex; gap: 3px; padding: 7px var(--pad) 0; }
 .session-progress span { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); }
 .session-progress span.done { background: var(--good); }

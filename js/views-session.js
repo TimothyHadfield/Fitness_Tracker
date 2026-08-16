@@ -64,9 +64,15 @@ export async function SessionView(workoutId) {
 
   // A draft only resumes on the same day. Yesterday's abandoned session should not
   // silently reappear and get saved with today's date.
+  //
+  // That check is against startedOn — the day the draft was CREATED — and not
+  // against `date`, which is the day the session is recorded for and which the
+  // user can move. Comparing `date` would mean back-dating a workout threw its
+  // own draft away the moment you switched apps. `date` is the fallback for
+  // drafts written before startedOn existed.
   const rawDraft = loadDraft();
-  const existingDraft =
-    rawDraft && rawDraft.workoutId === workout.id && rawDraft.date === todayISO() ? rawDraft : null;
+  const existingDraft = rawDraft && rawDraft.workoutId === workout.id
+    && (rawDraft.startedOn || rawDraft.date) === todayISO() ? rawDraft : null;
   if (rawDraft && !existingDraft) clearDraft();
 
   let state;
@@ -77,7 +83,12 @@ export async function SessionView(workoutId) {
     state = {
       workoutId: workout.id,
       workoutName: workout.name,
+      // The day this is recorded FOR. Defaults to today and is editable, for
+      // the workout you did yesterday and forgot to log.
       date: todayISO(),
+      // The day it was STARTED. Never edited — it is what decides whether a
+      // draft is still today's.
+      startedOn: todayISO(),
       startedAt: new Date().toISOString(),
       index: 0,
       entries: [],
@@ -279,6 +290,34 @@ export async function SessionView(workoutId) {
     });
   }
 
+  /* ---- which day this is recorded for ---- */
+  // Defaults to today, because that is what it is nearly every time. It sits in
+  // the header rather than behind the Finish button so that a workout being
+  // logged for another day says so the whole way through, instead of springing
+  // it on you at the end.
+  const dateInput = el('input', {
+    class: 'session-date', type: 'date', value: state.date,
+    // No future dates: this exists for the session you forgot to log, and a
+    // workout you have not done yet is not a thing to record.
+    max: todayISO(),
+    'aria-label': 'Day this workout is recorded for',
+    onChange: (e) => {
+      state.date = e.target.value || todayISO();
+      saveDraft(state);
+      renderDate();
+    },
+  });
+  const dateNote = el('span', { class: 'session-date-note' });
+
+  function renderDate() {
+    const isToday = state.date === todayISO();
+    dateInput.value = state.date;
+    dateInput.classList.toggle('is-moved', !isToday);
+    dateNote.textContent = isToday ? '' : 'not today';
+    dateNote.hidden = isToday;
+  }
+  renderDate();
+
   renderAll();
 
   return el('div', { class: 'screen no-nav' },
@@ -286,7 +325,12 @@ export async function SessionView(workoutId) {
       iconBtn('x', 'Leave workout', quit),
       el('div', { style: 'flex:1;min-width:0' },
         el('h1', { text: workout.name }),
-        el('div', { class: 'topbar-sub', text: existingDraft ? 'Resumed where you left off' : 'In progress' }),
+        el('div', { class: 'topbar-sub session-sub' },
+          el('span', { text: existingDraft ? 'Resumed' : 'In progress' }),
+          el('span', { class: 'session-sub-dot', text: '·' }),
+          dateInput,
+          dateNote,
+        ),
       ),
     ),
     progress,

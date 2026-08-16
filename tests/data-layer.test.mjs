@@ -598,5 +598,50 @@ ok(fb.mergeRows([{ id: 'a' }], []).length === 1, 'an empty upload leaves the clo
 const once = fb.mergeRows(remoteRows, localRows);
 ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a no-op');
 
+/* ================= the offline shell (D6) ================= */
+// sw.js hand-lists the files to precache, because there is no build step to
+// generate one. A file added and not listed is invisible until someone opens
+// the app in a basement with no signal — which is the exact case the service
+// worker exists for, and the exact case nobody tests. So the list is checked
+// against the repo instead.
+{
+  const fsMod = await import('node:fs');
+  const pathMod = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  // fileURLToPath, not pathname: the repo lives under "Code Projects" and the
+  // space comes back percent-encoded otherwise.
+  const up = pathMod.join(pathMod.dirname(fileURLToPath(import.meta.url)), '..');
+
+  const sw = fsMod.readFileSync(pathMod.join(up, 'sw.js'), 'utf8');
+  const listed = new Set([...sw.matchAll(/'\.\/([^']*)'/g)].map((m) => m[1]).filter(Boolean));
+
+  const shipped = [];
+  const walk = (dir, prefix) => {
+    for (const f of fsMod.readdirSync(pathMod.join(up, dir))) {
+      shipped.push(prefix + f);
+    }
+  };
+  walk('js', 'js/');
+  walk('css', 'css/');
+  walk('img', 'img/');
+  shipped.push('index.html', 'icon.svg', 'manifest.webmanifest');
+
+  const missing = shipped.filter((f) => !listed.has(f));
+  ok(missing.length === 0,
+     missing.length ? `sw.js precache is missing: ${missing.join(', ')}`
+                    : `sw.js precaches all ${shipped.length} shipped assets`);
+
+  const gone = [...listed].filter((f) => f && !fsMod.existsSync(pathMod.join(up, f)));
+  ok(gone.length === 0,
+     gone.length ? `sw.js precaches files that do not exist: ${gone.join(', ')}`
+                 : 'every file sw.js precaches actually exists');
+
+  // Cross-origin must be left alone: Firestore streams over long-polling and
+  // the SDK comes from gstatic. Caching either would break sync to no purpose.
+  ok(/url\.origin !== self\.location\.origin/.test(sw),
+     'sw.js ignores cross-origin requests');
+  ok(/req\.method !== 'GET'/.test(sw), 'sw.js never intercepts a write');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

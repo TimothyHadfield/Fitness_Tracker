@@ -251,5 +251,89 @@ ok(!data.querySelector('.stat-value.up') && !data.querySelector('.stat-value.dow
 ok(!data.querySelector('.rep-target'),
    'no rep-target stepper — there is nothing to normalise about standing on a scale');
 
+/* ================= the session's date ================= */
+// A workout records for TODAY by default, and the day can be moved for the
+// session you forgot to log.
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { todayISO } = await import(BASE + 'store.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const w = await store.saveWorkout({
+    name: 'Push day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '' }],
+  });
+
+  localStorage.removeItem(DRAFT);
+  const session = await mount(SessionView(w.id));
+
+  const dateInput = session.querySelector('.session-date');
+  ok(Boolean(dateInput), 'the session shows the day it will be recorded for');
+  ok(dateInput && dateInput.value === todayISO(),
+     `it defaults to today (${dateInput && dateInput.value})`);
+  ok(dateInput && dateInput.getAttribute('max') === todayISO(),
+     'it refuses future dates — you cannot log a workout you have not done');
+  ok(dateInput && !dateInput.classList.contains('is-moved'),
+     'today is not flagged as moved');
+
+  const draft0 = JSON.parse(localStorage.getItem(DRAFT));
+  ok(draft0 && draft0.date === todayISO() && draft0.startedOn === todayISO(),
+     'the draft records both the day it is for and the day it was started');
+
+  // Move it back a week.
+  const past = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  dateInput.value = past;
+  dateInput.dispatchEvent(new window.Event('change', { bubbles: true }));
+  await settle();
+
+  const draft1 = JSON.parse(localStorage.getItem(DRAFT));
+  ok(draft1 && draft1.date === past, `changing the date updates the draft (${draft1 && draft1.date})`);
+  ok(draft1 && draft1.startedOn === todayISO(),
+     'startedOn stays put — it is what decides whether the draft is still today\'s');
+  ok(session.querySelector('.session-date').classList.contains('is-moved'),
+     'a date that is not today is called out');
+
+  // The trap: a back-dated session must still resume. Comparing the draft's
+  // `date` to today — which is what the code used to do — would have thrown
+  // this draft away the moment the user switched apps.
+  const resumed = await mount(SessionView(w.id));
+  ok(localStorage.getItem(DRAFT) !== null, 'a back-dated draft survives leaving the screen');
+  ok(resumed.querySelector('.session-date').value === past,
+     'and it resumes on the day it was set to, not today');
+
+  // The whole point: finishing must SAVE it against the chosen day.
+  const before = (await store.getSessions()).length;
+  // The stepper commits on blur, not change — it lets you type freely first.
+  const weight = resumed.querySelector('.step-value');
+  weight.value = '135';
+  weight.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  for (const b of resumed.querySelectorAll('button')) {
+    if (/Next exercise/.test(b.textContent)) { b.click(); await settle(); }
+  }
+  const finishBtn = [...resumed.querySelectorAll('button')]
+    .find((b) => /Finish workout/.test(b.textContent));
+  ok(Boolean(finishBtn), 'the session offers a finish button');
+  if (finishBtn) { finishBtn.click(); await settle(); await settle(); }
+
+  const sessions = await store.getSessions();
+  const saved = sessions.find((s) => s.workoutId === w.id);
+  ok(sessions.length === before + 1, 'finishing writes one session');
+  ok(saved && saved.date === past,
+     `the session is filed under the chosen day, not today (${saved && saved.date})`);
+  ok(saved && saved.startedAt && saved.startedAt.slice(0, 10) === todayISO(),
+     'startedAt still records when it was actually entered — the date moved, not the clock');
+  ok(localStorage.getItem(DRAFT) === null, 'the draft is cleared once saved');
+
+  // A draft genuinely left over from a previous day is still discarded.
+  localStorage.setItem(DRAFT, JSON.stringify({
+    workoutId: w.id, workoutName: w.name, date: past, startedOn: '2020-01-01',
+    startedAt: '2020-01-01T10:00:00Z', index: 0, entries: [],
+  }));
+  const fresh = await mount(SessionView(w.id));
+  ok(fresh.querySelector('.session-date').value === todayISO(),
+     'yesterday\'s abandoned draft is still dropped, and the new one is for today');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -108,4 +108,16 @@ window.addEventListener('hashchange', render);
   document.documentElement.setAttribute('data-theme', settings.theme === 'light' ? 'light' : 'dark');
   if (!location.hash) location.hash = '#/home';
   await render();
+  registerServiceWorker();
 })();
+
+// Registered AFTER the first render, and never awaited. D6 says a gym with no
+// signal must not stop anyone logging a set, and a service worker that fails to
+// register — file missing, http://, private mode — must not stop the app either.
+// The registration is a nice-to-have for the NEXT visit; this one already works.
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  // Relative, so it keeps working under the /Fitness_Tracker/ path on Pages.
+  navigator.serviceWorker.register('./sw.js')
+    .catch((err) => console.warn('Service worker did not register.', err));
+}
