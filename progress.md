@@ -11,9 +11,7 @@ verified end to end. The body map is now **Tim's own illustration**, split into 
 layer and an ink layer that carries every keyline, striation and shadow — so the four look-and-feel
 gaps that were §9 are closed by construction. Screenshotted at 360/390/1180 in both themes.
 
-**Open work — read §11 first.** There is an **unresolved licensing question about the body-map
-artwork** that is blocking the push, and it is the only thing blocking it. Everything else in Tier 1
-is done bar a rest timer.
+**Open work:** nothing outstanding on the body map. Everything in Tier 1 is done bar a rest timer.
 
 | | |
 |---|---|
@@ -136,7 +134,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. **See §11 — the artwork's licence is unresolved.** |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
@@ -189,7 +187,7 @@ Fitness_Tracker/
 ├── firestore.rules             THE thing protecting user data
 ├── firebase.json · .firebaserc  so `firebase deploy` needs no flags
 ├── progress.md  ← this file · chat.md · README.md
-├── Human_Muscle_Groups.jpg     body-map source. GIT-IGNORED (*.jpg) — see §11
+├── Human_Muscle_Groups.jpg     body-map source, Tim's own. GIT-IGNORED (*.jpg)
 ├── img/ink-front.webp          the body map's ink layer, ~100 KB each. GENERATED
 │   └── ink-back.webp           the only binary assets in the app
 ├── tools/build-body-art.py     regenerates js/body-art.js + img/ink-*.webp from the
@@ -435,7 +433,6 @@ being a differentiator.
   Tim's illustration and are satisfied by construction rather than by drawing code: the ink layer
   *is* the keylines and striations, and unpainted parts are simply parts with no fill. Nothing about
   the figure's look is authored in this repo any more, so there is no styling knob to keep in sync.
-  What replaces it as the open question is the artwork's licence — §11.
 
 - **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
   step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
@@ -459,21 +456,20 @@ being a differentiator.
 
 ## 10. Next steps
 
-1. **Answer §11.** It is holding an unpushed commit, and nothing else is blocked on anything.
-2. **Tim opens the app on his phone.** Still the biggest remaining risk, but a smaller one than it
+1. **Tim opens the app on his phone.** Still the biggest remaining risk, but a smaller one than it
    was: the layout has now been seen at phone widths in Chrome (§0.5). What a screenshot cannot tell
    us is touch — tap target sizes on the body map, press-and-hold on the steppers, scroll feel — plus
    iOS Safari and the installed PWA.
-3. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
+2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
    support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
    anonymous both work.
-4. **Rest timer** — the last Tier 1 item.
-5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
-6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+3. **Rest timer** — the last Tier 1 item.
+4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
+5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
-**One, and it is blocking — see §11.**
+**None outstanding.**
 
 One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user
@@ -482,34 +478,3 @@ recognises.
 Also noticed while screenshotting, unrelated and **pre-existing at `868fdb0`**: the Data screen's
 mode switch wraps "Bar Chart" onto two lines at every width tested, desktop included. It doesn't
 overflow, it just looks broken. Not touched — it is nothing to do with the body map.
-
----
-
-## 11. BLOCKING — the body-map artwork's licence
-
-**The work is committed but NOT pushed, and this is the only reason.**
-
-Tim supplied `Human_Muscle_Groups.jpg` on 2026-08-16, said he created it, and asked that the figure
-follow it exactly. That shipped and it looks right.
-
-**But `docs/strength-map-plan.md` §7 already recorded, in an earlier session, that the reference
-image for this exact feature was a watermarked Dreamstime stock illustration — ID 142535635,
-© Vectorville — and ruled it out as copyright infringement.** The supplied file is the same
-composition: same pose, same rainbow scheme, same front/back pairing, no watermark, and a solid blue
-bar across the bottom where a stock-site brand strip usually sits.
-
-It may be that image. It may be an independent work in the same style. **Nobody has checked, and it
-is not a technical question.**
-
-What is at stake: the source JPG is git-ignored and unpublished, but `img/ink-*.webp` and
-`js/body-art.js` are *derived from it*, are committed, and would be served from a public repo and a
-public site. A derivative carries the original's licence.
-
-- **If Tim made it** → push, delete this section, done.
-- **If it is stock** → `js/body-map.js` depends on nothing but the `ART` and `FIGURE` exports of
-  `js/body-art.js`. Any replacement producing those two exports drops straight in, and
-  `tests/data-layer.test.mjs` asserts the muscle names against `MUSCLE_LIFTS` so a substitute cannot
-  quietly lose a group. The previous hand-authored figure is recoverable at `53f1b0b`.
-
-Do not push this without an answer. Raising it once and proceeding would be exactly the
-overclaiming §1 says this project's credibility rests on not doing.

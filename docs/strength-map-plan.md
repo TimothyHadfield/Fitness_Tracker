@@ -262,25 +262,19 @@ the switch may need to shorten to "Muscles", become icons, or move out of the he
 
 ## 7. Drawing the body
 
-### 7.0 SUPERSEDED 2026-08-16 — and an unresolved licensing question
+### 7.0 SUPERSEDED 2026-08-16 — the artwork is Tim's own
 
-Tim supplied `Human_Muscle_Groups.jpg` on 2026-08-16, said he created it, and asked that the app
-follow it **exactly** rather than approximate it. That is what now ships (7.2).
+Tim supplied `Human_Muscle_Groups.jpg` on 2026-08-16 and asked that the app follow it **exactly**
+rather than approximate it. That is what now ships (7.2).
 
-⚠️ **This has not been reconciled with the finding below.** An earlier session identified the
-*reference* image for this feature as a watermarked Dreamstime stock illustration,
-**ID 142535635, © Vectorville**, and ruled it out on those grounds. The supplied file is the same
-composition — same pose, same rainbow scheme, same front/back pairing — with no watermark and a
-solid blue bar across the bottom. It may be that image, or an independent work in the same style.
+**Licensing: raised and resolved 2026-08-16.** The earlier note here — that the *reference* image for
+this feature was a watermarked Dreamstime stock illustration, ID 142535635, © Vectorville — was put
+to Tim directly, because the supplied file is the same composition without the watermark and the
+derived assets are published. **He confirmed the image is his own work.** Recorded because the
+earlier finding is still in this file's history and would otherwise be re-raised every session.
 
-Nobody has verified which. Until somebody does:
-
-- the source JPG is **git-ignored** (`*.jpg`) and is not published,
-- but `img/ink-*.webp` and `js/body-art.js` **are derived from it**, are committed, and are served
-  from a public repo and a public site. A derivative carries the original's licence.
-
-**This is a decision for Tim, not a technical question.** If the image is licensed stock, the assets
-have to come out. See §7.3 for what that costs.
+The source JPG stays git-ignored (`*.jpg`) as a working file; `img/ink-*.webp` and `js/body-art.js`
+are the shipped derivatives.
 
 ### 7.1 The original plan (not taken)
 
@@ -329,7 +323,7 @@ Reconstruction error against the source, measured by the tool on every build: un
 **exact**; muscle interiors are exact at the median (p50 0/255) with p99 ≈ 62/255, which is the
 chroma the scalar encoding deliberately gives up.
 
-### 7.3 If the image has to be withdrawn
+### 7.3 Swapping the artwork out
 
 `js/body-map.js` consumes `ART` and `FIGURE` from `js/body-art.js` and nothing else about the
 artwork. Any replacement that produces the same two exports drops straight in; the muscle names are

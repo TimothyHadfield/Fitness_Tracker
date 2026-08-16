@@ -1136,9 +1136,13 @@ this feature was a watermarked Dreamstime stock illustration, **ID 142535635, ©
 ruled it out as copyright infringement. The file Tim supplied is the same composition, without the
 watermark, with a blue bar across the bottom.
 
-He said he created it, and that is taken at face value. But the earlier finding is specific enough,
-and about this exact picture, that it goes to him rather than getting quietly overridden — the source
-JPG is git-ignored, but `img/ink-*.webp` and `js/body-art.js` are derived from it and would be served
-from a public repo and a live site.
+He said he created it, and that is specific enough a prior finding — about this exact picture — that
+it went to him rather than getting quietly overridden. The source JPG is git-ignored, but
+`img/ink-*.webp` and `js/body-art.js` are derived from it and are served from a public repo and a
+live site, so it was worth the one question.
 
-**Committed, not pushed.** See `progress.md` §11.
+**Asked and answered: Tim confirmed the image is his own work.** Pushed. The resolution is recorded
+in `docs/strength-map-plan.md` §7.0 so the old note in this file's history doesn't get re-raised
+every session.
+
+State at close: 275 data-layer assertions, 49 render assertions, both green. Working tree clean.
