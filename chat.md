@@ -1397,3 +1397,46 @@ technical disclosure was conditioned on the offline flag when it should always b
 collapsed — the problem was never that the string existed, it was that it was the headline.
 
 322 data-layer + 109 render assertions, green.
+
+---
+
+## 2026-08-16 (cont.) — "Your browser blocked the sign-in window"
+
+Tim: *"sometimes when I sign in using google, it says Your browser blocked the sign-in window"*.
+
+**The popup blocker was not the problem.** Traced the only route by which that message can reach the
+UI at all — every genuine popup failure was already caught and retried as a redirect, so a real
+blocked popup would never have shown it:
+
+1. Anonymous user taps Continue with Google.
+2. `linkWithPopup` throws `auth/credential-already-in-use`, because that Google account **already has
+   its own account** from a previous sign-in.
+3. That is not a popup failure, so the redirect fallback is skipped.
+4. The `isAlreadyLinked` recovery called `signInWithPopup` — a **second popup**. The user gesture that
+   authorised the first one is spent by then, so the browser refuses it.
+5. That throw happens *inside* the catch block, so nothing handles it, and it surfaces as
+   "your browser blocked the sign-in window" for an account that had simply been registered already.
+
+"Sometimes" is the tell: it only happens with a Google account you have signed in with before.
+
+The fix is the documented Firebase recovery — `GoogleAuthProvider.credentialFromError(err)` hands back
+the credential from the *failed* link, and `signInWithCredential` uses it with no window at all.
+Checked both exist in the pinned 10.12.2 SDK by grepping the actual file rather than trusting memory.
+
+**Second bug found on the way:** `auth/popup-closed-by-user` was in the popup-failure list, so
+deliberately closing the window bounced the user to Google's full-page redirect — the opposite of
+what they had just asked for. Now `cancelled`, and nothing happens.
+
+To make this testable at all, the flow was extracted into `googleSignInFlow({ auth, ... })` with the
+SDK surface passed in, plus a pure `planAfterGoogleFailure()`. The flow now runs against a recording
+stub, so "only ONE popup is ever opened" is asserted rather than hoped for.
+
+And the test was checked for vacuity: the previous logic, run against the same stub, produces
+`linkWithPopup → signInWithPopup` — two popups — and fails the new assertion. A test that cannot fail
+on the bug it was written for is worth nothing.
+
+Also corrected a stale doc claim: progress.md said Google sign-in was not enabled in the console.
+Tim is plainly using it, so it has been enabled at some point.
+
+348 data-layer + 109 render assertions, green. The **redirect** path and the installed PWA remain
+unverified — I can drive a popup failure, not a real Google account.

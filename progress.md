@@ -20,7 +20,7 @@ exercise→muscle mapping that D3 depends on.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 322 assertions, **no dependencies** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 348 assertions, **no dependencies** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 109 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
@@ -209,7 +209,9 @@ Press-and-hold repeats.
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
   branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
   only — it says nothing about how a phone actually behaves in the hand.
-- **Google sign-in** — not enabled in the console, so untested.
+- **Google sign-in IS enabled and Tim uses it** (he reported a bug in it on 2026-08-16, so the
+  console toggle has been done at some point). The popup path is exercised in the real world; the
+  **redirect** path and the installed PWA still are not.
 
 ---
 
@@ -489,6 +491,11 @@ being a differentiator.
   `docs/research.md` §1.3 says was never validated — it was optimised for *internal consistency*.
   Harmless for rep normalisation, a stronger claim here. Mitigated by preferring ≤5-rep benchmarks
   and flagging levels derived from high-rep sets.
+- **A Google popup is only ever opened ONCE.** Recovering from "that account already exists" used to
+  open a second one, which the browser blocked because the gesture authorising the first was spent —
+  reported by Tim as "your browser blocked the sign-in window" (2026-08-16). The recovery now reuses
+  the credential from the failed link via `signInWithCredential`, which needs no window. Anything
+  added to this flow must not open a window outside the original click.
 - **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in an
   iOS home-screen app, so the code falls back to `signInWithRedirect`, which depends on third-party
   cookies while the auth domain differs from the origin. Fallbacks: email/password in the PWA, or a
@@ -509,9 +516,7 @@ being a differentiator.
    was: the layout has now been seen at phone widths in Chrome (§0.5). What a screenshot cannot tell
    us is touch — tap target sizes on the body map, press-and-hold on the steppers, scroll feel — plus
    iOS Safari and the installed PWA.
-2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
-   support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
-   anonymous both work.
+2. ~~**Google sign-in** — console toggle.~~ Done; Tim signs in with it.
 3. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
 4. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 

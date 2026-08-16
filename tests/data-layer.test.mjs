@@ -571,6 +571,124 @@ ok(!fb.isPopupFailure({ code: 'auth/wrong-password' }), 'unrelated errors do not
 ok(fb.isAlreadyLinked({ code: 'auth/credential-already-in-use' }), 'already-linked detected');
 ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect preference');
 
+/* ---------- what to do when a Google sign-in fails ---------- */
+// Reported by Tim: "sometimes when I sign in using google, it says Your browser
+// blocked the sign-in window". The popup was not the problem. Linking an
+// anonymous account to a Google account that ALREADY EXISTS throws
+// credential-already-in-use, and the recovery opened a SECOND popup — by which
+// point the gesture that authorised the first one is spent, so the browser
+// blocks it. Being thrown from inside the catch, nothing handled it.
+{
+  const plan = (code, anon) => fb.planAfterGoogleFailure({ code }, { anon });
+
+  ok(plan('auth/credential-already-in-use', true) === 'credential',
+     'an already-registered Google account signs in with the credential from the failed link');
+  ok(plan('auth/email-already-in-use', true) === 'credential',
+     'and so does an already-registered email');
+  ok(plan('auth/account-exists-with-different-credential', true) === 'credential',
+     'and an account held with a different provider');
+
+  ok(plan('auth/popup-blocked', false) === 'redirect', 'a blocked popup goes full-page instead');
+  ok(plan('auth/cancelled-popup-request', false) === 'redirect', 'so does a superseded popup');
+  ok(plan('auth/operation-not-supported-in-this-environment', false) === 'redirect',
+     'and an environment that cannot pop up at all');
+
+  // Closing the window is a decision, not a failure. It used to be treated as
+  // a popup failure, which bounced the user to Google's full-page redirect
+  // immediately after they had deliberately backed out.
+  ok(plan('auth/popup-closed-by-user', false) === 'cancelled',
+     'closing the window does nothing, rather than redirecting');
+  ok(plan('auth/popup-closed-by-user', true) === 'cancelled', 'the same while anonymous');
+  ok(!fb.isPopupFailure({ code: 'auth/popup-closed-by-user' }),
+     'a user-closed window is no longer counted as the browser refusing one');
+  ok(fb.isUserCancelled({ code: 'auth/popup-closed-by-user' }), 'and is named for what it is');
+
+  ok(plan('auth/wrong-password', false) === 'rethrow', 'anything else is reported to the user');
+  ok(plan('auth/network-request-failed', true) === 'rethrow', 'including a dropped connection');
+
+  // Not anonymous means there is nothing to link, so there is no credential
+  // recovery to attempt — the error is real and belongs on screen.
+  ok(plan('auth/credential-already-in-use', false) === 'rethrow',
+     'already-in-use while signed in is a genuine error, not a link failure');
+
+  ok(fb.planAfterGoogleFailure(null, { anon: true }) === 'rethrow', 'no error still yields a plan');
+}
+
+/* ---------- and the flow that acts on it ---------- */
+// The decision above is only half of it; the bug was in which SDK call got
+// made. This drives the real flow against a recording stub, so "never open a
+// second popup" is asserted rather than assumed.
+{
+  const fakeAuth = (opts = {}) => {
+    const calls = [];
+    const record = (name) => (...args) => {
+      calls.push(name);
+      if (opts.throwOn === name) throw Object.assign(new Error(name), { code: opts.code });
+      if (name === 'signInWithRedirect' || name === 'linkWithRedirect') return undefined;
+      return { user: { uid: 'u1', email: 'tim@example.com', isAnonymous: false } };
+    };
+    return {
+      calls,
+      linkWithPopup: record('linkWithPopup'),
+      signInWithPopup: record('signInWithPopup'),
+      linkWithRedirect: record('linkWithRedirect'),
+      signInWithRedirect: record('signInWithRedirect'),
+      signInWithCredential: record('signInWithCredential'),
+      GoogleAuthProvider: {
+        credentialFromError: () => (opts.noCredential ? null : { providerId: 'google.com' }),
+      },
+    };
+  };
+  const run = (auth, extra = {}) => fb.googleSignInFlow({
+    auth, authClient: {}, provider: {}, currentUser: { uid: 'anon' },
+    anon: true, preferRedirect: false, ...extra,
+  });
+
+  // THE BUG: anonymous user, Google account already registered.
+  let a = fakeAuth({ throwOn: 'linkWithPopup', code: 'auth/credential-already-in-use' });
+  let out = await run(a);
+  ok(a.calls.filter((c) => /Popup/.test(c)).length === 1,
+     `only ONE popup is ever opened (${a.calls.join(' → ')})`);
+  ok(!a.calls.includes('signInWithPopup'),
+     'the recovery never opens a second popup — that is what the browser blocked');
+  ok(a.calls.includes('signInWithCredential'),
+     'it signs in with the credential from the failed link instead');
+  ok(out.user && out.user.email === 'tim@example.com', 'and comes back signed in');
+
+  // Same, but Firebase gave us no credential to reuse.
+  a = fakeAuth({ throwOn: 'linkWithPopup', code: 'auth/credential-already-in-use', noCredential: true });
+  out = await run(a);
+  ok(!a.calls.includes('signInWithPopup'), 'with no credential it still does not reopen a popup');
+  ok(a.calls.includes('linkWithRedirect') || a.calls.includes('signInWithRedirect'),
+     'it redirects, which a popup blocker cannot stop');
+  ok(out.redirected === true, 'and reports that the page is navigating away');
+
+  // A genuinely blocked popup.
+  a = fakeAuth({ throwOn: 'signInWithPopup', code: 'auth/popup-blocked' });
+  out = await run(a, { anon: false });
+  ok(a.calls.includes('signInWithRedirect') && out.redirected,
+     'a blocked popup falls back to a redirect');
+
+  // A user who closed the window is left alone.
+  a = fakeAuth({ throwOn: 'signInWithPopup', code: 'auth/popup-closed-by-user' });
+  out = await run(a, { anon: false });
+  ok(out.cancelled === true, 'closing the window reports cancelled');
+  ok(!a.calls.some((c) => /Redirect/.test(c)),
+     'and does NOT bounce them to a full-page Google redirect');
+
+  // An installed PWA never tries a popup at all.
+  a = fakeAuth();
+  out = await run(a, { preferRedirect: true });
+  ok(!a.calls.some((c) => /Popup/.test(c)) && out.redirected,
+     'in a standalone PWA it goes straight to redirect');
+
+  // Real errors still surface.
+  a = fakeAuth({ throwOn: 'signInWithPopup', code: 'auth/network-request-failed' });
+  let threw = null;
+  try { await run(a, { anon: false }); } catch (e) { threw = e; }
+  ok(threw && threw.code === 'auth/network-request-failed', 'unrelated failures are still thrown');
+}
+
 /* ---------- merging a device into an account ---------- */
 // Uploading local data must never destroy something the cloud already had.
 const remoteRows = [{ id: 'a', name: 'Cloud A', updatedAt: '2026-08-10T00:00:00Z' }];

@@ -172,42 +172,18 @@ export const FirebaseBackend = {
 
   async signInGoogle() {
     const c = await init();
-    const provider = new c.auth.GoogleAuthProvider();
-    const anon = user && user.isAnonymous;
-
-    // A popup inside an installed PWA is usually blocked outright, so go
-    // straight to redirect there. Elsewhere try the popup first — it keeps the
-    // app state alive — and fall back to redirect if the browser refuses it.
-    if (prefersRedirect()) {
-      if (anon) await c.auth.linkWithRedirect(user, provider);
-      else await c.auth.signInWithRedirect(c.authClient, provider);
-      return null; // page navigates away; init() picks the result up on return
-    }
-
-    try {
-      const res = anon
-        ? await c.auth.linkWithPopup(user, provider)
-        : await c.auth.signInWithPopup(c.authClient, provider);
-      user = res.user;
-      notify();
-      return describeUser(user);
-    } catch (err) {
-      if (isPopupFailure(err)) {
-        if (anon) await c.auth.linkWithRedirect(user, provider);
-        else await c.auth.signInWithRedirect(c.authClient, provider);
-        return null;
-      }
-      // Linking fails if that Google account already has its own data. Signing
-      // in plainly is the right move — the anonymous data is what gets left
-      // behind, and the UI warns before this point.
-      if (anon && isAlreadyLinked(err)) {
-        const res = await c.auth.signInWithPopup(c.authClient, provider);
-        user = res.user;
-        notify();
-        return describeUser(user);
-      }
-      throw err;
-    }
+    const out = await googleSignInFlow({
+      auth: c.auth,
+      authClient: c.authClient,
+      provider: new c.auth.GoogleAuthProvider(),
+      currentUser: user,
+      anon: Boolean(user && user.isAnonymous),
+      preferRedirect: prefersRedirect(),
+    });
+    if (!out.user) return null;   // redirected away, or cancelled
+    user = out.user;
+    notify();
+    return describeUser(user);
   },
 
   // Sign out, then take a fresh anonymous account so the app still works.
@@ -290,14 +266,109 @@ export function prefersRedirect() {
   return false;
 }
 
+// The browser refused to open the window. Worth retrying as a full-page
+// redirect, which needs no popup.
 const POPUP_FAILURES = [
   'auth/popup-blocked',
-  'auth/popup-closed-by-user',
   'auth/cancelled-popup-request',
   'auth/operation-not-supported-in-this-environment',
 ];
 export function isPopupFailure(err) {
   return Boolean(err && POPUP_FAILURES.includes(err.code));
+}
+
+// The USER shut the window. Not the same thing at all: bouncing them to
+// Google's full-page redirect because they just cancelled is the opposite of
+// what they asked for. auth/popup-closed-by-user used to sit in the list above
+// and did exactly that.
+export function isUserCancelled(err) {
+  return Boolean(err && err.code === 'auth/popup-closed-by-user');
+}
+
+/**
+ * What to do when a Google sign-in attempt fails. Pure, so the decision that
+ * caused "Your browser blocked the sign-in window" is directly testable.
+ *
+ *   'cancelled'  — the user closed the window; do nothing
+ *   'redirect'   — the browser refused a popup; go full-page instead
+ *   'credential' — the Google account already exists in its own right, so sign
+ *                  into it with the credential from the FAILED link
+ *   'rethrow'    — anything else, which the UI reports
+ *
+ * The bug this replaces: on 'credential' the code opened a SECOND popup. By
+ * then the user gesture that authorised the first one is spent, so the browser
+ * blocks it — and because that throw happened inside the catch block, nothing
+ * handled it. It surfaced as a blocked-popup error on what was really an
+ * already-registered account.
+ */
+/**
+ * The whole Google sign-in dance, with its SDK surface passed in rather than
+ * reached for — so it can be exercised without a browser, a popup or a network.
+ * The bug that prompted this only showed up on the third branch, which is
+ * exactly the branch that is hardest to reach by hand.
+ *
+ * Returns { user } · { redirected: true } · { cancelled: true }, or throws.
+ */
+export async function googleSignInFlow({
+  auth, authClient, provider, currentUser, anon, preferRedirect,
+}) {
+  const goRedirect = async () => {
+    if (anon) await auth.linkWithRedirect(currentUser, provider);
+    else await auth.signInWithRedirect(authClient, provider);
+    return { redirected: true };
+  };
+
+  // A popup inside an installed PWA is usually blocked outright, so go straight
+  // to redirect there. Elsewhere try the popup first — it keeps the app state
+  // alive — and fall back if the browser refuses.
+  if (preferRedirect) return goRedirect();
+
+  try {
+    const res = anon
+      ? await auth.linkWithPopup(currentUser, provider)
+      : await auth.signInWithPopup(authClient, provider);
+    return { user: res.user };
+  } catch (err) {
+    switch (planAfterGoogleFailure(err, { anon })) {
+      case 'cancelled':
+        // They closed the window. Sending them to a full-page Google redirect
+        // for that would be worse than doing nothing.
+        return { cancelled: true };
+
+      case 'redirect':
+        return goRedirect();
+
+      case 'credential': {
+        // Linking fails when that Google account already exists in its own
+        // right. Signing into it is correct — the anonymous data is what gets
+        // left behind, and the UI warns before this point.
+        //
+        // NO SECOND POPUP. The gesture that authorised the first one is spent
+        // by now, so the browser blocks a second window — and the user was
+        // shown "your browser blocked the sign-in window" for an account that
+        // had simply been registered already. Firebase hands back the
+        // credential from the failed link, and using it needs no window at all.
+        const cred = auth.GoogleAuthProvider.credentialFromError(err);
+        if (cred) {
+          const res = await auth.signInWithCredential(authClient, cred);
+          return { user: res.user };
+        }
+        // No credential on the error. Redirect rather than reopening a popup,
+        // because it is the one route a popup blocker cannot touch.
+        return goRedirect();
+      }
+
+      default:
+        throw err;
+    }
+  }
+}
+
+export function planAfterGoogleFailure(err, { anon } = {}) {
+  if (isUserCancelled(err)) return 'cancelled';
+  if (isPopupFailure(err)) return 'redirect';
+  if (anon && isAlreadyLinked(err)) return 'credential';
+  return 'rethrow';
 }
 
 export function isAlreadyLinked(err) {
