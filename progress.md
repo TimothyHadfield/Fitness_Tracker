@@ -122,6 +122,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
+| `docs/strength-estimate-plan.md` | **Plan, not built.** How to measure strength from ordinary workout sets rather than benchmarks, and how to keep it stable. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state and the one remaining console step |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
@@ -530,7 +531,10 @@ being a differentiator.
 
 ### Open questions for Tim
 
-**None outstanding.**
+1. **Ratify D18?** `docs/strength-estimate-plan.md` §7 proposes narrowing D14 so that it governs raw
+   per-set plotting only, leaving the strength estimator free to draw on all evidence weighted by
+   confidence. D14 is a locked decision, so this needs Tim's say-so before Phase 2 of that plan.
+   The fallback if he says no: ship the estimator as a separate, clearly labelled chart mode.
 
 One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user

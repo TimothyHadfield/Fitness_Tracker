@@ -1479,3 +1479,52 @@ path**. Added both, and the plain popup sign-in now asserts `signInWithPopup →
 Lesson worth keeping: the change that caused this was made to fix a bug I had diagnosed correctly,
 with tests that passed, and shipped without anyone signing in with Google once. `popup-closed-by-user`
 is exactly the kind of code whose meaning cannot be read off its name.
+
+---
+
+## 2026-08-16 (cont.) — plan: strength from ordinary workouts
+
+Tim asked for a big plan: graphs and the body map should work without benchmarks, defaulting to
+ordinary workout sets, with a benchmarks-only option — and *"it's important that we make the system
+mostly accurate and not all over the place, which is the worry with using normal workout
+measurements."*
+
+Written to `docs/strength-estimate-plan.md`. Nothing built.
+
+**The insight the whole design turns on: the noise is one-sided.** A set can be easier than maximal —
+submaximal effort, fatigue, a warm-up, a bad day — but it can never be *harder* than what the lifter
+was capable of. So every observed e1RM is a lower bound on true strength, and that settles most of
+the design at a stroke:
+
+- averaging a day's sets is actively wrong — it is biased downward by however many warm-ups and
+  back-offs the person's programme happens to contain, so two equally strong lifters would read
+  differently purely from session structure
+- the estimator belongs to the *maximum* family — an upper envelope
+- a dip is weak evidence and a peak is strong evidence, so the estimate should rise readily and fall
+  reluctantly
+
+A naive "plot every set" chart swings wildly because it is showing the noise floor rather than the
+signal. That is the thing Tim is worried about, and it is a consequence of the estimator, not of
+workout data being unusable.
+
+Of the nine sources of variance listed, only two are genuinely invisible (proximity to failure, and
+day-to-day readiness). The rest — warm-ups, back-offs, rep count, set order, exercise order — are all
+already in the data and simply have not been used. Warm-ups in particular are exactly detectable:
+a set before the day's heaviest *and* lighter than it. That rule also does the right thing for
+reverse-pyramid training without a special case.
+
+Other pieces: per-set confidence (rep range × load-vs-recent-best × fatigue), corroboration as a
+partial stand-in for the missing RIR field, confidence-weighted best-of-3 over a trailing window,
+a rate limit on falling, an uncertainty band whose width is the honest output, and band-aware levels
+with hysteresis so the body map stops flapping.
+
+**D14 needed confronting rather than dodging.** It bans mixing benchmarks with workout sets. But all
+three failures it was written for — wild swings, the point flipping with the rep target, one-per-day
+discarding the loser — are structural to plotting *raw sets from two populations*, and none survive
+an explicit confidence-weighted estimator. So the plan proposes D18, narrowing D14 to raw per-set
+plotting. That is a locked decision, so it is now an open question for Tim rather than something I
+quietly overrode.
+
+Also proposed: a simulator with a known true 1RM curve, so the constants get fitted rather than
+guessed — optimising for **flap rate**, which is the direct measurement of Tim's worry — and later a
+backtest that hides his real benchmarks and predicts them from workout sets alone.
