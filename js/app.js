@@ -7,6 +7,7 @@ import { SessionView, BenchmarkView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
 import { AccountView, SignInView } from './views-account.js';
 import { ProfileView } from './views-profile.js';
+import { EditSessionView } from './views-edit-session.js';
 import { setUnits } from './units.js';
 
 const NAV = [
@@ -19,7 +20,7 @@ const NAV = [
 ];
 
 // Routes that take over the whole screen (no bottom nav).
-const FULLSCREEN = ['session', 'workout', 'benchmark', 'settings', 'day', 'start', 'account', 'signin', 'profile'];
+const FULLSCREEN = ['session', 'workout', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -55,6 +56,7 @@ async function resolve(route) {
     case 'benchmark': return BenchmarkView();
     case 'calendar':  return CalendarView();
     case 'day':       return DayView(route.param);
+    case 'edit':      return EditSessionView(route.param);
     case 'graphs':    return GraphView();
     case 'settings':  return SettingsView();
     case 'account':   return AccountView();

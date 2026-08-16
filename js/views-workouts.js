@@ -135,6 +135,25 @@ export async function WorkoutBuilderView(id) {
     onInput: (e) => { draft.name = e.target.value; },
   });
 
+  // A benchmark workout turns every exercise it records into a benchmark for
+  // that day. Off by default: a benchmark is meant to be a deliberate test, and
+  // making every workout one would empty the word of meaning.
+  const benchToggle = el('button', {
+    class: 'chip', 'aria-pressed': String(Boolean(draft.isBenchmark)),
+    text: draft.isBenchmark ? 'Benchmark workout' : 'Normal workout',
+    onClick: () => {
+      draft.isBenchmark = !draft.isBenchmark;
+      benchToggle.setAttribute('aria-pressed', String(draft.isBenchmark));
+      benchToggle.textContent = draft.isBenchmark ? 'Benchmark workout' : 'Normal workout';
+      benchHelp.textContent = draft.isBenchmark
+        ? 'Every exercise you record in this workout is saved as a benchmark for that day — the best set of each.'
+        : 'Turn this on for a testing session, where each exercise should count as a benchmark.';
+    },
+  });
+  const benchHelp = el('div', { class: 'field-help', text: draft.isBenchmark
+    ? 'Every exercise you record in this workout is saved as a benchmark for that day — the best set of each.'
+    : 'Turn this on for a testing session, where each exercise should count as a benchmark.' });
+
   const listWrap = el('div', { class: 'list' });
   const countLabel = el('div', { class: 'section-label' });
 
@@ -218,6 +237,11 @@ export async function WorkoutBuilderView(id) {
     back: () => go('#/workouts'),
     top: el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
     scroll: [
+      el('div', { class: 'field' },
+        el('label', { text: 'Kind' }),
+        el('div', { class: 'chips' }, benchToggle),
+        benchHelp,
+      ),
       countLabel,
       listWrap,
       el('button', {

@@ -335,6 +335,73 @@ ok(!data.querySelector('.rep-target'),
      'yesterday\'s abandoned draft is still dropped, and the new one is for today');
 }
 
+/* ========= editing a workout already recorded ========= */
+{
+  const { EditSessionView } = await import(BASE + 'views-edit-session.js');
+  const { DayView } = await import(BASE + 'views-data.js');
+  await store.clearAll();
+
+  const benchId = byName('Barbell Bench Press').id;
+  const rec = await store.saveSession({
+    workoutId: 'w9', workoutName: 'Test day', date: '2026-08-12', isBenchmark: true,
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 185, reps: 5 }, { weight: 225, reps: 2 }] }],
+  });
+
+  // The calendar day offers the way in.
+  const day = await mount(DayView('2026-08-12'));
+  const editBtn = [...day.querySelectorAll('button')]
+    .find((b) => /Edit this workout record/.test(b.getAttribute('aria-label') || ''));
+  ok(Boolean(editBtn), 'a recorded workout can be edited from its day');
+  ok(/benchmark/i.test(day.textContent), 'and a benchmark workout is badged as one');
+  // Its derived benchmarks are not listed again underneath.
+  ok((day.textContent.match(/Barbell Bench Press/g) || []).length === 1,
+     'a derived benchmark is not listed a second time under the day');
+
+  const ed = await mount(EditSessionView(rec.id));
+  ok(ed.querySelector('input[type="date"]').value === '2026-08-12',
+     'the editor opens on the day it is filed under');
+  ok(ed.querySelectorAll('.edit-set').length === 2, 'every set is editable');
+
+  // Change a weight, move the day, and save.
+  const firstWeight = ed.querySelector('.edit-set .step-value');
+  firstWeight.value = '195';
+  firstWeight.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  const d = ed.querySelector('input[type="date"]');
+  d.value = '2026-08-09';
+  d.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const nameField = ed.querySelector('input[type="text"]');
+  nameField.value = 'Max out';
+  nameField.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+  [...ed.querySelectorAll('button')].find((b) => /Save changes/.test(b.textContent)).click();
+  await settle(); await settle();
+
+  const saved = (await store.getSessions()).find((x) => x.id === rec.id);
+  ok(saved.date === '2026-08-09', `the record moves day (${saved.date})`);
+  ok(saved.workoutName === 'Max out', 'the name can be changed');
+  ok(saved.entries[0].sets[0].weight === 195, 'and a set can be corrected');
+  ok((await store.getSessions()).length === 1, 'editing does not create a second record');
+
+  const marks = await store.getBenchmarks();
+  ok(marks.length === 1 && marks[0].date === '2026-08-09',
+     'its benchmark moved with it rather than being left behind');
+
+  // Emptying every set must not silently save a record of zeros.
+  const ed2 = await mount(EditSessionView(rec.id));
+  for (const inp of ed2.querySelectorAll('.edit-set .step-value')) {
+    inp.value = '0';
+    inp.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  }
+  [...ed2.querySelectorAll('button')].find((b) => /Save changes/.test(b.textContent)).click();
+  await settle();
+  const still = (await store.getSessions()).find((x) => x.id === rec.id);
+  ok(still.entries[0].sets.length === 2 && still.entries[0].sets[0].weight === 195,
+     'a record emptied to zeros is refused, and the real one is untouched');
+
+  await store.clearAll();
+}
+
 /* ========= replaceChildren must not print the word "null" ========= */
 // Element.replaceChildren() stringifies anything that is not a Node, so a
 // `cond ? el(...) : null` child rendered the literal text "null" on the page.

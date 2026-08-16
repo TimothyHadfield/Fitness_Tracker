@@ -143,6 +143,94 @@ function upsert(rows, row) {
 
 export const DEFAULT_SETS = 3;
 
+/* ------------------------------------------------------------------ *
+ * Benchmark workouts
+ *
+ * A workout can be marked as a benchmark, and then every exercise it records
+ * becomes a benchmark for that day. The session is still saved as a session —
+ * you did do the workout — and the benchmark rows are DERIVED from it, tagged
+ * with sourceSessionId and rebuilt on every save. That is what lets the date be
+ * edited later without stranding a benchmark on the old day.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Which of an exercise's sets is *the* benchmark.
+ *
+ * A benchmark is one performance, so a workout's several sets have to reduce to
+ * one. Where the app can already rank a lift it uses the same measure it ranks
+ * with — estimated 1RM — so the benchmark agrees with the muscle map rather
+ * than being a second opinion.
+ *
+ * ⚠️ The honest limitation is time. Longer is better for a plank; FASTER is
+ * better for a mile. A distance-and-time exercise is resolved by taking the
+ * furthest set and breaking ties on the fastest time, which gets a fixed-
+ * distance run right. A time-ONLY exercise assumes longer is better, which is
+ * right for a hold and wrong for a sprint — record those by hand.
+ */
+export function pickBenchmarkSet(sets, fields) {
+  const usable = (sets || []).filter((s) => s && Object.values(s).some((v) => Number(v) > 0));
+  if (!usable.length) return null;
+  const has = (f) => fields && fields.includes(f);
+  const num = (s, f) => Number(s[f]) || 0;
+
+  const rank = (s) => {
+    if (has('weight') && has('reps')) return e1rm(num(s, 'weight'), num(s, 'reps')) || 0;
+    if (has('distance')) return num(s, 'distance');
+    if (has('reps')) return num(s, 'reps');
+    if (has('time')) return num(s, 'time');
+    return 0;
+  };
+
+  let best = usable[0];
+  for (const s of usable.slice(1)) {
+    const d = rank(s) - rank(best);
+    if (d > 0) { best = s; continue; }
+    // Same distance, quicker time wins — that is a faster mile, not a longer one.
+    if (d === 0 && has('distance') && has('time')
+        && num(s, 'time') > 0 && (num(best, 'time') === 0 || num(s, 'time') < num(best, 'time'))) {
+      best = s;
+    }
+  }
+  return { ...best };
+}
+
+async function dropSessionBenchmarks(sessionId) {
+  const rows = await backend.read('benchmarks');
+  const kept = rows.filter((r) => r.sourceSessionId !== sessionId);
+  if (kept.length !== rows.length) await backend.write('benchmarks', kept);
+}
+
+async function syncSessionBenchmarks(session) {
+  const rows = await backend.read('benchmarks');
+  const kept = rows.filter((r) => r.sourceSessionId !== session.id);
+
+  const made = [];
+  if (session.isBenchmark) {
+    const exMap = await store.getExerciseMap();
+    for (const entry of session.entries || []) {
+      const ex = exMap.get(entry.exerciseId);
+      const fields = ex ? ex.fields : ['weight', 'reps'];
+      const values = pickBenchmarkSet(entry.sets, fields);
+      if (!values) continue;
+      made.push({
+        // Deterministic, so re-saving updates the same row instead of piling up
+        // a new benchmark every time a past workout is edited.
+        id: `bmk-${session.id}-${entry.exerciseId}`,
+        date: session.date,
+        exerciseId: entry.exerciseId,
+        exerciseName: entry.exerciseName,
+        values,
+        sourceSessionId: session.id,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  if (kept.length !== rows.length || made.length) {
+    await backend.write('benchmarks', [...kept, ...made]);
+  }
+}
+
 // Workouts used to be a bare list of exercise ids. They now carry a planned set
 // count and notes per exercise, so older saved workouts are upgraded on read.
 export function normalizeWorkout(w) {
@@ -150,6 +238,7 @@ export function normalizeWorkout(w) {
   if (Array.isArray(w.exercises) && w.exercises.length) {
     return {
       ...w,
+      isBenchmark: Boolean(w.isBenchmark),
       exercises: w.exercises.map((e) => ({
         exerciseId: e.exerciseId,
         sets: Number(e.sets) > 0 ? Number(e.sets) : DEFAULT_SETS,
@@ -160,6 +249,7 @@ export function normalizeWorkout(w) {
   const ids = Array.isArray(w.exerciseIds) ? w.exerciseIds : [];
   return {
     ...w,
+    isBenchmark: Boolean(w.isBenchmark),
     exercises: ids.map((id) => ({ exerciseId: id, sets: DEFAULT_SETS, notes: '' })),
   };
 }
@@ -239,16 +329,25 @@ export const store = {
     if (!row.id) row.id = uid('s');
     if (!row.createdAt) row.createdAt = new Date().toISOString();
     await backend.write('sessions', upsert(rows, row));
+    // Benchmarks derived from this session are rebuilt from scratch every save,
+    // so editing the date, changing a set or clearing the flag can never leave a
+    // stale benchmark behind pointing at a day the workout is no longer on.
+    await syncSessionBenchmarks(row);
     return row;
   },
 
   async deleteSession(id) {
     const rows = await backend.read('sessions');
     await backend.write('sessions', rows.filter((r) => r.id !== id));
+    await dropSessionBenchmarks(id);
   },
 
   /* --- benchmarks --- */
 
+  /**
+   * Every set of every exercise a benchmark workout records, reduced to the one
+   * that counts. See pickBenchmarkSet for how "counts" is decided.
+   */
   async getBenchmarks() {
     const rows = await backend.read('benchmarks');
     return rows.sort((a, b) => b.date.localeCompare(a.date));
@@ -269,6 +368,12 @@ export const store = {
   },
 
   /* --- prefill: what did they do last time for this exercise? --- */
+
+  /** Derived rows carry the session that made them; a user-entered one doesn't. */
+  async benchmarksFromSession(sessionId) {
+    const rows = await backend.read('benchmarks');
+    return rows.filter((r) => r.sourceSessionId === sessionId);
+  },
 
   // Looks first within the same workout template, then falls back to any session.
   async lastSetsFor(workoutId, exerciseId) {

@@ -149,9 +149,15 @@ export async function DayView(date) {
     scroll.push(el('div', { class: 'card' },
       el('div', { class: 'day-head' },
         el('div', { style: 'flex:1;min-width:0' },
-          el('div', { class: 'day-title', text: s.workoutName || 'Workout' }),
+          el('div', { class: 'day-title' },
+            s.workoutName || 'Workout',
+            s.isBenchmark ? el('span', { class: 'bench-badge', text: 'benchmark' }) : null,
+          ),
           el('div', { class: 'row-sub', text: `${s.entries.length} exercise${s.entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` }),
         ),
+        // Edit before delete: correcting a record is the common intent, and
+        // putting the destructive button first invites the wrong tap.
+        iconBtn('edit', 'Edit this workout record', () => go('#/edit/' + s.id)),
         iconBtn('trash', 'Delete this workout record', () => confirmSheet({
           title: 'Delete this record?',
           message: `“${s.workoutName}” from ${fmtDateLong(date)} will be permanently removed, including from your graphs.`,
@@ -179,9 +185,14 @@ export async function DayView(date) {
     ));
   }
 
-  if (rec.benchmarks.length) {
+  // Benchmarks derived from a benchmark WORKOUT are already shown, set by set,
+  // in that workout's own card above. Listing them again here would make the day
+  // read as twice as much work as was actually done, so only hand-entered
+  // benchmarks get their own section; the workout card carries a badge instead.
+  const ownBenchmarks = rec.benchmarks.filter((b) => !b.sourceSessionId);
+  if (ownBenchmarks.length) {
     scroll.push(el('div', { class: 'section-label', text: 'Benchmarks' }));
-    for (const b of rec.benchmarks) {
+    for (const b of ownBenchmarks) {
       const ex = exMap.get(b.exerciseId);
       const fields = ex ? ex.fields : Object.keys(b.values || {});
       const loadType = ex ? ex.loadType : null;

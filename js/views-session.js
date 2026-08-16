@@ -92,6 +92,10 @@ export async function SessionView(workoutId) {
       // draft is still today's.
       startedOn: todayISO(),
       startedAt: new Date().toISOString(),
+      // Copied from the template at the moment the session starts, not read
+      // back from it later: re-flagging a workout months from now must not
+      // retroactively turn old sessions into benchmarks.
+      isBenchmark: Boolean(workout.isBenchmark),
       index: 0,
       entries: [],
     };
@@ -264,6 +268,7 @@ export async function SessionView(workoutId) {
       date: state.date,
       startedAt: state.startedAt,
       finishedAt: new Date().toISOString(),
+      isBenchmark: Boolean(state.isBenchmark),
       entries,
     });
 

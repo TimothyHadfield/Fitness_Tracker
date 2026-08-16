@@ -598,6 +598,115 @@ ok(fb.mergeRows([{ id: 'a' }], []).length === 1, 'an empty upload leaves the clo
 const once = fb.mergeRows(remoteRows, localRows);
 ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a no-op');
 
+/* ================= benchmark workouts ================= */
+// A workout can be marked a benchmark; every exercise it records then becomes a
+// benchmark for that day. The rows are DERIVED from the session, so the risk is
+// not creating them — it is leaving stale ones behind when the session changes.
+{
+  const { store: st, pickBenchmarkSet } = await import('../js/store.js');
+  await st.clearAll();
+
+  const benchId = byName('Barbell Bench Press').id;
+  const rowId = byName('Barbell Row').id;
+
+  // --- which set counts ---
+  ok(pickBenchmarkSet([{ weight: 135, reps: 8 }, { weight: 225, reps: 2 }], ['weight', 'reps'])
+       .weight === 225, 'the heaviest e1RM set is the benchmark, not the last one');
+  ok(pickBenchmarkSet([{ weight: 225, reps: 2 }, { weight: 185, reps: 8 }], ['weight', 'reps'])
+       .weight === 185, 'and e1RM, not raw weight — 185x8 beats 225x2');
+  ok(pickBenchmarkSet([{ reps: 12 }, { reps: 20 }], ['reps']).reps === 20,
+     'bodyweight work goes on reps');
+  ok(pickBenchmarkSet([{ time: 45 }, { time: 90 }], ['time']).time === 90,
+     'a hold goes on the longest time');
+  // A fixed-distance run: furthest wins, and among equals the FASTEST.
+  const run = pickBenchmarkSet(
+    [{ distance: 1, time: 500 }, { distance: 1, time: 430 }, { distance: 0.5, time: 200 }],
+    ['distance', 'time']);
+  ok(run.distance === 1 && run.time === 430, `a mile benchmark is the fastest one (${run.time}s)`);
+  ok(pickBenchmarkSet([{ weight: 0, reps: 0 }], ['weight', 'reps']) === null,
+     'an empty set is not a benchmark');
+  ok(pickBenchmarkSet([], ['weight', 'reps']) === null, 'and neither is no set at all');
+
+  // --- a normal workout makes none ---
+  const plain = await st.saveSession({
+    workoutId: 'w1', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 185, reps: 5 }] }],
+  });
+  ok((await st.getBenchmarks()).length === 0, 'a normal workout records no benchmarks');
+
+  // --- a benchmark workout makes one per exercise ---
+  const test = await st.saveSession({
+    workoutId: 'w2', workoutName: 'Test day', date: '2026-08-12', isBenchmark: true,
+    entries: [
+      { exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+        sets: [{ weight: 185, reps: 5 }, { weight: 225, reps: 2 }] },
+      { exerciseId: rowId, exerciseName: 'Barbell Row',
+        sets: [{ weight: 155, reps: 8 }] },
+    ],
+  });
+  let marks = await st.getBenchmarks();
+  ok(marks.length === 2, `every exercise becomes a benchmark (${marks.length})`);
+  ok(marks.every((m) => m.date === '2026-08-12'), 'filed on the day of the workout');
+  ok(marks.every((m) => m.sourceSessionId === test.id), 'and tagged with the session that made them');
+  ok(marks.find((m) => m.exerciseId === benchId).values.weight === 225,
+     'each takes that exercise\'s best set');
+
+  // --- editing must not duplicate ---
+  await st.saveSession({ ...test, entries: [
+    { exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+      sets: [{ weight: 185, reps: 5 }, { weight: 235, reps: 2 }] },
+    { exerciseId: rowId, exerciseName: 'Barbell Row', sets: [{ weight: 155, reps: 8 }] },
+  ] });
+  marks = await st.getBenchmarks();
+  ok(marks.length === 2, `re-saving updates rather than piling up (${marks.length})`);
+  ok(marks.find((m) => m.exerciseId === benchId).values.weight === 235,
+     'and the benchmark follows the corrected set');
+
+  // --- moving the date moves the benchmarks with it ---
+  await st.saveSession({ ...test, date: '2026-07-04', entries: [
+    { exerciseId: benchId, exerciseName: 'Barbell Bench Press', sets: [{ weight: 235, reps: 2 }] },
+    { exerciseId: rowId, exerciseName: 'Barbell Row', sets: [{ weight: 155, reps: 8 }] },
+  ] });
+  marks = await st.getBenchmarks();
+  ok(marks.length === 2 && marks.every((m) => m.date === '2026-07-04'),
+     'moving the record moves its benchmarks — none stranded on the old day');
+
+  // --- dropping an exercise drops its benchmark ---
+  await st.saveSession({ ...test, date: '2026-07-04', entries: [
+    { exerciseId: benchId, exerciseName: 'Barbell Bench Press', sets: [{ weight: 235, reps: 2 }] },
+  ] });
+  marks = await st.getBenchmarks();
+  ok(marks.length === 1 && marks[0].exerciseId === benchId,
+     `removing an exercise removes its benchmark (${marks.length} left)`);
+
+  // --- clearing the flag clears them ---
+  await st.saveSession({ ...test, date: '2026-07-04', isBenchmark: false, entries: [
+    { exerciseId: benchId, exerciseName: 'Barbell Bench Press', sets: [{ weight: 235, reps: 2 }] },
+  ] });
+  ok((await st.getBenchmarks()).length === 0, 'turning the flag off removes the derived benchmarks');
+
+  // --- a hand-entered benchmark is never touched by any of this ---
+  await st.saveBenchmark({ date: '2026-08-01', exerciseId: benchId,
+    exerciseName: 'Barbell Bench Press', values: { weight: 250, reps: 1 } });
+  await st.saveSession({ ...test, date: '2026-07-04', isBenchmark: true, entries: [
+    { exerciseId: benchId, exerciseName: 'Barbell Bench Press', sets: [{ weight: 235, reps: 2 }] },
+  ] });
+  marks = await st.getBenchmarks();
+  ok(marks.length === 2, 'a hand-entered benchmark survives a derived rebuild');
+  ok(marks.filter((m) => !m.sourceSessionId).length === 1,
+     'and stays distinguishable from a derived one');
+
+  // --- deleting the record takes its benchmarks with it ---
+  await st.deleteSession(test.id);
+  marks = await st.getBenchmarks();
+  ok(marks.length === 1 && !marks[0].sourceSessionId,
+     'deleting the record deletes its benchmarks, and only those');
+
+  await st.deleteSession(plain.id);
+  await st.clearAll();
+}
+
 /* ================= pounds and kilograms ================= */
 // Everything is STORED in pounds. Switching units is a display choice and must
 // never rewrite a recorded number — this is the check that protects that.

@@ -20,8 +20,8 @@ exercise→muscle mapping that D3 depends on.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 302 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 89 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 322 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 100 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -161,8 +161,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
-| Benchmarks | Any date, any exercise → feeds Data + calendar |
-| Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named |
+| Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
+| Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks |
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
@@ -231,6 +231,7 @@ Fitness_Tracker/
 │                               JPG. Dev-only; needs pillow/numpy/scipy/potracer
 ├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
+│   ├── views-edit-session.js   editing a workout already recorded
 │   ├── units.js                lbs/kg. EVERYTHING IS STORED IN POUNDS; this converts
 │   │                           only at the edges, so switching units is lossless
 │   ├── app.js                  hash router + boot
@@ -275,10 +276,12 @@ Fitness_Tracker/
 
 ```
 Exercise    id, name, muscle, equipment, fields[], loadType, isCustom
-Workout     id, name, exercises[{ exerciseId, sets, notes }], createdAt, updatedAt
-Session     id, workoutId, workoutName, date, startedAt, finishedAt,
+Workout     id, name, isBenchmark, exercises[{ exerciseId, sets, notes }], createdAt, updatedAt
+Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
             entries[{ exerciseId, exerciseName, sets[{weight,reps,time,distance}] }]
-Benchmark   id, date, exerciseId, exerciseName, values{}
+Benchmark   id, date, exerciseId, exerciseName, values{}, sourceSessionId?
+            ── sourceSessionId set = DERIVED from a benchmark workout, and rebuilt
+               from that session on every save. Absent = entered by hand, never touched.
 BodyWeight  id, date, weight, createdAt          ← one row per weigh-in
 Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 ```
@@ -404,6 +407,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D13 | **`BACKEND = 'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set (D6). Settings says "Not connected" rather than pretending to sync. |
 | D14 | **Graphs never mix benchmarks with workout sets.** One source at a time, benchmarks by default. | Reported by Tim: a workout set sat far off his benchmark trend. Two more problems fell out — the shown point flipped between sources as the rep target changed, and one-point-per-day silently discarded the loser. |
 | D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; general-population data would make every user Elite. The seven-level scale compresses into ~70–98 % of all adults. **The UI must say "of people who lift".** |
+| D17 | **A benchmark workout's benchmarks are DERIVED from its session, not written alongside it.** Each carries `sourceSessionId` and the whole set is rebuilt on every save. | The alternative — write benchmarks once at finish — strands them the moment the record is edited. Move the workout to another day and its benchmarks stay on the old one; delete an exercise and its benchmark lives on; untick the flag and nothing undoes it. Rebuilding makes all four correct by construction instead of by remembering. Hand-entered benchmarks have no `sourceSessionId` and are never touched. |
 | D16 | **Deadlift fills Glutes** on the muscle map. | It belongs to glutes, hamstrings and back at once. Hip-thrust standards are the thinnest of the three. Revisit with the weighted mapping. |
 
 ### Standing recommendations

@@ -1303,3 +1303,57 @@ Worth noting how it was found: not by a test, and not by reading the code. By ta
 the finished screen and looking at it. The test that now pins it was written afterwards.
 
 302 data-layer + 89 render assertions, green. Tier 1 is complete.
+
+---
+
+## 2026-08-16 (cont.) — benchmark workouts, and editing a recorded workout
+
+Tim: mark certain workouts as benchmarks so every exercise recorded in them counts as one; and let a
+past workout be edited from the calendar, including its date.
+
+### Benchmark workouts
+
+A workout carries `isBenchmark`. The flag is copied onto the **session** when it starts, not read back
+from the template later — re-flagging a workout months from now must not retroactively turn old
+sessions into benchmarks.
+
+The design decision worth writing down (now D17): **the benchmarks are derived from the session and
+rebuilt on every save**, each tagged `sourceSessionId`. Writing them once at finish is the obvious
+implementation and it strands them the moment anything is edited — move the workout to another day
+and its benchmarks stay on the old one, delete an exercise and its benchmark lives on, untick the
+flag and nothing undoes it. Rebuilding makes all four correct by construction. Hand-entered
+benchmarks have no `sourceSessionId` and are never touched by any of it.
+
+**Which set counts** needed a judgement call. A benchmark is one performance, so several sets have to
+reduce to one, and it uses the same measure the app already ranks with — estimated 1RM — so the
+benchmark agrees with the muscle map instead of being a second opinion. That means 185×8 beats 225×2,
+which is right and is not what "best" looks like at a glance.
+
+The honest limitation is time: longer is better for a plank, *faster* is better for a mile. A
+distance-and-time exercise takes the furthest set and breaks ties on the fastest time, which gets a
+fixed-distance run right. A time-only exercise assumes longer is better — right for a hold, wrong for
+a sprint. Documented in the code and left for manual entry.
+
+The day view shows a BENCHMARK badge on the workout card and does **not** list the derived benchmarks
+again underneath — the sets are already there, and listing them twice made the day read as twice the
+work.
+
+### Editing a recorded workout
+
+Calendar → day → pencil. Date, name, exercises, every set, add/remove sets, add/remove exercises, and
+the benchmark flag. Nothing is written until Save.
+
+Deliberately a plain form, **not** the session runner. The runner is built around a live workout: it
+prefills from history, keeps a draft against an app switch, and expires that draft at midnight. None
+of that is wanted when correcting last Tuesday, and bending it to do both would have put the draft
+machinery one bug away from overwriting real history.
+
+Two guards that came from thinking about how it would be misused: an "Add a set" someone thought
+better of would otherwise save as a row of zeros, and emptying every set would otherwise save an
+empty record. Both are refused, and the test asserts the real record survives the attempt.
+
+One layout bug caught by screenshotting rather than testing: the set number and delete button beside
+the steppers ate enough width that the steppers' `auto-fit, minmax(148px, 1fr)` grid collapsed to one
+column and every set became most of a screen tall. Moved them to their own row above.
+
+322 data-layer + 100 render assertions, green.

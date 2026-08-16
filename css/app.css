@@ -484,6 +484,29 @@ select.input {
   text-transform: uppercase; letter-spacing: .06em;
 }
 
+/* A workout whose every exercise counts as a benchmark. The badge is what
+   replaces listing those benchmarks a second time under the day. */
+.bench-badge {
+  margin-left: 7px; padding: 1px 6px; border-radius: 4px;
+  background: var(--accent-dim); color: var(--accent);
+  font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; vertical-align: middle;
+}
+
+/* Editing a recorded workout. One row per set: its number, its steppers, and a
+   way to remove it. */
+.edit-ex { display: flex; flex-direction: column; gap: 8px; }
+.edit-set {
+  display: flex; flex-direction: column; gap: 6px;
+  padding-top: 10px; border-top: 1px solid var(--rule-soft);
+}
+.edit-set:first-of-type { border-top: 0; padding-top: 0; }
+.edit-set-head { display: flex; align-items: center; justify-content: space-between; }
+.edit-set-num {
+  font-size: 10.5px; font-weight: 700; color: var(--ink-faint);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+
 /* Rest timer. Counts up from the last set; a target is optional, and only with
    one does the bar get to say the rest is over. */
 .rest-bar {
