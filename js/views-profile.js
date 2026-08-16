@@ -12,6 +12,7 @@ import {
   el, screenShell, toast, emptyState, confirmSheet, iconBtn,
   fmtDateShort, trimNum,
 } from './ui.js';
+import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -71,7 +72,7 @@ export async function ProfileView() {
     type: 'number',
     inputmode: 'decimal',
     step: '0.1',
-    placeholder: profile.bodyWeight ? String(profile.bodyWeight) : 'e.g. 180',
+    placeholder: profile.bodyWeight ? units.fmtWeight(profile.bodyWeight) : (units.units() === 'kg' ? 'e.g. 82' : 'e.g. 180'),
   });
 
   const logBtn = el('button', {
@@ -80,7 +81,8 @@ export async function ProfileView() {
     onClick: async () => {
       const v = Number(weightInput.value);
       if (!(v > 0)) { toast('Enter a weight'); return; }
-      await store.logBodyWeight(v);
+      // Typed in whatever unit is on screen; stored in pounds, always.
+      await store.logBodyWeight(units.fromDisplay(v));
       toast('Weight saved');
       refresh();
     },
@@ -92,9 +94,9 @@ export async function ProfileView() {
         const diff = last.weight - first.weight;
         const sign = diff > 0 ? '+' : diff < 0 ? '−' : '';
         return el('div', { class: 'field-help' },
-          `${trimNum(first.weight)} on ${fmtDateShort(first.date)} → `
-          + `${trimNum(last.weight)} on ${fmtDateShort(last.date)} `
-          + `(${sign}${trimNum(Math.abs(diff))} ${profile.units}) · `,
+          `${units.fmtWeight(first.weight)} on ${fmtDateShort(first.date)} → `
+          + `${units.fmtWeight(last.weight)} on ${fmtDateShort(last.date)} `
+          + `(${sign}${units.withUnit(Math.abs(diff))}) · `,
           // Two weigh-ins is exactly when the chart becomes available, so this
           // is the moment to say where it is (D8 — teach at the point of use).
           el('a', { class: 'text-link', href: '#/graphs', text: 'see the chart' }));
@@ -105,12 +107,12 @@ export async function ProfileView() {
     ? el('div', { class: 'list' }, [...history].reverse().slice(0, 12).map((r) =>
         el('div', { class: 'row' },
           el('div', { class: 'row-main' },
-            el('div', { class: 'row-title', text: `${trimNum(r.weight)} ${profile.units}` }),
+            el('div', { class: 'row-title', text: units.withUnit(r.weight) }),
             el('div', { class: 'row-sub', text: fmtDateShort(r.date) }),
           ),
           iconBtn('trash', 'Delete this weigh-in', () => confirmSheet({
             title: 'Delete this weigh-in?',
-            message: `${trimNum(r.weight)} ${profile.units} from ${fmtDateShort(r.date)} will be removed.`,
+            message: `${units.withUnit(r.weight)} from ${fmtDateShort(r.date)} will be removed.`,
             onConfirm: async () => { await store.deleteBodyWeight(r.id); toast('Deleted'); refresh(); },
           })),
         )))
@@ -124,8 +126,8 @@ export async function ProfileView() {
     el('div', { class: 'field-help' },
       ready
         ? (profile.age
-            ? `Ready. You'll be compared against people who lift, aged around ${profile.age}, at ${trimNum(profile.bodyWeight)} ${profile.units}.`
-            : `Ready. You'll be compared against everyone who lifts at ${trimNum(profile.bodyWeight)} ${profile.units}. Add a birth year to compare against your own age group instead.`)
+            ? `Ready. You'll be compared against people who lift, aged around ${profile.age}, at ${units.withUnit(profile.bodyWeight)}.`
+            : `Ready. You'll be compared against everyone who lifts at ${units.withUnit(profile.bodyWeight)}. Add a birth year to compare against your own age group instead.`)
         : `Still needs your ${profile.missing.join(' and ')} before it can rank anything.`),
   );
 
@@ -150,7 +152,7 @@ export async function ProfileView() {
         }),
       ),
 
-      el('div', { class: 'section-label', text: `Body weight (${profile.units})` }),
+      el('div', { class: 'section-label', text: `Body weight (${units.units()})` }),
       el('div', { class: 'card' },
         weightInput,
         logBtn,

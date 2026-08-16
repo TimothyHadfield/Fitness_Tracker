@@ -3,7 +3,7 @@
 import { store, todayISO } from './store.js';
 import { LOAD_LABEL } from './exercises.js';
 import {
-  el, icon, iconBtn, toast, screenShell, emptyState, stepper,
+  setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
@@ -61,6 +61,8 @@ export async function SessionView(workoutId) {
     for (const f of fields) s[f] = typeof src[f] === 'number' ? src[f] : 0;
     return s;
   }
+
+  const settings = await store.getSettings();
 
   // A draft only resumes on the same day. Yesterday's abandoned session should not
   // silently reappear and get saved with today's date.
@@ -126,7 +128,7 @@ export async function SessionView(workoutId) {
   const footer = el('div', { class: 'session-footer' });
 
   function renderProgress() {
-    progress.replaceChildren(
+    setChildren(progress,
       ...state.entries.map((_, i) =>
         el('span', { class: i < state.index ? 'done' : i === state.index ? 'current' : '' })),
     );
@@ -134,7 +136,7 @@ export async function SessionView(workoutId) {
 
   function renderFooter() {
     const isLast = state.index === state.entries.length - 1;
-    footer.replaceChildren(
+    setChildren(footer,
       el('button', {
         class: 'nav-arrow', 'aria-label': 'Previous exercise',
         disabled: state.index === 0,
@@ -157,7 +159,7 @@ export async function SessionView(workoutId) {
     const setList = el('div', { class: 'set-list' });
 
     function renderSets() {
-      setList.replaceChildren(
+      setChildren(setList,
         ...entry.sets.map((s, i) =>
           el('div', { class: 'set-item' + (i === entry.active ? ' active' : '') },
             el('button', {
@@ -186,10 +188,17 @@ export async function SessionView(workoutId) {
         field: f,
         value: active[f],
         suffix: f === 'weight' && entry.loadType ? LOAD_LABEL[entry.loadType] : null,
-        onChange: (v) => { active[f] = v; saveDraft(state); renderSets(); },
+        onChange: (v) => {
+          active[f] = v;
+          saveDraft(state);
+          renderSets();
+          // Recording a number IS finishing a set, so that is when rest starts.
+          // No extra button to remember to press mid-workout.
+          startRest();
+        },
       }).node);
 
-    pane.replaceChildren(
+    setChildren(pane,
       // The per-side / total distinction is carried by the stepper's own label,
       // so it isn't repeated here.
       el('div', { class: 'session-head' },
@@ -290,6 +299,87 @@ export async function SessionView(workoutId) {
     });
   }
 
+  /* ---- rest timer ---- */
+  //
+  // Counts UP from the last set rather than down from a target, because the
+  // count-up is true without being configured: open the app, see how long you
+  // have been standing there. A target is optional on top of it, and only then
+  // does the bar have an opinion about whether the rest is over.
+  //
+  // Time is read from a TIMESTAMP on every tick, never accumulated. Mobile
+  // throttles timers in a backgrounded tab, so a counter that added a second
+  // per tick would silently run slow — which is exactly what a rest timer is
+  // for, and exactly when the app is not in front of you.
+  const REST_TARGETS = [0, 60, 90, 120, 180];
+  let restTarget = REST_TARGETS.includes(Number(settings.restTarget))
+    ? Number(settings.restTarget) : 0;
+
+  const restClock = el('span', { class: 'rest-clock mono' });
+  const restLabel = el('span', { class: 'rest-label' });
+  const restChip = el('button', {
+    class: 'chip rest-target',
+    onClick: () => {
+      restTarget = REST_TARGETS[(REST_TARGETS.indexOf(restTarget) + 1) % REST_TARGETS.length];
+      store.saveSettings({ restTarget });
+      paintRest();
+    },
+  });
+  const restBar = el('div', { class: 'rest-bar' },
+    el('button', {
+      class: 'rest-reset', 'aria-label': 'Restart the rest timer',
+      onClick: () => startRest(),
+    }, restClock),
+    restLabel,
+    restChip,
+  );
+
+  function restSeconds() {
+    if (!state.restStartedAt) return null;
+    return Math.max(0, Math.floor((Date.now() - state.restStartedAt) / 1000));
+  }
+
+  function paintRest() {
+    const s = restSeconds();
+    restChip.textContent = restTarget ? `${restTarget}s` : 'no target';
+    restChip.setAttribute('aria-pressed', String(Boolean(restTarget)));
+
+    if (s === null) {
+      restClock.textContent = '--:--';
+      restLabel.textContent = 'Rest starts when you log a set';
+      restBar.classList.remove('is-done');
+      return;
+    }
+    restClock.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    const done = restTarget > 0 && s >= restTarget;
+    restBar.classList.toggle('is-done', done);
+    restLabel.textContent = done ? 'Rest done' : 'Resting';
+  }
+
+  let restTick = null;
+
+  // Kept separate from startRest on purpose: resuming a draft must pick the
+  // clock back UP, not restart it. Folding the two together meant walking back
+  // into a workout reset the rest you had already taken.
+  function ensureTicking() {
+    paintRest();
+    if (restTick) return;
+    restTick = setInterval(() => {
+      // Nothing tears this view down explicitly, so the interval has to notice
+      // it has been detached or it outlives the screen for the whole session.
+      if (!restBar.isConnected) { clearInterval(restTick); restTick = null; return; }
+      paintRest();
+    }, 1000);
+  }
+
+  function startRest() {
+    state.restStartedAt = Date.now();
+    saveDraft(state);
+    ensureTicking();
+  }
+
+  if (state.restStartedAt) ensureTicking();
+  paintRest();
+
   /* ---- which day this is recorded for ---- */
   // Defaults to today, because that is what it is nearly every time. It sits in
   // the header rather than behind the Finish button so that a workout being
@@ -335,6 +425,7 @@ export async function SessionView(workoutId) {
     ),
     progress,
     pane,
+    restBar,
     footer,
   );
 }
@@ -383,7 +474,7 @@ export async function BenchmarkView() {
   }
 
   function renderSteppers() {
-    stepWrap.replaceChildren(
+    setChildren(stepWrap,
       ...state.exercise.fields.map((f) =>
         stepper({
           field: f,

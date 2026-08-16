@@ -1,6 +1,7 @@
 // Shared UI primitives: DOM builder, icons, sheets, toasts, steppers, formatters.
 
 import { FIELD_META } from './exercises.js';
+import * as units from './units.js';
 
 /* ------------------------------------------------------------------ *
  * DOM
@@ -22,6 +23,18 @@ export function el(tag, props = {}, ...children) {
     if (c === null || c === undefined || c === false) continue;
     node.append(c instanceof Node ? c : document.createTextNode(String(c)));
   }
+  return node;
+}
+
+// Element.replaceChildren() stringifies anything that is not a Node, so a
+// `cond ? el(...) : null` child renders the literal text "null" on the page —
+// which it had been doing under the exercise name on the session screen for any
+// exercise without a note. el() has always guarded against this; setChildren is
+// the same guard for the places that replace a node's children directly.
+export function setChildren(node, ...children) {
+  node.replaceChildren(
+    ...children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false),
+  );
   return node;
 }
 
@@ -243,7 +256,7 @@ export function trimNum(n) {
 export function fmtSet(set, fields, loadType) {
   const parts = [];
   if (fields.includes('weight') && set.weight != null) {
-    parts.push(`${trimNum(set.weight)} lbs${loadType === 'per_side' ? '/side' : ''}`);
+    parts.push(`${units.withUnit(set.weight)}${loadType === 'per_side' ? '/side' : ''}`);
   }
   if (fields.includes('reps') && set.reps != null) parts.push(`× ${trimNum(set.reps)}`);
   if (fields.includes('time') && set.time != null) parts.push(fmtTime(set.time));
@@ -281,7 +294,16 @@ export function relativeDay(iso) {
 
 export function stepper({ field, value, onChange, suffix }) {
   const meta = FIELD_META[field];
-  let current = value == null ? 0 : Number(value);
+  // Weight is STORED in pounds and SHOWN in the user's unit, so the stepper
+  // works entirely in display units — a nudge is then a clean 2.5 kg rather
+  // than whatever 5 lb happens to convert to — and converts back on the way
+  // out. Every other field has one unit and passes straight through.
+  const isWeight = field === 'weight';
+  const step = isWeight ? units.weightStep() : meta.step;
+  const inbound = (v) => (isWeight ? units.toDisplay(v) : Number(v));
+  const outbound = (v) => (isWeight ? units.fromDisplay(v) : v);
+
+  let current = value == null ? 0 : inbound(value);
 
   const input = el('input', {
     class: 'step-value mono',
@@ -294,17 +316,20 @@ export function stepper({ field, value, onChange, suffix }) {
   function display(v) {
     if (field === 'time') return fmtTime(v);
     if (field === 'distance') return Number(v).toFixed(2);
+    // Kilograms keep a decimal: stored as pounds, a round 60 kg is 132.277 lb
+    // underneath and would otherwise read back as 60.000000000001.
+    if (isWeight && units.units() === 'kg') return String(Math.round(v * 10) / 10);
     return trimNum(v);
   }
 
   function set(v, silent) {
     current = Math.max(meta.min, Math.round(v * 100) / 100);
     input.value = display(current);
-    if (!silent) onChange(current);
+    if (!silent) onChange(outbound(current));
   }
 
   function bump(dir) {
-    set(current + dir * meta.step);
+    set(current + dir * step);
     if (navigator.vibrate) navigator.vibrate(8);
   }
 
@@ -341,12 +366,12 @@ export function stepper({ field, value, onChange, suffix }) {
     el('div', { class: 'step-unit', text: stepHint(field, meta) }),
   );
 
-  return { node, get: () => current, set: (v) => set(v, true) };
+  return { node, get: () => outbound(current), set: (v) => set(inbound(v), true) };
 }
 
 function stepHint(field, meta) {
   if (field === 'time') return `${meta.step} sec steps`;
-  if (field === 'weight') return `${meta.step} lb steps`;
+  if (field === 'weight') return `${units.weightStep()} ${units.units()} steps`;
   if (field === 'distance') return `${meta.step} mi steps`;
   return `1 rep steps`;
 }

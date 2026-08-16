@@ -484,6 +484,22 @@ select.input {
   text-transform: uppercase; letter-spacing: .06em;
 }
 
+/* Rest timer. Counts up from the last set; a target is optional, and only with
+   one does the bar get to say the rest is over. */
+.rest-bar {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 7px var(--pad); border-top: 1px solid var(--rule-soft);
+}
+.rest-reset {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--ink); font-size: 20px; font-weight: 650; line-height: 1;
+}
+.rest-clock { font-family: var(--mono); letter-spacing: -0.02em; }
+.rest-label { flex: 1; min-width: 0; font-size: 11.5px; color: var(--ink-faint); font-weight: 550; }
+.rest-target { flex: none; font-size: 11px; }
+.rest-bar.is-done .rest-reset { color: var(--good); }
+.rest-bar.is-done .rest-label { color: var(--good); font-weight: 700; }
+
 .session-progress { flex: none; display: flex; gap: 3px; padding: 7px var(--pad) 0; }
 .session-progress span { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); }
 .session-progress span.done { background: var(--good); }

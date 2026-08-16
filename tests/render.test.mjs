@@ -335,5 +335,125 @@ ok(!data.querySelector('.rep-target'),
      'yesterday\'s abandoned draft is still dropped, and the new one is for today');
 }
 
+/* ========= replaceChildren must not print the word "null" ========= */
+// Element.replaceChildren() stringifies anything that is not a Node, so a
+// `cond ? el(...) : null` child rendered the literal text "null" on the page.
+// It was doing exactly that under the exercise name for any exercise with no
+// note. el() always guarded against it; the direct replaceChildren calls did not.
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  localStorage.removeItem('ftrack:v1:draftSession');
+  const nw = await store.saveWorkout({
+    name: 'No notes',
+    // notes deliberately empty — that is what used to render "null"
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+  const screen = await mount(SessionView(nw.id));
+  ok(!/\bnull\b/.test(screen.textContent),
+     'an exercise with no note does not render the word "null"');
+  ok(!/\bundefined\b/.test(screen.textContent), 'nor "undefined"');
+
+  // The whole app, not just this screen.
+  for (const [name, view] of [
+    ['Home', HomeView()], ['Workouts', WorkoutsView()],
+    ['Calendar', CalendarView()], ['Settings', SettingsView()],
+  ]) {
+    const node = await mount(view);
+    ok(!/\bnull\b/.test(node.textContent), `${name} renders no stray "null"`);
+  }
+  localStorage.removeItem('ftrack:v1:draftSession');
+}
+
+/* ================= the rest timer ================= */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  localStorage.removeItem(DRAFT);
+
+  const rw = await store.saveWorkout({
+    name: 'Rest test',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '' }],
+  });
+  const s = await mount(SessionView(rw.id));
+
+  const bar = s.querySelector('.rest-bar');
+  ok(Boolean(bar), 'the session has a rest timer');
+  ok(s.querySelector('.rest-clock').textContent === '--:--',
+     'it shows nothing until a set is actually logged');
+
+  const wt = s.querySelector('.step-value');
+  wt.value = '135';
+  wt.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+
+  const draft = JSON.parse(localStorage.getItem(DRAFT));
+  ok(typeof draft.restStartedAt === 'number',
+     'logging a set starts the rest clock, and it goes in the draft');
+  ok(/^00:0\d$/.test(s.querySelector('.rest-clock').textContent),
+     `the clock starts from zero (${s.querySelector('.rest-clock').textContent})`);
+
+  // Elapsed time is read from the timestamp, not accumulated by the interval —
+  // a backgrounded tab throttles timers, which is exactly when a rest timer
+  // matters. Rewinding the stored start proves the clock is derived from it.
+  draft.restStartedAt = Date.now() - 95000;
+  localStorage.setItem(DRAFT, JSON.stringify(draft));
+  const resumedRest = await mount(SessionView(rw.id));
+  ok(resumedRest.querySelector('.rest-clock').textContent === '01:35',
+     `a resumed session picks the clock back up from the timestamp `
+     + `(${resumedRest.querySelector('.rest-clock').textContent})`);
+
+  // The target is opt-in; with none set, the bar never claims rest is "done".
+  const chip = resumedRest.querySelector('.rest-target');
+  ok(chip.textContent === 'no target', 'no rest target by default — no unearned opinion');
+  ok(!resumedRest.querySelector('.rest-bar').classList.contains('is-done'),
+     'and with no target it never says the rest is over');
+
+  chip.click(); await settle();
+  ok(chip.textContent === '60s', 'tapping cycles a target on');
+  ok(resumedRest.querySelector('.rest-bar').classList.contains('is-done'),
+     '95s past a 60s target reads as done');
+  ok((await store.getSettings()).restTarget === 60, 'the target is remembered');
+
+  localStorage.removeItem(DRAFT);
+  await store.saveSettings({ restTarget: 0 });
+}
+
+/* ================= the stepper in kilograms ================= */
+// The stepper SHOWS the user's unit and HANDS BACK pounds. Getting this
+// backwards would quietly store kilogram numbers as pounds and corrupt every
+// weight recorded after the switch.
+{
+  const { stepper } = await import(BASE + 'ui.js');
+  const u = await import(BASE + 'units.js');
+
+  u.setUnits('lbs');
+  let got = null;
+  const lb = stepper({ field: 'weight', value: 135, onChange: (v) => { got = v; } });
+  ok(lb.node.querySelector('.step-value').value === '135', 'pounds show as stored');
+  lb.node.querySelectorAll('.step-btn')[1].dispatchEvent(new window.Event('pointerdown'));
+  ok(got === 140, `a nudge in pounds is +5 (${got})`);
+
+  u.setUnits('kg');
+  got = null;
+  const kg = stepper({ field: 'weight', value: 220.46, onChange: (v) => { got = v; } });
+  ok(kg.node.querySelector('.step-value').value === '100',
+     `220.46 lb is shown as 100 kg (${kg.node.querySelector('.step-value').value})`);
+  ok(/2\.5 kg steps/.test(kg.node.textContent), 'and the hint says 2.5 kg steps');
+
+  kg.node.querySelectorAll('.step-btn')[1].dispatchEvent(new window.Event('pointerdown'));
+  ok(kg.node.querySelector('.step-value').value === '102.5', 'a nudge moves it to 102.5 kg');
+  ok(got !== null && Math.abs(got - 226.0) < 0.5,
+     `but what comes back is POUNDS, not kilograms (${got && got.toFixed(2)})`);
+  ok(Math.abs(kg.get() - got) < 1e-9, 'get() agrees with what onChange reported');
+
+  // Typing a round kg figure must store the right pounds.
+  const typed = kg.node.querySelector('.step-value');
+  typed.value = '60';
+  typed.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  ok(Math.abs(got - 132.277) < 0.01, `typing 60 kg stores 132.28 lb (${got && got.toFixed(3)})`);
+
+  u.setUnits('lbs');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

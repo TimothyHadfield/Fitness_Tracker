@@ -625,13 +625,28 @@ export async function normalizedSeries(exerciseId, targetReps, source = null) {
  * Muscle-group strength ranking
  * ------------------------------------------------------------------ */
 
-// Benchmarks only, for now — a benchmark is a deliberate test, a mid-workout set
-// is not (D14, and Tim's own instruction). Incorporating workout lifts is a
-// later step.
+// Ranks from BOTH benchmarks and sets logged in a workout, best estimate wins.
+//
+// This is not a breach of D14. That rule is about charting a trend: two sources
+// on one line make strength look like it swings wildly, and keeping one point
+// per day silently threw the loser away. Neither applies to a single best
+// estimate, which is all this screen asks for. Ranking on benchmarks alone left
+// the best screen in the app permanently grey for anyone who just logs their
+// workouts — which is most people, and the whole point of the app.
+//
+// A set logged mid-workout comes after everything else the session did, so it
+// UNDERSTATES: it will rarely beat a fresh benchmark, and when it does, that is
+// real evidence the lifter has moved on since they last tested. Taking the max
+// is therefore the conservative reading, not an optimistic one.
+//
+// What must never happen is the source going unsaid — an inference must not look
+// like a measurement (Rule 5). `best.source` carries it and the UI states it.
 //
 // Returns one entry per rankable muscle group that has usable data.
 export async function muscleStrength() {
-  const [profile, benchmarks] = await Promise.all([store.getProfile(), store.getBenchmarks()]);
+  const [profile, benchmarks, sessions] = await Promise.all([
+    store.getProfile(), store.getBenchmarks(), store.getSessions(),
+  ]);
   const {
     MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
     levelProgress, weightForPercentile, generalPopulationPercentile,
@@ -644,17 +659,27 @@ export async function muscleStrength() {
     const lift = keyLiftFor(muscle);
     if (!lift || !lift.id) continue;
 
-    // Every benchmark on this muscle's key lift, best e1RM wins — a muscle is
-    // as strong as the best evidence for it, and averaging would punish someone
+    // Best e1RM on this muscle's key lift, from any source — a muscle is as
+    // strong as the best evidence for it, and averaging would punish someone
     // for a bad day they honestly logged.
     let best = null;
+    const consider = (weight, reps, date, source) => {
+      const est = e1rm(weight, reps);
+      if (est === null) return;
+      if (!best || est > best.e1rm) {
+        best = { e1rm: est, weight, reps: Math.round(Number(reps)), date, source };
+      }
+    };
+
     for (const b of benchmarks) {
       if (b.exerciseId !== lift.id) continue;
       const v = b.values || {};
-      const est = e1rm(v.weight, v.reps);
-      if (est === null) continue;
-      if (!best || est > best.e1rm) {
-        best = { e1rm: est, weight: v.weight, reps: Math.round(Number(v.reps)), date: b.date };
+      consider(v.weight, v.reps, b.date, 'benchmark');
+    }
+    for (const s of sessions) {
+      for (const entry of s.entries || []) {
+        if (entry.exerciseId !== lift.id) continue;
+        for (const set of entry.sets || []) consider(set.weight, set.reps, s.date, 'workout');
       }
     }
     if (!best) continue;

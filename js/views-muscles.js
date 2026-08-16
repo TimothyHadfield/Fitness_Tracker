@@ -13,7 +13,8 @@ import {
   LEVELS, MUSCLE_LIFTS, UNRANKABLE, weightForPercentile, keyLiftFor,
 } from './strength-standards.js';
 import { bodySvg, setSelected } from './body-map.js';
-import { el, emptyState, trimNum, fmtDateShort } from './ui.js';
+import { setChildren, el, emptyState, trimNum, fmtDateShort } from './ui.js';
+import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -24,8 +25,8 @@ export async function muscleGroupsPane(host, top) {
   const { profile, muscles, ready } = await muscleStrength();
 
   if (!ready) {
-    top.replaceChildren();
-    host.replaceChildren(emptyState(
+    setChildren(top);
+    setChildren(host, emptyState(
       'Tell us about you first',
       `Ranking a muscle group needs your ${profile.missing.join(' and ')} — every strength `
       + 'standard is a ratio to body weight, and they differ between men and women.',
@@ -35,11 +36,11 @@ export async function muscleGroupsPane(host, top) {
   }
 
   if (!muscles.size) {
-    top.replaceChildren();
-    host.replaceChildren(emptyState(
-      'No benchmarks on a key lift yet',
+    setChildren(top);
+    setChildren(host, emptyState(
+      'Nothing to rank yet',
       'Each muscle group is ranked by one named lift — bench press for chest, back squat for quads, '
-      + 'and so on. Record a benchmark on one and it will light up.',
+      + 'and so on. Lift one in a workout, or record a benchmark, and it will light up.',
       el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
     ));
     return;
@@ -47,7 +48,7 @@ export async function muscleGroupsPane(host, top) {
 
   /* ---- top row: what the comparison is against ---- */
 
-  top.replaceChildren(
+  setChildren(top,
     el('div', { class: 'control-row' },
       el('div', { class: 'basis' },
         el('span', { class: 'basis-main', text: 'vs. people who lift' }),
@@ -55,7 +56,7 @@ export async function muscleGroupsPane(host, top) {
           class: 'basis-sub',
           text: `${profile.gender === 'female' ? 'women' : 'men'}`
             + (profile.age ? ` around ${profile.age}` : ', all ages')
-            + ` · ${trimNum(profile.bodyWeight)} ${profile.units}`,
+            + ` · ${units.withUnit(profile.bodyWeight)}`,
         }),
       ),
       el('button', {
@@ -86,14 +87,14 @@ export async function muscleGroupsPane(host, top) {
   const foot = el('div', { class: 'body-foot' });
 
   function renderPanel() {
-    foot.replaceChildren(
+    setChildren(foot,
       legend(),
       selected ? detail(muscles.get(selected), selected, profile) : summary(muscles),
     );
   }
 
   function render() {
-    host.replaceChildren(el('div', { class: 'body-wrap' }, body), foot);
+    setChildren(host, el('div', { class: 'body-wrap' }, body), foot);
     renderPanel();
   }
 
@@ -148,7 +149,8 @@ function detail(m, muscle, profile) {
       el('div', { class: 'section-label', text: muscle }),
       el('div', { class: 'field-help' },
         lift
-          ? `No benchmark on ${lift.name} yet. That's the lift this muscle is ranked by.`
+          ? `Nothing recorded on ${lift.name} yet. That's the lift this muscle is ranked by — `
+            + 'lift it in a workout or benchmark it.'
           : 'This muscle has no published strength standards, so it can\'t be ranked.'),
       lift
         ? el('a', { class: 'btn primary block', href: '#/benchmark', text: `Benchmark ${lift.name}` })
@@ -167,7 +169,7 @@ function detail(m, muscle, profile) {
       // Ceil, never round. If the panel says 295 lb, lifting 295 has to be
       // enough — rounding 295.4 down to 295 would show a target that does not
       // actually clear the threshold.
-      el('span', { class: 'target-wt mono', text: `${Math.ceil(target)} ${profile.units}` }),
+      el('span', { class: 'target-wt mono', text: units.withUnit(Math.ceil(target)) }),
     );
   });
 
@@ -178,9 +180,14 @@ function detail(m, muscle, profile) {
         text: m.level ? m.level.name : 'Below Beginner' }),
     ),
 
+    // Where the number came from is never left unsaid: a set logged mid-workout
+    // comes after everything else that session did, so it reads lower than a
+    // deliberate test, and someone comparing two muscles deserves to know which
+    // kind of evidence each one rests on.
     el('div', { class: 'field-help' },
-      `${trimNum(Math.round(m.best.e1rm))} ${profile.units} estimated max on ${m.lift.name}`
-      + ` · from ${trimNum(m.best.weight)}×${m.best.reps} on ${fmtDateShort(m.best.date)}`),
+      `${units.withUnit(Math.round(m.best.e1rm))} estimated max on ${m.lift.name}`
+      + ` · from ${units.fmtWeight(m.best.weight)}×${m.best.reps} on ${fmtDateShort(m.best.date)}`
+      + (m.best.source === 'workout' ? ', logged in a workout' : ', benchmarked')),
 
     el('div', { class: 'field-help' },
       `Stronger than ${pct}% of people who lift at your weight`
@@ -199,7 +206,7 @@ function detail(m, muscle, profile) {
           el('div', { class: 'to-next-bar' },
             el('div', { class: 'to-next-fill', style: `width:${(m.progress * 100).toFixed(1)}%` })),
           el('div', { class: 'to-next-label' },
-            `${Math.ceil(m.toNext)} ${profile.units} to ${m.next.name}`),
+            `${units.withUnit(Math.ceil(m.toNext))} to ${m.next.name}`),
         )
       : el('div', { class: 'field-help', text: 'Top level reached.' }),
 

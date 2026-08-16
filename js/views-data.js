@@ -9,10 +9,11 @@ import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
 } from './e1rm.js';
 import {
-  el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper, chevron,
+  setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
+import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -285,8 +286,8 @@ export async function GraphView() {
 
   async function renderTrend() {
     if (!trendOptions.length) {
-      top.replaceChildren();
-      host.replaceChildren(emptyState(
+      setChildren(top);
+      setChildren(host, emptyState(
         'Nothing to chart yet',
         'A line needs the same thing recorded on two different days. Record a workout, a '
         + 'benchmark, or your body weight twice and it will appear here.',
@@ -344,7 +345,7 @@ export async function GraphView() {
     const fields = opt.sources[source].fields;
     if (!fields.includes(graphChoice.field)) graphChoice.field = fields[0];
 
-    top.replaceChildren(
+    setChildren(top,
       el('div', { class: 'control-row' },
         picker,
         sourceChips,
@@ -360,20 +361,20 @@ export async function GraphView() {
     );
 
     if (!graphChoice.field) {
-      host.replaceChildren(emptyState('Nothing to chart from this source',
+      setChildren(host, emptyState('Nothing to chart from this source',
         `No ${SOURCE_LABEL[source].toLowerCase()} recorded for this exercise yet.`));
       return;
     }
 
     const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field, source);
     if (points.length < 2) {
-      host.replaceChildren(emptyState('Only one data point', 'Record this exercise on another day to see a line.'));
+      setChildren(host, emptyState('Only one data point', 'Record this exercise on another day to see a line.'));
       return;
     }
 
     const blocked = normalizeBlockedReason(opt.exercise);
     const plot = el('div', { class: 'chart-wrap' });
-    host.replaceChildren(
+    setChildren(host,
       plot,
       el('div', { class: 'chart-foot' },
         summaryStats(points, graphChoice.field),
@@ -400,7 +401,7 @@ export async function GraphView() {
       targetReps.set(key, target);
     }
 
-    top.replaceChildren(
+    setChildren(top,
       el('div', { class: 'control-row' },
         picker,
         sourceChips,
@@ -419,7 +420,7 @@ export async function GraphView() {
 
     const points = await normalizedSeries(opt.id, target, source);
     if (points.length < 2) {
-      host.replaceChildren(emptyState('Only one data point',
+      setChildren(host, emptyState('Only one data point',
         `Record this exercise with a weight and a rep count on another day to see a line. `
         + `Showing ${SOURCE_LABEL[source].toLowerCase()} only.`));
       return;
@@ -429,7 +430,7 @@ export async function GraphView() {
     const conf = repConfidence(target);
     const plot = el('div', { class: 'chart-wrap' });
 
-    host.replaceChildren(
+    setChildren(host,
       plot,
       el('div', { class: 'chart-foot' },
         summaryStats(points, 'weight'),
@@ -458,11 +459,11 @@ export async function GraphView() {
   // No sources to choose between and nothing to normalise, so the control row
   // is just the picker and the chart gets the rest of the screen (Rule 3).
   function renderBodyWeight(picker) {
-    top.replaceChildren(el('div', { class: 'control-row' }, picker));
+    setChildren(top, el('div', { class: 'control-row' }, picker));
 
     const days = dayGap(bwPoints[0].date, bwPoints[bwPoints.length - 1].date);
     const plot = el('div', { class: 'chart-wrap' });
-    host.replaceChildren(
+    setChildren(host,
       plot,
       el('div', { class: 'chart-foot' },
         // Direction is deliberately NOT judged here. Gaining is the goal for one
@@ -484,8 +485,8 @@ export async function GraphView() {
 
   function renderCompare() {
     if (!comparison.fields.length) {
-      top.replaceChildren();
-      host.replaceChildren(emptyState(
+      setChildren(top);
+      setChildren(host, emptyState(
         'Nothing to compare yet',
         'This compares your first benchmark against your latest, so it needs the same exercise '
         + 'benchmarked on two different days.',
@@ -496,7 +497,7 @@ export async function GraphView() {
     if (!compareField || !comparison.fields.includes(compareField)) compareField = comparison.fields[0];
     const rows = comparison.byField[compareField];
 
-    top.replaceChildren(
+    setChildren(top,
       el('div', { class: 'control-row' },
         comparison.fields.length > 1
           ? el('div', { class: 'chips tight' }, comparison.fields.map((f) =>
@@ -515,7 +516,7 @@ export async function GraphView() {
 
     const note = comparison.incomplete[compareField];
     const anyNormalized = rows.some((r) => r.atReps);
-    host.replaceChildren(
+    setChildren(host,
       barChart(rows, compareField),
       el('div', { class: 'chart-foot' },
         el('div', { class: 'chart-caption' },
@@ -564,7 +565,7 @@ function fillChart(host, points, field, label) {
     if (w < 60 || h < 60) return;          // not laid out yet
     if (w === lastW && h === lastH) return; // nothing changed
     lastW = w; lastH = h;
-    host.replaceChildren(lineChart(points, field, w, h, label));
+    setChildren(host, lineChart(points, field, w, h, label));
   };
 
   // The observer is the reliable trigger — it fires once the element is in the
@@ -837,7 +838,7 @@ export async function SettingsView() {
     ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
     : `${profile.gender === 'female' ? 'Female' : 'Male'}`
       + (profile.age ? `, ${profile.age}` : '')
-      + `, ${trimNum(profile.bodyWeight)} ${profile.units}`;
+      + `, ${units.withUnit(profile.bodyWeight)}`;
 
   async function doExport() {
     const data = await store.exportAll();
@@ -874,6 +875,16 @@ export async function SettingsView() {
     e.target.setAttribute('aria-pressed', 'true');
   }
 
+  // Changing units re-labels the app; it does NOT touch a single stored number.
+  // Everything is kept in pounds, so switching back and forth is lossless.
+  function setUnits(u, e) {
+    units.setUnits(u);
+    store.saveSettings({ units: u });
+    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    e.target.setAttribute('aria-pressed', 'true');
+    toast(u === 'kg' ? 'Showing kilograms' : 'Showing pounds');
+  }
+
   return screenShell({
     title: 'Settings',
     back: () => go('#/home'),
@@ -885,6 +896,23 @@ export async function SettingsView() {
           el('button', { class: 'chip', 'aria-pressed': String(settings.theme === 'light'), text: 'Light', onClick: (e) => setTheme('light', e) }),
         ),
         el('div', { class: 'field-help', text: 'Dark is easier to read under gym lighting.' }),
+      ),
+
+      el('div', { class: 'field' },
+        el('label', { text: 'Weight units' }),
+        el('div', { class: 'chips' },
+          el('button', {
+            class: 'chip', 'aria-pressed': String(units.units() !== 'kg'),
+            text: 'lbs', onClick: (e) => setUnits('lbs', e),
+          }),
+          el('button', {
+            class: 'chip', 'aria-pressed': String(units.units() === 'kg'),
+            text: 'kg', onClick: (e) => setUnits('kg', e),
+          }),
+        ),
+        el('div', { class: 'field-help', text:
+          'Display only. Weights are stored the same way either way, so switching '
+          + 'back and forth never changes anything you have recorded.' }),
       ),
 
       el('div', { class: 'section-label', text: 'You' }),

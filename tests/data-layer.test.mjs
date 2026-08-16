@@ -598,6 +598,119 @@ ok(fb.mergeRows([{ id: 'a' }], []).length === 1, 'an empty upload leaves the clo
 const once = fb.mergeRows(remoteRows, localRows);
 ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a no-op');
 
+/* ================= pounds and kilograms ================= */
+// Everything is STORED in pounds. Switching units is a display choice and must
+// never rewrite a recorded number — this is the check that protects that.
+{
+  const u = await import('../js/units.js');
+
+  u.setUnits('lbs');
+  ok(u.units() === 'lbs', 'defaults to pounds');
+  ok(u.toDisplay(135) === 135 && u.fromDisplay(135) === 135, 'pounds pass straight through');
+  ok(u.weightStep() === 5, '5 lb steps');
+  ok(u.withUnit(225) === '225 lbs', `pounds render plainly (${u.withUnit(225)})`);
+
+  u.setUnits('kg');
+  ok(u.units() === 'kg', 'switches to kilograms');
+  ok(near(u.toDisplay(220.46), 100, 0.01), `220.46 lb reads as 100 kg (${u.toDisplay(220.46).toFixed(3)})`);
+  ok(near(u.fromDisplay(100), 220.46, 0.01), '100 kg stores as 220.46 lb');
+  ok(u.weightStep() === 2.5, '2.5 kg steps — the smallest pair of plates most gyms own');
+  ok(u.withUnit(220.46) === '100 kg', `kilograms render to one decimal (${u.withUnit(220.46)})`);
+
+  // The round trip is the whole promise: flip to kg and back, get the same lb.
+  let worst = 0;
+  for (const lb of [45, 95, 135, 185, 225, 315, 405, 500, 137.5, 182.3]) {
+    u.setUnits('kg');
+    const roundTripped = u.fromDisplay(u.toDisplay(lb));
+    worst = Math.max(worst, Math.abs(roundTripped - lb));
+  }
+  ok(worst < 1e-9, `lb -> kg -> lb is lossless (worst drift ${worst})`);
+
+  // A round number typed in kg must read back as that round number, not as
+  // 59.99999 — it is stored as pounds underneath.
+  u.setUnits('kg');
+  ok(u.withUnit(u.fromDisplay(60)) === '60 kg', `60 kg round-trips through storage (${u.withUnit(u.fromDisplay(60))})`);
+  ok(u.withUnit(u.fromDisplay(102.5)) === '102.5 kg', 'and so does a half-plate figure');
+
+  ok(u.toDisplay('nonsense') === 0 && u.fromDisplay(undefined) === 0,
+     'junk converts to zero rather than NaN');
+
+  u.setUnits('lbs');   // leave the module as the rest of the suite expects
+}
+
+/* ========= the muscle map reads workouts, not just benchmarks ========= */
+// Ranking on benchmarks alone left the best screen in the app permanently grey
+// for anyone who only logs their workouts.
+{
+  const { store: st, muscleStrength } = await import('../js/store.js');
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-08-01');
+
+  const benchId = BUILT_IN_EXERCISES.find((e) => e.name === 'Barbell Bench Press').id;
+  const squatId = BUILT_IN_EXERCISES.find((e) => e.name === 'Back Squat').id;
+
+  // A workout only — no benchmarks anywhere.
+  await st.saveSession({
+    workoutId: 'w1', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 185, reps: 5 }, { weight: 205, reps: 3 }] }],
+  });
+  let r = await muscleStrength();
+  ok(r.ready, 'ranking is ready once the profile is complete');
+  const chest = r.muscles.get('Chest');
+  ok(Boolean(chest), 'a muscle ranks from workout sets alone, with no benchmark');
+  ok(chest && chest.best.source === 'workout', `the source is recorded (${chest && chest.best.source})`);
+  ok(chest && chest.best.weight === 205 && chest.best.reps === 3,
+     'the best set wins, not the last or the heaviest-by-reps');
+
+  // Add a stronger benchmark: it should take over, and say so.
+  await st.saveBenchmark({ date: '2026-08-12', exerciseId: benchId,
+    exerciseName: 'Barbell Bench Press', values: { weight: 245, reps: 1 } });
+  r = await muscleStrength();
+  const chest2 = r.muscles.get('Chest');
+  ok(chest2.best.source === 'benchmark' && chest2.best.weight === 245,
+     'a stronger benchmark takes over from the workout set');
+  ok(chest2.e1rm !== chest.e1rm || chest2.best.e1rm > chest.best.e1rm,
+     'and the estimate goes up with it');
+
+  // A workout set that genuinely beats a stale benchmark must win — that is
+  // real evidence the lifter has moved on since they last tested.
+  await st.saveSession({
+    workoutId: 'w2', workoutName: 'Push', date: '2026-08-14',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 275, reps: 2 }] }],
+  });
+  r = await muscleStrength();
+  ok(r.muscles.get('Chest').best.source === 'workout'
+     && r.muscles.get('Chest').best.weight === 275,
+     'a workout set that beats a stale benchmark wins, and is labelled as such');
+
+  // Untouched muscles stay unranked rather than guessing.
+  ok(!r.muscles.has('Quads'), 'a muscle with nothing logged is not ranked');
+  await st.saveSession({
+    workoutId: 'w3', workoutName: 'Legs', date: '2026-08-15',
+    entries: [{ exerciseId: squatId, exerciseName: 'Back Squat',
+                sets: [{ weight: 315, reps: 5 }] }],
+  });
+  r = await muscleStrength();
+  ok(r.muscles.has('Quads'), 'and starts ranking as soon as its key lift is logged');
+
+  // Sets with no weight or no reps must not fabricate a ranking.
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-08-01');
+  await st.saveSession({
+    workoutId: 'w4', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 0, reps: 0 }, { weight: 135 }] }],
+  });
+  r = await muscleStrength();
+  ok(!r.muscles.has('Chest'), 'empty or repless sets do not produce a ranking');
+
+  await st.clearAll();
+}
+
 /* ================= the offline shell (D6) ================= */
 // sw.js hand-lists the files to precache, because there is no build step to
 // generate one. A file added and not listed is invisible until someone opens

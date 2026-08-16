@@ -6,20 +6,22 @@
 
 **Last updated:** 2026-08-16
 
-**Status:** Live and working. Tier 1 is complete except for a rest timer. Firebase is provisioned and
-verified end to end. The body map is now **Tim's own illustration**, split into a recolourable fill
+**Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
+end. The app now works with **no network** (D6, finally real), records weights in **lbs or kg**, and
+the body map ranks from **workout sets as well as benchmarks**. The body map is now **Tim's own illustration**, split into a recolourable fill
 layer and an ink layer that carries every keyline, striation and shadow — so the four look-and-feel
 gaps that were §9 are closed by construction. Screenshotted at 360/390/1180 in both themes.
 
-**Open work:** nothing outstanding on the body map. Everything in Tier 1 is done bar a rest timer.
+**Open work:** **Tier 1 is complete.** Next is Tier 2, whose first move is the weighted
+exercise→muscle mapping that D3 depends on.
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 279 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 65 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 302 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 89 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -163,14 +165,17 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named |
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
+| Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
+| Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
-| Settings | Dark/light, profile, account, export/restore backup, delete all |
+| Settings | Dark/light, **lbs/kg**, profile, account, export/restore backup, delete all |
 
-**Stepper increments:** reps ±1 · weight ±5 lbs · time ±10 sec · distance ±0.1 mi. Press-and-hold repeats.
+**Stepper increments:** reps ±1 · weight **±5 lbs or ±2.5 kg** · time ±10 sec · distance ±0.1 mi.
+Press-and-hold repeats.
 
 ### Verified
 
@@ -226,6 +231,8 @@ Fitness_Tracker/
 │                               JPG. Dev-only; needs pillow/numpy/scipy/potracer
 ├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
+│   ├── units.js                lbs/kg. EVERYTHING IS STORED IN POUNDS; this converts
+│   │                           only at the edges, so switching units is lossless
 │   ├── app.js                  hash router + boot
 │   ├── store.js                data layer — async, backend-agnostic
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
@@ -438,7 +445,7 @@ being a differentiator.
 
 ## 8. Roadmap
 
-**Tier 1 — beat the spreadsheet.** Done except for a **rest timer**.
+**Tier 1 — beat the spreadsheet.** **Done.**
 
 **Tier 2 — programs and analysis**
 - Program builder (desktop) → execution (mobile)
@@ -466,8 +473,11 @@ being a differentiator.
   *is* the keylines and striations, and unpainted parts are simply parts with no fill. Nothing about
   the figure's look is authored in this repo any more, so there is no styling knob to keep in sync.
 
-- **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
-  step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
+- ~~**Muscles uses benchmarks only.**~~ **Closed 2026-08-16** — it now ranks from workout sets too,
+  best estimate wins, and the panel names the source. Not a breach of D14: that rule is about
+  charting a TREND (two sources on one line, one point per day discarding the loser); a single best
+  estimate has neither problem. Still limited to each muscle's ONE key lift — someone who only
+  dumbbell-benches still gets nothing for Chest, which needs cross-exercise equivalence to fix. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
   `docs/research.md` §1.3 says was never validated — it was optimised for *internal consistency*.
@@ -479,8 +489,9 @@ being a differentiator.
   custom domain with `authDomain` on a subdomain of it.
 - **Rep normalisation assumes near-failure effort.** Every rep-based formula does. Bias is systematic
   per user per exercise, so trend and ordering survive. There is no RIR/RPE field — deliberate (D9).
-- **No rest timer. No supersets.** Sets are a flat list — no RIR, tempo, or set types.
-- **Weight display is hard-coded to lbs.** The unit setting exists in the store but isn't wired up.
+- **No supersets.** Sets are a flat list — no RIR, tempo, or set types.
+- ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
+  canonically in pounds. Distance is still miles only.
 - **Exercise→muscle is a single string**, not the primary/secondary weighted mapping. **This must
   change before D3.**
 
@@ -495,9 +506,8 @@ being a differentiator.
 2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
    support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
    anonymous both work.
-3. **Rest timer** — the last Tier 1 item.
-4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
-5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+3. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
+4. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 

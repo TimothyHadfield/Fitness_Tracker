@@ -7,6 +7,7 @@ import { SessionView, BenchmarkView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
 import { AccountView, SignInView } from './views-account.js';
 import { ProfileView } from './views-profile.js';
+import { setUnits } from './units.js';
 
 const NAV = [
   { hash: '#/home',     label: 'Home',     icon: 'home' },
@@ -106,6 +107,9 @@ window.addEventListener('hashchange', render);
 (async function boot() {
   const settings = await store.getSettings();
   document.documentElement.setAttribute('data-theme', settings.theme === 'light' ? 'light' : 'dark');
+  // Seeded once, here, because the stepper and the set formatter are synchronous
+  // and are called mid-render — they cannot await the store for the unit.
+  setUnits(settings.units);
   if (!location.hash) location.hash = '#/home';
   await render();
   registerServiceWorker();

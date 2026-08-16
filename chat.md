@@ -1242,3 +1242,64 @@ Tested end to end — back-date a session, leave, resume, finish, and it is file
 while `startedAt` still honestly records when it was actually typed in.
 
 279 data-layer + 65 render assertions, green.
+
+---
+
+## 2026-08-16 (cont.) — Tier 1 finished: muscles from workouts, kg, rest timer
+
+Working down the list Tim approved, in order of need.
+
+### The muscle map reads workouts now, not just benchmarks
+
+Ranking on benchmarks alone left the best screen in the app permanently grey for anyone who just logs
+their workouts — which is most people, and the whole point of the app. It now takes the best e1RM
+from either source.
+
+**This is not a breach of D14.** That rule is about charting a *trend*: two sources on one line make
+strength look like it swings wildly, and keeping one point per day silently threw the loser away.
+Neither problem exists for a single best estimate, which is all this screen asks for. A mid-workout
+set comes after everything else that session did, so it *understates* — it will rarely beat a fresh
+benchmark, and when it does, that is real evidence the lifter has moved on since they last tested.
+Taking the max is the conservative reading.
+
+What must not happen is the source going unsaid (Rule 5 — an inference must not look like a
+measurement), so the panel says "logged in a workout" or "benchmarked". Verified: six groups light up
+from workout sessions with no benchmarks recorded at all.
+
+### Pounds and kilograms
+
+**Everything is stored in pounds, always.** Switching units is a display choice and must never rewrite
+a recorded number — the round trip is asserted lossless to 1e-9. Conversion happens at exactly two
+edges: what is shown, and what is typed. e1rm.js and strength-standards.js stay pounds throughout.
+
+The delicate part is the stepper, which now works entirely in display units so a nudge is a clean
+2.5 kg rather than whatever 5 lb converts to, and converts back on the way out. Getting that backwards
+would quietly store kilogram numbers as pounds and corrupt every weight recorded after the switch, so
+it has its own test: type 60 kg, assert 132.277 lb lands in the draft.
+
+### Rest timer — the last Tier 1 item
+
+Counts **up** from the last set rather than down from a target, because the count-up is true without
+being configured. A target (60/90/120/180s) is optional on top, and only with one does the bar get to
+say the rest is over — no unearned opinion.
+
+Elapsed time is read from a **timestamp** every tick, never accumulated. Mobile throttles timers in a
+backgrounded tab, so a counter adding a second per tick would silently run slow — which is exactly
+what a rest timer is for, and exactly when the app is not in front of you.
+
+One bug caught by its own test: resuming a draft called `startRest()`, which *reset* the clock.
+Walking back into a workout wiped the rest you had already taken. Split into `startRest` and
+`ensureTicking`.
+
+### And a pre-existing bug found by looking at the screen
+
+The literal word **"null"** was rendering under the exercise name for any exercise without a note.
+`Element.replaceChildren()` stringifies anything that is not a Node, so a `cond ? el(...) : null`
+child prints "null" on the page. `el()` has always guarded against that; the 28 direct
+`replaceChildren` calls did not. Added `setChildren()` with the same guard and routed them all
+through it. Confirmed pre-existing at HEAD — it had been shipping.
+
+Worth noting how it was found: not by a test, and not by reading the code. By taking a screenshot of
+the finished screen and looking at it. The test that now pins it was written afterwards.
+
+302 data-layer + 89 render assertions, green. Tier 1 is complete.
