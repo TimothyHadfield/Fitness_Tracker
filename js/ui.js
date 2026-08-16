@@ -131,6 +131,15 @@ export function profileButton() {
       glyph.replaceChildren(icon('person'));
       btn.setAttribute('aria-label', 'Account — signed in');
       btn.setAttribute('title', 'Account');
+    } else if (state && state.lastAccount && state.lastAccount.email) {
+      // Signed in, but the app cannot reach the account to confirm it. The dot
+      // stays — anything logged right now genuinely is not backed up yet — but
+      // calling that "no account" would be false and is what makes an offline
+      // session look like being signed out.
+      glyph.replaceChildren(document.createTextNode(state.lastAccount.email.trim()[0].toUpperCase()));
+      btn.setAttribute('aria-label',
+        `Account — signed in as ${state.lastAccount.email}, but offline right now`);
+      btn.setAttribute('title', 'Offline — recent changes have not uploaded yet');
     } else {
       glyph.replaceChildren(icon('person'));
       btn.setAttribute('aria-label', 'Account — your data is not backed up');

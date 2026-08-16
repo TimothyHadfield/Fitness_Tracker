@@ -335,6 +335,72 @@ ok(!data.querySelector('.rep-target'),
      'yesterday\'s abandoned draft is still dropped, and the new one is for today');
 }
 
+/* ========= the offline account screen ========= */
+// Reported by Tim: after a while away, the account screen said his account
+// "could not be reached" and printed a raw gstatic import URL. He concluded the
+// app was broken; his wi-fi was off. The behaviour was right and the message
+// was not, so these assert the MESSAGE.
+{
+  const { AccountView } = await import(BASE + 'views-account.js');
+  const { auth } = await import(BASE + 'store.js');
+
+  const realState = auth.state.bind(auth);
+  const realConfigured = auth.configured;
+  auth.configured = () => true;
+
+  // Genuinely offline.
+  auth.state = async () => ({
+    mode: 'local', user: null, degraded: true, offline: true,
+    error: 'Failed to fetch dynamically imported module: '
+      + 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',
+    lastAccount: { email: 'tim@example.com' },
+  });
+  const off = await mount(AccountView());
+  const offText = off.textContent;
+  // What the user actually reads, i.e. everything outside the collapsed
+  // <details>. The raw string is allowed to exist in there; it is not allowed
+  // to be the message.
+  const visible = (root) => {
+    const copy = root.cloneNode(true);
+    copy.querySelectorAll('.tech-detail').forEach((d) => d.remove());
+    return copy.textContent;
+  };
+
+  ok(/offline/i.test(offText), 'an offline account screen says you are offline');
+  ok(!/gstatic|dynamically imported/i.test(visible(off)),
+     'and never leads with a raw module-import error');
+  ok(/gstatic/.test(off.querySelector('.tech-detail').textContent),
+     'though the raw string stays available behind the disclosure');
+  ok(/still signed in/i.test(offText) && /tim@example\.com/.test(offText),
+     'it says you are still signed in, rather than looking logged out');
+  ok(!/could not be reached/i.test(offText),
+     'it does not blame the account for a connection problem');
+  ok(/backup/i.test(offText), 'and points at a backup, which works offline');
+
+  // Online, but the backend really is unreachable — the raw detail is worth
+  // keeping THEN, just not as the headline. The connectivity probe has to be
+  // told the network is fine, or jsdom (which can reach nothing) correctly
+  // rewrites this to "offline" and the case under test never happens.
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, status: 200 });
+  auth.state = async () => ({
+    mode: 'local', user: null, degraded: true, offline: false,
+    error: 'FirebaseError: permission-denied', lastAccount: null,
+  });
+  const broken = await mount(AccountView());
+  await settle(); await settle();
+  ok(/can.t connect/i.test(broken.textContent),
+     'a real failure while online reads differently from being offline');
+  const detail = broken.querySelector('.tech-detail');
+  ok(Boolean(detail) && /permission-denied/.test(detail.textContent),
+     'and the technical string is kept, behind a disclosure');
+  ok(!detail.hasAttribute('open'), 'which is closed by default');
+
+  globalThis.fetch = realFetch;
+  auth.state = realState;
+  auth.configured = realConfigured;
+}
+
 /* ========= editing a workout already recorded ========= */
 {
   const { EditSessionView } = await import(BASE + 'views-edit-session.js');

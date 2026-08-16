@@ -8,7 +8,7 @@
 // An anonymous account lives in one browser and nothing recovers it — clearing
 // site data destroys it permanently. That is stated plainly rather than buried.
 
-import { store, auth } from './store.js';
+import { store, auth, probeOffline } from './store.js';
 import { el, screenShell, toast, confirmSheet, emptyState, openSheet } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -51,25 +51,118 @@ export async function AccountView() {
     });
   }
 
-  if (state.mode === 'local') {
-    return screenShell({
-      title: 'Account',
-      back: () => go('#/settings'),
-      scroll: [
-        el('div', { class: 'card' },
-          el('div', { class: 'section-label', text: 'Not connected' }),
-          el('div', { class: 'field-help' },
-            'Your account could not be reached, so everything is being saved on this device instead. '
-            + 'Nothing has been lost — it will upload once you reconnect.'),
-          state.error ? el('div', { class: 'field-help mono', text: state.error }) : null,
-          el('button', { class: 'btn primary block', text: 'Try again', onClick: () => location.reload() }),
-        ),
-      ],
-    });
-  }
+  if (state.mode === 'local') return offlineScreen(state);
 
   const user = state.user || {};
   return user.isAnonymous ? anonymousScreen() : signedInScreen(user);
+}
+
+/* ------------------------------------------------------------------ *
+ * Configured, but the cloud is not reachable
+ *
+ * The version of this screen that led with "your account could not be reached"
+ * and then printed a raw module-import URL sent Tim looking for a bug in the
+ * app when his wi-fi was off. Three things it now gets right: it names the
+ * likely cause, it does not imply the account itself is broken or gone, and
+ * the technical string is available but is not the headline.
+ * ------------------------------------------------------------------ */
+
+function offlineScreen(state) {
+  // Framed as a CONNECTION problem in both branches. The failure that lands
+  // anyone here is an SDK that would not load, which is essentially always
+  // connectivity — leading with "your account" sent Tim looking for a bug in
+  // the app when his wi-fi was off.
+  const OFFLINE = {
+    heading: 'You’re offline',
+    body: 'This device has no internet connection, so the app can’t reach your account right '
+      + 'now. Keep logging — everything is saved here and uploads by itself when you’re '
+      + 'back online.',
+  };
+  const UNREACHABLE = {
+    heading: 'Can’t connect',
+    body: 'The app can’t reach the network at the moment. This is a connection problem rather '
+      + 'than anything wrong with your account. Keep logging — everything is saved on this '
+      + 'device and uploads once the connection returns.',
+  };
+
+  const headingEl = el('div', { class: 'section-label' });
+  const status = el('div', { class: 'field-help' });
+  const paint = (copy) => { headingEl.textContent = copy.heading; status.textContent = copy.body; };
+  paint(state.offline ? OFFLINE : UNREACHABLE);
+
+  // navigator.onLine says "true" for a captive portal or a dead upstream, so
+  // confirm by actually asking the network and correct the wording if it
+  // disagrees. Rendered first and refined after, rather than blocking on it.
+  if (!state.offline) {
+    probeOffline().then((reallyOffline) => {
+      if (reallyOffline && headingEl.isConnected) paint(OFFLINE);
+    }).catch(() => {});
+  }
+
+  const retryBtn = el('button', { class: 'btn primary block', text: 'Try again' });
+
+  async function attempt(auto) {
+    retryBtn.disabled = true;
+    retryBtn.textContent = 'Checking…';
+    const next = await auth.retry();
+    if (next.mode === 'cloud') { refresh(); return; }
+    retryBtn.disabled = false;
+    retryBtn.textContent = 'Try again';
+    // Saying "still offline" is the point: the old button reloaded the page and
+    // showed the identical error, which read as the button doing nothing.
+    if (!auto) {
+      const reallyOffline = next.offline || await probeOffline();
+      status.textContent = reallyOffline
+        ? 'Still offline. Check your wi-fi or mobile data, then try again.'
+        : 'Still can’t connect. It may be a moment before it comes back.';
+    }
+  }
+  retryBtn.addEventListener('click', () => attempt(false));
+
+  // Coming back online is the common ending, so take it without being asked.
+  const onOnline = () => attempt(true);
+  window.addEventListener('online', onOnline);
+  setTimeout(() => {
+    if (!retryBtn.isConnected) window.removeEventListener('online', onOnline);
+  }, 0);
+
+  return screenShell({
+    title: 'Account',
+    back: () => go('#/settings'),
+    scroll: [
+      el('div', { class: 'card' },
+        headingEl,
+
+        // You have NOT been signed out — the app simply cannot ask who you are.
+        // Saying so is the difference between "my account is gone" and "I'm on
+        // a bad connection".
+        state.lastAccount && state.lastAccount.email
+          ? el('div', { class: 'field-help' },
+              'You’re still signed in as ',
+              el('b', { text: state.lastAccount.email }),
+              '. You haven’t been signed out — the app just can’t check right now.')
+          : null,
+
+        status,
+
+        el('div', { class: 'field-help' },
+          'Your workouts are safe either way. Settings → Download backup keeps a copy on this device.'),
+
+        retryBtn,
+        el('a', { class: 'btn block', href: '#/settings', text: 'Back to settings' }),
+
+        // Kept, because it is what makes a real fault diagnosable — just not as
+        // the first thing a user reads. Always available, never expanded: the
+        // problem was never that this string existed, it was that it was the
+        // headline.
+        state.error
+          ? el('details', { class: 'tech-detail' },
+              el('summary', { text: 'Technical detail' }),
+              el('div', { class: 'field-help mono', text: state.error }))
+          : null,
+      ),
+    ],
+  });
 }
 
 /* ------------------------------------------------------------------ *

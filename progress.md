@@ -21,7 +21,7 @@ exercise→muscle mapping that D3 depends on.
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
 | **Data tests** | `node tests/data-layer.test.mjs` — 322 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 100 assertions, mounts every screen |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 109 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -78,9 +78,10 @@ It needs a server — ES modules do not load over `file://`.
    Hit-test before clicking, too: the centre of a muscle's *bounding box* can miss the muscle
    (Chest's lands in the sternum gap). Sample the box with `document.elementFromPoint` instead.
 
-   Also: the app's real `firebase-config.js` makes boot await a gstatic import that never resolves
-   without network, leaving `#app` empty — copy the app to a scratch dir and blank the config there.
-   Never blank the real one.
+   Also: copy the app to a scratch dir before changing `firebase-config.js`; never edit the real one.
+   Blank it (`IS_CONFIGURED = false`) for ordinary layout work. To exercise the CLOUD path — the
+   account screen, the offline fallback — write a config that is *shaped* like a real one but points
+   at a project that does not exist, so the test can never create a user in `fitness-tracker-th`.
 
 7. **Testing offline: kill the server, do NOT emulate it.** `Network.emulateNetworkConditions` is
    applied **per target**, and a service worker is its own target — so its fetches sail straight past
@@ -170,6 +171,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
+| Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
 | Settings | Dark/light, **lbs/kg**, profile, account, export/restore backup, delete all |

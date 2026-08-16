@@ -817,11 +817,22 @@ function describeAccount(state, configured) {
     };
   }
   if (state.mode === 'local') {
-    return {
-      title: 'Not connected',
-      sub: 'Saving to this device — nothing is syncing',
-      dataHelp: 'Your account could not be reached, so changes are being saved on this device. Download a backup until it reconnects.',
-    };
+    // Naming the cause matters: "could not be reached" reads as a broken
+    // account, and the usual cause is simply no connection.
+    return state.offline
+      ? {
+          title: 'Offline',
+          sub: 'Saving to this device — will sync when you reconnect',
+          dataHelp: 'This device has no internet connection, so changes are being saved here. '
+            + 'They upload by themselves once you are back online.',
+        }
+      : {
+          title: 'Not connected',
+          sub: 'Saving to this device — nothing is syncing',
+          dataHelp: 'Your account server cannot be reached at the moment — usually a connection '
+            + 'problem rather than anything wrong with your account. Changes are being saved here '
+            + 'and upload once it returns.',
+        };
   }
   const u = state.user || {};
   if (u.isAnonymous) {

@@ -508,6 +508,72 @@ export function ageFromBirthYear(year) {
  * method is safe to call when the cloud is off — it just reports "local".
  * ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ *
+ * Knowing WHY the cloud is unreachable
+ *
+ * "Your account could not be reached" is true of a dead server, a blocked
+ * domain and a phone with no signal alike, and only one of those is worth
+ * worrying about. navigator.onLine is a weak signal — false is reliable, true
+ * only means "there is an interface", so it is used to explain a failure that
+ * has already happened, never to predict one.
+ * ------------------------------------------------------------------ */
+
+function isOffline() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
+/**
+ * Actually ask the network, rather than trusting navigator.onLine.
+ *
+ * onLine === false is reliable. onLine === true is nearly worthless: it means
+ * an interface exists, so a captive portal, a hotel wi-fi that never finished
+ * logging in, or a dead upstream all report "online" while nothing can load.
+ * Those are the cases most likely to send someone hunting for a bug in the app.
+ *
+ * The request is same-origin and cache-busted so the service worker cannot
+ * answer it out of cache — a success here really does mean the network replied.
+ */
+export async function probeOffline(timeoutMs = 4000) {
+  if (isOffline()) return true;
+  if (typeof fetch !== 'function') return false;
+  try {
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+    await fetch(`./manifest.webmanifest?connectivity=${Date.now()}`, {
+      cache: 'no-store',
+      signal: ctl ? ctl.signal : undefined,
+    });
+    if (timer) clearTimeout(timer);
+    return false;
+  } catch (_) {
+    return true;
+  }
+}
+
+const LAST_ACCOUNT_KEY = NS + 'lastAccount';
+
+function rememberAccount(user) {
+  try {
+    if (user && !user.isAnonymous && user.email) {
+      localStorage.setItem(LAST_ACCOUNT_KEY, JSON.stringify({ email: user.email }));
+    } else if (user && user.isAnonymous) {
+      // An anonymous session is not an account to be reminded of.
+      localStorage.removeItem(LAST_ACCOUNT_KEY);
+    }
+  } catch (_) { /* storage full or blocked — this is a nicety, not data */ }
+}
+
+function lastKnownAccount() {
+  try {
+    const raw = localStorage.getItem(LAST_ACCOUNT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) { return null; }
+}
+
+export function forgetLastAccount() {
+  try { localStorage.removeItem(LAST_ACCOUNT_KEY); } catch (_) {}
+}
+
 function requireRemote() {
   if (!remoteImpl) {
     throw new Error(remoteFailure
@@ -532,9 +598,30 @@ export const auth = {
         // still logging fine, but nothing is syncing. Say so plainly.
         degraded: wantRemote(),
         error: remoteFailure ? remoteFailure.message : null,
+        // WHY it is not connected, which the UI got wrong: a dropped connection
+        // was reported as "your account could not be reached", which reads as a
+        // problem with the account. Tim hit this, concluded the app was broken,
+        // and was simply offline.
+        offline: isOffline(),
+        // Who was signed in last time the cloud WAS reachable. Without this an
+        // offline session looks like being logged out, which is alarming and
+        // untrue — nothing has been signed out, the app just cannot ask.
+        lastAccount: lastKnownAccount(),
       };
     }
-    return { mode: 'cloud', user: impl.currentUser(), degraded: false, error: null };
+    rememberAccount(impl.currentUser());
+    return { mode: 'cloud', user: impl.currentUser(), degraded: false, error: null,
+             offline: false, lastAccount: lastKnownAccount() };
+  },
+
+  // A real retry, rather than location.reload(). The first connection attempt is
+  // memoised in activePromise, so without clearing it every "Try again" replayed
+  // the same cached failure.
+  async retry() {
+    activePromise = null;
+    remoteImpl = null;
+    remoteFailure = null;
+    return this.state();
   },
 
   onChange(fn) {
@@ -546,7 +633,7 @@ export const auth = {
   async signInEmail(email, password) { return requireRemote().signInEmail(email, password); },
   async signInGoogle() { return requireRemote().signInGoogle(); },
   async sendPasswordReset(email) { return requireRemote().sendPasswordReset(email); },
-  async signOut() { return requireRemote().signOut(); },
+  async signOut() { forgetLastAccount(); return requireRemote().signOut(); },
   async changePassword(currentPassword, newPassword) {
     return requireRemote().changePassword(currentPassword, newPassword);
   },

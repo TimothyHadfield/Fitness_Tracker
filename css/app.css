@@ -484,6 +484,17 @@ select.input {
   text-transform: uppercase; letter-spacing: .06em;
 }
 
+/* Technical detail behind a disclosure, so a raw error string is diagnosable
+   without being the first thing a user reads. */
+.tech-detail { margin-top: 4px; }
+/* The browser's own disclosure triangle, rather than a CSS-escaped glyph — an
+   escaped one rendered as a missing-character box on Windows. */
+.tech-detail summary {
+  cursor: pointer; font-size: 11.5px; font-weight: 600; color: var(--ink-faint);
+  padding: 4px 0;
+}
+.tech-detail .mono { word-break: break-all; font-size: 11px; }
+
 /* A workout whose every exercise counts as a benchmark. The badge is what
    replaces listing those benchmarks a second time under the day. */
 .bench-badge {

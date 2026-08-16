@@ -1357,3 +1357,43 @@ the steppers ate enough width that the steppers' `auto-fit, minmax(148px, 1fr)` 
 column and every set became most of a screen tall. Moved them to their own row above.
 
 322 data-layer + 100 render assertions, green.
+
+---
+
+## 2026-08-16 (cont.) — the offline account screen
+
+Tim reported being logged out after time away, with the account screen showing "Your account could not
+be reached" plus `Failed to fetch dynamically imported module: https://www.gstatic.com/...`, and a
+Try again that did nothing. Then: *"scratch that, I just wasn't connected to the internet."*
+
+He was right, and the behaviour was correct — the local fallback (D13) doing exactly its job. But the
+report is still evidence of a real defect: **the app's own author read its message and concluded it
+was broken.** Three separate failures in one screen:
+
+1. It printed a raw module-import URL as the message. A developer string, shown to a user.
+2. It blamed the *account* for what was a *connection* problem.
+3. It looked like being signed out, when nothing had signed him out — the app simply could not ask.
+
+Fixed all three. The screen now names the cause, says "You're still signed in as <email>", keeps the
+raw string behind a collapsed disclosure, retries in place instead of reloading, and reconnects by
+itself on the browser's `online` event.
+
+**The interesting part was detecting "offline" honestly.** The first attempt used `navigator.onLine`,
+and the browser test immediately caught the flaw: it reported *online* with the server killed and the
+network emulated off. That is not just a harness artifact — `onLine === true` merely means an
+interface exists, so a captive portal or a dead upstream reports online while nothing loads, and
+those are precisely the cases that send someone hunting for a bug. So there is now a real probe: a
+cache-busted same-origin request the service worker cannot answer from cache, which means a success
+really did come from the network. `onLine === false` is still trusted immediately (it is reliable in
+that direction); the probe only refines the `true` case.
+
+Verified the whole thing the §0.7 way — origin server killed, network emulated off — against a scratch
+config shaped like a real Firebase config but pointing at a project that does not exist, so the live
+`fitness-tracker-th` project could not be touched.
+
+Two smaller things the screenshot caught that no test would have: a CSS-escaped `\25B8` disclosure
+marker rendered as a missing-glyph box on Windows (now the browser's native triangle), and the
+technical disclosure was conditioned on the offline flag when it should always be present and always
+collapsed — the problem was never that the string existed, it was that it was the headline.
+
+322 data-layer + 109 render assertions, green.
