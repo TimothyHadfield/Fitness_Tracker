@@ -1146,3 +1146,42 @@ in `docs/strength-map-plan.md` §7.0 so the old note in this file's history does
 every session.
 
 State at close: 275 data-layer assertions, 49 render assertions, both green. Working tree clean.
+
+---
+
+## 2026-08-16 (cont.) — the white box on selection
+
+Tim: *"that is so good. The only improvement is to remove the white box that shows up when you select
+a muscle group -- the outline of the exact muscle is fine."*
+
+It was **Chrome's focus ring**. Chrome paints `outline: auto` around an SVG element's *bounding box*,
+so focusing the Chest path drew a white rectangle spanning both pecs, sitting behind the accent
+outline that was supposed to be the only selection cue.
+
+Two things made it survive the earlier screenshot review:
+
+1. The CSS only killed the ring on `:focus-visible`. Chrome painted it on plain `:focus` — measured:
+   `focusVisible: false` and `outline: rgb(16,16,16) auto 5px` at the same moment.
+2. **The screenshot harness dispatched a synthetic `MouseEvent`, which does not move focus.** So the
+   ring never appeared in any screenshot taken, and the review passed on a figure that could not
+   exhibit the bug.
+
+Fixing (2) properly was the real work: a CDP driver that sends `Input.dispatchMouseEvent`, so the
+click is a real one. Node 24 has a global `WebSocket`, so it needed no dependencies. Two useful
+findings recorded in `progress.md` §0.6:
+
+- **`Emulation.setDeviceMetricsOverride` DOES change the layout viewport**, unlike `--window-size`.
+  The `<iframe>` wrapper trick that cost half an hour last session is no longer necessary.
+- A muscle's **bounding-box centre can miss the muscle** — Chest's lands in the sternum gap between
+  the pecs, so the first "click" hit the paper and selected nothing. Hit-test with
+  `document.elementFromPoint` instead.
+
+The fix removes the ring on `:focus` as well as `:focus-visible`, and replaces it rather than just
+deleting it: keyboard focus now draws a dashed outline on the muscle's **own shape**, via the same
+above-the-ink path trick the selection ring uses. Verified by sending real Tab keys — focus lands on
+Biceps with `:focus-visible` true, a 2457-character ring path, and `outlineStyle: none`.
+
+Deleting an accessible focus indicator to satisfy a visual note would have been the easy read of the
+request; Tim asked for the box gone, not for keyboard users to lose their place.
+
+State at close: 275 data-layer assertions, 49 render assertions, both green. Pushed.

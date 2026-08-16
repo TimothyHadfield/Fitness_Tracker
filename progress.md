@@ -21,7 +21,7 @@ gaps that were §9 are closed by construction. Screenshotted at 360/390/1180 in 
 | **Data tests** | `node tests/data-layer.test.mjs` — 275 assertions, **no dependencies** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 49 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
-| **Look at it** | headless Chrome + an `<iframe>` at phone width — §0.6. Chrome and Edge are both installed |
+| **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |
 
@@ -58,10 +58,27 @@ It needs a server — ES modules do not load over `file://`.
 
 6. **How to actually look at the app.** `--window-size` does NOT change the layout viewport in this
    headless build — it crops the screenshot of a 512px layout, which reads exactly like an overflow
-   bug and cost half an hour. To get a true phone viewport, load the app in an `<iframe>` of fixed
-   width and screenshot the wrapper page. Also: the app's real `firebase-config.js` makes boot await
-   a gstatic import that never resolves without network, leaving `#app` empty — copy the app to a
-   scratch dir and blank the config there. Never blank the real one.
+   bug and cost half an hour. Two ways round it:
+
+   - **`<iframe>` of fixed width, screenshot the wrapper.** Works with a plain `--screenshot` run.
+   - **Better: drive Chrome over CDP and call `Emulation.setDeviceMetricsOverride`.** That *does*
+     change the layout viewport, so no iframe is needed — point it straight at the app. Node 24 has
+     a global `WebSocket`, so a CDP driver needs no dependencies: launch with
+     `--headless=new --remote-debugging-port=N --user-data-dir=<ABSOLUTE path>`, then
+     `Page.enable` → `Emulation.setDeviceMetricsOverride` → `Page.navigate` → `Page.captureScreenshot`.
+     Two traps: the debugger attaches to a stray `about:blank` target, so always `Page.navigate`
+     explicitly rather than passing the URL on the command line; and a relative `--user-data-dir`
+     makes Chrome fail to start at all.
+
+   **Use CDP whenever the thing you are checking involves input.** `dispatchEvent()` from page
+   script does not reproduce focus, so it cannot show you a focus ring — that is exactly how the
+   white box in the body map survived a screenshot review. `Input.dispatchMouseEvent` does.
+   Hit-test before clicking, too: the centre of a muscle's *bounding box* can miss the muscle
+   (Chest's lands in the sternum gap). Sample the box with `document.elementFromPoint` instead.
+
+   Also: the app's real `firebase-config.js` makes boot await a gstatic import that never resolves
+   without network, leaving `#app` empty — copy the app to a scratch dir and blank the config there.
+   Never blank the real one.
 
 ---
 
@@ -134,7 +151,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |

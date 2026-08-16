@@ -44,6 +44,21 @@ function mk(shape, attrs, cls) {
   return n;
 }
 
+// jsdom does not implement :focus-visible and throws on the selector, so this
+// has to be asked for rather than assumed.
+function keyboardFocus(node) {
+  try {
+    return node.matches(':focus-visible');
+  } catch {
+    return false;
+  }
+}
+
+function markFocus(view, d) {
+  const ring = view.querySelector('.body-focus');
+  if (ring) ring.setAttribute('d', d);
+}
+
 /**
  * Draw both views.
  * @param {Map<string,{levelKey,label}>} levels  muscle -> level, absent = grey
@@ -97,6 +112,10 @@ export function bodySvg(levels, selected, onPick) {
       node.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(muscle); }
       });
+      // Only for keyboard focus. A mouse click focuses the path too, and
+      // showing a second ring on top of the selection ring is noise.
+      node.addEventListener('focus', () => markFocus(g, keyboardFocus(node) ? d : ''));
+      node.addEventListener('blur', () => markFocus(g, ''));
       g.append(node);
     }
 
@@ -117,6 +136,10 @@ export function bodySvg(levels, selected, onPick) {
     // Selection outline rides ABOVE the ink. Drawn under it, it would land
     // exactly beneath the muscle's own black keyline and never be seen.
     g.append(mk('path', { d: '' }, 'body-pick'));
+    // Keyboard focus, same trick. This replaces the browser's own focus ring,
+    // which Chrome draws as a rectangle around the SVG element's BOUNDING BOX
+    // and which therefore put a white box around the selected muscle.
+    g.append(mk('path', { d: '' }, 'body-focus'));
 
     const cap = mk('text', {
       x: w / 2, y: h + CAPTION_H - 10, 'text-anchor': 'middle',

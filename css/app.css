@@ -1254,8 +1254,18 @@ select.input {
   fill: none; stroke: var(--accent); stroke-width: 6;
   stroke-linejoin: round; pointer-events: none;
 }
+/* Chrome paints outline:auto as a rectangle around an SVG element's BOUNDING
+   BOX, so selecting a muscle drew a white box around it. It paints that on
+   plain :focus — a :focus-visible rule alone does not remove it, because a
+   mouse click focuses the path without matching :focus-visible.
+   Keyboard focus is not dropped, it moves to .body-focus below, which follows
+   the muscle's own shape instead of a box. */
+.body-region:focus,
 .body-region:focus-visible { outline: none; }
-.body-region:focus-visible ~ .body-pick { stroke: var(--ink); }
+.body-focus {
+  fill: none; stroke: var(--ink); stroke-width: 5; stroke-dasharray: 11 8;
+  stroke-linejoin: round; pointer-events: none;
+}
 
 .lv-beginner, .body-region.lv-beginner         { fill: var(--lv-beginner); }
 .lv-novice, .body-region.lv-novice             { fill: var(--lv-novice); }
