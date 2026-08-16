@@ -644,9 +644,20 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
     anon: true, preferRedirect: false, ...extra,
   });
 
+  // The plain success path — which the first version of these tests never
+  // covered, every case having been an error case.
+  let a = fakeAuth();
+  let out = await run(a, { anon: false });
+  ok(a.calls.join() === 'signInWithPopup' && out.user,
+     `a normal sign-in opens one popup and returns the user (${a.calls.join(' → ')})`);
+  a = fakeAuth();
+  out = await run(a, { anon: true });
+  ok(a.calls.join() === 'linkWithPopup' && out.user,
+     `an anonymous upgrade links, and does not sign in separately (${a.calls.join(' → ')})`);
+
   // THE BUG: anonymous user, Google account already registered.
-  let a = fakeAuth({ throwOn: 'linkWithPopup', code: 'auth/credential-already-in-use' });
-  let out = await run(a);
+  a = fakeAuth({ throwOn: 'linkWithPopup', code: 'auth/credential-already-in-use' });
+  out = await run(a);
   ok(a.calls.filter((c) => /Popup/.test(c)).length === 1,
      `only ONE popup is ever opened (${a.calls.join(' → ')})`);
   ok(!a.calls.includes('signInWithPopup'),

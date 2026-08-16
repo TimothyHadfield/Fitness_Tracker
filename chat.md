@@ -1440,3 +1440,42 @@ Tim is plainly using it, so it has been enabled at some point.
 
 348 data-layer + 109 render assertions, green. The **redirect** path and the installed PWA remain
 unverified — I can drive a popup failure, not a real Google account.
+
+---
+
+## 2026-08-16 (cont.) — I broke Google sign-in, then fixed it
+
+Tim: *"okay so what's the problem and why can't I sign in through google now?"*
+
+**My regression, shipped an hour earlier.** In fixing the second-popup bug I moved
+`auth/popup-closed-by-user` out of the popup-failure list and made it a no-op, reasoning that
+bouncing someone to a full-page Google redirect right after they deliberately closed the window is
+the opposite of what they asked for. That reasoning holds. The implementation did not:
+
+- Firebase raises `auth/popup-closed-by-user` **both** when a person closes the window and when the
+  SDK loses its handle on it (Cross-Origin-Opener-Policy). It is not reliably a decision.
+- So on any environment producing it spuriously, sign-in went from "annoying but works via redirect"
+  to "nothing happens at all".
+
+Two dead ends, not one. The second only surfaced because the test asserted it:
+
+1. **No message, no route through.** Now it says what happened and reveals **Continue in this window
+   instead** — a redirect-only path (`signInGoogle({ forceRedirect: true })`) that no popup blocker
+   can touch. Never automatic; always one tap.
+2. **The button stayed disabled on "Opening…".** `run()` hands the button back only when its function
+   THROWS, on the assumption that success navigates away. A cancelled sign-in does neither. Written
+   down in progress.md, because any future outcome that stays on the screen hits the same trap.
+
+`signInGoogle` now returns a tagged result — `{ status: 'signed-in' | 'redirecting' | 'cancelled' }`
+— because collapsing "cancelled" and "the page is navigating to Google" into a bare `null` is what
+let a cancelled sign-in look like nothing happening. Both Google buttons now come from one shared
+`googleButton()` rather than two copies that drift.
+
+Also filled a real gap: the previous stub tests covered five failure paths and **not one success
+path**. Added both, and the plain popup sign-in now asserts `signInWithPopup → user`.
+
+350 data-layer + 116 render assertions, green. Verified in a browser as well as in jsdom.
+
+Lesson worth keeping: the change that caused this was made to fix a bug I had diagnosed correctly,
+with tests that passed, and shipped without anyone signing in with Google once. `popup-closed-by-user`
+is exactly the kind of code whose meaning cannot be read off its name.

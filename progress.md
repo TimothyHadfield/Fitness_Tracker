@@ -20,8 +20,8 @@ exercise→muscle mapping that D3 depends on.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 348 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 109 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 350 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 116 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -491,6 +491,14 @@ being a differentiator.
   `docs/research.md` §1.3 says was never validated — it was optimised for *internal consistency*.
   Harmless for rep normalisation, a stronger claim here. Mitigated by preferring ≤5-rep benchmarks
   and flagging levels derived from high-rep sets.
+- **A cancelled Google sign-in must never be silent.** `auth/popup-closed-by-user` is raised both
+  when a person closes the window AND when the SDK loses its handle on it (Cross-Origin-Opener-
+  Policy), so it is not reliably a decision. Treating it as "do nothing" made the button look dead
+  and left no route through — a regression shipped and reported within the hour. It now says what
+  happened and reveals **Continue in this window instead**, a redirect-only path no popup blocker can
+  touch. Related trap: `run()` in views-account.js hands the button back only when its function
+  THROWS, on the assumption success navigates away — any new outcome that stays on the screen has to
+  re-enable the button itself.
 - **A Google popup is only ever opened ONCE.** Recovering from "that account already exists" used to
   open a second one, which the browser blocked because the gesture authorising the first was spent —
   reported by Tim as "your browser blocked the sign-in window" (2026-08-16). The recovery now reuses

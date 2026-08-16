@@ -166,6 +166,60 @@ function offlineScreen(state) {
 }
 
 /* ------------------------------------------------------------------ *
+ * The Google button
+ *
+ * Shared by both screens because the failure handling is the fiddly part and
+ * having two copies of it is how they drift.
+ *
+ * A cancelled popup must never look like a dead button. Firebase raises
+ * auth/popup-closed-by-user both when a person closes the window AND when the
+ * SDK loses its handle on it (Cross-Origin-Opener-Policy), so "cancelled" is
+ * not reliably a decision — but auto-redirecting on it would yank someone to
+ * Google the instant they backed out on purpose. So: say what happened, and
+ * offer the redirect as one tap rather than taking it for them.
+ * ------------------------------------------------------------------ */
+
+function googleButton({ label, className, onDone }) {
+  const btn = el('button', { class: className, text: label });
+  const escape = el('button', {
+    class: 'btn block', hidden: true,
+    text: 'Continue in this window instead',
+    onClick: async () => {
+      // Redirect only — no popup to block. This is the route that always works.
+      await run(escape, 'Redirecting…', () => auth.signInGoogle({ forceRedirect: true }));
+    },
+  });
+
+  btn.addEventListener('click', async () => {
+    let cancelled = false;
+    const ok = await run(btn, 'Opening…', async () => {
+      const res = await auth.signInGoogle();
+      if (res && res.status === 'cancelled') {
+        cancelled = true;
+        toast('Sign-in window closed before finishing');
+        escape.hidden = false;
+        return;
+      }
+      if (res && res.status === 'signed-in') toast('Account secured');
+    });
+
+    if (cancelled) {
+      // run() hands the button back only when fn THROWS, on the assumption that
+      // success navigates away. A cancelled sign-in does neither, so without
+      // this the button sits on "Opening…" for good — which is the dead button
+      // all over again, one layer up.
+      btn.disabled = false;
+      btn.textContent = label;
+      return;
+    }
+    // 'redirecting' navigates away, so nothing after this runs in that case.
+    if (ok) onDone();
+  });
+
+  return { btn, escape };
+}
+
+/* ------------------------------------------------------------------ *
  * Anonymous — the upgrade path
  * ------------------------------------------------------------------ */
 
@@ -173,17 +227,12 @@ function anonymousScreen() {
   const email = el('input', { class: 'input', type: 'email', autocomplete: 'email', placeholder: 'you@example.com' });
   const password = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: 'At least 6 characters' });
 
-  const googleBtn = el('button', {
-    class: 'btn primary block',
-    text: 'Continue with Google',
-    onClick: async () => {
-      const ok = await run(googleBtn, 'Opening…', async () => {
-        const res = await auth.signInGoogle();
-        if (res) toast('Account secured');
-      });
-      if (ok) refresh();
-    },
+  const google = googleButton({
+    label: 'Continue with Google',
+    className: 'btn primary block',
+    onDone: refresh,
   });
+  const googleBtn = google.btn;
 
   const createBtn = el('button', {
     class: 'btn block',
@@ -214,6 +263,7 @@ function anonymousScreen() {
       ),
 
       googleBtn,
+      google.escape,
 
       el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
 
@@ -401,14 +451,12 @@ export async function SignInView() {
     },
   });
 
-  const googleBtn = el('button', {
-    class: 'btn block',
-    text: 'Continue with Google',
-    onClick: async () => {
-      const ok = await run(googleBtn, 'Opening…', async () => { await auth.signInGoogle(); });
-      if (ok) go('#/account');
-    },
+  const google = googleButton({
+    label: 'Continue with Google',
+    className: 'btn block',
+    onDone: () => go('#/account'),
   });
+  const googleBtn = google.btn;
 
   const resetBtn = el('button', {
     class: 'btn ghost block',
@@ -449,6 +497,7 @@ export async function SignInView() {
 
       el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
       googleBtn,
+      google.escape,
       resetBtn,
     ],
   });

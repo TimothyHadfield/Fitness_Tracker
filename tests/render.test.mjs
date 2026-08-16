@@ -335,6 +335,56 @@ ok(!data.querySelector('.rep-target'),
      'yesterday\'s abandoned draft is still dropped, and the new one is for today');
 }
 
+/* ========= a cancelled Google sign-in is never a dead end ========= */
+// The regression this guards: treating auth/popup-closed-by-user as "do
+// nothing" made the button look broken — no message, no way through. Firebase
+// raises that code both when a person closes the window and when the SDK loses
+// its handle on it, so it is not reliably a decision.
+{
+  const { AccountView } = await import(BASE + 'views-account.js');
+  const { auth } = await import(BASE + 'store.js');
+
+  const realState = auth.state.bind(auth);
+  const realConfigured = auth.configured;
+  const realGoogle = auth.signInGoogle.bind(auth);
+
+  auth.configured = () => true;
+  auth.state = async () => ({
+    mode: 'cloud',
+    user: { uid: 'anon1', isAnonymous: true, secured: false, email: null },
+    degraded: false, error: null, offline: false, lastAccount: null,
+  });
+
+  const calls = [];
+  auth.signInGoogle = async (opts) => { calls.push(opts || {}); return { status: 'cancelled' }; };
+
+  const screen = await mount(AccountView());
+  const gBtn = [...screen.querySelectorAll('button')]
+    .find((b) => /Continue with Google/.test(b.textContent));
+  ok(Boolean(gBtn), 'the anonymous screen offers Google sign-in');
+
+  const escapeBtn = [...screen.querySelectorAll('button')]
+    .find((b) => /Continue in this window/.test(b.textContent));
+  ok(Boolean(escapeBtn), 'and carries a redirect fallback');
+  ok(escapeBtn.hidden, 'which stays out of the way until it is needed');
+
+  gBtn.click();
+  await settle(); await settle();
+
+  ok(calls.length === 1 && !calls[0].forceRedirect, 'tapping it tries the popup first');
+  ok(!escapeBtn.hidden, 'a cancelled sign-in reveals the way through, rather than doing nothing');
+  ok(!gBtn.disabled, 'and leaves the button usable rather than stuck on "Opening…"');
+
+  escapeBtn.click();
+  await settle(); await settle();
+  ok(calls.length === 2 && calls[1].forceRedirect === true,
+     'the fallback forces the redirect route, which no popup blocker can stop');
+
+  auth.signInGoogle = realGoogle;
+  auth.state = realState;
+  auth.configured = realConfigured;
+}
+
 /* ========= the offline account screen ========= */
 // Reported by Tim: after a while away, the account screen said his account
 // "could not be reached" and printed a raw gstatic import URL. He concluded the

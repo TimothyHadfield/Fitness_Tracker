@@ -170,7 +170,12 @@ export const FirebaseBackend = {
     return describeUser(user);
   },
 
-  async signInGoogle() {
+  // Returns a tagged result rather than a user-or-null, because "cancelled" and
+  // "the page is navigating to Google" are different things and the UI has to
+  // tell them apart. Collapsing both to null is what made a cancelled popup
+  // look like a dead button.
+  //   { status: 'signed-in', user } · { status: 'redirecting' } · { status: 'cancelled' }
+  async signInGoogle({ forceRedirect = false } = {}) {
     const c = await init();
     const out = await googleSignInFlow({
       auth: c.auth,
@@ -178,12 +183,13 @@ export const FirebaseBackend = {
       provider: new c.auth.GoogleAuthProvider(),
       currentUser: user,
       anon: Boolean(user && user.isAnonymous),
-      preferRedirect: prefersRedirect(),
+      preferRedirect: forceRedirect || prefersRedirect(),
     });
-    if (!out.user) return null;   // redirected away, or cancelled
+    if (out.cancelled) return { status: 'cancelled' };
+    if (!out.user) return { status: 'redirecting' };
     user = out.user;
     notify();
-    return describeUser(user);
+    return { status: 'signed-in', user: describeUser(user) };
   },
 
   // Sign out, then take a fresh anonymous account so the app still works.

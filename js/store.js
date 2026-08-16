@@ -631,7 +631,7 @@ export const auth = {
 
   async signUpEmail(email, password) { return requireRemote().signUpEmail(email, password); },
   async signInEmail(email, password) { return requireRemote().signInEmail(email, password); },
-  async signInGoogle() { return requireRemote().signInGoogle(); },
+  async signInGoogle(opts) { return requireRemote().signInGoogle(opts); },
   async sendPasswordReset(email) { return requireRemote().sendPasswordReset(email); },
   async signOut() { forgetLastAccount(); return requireRemote().signOut(); },
   async changePassword(currentPassword, newPassword) {
