@@ -117,7 +117,10 @@ Tim is the **manager**; Claude is the **builder**.
   licence to stop listening — he found the source-mixing bug, correctly diagnosed the level-flipping
   bug, and his percentile spacing held up under modelling. Say so when he is right.
 - **Questions go in the AskUserQuestion box, never in prose.** Tim often doesn't read a full reply.
-- **Keep replies short, conclusion first.**
+- **Talk to Tim in plain short sentences. Never say "D5" or "D14" to him** — say the actual thing
+  ("we don't mix benchmarks with workout sets"). The decision codes are for these docs only. No long
+  progress reports, no headers and sections for an ordinary update. Two lines when the work is done,
+  or "X broke because of Y — should we do A or B?" (Tim, 2026-08-16.)
 - **Always commit and push when a piece of work is finished — don't ask.** Pages redeploys in ~40s,
   so pushing is how he sees anything. Update the docs in the same commit.
 - **State what is unverified.** This project's whole credibility rests on not overclaiming.
