@@ -128,6 +128,7 @@ Tim is the **manager**; Claude is the **builder**.
 |---|---|
 | `progress.md` | State, decisions, rules, next steps. **The catch-up file.** |
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |
+| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a plan — nothing in it is being built, and nothing starts off it without him saying so. He adds to it whenever something occurs to him |
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
@@ -487,6 +488,13 @@ being a differentiator.
 - Just-in-time concept explanations wired to first use (D8)
 - Post-session check-in feeding next week's volume
 - Deload prompting; equipment-aware substitution
+
+**Beyond the roadmap — `docs/vision.md`.** Tim's own running list of where he wants this to go:
+Strava-shaped **social** built for lifting, **smart systems** that adjust weights/reps and suggest
+which workout to do, **pre-designed programs ranked by how optimal they are as a percentage**, and a
+user-chosen **"Compared to:"** group on the muscle map. None of it is scheduled and none of it is
+started. Two of the four collide with locked decisions — social with **D7**, an "all people" comparison
+with **D15** — and `docs/vision.md` records those collisions rather than resolving them.
 
 ---
 

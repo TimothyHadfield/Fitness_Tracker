@@ -1593,3 +1593,42 @@ exist, which is the one part of Tim's last request still unmet.
 
 State at close: **355 data-layer + 116 render assertions green**, everything pushed and live,
 Tier 1 complete, one decision (D18) waiting on Tim.
+
+---
+
+## 2026-08-16 — Tim's vision list gets a home
+
+Tim wanted somewhere to put what he wants this to *become*, separate from what is scheduled — "I'll
+add to them later", and explicitly **don't start any of these**. So `docs/vision.md`: a capture file,
+not a plan, with a standing rule at the top that nothing graduates out of it without him saying so.
+
+Four ideas recorded in his words:
+
+1. **Social** — contact other people, see their workouts and overall progress, per-person visibility
+   controls. Strava's format and feel, structured for lifting rather than runs.
+2. **Smart systems** — automatic weight/rep adjustment for progressive overload instead of repeating
+   an identical exercise, plus suggesting *which* workout to start based on history. (His sentence
+   trailed off mid-thought on the second input to that suggestion; recorded as unfinished rather than
+   guessed at.)
+3. **Pre-designed systems ranked by how optimal they are, as a percentage** — 5×/week at 90 min might
+   be the optimum; 3×/week at 45 min might be 90% of it, and the user decides what they are giving
+   versus getting. Plus a few influencer/celebrity systems.
+4. **"Compared to:" as a setting** on the muscle map — default stays people who lift at your weight,
+   sex and age, but male / female / all / specific or all weights / specific or all ages all become
+   choosable, with the colours and ranges moving accordingly.
+
+The part worth doing properly was the collisions, and they are noted in the file rather than
+resolved: **social contradicts D7** ("no social feed" — though D7 was aimed at a passive feed bolted
+onto a logger, which is not this), and an **"all people" comparison contradicts D15**, which locks
+ranking to people who lift precisely because general-population data makes every user Elite and
+collapses the seven-level scale. The likely shape there — levels stay pinned to the lifting
+population, the *percentile* moves with the comparison group — is written down as a design question,
+not an answer.
+
+Also flagged: the "% optimal" number would be the most scientifically load-bearing thing the app ever
+shows, so it needs grounding in `docs/research.md` or it is a made-up number with a percent sign on
+it. And three of the four ideas turn the app from a recorder into an adviser, which is exactly what
+Rules 5 and 6 exist to police.
+
+Linked from `progress.md` — the file-upkeep table and a new block under §8 Roadmap — so a fresh
+session finds it. No code touched.
