@@ -116,7 +116,12 @@ Tim is the **manager**; Claude is the **builder**.
   going to be better than what I say 90% of the time."* Take that as licence to decide, **not** as
   licence to stop listening — he found the source-mixing bug, correctly diagnosed the level-flipping
   bug, and his percentile spacing held up under modelling. Say so when he is right.
-- **Questions go in the AskUserQuestion box, never in prose.** Tim often doesn't read a full reply.
+- **Never ask Tim what to work on next.** Questions are only for clarification or a decision *inside
+  a job he already gave you*. Between jobs: say what's done, say what you noticed, stop. A question
+  box forces him to answer it instead of replying to what you said — and most of the time what you
+  want to do next isn't what he wants done next. (Tim, 2026-08-16.)
+- **Questions that ARE in scope go in the AskUserQuestion box, never in prose.** Tim often doesn't
+  read a full reply.
 - **Talk to Tim in plain short sentences. Never say "D5" or "D14" to him** — say the actual thing
   ("we don't mix benchmarks with workout sets"). The decision codes are for these docs only. No long
   progress reports, no headers and sections for an ordinary update. Two lines when the work is done,
