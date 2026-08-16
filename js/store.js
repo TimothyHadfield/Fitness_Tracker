@@ -8,7 +8,7 @@
 // See docs/firebase-setup.md.
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
-import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps } from './e1rm.js';
+import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps, isRankableSet } from './e1rm.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 
 const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
@@ -856,6 +856,12 @@ export async function muscleStrength() {
     // for a bad day they honestly logged.
     let best = null;
     const consider = (weight, reps, date, source) => {
+      // D5: a maximum is not inferred from a set above 15 reps. Without this
+      // the formula extrapolates a 135x25 burnout set to 258 lb, which beats a
+      // real 205x5 top set and moves the muscle a whole level on the back of
+      // the least informative set of the week. A benchmark gets no exemption —
+      // a 25-rep benchmark is no more evidence of a max than a 25-rep set is.
+      if (!isRankableSet(reps)) return;
       const est = e1rm(weight, reps);
       if (est === null) return;
       if (!best || est > best.e1rm) {

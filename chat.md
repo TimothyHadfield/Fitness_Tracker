@@ -1528,3 +1528,38 @@ quietly overrode.
 Also proposed: a simulator with a known true 1RM curve, so the constants get fitted rather than
 guessed — optimising for **flap rate**, which is the direct measurement of Tim's worry — and later a
 backtest that hides his real benchmarks and predicts them from workout sets alone.
+
+---
+
+## 2026-08-16 (cont.) — "is the workouts incorporated in the data working now or not yet?"
+
+Checked rather than answered from memory, on an account with zero benchmarks:
+
+- **Body map** — Chest ranked *Intermediate, source=workout*. Works.
+- **Graphs** — the exercise appears with `usableSources: ["workout"]` and charts 3 points. Works,
+  and predates today; it was always the fallback when no benchmark existed.
+
+So the basic thing is live. What is **not** built is the estimator from
+`docs/strength-estimate-plan.md` — the confidence weighting, warm-up rejection, uncertainty band,
+stable levels, and the setting.
+
+One caveat that matters: when an exercise has **both** sources, the graph still defaults to
+benchmarks. That is the opposite of what Tim asked for ("default should be mostly workout
+measurements") and is the one part of his request that is genuinely unmet today.
+
+### And the check turned up a live bug
+
+Probing whether the "all over the place" worry was already real: a **135×25 burnout set promoted
+Chest from Intermediate to Proficient**, beating a genuine 205×5. `muscleStrength()` called `e1rm()`
+with no rep limit, and the formula extrapolates 135×25 to 258 lb.
+
+D5 already says don't extrapolate above 15 reps, and `canNormalize` enforces it for charts — the
+ranking path simply never applied it. A locked decision going unenforced, so it is enforced now:
+`MAX_EVIDENCE_REPS = 15` in `e1rm.js`, applied in `muscleStrength()`. Benchmarks get no exemption —
+a 25-rep test is no more evidence of a maximum than a 25-rep set is.
+
+This is the cheapest possible instalment of the plan: no confidence model, no estimator, just the
+rep gate that was already decided. It removes the single worst distortion for five lines of code.
+Anyone whose level was inflated by a high-rep set will see it drop, which is correct.
+
+355 data-layer + 116 render assertions, green.

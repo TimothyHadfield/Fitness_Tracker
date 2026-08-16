@@ -934,6 +934,51 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   r = await muscleStrength();
   ok(r.muscles.has('Quads'), 'and starts ranking as soon as its key lift is logged');
 
+  // D5: a maximum is not inferred from a very high-rep set. Found live — a
+  // 135x25 burnout set extrapolated to 258 lb, beat a genuine 205x5 top set,
+  // and promoted Chest a whole level. The least informative set of the week
+  // was deciding the ranking.
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-08-01');
+  await st.saveSession({
+    workoutId: 'w9', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 205, reps: 5 }] }],
+  });
+  const beforeBurnout = (await muscleStrength()).muscles.get('Chest');
+  await st.saveSession({
+    workoutId: 'w9', workoutName: 'Push', date: '2026-08-11',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 135, reps: 25 }] }],
+  });
+  const afterBurnout = (await muscleStrength()).muscles.get('Chest');
+  ok(afterBurnout.best.reps === 5 && afterBurnout.best.weight === 205,
+     `a 25-rep burnout set is not evidence of a max (${afterBurnout.best.weight}x${afterBurnout.best.reps})`);
+  ok(afterBurnout.level.name === beforeBurnout.level.name,
+     `and does not move the level (${beforeBurnout.level.name} → ${afterBurnout.level.name})`);
+  ok(e1rm(135, 25) > e1rm(205, 5),
+     'even though the raw formula does rate it higher — which is why the gate exists');
+
+  // 15 reps is the documented boundary and is still admitted.
+  await st.saveSession({
+    workoutId: 'w9', workoutName: 'Push', date: '2026-08-12',
+    entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 185, reps: 15 }] }],
+  });
+  ok((await muscleStrength()).muscles.get('Chest').best.reps === 15,
+     '15 reps is still admissible — the cut is above it, not at it');
+
+  // A benchmark gets no exemption: a 25-rep test is no more informative.
+  await st.saveBenchmark({ date: '2026-08-13', exerciseId: benchId,
+    exerciseName: 'Barbell Bench Press', values: { weight: 155, reps: 25 } });
+  ok((await muscleStrength()).muscles.get('Chest').best.reps !== 25,
+     'and a high-rep BENCHMARK is refused too — deliberate does not mean informative');
+
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-08-01');
+
   // Sets with no weight or no reps must not fabricate a ranking.
   await st.clearAll();
   await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });

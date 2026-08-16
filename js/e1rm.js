@@ -121,6 +121,27 @@ export function normalizeBlockedReason(exercise) {
 export const MIN_TARGET_REPS = 1;
 export const MAX_TARGET_REPS = 20;
 
+/**
+ * The most reps a set may have and still count as EVIDENCE of a maximum (D5:
+ * "don't normalise above 15").
+ *
+ * MAX_TARGET_REPS is a different thing — it caps the rep count a chart may be
+ * *displayed* at, where the user has asked for it explicitly. This caps what
+ * the app is willing to infer a 1RM from on its own.
+ *
+ * Worth stating why it matters, because leaving it unenforced was a real bug:
+ * the formula happily extrapolates 135x25 to 258 lb, which beat a genuine
+ * 205x5 top set and promoted a muscle a whole level on the strength of a
+ * burnout set.
+ */
+export const MAX_EVIDENCE_REPS = 15;
+
+/** Is this set something a maximum can honestly be inferred from? */
+export function isRankableSet(reps) {
+  const r = Number(reps);
+  return Number.isFinite(r) && r >= 1 && r <= MAX_EVIDENCE_REPS;
+}
+
 // Returns null for anything that is not a usable rep count. The explicit type
 // guard matters: Number(null) and Number('') are both 0, which would otherwise
 // clamp up to 1 and turn missing data into a silent "1 rep".
