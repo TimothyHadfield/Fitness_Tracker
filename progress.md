@@ -4,13 +4,16 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-15
+**Last updated:** 2026-08-16
 
 **Status:** Live and working. Tier 1 is complete except for a rest timer. Firebase is provisioned and
 verified end to end. The **Muscle Groups** strength map and the **body-weight trend chart** both
-shipped today, and the body map was then **redrawn anatomically** with a bright multi-hue level
-ramp. **A browser has now rendered it** (headless Chrome, screenshots eyeballed) — see §0.5 for
-exactly what that does and does not cover. The remaining risk is a real device, not a real browser.
+shipped, and the body map was then **redrawn anatomically** with a bright multi-hue level ramp and
+given a side detail panel on desktop. **A browser has now rendered it** (headless Chrome,
+screenshots eyeballed) — see §0.5 for exactly what that does and does not cover.
+
+**Open work:** the Muscles figure is anatomically right but its *look* is not signed off — see §9.
+Everything else in Tier 1 is done bar a rest timer.
 
 | | |
 |---|---|
@@ -132,7 +135,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | Hand-authored **anatomical** SVG body, front + back, 46 tappable regions. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Real muscle shapes — pec fan, deltoid cap, lat V, three quadriceps heads, two gastrocnemius heads — drawn as cross-section tables, not path data (see `body-map.js`). Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
+| **Muscles** | Hand-authored **anatomical** SVG body, front + back, 46 tappable regions. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. **The drawing's style is not finished — see §9.** Real muscle shapes — pec fan, deltoid cap, lat V, three quadriceps heads, two gastrocnemius heads — drawn as cross-section tables, not path data (see `body-map.js`). Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
@@ -414,6 +417,19 @@ being a differentiator.
 - **Body weight is charted but not yet wired into rep normalisation** for the 14 bodyweight/assisted
   exercises. Their logged weight is added or assisted load, not total resistance — which is now
   computable. `canNormalize()` in `e1rm.js` still refuses them.
+- **The Muscles figure is drawn but its LOOK is not signed off.** It currently reads as a clinical
+  diagram; Tim wants a bold training-poster illustration. Four specific gaps, and he has said twice
+  that **shading and texture matter more to him than outline accuracy**:
+    1. **Heavy black keylines** around every muscle group — the single biggest thing making it read
+       as graphic rather than medical.
+    2. **Dense fibre striations** inside each muscle, following the fibre direction.
+    3. **Head, hands, feet and knees left white/unpainted**, so colour stops at the joints and the
+       coloured masses pop.
+    4. **More heroic proportions** — wider shoulders, narrower waist, bigger arms.
+  `belly()` in `body-map.js` takes cross-sections, so proportions are cheap to change; keylines and
+  striations are a CSS/`FIBRES` job. Use the §0.6 screenshot loop to check every pass — this is
+  pure visual work and cannot be verified any other way.
+
 - **Muscles uses benchmarks only.** Tim's own note: incorporating normal workout lifts is a later
   step. **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
@@ -443,9 +459,10 @@ being a differentiator.
 2. **Google sign-in** — one console toggle: Authentication → Sign-in method → Google → Enable, pick a
    support email. It needs an OAuth client the API cannot create. Nothing is blocked on it; email and
    anonymous both work.
-3. **Rest timer** — the last Tier 1 item.
-4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
-5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+3. **Finish the look of the Muscles figure** — the four gaps in §9. Highest-value visual work left.
+4. **Rest timer** — the last Tier 1 item.
+5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
+6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 

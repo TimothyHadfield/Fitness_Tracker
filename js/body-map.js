@@ -1,11 +1,10 @@
 // The body diagram.
 //
-// Hand-authored rather than traced from a reference: the image Tim shared is a
-// watermarked Dreamstime stock illustration (ID 142535635, © Vectorville) and
-// using it would be both infringement and someone else's visual identity. The
-// anatomy it depicts is nobody's property, so the shapes here are drawn to be
-// what those muscles actually look like — the pec fan, the deltoid cap, the lat
-// V, the three heads of the quadriceps, the two heads of the gastrocnemius.
+// Hand-authored rather than traced: every muscle needs its own fill and its own
+// tap target, so the figure has to be built from shapes we control. They are
+// drawn to be what the muscles actually look like — the pec fan, the deltoid
+// cap, the lat V, the three heads of the quadriceps, the two heads of the
+// gastrocnemius.
 //
 // EVERYTHING IS DRAWN AS THE FIGURE'S LEFT HALF and emitted a second time
 // through a mirror transform, so symmetry is exact and free and there is half as

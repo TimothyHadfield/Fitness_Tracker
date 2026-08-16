@@ -5,3 +5,7 @@ node_modules/
 *.log
 .vscode/
 .idea/
+
+# Local reference/working images — not part of the app
+*.jpg
+*.jpeg

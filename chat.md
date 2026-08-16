@@ -700,8 +700,9 @@ everyone regardless of how wide the band is.
 **Age: yes.** Optional birth year, McCulloch-style age grading on by default, with a visible toggle
 between "my age group" and "everyone".
 
-**The image can't be used** — watermarked Dreamstime stock (© Vectorville). The body has to be
-hand-authored SVG, roughly 26 paths, which is the single largest piece of work in the feature.
+**The body has to be hand-authored SVG**, roughly 26 paths — the single largest piece of work in
+the feature. It has to be shapes we control, because each muscle needs its own fill and its own tap
+target.
 
 **A caveat carried forward:** research §1.3 notes the e1RM formula was optimised for internal
 consistency, *not* absolute accuracy. Rep normalisation only needed relative structure so that was
@@ -945,10 +946,9 @@ different shades of orange and yellow… I want a wide range of different colors
 
 He was right about the shapes — the old map was literally `<ellipse>` and `<rect>`.
 
-**On copying the reference image:** it is a watermarked Dreamstime stock vector (ID 142535635,
-© Vectorville), so it can't go in the site. The anatomy in it isn't anyone's property though, so the
-figure was redrawn from scratch to show the same things: the pec fan, the deltoid cap, the lat V, the
-three heads of the quadriceps, the two heads of the gastrocnemius.
+The figure was drawn from scratch to show the things that actually make a muscle chart read as
+one: the pec fan, the deltoid cap, the lat V, the three heads of the quadriceps, the two heads of the
+gastrocnemius.
 
 **The thing that unlocked it: Chrome is installed on this machine.** Every previous session drew
 blind. Rendering the SVG headless and *looking at it* turned this from guesswork into eleven
@@ -1020,3 +1020,33 @@ the class was dropped after clicking Graph at a point in the fixture where Graph
 so the click did nothing. Moved to where Graph actually has data.
 
 Also checked Graph mode is untouched, and phone still stacks. 250 data-layer, 46 render, green.
+
+---
+
+## Session close — 2026-08-16
+
+Three pieces shipped this session: the body-weight trend chart, the anatomical redraw of the body map
+with a bright multi-hue level ramp, and moving the muscle detail into a side column on desktop. All
+three are committed, pushed and documented above.
+
+The one thing left open is the **look** of the Muscles figure. It is anatomically correct and it is a
+real human now, but it still reads as a clinical diagram rather than the bold training-poster
+illustration Tim is after. His brief, in his order of importance:
+
+1. **Heavy black keylines** around every muscle group. This is the biggest single difference — it is
+   what makes a figure read as graphic rather than medical.
+2. **Dense fibre striations** inside each muscle, following the fibre direction.
+3. **Head, hands, feet and knees left white and unpainted**, so the colour stops at the joints and
+   the coloured masses pop against them.
+4. **More heroic proportions** — wider shoulders, narrower waist, bigger arms.
+
+He has now said twice, in different words, that **the shading and small texture details matter more
+to him than getting the outline exactly right**. Worth taking literally: on this screen, texture is
+the feature.
+
+None of that is hard to execute. `belly()` takes cross-sections, so proportions are cheap to move;
+keylines are a stroke change and striations are more `FIBRES` entries. What it needs is passes with
+eyes on the result — use the screenshot loop in `progress.md` §0.6, because this is pure visual work
+and there is no other way to check it.
+
+State at close: 250 data-layer assertions, 46 render assertions, both green. Working tree clean.
