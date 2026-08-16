@@ -18,7 +18,7 @@ exactly what that does and does not cover. The remaining risk is a real device, 
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
 | **Data tests** | `node tests/data-layer.test.mjs` — 250 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 44 assertions, mounts every screen |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 46 assertions, mounts every screen |
 | **Look at it** | headless Chrome + an `<iframe>` at phone width — §0.6. Chrome and Edge are both installed |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |
@@ -132,7 +132,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | Hand-authored **anatomical** SVG body, front + back, 46 tappable regions. Real muscle shapes — pec fan, deltoid cap, lat V, three quadriceps heads, two gastrocnemius heads — drawn as cross-section tables, not path data (see `body-map.js`). Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
+| **Muscles** | Hand-authored **anatomical** SVG body, front + back, 46 tappable regions. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Real muscle shapes — pec fan, deltoid cap, lat V, three quadriceps heads, two gastrocnemius heads — drawn as cross-section tables, not path data (see `body-map.js`). Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey with no benchmark. Tap → level, percentile, progress bar, all seven per-level weight targets |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
@@ -144,11 +144,12 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 
 - All **15 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
 - **250 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies)
-- **44 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
+- **46 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, the body map draws
   46 regions with correct level classes, tapping a muscle opens its detail, and the SVG line chart
   genuinely runs (gridlines, one marker per measured point, correct aria label)
-- **Screenshots, headless Chrome** — Home, Workouts, Calendar, Settings and Muscles at 360/390/512 px
-  in dark and light. Layout holds, nothing overflows, the legend wraps
+- **Screenshots, headless Chrome** — Home, Workouts, Calendar, Settings, Muscles and the line chart
+  at 360 / 390 / 880 / 1180 / 1280 px in dark and light. Layout holds, nothing overflows, the legend
+  wraps, and the Muscles side column holds its figure size whether or not a muscle is selected
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -265,6 +266,12 @@ leftover space, not the opposite."*
 
 The line chart is **measured, not fixed**: `fillChart()` reads the container's real pixel size and
 draws at exactly that, with a `ResizeObserver`. Gridline and date-label density scale with size.
+
+**Corollary — content must not shrink because you asked it a question.** Tapping a muscle used to
+open the detail *below* the body map, which pushed the figures up and shrank them. On ≥ 860px the
+panel is now a side column instead, so the body is the same size selected or not. Measured at 960px
+the side layout gives a *larger* figure than stacking (395×433 vs 338×370): a column costs width
+once, a stacked panel costs half the height.
 
 ### Rule 4 — never mix benchmarks with workout sets
 

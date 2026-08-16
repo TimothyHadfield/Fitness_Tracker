@@ -1111,6 +1111,33 @@ select.input {
 
   .toast { bottom: 24px; }
   .stat-value { font-size: 19px; }
+
+  /* Muscle Groups: the detail sits BESIDE the figures, in the empty space next
+     to them, rather than underneath.
+
+     Stacked, the panel pushed the body up and shrank it the moment you tapped a
+     muscle — the figure is the content, and content does not get smaller because
+     you asked it a question (Rule 3). As a side column the panel's height
+     changes freely and the figures never move at all.
+
+     This shares the 860px breakpoint rather than getting its own. Measured at
+     960px the side layout gives a LARGER figure than stacking does (395x433 vs
+     338x370), because a column costs width once whereas a stacked panel costs
+     nearly half the height. The two are about even at 860, and stability wins
+     the tie. The fluid width is what keeps that true at the narrow end. */
+  .graph-host.is-muscles { flex-direction: row; align-items: stretch; gap: 18px; }
+  .graph-host.is-muscles .body-wrap { flex: 1; min-width: 0; }
+  .graph-host.is-muscles .body-foot {
+    width: clamp(260px, 32%, 340px);
+    flex: none;
+    max-height: 100%;
+    padding-left: 18px;
+    /* A hairline, not a card — the panel is a column of this screen, not a box
+       floating on it (Rule 2). */
+    border-left: 1px solid var(--rule-soft);
+  }
+  /* Vertical room is no longer scarce here, so the legend can breathe. */
+  .graph-host.is-muscles .lv-key { gap: 6px 12px; }
 }
 
 @media (min-width: 1200px) {

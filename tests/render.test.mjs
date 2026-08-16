@@ -166,6 +166,14 @@ ok(Boolean(data.querySelector('.to-next-fill')), 'progress bar toward the next l
 const selectedNow = data.querySelectorAll('.body-region.is-selected');
 ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length} regions)`);
 
+/* ============ the side-panel layout hook ============ */
+// On a wide screen the detail sits BESIDE the figures rather than under them,
+// so the body never resizes when a muscle is picked. CSS does the layout; this
+// class is what tells it which mode is on screen, and it must not leak into the
+// chart modes, which are still a column.
+ok(data.querySelector('.graph-host').classList.contains('is-muscles'),
+   'Muscles mode marks the host so the detail can lay out as a side column');
+
 /* ================= the other two modes still work ================= */
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Graph').click();
 await settle();
@@ -191,6 +199,11 @@ await store.saveBenchmark({ date: '2026-06-15', exerciseId: bench.id, exerciseNa
 data = await mount(GraphView());
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Graph').click();
 await settle();
+
+// Leaving Muscles must drop the side-column class — the chart modes are still a
+// single column, and a stale class would lay them out as a row on a laptop.
+ok(!data.querySelector('.graph-host').classList.contains('is-muscles'),
+   'the side-column class is dropped on the way back out to a chart mode');
 
 const select = data.querySelector('select');
 const bwOpt = [...data.querySelectorAll('option')].find((o) => o.textContent === 'Body weight');

@@ -987,3 +987,36 @@ fixed width; at a true 360 and 390 everything fits and the legend wraps.
 
 Home, Workouts, Calendar, Settings and Muscles now all screenshotted in both themes. 250 data-layer
 assertions, 44 render assertions, green.
+
+---
+
+## Muscle detail moves beside the figures — 2026-08-15
+
+Tim: *"When you click on a muscle group, a new section with that muscle group appears below the
+screen, and everything shrinks. Instead of anything shrinking, on a laptop, I want the muscle group
+details to appear on the right or left side of the screen, in the open space to the side of the
+human body."*
+
+Right, and it's a Rule 3 violation of the kind the rule was written for — the figure is the content,
+and it was getting smaller the moment you asked it a question. Fixed by making the Muscles pane a
+row on wide screens: figures take the flexible space, the panel is a fixed-width column on the
+right with a hairline rule down its left edge (no card, Rule 2). Because the column's width doesn't
+depend on its contents, the body is now *pixel-identical* selected and unselected — confirmed by
+screenshotting both.
+
+The whole foot moves, legend included, not just the detail. That frees the vertical space the legend
+was taking and is why the figures are noticeably bigger on a laptop now.
+
+**Breakpoint.** First attempt gave it its own 1040px query on the assumption that a narrow desktop
+couldn't spare 320px. Measuring said otherwise: at 960px the side layout yields a *larger* figure
+than stacking (395×433 vs 338×370), because a column costs width once while a stacked panel costs
+nearly half the height. They're about even at 860. So it shares the existing 860px desktop
+breakpoint — one fewer concept — with `clamp(260px, 32%, 340px)` keeping it honest at the narrow end.
+
+A `is-muscles` class on `.graph-host` carries which mode is on screen; CSS decides where it applies.
+There's a test that it's set in Muscles mode and dropped on the way out, since a stale class would
+lay the line chart out as a row. The first version of that test was in the wrong place — it asserted
+the class was dropped after clicking Graph at a point in the fixture where Graph is still disabled,
+so the click did nothing. Moved to where Graph actually has data.
+
+Also checked Graph mode is untouched, and phone still stacks. 250 data-layer, 46 render, green.

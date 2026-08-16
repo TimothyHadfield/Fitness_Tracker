@@ -532,6 +532,10 @@ export async function GraphView() {
     const order = ['trend', 'compare', 'muscles'];
     modeSwitch.querySelectorAll('.seg').forEach((b, i) =>
       b.setAttribute('aria-selected', String(graphMode === order[i])));
+    // Muscles is the one mode with a side panel on a wide screen, so it is the
+    // one mode that lays out as a row. The class carries that; the CSS decides
+    // at which width it actually applies.
+    host.classList.toggle('is-muscles', graphMode === 'muscles');
     if (graphMode === 'muscles') await muscleGroupsPane(host, top);
     else if (graphMode === 'compare') renderCompare();
     else await renderTrend();
