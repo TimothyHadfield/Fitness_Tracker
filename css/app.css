@@ -306,6 +306,35 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .row-title { font-weight: 600; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-sub { font-size: 12.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The default row subtitle is one clipped line, which is right for a name but
+   wrong for a sentence. `.wrap` is the sentence version. */
+.row-sub.wrap { white-space: normal; overflow: visible; line-height: 1.4; }
+.row-meta { flex: none; font-size: 12.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+/* A row that is information rather than a destination. */
+.row.static { cursor: default; align-items: flex-start; }
+.row.static:active { background: none; }
+.row.static .row-title { white-space: normal; }
+.row.static .row-sub { white-space: normal; overflow: visible; line-height: 1.4; }
+
+/* Small inline label beside a title — "Added", and whatever comes next. */
+.tag {
+  margin-left: 7px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* How a ready-made system explains itself. Paragraphs, because these are
+   instructions someone has to read, not a caption. */
+.preset-notes { display: flex; flex-direction: column; gap: 8px; }
+.preset-notes p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+
 .row-chev { color: var(--ink-faint); flex: none; display: flex; }
 .row-chev svg { width: 17px; height: 17px; display: block; }
 

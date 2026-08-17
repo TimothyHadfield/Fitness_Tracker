@@ -93,6 +93,18 @@ Open threads:
 - Celebrity systems have an obvious tension with that: they are a draw, and many are not optimal. The
   honest version might be that showing a celebrity system's *low* percentage is the feature.
 
+**Browsing and adding BUILT 2026-08-17; third-party content is not.** Workouts → Explore ready-made
+systems lists them, shows the whole programme with its per-exercise notes, and copies one into the
+account on a tap. Three of the app's own ship with it.
+
+**The celebrity part is blocked, and not on effort.** Tim asked for Jeff Nippard's *Ultimate Push
+Pull Legs* first. The full 12-week system is a paid product on his site, and the free YouTube series
+cannot be watched from here — secondary write-ups are partial and contradict each other. Shipping a
+guess under a real person's name is the one thing this project has consistently refused to do. The
+data model already carries `author`, `sourceName` and `sourceUrl`, and the screen shows them, so a
+licensed or properly sourced system needs no new code. What it needs is permission, or a first-party
+written source.
+
 **Groundwork laid 2026-08-17.** Workouts now live inside **systems** — a system is a named programme
 holding several workouts — which is the container a shipped or celebrity programme would arrive as.
 Tim asked to build system creation first and do the celebrity systems afterwards. What exists is

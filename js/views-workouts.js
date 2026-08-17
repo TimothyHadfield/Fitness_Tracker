@@ -112,8 +112,15 @@ export async function WorkoutsView() {
     profile: true,
     title: 'Workouts',
     sub: systems.length ? plural(systems.length, 'system') : null,
-    top: el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
-      icon('plus'), 'New system'),
+    top: [
+      el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
+        icon('plus'), 'New system'),
+      // Browsing ready-made systems is the low-effort path and belongs beside
+      // the high-effort one, not buried in an empty state where someone who
+      // already has a system would never find it.
+      el('button', { class: 'btn block', onClick: () => go('#/explore') },
+        icon('search'), 'Explore ready-made systems'),
+    ],
     scroll: systems.length
       ? el('div', { class: 'list' }, systems.map((sys) => {
           const n = countIn(sys.id);
@@ -133,7 +140,124 @@ export async function WorkoutsView() {
         }))
       : emptyState('No systems yet',
           'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
-          + 'whatever you follow. Make one and put your workouts in it.'),
+          + 'whatever you follow. Build one, or start from a ready-made one.'),
+  });
+}
+
+/* ================================================================== *
+ * Explore ready-made systems
+ * ================================================================== */
+
+export async function ExploreView() {
+  const [{ PRESET_SYSTEMS, presetSetCount }, added] = await Promise.all([
+    import('./preset-systems.js'), store.addedPresetIds(),
+  ]);
+
+  return screenShell({
+    title: 'Ready-made systems',
+    back: () => go('#/workouts'),
+    scroll: [
+      el('div', { class: 'field-help', text:
+        'Pick one and it is copied into your systems. From then on it is yours — rename it, '
+        + 'change the exercises, delete what you do not do.' }),
+      el('div', { class: 'list' }, PRESET_SYSTEMS.map((p) =>
+        el('button', { class: 'row', onClick: () => go('#/explore/' + p.id) },
+          el('div', { class: 'row-main' },
+            el('div', { class: 'row-title' },
+              p.name,
+              added.has(p.id) ? el('span', { class: 'tag', text: 'Added' }) : null,
+            ),
+            el('div', { class: 'row-sub', text:
+              `${p.daysPerWeek} days/week · ~${p.minutes} min · ${p.level}` }),
+            el('div', { class: 'row-sub wrap', text: p.summary }),
+          ),
+          chevron(),
+        ))),
+      el('div', { class: 'field-help', text:
+        `${PRESET_SYSTEMS.length} to choose from, with more to come.` }),
+    ],
+  });
+}
+
+/* ================================================================== *
+ * One ready-made system, before you commit to it
+ * ================================================================== */
+
+export async function ExploreDetailView(id) {
+  const [{ presetById, presetSetCount }, added] = await Promise.all([
+    import('./preset-systems.js'), store.addedPresetIds(),
+  ]);
+  const preset = presetById(id);
+
+  if (!preset) {
+    return screenShell({
+      title: 'Not found', back: () => go('#/explore'),
+      scroll: emptyState('That system no longer exists', 'It may have been renamed or removed.'),
+    });
+  }
+
+  const alreadyAdded = added.has(preset.id);
+
+  async function add() {
+    const { system, skipped } = await store.addPresetSystem(preset);
+    toast(skipped ? `Added — ${skipped} exercise(s) skipped` : 'Added to your systems');
+    go('#/system/' + system.id);
+  }
+
+  return screenShell({
+    title: preset.name,
+    back: () => go('#/explore'),
+    scroll: [
+      // NOT "sets a week". These workouts repeat — a 6-day PPL runs its three
+      // workouts twice — so the total across the workouts is not a weekly
+      // figure, and printing it as one would overstate or understate every
+      // programme by a different factor.
+      el('div', { class: 'field-help', text:
+        `${preset.goal} · ${preset.daysPerWeek} days a week · around ${preset.minutes} minutes a `
+        + `session · ${preset.level} · ${presetSetCount(preset)} sets across `
+        + `${plural(preset.workouts.length, 'workout')}` }),
+
+      // Who wrote it, always. A system from somewhere else must never look like
+      // one the app wrote, and the link out is how someone checks it.
+      el('div', { class: 'field-help' },
+        'By ', el('b', { text: preset.author || 'Unknown' }),
+        preset.sourceName ? ' · ' : '',
+        preset.sourceUrl
+          ? el('a', { href: preset.sourceUrl, target: '_blank', rel: 'noopener noreferrer',
+                      text: preset.sourceName || 'Source' })
+          : (preset.sourceName || null),
+      ),
+
+      preset.notes
+        ? el('div', { class: 'preset-notes' },
+            // Paragraph breaks in the notes are real paragraphs, not one wall of text.
+            ...preset.notes.split(/\n{2,}/).map((para) => el('p', { text: para })))
+        : null,
+
+      ...preset.workouts.flatMap((w) => [
+        el('div', { class: 'section-label', text: w.name }),
+        w.notes ? el('div', { class: 'field-help', text: w.notes }) : null,
+        el('div', { class: 'list' }, w.exercises.map((e) =>
+          el('div', { class: 'row static' },
+            el('div', { class: 'row-main' },
+              el('div', { class: 'row-title', text: e.name }),
+              e.notes ? el('div', { class: 'row-sub', text: e.notes }) : null,
+            ),
+            el('div', { class: 'row-meta mono', text: `${e.sets} sets` }),
+          ))),
+      ]),
+    ],
+    bottom: [
+      el('button', {
+        class: 'btn primary block',
+        text: alreadyAdded ? 'Add another copy' : 'Add to my systems',
+        onClick: add,
+      }),
+      alreadyAdded
+        ? el('div', { class: 'field-help', text:
+            'You have already added this one. Adding it again makes a second, separate copy.' })
+        : null,
+    ],
   });
 }
 

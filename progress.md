@@ -32,8 +32,8 @@ trains it**, each rating carrying a **confidence** that fades the colour.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 806 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 134 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 858 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 141 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -180,6 +180,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you. `js/preset-systems.js` holds three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves. **No third-party system is shipped** — see §9 |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **265 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
@@ -206,12 +207,12 @@ Press-and-hold repeats.
 
 ### Verified
 
-- All **19 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **806 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- All **20 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **858 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **134 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **141 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -264,6 +265,8 @@ Fitness_Tracker/
 │   ├── store.js                data layer — async, backend-agnostic
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
+│   ├── preset-systems.js       ready-made systems to browse and copy. Shaped so a
+│   │                           third-party one can slot in: author/sourceName/sourceUrl
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
@@ -282,8 +285,8 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     806 assertions, no dependencies
-│   └── render.test.mjs         134 jsdom assertions — mounts every screen
+│   ├── data-layer.test.mjs     858 assertions, no dependencies
+│   └── render.test.mjs         141 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
          firebase-setup.md · competitive-teardown.html
 ```
@@ -598,6 +601,15 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
 - **No supersets.** Sets are a flat list — no RIR, tempo, or set types.
 - ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
   canonically in pounds. Distance is still miles only.
+- **No third-party workout system is shipped, and this is deliberate.** Tim asked (2026-08-17) for
+  Jeff Nippard's *Ultimate Push Pull Legs* as the first public system. Two blockers, neither of which
+  a bit more effort would clear: the full 12-week system is a **paid product** on jeffnippard.com, so
+  copying its prescriptions into a public app is redistributing what he sells; and **nobody here can
+  watch the videos** — the secondary write-ups of the free YouTube series are partial and disagree,
+  so anything shipped under his name would be a guess attributed to a real person. `preset-systems.js`
+  carries `author` / `sourceName` / `sourceUrl` and the detail screen shows them, so a properly
+  licensed or properly sourced system slots straight in. **What would unblock it:** permission from
+  the author, or a first-party written source Tim can point at.
 - **Exercise→muscle is a single string**, not the primary/secondary weighted mapping. **This must
   change before D3.**
 

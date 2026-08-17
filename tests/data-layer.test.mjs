@@ -1802,5 +1802,105 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ================= ready-made systems ================= */
+{
+  const { store: st } = await import('../js/store.js');
+  const { PRESET_SYSTEMS, presetById, presetSetCount, presetExerciseNames } =
+    await import('../js/preset-systems.js');
+
+  ok(PRESET_SYSTEMS.length >= 1, 'there is at least one ready-made system to explore');
+
+  // THE check. Presets reference exercises BY NAME, because ids are derived from
+  // name+muscle and hard-coding them would rot silently the first time a name
+  // changed. That trade only holds if a test catches a name that stops
+  // resolving — otherwise the failure is a workout quietly missing an exercise.
+  const names = new Set(BUILT_IN_EXERCISES.map((e) => e.name));
+  for (const p of PRESET_SYSTEMS) {
+    const missing = presetExerciseNames(p).filter((n) => !names.has(n));
+    ok(missing.length === 0,
+       `every exercise in "${p.name}" resolves${missing.length ? ': MISSING ' + missing.join(', ') : ''}`);
+  }
+
+  // Each one has to describe itself well enough to choose between.
+  for (const p of PRESET_SYSTEMS) {
+    ok(Boolean(p.id && p.name && p.summary && p.author),
+       `"${p.name}" states its id, name, summary and author`);
+    ok(p.daysPerWeek > 0 && p.minutes > 0, `"${p.name}" states days per week and session length`);
+    ok(p.workouts.length > 0, `"${p.name}" has workouts`);
+    ok(p.workouts.every((w) => w.name && w.exercises.length),
+       `every workout in "${p.name}" is named and non-empty`);
+    ok(p.workouts.every((w) => w.exercises.every((e) => Number(e.sets) > 0)),
+       `every exercise in "${p.name}" has a planned set count`);
+    ok(presetSetCount(p) > 0, `"${p.name}" reports a total set count`);
+  }
+  ok(new Set(PRESET_SYSTEMS.map((p) => p.id)).size === PRESET_SYSTEMS.length,
+     'preset ids are unique');
+  ok(presetById('does-not-exist') === null, 'an unknown preset id returns null, not a throw');
+
+  // A third-party system must never be able to look like one the app wrote, so
+  // the fields that carry attribution have to exist even when empty.
+  for (const p of PRESET_SYSTEMS) {
+    ok('sourceName' in p && 'sourceUrl' in p,
+       `"${p.name}" carries attribution fields, so a third-party system has somewhere to say so`);
+  }
+
+  /* ---- adding one to an account ---- */
+  await st.clearAll();
+  const preset = PRESET_SYSTEMS[0];
+  const { system, skipped } = await st.addPresetSystem(preset);
+
+  ok(skipped === 0, `adding "${preset.name}" skips nothing (${skipped})`);
+  ok(system.id && system.name === preset.name, 'it becomes a real system with the same name');
+  ok(system.presetId === preset.id, 'and remembers which ready-made system it came from');
+
+  const made = await st.getWorkouts(system.id);
+  ok(made.length === preset.workouts.length,
+     `every workout is copied in (${made.length}/${preset.workouts.length})`);
+  for (const w of preset.workouts) {
+    const mine = made.find((m) => m.name === w.name);
+    ok(Boolean(mine), `"${w.name}" was copied`);
+    ok(mine && mine.exercises.length === w.exercises.length,
+       `"${w.name}" kept all ${w.exercises.length} exercises`);
+    ok(mine && mine.exercises.every((e) => e.exerciseId),
+       `"${w.name}" resolved every exercise to a real id`);
+    ok(mine && mine.exercises[0].sets === w.exercises[0].sets,
+       `"${w.name}" kept the planned set counts`);
+  }
+  // The per-exercise coaching notes are the reason to use somebody's programme
+  // rather than a list of names, so they must survive the copy.
+  ok(made.some((m) => m.exercises.some((e) => e.notes)),
+     'the exercise notes come across with it');
+
+  ok((await st.addedPresetIds()).has(preset.id), 'the account knows it has this one');
+
+  // It is a COPY. Editing it must not be able to reach back into the preset,
+  // and the preset must not change under a user who has already taken it.
+  const mine = made[0];
+  mine.name = 'Renamed by me';
+  mine.exercises.pop();
+  await st.saveWorkout(mine);
+  ok(presetById(preset.id).workouts[0].name !== 'Renamed by me',
+     'editing your copy does not touch the original');
+  ok(presetById(preset.id).workouts[0].exercises.length > 0, 'the original still has its exercises');
+
+  // Adding twice gives two separate copies rather than merging or failing.
+  const second = await st.addPresetSystem(preset);
+  ok(second.system.id !== system.id, 'adding it again makes a second, separate system');
+  ok((await st.getSystems()).length === 2, 'and both are listed');
+  ok((await st.getWorkouts(second.system.id)).length === preset.workouts.length,
+     'the second copy is complete even though the first was edited');
+
+  // Deleting one copy leaves the other alone.
+  await st.deleteSystem(system.id);
+  ok((await st.getWorkouts(second.system.id)).length === preset.workouts.length,
+     'deleting one copy does not touch the other');
+
+  await st.clearAll();
+  let threw = false;
+  try { await st.addPresetSystem(null); } catch { threw = true; }
+  ok(threw, 'adding a non-system throws rather than writing junk');
+}
+
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

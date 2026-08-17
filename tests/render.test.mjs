@@ -703,5 +703,35 @@ ok(!data.querySelector('.rep-target'),
 }
 
 
+/* ================= ready-made systems ================= */
+{
+  const { ExploreView, ExploreDetailView } = await import(BASE + 'views-workouts.js');
+  const { PRESET_SYSTEMS } = await import(BASE + 'preset-systems.js');
+
+  const browse = await mount(ExploreView());
+  ok(PRESET_SYSTEMS.every((p) => browse.textContent.includes(p.name)),
+     'every ready-made system is listed');
+
+  const first = PRESET_SYSTEMS[0];
+  const detail = await mount(ExploreDetailView(first.id));
+  ok(detail.textContent.includes(first.workouts[0].name),
+     'opening one shows its workouts before you commit to it');
+  ok(detail.textContent.includes(first.workouts[0].exercises[0].name),
+     'and the exercises inside them');
+  // Attribution is not optional. A system from somewhere else must never look
+  // like one the app wrote.
+  ok(detail.textContent.includes(first.author), 'and says who wrote it');
+  ok(/Add to my systems/.test(detail.textContent), 'and offers to add it');
+  // The set total must not be presented as a weekly figure: these workouts
+  // repeat, so the total across them is not what you do in a week.
+  ok(!/sets a week/i.test(detail.textContent),
+     'the set count is not mislabelled as a weekly total');
+
+  const missing = await mount(ExploreDetailView('no-such-preset'));
+  ok(/no longer exists/.test(missing.textContent),
+     'an unknown system id gives a real screen, not a crash');
+}
+
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

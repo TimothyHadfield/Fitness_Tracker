@@ -380,6 +380,61 @@ export const store = {
     await backend.write('systems', systems.filter((r) => r.id !== id));
   },
 
+  /**
+   * Copy a ready-made system into this account.
+   *
+   * A COPY, not a reference. Once added it is the user's: they can rename it,
+   * change the exercises, delete a workout. The alternative — keeping it linked
+   * to the original — means their programme could change under them when the
+   * app updates, which is exactly the surprise a training plan must never spring.
+   *
+   * `presetId` is kept so the browse screen can say "already added", and so a
+   * future update could offer a fresh copy rather than silently rewriting one.
+   *
+   * Exercises are matched BY NAME. Anything that does not resolve is skipped
+   * rather than written as a dangling id, and the count of what was skipped is
+   * returned so the caller can be honest about it. In practice a test asserts
+   * every preset name resolves, so this is a belt-and-braces path.
+   */
+  async addPresetSystem(preset) {
+    if (!preset || !Array.isArray(preset.workouts)) throw new Error('Not a system');
+    const exMap = await this.getExerciseMap();
+    const byName = new Map([...exMap.values()].map((e) => [e.name, e]));
+
+    const system = await this.saveSystem({
+      name: preset.name,
+      notes: preset.notes || preset.summary || '',
+      presetId: preset.id,
+      author: preset.author || null,
+      sourceName: preset.sourceName || null,
+      sourceUrl: preset.sourceUrl || null,
+    });
+
+    let skipped = 0;
+    for (const w of preset.workouts) {
+      const exercises = [];
+      for (const item of w.exercises || []) {
+        const ex = byName.get(item.name);
+        if (!ex) { skipped++; continue; }
+        exercises.push({
+          exerciseId: ex.id,
+          sets: Number(item.sets) > 0 ? Number(item.sets) : DEFAULT_SETS,
+          notes: item.notes || '',
+        });
+      }
+      if (!exercises.length) continue;
+      await this.saveWorkout({ name: w.name, systemId: system.id, exercises });
+    }
+
+    return { system, skipped };
+  },
+
+  // Which ready-made systems this account already holds a copy of.
+  async addedPresetIds() {
+    const rows = await backend.read('systems');
+    return new Set(rows.map((r) => r.presetId).filter(Boolean));
+  },
+
   /* --- workout templates --- */
 
   async getWorkouts(systemId) {

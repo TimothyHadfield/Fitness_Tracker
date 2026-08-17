@@ -1975,3 +1975,63 @@ the system lists them, creating a second system lands inside it, and the start p
 every workout.
 
 Next, per Tim: celebrity / popular systems you can view and take for yourself.
+
+---
+
+## 2026-08-17 — ready-made systems you can browse and take
+
+Tim: an explore section in Workouts for pre-made systems, addable to your own account. First one to
+be Jeff Nippard's *Ultimate Push Pull Legs Series (2023)* from YouTube.
+
+### Built — the whole feature
+
+**Workouts → Explore ready-made systems.** Browse a list, open one and read the entire programme —
+every workout, every exercise, the planned sets and the per-exercise coaching notes — then tap to
+copy it in.
+
+A **copy**, not a link. Once added it is the user's: rename it, change the exercises, delete a day.
+The alternative, keeping it linked to the original, means someone's training plan could change under
+them when the app updates, which is exactly the surprise a plan must never spring. The system
+remembers its `presetId` so the browse list can say **Added**, and adding it twice makes a second
+separate copy rather than merging or refusing.
+
+Exercises are referenced **by name**, not by id — ids are derived from name+muscle in `exercises.js`,
+so hard-coding them would rot silently the first time a name changed. That trade only holds because a
+test asserts every name in every preset resolves; without it the failure is a workout quietly missing
+an exercise.
+
+### Not built — the Nippard system, and why
+
+Researched it properly before writing anything. Two blockers, and neither is effort:
+
+1. **The full 12-week "Ultimate Push Pull Legs System" is a paid product** — a 110-page ebook sold on
+   jeffnippard.com. Copying its prescriptions into a public app is redistributing what he sells.
+2. **Nobody here can watch the videos.** The free YouTube series is six parts; the secondary
+   write-ups are fragments (one names a close-grip incline bench and a set of diamond push-ups to
+   failure, another describes an undulating set model) and they disagree. Anything shipped would be a
+   guess published under a real person's name — the one thing this project has consistently refused
+   to do.
+
+So what shipped instead is **three systems the app can actually stand behind** — Push Pull Legs,
+Upper/Lower, and a 3-day Full Body — built on what `docs/research.md` already supports: 10–20 hard
+sets per muscle per week (§6), compounds first while fresh (§4), and last sets taken near failure
+because every estimate the app makes assumes it (§3).
+
+The structure is ready for the real thing: `author`, `sourceName` and `sourceUrl` exist on every
+preset and the detail screen renders them, with a test asserting the attribution fields are present.
+A licensed or properly sourced system needs no new code — it needs permission, or a first-party
+written source Tim can point at.
+
+### One thing corrected before it shipped
+
+The detail screen said "64 sets a week". It is not a weekly figure — a 6-day PPL runs its three
+workouts twice, so the total across the workouts overstates or understates every programme by a
+different factor depending on how it repeats. Now reads "64 sets across 3 workouts", with a test that
+the phrase "sets a week" never appears.
+
+### Verified
+
+**858 data-layer + 141 render assertions, green.** Driven in a browser with real clicks: Explore from
+the Workouts screen, open Push Pull Legs, 20 exercises listed under Push/Pull/Legs, add it, land
+inside the new system with all three workouts, and the browse list then shows **Added**. Checked
+against the store afterwards that the copy carries 6/7/7 exercises with their notes intact.
