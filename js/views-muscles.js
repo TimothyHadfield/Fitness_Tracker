@@ -11,9 +11,10 @@
 import { store, muscleStrength } from './store.js';
 import {
   LEVELS, MUSCLE_LIFTS, UNRANKABLE, weightForPercentile, keyLiftFor,
+  COMPARE_OPTIONS, normalizeCompare, comparisonLabel,
 } from './strength-standards.js';
 import { bodySvg, setSelected } from './body-map.js';
-import { setChildren, el, emptyState, trimNum, fmtDateShort } from './ui.js';
+import { setChildren, el, emptyState, trimNum, fmtDateShort, icon, openSheet } from './ui.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -23,6 +24,9 @@ let showGeneral = false;
 
 export async function muscleGroupsPane(host, top) {
   const { profile, muscles, ready } = await muscleStrength();
+  // Changing the comparison group changes the percentile, the level, the
+  // targets and the colours, so the whole pane is rebuilt rather than repainted.
+  const reload = () => muscleGroupsPane(host, top);
 
   if (!ready) {
     setChildren(top);
@@ -39,8 +43,8 @@ export async function muscleGroupsPane(host, top) {
     setChildren(top);
     setChildren(host, emptyState(
       'Nothing to rank yet',
-      'Each muscle group is ranked by one named lift — bench press for chest, back squat for quads, '
-      + 'and so on. Lift one in a workout, or record a benchmark, and it will light up.',
+      'Any exercise that trains a muscle rates it — a hammer curl rates biceps just as a barbell '
+      + 'curl does. Log a workout or record a benchmark and the map lights up.',
       el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
     ));
     return;
@@ -48,16 +52,23 @@ export async function muscleGroupsPane(host, top) {
 
   /* ---- top row: what the comparison is against ---- */
 
+  // The whole row is the control. Tim asked to be able to choose the comparison
+  // group; making the existing caption the button means the thing that STATES
+  // the comparison is also the thing that CHANGES it, so there is nothing extra
+  // on a screen whose rule is that the content comes first.
+  const label = comparisonLabel(profile);
+
   setChildren(top,
     el('div', { class: 'control-row' },
-      el('div', { class: 'basis' },
-        el('span', { class: 'basis-main', text: 'vs. people who lift' }),
-        el('span', {
-          class: 'basis-sub',
-          text: `${profile.gender === 'female' ? 'women' : 'men'}`
-            + (profile.age ? ` around ${profile.age}` : ', all ages')
-            + ` · ${units.withUnit(profile.bodyWeight)}`,
-        }),
+      el('button', {
+        class: 'basis basis-btn', 'aria-haspopup': 'dialog',
+        onClick: () => openCompareSheet(profile, reload),
+      },
+        el('span', { class: 'basis-main' },
+          label.main,
+          icon('down', 15),
+        ),
+        el('span', { class: 'basis-sub', text: label.sub }),
       ),
       el('button', {
         class: 'chip', 'aria-pressed': String(showGeneral),
@@ -134,6 +145,70 @@ function legend() {
 }
 
 /* ------------------------------------------------------------------ *
+ * "Compared to:" — who the ranking is measured against
+ * ------------------------------------------------------------------ */
+
+// Three independent axes. They are separate rather than a list of presets
+// because they genuinely are independent — "women, any body weight, my age" is
+// a sensible question, and a preset list could not hold every combination
+// without becoming a menu nobody reads.
+//
+// What this must never become is a way to quietly look stronger. Every option
+// changes the STATED comparison in the header at the same time as it changes
+// the colours, so the number and the population it refers to can never drift
+// apart. And none of these options reach outside people who lift — D15 stands;
+// "everyone who lifts" means both sexes, not the general public.
+const COMPARE_AXES = [
+  // Titled "Who" rather than "Compared to" — the sheet is already called that,
+  // and a section repeating its own dialog's title reads as a mistake.
+  { key: 'sex', title: 'Who',
+    help: 'Men and women are held to different standards, so this changes every level.' },
+  { key: 'weight', title: 'Body weight',
+    help: 'Standards scale with body weight. Ignoring it compares you against lifters of every size.' },
+  { key: 'age', title: 'Age',
+    help: 'Strength peaks around 23–40. Ignoring age drops the correction that keeps a masters lifter from reading as permanently weak.' },
+];
+
+function openCompareSheet(profile, onChange) {
+  const current = normalizeCompare(profile.compare);
+  const body = el('div', { class: 'compare-sheet' });
+
+  const draw = () => {
+    setChildren(body,
+      ...COMPARE_AXES.map((axis) =>
+        el('div', { class: 'compare-axis' },
+          el('div', { class: 'section-label', text: axis.title }),
+          el('div', { class: 'compare-opts' },
+            ...COMPARE_OPTIONS[axis.key].map((opt) =>
+              el('button', {
+                // .chip[aria-pressed="true"] already carries the selected look,
+                // so the state lives in the attribute the screen reader reads
+                // rather than in a second class that could disagree with it.
+                class: 'chip',
+                'aria-pressed': String(current[axis.key] === opt.key),
+                text: opt.name,
+                onClick: async () => {
+                  current[axis.key] = opt.key;
+                  await store.saveSettings({ compare: { ...current } });
+                  draw();
+                  // Re-rank rather than repaint: the percentile, the level, the
+                  // targets and the colours all move together.
+                  onChange();
+                },
+              }))),
+          el('div', { class: 'field-help', text: axis.help }),
+        )),
+      el('div', { class: 'field-help', text:
+        'Every option here compares you against people who lift. "Everyone who lifts" means men and '
+        + 'women together — not the general public, who mostly do not lift at all.' }),
+    );
+  };
+  draw();
+
+  openSheet({ title: 'Compared to', body });
+}
+
+/* ------------------------------------------------------------------ *
  * Confidence
  * ------------------------------------------------------------------ */
 
@@ -191,8 +266,9 @@ function detail(m, muscle, profile) {
       el('div', { class: 'section-label', text: muscle }),
       el('div', { class: 'field-help' },
         lift
-          ? `Nothing recorded on ${lift.name} yet. That's the lift this muscle is ranked by — `
-            + 'lift it in a workout or benchmark it.'
+          ? `Nothing recorded for this muscle yet. Any exercise that trains it counts — `
+            + `${lift.name} is the standard it is measured against, but it is not the only thing `
+            + 'that rates it.'
           : 'This muscle has no published strength standards, so it can\'t be ranked.'),
       lift
         ? el('a', { class: 'btn primary block', href: '#/benchmark', text: `Benchmark ${lift.name}` })
@@ -244,9 +320,12 @@ function detail(m, muscle, profile) {
 
     m.hint ? el('div', { class: 'field-help', text: m.hint }) : null,
 
+    // The population is never assumed. It is whatever the header says it is,
+    // built from the same function, so the percentile and the group it refers
+    // to cannot drift apart when the comparison is changed.
     el('div', { class: 'field-help' },
-      `Stronger than ${pct}% of people who lift at your weight`
-      + (profile.age ? ' and age.' : '.')),
+      `Stronger than ${pct}% of ${comparisonLabel(profile).main.replace(/^vs\. /, '')}`
+      + ` — ${comparisonLabel(profile).sub}.`),
 
     showGeneral
       ? el('div', { class: 'field-help general' },

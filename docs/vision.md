@@ -96,7 +96,7 @@ Open threads:
 **Where this connects:** Tier 3's "small set of well-explained starter programs". The ranking is the
 part that is genuinely new versus every competitor.
 
-### 1.4 Body comparing — "Compared to:" is a user setting
+### 1.4 Body comparing — "Compared to:" is a user setting — **BUILT 2026-08-17**
 
 Right now the muscle map compares the user to people who lift and are similar to them. The user
 should be able to choose what they are compared against, in a **"Compared to:" setting**.
@@ -105,7 +105,23 @@ should be able to choose what they are compared against, in a **"Compared to:" s
 - **Choosable:** male · female · all · a specific weight · all weights · a specific age · all ages.
 - The **colours and ranges of the muscle groups change accordingly.**
 
-**Partly unblocked, 2026-08-17.** The related complaint — that the map was far too picky about which
+**BUILT 2026-08-17, as described.** The header on the Muscles screen is now the control: it states
+the comparison group and opens a sheet with the three axes. Sex (like me / men / women / everyone who
+lifts), body weight (mine / any) and age (mine / any), each independent, defaulting to people like
+you, saved to settings so it survives a reload. Levels, percentiles, targets and colours all move
+together.
+
+Two things worth knowing about how it was built. "Everyone who lifts" is a genuine **mixture** of the
+male and female distributions, not a made-up combined median — the split it assumes (55 % male) is an
+assumption, is marked as one in the code, and affects nothing else. And a mixture has no closed-form
+inverse, so the targets panel solves it by bisection; there is a test that every level's target,
+under every one of the sixteen combinations, actually grants that level when hit.
+
+**The D15 worry below turned out not to apply** — "all" sits alongside male/female, so it is the sex
+axis, not the population axis. The general-population readout is still the separate "vs. everyone"
+line it always was. The original note is kept:
+
+**Earlier, partly unblocked:** The related complaint — that the map was far too picky about which
 exercises counted — is fixed: every exercise that trains a muscle now rates it, with a confidence
 that fades the colour. That work built the machinery a "Compared to:" setting would sit on top of,
 but the setting itself is NOT built and the comparison group is still fixed.

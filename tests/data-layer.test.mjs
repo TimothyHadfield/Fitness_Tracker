@@ -1039,6 +1039,158 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(/req\.method !== 'GET'/.test(sw), 'sw.js never intercepts a write');
 }
 
+/* ================= "Compared to:" — the chosen comparison group ================= */
+// Tim, 2026-08-17: the user picks who they are ranked against. Three independent
+// axes, each defaulting to "like me". The colours, levels and targets all follow.
+{
+  const me180 = { gender: 'male', bodyWeight: 180, age: 30 };
+  const withCompare = (c) => ({ ...me180, compare: c });
+
+  // ---- a bad or missing setting must never throw, and must fall back ----
+  for (const junk of [null, undefined, {}, 'nonsense', 42, { sex: 'martian' },
+                      { sex: 'all', weight: 'banana' }]) {
+    const n = ss.normalizeCompare(junk);
+    ok(ss.COMPARE_OPTIONS.sex.some((o) => o.key === n.sex)
+       && ss.COMPARE_OPTIONS.weight.some((o) => o.key === n.weight)
+       && ss.COMPARE_OPTIONS.age.some((o) => o.key === n.age),
+       `a stored comparison of ${JSON.stringify(junk)} degrades to something valid`);
+  }
+  ok(ss.normalizeCompare({ sex: 'all', weight: 'banana' }).sex === 'all',
+     'and a half-valid setting keeps the half that is valid');
+
+  // ---- the default must be exactly what it always was ----
+  {
+    const before = ss.percentileFor(225, 'Chest', me180);
+    const after = ss.percentileFor(225, 'Chest', withCompare(ss.COMPARE_DEFAULT));
+    ok(near(before, after, 1e-9), 'the default comparison changes nothing at all');
+    ok(near(before, 50, 0.5), `and a 180 lb man benching 225 is still the 50th percentile (${before.toFixed(1)})`);
+  }
+
+  // ---- sex ----
+  {
+    const vsMen = ss.percentileFor(225, 'Chest', withCompare({ sex: 'male' }));
+    const vsWomen = ss.percentileFor(225, 'Chest', withCompare({ sex: 'female' }));
+    const vsAll = ss.percentileFor(225, 'Chest', withCompare({ sex: 'all' }));
+    ok(vsWomen > vsMen, `the same bench ranks higher against women (${vsWomen.toFixed(1)} > ${vsMen.toFixed(1)})`);
+    ok(vsAll > vsMen && vsAll < vsWomen,
+       `and a mixed population lands between the two (${vsAll.toFixed(1)})`);
+    ok(near(ss.percentileFor(225, 'Chest', withCompare({ sex: 'own' })), vsMen, 1e-9),
+       'like me resolves to the user own sex');
+    const her = { gender: 'female', bodyWeight: 140, age: 30 };
+    ok(near(ss.percentileFor(100, 'Chest', { ...her, compare: { sex: 'own' } }),
+            ss.percentileFor(100, 'Chest', { ...her, compare: { sex: 'female' } }), 1e-9),
+       'and resolves to hers for a woman');
+  }
+
+  // The mixture is a real mixture, not a fudged single median: its percentile
+  // must equal the share-weighted sum of the two populations' percentiles.
+  {
+    const v = 260;
+    const m = ss.percentileFor(v, 'Chest', withCompare({ sex: 'male' }));
+    const f = ss.percentileFor(v, 'Chest', withCompare({ sex: 'female' }));
+    const all = ss.percentileFor(v, 'Chest', withCompare({ sex: 'all' }));
+    ok(near(all, ss.MALE_SHARE * m + (1 - ss.MALE_SHARE) * f, 1e-6),
+       'the combined population is the share-weighted mixture of the two, exactly');
+  }
+
+  // ---- body weight ----
+  {
+    const light = { gender: 'male', bodyWeight: 140, age: 30 };
+    const ownWeight = ss.percentileFor(225, 'Chest', { ...light, compare: { weight: 'own' } });
+    const anyWeight = ss.percentileFor(225, 'Chest', { ...light, compare: { weight: 'any' } });
+    ok(ownWeight > anyWeight,
+       `a light lifter ranks higher against his own weight class than against everyone (${ownWeight.toFixed(1)} > ${anyWeight.toFixed(1)})`);
+    // "Any body weight" is the unscaled reference standard, not a missing value.
+    ok(near(ss.percentileFor(225, 'Chest', { ...light, compare: { weight: 'any' } }),
+            ss.percentileFor(225, 'Chest', { gender: 'male', bodyWeight: 180, age: 30 }), 1e-9),
+       'and "any body weight" is exactly the reference standard, unscaled');
+    const heavy = { gender: 'male', bodyWeight: 260, age: 30 };
+    ok(ss.percentileFor(225, 'Chest', { ...heavy, compare: { weight: 'any' } })
+       > ss.percentileFor(225, 'Chest', { ...heavy, compare: { weight: 'own' } }),
+       'and a heavy lifter ranks higher once body weight stops being held against him');
+  }
+
+  // ---- age ----
+  {
+    const older = { gender: 'male', bodyWeight: 180, age: 62 };
+    const graded = ss.percentileFor(225, 'Chest', { ...older, compare: { age: 'own' } });
+    const ungraded = ss.percentileFor(225, 'Chest', { ...older, compare: { age: 'any' } });
+    ok(graded > ungraded,
+       `age grading helps a 62-year-old, and turning it off costs him (${graded.toFixed(1)} > ${ungraded.toFixed(1)})`);
+    const prime = { gender: 'male', bodyWeight: 180, age: 30 };
+    ok(near(ss.percentileFor(225, 'Chest', { ...prime, compare: { age: 'own' } }),
+            ss.percentileFor(225, 'Chest', { ...prime, compare: { age: 'any' } }), 1e-9),
+       'and it makes no difference at all in the 23–40 prime, where the coefficient is 1');
+  }
+
+  // ---- axes are independent ----
+  {
+    const both = ss.percentileFor(225, 'Chest', withCompare({ sex: 'female', weight: 'any' }));
+    ok(Number.isFinite(both) && both > 0 && both < 100,
+       'two axes can be changed at once and still produce a real percentile');
+  }
+
+  // ---- the round trip has to hold for EVERY combination ----
+  // levelFor() and the targets panel are held together by this: hitting the
+  // weight the panel asks for must grant the level. A mixture has no closed-form
+  // inverse, so this is the check that its bisection is good enough.
+  for (const sex of ['own', 'male', 'female', 'all']) {
+    for (const weight of ['own', 'any']) {
+      for (const age of ['own', 'any']) {
+        const prof = withCompare({ sex, weight, age });
+        let worst = 0;
+        for (const lv of ss.LEVELS) {
+          const w = ss.weightForPercentile(lv.percentile, 'Chest', prof);
+          const back = ss.percentileFor(w, 'Chest', prof);
+          worst = Math.max(worst, Math.abs(back - lv.percentile));
+          const level = ss.levelFor(back);
+          ok(Boolean(level) && level.percentile >= lv.percentile - 1e-6,
+             `${sex}/${weight}/${age}: hitting the ${lv.name} target actually grants ${lv.name}`);
+        }
+        ok(worst < 1e-4,
+           `${sex}/${weight}/${age}: percentile round-trips to within 1e-4 (${worst.toExponential(1)})`);
+      }
+    }
+  }
+
+  // Targets must still rise with level under every comparison, or the panel
+  // would list a harder level as needing less weight.
+  for (const sex of ['own', 'male', 'female', 'all']) {
+    const prof = withCompare({ sex });
+    let rising = true;
+    let prev = 0;
+    for (const lv of ss.LEVELS) {
+      const w = ss.weightForPercentile(lv.percentile, 'Chest', prof);
+      if (!(w > prev)) rising = false;
+      prev = w;
+    }
+    ok(rising, `targets increase with every level under sex=${sex}`);
+  }
+
+  // ---- the label ----
+  // D15's rule survives the new setting: whatever group is chosen, the words on
+  // screen say it is people who LIFT. The general-population figure stays a
+  // separate, clearly-labelled readout.
+  for (const sex of ['own', 'male', 'female', 'all']) {
+    for (const weight of ['own', 'any']) {
+      for (const age of ['own', 'any']) {
+        const label = ss.comparisonLabel(withCompare({ sex, weight, age }));
+        ok(/lifts?\b/i.test(label.main),
+           `the caption for ${sex}/${weight}/${age} names a population that lifts ("${label.main}")`);
+        ok(label.sub.length > 0, `and states the weight and age basis ("${label.sub}")`);
+      }
+    }
+  }
+  ok(ss.comparisonLabel(withCompare(ss.COMPARE_DEFAULT)).isDefault,
+     'the default comparison knows it is the default');
+  ok(!ss.comparisonLabel(withCompare({ sex: 'all' })).isDefault,
+     'and a changed one knows it is not');
+  ok(/any body weight/i.test(ss.comparisonLabel(withCompare({ weight: 'any' })).sub),
+     'ignoring body weight is stated in words, never left implied');
+  ok(/any age/i.test(ss.comparisonLabel(withCompare({ age: 'any' })).sub),
+     'and so is ignoring age');
+}
+
 /* ================= muscle evidence: many exercises, one rating ================= */
 // The change this suite exists for: before 2026-08-17 a muscle was ranked by ONE
 // named lift, so 11 of 265 exercises could move the body map. A full week of

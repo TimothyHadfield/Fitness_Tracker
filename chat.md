@@ -1749,3 +1749,65 @@ and the seated→standing conversion. The panel says Fair confidence, one sessio
 12-rep set, but the *level* still says Elite. Fixing it properly needs per-exercise spread or high-rep
 shrinkage, and neither should be guessed at without the simulator in
 `docs/strength-estimate-plan.md` §11. Written into `progress.md` §9 rather than quietly tuned.
+
+---
+
+## 2026-08-17 — "Compared to:" — the user picks the comparison group
+
+Straight from `docs/vision.md` §1.4, which Tim asked me to review and then build. I had enough detail
+and said so, with one correction to my own earlier note: I had read his "all" as meaning *all people
+including non-lifters*, which would have collided with the rule that ranking is always against people
+who lift. Re-reading, "all" sits in a list with male and female — it is the **sex** axis. There was no
+collision. The general-population readout was already a separate "vs. everyone" line.
+
+### What it is
+
+The caption on the Muscles screen — the line that already stated the comparison — became the button
+that changes it. Tapping it opens a sheet with three independent axes:
+
+- **Who** — people like me · men · women · everyone who lifts
+- **Body weight** — mine · any
+- **Age** — mine · any
+
+Independent rather than a preset list, because "women, any body weight, my age" is a real question
+and no preset list holds sixteen combinations without becoming a menu nobody reads. Saved to
+settings, so it survives a reload and follows the account.
+
+### The part that needed actual thought
+
+**"Everyone who lifts" has no median.** The male and female distributions sit about 2.5σ apart, so
+any single combined median would be a number describing nobody. It is modelled as a real **mixture**
+instead: the percentile is the share-weighted sum of the two populations' percentiles. There is a
+test asserting exactly that identity, so the implementation cannot quietly drift into a fudge.
+
+The male share (55 %) **is an assumption** and is labelled as one in the code — US strength-training
+participation is close to even, but barbell logging skews male. It affects only that one option.
+
+A mixture has no closed-form inverse, so the targets panel solves it by bisection. That matters more
+than it sounds: the levels and the targets are held together by a round trip — hitting the weight the
+panel asks for must actually grant the level — and the tolerance for that was originally measured
+against the closed form. So there is now a test that walks **all sixteen combinations** of the three
+axes, and for every level checks that the target round-trips and grants the level. 80 halvings put
+the bracket far below the closed form's own error.
+
+Two other invariants worth having: targets must still *rise* with level under every comparison, and
+every caption must name a population that **lifts**. The latter replaced a render test that had been
+checking for the literal string "people who lift" — which was the right rule expressed as the wrong
+assertion, since the caption is no longer one fixed string.
+
+### Corrections that fell out
+
+The screen still told people a muscle was "ranked by one named lift" in two empty states — untrue
+since yesterday. Both now say any exercise that trains the muscle counts.
+
+The detail panel's "Stronger than X % of people who lift at your weight and age" was hard-coded to
+assume the default comparison. It now builds that sentence from the same function as the header, so
+the number and the population it refers to cannot disagree.
+
+### Verified
+
+**641 data-layer + 118 render assertions, green.** Driven in a real browser with CDP clicks, not
+synthetic events: opening the sheet, picking **Women**, and watching Chest go Intermediate → Elite
+while the caption changed to "vs. women who lift" and the setting persisted to storage. Same again
+for "Any body weight". The sheet stays open while the body recolours behind it, which turned out to
+be a nice property rather than a designed one.

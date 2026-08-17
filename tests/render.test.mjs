@@ -173,8 +173,13 @@ ok([...data.querySelectorAll('.lv-key-item')].some((n) => /less sure/i.test(n.te
 chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 await settle();
 ok(/Chest/.test(data.textContent), 'tapping chest opens its detail');
-ok(/people who lift/i.test(data.textContent),
-   'the caption says "people who lift" — never implies the general population');
+// The comparison group is now the user's choice, so the caption is no longer one
+// fixed string. The invariant it has to keep is the one that matters: whatever
+// group is named, it is always a group of people who LIFT. Never the public.
+ok(/who lifts?\b/i.test(data.textContent),
+   'the caption names a population that lifts — never implies the general population');
+ok(!/\d+% of (all )?(people|adults)\b(?! who)/i.test(data.textContent),
+   'and never claims a percentile against people in general');
 ok(/\d+ lbs to (Beginner|Novice|Intermediate|Proficient|Advanced|Expert|Elite)/.test(data.textContent),
    'the detail shows the weight needed for the next level');
 ok(data.querySelectorAll('.target-row').length === LEVELS.length,

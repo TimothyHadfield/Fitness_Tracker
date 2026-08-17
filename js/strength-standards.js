@@ -179,9 +179,80 @@ function normalInv(p) {
     / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
 }
 
-// The median 1RM for this muscle's key lift, at this person's body weight,
-// age-graded. Everything else is derived from this.
-export function medianFor(muscle, { gender, bodyWeight, age } = {}) {
+/* ------------------------------------------------------------------ *
+ * Who you are being compared against
+ * ------------------------------------------------------------------ */
+
+// Tim, 2026-08-17: the comparison group should be the user's choice, defaulting
+// to people like them. Three independent axes, each defaulting to `own`.
+//
+// Note what "all" means on the SEX axis: men and women together. It does NOT
+// mean the general population — that is a separate, clearly-labelled readout
+// (generalPopulationPercentile), and D15 still forbids re-tiering against it.
+export const COMPARE_DEFAULT = { sex: 'own', weight: 'own', age: 'own' };
+
+export const COMPARE_OPTIONS = {
+  sex: [
+    { key: 'own', name: 'People like me' },
+    { key: 'male', name: 'Men' },
+    { key: 'female', name: 'Women' },
+    { key: 'all', name: 'Everyone who lifts' },
+  ],
+  weight: [
+    { key: 'own', name: 'My body weight' },
+    { key: 'any', name: 'Any body weight' },
+  ],
+  age: [
+    { key: 'own', name: 'My age' },
+    { key: 'any', name: 'Any age' },
+  ],
+};
+
+// The share of people who lift and log who are men. Used ONLY to combine the
+// two sexes into one population when the user asks to be compared against
+// everyone — a mixture, so that no fictional "combined median" has to be
+// invented for a distribution that is genuinely bimodal.
+//
+// ⚠️ THIS IS AN ASSUMPTION, not a measurement. US strength-training
+// participation is close to even (NHIS), but barbell logging skews male. It
+// affects only the `sex: 'all'` option, and only by shifting the percentile a
+// few points; every other comparison is unaffected.
+export const MALE_SHARE = 0.55;
+
+export function normalizeCompare(compare) {
+  const c = compare && typeof compare === 'object' ? compare : {};
+  const pick = (axis) => (COMPARE_OPTIONS[axis].some((o) => o.key === c[axis])
+    ? c[axis] : COMPARE_DEFAULT[axis]);
+  return { sex: pick('sex'), weight: pick('weight'), age: pick('age') };
+}
+
+// The reference population as a MIXTURE: a list of { gender, share }. One entry
+// for a single sex, two for "everyone who lifts".
+function populations(profile) {
+  const c = normalizeCompare(profile && profile.compare);
+  if (c.sex === 'all') {
+    return [{ gender: 'male', share: MALE_SHARE }, { gender: 'female', share: 1 - MALE_SHARE }];
+  }
+  if (c.sex === 'male' || c.sex === 'female') return [{ gender: c.sex, share: 1 }];
+  return [{ gender: profile && profile.gender === 'female' ? 'female' : 'male', share: 1 }];
+}
+
+// "Any body weight" is not a missing value — it means compare against lifters of
+// every size, which is exactly the reference median with no allometric scaling
+// applied. Same for age: "any age" is the ungraded standard, not age zero.
+function refBodyWeight(profile, gender) {
+  const c = normalizeCompare(profile && profile.compare);
+  if (c.weight === 'any') return REF_BW[gender];
+  return Number(profile && profile.bodyWeight);
+}
+
+function refAge(profile) {
+  const c = normalizeCompare(profile && profile.compare);
+  if (c.age === 'any') return null;
+  return profile ? profile.age : null;
+}
+
+function medianForPopulation(muscle, gender, bodyWeight, age) {
   const spec = MUSCLE_LIFTS[muscle];
   if (!spec) return null;
   const g = gender === 'female' ? 'female' : 'male';
@@ -194,21 +265,75 @@ export function medianFor(muscle, { gender, bodyWeight, age } = {}) {
   return scaled / ageCoefficient(age);
 }
 
-// Percentile among people who lift, 0–100.
+// The median 1RM for this muscle's key lift, at this person's body weight,
+// age-graded. With a mixed reference population there is no single median that
+// means anything, so this reports the one for the FIRST population — callers
+// that need a true answer under mixing should ask weightForPercentile(50).
+export function medianFor(muscle, profile = {}) {
+  const pops = populations(profile);
+  return medianForPopulation(muscle, pops[0].gender, refBodyWeight(profile, pops[0].gender), refAge(profile));
+}
+
+// Percentile among the chosen comparison group, 0–100.
 export function percentileFor(oneRepMax, muscle, profile) {
-  const median = medianFor(muscle, profile);
   const v = Number(oneRepMax);
-  if (!median || !(v > 0)) return null;
-  const z = (Math.log(v) - Math.log(median)) / SIGMA;
-  return Math.min(99.9, Math.max(0.1, normalCdf(z) * 100));
+  if (!(v > 0)) return null;
+  let p = 0;
+  for (const pop of populations(profile)) {
+    const median = medianForPopulation(muscle, pop.gender, refBodyWeight(profile, pop.gender), refAge(profile));
+    if (!median) return null;
+    p += pop.share * normalCdf((Math.log(v) - Math.log(median)) / SIGMA);
+  }
+  return Math.min(99.9, Math.max(0.1, p * 100));
 }
 
 // The weight needed to reach a given percentile — the "targets" panel.
 export function weightForPercentile(percentile, muscle, profile) {
-  const median = medianFor(muscle, profile);
   const p = Number(percentile);
-  if (!median || !(p > 0) || !(p < 100)) return null;
-  return median * Math.exp(normalInv(p / 100) * SIGMA);
+  if (!(p > 0) || !(p < 100)) return null;
+  const pops = populations(profile);
+  const medians = pops.map((pop) =>
+    medianForPopulation(muscle, pop.gender, refBodyWeight(profile, pop.gender), refAge(profile)));
+  if (medians.some((m) => !m)) return null;
+
+  // One population still has a closed form, and it is kept: the targets panel
+  // and levelFor() are held together by a round-trip whose error budget was
+  // measured against exactly this expression (see BOUNDARY_EPSILON).
+  if (pops.length === 1) return medians[0] * Math.exp(normalInv(p / 100) * SIGMA);
+
+  // A mixture has no closed-form inverse. Its CDF is strictly increasing in
+  // weight, so bisection always converges, and 80 halvings take the bracket
+  // below 1e-18 of a pound — far tighter than the closed form's own error.
+  const target = p / 100;
+  let lo = 1e-6, hi = 1e6;
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    let cdf = 0;
+    for (let j = 0; j < pops.length; j++) {
+      cdf += pops[j].share * normalCdf((Math.log(mid) - Math.log(medians[j])) / SIGMA);
+    }
+    if (cdf < target) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+// How to describe the comparison on screen. The screen must never imply the
+// comparison is against everyone alive, so the noun is always "who lift".
+export function comparisonLabel(profile) {
+  const c = normalizeCompare(profile && profile.compare);
+  const own = profile && profile.gender === 'female' ? 'women' : 'men';
+  const who = c.sex === 'all' ? 'everyone who lifts'
+    : c.sex === 'male' ? 'men who lift'
+      : c.sex === 'female' ? 'women who lift'
+        : `${own} who lift`;
+
+  const bits = [];
+  bits.push(c.weight === 'any' ? 'any body weight'
+    : (profile && profile.bodyWeight ? `${Math.round(profile.bodyWeight)} lbs` : 'your body weight'));
+  bits.push(c.age === 'any' ? 'any age'
+    : (profile && profile.age ? `around ${profile.age}` : 'any age'));
+
+  return { main: `vs. ${who}`, sub: bits.join(' · '), isDefault: c.sex === 'own' && c.weight === 'own' && c.age === 'own' };
 }
 
 // Which level a percentile falls in. Below the first threshold is `null` —

@@ -466,8 +466,12 @@ export const store = {
       bodyWeight: latest ? latest.weight : null,
       bodyWeightDate: latest ? latest.date : null,
       units: settings.units || 'lbs',
-      // What the strength map is still waiting on. Gender and body weight are
-      // required; age only changes which population you are compared against.
+      // Who the body map compares you against. A view preference, but it lives
+      // in settings so it survives a reload and follows the account — someone
+      // who has chosen to be ranked against everyone should not find it reset
+      // the next morning. Shape is validated in strength-standards.js, so a
+      // stale or hand-edited value degrades to the default rather than throwing.
+      compare: settings.compare || null,
       missing: [
         !settings.gender && 'gender',
         !latest && 'body weight',

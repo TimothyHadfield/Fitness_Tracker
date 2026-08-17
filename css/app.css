@@ -1447,8 +1447,17 @@ select.input {
 .body-foot { flex: none; display: flex; flex-direction: column; gap: 8px; max-height: 46%; overflow-y: auto; }
 
 .basis { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.basis-main { font-size: 14px; font-weight: 650; }
+.basis-main { font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 3px; }
 .basis-sub { font-size: 11.5px; color: var(--ink-faint); }
+/* The caption IS the control: the line that states the comparison group is the
+   button that changes it, so nothing extra has to be added to the screen. */
+.basis-btn { text-align: left; cursor: pointer; background: none; padding: 2px 0; color: inherit; }
+.basis-btn .basis-main svg { color: var(--ink-faint); }
+.basis-btn:active { opacity: .7; }
+
+.compare-sheet { display: flex; flex-direction: column; gap: 15px; }
+.compare-axis { display: flex; flex-direction: column; gap: 6px; }
+.compare-opts { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .muscle-head { display: flex; align-items: baseline; gap: 8px; }
 .muscle-name { font-size: 16px; font-weight: 700; flex: 1; }
