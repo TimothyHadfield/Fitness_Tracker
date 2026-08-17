@@ -205,6 +205,23 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 await settle();
 ok(data.querySelectorAll('.seg').length === 3, 'Bar Chart mode keeps the mode switch');
 
+/* ============ neither chart mode is ever a dead end ============ */
+// Tim, 2026-08-17: a chart needs the same lift on two days, but the numbers
+// exist from the first workout and should be visible. Both modes fall back to
+// the current-bests list rather than an empty state, and no tab is disabled.
+ok(![...data.querySelectorAll('.seg')].some((b) => b.disabled),
+   'no mode tab is ever disabled — each one leads somewhere useful');
+for (const mode of ['Graph', 'Bar Chart']) {
+  [...data.querySelectorAll('.seg')].find((b) => b.textContent === mode).click();
+  await settle();
+  const rows = data.querySelectorAll('.best-row');
+  ok(rows.length > 0, `${mode} shows where every lift stands when it cannot draw a line`);
+  ok(/\d/.test(data.querySelector('.best-set').textContent),
+     `${mode}'s list shows actual numbers, not just names`);
+  ok(!/Nothing to chart yet|Nothing to compare yet/.test(data.textContent),
+     `${mode} no longer dead-ends on "nothing to chart"`);
+}
+
 /* ================= body-weight trend ================= */
 // One weigh-in so far, and a line needs two.
 data = await mount(GraphView());

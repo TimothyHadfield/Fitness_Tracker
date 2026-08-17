@@ -2,7 +2,7 @@
 
 import {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
-  normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL,
+  normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL, currentBests,
 } from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
@@ -258,8 +258,8 @@ function pickSource(opt) {
 }
 
 export async function GraphView() {
-  const [options, comparison, bwPoints] = await Promise.all([
-    chartableExercises(2), benchmarkComparison(2), bodyWeightSeries(),
+  const [options, comparison, bwPoints, bests] = await Promise.all([
+    chartableExercises(2), benchmarkComparison(2), bodyWeightSeries(), currentBests(),
   ]);
 
   // Two weigh-ins to make a line, the same bar every exercise has to clear.
@@ -273,8 +273,9 @@ export async function GraphView() {
   // Muscles unreachable — precisely when it is the most useful thing here,
   // since it works off a single benchmark and explains what to record next.
   // Each mode now renders its own empty state inside the normal shell.
-  if (!trendOptions.length && graphMode === 'trend') graphMode = comparison.fields.length ? 'compare' : 'muscles';
-  if (!comparison.fields.length && graphMode === 'compare') graphMode = trendOptions.length ? 'trend' : 'muscles';
+  // No mode is force-switched away from any more either. A mode with no line to
+  // draw still shows where every lift stands, so bouncing the user to a
+  // different tab would take away the thing they came to look at.
 
   // The chart owns the screen. Controls are one compact row, and the mode switch
   // lives in the header instead of a redundant "Graphs" heading.
@@ -285,9 +286,11 @@ export async function GraphView() {
     [['trend', 'Graph'], ['compare', 'Bar Chart'], ['muscles', 'Muscles']].map(([m, label]) =>
       el('button', {
         class: 'seg', role: 'tab', 'aria-selected': String(graphMode === m),
-        // Muscles is never disabled: with no data it explains what to record,
-        // which is more use than a dead tab.
-        disabled: (m === 'trend' && !trendOptions.length) || (m === 'compare' && !comparison.fields.length),
+        // NOTHING here is disabled any more. Both chart modes fall back to the
+        // current-bests list when they cannot draw a line, so a tab always leads
+        // somewhere useful — which is the whole point of that list existing.
+        // Disabling them was what made a new user's Data screen feel empty.
+        disabled: false,
         text: label,
         onClick: () => { graphMode = m; render(); },
       })),
@@ -298,12 +301,12 @@ export async function GraphView() {
   async function renderTrend() {
     if (!trendOptions.length) {
       setChildren(top);
-      setChildren(host, emptyState(
-        'Nothing to chart yet',
-        'A line needs the same thing recorded on two different days. Record a workout, a '
-        + 'benchmark, or your body weight twice and it will appear here.',
-        el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
-      ));
+      // A line needs two days. Where there is only one, the numbers still exist
+      // and are worth showing — telling someone who has just logged a full
+      // workout that there is "nothing to chart" reads as the app having lost
+      // their data (Tim, 2026-08-17).
+      setChildren(host, bestsPane(bests, 'A line needs the same lift on two different days. '
+        + 'Until then, here is where everything stands.'));
       return;
     }
     if (!graphChoice.exerciseId || !trendOptions.find((o) => o.id === graphChoice.exerciseId)) {
@@ -379,7 +382,14 @@ export async function GraphView() {
 
     const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field, source);
     if (points.length < 2) {
-      setChildren(host, emptyState('Only one data point', 'Record this exercise on another day to see a line.'));
+      // One point is not a line, but it IS a measurement. Show it.
+      const one = points[0];
+      setChildren(host, emptyState(
+        'One recording so far',
+        one
+          ? `${fmtField(graphChoice.field, one.value)} on ${fmtDateShort(one.date)}. `
+            + 'Record it on another day and this becomes a line.'
+          : 'Record this exercise on another day to see a line.'));
       return;
     }
 
@@ -497,12 +507,9 @@ export async function GraphView() {
   function renderCompare() {
     if (!comparison.fields.length) {
       setChildren(top);
-      setChildren(host, emptyState(
-        'Nothing to compare yet',
+      setChildren(host, bestsPane(bests,
         'This compares your first benchmark against your latest, so it needs the same exercise '
-        + 'benchmarked on two different days.',
-        el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
-      ));
+        + 'benchmarked on two different days. Until then, here is where everything stands.'));
       return;
     }
     if (!compareField || !comparison.fields.includes(compareField)) compareField = comparison.fields[0];
@@ -587,6 +594,67 @@ function fillChart(host, points, field, label) {
     chartObserver = new ResizeObserver(draw);
     chartObserver.observe(host);
   }
+}
+
+/* ---- where every lift stands right now ---- */
+//
+// Both chart modes need the same thing recorded on two different days before
+// they can draw anything, which left a new user staring at "Nothing to chart
+// yet" while the app held every number they had entered. This is what fills
+// that space instead: one row per exercise, best effort, how long ago.
+//
+// It is a list rather than a chart on purpose. There is no trend in a single
+// recording, and drawing one would be inventing a shape out of one point —
+// Rule 5, an inference must never look like a measurement.
+function bestsPane(bests, intro) {
+  if (!bests || !bests.length) {
+    return emptyState(
+      'Nothing recorded yet',
+      'Log a workout or record a benchmark and your numbers will appear here.',
+      el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
+    );
+  }
+
+  return el('div', { class: 'bests' },
+    el('div', { class: 'field-help', text: intro }),
+    el('div', { class: 'bests-list' },
+      ...bests.map((b) => el('div', { class: 'best-row' },
+        el('div', { class: 'best-main' },
+          el('div', { class: 'best-name', text: b.name }),
+          el('div', { class: 'best-sub' },
+            b.muscle || '',
+            b.muscle ? ' · ' : '',
+            b.days === 0 ? 'today' : b.days === 1 ? 'yesterday' : `${b.days} days ago`,
+            b.sessions > 1 ? ` · ${b.sessions} days recorded` : '',
+            b.best.source === 'benchmark' ? ' · benchmarked' : '',
+          ),
+        ),
+        el('div', { class: 'best-nums' },
+          el('div', { class: 'best-set mono', text: bestSetText(b) }),
+          // The estimated max is the comparable number across rep counts, and it
+          // is explicitly labelled an estimate so it cannot be read as a lift
+          // that was actually performed.
+          b.e1rm
+            ? el('div', { class: 'best-e1rm mono', text: `~${units.withUnit(Math.round(b.e1rm))} max` })
+            : null,
+        ),
+      ))),
+    el('div', { class: 'field-help', text:
+      'Best effort for each lift. "~max" is an estimate from your reps, not a weight you have lifted.' }),
+  );
+}
+
+function bestSetText(b) {
+  const s = b.best;
+  // loadType is a property of the EXERCISE, not of the set — reading it off the
+  // set silently dropped "/side" from every dumbbell lift.
+  if (s.weight > 0 && s.reps >= 1) {
+    return `${units.fmtWeight(s.weight)}${b.loadType === 'per_side' ? '/side' : ''} × ${s.reps}`;
+  }
+  if (s.time > 0) return fmtTime(s.time) + (s.distance > 0 ? ` · ${trimNum(s.distance)} mi` : '');
+  if (s.distance > 0) return `${trimNum(s.distance)} mi`;
+  if (s.weight > 0) return units.fmtWeight(s.weight);
+  return '—';
 }
 
 /* ---- paired horizontal bars: first benchmark vs latest ---- */

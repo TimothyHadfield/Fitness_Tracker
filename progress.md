@@ -32,8 +32,8 @@ trains it**, each rating carrying a **confidence** that fades the colour.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 772 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 118 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 784 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 125 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -187,7 +187,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
 | Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks |
-| **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
+| **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). **No mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
@@ -206,11 +206,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **19 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **772 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **784 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **118 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **125 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -281,8 +281,8 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     772 assertions, no dependencies
-│   └── render.test.mjs         118 jsdom assertions — mounts every screen
+│   ├── data-layer.test.mjs     784 assertions, no dependencies
+│   └── render.test.mjs         125 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
          firebase-setup.md · competitive-teardown.html
 ```
@@ -616,6 +616,6 @@ One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user
 recognises.
 
-**Small, known, untouched:** the Data screen's mode switch wraps "Bar Chart" onto two lines at every
-width tested, desktop included. Pre-existing at `868fdb0`. It doesn't overflow, it just looks
-broken.
+~~**Small, known, untouched:** the Data screen's mode switch wraps "Bar Chart" onto two lines.~~
+**Fixed 2026-08-17.** The cause was the flex default `min-width: auto` letting a `.seg` be squeezed
+below its own content and wrap; `white-space: nowrap` plus `min-width: 0` on `.seg`.

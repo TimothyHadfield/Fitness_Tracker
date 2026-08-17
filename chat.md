@@ -1869,3 +1869,50 @@ level) across **all 32 combinations** of the four axes, and that targets still r
 every one of them. Driven in the browser with real clicks: "Like me" lit by default, pressing
 "Everyone" sets all four axes at once, the caption becomes "vs. all adults · any body weight · any
 age", Chest moves Intermediate → Expert, and the choice persists.
+
+---
+
+## 2026-08-17 — the charts stop being dead ends
+
+Tim, mid-session: *"I know the graph and bar charts don't mean much without multiple recordings of
+benchmarks over time, but I still want to be able to see some sort of display that allows the user to
+know their current measurements for each of their lifts in these sections."*
+
+He is describing a real hole. Both chart modes need the same thing recorded on **two different days**
+before they can draw anything, so someone who had just logged a full workout was told "Nothing to
+chart yet" — while the app was holding every number they had entered. Worse, the tabs were
+*disabled* in that state and the screen force-switched away from them, so it read as the app having
+lost the data rather than as a chart waiting for a second point.
+
+### Built
+
+`currentBests()` in `store.js`, and a list that replaces the empty states in **both** modes:
+
+- One row per exercise: best effort, its date, how long ago, how many days recorded.
+- Ranked by **estimated max**, so 205×5 correctly beats 185×8 and a 135×12 burnout beats neither.
+- Per-side lifts show what was typed, with `/side` — doubling belongs to the ranking model, not to a
+  screen showing someone what they logged.
+- Time-based work keeps its own best, and **fastest wins** for a time. No estimated max is invented
+  for it.
+- The estimate is labelled `~242 lbs max` with a footnote that it is an estimate, not a lift
+  performed — Rule 5, an inference must not look like a measurement. A list rather than a chart for
+  the same reason: there is no trend in one recording and drawing one would be inventing a shape.
+
+A separate function from `chartableExercises(1)` on purpose: a chart wants points over time, this
+wants the single best effort and how long ago it was. Different question, different function.
+
+**Nothing is disabled any more, and no mode is force-switched away from** — both were only defensible
+while those modes led nowhere.
+
+### Also fixed
+
+The mode switch had wrapped **"Bar Chart"** onto two lines at every width tested, desktop included —
+carried in the docs as known-but-untouched since `868fdb0`. Cause was the flex default
+`min-width: auto` letting a `.seg` be squeezed below its own content and wrap rather than overflow.
+`white-space: nowrap` and `min-width: 0`. Confirmed on one line at 360 px.
+
+### Verified
+
+**784 data-layer + 125 render assertions, green.** The render tests now assert that neither chart
+mode dead-ends, that both show real numbers, and that no tab is disabled. Screenshotted at 360 and
+390 with a single day's workout: six lifts listed with per-side, a plank in time, and estimated maxes.

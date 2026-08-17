@@ -1077,6 +1077,105 @@ export async function chartableExercises(min = 2) {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Where every lift stands RIGHT NOW — one row per exercise, no history needed.
+ *
+ * Tim, 2026-08-17: *"I know the graph and bar charts don't mean much without
+ * multiple recordings over time, but I still want to be able to see some sort of
+ * display that allows the user to know their current measurements for each of
+ * their lifts."* Both chart modes need two points on two days before they can
+ * draw anything, so a new user who has logged a full workout was being told
+ * "Nothing to chart yet" while the app sat on every number they had entered.
+ *
+ * This asks a different question from a chart, so it is a different function
+ * rather than chartableExercises(1): a chart wants points over time, this wants
+ * the single best effort and how long ago it was.
+ *
+ * Returns rows sorted by most recent, each:
+ *   { id, name, muscle, best{ weight, reps, date, source, ... }, e1rm,
+ *     latestDate, days, sessions }
+ */
+export async function currentBests() {
+  const [sessions, benchmarks, exMap] = await Promise.all([
+    store.getSessions(), store.getBenchmarks(), store.getExerciseMap(),
+  ]);
+
+  const rows = new Map();
+  const row = (exId) => {
+    if (!rows.has(exId)) {
+      const ex = exMap.get(exId);
+      rows.set(exId, {
+        id: exId,
+        name: ex ? ex.name : 'Unknown exercise',
+        muscle: ex ? ex.muscle : '',
+        loadType: ex ? ex.loadType : null,
+        fields: ex ? ex.fields : ['weight', 'reps'],
+        best: null,
+        e1rm: null,
+        latestDate: null,
+        days: new Set(),
+      });
+    }
+    return rows.get(exId);
+  };
+
+  const consider = (exId, values, date, source) => {
+    const r = row(exId);
+    r.days.add(date);
+    if (!r.latestDate || date > r.latestDate) r.latestDate = date;
+
+    const w = Number(values.weight);
+    const reps = Number(values.reps);
+    const hasLoad = w > 0 && reps >= 1;
+
+    // Rank by estimated 1RM where there is one, so 185×8 correctly beats 205×3
+    // only if it really does. Everything else — a time, a distance — keeps its
+    // own best by raw value, and "best" for a time means FASTEST.
+    if (hasLoad) {
+      const est = e1rm(w, reps);
+      if (est !== null && (r.e1rm === null || est > r.e1rm)) {
+        r.e1rm = est;
+        r.best = { weight: w, reps: Math.round(reps), date, source };
+      }
+      return;
+    }
+    const t = Number(values.time);
+    const d = Number(values.distance);
+    if (t > 0 && (!r.best || !(r.best.time > 0) || t < r.best.time)) {
+      r.best = { time: t, distance: d > 0 ? d : undefined, date, source };
+    } else if (d > 0 && (!r.best || !(r.best.distance > 0))) {
+      r.best = { distance: d, date, source };
+    } else if (w > 0 && (!r.best || !(r.best.weight > 0))) {
+      // A weight with no reps still tells you something; it just cannot be
+      // turned into an estimated maximum.
+      r.best = { weight: w, date, source };
+    }
+  };
+
+  for (const s of sessions) {
+    for (const e of s.entries || []) {
+      for (const set of e.sets || []) consider(e.exerciseId, set, s.date, 'workout');
+    }
+  }
+  for (const b of benchmarks) consider(b.exerciseId, b.values || {}, b.date, 'benchmark');
+
+  // Noon, so a DST shift cannot turn a clean 7 days into 6.96 and round down.
+  const noon = (iso) => new Date(String(iso) + 'T12:00:00');
+  const today = noon(todayISO());
+  const out = [];
+  for (const r of rows.values()) {
+    if (!r.best) continue;
+    const t = noon(r.latestDate);
+    out.push({
+      ...r,
+      sessions: r.days.size,
+      days: Number.isNaN(t.getTime()) ? null : Math.max(0, Math.round((today - t) / 86400000)),
+    });
+  }
+  // Most recent first: the lift you did yesterday is the one you want to see.
+  return out.sort((a, b) => (a.latestDate < b.latestDate ? 1 : a.latestDate > b.latestDate ? -1 : a.name.localeCompare(b.name)));
+}
+
 // Start-vs-now comparison built from BENCHMARKS ONLY — workout sessions are
 // deliberately excluded, so this answers "how has my tested best moved?" rather
 // than mixing in whatever happened to get logged on a training day.

@@ -1624,5 +1624,82 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await st.clearAll();
 }
 
+/* ================= current bests: numbers without a trend ================= */
+// Tim, 2026-08-17: the chart modes need two days before they draw anything, so a
+// new user who had logged a whole workout was told "Nothing to chart yet" while
+// the app sat on every number they had entered.
+{
+  const { store: st, currentBests } = await import('../js/store.js');
+  await st.clearAll();
+  const id = (n) => byName(n).id;
+  const today = new Date().toISOString().slice(0, 10);
+
+  ok((await currentBests()).length === 0, 'nothing recorded, nothing listed');
+
+  await st.saveSession({
+    workoutId: 'cb', workoutName: 'Full body', date: today,
+    entries: [
+      { exerciseId: id('Barbell Bench Press'), exerciseName: 'Barbell Bench Press',
+        sets: [{ weight: 185, reps: 8 }, { weight: 205, reps: 5 }, { weight: 135, reps: 12 }] },
+      { exerciseId: id('Dumbbell Row'), exerciseName: 'Dumbbell Row',
+        sets: [{ weight: 90, reps: 10 }] },
+      { exerciseId: id('Plank'), exerciseName: 'Plank', sets: [{ time: 90 }, { time: 120 }] },
+    ],
+  });
+
+  let rows = await currentBests();
+  ok(rows.length === 3, `one row per exercise from a single workout (${rows.length})`);
+
+  const benchRow = rows.find((r) => r.name === 'Barbell Bench Press');
+  // Ranked by estimated max, not by raw weight and not by the last set entered:
+  // 205x5 genuinely beats 185x8, and 135x12 beats neither.
+  ok(benchRow.best.weight === 205 && benchRow.best.reps === 5,
+     `the best set wins on estimated max (${benchRow.best.weight}x${benchRow.best.reps})`);
+  ok(benchRow.e1rm > 205, 'and the estimate is above the weight actually lifted');
+  ok(benchRow.days === 0 && benchRow.sessions === 1, 'recorded today, one day counted');
+
+  // A per-side lift keeps the number the user typed. Doubling belongs to the
+  // ranking model, not to a screen that is showing them what they logged.
+  const rowRow = rows.find((r) => r.name === 'Dumbbell Row');
+  ok(rowRow.best.weight === 90 && rowRow.loadType === 'per_side',
+     'a per-side lift reports the entered weight and says it is per side');
+
+  // A time-based exercise has no estimated max and must not invent one, and its
+  // BEST is its fastest, not its longest.
+  const plank = rows.find((r) => r.name === 'Plank');
+  ok(plank.e1rm === null, 'a plank has no estimated one-rep max');
+  ok(plank.best.time === 90, `and its best is the fastest time (${plank.best.time})`);
+
+  // A benchmark on a later day should take over and be labelled.
+  await st.saveBenchmark({ date: today, exerciseId: id('Barbell Bench Press'),
+    exerciseName: 'Barbell Bench Press', values: { weight: 245, reps: 1 } });
+  rows = await currentBests();
+  const bench2 = rows.find((r) => r.name === 'Barbell Bench Press');
+  ok(bench2.best.weight === 245 && bench2.best.source === 'benchmark',
+     'a stronger benchmark takes over and says so');
+
+  // Older work still appears, and is ordered behind more recent work.
+  await st.saveSession({
+    workoutId: 'cb2', workoutName: 'Old', date: '2026-01-05',
+    entries: [{ exerciseId: id('Back Squat'), exerciseName: 'Back Squat',
+                sets: [{ weight: 315, reps: 3 }] }],
+  });
+  rows = await currentBests();
+  ok(rows[rows.length - 1].name === 'Back Squat', 'the oldest lift sorts last');
+  ok(rows[rows.length - 1].days > 100, 'and reports how long ago it was');
+
+  // Zero and blank sets must not create a row out of nothing.
+  await st.saveSession({
+    workoutId: 'cb3', workoutName: 'Empty', date: today,
+    entries: [{ exerciseId: id('Overhead Press'), exerciseName: 'Overhead Press',
+                sets: [{ weight: 0, reps: 0 }] }],
+  });
+  ok(!(await currentBests()).some((r) => r.name === 'Overhead Press'),
+     'an empty set does not produce a row');
+
+  await st.clearAll();
+}
+
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);
