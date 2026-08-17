@@ -178,7 +178,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete |
 | Exercise library | **265 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
-| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
+| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
@@ -298,6 +298,13 @@ Fitness_Tracker/
   stringifies anything that is not a Node, so a `cond ? el(...) : null` child renders the literal
   text **"null"** on the page — which it had been doing under the exercise name on the session
   screen for every exercise without a note. `el()` guards this; the direct calls did not.
+- **⚠️ `.pane-scroll` is a COLUMN FLEX container, so its children shrink.** A child that sets
+  `min-height: 0` loses the `min-height: auto` protection and gets crushed *below its own content
+  height* as soon as the pane overflows — the child's rows keep their size, spill out of the shrunken
+  box, and whatever comes next is painted on top of them. This shipped: on a 360×640 phone with six
+  sets, the session screen's "Add another set" button was drawn over set 4 and hid sets 5 and 6.
+  Anything tall inside a pane wants `flex: none`, and `min-height: 0` belongs only on a child that
+  also handles its own overflow.
 - **Weights are STORED IN POUNDS, always** (`units.js`). kg is a display choice, converted at exactly
   two edges: what is shown and what is typed. `e1rm.js` and `strength-standards.js` are pounds
   throughout. Anything that stores a number the user typed must go through `units.fromDisplay()`.

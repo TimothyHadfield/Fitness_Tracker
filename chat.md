@@ -1632,3 +1632,37 @@ Rules 5 and 6 exist to police.
 
 Linked from `progress.md` — the file-upkeep table and a new block under §8 Roadmap — so a fresh
 session finds it. No code touched.
+
+---
+
+## 2026-08-17 — "Add another set" was painted over the sets
+
+Tim: the add-set button at the bottom of a workout covers up some of the set details, specifically
+the third. Make it a lot smaller and off to the side.
+
+Reproduced it properly rather than eyeballing — Chrome over CDP at 360×640 with six sets. It was a
+genuine overlap, not crowding: the button was drawn **on top of set 4**, hiding sets 5 and 6
+completely.
+
+Cause was one property. `.pane-scroll` is a column flex container, and `.set-list` carried
+`min-height: 0`, which throws away the `min-height: auto` that normally stops a flex item shrinking
+below its content. Once the content outgrew the pane, the list's *box* was crushed while its rows
+kept their real height, so the rows spilled out of the box and the next sibling — the button — was
+laid out over the top of them. At 390×844 with four sets nothing overflowed, so it looked fine, which
+is why it survived every previous screenshot.
+
+Two changes:
+
+- `.set-list` is now `flex: none`. The list keeps its height and the pane scrolls, which is what
+  should have happened all along.
+- The button moved up onto the "Sets" heading as a small right-aligned pill reading **Add set**
+  (32px tall, 83px wide, was a full-width 46px block). It no longer competes with the sets for
+  attention, and being above the list it stays on screen when the pane scrolls back to the top after
+  a set is added.
+
+Verified with a real `Input.dispatchMouseEvent` click, not a synthetic event: hit test at the pill's
+centre lands on `.add-set`, clicking takes 6 sets to 7 and makes the new one active. Re-shot at
+360/390/1180 — no overlap at any of them. 355 data-layer + 116 render assertions green.
+
+Worth remembering, and now in `progress.md`'s key patterns: anything tall inside a `.pane-scroll`
+wants `flex: none`, and `min-height: 0` belongs only on a child that handles its own overflow.

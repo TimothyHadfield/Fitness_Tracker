@@ -225,18 +225,22 @@ export async function SessionView(workoutId) {
       el('div', { class: 'section-label', text: `Set ${entry.active + 1} of ${entry.sets.length}` }),
       el('div', { class: 'steppers' }, steppers),
 
-      el('div', { class: 'section-label', text: 'Sets' }),
+      // The add button rides on the "Sets" heading rather than sitting under the
+      // list. Full-width and below, it was as loud as the sets themselves and it
+      // sat directly on top of them once the list outgrew the pane.
+      el('div', { class: 'sets-head' },
+        el('div', { class: 'section-label', text: 'Sets' }),
+        el('button', {
+          class: 'add-set', 'aria-label': 'Add another set',
+          onClick: () => {
+            entry.sets.push({ ...entry.sets[entry.sets.length - 1] });
+            entry.active = entry.sets.length - 1;
+            saveDraft(state);
+            renderPane();
+          },
+        }, icon('plus', 15), 'Add set'),
+      ),
       setList,
-
-      el('button', {
-        class: 'btn block',
-        onClick: () => {
-          entry.sets.push({ ...entry.sets[entry.sets.length - 1] });
-          entry.active = entry.sets.length - 1;
-          saveDraft(state);
-          renderPane();
-        },
-      }, icon('plus'), 'Add another set'),
     );
 
     pane.scrollTop = 0;

@@ -579,8 +579,30 @@ select.input {
 .prefill-note b { color: var(--accent); font-weight: 650; }
 .prefill-note svg { flex: none; color: var(--good); }
 
-.set-list { display: flex; flex-direction: column; min-height: 0; }
+/* ⚠️ flex: none is load-bearing. .pane-scroll is a column flex container, so a
+   child with min-height: 0 gets CRUSHED below its content height once the pane
+   overflows — and because the rows keep their own size they spill out of the
+   shrunken box and whatever comes next is drawn on top of them. That is exactly
+   what happened: on a 360×640 phone with six sets, the button that used to sit
+   under this list was painted over set 4, hiding 5 and 6 entirely. The list must
+   keep its full height and let the pane scroll. */
+.set-list { display: flex; flex-direction: column; flex: none; }
 .set-list > * + * { border-top: 1px solid var(--rule-soft); }
+
+/* "Sets" heading with the add button on the right of it. */
+.sets-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.add-set {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 4px;
+  min-height: 32px; padding: 0 11px 0 8px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-soft);
+  font-size: 12.5px; font-weight: 650;
+  cursor: pointer;
+}
+.add-set svg { display: block; }
+.add-set:active { transform: scale(.96); }
 
 .set-item { display: flex; align-items: center; gap: 9px; padding: 7px 2px; font-size: 14px; }
 .set-item.active .set-vals { color: var(--ink); font-weight: 600; }
