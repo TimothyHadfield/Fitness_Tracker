@@ -23,7 +23,7 @@ export async function HomeView() {
   const top = [
     el('button', {
       class: 'btn primary lg block',
-      onClick: () => (workouts.length ? go('#/start') : go('#/workout/new')),
+      onClick: () => (workouts.length ? go('#/start') : go('#/workouts')),
     }, icon('play'), workouts.length ? 'Start a workout' : 'Create your first workout'),
 
     el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
@@ -65,47 +65,164 @@ function sessionRow(s) {
  * ================================================================== */
 
 export async function StartPickerView() {
-  const workouts = await store.getWorkouts();
+  const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
 
-  const scroll = workouts.length
-    ? el('div', { class: 'list' }, workouts.map((w) =>
-        el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
-          el('div', { class: 'row-main' },
-            el('div', { class: 'row-title', text: w.name }),
-            el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
-          ),
-          chevron(),
-        )))
+  // GROUPED, not nested. Making someone pick a system and then a workout would
+  // add a tap to the one screen that is used mid-gym, and most people have one
+  // system anyway. The heading is dropped when there is only one, because a
+  // sole heading is decoration.
+  const groups = systems
+    .map((sys) => ({ sys, items: workouts.filter((w) => w.systemId === sys.id) }))
+    .filter((g) => g.items.length);
+
+  const row = (w) => el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: w.name }),
+      el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
+    ),
+    chevron(),
+  );
+
+  const scroll = groups.length
+    ? groups.flatMap((g) => (groups.length > 1
+        ? [el('div', { class: 'section-label', text: g.sys.name }), el('div', { class: 'list' }, g.items.map(row))]
+        : [el('div', { class: 'list' }, g.items.map(row))]))
     : emptyState('No workouts yet', 'Build a workout first, then you can run it here.',
-        el('button', { class: 'btn primary', text: 'Build a workout', onClick: () => go('#/workout/new') }));
+        el('button', { class: 'btn primary', text: 'Build a workout', onClick: () => go('#/workouts') }));
 
   return screenShell({ title: 'Start a workout', back: () => go('#/home'), scroll });
 }
 
 /* ================================================================== *
- * Workout list
+ * Workout systems
  * ================================================================== */
 
+// A SYSTEM is a programme — a named group of workouts. "Push Pull Legs" holding
+// a Push, a Pull and a Legs day. Tim, 2026-08-17: he wants several side by side,
+// and later to be able to load somebody else's (docs/vision.md §1.3).
+//
+// The top-level tab lists systems now, not workouts. Everything that used to be
+// reachable in one tap still is, because a system with one workout shows that
+// workout's name in its subtitle and the row goes straight into the system.
 export async function WorkoutsView() {
-  const workouts = await store.getWorkouts();
+  const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
+  const countIn = (id) => workouts.filter((w) => w.systemId === id).length;
 
   return screenShell({
     profile: true,
     title: 'Workouts',
-    sub: workouts.length ? plural(workouts.length, 'workout') : null,
-    top: el('button', { class: 'btn primary block', onClick: () => go('#/workout/new') },
-      icon('plus'), 'New workout'),
-    scroll: workouts.length
-      ? el('div', { class: 'list' }, workouts.map((w) =>
-          el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
+    sub: systems.length ? plural(systems.length, 'system') : null,
+    top: el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
+      icon('plus'), 'New system'),
+    scroll: systems.length
+      ? el('div', { class: 'list' }, systems.map((sys) => {
+          const n = countIn(sys.id);
+          const names = workouts.filter((w) => w.systemId === sys.id).map((w) => w.name);
+          return el('button', { class: 'row', onClick: () => go('#/system/' + sys.id) },
             el('div', { class: 'row-main' },
-              el('div', { class: 'row-title', text: w.name }),
-              el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
+              el('div', { class: 'row-title', text: sys.name }),
+              el('div', { class: 'row-sub', text: n
+                // The workout names ARE the useful subtitle — "3 workouts" says
+                // nothing you could not guess, "Push · Pull · Legs" tells you
+                // what the programme is.
+                ? names.slice(0, 4).join(' · ') + (names.length > 4 ? ' · …' : '')
+                : 'No workouts yet' }),
             ),
             chevron(),
-          )))
-      : emptyState('No workouts yet',
-          'A workout is a named list of exercises — Push, Legs, Upper, whatever you call it. Make as many as you like.'),
+          );
+        }))
+      : emptyState('No systems yet',
+          'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
+          + 'whatever you follow. Make one and put your workouts in it.'),
+  });
+}
+
+/* ================================================================== *
+ * One system: its workouts, and its name
+ * ================================================================== */
+
+export async function SystemView(id) {
+  const isNew = id === 'new';
+  const existing = isNew ? null : await store.getSystem(id);
+
+  if (!isNew && !existing) {
+    return screenShell({
+      title: 'Not found', back: () => go('#/workouts'),
+      scroll: emptyState('That system no longer exists', 'It may have been deleted.'),
+    });
+  }
+
+  const workouts = isNew ? [] : await store.getWorkouts(id);
+  const draft = existing ? { ...existing } : { id: null, name: '', notes: '' };
+
+  const nameInput = el('input', {
+    class: 'input', type: 'text', value: draft.name, maxlength: '60',
+    placeholder: 'Push Pull Legs, Upper/Lower…',
+    onInput: (e) => { draft.name = e.target.value; },
+  });
+  const notesInput = el('textarea', {
+    class: 'input', rows: '2', maxlength: '300',
+    placeholder: 'What is this programme for? (optional)',
+    onInput: (e) => { draft.notes = e.target.value; },
+  });
+  notesInput.value = draft.notes || '';
+
+  async function save() {
+    if (!draft.name.trim()) { toast('Give your system a name first'); nameInput.focus(); return; }
+    const saved = await store.saveSystem({ ...draft, name: draft.name.trim() });
+    toast(isNew ? 'System created' : 'System saved');
+    // A brand-new system is empty, so land the user back inside it where the
+    // "New workout" button is, rather than on the list looking at an empty row.
+    go(isNew ? '#/system/' + saved.id : '#/workouts');
+  }
+
+  function remove() {
+    confirmSheet({
+      title: 'Delete this system?',
+      message: workouts.length
+        ? `${plural(workouts.length, 'workout')} inside it will be deleted too. `
+          + 'Workouts you have already recorded stay in your history and on your calendar — '
+          + 'only the templates go.'
+        : 'It has no workouts in it.',
+      onConfirm: async () => { await store.deleteSystem(draft.id); toast('System deleted'); go('#/workouts'); },
+    });
+  }
+
+  const scroll = isNew
+    ? [el('div', { class: 'field-help', text:
+        'Name it first, then you can add workouts to it.' })]
+    : [
+        el('div', { class: 'section-label', text: workouts.length
+          ? plural(workouts.length, 'workout') : 'Workouts' }),
+        workouts.length
+          ? el('div', { class: 'list' }, workouts.map((w) =>
+              el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
+                el('div', { class: 'row-main' },
+                  el('div', { class: 'row-title', text: w.name }),
+                  el('div', { class: 'row-sub', text:
+                    `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
+                    + (w.isBenchmark ? ' · benchmark' : '') }),
+                ),
+                chevron(),
+              )))
+          : emptyState('No workouts in this system yet',
+              'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+        el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + draft.id) },
+          icon('plus'), 'New workout'),
+      ];
+
+  return screenShell({
+    title: isNew ? 'New system' : draft.name,
+    back: () => go('#/workouts'),
+    top: [
+      el('div', { class: 'field' }, el('label', { text: 'System name' }), nameInput),
+      el('div', { class: 'field' }, el('label', { text: 'Notes' }), notesInput),
+    ],
+    scroll,
+    bottom: [
+      el('button', { class: 'btn primary block', text: isNew ? 'Create system' : 'Save changes', onClick: save }),
+      isNew ? null : el('button', { class: 'btn danger block', text: 'Delete system', onClick: remove }),
+    ],
   });
 }
 
@@ -113,7 +230,11 @@ export async function WorkoutsView() {
  * Workout builder
  * ================================================================== */
 
-export async function WorkoutBuilderView(id) {
+// Route is `#/workout/<id>` to edit, `#/workout/new/<systemId>` to create — a
+// new workout has to know which system it is being added to, and there is no
+// sensible way to ask afterwards.
+export async function WorkoutBuilderView(param) {
+  const [id, newSystemId] = String(param || '').split('/');
   const isNew = id === 'new';
   const exMap = await store.getExerciseMap();
   const existing = isNew ? null : await store.getWorkout(id);
@@ -127,7 +248,11 @@ export async function WorkoutBuilderView(id) {
 
   const draft = existing
     ? { ...existing, exercises: existing.exercises.map((e) => ({ ...e })) }
-    : { id: null, name: '', exercises: [] };
+    : { id: null, name: '', exercises: [], systemId: newSystemId || null };
+
+  // Where "back" and "save" return to. A workout is always inside a system, so
+  // leaving one should land on that system rather than on the top-level list.
+  const home = draft.systemId ? '#/system/' + draft.systemId : '#/workouts';
 
   const nameInput = el('input', {
     class: 'input', type: 'text', value: draft.name, maxlength: '60',
@@ -221,20 +346,20 @@ export async function WorkoutBuilderView(id) {
     if (!draft.exercises.length) { toast('Add at least one exercise'); return; }
     await store.saveWorkout({ ...draft, name: draft.name.trim() });
     toast(isNew ? 'Workout created' : 'Workout saved');
-    go('#/workouts');
+    go(home);
   }
 
   function remove() {
     confirmSheet({
       title: 'Delete this workout?',
       message: 'Workouts you have already recorded stay in your history and on your calendar. Only the template is removed.',
-      onConfirm: async () => { await store.deleteWorkout(draft.id); toast('Workout deleted'); go('#/workouts'); },
+      onConfirm: async () => { await store.deleteWorkout(draft.id); toast('Workout deleted'); go(home); },
     });
   }
 
   return screenShell({
     title: isNew ? 'New workout' : 'Edit workout',
-    back: () => go('#/workouts'),
+    back: () => go(home),
     top: el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
     scroll: [
       el('div', { class: 'field' },

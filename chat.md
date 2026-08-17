@@ -1916,3 +1916,62 @@ carried in the docs as known-but-untouched since `868fdb0`. Cause was the flex d
 **784 data-layer + 125 render assertions, green.** The render tests now assert that neither chart
 mode dead-ends, that both show real numbers, and that no tab is disabled. Screenshotted at 360 and
 390 with a single day's workout: six lifts listed with per-side, a plank in time, and estimated maxes.
+
+---
+
+## 2026-08-17 — workouts become workout systems
+
+Tim: *"I want to change workouts to workout systems, which means that you can have different systems
+of workouts, each with their own set of workouts you can choose from. This also ties with my talk in
+the vision about being able to view other popular people's workout system and use it for yourself.
+Lets just start with doing the workout system creation."*
+
+So: a **system** is a programme — a named group of workouts. "Push Pull Legs" holding a Push, a Pull
+and a Legs day. The Workouts tab lists systems; opening one shows and adds its workouts.
+
+### Decisions made without asking
+
+**A workout belongs to exactly one system.** Sharing one between two programmes sounds useful and is
+not — editing it in one place would silently change the other, and *"did my Push day change because I
+imported someone else's programme?"* is a question this app should never raise.
+
+**Deleting a system deletes its workouts, but never recorded history.** The confirmation names the
+count. Sessions already logged are untouched: history is a record of what happened and does not
+become untrue because the plan behind it was thrown away.
+
+**The start picker groups rather than nests.** Making someone pick a system and then a workout adds a
+tap to the one screen used mid-gym. Workouts are listed under system headings, and the headings
+disappear when there is only one system, because a sole heading is decoration.
+
+### The migration, and the bug in it
+
+Tim has real workouts saved. `ensureSystems()` adopts any workout without a `systemId` into a
+**My Workouts** system, creating it if needed, and is idempotent — after the first run there are no
+orphans, so it writes nothing.
+
+It shipped broken for about ten minutes. Read-modify-write across two collections is not atomic, and
+`WorkoutsView` asks for systems and workouts in the same `Promise.all`. Both calls ran the migration,
+both read "no systems", both created one, and the second write clobbered the first — leaving the list
+pointing at a row that no longer existed and every workout stamped with a dead id. On screen: a system
+that said **"No workouts yet"** and then **"Not found"** the moment you tapped it.
+
+Fixed by making the migration single-flight, so concurrent callers share one run. There is a test
+that fails if the guard is removed — verified by removing it.
+
+That trap is now in `progress.md`'s key patterns, because the next read-modify-write migration will
+have exactly the same shape.
+
+### Also
+
+`firestore.rules` gained `systems` in `knownCollection()` and **was deployed** — the documented trap
+is that a collection added to `COLLECTIONS` and not to the rules has every cloud write denied while
+localStorage keeps working, which is invisible until someone signs in.
+
+### Verified
+
+**806 data-layer + 134 render assertions, green.** Driven in a browser from a seeded pre-systems
+account: the three old workouts appear under "My Workouts" with their names as the subtitle, opening
+the system lists them, creating a second system lands inside it, and the start picker still reaches
+every workout.
+
+Next, per Tim: celebrity / popular systems you can view and take for yourself.

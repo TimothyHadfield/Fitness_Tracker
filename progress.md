@@ -32,8 +32,8 @@ trains it**, each rating carrying a **confidence** that fades the colour.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 784 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 125 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 806 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 134 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -179,7 +179,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 
 | Area | State |
 |---|---|
-| Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete |
+| **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
+| Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **265 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
 | Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
@@ -206,11 +207,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **19 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **784 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **806 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **125 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **134 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -281,8 +282,8 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     784 assertions, no dependencies
-│   └── render.test.mjs         125 jsdom assertions — mounts every screen
+│   ├── data-layer.test.mjs     806 assertions, no dependencies
+│   └── render.test.mjs         134 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
          firebase-setup.md · competitive-teardown.html
 ```
@@ -311,6 +312,13 @@ Fitness_Tracker/
   sets, the session screen's "Add another set" button was drawn over set 4 and hid sets 5 and 6.
   Anything tall inside a pane wants `flex: none`, and `min-height: 0` belongs only on a child that
   also handles its own overflow.
+- **⚠️ A read-modify-write migration must be SINGLE-FLIGHT.** `ensureSystems()` reads two
+  collections, decides, and writes both. Two callers running it at once each read "no systems", each
+  created one, and the second write clobbered the first — leaving the list pointing at a row that no
+  longer existed and every workout stamped with a dead id. It presented as an empty system list that
+  said "Not found" the moment you tapped it. `WorkoutsView` asking for systems and workouts in one
+  `Promise.all` is exactly that case, and is a perfectly reasonable thing for a view to do. There is
+  a test that fails if the single-flight guard is removed.
 - **Weights are STORED IN POUNDS, always** (`units.js`). kg is a display choice, converted at exactly
   two edges: what is shown and what is typed. `e1rm.js` and `strength-standards.js` are pounds
   throughout. Anything that stores a number the user typed must go through `units.fromDisplay()`.
@@ -322,7 +330,10 @@ Fitness_Tracker/
 
 ```
 Exercise    id, name, muscle, equipment, fields[], loadType, isCustom
-Workout     id, name, isBenchmark, exercises[{ exerciseId, sets, notes }], createdAt, updatedAt
+System      id, name, notes, createdAt, updatedAt
+            ── a programme. Workouts belong to one, and only one.
+Workout     id, name, systemId, isBenchmark, exercises[{ exerciseId, sets, notes }],
+            createdAt, updatedAt
 Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
             entries[{ exerciseId, exerciseName, sets[{weight,reps,time,distance}] }]
 Benchmark   id, date, exerciseId, exerciseName, values{}, sourceSessionId?
@@ -333,6 +344,8 @@ Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 ```
 
 `normalizeWorkout()` in `store.js` migrates the old `exerciseIds[]` shape on read — keep it.
+`store.ensureSystems()` does the same job for workouts saved before systems existed, and is
+**single-flight on purpose** — see the key patterns below.
 
 ⚠️ **Adding a collection to `COLLECTIONS` also requires adding it to `knownCollection()` in
 `firestore.rules` and redeploying**, or every cloud write to it is denied while localStorage keeps
@@ -455,6 +468,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; general-population data would make every user Elite. The seven-level scale compresses into ~70–98 % of all adults. **The UI must say "of people who lift".** |
 | D17 | **A benchmark workout's benchmarks are DERIVED from its session, not written alongside it.** Each carries `sourceSessionId` and the whole set is rebuilt on every save. | The alternative — write benchmarks once at finish — strands them the moment the record is edited. Move the workout to another day and its benchmarks stay on the old one; delete an exercise and its benchmark lives on; untick the flag and nothing undoes it. Rebuilding makes all four correct by construction instead of by remembering. Hand-entered benchmarks have no `sourceSessionId` and are never touched. |
 | D20 | **The comparison group is a user setting: FOUR independent axes — population (lifters / everyone), sex, body weight, age — plus two presets, "Like me" and "Everyone".** Any mixed population is modelled as a real MIXTURE of distributions, never an invented combined median. | Tim, 2026-08-17. Axes rather than presets alone because "women, any body weight, my age" is a real question; presets on top because the two combinations most people want are the extremes and setting four things by hand to reach them is a chore. The caption naming the group is built by the same function that computes it, so the number and the population it refers to cannot drift apart. |
+| D22 | **A workout belongs to exactly ONE system.** | Sharing one workout between two programmes sounds useful and is not: editing it in one place would silently change the other, and "did my Push day change because I imported someone else's programme?" is a question this app should never raise. Deleting a system therefore deletes its workouts — but never the sessions already recorded from them, because history is a record of what happened and does not become untrue when the plan behind it is thrown away. |
 | D21 | **D15 is narrowed, not repealed: ranking against people who do not lift is now offered, and untrained adults are given their OWN overlapping distribution rather than being assumed weaker than every lifter.** Untrained median = 0.55 × the lifter median. | Tim asked for a lift/don't-lift axis. D15's real objection was never "don't offer it" — it was that general-population data makes every user Elite. That was true of the OLD model, which assumed every non-lifter sat below every lifter and so forced any lifter above the 68th percentile, squashing seven levels into three. With an overlapping untrained distribution the levels keep spreading: a beginner lifter reads Proficient, a median lifter Expert, an elite lifter Elite — asserted in the tests. **The 0.55 is the weakest number in the file** (nobody has measured what the median adult can bench) and both the sheet and the detail panel say so. |
 | D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 of 265 exercises could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
 | D16 | **Deadlift fills Glutes** on the muscle map. | It belongs to glutes, hamstrings and back at once. Hip-thrust standards are the thinnest of the three. Revisit with the weighted mapping. |

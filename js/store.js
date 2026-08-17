@@ -16,7 +16,7 @@ const NS = 'ftrack:v1:';
 
 // ⚠️ Adding a collection here also requires adding it to knownCollection() in
 // firestore.rules and redeploying, or every cloud write to it is denied.
-const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight'];
+const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems'];
 
 /* ------------------------------------------------------------------ *
  * Local backend
@@ -231,6 +231,29 @@ async function syncSessionBenchmarks(session) {
   }
 }
 
+// A SYSTEM is a named group of workouts — a programme. "Push Pull Legs" holding
+// a Push, a Pull and a Legs workout; "Upper/Lower" holding two. Added 2026-08-17
+// because Tim wants several programmes side by side and, later, to be able to
+// load somebody else's (docs/vision.md §1.3).
+//
+// A workout belongs to exactly ONE system. Sharing one workout between two
+// programmes sounds useful and is not: editing it in one place would silently
+// change the other, and "did my Push day just change because I imported a
+// celebrity programme?" is not a question this app should ever raise.
+const DEFAULT_SYSTEM_NAME = 'My Workouts';
+
+// In-flight migration, shared by concurrent callers. See ensureSystems().
+let systemsMigration = null;
+
+export function normalizeSystem(sys) {
+  if (!sys) return sys;
+  return {
+    ...sys,
+    name: (sys.name || '').trim() || 'Untitled system',
+    notes: sys.notes || '',
+  };
+}
+
 // Workouts used to be a bare list of exercise ids. They now carry a planned set
 // count and notes per exercise, so older saved workouts are upgraded on read.
 export function normalizeWorkout(w) {
@@ -283,11 +306,87 @@ export const store = {
     await backend.write('customExercises', rows.filter((r) => r.id !== id));
   },
 
+  /* --- workout systems --- */
+
+  // Every workout must end up in a system, including the ones saved before
+  // systems existed. This is the migration, and it is idempotent: it only
+  // writes when it finds a workout without a systemId, which after the first
+  // run is never. Done here rather than on read of a single workout so that a
+  // half-migrated state cannot exist.
+  // ⚠️ SINGLE-FLIGHT, and that is not an optimisation. Read-modify-write on two
+  // collections is not atomic, so two callers running this at once each read
+  // "no systems", each created one, and the second write clobbered the first —
+  // leaving the systems list pointing at a row that no longer existed and every
+  // workout stamped with a dead id. It presented as an empty system list and a
+  // "Not found" the moment you tapped it. Concurrent callers now share one run.
+  //
+  // WorkoutsView asking for systems and workouts in the same Promise.all is
+  // exactly that case, and is a completely reasonable thing for a view to do.
+  ensureSystems() {
+    if (systemsMigration) return systemsMigration;
+    systemsMigration = (async () => {
+      const [systems, workouts] = await Promise.all([
+        backend.read('systems'), backend.read('workouts'),
+      ]);
+      const orphans = workouts.filter((w) => !w.systemId);
+      if (!orphans.length) return systems.map(normalizeSystem);
+
+      let home = systems[0];
+      if (!home) {
+        const now = new Date().toISOString();
+        home = { id: uid('sys'), name: DEFAULT_SYSTEM_NAME, notes: '', createdAt: now, updatedAt: now };
+        systems.push(home);
+        await backend.write('systems', systems);
+      }
+      for (const w of orphans) w.systemId = home.id;
+      await backend.write('workouts', workouts);
+      return systems.map(normalizeSystem);
+    })();
+    // Cleared once settled, so a later call re-checks. After the first run there
+    // are no orphans left, so re-checking costs two reads and writes nothing.
+    systemsMigration.finally(() => { systemsMigration = null; });
+    return systemsMigration;
+  },
+
+  async getSystems() {
+    const systems = await this.ensureSystems();
+    return systems.sort((a, b) => a.name.localeCompare(b.name));
+  },
+
+  async getSystem(id) {
+    const rows = await this.ensureSystems();
+    const row = rows.find((r) => r.id === id);
+    return row ? normalizeSystem(row) : null;
+  },
+
+  async saveSystem(sys) {
+    const rows = await backend.read('systems');
+    const row = { ...normalizeSystem(sys), updatedAt: new Date().toISOString() };
+    if (!row.id) row.id = uid('sys');
+    if (!row.createdAt) row.createdAt = row.updatedAt;
+    await backend.write('systems', upsert(rows, row));
+    return row;
+  },
+
+  // Deleting a system deletes the workouts inside it — they belong to it and
+  // there is nowhere else for them to live. Sessions already RECORDED are not
+  // touched: history is a record of what happened and does not become untrue
+  // because the plan behind it was thrown away.
+  async deleteSystem(id) {
+    const [systems, workouts] = await Promise.all([
+      backend.read('systems'), backend.read('workouts'),
+    ]);
+    await backend.write('workouts', workouts.filter((w) => w.systemId !== id));
+    await backend.write('systems', systems.filter((r) => r.id !== id));
+  },
+
   /* --- workout templates --- */
 
-  async getWorkouts() {
+  async getWorkouts(systemId) {
+    await this.ensureSystems();
     const rows = await backend.read('workouts');
-    return rows.map(normalizeWorkout).sort((a, b) => a.name.localeCompare(b.name));
+    const all = rows.map(normalizeWorkout).sort((a, b) => a.name.localeCompare(b.name));
+    return systemId ? all.filter((w) => w.systemId === systemId) : all;
   },
 
   async getWorkout(id) {

@@ -1701,5 +1701,106 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ================= workout systems ================= */
+// A SYSTEM is a programme — a named group of workouts (Tim, 2026-08-17).
+{
+  const { store: st } = await import('../js/store.js');
+  const id = (n) => byName(n).id;
+
+  /* ---- migration: workouts saved before systems existed ---- */
+  await st.clearAll();
+  // Written straight past the store, exactly as an older build left them: no
+  // systemId at all, and one still in the ancient exerciseIds shape.
+  localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
+    { id: 'w1', name: 'Push', exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 4 }], createdAt: '2026-01-01' },
+    { id: 'w2', name: 'Legs', exerciseIds: [id('Back Squat')], createdAt: '2026-01-02' },
+  ]));
+
+  let systems = await st.getSystems();
+  ok(systems.length === 1, `orphaned workouts are adopted into one system (${systems.length})`);
+  ok(systems[0].name === 'My Workouts', `and it is named for what it holds ("${systems[0].name}")`);
+  let ws = await st.getWorkouts();
+  ok(ws.length === 2 && ws.every((w) => w.systemId === systems[0].id),
+     'every pre-existing workout ends up in it — nothing is lost or hidden');
+  ok(ws.find((w) => w.name === 'Legs').exercises.length === 1,
+     'and the older exerciseIds shape still upgrades on the way through');
+
+  // Idempotent: running it again must not create a second system.
+  await st.getSystems();
+  await st.getSystems();
+  ok((await st.getSystems()).length === 1, 'migrating twice does not create a second system');
+
+  /* ---- the race that shipped ---- */
+  // Read-modify-write across two collections is not atomic. Two callers running
+  // the migration at once each saw "no systems", each created one, and the
+  // second write clobbered the first — leaving the list pointing at a row that
+  // no longer existed. It presented as an empty system list that said "Not
+  // found" when tapped. WorkoutsView asking for both in one Promise.all is
+  // exactly this case.
+  await st.clearAll();
+  localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
+    { id: 'r1', name: 'Push', exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 3 }] },
+  ]));
+  const [raceSystems, raceWorkouts] = await Promise.all([st.getSystems(), st.getWorkouts()]);
+  ok(raceSystems.length === 1,
+     `concurrent callers produce exactly one system (${raceSystems.length})`);
+  ok(raceWorkouts.every((w) => raceSystems.some((s) => s.id === w.systemId)),
+     'and every workout points at a system that actually exists');
+  // Four at once, for good measure.
+  await st.clearAll();
+  localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
+    { id: 'r2', name: 'Pull', exercises: [{ exerciseId: id('Barbell Row'), sets: 3 }] },
+  ]));
+  await Promise.all([st.getSystems(), st.getWorkouts(), st.getSystems(), st.getWorkouts()]);
+  ok((await st.getSystems()).length === 1, 'four concurrent callers still produce one system');
+
+  /* ---- create, rename, filter ---- */
+  await st.clearAll();
+  const ppl = await st.saveSystem({ name: 'Push Pull Legs', notes: '6 days' });
+  const ul = await st.saveSystem({ name: 'Upper / Lower' });
+  ok(ppl.id && ul.id && ppl.id !== ul.id, 'systems get their own ids');
+  ok((await st.getSystems()).length === 2, 'and both are listed');
+
+  await st.saveWorkout({ name: 'Push', systemId: ppl.id, exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 3 }] });
+  await st.saveWorkout({ name: 'Pull', systemId: ppl.id, exercises: [{ exerciseId: id('Barbell Row'), sets: 3 }] });
+  await st.saveWorkout({ name: 'Upper', systemId: ul.id, exercises: [{ exerciseId: id('Overhead Press'), sets: 3 }] });
+
+  ok((await st.getWorkouts(ppl.id)).length === 2, 'workouts filter by system');
+  ok((await st.getWorkouts(ul.id)).length === 1, 'and each system sees only its own');
+  ok((await st.getWorkouts()).length === 3, 'asking for all of them still returns all of them');
+  // A workout created inside a system must not be adopted away by the migration.
+  ok((await st.getWorkouts()).every((w) => w.systemId),
+     'a workout saved with a system keeps it');
+
+  const renamed = await st.saveSystem({ ...ppl, name: 'PPL' });
+  ok(renamed.id === ppl.id, 'renaming keeps the id');
+  ok((await st.getSystem(ppl.id)).name === 'PPL', 'and the new name sticks');
+  ok((await st.getWorkouts(ppl.id)).length === 2, 'and its workouts are still in it');
+
+  /* ---- names ---- */
+  const blank = await st.saveSystem({ name: '   ' });
+  ok((await st.getSystem(blank.id)).name === 'Untitled system',
+     'a blank name falls back rather than rendering as an empty row');
+
+  /* ---- deleting a system takes its workouts, but never history ---- */
+  await st.saveSession({
+    workoutId: 'gone', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: id('Barbell Bench Press'), exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 185, reps: 5 }] }],
+  });
+  const sessionsBefore = (await st.getSessions()).length;
+
+  await st.deleteSystem(ppl.id);
+  ok(!(await st.getSystem(ppl.id)), 'the system is gone');
+  ok((await st.getWorkouts()).every((w) => w.systemId !== ppl.id),
+     'its workouts go with it — they belong to it and have nowhere else to live');
+  ok((await st.getWorkouts(ul.id)).length === 1, 'and another system is untouched');
+  ok((await st.getSessions()).length === sessionsBefore,
+     'recorded history is NOT touched — it is a record of what happened, not a plan');
+
+  await st.clearAll();
+}
+
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

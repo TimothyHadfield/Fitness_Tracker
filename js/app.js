@@ -2,7 +2,7 @@
 
 import { store } from './store.js';
 import { el, icon, clear, profileButton } from './ui.js';
-import { HomeView, StartPickerView, WorkoutsView, WorkoutBuilderView } from './views-workouts.js';
+import { HomeView, StartPickerView, WorkoutsView, SystemView, WorkoutBuilderView } from './views-workouts.js';
 import { SessionView, BenchmarkView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
 import { AccountView, SignInView } from './views-account.js';
@@ -20,7 +20,7 @@ const NAV = [
 ];
 
 // Routes that take over the whole screen (no bottom nav).
-const FULLSCREEN = ['session', 'workout', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile'];
+const FULLSCREEN = ['session', 'workout', 'system', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -51,6 +51,7 @@ async function resolve(route) {
     case 'home':      return HomeView();
     case 'start':     return StartPickerView();
     case 'workouts':  return WorkoutsView();
+    case 'system':    return SystemView(route.param);
     case 'workout':   return WorkoutBuilderView(route.param);
     case 'session':   return SessionView(route.param);
     case 'benchmark': return BenchmarkView();

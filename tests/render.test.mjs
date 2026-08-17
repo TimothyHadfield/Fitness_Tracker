@@ -45,7 +45,7 @@ const { BUILT_IN_EXERCISES } = await import(BASE + 'exercises.js');
 const { store } = await import(BASE + 'store.js');
 const { GraphView, CalendarView, SettingsView } = await import(BASE + 'views-data.js');
 const { ProfileView } = await import(BASE + 'views-profile.js');
-const { HomeView, WorkoutsView } = await import(BASE + 'views-workouts.js');
+const { HomeView, WorkoutsView, SystemView, StartPickerView } = await import(BASE + 'views-workouts.js');
 const { LEVELS } = await import(BASE + 'strength-standards.js');
 const { MAPPED_MUSCLES } = await import(BASE + 'body-map.js');
 
@@ -663,6 +663,45 @@ ok(!data.querySelector('.rep-target'),
 
   u.setUnits('lbs');
 }
+
+/* ================= workout systems ================= */
+{
+  // Workouts saved before systems existed, written past the store exactly as an
+  // older build left them.
+  localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
+    { id: 'sw1', name: 'Push', exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 3 }] },
+    { id: 'sw2', name: 'Legs', exercises: [{ exerciseId: byName('Back Squat').id, sets: 3 }] },
+  ]));
+
+  const list = await mount(WorkoutsView());
+  ok(/My Workouts/.test(list.textContent),
+     'the Workouts tab lists systems, and old workouts are adopted into one');
+  // The subtitle naming the workouts is the point — "2 workouts" says nothing
+  // you could not guess.
+  ok(/Push/.test(list.textContent) && /Legs/.test(list.textContent),
+     'and names the workouts inside it rather than just counting them');
+  ok(!/No workouts yet/.test(list.textContent),
+     'the migrated system does not claim to be empty — the bug the race caused');
+
+  const sys = (await store.getSystems())[0];
+  const detail = await mount(SystemView(sys.id));
+  ok(/Push/.test(detail.textContent) && /Legs/.test(detail.textContent),
+     'opening a system shows its workouts');
+  ok(/New workout/.test(detail.textContent), 'and offers to add another');
+  ok(!/no longer exists/.test(detail.textContent),
+     'a system opened straight after migration is found, not "Not found"');
+
+  ok(/New system/.test((await mount(WorkoutsView())).textContent),
+     'a system can be created from the list');
+  const blank = await mount(SystemView('new'));
+  ok(/Create system/.test(blank.textContent), 'the new-system screen offers to create one');
+
+  // Starting a workout must still reach every workout, whatever system it is in.
+  const start = await mount(StartPickerView());
+  ok(/Push/.test(start.textContent) && /Legs/.test(start.textContent),
+     'the start picker still reaches every workout');
+}
+
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

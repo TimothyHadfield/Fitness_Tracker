@@ -93,6 +93,13 @@ Open threads:
 - Celebrity systems have an obvious tension with that: they are a draw, and many are not optimal. The
   honest version might be that showing a celebrity system's *low* percentage is the feature.
 
+**Groundwork laid 2026-08-17.** Workouts now live inside **systems** — a system is a named programme
+holding several workouts — which is the container a shipped or celebrity programme would arrive as.
+Tim asked to build system creation first and do the celebrity systems afterwards. What exists is
+creation, naming, notes and deletion; what does not exist is any notion of a system that came from
+somewhere else (an author, a source, a rating, a way to copy one into your own account), or the
+"% optimal" number, which is still the part that needs real grounding.
+
 **Where this connects:** Tier 3's "small set of well-explained starter programs". The ranking is the
 part that is genuinely new versus every competitor.
 
