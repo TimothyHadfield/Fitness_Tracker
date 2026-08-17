@@ -2141,3 +2141,75 @@ ready-made systems including one transcribed from Jeff Nippard's free 2023 serie
 The next thing worth doing is the **simulator** — it is what turns the two remaining accuracy gaps
 from documented into measured. The biggest risk remains unchanged and is not a code problem: **nobody
 has opened this app on a real phone.**
+
+---
+
+## 2026-08-17 (later) — Three more ready-made systems, and a third kind of attribution
+
+**Tim:** *"I know I personally follow Mike Israetel so lets try to find a way to make a system for
+him, and then lets also do the Arnold and Thurston one you recommend aswell. Also put a note in the
+vision to eventually add supersets, drop sets, and tri-sets to the cite."*
+
+This followed a list of celebrity systems worth adding, filtered by what can actually be shipped:
+free published write-up, cited, flagged unofficial, nothing from a paid product.
+
+**Shipped: three systems.** Explore now holds seven.
+
+- **The Golden Six** — Arnold Schwarzenegger. One workout, three times a week, 20 sets. The oldest
+  programme in the list and still a sound beginner routine. Its warning is different from Nippard's:
+  the versions of this routine *disagree with each other* after sixty years of republication, and
+  nobody here has a primary source. The behind-the-neck press is kept because it is in the original,
+  with a note saying to press in front if your shoulders object.
+- **Mike Thurston's Six-Day Split** — five lifting days plus a conditioning day, transcribed from
+  Fitness Volt. Its own limitation, stated on screen: he rebuilds his programme every four to six
+  weeks, so this is one block frozen rather than a programme he stands behind. First preset to carry
+  **cardio** exercises; checked in a browser that they copy in with the right fields.
+- **Volume Landmarks Hypertrophy** — and this one needed a new idea.
+
+**The Israetel problem, and the third kind of system.** A straight transcription was not honestly
+available. What he publishes *free* is a METHOD — volume landmarks, MEV → MRV — while the routine
+written up as his own training is built almost end to end from supersets, tri-sets and myo-reps,
+none of which this app can log. Transcribing that as a flat list would not be his workout; it would
+be a list of the exercises in it.
+
+So `js/preset-systems.js` now distinguishes **three** kinds of system, and the header says so:
+
+| Kind | `author` | Renders as |
+|---|---|---|
+| Ours | `Fitness Tracker` | "By Fitness Tracker" |
+| Transcribed | the real person | "By Jeff Nippard" + unofficial warning |
+| **Method** | `Fitness Tracker` **+ `basedOn`** | "By Fitness Tracker" *and* "Follows **Dr. Mike Israetel**'s volume landmarks. The workouts below are not theirs." |
+
+The rule that matters: **a person's name never goes in `author` unless they chose the exercises.**
+"By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath it can undo.
+Tests enforce it — a `basedOn` system that names the person as author fails, and a render test
+asserts the string "By Dr. Mike Israetel" never appears on the page.
+
+**Two things fixed along the way, both found by looking rather than by reasoning:**
+
+1. **The warning banner was quieter than the text it was warning about.** It reused
+   `.chart-caption.warn` — 12px, `--ink-soft` — so the one line on the screen that must not be
+   skimmed rendered fainter than the notes below it. New `.preset-warning`: hairline rule in
+   `--danger` down the left, full-strength ink, no box (Rule 2). Also the default warning text said
+   "transcribed from the free videos", which is true of Nippard and false of a routine from 1965 or
+   of a method-based system — `warning` now overrides it per system, and a test fails if anything
+   that is not a video transcription falls through to the default.
+2. **Copied programmes arrived in ALPHABETICAL order.** Found by driving the real Add button:
+   Thurston's week came out Arms, Back, Chest, Conditioning, Legs, Shoulders, and Upper A / Lower A /
+   Upper B / Lower B came out with both Lowers first — reversing exactly what the notes tell you to
+   alternate. `getWorkouts()` sorted by name. Workouts copied from a preset now carry an `order`;
+   ordered ones sort first, unordered ones stay alphabetical after them, so a workout you add
+   yourself lands at the end of somebody's split rather than in the middle of it. **This fixed
+   Nippard too** — it had been listing Legs, Pull, Push since the day it shipped.
+
+**Also:** `docs/vision.md` §1.5 — supersets, drop sets and tri-sets, as Tim asked. The note records
+*why it came up now*: it is the thing blocking celebrity systems. Chris Bumstead's programme is
+tri-sets and drop sets; Israetel's own training is supersets and myo-reps; Thurston's arm day is
+paired in one published version. It also flags that four things are being lumped together and are
+two different shapes — a superset groups *exercises*, a drop set is a structure *within one set* —
+and that whatever gets built has to keep "a drop set counts as ONE hard set" true, which is already
+decided in §6.
+
+**State at close:** **937 data-layer + 153 render assertions green.** Screenshotted at 360 and
+1180 px in both themes; the add flow driven with real mouse events through to the copied system and
+into its workouts. Unverified as ever: a real phone.

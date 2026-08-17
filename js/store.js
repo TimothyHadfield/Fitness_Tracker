@@ -411,6 +411,7 @@ export const store = {
     });
 
     let skipped = 0;
+    let order = 0;
     for (const w of preset.workouts) {
       const exercises = [];
       for (const item of w.exercises || []) {
@@ -423,7 +424,13 @@ export const store = {
         });
       }
       if (!exercises.length) continue;
-      await this.saveWorkout({ name: w.name, systemId: system.id, exercises });
+      // ⚠️ `order` is what stops a programme arriving shuffled. Workouts sort by
+      // name otherwise, which is harmless for a list somebody typed themselves
+      // and wrong for a programme: Thurston's week came out Arms, Back, Chest,
+      // Conditioning, Legs, Shoulders, and "Upper A, Lower A, Upper B, Lower B"
+      // came out with both Lowers first — reversing the two things the notes
+      // tell you to alternate. Caught by driving the real Add button.
+      await this.saveWorkout({ name: w.name, systemId: system.id, exercises, order: order++ });
     }
 
     return { system, skipped };
@@ -437,10 +444,28 @@ export const store = {
 
   /* --- workout templates --- */
 
+  /**
+   * Workouts, in the order they should be READ rather than the order they were
+   * written.
+   *
+   * A workout copied from a ready-made system carries an `order` — the position
+   * it had in the programme, which is information the author put there and
+   * alphabetising throws away. A workout the user typed has none, because there
+   * is no meaningful order to a list you wrote yourself, and those stay
+   * alphabetical so they are findable.
+   *
+   * Ordered ones come first. That is deliberate: add your own workout to a
+   * copied programme and it lands at the end, rather than wedging itself into
+   * the middle of somebody's split because of its initial letter.
+   */
   async getWorkouts(systemId) {
     await this.ensureSystems();
     const rows = await backend.read('workouts');
-    const all = rows.map(normalizeWorkout).sort((a, b) => a.name.localeCompare(b.name));
+    const all = rows.map(normalizeWorkout).sort((a, b) => {
+      const ao = Number.isFinite(a.order) ? a.order : Infinity;
+      const bo = Number.isFinite(b.order) ? b.order : Infinity;
+      return ao !== bo ? ao - bo : a.name.localeCompare(b.name);
+    });
     return systemId ? all.filter((w) => w.systemId === systemId) : all;
   },
 

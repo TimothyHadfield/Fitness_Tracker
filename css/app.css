@@ -335,6 +335,19 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .preset-notes { display: flex; flex-direction: column; gap: 8px; }
 .preset-notes p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
 
+/* Whether a programme is really the named person's is the ONE thing on this
+   screen that must not be skimmed past, and `.chart-caption.warn` — a 12px
+   grey line — rendered it as quieter than the notes underneath it. This is a
+   hairline rule and full-strength ink, not a card: no border box, no fill, no
+   icon (Rule 2). It is the only place in the app that uses --danger for
+   something that is not an error, which is the point — nothing else on the
+   screen looks like it. */
+.preset-warning {
+  border-left: 2px solid var(--danger);
+  padding-left: 11px;
+  font-size: 13.5px; line-height: 1.5; color: var(--ink);
+}
+
 .row-chev { color: var(--ink-faint); flex: none; display: flex; }
 .row-chev svg { width: 17px; height: 17px; display: block; }
 

@@ -167,8 +167,11 @@ export async function ExploreView() {
               p.name,
               added.has(p.id) ? el('span', { class: 'tag', text: 'Added' }) : null,
             ),
+            // Whose it is, before anything else — but "follows X's method" and
+            // "by X" are different claims and the list has to keep them apart.
             el('div', { class: 'row-sub', text:
-              (p.author && p.author !== 'Fitness Tracker' ? `${p.author} · ` : '')
+              (p.author && p.author !== 'Fitness Tracker' ? `${p.author} · `
+                : p.basedOn ? `Follows ${p.basedOn.person} · ` : '')
               + `${p.daysPerWeek} days/week · ~${p.minutes} min · ${p.level}` }),
             el('div', { class: 'row-sub wrap', text: p.summary }),
           ),
@@ -229,13 +232,27 @@ export async function ExploreDetailView(id) {
           : (preset.sourceName || null),
       ),
 
+      // A system that FOLLOWS someone's published method is not a system BY
+      // them, and the two must never render the same way. The byline above
+      // stays truthful (it says who chose the exercises); this line is where
+      // the credit goes.
+      preset.basedOn
+        ? el('div', { class: 'field-help' },
+            'Follows ', el('b', { text: preset.basedOn.person }), '’s ',
+            preset.basedOn.what || 'published method',
+            '. The workouts below are not theirs.')
+        : null,
+
       // Loud, not a footnote. Someone reading a programme attributed to a real
       // person has to know whether that person actually wrote what is on screen.
+      // The default assumes a video transcription, which is true of exactly one
+      // system here — anything else states its own case.
       preset.unofficial
-        ? el('div', { class: 'chart-caption warn' }, el('span', {
-            text: 'Not official. Transcribed from published write-ups of the free videos, '
-              + 'not from the author or their paid programme. Sets and reps are as reported — '
-              + 'check the source before you trust a number.' }))
+        ? el('div', { class: 'preset-warning' }, el('span', {
+            text: preset.warning
+              || 'Not official. Transcribed from published write-ups of the free videos, '
+                 + 'not from the author or their paid programme. Sets and reps are as reported — '
+                 + 'check the source before you trust a number.' }))
         : null,
 
       preset.notes

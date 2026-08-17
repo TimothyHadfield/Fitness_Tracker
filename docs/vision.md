@@ -8,7 +8,7 @@
 > does. Until then, an entry here is a want, not a commitment — the wording is his, and where
 > something conflicts with a locked decision the conflict is *noted*, never quietly resolved.
 
-**Started:** 2026-08-16 · **Last added to:** 2026-08-16
+**Started:** 2026-08-16 · **Last added to:** 2026-08-17
 
 ---
 
@@ -101,6 +101,17 @@ account on a tap. Three of the app's own ship with it.
 transcribed from published write-ups of his **free** YouTube series and flagged on screen as
 unofficial, with a link to the playlist. Not from his paid ebook. One rotation of a six-part series.
 
+**Three more shipped later on 2026-08-17**, on Tim's ask — Arnold's *Golden Six*, *Mike Thurston's
+Six-Day Split*, and *Volume Landmarks Hypertrophy*, which follows **Dr. Mike Israetel's** published
+method because a transcription of him was not honestly available (his free work is a method; his own
+routine is supersets and myo-reps — see §1.5). That third one forced a distinction worth keeping:
+a system that FOLLOWS someone's method is not a system BY them, so the person's name goes in a
+`basedOn` field and never in `author`. Seven systems now.
+
+The **"% optimal" number is still not built**, and it is now the obviously missing piece: seven
+programmes sitting in a list with no way to compare them is exactly the state this idea was written
+to fix.
+
 **Superseded note, kept for the reasoning:** Tim asked for Jeff Nippard's *Ultimate Push
 Pull Legs* first. The full 12-week system is a paid product on his site, and the free YouTube series
 cannot be watched from here — secondary write-ups are partial and contradict each other. Shipping a
@@ -162,6 +173,47 @@ Also worth knowing: the underlying standards data is thinner for some slices tha
 `docs/research.md` §strength standards). Some combinations of the choices above will have no real
 data behind them, and the app's whole credibility rests on saying so rather than interpolating
 quietly.
+
+### 1.5 Set types — supersets, drop sets, tri-sets
+
+Tim, 2026-08-17: eventually add **supersets, drop sets and tri-sets** to the site.
+
+Right now a workout is a flat list of exercises and a set is a flat list of numbers. There is no way
+to say "these two are done back to back with no rest", or "strip the weight and keep going", or
+"three exercises in a row". `progress.md` §9 has recorded "No supersets" as a known gap since the
+beginning; this is Tim asking for it to stop being one.
+
+**Why it came up now:** it is the thing blocking celebrity systems, which is not obvious until you
+try. Three of the names worth shipping cannot be represented honestly without it —
+
+- **Chris Bumstead's** programme is built on tri-sets and drop sets. Written as a flat list it is not
+  his workout, it is a list of the exercises in it.
+- **Dr. Mike Israetel's own training**, as published, is supersets, tri-sets and myo-reps almost end
+  to end. That is exactly why the system shipped on 2026-08-17 follows his *volume landmarks method*
+  and openly says the workouts are not his — a straight transcription was not available to us.
+- **Mike Thurston's** arm day pairs every exercise (1A/1B, 2A/2B) in at least one published version.
+  The version shipped is a different, unpaired block of his.
+
+Open threads:
+
+- Four things are being lumped together and they are not the same shape. A **superset** and a
+  **tri-set** are a grouping of *exercises*; a **drop set** and a **myo-rep** are a structure
+  *within one set*. Probably two features.
+- What does a drop set count as for volume? The app already resolved the adjacent question — "drop
+  sets / myo-reps count as **one** hard set" is in `progress.md` §6, decided so volume totals don't
+  inflate. Building the feature has to keep that true, which means the data model must be able to
+  say "this is one set with three drops", not "three sets".
+- What does the **rest timer** do inside a superset? It counts up from the last logged number today
+  (§3), and the whole point of a superset is that there is no rest between the pair. It should
+  probably start only after the last exercise in the group.
+- The session runner walks exercises one at a time. A group has to be walkable as a unit without
+  turning the screen into a nested list — which is a **Rule 1** problem (the window never scrolls).
+- What happens to grouping when the user edits a recorded session, or when a preset carrying groups
+  is copied and then edited?
+
+**Where this connects:** ranked pre-designed systems (§1.3) — several of the best-known programmes
+cannot even be *entered* until this exists, so the celebrity library has a ceiling until it does.
+Nothing here collides with a locked decision.
 
 ---
 

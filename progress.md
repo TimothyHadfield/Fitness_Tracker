@@ -14,8 +14,9 @@ workout be logged for another day, lets a past record be edited from the calenda
 whole workout as a benchmark.
 
 **Workouts live inside SYSTEMS** — a system is a programme holding several workouts — and there is an
-**Explore** screen of ready-made systems you can copy into your account, including one transcribed
-from Jeff Nippard's free 2023 YouTube series.
+**Explore** screen of **seven** ready-made systems you can copy into your account. Four are credited
+to real people: Jeff Nippard, Arnold Schwarzenegger, Mike Thurston, and one that follows Dr. Mike
+Israetel's published method without claiming to be his.
 
 **The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
 rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
@@ -44,8 +45,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 869 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 141 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 937 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 153 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -151,7 +152,7 @@ Tim is the **manager**; Claude is the **builder**.
 |---|---|
 | `progress.md` | State, decisions, rules, next steps. **The catch-up file.** |
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |
-| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a schedule: nothing starts off it without him saying so. Two of its four ideas are now partly built (the comparison setting, and ready-made systems) and are marked BUILT in place |
+| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a schedule: nothing starts off it without him saying so. Five ideas; two are partly built (the comparison setting, and ready-made systems) and marked BUILT in place. §1.5 (set types) is the newest and is the one currently blocking other work |
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
@@ -193,7 +194,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you. `js/preset-systems.js` holds four: **Jeff Nippard's Ultimate Push Pull Legs (2023)** plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **seven**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Dr. Mike Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
+| **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. The METHOD kind exists because his freely published work is a *method*, while the routine written up as his own training is supersets, tri-sets and myo-reps the app cannot log at all |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
@@ -221,11 +223,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **20 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **869 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **937 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **141 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **153 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -238,7 +240,11 @@ Press-and-hold repeats.
   Intermediate → Elite and the caption followed; the Everyone preset set all four axes), the systems
   list and one system, and Explore → a preset → Add, landing in the copied system with its notes
   intact. Confidence was checked from **computed styles**, not by eye: two muscles at one level and
-  different confidences differ only in chroma, with identical lightness and hue
+  different confidences differ only in chroma, with identical lightness and hue.
+  Later the same day: Explore → Thurston → **Add** → the copied system → its Conditioning workout
+  (the first preset workout made of cardio rather than lifts), and the same for the 8-exercise
+  Upper B. **This is what caught the alphabetical-order bug** — every test passed, every screenshot
+  looked right, and the programme was still arriving shuffled
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -354,8 +360,13 @@ Fitness_Tracker/
 Exercise    id, name, muscle, equipment, fields[], loadType, isCustom
 System      id, name, notes, createdAt, updatedAt
             ── a programme. Workouts belong to one, and only one.
-Workout     id, name, systemId, isBenchmark, exercises[{ exerciseId, sets, notes }],
+Workout     id, name, systemId, isBenchmark, order?, exercises[{ exerciseId, sets, notes }],
             createdAt, updatedAt
+            ── `order` is the position it had in a ready-made programme. Absent
+               on anything the user typed, because a list you wrote yourself has
+               no meaningful order. getWorkouts() sorts ordered first, then by
+               name — so a copied split keeps its shape and your own additions
+               land at the end of it rather than in the middle.
 Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
             entries[{ exerciseId, exerciseName, sets[{weight,reps,time,distance}] }]
 Benchmark   id, date, exerciseId, exerciseName, values{}, sourceSessionId?
@@ -618,7 +629,15 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   custom domain with `authDomain` on a subdomain of it.
 - **Rep normalisation assumes near-failure effort.** Every rep-based formula does. Bias is systematic
   per user per exercise, so trend and ordering survive. There is no RIR/RPE field — deliberate (D9).
-- **No supersets.** Sets are a flat list — no RIR, tempo, or set types.
+- **No supersets, drop sets or tri-sets.** Sets are a flat list — no RIR, tempo, or set types.
+  **This is now the ceiling on the celebrity library**, which is not obvious until you try to build
+  one: Chris Bumstead's programme is tri-sets and drop sets, Dr. Mike Israetel's own published
+  training is supersets and myo-reps almost end to end, and one published version of Mike Thurston's
+  arm day pairs every exercise. Written as a flat list, none of those is that person's workout — it
+  is a list of the exercises in it. Tim asked on 2026-08-17 for this to be built eventually;
+  `docs/vision.md` §1.5 holds the request and the open threads, including that a superset groups
+  *exercises* while a drop set is a structure *within one set*, and that whatever gets built must
+  keep "a drop set counts as ONE hard set" true.
 - ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
   canonically in pounds. Distance is still miles only.
 - **The Nippard system is a TRANSCRIPTION, and the screen says so.** It comes from published
@@ -631,6 +650,16 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   Sources: [Fitness Volt push](https://fitnessvolt.com/jeff-nippard-push-workout/) ·
   [Fitness Volt pull](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/) ·
   [Fitness Volt legs](https://fitnessvolt.com/jeff-nippard-leg-day-workout/)
+- **The other three creator systems each have a DIFFERENT limitation, and each says its own.** The
+  default warning ("transcribed from the free videos") is true of Nippard and false of the rest, so
+  `warning` overrides it per system and a test fails if anything that is not a video transcription
+  falls through to the default. **Arnold's Golden Six**: sixty years of republication and the
+  versions disagree — some swap the behind-the-neck press for an upright row, sit-up reps run from
+  20 to AMRAP — and nobody here has a primary source, which may not exist. **Thurston**: he rebuilds
+  his own programme every four to six weeks, so a transcription is one block frozen rather than a
+  programme he stands behind. **Volume Landmarks Hypertrophy**: the workouts are the app's own and
+  the screen says so twice — a straight transcription of Israetel was not available because what he
+  publishes free is a method and what he does himself is supersets and myo-reps.
 - **Beware which Nippard workout you are reading.** He has published several similarly named push
   workouts. A Generation Iron write-up of an older PPL gives a completely different push day
   (dips, Egyptian lateral raises, cable kickbacks) from the 2023 series. Cross-check the date and the
@@ -653,8 +682,12 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
    Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
    part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line
    in `pickSource()` in `views-data.js`.
-4. **Finish the Nippard series** — three of its six workouts are in. Needs someone to watch the other
-   three videos, or a published write-up of them. §9 has the rules that apply to creator systems.
+4. **The creator library.** Seven systems now, four credited. Two things would grow it:
+   **finish the Nippard series** (three of six workouts are in — needs someone to watch the other
+   three videos, or a published write-up of them), and **build set types** (`docs/vision.md` §1.5),
+   which is the hard ceiling — Chris Bumstead and several others cannot be represented at all until
+   supersets, drop sets and tri-sets exist. §9 has the rules that apply to creator systems, and they
+   are not the same rule for each one.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
 6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.

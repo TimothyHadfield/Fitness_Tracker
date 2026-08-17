@@ -1851,6 +1851,72 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       ok(/not from|transcribed/i.test(p.notes || ''),
          `"${p.name}" says in its own notes that it is not the author's own writing`);
     }
+
+    // A METHOD system is the harder case to get right: the workouts are OURS,
+    // written to follow somebody else's published idea. Borrowing a reputation
+    // is easier to do by accident than plagiarising a programme, so the rules
+    // are stricter — the person must NOT appear as the author, must be cited,
+    // and the notes must disown the workouts in as many words.
+    if (p.basedOn) {
+      ok(p.author === 'Fitness Tracker',
+         `"${p.name}" follows ${p.basedOn.person}'s method and does NOT claim them as author`);
+      ok(Boolean(p.basedOn.person && p.basedOn.sourceUrl),
+         `"${p.name}" names whose method it follows and links to it`);
+      ok(p.unofficial === true, `"${p.name}" is flagged unofficial`);
+      ok(/not written by|not .*(their|his|her)|are not theirs/i.test(p.notes || '')
+         || /not\b[^.]*\b(transcribed|programme|program)\b/i.test(p.notes || ''),
+         `"${p.name}" says in its notes that the workouts are not the named person's`);
+      ok(/NOT|not/.test(p.warning || ''),
+         `"${p.name}" carries its own warning rather than the transcription default`);
+    }
+
+    // The default warning on the detail screen says "transcribed from the free
+    // VIDEOS". That is true of one system here and false of the rest, so
+    // anything not transcribed from video has to override it. Caught by hand
+    // once already: Arnold's Golden Six predates YouTube by forty years.
+    if (p.unofficial && !/youtube|video/i.test(p.sourceName || '')) {
+      ok(typeof p.warning === 'string' && p.warning.length > 0,
+         `"${p.name}" is not a video transcription, so it states its own warning`);
+    }
+  }
+
+  /* ---- every one of them actually copies in ---- */
+  // The name-resolution check above is static. This is the end-to-end version:
+  // add each system for real and assert nothing was silently dropped. They are
+  // not interchangeable — `skipped` counts exercises the STORE could not
+  // resolve, which is a different failure from a name that is not in the
+  // library at all.
+  for (const p of PRESET_SYSTEMS) {
+    await st.clearAll();
+    const { system, skipped } = await st.addPresetSystem(p);
+    ok(skipped === 0, `"${p.name}" copies in with nothing skipped (${skipped})`);
+    const ws = await st.getWorkouts(system.id);
+    ok(ws.length === p.workouts.length,
+       `"${p.name}" brings all ${p.workouts.length} workouts`);
+    const wanted = presetExerciseNames(p).length;
+    const got = ws.reduce((n, w) => n + w.exercises.length, 0);
+    ok(got === wanted, `"${p.name}" brings all ${wanted} exercises (${got})`);
+
+    // IN PROGRAMME ORDER. Workouts otherwise sort by name, which shuffled
+    // "Upper A, Lower A, Upper B, Lower B" into both Lowers first and turned
+    // Thurston's week into an alphabetical list. The order is the author's,
+    // and the notes tell you to follow it.
+    ok(ws.map((w) => w.name).join(' → ') === p.workouts.map((w) => w.name).join(' → '),
+       `"${p.name}" keeps programme order (${ws.map((w) => w.name).join(', ')})`);
+  }
+
+  // A workout the user adds afterwards has no order and lands at the END,
+  // rather than wedging itself into someone's split by its initial letter.
+  {
+    await st.clearAll();
+    const p = presetById('preset-volume-landmarks');
+    const { system } = await st.addPresetSystem(p);
+    await st.saveWorkout({ name: 'Arm day I added', systemId: system.id, exercises: [] });
+    const names = (await st.getWorkouts(system.id)).map((w) => w.name);
+    ok(names[names.length - 1] === 'Arm day I added',
+       `a workout you add yourself goes last, not first (${names.join(', ')})`);
+    ok(names.slice(0, 4).join(',') === p.workouts.map((w) => w.name).join(','),
+       'and the copied programme keeps its own order around it');
   }
 
   /* ---- adding one to an account ---- */

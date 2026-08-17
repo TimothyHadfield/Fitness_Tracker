@@ -727,6 +727,28 @@ ok(!data.querySelector('.rep-target'),
   ok(!/sets a week/i.test(detail.textContent),
      'the set count is not mislabelled as a weekly total');
 
+  // Every unofficial system gets a warning ON SCREEN, and each says its own
+  // true thing. The default text claims a video transcription, so a system
+  // that is not one must not be able to fall through to it — the whole point
+  // of the flag is that the reader knows what they are looking at.
+  for (const p of PRESET_SYSTEMS.filter((x) => x.unofficial)) {
+    const d = await mount(ExploreDetailView(p.id));
+    ok(/Not official|NOT/.test(d.textContent), `"${p.name}" warns that it is not official`);
+    if (p.warning) {
+      ok(d.textContent.includes(p.warning.slice(0, 40)),
+         `"${p.name}" shows its own warning, not the video-transcription default`);
+      ok(!/free videos/.test(d.textContent),
+         `"${p.name}" does not also show the default warning`);
+    }
+    // A method system credits the person WITHOUT bylining them.
+    if (p.basedOn) {
+      ok(d.textContent.includes('Follows ') && d.textContent.includes(p.basedOn.person),
+         `"${p.name}" credits ${p.basedOn.person} as the method, not the author`);
+      ok(!new RegExp('By\\s*' + p.basedOn.person).test(d.textContent),
+         `"${p.name}" never renders "By ${p.basedOn.person}"`);
+    }
+  }
+
   const missing = await mount(ExploreDetailView('no-such-preset'));
   ok(/no longer exists/.test(missing.textContent),
      'an unknown system id gives a real screen, not a crash');
