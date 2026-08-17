@@ -260,7 +260,25 @@ I actually lifted at 5 reps") and it answers it well.
 
 ---
 
-## 10. Later: evidence from other exercises
+## 10. Evidence from other exercises — BUILT 2026-08-17, and the ordering here was wrong
+
+> **This section was written as "later, and the weakest part of the plan". Reality reversed it.**
+> Tim trained every muscle for a week and the body map recorded ONE number, because a muscle was
+> ranked by a single named lift and he had done hammer curls rather than barbell curls. The stability
+> problem this document is mostly about is real, but it is a problem you only get to HAVE once there
+> is something on the screen. Flexibility turned out to be the blocker; stability was the refinement.
+>
+> Built in `js/muscle-evidence.js` (D19). It follows most of the discipline below — a substituted
+> lift is named in the UI, carries a lower confidence, and a compound may only stand in for a
+> secondary muscle that has NO direct evidence. It breaks one rule deliberately: substitutions do
+> blend with direct evidence within a muscle, because "hammer curl" and "barbell curl" are both
+> direct biceps work and picking one to ignore would throw away real information.
+>
+> What did NOT come with it is §11 — there is no simulator, and the constants in that module are
+> reasoned rather than fitted. **That is now the top open item.**
+
+### The original text, kept because its warning still stands
+
 
 The body map still ranks each muscle by **one** key lift. Someone who only ever dumbbell-benches gets
 a grey chest forever. The obvious extension is cross-exercise equivalence — estimate bench from

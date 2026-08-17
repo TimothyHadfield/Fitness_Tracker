@@ -1666,3 +1666,86 @@ centre lands on `.add-set`, clicking takes 6 sets to 7 and makes the new one act
 
 Worth remembering, and now in `progress.md`'s key patterns: anything tall inside a `.pane-scroll`
 wants `flex: none`, and `min-height: 0` belongs only on a child that handles its own overflow.
+
+---
+
+## 2026-08-17 — the body map stops being picky
+
+Tim's report: he trained every muscle in his body for a week and the map recorded **one** measurement,
+the back squat. He had done hammer curls instead of barbell curls, dumbbell shrugs instead of barbell
+shrugs, dumbbell rows instead of barbell rows, seated calf raises instead of standing, machine
+shoulder press instead of overhead press. Every one of those is in the library, tagged to the right
+muscle, and was thrown away — a muscle was ranked by exactly ONE named lift, so **11 of 265 exercises
+could move the map**.
+
+His proposal: many exercises feed a muscle, weighted, some trumping others, with recency counted, and
+a **confidence** per muscle shown as colour brightness.
+
+Three things I pushed back on or added before building, all three of which he took:
+
+1. **Brightness cannot carry confidence, because brightness already carries the rating.** The seven
+   levels are a strictly monotone lightness ramp — that is what makes them read as a scale rather than
+   a rainbow — so a dimmed Elite would read as a lower level. Confidence is carried by **saturation**
+   instead. Grey already means "no data", so faded reads as "less sure" on the same axis.
+2. **"Trump" is strict, not just heavier.** Direct exercises decide a rating; a compound stands in for
+   a secondary muscle only when that muscle has nothing direct at all. That keeps grey meaningful —
+   it still answers "what am I not training".
+3. **The honest cost.** Scoring a hammer curl means knowing what a good hammer curl is, and published
+   standards exist for the 11 key lifts only. Everything else needed a ratio, and those ratios are
+   estimates — solid for dumbbell swaps, **shaky for machines**, where gearing varies by brand.
+   Coverage went up and per-observation accuracy went down. Confidence is what pays for that.
+
+### Built
+
+`js/muscle-evidence.js`, pure maths, no DOM or store — the pattern that keeps catching bugs here.
+~90 ordered ratio rules across the 11 rankable muscles, each with a `quality` that is the *width of
+the population spread in that conversion*, not how hard the exercise is. Per-side loads are doubled
+to total before anything else, or every dumbbell lifter reads as feeble.
+
+Cross-muscle conversions are **not** a second table: they fall out of the medians already in
+`strength-standards.js`, so bench → triceps is 185/225 by construction and the two cannot drift apart.
+
+Confidence is a geometric mean of four things — conversion quality, how much evidence there is,
+whether the contributing exercises agree, and how fresh the newest one is. Geometric so no single term
+can be quietly compensated for: a pile of stale evidence stays low-confidence however much of it there
+is. Two different half-lives, deliberately: **weight** decays slowly (120 days), because a four-month
+old heavy single is still the best evidence there is; **freshness** decays fast (60 days) and feeds
+confidence only. Old evidence still sets the number, it just stops claiming to describe today.
+
+### Two bugs the tests did not catch — reading the numbers did
+
+- **A name collision.** The scoring code wrote `weight:` onto an observation that already had a
+  `weight` — the pounds on the bar — so every displayed lift was silently replaced by its own
+  confidence score. A 205 lb set rendered as `0.91`.
+- **The cross-muscle conversion was inverted.** Dividing where it should multiply gave a dumbbell row
+  a **429 lb wrist curl** and painted Forearms Elite off a single set. No test caught it because every
+  test only asserted that a number existed. There are now tests that assert the *direction*: standing
+  in for a weaker muscle must produce a smaller estimate.
+
+Both were found by dumping a realistic training week and looking at the table, which is worth
+remembering as a technique.
+
+### A design flaw found by screenshotting the light theme
+
+The first version faded with `color-mix`, which moves lightness as well as chroma. In the light theme
+the ramp runs strongest = *darkest*, so fading a muscle **lightened** it — the exact confusion the
+whole design was meant to avoid, just in the other theme. Fixed with relative colour syntax
+(`oklch(from … l calc(c * var(--tint-n)) h)`), which scales chroma alone. Verified from computed
+styles, not by eye: two muscles at the same level and different confidences now have **identical**
+lightness and hue, differing only in chroma. Both declarations are kept, weakest support first, so an
+older browser degrades to the solid fill it had before.
+
+### Result
+
+The same week that produced one reading now rates all eleven muscles, each naming the exercise it
+came from, its confidence as a bar and a word, how many sessions counted, how old the newest is, and
+what to do to firm it up — *"Only one session counts so far. A second would confirm it."*
+
+**448 data-layer + 117 render assertions, green.** Screenshotted at 390 and 1180 in both themes.
+
+**Known and stated, not hidden:** a seated calf raise at 180×12 still estimates a 417 lb standing calf
+raise and reads Elite off one set. Two inflations stack — the e1RM formula extrapolating from 12 reps,
+and the seated→standing conversion. The panel says Fair confidence, one session, and warns about the
+12-rep set, but the *level* still says Elite. Fixing it properly needs per-exercise spread or high-rep
+shrinkage, and neither should be guessed at without the simulator in
+`docs/strength-estimate-plan.md` §11. Written into `progress.md` §9 rather than quietly tuned.

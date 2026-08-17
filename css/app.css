@@ -1369,6 +1369,50 @@ select.input {
 .body-region.lv-below                          { fill: var(--lv-below); }
 .body-region.lv-none                           { fill: var(--body-none); }
 
+/* CONFIDENCE = how vivid the colour is. The rating owns the hue; how sure we
+   are of it owns the saturation, mixed toward the same neutral that means "no
+   data". Brightness could not carry confidence, because brightness already
+   carries the RATING — the seven levels are a strictly monotone lightness ramp,
+   so dimming an Elite would make it read as a lower level.
+
+   --tint is set per muscle by body-map.js and floored at 38 %, so an unsure
+   rating still reads as its own colour rather than collapsing into grey.
+   "We are not sure" and "you have never trained this" must stay distinguishable.
+
+   These declarations come AFTER the solid ones on purpose, weakest support
+   first, so each browser takes the best one it understands and anything older
+   keeps the solid fill above — exactly the pre-2026-08-17 behaviour. Nothing
+   breaks, it just stops showing confidence.
+
+   body-map.js sets the tint TWICE, as --tint (a percentage, which is what
+   color-mix takes) and --tint-n (unitless, which is what calc() inside a colour
+   function takes). One value in two syntaxes, because neither function accepts
+   the other's. */
+.body-region[style*="--tint"] {
+  fill: color-mix(in oklab, var(--lv-mix, currentColor) var(--tint, 100%), var(--body-none));
+}
+/* THE ONE THAT IS ACTUALLY RIGHT. color-mix moves lightness as well as chroma,
+   and in the light theme — where the ramp runs strongest = DARKEST — fading a
+   muscle lightens it, which is the exact confusion this design set out to
+   avoid. Relative colour syntax scales CHROMA alone and leaves l and h
+   untouched, so an unsure Elite is a washed-out Elite and never reads as a
+   lower level. */
+@supports (fill: oklch(from red l c h)) {
+  .body-region[style*="--tint"] {
+    fill: oklch(from var(--lv-mix, currentColor) l calc(c * var(--tint-n, 1)) h);
+  }
+}
+/* One place each level's colour is named as a variable, so the map's fill, the
+   legend swatch and the confidence bar cannot drift apart. */
+.lv-beginner     { --lv-mix: var(--lv-beginner); }
+.lv-novice       { --lv-mix: var(--lv-novice); }
+.lv-intermediate { --lv-mix: var(--lv-intermediate); }
+.lv-proficient   { --lv-mix: var(--lv-proficient); }
+.lv-advanced     { --lv-mix: var(--lv-advanced); }
+.lv-expert       { --lv-mix: var(--lv-expert); }
+.lv-elite        { --lv-mix: var(--lv-elite); }
+.lv-below        { --lv-mix: var(--lv-below); }
+
 /* Legend. Always present, so a level is never communicated by colour alone. */
 .lv-key { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .lv-key-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-soft); }
@@ -1381,7 +1425,24 @@ select.input {
 .lv-sw.lv-expert { background: var(--lv-expert); }
 .lv-sw.lv-elite { background: var(--lv-elite); }
 .lv-sw.lv-none { background: var(--lv-none); }
+/* The legend's own example of a faded rating, mixed at the same floor the map
+   uses so the two cannot drift apart. */
+.lv-sw.lv-faded { background: var(--lv-advanced); opacity: .42; }
+.lv-key-note { color: var(--ink-faint); }
 .lv-pct { color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
+
+/* Confidence in the detail panel. */
+.conf-row { display: flex; flex-direction: column; gap: 4px; }
+.conf-head { display: flex; align-items: baseline; gap: 7px; }
+.conf-label {
+  font-size: 10.5px; font-weight: 750; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.conf-band { font-size: 13px; font-weight: 700; flex: 1; }
+.conf-pct { font-size: 11.5px; color: var(--ink-faint); }
+.conf-bar { height: 6px; background: var(--raised); border-radius: 3px; overflow: hidden; }
+.conf-fill { height: 100%; border-radius: 3px; background: var(--lv-mix, var(--accent)); }
+.conf-sub { font-size: 11.5px; color: var(--ink-faint); }
 
 .body-foot { flex: none; display: flex; flex-direction: column; gap: 8px; max-height: 46%; overflow-y: auto; }
 

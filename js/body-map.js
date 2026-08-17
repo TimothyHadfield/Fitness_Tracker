@@ -98,14 +98,27 @@ export function bodySvg(levels, selected, onPick) {
         info ? `lv-${info.levelKey}` : 'lv-none',
       ].join(' '));
       node.dataset.muscle = muscle;
+      // Confidence rides on the fill as a custom property, so the CSS keeps
+      // owning the colours — including the two themes' separate ramps, which a
+      // colour computed in JS would go stale against the moment the theme is
+      // toggled without a re-render.
+      // Set twice on purpose: color-mix() wants a percentage and calc() inside
+      // oklch() wants a plain number, and neither accepts the other's syntax.
+      if (info && typeof info.tint === 'number') {
+        node.style.setProperty('--tint', `${(info.tint * 100).toFixed(1)}%`);
+        node.style.setProperty('--tint-n', info.tint.toFixed(3));
+      }
       node.setAttribute('tabindex', '0');
       node.setAttribute('role', 'button');
+      // Confidence is stated in words as well as painted, because the fade is
+      // a colour cue and this screen's rule is that nothing is colour-alone.
+      const conf = info && info.confidence ? `, ${info.confidence.toLowerCase()} confidence` : '';
       node.setAttribute('aria-label',
-        `${muscle} — ${info ? info.label : 'no benchmark recorded'}`);
+        `${muscle} — ${info ? info.label + conf : 'nothing recorded'}`);
       // A <title> gives a native tooltip on desktop for free, and screen
       // readers announce it.
       const t = mk('title', {});
-      t.textContent = `${muscle}: ${info ? info.label : 'no data'}`;
+      t.textContent = `${muscle}: ${info ? info.label + conf : 'no data'}`;
       node.append(t);
 
       node.addEventListener('click', () => onPick(muscle));

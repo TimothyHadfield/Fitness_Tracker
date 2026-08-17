@@ -1039,5 +1039,307 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(/req\.method !== 'GET'/.test(sw), 'sw.js never intercepts a write');
 }
 
+/* ================= muscle evidence: many exercises, one rating ================= */
+// The change this suite exists for: before 2026-08-17 a muscle was ranked by ONE
+// named lift, so 11 of 265 exercises could move the body map. A full week of
+// training produced a single reading because the work was done with dumbbells
+// and machines rather than the exact barbell lift.
+{
+  const me = await import('../js/muscle-evidence.js');
+
+  // ---- load ----
+  ok(me.totalLoad(80, 'per_side') === 160, 'a per-side entry is doubled to total load');
+  ok(me.totalLoad(185, 'total') === 185, 'a total entry is left alone');
+  ok(me.totalLoad(0, 'total') === null, 'a zero load is not a load');
+
+  // ---- the exercises Tim actually did ----
+  // Every one of these was in the library, tagged to the right muscle, and
+  // contributed nothing. This is the regression that must never come back.
+  const wasIgnored = [
+    ['Hammer Curl', 'Biceps'],
+    ['Dumbbell Shrug', 'Traps'],
+    ['Dumbbell Row', 'Back'],
+    ['Seated Calf Raise', 'Calves'],
+    ['Machine Shoulder Press', 'Shoulders'],
+  ];
+  for (const [name, muscle] of wasIgnored) {
+    const c = me.contributionsFor(byName(name));
+    const hit = c.find((x) => x.muscle === muscle);
+    ok(hit && hit.kind === 'direct', `${name} is direct evidence for ${muscle}`);
+    ok(hit && hit.ratio > 0 && hit.quality > 0, `${name} converts to the ${muscle} standard`);
+  }
+
+  // Coverage, stated as a number so a regression is loud rather than subtle.
+  const weighted = BUILT_IN_EXERCISES.filter((e) => e.fields.includes('weight'));
+  const contributing = weighted.filter((e) => me.contributionsFor(e).length);
+  ok(contributing.length >= 150,
+     `${contributing.length}/${weighted.length} weighted exercises now rate a muscle (was 11)`);
+
+  // ---- ordering of the rules ----
+  // First match wins, so a specific name placed after a general one would be
+  // shadowed and silently take the wrong ratio.
+  const specificity = [
+    ['Chest-Supported Dumbbell Row', 'Dumbbell Row'],
+    ['Cross-Body Hammer Curl', 'Hammer Curl'],
+    ['Dumbbell Preacher Curl', 'Preacher Curl'],
+    ['Incline Dumbbell Bench Press', 'Dumbbell Bench Press'],
+    ['Single-Leg Press', 'Leg Press'],
+  ];
+  for (const [specific, general] of specificity) {
+    const a = me.contributionsFor(byName(specific)).find((x) => x.kind === 'direct');
+    const b = me.contributionsFor(byName(general)).find((x) => x.kind === 'direct');
+    ok(a && b && a.ratio !== b.ratio,
+       `"${specific}" is not shadowed by "${general}" (${a && a.ratio} vs ${b && b.ratio})`);
+  }
+
+  // ---- the key lift always wins, wherever the library files it ----
+  const cg = me.contributionsFor(byName('Close-Grip Bench Press'));
+  const cgTri = cg.find((x) => x.muscle === 'Triceps');
+  ok(cgTri && cgTri.ratio === 1 && cgTri.quality === 1,
+     'Close-Grip Bench Press is the triceps standard even though it is filed under Chest');
+  const dl = me.contributionsFor(byName('Deadlift'));
+  const dlGlutes = dl.find((x) => x.muscle === 'Glutes');
+  ok(dlGlutes && dlGlutes.ratio === 1 && dlGlutes.kind === 'direct',
+     'Deadlift is the glute standard even though it is filed under Back');
+
+  // ---- fallback ----
+  const bench = me.contributionsFor(byName('Barbell Bench Press'));
+  ok(bench.find((x) => x.muscle === 'Chest').kind === 'direct', 'bench is direct for chest');
+  const benchTri = bench.find((x) => x.muscle === 'Triceps');
+  ok(benchTri && benchTri.kind === 'fallback', 'and only a fallback for triceps');
+  ok(benchTri.quality < bench.find((x) => x.muscle === 'Chest').quality,
+     'a fallback is always worth less than the direct reading it came from');
+  // An isolation movement must never stand in for another muscle.
+  const fly = me.contributionsFor(byName('Cable Fly'));
+  ok(!fly.some((x) => x.kind === 'fallback'),
+     'a cable fly says nothing about triceps and is not allowed to pretend otherwise');
+
+  // DIRECTION of the cross-muscle conversion. Standing in for a WEAKER muscle
+  // has to produce a SMALLER estimate, not a larger one. Getting this backwards
+  // rated a dumbbell row as a 429 lb wrist curl and painted Forearms Elite off a
+  // single set, which no test caught because every test only checked that a
+  // number existed.
+  {
+    const rowContribs = me.contributionsFor(byName('Barbell Row'));
+    const toBack = rowContribs.find((x) => x.muscle === 'Back');
+    const toBiceps = rowContribs.find((x) => x.muscle === 'Biceps');
+    ok(toBiceps && toBiceps.ratio > toBack.ratio,
+       `a row is a bigger multiple of a curl than of a row (${toBiceps && toBiceps.ratio.toFixed(2)} > ${toBack.ratio})`);
+    const raw = 250;
+    ok(raw / toBiceps.ratio < raw / toBack.ratio,
+       'so the biceps estimate it implies is smaller than the back one, as it must be');
+    // Same check the other way: bench standing in for triceps, whose standard is
+    // lower, must come out lower.
+    const b = me.contributionsFor(byName('Barbell Bench Press'));
+    const bChest = b.find((x) => x.muscle === 'Chest');
+    const bTri = b.find((x) => x.muscle === 'Triceps');
+    ok(300 / bTri.ratio < 300 / bChest.ratio,
+       'a 300 lb bench implies a close-grip bench BELOW it, never above');
+    ok(near(300 / bTri.ratio, 300 / (((225 / 185) + (100 / 85)) / 2), 1e-9),
+       'and lands exactly where the published medians say it should');
+  }
+
+  // Bodyweight and assisted work logs added or subtracted load, not the load on
+  // the muscle, so it cannot be converted at all yet.
+  ok(me.contributionsFor(byName('Pull-Up')).length === 0, 'bodyweight work is not rated');
+  ok(me.contributionsFor(byName('Assisted Pull-Up')).length === 0, 'assisted work is not rated');
+
+  // ---- cross-muscle conversion comes from the published medians ----
+  ok(near(me.crossMuscleRatio('Chest', 'Triceps'), ((225 / 185) + (100 / 85)) / 2, 1e-9),
+     'the muscle-to-muscle conversion is derived from the medians, not a second hard-coded table');
+
+  // ---- rep gate and rep weighting ----
+  ok(me.repFactor(25) === 0, 'a 25-rep set is not evidence of a maximum');
+  ok(me.repFactor(16) === 0, 'and neither is 16');
+  ok(me.repFactor(15) > 0, 'but 15 is, which is where the documented cut sits');
+  let repMonotone = true;
+  for (let r = 2; r <= 15; r++) if (me.repFactor(r) > me.repFactor(r - 1)) repMonotone = false;
+  ok(repMonotone, 'the rep factor never rises as reps go up');
+
+  // ---- recency ----
+  ok(near(me.recencyWeight(0), 1, 1e-9), 'today counts fully');
+  ok(near(me.recencyWeight(120), 0.5, 1e-9), 'and halves over 120 days');
+  ok(me.freshness(60) < me.recencyWeight(60),
+     'freshness decays faster than weight — old evidence still sets the number, it just stops claiming to be current');
+  ok(me.freshness(10000) >= 0.12, 'freshness has a floor, so ancient evidence is not literally worthless');
+
+  // ---- rating ----
+  const obs = (o) => ({ estimate: 200, quality: 1, kind: 'direct', reps: 5, ageDays: 0,
+                        isBenchmark: false, exerciseId: 'x', date: '2026-08-17', ...o });
+
+  ok(me.rateMuscle([]) === null, 'nothing in, nothing out');
+  ok(me.rateMuscle([obs({ reps: 30 })]) === null, 'a single 30-rep set produces no rating');
+
+  // Direct evidence decides; a fallback only fills a gap. Tim's call.
+  const mixed = me.rateMuscle([
+    obs({ estimate: 100, kind: 'direct', exerciseId: 'direct' }),
+    obs({ estimate: 400, kind: 'fallback', quality: 0.4, exerciseId: 'fall' }),
+  ]);
+  ok(mixed.kind === 'direct' && near(mixed.estimate, 100, 1e-9),
+     'a fallback never outvotes direct evidence, however big its number');
+  ok(me.rateMuscle([obs({ estimate: 400, kind: 'fallback', quality: 0.4 })]).kind === 'fallback',
+     'but it does stand in when there is nothing direct');
+
+  // One value per exercise per day: the best set. Warm-ups and back-offs on the
+  // same day must not each count as separate evidence.
+  const oneDay = me.rateMuscle([
+    obs({ estimate: 100, exerciseId: 'a' }), obs({ estimate: 120, exerciseId: 'a' }),
+    obs({ estimate: 90, exerciseId: 'a' }),
+  ]);
+  ok(oneDay.contributorCount === 1, 'three sets of one exercise on one day are one observation');
+  ok(near(oneDay.estimate, 120, 1e-9), 'and it is the best of them');
+
+  // Confidence responds to the four things it claims to.
+  const lonely = me.rateMuscle([obs({ estimate: 200, quality: 0.35, exerciseId: 'a' })]);
+  const solid = me.rateMuscle([
+    obs({ estimate: 200, quality: 1, exerciseId: 'a' }),
+    obs({ estimate: 202, quality: 1, exerciseId: 'b' }),
+    obs({ estimate: 198, quality: 1, exerciseId: 'c' }),
+  ]);
+  ok(solid.confidence > lonely.confidence,
+     `agreeing high-quality evidence beats one loose reading (${solid.confidence.toFixed(2)} > ${lonely.confidence.toFixed(2)})`);
+
+  const disagreeing = me.rateMuscle([
+    obs({ estimate: 120, quality: 1, exerciseId: 'a' }),
+    obs({ estimate: 260, quality: 1, exerciseId: 'b' }),
+    obs({ estimate: 400, quality: 1, exerciseId: 'c' }),
+  ]);
+  ok(disagreeing.confidence < solid.confidence,
+     'evidence that contradicts itself is less trustworthy than evidence that agrees');
+
+  const stale = me.rateMuscle([
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', ageDays: 400 }),
+    obs({ estimate: 202, quality: 1, exerciseId: 'b', ageDays: 400 }),
+    obs({ estimate: 198, quality: 1, exerciseId: 'c', ageDays: 400 }),
+  ]);
+  ok(stale.confidence < solid.confidence, 'and year-old evidence is less trustworthy than fresh');
+
+  const machineish = me.rateMuscle([
+    obs({ estimate: 200, quality: 0.35, exerciseId: 'a' }),
+    obs({ estimate: 202, quality: 0.35, exerciseId: 'b' }),
+    obs({ estimate: 198, quality: 0.35, exerciseId: 'c' }),
+  ]);
+  ok(machineish.confidence < solid.confidence,
+     'and evidence that needed a shaky conversion is less trustworthy than the standard lift');
+
+  for (const r of [lonely, solid, disagreeing, stale, machineish]) {
+    ok(r.confidence >= 0 && r.confidence <= 1, 'confidence stays inside 0..1');
+  }
+
+  // A benchmark is worth more than the same numbers logged mid-workout.
+  ok(me.rateMuscle([obs({ estimate: 200, isBenchmark: true, exerciseId: 'a' })]).confidence
+     >= lonely.confidence,
+     'a deliberate test is worth at least as much as an ordinary set');
+
+  // ---- tint ----
+  ok(me.tintFor(1) === 1, 'full confidence paints the full colour');
+  ok(near(me.tintFor(0), me.MIN_TINT, 1e-9), 'and no confidence still paints something');
+  ok(me.MIN_TINT > 0.25,
+     'the floor is high enough that "unsure" never collapses into "never trained"');
+  ok(me.tintFor(0.8) > me.tintFor(0.3), 'tint rises with confidence');
+
+  // ---- bands ----
+  ok(me.confidenceBand(0.01).key === 'low' && me.confidenceBand(0.99).key === 'high',
+     'confidence bands run low to high');
+  ok(me.confidenceBand(NaN).key === 'low', 'a broken confidence reads as low, never as high');
+}
+
+/* ================= the whole path, through the store ================= */
+{
+  const { store: st, muscleStrength } = await import('../js/store.js');
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-08-01');
+
+  const id = (n) => byName(n).id;
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Tim's week: not one barbell key lift in it.
+  await st.saveSession({
+    workoutId: 'wk', workoutName: 'Everything', date: today,
+    entries: [
+      { exerciseId: id('Hammer Curl'), exerciseName: 'Hammer Curl',
+        sets: [{ weight: 40, reps: 8 }] },
+      { exerciseId: id('Dumbbell Shrug'), exerciseName: 'Dumbbell Shrug',
+        sets: [{ weight: 90, reps: 10 }] },
+      { exerciseId: id('Dumbbell Row'), exerciseName: 'Dumbbell Row',
+        sets: [{ weight: 100, reps: 8 }] },
+      { exerciseId: id('Seated Calf Raise'), exerciseName: 'Seated Calf Raise',
+        sets: [{ weight: 200, reps: 10 }] },
+      { exerciseId: id('Machine Shoulder Press'), exerciseName: 'Machine Shoulder Press',
+        sets: [{ weight: 140, reps: 8 }] },
+    ],
+  });
+
+  const r = await muscleStrength();
+  for (const m of ['Biceps', 'Traps', 'Back', 'Calves', 'Shoulders']) {
+    ok(r.muscles.has(m), `${m} rates from a non-standard exercise — the whole point of the change`);
+  }
+  // Per-side conversion has to survive the whole path, not just the unit test:
+  // a 100 lb/side dumbbell row is 200 lb on the body.
+  const back = r.muscles.get('Back');
+  ok(back.estimate > e1rm(100, 8),
+     `a per-side row is rated on its total load, not the number typed (${Math.round(back.estimate)})`);
+
+  // Every rating carries a confidence, and none of them claims certainty off one
+  // loose session.
+  for (const [muscle, m] of r.muscles) {
+    ok(m.confidence > 0 && m.confidence < 1, `${muscle} carries a real confidence`);
+    ok(m.tint >= 0.38 && m.tint <= 1, `${muscle} tint is inside the painted range`);
+    ok(Boolean(m.band && m.band.name), `${muscle} names its confidence in words`);
+  }
+  ok(r.muscles.get('Biceps').confidence < 0.72,
+     'one hammer-curl set does not produce high confidence in a biceps rating');
+
+  // The standard lift, done properly, must be trusted more than a converted
+  // machine number.
+  const rateAlone = async (name, weight) => {
+    await st.clearAll();
+    await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+    await st.logBodyWeight(180, '2026-08-01');
+    await st.saveSession({
+      workoutId: 'k', workoutName: 'Press', date: today,
+      entries: [{ exerciseId: id(name), exerciseName: name, sets: [{ weight, reps: 5 }] }],
+    });
+    return (await muscleStrength()).muscles.get('Shoulders');
+  };
+  const direct = await rateAlone('Overhead Press', 135);
+  const converted = await rateAlone('Machine Shoulder Press', 148);
+  ok(direct.confidence > converted.confidence,
+     `the standard lift is trusted more than a machine converted to it (${direct.confidence.toFixed(2)} > ${converted.confidence.toFixed(2)})`);
+
+  // Fallback: bench and nothing else should still say something about triceps,
+  // clearly labelled, and it must not be mistaken for direct evidence.
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-08-01');
+  await st.saveSession({
+    workoutId: 'b1', workoutName: 'Push', date: today,
+    entries: [{ exerciseId: id('Barbell Bench Press'), exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 225, reps: 5 }] }],
+  });
+  const fb = await muscleStrength();
+  ok(fb.muscles.get('Chest').basis === 'direct', 'bench rates chest directly');
+  ok(fb.muscles.get('Triceps') && fb.muscles.get('Triceps').basis === 'fallback',
+     'and stands in for triceps, marked as inferred');
+  ok(fb.muscles.get('Triceps').confidence < fb.muscles.get('Chest').confidence,
+     'with less confidence than the muscle it actually trained');
+  ok(!fb.muscles.has('Quads'), 'and says nothing at all about a muscle it does not touch');
+  ok(typeof fb.muscles.get('Triceps').hint === 'string'
+     && /direct/i.test(fb.muscles.get('Triceps').hint),
+     'the panel is told how to turn that inference into a real rating');
+
+  // Adding a direct triceps exercise must take over from the inference.
+  await st.saveSession({
+    workoutId: 'b2', workoutName: 'Arms', date: today,
+    entries: [{ exerciseId: id('Skull Crusher'), exerciseName: 'Skull Crusher',
+                sets: [{ weight: 95, reps: 8 }] }],
+  });
+  ok((await muscleStrength()).muscles.get('Triceps').basis === 'direct',
+     'a direct triceps exercise takes over from the bench inference');
+
+  await st.clearAll();
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

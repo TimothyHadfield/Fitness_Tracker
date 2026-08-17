@@ -4,7 +4,7 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-16
+**Last updated:** 2026-08-17
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end.
@@ -13,24 +13,27 @@ The body map is **Tim's own illustration**, split into a recolourable fill layer
 carrying every keyline, striation and shadow. The app works with **no network** (D6 — a service
 worker, so this is finally true rather than claimed), records weights in **lbs or kg**, has a rest
 timer, lets a workout be logged for another day, lets a past record be edited from the calendar, and
-can mark a whole workout as a benchmark. The body map ranks from **workout sets as well as
-benchmarks**.
+can mark a whole workout as a benchmark. The body map rates every muscle from **every exercise that
+trains it**, each rating carrying a **confidence** that fades the colour.
 
 **Open work — start here:**
 
-1. **`docs/strength-estimate-plan.md` is written and nothing is built.** It is the plan for measuring
-   strength from ordinary workouts reliably. It **proposes D18** (narrowing D14), which Tim has not
-   yet ratified — see §10 open questions. Phase 0 (pure maths + a simulator, nothing user-visible) is
-   the recommended start.
-2. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on.
+1. **`docs/strength-estimate-plan.md`, Phase 0** — the confidence-weighted estimator and its
+   simulator. Part of it arrived early on 2026-08-17: `js/muscle-evidence.js` is a real confidence
+   model, but it was built for the BODY MAP, not for the graph, and it has no simulator behind it.
+   The constants in it are reasoned, not fitted. **Fitting them is the open work.**
+2. **`docs/vision.md`** — Tim's own list of where this goes next. Nothing there is scheduled.
+3. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on. Note that
+   `muscle-evidence.js` now holds a *ranking* mapping; D3 needs a *volume* one, and they are not the
+   same table — one asks "how strong", the other "how much work landed here".
 
 | | |
 |---|---|
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 355 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 116 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 448 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 117 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -139,6 +142,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a plan — nothing in it is being built, and nothing starts off it without him saying so. He adds to it whenever something occurs to him |
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
+| `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `docs/strength-estimate-plan.md` | **Plan, not built.** How to measure strength from ordinary workout sets rather than benchmarks, and how to keep it stable. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state. ⚠️ Says a Google console toggle is outstanding; it is not — Google sign-in is enabled and in use |
@@ -188,7 +192,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — best e1RM across both, source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where its key lift ranks among **people who lift** at your weight, sex and age; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
@@ -201,12 +205,12 @@ Press-and-hold repeats.
 
 ### Verified
 
-- All **18 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **355 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- All **19 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **448 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **116 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **117 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -259,6 +263,8 @@ Fitness_Tracker/
 │   ├── store.js                data layer — async, backend-agnostic
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
+│   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
+│   │                           between them, and the confidence model — pure maths
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
@@ -275,8 +281,8 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     355 assertions, no dependencies
-│   └── render.test.mjs         116 jsdom assertions — mounts every screen
+│   ├── data-layer.test.mjs     448 assertions, no dependencies
+│   └── render.test.mjs         117 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
          firebase-setup.md · competitive-teardown.html
 ```
@@ -448,6 +454,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D14 | **Graphs never mix benchmarks with workout sets.** One source at a time, benchmarks by default. | Reported by Tim: a workout set sat far off his benchmark trend. Two more problems fell out — the shown point flipped between sources as the rep target changed, and one-point-per-day silently discarded the loser. |
 | D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; general-population data would make every user Elite. The seven-level scale compresses into ~70–98 % of all adults. **The UI must say "of people who lift".** |
 | D17 | **A benchmark workout's benchmarks are DERIVED from its session, not written alongside it.** Each carries `sourceSessionId` and the whole set is rebuilt on every save. | The alternative — write benchmarks once at finish — strands them the moment the record is edited. Move the workout to another day and its benchmarks stay on the old one; delete an exercise and its benchmark lives on; untick the flag and nothing undoes it. Rebuilding makes all four correct by construction instead of by remembering. Hand-entered benchmarks have no `sourceSessionId` and are never touched. |
+| D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 of 265 exercises could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
 | D16 | **Deadlift fills Glutes** on the muscle map. | It belongs to glutes, hamstrings and back at once. Hip-thrust standards are the thinnest of the three. Revisit with the weighted mapping. |
 
 ### Standing recommendations
@@ -527,9 +534,25 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
 - ~~**Muscles uses benchmarks only.**~~ **Closed 2026-08-16** — it now ranks from workout sets too,
   best estimate wins, and the panel names the source. Not a breach of D14: that rule is about
   charting a TREND (two sources on one line, one point per day discarding the loser); a single best
-  estimate has neither problem. Still limited to each muscle's ONE key lift — someone who only
-  dumbbell-benches still gets nothing for Chest, which needs cross-exercise equivalence to fix
-  (`docs/strength-estimate-plan.md` §10, flagged there as the weakest part of that plan).
+  estimate has neither problem.
+- ~~**A muscle is rated by exactly ONE key lift.**~~ **Closed 2026-08-17.** Tim trained every muscle
+  for a week and the map recorded a single number, because he had done hammer curls rather than
+  barbell curls, dumbbell rows rather than barbell rows, seated calf raises rather than standing.
+  Every exercise that trains a muscle now rates it, converted to that muscle's standard by a ratio in
+  `js/muscle-evidence.js`. **11 of 265 exercises could move the map; ~190 can now.**
+- **The conversion ratios are estimates, and some are shaky.** This is the price of the change above
+  and it is not hidden: a confidence is computed per muscle and the colour desaturates with it.
+  Dumbbell swaps of barbell lifts are solid; **machines are the weak case**, because gearing varies
+  by brand and two "machine shoulder press" numbers may not describe the same resistance at all.
+  Machine conversions carry a quality of 0.35–0.45 for exactly that reason.
+- **High-rep isolation work can still overstate a LEVEL.** A seated calf raise at 180×12 estimates a
+  417 lb standing calf raise and reads Elite off one set. Two inflations stack: the e1RM formula
+  extrapolating from 12 reps, and the seated→standing conversion. The screen says all of it — Fair
+  confidence, "1 session counted", and the 12-rep warning — but the level still says Elite. Fixing it
+  properly means either per-exercise spread (σ is one value for every lift today, and
+  `strength-standards.js` already flags that isolation work is probably wider) or shrinking high-rep
+  estimates. Neither should be guessed at without the simulator that `docs/strength-estimate-plan.md`
+  §11 describes.
 - **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which

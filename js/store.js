@@ -834,76 +834,153 @@ export async function normalizedSeries(exerciseId, targetReps, source = null) {
 // What must never happen is the source going unsaid — an inference must not look
 // like a measurement (Rule 5). `best.source` carries it and the UI states it.
 //
+// SINCE 2026-08-17 a muscle is rated from EVERY exercise that trains it, not
+// from one named lift. Before this, 11 of 265 exercises could move the map:
+// Tim trained everything for a week and got a single reading, because he had
+// done hammer curls rather than barbell curls and dumbbell rows rather than
+// barbell rows. js/muscle-evidence.js holds the conversions and the confidence
+// model; this function's only job is to turn stored records into observations
+// and hand them over.
+//
 // Returns one entry per rankable muscle group that has usable data.
 export async function muscleStrength() {
-  const [profile, benchmarks, sessions] = await Promise.all([
-    store.getProfile(), store.getBenchmarks(), store.getSessions(),
+  const [profile, benchmarks, sessions, exMap] = await Promise.all([
+    store.getProfile(), store.getBenchmarks(), store.getSessions(), store.getExerciseMap(),
   ]);
-  const {
-    MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
-    levelProgress, weightForPercentile, generalPopulationPercentile,
-  } = await import('./strength-standards.js');
+  const [
+    { MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
+      levelProgress, weightForPercentile, generalPopulationPercentile },
+    { contributionsFor, totalLoad, rateMuscle, confidenceBand, tintFor, raiseConfidenceHint },
+  ] = await Promise.all([
+    import('./strength-standards.js'),
+    import('./muscle-evidence.js'),
+  ]);
 
   const out = new Map();
   if (profile.missing.length) return { profile, muscles: out, ready: false };
 
+  // Contributions are per exercise, not per set, so they are resolved once.
+  const contribCache = new Map();
+  const contribFor = (exerciseId) => {
+    if (contribCache.has(exerciseId)) return contribCache.get(exerciseId);
+    const ex = exMap.get(exerciseId);
+    const c = ex ? contributionsFor(ex) : [];
+    contribCache.set(exerciseId, c);
+    return c;
+  };
+
+  const today = new Date(todayISO() + 'T00:00:00');
+  const ageOf = (date) => {
+    const d = new Date(String(date) + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return 0;
+    return Math.max(0, Math.round((today - d) / 86400000));
+  };
+
+  // muscle -> observations, each already converted to that muscle's KEY LIFT.
+  const byMuscle = new Map();
+
+  const record = (exerciseId, exerciseName, weight, reps, date, isBenchmark) => {
+    // D5: a maximum is not inferred from a set above 15 reps. Without this the
+    // formula extrapolates a 135x25 burnout set to 258 lb, which beats a real
+    // 205x5 top set and moves the muscle a whole level on the back of the least
+    // informative set of the week. A benchmark gets no exemption — a 25-rep
+    // benchmark is no more evidence of a max than a 25-rep set is.
+    if (!isRankableSet(reps)) return;
+    const contributions = contribFor(exerciseId);
+    if (!contributions.length) return;
+
+    const ex = exMap.get(exerciseId);
+    // Ratios are in TOTAL load. A dumbbell row entered as 80 is 160 on the body,
+    // and comparing the 80 against a barbell row would make every dumbbell
+    // lifter look weak.
+    const load = totalLoad(weight, ex ? ex.loadType : 'total');
+    if (load === null) return;
+    const raw = e1rm(load, reps);
+    if (raw === null) return;
+
+    for (const c of contributions) {
+      if (!byMuscle.has(c.muscle)) byMuscle.set(c.muscle, []);
+      byMuscle.get(c.muscle).push({
+        estimate: raw / c.ratio,
+        rawE1rm: raw,
+        quality: c.quality,
+        kind: c.kind,
+        via: c.via,
+        ratio: c.ratio,
+        reps: Math.round(Number(reps)),
+        weight: Number(weight),
+        loadType: ex ? ex.loadType : 'total',
+        date,
+        ageDays: ageOf(date),
+        isBenchmark: Boolean(isBenchmark),
+        exerciseId,
+        exerciseName: exerciseName || (ex ? ex.name : exerciseId),
+        source: isBenchmark ? 'benchmark' : 'workout',
+      });
+    }
+  };
+
+  for (const b of benchmarks) {
+    const v = b.values || {};
+    record(b.exerciseId, b.exerciseName, v.weight, v.reps, b.date, true);
+  }
+  for (const s of sessions) {
+    for (const entry of s.entries || []) {
+      for (const set of entry.sets || []) {
+        record(entry.exerciseId, entry.exerciseName, set.weight, set.reps, s.date, Boolean(s.isBenchmark));
+      }
+    }
+  }
+
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
-    const lift = keyLiftFor(muscle);
-    if (!lift || !lift.id) continue;
+    const rating = rateMuscle(byMuscle.get(muscle) || []);
+    if (!rating) continue;
 
-    // Best e1RM on this muscle's key lift, from any source — a muscle is as
-    // strong as the best evidence for it, and averaging would punish someone
-    // for a bad day they honestly logged.
-    let best = null;
-    const consider = (weight, reps, date, source) => {
-      // D5: a maximum is not inferred from a set above 15 reps. Without this
-      // the formula extrapolates a 135x25 burnout set to 258 lb, which beats a
-      // real 205x5 top set and moves the muscle a whole level on the back of
-      // the least informative set of the week. A benchmark gets no exemption —
-      // a 25-rep benchmark is no more evidence of a max than a 25-rep set is.
-      if (!isRankableSet(reps)) return;
-      const est = e1rm(weight, reps);
-      if (est === null) return;
-      if (!best || est > best.e1rm) {
-        best = { e1rm: est, weight, reps: Math.round(Number(reps)), date, source };
-      }
-    };
-
-    for (const b of benchmarks) {
-      if (b.exerciseId !== lift.id) continue;
-      const v = b.values || {};
-      consider(v.weight, v.reps, b.date, 'benchmark');
-    }
-    for (const s of sessions) {
-      for (const entry of s.entries || []) {
-        if (entry.exerciseId !== lift.id) continue;
-        for (const set of entry.sets || []) consider(set.weight, set.reps, s.date, 'workout');
-      }
-    }
-    if (!best) continue;
-
-    const percentile = percentileFor(best.e1rm, muscle, profile);
+    const percentile = percentileFor(rating.estimate, muscle, profile);
     if (percentile === null) continue;
     const level = levelFor(percentile);
     const next = nextLevelAfter(level);
     const nextWeight = next ? weightForPercentile(next.percentile, muscle, profile) : null;
 
+    // The single strongest contributor, named in the panel so an inference
+    // never looks like a measurement (Rule 5).
+    const top = rating.used[0];
+
     out.set(muscle, {
       muscle,
-      lift,
-      best,
+      lift: keyLiftFor(muscle),
+      estimate: rating.estimate,
+      confidence: rating.confidence,
+      band: confidenceBand(rating.confidence),
+      tint: tintFor(rating.confidence),
+      basis: rating.kind,
+      contributors: rating.used,
+      contributorCount: rating.contributorCount,
+      newestAgeDays: rating.newestAgeDays,
+      hint: raiseConfidenceHint(muscle, rating),
+      // Kept for the panel, which still wants to show a real recorded set
+      // rather than only a derived number.
+      best: {
+        e1rm: top.rawE1rm,
+        weight: top.weight,
+        reps: top.reps,
+        date: top.date,
+        source: top.source,
+        exerciseName: top.exerciseName,
+        loadType: top.loadType,
+      },
       percentile,
       level,
       next,
       nextWeight,
-      toNext: nextWeight ? Math.max(0, nextWeight - best.e1rm) : null,
+      toNext: nextWeight ? Math.max(0, nextWeight - rating.estimate) : null,
       progress: levelProgress(percentile, level),
       generalPercentile: generalPopulationPercentile(percentile),
       // Percentile placement leans on the e1RM formula being absolutely
       // accurate, which docs/research.md §1.3 says was never validated. It is
       // most trustworthy at low reps, so anything derived from a high-rep set
       // is flagged rather than presented as equally solid.
-      confident: best.reps <= 5,
+      confident: top.reps <= 5,
     });
   }
 

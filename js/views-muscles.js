@@ -74,6 +74,13 @@ export async function muscleGroupsPane(host, top) {
     levelMap.set(muscle, {
       levelKey: m.level ? m.level.key : 'below',
       label: m.level ? m.level.name : 'Below Beginner',
+      // How much of the level's colour survives. The rating is the hue; how
+      // sure we are is how vivid it is. Grey already means "never trained", so
+      // fading toward grey reads as one scale rather than a second code to
+      // learn — and it never reaches grey, because "unsure" and "no data" are
+      // completely different messages.
+      tint: m.tint,
+      confidence: m.band ? m.band.name : null,
     });
   }
 
@@ -117,6 +124,41 @@ function legend() {
       el('i', { class: 'lv-sw lv-none' }),
       el('span', { class: 'lv-name', text: 'No data' }),
     ),
+    // Without this the fade is an unexplained visual, and an unexplained
+    // visual reads as a rendering bug rather than as information.
+    el('span', { class: 'lv-key-item lv-key-note' },
+      el('i', { class: 'lv-sw lv-faded' }),
+      el('span', { class: 'lv-name', text: 'Faded = less sure' }),
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Confidence
+ * ------------------------------------------------------------------ */
+
+// A bar and a word, never the colour alone. The bar is the same fade the muscle
+// itself is painted with, so the two are obviously the same quantity — someone
+// should be able to look at a washed-out muscle, tap it, and find the bar short.
+function confidenceRow(m) {
+  const pct = Math.round(m.confidence * 100);
+  const sources = m.contributorCount === 1
+    ? '1 session counted'
+    : `${m.contributorCount} sessions counted`;
+  return el('div', { class: 'conf-row' },
+    el('div', { class: 'conf-head' },
+      el('span', { class: 'conf-label', text: 'Confidence' }),
+      el('span', { class: 'conf-band', text: m.band.name }),
+      el('span', { class: 'conf-pct mono', text: `${pct}%` }),
+    ),
+    el('div', { class: 'conf-bar' },
+      el('div', {
+        class: 'conf-fill lv-' + (m.level ? m.level.key : 'below'),
+        style: `width:${Math.max(3, pct)}%`,
+      })),
+    el('div', { class: 'conf-sub', text: sources
+      + (m.newestAgeDays === 0 ? ', newest today'
+        : `, newest ${Math.round(m.newestAgeDays)} day${m.newestAgeDays === 1 ? '' : 's'} ago`) }),
   );
 }
 
@@ -180,14 +222,27 @@ function detail(m, muscle, profile) {
         text: m.level ? m.level.name : 'Below Beginner' }),
     ),
 
-    // Where the number came from is never left unsaid: a set logged mid-workout
-    // comes after everything else that session did, so it reads lower than a
-    // deliberate test, and someone comparing two muscles deserves to know which
-    // kind of evidence each one rests on.
+    // Where the number came from is never left unsaid (Rule 5). Now that a
+    // rating can come from an exercise that is NOT the key lift, saying which
+    // exercise matters more than it ever did: "195 lb bench" and "195 lb
+    // converted from a dumbbell press" deserve different amounts of trust, and
+    // the panel has to let someone tell them apart.
     el('div', { class: 'field-help' },
-      `${units.withUnit(Math.round(m.best.e1rm))} estimated max on ${m.lift.name}`
-      + ` · from ${units.fmtWeight(m.best.weight)}×${m.best.reps} on ${fmtDateShort(m.best.date)}`
+      `${units.withUnit(Math.round(m.estimate))} estimated ${m.lift.name}`
+      + ` · best from ${m.best.exerciseName}, ${units.fmtWeight(m.best.weight)}`
+      + (m.best.loadType === 'per_side' ? '/side' : '')
+      + `×${m.best.reps} on ${fmtDateShort(m.best.date)}`
       + (m.best.source === 'workout' ? ', logged in a workout' : ', benchmarked')),
+
+    confidenceRow(m),
+
+    m.basis === 'fallback'
+      ? el('div', { class: 'chart-caption warn' }, el('span', {
+          text: 'No direct exercise for this muscle yet — this is inferred from the big lifts '
+            + 'that also work it, so treat it as a rough placing.' }))
+      : null,
+
+    m.hint ? el('div', { class: 'field-help', text: m.hint }) : null,
 
     el('div', { class: 'field-help' },
       `Stronger than ${pct}% of people who lift at your weight`

@@ -161,9 +161,13 @@ ok(biceps && biceps.classList.contains('lv-none'), 'biceps stays grey with no be
 const core = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Core'));
 ok(core && core.classList.contains('lv-none'), 'core is grey — no published standards');
 
-// Legend present, so level is never colour-alone.
-ok(data.querySelectorAll('.lv-key-item').length === LEVELS.length + 1,
-   'legend lists every level plus No data');
+// Legend present, so level is never colour-alone. Seven levels, No data, and
+// the note explaining the confidence fade — without that last one the fade is
+// an unexplained visual and reads as a rendering fault.
+ok(data.querySelectorAll('.lv-key-item').length === LEVELS.length + 2,
+   'legend lists every level, No data, and the faded-means-less-sure note');
+ok([...data.querySelectorAll('.lv-key-item')].some((n) => /less sure/i.test(n.textContent)),
+   'and the fade is explained in words, not left as colour alone');
 
 /* ================= tapping a muscle ================= */
 chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));

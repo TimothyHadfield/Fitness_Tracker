@@ -105,6 +105,11 @@ should be able to choose what they are compared against, in a **"Compared to:" s
 - **Choosable:** male · female · all · a specific weight · all weights · a specific age · all ages.
 - The **colours and ranges of the muscle groups change accordingly.**
 
+**Partly unblocked, 2026-08-17.** The related complaint — that the map was far too picky about which
+exercises counted — is fixed: every exercise that trains a muscle now rates it, with a confidence
+that fades the colour. That work built the machinery a "Compared to:" setting would sit on top of,
+but the setting itself is NOT built and the comparison group is still fixed.
+
 **Where this collides:** **D15** locks ranking to *people who lift*, never "everyone", because
 general-population data makes essentially every user Elite and the seven-level scale collapses. An
 "all" option is exactly that case. It is not necessarily wrong to offer — it is a comparison the user
