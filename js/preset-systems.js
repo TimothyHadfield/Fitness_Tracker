@@ -41,13 +41,23 @@
 //                   `author`, because "By Dr. Mike Israetel" over exercises he
 //                   never chose is a lie no warning underneath can undo.
 //
-// The third kind exists because Tim follows Mike Israetel (2026-08-17) and a
-// straight transcription was not honestly available: what Israetel publishes
-// for free is a METHOD (volume landmarks), while the routine written up as his
-// own is built from supersets, tri-sets and myo-reps that this app cannot
-// represent at all — see docs/vision.md §1.5. Rather than transcribe a
-// programme badly under a real name, kind 3 says plainly whose idea it is and
-// whose exercise choices they are.
+// The third kind exists because Tim follows Mike Israetel (2026-08-17). The
+// first attempt at him was kind 3 ONLY, on the belief that no transcribable
+// programme of his existed. Tim pushed back — "search online for other people
+// who have reposted or summarized the system" — and he was right: RP publishes
+// his actual split on their own site, for free, and a second write-up agrees
+// with it exercise for exercise. That is now shipped as kind 2.
+//
+// BOTH are kept, because they answer different questions and each is honest
+// about which one it answers. `preset-israetel-floating-split` is what he
+// really does — a cutting split, mostly myo-reps, only partly representable
+// here. `preset-volume-landmarks` is a runnable programme built on the method
+// he publishes for everybody else. Neither could stand in for the other, and
+// the summaries say so on screen so nobody has to guess.
+//
+// The lesson worth keeping: "no honest source exists" was a conclusion reached
+// after four searches, and it was wrong. Search harder before inventing a
+// category.
 //
 // `warning` overrides the default red banner on the detail screen. The default
 // talks about transcribing free VIDEOS, which is true of Nippard and false of
@@ -117,6 +127,117 @@ export const PRESET_SYSTEMS = [
           { name: 'Seated Leg Curl', sets: 3, notes: '10–12 reps.' },
           { name: 'Leg Press Calf Raise', sets: 4, notes: '10–12 reps.' },
           { name: 'Decline Sit-Up', sets: 3, notes: 'Holding a plate. 10–12 reps.' },
+        ] },
+    ],
+  },
+
+  {
+    id: 'preset-israetel-floating-split',
+    name: 'Dr. Mike’s Floating Split',
+    author: 'Dr. Mike Israetel',
+    sourceName: 'Dr. Mike’s Exact Training Split to Get to 6% Body Fat — Renaissance Periodization',
+    sourceUrl: 'https://rpstrength.com/blogs/video-guides/dr-mikes-exact-training-split-to-get-to-6-body-fat',
+    // ⚠️ NOT OFFICIAL, but better sourced than most: the split is written up on
+    // RENAISSANCE PERIODIZATION'S OWN SITE, free, and a second write-up (BoxLife)
+    // agrees with it exercise for exercise. That is a stronger footing than the
+    // Nippard transcription had. Three things it does NOT fix:
+    //
+    //   1. It is a CUTTING split — what he trained while dieting to 6 % body
+    //      fat, built to hold muscle under fatigue rather than to add it.
+    //   2. Nearly every set in it is a MYO-REP or a GIANT SET, and this app can
+    //      only record straight sets. The exercises are his; the set structure
+    //      is not, and cannot be until docs/vision.md §1.5 is built. This is the
+    //      single most distorted transcription in this file and the warning
+    //      leads with it.
+    //   3. Several set counts were never reported by either source, and the
+    //      specialty bars he uses (transformer bar, cambered bar, the CC squat
+    //      machine) are mapped onto the nearest thing in the library.
+    unofficial: true,
+    warning: 'Not official, and it loses something in translation. Nearly every set Dr. Mike does '
+      + 'here is a myo-rep or a giant set — this app can only record straight sets, so what you see '
+      + 'is his exercise choice with the set structure stripped out. It is also a CUTTING split, '
+      + 'built to hold muscle while dieting rather than to add it. Some set counts were never '
+      + 'reported and specialty bars are swapped for the nearest equivalent. Read the source.',
+    goal: 'Holding muscle while cutting',
+    daysPerWeek: 6,
+    minutes: 90,
+    level: 'Advanced',
+    summary: 'The split Dr. Mike Israetel actually trained to reach 6 % body fat — Pull, Legs, '
+      + 'Push, twice through, with no fixed days. Written up on Renaissance Periodization’s own '
+      + 'site.',
+    notes: 'Transcribed from the write-up on Renaissance Periodization’s own site — not from him, '
+      + 'and not from anything RP sells. A second write-up (BoxLife) agrees with it exercise for '
+      + 'exercise, which is a firmer footing than most creator programmes get.\n\n'
+      + 'Read this before you run it. Two things make it unusual, and one of them is this app’s '
+      + 'fault. First, it is a CUTTING split: this is what he did while dieting down to 6 % body '
+      + 'fat, so it is built to hold muscle under fatigue, not to add it. Second, almost every set '
+      + 'he does is a myo-rep or a giant set — one hard set, then repeated mini-sets after a few '
+      + 'breaths — and this app can only log straight sets. So the exercises below are his and the '
+      + 'set structure is not. Where the source says "4 myo-rep match sets" you will see 4 sets.\n\n'
+      + 'What "floating" means, and it is the best idea in here: there are no days of the week. You '
+      + 'run Pull 1, Legs 1, Push 1, Pull 2, Legs 2, Push 2 and start again. Train when you have '
+      + 'recovered, rest when you have not — one rest day, two, or none. It came out at six days a '
+      + 'week on average, sometimes five, sometimes seven. Missing a Tuesday cannot derail a '
+      + 'programme that has no Tuesday.\n\n'
+      + 'Sessions ran about ninety minutes. Reps are high throughout — mostly 10–20, and the lateral '
+      + 'raises accumulate near a hundred reps in a session.\n\n'
+      + 'Equipment: he uses a transformer bar, a cambered bar and a CC squat machine. Those are '
+      + 'mapped to the closest thing in this app’s library and noted on each exercise. Use whatever '
+      + 'your gym has — none of it is load-bearing.',
+    workouts: [
+      { name: 'Pull 1', notes: 'Neutral-grip pull-ups first, then rows, side delts, biceps and '
+          + 'forearms. Reported: 3–5 weighted sets of 5–15, then the same grip unweighted; rows '
+          + 'about 40 total reps; laterals 4–6 sets to around 100 reps; curls one set of 40.',
+        exercises: [
+          { name: 'Neutral-Grip Pull-Up', sets: 5, notes: 'Weighted for 5–15 reps, descending. Then strip the weight and repeat the same grip — that second block is the point, not a cooldown.' },
+          { name: 'Chest-Supported Row', sets: 2, notes: 'Machine. About 40 reps in total across the sets.' },
+          { name: 'Lateral Raise', sets: 5, notes: 'Seated dumbbell. He accumulates close to 100 reps here. Written up as myo-rep match sets.' },
+          { name: 'Cable Curl', sets: 1, notes: '40 reps in one myo-rep set. One source says a lying dumbbell curl instead — either is a long-head biceps curl.' },
+          { name: 'Wrist Curl', sets: 1, notes: 'Cable. 50 reps, as a finisher.' },
+        ] },
+      { name: 'Legs 1', notes: 'The hinge day. Abs first, then a good morning, leg press and a '
+          + 'quad finisher taken to failure. Reported: good mornings 5–15 reps, leg press 10–20.',
+        exercises: [
+          { name: 'Decline Sit-Up', sets: 1, notes: '30 reps, to open the session.' },
+          { name: 'Good Morning', sets: 3, notes: '5–15 reps. He uses a transformer bar — any safe hinge works.' },
+          { name: 'Leg Press', sets: 3, notes: '10–20 reps. Written up as myo-reps.' },
+          { name: 'Sissy Squat', sets: 1, notes: 'One giant set to failure, about 90 seconds and 30 reps. He uses a CC squat machine; a sissy squat is the closest free version.' },
+        ] },
+      { name: 'Push 1', notes: 'Calves first, then a flat press, triceps paired with push-ups, '
+          + 'biceps and a very long lateral-raise set. Reported: presses 5–15, curls 4×12, '
+          + 'laterals 50–75 reps in one giant set.',
+        exercises: [
+          { name: 'Standing Calf Raise', sets: 3, notes: 'Opens the session.' },
+          { name: 'Barbell Bench Press', sets: 3, notes: '5–15 reps. He uses a cambered bar for the extra stretch at the bottom.' },
+          { name: 'Overhead Cable Extension', sets: 3, notes: 'Supersetted with the push-ups below — no rest between the two.' },
+          { name: 'Push-Up', sets: 3, notes: 'From a deficit, so the chest drops below the hands. The second half of the superset.' },
+          { name: 'Incline Dumbbell Curl', sets: 4, notes: '12 reps each, as myo-rep match sets.' },
+          { name: 'Lateral Raise', sets: 1, notes: 'One giant set, light, 50–75 total reps.' },
+        ] },
+      { name: 'Pull 2', notes: 'Same shape as Pull 1 with the grip changed — overhand rather than '
+          + 'neutral. Front raises here instead of laterals. Several counts were never reported.',
+        exercises: [
+          { name: 'Pull-Up', sets: 5, notes: 'Overhand this time. Weighted first, then unweighted for volume.' },
+          { name: 'Machine Row', sets: 3, notes: 'He uses a Smith machine row. Set count not reported.' },
+          { name: 'Cable Front Raise', sets: 3, notes: 'Lying. This is a heavy shoulder session.' },
+          { name: 'Cable Curl', sets: 1, notes: 'Biceps maintenance rather than a growth block.' },
+          { name: 'Wrist Curl', sets: 1, notes: 'Cable.' },
+        ] },
+      { name: 'Legs 2', notes: 'Hamstring curls replace the hinge — deliberately, to keep lower-back '
+          + 'fatigue off a body already dieting. Reported: leg curls and belt squats 15–20 reps.',
+        exercises: [
+          { name: 'Lying Leg Curl', sets: 3, notes: '15–20 reps. Here instead of a hinge so the lower back gets a break.' },
+          { name: 'Belt Squat', sets: 3, notes: '15–20 reps, as myo-reps. Loads the legs without loading the spine.' },
+          { name: 'Bulgarian Split Squat', sets: 3, notes: 'He does these with the transformer bar.' },
+        ] },
+      { name: 'Push 2', notes: 'The heavier push day. Reported: incline press 10–20, flat bench '
+          + '5–15, skull crushers 6 sets at 15–20.',
+        exercises: [
+          { name: 'Incline Machine Press', sets: 3, notes: '10–20 reps, myo-reps.' },
+          { name: 'Barbell Bench Press', sets: 3, notes: '5–15 reps, flat and straight-barred this time.' },
+          { name: 'Skull Crusher', sets: 6, notes: '15–20 reps, as myo-rep match sets. The most volume any exercise gets in the week.' },
+          { name: 'Cable Curl', sets: 1, notes: 'He uses a Free Motion cable station.' },
+          { name: 'Cable Front Raise', sets: 1, notes: 'Lying. One giant set to finish.' },
         ] },
     ],
   },
@@ -282,10 +403,14 @@ export const PRESET_SYSTEMS = [
     level: 'Intermediate',
     summary: 'Four days that grow. Start at the volume where growth begins, add a set per muscle '
       + 'each week for four weeks, then deload — the mesocycle Dr. Mike Israetel’s volume '
-      + 'landmarks describe, written out as workouts you can log.',
+      + 'landmarks describe, written out as workouts you can log. Not his own training: for that, '
+      + 'see Dr. Mike’s Floating Split.',
     notes: 'Not written by Dr. Mike Israetel, and not transcribed from a programme of his. The '
       + 'idea underneath is his and is published free by Renaissance Periodization; the exercises '
       + 'and set counts here are this app’s reading of it.\n\n'
+      + 'If you want what he actually does, that is a separate system here — Dr. Mike’s Floating '
+      + 'Split. It is a cutting programme built almost entirely from myo-reps, so this app can only '
+      + 'record part of it. This one is the runnable programme; that one is the real one.\n\n'
       + 'The idea in one paragraph: for each muscle there is a weekly set count below which it '
       + 'does not grow (he calls it MEV), a range above that where it grows fastest, and a ceiling '
       + 'past which you cannot recover (MRV). You start near the bottom, climb, and reset before '

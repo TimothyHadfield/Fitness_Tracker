@@ -2213,3 +2213,51 @@ decided in §6.
 **State at close:** **937 data-layer + 153 render assertions green.** Screenshotted at 360 and
 1180 px in both themes; the add flow driven with real mouse events through to the copied system and
 into its workouts. Unverified as ever: a real phone.
+
+---
+
+## 2026-08-17 (later still) — Tim was right: Israetel's real split does exist
+
+**Tim:** *"for the israetel system, could you do the same thing you did with nippard and just search
+online for other people who have reposted or summarized the system for themselves and others?"*
+
+**He was right and the earlier conclusion was wrong.** The method-based system was built on
+"no transcribable programme of his exists", which was a conclusion reached after four searches.
+Searching properly found one immediately: **Renaissance Periodization publish his own split on their
+own site, free** — *Dr. Mike's Exact Training Split to Get to 6% Body Fat* — and **BoxLife Magazine**
+wrote it up independently, agreeing exercise for exercise. That is *better* sourcing than the Nippard
+transcription has, and it went in as `preset-israetel-floating-split`, **Dr. Mike's Floating Split**.
+
+**What it is.** Six workouts — Pull 1, Legs 1, Push 1, Pull 2, Legs 2, Push 2 — run on no fixed days
+at all. Train when recovered, rest when not; it came out at six days a week on average, sometimes
+five, sometimes seven. Sessions ~90 minutes. That "floating" idea is the best thing in it: a
+programme with no Tuesday cannot be derailed by missing a Tuesday.
+
+**Three limitations, all on screen, and the warning leads with the worst one:**
+
+1. **Nearly every set is a myo-rep or a giant set, and this app records straight sets only.** So what
+   ships is his exercise choice with the set structure removed — "4 myo-rep match sets" renders as
+   4 sets. This is the most distorted transcription in the file, and it is the single strongest
+   argument for `docs/vision.md` §1.5.
+2. **It is a CUTTING split.** Built to hold muscle while dieting to 6 % body fat, not to add it.
+3. **Several set counts were never reported** by either source, and the specialty bars he uses
+   (transformer bar, cambered bar, CC squat machine) are mapped to the nearest library equivalent
+   and noted per exercise.
+
+**Both Israetel systems are kept.** They answer different questions: the Floating Split is what he
+really does; Volume Landmarks Hypertrophy is a runnable programme built on the method he publishes
+for everyone else. Each summary now names the other so nobody has to guess which is which.
+
+**The `basedOn` distinction survives the correction and was worth having anyway** — a system that
+FOLLOWS someone's method is not a system BY them, and that is true regardless of whether a
+transcription also exists. What did not survive is the *reasoning* recorded in the file header, which
+now says plainly that "no honest source exists" was reached too early. The lesson is written into
+`js/preset-systems.js` and `progress.md` §3: **search past the first four queries before inventing a
+category to work around a missing source.**
+
+**State at close:** **953 data-layer + 156 render assertions green.** Eight systems, five credited.
+Driven over CDP: Explore → the Floating Split → Add → the copied system, which arrives in programme
+order (Pull 1, Legs 1, Push 1, Pull 2, Legs 2, Push 2) and opens its workouts intact.
+
+Sources: [RP Strength, Dr. Mike's exact training split](https://rpstrength.com/blogs/video-guides/dr-mikes-exact-training-split-to-get-to-6-body-fat) ·
+[BoxLife Magazine](https://boxlifemagazine.com/six-percent-body-fat-training-split/)

@@ -101,16 +101,24 @@ account on a tap. Three of the app's own ship with it.
 transcribed from published write-ups of his **free** YouTube series and flagged on screen as
 unofficial, with a link to the playlist. Not from his paid ebook. One rotation of a six-part series.
 
-**Three more shipped later on 2026-08-17**, on Tim's ask — Arnold's *Golden Six*, *Mike Thurston's
-Six-Day Split*, and *Volume Landmarks Hypertrophy*, which follows **Dr. Mike Israetel's** published
-method because a transcription of him was not honestly available (his free work is a method; his own
-routine is supersets and myo-reps — see §1.5). That third one forced a distinction worth keeping:
-a system that FOLLOWS someone's method is not a system BY them, so the person's name goes in a
-`basedOn` field and never in `author`. Seven systems now.
+**Four more shipped later on 2026-08-17**, on Tim's ask — Arnold's *Golden Six*, *Mike Thurston's
+Six-Day Split*, *Volume Landmarks Hypertrophy* and *Dr. Mike's Floating Split*. **Eight systems now**,
+five credited to real people.
 
-The **"% optimal" number is still not built**, and it is now the obviously missing piece: seven
+Two of those are Israetel, deliberately, and the reason is worth keeping. The first attempt shipped
+only *Volume Landmarks Hypertrophy* — a programme built on his published method, credited via a new
+`basedOn` field so his name could never appear as its author — on the conclusion that no
+transcribable programme of his existed. **Tim said to search harder for reposts and summaries, and
+he was right:** Renaissance Periodization publish his actual split on their own site, free, and an
+independent write-up agrees with it exercise for exercise. That is now *Dr. Mike's Floating Split*.
+Both are kept: one is what he really does (a cutting split, mostly myo-reps, only partly
+representable here), the other is a runnable programme built on what he teaches. The distinction
+that came out of the first attempt survives and is worth more than the mistake cost — **a system
+that FOLLOWS someone's method is not a system BY them.**
+
+The **"% optimal" number is still not built**, and it is now the obviously missing piece: eight
 programmes sitting in a list with no way to compare them is exactly the state this idea was written
-to fix.
+to fix. It would also be the honest way to show what a cutting split is and is not for.
 
 **Superseded note, kept for the reasoning:** Tim asked for Jeff Nippard's *Ultimate Push
 Pull Legs* first. The full 12-week system is a paid product on his site, and the free YouTube series
@@ -188,9 +196,10 @@ try. Three of the names worth shipping cannot be represented honestly without it
 
 - **Chris Bumstead's** programme is built on tri-sets and drop sets. Written as a flat list it is not
   his workout, it is a list of the exercises in it.
-- **Dr. Mike Israetel's own training**, as published, is supersets, tri-sets and myo-reps almost end
-  to end. That is exactly why the system shipped on 2026-08-17 follows his *volume landmarks method*
-  and openly says the workouts are not his — a straight transcription was not available to us.
+- **Dr. Mike Israetel's own training** is myo-reps and giant sets almost end to end. It IS shipped —
+  *Dr. Mike's Floating Split*, transcribed from RP's own free write-up — but with the set structure
+  stripped out, which its warning leads with. It is the clearest case in the app of a programme that
+  is *present but not faithful*, and set types are the only thing that would fix it.
 - **Mike Thurston's** arm day pairs every exercise (1A/1B, 2A/2B) in at least one published version.
   The version shipped is a different, unpaired block of his.
 

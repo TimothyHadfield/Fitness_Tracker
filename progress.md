@@ -14,9 +14,9 @@ workout be logged for another day, lets a past record be edited from the calenda
 whole workout as a benchmark.
 
 **Workouts live inside SYSTEMS** — a system is a programme holding several workouts — and there is an
-**Explore** screen of **seven** ready-made systems you can copy into your account. Four are credited
-to real people: Jeff Nippard, Arnold Schwarzenegger, Mike Thurston, and one that follows Dr. Mike
-Israetel's published method without claiming to be his.
+**Explore** screen of **eight** ready-made systems you can copy into your account. Five are credited
+to real people: Jeff Nippard, Dr. Mike Israetel, Arnold Schwarzenegger, Mike Thurston, plus a fifth
+that follows Israetel's published *method* without claiming to be his own training.
 
 **The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
 rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
@@ -45,8 +45,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 937 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 153 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 953 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 156 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -194,8 +194,9 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **seven**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Dr. Mike Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
-| **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. The METHOD kind exists because his freely published work is a *method*, while the routine written up as his own training is supersets, tri-sets and myo-reps the app cannot log at all |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **eight**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
+| **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
+| **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
@@ -223,11 +224,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **20 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **937 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **953 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **153 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **156 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -650,16 +651,24 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   Sources: [Fitness Volt push](https://fitnessvolt.com/jeff-nippard-push-workout/) ·
   [Fitness Volt pull](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/) ·
   [Fitness Volt legs](https://fitnessvolt.com/jeff-nippard-leg-day-workout/)
-- **The other three creator systems each have a DIFFERENT limitation, and each says its own.** The
-  default warning ("transcribed from the free videos") is true of Nippard and false of the rest, so
-  `warning` overrides it per system and a test fails if anything that is not a video transcription
-  falls through to the default. **Arnold's Golden Six**: sixty years of republication and the
-  versions disagree — some swap the behind-the-neck press for an upright row, sit-up reps run from
-  20 to AMRAP — and nobody here has a primary source, which may not exist. **Thurston**: he rebuilds
-  his own programme every four to six weeks, so a transcription is one block frozen rather than a
-  programme he stands behind. **Volume Landmarks Hypertrophy**: the workouts are the app's own and
-  the screen says so twice — a straight transcription of Israetel was not available because what he
-  publishes free is a method and what he does himself is supersets and myo-reps.
+- **Every creator system has a DIFFERENT limitation, and each states its own.** The default warning
+  ("transcribed from the free videos") is true of Nippard and false of the rest, so `warning`
+  overrides it per system and a test fails if anything that is not a video transcription falls
+  through to the default. **Arnold's Golden Six**: sixty years of republication and the versions
+  disagree — some swap the behind-the-neck press for an upright row, sit-up reps run from 20 to
+  AMRAP — and nobody here has a primary source, which may not exist. **Thurston**: he rebuilds his
+  own programme every four to six weeks, so a transcription is one block frozen rather than a
+  programme he stands behind. **Volume Landmarks Hypertrophy**: the workouts are the app's own, said
+  twice on screen.
+- **Dr. Mike's Floating Split is the most DISTORTED transcription in the file, and that is the first
+  thing its warning says.** Nearly every set in it is a myo-rep or a giant set; the app records
+  straight sets only, so what ships is his exercise choice with the set structure removed — "4
+  myo-rep match sets" becomes 4 sets. Two further caveats on screen: it is a **cutting** split
+  (training to hold muscle while dieting to 6 % body fat, not to add it), and several set counts were
+  never reported by either source. Specialty equipment — transformer bar, cambered bar, CC squat
+  machine — is mapped to the nearest thing in the library and noted per exercise. Sourcing is the
+  *strongest* of any creator system here, though: RP's own site plus an independent write-up that
+  agrees exercise for exercise. **This is the system that most wants `docs/vision.md` §1.5.**
 - **Beware which Nippard workout you are reading.** He has published several similarly named push
   workouts. A Generation Iron write-up of an older PPL gives a completely different push day
   (dips, Egyptian lateral raises, cable kickbacks) from the 2023 series. Cross-check the date and the
