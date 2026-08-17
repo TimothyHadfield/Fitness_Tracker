@@ -1130,6 +1130,137 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'two axes can be changed at once and still produce a real percentile');
   }
 
+/* ---- the population axis: people who lift, or everyone ---- */
+// Tim, 2026-08-17, restructuring the first cut into four axes plus two presets.
+// This is the one that touches D15 — "everyone" now RE-TIERS rather than being a
+// footnote — so it is the one that needs the most holding to account.
+{
+  const me180 = { gender: 'male', bodyWeight: 180, age: 30 };
+  const withCompare = (c) => ({ ...me180, compare: c });
+
+  ok(ss.normalizeCompare({}).pool === 'lifters',
+     'the default population is people who lift — the stricter comparison, not the flattering one');
+
+  const vsLifters = ss.percentileFor(225, 'Chest', withCompare({ pool: 'lifters', sex: 'male' }));
+  const vsEveryone = ss.percentileFor(225, 'Chest', withCompare({ pool: 'everyone', sex: 'male' }));
+  ok(vsEveryone > vsLifters,
+     `including people who do not lift raises the placing (${vsEveryone.toFixed(1)} > ${vsLifters.toFixed(1)})`);
+
+  // THE D15 CHECK, stated as a test rather than as a warning in a comment.
+  // The old general-population model assumed every non-lifter was weaker than
+  // every lifter, which forced anyone who lifts at all above the 68th percentile
+  // and squashed seven levels into three. Untrained adults now have their own
+  // overlapping distribution, so the levels have to keep SPREADING.
+  {
+    const everyone = { pool: 'everyone', sex: 'all', weight: 'any', age: 'any' };
+    const beginner = ss.weightForPercentile(5, 'Chest', withCompare({ pool: 'lifters', sex: 'male' }));
+    const median = ss.weightForPercentile(50, 'Chest', withCompare({ pool: 'lifters', sex: 'male' }));
+    const elite = ss.weightForPercentile(95, 'Chest', withCompare({ pool: 'lifters', sex: 'male' }));
+
+    const lvB = ss.levelFor(ss.percentileFor(beginner, 'Chest', withCompare(everyone)));
+    const lvM = ss.levelFor(ss.percentileFor(median, 'Chest', withCompare(everyone)));
+    const lvE = ss.levelFor(ss.percentileFor(elite, 'Chest', withCompare(everyone)));
+
+    ok(lvB && lvM && lvE, 'all three reference lifters still get a level against everyone');
+    ok(lvB.percentile < lvM.percentile && lvM.percentile < lvE.percentile,
+       `the levels still separate beginner/median/elite against everyone (${lvB.name} < ${lvM.name} < ${lvE.name})`);
+    ok(lvB.key !== 'elite',
+       `a beginner lifter does NOT read Elite against the general population (${lvB.name}) — the whole D15 objection`);
+    const spread = ss.percentileFor(elite, 'Chest', withCompare(everyone))
+      - ss.percentileFor(beginner, 'Chest', withCompare(everyone));
+    ok(spread > 25,
+       `and the percentile range across lifters stays wide (${spread.toFixed(1)} points, old model gave under 29)`);
+  }
+
+  // An untrained population must be WEAKER than a trained one, never stronger.
+  ok(ss.weightForPercentile(50, 'Chest', withCompare({ pool: 'everyone', sex: 'male' }))
+     < ss.weightForPercentile(50, 'Chest', withCompare({ pool: 'lifters', sex: 'male' })),
+     'the median of everyone is below the median of people who lift');
+
+  // The mixture identity holds on this axis too.
+  {
+    const v = 200;
+    const all = ss.percentileFor(v, 'Chest', withCompare({ pool: 'everyone', sex: 'male' }));
+    ok(all > 0 && all < 100 && Number.isFinite(all), 'the everyone mixture produces a real percentile');
+    ok(all > ss.percentileFor(v, 'Chest', withCompare({ pool: 'lifters', sex: 'male' })),
+       'and always sits above the lifters-only reading for the same weight');
+  }
+
+  /* ---- presets ---- */
+  {
+    const likeMe = ss.comparePreset('like-me', me180);
+    ok(likeMe.pool === 'lifters' && likeMe.sex === 'male'
+       && likeMe.weight === 'own' && likeMe.age === 'own',
+       'the "Like me" preset is lifters of my sex, weight and age');
+    const her = { gender: 'female', bodyWeight: 140, age: 30 };
+    ok(ss.comparePreset('like-me', her).sex === 'female', 'and follows the user’s own sex');
+
+    const everyone = ss.comparePreset('everyone', me180);
+    ok(everyone.pool === 'everyone' && everyone.sex === 'all'
+       && everyone.weight === 'any' && everyone.age === 'any',
+       'the "Everyone" preset opens every axis at once');
+
+    ok(ss.matchesPreset(likeMe, 'like-me', me180), 'a preset recognises itself');
+    ok(!ss.matchesPreset(likeMe, 'everyone', me180), 'and does not recognise the other one');
+    // The unset default IS "like me", so a new user sees that preset lit up
+    // rather than neither of them.
+    ok(ss.matchesPreset(ss.COMPARE_DEFAULT, 'like-me', me180),
+       'a user who has never opened the sheet is already on "Like me"');
+    ok(!ss.matchesPreset({ ...likeMe, weight: 'any' }, 'like-me', me180),
+       'and changing one axis takes you off the preset');
+  }
+
+  /* ---- "People like me" is gone as a visible option ---- */
+  ok(!ss.COMPARE_OPTIONS.sex.some((o) => !o.hidden && o.key === 'own'),
+     '"my sex" is not offered as a choice — it is the stored default only');
+  ok(ss.COMPARE_OPTIONS.sex.filter((o) => !o.hidden).map((o) => o.key).join() === 'male,female,all',
+     'the sex axis offers exactly men, women and both');
+  ok(ss.COMPARE_OPTIONS.pool.map((o) => o.key).join() === 'lifters,everyone',
+     'and the population axis offers exactly lifters and everyone');
+
+  /* ---- the label must carry the population every time ---- */
+  for (const sex of ['male', 'female', 'all']) {
+    for (const weight of ['own', 'any']) {
+      for (const age of ['own', 'any']) {
+        const lifters = ss.comparisonLabel(withCompare({ pool: 'lifters', sex, weight, age }));
+        ok(/lifts?\b/i.test(lifters.main),
+           `lifters/${sex}/${weight}/${age} says so in words ("${lifters.main}")`);
+
+        const everyone = ss.comparisonLabel(withCompare({ pool: 'everyone', sex, weight, age }));
+        ok(!/lifts?\b/i.test(everyone.main),
+           `everyone/${sex}/${weight}/${age} must NOT claim a lifting population ("${everyone.main}")`);
+        ok(/\ball\b/i.test(everyone.main),
+           `and says it is all of them ("${everyone.main}")`);
+        ok(everyone.pool === 'everyone', 'and reports which pool it used, for the panel caveat');
+      }
+    }
+  }
+
+  /* ---- the round trip, across every combination of all FOUR axes ---- */
+  for (const pool of ['lifters', 'everyone']) {
+    for (const sex of ['own', 'male', 'female', 'all']) {
+      for (const weight of ['own', 'any']) {
+        for (const age of ['own', 'any']) {
+          const prof = withCompare({ pool, sex, weight, age });
+          let worst = 0;
+          let rising = true;
+          let prev = 0;
+          for (const lv of ss.LEVELS) {
+            const w = ss.weightForPercentile(lv.percentile, 'Chest', prof);
+            if (!(w > prev)) rising = false;
+            prev = w;
+            worst = Math.max(worst, Math.abs(ss.percentileFor(w, 'Chest', prof) - lv.percentile));
+          }
+          ok(worst < 1e-4,
+             `${pool}/${sex}/${weight}/${age}: targets round-trip (${worst.toExponential(1)})`);
+          ok(rising, `${pool}/${sex}/${weight}/${age}: targets rise with level`);
+        }
+      }
+    }
+  }
+}
+
+
   // ---- the round trip has to hold for EVERY combination ----
   // levelFor() and the targets panel are held together by this: hitting the
   // weight the panel asks for must grant the level. A mixture has no closed-form

@@ -189,14 +189,27 @@ function normalInv(p) {
 // Note what "all" means on the SEX axis: men and women together. It does NOT
 // mean the general population — that is a separate, clearly-labelled readout
 // (generalPopulationPercentile), and D15 still forbids re-tiering against it.
-export const COMPARE_DEFAULT = { sex: 'own', weight: 'own', age: 'own' };
+// FOUR axes (Tim, 2026-08-17, revising the first cut). "People like me" is gone
+// as an option — it was doing two jobs, quietly meaning "your sex" while reading
+// like a whole preset. It is a PRESET now, at the top of the sheet, alongside
+// "Everyone", and each axis says one plain thing.
+//
+// `sex: 'own'` survives as the UNSET value only. It never appears in the UI; it
+// resolves to the user's own sex so that someone who has never opened the sheet
+// gets the sensible default, and picking a preset writes a concrete value.
+export const COMPARE_DEFAULT = { pool: 'lifters', sex: 'own', weight: 'own', age: 'own' };
 
 export const COMPARE_OPTIONS = {
+  pool: [
+    { key: 'lifters', name: 'People who lift' },
+    { key: 'everyone', name: 'Everyone' },
+  ],
   sex: [
-    { key: 'own', name: 'People like me' },
     { key: 'male', name: 'Men' },
     { key: 'female', name: 'Women' },
-    { key: 'all', name: 'Everyone who lifts' },
+    { key: 'all', name: 'Both' },
+    // Not offered in the UI; the stored default before anything is chosen.
+    { key: 'own', name: 'My sex', hidden: true },
   ],
   weight: [
     { key: 'own', name: 'My body weight' },
@@ -207,6 +220,21 @@ export const COMPARE_OPTIONS = {
     { key: 'any', name: 'Any age' },
   ],
 };
+
+// The two presets the sheet offers at the top. "Like me" writes the user's own
+// sex, so it needs the profile.
+export function comparePreset(name, profile) {
+  const own = profile && profile.gender === 'female' ? 'female' : 'male';
+  if (name === 'everyone') return { pool: 'everyone', sex: 'all', weight: 'any', age: 'any' };
+  return { pool: 'lifters', sex: own, weight: 'own', age: 'own' };
+}
+
+export function matchesPreset(compare, name, profile) {
+  const a = normalizeCompare(compare);
+  const b = comparePreset(name, profile);
+  const sexA = a.sex === 'own' ? (profile && profile.gender === 'female' ? 'female' : 'male') : a.sex;
+  return sexA === b.sex && a.pool === b.pool && a.weight === b.weight && a.age === b.age;
+}
 
 // The share of people who lift and log who are men. Used ONLY to combine the
 // two sexes into one population when the user asks to be compared against
@@ -223,18 +251,33 @@ export function normalizeCompare(compare) {
   const c = compare && typeof compare === 'object' ? compare : {};
   const pick = (axis) => (COMPARE_OPTIONS[axis].some((o) => o.key === c[axis])
     ? c[axis] : COMPARE_DEFAULT[axis]);
-  return { sex: pick('sex'), weight: pick('weight'), age: pick('age') };
+  return { pool: pick('pool'), sex: pick('sex'), weight: pick('weight'), age: pick('age') };
 }
 
-// The reference population as a MIXTURE: a list of { gender, share }. One entry
-// for a single sex, two for "everyone who lifts".
+// The reference population as a MIXTURE: a list of { gender, trained, share }.
+// One entry for the simple case, up to four for "everyone, both sexes".
+//
+// The two axes multiply. Sex splits the population by sex; pool splits it into
+// people who train and people who do not. Note the sex split DIFFERS between
+// the two: lifters skew male, adults in general do not.
 function populations(profile) {
   const c = normalizeCompare(profile && profile.compare);
-  if (c.sex === 'all') {
-    return [{ gender: 'male', share: MALE_SHARE }, { gender: 'female', share: 1 - MALE_SHARE }];
+  const own = profile && profile.gender === 'female' ? 'female' : 'male';
+  const pools = c.pool === 'everyone'
+    ? [{ trained: true, share: TRAINING_RATE }, { trained: false, share: 1 - TRAINING_RATE }]
+    : [{ trained: true, share: 1 }];
+
+  const out = [];
+  for (const p of pools) {
+    const maleShare = p.trained ? MALE_SHARE : 0.5;
+    const sexes = c.sex === 'all'
+      ? [{ gender: 'male', share: maleShare }, { gender: 'female', share: 1 - maleShare }]
+      : [{ gender: c.sex === 'own' ? own : c.sex, share: 1 }];
+    for (const s of sexes) {
+      out.push({ gender: s.gender, trained: p.trained, share: p.share * s.share });
+    }
   }
-  if (c.sex === 'male' || c.sex === 'female') return [{ gender: c.sex, share: 1 }];
-  return [{ gender: profile && profile.gender === 'female' ? 'female' : 'male', share: 1 }];
+  return out;
 }
 
 // "Any body weight" is not a missing value — it means compare against lifters of
@@ -252,7 +295,23 @@ function refAge(profile) {
   return profile ? profile.age : null;
 }
 
-function medianForPopulation(muscle, gender, bodyWeight, age) {
+// What the median UNTRAINED adult lifts, as a fraction of the median lifter.
+//
+// ⚠️ WEAKEST NUMBER IN THIS FILE. Nobody has measured what the median adult can
+// bench, because the median adult has never tried. It is anchored on untrained
+// baselines from training studies — first-session loads typically land around
+// half to two-thirds of a trained lifter's median — and it is one number for
+// every lift, which is certainly wrong in detail.
+//
+// It exists because the alternative was worse. The previous general-population
+// readout assumed every non-lifter sits BELOW every lifter, which forced any
+// lifter at all above the 68th percentile and made the seven levels collapse
+// into the top three — the exact objection in D15. Giving untrained people their
+// own overlapping distribution lets a beginner read as a beginner. The estimate
+// is rough; the SHAPE is much closer to right.
+const UNTRAINED_FRACTION = 0.55;
+
+function medianForPopulation(muscle, gender, bodyWeight, age, trained = true) {
   const spec = MUSCLE_LIFTS[muscle];
   if (!spec) return null;
   const g = gender === 'female' ? 'female' : 'male';
@@ -262,7 +321,7 @@ function medianForPopulation(muscle, gender, bodyWeight, age) {
   // Age grading raises the bar for people in their prime and lowers it for
   // masters — dividing, because the coefficient scales a lift UP toward a
   // 23–40-year-old equivalent.
-  return scaled / ageCoefficient(age);
+  return (scaled / ageCoefficient(age)) * (trained ? 1 : UNTRAINED_FRACTION);
 }
 
 // The median 1RM for this muscle's key lift, at this person's body weight,
@@ -271,7 +330,8 @@ function medianForPopulation(muscle, gender, bodyWeight, age) {
 // that need a true answer under mixing should ask weightForPercentile(50).
 export function medianFor(muscle, profile = {}) {
   const pops = populations(profile);
-  return medianForPopulation(muscle, pops[0].gender, refBodyWeight(profile, pops[0].gender), refAge(profile));
+  return medianForPopulation(muscle, pops[0].gender,
+    refBodyWeight(profile, pops[0].gender), refAge(profile), pops[0].trained);
 }
 
 // Percentile among the chosen comparison group, 0–100.
@@ -280,7 +340,8 @@ export function percentileFor(oneRepMax, muscle, profile) {
   if (!(v > 0)) return null;
   let p = 0;
   for (const pop of populations(profile)) {
-    const median = medianForPopulation(muscle, pop.gender, refBodyWeight(profile, pop.gender), refAge(profile));
+    const median = medianForPopulation(muscle, pop.gender,
+      refBodyWeight(profile, pop.gender), refAge(profile), pop.trained);
     if (!median) return null;
     p += pop.share * normalCdf((Math.log(v) - Math.log(median)) / SIGMA);
   }
@@ -293,7 +354,8 @@ export function weightForPercentile(percentile, muscle, profile) {
   if (!(p > 0) || !(p < 100)) return null;
   const pops = populations(profile);
   const medians = pops.map((pop) =>
-    medianForPopulation(muscle, pop.gender, refBodyWeight(profile, pop.gender), refAge(profile)));
+    medianForPopulation(muscle, pop.gender,
+      refBodyWeight(profile, pop.gender), refAge(profile), pop.trained));
   if (medians.some((m) => !m)) return null;
 
   // One population still has a closed form, and it is kept: the targets panel
@@ -321,11 +383,19 @@ export function weightForPercentile(percentile, muscle, profile) {
 // comparison is against everyone alive, so the noun is always "who lift".
 export function comparisonLabel(profile) {
   const c = normalizeCompare(profile && profile.compare);
-  const own = profile && profile.gender === 'female' ? 'women' : 'men';
-  const who = c.sex === 'all' ? 'everyone who lifts'
-    : c.sex === 'male' ? 'men who lift'
-      : c.sex === 'female' ? 'women who lift'
-        : `${own} who lift`;
+  const own = profile && profile.gender === 'female' ? 'female' : 'male';
+  const sex = c.sex === 'own' ? own : c.sex;
+
+  // The noun states the pool outright. This screen's oldest rule is that it must
+  // never imply a ranking against everyone when it means lifters — so now that
+  // ranking against everyone is genuinely on offer, the words have to carry the
+  // difference every single time.
+  const lifts = c.pool === 'lifters';
+  const who = sex === 'all'
+    ? (lifts ? 'men and women who lift' : 'all adults')
+    : sex === 'female'
+      ? (lifts ? 'women who lift' : 'all women')
+      : (lifts ? 'men who lift' : 'all men');
 
   const bits = [];
   bits.push(c.weight === 'any' ? 'any body weight'
@@ -333,7 +403,13 @@ export function comparisonLabel(profile) {
   bits.push(c.age === 'any' ? 'any age'
     : (profile && profile.age ? `around ${profile.age}` : 'any age'));
 
-  return { main: `vs. ${who}`, sub: bits.join(' · '), isDefault: c.sex === 'own' && c.weight === 'own' && c.age === 'own' };
+  return {
+    main: `vs. ${who}`,
+    sub: bits.join(' · '),
+    pool: c.pool,
+    isDefault: c.pool === 'lifters' && c.weight === 'own' && c.age === 'own'
+      && (c.sex === 'own' || c.sex === own),
+  };
 }
 
 // Which level a percentile falls in. Below the first threshold is `null` —
@@ -377,12 +453,12 @@ export function levelProgress(percentile, level) {
   return Math.min(1, Math.max(0, (percentile - from) / span));
 }
 
-// Rough percentile among ALL adults, not just people who lift. There is no
-// dataset for this — nobody has measured what fraction of adults can bench 225 —
-// so it is approximated from participation, treating non-trainers as sitting
-// below trainers. That assumption is false at the margins (plenty of untrained
-// people are naturally strong), so it OVERSTATES and must be shown rounded,
-// never as a decimal.
+// ⚠️ SUPERSEDED 2026-08-17 by the `pool` axis, and kept only so the difference
+// is on the record. This treated every non-lifter as weaker than every lifter,
+// which forced ANY lifter above the 68th percentile of adults and squashed the
+// seven levels into the top three. The pool axis instead gives untrained adults
+// their own overlapping distribution, so a beginner reads as a beginner. Nothing
+// in the app calls this any more.
 export function generalPopulationPercentile(lifterPercentile) {
   const p = Number(lifterPercentile);
   if (!Number.isFinite(p)) return null;

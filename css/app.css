@@ -1458,6 +1458,17 @@ select.input {
 .compare-sheet { display: flex; flex-direction: column; gap: 15px; }
 .compare-axis { display: flex; flex-direction: column; gap: 6px; }
 .compare-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+/* The two presets. Bigger than the chips below them because they are what most
+   people want; the four axes are the escape hatch, not the main event. */
+.preset {
+  flex: 1 1 140px; min-height: 52px;
+  flex-direction: column; gap: 1px;
+  align-items: flex-start; justify-content: center;
+  padding: 8px 13px;
+}
+.preset-name { font-size: 14.5px; font-weight: 700; }
+.preset-hint { font-size: 11px; font-weight: 500; opacity: .72; text-align: left; }
+.btn.preset[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 .muscle-head { display: flex; align-items: baseline; gap: 8px; }
 .muscle-name { font-size: 16px; font-weight: 700; flex: 1; }

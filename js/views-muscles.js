@@ -11,7 +11,7 @@
 import { store, muscleStrength } from './store.js';
 import {
   LEVELS, MUSCLE_LIFTS, UNRANKABLE, weightForPercentile, keyLiftFor,
-  COMPARE_OPTIONS, normalizeCompare, comparisonLabel,
+  COMPARE_OPTIONS, normalizeCompare, comparisonLabel, comparePreset, matchesPreset,
 } from './strength-standards.js';
 import { bodySvg, setSelected } from './body-map.js';
 import { setChildren, el, emptyState, trimNum, fmtDateShort, icon, openSheet } from './ui.js';
@@ -20,7 +20,6 @@ import * as units from './units.js';
 const go = (hash) => { location.hash = hash; };
 
 let selected = null;
-let showGeneral = false;
 
 export async function muscleGroupsPane(host, top) {
   const { profile, muscles, ready } = await muscleStrength();
@@ -70,11 +69,9 @@ export async function muscleGroupsPane(host, top) {
         ),
         el('span', { class: 'basis-sub', text: label.sub }),
       ),
-      el('button', {
-        class: 'chip', 'aria-pressed': String(showGeneral),
-        text: 'vs. everyone',
-        onClick: () => { showGeneral = !showGeneral; render(); },
-      }),
+      // The old "vs. everyone" toggle is gone: comparing against people who do
+      // not lift is now one of the four axes in the sheet, so having it in two
+      // places would let them contradict each other.
     ),
   );
 
@@ -148,65 +145,110 @@ function legend() {
  * "Compared to:" — who the ranking is measured against
  * ------------------------------------------------------------------ */
 
-// Three independent axes. They are separate rather than a list of presets
-// because they genuinely are independent — "women, any body weight, my age" is
-// a sensible question, and a preset list could not hold every combination
-// without becoming a menu nobody reads.
+// FOUR independent axes, and two presets on top of them (Tim, 2026-08-17).
 //
-// What this must never become is a way to quietly look stronger. Every option
-// changes the STATED comparison in the header at the same time as it changes
-// the colours, so the number and the population it refers to can never drift
-// apart. And none of these options reach outside people who lift — D15 stands;
-// "everyone who lifts" means both sexes, not the general public.
+// The axes are separate rather than a preset list because they genuinely are
+// independent — "women, any body weight, my age" is a real question, and no
+// preset list holds every combination without becoming a menu nobody reads. The
+// presets exist because the two combinations people actually want are the two
+// extremes, and setting four things by hand to reach either of them is a chore.
+//
+// The rule this must never break: every option changes the STATED comparison in
+// the header at the same moment it changes the colours, so the number and the
+// population it refers to can never drift apart. That rule got stricter here,
+// not looser — ranking against people who do not lift is now genuinely on
+// offer, so the caption has to carry the difference every single time.
 const COMPARE_AXES = [
-  // Titled "Who" rather than "Compared to" — the sheet is already called that,
-  // and a section repeating its own dialog's title reads as a mistake.
-  { key: 'sex', title: 'Who',
+  { key: 'pool', title: 'Population',
+    help: 'Most adults do not lift at all, so including them raises every level. '
+      + 'What an untrained adult can lift has never been properly measured — that option is a rough estimate.' },
+  { key: 'sex', title: 'Sex',
     help: 'Men and women are held to different standards, so this changes every level.' },
   { key: 'weight', title: 'Body weight',
-    help: 'Standards scale with body weight. Ignoring it compares you against lifters of every size.' },
+    help: 'Standards scale with body weight. Ignoring it compares you against people of every size.' },
   { key: 'age', title: 'Age',
-    help: 'Strength peaks around 23–40. Ignoring age drops the correction that keeps a masters lifter from reading as permanently weak.' },
+    help: 'Strength peaks around 23–40. Ignoring age drops the correction that keeps an older lifter from reading as permanently weak.' },
+];
+
+const PRESETS = [
+  { key: 'like-me', name: 'Like me', hint: 'Lifters of my sex, weight and age' },
+  { key: 'everyone', name: 'Everyone', hint: 'All adults, any sex, weight or age' },
 ];
 
 function openCompareSheet(profile, onChange) {
-  const current = normalizeCompare(profile.compare);
+  let current = normalizeCompare(profile.compare);
   const body = el('div', { class: 'compare-sheet' });
 
-  const draw = () => {
+  const apply = async (next) => {
+    current = normalizeCompare(next);
+    await store.saveSettings({ compare: { ...current } });
+    draw();
+    // Re-rank rather than repaint: the percentile, the level, the targets and
+    // the colours all move together.
+    onChange();
+  };
+
+  function draw() {
+    // `profile.compare` is the value this sheet was opened with; the presets and
+    // the pressed states must reflect the LIVE choice, so a throwaway profile
+    // carrying `current` is what gets asked.
+    const live = { ...profile, compare: current };
+
     setChildren(body,
+      // The presets, first, because they are what most people want and the four
+      // axes below are the escape hatch rather than the main event.
+      el('div', { class: 'compare-axis' },
+        el('div', { class: 'compare-opts' },
+          ...PRESETS.map((p) =>
+            el('button', {
+              class: 'btn preset',
+              'aria-pressed': String(matchesPreset(current, p.key === 'everyone' ? 'everyone' : 'like-me', profile)),
+              onClick: () => apply(comparePreset(p.key === 'everyone' ? 'everyone' : 'like-me', profile)),
+            },
+              el('span', { class: 'preset-name', text: p.name }),
+              el('span', { class: 'preset-hint', text: p.hint }),
+            ))),
+      ),
+
       ...COMPARE_AXES.map((axis) =>
         el('div', { class: 'compare-axis' },
           el('div', { class: 'section-label', text: axis.title }),
           el('div', { class: 'compare-opts' },
-            ...COMPARE_OPTIONS[axis.key].map((opt) =>
+            ...COMPARE_OPTIONS[axis.key].filter((o) => !o.hidden).map((opt) =>
               el('button', {
                 // .chip[aria-pressed="true"] already carries the selected look,
                 // so the state lives in the attribute the screen reader reads
                 // rather than in a second class that could disagree with it.
                 class: 'chip',
-                'aria-pressed': String(current[axis.key] === opt.key),
+                'aria-pressed': String(isChosen(axis.key, opt.key, current, profile)),
                 text: opt.name,
-                onClick: async () => {
-                  current[axis.key] = opt.key;
-                  await store.saveSettings({ compare: { ...current } });
-                  draw();
-                  // Re-rank rather than repaint: the percentile, the level, the
-                  // targets and the colours all move together.
-                  onChange();
-                },
+                onClick: () => apply({ ...current, [axis.key]: opt.key }),
               }))),
           el('div', { class: 'field-help', text: axis.help }),
         )),
-      el('div', { class: 'field-help', text:
-        'Every option here compares you against people who lift. "Everyone who lifts" means men and '
-        + 'women together — not the general public, who mostly do not lift at all.' }),
+
+      el('div', { class: 'field-help' },
+        'Now comparing you against ',
+        el('b', { text: comparisonLabel(live).main.replace(/^vs\. /, '') }),
+        ` — ${comparisonLabel(live).sub}.`),
     );
-  };
+  }
   draw();
 
   openSheet({ title: 'Compared to', body });
 }
+
+// `sex: 'own'` is the stored default and is never shown, so the chip that lights
+// up for it is the user's actual sex. Without this, someone who has never opened
+// the sheet would see nothing selected under Sex and read it as broken.
+function isChosen(axis, key, current, profile) {
+  if (axis !== 'sex') return current[axis] === key;
+  const resolved = current.sex === 'own'
+    ? (profile && profile.gender === 'female' ? 'female' : 'male')
+    : current.sex;
+  return resolved === key;
+}
+
 
 /* ------------------------------------------------------------------ *
  * Confidence
@@ -327,10 +369,14 @@ function detail(m, muscle, profile) {
       `Stronger than ${pct}% of ${comparisonLabel(profile).main.replace(/^vs\. /, '')}`
       + ` — ${comparisonLabel(profile).sub}.`),
 
-    showGeneral
+    // When the comparison includes people who do not lift, say so in the panel
+    // as well as the header — that reading is much softer evidence than a
+    // ranking against lifters, and it should never be quoted without the caveat.
+    profile && normalizeCompare(profile.compare).pool === 'everyone'
       ? el('div', { class: 'field-help general' },
-          `Roughly the top ${Math.max(1, Math.round(100 - m.generalPercentile))}% of all adults — `
-          + 'a rough estimate from how many people strength train at all, not a measurement.')
+          'This compares you against adults in general, most of whom do not lift. '
+          + 'What an untrained adult can lift has never really been measured, so treat '
+          + 'this as a rough placing rather than a number to quote.')
       : null,
 
     // The near goal. Five levels alone left gaps big enough to train through

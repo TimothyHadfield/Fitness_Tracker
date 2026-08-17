@@ -105,11 +105,12 @@ should be able to choose what they are compared against, in a **"Compared to:" s
 - **Choosable:** male · female · all · a specific weight · all weights · a specific age · all ages.
 - The **colours and ranges of the muscle groups change accordingly.**
 
-**BUILT 2026-08-17, as described.** The header on the Muscles screen is now the control: it states
-the comparison group and opens a sheet with the three axes. Sex (like me / men / women / everyone who
-lifts), body weight (mine / any) and age (mine / any), each independent, defaulting to people like
-you, saved to settings so it survives a reload. Levels, percentiles, targets and colours all move
-together.
+**BUILT 2026-08-17, as described, then restructured the same day on Tim's note that "people like me"
+should not be a category at all.** The header on the Muscles screen is the control: it states the
+comparison group and opens a sheet with two presets — **Like me** and **Everyone** — sitting over four
+independent axes: population (people who lift / everyone), sex (men / women / both), body weight
+(mine / any) and age (mine / any). Saved to settings so it survives a reload. Levels, percentiles,
+targets and colours all move together.
 
 Two things worth knowing about how it was built. "Everyone who lifts" is a genuine **mixture** of the
 male and female distributions, not a made-up combined median — the split it assumes (55 % male) is an

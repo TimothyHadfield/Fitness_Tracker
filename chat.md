@@ -1811,3 +1811,61 @@ synthetic events: opening the sheet, picking **Women**, and watching Chest go In
 while the caption changed to "vs. women who lift" and the setting persisted to storage. Same again
 for "Any body weight". The sheet stays open while the body recolours behind it, which turned out to
 be a nice property rather than a designed one.
+
+---
+
+## 2026-08-17 — four axes and two presets, and D15 gets narrowed
+
+Tim, on seeing the first cut: *"people like me should not be a category at all. I think there should
+be 4 different categories: lift/don't lift, gender, age, and weight. and at the top of the settings
+there should be a button that says 'like me' or 'everyone' that automatically sets each setting
+accordingly."*
+
+He is right about "people like me". It was doing two jobs at once — quietly meaning "your sex" while
+reading like a whole preset — which is exactly why he had to ask what the difference was between it
+and "everyone who lifts". Each axis now says one plain thing, and the preset job moved to where it
+belongs, as two buttons at the top of the sheet.
+
+`sex: 'own'` survives internally as the *unset* value so a user who has never opened the sheet still
+gets their own sex, but it is never shown; the chip that lights up for it is their actual sex.
+
+### The part that needed care: lift / don't lift
+
+This is the axis the app has refused for its whole life. D15 says ranking is against people who lift,
+never everyone, because general-population data makes every user Elite.
+
+**The objection turned out to be about the model, not the idea.** The old general-population readout
+assumed every non-lifter sits below every lifter — so any lifter at all landed above the 68th
+percentile of adults and seven levels squashed into three. That is a property of that specific
+approximation, not of the question Tim asked.
+
+Giving untrained adults their **own overlapping distribution** fixes it. Median untrained = 0.55 × the
+lifter median, same spread, mixed at the NHIS participation rate. Against everyone, the levels still
+separate properly:
+
+| Lifter | vs. people who lift | vs. everyone |
+|---|---|---|
+| 5th percentile | Beginner | Proficient |
+| 50th percentile | Intermediate | Expert |
+| 95th percentile | Elite | Elite |
+
+A beginner reads as a beginner-ish rather than Elite, and the percentile spread across lifters is
+32.6 points against the old model's 29-point ceiling. All three of those are now assertions in the
+test file, written as the D15 objection itself so nobody has to remember the argument.
+
+**The 0.55 is the weakest number in that file and is labelled as such** — nobody has measured what the
+median adult can bench, because the median adult has never tried. The sheet says so, and the detail
+panel adds a caveat whenever the comparison includes non-lifters. So D15 is narrowed rather than
+repealed: the reference population is still stated in words every time, and "all adults" never reads
+as "who lift".
+
+The old "vs. everyone" chip is gone — it would have been a second control for the same thing, free to
+contradict the sheet.
+
+### Verified
+
+**772 data-layer + 118 render assertions, green**, including the round trip (target → percentile →
+level) across **all 32 combinations** of the four axes, and that targets still rise with level in
+every one of them. Driven in the browser with real clicks: "Like me" lit by default, pressing
+"Everyone" sets all four axes at once, the caption becomes "vs. all adults · any body weight · any
+age", Chest moves Intermediate → Expert, and the choice persists.
