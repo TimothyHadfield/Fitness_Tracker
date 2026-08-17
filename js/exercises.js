@@ -19,6 +19,8 @@ const RAW = [
   ['Decline Barbell Bench Press', 'Chest', 'Barbell', 'wr'],
   ['Close-Grip Bench Press', 'Chest', 'Barbell', 'wr'],
   ['Floor Press', 'Chest', 'Barbell', 'wr'],
+  // Bench press with the legs off the floor — no leg drive, no arch.
+  ['Larsen Press', 'Chest', 'Barbell', 'wr'],
   ['Dumbbell Bench Press', 'Chest', 'Dumbbell', 'wr'],
   ['Incline Dumbbell Bench Press', 'Chest', 'Dumbbell', 'wr'],
   ['Decline Dumbbell Bench Press', 'Chest', 'Dumbbell', 'wr'],
@@ -32,6 +34,7 @@ const RAW = [
   ['Low-to-High Cable Fly', 'Chest', 'Cable', 'wr'],
   ['High-to-Low Cable Fly', 'Chest', 'Cable', 'wr'],
   ['Cable Crossover', 'Chest', 'Cable', 'wr'],
+  ['Cable Press Around', 'Chest', 'Cable', 'wr'],
   ['Chest Dip', 'Chest', 'Bodyweight', 'wr'],
   ['Push-Up', 'Chest', 'Bodyweight', 'r'],
   ['Incline Push-Up', 'Chest', 'Bodyweight', 'r'],
@@ -56,6 +59,8 @@ const RAW = [
   ['Dumbbell Row', 'Back', 'Dumbbell', 'wr'],
   ['Chest-Supported Dumbbell Row', 'Back', 'Dumbbell', 'wr'],
   ['Meadows Row', 'Back', 'Barbell', 'wr'],
+  // Heavy, slightly loose one-arm dumbbell row for high reps.
+  ['Kroc Row', 'Back', 'Dumbbell', 'wr'],
   ['Pull-Up', 'Back', 'Bodyweight', 'wr'],
   ['Chin-Up', 'Back', 'Bodyweight', 'wr'],
   ['Neutral-Grip Pull-Up', 'Back', 'Bodyweight', 'wr'],
@@ -90,6 +95,7 @@ const RAW = [
   ['Smith Machine Overhead Press', 'Shoulders', 'Machine', 'wr'],
   ['Lateral Raise', 'Shoulders', 'Dumbbell', 'wr'],
   ['Cable Lateral Raise', 'Shoulders', 'Cable', 'wr'],
+  ['Cross-Body Cable Y-Raise', 'Shoulders', 'Cable', 'wr'],
   ['Machine Lateral Raise', 'Shoulders', 'Machine', 'wr'],
   ['Leaning Lateral Raise', 'Shoulders', 'Dumbbell', 'wr'],
   ['Front Raise', 'Shoulders', 'Dumbbell', 'wr'],
@@ -141,6 +147,7 @@ const RAW = [
   ['V-Bar Pushdown', 'Triceps', 'Cable', 'wr'],
   ['Reverse-Grip Pushdown', 'Triceps', 'Cable', 'wr'],
   ['Overhead Cable Extension', 'Triceps', 'Cable', 'wr'],
+  ['Cross-Body Cable Triceps Extension', 'Triceps', 'Cable', 'wr'],
   ['Overhead Dumbbell Extension', 'Triceps', 'Dumbbell', 'wr'],
   ['Skull Crusher', 'Triceps', 'Barbell', 'wr'],
   ['Dumbbell Skull Crusher', 'Triceps', 'Dumbbell', 'wr'],
@@ -342,6 +349,8 @@ const FORCE_PER_SIDE = new Set([
   'Cable Fly', 'Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Cable Crossover',
   'Cable Rear Delt Fly', 'Cable Lateral Raise', 'Bayesian Cable Curl', 'Cable Kickback',
   'Machine Lateral Raise', 'Single-Arm Lat Pulldown', 'Meadows Row', 'Landmine Press',
+  'Cable Press Around', 'Cross-Body Cable Y-Raise', 'Cross-Body Cable Triceps Extension',
+  'Kroc Row',
   'Suitcase Carry', 'Farmer Carry', 'Overhead Carry', 'Plate Pinch Hold',
 ]);
 

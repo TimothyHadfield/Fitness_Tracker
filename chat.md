@@ -2035,3 +2035,65 @@ the phrase "sets a week" never appears.
 the Workouts screen, open Push Pull Legs, 20 exercises listed under Push/Pull/Legs, add it, land
 inside the new system with all three workouts, and the browse list then shows **Added**. Checked
 against the store afterwards that the copy carries 6/7/7 exercises with their notes intact.
+
+---
+
+## 2026-08-17 — the Nippard system, found and built
+
+Tim asked whether the exercises had been written down anywhere by somebody else. They have. Searching
+properly changed the answer, and it is worth recording what changed it.
+
+### What was found
+
+Three separate fitness publications wrote up the **free** YouTube videos, with exercises in order and
+sets and reps:
+
+| Day | Source | Complete? |
+|---|---|---|
+| Push | [Fitness Volt](https://fitnessvolt.com/jeff-nippard-push-workout/) | yes, 8 movements with sets/reps |
+| Pull | [Fitness Volt, 27 Jul 2023](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/) | yes, 6 movements with sets/reps |
+| Legs | [Fitness Volt, 23 Feb 2023](https://fitnessvolt.com/jeff-nippard-leg-day-workout/) | yes — and names itself "the third installment of the six-part push-pull-leg series" |
+
+That last line is what made it usable: an explicit link between a write-up and the series Tim named.
+
+### The trap that nearly got us
+
+**Nippard has published several similarly named push workouts, and the write-ups disagree because
+they are describing different videos.** Three "Jeff Nippard push day" articles gave three different
+workouts:
+
+- Fitness Volt (the 2023 series): bench, Larsen press, Arnold press, cable press-around, Y-raise…
+- [BarBend, 3 Jun 2023](https://barbend.com/news/7-exercises-jeff-nippard-chest-shoulders-triceps/):
+  close-grip incline bench, machine shoulder press, floor-reset skull crusher, diamond push-ups…
+- [Generation Iron](https://generationiron.com/jeff-nippard-push-pull-legs/) (an older PPL): dips,
+  Egyptian lateral raises, cable triceps kickbacks…
+
+The earlier session read "the sources disagree" as "the sources are unreliable". The truer reading is
+that they are reliable about **different videos**, and the job is to pin down which. That is now a
+warning in `progress.md`.
+
+### What was NOT used
+
+The paid 12-week ebook on jeffnippard.com — including a copy of it sitting on a document-sharing
+site. That is the thing he sells, and it stays out.
+
+### Built
+
+`preset-systems.js` gained the system, and the exercise library gained the five movements it needed:
+**Larsen Press, Cable Press Around, Cross-Body Cable Y-Raise, Cross-Body Cable Triceps Extension,
+Kroc Row** — 265 exercises to 270. The four cable/dumbbell ones are per-side, which matters: the
+ranking model doubles per-side loads, and getting that wrong makes a lifter look weak.
+
+The detail screen carries `unofficial: true`, which renders as a warning above the programme:
+*not official, transcribed from published write-ups of the free videos, sets and reps as reported.*
+The notes also state that the series runs to six workouts and this is one of each.
+
+A test now asserts that **any** preset credited to a real person has a source URL, the unofficial
+flag, and a note saying it is not that person's own writing. That is the difference between citing
+someone and impersonating them, and it should not depend on whoever adds the next one remembering.
+
+### Verified
+
+**869 data-layer + 141 render assertions, green.** Driven in a browser: Explore → Ultimate Push Pull
+Legs → 20 exercises across Push/Pull/Legs → added → lands in the new system with 8/6/6 exercises,
+notes intact. Also fixed "1 sets" in the preset list.

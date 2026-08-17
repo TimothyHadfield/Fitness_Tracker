@@ -97,7 +97,11 @@ Open threads:
 systems lists them, shows the whole programme with its per-exercise notes, and copies one into the
 account on a tap. Three of the app's own ship with it.
 
-**The celebrity part is blocked, and not on effort.** Tim asked for Jeff Nippard's *Ultimate Push
+**First creator system shipped 2026-08-17:** Jeff Nippard's *Ultimate Push Pull Legs (2023)*,
+transcribed from published write-ups of his **free** YouTube series and flagged on screen as
+unofficial, with a link to the playlist. Not from his paid ebook. One rotation of a six-part series.
+
+**Superseded note, kept for the reasoning:** Tim asked for Jeff Nippard's *Ultimate Push
 Pull Legs* first. The full 12-week system is a paid product on his site, and the free YouTube series
 cannot be watched from here — secondary write-ups are partial and contradict each other. Shipping a
 guess under a real person's name is the one thing this project has consistently refused to do. The

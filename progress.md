@@ -32,7 +32,7 @@ trains it**, each rating carrying a **confidence** that fades the colour.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 858 assertions, **no dependencies** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 869 assertions, **no dependencies** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 141 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
@@ -180,9 +180,9 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you. `js/preset-systems.js` holds three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves. **No third-party system is shipped** — see §9 |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you. `js/preset-systems.js` holds four: **Jeff Nippard's Ultimate Push Pull Legs (2023)** plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
-| Exercise library | **265 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
+| Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
 | Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
@@ -208,7 +208,7 @@ Press-and-hold repeats.
 ### Verified
 
 - All **20 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **858 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **869 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
@@ -273,7 +273,7 @@ Fitness_Tracker/
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
 │   ├── body-map.js             composes the fill paths + the ink masks
-│   ├── exercises.js            265-exercise library + load-type rules
+│   ├── exercises.js            270-exercise library + load-type rules
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
 │   ├── views-workouts.js       home, workout list, builder, exercise picker
 │   ├── views-session.js        session runner, benchmark form
@@ -285,7 +285,7 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     858 assertions, no dependencies
+│   ├── data-layer.test.mjs     869 assertions, no dependencies
 │   └── render.test.mjs         141 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
          firebase-setup.md · competitive-teardown.html
@@ -464,7 +464,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery. |
 | D9 | **Progressive disclosure is core architecture.** | Audience is "any level". Can't be bolted on later. |
 | D10 | **Training goal is a user setting that reconfigures the dashboard.** | One fixed dashboard would be wrong for most users. |
-| D11 | **Marzagão (2026) weight-dependent e1RM**, not Epley/Brzycki.<br>`1RM = w × (1 + (r−1)^0.85 / k(w))`<br>`k(w) = max(4.58, −2.55 + 4.58·ln(w_kg))` | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator). Classical formulas use one fixed factor for all 265 exercises. **⚠️ Our k-floor is 4.58, NOT the paper's 0.5** — below k = B the published curve *decreases* in weight, so a heavier lift would score lower and the inverse stops being unique. Asserted monotone across 1–400 lb. See `docs/research.md` §1. |
+| D11 | **Marzagão (2026) weight-dependent e1RM**, not Epley/Brzycki.<br>`1RM = w × (1 + (r−1)^0.85 / k(w))`<br>`k(w) = max(4.58, −2.55 + 4.58·ln(w_kg))` | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator). Classical formulas use one fixed factor for all 270 exercises. **⚠️ Our k-floor is 4.58, NOT the paper's 0.5** — below k = B the published curve *decreases* in weight, so a heavier lift would score lower and the inverse stops being unique. Asserted monotone across 1–400 lb. See `docs/research.md` §1. |
 | D12 | **Accounts are anonymous-first**; upgrading *links* the account so uid and data carry over. | A signup wall on first open is the biggest killer of retention, and D8/D9 say no wall on day one. Cost: un-upgraded data lives in one browser — the UI states that plainly. |
 | D13 | **`BACKEND = 'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set (D6). Settings says "Not connected" rather than pretending to sync. |
 | D14 | **Graphs never mix benchmarks with workout sets.** One source at a time, benchmarks by default. | Reported by Tim: a workout set sat far off his benchmark trend. Two more problems fell out — the shown point flipped between sources as the rep target changed, and one-point-per-day silently discarded the loser. |
@@ -473,7 +473,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D20 | **The comparison group is a user setting: FOUR independent axes — population (lifters / everyone), sex, body weight, age — plus two presets, "Like me" and "Everyone".** Any mixed population is modelled as a real MIXTURE of distributions, never an invented combined median. | Tim, 2026-08-17. Axes rather than presets alone because "women, any body weight, my age" is a real question; presets on top because the two combinations most people want are the extremes and setting four things by hand to reach them is a chore. The caption naming the group is built by the same function that computes it, so the number and the population it refers to cannot drift apart. |
 | D22 | **A workout belongs to exactly ONE system.** | Sharing one workout between two programmes sounds useful and is not: editing it in one place would silently change the other, and "did my Push day change because I imported someone else's programme?" is a question this app should never raise. Deleting a system therefore deletes its workouts — but never the sessions already recorded from them, because history is a record of what happened and does not become untrue when the plan behind it is thrown away. |
 | D21 | **D15 is narrowed, not repealed: ranking against people who do not lift is now offered, and untrained adults are given their OWN overlapping distribution rather than being assumed weaker than every lifter.** Untrained median = 0.55 × the lifter median. | Tim asked for a lift/don't-lift axis. D15's real objection was never "don't offer it" — it was that general-population data makes every user Elite. That was true of the OLD model, which assumed every non-lifter sat below every lifter and so forced any lifter above the 68th percentile, squashing seven levels into three. With an overlapping untrained distribution the levels keep spreading: a beginner lifter reads Proficient, a median lifter Expert, an elite lifter Elite — asserted in the tests. **The 0.55 is the weakest number in the file** (nobody has measured what the median adult can bench) and both the sheet and the detail panel say so. |
-| D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 of 265 exercises could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
+| D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 of 270 exercises could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
 | D16 | **Deadlift fills Glutes** on the muscle map. | It belongs to glutes, hamstrings and back at once. Hip-thrust standards are the thinnest of the three. Revisit with the weighted mapping. |
 
 ### Standing recommendations
@@ -558,7 +558,7 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   for a week and the map recorded a single number, because he had done hammer curls rather than
   barbell curls, dumbbell rows rather than barbell rows, seated calf raises rather than standing.
   Every exercise that trains a muscle now rates it, converted to that muscle's standard by a ratio in
-  `js/muscle-evidence.js`. **11 of 265 exercises could move the map; ~190 can now.**
+  `js/muscle-evidence.js`. **11 of 270 exercises could move the map; ~190 can now.**
 - **The conversion ratios are estimates, and some are shaky.** This is the price of the change above
   and it is not hidden: a confidence is computed per muscle and the colour desaturates with it.
   Dumbbell swaps of barbell lifts are solid; **machines are the weak case**, because gearing varies
@@ -601,15 +601,20 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
 - **No supersets.** Sets are a flat list — no RIR, tempo, or set types.
 - ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
   canonically in pounds. Distance is still miles only.
-- **No third-party workout system is shipped, and this is deliberate.** Tim asked (2026-08-17) for
-  Jeff Nippard's *Ultimate Push Pull Legs* as the first public system. Two blockers, neither of which
-  a bit more effort would clear: the full 12-week system is a **paid product** on jeffnippard.com, so
-  copying its prescriptions into a public app is redistributing what he sells; and **nobody here can
-  watch the videos** — the secondary write-ups of the free YouTube series are partial and disagree,
-  so anything shipped under his name would be a guess attributed to a real person. `preset-systems.js`
-  carries `author` / `sourceName` / `sourceUrl` and the detail screen shows them, so a properly
-  licensed or properly sourced system slots straight in. **What would unblock it:** permission from
-  the author, or a first-party written source Tim can point at.
+- **The Nippard system is a TRANSCRIPTION, and the screen says so.** It comes from published
+  write-ups of the FREE YouTube series (Fitness Volt, BarBend), **not** from his paid 12-week ebook
+  and not from him. Two limits stated on the detail screen and in the data: the series runs to **six**
+  workouts and only one Push, one Pull and one Legs are here; and nobody involved watched the videos,
+  so the sets and reps are as reported. `unofficial: true` is what puts the warning on screen, and a
+  test asserts that anything credited to a real person carries a source URL, the flag, and a note
+  saying it is not their own writing. **Do not add the paid ebook's contents.**
+  Sources: [Fitness Volt push](https://fitnessvolt.com/jeff-nippard-push-workout/) ·
+  [Fitness Volt pull](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/) ·
+  [Fitness Volt legs](https://fitnessvolt.com/jeff-nippard-leg-day-workout/)
+- **Beware which Nippard workout you are reading.** He has published several similarly named push
+  workouts. A Generation Iron write-up of an older PPL gives a completely different push day
+  (dips, Egyptian lateral raises, cable kickbacks) from the 2023 series. Cross-check the date and the
+  series before trusting any write-up.
 - **Exercise→muscle is a single string**, not the primary/secondary weighted mapping. **This must
   change before D3.**
 

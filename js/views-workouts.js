@@ -168,7 +168,8 @@ export async function ExploreView() {
               added.has(p.id) ? el('span', { class: 'tag', text: 'Added' }) : null,
             ),
             el('div', { class: 'row-sub', text:
-              `${p.daysPerWeek} days/week · ~${p.minutes} min · ${p.level}` }),
+              (p.author && p.author !== 'Fitness Tracker' ? `${p.author} · ` : '')
+              + `${p.daysPerWeek} days/week · ~${p.minutes} min · ${p.level}` }),
             el('div', { class: 'row-sub wrap', text: p.summary }),
           ),
           chevron(),
@@ -228,6 +229,15 @@ export async function ExploreDetailView(id) {
           : (preset.sourceName || null),
       ),
 
+      // Loud, not a footnote. Someone reading a programme attributed to a real
+      // person has to know whether that person actually wrote what is on screen.
+      preset.unofficial
+        ? el('div', { class: 'chart-caption warn' }, el('span', {
+            text: 'Not official. Transcribed from published write-ups of the free videos, '
+              + 'not from the author or their paid programme. Sets and reps are as reported — '
+              + 'check the source before you trust a number.' }))
+        : null,
+
       preset.notes
         ? el('div', { class: 'preset-notes' },
             // Paragraph breaks in the notes are real paragraphs, not one wall of text.
@@ -243,7 +253,7 @@ export async function ExploreDetailView(id) {
               el('div', { class: 'row-title', text: e.name }),
               e.notes ? el('div', { class: 'row-sub', text: e.notes }) : null,
             ),
-            el('div', { class: 'row-meta mono', text: `${e.sets} sets` }),
+            el('div', { class: 'row-meta mono', text: plural(e.sets, 'set') }),
           ))),
       ]),
     ],

@@ -31,6 +31,72 @@
 
 export const PRESET_SYSTEMS = [
   {
+    id: 'preset-nippard-ppl-2023',
+    name: 'Ultimate Push Pull Legs',
+    author: 'Jeff Nippard',
+    sourceName: 'The Ultimate Push Pull Legs Series (2023) — YouTube',
+    sourceUrl: 'https://www.youtube.com/playlist?list=PLp4G6oBUcv8w-v9tpZeF8GSlGcyl_J_gx',
+    // ⚠️ NOT OFFICIAL, and the screen says so. These three workouts are
+    // transcribed from published write-ups of the FREE YouTube videos — Fitness
+    // Volt and BarBend — not from Jeff Nippard's paid 12-week ebook, and not
+    // from him. Two limits worth keeping in view:
+    //   · the series is SIX parts; this is one rotation of it, not all six
+    //   · nobody here watched the videos, so the sets and reps are as reported
+    // The `unofficial` flag is what puts that on screen rather than in a
+    // comment nobody reads.
+    unofficial: true,
+    goal: 'Hypertrophy',
+    daysPerWeek: 6,
+    minutes: 75,
+    level: 'Intermediate',
+    summary: 'One rotation of Jeff Nippard’s 2023 YouTube series. Heavy top sets, then '
+      + 'high-rep isolation work chosen for stretch and peak contraction.',
+    notes: 'Transcribed from published write-ups of the free YouTube videos, not from Jeff '
+      + 'Nippard’s paid programme and not by him. Watch the series for his form cues and '
+      + 'reasoning — they are most of the value and none of it fits in a workout log.\n\n'
+      + 'The series runs to six workouts; this is one Push, one Pull and one Legs from it.\n\n'
+      + 'The pattern to notice: one heavy compound taken near a true maximum, then everything '
+      + 'else lighter and further from failure, picked for where it loads the muscle rather than '
+      + 'for how much weight moves.',
+    workouts: [
+      { name: 'Push', notes: 'Chest, shoulders, triceps. One heavy press, then stretch- and '
+          + 'contraction-biased work. Reported reps: bench 3–5, Larsen press 10, Arnold press '
+          + '8–10, press-around 12–15, Y-raise 12–15, pressdown 8, cross-body extension 10–12.',
+        exercises: [
+          { name: 'Barbell Bench Press', sets: 1, notes: 'One heavy set of 3–5, after working up to it.' },
+          { name: 'Larsen Press', sets: 2, notes: 'Legs off the floor — no leg drive, no arch. 10 reps.' },
+          { name: 'Arnold Press', sets: 3, notes: 'Standing. 8–10 reps.' },
+          { name: 'Cable Press Around', sets: 2, notes: '12–15 reps. Supersetted with a 30-second pec stretch.' },
+          { name: 'Cross-Body Cable Y-Raise', sets: 3, notes: '12–15 reps.' },
+          { name: 'Triceps Pushdown', sets: 3, notes: 'Squeeze-only partials, 8 reps. Supersetted with the overhead extension.' },
+          { name: 'Overhead Cable Extension', sets: 3, notes: 'Stretch-only partials, 8 reps.' },
+          { name: 'Cross-Body Cable Triceps Extension', sets: 2, notes: '10–12 reps.' },
+        ] },
+      { name: 'Pull', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
+          + '12–15, pull-ups to failure, Kroc rows 10–12, everything else 10–12.',
+        exercises: [
+          { name: 'Single-Arm Lat Pulldown', sets: 3, notes: 'Half-kneeling, one arm. 12–15 reps.' },
+          { name: 'Pull-Up', sets: 1, notes: 'One set to failure. If you are cutting, aim to add a rep a week as your body weight drops.' },
+          { name: 'Kroc Row', sets: 3, notes: 'Heavy one-arm dumbbell row, 10–12 reps.' },
+          { name: 'Cable Shrug', sets: 3, notes: 'Shrug-ins from a low pulley — the traps fan out horizontally, so the cable angle suits them better than a barbell. 10–12 reps.' },
+          { name: 'Reverse Pec Deck', sets: 3, notes: '10–12 reps.' },
+          { name: 'Cable Curl', sets: 3, notes: 'Overhead, which biases the long head more than a standing curl. 10–12 reps.' },
+        ] },
+      { name: 'Legs', notes: 'One heavy squat, then hinge, single-leg, hamstring and calf work. '
+          + 'Reported: squat 2–4 near max plus two paused back-off sets, RDL 8–10, lunges 10 per '
+          + 'leg, leg curls 10–12, calves 10–12.',
+        exercises: [
+          { name: 'Back Squat', sets: 3, notes: 'Work up, then one set of 2–4 at 85–90%. Two paused back-off sets of 5 at 75% of that.' },
+          { name: 'Romanian Deadlift', sets: 3, notes: '8–10 reps.' },
+          { name: 'Walking Lunge', sets: 3, notes: 'Dumbbells, 10 reps per leg.' },
+          { name: 'Seated Leg Curl', sets: 3, notes: '10–12 reps.' },
+          { name: 'Leg Press Calf Raise', sets: 4, notes: '10–12 reps.' },
+          { name: 'Decline Sit-Up', sets: 3, notes: 'Holding a plate. 10–12 reps.' },
+        ] },
+    ],
+  },
+
+  {
     id: 'preset-ppl',
     name: 'Push Pull Legs',
     author: 'Fitness Tracker',

@@ -1842,6 +1842,15 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   for (const p of PRESET_SYSTEMS) {
     ok('sourceName' in p && 'sourceUrl' in p,
        `"${p.name}" carries attribution fields, so a third-party system has somewhere to say so`);
+    // Anything credited to a real person has to link to where it came from AND
+    // say plainly that it is not their own words. Getting this wrong is the
+    // difference between citing someone and impersonating them.
+    if (p.author && p.author !== 'Fitness Tracker') {
+      ok(Boolean(p.sourceUrl), `"${p.name}" is credited to ${p.author} and links to the source`);
+      ok(p.unofficial === true, `"${p.name}" is flagged as an unofficial transcription`);
+      ok(/not from|transcribed/i.test(p.notes || ''),
+         `"${p.name}" says in its own notes that it is not the author's own writing`);
+    }
   }
 
   /* ---- adding one to an account ---- */
