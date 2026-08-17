@@ -9,21 +9,33 @@
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end.
 
-The body map is **Tim's own illustration**, split into a recolourable fill layer and an ink layer
-carrying every keyline, striation and shadow. The app works with **no network** (D6 — a service
-worker, so this is finally true rather than claimed), records weights in **lbs or kg**, has a rest
-timer, lets a workout be logged for another day, lets a past record be edited from the calendar, and
-can mark a whole workout as a benchmark. The body map rates every muscle from **every exercise that
-trains it**, each rating carrying a **confidence** that fades the colour.
+The app works with **no network** (D6), records weights in **lbs or kg**, has a rest timer, lets a
+workout be logged for another day, lets a past record be edited from the calendar, and can mark a
+whole workout as a benchmark.
+
+**Workouts live inside SYSTEMS** — a system is a programme holding several workouts — and there is an
+**Explore** screen of ready-made systems you can copy into your account, including one transcribed
+from Jeff Nippard's free 2023 YouTube series.
+
+**The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
+rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
+desaturates the colour, and the **comparison group is the user's choice** — lifters or everyone, sex,
+body weight, age.
+
+**Neither chart mode is a dead end**: where there is not enough history to draw a line, they list
+where every lift stands right now.
 
 **Open work — start here:**
 
 1. **`docs/strength-estimate-plan.md`, Phase 0** — the confidence-weighted estimator and its
-   simulator. Part of it arrived early on 2026-08-17: `js/muscle-evidence.js` is a real confidence
-   model, but it was built for the BODY MAP, not for the graph, and it has no simulator behind it.
-   The constants in it are reasoned, not fitted. **Fitting them is the open work.**
-2. **`docs/vision.md`** — Tim's own list of where this goes next. Nothing there is scheduled.
-3. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on. Note that
+   simulator. Part of it arrived on 2026-08-17: `js/muscle-evidence.js` is a real confidence model,
+   but it was built for the BODY MAP, not the graph, and it has **no simulator behind it**. Its
+   constants are reasoned, not fitted. Fitting them is the open work, and it is what would let the
+   two known accuracy gaps in §9 be closed rather than documented.
+2. **Tim opens the app on a real phone.** Unchanged, and still the biggest risk in the project.
+3. **`docs/vision.md`** — Tim's own list of where this goes next. Nothing there is scheduled; the
+   next thing he named is completing the Nippard series (three of six workouts are in).
+4. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on. Note that
    `muscle-evidence.js` now holds a *ranking* mapping; D3 needs a *volume* one, and they are not the
    same table — one asks "how strong", the other "how much work landed here".
 
@@ -139,12 +151,13 @@ Tim is the **manager**; Claude is the **builder**.
 |---|---|
 | `progress.md` | State, decisions, rules, next steps. **The catch-up file.** |
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |
-| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a plan — nothing in it is being built, and nothing starts off it without him saying so. He adds to it whenever something occurs to him |
+| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a schedule: nothing starts off it without him saying so. Two of its four ideas are now partly built (the comparison setting, and ready-made systems) and are marked BUILT in place |
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
+| `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
-| `docs/strength-estimate-plan.md` | **Plan, not built.** How to measure strength from ordinary workout sets rather than benchmarks, and how to keep it stable. Proposes D18 |
+| `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state. ⚠️ Says a Google console toggle is outstanding; it is not — Google sign-in is enabled and in use |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
@@ -219,8 +232,13 @@ Press-and-hold repeats.
   detail at all, which is the one failure that would not look like a bug in a screenshot
 - **Screenshots, headless Chrome** — Home, Workouts, Calendar, Settings, Muscles and the line chart
   at 360 / 390 / 880 / 1180 / 1280 px in dark and light. Layout holds, nothing overflows, the legend
-  wraps, and the Muscles side column holds its figure size whether or not a muscle is selected. The
-  new body map was re-shot at 360/390/1180 in both themes, selected and unselected
+  wraps, and the Muscles side column holds its figure size whether or not a muscle is selected
+- **Driven over CDP with real mouse events**, not synthetic ones — 2026-08-17: the session screen's
+  Add set pill (hit-tested, 6 sets → 7), the Compared-to sheet (picking Women moved Chest
+  Intermediate → Elite and the caption followed; the Everyone preset set all four axes), the systems
+  list and one system, and Explore → a preset → Add, landing in the copied system with its notes
+  intact. Confidence was checked from **computed styles**, not by eye: two muscles at one level and
+  different confidences differ only in chroma, with identical lightness and hue
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -275,7 +293,8 @@ Fitness_Tracker/
 │   ├── body-map.js             composes the fill paths + the ink masks
 │   ├── exercises.js            270-exercise library + load-type rules
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
-│   ├── views-workouts.js       home, workout list, builder, exercise picker
+│   ├── views-workouts.js       home, SYSTEMS list, one system, workout builder,
+│   │                           Explore ready-made systems, exercise picker
 │   ├── views-session.js        session runner, benchmark form
 │   ├── views-data.js           calendar, day detail, Data screen, settings
 │   ├── views-muscles.js        the Muscles pane
@@ -287,8 +306,8 @@ Fitness_Tracker/
 ├── tests/
 │   ├── data-layer.test.mjs     869 assertions, no dependencies
 │   └── render.test.mjs         141 jsdom assertions — mounts every screen
-└── docs/  spec.md · research.md · strength-map-plan.md · strength-estimate-plan.md
-         firebase-setup.md · competitive-teardown.html
+└── docs/  spec.md · research.md · vision.md · strength-map-plan.md
+         strength-estimate-plan.md · firebase-setup.md · competitive-teardown.html
 ```
 
 ### Key patterns
@@ -464,17 +483,17 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery. |
 | D9 | **Progressive disclosure is core architecture.** | Audience is "any level". Can't be bolted on later. |
 | D10 | **Training goal is a user setting that reconfigures the dashboard.** | One fixed dashboard would be wrong for most users. |
-| D11 | **Marzagão (2026) weight-dependent e1RM**, not Epley/Brzycki.<br>`1RM = w × (1 + (r−1)^0.85 / k(w))`<br>`k(w) = max(4.58, −2.55 + 4.58·ln(w_kg))` | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator). Classical formulas use one fixed factor for all 270 exercises. **⚠️ Our k-floor is 4.58, NOT the paper's 0.5** — below k = B the published curve *decreases* in weight, so a heavier lift would score lower and the inverse stops being unique. Asserted monotone across 1–400 lb. See `docs/research.md` §1. |
+| D11 | **Marzagão (2026) weight-dependent e1RM**, not Epley/Brzycki.<br>`1RM = w × (1 + (r−1)^0.85 / k(w))`<br>`k(w) = max(4.58, −2.55 + 4.58·ln(w_kg))` | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator). Classical formulas use one fixed factor for every exercise in the library. **⚠️ Our k-floor is 4.58, NOT the paper's 0.5** — below k = B the published curve *decreases* in weight, so a heavier lift would score lower and the inverse stops being unique. Asserted monotone across 1–400 lb. See `docs/research.md` §1. |
 | D12 | **Accounts are anonymous-first**; upgrading *links* the account so uid and data carry over. | A signup wall on first open is the biggest killer of retention, and D8/D9 say no wall on day one. Cost: un-upgraded data lives in one browser — the UI states that plainly. |
 | D13 | **`BACKEND = 'auto'`, and a cloud failure falls back to local storage.** | Losing signal must never stop someone logging a set (D6). Settings says "Not connected" rather than pretending to sync. |
 | D14 | **Graphs never mix benchmarks with workout sets.** One source at a time, benchmarks by default. | Reported by Tim: a workout set sat far off his benchmark trend. Two more problems fell out — the shown point flipped between sources as the rep target changed, and one-point-per-day silently discarded the loser. |
 | D15 | **Strength ranking is against people who lift and log, never "everyone".** Levels are lifter-based; a general-population figure is an optional extra line, never a re-tiering. | Competition data puts the general population below its own 50th percentile; general-population data would make every user Elite. The seven-level scale compresses into ~70–98 % of all adults. **The UI must say "of people who lift".** |
-| D17 | **A benchmark workout's benchmarks are DERIVED from its session, not written alongside it.** Each carries `sourceSessionId` and the whole set is rebuilt on every save. | The alternative — write benchmarks once at finish — strands them the moment the record is edited. Move the workout to another day and its benchmarks stay on the old one; delete an exercise and its benchmark lives on; untick the flag and nothing undoes it. Rebuilding makes all four correct by construction instead of by remembering. Hand-entered benchmarks have no `sourceSessionId` and are never touched. |
-| D20 | **The comparison group is a user setting: FOUR independent axes — population (lifters / everyone), sex, body weight, age — plus two presets, "Like me" and "Everyone".** Any mixed population is modelled as a real MIXTURE of distributions, never an invented combined median. | Tim, 2026-08-17. Axes rather than presets alone because "women, any body weight, my age" is a real question; presets on top because the two combinations most people want are the extremes and setting four things by hand to reach them is a chore. The caption naming the group is built by the same function that computes it, so the number and the population it refers to cannot drift apart. |
-| D22 | **A workout belongs to exactly ONE system.** | Sharing one workout between two programmes sounds useful and is not: editing it in one place would silently change the other, and "did my Push day change because I imported someone else's programme?" is a question this app should never raise. Deleting a system therefore deletes its workouts — but never the sessions already recorded from them, because history is a record of what happened and does not become untrue when the plan behind it is thrown away. |
-| D21 | **D15 is narrowed, not repealed: ranking against people who do not lift is now offered, and untrained adults are given their OWN overlapping distribution rather than being assumed weaker than every lifter.** Untrained median = 0.55 × the lifter median. | Tim asked for a lift/don't-lift axis. D15's real objection was never "don't offer it" — it was that general-population data makes every user Elite. That was true of the OLD model, which assumed every non-lifter sat below every lifter and so forced any lifter above the 68th percentile, squashing seven levels into three. With an overlapping untrained distribution the levels keep spreading: a beginner lifter reads Proficient, a median lifter Expert, an elite lifter Elite — asserted in the tests. **The 0.55 is the weakest number in the file** (nobody has measured what the median adult can bench) and both the sheet and the detail panel say so. |
-| D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 of 270 exercises could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
 | D16 | **Deadlift fills Glutes** on the muscle map. | It belongs to glutes, hamstrings and back at once. Hip-thrust standards are the thinnest of the three. Revisit with the weighted mapping. |
+| D17 | **A benchmark workout's benchmarks are DERIVED from its session, not written alongside it.** Each carries `sourceSessionId` and the whole set is rebuilt on every save. | The alternative — write benchmarks once at finish — strands them the moment the record is edited. Move the workout to another day and its benchmarks stay on the old one; delete an exercise and its benchmark lives on; untick the flag and nothing undoes it. Rebuilding makes all four correct by construction instead of by remembering. Hand-entered benchmarks have no `sourceSessionId` and are never touched. |
+| D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 exercises out of the whole library could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
+| D20 | **The comparison group is a user setting: FOUR independent axes — population (lifters / everyone), sex, body weight, age — plus two presets, "Like me" and "Everyone".** Any mixed population is modelled as a real MIXTURE of distributions, never an invented combined median. | Tim, 2026-08-17. Axes rather than presets alone because "women, any body weight, my age" is a real question; presets on top because the two combinations most people want are the extremes and setting four things by hand to reach them is a chore. The caption naming the group is built by the same function that computes it, so the number and the population it refers to cannot drift apart. |
+| D21 | **D15 is narrowed, not repealed: ranking against people who do not lift is now offered, and untrained adults are given their OWN overlapping distribution rather than being assumed weaker than every lifter.** Untrained median = 0.55 × the lifter median. | Tim asked for a lift/don't-lift axis. D15's real objection was never "don't offer it" — it was that general-population data makes every user Elite. That was true of the OLD model, which assumed every non-lifter sat below every lifter and so forced any lifter above the 68th percentile, squashing seven levels into three. With an overlapping untrained distribution the levels keep spreading: a beginner lifter reads Proficient, a median lifter Expert, an elite lifter Elite — asserted in the tests. **The 0.55 is the weakest number in the file** (nobody has measured what the median adult can bench) and both the sheet and the detail panel say so. |
+| D22 | **A workout belongs to exactly ONE system.** | Sharing one workout between two programmes sounds useful and is not: editing it in one place would silently change the other, and "did my Push day change because I imported someone else's programme?" is a question this app should never raise. Deleting a system therefore deletes its workouts — but never the sessions already recorded from them, because history is a record of what happened and does not become untrue when the plan behind it is thrown away. |
 
 ### Standing recommendations
 
@@ -541,9 +560,10 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
 
 ## 9. Known gaps — deliberate, not bugs
 
-- **Body weight is charted but not yet wired into rep normalisation** for the 14 bodyweight/assisted
-  exercises. Their logged weight is added or assisted load, not total resistance — which is now
-  computable. `canNormalize()` in `e1rm.js` still refuses them.
+- **Body weight is charted but not yet wired into rep normalisation** for the 54 bodyweight and
+  assisted exercises. Their logged weight is added or assisted load, not total resistance — which is now
+  computable. `canNormalize()` in `e1rm.js` still refuses them, and `contributionsFor()` in
+  `muscle-evidence.js` refuses them for ranking too — so a pull-up rates nothing at all.
 - ~~**The Muscles figure's look is not signed off.**~~ **Closed 2026-08-16.** All four gaps — heavy
   keylines, dense striations, unpainted head/hands/feet/knees, heroic proportions — came in with
   Tim's illustration and are satisfied by construction rather than by drawing code: the ink layer
@@ -558,7 +578,7 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   for a week and the map recorded a single number, because he had done hammer curls rather than
   barbell curls, dumbbell rows rather than barbell rows, seated calf raises rather than standing.
   Every exercise that trains a muscle now rates it, converted to that muscle's standard by a ratio in
-  `js/muscle-evidence.js`. **11 of 270 exercises could move the map; ~190 can now.**
+  `js/muscle-evidence.js`. **11 exercises could move the map; 164 of the 209 weighted ones can now.**
 - **The conversion ratios are estimates, and some are shaky.** This is the price of the change above
   and it is not hidden: a confidence is computed per muscle and the colour desaturates with it.
   Dumbbell swaps of barbell lifts are solid; **machines are the weak case**, because gearing varies
@@ -622,26 +642,36 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
 
 ## 10. Next steps
 
-1. **`docs/strength-estimate-plan.md`, Phase 0** — the pure-maths estimator plus its simulator.
-   Nothing user-visible, and it is where all the risk in that plan lives: the simulator says whether
-   the rest is worth building before any of it ships. **Blocked on nothing.** Phase 2 onwards is
-   blocked on Tim ratifying D18 (below).
-2. **Tim opens the app on his phone.** Still the biggest remaining risk. The layout has been seen at
-   phone widths in Chrome, but a screenshot says nothing about touch — tap targets on the body map,
-   press-and-hold on the steppers, scroll feel — nor about iOS Safari or the installed PWA.
-3. **The graph still defaults to benchmarks when an exercise has both sources.** That is the opposite
-   of what Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and is the
-   one part of that request still unmet. Fixing it properly is Phase 3 of the estimate plan; fixing
-   it cheaply is one line in `pickSource()` in `views-data.js`.
-4. **Wire body weight into rep normalisation** for bodyweight/assisted exercises.
-5. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+1. **The simulator** — `docs/strength-estimate-plan.md` §11, Phase 0. **Blocked on nothing, and now
+   the highest-value thing left.** `js/muscle-evidence.js` shipped a real confidence model whose
+   constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
+   closed by guessing at numbers. A simulator turns both into measurements.
+2. **Tim opens the app on a real phone.** Still the biggest remaining risk. The layout has been seen
+   at phone widths in Chrome, but a screenshot says nothing about touch — tap targets on the body
+   map, press-and-hold on the steppers, scroll feel — nor about iOS Safari or the installed PWA.
+3. **The graph still defaults to benchmarks when an exercise has both sources.** The opposite of what
+   Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
+   part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line
+   in `pickSource()` in `views-data.js`.
+4. **Finish the Nippard series** — three of its six workouts are in. Needs someone to watch the other
+   three videos, or a published write-up of them. §9 has the rules that apply to creator systems.
+5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
+   would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
+6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
 1. **Ratify D18?** `docs/strength-estimate-plan.md` §7 proposes narrowing D14 so that it governs raw
    per-set plotting only, leaving the strength estimator free to draw on all evidence weighted by
-   confidence. D14 is a locked decision, so this needs Tim's say-so before Phase 2 of that plan.
-   The fallback if he says no: ship the estimator as a separate, clearly labelled chart mode.
+   confidence. D14 is locked, so this needs Tim's say-so before Phase 2 of that plan. The fallback if
+   he says no: ship the estimator as a separate, clearly labelled chart mode.
+   **Precedent worth citing when asking:** D15 was narrowed the same way on 2026-08-17 (see D21) —
+   the objection turned out to be about a specific model rather than about the idea, and re-examining
+   it produced something better than either the old rule or a plain override.
+2. **Does Tim want the "% optimal" rating for systems?** `docs/vision.md` §1.3 asks for one. Now that
+   ready-made systems exist it is buildable, and it would be the most scientifically load-bearing
+   number the app has ever shown. It needs grounding in `docs/research.md` §6 first — which is itself
+   marked 🟡, "primary sources not yet pulled into this log".
 
 One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user

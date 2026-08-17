@@ -2097,3 +2097,47 @@ someone and impersonating them, and it should not depend on whoever adds the nex
 **869 data-layer + 141 render assertions, green.** Driven in a browser: Explore → Ultimate Push Pull
 Legs → 20 exercises across Push/Pull/Legs → added → lands in the new system with 8/6/6 exercises,
 notes intact. Also fixed "1 sets" in the preset list.
+
+---
+
+## 2026-08-17 — end of session, prepared for a chat reset
+
+Swept `progress.md` for staleness and contradiction rather than appending to it. It had taken a lot
+of scripted edits in one day and several had gone wrong.
+
+**What was actually wrong:**
+
+- **The decisions table was out of numeric order** — D20, D22, D21, D19, then D16 — because each new
+  decision had been inserted above a fixed anchor. Sorted.
+- **A blanket "265 → 270" rewrite had corrupted three *historical* statements.** "11 of 265 exercises
+  could move the map" became "11 of 270", which silently rewrote the past; the same happened in D19
+  and in D11's note about classical formulas. All three now avoid the number entirely, and the live
+  figure is stated properly: **164 of the 209 weighted exercises rate a muscle**, measured rather
+  than guessed at.
+- **"the 14 bodyweight/assisted exercises" was wrong** — there are 54. Also added the consequence
+  that had never been written down: `contributionsFor()` refuses them too, so **a pull-up rates
+  nothing at all**, which is a bigger gap than "body weight is not wired into normalisation" sounds.
+- **The status paragraph had a day of work missing** — no mention of systems, Explore, the comparison
+  setting or the chart fallback.
+- **§10 Next steps was pre-session.** It still listed the graph-source default (still true, still
+  unmet) but framed Phase 0 as the thing "blocked on nothing" without saying why it now matters more:
+  a confidence model shipped with reasoned-not-fitted constants, and §9 has two accuracy gaps that
+  cannot honestly be closed by guessing.
+- **The file-upkeep table lied twice.** `docs/vision.md` said "nothing in it is being built" — two of
+  its four ideas now are. `docs/strength-estimate-plan.md` said "Plan, not built" — its §10 was built
+  today. Both corrected, and `js/preset-systems.js` added, because its header records what may and
+  may not be shipped from someone else's programme.
+
+**Added to §10 open questions:** whether Tim wants the "% optimal" system rating from
+`docs/vision.md` §1.3. It is buildable now that ready-made systems exist, and it would be the most
+scientifically load-bearing number the app has ever shown — so it needs `docs/research.md` §6
+grounded first, which is still marked 🟡.
+
+**State at close:** **869 data-layer + 141 render assertions green**, everything pushed and live,
+Firestore rules deployed. Today added: the many-exercise muscle rating with confidence, the
+comparison-group setting, the current-bests fallback on both chart modes, workout systems, and
+ready-made systems including one transcribed from Jeff Nippard's free 2023 series.
+
+The next thing worth doing is the **simulator** — it is what turns the two remaining accuracy gaps
+from documented into measured. The biggest risk remains unchanged and is not a code problem: **nobody
+has opened this app on a real phone.**
