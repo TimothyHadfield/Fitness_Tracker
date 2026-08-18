@@ -103,8 +103,10 @@ export const PRESET_SYSTEMS = [
           { name: 'Arnold Press', sets: 3, notes: 'Standing. 8–10 reps.' },
           { name: 'Cable Press Around', sets: 2, notes: '12–15 reps. Supersetted with a 30-second pec stretch.' },
           { name: 'Cross-Body Cable Y-Raise', sets: 3, notes: '12–15 reps.' },
-          { name: 'Triceps Pushdown', sets: 3, notes: 'Squeeze-only partials, 8 reps. Supersetted with the overhead extension.' },
-          { name: 'Overhead Cable Extension', sets: 3, notes: 'Stretch-only partials, 8 reps.' },
+          // The write-up says these two are supersetted, and now the app can
+          // say so too rather than listing them as separate exercises.
+          { name: 'Triceps Pushdown', sets: 3, group: 0, notes: 'Squeeze-only partials, 8 reps.' },
+          { name: 'Overhead Cable Extension', sets: 3, group: 0, notes: 'Stretch-only partials, 8 reps. Straight into this from the pushdown.' },
           { name: 'Cross-Body Cable Triceps Extension', sets: 2, notes: '10–12 reps.' },
         ] },
       { name: 'Pull', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
@@ -209,8 +211,8 @@ export const PRESET_SYSTEMS = [
         exercises: [
           { name: 'Standing Calf Raise', sets: 3, notes: 'Opens the session.' },
           { name: 'Barbell Bench Press', sets: 3, notes: '5–15 reps. He uses a cambered bar for the extra stretch at the bottom.' },
-          { name: 'Overhead Cable Extension', sets: 3, notes: 'Supersetted with the push-ups below — no rest between the two.' },
-          { name: 'Push-Up', sets: 3, notes: 'From a deficit, so the chest drops below the hands. The second half of the superset.' },
+          { name: 'Overhead Cable Extension', sets: 3, group: 0, notes: 'Straight into the push-ups — no rest between the two.' },
+          { name: 'Push-Up', sets: 3, group: 0, notes: 'From a deficit, so the chest drops below the hands.' },
           { name: 'Incline Dumbbell Curl', sets: 4, notes: '12 reps each, as myo-rep match sets.' },
           { name: 'Lateral Raise', sets: 1, notes: 'One giant set, light, 50–75 total reps.' },
         ] },

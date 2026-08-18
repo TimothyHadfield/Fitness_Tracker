@@ -2,6 +2,10 @@
 
 import { store, DEFAULT_SETS, todayISO } from './store.js';
 import { suggestNext, describeSuggestion } from './next-workout.js';
+import {
+  DROP, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
+  setTypeLabel, plannedDrops, miniSetCount,
+} from './set-types.js';
 import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
 import {
   el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
@@ -472,47 +476,125 @@ export async function WorkoutBuilderView(param) {
       return;
     }
 
-    draft.exercises.forEach((item, i) => {
-      const ex = exMap.get(item.exerciseId);
-      const name = ex ? ex.name : 'Unknown exercise';
+    // Blocks, so a superset can be bracketed as one thing. The bracket is a
+    // hairline down the left and a label — never a bordered card (Rule 2).
+    //
+    // ⚠️ blocksOf() returns COPIES (normalizeGroups maps over the list), so the
+    // `item` inside a block is not the object in `draft.exercises`. Every
+    // handler below has to reach back through the index or it writes into a
+    // throwaway and the control silently does nothing — which is exactly what
+    // the set-type chip, the sets stepper and the notes box all did until a
+    // browser click showed it. Blocks are for LAYOUT; the draft is the truth.
+    const blocks = blocksOf(draft.exercises);
 
-      listWrap.append(el('div', { class: 'builder-item' },
-        el('div', { class: 'builder-main' },
-          el('div', { class: 'row-title', text: name }),
-          el('div', { class: 'row-sub', text: ex ? `${ex.muscle} · ${ex.equipment}` : 'Missing from library' }),
-        ),
-        el('div', { class: 'move-btns' },
-          el('button', { type: 'button', 'aria-label': 'Move up', disabled: i === 0, onClick: () => move(i, -1) }, icon('up')),
-          el('button', { type: 'button', 'aria-label': 'Move down', disabled: i === draft.exercises.length - 1, onClick: () => move(i, 1) }, icon('down')),
-        ),
-        iconBtn('trash', `Remove ${name}`, () => { draft.exercises.splice(i, 1); renderList(); }),
+    for (const block of blocks) {
+      const grouped = block.group != null;
+      const wrap = el('div', { class: grouped ? 'builder-group' : 'builder-plain' });
+      // Link controls that belong OUTSIDE this block's bracket — see below.
+      const trailing = [];
 
-        el('div', { class: 'builder-controls' },
-          el('span', { class: 'builder-control-label', text: 'Sets' }),
-          miniStepper({
-            value: item.sets, min: 1, max: 20,
-            label: 'planned sets',
-            onChange: (v) => { item.sets = v; countLabel.textContent = `Exercises · ${plural(totalSets(draft), 'set')} total`; },
+      if (grouped) {
+        wrap.append(el('div', { class: 'builder-group-head' },
+          el('span', { class: 'builder-group-label', text: groupLabel(block.items.length) }),
+          el('span', { class: 'builder-group-hint', text: 'done back to back · rest after the last one' }),
+        ));
+      }
+
+      block.items.forEach(({ index: i }) => {
+        const item = draft.exercises[i];   // the REAL one — see the note above
+        const ex = exMap.get(item.exerciseId);
+        const name = ex ? ex.name : 'Unknown exercise';
+        const isDrop = item.setType === DROP;
+
+        wrap.append(el('div', { class: 'builder-item' },
+          el('div', { class: 'builder-main' },
+            el('div', { class: 'row-title', text: name }),
+            el('div', { class: 'row-sub', text: ex ? `${ex.muscle} · ${ex.equipment}` : 'Missing from library' }),
+          ),
+          el('div', { class: 'move-btns' },
+            el('button', { type: 'button', 'aria-label': 'Move up', disabled: i === 0, onClick: () => move(i, -1) }, icon('up')),
+            el('button', { type: 'button', 'aria-label': 'Move down', disabled: i === draft.exercises.length - 1, onClick: () => move(i, 1) }, icon('down')),
+          ),
+          iconBtn('trash', `Remove ${name}`, () => {
+            draft.exercises.splice(i, 1);
+            draft.exercises = normalizeGroups(draft.exercises);
+            renderList();
           }),
-          ex && ex.loadType ? loadBadge(ex.loadType) : null,
-        ),
 
-        el('textarea', {
-          class: 'builder-note',
-          rows: '1',
-          maxlength: '200',
-          placeholder: 'Notes — cues, seat height, rest, anything',
-          value: item.notes || '',
-          onInput: (e) => { item.notes = e.target.value; },
-        }),
-      ));
-    });
+          el('div', { class: 'builder-controls' },
+            el('span', { class: 'builder-control-label', text: 'Sets' }),
+            miniStepper({
+              value: item.sets, min: 1, max: 20,
+              label: 'planned sets',
+              onChange: (v) => { item.sets = v; countLabel.textContent = `Exercises · ${plural(totalSets(draft), 'set')} total`; },
+            }),
+            ex && ex.loadType ? loadBadge(ex.loadType) : null,
+
+            // ONE TAP to a drop set, and one more for each extra drop. A sheet
+            // would be more explicit and would also be three taps for the
+            // commonest thing somebody wants here.
+            el('button', {
+              type: 'button',
+              class: 'chip set-type' + (isDrop ? ' is-on' : ''),
+              'aria-pressed': String(isDrop),
+              title: 'Straight sets → drop set → more drops',
+              text: setTypeLabel(item),
+              onClick: () => {
+                const n = isDrop ? plannedDrops(item) : 0;
+                if (n >= 3) { delete item.setType; delete item.drops; }
+                else { item.setType = DROP; item.drops = n + 1; }
+                renderList();
+              },
+            }),
+          ),
+
+          el('textarea', {
+            class: 'builder-note',
+            rows: '1',
+            maxlength: '200',
+            placeholder: 'Notes — cues, seat height, rest, anything',
+            value: item.notes || '',
+            onInput: (e) => { item.notes = e.target.value; },
+          }),
+        ));
+
+        // The link control belongs in the GAP, because that is what a superset
+        // is — an instruction about the space between two exercises, not a
+        // property of either one. Rendering it on a row would force the reader
+        // to work out which of its neighbours it meant.
+        if (i < draft.exercises.length - 1) {
+          const linked = isLinked(draft.exercises, i);
+          const gap = el('div', { class: 'link-gap' + (linked ? ' is-linked' : '') },
+            el('button', {
+              type: 'button',
+              class: 'link-btn',
+              'aria-pressed': String(linked),
+              onClick: () => {
+                draft.exercises = toggleLink(draft.exercises, i);
+                renderList();
+              },
+            }, icon(linked ? 'link' : 'link-off', 15),
+              linked ? 'No rest — tap to separate' : 'Superset with next'),
+          );
+          // The gap after a block's LAST member is the boundary out of the
+          // block, so it goes outside the bracket. Inside, the accent rule ran
+          // past it and "Superset with next" read as part of the superset it
+          // was offering to join, which is the opposite of what it does.
+          if (linked) wrap.append(gap); else trailing.push(gap);
+        }
+      });
+
+      listWrap.append(wrap, ...trailing);
+    }
   }
 
   function move(i, dir) {
     const j = i + dir;
     if (j < 0 || j >= draft.exercises.length) return;
     [draft.exercises[i], draft.exercises[j]] = [draft.exercises[j], draft.exercises[i]];
+    // Moving an exercise out of a superset has to dissolve it if that leaves
+    // one member behind — a one-exercise superset is not a thing.
+    draft.exercises = normalizeGroups(draft.exercises);
     renderList();
   }
 

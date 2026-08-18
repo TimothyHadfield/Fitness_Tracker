@@ -2111,5 +2111,167 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ================= set types: supersets and drop sets ================= */
+{
+  const st = await import('../js/set-types.js');
+  const { store: store2 } = await import('../js/store.js');
+
+  const ex = (id, sets = 3, extra = {}) => ({ exerciseId: id, sets, notes: '', ...extra });
+
+  /* ---- naming ---- */
+  ok(st.groupLabel(2) === 'Superset' && st.groupLabel(3) === 'Tri-set' && st.groupLabel(5) === 'Giant set',
+     'a block is named for how many exercises are in it');
+
+  /* ---- linking ---- */
+  {
+    let list = [ex('a'), ex('b'), ex('c')];
+    list = st.toggleLink(list, 0);
+    ok(st.isLinked(list, 0) && !st.isLinked(list, 1), 'linking joins exactly one boundary');
+    ok(st.blocksOf(list).length === 2, 'which makes two blocks out of three exercises');
+
+    // Joining onto an existing block GROWS it — a superset becomes a tri-set
+    // rather than splitting into two blocks that happen to be adjacent.
+    list = st.toggleLink(list, 1);
+    const blocks = st.blocksOf(list);
+    ok(blocks.length === 1 && blocks[0].items.length === 3, 'joining again grows it into a tri-set');
+    ok(st.groupLabel(blocks[0].items.length) === 'Tri-set', 'and it calls itself a tri-set');
+
+    // Splitting a tri-set in the middle leaves a pair and a single; the single
+    // must stop being a group at all.
+    const split = st.toggleLink(list, 0);
+    ok(st.blocksOf(split).length === 2, 'splitting a tri-set leaves two blocks');
+    ok(split[0].group == null, 'and the exercise left on its own is no longer in a group');
+    ok(split[1].group != null && split[1].group === split[2].group, 'while the other two stay joined');
+  }
+
+  /* ---- a group of one is never a group ---- */
+  {
+    // Reached by deleting the other member, which is an ordinary thing to do.
+    const orphan = st.normalizeGroups([ex('a', 3, { group: 7 }), ex('b')]);
+    ok(orphan[0].group === undefined, 'a group with one member left dissolves');
+    // And the same id appearing in two separate runs is two blocks, not one.
+    const scattered = st.normalizeGroups([
+      ex('a', 3, { group: 1 }), ex('b', 3, { group: 1 }),
+      ex('c'), ex('d', 3, { group: 1 }), ex('e', 3, { group: 1 }),
+    ]);
+    ok(scattered[0].group !== scattered[3].group,
+       'the same id in two non-adjacent runs is renumbered into two blocks');
+  }
+
+  /* ---- THE WALK. This is what makes a superset a superset ---- */
+  {
+    let list = [ex('a', 3), ex('b', 3), ex('c', 2)];
+    list = st.toggleLink(list, 0);           // a+b supersetted, c on its own
+    const steps = st.stepsFor(list);
+    const shape = steps.map((s) => `${s.entryIndex}r${s.round == null ? '-' : s.round}${s.restsAfter ? '*' : ''}`);
+    ok(shape.join(' ') === '0r0 1r0* 0r1 1r1* 0r2 1r2* 2r-*',
+       `a superset alternates A,B,A,B — not all of A then all of B (${shape.join(' ')})`);
+
+    // The rest rule IS the feature. Rest belongs after the last exercise of a
+    // round; a timer that fired between them would be telling you to do the
+    // opposite of what a superset is.
+    ok(steps.filter((s) => s.restsAfter).length === 4,
+       'rest comes once per round, plus once for the solo exercise');
+    ok(steps[0].restsAfter === false, 'and never in the middle of a round');
+    ok(steps[6].round === null && steps[6].restsAfter === true,
+       'a solo exercise is still one step that rests after it');
+  }
+
+  /* ---- a short member drops out of the later rounds ---- */
+  {
+    let list = [ex('a', 3), ex('b', 1)];
+    list = st.toggleLink(list, 0);
+    const steps = st.stepsFor(list);
+    ok(steps.length === 4, 'a member planned for fewer sets does not hold up the block');
+    ok(steps[0].restsAfter === false && steps[1].restsAfter === true,
+       'round one still has two exercises in it');
+    ok(steps[2].restsAfter === true,
+       'and from round two the remaining exercise rests after each set');
+  }
+
+  /* ---- DROP SETS: one drop set is ONE hard set ---- */
+  {
+    // progress.md §6 locks this. It is true here BY CONSTRUCTION — drops live
+    // inside the set object — so every existing count of `sets.length` keeps
+    // counting one without knowing drop sets exist. Flattening them into `sets`
+    // would have inflated every volume figure in the app.
+    const sets = [
+      { weight: 185, reps: 8, drops: [{ weight: 135, reps: 6 }, { weight: 95, reps: 8 }] },
+      { weight: 185, reps: 7 },
+    ];
+    ok(st.hardSetCount(sets) === 2, 'two sets with drops on one of them is TWO hard sets, not four');
+    ok(st.miniSetCount(sets) === 4, 'but four mini-sets were actually performed');
+    ok(st.dropsOf(sets[1]).length === 0 && Array.isArray(st.dropsOf(sets[1])),
+       'a set with no drops reports an empty array, never undefined');
+    ok(st.setTypeLabel({ setType: st.DROP, drops: 2 }) === 'Drop set · 2 drops'
+       && st.setTypeLabel({}) === 'Straight sets', 'a set type says what it is in words');
+    ok(st.plannedDrops({ setType: st.DROP }) === 1 && st.plannedDrops({}) === 0,
+       'a drop set with no count planned means one drop');
+  }
+
+  /* ---- it SURVIVES a round trip through the store ---- */
+  // normalizeWorkout() rebuilds each exercise field by field, so a new field is
+  // dropped on every read unless it is named there. That is the exact way this
+  // feature could have looked finished and silently done nothing.
+  {
+    await store2.clearAll();
+    const sys = await store2.saveSystem({ name: 'Set types' });
+    const exId = BUILT_IN_EXERCISES[0].id;
+    const exId2 = BUILT_IN_EXERCISES[1].id;
+    await store2.saveWorkout({
+      name: 'Grouped', systemId: sys.id,
+      exercises: [
+        { exerciseId: exId, sets: 3, notes: '', group: 0 },
+        { exerciseId: exId2, sets: 3, notes: '', group: 0 },
+        { exerciseId: BUILT_IN_EXERCISES[2].id, sets: 3, notes: '', setType: 'drop', drops: 2 },
+      ],
+    });
+    const back = (await store2.getWorkouts(sys.id))[0];
+    ok(back.exercises[0].group != null && back.exercises[0].group === back.exercises[1].group,
+       'a superset survives being written and read back');
+    ok(back.exercises[2].setType === 'drop' && back.exercises[2].drops === 2,
+       'and so does a drop set with its drop count');
+    ok(back.exercises[2].group === undefined, 'a solo exercise carries no group');
+
+    // A recorded session keeps its drops, and they do not become extra sets.
+    await store2.saveSession({
+      workoutId: back.id, workoutName: 'Grouped', date: '2026-08-17',
+      entries: [{
+        exerciseId: exId, exerciseName: 'x', group: 0,
+        sets: [{ weight: 185, reps: 8, drops: [{ weight: 135, reps: 6 }] }],
+      }],
+    });
+    const saved = (await store2.getSessions())[0];
+    ok(saved.entries[0].sets.length === 1, 'a recorded drop set is still one set');
+    ok(st.dropsOf(saved.entries[0].sets[0]).length === 1, 'with its drop kept alongside it');
+    ok(saved.entries[0].group === 0, 'and the session remembers it was part of a superset');
+    await store2.clearAll();
+  }
+
+  /* ---- the presets that document a superset now carry one ---- */
+  {
+    const { PRESET_SYSTEMS } = await import('../js/preset-systems.js');
+    let found = 0;
+    for (const p of PRESET_SYSTEMS) {
+      for (const w of p.workouts) {
+        for (const b of st.blocksOf(w.exercises)) if (b.group != null) found++;
+      }
+    }
+    ok(found >= 2, `ready-made systems can express a superset and at least two do (${found})`);
+
+    // And it survives being copied into an account — the thing that would
+    // otherwise flatten somebody else's programme on the way in.
+    await store2.clearAll();
+    const { presetById } = await import('../js/preset-systems.js');
+    const { system } = await store2.addPresetSystem(presetById('preset-nippard-ppl-2023'));
+    const push = (await store2.getWorkouts(system.id)).find((w) => w.name === 'Push');
+    const grouped = st.blocksOf(push.exercises).filter((b) => b.group != null);
+    ok(grouped.length === 1 && grouped[0].items.length === 2,
+       'copying Nippard\'s Push brings its superset with it');
+    await store2.clearAll();
+  }
+}
+
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

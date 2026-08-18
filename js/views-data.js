@@ -13,6 +13,7 @@ import {
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
+import { dropsOf, groupLabel } from './set-types.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -164,21 +165,39 @@ export async function DayView(date) {
           onConfirm: async () => { await store.deleteSession(s.id); toast('Record deleted'); refresh(); },
         })),
       ),
-      ...s.entries.map((e) => {
+      ...s.entries.map((e, ei) => {
         const ex = exMap.get(e.exerciseId);
         const fields = ex ? ex.fields : ['weight', 'reps'];
         const loadType = ex ? ex.loadType : null;
-        return el('div', { class: 'detail-ex' },
+        // A superset was performed as one unit, so the record has to say so —
+        // otherwise the day reads as two ordinary exercises that happened to be
+        // next to each other, which is not what was done.
+        const prev = s.entries[ei - 1];
+        const opensGroup = e.group != null && (!prev || prev.group !== e.group);
+        return el('div', { class: 'detail-ex' + (e.group == null ? '' : ' in-group') },
+          opensGroup
+            ? el('div', { class: 'detail-group-label', text:
+                groupLabel(s.entries.filter((o) => o.group === e.group).length) })
+            : null,
           el('div', { class: 'detail-ex-head' },
             el('span', { class: 'detail-ex-name', text: e.exerciseName }),
             loadType ? loadBadge(loadType) : null,
           ),
           el('div', { class: 'detail-sets' },
-            ...e.sets.map((set, i) =>
+            // A set and its drops are ONE run, so a wrap can never leave a drop
+            // sitting next to the wrong set number.
+            ...e.sets.map((set, i) => el('div', { class: 'detail-set-run' },
               el('div', { class: 'detail-set' },
                 el('b', { text: `Set ${i + 1}` }),
                 el('span', { text: fmtSet(set, fields, loadType) }),
+              ),
+              // Drops follow their set and are never given a set number of
+              // their own — one drop set is one hard set (progress.md §6).
+              ...dropsOf(set).map((d) => el('div', { class: 'detail-set is-drop' },
+                el('b', { text: '↳ drop' }),
+                el('span', { text: fmtSet(d, fields, loadType) }),
               )),
+            )),
           ),
         );
       }),

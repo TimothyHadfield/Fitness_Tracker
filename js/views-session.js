@@ -7,6 +7,7 @@ import {
   fmtSet, confirmSheet, fmtDateLong,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
+import { DROP, stepsFor, dropsOf, plannedDrops, groupLabel } from './set-types.js';
 
 const go = (hash) => { location.hash = hash; };
 const DRAFT_KEY = 'ftrack:v1:draftSession';
@@ -116,8 +117,15 @@ export async function SessionView(workoutId) {
         loadType: ex.loadType,
         notes: item.notes || '',
         plannedSets: item.sets,
+        // Copied from the plan at the moment the session starts, like
+        // isBenchmark above and for the same reason: editing the workout
+        // template next month must not reshape a session already recorded.
+        group: item.group == null ? null : item.group,
+        setType: item.setType === DROP ? DROP : null,
+        plannedDrops: plannedDrops(item),
         sets,
         active: 0,
+        activeDrop: null,
         hadHistory: Boolean(last && last.length),
         lastSummary: last && last.length ? fmtSet(last[0], ex.fields, ex.loadType) : null,
       });
@@ -131,84 +139,228 @@ export async function SessionView(workoutId) {
   const pane = el('div', { class: 'pane-scroll' });
   const footer = el('div', { class: 'session-footer' });
 
+  /**
+   * The walk.
+   *
+   * A solo exercise is one step, exactly as it always was. A superset is one
+   * step PER (round, member) — A set 1, B set 1, rest, A set 2, B set 2 — which
+   * is what a superset is. All of A and then all of B is not a superset, it is
+   * two exercises in a row.
+   *
+   * Derived from the ENTRIES' live set counts rather than from the workout
+   * plan, so adding or deleting a set mid-session reshapes the walk instead of
+   * leaving it pointing at rounds that no longer exist.
+   */
+  function steps() {
+    return stepsFor(state.entries.map((e) => ({ sets: e.sets.length, group: e.group })));
+  }
+
+  function currentStep() {
+    const all = steps();
+    if (!all.length) return null;
+    state.index = Math.max(0, Math.min(state.index, all.length - 1));
+    return all[state.index];
+  }
+
+  // Moving between steps re-points the steppers at the round you are on. Inside
+  // a step you can still tap any set to fix a typo from round one.
+  function goToStep(i) {
+    const all = steps();
+    state.index = Math.max(0, Math.min(i, all.length - 1));
+    const step = all[state.index];
+    if (step) {
+      const entry = state.entries[step.entryIndex];
+      if (entry) {
+        entry.active = step.round == null
+          ? Math.min(entry.active || 0, entry.sets.length - 1)
+          : Math.min(step.round, entry.sets.length - 1);
+        entry.activeDrop = null;
+      }
+    }
+    saveDraft(state);
+    renderAll();
+  }
+
   function renderProgress() {
+    const all = steps();
     setChildren(progress,
-      ...state.entries.map((_, i) =>
-        el('span', { class: i < state.index ? 'done' : i === state.index ? 'current' : '' })),
+      ...all.map((s, i) =>
+        el('span', {
+          class: [
+            i < state.index ? 'done' : i === state.index ? 'current' : '',
+            // A superset's steps are marked, so the dots read as the shape of
+            // the workout rather than as an undifferentiated row.
+            s.group == null ? '' : 'grouped',
+          ].filter(Boolean).join(' '),
+        })),
     );
   }
 
   function renderFooter() {
-    const isLast = state.index === state.entries.length - 1;
+    const all = steps();
+    const step = all[state.index];
+    const next = all[state.index + 1];
+    const isLast = state.index === all.length - 1;
+
+    // The label has to say what actually happens next, because mid-superset
+    // "Next exercise" is both true and useless — the thing you need to know is
+    // that you do not rest first.
+    let label = 'Next exercise';
+    if (next) {
+      if (step && step.group != null && next.group === step.group && next.round === step.round) {
+        label = 'Straight into ' + state.entries[next.entryIndex].exerciseName;
+      } else if (step && step.group != null && next.group === step.group) {
+        label = `Round ${next.round + 1} of ${next.rounds}`;
+      }
+    }
+
     setChildren(footer,
       el('button', {
-        class: 'nav-arrow', 'aria-label': 'Previous exercise',
+        class: 'nav-arrow', 'aria-label': 'Previous',
         disabled: state.index === 0,
-        onClick: () => { state.index--; saveDraft(state); renderAll(); },
+        onClick: () => goToStep(state.index - 1),
       }, icon('left')),
       isLast
         ? el('button', { class: 'btn good', onClick: finish }, icon('check'), 'Finish workout')
         : el('button', {
-            class: 'btn primary',
-            onClick: () => { state.index++; saveDraft(state); renderAll(); },
-          }, 'Next exercise', icon('right')),
+            class: 'btn primary' + (label === 'Next exercise' ? '' : ' is-linked'),
+            onClick: () => goToStep(state.index + 1),
+          }, label, icon('right')),
     );
   }
 
   function renderPane() {
-    const entry = state.entries[state.index];
+    const step = currentStep();
+    if (!step) return;
+    const entry = state.entries[step.entryIndex];
     const ex = exMap.get(entry.exerciseId);
-    const active = entry.sets[entry.active] || entry.sets[0];
+    const isDrop = entry.setType === DROP;
+
+    if (entry.active >= entry.sets.length) entry.active = entry.sets.length - 1;
+    const activeSet = entry.sets[entry.active] || entry.sets[0];
+    // What the steppers are pointed at: the set itself, or one of its drops.
+    const drops = dropsOf(activeSet);
+    if (entry.activeDrop != null && entry.activeDrop >= drops.length) entry.activeDrop = null;
+    const target = entry.activeDrop == null ? activeSet : drops[entry.activeDrop];
 
     const setList = el('div', { class: 'set-list' });
 
+    function select(i, dropIndex) {
+      entry.active = i;
+      entry.activeDrop = dropIndex;
+      saveDraft(state);
+      renderPane();
+    }
+
     function renderSets() {
-      setChildren(setList,
-        ...entry.sets.map((s, i) =>
-          el('div', { class: 'set-item' + (i === entry.active ? ' active' : '') },
+      const rows = [];
+      entry.sets.forEach((s, i) => {
+        const isHere = i === entry.active;
+        rows.push(el('div', { class: 'set-item' + (isHere && entry.activeDrop == null ? ' active' : '') },
+          el('button', {
+            class: 'set-num', text: String(i + 1), 'aria-label': `Edit set ${i + 1}`,
+            onClick: () => select(i, null),
+          }),
+          el('div', { class: 'set-vals', text: fmtSet(s, entry.fields, entry.loadType) }),
+          entry.sets.length > 1
+            ? el('button', {
+                class: 'set-del', 'aria-label': `Delete set ${i + 1}`,
+                onClick: () => {
+                  entry.sets.splice(i, 1);
+                  entry.active = Math.min(entry.active, entry.sets.length - 1);
+                  entry.activeDrop = null;
+                  saveDraft(state);
+                  renderAll();
+                },
+              }, icon('trash'))
+            : null,
+        ));
+
+        // Drops hang UNDER their set and are indented, because that is what they
+        // are — the same set continued at a lower weight. They are deliberately
+        // not numbered as sets: one drop set is one hard set (progress.md §6),
+        // and numbering them 1, 2, 3 would teach the opposite.
+        dropsOf(s).forEach((d, di) => {
+          rows.push(el('div', { class: 'set-item set-drop' + (isHere && entry.activeDrop === di ? ' active' : '') },
             el('button', {
-              class: 'set-num', text: String(i + 1), 'aria-label': `Edit set ${i + 1}`,
-              onClick: () => { entry.active = i; saveDraft(state); renderPane(); },
+              class: 'set-num drop-num', text: '↳', 'aria-label': `Edit drop ${di + 1} of set ${i + 1}`,
+              onClick: () => select(i, di),
             }),
-            el('div', { class: 'set-vals', text: fmtSet(s, entry.fields, entry.loadType) }),
-            entry.sets.length > 1
-              ? el('button', {
-                  class: 'set-del', 'aria-label': `Delete set ${i + 1}`,
-                  onClick: () => {
-                    entry.sets.splice(i, 1);
-                    entry.active = Math.min(entry.active, entry.sets.length - 1);
-                    saveDraft(state);
-                    renderPane();
-                  },
-                }, icon('trash'))
-              : null,
-          )),
-      );
+            el('div', { class: 'set-vals', text: fmtSet(d, entry.fields, entry.loadType) }),
+            el('button', {
+              class: 'set-del', 'aria-label': `Delete drop ${di + 1}`,
+              onClick: () => {
+                s.drops.splice(di, 1);
+                if (!s.drops.length) delete s.drops;
+                entry.activeDrop = null;
+                saveDraft(state);
+                renderPane();
+              },
+            }, icon('trash')),
+          ));
+        });
+      });
+      setChildren(setList, ...rows);
     }
     renderSets();
 
     const steppers = entry.fields.map((f) =>
       stepper({
         field: f,
-        value: active[f],
+        value: target[f],
         suffix: f === 'weight' && entry.loadType ? LOAD_LABEL[entry.loadType] : null,
         onChange: (v) => {
-          active[f] = v;
+          target[f] = v;
           saveDraft(state);
           renderSets();
           // Recording a number IS finishing a set, so that is when rest starts.
           // No extra button to remember to press mid-workout.
-          startRest();
+          //
+          // ⚠️ Two exceptions, and they are the whole point of set types.
+          // Inside a superset, rest belongs after the LAST exercise of the
+          // round — a timer that started between them would be telling you to
+          // do the opposite of what a superset is. And on a drop set, the top
+          // set is not the end of the set: you strip the weight and carry on,
+          // so rest waits for a drop.
+          const midGroup = !step.restsAfter;
+          const midDropSet = isDrop && entry.activeDrop == null;
+          if (!midGroup && !midDropSet) startRest();
         },
       }).node);
 
+    const dropCount = drops.length;
+    const wantsDrops = isDrop ? entry.plannedDrops : 0;
+
     setChildren(pane,
+      // The superset banner is the first thing on the screen, above the
+      // exercise name, because "do not rest after this one" changes what you do
+      // with your next thirty seconds and the exercise name does not.
+      step.group == null ? null : el('div', { class: 'group-banner' },
+        el('div', { class: 'group-banner-head' },
+          el('span', { class: 'group-kind', text: step.groupLabel }),
+          el('span', { class: 'group-round', text: `Round ${step.round + 1} of ${step.rounds}` }),
+        ),
+        el('div', { class: 'group-members' },
+          ...step.members.map((mi, pos) => el('button', {
+            class: 'group-member' + (mi === step.entryIndex ? ' is-current' : ''),
+            onClick: () => {
+              const all = steps();
+              const to = all.findIndex((s) => s.group === step.group && s.round === step.round && s.entryIndex === mi);
+              if (to >= 0) goToStep(to);
+            },
+          }, (pos ? '→ ' : '') + state.entries[mi].exerciseName)),
+        ),
+        el('div', { class: 'group-hint', text: step.restsAfter
+          ? 'Last one in the round — rest after this.'
+          : 'Go straight into the next one. No rest.' }),
+      ),
+
       // The per-side / total distinction is carried by the stepper's own label,
       // so it isn't repeated here.
       el('div', { class: 'session-head' },
         el('h2', { class: 'session-ex-name', text: entry.exerciseName }),
         el('div', { class: 'session-ex-meta' },
-          `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${state.index + 1} of ${state.entries.length}`,
+          `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
         ),
       ),
 
@@ -222,8 +374,32 @@ export async function SessionView(workoutId) {
         : el('div', { class: 'prefill-note' },
             el('span', { text: 'First time logging this — your numbers will be remembered.' })),
 
-      el('div', { class: 'section-label', text: `Set ${entry.active + 1} of ${entry.sets.length}` }),
+      el('div', { class: 'section-label', text: entry.activeDrop == null
+        ? `Set ${entry.active + 1} of ${entry.sets.length}`
+        : `Set ${entry.active + 1} · drop ${entry.activeDrop + 1}` }),
       el('div', { class: 'steppers' }, steppers),
+
+      // A drop set says what to do next in the one place you are looking. The
+      // button is the instruction: take the weight off and go again.
+      isDrop
+        ? el('div', { class: 'drop-row' },
+            el('button', {
+              class: 'btn block drop-add',
+              onClick: () => {
+                if (!Array.isArray(activeSet.drops)) activeSet.drops = [];
+                const from = drops.length ? drops[drops.length - 1] : activeSet;
+                activeSet.drops.push(pickFields(from, entry.fields));
+                entry.activeDrop = activeSet.drops.length - 1;
+                saveDraft(state);
+                renderPane();
+              },
+            }, icon('down', 16),
+              dropCount ? 'Drop again' : 'Strip the weight — add a drop'),
+            el('div', { class: 'field-help', text: dropCount >= wantsDrops && wantsDrops
+              ? `${dropCount} drop${dropCount === 1 ? '' : 's'} recorded — this counts as one hard set.`
+              : `Planned: ${wantsDrops} drop${wantsDrops === 1 ? '' : 's'} after each set. The whole thing counts as one hard set.` }),
+          )
+        : null,
 
       // The add button rides on the "Sets" heading rather than sitting under the
       // list. Full-width and below, it was as loud as the sets themselves and it
@@ -231,14 +407,21 @@ export async function SessionView(workoutId) {
       el('div', { class: 'sets-head' },
         el('div', { class: 'section-label', text: 'Sets' }),
         el('button', {
-          class: 'add-set', 'aria-label': 'Add another set',
+          class: 'add-set', 'aria-label': step.group == null ? 'Add another set' : 'Add another round',
           onClick: () => {
-            entry.sets.push({ ...entry.sets[entry.sets.length - 1] });
+            // Inside a superset a set is a ROUND: adding one to a single member
+            // would leave the block ragged and the walk would skip it.
+            const targets = step.group == null ? [step.entryIndex] : step.members;
+            for (const mi of targets) {
+              const e = state.entries[mi];
+              e.sets.push(pickFields(e.sets[e.sets.length - 1] || {}, e.fields));
+            }
             entry.active = entry.sets.length - 1;
+            entry.activeDrop = null;
             saveDraft(state);
-            renderPane();
+            renderAll();
           },
-        }, icon('plus', 15), 'Add set'),
+        }, icon('plus', 15), step.group == null ? 'Add set' : 'Add round'),
       ),
       setList,
     );
@@ -253,11 +436,31 @@ export async function SessionView(workoutId) {
   }
 
   async function finish() {
+    // ⚠️ Filter on the exercise's OWN FIELDS, not on Object.values(set). A set
+    // now carries a `drops` array, and `Number([{…}])` is NaN — so the old
+    // blanket check happened to work, but only by accident, and it would have
+    // thrown away a set whose numbers were all in its drops.
+    const hasNumbers = (s, fields) => fields.some((f) => Number(s[f]) > 0);
+
     const entries = state.entries
       .map((e) => ({
         exerciseId: e.exerciseId,
         exerciseName: e.exerciseName,
-        sets: e.sets.filter((s) => Object.values(s).some((v) => Number(v) > 0)),
+        // Carried so the calendar and the edit screen can show a recorded
+        // session the way it was actually performed, not just as a flat list.
+        ...(e.group == null ? {} : { group: e.group }),
+        ...(e.setType === DROP ? { setType: DROP } : {}),
+        sets: e.sets
+          .filter((s) => hasNumbers(s, e.fields) || dropsOf(s).some((d) => hasNumbers(d, e.fields)))
+          .map((s) => {
+            const kept = dropsOf(s).filter((d) => hasNumbers(d, e.fields));
+            const out = { ...s };
+            // An empty `drops: []` is noise in storage and reads as "this was a
+            // drop set with no drops", which is a different claim from "this
+            // was a straight set".
+            if (kept.length) out.drops = kept; else delete out.drops;
+            return out;
+          }),
       }))
       .filter((e) => e.sets.length);
 

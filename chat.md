@@ -2333,3 +2333,91 @@ A test that is green by time of day is worse than no test, and this one had been
 1180 px through all four states — empty account, programme added with nothing done, one workout two
 days ago, and the end of the rotation wrapping back to the start. Button and caption moved together
 every time.
+
+---
+
+## 2026-08-17 (later still) — Set types: supersets, tri-sets and drop sets
+
+**Tim:** *"alright lets start with the set types. Make sure that the display is how we want it and
+when the user is creating the workout, it's easy to make the set type different, and then when the
+user is actually doing that workout, it's easy to know what to do based on what is on the screen and
+it's similarly easy to record."*
+
+`docs/vision.md` §1.5, built. **D23** records the model.
+
+### The thing to understand first: it is two shapes, not three of a kind
+
+"Supersets, drop sets and tri-sets" sounds like three of one thing and is two of two.
+
+- **GROUPING.** A superset (2), tri-set (3) or giant set (4+) is a property of the SPACE BETWEEN
+  exercises. Modelled as `group` on adjacent workout exercises.
+- **NESTING.** A drop set is a property of a SINGLE SET — take it, strip the weight, keep going.
+  Modelled as `drops[]` **inside** the recorded set.
+
+The nesting is the load-bearing decision. `progress.md` §6 already locked "drop sets and myo-reps
+count as ONE hard set — else volume totals inflate". Putting the drops inside the set makes that true
+**by construction**: every existing path in the app counts `sets.length`, so it keeps counting one,
+and nothing else has to learn that drop sets exist. Flattening drops into `sets` would have silently
+inflated every set count, every weekly volume figure, and D3 when it lands.
+
+### Building a workout
+
+- A **chip on each exercise** cycles Straight sets → Drop set → 2 drops → 3 drops → back. One tap for
+  the thing people actually want; a sheet would have been more explicit and three taps.
+- The **link control sits in the gap between two exercises** — "Superset with next" / "No rest — tap
+  to separate" — because that is what a superset is a statement about. On a row it would force the
+  reader to work out which neighbour it meant. A joined block gets an accent hairline bracket and is
+  named for its size. The gap *after* a block's last member renders outside the bracket, because it
+  is the boundary out of the block.
+- Deleting or moving an exercise out of a superset dissolves it if that leaves one member — a
+  one-exercise superset is not a thing, and `normalizeGroups()` enforces it on every read and write.
+
+### Doing the workout
+
+- The runner walks a superset **round by round**: A, B, rest, A, B. All of A and then all of B is not
+  a superset, it is two exercises in a row — that is the mistake this feature exists to stop.
+- The **banner sits above the exercise name**, because "do not rest after this one" changes what you
+  do with the next thirty seconds and the exercise name does not. It says the kind, the round, the
+  members with the current one marked, and either "Go straight into the next one. No rest." or "Last
+  one in the round — rest after this."
+- The forward button reads **"Straight into Overhead Cable Extension"** mid-round and **"Round 2 of
+  3"** at the end of one, instead of "Next exercise", which is true and useless.
+- **The rest timer does not start mid-round**, and does not start after the top set of a drop set —
+  it waits for a drop. Those are the two places the old "log a number → start resting" rule would
+  have instructed the user to do the opposite of what the set type means.
+- **"Add set" becomes "Add round"** inside a superset and adds a set to every member, because a set
+  inside a block is a round.
+- A drop set offers **"Strip the weight — add a drop"** — the instruction, not the jargon — and says
+  "this counts as one hard set" on screen. Drops render indented under their set with a ↳ and are
+  deliberately *not numbered*, because numbering them 2, 3, 4 would teach the opposite of the rule.
+
+### Two bugs found by looking, not by reasoning
+
+1. **The builder was writing into a copy.** It renders from `blocksOf(draft.exercises)`, and
+   `blocksOf` maps over the list — so the `item` in a block is a copy. The set-type chip, the sets
+   stepper and the notes box all closed over it and did nothing at all. jsdom missed it because the
+   first tests read the screen, which re-rendered from the unchanged draft and looked correct. **A
+   real mouse click in a browser is what found it.** The builder tests now assert by reading the
+   workout back out of the store, and I reintroduced the bug to confirm they fail — a test that
+   passes either way is worse than no test, which this project learned twice today.
+2. **Drops could wrap onto the line above their set** in the calendar day view, because
+   `.detail-sets` is a wrapping flex. Reading order was right and it still looked wrong. Each set and
+   its drops is now one run that wraps as a unit.
+
+Also: `normalizeWorkout()` rebuilds each exercise field by field, so `group`, `setType` and `drops`
+had to be named there or they would have survived exactly until the workout was next read. Same for
+the edit-record form, which rebuilds entries on save — it was silently going to flatten a superset
+the first time somebody fixed a typo in one. Both have tests now.
+
+**Presets:** Nippard's Push and Israetel's Push 1 both document supersets and now ship with them
+intact rather than flattened.
+
+**Still open:** **myo-reps** — the same nesting shape as a drop set, differing only in whether the
+weight comes down, so a label and a rest hint rather than a model change. It matters because *Dr.
+Mike's Floating Split* is myo-reps almost end to end and is still shipping with its structure
+removed. **Chris Bumstead is now buildable and has not been built.**
+
+**State at close:** **1012 data-layer + 194 render assertions green.** Driven over CDP at 360, 390
+and 1180 px through the whole path — build the superset, tap a drop set, save, run it, watch the rest
+timer stay put mid-round and start after it, add a drop, then read it back on the calendar and
+through the edit form and save unchanged with everything preserved.

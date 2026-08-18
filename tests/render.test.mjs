@@ -768,6 +768,162 @@ ok(!data.querySelector('.rep-target'),
 }
 
 
+/* ================= set types in the BUILDER ================= */
+// These controls all write into `draft.exercises`, and the list is rendered
+// from blocksOf(), which returns COPIES. Every one of them silently did
+// nothing until a real click in a browser showed it — so each is asserted by
+// reading the saved workout back, not by reading the screen.
+{
+  const { WorkoutBuilderView } = await import(BASE + 'views-workouts.js');
+  const sys = await store.saveSystem({ name: 'Builder tests' });
+  const w = await store.saveWorkout({
+    name: 'Arms', systemId: sys.id,
+    exercises: [
+      { exerciseId: byName('Triceps Pushdown').id, sets: 3, notes: '' },
+      { exerciseId: byName('Overhead Cable Extension').id, sets: 3, notes: '' },
+      { exerciseId: byName('Leg Extension').id, sets: 3, notes: '' },
+    ],
+  });
+
+  const b = await mount(WorkoutBuilderView(w.id));
+  const find = (re) => [...b.querySelectorAll('button')].find((n) => re.test(n.textContent));
+
+  ok(!/Superset/.test(b.querySelector('.section-label').textContent), 'nothing is grouped to begin with');
+  find(/Superset with next/).click();
+  await settle();
+  ok(/SUPERSET|Superset/.test(b.textContent), 'linking brackets the two exercises');
+  ok(/No rest — tap to separate/.test(b.textContent), 'and the control now offers to undo it');
+
+  // One tap to a drop set, another for a second drop.
+  find(/Straight sets/).click();
+  await settle();
+  ok(/Drop set/.test(b.textContent), 'one tap on the chip makes it a drop set');
+  find(/^Drop set$/).click();
+  await settle();
+  ok(/Drop set · 2 drops/.test(b.textContent), 'another tap adds a second drop');
+
+  find(/Save changes/).click();
+  await settle(); await settle();
+
+  const saved = await store.getWorkout(w.id);
+  ok(saved.exercises[0].group != null && saved.exercises[0].group === saved.exercises[1].group,
+     'the superset is actually SAVED, not just drawn');
+  ok(saved.exercises[2].group === undefined, 'and the third exercise is left out of it');
+  ok(saved.exercises[0].setType === 'drop' && saved.exercises[0].drops === 2,
+     `the drop set is saved with its count (${JSON.stringify(saved.exercises[0])})`);
+}
+
+
+/* ================= set types in the session runner ================= */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const type = (node, value) => {
+    node.value = String(value);
+    node.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  };
+  const btn = (root, re) => [...root.querySelectorAll('button')].find((b) => re.test(b.textContent));
+
+  /* ---- a superset ---- */
+  {
+    const w = await store.saveWorkout({
+      name: 'Superset day',
+      exercises: [
+        { exerciseId: byName('Triceps Pushdown').id, sets: 2, notes: '', group: 0 },
+        { exerciseId: byName('Overhead Cable Extension').id, sets: 2, notes: '', group: 0 },
+        { exerciseId: byName('Lateral Raise').id, sets: 2, notes: '' },
+      ],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    ok(/Superset/.test(s.textContent), 'the session says you are in a superset');
+    ok(/Round 1 of 2/.test(s.textContent), 'and which round you are on');
+    ok(/No rest/i.test(s.textContent), 'and that you do not rest after this one');
+    ok(/Triceps Pushdown/.test(s.querySelector('.session-ex-name').textContent),
+       'starting with the first exercise of the block');
+    ok(Boolean(btn(s, /Straight into Overhead Cable Extension/)),
+       'the forward button names the exercise you go straight into');
+
+    // THE RULE. Logging a number inside a superset must NOT start the rest
+    // timer — that is the whole point of the grouping, and a timer firing here
+    // would be telling you to do the opposite of what a superset is.
+    const rest = s.querySelector('.rest-bar');
+    type(s.querySelector('.step-value'), 100);
+    await settle();
+    ok(/Rest starts when you log a set/.test(rest.textContent),
+       'logging the first exercise of a round does NOT start the rest timer');
+
+    btn(s, /Straight into/).click();
+    await settle();
+    ok(/Overhead Cable Extension/.test(s.querySelector('.session-ex-name').textContent),
+       'moving on lands on the second exercise of the same round');
+    ok(/Last one in the round/i.test(s.textContent), 'which says it is the last of the round');
+    type(s.querySelector('.step-value'), 60);
+    await settle();
+    ok(/Resting/.test(rest.textContent),
+       'and logging THAT one does start the rest — rest belongs after the round');
+
+    ok(Boolean(btn(s, /Round 2 of 2/)), 'the next step is round two, not the next exercise');
+    btn(s, /Round 2 of 2/).click();
+    await settle();
+    ok(/Triceps Pushdown/.test(s.querySelector('.session-ex-name').textContent)
+       && /Round 2 of 2/.test(s.textContent),
+       'round two comes back to the first exercise — A,B,A,B, not all of A then all of B');
+  }
+
+  /* ---- a drop set ---- */
+  {
+    const w = await store.saveWorkout({
+      name: 'Drop day',
+      exercises: [{ exerciseId: byName('Leg Extension').id, sets: 2, notes: '', setType: 'drop', drops: 2 }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    ok(/one hard set/i.test(s.textContent),
+       'the screen states that the whole drop set counts as one hard set');
+    const add = btn(s, /Strip the weight/);
+    ok(Boolean(add), 'and offers the drop as an instruction, not a jargon label');
+
+    // The top set of a drop set is not the end of the set — you strip the
+    // weight and carry on — so rest must wait for the drop.
+    const rest = s.querySelector('.rest-bar');
+    type(s.querySelector('.step-value'), 120);
+    await settle();
+    ok(/Rest starts when you log a set/.test(rest.textContent),
+       'logging the top set of a drop set does not start rest yet');
+
+    btn(s, /Strip the weight/).click();
+    await settle();
+    ok(s.querySelectorAll('.set-drop').length === 1, 'the drop appears under its set');
+    ok(/drop 1/i.test(s.textContent), 'and the steppers say they are editing the drop');
+    type(s.querySelector('.step-value'), 80);
+    await settle();
+    ok(/Resting/.test(rest.textContent), 'logging the drop is what starts the rest');
+
+    // ⚠️ The locked rule (progress.md §6): a drop set is ONE hard set. If drops
+    // were rows in `sets` this count would read 3 and every volume figure in
+    // the app would inflate the day someone used the feature.
+    ok(s.querySelectorAll('.set-item:not(.set-drop)').length === 2,
+       'the set list still shows two sets, not three');
+
+    const finish = btn(s, /Finish workout/);
+    if (finish) { finish.click(); await settle(); await settle(); }
+    const saved = (await store.getSessions()).find((x) => x.workoutName === 'Drop day');
+    ok(Boolean(saved), 'the drop session saves');
+    ok(saved && saved.entries[0].sets.length === 1,
+       `only the set with numbers in it is kept, and it is ONE set (${saved && saved.entries[0].sets.length})`);
+    ok(saved && (saved.entries[0].sets[0].drops || []).length === 1,
+       'with its drop stored inside it rather than as another set');
+    ok(saved && saved.entries[0].setType === 'drop',
+       'and the record remembers it was a drop set');
+  }
+  localStorage.removeItem(DRAFT);
+}
+
+
 /* ================= home suggests where you are in the rotation ================= */
 {
   const { todayISO } = await import(BASE + 'store.js');

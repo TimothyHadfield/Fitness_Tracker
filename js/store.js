@@ -9,6 +9,7 @@
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
 import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps, isRankableSet } from './e1rm.js';
+import { normalizeGroups, plannedDrops, DROP } from './set-types.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 
 const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
@@ -262,11 +263,18 @@ export function normalizeWorkout(w) {
     return {
       ...w,
       isBenchmark: Boolean(w.isBenchmark),
-      exercises: w.exercises.map((e) => ({
+      // ⚠️ This function REBUILDS each exercise field by field rather than
+      // spreading it, so anything not named here is silently dropped on every
+      // read and write. `group`, `setType` and `drops` (set-types.js) have to
+      // be listed or supersets and drop sets would survive exactly until the
+      // workout was next loaded. Add a field to the exercise shape, add it here.
+      exercises: normalizeGroups(w.exercises.map((e) => ({
         exerciseId: e.exerciseId,
         sets: Number(e.sets) > 0 ? Number(e.sets) : DEFAULT_SETS,
         notes: e.notes || '',
-      })),
+        ...(e.setType === DROP ? { setType: DROP, drops: plannedDrops(e) } : {}),
+        ...(e.group == null ? {} : { group: e.group }),
+      }))),
     };
   }
   const ids = Array.isArray(w.exerciseIds) ? w.exerciseIds : [];
@@ -421,6 +429,11 @@ export const store = {
           exerciseId: ex.id,
           sets: Number(item.sets) > 0 ? Number(item.sets) : DEFAULT_SETS,
           notes: item.notes || '',
+          // A preset that says "supersetted with the next one" has to arrive
+          // that way, or copying somebody's programme quietly flattens it —
+          // which is the whole complaint docs/vision.md §1.5 was written about.
+          ...(item.setType === DROP ? { setType: DROP, drops: plannedDrops(item) } : {}),
+          ...(item.group == null ? {} : { group: item.group }),
         });
       }
       if (!exercises.length) continue;

@@ -45,8 +45,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 982 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 164 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1012 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 194 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -198,6 +198,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
 | **What's next** (home) | The big button on Home is **the next workout in your rotation**, not a generic "Start a workout" — `js/next-workout.js`, `docs/vision.md` §1.2 first half. It reads the most recent session, finds that workout in its system, and offers the one after it, **wrapping** at the end. The caption always says what it read ("Next in Push Pull Legs. You did Push 2 days ago"), and **Choose another workout** sits right underneath, so it never traps you. It is a LOOKUP, not advice — the order came from the user's own system, so this is Rule 6-safe in a way that "you should rest today" would not be. It never scolds and never refuses: train twice in a day and it says "You already did Push today — this is next when you are ready". Silent when it would have to guess: no history **and** more than one system means no suggestion at all. Skips past sessions whose workout has since been deleted (D22 keeps the history), rather than dead-ending. **The other half of §1.2 — suggesting the weights and reps — is NOT built and needs the estimator first** |
+| **Set types** | **Supersets, tri-sets, giant sets and drop sets** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise cycles Straight sets → Drop set → 2 drops → 3 → back (one tap for the common case), and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. Drop sets get "Strip the weight — add a drop" and record the drops nested inside the set |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
@@ -224,12 +225,12 @@ Press-and-hold repeats.
 
 ### Verified
 
-- All **21 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **982 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **1012 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **164 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **194 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -250,6 +251,13 @@ Press-and-hold repeats.
 - **Home's "what's next" driven through all four of its states** at 390 and 1180 px — empty account,
   programme added with no history, one workout recorded two days ago, and the end of the rotation
   wrapping back to the first. The button and the caption moved together every time
+- **Set types driven end to end with real mouse events** at 360 / 390 / 1180 px: link two exercises
+  in the builder, tap an exercise into a drop set, save, run the workout, confirm **the rest timer
+  stays at `--:--` mid-round and starts only after the last exercise of the round**, walk into round
+  two, add a drop, then read the record back on the calendar day and through the edit form. Saving
+  the edit form unchanged preserves groups, set types, set counts and drops exactly. **This pass is
+  what caught the builder writing into a copy** — every control looked right on screen and none of
+  them saved anything
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -299,6 +307,9 @@ Fitness_Tracker/
 │   ├── next-workout.js         where you are in your own rotation — pure, clock
 │   │                           passed IN. vision §1.2 first half. Builds its own
 │   │                           caption so the sentence cannot drift from the answer
+│   ├── set-types.js            supersets/tri-sets (grouping) and drop sets
+│   │                           (nesting) — pure. Owns the walk the runner
+│   │                           follows and the one-drop-set-is-one-hard-set rule
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
@@ -355,6 +366,15 @@ Fitness_Tracker/
   said "Not found" the moment you tapped it. `WorkoutsView` asking for systems and workouts in one
   `Promise.all` is exactly that case, and is a perfectly reasonable thing for a view to do. There is
   a test that fails if the single-flight guard is removed.
+- **⚠️ A view that renders from a DERIVED list must still write to the original.** The workout
+  builder draws from `blocksOf(draft.exercises)`, and `blocksOf` maps over the list — so the `item`
+  inside a block is a **copy**. Every handler that closed over it (the set-type chip, the sets
+  stepper, the notes box) wrote into a throwaway object and did nothing at all. jsdom did not catch
+  it because the first tests read the screen, which re-rendered from the unchanged draft and looked
+  right; **a real click in a browser is what found it**. The rule: a derived structure is for
+  LAYOUT, and mutation goes back through the index into the source array. The builder tests now
+  assert by reading the workout back from the store, and were checked to fail when the bug is
+  reintroduced — a test that passes either way is worse than none.
 - **⚠️ A UTC timestamp is not a local date, and a test that mixes them is green by time of day.**
   `startedAt` is a UTC instant (`new Date().toISOString()`); `todayISO()` is the LOCAL day. A render
   test compared `startedAt.slice(0, 10)` to `todayISO()` and so failed every evening after 18:00
@@ -379,15 +399,25 @@ Fitness_Tracker/
 Exercise    id, name, muscle, equipment, fields[], loadType, isCustom
 System      id, name, notes, createdAt, updatedAt
             ── a programme. Workouts belong to one, and only one.
-Workout     id, name, systemId, isBenchmark, order?, exercises[{ exerciseId, sets, notes }],
+Workout     id, name, systemId, isBenchmark, order?,
+            exercises[{ exerciseId, sets, notes, group?, setType?, drops? }],
             createdAt, updatedAt
+            ── `group`: adjacent exercises sharing one form a superset/tri-set.
+               `setType: 'drop'` + `drops: n` plans n drops after every set.
+               ⚠️ normalizeWorkout() REBUILDS each exercise field by field, so
+               any new field must be named there or it is lost on every read.
             ── `order` is the position it had in a ready-made programme. Absent
                on anything the user typed, because a list you wrote yourself has
                no meaningful order. getWorkouts() sorts ordered first, then by
                name — so a copied split keeps its shape and your own additions
                land at the end of it rather than in the middle.
 Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
-            entries[{ exerciseId, exerciseName, sets[{weight,reps,time,distance}] }]
+            entries[{ exerciseId, exerciseName, group?, setType?,
+                      sets[{ weight, reps, time, distance, drops?[…] }] }]
+            ── ⚠️ `drops` live INSIDE a set, never as extra rows in `sets`.
+               That is what makes "a drop set is ONE hard set" true by
+               construction: every count of sets.length keeps counting one,
+               so no analysis path has to know drop sets exist (D23).
 Benchmark   id, date, exerciseId, exerciseName, values{}, sourceSessionId?
             ── sourceSessionId set = DERIVED from a benchmark workout, and rebuilt
                from that session on every save. Absent = entered by hand, never touched.
@@ -523,6 +553,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 exercises out of the whole library could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
 | D20 | **The comparison group is a user setting: FOUR independent axes — population (lifters / everyone), sex, body weight, age — plus two presets, "Like me" and "Everyone".** Any mixed population is modelled as a real MIXTURE of distributions, never an invented combined median. | Tim, 2026-08-17. Axes rather than presets alone because "women, any body weight, my age" is a real question; presets on top because the two combinations most people want are the extremes and setting four things by hand to reach them is a chore. The caption naming the group is built by the same function that computes it, so the number and the population it refers to cannot drift apart. |
 | D21 | **D15 is narrowed, not repealed: ranking against people who do not lift is now offered, and untrained adults are given their OWN overlapping distribution rather than being assumed weaker than every lifter.** Untrained median = 0.55 × the lifter median. | Tim asked for a lift/don't-lift axis. D15's real objection was never "don't offer it" — it was that general-population data makes every user Elite. That was true of the OLD model, which assumed every non-lifter sat below every lifter and so forced any lifter above the 68th percentile, squashing seven levels into three. With an overlapping untrained distribution the levels keep spreading: a beginner lifter reads Proficient, a median lifter Expert, an elite lifter Elite — asserted in the tests. **The 0.55 is the weakest number in the file** (nobody has measured what the median adult can bench) and both the sheet and the detail panel say so. |
+| D23 | **Set types are TWO shapes, not one list.** A superset/tri-set/giant set is a `group` on adjacent exercises — a statement about the SPACE BETWEEN them. A drop set is `drops[]` nested INSIDE a recorded set. Rest fires at the end of a round, and after a drop rather than after the top set. | "Supersets, drop sets and tri-sets" sounds like three of a kind and is two of two, and building it as one list would have got both wrong. The nesting is the load-bearing half: `progress.md` §6 already locks "a drop set counts as ONE hard set", and storing drops inside the set makes that true **by construction** — every existing path counts `sets.length` and keeps counting one, so no analysis code has to know drop sets exist. Flattening drops into `sets` would have silently inflated every set count, every weekly volume figure and D3 when it lands. The rest rule is the other half: a timer that started between the two halves of a superset would be instructing the user to do the opposite of what a superset is. |
 | D22 | **A workout belongs to exactly ONE system.** | Sharing one workout between two programmes sounds useful and is not: editing it in one place would silently change the other, and "did my Push day change because I imported someone else's programme?" is a question this app should never raise. Deleting a system therefore deletes its workouts — but never the sessions already recorded from them, because history is a record of what happened and does not become untrue when the plan behind it is thrown away. |
 
 ### Standing recommendations
@@ -648,15 +679,12 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   custom domain with `authDomain` on a subdomain of it.
 - **Rep normalisation assumes near-failure effort.** Every rep-based formula does. Bias is systematic
   per user per exercise, so trend and ordering survive. There is no RIR/RPE field — deliberate (D9).
-- **No supersets, drop sets or tri-sets.** Sets are a flat list — no RIR, tempo, or set types.
-  **This is now the ceiling on the celebrity library**, which is not obvious until you try to build
-  one: Chris Bumstead's programme is tri-sets and drop sets, Dr. Mike Israetel's own published
-  training is supersets and myo-reps almost end to end, and one published version of Mike Thurston's
-  arm day pairs every exercise. Written as a flat list, none of those is that person's workout — it
-  is a list of the exercises in it. Tim asked on 2026-08-17 for this to be built eventually;
-  `docs/vision.md` §1.5 holds the request and the open threads, including that a superset groups
-  *exercises* while a drop set is a structure *within one set*, and that whatever gets built must
-  keep "a drop set counts as ONE hard set" true.
+- ~~**No supersets, drop sets or tri-sets.**~~ **Closed 2026-08-17** — built, and D23 records the
+  two-shapes model. **Still missing: myo-reps, RIR, tempo.** Myo-reps are the *same nesting shape*
+  as a drop set (mini-sets after a top set, differing only in whether the weight comes down), so
+  they are a label and a rest hint rather than a model change — which matters because **Dr. Mike's
+  Floating Split is myo-reps almost end to end** and is still shipping with its structure removed.
+  Chris Bumstead is now buildable and has not been built.
 - ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
   canonically in pounds. Distance is still miles only.
 - **The Nippard system is a TRANSCRIPTION, and the screen says so.** It comes from published

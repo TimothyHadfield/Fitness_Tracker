@@ -14,6 +14,7 @@
 
 import { store, todayISO } from './store.js';
 import { LOAD_LABEL } from './exercises.js';
+import { dropsOf } from './set-types.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   confirmSheet, fmtDateLong,
@@ -40,7 +41,13 @@ export async function EditSessionView(sessionId) {
     ...session,
     entries: (session.entries || []).map((e) => ({
       ...e,
-      sets: (e.sets || []).map((s) => ({ ...s })),
+      // The drops have to be copied too. A shallow `{...s}` carries the SAME
+      // drops array through, so editing a drop here would have written straight
+      // into the stored record before Save was ever pressed.
+      sets: (e.sets || []).map((s) => ({
+        ...s,
+        ...(dropsOf(s).length ? { drops: dropsOf(s).map((d) => ({ ...d })) } : {}),
+      })),
     })),
   };
   const originalDate = session.date;
@@ -85,30 +92,57 @@ export async function EditSessionView(sessionId) {
       // steppers. Beside them they ate enough width that the steppers' grid —
       // auto-fit at a 148px minimum — collapsed to one column and every set
       // became most of a screen tall.
-      const setRows = entry.sets.map((set, si) => el('div', { class: 'edit-set' },
+      // One editable block of steppers, used for a set and for each of its
+      // drops. A drop is the same numbers with a different label — writing it
+      // twice is how the two drift apart.
+      const numberBlock = (obj, { label, onDelete, drop }) => el('div',
+        { class: 'edit-set' + (drop ? ' is-drop' : '') },
         el('div', { class: 'edit-set-head' },
-          el('span', { class: 'edit-set-num', text: `Set ${si + 1}` }),
-          entry.sets.length > 1
-            ? iconBtn('trash', `Delete set ${si + 1}`, () => {
-                entry.sets.splice(si, 1);
-                renderList();
-              }, 'set-del')
-            : null,
+          el('span', { class: 'edit-set-num', text: label }),
+          onDelete ? iconBtn('trash', `Delete ${label}`, onDelete, 'set-del') : null,
         ),
         el('div', { class: 'steppers' },
           ...fields.map((f) => stepper({
             field: f,
-            value: set[f],
+            value: obj[f],
             suffix: f === 'weight' && loadType ? LOAD_LABEL[loadType] : null,
-            onChange: (v) => { set[f] = v; },
+            onChange: (v) => { obj[f] = v; },
           }).node),
         ),
-      ));
+      );
+
+      const setRows = entry.sets.flatMap((set, si) => [
+        numberBlock(set, {
+          label: `Set ${si + 1}`,
+          onDelete: entry.sets.length > 1
+            ? () => { entry.sets.splice(si, 1); renderList(); }
+            : null,
+        }),
+        // Drops are editable here too. They were invisible on this screen at
+        // first, which is worse than not supporting them: someone opening a
+        // recorded drop set would have seen half of what they did and assumed
+        // the rest had been lost.
+        ...dropsOf(set).map((d, di) => numberBlock(d, {
+          drop: true,
+          label: `Drop ${di + 1}`,
+          onDelete: () => {
+            set.drops.splice(di, 1);
+            if (!set.drops.length) delete set.drops;
+            renderList();
+          },
+        })),
+      ]);
 
       return el('div', { class: 'card edit-ex' },
         el('div', { class: 'day-head' },
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'detail-ex-name', text: entry.exerciseName }),
+            entry.group != null || entry.setType
+              ? el('div', { class: 'row-sub', text: [
+                  entry.group != null ? 'part of a superset' : null,
+                  entry.setType ? 'drop set' : null,
+                ].filter(Boolean).join(' · ') })
+              : null,
           ),
           iconBtn('trash', `Remove ${entry.exerciseName}`, () => confirmSheet({
             title: `Remove ${entry.exerciseName}?`,
@@ -137,12 +171,31 @@ export async function EditSessionView(sessionId) {
     // Same rule the session runner finishes by: a set with nothing in it is not
     // a set. Without this an "Add a set" someone thought better of would be
     // saved as a row of zeros.
+    // ⚠️ This rebuilds each entry field by field, so anything not named here is
+    // lost on every save. `group` and `setType` describe how the workout was
+    // actually performed; dropping them would quietly flatten a superset into
+    // two ordinary exercises the first time somebody fixed a typo in it.
+    const hasNumbers = (s, fields) => fields.some((f) => Number(s[f]) > 0);
+
     const entries = draft.entries
-      .map((e) => ({
-        exerciseId: e.exerciseId,
-        exerciseName: e.exerciseName,
-        sets: e.sets.filter((s) => Object.values(s).some((v) => Number(v) > 0)),
-      }))
+      .map((e) => {
+        const ex = exMap.get(e.exerciseId);
+        const fields = ex ? ex.fields : ['weight', 'reps'];
+        return {
+          exerciseId: e.exerciseId,
+          exerciseName: e.exerciseName,
+          ...(e.group == null ? {} : { group: e.group }),
+          ...(e.setType ? { setType: e.setType } : {}),
+          sets: e.sets
+            .filter((s) => hasNumbers(s, fields) || dropsOf(s).some((d) => hasNumbers(d, fields)))
+            .map((s) => {
+              const kept = dropsOf(s).filter((d) => hasNumbers(d, fields));
+              const out = { ...s };
+              if (kept.length) out.drops = kept; else delete out.drops;
+              return out;
+            }),
+        };
+      })
       .filter((e) => e.sets.length);
 
     if (!entries.length) {

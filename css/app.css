@@ -580,6 +580,36 @@ select.input {
 .session-progress span { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); }
 .session-progress span.done { background: var(--good); }
 .session-progress span.current { background: var(--accent); }
+/* Steps inside a superset read as one run rather than as separate exercises. */
+.session-progress span.grouped { opacity: .55; }
+.session-progress span.grouped.current,
+.session-progress span.grouped.done { opacity: 1; }
+
+/* ── The superset banner, first thing on the session screen ────────────────
+   Above the exercise name on purpose: "do not rest after this one" changes
+   what you do with the next thirty seconds and the exercise name does not.
+   Hairline bracket, no box (Rule 2). */
+.group-banner {
+  border-left: 2px solid var(--accent);
+  padding-left: 11px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.group-banner-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.group-kind {
+  font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent);
+}
+.group-round { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.group-members { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.group-member {
+  font-size: 12.5px; color: var(--ink-faint); text-align: left;
+  padding: 1px 0; border-radius: 4px;
+}
+.group-member.is-current { color: var(--ink); font-weight: 650; }
+.group-hint { font-size: 11.5px; color: var(--ink-faint); }
+/* The forward button says "straight into X" mid-round, and looks like the
+   continuation it is rather than like the end of something. */
+.btn.primary.is-linked { background: var(--accent-dim); color: var(--accent); }
 
 .session-head { display: flex; flex-direction: column; gap: 3px; }
 .session-ex-name {
@@ -648,6 +678,21 @@ select.input {
 
 .set-item { display: flex; align-items: center; gap: 9px; padding: 7px 2px; font-size: 14px; }
 .set-item.active .set-vals { color: var(--ink); font-weight: 600; }
+
+/* A drop hangs under its set, indented, and is NOT numbered — one drop set is
+   one hard set (progress.md §6), and numbering the drops 2, 3, 4 would teach
+   the reader the opposite of the rule the data model is built on. */
+.set-drop { padding-left: 22px; }
+.set-drop .set-vals { font-size: 13px; }
+.set-list > .set-drop { border-top: 0; }
+.drop-num {
+  background: transparent; color: var(--ink-faint);
+  font-size: 15px; width: 22px; min-width: 22px;
+}
+.set-item.set-drop.active .drop-num { background: transparent; color: var(--accent); }
+
+.drop-row { display: flex; flex-direction: column; gap: 5px; }
+.drop-add { justify-content: center; gap: 7px; }
 .set-num {
   width: 21px; height: 21px;
   flex: none;
@@ -1107,7 +1152,39 @@ select.input {
 .move-btns button:disabled { opacity: .22; pointer-events: none; }
 .builder-item > .icon-btn { grid-area: del; }
 
-.builder-controls { grid-area: ctl; display: flex; align-items: center; gap: 8px; }
+.builder-controls { grid-area: ctl; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.set-type { font-size: 11.5px; padding: 3px 9px; }
+.set-type.is-on { background: var(--accent-dim); color: var(--accent); border-color: transparent; }
+
+/* ── Supersets in the builder ──────────────────────────────────────────────
+   A block is bracketed by a hairline down its left and a label, never by a
+   bordered card (Rule 2). The rule is the thing that says "these are one
+   unit"; a box would say the same and cost 2px of height on every row plus a
+   second visual language on a screen that already has none. */
+.builder-group {
+  border-left: 2px solid var(--accent);
+  padding-left: 11px;
+  margin-block: 4px;
+}
+.builder-group-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+.builder-group-label {
+  font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent);
+}
+.builder-group-hint { font-size: 11.5px; color: var(--ink-faint); }
+
+/* The join control lives in the GAP between two exercises, because that is
+   what a superset is a statement about. Quiet until it is on. */
+.link-gap { display: flex; padding: 2px 0 6px; }
+.link-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--ink-faint);
+  padding: 3px 8px 3px 0; border-radius: 5px;
+}
+.link-btn svg { width: 15px; height: 15px; display: block; }
+.link-btn:active { background: var(--raised); }
+.link-gap.is-linked .link-btn { color: var(--accent); }
+
 .builder-control-label {
   font-size: 10.5px;
   font-weight: 750;
@@ -1568,3 +1645,20 @@ select.input {
 .lv-text-advanced { color: var(--lv-advanced); }
 .lv-text-expert { color: var(--lv-expert); }
 .lv-text-elite { color: var(--lv-elite); }
+
+/* A drop in a recorded day, and in the edit form. Indented and labelled
+   "drop", never numbered as a set — one drop set is one hard set. */
+/* A set and its drops must stay together when the row wraps. `.detail-sets` is
+   a wrapping flex, so a bare drop chip could end up on the line above the set
+   it belongs to — the numbers would still be in reading order and would still
+   look, at a glance, like they belonged to the wrong set. The run wraps as one
+   thing instead. */
+.detail-set-run { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; }
+.detail-set.is-drop { opacity: .8; }
+.detail-set.is-drop b { color: var(--ink-faint); font-weight: 600; }
+.detail-ex.in-group { border-left: 2px solid var(--accent); padding-left: 10px; }
+.detail-group-label {
+  font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 2px;
+}
+.edit-set.is-drop { padding-left: 14px; border-left: 1px solid var(--rule); }

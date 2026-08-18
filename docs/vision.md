@@ -207,7 +207,7 @@ Also worth knowing: the underlying standards data is thinner for some slices tha
 data behind them, and the app's whole credibility rests on saying so rather than interpolating
 quietly.
 
-### 1.5 Set types — supersets, drop sets, tri-sets
+### 1.5 Set types — supersets, drop sets, tri-sets — **BUILT 2026-08-17**
 
 Tim, 2026-08-17: eventually add **supersets, drop sets and tri-sets** to the site.
 
@@ -245,9 +245,31 @@ Open threads:
 - What happens to grouping when the user edits a recorded session, or when a preset carrying groups
   is copied and then edited?
 
+**BUILT 2026-08-17**, and the open thread above about "four things of two shapes" turned out to be
+the whole design. It is now **D23**:
+
+- A **superset / tri-set / giant set** is a `group` on adjacent exercises — a statement about the
+  SPACE BETWEEN them. In the builder the control therefore sits in the *gap*, not on either row.
+- A **drop set** is `drops[]` nested INSIDE a recorded set. This is the load-bearing half: it makes
+  "a drop set counts as ONE hard set" true **by construction**, because every existing count of
+  `sets.length` keeps counting one and no analysis code has to know drop sets exist. Flattening them
+  into `sets` would have inflated every volume figure in the app.
+- The **rest timer** answer to the open thread above: rest fires at the end of a ROUND, and after a
+  *drop* rather than after the top set. A timer that started between the two halves of a superset
+  would be telling the user to do the opposite of what a superset is.
+
+The session runner walks a superset round by round — A, B, rest, A, B — because all of A and then
+all of B is not a superset, it is two exercises in a row. Nippard's Push and Israetel's Push 1 now
+ship with their documented supersets intact instead of flattened.
+
+**Still open: myo-reps.** Same nesting shape as a drop set, differing only in whether the weight
+comes down, so it is a label and a rest hint rather than a model change — and *Dr. Mike's Floating
+Split* is myo-reps almost end to end, so it is still shipping with its structure removed. **Chris
+Bumstead is now buildable and has not been built.** RIR and tempo remain deliberately absent (D9).
+
 **Where this connects:** ranked pre-designed systems (§1.3) — several of the best-known programmes
-cannot even be *entered* until this exists, so the celebrity library has a ceiling until it does.
-Nothing here collides with a locked decision.
+could not even be *entered* before this, so the celebrity library had a ceiling. Nothing here
+collided with a locked decision.
 
 ---
 
