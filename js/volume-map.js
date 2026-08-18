@@ -267,6 +267,37 @@ export function weeklyVolume(workouts, exMap, weeks = 1) {
 }
 
 /**
+ * How many sessions a week train each muscle.
+ *
+ * ⚠️ Not the same as the programme's days per week, and the difference is the
+ * whole point. A six-day "bro split" trains chest on ONE of those six days, so
+ * its frequency for chest is 1, not 6. Frequency only matters for strength
+ * (docs/research.md §6.3), and it matters per muscle rather than per calendar.
+ *
+ * Counts a session if it contains any DIRECT work for the muscle. Indirect work
+ * is real volume but it is not the muscle being trained that day, and counting
+ * it would make every pressing day a "back day" because of the deadlift.
+ */
+export function weeklyFrequency(workouts, exMap, weeks = 1) {
+  const out = new Map();
+  const span = weeks > 0 ? weeks : 1;
+
+  for (const w of workouts || []) {
+    const hit = new Set();
+    for (const item of (w && w.exercises) || []) {
+      if (!(Number(item.sets) > 0)) continue;
+      const ex = exMap && exMap.get ? exMap.get(item.exerciseId) : null;
+      if (!ex) continue;
+      for (const c of volumeContributions(ex)) {
+        if (c.kind === 'direct') hit.add(c.muscle);
+      }
+    }
+    for (const m of hit) out.set(m, (out.get(m) || 0) + 1 / span);
+  }
+  return out;
+}
+
+/**
  * Which efficiency tier a weekly volume sits in, for HYPERTROPHY.
  *
  * Straight from Table 3 of Pelland et al. (2025). These are not our bands and

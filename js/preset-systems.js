@@ -406,6 +406,11 @@ export const PRESET_SYSTEMS = [
       + 'The sources disagree about how much of arm day is tri-sets.',
     goal: 'Bodybuilding',
     daysPerWeek: 6,
+    // ⚠️ The only system here whose rotation is not a week. Six workouts across
+    // EIGHT days, so weekly volume is 7/8 of one pass — without this the rating
+    // overstates every number on this row by about a seventh. `daysPerWeek: 6`
+    // above stays an approximation for display, which the warning explains.
+    cycleDays: 8,
     minutes: 75,
     level: 'Advanced',
     summary: 'Six training days in an eight-day cycle from the four-time Mr. Olympia — three on, '

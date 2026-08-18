@@ -66,6 +66,7 @@ where every lift stands right now.
 | **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
+| **Rating tests** | `node tests/optimal.test.mjs` — 33 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -232,6 +233,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**, and **each one now carries a rating** — two numbers, **growth** and **strength**, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength). Banded to 5, never a point, because the source models explain about a quarter of the variance. The screen states what 100 % would mean, that the numbers assume training close to failure, and that **more days is not itself better for growth**. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md`. |
 | **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
@@ -299,6 +301,13 @@ Press-and-hold repeats.
   them saved anything
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
+- **33 rating assertions** (`tests/optimal.test.mjs`, no dependencies) — the curves are checked
+  against the PUBLISHED FIGURES, not just against their own slopes: a curve fitted to a slope can
+  match it perfectly and still be the wrong curve, so the hypertrophy model must also reproduce the
+  ~5-6 % at 12 sets and ~10.5 % at 42 that the paper plots, and the strength frequency model must hit
+  12.72 % and 17.32 % exactly. The three refusals are asserted directly — **the same 12 sets spread
+  over 3 days scores identically for growth and higher for strength**, 100 sets scores as 42, and 83
+  and 87 both band to 85
 - **49 volume-mapping assertions** (`tests/volume-map.test.mjs`, no dependencies) — the direct/
   indirect classifications the source paper states outright are pinned as tests, the conservative
   fallback is proved conservative, and the published efficiency tiers are asserted at their
@@ -407,6 +416,9 @@ Fitness_Tracker/
 │   │                           deleting fields, because deletion fails OPEN
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
+│   ├── optimal.js              the "% OPTIMAL" RATING — dose-response curves
+│   │                           fitted to published values, clamped at the top
+│   │                           of the evidence, banded to 5. Pure maths
 │   ├── volume-map.js           HOW MUCH WORK landed on each muscle — direct 1.0,
 │   │                           indirect 0.5, plus the published efficiency
 │   │                           tiers. ⚠️ NOT the same table as muscle-evidence:
@@ -920,13 +932,12 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    has run only as rules assertions with hand-written documents. That is the next social job, and it
    needs two real accounts. Phase 4 (a chronological feed, finer visibility axes) remains unstarted
    and still needs D7 narrowed first.
-7. **The "% optimal" rating — `docs/optimal-rating-plan.md`.** Started 2026-08-18 on Tim's ask.
-   **Phase 0 (research) done** — `docs/research.md` §6 is now 🟢 where it was 🟡. **Phase 1 done** —
-   `js/volume-map.js`, the direct/indirect mapping over all 270 exercises, 49 assertions.
-   **Next is Phase 2: the pure scoring model** (`js/optimal.js`), then §5's validation, then the
-   screen. Tim ratified both design questions on 2026-08-18: **rate hypertrophy and strength
-   separately**, and **100 % means the most the evidence supports**, not the best system in the
-   library.
+7. **The "% optimal" rating — BUILT 2026-08-18**, `docs/optimal-rating-plan.md`. Research, the
+   direct/indirect mapping, the scoring model and the badge on Explore all shipped the same day.
+   **What is left is deliberately not built**: the rating is on ready-made systems only, not on the
+   user's own — which is where it would actually be useful, and is the obvious next move. §6.8 of
+   `docs/research.md` also lists the axes still to pull (load, rest, range of motion, per-session
+   volume), each of which either enters the model or becomes a stated caveat.
 8. **Tier 2 / D3 — the mapping it was blocked on now EXISTS.** `js/volume-map.js` already computes
    fractional weekly sets per muscle for any set of workouts (`weeklyVolume()`), which is the input
    D3's "weekly sets per muscle group vs target bands" needs. What is left for D3 is the screen and

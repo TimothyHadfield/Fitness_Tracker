@@ -313,3 +313,59 @@ half a programme and its volume should not be read as his.
 ⚠️ **Nothing here is a rating yet.** These are set counts, not a score. The score needs the
 dose–response curves (Phase 2), the ceiling from §4.4, and the banding from §2.6 — a raw total would
 be exactly the "more is better" number this document exists to prevent.
+
+---
+
+## 9. Phases 2 and 4 — built 2026-08-18
+
+`js/optimal.js` + `tests/optimal.test.mjs` (33 assertions), and the rating rendered beside every
+system on Workouts → Explore.
+
+**The curves are fitted, not chosen.** The paper reports, for each outcome, the best-fitting
+functional form and the marginal slope at the mean volume of its data — two facts that pin a
+one-parameter curve exactly. Each constant carries its derivation in a comment. And they are checked
+against the *plotted* values as well as the slopes, which matters: a curve fitted to a slope can
+match that slope perfectly and still be the wrong curve. The hypertrophy model reproduces ~5.8 % at
+12 sets and 10.9 % at 42 against their Fig. 7; the strength frequency model hits 12.72 % and 17.32 %
+exactly, because those are the two points it was fitted to.
+
+**The three refusals are tests, not intentions:**
+
+- *The same 12 sets spread over 3 days scores identically for growth, and higher for strength.* That
+  single assertion is the whole of §2.3 made executable.
+- *100 sets scores as 42.* Past the top of the evidence range the curve is flat, so the rating can
+  never recommend 60 sets a week.
+- *83 and 87 both band to 85.*
+
+**A bug the numbers caught, which reading would not have.** A system's workout list is a **rotation,
+not a week**. The Golden Six stores ONE workout trained three days a week, so counting the list once
+gave it a third of its volume and a frequency of 1 instead of 3 — it scored 20 % where it should
+score 35 %. Push Pull Legs has the same shape (three workouts, six days). `weeksForRotation()` now
+derives it, and Bumstead's eight-day cycle overrides it via a new `cycleDays` field on the preset.
+
+**A test that was measuring nothing**, also worth recording: the "more is better" guard originally
+asserted a ratio "< 1.6", failed at 1.81, and was comparing against a number picked out of the air.
+It now measures the clamp against what the unclamped curve *would* have done — 1.80× versus 3.16× —
+which is the thing actually worth knowing.
+
+**What the ratings say about the library:**
+
+| System | Growth | Strength | days | min | growth/hour |
+|---|---|---|---|---|---|
+| Push Pull Legs (ours) | 65 % | 80 % | 6 | 65 | 9.8 |
+| Ultimate Push Pull Legs (Nippard) | 55 % | 80 % | 6 | 75 | 7.5 |
+| Mike Thurston's Six-Day Split | 55 % | 65 % | 6 | 75 | 7.0 |
+| Dr. Mike's Floating Split | 50 % | 80 % | 6 | 90 | 5.4 |
+| Volume Landmarks Hypertrophy | 50 % | 80 % | 4 | 70 | 10.2 |
+| Upper / Lower | 50 % | 75 % | 4 | 70 | 11.2 |
+| Chris Bumstead's 8-Day Split | 45 % | 70 % | 6 | 75 | 5.9 |
+| Full Body, 3 Days | 40 % | 75 % | 3 | 50 | **16.9** |
+| The Golden Six | 35 % | 55 % | 3 | 65 | 11.2 |
+
+**That last column is Tim's original example, computed.** Full Body 3 Days delivers 40 % of the
+achievable growth stimulus for 150 minutes a week; Dr. Mike's delivers 50 % for 540. Three times the
+time for a quarter more stimulus — which is exactly the give/get trade `docs/vision.md` §1.3 asked to
+be made visible, and it is only visible because frequency is *not* rewarded.
+
+⚠️ **Still not built, deliberately:** the rating is on ready-made systems only. It is more useful on
+the user's own programme, and that is the obvious next move.

@@ -240,10 +240,65 @@ export function openSetTypeSheet(item, onChange) {
  * Explore ready-made systems
  * ================================================================== */
 
+/**
+ * The rating beside a ready-made system.
+ *
+ * ⚠️ TWO numbers, never one, and never a bare "83 % optimal". A programme good
+ * for growth is often not the one good for strength — the Golden Six is the
+ * clearest case in the library — and a single blended figure would hide exactly
+ * the trade somebody is choosing between. Tim ratified this on 2026-08-18.
+ *
+ * The scores are banded to 5 before they get here (js/optimal.js), because the
+ * source models explain about a quarter of the variance and a sharper number
+ * would be claiming a precision nobody has.
+ */
+function ratingBadge(rating) {
+  if (!rating) return null;
+  return el('div', { class: 'rating' },
+    el('div', { class: 'rating-cell' },
+      el('div', { class: 'rating-num', text: rating.hypertrophy + '%' }),
+      el('div', { class: 'rating-cap', text: 'growth' }),
+    ),
+    el('div', { class: 'rating-cell' },
+      el('div', { class: 'rating-num', text: rating.strength + '%' }),
+      el('div', { class: 'rating-cap', text: 'strength' }),
+    ),
+  );
+}
+
+/** Rate every preset once, so the list does not recompute per row. */
+async function rateAllPresets(presets) {
+  const [{ rateProgramme }, exMap] = await Promise.all([
+    import('./optimal.js'), store.getExerciseMap(),
+  ]);
+  const byName = new Map([...exMap.values()].map((e) => [e.name, e]));
+  const out = new Map();
+
+  for (const p of presets) {
+    const workouts = (p.workouts || []).map((w) => ({
+      exercises: (w.exercises || []).map((i) => {
+        const e = byName.get(i.name);
+        return e ? { exerciseId: e.id, sets: Number(i.sets) || 3 } : null;
+      }).filter(Boolean),
+    }));
+    if (!workouts.length) continue;
+    out.set(p.id, rateProgramme(workouts, exMap, {
+      daysPerWeek: p.daysPerWeek,
+      minutesPerSession: p.minutes,
+      // Bumstead's is an EIGHT-day cycle, not a week — it drifts across the
+      // calendar on purpose, and counting it as a week would overstate every
+      // number on his row by about a seventh.
+      cycleDays: p.cycleDays || 0,
+    }));
+  }
+  return out;
+}
+
 export async function ExploreView() {
   const [{ PRESET_SYSTEMS, presetSetCount }, added] = await Promise.all([
     import('./preset-systems.js'), store.addedPresetIds(),
   ]);
+  const ratings = await rateAllPresets(PRESET_SYSTEMS);
 
   return screenShell({
     title: 'Ready-made systems',
@@ -261,14 +316,28 @@ export async function ExploreView() {
             ),
             // Whose it is, before anything else — but "follows X's method" and
             // "by X" are different claims and the list has to keep them apart.
-            el('div', { class: 'row-sub', text:
+            // `.wrap`, because the rating now takes width off this line and it
+            // was clipping to "Jeff Nippard · 6 days/week · ~75 min…". Days and
+            // minutes are the COST half of what this screen is for — a rating
+            // shown without what it costs you is half a sentence.
+            el('div', { class: 'row-sub wrap', text:
               (p.author && p.author !== 'Fitness Tracker' ? `${p.author} · `
                 : p.basedOn ? `Follows ${p.basedOn.person} · ` : '')
               + `${p.daysPerWeek} days/week · ~${p.minutes} min · ${p.level}` }),
             el('div', { class: 'row-sub wrap', text: p.summary }),
           ),
+          ratingBadge(ratings.get(p.id)),
           chevron(),
         ))),
+      // The rating cannot be left to speak for itself. 55 % reads as a bad mark
+      // unless the reader is told what 100 % would mean, and the one variable
+      // that most decides whether a set grows anything is one this app cannot
+      // see (D9) — so both facts go on the screen, not just in the docs.
+      el('div', { class: 'field-help', text:
+        'The percentages are how much of the growth or strength stimulus the research supports '
+        + 'each programme delivers. Nothing real reaches 100 % — that would mean 42 hard sets per '
+        + 'muscle every week. They assume you train close to failure, and more days is not itself '
+        + 'better for growth.' }),
       el('div', { class: 'field-help', text:
         `${PRESET_SYSTEMS.length} to choose from, with more to come.` }),
     ],

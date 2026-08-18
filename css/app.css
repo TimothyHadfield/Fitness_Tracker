@@ -1723,3 +1723,23 @@ a.row { text-decoration: none; }
 
 .friend-body { margin: 6px 0 4px; }
 .friend-body .body-map { width: 100%; height: auto; }
+
+/* The "% optimal" rating beside a ready-made system.
+   Two numbers, never one — a programme good for growth is often not the one
+   good for strength, and a blend would hide the trade. Right-aligned in the
+   leftover space so the system's name stays the content (Rule 3). */
+.rating { display: flex; gap: 12px; flex: none; text-align: right; }
+.rating-cell { min-width: 42px; }
+.rating-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rating-cap {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--ink-faint); margin-top: 1px;
+}
+/* Below ~380px the summary and the rating fight for the row. The rating is the
+   newer thing but the name is the content, so the rating stacks under rather
+   than squeezing the title into an ellipsis. */
+@media (max-width: 380px) {
+  .rating { gap: 9px; }
+  .rating-cell { min-width: 36px; }
+  .rating-num { font-size: 13.5px; }
+}

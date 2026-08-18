@@ -1057,6 +1057,36 @@ ok(!data.querySelector('.rep-target'),
 }
 
 
+/* ================= The "% optimal" rating on Explore ================= */
+{
+  const { ExploreView } = await import(BASE + 'views-workouts.js');
+  const { PRESET_SYSTEMS } = await import(BASE + 'preset-systems.js');
+  const screen = await ExploreView();
+  await settle();
+
+  const badges = screen.querySelectorAll('.rating');
+  ok(badges.length === PRESET_SYSTEMS.length,
+     `every ready-made system carries a rating (${badges.length} of ${PRESET_SYSTEMS.length})`);
+
+  const nums = [...screen.querySelectorAll('.rating-num')].map((n) => n.textContent);
+  ok(nums.length === PRESET_SYSTEMS.length * 2, 'two numbers each — growth and strength, never a blend');
+  ok(nums.every((t) => /^\d+%$/.test(t)), 'each is a plain percentage');
+  ok(nums.every((t) => Number(t.replace('%', '')) % 5 === 0),
+     'and every one is banded to 5 — the models explain a quarter of the variance');
+  ok(nums.every((t) => Number(t.replace('%', '')) <= 100), 'nothing exceeds 100 %');
+
+  const caps = [...screen.querySelectorAll('.rating-cap')].map((n) => n.textContent);
+  ok(caps.includes('growth') && caps.includes('strength'), 'each number is labelled with what it rates');
+
+  // The number cannot be left to explain itself: 55 % reads as a bad mark
+  // unless the reader is told what 100 % would mean.
+  const text = screen.textContent.replace(/\s+/g, ' ');
+  ok(/Nothing real reaches 100/.test(text), 'the screen says outright that nothing reaches 100 %');
+  ok(/close to failure/.test(text), 'and that the ratings assume you train close to failure (D9)');
+  ok(/more days is not itself better/i.test(text),
+     'and that more days is not itself better for growth — the finding Tim predicted');
+}
+
 /* ================= Social ================= */
 // docs/social-plan.md, Phases 2-3. There is no cloud in jsdom, so what these
 // assert is the DEGRADED path — which is the one a real person on a train meets,

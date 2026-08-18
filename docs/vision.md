@@ -22,7 +22,7 @@
 |---|---|---|
 | §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — a Social tab, mutual friends, invite links, per-person visibility, a friend's page with their body map. **D7 never had to be reopened**: there is no feed. Untested between two real accounts |
 | §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
-| §1.3 | Ready-made systems, ranked "% optimal" | **Built bar the number.** Nine systems, six credited. The "% optimal" rating needs research first |
+| §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating now sits beside each one on Explore — **two numbers, growth and strength**, banded to 5 |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
 | §1.5 | Set types | **BUILT** 2026-08-17 — supersets, tri-sets, drop sets, myo-reps |
 

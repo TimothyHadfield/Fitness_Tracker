@@ -2975,3 +2975,52 @@ the published efficiency tiers.
 ⚠️ **Nothing here is a rating yet.** These are set counts, not a score. A raw total would be exactly
 the "more is better" number this whole project exists to prevent. The score needs the dose–response
 curves, the ceiling, and the banding — Phase 2.
+
+---
+
+## 2026-08-18 — The rating is on the Explore list
+
+Tim: *"if you're ready, put the rating by the side of the system on the explore workout systems
+list."* That needed Phase 2 first — there was no score yet, only set counts.
+
+**Built:** `js/optimal.js` (the dose–response curves and the scoring), and a two-number badge on
+every row of Workouts → Explore. 33 new assertions, 234 render assertions.
+
+**The curves are fitted, not chosen.** The paper reports the best-fitting functional form and the
+marginal slope at the mean of its data, which pins a one-parameter curve exactly — each constant
+carries its derivation in a comment. They are then checked against the *plotted* values as well,
+which is the part that matters: **a curve fitted to a slope can match that slope perfectly and still
+be the wrong curve.** The hypertrophy model reproduces ~5.8 % at 12 sets and 10.9 % at 42 against
+their Fig. 7; the strength frequency model hits 12.72 % and 17.32 % exactly.
+
+**The three refusals are tests rather than intentions:** the same 12 sets spread over 3 days scores
+*identically* for growth and higher for strength; 100 sets scores as 42; 83 and 87 both band to 85.
+
+**A real bug the numbers caught.** A system's workout list is a **rotation, not a week**. The Golden
+Six stores ONE workout trained three days a week, so counting the list once gave it a third of its
+volume and a frequency of 1 instead of 3 — it scored 20 % where it should score 35 %. Push Pull Legs
+has the same shape. Found by looking at the output table and thinking "that is too low", not by
+review. Bumstead's eight-day cycle now overrides it explicitly with a new `cycleDays` field.
+
+**And a test that was measuring nothing.** The "more is better" guard asserted a ratio "< 1.6",
+failed at 1.81, and was comparing against a number picked out of the air. It now measures the clamp
+against what the *unclamped* curve would have done — 1.80× versus 3.16×.
+
+**What the library looks like rated** — and the last column is Tim's own example, computed:
+
+- Full Body, 3 Days: **40 % growth, 16.9 growth per hour** — 150 minutes a week
+- Dr. Mike's Floating Split: **50 % growth, 5.4 per hour** — 540 minutes a week
+
+Three and a half times the time for a quarter more stimulus. That trade is only visible because
+frequency is *not* rewarded, which is the finding Tim predicted before any of the research was read.
+
+**The CDP pass caught one thing jsdom could not:** the rating took width off the metadata line and
+clipped it to "Jeff Nippard · 6 days/week · ~75 min…". Days and minutes are the COST half of what
+this screen is for — a rating shown without what it costs you is half a sentence — so that line now
+wraps. Checked again at 360, 390 and 1180 px.
+
+**On screen the number is not left to speak for itself**, because 55 % reads as a bad mark otherwise:
+the list says what 100 % would mean (42 hard sets per muscle every week, which nobody recovers from),
+that the ratings assume training close to failure, and that more days is not itself better.
+
+⚠️ Still on ready-made systems only. It would be more useful on the user's own programme.
