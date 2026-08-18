@@ -45,8 +45,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 953 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 156 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 982 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 164 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -197,6 +197,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **eight**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
+| **What's next** (home) | The big button on Home is **the next workout in your rotation**, not a generic "Start a workout" — `js/next-workout.js`, `docs/vision.md` §1.2 first half. It reads the most recent session, finds that workout in its system, and offers the one after it, **wrapping** at the end. The caption always says what it read ("Next in Push Pull Legs. You did Push 2 days ago"), and **Choose another workout** sits right underneath, so it never traps you. It is a LOOKUP, not advice — the order came from the user's own system, so this is Rule 6-safe in a way that "you should rest today" would not be. It never scolds and never refuses: train twice in a day and it says "You already did Push today — this is next when you are ready". Silent when it would have to guess: no history **and** more than one system means no suggestion at all. Skips past sessions whose workout has since been deleted (D22 keeps the history), rather than dead-ending. **The other half of §1.2 — suggesting the weights and reps — is NOT built and needs the estimator first** |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
@@ -223,12 +224,12 @@ Press-and-hold repeats.
 
 ### Verified
 
-- All **20 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **953 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- All **21 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **982 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **156 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **164 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -246,6 +247,9 @@ Press-and-hold repeats.
   (the first preset workout made of cardio rather than lifts), and the same for the 8-exercise
   Upper B. **This is what caught the alphabetical-order bug** — every test passed, every screenshot
   looked right, and the programme was still arriving shuffled
+- **Home's "what's next" driven through all four of its states** at 390 and 1180 px — empty account,
+  programme added with no history, one workout recorded two days ago, and the end of the rotation
+  wrapping back to the first. The button and the caption moved together every time
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
@@ -292,6 +296,9 @@ Fitness_Tracker/
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
 │   ├── preset-systems.js       ready-made systems to browse and copy. Shaped so a
 │   │                           third-party one can slot in: author/sourceName/sourceUrl
+│   ├── next-workout.js         where you are in your own rotation — pure, clock
+│   │                           passed IN. vision §1.2 first half. Builds its own
+│   │                           caption so the sentence cannot drift from the answer
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
@@ -348,6 +355,17 @@ Fitness_Tracker/
   said "Not found" the moment you tapped it. `WorkoutsView` asking for systems and workouts in one
   `Promise.all` is exactly that case, and is a perfectly reasonable thing for a view to do. There is
   a test that fails if the single-flight guard is removed.
+- **⚠️ A UTC timestamp is not a local date, and a test that mixes them is green by time of day.**
+  `startedAt` is a UTC instant (`new Date().toISOString()`); `todayISO()` is the LOCAL day. A render
+  test compared `startedAt.slice(0, 10)` to `todayISO()` and so failed every evening after 18:00
+  here — UTC had rolled into tomorrow while local had not — and passed again each morning. It was
+  green when this session started and red an hour later with nothing touched in between. **The app
+  is fine**: day logic runs off `startedOn`, which is local, and `startedAt` is never compared to a
+  local date anywhere. The test now asserts what it actually meant — that `startedAt` is within
+  minutes of real time and did *not* get dragged back to the back-dated day. Anything comparing a
+  stored timestamp to a calendar day wants this same look. Also: parse `YYYY-MM-DD` as **local**
+  midnight by splitting it, never `new Date(iso)`, which reads a bare date as UTC and lands a day
+  early for everyone west of Greenwich (`daysBetween()` in `next-workout.js`).
 - **Weights are STORED IN POUNDS, always** (`units.js`). kg is a display choice, converted at exactly
   two edges: what is shown and what is typed. `e1rm.js` and `strength-standards.js` are pounds
   throughout. Anything that stores a number the user typed must go through `units.fromDisplay()`.

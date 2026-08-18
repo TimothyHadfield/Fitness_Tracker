@@ -48,7 +48,7 @@ not what is described here, but D7 is locked and would need explicitly revisitin
 the first feature that makes other people's data a hard privacy problem, so `firestore.rules` and
 D12's anonymous-first model both get materially harder. Worth knowing before, not during.
 
-### 1.2 Smart systems — the app adjusts the workout
+### 1.2 Smart systems — the app adjusts the workout — **HALF BUILT 2026-08-17**
 
 Have the site automatically adjust things for a workout — weight and rep adjustments that support and
 optimise **progressive overload**, rather than the user repeating an identical exercise forever.
@@ -64,6 +64,31 @@ Open threads:
 - What does it do on week one, with no history?
 - Does it ever adjust without asking, or always propose? Silent adjustment is the kind of thing that
   destroys trust if it is wrong once.
+
+**The FIRST half is BUILT — 2026-08-17.** Home's big button is now the next workout in your rotation
+rather than a generic "Start a workout": it reads your most recent session, finds that workout in its
+system, and offers the one after it, wrapping at the end. The caption says what it read ("Next in
+Push Pull Legs. You did Push 2 days ago") and **Choose another workout** sits underneath, so nothing
+is ever forced. `js/next-workout.js` — pure, with the date passed in.
+
+Three decisions inside it worth keeping:
+
+- **Rotation, not "whichever is stalest".** The two agree whenever somebody follows their programme,
+  so the choice only matters when they have not. Rotation wins because the order is what the author
+  actually wrote — Push 1 and Push 2 are different sessions on purpose — and a stale-first rule would
+  chase anyone who misses a day into repeating the same catch-up forever. This only became possible
+  the same day, when copied workouts started carrying an `order`; before that they came back
+  alphabetically and there was no rotation to read.
+- **It never scolds and never refuses.** Train twice in a day and it says "You already did Push
+  today — this is next when you are ready". Telling somebody they have trained too much would be an
+  opinion the app has not earned (Rule 6). Reading their own rotation back to them is not.
+- **Silent rather than wrong.** No history *and* more than one system means no suggestion at all,
+  because guessing which programme somebody meant to start is exactly the confident-and-wrong this
+  project is built against.
+
+**The second half — suggesting the WEIGHTS AND REPS — is deliberately untouched.** It needs the
+strength estimator underneath it, and a number the app moved for a bad reason is the failure this
+whole file warns about. Tim's trailing "and which one …" note below is also still uncaptured.
 
 **Where this connects:** this is Tier 2's *progression rules* (linear + double progression) grown up,
 and it wants the strength estimator from `docs/strength-estimate-plan.md` underneath it — an

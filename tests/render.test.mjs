@@ -347,8 +347,21 @@ ok(!data.querySelector('.rep-target'),
   ok(sessions.length === before + 1, 'finishing writes one session');
   ok(saved && saved.date === past,
      `the session is filed under the chosen day, not today (${saved && saved.date})`);
-  ok(saved && saved.startedAt && saved.startedAt.slice(0, 10) === todayISO(),
-     'startedAt still records when it was actually entered — the date moved, not the clock');
+  // ⚠️ `startedAt` is a UTC INSTANT; `todayISO()` is a LOCAL date. This used to
+  // compare the two, which meant the suite failed every evening once UTC rolled
+  // over into tomorrow and passed again the next morning — a test that is green
+  // by time of day is worse than no test. The app itself is fine: the day logic
+  // (draft expiry) runs off `startedOn`, which is local, and `startedAt` is
+  // never compared to a local date anywhere.
+  //
+  // What the assertion actually means: the clock did NOT move with the date.
+  // So check it against real time, and against the back-dated day it must not
+  // have become.
+  const startedMs = saved && saved.startedAt ? Date.parse(saved.startedAt) : NaN;
+  ok(Number.isFinite(startedMs) && Math.abs(Date.now() - startedMs) < 5 * 60000,
+     'startedAt records when it was actually entered — the date moved, not the clock');
+  ok(saved && saved.startedAt.slice(0, 10) !== past,
+     'and it did not get dragged back to the day the session was filed under');
   ok(localStorage.getItem(DRAFT) === null, 'the draft is cleared once saved');
 
   // A draft genuinely left over from a previous day is still discarded.
@@ -752,6 +765,48 @@ ok(!data.querySelector('.rep-target'),
   const missing = await mount(ExploreDetailView('no-such-preset'));
   ok(/no longer exists/.test(missing.textContent),
      'an unknown system id gives a real screen, not a crash');
+}
+
+
+/* ================= home suggests where you are in the rotation ================= */
+{
+  const { todayISO } = await import(BASE + 'store.js');
+  const { presetById } = await import(BASE + 'preset-systems.js');
+
+  await store.clearAll();
+  // Nothing at all: the old behaviour, and no suggestion invented from nowhere.
+  let home = await mount(HomeView());
+  ok(/Create your first workout/.test(home.textContent),
+     'an empty account still asks you to build something');
+
+  const { system } = await store.addPresetSystem(presetById('preset-ppl'));
+  const ws = await store.getWorkouts(system.id);
+
+  // One system, no history — start at the top of the rotation.
+  home = await mount(HomeView());
+  const primary = home.querySelector('.btn.primary.lg');
+  ok(primary && primary.textContent.includes(ws[0].name),
+     `the big button offers the first workout in the programme (${primary && primary.textContent})`);
+  ok(/First workout in Push Pull Legs/.test(home.textContent),
+     'and says why, naming the system');
+  ok(/Choose another workout/.test(home.textContent),
+     'every other workout is still one tap away — the suggestion never traps you');
+
+  // Record the first workout; the suggestion should move on to the second.
+  await store.saveSession({
+    workoutId: ws[0].id, workoutName: ws[0].name, date: todayISO(),
+    entries: [{ exerciseId: ws[0].exercises[0].exerciseId, exerciseName: 'x', sets: [{ weight: 100, reps: 5 }] }],
+  });
+  home = await mount(HomeView());
+  const next = home.querySelector('.btn.primary.lg');
+  ok(next && next.textContent.includes(ws[1].name),
+     `after doing ${ws[0].name} it offers ${ws[1].name} (${next && next.textContent})`);
+  ok(new RegExp(`already did ${ws[0].name} today`).test(home.textContent),
+     'training today is acknowledged, not used as a reason to refuse');
+  ok(!/rest day|too much|should not/i.test(home.textContent),
+     'and it never tells you what to do — Rule 6');
+
+  await store.clearAll();
 }
 
 

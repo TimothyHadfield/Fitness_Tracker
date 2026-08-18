@@ -1,6 +1,7 @@
 // Home, workout list, workout builder, exercise picker.
 
-import { store, DEFAULT_SETS } from './store.js';
+import { store, DEFAULT_SETS, todayISO } from './store.js';
+import { suggestNext, describeSuggestion } from './next-workout.js';
 import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
 import {
   el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
@@ -17,18 +18,43 @@ const totalSets = (w) => w.exercises.reduce((n, e) => n + e.sets, 0);
  * ================================================================== */
 
 export async function HomeView() {
-  const [workouts, sessions] = await Promise.all([store.getWorkouts(), store.getSessions()]);
+  const [systems, workouts, sessions] = await Promise.all([
+    store.getSystems(), store.getWorkouts(), store.getSessions(),
+  ]);
   const recent = sessions.slice(0, 20);
 
-  const top = [
-    el('button', {
-      class: 'btn primary lg block',
-      onClick: () => (workouts.length ? go('#/start') : go('#/workouts')),
-    }, icon('play'), workouts.length ? 'Start a workout' : 'Create your first workout'),
+  // Where you are in your own rotation (docs/vision.md §1.2, first half).
+  // This is a LOOKUP, not advice: the order came out of the user's own system.
+  // It never refuses and never scolds — every other workout is still one tap
+  // away on "Choose another workout", and the caption always says what it read.
+  const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
 
-    el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
-      icon('flag'), 'Record a benchmark'),
-  ];
+  const top = next
+    ? [
+        el('button', {
+          class: 'btn primary lg block',
+          onClick: () => go('#/session/' + next.workout.id),
+        }, icon('play'), next.workout.name),
+
+        el('div', { class: 'field-help', text: describeSuggestion(next) }),
+
+        // Not "Start a workout" any more — the button above already starts one,
+        // so this one has to say what is DIFFERENT about it.
+        el('button', { class: 'btn block', onClick: () => go('#/start') },
+          icon('list'), 'Choose another workout'),
+
+        el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
+          icon('flag'), 'Record a benchmark'),
+      ]
+    : [
+        el('button', {
+          class: 'btn primary lg block',
+          onClick: () => (workouts.length ? go('#/start') : go('#/workouts')),
+        }, icon('play'), workouts.length ? 'Start a workout' : 'Create your first workout'),
+
+        el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
+          icon('flag'), 'Record a benchmark'),
+      ];
 
   const scroll = [
     el('div', { class: 'section-label', text: 'Recent activity' }),

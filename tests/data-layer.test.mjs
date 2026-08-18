@@ -1977,5 +1977,139 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ================= which workout is next ================= */
+{
+  const { suggestNext, describeSuggestion, agoWords, daysBetween } =
+    await import('../js/next-workout.js');
+
+  const SYS = [{ id: 'sA', name: 'Push Pull Legs' }, { id: 'sB', name: 'Upper / Lower' }];
+  // In DISPLAY order, which is what store.getWorkouts() returns.
+  const PPL = [
+    { id: 'wPush', name: 'Push', systemId: 'sA', order: 0, exercises: [] },
+    { id: 'wPull', name: 'Pull', systemId: 'sA', order: 1, exercises: [] },
+    { id: 'wLegs', name: 'Legs', systemId: 'sA', order: 2, exercises: [] },
+  ];
+  const sess = (workoutId, date, workoutName) => ({ id: 's' + date, workoutId, workoutName, date });
+  const call = (o) => suggestNext({ today: '2026-08-17', systems: SYS, ...o });
+
+  /* ---- the plain case ---- */
+  {
+    const s = call({ workouts: PPL, sessions: [sess('wPush', '2026-08-15', 'Push')] });
+    ok(s && s.workout.id === 'wPull', 'after Push, the next workout is Pull');
+    ok(s.reason === 'rotation', 'and it says it read that off the rotation');
+    ok(s.daysSince === 2, 'it knows how long ago the last one was');
+    ok(s.lastName === 'Push', 'and what the last one was');
+    ok(/Push Pull Legs/.test(describeSuggestion(s)) && /Push/.test(describeSuggestion(s)),
+       'the caption names the system and the last workout');
+    // The button carries the name, so the sentence under it must not repeat it.
+    ok(!/\bPull\b/.test(describeSuggestion(s).replace('Push Pull Legs', '')),
+       'the caption does not repeat the name already on the button');
+  }
+
+  /* ---- it WRAPS. A rotation's last workout is followed by its first ---- */
+  {
+    const s = call({ workouts: PPL, sessions: [sess('wLegs', '2026-08-16', 'Legs')] });
+    ok(s.workout.id === 'wPush', 'after the last workout it wraps back to the first');
+  }
+
+  /* ---- order, not alphabet ---- */
+  // The whole feature rests on `order`. Alphabetically these are Legs, Pull,
+  // Push, so a suggestion built on names would answer "Push" here and be wrong.
+  {
+    const s = call({ workouts: PPL, sessions: [sess('wPull', '2026-08-16', 'Pull')] });
+    ok(s.workout.id === 'wLegs',
+       'the rotation follows programme order, not alphabetical order');
+  }
+
+  /* ---- nothing recorded yet ---- */
+  {
+    const s = call({ workouts: PPL, sessions: [] });
+    ok(s.workout.id === 'wPush' && s.isStart, 'with no history it starts at the top of the rotation');
+    ok(/First workout/.test(describeSuggestion(s)), 'and says so rather than inventing a last session');
+  }
+
+  /* ---- two systems and no history: SAY NOTHING ---- */
+  // Guessing which programme somebody meant to start is exactly the
+  // confident-and-wrong this app is built against.
+  {
+    const both = [...PPL, { id: 'wUp', name: 'Upper', systemId: 'sB', order: 0, exercises: [] }];
+    ok(call({ workouts: both, sessions: [] }) === null,
+       'two systems and no history means no suggestion at all');
+    // But one session is enough to know which programme they are on.
+    const s = call({ workouts: both, sessions: [sess('wUp', '2026-08-16', 'Upper')] });
+    ok(s && s.system.id === 'sB', 'one session picks the system out');
+    ok(s.workout.id === 'wUp', 'and a one-workout system suggests itself again');
+    ok(s.isOnlyWorkout && /only workout/i.test(describeSuggestion(s)),
+       'saying it is the only one, so repeating it does not read as a bug');
+  }
+
+  /* ---- trained today: offer, never refuse ---- */
+  {
+    const s = call({ workouts: PPL, sessions: [sess('wPush', '2026-08-17', 'Push')] });
+    ok(s.trainedToday && s.workout.id === 'wPull', 'training today still suggests the next one');
+    ok(/already did Push today/.test(describeSuggestion(s)),
+       'and says you already trained rather than telling you not to');
+    ok(!/rest|too much|don.t/i.test(describeSuggestion(s)),
+       'Rule 6: it never scolds — that would be an opinion it has not earned');
+  }
+
+  /* ---- a workout deleted after being run ---- */
+  // D22 keeps the SESSION when a workout is deleted, so the newest row can point
+  // at a workout that no longer exists. Dead-ending there would silence the
+  // suggestion permanently for anyone who has ever deleted a workout.
+  {
+    const s = call({ workouts: PPL, sessions: [
+      sess('wGone', '2026-08-16', 'Deleted day'),
+      sess('wPush', '2026-08-14', 'Push'),
+    ] });
+    ok(s && s.workout.id === 'wPull',
+       'a session pointing at a deleted workout is skipped, not fatal');
+    ok(s.daysSince === 3, 'and the date read is the one it actually used');
+  }
+
+  /* ---- sessions handed over in the wrong order ---- */
+  {
+    const s = call({ workouts: PPL, sessions: [
+      sess('wPush', '2026-08-10', 'Push'), sess('wPull', '2026-08-16', 'Pull'),
+    ] });
+    ok(s.workout.id === 'wLegs', 'the newest session wins whatever order they arrive in');
+  }
+
+  /* ---- nothing to suggest from ---- */
+  ok(call({ workouts: [], sessions: [] }) === null, 'no workouts means no suggestion');
+  ok(call({ workouts: [{ id: 'x', name: 'Loose', systemId: null, exercises: [] }], sessions: [] }) === null,
+     'a workout in no system cannot be a rotation');
+
+  /* ---- dates ---- */
+  // Parsed as LOCAL midnight. `new Date('2026-08-17')` is UTC and lands on the
+  // 16th for anyone west of Greenwich, which would put every suggestion a day
+  // out for half the world.
+  ok(daysBetween('2026-08-15', '2026-08-17') === 2, 'day arithmetic counts days');
+  ok(daysBetween('2026-08-17', '2026-08-17') === 0, 'the same day is zero days');
+  ok(daysBetween('2026-02-28', '2026-03-01') === 1, 'and crosses a month end');
+  ok(agoWords(0) === 'today' && agoWords(1) === 'yesterday' && agoWords(3) === '3 days ago',
+     'recent days are named, not dated');
+  ok(agoWords(9) === 'a week ago' && agoWords(21) === '3 weeks ago', 'and longer gaps round to weeks');
+  ok(describeSuggestion(null) === '', 'no suggestion describes as nothing, not "undefined"');
+
+  /* ---- it works on a real preset, end to end ---- */
+  {
+    const { store: st } = await import('../js/store.js');
+    const { presetById } = await import('../js/preset-systems.js');
+    await st.clearAll();
+    const preset = presetById('preset-israetel-floating-split');
+    const { system } = await st.addPresetSystem(preset);
+    const ws = await st.getWorkouts(system.id);
+    const s = suggestNext({
+      systems: await st.getSystems(), workouts: await st.getWorkouts(),
+      sessions: [sess(ws[0].id, '2026-08-16', ws[0].name)], today: '2026-08-17',
+    });
+    ok(s.workout.name === 'Legs 1',
+       `after Pull 1 the floating split says Legs 1 (${s.workout.name})`);
+    await st.clearAll();
+  }
+}
+
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

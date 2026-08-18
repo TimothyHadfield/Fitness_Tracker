@@ -2261,3 +2261,75 @@ order (Pull 1, Legs 1, Push 1, Pull 2, Legs 2, Push 2) and opens its workouts in
 
 Sources: [RP Strength, Dr. Mike's exact training split](https://rpstrength.com/blogs/video-guides/dr-mikes-exact-training-split-to-get-to-6-body-fat) ·
 [BoxLife Magazine](https://boxlifemagazine.com/six-percent-body-fat-training-split/)
+
+---
+
+## 2026-08-17 (later still) — Home knows where you are in your rotation
+
+**Tim:** *"what do you think is the next easiest step in my vision now"* → then *"if you feel like
+you have a good idea on what that project entails then you can begin now"*.
+
+Recommended and built the **first half of `docs/vision.md` §1.2**: suggesting which workout to do
+next. It was the easiest genuine win in the file because it needs no new science, no new data model
+and no research grounding — sessions already store `workoutId` and a date, and workouts started
+carrying an `order` earlier the same day, which is the only reason a rotation can be read at all.
+
+**What it does.** Home's big button is the next workout in your rotation instead of a generic "Start
+a workout". It finds your most recent session, locates that workout in its system, and offers the one
+after it — wrapping at the end, because a rotation's last workout is followed by its first.
+
+```
+[ ▶ Pull ]
+Next in Push Pull Legs. You did Push 2 days ago.
+[ Choose another workout ]
+[ Record a benchmark ]
+```
+
+**`js/next-workout.js`** — pure, no DOM, no store, and the date is passed IN rather than read from a
+clock. Same pattern as `e1rm.js` and `strength-standards.js`, and this has more edge cases than
+either.
+
+**The four decisions worth remembering:**
+
+1. **Rotation, not "whichever is stalest".** They agree whenever somebody follows their programme, so
+   it only matters when they have not. Rotation wins because the order is what the author wrote —
+   Push 1 and Push 2 are different sessions on purpose — and stale-first would chase anyone who
+   misses a day into repeating the same catch-up forever.
+2. **It never scolds and never refuses.** Train twice in a day and it says "You already did Push
+   today — this is next when you are ready". Telling somebody they have trained too much is an
+   opinion the app has not earned (Rule 6). Reading their own rotation back to them is not — the
+   order came out of their own system.
+3. **Silent rather than wrong.** No history *and* more than one system means no suggestion at all.
+   Guessing which programme somebody meant to start is exactly the confident-and-wrong this project
+   exists to avoid.
+4. **A deleted workout does not kill it.** D22 keeps sessions when their workout is deleted, so the
+   newest row can point at something gone. It walks past those instead of dead-ending — otherwise the
+   suggestion would go permanently silent for anyone who has ever deleted a workout.
+
+The caption is built by the same module that computes the answer, which is the trick D20 used for the
+comparison-group caption and for the same reason: a sentence written elsewhere drifts from the thing
+it describes and both halves still look fine on their own.
+
+**Deliberately NOT built: the second half of §1.2** — suggesting the weights and reps. That needs the
+strength estimator underneath it, and a number the app moved for a bad reason is precisely the failure
+`docs/vision.md` warns about.
+
+### A test that was green by time of day
+
+While running the suite, `render.test.mjs` failed on an assertion nobody had touched — and it had
+passed an hour earlier. Cause: `startedAt` is a **UTC instant** and `todayISO()` is a **local date**,
+and the test compared them. It is 18:05 here (UTC−6), so UTC had already rolled into tomorrow. That
+test had been failing every evening after 18:00 and passing again each morning.
+
+**The app is fine** — day logic runs off `startedOn`, which is local, and `startedAt` is never
+compared to a calendar day anywhere. The test now asserts what it actually meant: that `startedAt` is
+within minutes of real time and did *not* get dragged back to the back-dated day. Written up in
+`progress.md` §4, along with the related trap that `new Date('2026-08-17')` parses as UTC and lands a
+day early west of Greenwich — `daysBetween()` splits the string instead.
+
+A test that is green by time of day is worse than no test, and this one had been lying for a while.
+
+**State at close:** **982 data-layer + 164 render assertions green.** Driven over CDP at 390 and
+1180 px through all four states — empty account, programme added with nothing done, one workout two
+days ago, and the end of the rotation wrapping back to the start. Button and caption moved together
+every time.
