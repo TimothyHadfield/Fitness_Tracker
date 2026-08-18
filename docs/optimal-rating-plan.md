@@ -8,7 +8,13 @@
 >
 > He is right on every count, and the third sentence is the design constraint, not a caveat.
 
-**Status:** plan · **Written:** 2026-08-18 · **Phase 0 (research) started the same day**
+**Status:** Phase 0 and Phase 1 BUILT · **Written:** 2026-08-18
+
+**Tim ratified both questions in §7 on 2026-08-18:** hypertrophy and strength are rated
+**separately**, and **100 % means the most the evidence supports** rather than the best system in the
+library. Both were the recommendation, so §4 stands as written.
+
+**Phase 1 shipped the same day** — `js/volume-map.js`, 49 assertions. See §8.
 
 ---
 
@@ -254,3 +260,56 @@ is actionable.
    visible, rather than "best in our library", which would make ratings move when we add a system.
 
 Neither blocks Phase 1, which is the same mapping either way.
+
+
+---
+
+## 8. Phase 1 — built 2026-08-18
+
+`js/volume-map.js` + `tests/volume-map.test.mjs` (49 assertions, no dependencies).
+
+**What it does:** turns any set of workouts into **fractional weekly sets per muscle**, using
+direct 1.0 / indirect 0.5, and reports which published efficiency tier each muscle lands in.
+
+**Three things that came out of building it:**
+
+1. **The audit caught a real error that reading would not have.** A bare `/curl/` rule matched
+   *wrist* curls and paid them biceps volume. The elbow does not move in a wrist curl. Running the
+   mapping over all 270 exercises and printing what fell through is what found it — there is now a
+   test pinning both halves (a wrist curl trains no biceps, a reverse curl does).
+2. **Core is measured but excluded from the average**, and the reason is specific rather than
+   squeamish. Face-value set counting is *accurate* for calves — a programme with no calf work
+   really does neglect them, and several shipped systems genuinely score zero, which is a true
+   statement about them. It is *systematically wrong* for core, which is trained by squats,
+   deadlifts, carries and overhead pressing without a set ever being logged against it. The
+   alternative — crediting compounds with invented indirect core work — would mean making up a
+   number the literature does not offer.
+3. **Full-body lifts contribute indirect volume only, with no direct muscle at all.** An Olympic
+   lift is limited by technique and power output long before any one muscle is driven near failure,
+   and the dose–response literature is built almost entirely on sets taken close to failure (§2.5).
+   Counting a clean as a direct set for the quads would inflate a CrossFit-shaped programme on
+   evidence that does not cover it.
+
+**Sanity check against the nine shipped systems** (fractional sets/week over the 11 scored muscles):
+
+| System | Total | Under the minimum effective dose |
+|---|---|---|
+| Mike Thurston's Six-Day Split | 147 | Calves |
+| Volume Landmarks Hypertrophy | 108 | Traps |
+| Dr. Mike's Floating Split | 116 | Traps, Calves |
+| Push Pull Legs (ours) | 99 | — |
+| Chris Bumstead's 8-Day Split | 99 | Traps, Glutes, Calves |
+| Ultimate Push Pull Legs (Nippard) | 77 | — |
+| Upper / Lower | 66 | Traps |
+| Full Body, 3 Days | 58 | Traps, Quads, Glutes, Calves |
+| The Golden Six | 29 | most |
+
+That ordering is defensible on sight, which is the bar §5 set: a 6-day professional bodybuilder's
+split at the top, a 3-day 1960s beginner programme at the bottom, and the one programme *designed on
+volume landmarks* hitting the minimum effective dose in 10 of 11 muscles. **Note Nippard's total is
+understated** — only three of his six workouts are transcribed (`progress.md` §9), so his system is
+half a programme and its volume should not be read as his.
+
+⚠️ **Nothing here is a rating yet.** These are set counts, not a score. The score needs the
+dose–response curves (Phase 2), the ceiling from §4.4, and the banding from §2.6 — a raw total would
+be exactly the "more is better" number this document exists to prevent.

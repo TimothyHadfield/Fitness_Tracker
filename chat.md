@@ -2924,3 +2924,54 @@ sets per muscle per week" band is marked as superseded — it is not a target, i
 curve that keeps rising while getting steadily less efficient.
 
 Two questions to Tim, neither blocking Phase 1: one number or two, and what 100 % should mean.
+
+---
+
+## 2026-08-18 — "% optimal" Phase 1: the mapping, and it unblocks D3 as a side effect
+
+Tim ratified both design questions — **hypertrophy and strength rated separately**, and **100 % means
+the most the evidence supports** rather than the best system in our library. Both were the
+recommendation, so the plan stands as written.
+
+**Built: `js/volume-map.js`** — every one of the 270 exercises mapped to the muscles a set of it
+actually works, direct 1.0 / indirect 0.5, plus the published efficiency tiers. 49 assertions.
+
+**This is not `muscle-evidence.js` and the header says so loudly.** They map the same exercises onto
+the same muscles and answer different questions: that one asks *how strong is this muscle*, this one
+asks *how much work landed here*. Conflating them would be an easy and expensive mistake.
+
+**Three things worth keeping from building it:**
+
+1. **The audit caught an error reading would not have.** A bare `/curl/` rule matched *wrist* curls
+   and paid them biceps volume — the elbow does not move in a wrist curl. Found by running the
+   mapping over all 270 exercises and printing what fell through, not by review. Both halves are now
+   pinned as tests.
+2. **Core is measured but excluded from the average**, for a specific reason rather than a squeamish
+   one. Face-value set counting is *accurate* for calves — several shipped programmes genuinely score
+   zero and that is a true statement about them. It is *systematically wrong* for core, which squats,
+   deadlifts, carries and overhead pressing all train without a set ever being logged against it. The
+   alternative was to credit compounds with invented indirect core work, which means making up a
+   number the literature does not offer.
+3. **Olympic and full-body lifts contribute indirect volume only, with no direct muscle.** They are
+   limited by technique and power long before a muscle nears failure, and the dose–response evidence
+   is built almost entirely on sets taken close to failure. Counting a clean as direct quad volume
+   would inflate a CrossFit-shaped programme on evidence that does not cover it.
+
+**Sanity check against the nine shipped systems** — Thurston 147 fractional sets/week, Dr. Mike 116,
+Bumstead 99 (correctly scaled down for his 8-day cycle), the Golden Six 29. That ordering is
+defensible on sight, and the programme literally designed on volume landmarks hits the minimum
+effective dose in 10 of 11 scored muscles, which is about as close to a labelled example as this
+gets. Nippard's 77 is understated and the docs say why — only three of his six workouts exist here.
+
+**Two guards from §5 of the plan are now tests:** a fabricated 60-sets-a-week programme must land in
+"beyond the evidence" rather than in a better tier, and Bumstead's 8-day cycle must produce *lower*
+weekly volume than the same workouts counted as a week.
+
+**And it discharges the D3 blocker as a side effect.** `progress.md` §9 has said since the beginning
+that exercise→muscle must become a weighted mapping before weekly-volume-per-muscle could be built.
+`weeklyVolume()` is that input, and the target bands D3 needs are no longer a guess either — they are
+the published efficiency tiers.
+
+⚠️ **Nothing here is a rating yet.** These are set counts, not a score. A raw total would be exactly
+the "more is better" number this whole project exists to prevent. The score needs the dose–response
+curves, the ceiling, and the banding — Phase 2.

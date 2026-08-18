@@ -50,6 +50,7 @@ const SHELL = [
   './js/next-workout.js',
   './js/set-types.js',
   './js/social.js',
+  './js/volume-map.js',
   './js/views-social.js',
   './js/units.js',
   './js/ui.js',

@@ -65,6 +65,7 @@ where every lift stands right now.
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
+| **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -298,6 +299,15 @@ Press-and-hold repeats.
   them saved anything
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
+- **49 volume-mapping assertions** (`tests/volume-map.test.mjs`, no dependencies) — the direct/
+  indirect classifications the source paper states outright are pinned as tests, the conservative
+  fallback is proved conservative, and the published efficiency tiers are asserted at their
+  boundaries. **Two guards worth keeping**: a fabricated 60-sets-a-week programme must land in
+  "beyond the evidence" rather than in a better tier (the "more is always better" failure this
+  rating exists to avoid), and Bumstead's 8-day cycle must produce *lower* weekly volume than the
+  same workouts counted as a week. Sanity-checked against all nine shipped systems — the 1960s
+  Golden Six totals 29 fractional sets a week against Thurston's 147, and the programme built on
+  volume landmarks reaches the minimum effective dose in 10 of 11 scored muscles
 - **73 social assertions** (`tests/social.test.mjs`, no dependencies) — what a person SHARES. The
   load-bearing one is an **absence** check: the light projection is walked and required to contain no
   numeric leaf below the workout name, run against a session carrying a superset, a drop set and a
@@ -397,6 +407,10 @@ Fitness_Tracker/
 │   │                           deleting fields, because deletion fails OPEN
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
+│   ├── volume-map.js           HOW MUCH WORK landed on each muscle — direct 1.0,
+│   │                           indirect 0.5, plus the published efficiency
+│   │                           tiers. ⚠️ NOT the same table as muscle-evidence:
+│   │                           that asks "how strong", this asks "how much work"
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
@@ -907,12 +921,17 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    needs two real accounts. Phase 4 (a chronological feed, finer visibility axes) remains unstarted
    and still needs D7 narrowed first.
 7. **The "% optimal" rating — `docs/optimal-rating-plan.md`.** Started 2026-08-18 on Tim's ask.
-   Phase 0 (research) is largely done and is in `docs/research.md` §6, which is now 🟢 where it was
-   🟡. **Phase 1 is the direct/indirect mapping over all 270 exercises — and it is the same piece of
-   work Tier 2 and D3 are blocked on**, so it pays for itself twice. Phases 2–4: the pure model, the
-   validation in §5 of the plan, then the screen.
-8. **Tier 2**, whose first move is now the *same* mapping as item 7 — see D3 and `docs/research.md`
-   §6.4 for what it should be.
+   **Phase 0 (research) done** — `docs/research.md` §6 is now 🟢 where it was 🟡. **Phase 1 done** —
+   `js/volume-map.js`, the direct/indirect mapping over all 270 exercises, 49 assertions.
+   **Next is Phase 2: the pure scoring model** (`js/optimal.js`), then §5's validation, then the
+   screen. Tim ratified both design questions on 2026-08-18: **rate hypertrophy and strength
+   separately**, and **100 % means the most the evidence supports**, not the best system in the
+   library.
+8. **Tier 2 / D3 — the mapping it was blocked on now EXISTS.** `js/volume-map.js` already computes
+   fractional weekly sets per muscle for any set of workouts (`weeklyVolume()`), which is the input
+   D3's "weekly sets per muscle group vs target bands" needs. What is left for D3 is the screen and
+   the target bands — and the bands are no longer a guess either, they are the published efficiency
+   tiers in that module.
 
 ### Open questions for Tim
 
