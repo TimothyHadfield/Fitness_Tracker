@@ -41,7 +41,9 @@ where every lift stands right now.
    but it was built for the BODY MAP, not the graph, and it has **no simulator behind it**. Its
    constants are reasoned, not fitted. Fitting them is the open work, and it is what would let the
    two known accuracy gaps in §9 be closed rather than documented.
-2. **Tim opens the app on a real phone.** Unchanged, and still the biggest risk in the project.
+2. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
+   itself is finished. It is still the biggest untested risk in the project and that has not changed;
+   it is simply not the next thing. Don't keep raising it.
 3. **`docs/vision.md` is nearly out of cheap wins.** Two of its five ideas are built (§1.4 the
    comparison setting, §1.5 set types), §1.3 is built except for the "% optimal" number, and §1.2 is
    half built. What is left is **gated**, not merely unstarted: the "% optimal" rating needs
@@ -285,7 +287,9 @@ Press-and-hold repeats.
 
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
   branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
-  only — it says nothing about how a phone actually behaves in the hand.
+  only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —
+  Tim is not doing phone testing until the site itself is done (2026-08-17). Unverified is not the
+  same as unimportant: keep saying so, just don't propose it as the next job.
 - **Google sign-in IS enabled and Tim uses it** (he reported a bug in it on 2026-08-16, so the
   console toggle has been done at some point). The popup path is exercised in the real world; the
   **redirect** path and the installed PWA still are not.
@@ -781,9 +785,12 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    the highest-value thing left.** `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
    closed by guessing at numbers. A simulator turns both into measurements.
-2. **Tim opens the app on a real phone.** Still the biggest remaining risk. The layout has been seen
-   at phone widths in Chrome, but a screenshot says nothing about touch — tap targets on the body
-   map, press-and-hold on the steppers, scroll feel — nor about iOS Safari or the installed PWA.
+2. ~~**Tim opens the app on a real phone.**~~ **DEFERRED — Tim, 2026-08-17: "I don't want to work on
+   the iPhone for a while, only once we're completely done with the actual site."** The risk is
+   unchanged and still real — the layout has been seen at phone widths in Chrome, but a screenshot
+   says nothing about touch (tap targets on the body map, press-and-hold on the steppers, scroll
+   feel), nor about iOS Safari or the installed PWA. It stays in §3 NOT verified. It is just not
+   scheduled, and it should stop being offered as the next job.
 3. **The graph still defaults to benchmarks when an exercise has both sources.** The opposite of what
    Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
    part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line

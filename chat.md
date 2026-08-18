@@ -2587,3 +2587,34 @@ problem: **nobody has opened this app on a real phone.**
 The highest-value open item remains the **strength estimator and its simulator** — it is what would
 turn the two accuracy gaps in §9 from documented into measured, and it sits underneath the half of
 `docs/vision.md` §1.2 that is not built.
+
+---
+
+## 2026-08-17 — Phone testing deferred; a read-back of what is left on the vision
+
+Tim, after a catch-up: **"I don't want to work on the iphone for a while, only once we're completely
+done with the actual site."** Then: what else is on the vision besides the four items just listed?
+
+**Phone testing is now DEFERRED, not dropped.** Recorded in `progress.md` in all three places it was
+being raised — the open-work list at the top, §10 next steps, and §3 NOT verified. The wording
+matters and was chosen carefully: the risk is *unchanged*, and iOS Safari, touch targets and the
+installed PWA are still unverified and still say so. What changed is only that it is not the next
+job and should stop being offered as one. A deferred risk that quietly turns into a closed one is
+exactly the kind of drift this project's docs exist to prevent.
+
+**What is actually left on `docs/vision.md`** — three things, and each is gated on something
+different, which is the useful part:
+
+1. **Social (§1.1)** — untouched. Hardest thing in the file, the only one that cannot be prototyped
+   locally, and the only one that makes other people's data a privacy problem. Collides with **D7**,
+   though D7 was about a passive scrolling feed bolted onto a logger rather than what §1.1 describes.
+2. **The second half of smart systems (§1.2)** — suggesting the weights and reps. Gated on the
+   strength estimator, which is the same thing item 1 of the open-work list is about. Also still
+   carries Tim's unfinished note: *"and which one …"*, a second input to the workout suggestion he
+   never finished saying. Not guessed at.
+3. **The "% optimal" number (§1.3)** — the percentage that lets nine systems in a list be compared.
+   Gated on **research, not code**: `docs/research.md` §6 is 🟡 with primary sources not yet pulled.
+
+§1.4 and §1.5 are built. §3 "Not yet placed" is empty.
+
+Told to him in plain terms with no decision codes, per the working agreement.
