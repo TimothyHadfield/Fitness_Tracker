@@ -209,6 +209,24 @@ ok(scored.find((s) => s.p.id === 'preset-volume-landmarks').r.under.length <= 1,
   ok(measured.raw.hypertrophy !== assumed.raw.hypertrophy,
      'and the two genuinely differ — how often you train it changes the answer');
 
+  // ⚠️ THE DISCREPANCY TIM FOUND. A ready-made system rated one way on Explore
+  // and a different way once copied into the library, because the copy had lost
+  // the programme's own "6 days a week" and fell back to assuming one pass.
+  // Three workouts trained six days is not a three-day programme.
+  const declared = rateUserSystem(workouts, exMap, {
+    sessionDates: [], todayISO: TODAY, declaredDaysPerWeek: 6,
+  });
+  ok(declared.basis === 'declared', 'a copied programme uses the frequency it declares');
+  ok(declared.raw.hypertrophy > assumed.raw.hypertrophy,
+     'which scores higher than assuming one pass a week — the bug Tim spotted');
+  ok(/6 days a week/.test(declared.caption), 'and the caption says where the number came from');
+
+  const declaredButTrained = rateUserSystem(workouts, exMap, {
+    sessionDates: threeAWeek, todayISO: TODAY, declaredDaysPerWeek: 6,
+  });
+  ok(declaredButTrained.basis === 'measured',
+     'but real history always beats what the programme claims — what you DO wins');
+
   // ⚠️ The trap from progress.md: a bare YYYY-MM-DD parsed with new Date() is
   // UTC and lands a day early west of Greenwich.
   ok(observedDaysPerWeek(['2026-08-18'], '2026-08-18') === null

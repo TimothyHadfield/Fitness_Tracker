@@ -2373,6 +2373,22 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(cbBlocks.some((b) => st.groupLabel(b.items.length) === 'Tri-set'),
        'the tri-set is recognised as a tri-set');
     await store2.clearAll();
+
+    // ⚠️ A COPY MUST RATE THE SAME AS THE ORIGINAL. Tim, 2026-08-18: the
+    // percentage on Explore differed from the same system in his library,
+    // because addPresetSystem dropped the programme's own days-per-week and the
+    // copy fell back to "one pass a week". Push Pull Legs is three workouts
+    // trained six days — as a three-day programme it scores far lower.
+    for (const id of ['preset-ppl', 'preset-bumstead-8day', 'preset-arnold-golden-six']) {
+      const p = presetById(id);
+      const { system } = await store2.addPresetSystem(p);
+      const saved = await store2.getSystem(system.id);
+      ok(saved.daysPerWeek === p.daysPerWeek,
+         `${p.name} copies in carrying its ${p.daysPerWeek} days a week`);
+      ok((saved.cycleDays || 0) === (p.cycleDays || 0),
+         'and its cycle length, which is what makes an 8-day split an 8-day split');
+      await store2.clearAll();
+    }
   }
 }
 

@@ -3087,3 +3087,48 @@ and the shot showed "No systems yet" after seeding three of them. The app's own 
 knows this and bounces through `#/blank`; the harness now does the same. Second time this session a
 silent harness failure has been indistinguishable from a real bug — the first was a stale service
 worker serving old CSS.
+
+---
+
+## 2026-08-18 — Two things Tim caught: a stale deploy, and a real discrepancy
+
+**1. "The percentage isn't in the main list."** It was — it had shipped and was live. His symptom was
+the diagnosis: the rating showed on a system's own screen but not on the list, and **both live in the
+same file**. So he was running the previous version of `views-workouts.js`, which had one and not the
+other.
+
+Cause: `sw.js` is stale-while-revalidate, so the load after a deploy serves the OLD app and the
+change appears on the one after. That is the deliberate trade — a hand-maintained cache version can
+freeze somebody on a stale build forever, this self-heals — but it is **indistinguishable from a
+feature that does not work**, which is exactly how it presented.
+
+Fixed rather than explained away. The worker now compares ETag (falling back to Last-Modified) when
+it revalidates, and tells the page; the page shows **"A new version is ready · Refresh"**. Two
+details that matter: it **offers, never reloads** — reloading unasked is right almost always and
+catastrophic once, mid-set with numbers typed and unsaved — and the worker keeps a **flag** as well
+as broadcasting, because the stylesheet and `app.js` are fetched from `<head>` long before the page
+has a listener attached, so a pure broadcast would be shouted into an empty room.
+
+`tests/sw-update.test.mjs` proves it end to end: copies the app to a temp dir, serves it over real
+HTTP, installs the worker, **edits a file on disk**, and asserts the notice appears — and does *not*
+appear on a normal load. 8 assertions. It never touches the repo, which matters when the method is
+"modify a source file".
+
+⚠️ And the harness bit back again, third time today: the first version stamped `Last-Modified` with
+`new Date()` on every request, so every asset always looked changed, the notice fired on a normal
+load, and it read as an app bug. It was a test bug. A real server sends the file's own mtime.
+
+**2. "The percentages differ between Explore and my library."** This one was a real bug and a good
+catch. The two screens rated the same programme by different rules: Explore used the programme's
+declared **6 days a week**, but `addPresetSystem` never copied `daysPerWeek` across, so the library
+fell back to assuming one pass a week. Push Pull Legs is three workouts trained six days — as a
+three-day programme it scores far lower.
+
+Copies now carry `daysPerWeek`, `cycleDays` and `minutes`, and the rating has **three bases in
+priority order**: *measured* (what you actually do, always wins), *declared* (what the programme says
+— right for a fresh copy, and it makes the two screens agree), *assumed* (one pass a week, only for
+something typed from scratch). Systems copied before the fix are backfilled from their `presetId`, so
+Tim's existing library is corrected rather than only new copies.
+
+Verified by copying all nine presets through the real store and comparing both paths: **all nine
+agree**. Tests pin it at both layers — the store carries the fields, and history beats a declaration.

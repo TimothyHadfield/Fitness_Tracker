@@ -96,6 +96,11 @@ self.addEventListener('message', (e) => {
   if (e.data === 'unregister') {
     self.registration.unregister().then(() => caches.delete(CACHE));
   }
+  // The page asking on boot, because the update may have been spotted before
+  // it was listening. See the note on `sawUpdate`.
+  if (e.data === 'has-update' && sawUpdate && e.source) {
+    e.source.postMessage('assets-updated');
+  }
 });
 
 self.addEventListener('fetch', (e) => {
@@ -131,7 +136,20 @@ self.addEventListener('fetch', (e) => {
     const spawn = fetch(req).then((res) => {
       // Only store real, complete responses. An opaque or partial one cached
       // here would be served back as a corrupt asset later.
-      if (res && res.ok && res.type === 'basic') cache.put(req, res.clone());
+      if (res && res.ok && res.type === 'basic') {
+        // ⚠️ The cost of stale-while-revalidate, and it is not theoretical.
+        // This load is being served the OLD file while the new one downloads
+        // behind it, so a change that shipped minutes ago is invisible until
+        // the next load. Tim hit exactly this: a rating showed on one screen
+        // and not another, because both live in the same file and he had the
+        // previous version of it. That reads as a broken feature and is not.
+        //
+        // So: notice when the file that just arrived differs from the one we
+        // served, and tell the page. The page decides what to do about it —
+        // a service worker must never reload somebody mid-set.
+        if (hit && isDifferent(hit, res)) announceUpdate();
+        cache.put(req, res.clone());
+      }
       return res;
     }).catch(() => null);
 
@@ -140,3 +158,38 @@ self.addEventListener('fetch', (e) => {
     return fresh || Response.error();
   })());
 });
+
+/**
+ * Has this asset actually changed?
+ *
+ * ETag first — GitHub Pages sends a strong one and it is exact. Last-Modified
+ * is the fallback. If neither header is present we say NO rather than yes: a
+ * false positive here nags the user on every single load, which is worse than
+ * missing an update they will pick up on the next visit anyway.
+ */
+function isDifferent(cached, fresh) {
+  const tag = (r) => r.headers.get('etag');
+  const mod = (r) => r.headers.get('last-modified');
+  if (tag(cached) && tag(fresh)) return tag(cached) !== tag(fresh);
+  if (mod(cached) && mod(fresh)) return mod(cached) !== mod(fresh);
+  return false;
+}
+
+// ⚠️ A FLAG, not just a broadcast, and that distinction is the whole thing
+// working or not.
+//
+// The stylesheet and app.js are fetched from <head>, long before app.js has
+// booted and attached its listener — so a broadcast at that moment is shouted
+// into an empty room and the user never hears about the update that triggered
+// it. The lazily-imported view modules are the opposite: they load well after
+// boot, so a broadcast reaches them fine.
+//
+// Both paths are needed. The flag survives the race; the broadcast catches the
+// later ones without the page having to poll.
+let sawUpdate = false;
+async function announceUpdate() {
+  if (sawUpdate) return;      // a deploy changes a dozen files; say it once
+  sawUpdate = true;
+  const windows = await self.clients.matchAll({ type: 'window' });
+  for (const c of windows) c.postMessage('assets-updated');
+}

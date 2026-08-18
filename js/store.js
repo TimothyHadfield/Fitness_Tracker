@@ -416,6 +416,16 @@ export const store = {
       author: preset.author || null,
       sourceName: preset.sourceName || null,
       sourceUrl: preset.sourceUrl || null,
+      // ⚠️ HOW OFTEN IT IS MEANT TO BE TRAINED HAS TO COME WITH IT.
+      // Without these three the copy rates DIFFERENTLY from the original the
+      // moment it lands in your library — Push Pull Legs is three workouts
+      // trained six days a week, so dropping `daysPerWeek` made the copy look
+      // like a three-day programme and score well below the version on the
+      // Explore screen. Tim spotted exactly that. The rating is only allowed to
+      // change once there is real history saying it should.
+      daysPerWeek: preset.daysPerWeek || null,
+      cycleDays: preset.cycleDays || null,
+      minutes: preset.minutes || null,
     });
 
     let skipped = 0;

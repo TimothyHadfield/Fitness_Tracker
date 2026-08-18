@@ -1,7 +1,7 @@
 // Router + boot.
 
 import { store } from './store.js';
-import { el, icon, clear, profileButton } from './ui.js';
+import { el, icon, iconBtn, clear, profileButton } from './ui.js';
 import {
   HomeView, StartPickerView, WorkoutsView, SystemView, WorkoutBuilderView,
   ExploreView, ExploreDetailView,
@@ -141,4 +141,37 @@ function registerServiceWorker() {
   // Relative, so it keeps working under the /Fitness_Tracker/ path on Pages.
   navigator.serviceWorker.register('./sw.js')
     .catch((err) => console.warn('Service worker did not register.', err));
+
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data === 'assets-updated') offerRefresh();
+  });
+}
+
+/**
+ * "A new version is ready."
+ *
+ * The service worker serves the cached file and fetches the new one behind it,
+ * so the load that follows a deploy shows the OLD app. That is the deliberate
+ * trade in sw.js — it self-heals and cannot freeze anyone on a stale build the
+ * way a hand-maintained cache version can — but the user is left looking at a
+ * change that shipped and did not appear. Tim hit exactly that.
+ *
+ * ⚠️ It OFFERS rather than reloads. Reloading by itself would be correct almost
+ * always and catastrophic once: mid-set, with numbers typed and not yet saved.
+ * Nothing here touches the page until it is tapped.
+ */
+let refreshOffered = false;
+function offerRefresh() {
+  if (refreshOffered) return;
+  refreshOffered = true;
+
+  const bar = el('div', { class: 'update-bar', role: 'status' },
+    el('span', { text: 'A new version is ready.' }),
+    el('button', {
+      class: 'btn small primary', text: 'Refresh',
+      onClick: () => location.reload(),
+    }),
+    iconBtn('x', 'Dismiss', () => bar.remove()),
+  );
+  document.body.append(bar);
 }

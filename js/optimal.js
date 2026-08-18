@@ -276,24 +276,50 @@ export function observedDaysPerWeek(dates, todayISO, windowDays = OBSERVE_WINDOW
  * to be able to say so. A rating computed from an assumption and a rating
  * computed from ten sessions are not the same claim.
  */
-export function rateUserSystem(workouts, exMap, { sessionDates, todayISO, minutesPerSession } = {}) {
+export function rateUserSystem(workouts, exMap, {
+  sessionDates, todayISO, minutesPerSession, declaredDaysPerWeek, cycleDays,
+} = {}) {
   const observed = observedDaysPerWeek(sessionDates, todayISO);
-  const daysPerWeek = observed ? observed.daysPerWeek : (workouts || []).length;
 
-  const rating = rateProgramme(workouts, exMap, { daysPerWeek, minutesPerSession });
+  // ⚠️ THREE bases, in this order, and the order is the whole fix for a real
+  // bug: a ready-made system rated one way on Explore and a different way once
+  // copied into the library, because the copy had lost the programme's own
+  // "6 days a week" and fell back to assuming one pass.
+  //
+  //   measured  — what they actually do. Always wins when it exists.
+  //   declared  — what the programme says it is. Right for a copy with no
+  //               history yet, and it makes the two screens agree.
+  //   assumed   — one pass a week. Only for a system somebody typed from
+  //               scratch, which declares nothing.
+  const basis = observed ? 'measured' : (declaredDaysPerWeek > 0 ? 'declared' : 'assumed');
+  const daysPerWeek = observed ? observed.daysPerWeek
+    : (declaredDaysPerWeek > 0 ? declaredDaysPerWeek : (workouts || []).length);
+
+  const rating = rateProgramme(workouts, exMap, {
+    daysPerWeek,
+    minutesPerSession,
+    // A declared cycle only applies while the days count is declared too. Once
+    // there is real history, the history already knows about the rest days.
+    cycleDays: observed ? 0 : cycleDays,
+  });
+
+  const CAPTIONS = {
+    measured: observed && `Based on the ${observed.sessions} session${observed.sessions === 1 ? '' : 's'} `
+      + `you have logged in the last ${Math.round(observed.spanDays / 7)} weeks — about `
+      + `${observed.daysPerWeek.toFixed(1)} days a week.`,
+    declared: `Based on this programme's ${declaredDaysPerWeek} days a week. Once you have logged a `
+      + 'couple of weeks, this switches to what you actually do.',
+    assumed: 'Assuming you train each workout once a week. Log a couple of weeks and this will be '
+      + 'measured from what you actually do instead.',
+  };
+
   return {
     ...rating,
-    basis: observed ? 'measured' : 'assumed',
+    basis,
     observed,
-    // Said in words by the module that computed it, so the sentence and the
-    // number cannot drift apart — the same reason next-workout.js builds its
-    // own caption.
-    caption: observed
-      ? `Based on the ${observed.sessions} session${observed.sessions === 1 ? '' : 's'} you have `
-        + `logged in the last ${Math.round(observed.spanDays / 7)} weeks — about `
-        + `${observed.daysPerWeek.toFixed(1)} days a week.`
-      : 'Assuming you train each workout once a week. Log a couple of weeks and this will be '
-        + 'measured from what you actually do instead.',
+    // Built by the module that computed the number, so the sentence and the
+    // number cannot drift apart — the same reason next-workout.js builds its own.
+    caption: CAPTIONS[basis],
   };
 }
 

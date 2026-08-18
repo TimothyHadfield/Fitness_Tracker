@@ -286,8 +286,8 @@ async function rateOwnSystems(systems, workouts) {
   const out = new Map();
   if (!systems || !systems.length) return out;
 
-  const [{ rateUserSystem }, exMap, sessions] = await Promise.all([
-    import('./optimal.js'), store.getExerciseMap(), store.getSessions(),
+  const [{ rateUserSystem }, exMap, sessions, declared] = await Promise.all([
+    import('./optimal.js'), store.getExerciseMap(), store.getSessions(), declaredFor(systems),
   ]);
   const today = todayISO();
 
@@ -295,11 +295,41 @@ async function rateOwnSystems(systems, workouts) {
     const own = workouts.filter((w) => w.systemId === sys.id);
     if (!own.length) continue;
     const ids = new Set(own.map((w) => w.id));
+    const d = declared.get(sys.id) || {};
     const rating = rateUserSystem(own, exMap, {
       sessionDates: sessions.filter((s) => ids.has(s.workoutId)).map((s) => s.date),
       todayISO: today,
+      declaredDaysPerWeek: d.daysPerWeek,
+      cycleDays: d.cycleDays,
+      minutesPerSession: d.minutes,
     });
     if (rating && rating.raw.hypertrophy > 0) out.set(sys.id, rating);
+  }
+  return out;
+}
+
+/**
+ * What each system says about how often it is meant to be trained.
+ *
+ * A system copied from a ready-made one now carries `daysPerWeek` itself. But
+ * copies made BEFORE that fix do not, so anything with a `presetId` falls back
+ * to looking it up — otherwise Tim's existing library keeps showing the old,
+ * lower numbers and the fix appears not to have worked.
+ */
+async function declaredFor(systems) {
+  const out = new Map();
+  const needsLookup = systems.some((s) => s.presetId && !s.daysPerWeek);
+  const presets = needsLookup
+    ? (await import('./preset-systems.js')).PRESET_SYSTEMS
+    : [];
+
+  for (const sys of systems) {
+    if (sys.daysPerWeek) {
+      out.set(sys.id, { daysPerWeek: sys.daysPerWeek, cycleDays: sys.cycleDays, minutes: sys.minutes });
+      continue;
+    }
+    const p = sys.presetId && presets.find((x) => x.id === sys.presetId);
+    if (p) out.set(sys.id, { daysPerWeek: p.daysPerWeek, cycleDays: p.cycleDays, minutes: p.minutes });
   }
   return out;
 }
@@ -316,7 +346,7 @@ async function rateOwnSystems(systems, workouts) {
  * Returns null rather than an empty box when there is nothing to rate: an empty
  * system, or one whose exercises all fall outside what can be scored.
  */
-async function ownSystemRating(systemId, workouts) {
+async function ownSystemRating(systemId, workouts, systemRow) {
   if (!systemId || !workouts || !workouts.length) return null;
 
   const [{ rateUserSystem, explain }, exMap, sessions] = await Promise.all([
@@ -326,9 +356,13 @@ async function ownSystemRating(systemId, workouts) {
   const ids = new Set(workouts.map((w) => w.id));
   const sessionDates = sessions.filter((s) => ids.has(s.workoutId)).map((s) => s.date);
 
+  const declared = (await declaredFor([systemRow || { id: systemId }])).get(systemId) || {};
   const rating = rateUserSystem(workouts, exMap, {
     sessionDates,
     todayISO: todayISO(),
+    declaredDaysPerWeek: declared.daysPerWeek,
+    cycleDays: declared.cycleDays,
+    minutesPerSession: declared.minutes,
   });
   if (!rating || !(rating.raw.hypertrophy > 0)) return null;
 
@@ -590,7 +624,7 @@ export async function SystemView(id) {
     ? [el('div', { class: 'field-help', text:
         'Name it first, then you can add workouts to it.' })]
     : [
-        await ownSystemRating(draft.id, workouts),
+        await ownSystemRating(draft.id, workouts, existing),
         el('div', { class: 'section-label', text: workouts.length
           ? plural(workouts.length, 'workout') : 'Workouts' }),
         workouts.length
