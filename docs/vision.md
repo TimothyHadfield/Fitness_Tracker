@@ -20,7 +20,7 @@
 
 | | Idea | State |
 |---|---|---|
-| §1.1 | Social, Strava-shaped | Not started. Hardest thing here, and collides with **D7** |
+| §1.1 | Social, Strava-shaped | **PLANNED 2026-08-17** — `docs/social-plan.md`. Nothing built. Still the hardest thing here; the plan's recommendation avoids the **D7** collision rather than resolving it |
 | §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
 | §1.3 | Ready-made systems, ranked "% optimal" | **Built bar the number.** Nine systems, six credited. The "% optimal" rating needs research first |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
@@ -63,6 +63,27 @@ unwanted in Hevy's reviews. That was about a *passive scrolling feed bolted onto
 not what is described here, but D7 is locked and would need explicitly revisiting. Also: social is
 the first feature that makes other people's data a hard privacy problem, so `firestore.rules` and
 D12's anonymous-first model both get materially harder. Worth knowing before, not during.
+
+**PLANNED 2026-08-17 — `docs/social-plan.md`.** Tim asked for a plan; none of it is built. Four
+things from it worth knowing without reading it:
+
+- **The four open threads above are answered** in its §5. The unit of a post is the *session*
+  (expanding from one line into its real structure, supersets and all — the thing Tim's "a run is one
+  number, a lifting session is a structure" line asks for). Mutual connections rather than followers.
+  Per-person visibility, not per-exercise. And **yes, the body map is the shareable object** — as the
+  profile, because it is a state rather than an event.
+- **The storage shape decides the architecture, and it rules out the obvious build.** One document
+  holds every row of a collection and Firestore grants permission per document, so "let Alex see some
+  of my workouts" is not a permission that can be written. Sharing therefore publishes a **derived
+  copy** containing only what was chosen, and the private collections stay owner-only forever.
+- **The D7 collision is side-stepped rather than resolved**, which is the plan's main recommendation:
+  build a connection's **profile page** and no feed. That delivers "see what a friend is doing"
+  completely, and leaves D7 to be judged later against a real screen. No likes, streaks or
+  leaderboards either way — those are the engagement mechanics D7 was actually written against.
+- **The privacy note above turned out to be the understatement.** This is the first feature where
+  being wrong is not recoverable, and revocation cannot be: unsharing deletes a document, it does not
+  un-see what somebody already read. The plan says that has to be on screen when you share, not
+  buried in settings.
 
 ### 1.2 Smart systems — the app adjusts the workout — **HALF BUILT 2026-08-17**
 

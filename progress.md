@@ -49,7 +49,10 @@ where every lift stands right now.
    half built. What is left is **gated**, not merely unstarted: the "% optimal" rating needs
    `docs/research.md` §6 grounded in primary sources FIRST — it is a research commission, not a
    coding session — the other half of §1.2 needs the estimator in item 1, and social (§1.1) is the
-   hardest thing in the file and the only one that makes other people's data a privacy problem.
+   hardest thing in the file and the only one that makes other people's data a privacy problem —
+   and it **now has a plan**, `docs/social-plan.md`, written 2026-08-17 on Tim's ask. None of it is
+   built. Its Phase 0 is two questions for him; its Phase 1 is rules, a projection builder and an
+   emulator test suite, with nothing on screen.
    The last ungated piece of content work is finishing the **Nippard series** (three of six).
 4. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on. Note that
    `muscle-evidence.js` now holds a *ranking* mapping; D3 needs a *volume* one, and they are not the
@@ -174,6 +177,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
+| `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator |
 | `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state, and what is still unverified. **Corrected 2026-08-17** — it had claimed for a day that Google sign-in was not enabled, while this file carried a note saying that claim was wrong. The source is fixed; the note is gone |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
@@ -591,6 +595,13 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 locked decision — it would narrow D14, and D14 is locked, so it needs Tim's say-so first. §10 has
 the question. Nothing else is missing from this table.
 
+**D24 and D25 are proposals too, in `docs/social-plan.md`**, and are not in the table for the same
+reason — nothing is built, so nothing is decided. D24: *sharing publishes a derived copy and never
+widens a permission on the source*, which is forced by the storage shape (one document holds every
+row of a collection, and Firestore grants per document, so "let a friend see some of my workouts"
+has no permission that expresses it). D25: *social requires upgrading off an anonymous account*,
+which narrows D12 rather than breaching it. Both get locked if and when Phase 1 is built.
+
 ### Standing recommendations
 
 - **R1 — Web app (PWA), not native.** Home-screen install, offline, zero distribution cost.
@@ -803,7 +814,14 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    limitation, and a test fails if a non-video transcription falls through to the default warning.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
-6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+6. **Social — `docs/social-plan.md`.** Planned 2026-08-17, nothing built. **Phase 1 is buildable
+   without either open question being answered**: the Firestore rules for the new paths, the pure
+   `publishProjection()` and an emulator-backed rules test suite, all of it invisible. That ordering
+   is deliberate — this is the first feature where being wrong is not recoverable, and getting the
+   security wrong before a UI exists is far cheaper than after. **It needs a new test-only dependency**
+   (`@firebase/rules-unit-testing` + the emulator), because nothing available today can assert that a
+   read is DENIED to a different user, and every interesting case here is a denial.
+7. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim
 
@@ -814,7 +832,14 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    **Precedent worth citing when asking:** D15 was narrowed the same way on 2026-08-17 (see D21) —
    the objection turned out to be about a specific model rather than about the idea, and re-examining
    it produced something better than either the old rule or a plain override.
-2. **Does Tim want the "% optimal" rating for systems?** `docs/vision.md` §1.3 asks for one. Now that
+2. **Social: profile-first, or a feed as well?** `docs/social-plan.md` §9. The recommendation is to
+   build a connection's **profile page** and no feed at all — it delivers the whole of what §1.1 asks
+   for ("see what a friend is doing"), and it needs **no narrowing of D7**, so the collision can be
+   judged later against something real. Answering this does not block Phase 1.
+3. **Social: mutual connections, or followers?** Same file. Recommendation is mutual, because it is
+   the harder one to reverse — mutual can grow into following, following cannot shrink back — and
+   because an asymmetric audience breaks the viewer-list model in §3.2 of that plan.
+4. **Does Tim want the "% optimal" rating for systems?** `docs/vision.md` §1.3 asks for one. Now that
    ready-made systems exist it is buildable, and it would be the most scientifically load-bearing
    number the app has ever shown. It needs grounding in `docs/research.md` §6 first — which is itself
    marked 🟡, "primary sources not yet pulled into this log".

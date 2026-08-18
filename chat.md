@@ -2618,3 +2618,57 @@ different, which is the useful part:
 §1.4 and §1.5 are built. §3 "Not yet placed" is empty.
 
 Told to him in plain terms with no decision codes, per the working agreement.
+
+---
+
+## 2026-08-17 — Social: a plan, and the storage shape that decides it
+
+Tim: **"Lets do the social part now. Make a plan for it and push it."** So: `docs/social-plan.md`,
+plan only, nothing built.
+
+**The thing that turned out to decide the whole design** was not a product question. Data is stored
+as **one document per collection per user** — `users/{uid}/collections/sessions` holds every session
+ever recorded as a single `rows` list — and Firestore grants permission **per document**. There is
+no field-level or row-level read rule. So the obvious implementation is impossible: "let Alex see my
+workouts" cannot be a permission on that document, because the document is *all of it*, including
+the parts deliberately not shared. Building it that way would leave the visibility controls enforced
+by the UI, which is not enforcement.
+
+Hence the proposed **D24 — sharing publishes a derived COPY, never widens a permission on the
+source.** The private collections stay owner-only forever; the owner's own client computes a
+projection holding only what was chosen and writes it somewhere readable. Worth more than mere
+necessity, for three reasons that are in the plan: two independent gates (what goes in, who may
+read), a blast radius that can be *shown* to the user verbatim rather than reasoned about, and
+immunity to the storage shape changing later.
+
+Also proposed: **D25 — social requires upgrading off an anonymous account.** Narrows D12 rather than
+breaching it; D12's objection was a signup wall on first open, and this is not first open.
+
+**Tim's four open threads in §1.1 are answered.** Unit of a post = the session, rendered as one line
+that expands into its real structure — supersets and drop sets included, which is the payoff of last
+week's work and the thing no competitor shows. Mutual connections, not followers, because following
+cannot shrink back into mutual and an audience creates performance. Per-person visibility via a small
+number of tiers, never per-exercise. And the body map **is** the shareable object, as the profile
+rather than as a post — it is a state, not an event.
+
+**On D7.** The recommendation is to side-step rather than narrow: build a connection's **profile
+page** and no feed at all. "See what a friend is doing with their workouts" is satisfied completely
+by visiting them, it needs no decision on D7, and it defers the collision until there is something
+real to judge. Explicitly out either way: likes, kudos, comments, notifications, streaks,
+leaderboards — each individually small and collectively the exact product D7 was written against.
+Rule 6 also bars comparing two people's raw weights in v1; without body weight, sex and training age
+it is an unearned opinion, and the app already has honest machinery for it if it is ever wanted.
+
+**Two things the plan is deliberately blunt about.** Revocation is not retroactive — unsharing
+deletes a document, it does not un-see what was already read, and that belongs on screen at the
+moment of sharing. And rules testing has to change: today they are checked by hand in the console
+playground, and every interesting case in social is a **denial**, which nothing currently available
+can assert. That means `@firebase/rules-unit-testing` and the emulator as a test-only dependency —
+the same standing as jsdom, not a dependency of the app, which stays build-free.
+
+**Phasing puts all the security first and the UI last:** Phase 1 is rules, the pure
+`publishProjection()` and the emulator suite, with nothing on screen. It is buildable now without
+either open question being answered.
+
+**Two questions for Tim**, both recorded in `progress.md` §10: profile-first or feed as well, and
+mutual or followers. Neither blocks Phase 1.
