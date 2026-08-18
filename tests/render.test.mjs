@@ -1057,5 +1057,38 @@ ok(!data.querySelector('.rep-target'),
 }
 
 
+/* ================= Social ================= */
+// docs/social-plan.md, Phases 2-3. There is no cloud in jsdom, so what these
+// assert is the DEGRADED path — which is the one a real person on a train meets,
+// and the one a screenshot review would never see.
+{
+  const { SocialView, FriendView, InviteView } = await import(BASE + 'views-social.js');
+  const text = (node) => node.textContent.replace(/\s+/g, ' ');
+
+  const social = await SocialView();
+  ok(social instanceof Node, 'the Social screen mounts');
+  ok(/Social/.test(text(social)), 'and is titled Social');
+  // The important one: with no account reachable it must explain itself rather
+  // than render an empty friends list, which would read as "you have no
+  // friends" when the truth is "we cannot ask".
+  ok(/not connected|not switched on|real account/i.test(text(social)),
+     'with no cloud it says WHY social is unavailable rather than showing an empty list');
+  ok(!/Invite a friend/.test(text(social)),
+     'and does not offer to invite anybody when it cannot reach an account');
+  ok(!/lbs|reps/i.test(text(social)), 'and shows no training data at all');
+
+  // Messaging apps truncate links. A broken one must explain itself, not throw.
+  for (const bad of ['', 'onlyone', '//']) {
+    const v = await InviteView(bad);
+    ok(v instanceof Node && /not complete|not connected|not switched on|name first/i.test(text(v)),
+       `a broken invite link ("${bad}") explains itself instead of throwing`);
+  }
+
+  const friend = await FriendView('nobody-uid');
+  ok(friend instanceof Node, 'a friend screen mounts for an unknown uid');
+  ok(/not connected|not switched on|real account/i.test(text(friend)),
+     'and says so rather than rendering a blank profile');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

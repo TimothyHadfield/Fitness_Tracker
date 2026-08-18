@@ -473,6 +473,39 @@ export function inviteExpiry(createdAt, days = INVITE_TTL_DAYS) {
  * has expired" send somebody to two different next steps, and a single
  * "invalid link" sends them to neither.
  */
+/**
+ * The link that gets sent to somebody.
+ *
+ * Carries BOTH halves — the owner's uid and the token — because the invite
+ * lives at users/{ownerUid}/invites/{token} and a token alone would need a
+ * lookup across every account, which is exactly the enumeration this design
+ * does not have. The uid in a link is not a secret: it identifies an account,
+ * and reaching anything under it still requires the rules to say yes.
+ */
+export function inviteLink(baseUrl, ownerUid, token) {
+  const base = String(baseUrl || '').split('#')[0];
+  return `${base}#/invite/${encodeURIComponent(ownerUid)}/${encodeURIComponent(token)}`;
+}
+
+/** The other half — `#/invite/<ownerUid>/<token>` back into its two parts. */
+export function parseInviteRoute(param) {
+  const [ownerUid, token] = String(param || '').split('/');
+  if (!ownerUid || !token) return null;
+  return { ownerUid: decodeURIComponent(ownerUid), token: decodeURIComponent(token) };
+}
+
+/**
+ * The order a reader tries a friend's tiers in: most generous first.
+ *
+ * A viewer is listed in exactly one tier's document (see viewersForTier), so
+ * they do not know which one they were given and have to find out by asking.
+ * High to low, keeping the first that answers. A refusal is not billed as a
+ * read, and the answer is worth caching — but the cache must be re-probed on a
+ * miss, because the owner can move somebody down at any moment and a stale
+ * "they let me see everything" must never survive that.
+ */
+export const PROBE_ORDER = [FULL, MID, LIGHT];
+
 export function inviteState(invite, nowISO) {
   if (!invite || typeof invite.token !== 'string' || !invite.token) return 'invalid';
   if (invite.claimedBy) return 'claimed';

@@ -2811,3 +2811,56 @@ needs Java ≥ 21, the emulator jar needs a JDK that is not Oracle's.
 Rules redeployed after the change. **Phase 1 is done: 73 projection assertions + 46 rules assertions,
 green.** Phase 2 — display name, the upgrade gate, invite links, per-person tier control — is next,
 and still publishes nothing.
+
+---
+
+## 2026-08-18 — The Social tab. Built, and looked at
+
+Tim: *"well lets make a social section on the cite (next to data, workouts, home, etc.) Allow the
+user to interact with friends, see their data, etc. all in that one section."*
+
+Phases 2 and 3 of the plan, shipped together as a fifth nav tab.
+
+**The two open questions were answered by building the recommendation rather than asking again** —
+mutual friends, and a list you visit rather than a feed. The second is the one that mattered: **D7
+never had to be reopened**, because "see what my friends are doing" is delivered completely by
+opening a friend's page. No likes, kudos, comments, notifications, streaks or leaderboards.
+
+**What is on screen.** The tab: friends with what each may see, anyone waiting to be added, unused
+invite links with a Cancel, one button to invite. A friend's page: their body map in the app's own
+art and ramp, their recent workouts one line each opening to the real structure with supersets and
+drop sets intact. And **what THEY can see of yours sits at the top of their page**, above anything of
+theirs — the thing a person actually wants to check is what they are giving away, not what they are
+getting. The picker names all four settings and explains each in a sentence, with the "this cannot
+un-see what they have already looked at" caveat right there at the moment of choosing, which is what
+§2 of the plan asked for and what a settings page would have buried.
+
+**Three different unavailable screens, not one dead end:** no cloud, no connection, and anonymous
+account each say the different thing and each offer the different next step.
+
+**The CDP pass earned its keep.** Every screen was driven at 390 and 1180 px in both themes against a
+stubbed facade — no live project touched, no account created. It found two defects jsdom could not
+see: friend rows were **underlined** (they are anchors; every other list in the app is buttons), and
+the visibility description **clipped to "…your muscle map and your pr…"** on a phone, on the one row
+of that screen where the detail is the whole point. The fix for the second was already in the
+stylesheet — `.row-sub.wrap` exists precisely for "this is a sentence, not a name". Both re-checked
+from **computed styles** rather than by eye.
+
+**⚠️ And a trap worth the note it got in `progress.md`:** the scratch copy ships the service worker,
+so the second screenshot run was served the FIRST run's CSS out of cache and showed the bug as still
+present after it had been fixed. A screenshot of a stale cache is indistinguishable from a fix that
+did not work. Fresh `--user-data-dir` per run.
+
+**Also caught by the existing suite**, exactly as designed: `sw.js precache is missing:
+js/views-social.js`. Same guard that caught `social.js` yesterday.
+
+**Green:** 1051 data-layer, 73 social, 46 rules, 225 render (the render suite now covers the Social
+screens in their *unavailable* states, which is the path a real person meets on a train and the one
+nobody screenshots).
+
+**⚠️ The honest gap, and it is the only thing left: NO TWO ACCOUNTS HAVE EVER CONNECTED.** Every
+screen has been driven, but against a stub. The round trip — create an invite, open it as somebody
+else, claim, accept, publish, read their page — has run as rules assertions against hand-written
+documents, never as the app talking to itself from two sides. That is reviewed code sitting on
+tested rules, which is exactly the shape `firebase-backend.js` was in before the 45 live checks
+closed it, and it wants the same treatment: two throwaway accounts, then deleted.

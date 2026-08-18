@@ -20,7 +20,7 @@
 
 | | Idea | State |
 |---|---|---|
-| §1.1 | Social, Strava-shaped | **PLANNED 2026-08-17** — `docs/social-plan.md`. Nothing built. Still the hardest thing here; the plan's recommendation avoids the **D7** collision rather than resolving it |
+| §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — a Social tab, mutual friends, invite links, per-person visibility, a friend's page with their body map. **D7 never had to be reopened**: there is no feed. Untested between two real accounts |
 | §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
 | §1.3 | Ready-made systems, ranked "% optimal" | **Built bar the number.** Nine systems, six credited. The "% optimal" rating needs research first |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
@@ -64,8 +64,16 @@ not what is described here, but D7 is locked and would need explicitly revisitin
 the first feature that makes other people's data a hard privacy problem, so `firestore.rules` and
 D12's anonymous-first model both get materially harder. Worth knowing before, not during.
 
-**PLANNED 2026-08-17 — `docs/social-plan.md`.** Tim asked for a plan; none of it is built. Four
-things from it worth knowing without reading it:
+**BUILT 2026-08-18.** Tim: *"lets make a social section on the cite (next to data, workouts, home,
+etc.) Allow the user to interact with friends, see their data, etc. all in that one section."* It is
+a fifth nav tab. Connect by invite link, choose per person what they see, open a friend to see their
+body map and their recent workouts with the set structure intact. **Both open questions were settled
+by building the recommendation** — mutual friends rather than followers, and a list you visit rather
+than a feed — which is why **D7 never had to be narrowed**. What has not happened: two real accounts
+have never connected. See `progress.md` NOT verified.
+
+**PLANNED 2026-08-17 — `docs/social-plan.md`.** Four things from the plan worth knowing without
+reading it:
 
 - **The four open threads above are answered** in its §5. The unit of a post is the *session*
   (expanding from one line into its real structure, supersets and all — the thing Tim's "a run is one

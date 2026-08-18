@@ -73,6 +73,9 @@ const PATHS = {
   edit: 'M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z',
   flag: 'M5 21V4h13l-2.5 4L18 12H5',
   person: 'M12 12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0',
+  // Two people, the second half-behind the first. Deliberately not a speech
+  // bubble or a heart: this section is people, not messages or approval.
+  people: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.4a6.5 6.5 0 0 1 3.5 5.6',
 };
 
 export function icon(name, size) {

@@ -874,6 +874,250 @@ export const auth = {
 };
 
 /* ------------------------------------------------------------------ *
+ * Social
+ *
+ * docs/social-plan.md. A thin facade, in the same spirit as `auth` above:
+ * every method is safe to call when the cloud is off, and reports why rather
+ * than throwing something the UI has to interpret.
+ *
+ * ⚠️ Nothing here reads or writes another person's PRIVATE data, and nothing
+ * can — the rules refuse it. Sharing works by publishing a derived copy
+ * (js/social.js), and these methods are the plumbing that keeps those copies in
+ * step with the graph. The single rule to hold on to while editing: ANY change
+ * to who-sees-what must be followed by a republish, or the stored copy keeps
+ * answering the old question.
+ * ------------------------------------------------------------------ */
+
+async function socialMod() { return import('./social.js'); }
+
+// Every tier gets rewritten on every publish, including the ones with nobody in
+// them — an empty tier is DELETED rather than left behind. Leaving a stale
+// document with an old viewers list would keep somebody's access alive after
+// they were moved out of it, which is the one thing revocation has to be.
+async function republish() {
+  const impl = requireRemote();
+  const S = await socialMod();
+  const graph = normalizeSocialGraph(await impl.readGraph());
+  const settings = await store.getSettings();
+
+  const [sessions, benchmarks, bodyWeights] = await Promise.all([
+    store.getSessions(), store.getBenchmarks(), store.getBodyWeights(),
+  ]);
+
+  let strength = [];
+  try {
+    const { muscles, ready } = await muscleStrength();
+    if (ready) {
+      strength = [...muscles.values()].map((m) => ({
+        muscle: m.muscle,
+        level: m.level && m.level.name ? m.level.name : m.level,
+        percentile: m.percentile,
+        confidence: m.confidence,
+      }));
+    }
+  } catch (err) {
+    // A body map that cannot be computed must not stop the rest publishing.
+    console.warn('Muscle map not included in this publish.', err);
+  }
+
+  const publishedAt = new Date().toISOString();
+  for (const tier of S.TIERS) {
+    const viewers = S.viewersForTier(graph, tier);
+    if (!viewers.length) { await impl.unpublishTier(tier).catch(() => {}); continue; }
+    const doc = S.buildProjection({
+      tier,
+      viewers,
+      profile: { name: settings.displayName || '' },
+      sessions, benchmarks, strength, bodyWeights,
+      shareBodyWeight: Boolean(settings.shareBodyWeight),
+      publishedAt,
+    });
+    await impl.publishTier(tier, doc);
+  }
+  return true;
+}
+
+function normalizeSocialGraph(raw) {
+  return raw && Array.isArray(raw.connections) ? raw : { connections: [] };
+}
+
+export const social = {
+  /**
+   * Can this account be social at all, and if not, exactly why.
+   *
+   * Three refusals, each with a different next step, which is why they are
+   * three values and not one boolean: no cloud configured, cloud unreachable
+   * right now, and signed in anonymously (D25 — an anonymous uid is a browser
+   * profile that will eventually be lost, so a connection to one is a
+   * connection to nobody).
+   */
+  async state() {
+    const a = await auth.state();
+    if (a.mode !== 'cloud') {
+      return { available: false, reason: a.degraded ? 'offline' : 'local', user: null };
+    }
+    if (!a.user || a.user.isAnonymous) {
+      return { available: false, reason: 'anonymous', user: a.user };
+    }
+    const settings = await store.getSettings();
+    const impl = requireRemote();
+    const graph = normalizeSocialGraph(await impl.readGraph());
+    const S = await socialMod();
+    return {
+      available: true,
+      reason: null,
+      user: a.user,
+      uid: impl.currentUid(),
+      name: settings.displayName || '',
+      shareBodyWeight: Boolean(settings.shareBodyWeight),
+      connections: S.normalizeGraph(graph).connections,
+    };
+  },
+
+  async setDisplayName(name) {
+    const clean = String(name || '').trim().slice(0, 60);
+    if (!clean) throw new Error('Choose a name your friends will recognise.');
+    await store.saveSettings({ displayName: clean });
+    // The name is inside every projection, so changing it has to rewrite them.
+    await republish().catch((err) => console.warn('Could not republish after rename.', err));
+    return clean;
+  },
+
+  async setShareBodyWeight(on) {
+    await store.saveSettings({ shareBodyWeight: Boolean(on) });
+    await republish();
+  },
+
+  /** Move one person between tiers — or to `none`, which shares nothing. */
+  async setTier(uid, tier) {
+    const impl = requireRemote();
+    const graph = normalizeSocialGraph(await impl.readGraph());
+    const row = graph.connections.find((c) => c.uid === uid);
+    if (!row) throw new Error('You are not connected to them.');
+    row.tier = tier;
+    await impl.writeGraph(graph);
+    await republish();
+    return row;
+  },
+
+  async remove(uid) {
+    const impl = requireRemote();
+    const graph = normalizeSocialGraph(await impl.readGraph());
+    graph.connections = graph.connections.filter((c) => c.uid !== uid);
+    await impl.writeGraph(graph);
+    // Republish FIRST-class: this is what actually cuts their access, because
+    // the viewers list lives inside the document they were reading.
+    await republish();
+    return true;
+  },
+
+  async addConnection(uid, name) {
+    const impl = requireRemote();
+    const S = await socialMod();
+    const graph = normalizeSocialGraph(await impl.readGraph());
+    if (!graph.connections.some((c) => c.uid === uid)) {
+      graph.connections.push({
+        uid,
+        name: String(name || '').slice(0, 60),
+        tier: S.DEFAULT_TIER,
+        since: todayISO(),
+      });
+      await impl.writeGraph(graph);
+      await republish();
+    }
+    return true;
+  },
+
+  /* --- invites --- */
+
+  async createInvite() {
+    const impl = requireRemote();
+    const S = await socialMod();
+    const token = S.newInviteToken((n) => crypto.getRandomValues(new Uint8Array(n)));
+    const createdAt = new Date().toISOString();
+    await impl.createInvite(token, {
+      token,
+      createdAt,
+      expiresAt: new Date(Date.parse(S.inviteExpiry(createdAt))),
+    });
+    return { token, link: S.inviteLink(location.href, impl.currentUid(), token) };
+  },
+
+  async invites() {
+    const impl = requireRemote();
+    const rows = await impl.listInvites();
+    return rows.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  },
+
+  async revokeInvite(token) {
+    return requireRemote().deleteInvite(token);
+  },
+
+  /**
+   * Somebody opened my link and claimed it — turn that into a connection.
+   *
+   * The claim is the other person telling me who they are; this is me agreeing.
+   * Deliberately two steps: a link can be forwarded, so the person who opens it
+   * is not always the person it was sent to, and the owner should see a name
+   * before anything is shared.
+   */
+  async acceptClaim(token) {
+    const impl = requireRemote();
+    const rows = await impl.listInvites();
+    const row = rows.find((r) => r.token === token || r.id === token);
+    if (!row || !row.claimedBy) throw new Error('That invite has not been used yet.');
+    await this.addConnection(row.claimedBy, row.claimedName);
+    await impl.deleteInvite(row.id || row.token).catch(() => {});
+    return true;
+  },
+
+  /** The other side: I opened somebody's link. */
+  async openInvite(ownerUid, token) {
+    const impl = requireRemote();
+    const S = await socialMod();
+    const row = await impl.readInvite(ownerUid, token);
+    return { invite: row, state: S.inviteState(row, new Date().toISOString()) };
+  },
+
+  async acceptInvite(ownerUid, token, ownerName) {
+    const impl = requireRemote();
+    const settings = await store.getSettings();
+    if (!settings.displayName) throw new Error('Choose your display name first.');
+    await impl.claimInvite(ownerUid, token, {
+      claimedBy: impl.currentUid(),
+      claimedName: settings.displayName,
+      claimedAt: new Date().toISOString(),
+    });
+    // They now know about me; this is me adding them, so the connection is
+    // mutual from my side immediately rather than waiting on their next visit.
+    await this.addConnection(ownerUid, ownerName || 'Friend');
+    return true;
+  },
+
+  /* --- reading a friend --- */
+
+  /**
+   * What one friend has shared with me.
+   *
+   * Tries the tiers most-generous-first because a viewer is listed in exactly
+   * one of them and is never told which (js/social.js, viewersForTier). A
+   * refusal is the normal answer for the tiers above yours, not an error.
+   */
+  async friend(uid) {
+    const impl = requireRemote();
+    const S = await socialMod();
+    for (const tier of S.PROBE_ORDER) {
+      const doc = await impl.readShared(uid, tier);
+      if (doc) return { tier, doc };
+    }
+    return { tier: null, doc: null };
+  },
+
+  /** Force every projection to be rebuilt — after logging a workout, say. */
+  async publish() { return republish(); },
+};
+
+/* ------------------------------------------------------------------ *
  * Derived data used by the graph + calendar
  * ------------------------------------------------------------------ */
 

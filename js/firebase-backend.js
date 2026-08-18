@@ -136,6 +136,108 @@ export const FirebaseBackend = {
     return true;
   },
 
+  /* --- social ---------------------------------------------------------
+   *
+   * ⚠️ These do NOT go through docRef(). Everything else in this file reads and
+   * writes users/{uid}/collections/{name} and is owner-only by construction;
+   * social is the one place the app touches a path belonging to somebody else.
+   * Each method therefore names its full path explicitly, so a reader can see
+   * whose data it is from the call site rather than inferring it.
+   *
+   * The rules are what enforce all of this. These methods only decide what to
+   * ASK for; firestore.rules decides what is answered. See docs/social-plan.md.
+   * ------------------------------------------------------------------ */
+
+  currentUid() { return user ? user.uid : null; },
+
+  // Owner-private: who I am connected to and what each of them may see.
+  async readGraph() {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', user.uid, 'social', 'graph'));
+    return snap.exists() ? snap.data() : null;
+  },
+
+  async writeGraph(graph) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'social', 'graph'), graph);
+    return true;
+  },
+
+  // Publish one tier's projection. The document is written WHOLE every time —
+  // never merged — so a field that stops being shared actually disappears
+  // rather than lingering from the previous publish.
+  async publishTier(tier, doc) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'shared', tier), doc);
+    return true;
+  },
+
+  async unpublishTier(tier) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', user.uid, 'shared', tier));
+    return true;
+  },
+
+  // Somebody else's projection. Returns null when the rules refuse, which is
+  // the normal answer while probing tiers — see PROBE_ORDER in social.js — and
+  // must not be logged as an error or it fills the console on every visit.
+  async readShared(ownerUid, tier) {
+    const c = await init();
+    try {
+      const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', ownerUid, 'shared', tier));
+      return snap.exists() ? snap.data() : null;
+    } catch (err) {
+      if (err && err.code === 'permission-denied') return null;
+      throw err;
+    }
+  },
+
+  /* --- invites --- */
+
+  async createInvite(token, data) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'invites', token), data);
+    return true;
+  },
+
+  async listInvites() {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    const snap = await c.fs.getDocs(c.fs.collection(c.db, 'users', user.uid, 'invites'));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  },
+
+  async deleteInvite(token) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', user.uid, 'invites', token));
+    return true;
+  },
+
+  // Reading somebody else's invite by exact id — allowed, because you cannot
+  // redeem what you cannot read. Listing them is what the rules refuse.
+  async readInvite(ownerUid, token) {
+    const c = await init();
+    const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', ownerUid, 'invites', token));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  },
+
+  // ⚠️ updateDoc, not setDoc. The rules allow a claimer to change exactly three
+  // fields; setDoc sends the whole document, so every other field counts as
+  // affected and the write is refused. This is the one place in the app where
+  // that distinction decides whether the feature works at all.
+  async claimInvite(ownerUid, token, patch) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.updateDoc(c.fs.doc(c.db, 'users', ownerUid, 'invites', token), patch);
+    return true;
+  },
+
   /* --- accounts --- */
 
   currentUser() { return describeUser(user); },

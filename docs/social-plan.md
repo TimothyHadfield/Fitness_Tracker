@@ -1,13 +1,17 @@
 # Social — plan
 
-> Design for `docs/vision.md` §1.1. **Tim asked for this plan on 2026-08-17.** Nothing here is built.
+> Design for `docs/vision.md` §1.1. **Planned 2026-08-17, BUILT 2026-08-18 — see §11**, which is the
+> section to read first if you only read one. The plan below is kept as written, because the
+> reasoning is why the build looks the way it does.
 >
 > This is the first feature in the project where a bug is not a wrong number on a chart. Everything
 > the app has shipped so far can be wrong in private. This can be wrong in public, and it is not
 > undoable: data shown to somebody has been shown to them, whatever the app does next. The plan is
 > written around that one fact.
 
-**Status:** plan only · **Written:** 2026-08-17 · **Blocked on:** two decisions from Tim (§9)
+**Status:** BUILT · **Written:** 2026-08-17 · **Built:** 2026-08-18 · **§9's two questions were
+answered by building the recommendation** — mutual connections, and a list you visit rather than a
+feed, which is why D7 never had to be reopened.
 
 **Updated the same day:** the three visibility tiers are now **Tim's**, and his mid/full line is cut
 in a different place from the first draft's. §3.3.1 records the change and why it is an improvement
@@ -423,3 +427,46 @@ Neither blocks Phase 1: the rules, the projection builder and its tests are the 
   revisited first, deliberately.
 - **Firestore cost is per read**, and a profile page that republishes or refetches eagerly is the way
   this becomes expensive. Fetch on visit; do not subscribe.
+
+---
+
+## 11. Built — 2026-08-18
+
+Tim: *"lets make a social section on the cite (next to data, workouts, home, etc.) Allow the user to
+interact with friends, see their data, etc. all in that one section."*
+
+Phases 2 and 3 shipped together as one **Social tab**, the fifth nav item. `js/views-social.js`, plus
+the `social` facade in `store.js` and the doc-level methods in `firebase-backend.js`.
+
+**§9's two open questions were answered by building the recommendation**, not by asking again:
+mutual connections, and a list you visit rather than a feed. The second one is why **D7 was never
+reopened** — "see what my friends are doing" is delivered completely by opening a friend's page, so
+the locked decision was never in the way. No likes, kudos, comments, notifications, streaks or
+leaderboards, as §6 said.
+
+What is on screen:
+
+- **The tab** — friends with what each may see, anybody waiting to be added, unused invite links
+  with a Cancel, and one button to invite somebody.
+- **A friend's page** — their body map in the app's own art and ramp, their recent workouts one line
+  each, opening to the real structure with supersets and drop sets intact. **What THEY can see of
+  yours is the first thing on it**, above anything of theirs, because that is what a person actually
+  wants to check.
+- **The picker** — four options, each with a sentence saying what it means, and the "this cannot
+  un-see what they have already looked at" caveat at the point of choosing rather than in a settings
+  page. §2 asked for exactly that.
+- **The degraded paths** — no cloud, no connection, and anonymous account are three different
+  screens with three different next steps, not one dead end.
+
+**Verified:** 73 projection assertions, 46 rules assertions, 225 render assertions (which now include
+the Social screens mounting in the *unavailable* states — the ones a real person meets on a train),
+and a CDP pass at 390 and 1180 px in both themes against a stubbed facade. That pass found two
+defects jsdom could not see: underlined friend rows, and the visibility description clipping to
+"…your muscle map and your pr…" on a phone. Both fixed, both re-checked from computed styles.
+
+⚠️ **NOT verified, and it is the whole of what is left: two accounts have never connected.** The
+round trip — create an invite, open it as somebody else, claim it, accept, publish, read their page
+— has run as rules assertions against hand-written documents, never as the app talking to itself
+from two sides. Until it has, this is reviewed code with tested rules underneath it. Two throwaway
+accounts against the live project, then deleted, is the same treatment that closed the equivalent
+gap in `firebase-backend.js`.

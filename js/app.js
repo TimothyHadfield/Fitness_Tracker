@@ -11,6 +11,7 @@ import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js'
 import { AccountView, SignInView } from './views-account.js';
 import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
+import { SocialView, FriendView, InviteView } from './views-social.js';
 import { setUnits } from './units.js';
 
 const NAV = [
@@ -20,10 +21,13 @@ const NAV = [
   // Route stays #/graphs; only the label changed. Renaming the hash would
   // break nothing visible and churn the router for no user-facing gain.
   { hash: '#/graphs',   label: 'Data',     icon: 'chart' },
+  { hash: '#/social',   label: 'Social',   icon: 'people' },
 ];
 
 // Routes that take over the whole screen (no bottom nav).
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile'];
+// `friend` and `invite` are here but `social` is NOT: Social is a tab, and the
+// two screens you reach FROM it are not.
+const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -68,6 +72,11 @@ async function resolve(route) {
     case 'account':   return AccountView();
     case 'signin':    return SignInView();
     case 'profile':   return ProfileView();
+    case 'social':    return SocialView();
+    case 'friend':    return FriendView(route.param);
+    // #/invite/<ownerUid>/<token> — the whole param is passed through, because
+    // parse() joins the rest back together and the token is the second half.
+    case 'invite':    return InviteView(route.param);
     default:          return HomeView();
   }
 }

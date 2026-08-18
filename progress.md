@@ -249,6 +249,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
@@ -304,6 +305,19 @@ Press-and-hold repeats.
   rather than a walk looking in the wrong place. Also asserted: an email address handed straight to
   the builder never reaches the output, body weight stays out even at full unless separately enabled,
   and a stored tier that is not recognised degrades to the *safest* value rather than the nearest
+- **The Social screens driven in a real browser over CDP** — 2026-08-18, at 390 and 1180 px in both
+  themes, against a scratch copy whose `social` facade is stubbed, so nothing touched the live
+  project and no account was created. Seen: the friends list with all four visibility settings, the
+  waiting-to-be-added row, an unused invite link with its Cancel, a friend's page with **their body
+  map rendering in the app's own art**, and the visibility sheet with its four explained options.
+  **Two real defects came out of it and neither was visible to jsdom**: friend rows were underlined
+  (they are anchors, and the app's other lists are buttons), and the visibility description clipped
+  to *"…your muscle map and your pr…"* on a phone — the one row on that screen where the detail is
+  the point. Both fixed and re-checked from **computed styles**, not by eye
+- ⚠️ **And the trap that nearly hid the fix:** the scratch copy ships the service worker, so the
+  second screenshot run was served the FIRST run's CSS out of cache and showed the bug as still
+  present. A screenshot of a stale cache looks exactly like a fix that did not work. Use a fresh
+  `--user-data-dir` per run
 - **46 rules assertions against the real rules engine** (`tests/rules.test.mjs`, Firestore emulator)
   — **the first tests in this project that run as somebody who is not you.** Everything else asserts
   a number; a permission can only be tested by attempting it as another user and being refused, which
@@ -330,6 +344,13 @@ Press-and-hold repeats.
   only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —
   Tim is not doing phone testing until the site itself is done (2026-08-17). Unverified is not the
   same as unimportant: keep saying so, just don't propose it as the next job.
+- **⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.** Social is built and every screen has been driven in a
+  browser — but against a **stubbed** `social` facade, so the actual round trip (create an invite,
+  open it as somebody else, claim it, accept, publish, read the other person's page) has never run
+  end to end against Firestore. The rules half of it is genuinely tested, with hand-written
+  documents; the app half is reviewed code. This is the same shape of gap `firebase-backend.js`
+  carried before the 45 live checks closed it, and it wants the same treatment: two throwaway
+  accounts against the live project, then delete them.
 - **Google sign-in IS enabled and Tim uses it** (he reported a bug in it on 2026-08-16, so the
   console toggle has been done at some point). The popup path is exercised in the real world; the
   **redirect** path and the installed PWA still are not.
@@ -386,6 +407,9 @@ Fitness_Tracker/
 │   ├── views-session.js        session runner, benchmark form
 │   ├── views-data.js           calendar, day detail, Data screen, settings
 │   ├── views-muscles.js        the Muscles pane
+│   ├── views-social.js         the Social tab, a friend's page, accepting an
+│   │                           invite. Reads ONLY published copies — it cannot
+│   │                           reach anybody's private data even if it tries
 │   ├── views-edit-session.js   editing a workout already recorded (calendar → day → pencil)
 │   ├── views-profile.js        gender, birth year, body weight
 │   ├── views-account.js        account, sign-in, upgrade-from-anonymous
@@ -868,13 +892,15 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    limitation, and a test fails if a non-video transcription falls through to the default warning.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
-6. **Social — Phase 1 is DONE.** `js/social.js` (tiers + projection builder, pure, wired to no
-   screen), the new `firestore.rules` paths deployed, **73 projection assertions + 46 rules
-   assertions, all green**. The security is settled before anything exists to look at, which was the
-   entire point of the phasing. **Next is Phase 2** — display name, the upgrade-off-anonymous gate
-   (D25), invite links, accept, per-person tier control, disconnect — still with nothing published.
-   Then Phase 3, the profile page, which is the one that delivers what Tim asked for. **Two open
-   questions sit above this**, neither blocking: profile-only vs a feed, and mutual vs followers.
+6. **Social — BUILT, and never used by two real accounts.** Phases 1–3 all shipped on 2026-08-18:
+   the tier model and projection builder, the rules, the Social tab, invite links, a friend's page.
+   **Both open questions were answered by building the recommendation** — mutual friends, and a list
+   you visit rather than a feed — so D7 never had to be reopened. **What is NOT verified is the only
+   thing that matters next: no two accounts have ever actually connected.** Every screen has been
+   driven, but against a stubbed facade; the round trip — invite, claim, accept, publish, read —
+   has run only as rules assertions with hand-written documents. That is the next social job, and it
+   needs two real accounts. Phase 4 (a chronological feed, finer visibility axes) remains unstarted
+   and still needs D7 narrowed first.
 7. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim

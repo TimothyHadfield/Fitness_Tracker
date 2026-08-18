@@ -1662,3 +1662,64 @@ select.input {
   text-transform: uppercase; color: var(--accent); margin-bottom: 2px;
 }
 .edit-set.is-drop { padding-left: 14px; border-left: 1px solid var(--rule); }
+
+/* ================= Social =================
+   docs/social-plan.md. Rule 2 still applies — no boxes. Structure comes from
+   hairlines, spacing and weight, exactly as everywhere else, so a friend's page
+   reads as the same app rather than a bolted-on section. */
+
+.section-head {
+  font-size: 11px; font-weight: 750; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-faint);
+  margin: 18px 0 2px;
+}
+.section-head:first-child { margin-top: 4px; }
+
+.note { margin: 4px 0 10px; color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; }
+
+.form { display: flex; flex-direction: column; gap: 10px; }
+.input.mono { font-family: var(--mono); font-size: 12.5px; }
+
+.row-icon { display: flex; color: var(--ink-faint); }
+.row-icon svg { width: 20px; height: 20px; }
+
+/* Most rows in this app are buttons; a friend row is a real link, so you can
+   open somebody in a new tab. That means undoing the underline the browser
+   gives an anchor — the row is the affordance, not the text inside it. */
+a.row { text-decoration: none; }
+
+/* A row that is a button must not look like a button — it is a row. */
+.as-button { border: 0; font: inherit; cursor: pointer; }
+.as-button:hover .row-title { color: var(--accent); }
+
+.btn.small { min-height: 34px; padding-inline: 11px; font-size: 13px; }
+
+.danger-zone { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--rule); }
+
+/* The visibility picker. Each option carries its own explanation, because
+   "mid visibility" means nothing to somebody who has not read the plan (D8). */
+.pick-list { display: flex; flex-direction: column; }
+.pick-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 0; text-align: left; background: none; border: 0;
+  border-bottom: 1px solid var(--rule-soft); color: inherit; cursor: pointer;
+}
+.pick-row:last-of-type { border-bottom: 0; }
+.pick-row svg { color: var(--accent); width: 20px; height: 20px; flex: none; }
+.pick-title { font-size: 15px; font-weight: 650; }
+.pick-sub { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 1px; }
+.pick-row.is-on .pick-title { color: var(--accent); }
+
+/* A friend's workout, closed by default and opening in place. */
+.act { border-bottom: 1px solid var(--rule-soft); }
+.act:last-child { border-bottom: 0; }
+.act-detail { padding: 2px 0 12px; }
+.act-line {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 5px 0 5px 30px; font-size: 13.5px;
+}
+.act-name { flex: 1; min-width: 0; }
+.act-sets { color: var(--ink-soft); font-family: var(--mono); font-size: 12px; text-align: right; }
+
+.friend-body { margin: 6px 0 4px; }
+.friend-body .body-map { width: 100%; height: auto; }
