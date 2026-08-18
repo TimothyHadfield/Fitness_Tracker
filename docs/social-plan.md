@@ -9,6 +9,10 @@
 
 **Status:** plan only · **Written:** 2026-08-17 · **Blocked on:** two decisions from Tim (§9)
 
+**Updated the same day:** the three visibility tiers are now **Tim's**, and his mid/full line is cut
+in a different place from the first draft's. §3.3.1 records the change and why it is an improvement
+rather than a preference.
+
 ---
 
 ## 1. What Tim asked for
@@ -113,17 +117,49 @@ Tim asked for per-person visibility. Publishing one document per *person* would 
 documents after every workout, so instead there are a small fixed number of tiers, and per-person
 control is expressed as **which tier a person is in**:
 
-| Tier | Default contents |
-|---|---|
-| `summary` | Display name, that they trained, the date, the workout name. No numbers. |
-| `detail` | The above plus exercises, sets and reps. |
-| `full` | The above plus weights, plus the strength/muscle-map projection if enabled. |
+**Tim's three, 2026-08-17**, and they are what ships. He described them as full visibility (workout
+details, benchmarks/data), mid (only workout details) and light (only workout titles and dates):
 
-The UI never says "tier". It says **"Alex can see: everything / just that you trained / nothing"**,
-which is per-person control in the only sense that matters to the person setting it. Adding a fourth
-tier later is a data change, not an architecture change.
+| Tier | Contents | The one-line version |
+|---|---|---|
+| `light` | Display name, that they trained, the date, the workout name. Nothing inside the workout. | *"I trained. Push, Tuesday."* |
+| `mid` | The above, plus the whole session — exercises, sets, reps, weights, set types. | *"Here is what I did."* |
+| `full` | The above, plus benchmarks, the strength/muscle map, and progress over time. | *"Here is how strong I am."* |
 
-**Default for a new connection is `summary`.** Not `detail`, not "whatever you set last time".
+**Default for a new connection is `light`.** Not `mid`, and not "whatever you set last time".
+
+The UI never says "tier" or shows this table. It says **"Alex can see: everything · my workouts ·
+just that I trained · nothing"**, per person.
+
+### 3.3.1 ⚠️ Tim's mid/full line is different from the plan's first draft, and is better
+
+The first draft split `mid` from `full` on **weights** — exercises and reps at `mid`, weights only at
+`full`. Tim's split is on **session versus analysis**: the whole workout at `mid`, and benchmarks,
+the muscle map and progress at `full`. Adopted, for three reasons, the third of which is the real one:
+
+1. **It is explainable in a sentence** — "what I did" versus "how strong I am". A visibility control
+   the user cannot restate in their own words is not a control, and "reps but not weights" needs a
+   paragraph.
+2. **It matches a boundary the data model already has.** `mid` is `sessions`; `full` adds
+   `benchmarks`, `bodyWeight` and the muscle map. The tiers fall on collection lines.
+3. **It needs no field surgery, and that is a security property, not a tidiness one.** The first
+   draft's `mid` meant walking into every set — *and into the `minis` nested inside a set* — to strip
+   one field while keeping its siblings. That is precisely the shape of code that leaves a number
+   behind, and §7 already listed nested mini-sets as the case a naive projection builder gets wrong.
+   Tim's version copies whole objects or omits them, so the builder has no partial object anywhere in
+   it and the test is an absence check rather than a shape check.
+
+⚠️ **What his version gives up, stated rather than glossed:** "they can see my volume but not my
+weights", which is the example in `docs/vision.md` §1.1, is **not expressible** under these three
+tiers — volume is computed from weights, so anything showing it at `mid` puts the weights back in by
+another door. The recommendation is to accept that and not add a fourth tier for it: the honest
+reading of the vision line is that Tim wanted *some* useful middle setting, and "my whole workout,
+none of my analysis" is one. Revisit only if it is actually missed.
+
+**Body weight is the exception inside `full`.** It is the most personal number the app stores and it
+is not what anybody means by "how strong I am", so it stays **off even at `full`**, with its own
+switch. Grouping it with the strength data because it happens to be needed to compute strength would
+be an accident of the schema deciding a privacy question.
 
 ### 3.4 Finding each other — invite links, and no directory
 
@@ -208,10 +244,11 @@ turns a lifting log into a place where people post their best day and quietly st
 worst. It also makes §3.2's `viewers` ceiling irrelevant. Following can be added later on top of
 mutual; the reverse is not true.
 
-**Visibility axes.** Per-person, via tiers (§3.3). *Not* per-exercise in v1 — "Alex can see my bench
-but not my squat" needs a filter in the projection builder for every screen that reads it, and every
-place that forgets is a leak. Per-metric is already covered by the tiers, which is the axis Tim
-actually named ("they can see my volume but not my weights").
+**Visibility axes.** Per-person, via the three tiers Tim specified (§3.3). *Not* per-exercise in v1 —
+"Alex can see my bench but not my squat" needs a filter in the projection builder for every screen
+that reads it, and every place that forgets is a leak. Nor per-metric: §3.3.1 records that his
+tiers deliberately cannot express "volume but not weights", and why taking that loss is the right
+trade.
 
 **Does the body map become the shareable object?** *Yes — as the profile, not as a post.* It is the
 most distinctive thing the app has and it is a state rather than an event, which is what a profile
@@ -284,9 +321,13 @@ The suite has to include, at minimum:
 - A viewer cannot write to a projection they can read.
 - A user cannot add themselves to somebody else's `viewers` list.
 - Removing a connection makes the previously-readable document unreadable.
-- The `summary` projection contains no weights — asserted over generated data covering supersets,
-  drop sets and myo-reps, because a nested mini-set is exactly where a naive projection builder
-  leaves a number behind.
+- **The `light` projection contains no number from inside a workout at all** — asserted over
+  generated data covering supersets, drop sets and myo-reps, by walking the published document and
+  failing on any numeric leaf below the workout name. An absence check, not a shape check: a test
+  that lists the fields it expects to be missing passes happily when a *new* field is added and
+  forgotten, which is how this kind of leak actually happens.
+- **The `mid` projection contains no benchmark, body weight, percentile or muscle-map value**, by the
+  same walk. And body weight appears at `full` only when its own switch is on (§3.3).
 - Invites cannot be listed, only fetched by exact token; an expired or redeemed one fails.
 
 ⚠️ **A rules test that only asserts the allowed cases is worth almost nothing.** The failures that

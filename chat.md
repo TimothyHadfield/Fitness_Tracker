@@ -2672,3 +2672,45 @@ either open question being answered.
 
 **Two questions for Tim**, both recorded in `progress.md` §10: profile-first or feed as well, and
 mutual or followers. Neither blocks Phase 1.
+
+---
+
+## 2026-08-17 — Tim specifies the visibility tiers, and moves the middle line
+
+Tim, on the social plan: *"For permissions on visibility, i was just thinking like 2-3 options like
+'full visibility (workout details, benchmarks/data, etc)', 'mid visibility (only workout details)',
+and 'light visibility (only workout titles/dates)'. does that change the plan at all or what?"*
+
+Same three-tier shape the plan already had — but **the mid/full line is cut somewhere different, and
+his place is better.** The draft split them on *weights* (exercises and reps at mid, weights at
+full). His splits on *session versus analysis*: the whole workout at mid, and benchmarks, muscle map
+and progress at full. Adopted.
+
+Three reasons, recorded in `docs/social-plan.md` §3.3.1:
+
+1. **It is explainable in a sentence** — "what I did" versus "how strong I am". "Reps but not
+   weights" takes a paragraph, and a control the user cannot restate in their own words is not one.
+2. **It falls on boundaries the data model already has** — mid is `sessions`, full adds `benchmarks`,
+   `bodyWeight` and the muscle map. Tiers on collection lines.
+3. **It needs no field surgery, which is a security property rather than a tidiness one.** The
+   draft's mid meant reaching into every set — *and into the `minis` nested inside a set* — to strip
+   one field and keep its siblings. §7 of the plan had already named nested mini-sets as the case a
+   naive projection builder gets wrong, so the draft was proposing exactly the shape its own test
+   list was worried about. His version copies whole objects or omits them, so there is no partial
+   object anywhere in the builder and the test becomes an absence check.
+
+**What his cut gives up, and it is written down rather than glossed:** "they can see my volume but
+not my weights" — the example in `docs/vision.md` §1.1 — is now not expressible, because volume is
+computed from weights and anything showing it puts them back by another door. Recommended taking the
+loss rather than adding a fourth tier: the honest reading of that line is that he wanted a useful
+middle setting, and "my whole workout, none of my analysis" is one.
+
+**One thing added on top of his three: body weight stays off even at full**, behind its own switch.
+It is the most personal number stored and it is not what anyone means by "how strong I am". Letting
+it ride along with the strength data because the schema needs it to *compute* strength would be an
+accident of storage deciding a privacy question.
+
+Default for a new connection is **light**. The tests changed shape too — the light projection is now
+asserted to contain no numeric leaf below the workout name at all, by walking the document, rather
+than by listing fields expected to be absent. A list-what's-missing test passes happily when a new
+field is added and forgotten, which is how this kind of leak actually happens.
