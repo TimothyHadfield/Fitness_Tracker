@@ -407,3 +407,9 @@ Three details worth keeping:
   you have logged in the last 3 weeks — about 4.0 days a week"*, rated it 40 % growth / 65 % strength,
   and said the gap was calves. A rating on a shop window is interesting; a rating on your own
   programme tells you what to fix.
+
+**Where it appears, after 2026-08-18:** Tim's follow-up — *"inside the workout menu, where it has all
+your workout systems listed, it also shows the % optimal on the side, even if the user made it
+themselves"* — so the badge is now on **the Workouts list, Explore, and a system's own screen**, the
+same two numbers in all three. A system with no workouts gets no badge: an empty programme is
+unfinished, not bad, and showing it 0 % would be both wrong and discouraging.

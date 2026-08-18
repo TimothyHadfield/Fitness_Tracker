@@ -1127,6 +1127,24 @@ ok(!data.querySelector('.rep-target'),
   ok(!emptyScreen.querySelector('.own-rating'),
      'a system with no workouts shows no rating rather than an empty one');
 
+  // ...and the same rating on the Workouts LIST, which is where Tim wanted it.
+  const { WorkoutsView } = await import(BASE + 'views-workouts.js');
+  const list = await WorkoutsView();
+  await settle();
+  const listText = list.textContent.replace(/\s+/g, ' ');
+
+  ok(list.querySelector('.rating'),
+     'the Workouts list shows the rating beside your own systems');
+  ok(list.querySelectorAll('.rating').length === 1,
+     'one badge — the system with workouts in it, not the empty one');
+  ok(/My Split/.test(listText) && /Nothing here/.test(listText),
+     'while both systems are still listed');
+  const listNums = [...list.querySelectorAll('.rating-num')].map((n) => n.textContent);
+  ok(listNums.length === 2 && listNums.every((t) => Number(t.replace('%', '')) % 5 === 0),
+     'growth and strength, banded the same as everywhere else');
+  ok(/Upper · Lower|Lower · Upper/.test(listText),
+     'and the workout names still show in full — the rating did not clip them away');
+
   await store.clearAll();
 }
 

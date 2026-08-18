@@ -3063,3 +3063,27 @@ screenshotted "That system no longer exists". A seeding step that fails quietly 
 feature that does not work.
 
 241 render assertions, 44 rating assertions, all suites green.
+
+---
+
+## 2026-08-18 — …and on the Workouts list itself
+
+Tim: *"That's okay if you keep what you just made, but what I was wanting was that inside the workout
+menu, where it has all your workout systems listed, it also shows the % optimal on the side, even if
+the user made it themselves."*
+
+Fair — I had put it on the system's own screen, not the list. Both now, same two numbers. A system
+with no workouts gets no badge: an empty programme is unfinished rather than bad, and showing it 0 %
+would be wrong and discouraging both.
+
+The Workouts list rates every system in one pass over sessions rather than per row, the same way
+Explore rates its presets once. The names line wraps for the same reason as Explore — "Push · Pull ·
+Legs" is what tells you which programme a row is, and clipping it to make room for the rating would
+trade the content for the ornament.
+
+**A scratch-harness trap worth recording, because it cost a screenshot cycle and looked exactly like
+a broken feature:** navigating to the SAME hash fires no `hashchange`, so the page never re-rendered
+and the shot showed "No systems yet" after seeding three of them. The app's own `refresh()` already
+knows this and bounces through `#/blank`; the harness now does the same. Second time this session a
+silent harness failure has been indistinguishable from a real bug — the first was a stale service
+worker serving old CSS.

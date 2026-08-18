@@ -137,6 +137,7 @@ export async function StartPickerView() {
 export async function WorkoutsView() {
   const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
   const countIn = (id) => workouts.filter((w) => w.systemId === id).length;
+  const ratings = await rateOwnSystems(systems, workouts);
 
   return screenShell({
     profile: true,
@@ -158,13 +159,18 @@ export async function WorkoutsView() {
           return el('button', { class: 'row', onClick: () => go('#/system/' + sys.id) },
             el('div', { class: 'row-main' },
               el('div', { class: 'row-title', text: sys.name }),
-              el('div', { class: 'row-sub', text: n
+              // `.wrap`, for the same reason as the Explore list: the rating
+              // takes width off this line, and the workout names are what tell
+              // you which programme this is. Clipping "Push · Pull · Legs" to
+              // "Push · Pu…" would trade the content for the ornament.
+              el('div', { class: 'row-sub wrap', text: n
                 // The workout names ARE the useful subtitle — "3 workouts" says
                 // nothing you could not guess, "Push · Pull · Legs" tells you
                 // what the programme is.
                 ? names.slice(0, 4).join(' · ') + (names.length > 4 ? ' · …' : '')
                 : 'No workouts yet' }),
             ),
+            ratingBadge(ratings.get(sys.id)),
             chevron(),
           );
         }))
@@ -264,6 +270,38 @@ function ratingBadge(rating) {
       el('div', { class: 'rating-cap', text: 'strength' }),
     ),
   );
+}
+
+/**
+ * Rate every one of the user's own systems, for the Workouts list.
+ *
+ * One pass over sessions and one exercise map for the whole list rather than
+ * per row — the same reason the Explore list rates its presets once.
+ *
+ * A system with no workouts gets no entry, so `ratingBadge` renders nothing for
+ * it. An empty programme is not a bad programme, it is an unfinished one, and
+ * showing it a 0 % would be both wrong and discouraging.
+ */
+async function rateOwnSystems(systems, workouts) {
+  const out = new Map();
+  if (!systems || !systems.length) return out;
+
+  const [{ rateUserSystem }, exMap, sessions] = await Promise.all([
+    import('./optimal.js'), store.getExerciseMap(), store.getSessions(),
+  ]);
+  const today = todayISO();
+
+  for (const sys of systems) {
+    const own = workouts.filter((w) => w.systemId === sys.id);
+    if (!own.length) continue;
+    const ids = new Set(own.map((w) => w.id));
+    const rating = rateUserSystem(own, exMap, {
+      sessionDates: sessions.filter((s) => ids.has(s.workoutId)).map((s) => s.date),
+      todayISO: today,
+    });
+    if (rating && rating.raw.hypertrophy > 0) out.set(sys.id, rating);
+  }
+  return out;
 }
 
 /**
