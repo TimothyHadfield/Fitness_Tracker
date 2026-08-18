@@ -45,8 +45,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1023 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 210 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1032 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 212 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -226,11 +226,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **1023 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1032 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **210 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **212 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -366,6 +366,16 @@ Fitness_Tracker/
   said "Not found" the moment you tapped it. `WorkoutsView` asking for systems and workouts in one
   `Promise.all` is exactly that case, and is a perfectly reasonable thing for a view to do. There is
   a test that fails if the single-flight guard is removed.
+- **⚠️ A "merge two things" operation must merge the whole of both, not the two items either side
+  of the seam.** `toggleLink` stamped the new group id on the exercise on each side of the boundary
+  only, so joining two adjacent supersets left the far end of the right-hand block on its old id —
+  where it was then a group of one and got dissolved. Joining two supersets silently un-supersetted
+  the last exercise. It now walks each side's run to its end first. Found in review, not by use.
+- **⚠️ Anything that DROPS rows must ask what the survivors were pointing at.** Both save paths
+  discard entries with no numbers in them, and the edit form can remove one outright — either leaves
+  the other half of a superset still carrying `group`, and the day view brackets it alone and calls
+  it a "Superset". `dropOrphanGroups()` runs on both save paths. The general form: a foreign key
+  into a set of rows is only valid while the rest of that set still exists.
 - **⚠️ A view that renders from a DERIVED list must still write to the original.** The workout
   builder draws from `blocksOf(draft.exercises)`, and `blocksOf` maps over the list — so the `item`
   inside a block is a **copy**. Every handler that closed over it (the set-type chip, the sets

@@ -895,6 +895,33 @@ ok(!data.querySelector('.rep-target'),
        'round two comes back to the first exercise — A,B,A,B, not all of A then all of B');
   }
 
+  /* ---- half a superset logged: it must not save as a lone "Superset" ---- */
+  // Found in review. finish() drops entries with no numbers, which left the
+  // survivor still carrying `group`, and the day view bracketed one exercise
+  // and called it a Superset — a claim about what was done that is false.
+  {
+    const w = await store.saveWorkout({
+      name: 'Half super',
+      exercises: [
+        { exerciseId: byName('Cable Fly').id, sets: 1, notes: '', group: 0 },
+        { exerciseId: byName('Pec Deck').id, sets: 1, notes: '', group: 0 },
+      ],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    type(s.querySelector('.step-value'), 40);   // only the first one gets numbers
+    await settle();
+    const finish = btn(s, /Finish workout/) || (btn(s, /Straight into|Round/) && null);
+    if (!finish) { btn(s, /Straight into|Round/).click(); await settle(); }
+    const f2 = btn(s, /Finish workout/);
+    if (f2) { f2.click(); await settle(); await settle(); }
+
+    const saved = (await store.getSessions()).find((x) => x.workoutName === 'Half super');
+    ok(saved && saved.entries.length === 1, 'the unlogged half of the superset is not saved');
+    ok(saved && saved.entries[0].group === undefined,
+       'and the half that WAS logged no longer claims to be in a superset');
+  }
+
   /* ---- a drop set ---- */
   {
     const w = await store.saveWorkout({

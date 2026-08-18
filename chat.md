@@ -2459,3 +2459,37 @@ opens is what said so.
 sheet, pick myo-reps, see the count stepper, close, confirm the chip reads "Myo-reps · 3 mini-sets",
 run the workout, confirm the instruction says rest rather than strip, add a mini-set, confirm it is
 labelled a mini-set and not a drop, and that the whole thing still saves as one hard set.
+
+### Review of the set-type work — six findings, all real, all fixed
+
+Ran a review over both set-type commits. Every finding held up; none were false positives.
+
+1. **`toggleLink` lost an exercise when joining two supersets.** It stamped the new id on the two
+   exercises either side of the boundary only, so `[A0 B0 | C1 D1]` became `[A0 B0 C0 D1]` — and D,
+   now a group of one, was dissolved. Tapping "Superset with next" between two supersets silently
+   un-supersetted the last exercise. It now walks each side's run to its end before merging.
+2. **Half a superset could save as a whole one.** `finish()` drops entries with no numbers in them,
+   leaving the survivor still carrying `group`; the day view then bracketed one exercise and labelled
+   it "Superset" — a false claim about what was actually done. New `dropOrphanGroups()`.
+3. **Same on the edit path** — removing one half of a recorded superset left the other claiming it.
+4. **"Add round" moved the editing target off the round you were on.** It set `active` to the newly
+   added last set, so the next numbers typed landed in a different round from the one the banner
+   said you were in — for that member only, desynchronising the block. Now only solo exercises
+   follow the new set, which is right for them: adding a set there means you are about to do it.
+5. **The progress bar could draw every dot as done.** `renderProgress` ran before `renderPane` did
+   the index clamping, so deleting a set that shrank the walk left the bar wrong until the next
+   redraw. `renderAll` clamps first now.
+6. **A dead button in the superset banner.** The banner listed every member of the block, but a
+   member planned for fewer sets has no step in the later rounds — its button computed `to = -1` and
+   did nothing, with no feedback. Steps now carry `roundMembers` and the banner lists only those.
+
+All six have tests, and I reverted the source fixes while keeping the tests to confirm they fail
+without them — three assertions went red, exactly the ones that should. (The first attempt at that
+check stashed the tests along with the fixes and reported a meaningless zero.)
+
+**Worth noticing about the shape of these:** four of the six are the same class of bug — an operation
+that changes the *membership* of a group without asking what the rest of the group was pointing at.
+Joining, dropping empty entries, deleting an exercise, shrinking the walk. Grouping introduced a
+reference between rows, and every reference needs someone to own what happens when the far end moves.
+
+**State at close:** **1032 data-layer + 212 render assertions green.**

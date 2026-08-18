@@ -2144,6 +2144,55 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(split[1].group != null && split[1].group === split[2].group, 'while the other two stay joined');
   }
 
+  /* ---- joining two blocks merges BOTH of them ---- */
+  // Found in review. Stamping the id on only the exercise next to the boundary
+  // left the rest of the right-hand block on its old id, so joining two
+  // supersets produced [A0 B0 C0 D1] and D — a group of one — was dissolved.
+  // Tapping "Superset with next" between two supersets silently un-supersetted
+  // the last exercise.
+  {
+    const g = (n) => (n === undefined ? null : n);
+    const four = [ex('a', 3, { group: 0 }), ex('b', 3, { group: 0 }),
+      ex('c', 3, { group: 1 }), ex('d', 3, { group: 1 })];
+    const joined = st.toggleLink(four, 1).map((e) => g(e.group));
+    ok(joined.every((x) => x != null && x === joined[0]),
+       `joining two supersets makes ONE block of four, losing nobody (${JSON.stringify(joined)})`);
+    ok(st.blocksOf(st.toggleLink(four, 1))[0].items.length === 4,
+       'and it is a giant set');
+
+    // The same trap from the other side: a solo joined onto an existing block.
+    const solo = st.toggleLink([ex('a'), ex('b', 3, { group: 0 }), ex('c', 3, { group: 0 })], 0);
+    ok(st.blocksOf(solo).length === 1 && st.blocksOf(solo)[0].items.length === 3,
+       'joining a lone exercise onto a superset grows it to a tri-set');
+  }
+
+  /* ---- an orphaned group is not a group ---- */
+  // Both save paths drop entries with nothing in them, and the edit form can
+  // remove one outright. Either leaves the survivor claiming to be in a
+  // superset, and the day view would bracket it alone and label it "Superset" —
+  // a false statement about what the user actually did.
+  {
+    const kept = st.dropOrphanGroups([
+      { exerciseId: 'a', group: 0 },
+      { exerciseId: 'b', group: 1 }, { exerciseId: 'c', group: 1 },
+    ]);
+    ok(kept[0].group === undefined, 'an entry left alone in its group loses the group');
+    ok(kept[1].group === 1 && kept[2].group === 1, 'while a real pair keeps it');
+    ok(st.dropOrphanGroups([]).length === 0 && st.dropOrphanGroups(null).length === 0,
+       'and it copes with nothing at all');
+  }
+
+  /* ---- the banner only offers members that are IN this round ---- */
+  {
+    const steps = st.stepsFor([{ sets: 3, group: 0 }, { sets: 1, group: 0 }]);
+    ok(steps[0].roundMembers.length === 2, 'round one has both members');
+    ok(steps[2].roundMembers.length === 1 && steps[2].roundMembers[0] === 0,
+       'and later rounds list only who is still in them — a button to a step that '
+       + 'does not exist would do nothing and say nothing');
+    ok(steps.every((s) => s.roundMembers.includes(s.entryIndex)),
+       'every step is in its own round');
+  }
+
   /* ---- a group of one is never a group ---- */
   {
     // Reached by deleting the other member, which is an ordinary thing to do.

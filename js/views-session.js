@@ -7,7 +7,9 @@ import {
   fmtSet, confirmSheet, fmtDateLong,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
-import { DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel } from './set-types.js';
+import {
+  DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
+} from './set-types.js';
 
 const go = (hash) => { location.hash = hash; };
 const DRAFT_KEY = 'ftrack:v1:draftSession';
@@ -342,7 +344,7 @@ export async function SessionView(workoutId) {
           el('span', { class: 'group-round', text: `Round ${step.round + 1} of ${step.rounds}` }),
         ),
         el('div', { class: 'group-members' },
-          ...step.members.map((mi, pos) => el('button', {
+          ...step.roundMembers.map((mi, pos) => el('button', {
             class: 'group-member' + (mi === step.entryIndex ? ' is-current' : ''),
             onClick: () => {
               const all = steps();
@@ -428,7 +430,13 @@ export async function SessionView(workoutId) {
               const e = state.entries[mi];
               e.sets.push(pickFields(e.sets[e.sets.length - 1] || {}, e.fields));
             }
-            entry.active = entry.sets.length - 1;
+            // ⚠️ On a SOLO exercise, adding a set means you are about to do it,
+            // so the steppers follow it. Inside a block they must NOT: you are
+            // still on round N, and moving the target to the new last set meant
+            // the next numbers you typed landed in a different round from the
+            // one the banner said you were on — for that member only, silently
+            // desynchronising the block.
+            if (step.group == null) entry.active = entry.sets.length - 1;
             entry.activeDrop = null;
             saveDraft(state);
             renderAll();
@@ -442,6 +450,10 @@ export async function SessionView(workoutId) {
   }
 
   function renderAll() {
+    // Clamp FIRST. Deleting a set can shrink the walk, and renderProgress ran
+    // before renderPane did the clamping — so the bar drew every dot as done
+    // with no current step until something else forced a redraw.
+    currentStep();
     renderProgress();
     renderPane();
     renderFooter();
@@ -477,6 +489,11 @@ export async function SessionView(workoutId) {
       }))
       .filter((e) => e.sets.length);
 
+    // Dropping the empty entries can leave one half of a superset behind still
+    // claiming to be in one, and the day view would bracket it alone and call
+    // it a Superset — a false claim about what was actually done.
+    const cleaned = dropOrphanGroups(entries);
+
     if (!entries.length) {
       toast('Nothing recorded — enter at least one number');
       return;
@@ -489,11 +506,11 @@ export async function SessionView(workoutId) {
       startedAt: state.startedAt,
       finishedAt: new Date().toISOString(),
       isBenchmark: Boolean(state.isBenchmark),
-      entries,
+      entries: cleaned,
     });
 
     clearDraft();
-    showFinished(entries);
+    showFinished(cleaned);
   }
 
   function showFinished(entries) {

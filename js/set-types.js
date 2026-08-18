@@ -205,14 +205,51 @@ export function toggleLink(exercises, i) {
     return normalizeGroups(list);
   }
 
-  // Join. Prefer an id already in play on either side so a superset grows into
-  // a tri-set instead of splitting into two blocks.
-  const id = list[i].group != null ? list[i].group
-    : list[i + 1].group != null ? list[i + 1].group
-    : 1000 + i;
-  list[i].group = id;
-  list[i + 1].group = id;
+  // Join. ⚠️ Merge the WHOLE RUN on each side, not just the two exercises
+  // either side of the boundary. Stamping the id on `list[i+1]` alone left the
+  // rest of the right-hand block still carrying its old id, so joining two
+  // adjacent supersets — [A0 B0 | C1 D1] — produced [A0 B0 C0 D1], and D was
+  // then a group of one and got dissolved. Tapping "Superset with next"
+  // between two supersets silently un-supersetted the last exercise.
+  const runStart = (k) => {
+    let a = k;
+    while (a > 0 && list[a].group != null && list[a - 1].group === list[a].group) a--;
+    return a;
+  };
+  const runEnd = (k) => {
+    let b = k;
+    while (b < list.length - 1 && list[b].group != null && list[b + 1].group === list[b].group) b++;
+    return b;
+  };
+
+  const from = list[i].group != null ? runStart(i) : i;
+  const to = list[i + 1].group != null ? runEnd(i + 1) : i + 1;
+  const id = 1000 + i;
+  for (let k = from; k <= to; k++) list[k].group = id;
   return normalizeGroups(list);
+}
+
+/**
+ * Strip `group` from recorded entries whose block has fewer than two members
+ * left, and renumber the rest.
+ *
+ * Both save paths drop entries with nothing recorded in them, and the edit form
+ * lets an exercise be removed outright. Either can leave the survivor of a
+ * superset still claiming to be in one — and the day view would then bracket a
+ * single exercise and label it "Superset", which is a claim about what the user
+ * did that is simply false.
+ */
+export function dropOrphanGroups(entries) {
+  const counts = new Map();
+  for (const e of entries || []) {
+    if (e.group == null) continue;
+    counts.set(e.group, (counts.get(e.group) || 0) + 1);
+  }
+  return (entries || []).map((e) => {
+    if (e.group == null || counts.get(e.group) > 1) return e;
+    const { group, ...rest } = e;
+    return rest;
+  });
 }
 
 /** Rounds in a block: one round is one set of each member. */
@@ -246,6 +283,7 @@ export function stepsFor(exercises) {
         // already did before groups existed.
         restsAfter: true,
         members: [block.items[0].index],
+        roundMembers: [block.items[0].index],
       });
       continue;
     }
@@ -256,6 +294,10 @@ export function stepsFor(exercises) {
 
     for (let r = 0; r < rounds; r++) {
       const inRound = block.items.filter(({ item }) => (Number(item.sets) || 0) > r);
+      // Who is actually in THIS round. A member planned for fewer sets has no
+      // step here, so listing it in the banner would offer a button that
+      // cannot go anywhere — which is what it did until the review caught it.
+      const roundMembers = inRound.map(({ index }) => index);
       inRound.forEach(({ index }, pos) => {
         steps.push({
           entryIndex: index,
@@ -265,6 +307,7 @@ export function stepsFor(exercises) {
           round: r,
           rounds,
           memberPos: pos,
+          roundMembers,
           // ⚠️ THE POINT OF THE WHOLE FEATURE. Rest belongs at the END of a
           // round, not between the exercises inside it — "no rest between
           // these" is what a superset means, and a timer that started on every

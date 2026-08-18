@@ -14,7 +14,7 @@
 
 import { store, todayISO } from './store.js';
 import { LOAD_LABEL } from './exercises.js';
-import { minisOf, miniLabel } from './set-types.js';
+import { minisOf, miniLabel, dropOrphanGroups } from './set-types.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   confirmSheet, fmtDateLong,
@@ -198,6 +198,10 @@ export async function EditSessionView(sessionId) {
         };
       })
       .filter((e) => e.sets.length);
+
+    // Removing one half of a recorded superset must not leave the survivor
+    // claiming to still be in one — same trap as the session runner's finish().
+    const cleaned = dropOrphanGroups(entries);
 
     if (!entries.length) {
       toast('Every set is empty — enter at least one number');
