@@ -2714,3 +2714,59 @@ Default for a new connection is **light**. The tests changed shape too — the l
 asserted to contain no numeric leaf below the workout name at all, by walking the document, rather
 than by listing fields expected to be absent. A list-what's-missing test passes happily when a new
 field is added and forgotten, which is how this kind of leak actually happens.
+
+---
+
+## 2026-08-18 — Social Phase 1 built: the security, and none of the screens
+
+Tim: **"alright if you're ready then begin."** So Phase 1 of `docs/social-plan.md` — the half that
+decides whether this feature is safe, built before anything that can be looked at.
+
+**Shipped:** `js/social.js` (visibility tiers + the projection builder, pure, imported by nothing),
+the new paths in `firestore.rules`, **73 passing assertions** in `tests/social.test.mjs`, and
+`tests/rules.test.mjs`.
+
+**Three things in the build worth keeping.**
+
+*The builder is a WHITELIST, and that is a security property.* It names every field that may be
+published rather than copying a private row and deleting from it. Deletion fails OPEN — add a field
+to a session next year and a delete-based builder publishes it. A whitelist fails closed: the new
+field is simply absent until somebody names it. There is a test asserting internal session fields
+(`workoutId`, `startedAt`, `isBenchmark`) never appear, and another that an email address handed
+*straight into* the builder does not reach the output or survive as text.
+
+*The leak test is an ABSENCE check with a vacuity guard.* The light projection is walked and required
+to hold no numeric leaf below the workout name, run against a session carrying a superset, a drop set
+and a myo-rep still stored under the legacy `drops` key. But "found no numbers" is also what a walk
+looking in the wrong place reports — so the identical walk over the identical sessions at mid must
+find numbers, and does: **18**. Without that guard the headline assertion proves nothing.
+
+*Everything in the rules is a denial test.* A rule that permits everything passes every positive
+test, so `tests/rules.test.mjs` leads with refusals, including the one that matters most — a
+**full-tier friend still cannot read the private sessions document**. That block is a regression test
+against the only unacceptable outcome of this feature, which is that adding social widened the old
+paths. It also asserts a stranger cannot add themselves to a viewers list, that nobody can list
+another person's invites (get yes, list no), and that a claimer cannot extend an invite's expiry on
+the way past.
+
+**⚠️ And the honest part: `tests/rules.test.mjs` has never run.** The Firestore emulator exits
+instantly on this machine — code 4294967295, an **empty** debug log, and zero bytes on both stdout
+and stderr. Ruled out, so nobody repeats it: not the port (python binds fine, nothing is on 8080),
+not the sandbox (fails the same with it off), not the path (fails the same from a short local dir),
+not the temp dir, and not a broken jar (`--version` and `--help` both print normally — it is only
+*serving* that dies). Running the CLI's exact java command by hand, copied out of
+`firebase-debug.log`, fails identically. Leading suspect is the JDK: Java 21.0.5 is the only one
+installed, and Temurin 17 is the usual recommendation for this emulator. Installing a second JDK is
+a machine change, so it is Tim's call.
+
+So the status line is: **rules compile, rules are deployed, rules are untested.** `firebase deploy
+--only firestore:rules` validates server-side and reported success, and the diff is purely additive
+so the private-collection block is byte-for-byte unchanged — but neither of those says anything about
+behaviour. Recorded in `progress.md` under NOT verified rather than anywhere softer. Nothing reads or
+writes the new paths yet, so today's exposure is zero, and **Phase 2 does not start until the suite
+runs.**
+
+**Caught in passing:** the data-layer suite failed the moment `js/social.js` existed —
+`sw.js precache is missing: js/social.js`. A module outside the precache is a module the app cannot
+load offline, and D6 says offline is non-negotiable. Added, and the rule is now written into
+`progress.md` beside the matching one about `COLLECTIONS` and `knownCollection()`.

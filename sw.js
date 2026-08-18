@@ -49,6 +49,7 @@ const SHELL = [
   './js/preset-systems.js',
   './js/next-workout.js',
   './js/set-types.js',
+  './js/social.js',
   './js/units.js',
   './js/ui.js',
   './js/views-account.js',

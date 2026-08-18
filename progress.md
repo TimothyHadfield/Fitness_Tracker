@@ -64,7 +64,9 @@ where every lift stands right now.
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
+| **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
+| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing` then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — who may READ it. ⚠️ **WRITTEN BUT NEVER RUN**: the emulator will not start on this machine. `docs/social-plan.md` §7.1 has everything already tried |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -175,6 +177,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
+| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to no screen yet |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |
@@ -280,6 +283,14 @@ Press-and-hold repeats.
   them saved anything
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
+- **73 social assertions** (`tests/social.test.mjs`, no dependencies) — what a person SHARES. The
+  load-bearing one is an **absence** check: the light projection is walked and required to contain no
+  numeric leaf below the workout name, run against a session carrying a superset, a drop set and a
+  myo-rep still stored under the legacy `drops` key. It has a **vacuity guard** — the identical walk
+  over the identical sessions at mid must find numbers (it finds 18), so "none at light" is a result
+  rather than a walk looking in the wrong place. Also asserted: an email address handed straight to
+  the builder never reaches the output, body weight stays out even at full unless separately enabled,
+  and a stored tier that is not recognised degrades to the *safest* value rather than the nearest
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
   its gstatic imports redirected to a local SDK — not a lookalike: anonymous sign-in, read/write
   round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking preserving uid and
@@ -294,6 +305,14 @@ Press-and-hold repeats.
   only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —
   Tim is not doing phone testing until the site itself is done (2026-08-17). Unverified is not the
   same as unimportant: keep saying so, just don't propose it as the next job.
+- **⚠️ THE SOCIAL FIRESTORE RULES ARE NOT TESTED.** `firestore.rules` gained the shared-projection,
+  connection-graph and invite paths on 2026-08-18, and `tests/rules.test.mjs` covers them — but that
+  suite **has never been executed**, because the Firestore emulator exits instantly on this machine
+  with an empty log. What IS known: the rules **compile** (`firebase deploy` validates server-side and
+  they are deployed), and the diff is purely additive so the private-collection block is unchanged.
+  Neither is a statement about behaviour. Everything already tried, so it is not repeated, is in
+  `docs/social-plan.md` §7.1; the leading suspect is the JDK. **Nothing reads or writes these paths
+  yet**, so the exposure today is zero — but Phase 2 must not start until this runs.
 - **Google sign-in IS enabled and Tim uses it** (he reported a bug in it on 2026-08-16, so the
   console toggle has been done at some point). The popup path is exercised in the real world; the
   **redirect** path and the installed PWA still are not.
@@ -332,6 +351,11 @@ Fitness_Tracker/
 │   ├── set-types.js            supersets/tri-sets (grouping) and drop sets
 │   │                           (nesting) — pure. Owns the walk the runner
 │   │                           follows and the one-drop-set-is-one-hard-set rule
+│   ├── social.js               VISIBILITY TIERS + the projection builder — pure.
+│   │                           NOT WIRED TO ANY SCREEN. Sharing publishes a
+│   │                           derived copy; it never widens a permission on
+│   │                           the private data. Built by whitelist, never by
+│   │                           deleting fields, because deletion fails OPEN
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
@@ -351,8 +375,11 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     869 assertions, no dependencies
-│   └── render.test.mjs         141 jsdom assertions — mounts every screen
+│   ├── data-layer.test.mjs     1051 assertions, no dependencies
+│   ├── social.test.mjs         73 assertions, no dependencies — what is SHARED
+│   ├── rules.test.mjs          who may READ it. Needs the emulator.
+│   │                           ⚠️ WRITTEN, NEVER RUN — social-plan.md §7.1
+│   └── render.test.mjs         215 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · vision.md · strength-map-plan.md
          strength-estimate-plan.md · firebase-setup.md · competitive-teardown.html
 ```
@@ -467,6 +494,16 @@ Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 ⚠️ **Adding a collection to `COLLECTIONS` also requires adding it to `knownCollection()` in
 `firestore.rules` and redeploying**, or every cloud write to it is denied while localStorage keeps
 working — invisible until someone signs in.
+
+⚠️ **Adding a `js/` module also requires adding it to the precache list in `sw.js`.** There is a test
+that fails if you don't (`sw.js precache is missing: …`), which is how `js/social.js` was caught the
+minute it was created — a module missing from the precache is a module the app cannot load offline,
+and D6 says offline is non-negotiable.
+
+**Social paths, added 2026-08-18 and read by nothing yet** — `users/{uid}/shared/{tier}` (the
+published copy, carrying its own `viewers` list so the rule needs no second read),
+`users/{uid}/social/graph` (owner-only, who is connected and what each may see) and
+`users/{uid}/invites/{token}` (`get` yes, `list` no, which is what stops anyone enumerating them).
 
 ---
 
@@ -814,13 +851,13 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    limitation, and a test fails if a non-video transcription falls through to the default warning.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
-6. **Social — `docs/social-plan.md`.** Planned 2026-08-17, nothing built. **Phase 1 is buildable
-   without either open question being answered**: the Firestore rules for the new paths, the pure
-   `publishProjection()` and an emulator-backed rules test suite, all of it invisible. That ordering
-   is deliberate — this is the first feature where being wrong is not recoverable, and getting the
-   security wrong before a UI exists is far cheaper than after. **It needs a new test-only dependency**
-   (`@firebase/rules-unit-testing` + the emulator), because nothing available today can assert that a
-   read is DENIED to a different user, and every interesting case here is a denial.
+6. **Social — Phase 1 is BUILT, and one thing about it is unfinished.** `js/social.js` (tiers +
+   projection builder, pure, wired to nothing), the new `firestore.rules` paths, 73 passing
+   assertions and `tests/rules.test.mjs`. **The one open item is that the rules suite has never
+   run** — see NOT verified above and `docs/social-plan.md` §7.1. Getting the emulator to start is
+   therefore the next social job, ahead of any UI, and the leading suspect is the JDK (Java 21 is the
+   only one installed; Temurin 17 is the usual recommendation). **Phase 2 — display name, the upgrade
+   gate, invite links, per-person tier control — should not start until it does.**
 7. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim

@@ -53,5 +53,114 @@ service cloud.firestore {
       // so nothing needs delete permission.
       allow delete: if false;
     }
+
+    // ================================================================
+    // SOCIAL — docs/social-plan.md, Phase 1.
+    //
+    // ⚠️ READ THIS BEFORE CHANGING ANYTHING ABOVE THIS LINE.
+    //
+    // The block above is the private data and it stays owner-only forever.
+    // Sharing does NOT widen it. It cannot: one document holds every row of a
+    // collection, Firestore grants per document, so "let Alex see some of my
+    // workouts" is not a permission that exists. Granting read on
+    // users/{uid}/collections/sessions grants every session ever recorded.
+    //
+    // Instead the owner's own client publishes a DERIVED COPY containing only
+    // what they chose (js/social.js), and that copy is what other people read.
+    // Two independent gates: what goes in is decided at write time by that
+    // module, who may read it is decided here. Neither is allowed to become
+    // the only one.
+    // ================================================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // A published projection. One document per visibility tier.
+    //
+    // The list of who may read it lives INSIDE the document, so this rule needs
+    // no get() of a second document — resource.data is free, a get() is billed
+    // on every access and counts against the ten-get limit.
+    //
+    // ⚠️ `resource` is null on create, which is why create is checked against
+    // request.resource and read is checked against resource. Merging the two
+    // into one condition makes create fail closed and look like a broken write.
+    function isPublishedViewer() {
+      return signedIn()
+             && resource != null
+             && resource.data.viewers is list
+             && request.auth.uid in resource.data.viewers;
+    }
+
+    function validTier(tier) {
+      return tier in ['light', 'mid', 'full'];
+    }
+
+    function validProjection() {
+      return request.resource.data.keys().hasOnly(
+               ['tier', 'viewers', 'profile', 'publishedAt', 'activity',
+                'benchmarks', 'strength', 'bodyWeight'])
+          && request.resource.data.viewers is list
+          && request.resource.data.viewers.size() <= 500
+          && request.resource.data.activity is list
+          && request.resource.data.activity.size() <= 60;
+    }
+
+    match /users/{userId}/shared/{tier} {
+      // The owner reads their own to show "here is exactly what Alex can see",
+      // which is the answer a copy-based design can give and a permission-based
+      // one cannot.
+      allow get: if isOwner(userId) || isPublishedViewer();
+      // ⚠️ list is DENIED even for viewers. A viewer reads the one tier they
+      // were granted, by name. Listing would hand them the names of the tiers
+      // they were NOT granted, which is a small leak and an entirely avoidable
+      // one.
+      allow list: if isOwner(userId);
+
+      allow create, update: if isOwner(userId) && validTier(tier) && validProjection();
+      // Unsharing deletes the document. That is the whole revocation mechanism,
+      // so it has to be permitted — and it is worth being clear that it is not
+      // retroactive: it stops future reads and cannot reach what was already
+      // read or screenshotted.
+      allow delete: if isOwner(userId);
+    }
+
+    // Who the owner is connected to and what each person may see. Owner-only in
+    // BOTH directions — this is never how a viewer discovers their own tier.
+    match /users/{userId}/social/{doc} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Invite links. There is no user directory in v1, deliberately: a
+    // searchable list of accounts is an enumeration surface that has to be
+    // right first time, and an invite link is a capability handed to one
+    // person instead.
+    function claimingUnclaimedInvite() {
+      return signedIn()
+             && resource != null
+             && !('claimedBy' in resource.data)
+             && request.resource.data.claimedBy == request.auth.uid
+             // Only the two claim fields may change. Without this the claimer
+             // could rewrite the invite's owner or its expiry on the way past.
+             && request.resource.data.diff(resource.data)
+                  .affectedKeys().hasOnly(['claimedBy', 'claimedName', 'claimedAt'])
+             && request.time < resource.data.expiresAt;
+    }
+
+    match /users/{userId}/invites/{token} {
+      // ⚠️ get YES, list NO, and that distinction is the whole security model
+      // here. Anyone signed in can redeem a link they were GIVEN — they must be
+      // able to read it to redeem it — but nobody can enumerate anyone's
+      // invites, so a leaked link costs one invite rather than the whole set.
+      allow get: if signedIn();
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId)
+                    && request.resource.data.keys().hasOnly(
+                         ['token', 'createdAt', 'expiresAt', 'claimedBy', 'claimedName', 'claimedAt'])
+                    && !('claimedBy' in request.resource.data);
+      allow update: if isOwner(userId) || claimingUnclaimedInvite();
+      allow delete: if isOwner(userId);
+    }
   }
 }

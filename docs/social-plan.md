@@ -333,6 +333,43 @@ The suite has to include, at minimum:
 ⚠️ **A rules test that only asserts the allowed cases is worth almost nothing.** The failures that
 matter are all denials, and a rule that allows everything passes every positive test.
 
+### 7.1 ⚠️ The suite is WRITTEN and has never RUN — 2026-08-18
+
+`tests/rules.test.mjs` exists, covers every case in the list above, and **has not been executed once**,
+because the Firestore emulator will not start on this machine. Until it runs, **the rules in
+`firestore.rules` are unverified** beyond compiling. Do not let the presence of a test file read as
+a passing test file.
+
+What is actually known about them: they **compile** — `firebase deploy --only firestore:rules`
+validates server-side and reported "compiled successfully" — and the diff that added them is purely
+additive, so the private-collection block is byte-for-byte what it was. Neither of those is a
+statement about behaviour.
+
+What was tried, so the next session does not repeat it:
+
+- `firebase emulators:exec --only firestore` → the emulator exits immediately with code 4294967295
+  (−1) and `firestore-debug.log` is **empty**.
+- The jar is present and not corrupt: `--version` and `--help` both work and print normally. It is
+  only *serving* that dies.
+- Running the CLI's exact java command by hand — copied out of `firebase-debug.log`, including
+  `--database-edition standard` and `--single_project_mode` — fails identically, with **zero bytes on
+  both stdout and stderr**. There is no stack trace and no `hs_err` file.
+- Not a port conflict: nothing is listening on 8080, and `python -m http.server` binds a port on this
+  machine fine.
+- Not the sandbox: it fails the same way with the sandbox disabled.
+- Not the path: it fails the same from a short local directory as from the OneDrive project folder.
+- Not the working directory or temp: `-Djava.io.tmpdir` pointed somewhere writable changes nothing.
+- Java is 21.0.5 (Oracle), and it is the **only** JDK installed.
+
+**The most likely remaining cause is the JDK**, since a silent instant exit with no JVM diagnostics
+is unusual for anything else. The next thing to try is a second JDK — Temurin 17 is the usual
+recommendation for this emulator — pointed at with `JAVA_HOME`. That is a machine change, so it is
+Tim's call rather than something to do unasked.
+
+**Until it runs, the honest status line is: rules compile, rules are deployed, rules are untested.**
+Phase 2 should not start until this is resolved — Phase 1 exists precisely so that the security is
+settled before anything reads or writes real shared data.
+
 ---
 
 ## 8. Phasing
