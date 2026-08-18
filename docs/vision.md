@@ -126,9 +126,9 @@ account on a tap. Three of the app's own ship with it.
 transcribed from published write-ups of his **free** YouTube series and flagged on screen as
 unofficial, with a link to the playlist. Not from his paid ebook. One rotation of a six-part series.
 
-**Four more shipped later on 2026-08-17**, on Tim's ask — Arnold's *Golden Six*, *Mike Thurston's
-Six-Day Split*, *Volume Landmarks Hypertrophy* and *Dr. Mike's Floating Split*. **Eight systems now**,
-five credited to real people.
+**Five more shipped later on 2026-08-17**, on Tim's ask — Arnold's *Golden Six*, *Mike Thurston's
+Six-Day Split*, *Volume Landmarks Hypertrophy*, *Dr. Mike's Floating Split* and — once set types
+existed — *Chris Bumstead's 8-Day Split*. **Nine systems now**, six credited to real people.
 
 Two of those are Israetel, deliberately, and the reason is worth keeping. The first attempt shipped
 only *Volume Landmarks Hypertrophy* — a programme built on his published method, credited via a new
@@ -141,7 +141,7 @@ representable here), the other is a runnable programme built on what he teaches.
 that came out of the first attempt survives and is worth more than the mistake cost — **a system
 that FOLLOWS someone's method is not a system BY them.**
 
-The **"% optimal" number is still not built**, and it is now the obviously missing piece: eight
+The **"% optimal" number is still not built**, and it is now the obviously missing piece: nine
 programmes sitting in a list with no way to compare them is exactly the state this idea was written
 to fix. It would also be the honest way to show what a cutting split is and is not for.
 
@@ -220,7 +220,7 @@ beginning; this is Tim asking for it to stop being one.
 try. Three of the names worth shipping cannot be represented honestly without it —
 
 - **Chris Bumstead's** programme is built on tri-sets and drop sets. Written as a flat list it is not
-  his workout, it is a list of the exercises in it.
+  his workout, it is a list of the exercises in it. **Shipped 2026-08-17** once set types existed.
 - **Dr. Mike Israetel's own training** is myo-reps and giant sets almost end to end. It IS shipped —
   *Dr. Mike's Floating Split*, transcribed from RP's own free write-up — but with the set structure
   stripped out, which its warning leads with. It is the clearest case in the app of a programme that
@@ -270,8 +270,9 @@ label cannot.
 
 **The payoff is *Dr. Mike's Floating Split*.** It shipped hours earlier with a warning saying its
 structure had been stripped out; 11 of its exercises are now marked as myo-reps and that sentence
-has been deleted from the warning because it stopped being true. **Chris Bumstead is now buildable
-and has not been built.** RIR and tempo remain deliberately absent (D9).
+has been deleted from the warning because it stopped being true. **Chris Bumstead shipped the same day** and is the
+system this was built for — eight drop sets, a tri-set and a superset, none of which could have been
+expressed before. RIR and tempo remain deliberately absent (D9).
 
 **Where this connects:** ranked pre-designed systems (§1.3) — several of the best-known programmes
 could not even be *entered* before this, so the celebrity library had a ceiling. Nothing here

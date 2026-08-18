@@ -14,9 +14,10 @@ workout be logged for another day, lets a past record be edited from the calenda
 whole workout as a benchmark.
 
 **Workouts live inside SYSTEMS** — a system is a programme holding several workouts — and there is an
-**Explore** screen of **eight** ready-made systems you can copy into your account. Five are credited
-to real people: Jeff Nippard, Dr. Mike Israetel, Arnold Schwarzenegger, Mike Thurston, plus a fifth
-that follows Israetel's published *method* without claiming to be his own training.
+**Explore** screen of **nine** ready-made systems you can copy into your account. Six are credited
+to real people: Jeff Nippard, Dr. Mike Israetel, Chris Bumstead, Arnold Schwarzenegger, Mike
+Thurston, plus a sixth that follows Israetel's published *method* without claiming to be his own
+training.
 
 **The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
 rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
@@ -45,8 +46,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1032 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 212 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -194,7 +195,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **eight**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
 | **What's next** (home) | The big button on Home is **the next workout in your rotation**, not a generic "Start a workout" — `js/next-workout.js`, `docs/vision.md` §1.2 first half. It reads the most recent session, finds that workout in its system, and offers the one after it, **wrapping** at the end. The caption always says what it read ("Next in Push Pull Legs. You did Push 2 days ago"), and **Choose another workout** sits right underneath, so it never traps you. It is a LOOKUP, not advice — the order came from the user's own system, so this is Rule 6-safe in a way that "you should rest today" would not be. It never scolds and never refuses: train twice in a day and it says "You already did Push today — this is next when you are ready". Silent when it would have to guess: no history **and** more than one system means no suggestion at all. Skips past sessions whose workout has since been deleted (D22 keeps the history), rather than dead-ending. **The other half of §1.2 — suggesting the weights and reps — is NOT built and needs the estimator first** |
@@ -226,11 +227,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **1032 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1051 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **212 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **215 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -696,8 +697,9 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   two-shapes model. **Myo-reps followed the same day** and cost almost nothing, exactly as the
   prediction said: same nesting shape, one label, one rest hint, one default count. **Dr. Mike's
   Floating Split now ships with its real structure** — 11 of its exercises are myo-reps — and its
-  warning no longer has to say the structure was stripped out. **Still missing: RIR and tempo**,
-  both deliberate (D9). **Chris Bumstead is now buildable and has not been built.**
+  warning no longer has to say the structure was stripped out. **Chris Bumstead shipped the same
+  day**, and he is the system this was built for: eight drop sets, a tri-set and a superset, none of
+  which could have been expressed before. **Still missing: RIR and tempo**, both deliberate (D9).
 - **⚠️ The stored key for mini-sets is `minis`, and `drops` is a legacy alias.** It shipped as
   `drops` during the few hours when drop sets were the only nesting type. Keeping that name would
   have meant every myo-rep set on disk claiming to be a list of drops — visible to anyone who
@@ -724,6 +726,15 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
   own programme every four to six weeks, so a transcription is one block frozen rather than a
   programme he stands behind. **Volume Landmarks Hypertrophy**: the workouts are the app's own, said
   twice on screen.
+- **Chris Bumstead's is an EIGHT-DAY cycle, not a week, and the warning leads with it** — three on,
+  one off, twice through, so it drifts across the calendar on purpose and `daysPerWeek: 6` is an
+  approximation the screen explains. Second thing it says: this is a four-time Mr. Olympia's volume
+  and exercise selection, built for somebody whose job is recovering from it. Two source
+  disagreements are recorded in the file: whether day one ends in a tri-set (Set For Set says yes,
+  Generation Iron lists the three plainly — followed Set For Set, because a claim that something is
+  grouped is harder to invent than to omit), and how much of **arm day** is tri-sets (shorter
+  summaries say most of it; both detailed write-ups show straight exercises with drop sets — followed
+  the detailed ones, and it is the part most likely to be wrong).
 - **Dr. Mike's Floating Split is the most DISTORTED transcription in the file, and that is the first
   thing its warning says.** Nearly every set in it is a myo-rep or a giant set; the app records
   straight sets only, so what ships is his exercise choice with the set structure removed — "4

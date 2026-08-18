@@ -2355,6 +2355,24 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(/CUTTING split/.test(preset.warning),
        'while still leading with what IS still true of it');
     await store2.clearAll();
+
+    // THE SYSTEM SET TYPES WERE BUILT FOR. Chris Bumstead's programme is drop
+    // sets, a tri-set and a superset; as a flat list it would have been a list
+    // of the exercises in his programme rather than his programme. Copying it
+    // has to bring all three across or the feature bought nothing.
+    const cb = await store2.addPresetSystem(presetById('preset-bumstead-8day'));
+    const cbWorkouts = await store2.getWorkouts(cb.system.id);
+    const cbAll = cbWorkouts.flatMap((w) => w.exercises);
+    ok(cbAll.filter((e) => e.setType === st.DROP).length === 8,
+       `Bumstead copies in with all eight drop sets (${cbAll.filter((e) => e.setType === st.DROP).length})`);
+
+    const cbBlocks = cbWorkouts.flatMap((w) => st.blocksOf(w.exercises)).filter((b) => b.group != null);
+    const sizes = cbBlocks.map((b) => b.items.length).sort();
+    ok(sizes.join(',') === '2,3',
+       `and with one superset and one tri-set intact (blocks of ${sizes.join(' and ')})`);
+    ok(cbBlocks.some((b) => st.groupLabel(b.items.length) === 'Tri-set'),
+       'the tri-set is recognised as a tri-set');
+    await store2.clearAll();
   }
 }
 

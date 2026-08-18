@@ -376,6 +376,121 @@ export const PRESET_SYSTEMS = [
   },
 
   {
+    id: 'preset-bumstead-8day',
+    name: 'Chris Bumstead’s 8-Day Split',
+    author: 'Chris Bumstead',
+    sourceName: 'Chris Bumstead’s Complete Workout & Diet Plan — Generation Iron',
+    sourceUrl: 'https://generationiron.com/chris-bumstead-workout/',
+    // ⚠️ NOT OFFICIAL. Transcribed from two published write-ups — Generation
+    // Iron and Set For Set — which agree exercise for exercise, on the same
+    // drop sets and on the same superset. That is good sourcing by the
+    // standards of this file.
+    //
+    // THIS IS THE SYSTEM SET TYPES WERE BUILT FOR. It could not ship at all
+    // before 2026-08-17: eight of its exercises are drop sets, one pair is a
+    // superset and one trio is a tri-set, and as a flat list it would have been
+    // a list of the exercises in his programme rather than his programme.
+    //
+    // Two honest disagreements between sources, both stated on screen:
+    //   · Set For Set marks day one's last three as a TRI-SET; Generation Iron
+    //     lists them plainly. Followed Set For Set, because a claim that
+    //     something is grouped is harder to invent than to omit.
+    //   · Several shorter summaries describe ARM DAY as built on tri-sets. Both
+    //     detailed write-ups show it as straight exercises with drop sets.
+    //     Followed the detailed ones — but it is the part most likely wrong.
+    unofficial: true,
+    warning: 'Not official. Transcribed from two published write-ups of his training, not from him. '
+      + 'Two things to know before running it: this is an EIGHT-day cycle, not a week, so it will '
+      + 'drift across your calendar; and it is a four-time Mr. Olympia’s programme, which is a '
+      + 'volume and an exercise selection built for somebody whose job is recovering from it. '
+      + 'The sources disagree about how much of arm day is tri-sets.',
+    goal: 'Bodybuilding',
+    daysPerWeek: 6,
+    minutes: 75,
+    level: 'Advanced',
+    summary: 'Six training days in an eight-day cycle from the four-time Mr. Olympia — three on, '
+      + 'one off, twice through. Built on drop sets, with a tri-set and a superset.',
+    notes: 'Transcribed from published write-ups of Chris Bumstead’s training — not from him, and '
+      + 'not from anything he sells. Two sources were used and they agree exercise for exercise, '
+      + 'on the same drop sets and the same superset.\n\n'
+      + 'It runs on an EIGHT-day cycle, not a week: three days on, one off, then three on and one '
+      + 'off again. That means it will not line up with your calendar and is not supposed to — '
+      + 'follow the order, not the days.\n\n'
+      + 'The set types are the programme. Eight exercises are drop sets, day one finishes on a '
+      + 'tri-set and day five on a superset, and this app could not have represented any of that '
+      + 'before set types were built. Where a source just said "drop set" without a count, one '
+      + 'drop is planned — change it in the workout if you know better.\n\n'
+      + 'What it is honestly for: this is an elite bodybuilder’s programme. The volume, the machine '
+      + 'selection and the sheer number of drop sets assume somebody whose job is recovering from '
+      + 'them. Run it because you want to see how he trains, not because it is the optimal way for '
+      + 'you to train.',
+    workouts: [
+      { name: 'Quads & Calves', notes: 'Opens on a drop set and closes on a tri-set. '
+          + 'Reported: leg extensions 2×20, squats 6–10, then the tri-set 8–15.',
+        exercises: [
+          { name: 'Leg Extension', sets: 2, setType: 'drop', minis: 1, notes: '20 reps, then drop the weight. Written up as drop sets.' },
+          { name: 'Smith Machine Squat', sets: 2, notes: '6–10 reps.' },
+          // Set For Set marks these three as a tri-set; Generation Iron lists
+          // them plainly. Following the more specific claim.
+          { name: 'Single-Leg Press', sets: 3, group: 0, notes: '8–10 reps per leg. First of a tri-set.' },
+          { name: 'Sissy Squat', sets: 3, group: 0, notes: '12–15 reps. Straight into it.' },
+          { name: 'Seated Calf Raise', sets: 3, group: 0, notes: '10–12 reps. Last of the tri-set — rest after this.' },
+        ] },
+      { name: 'Chest & Triceps', notes: 'Incline-heavy. Reported: presses and flys 8–10, '
+          + 'machine press 6–10 with a drop, pec deck 15, push-ups to failure.',
+        exercises: [
+          { name: 'Incline Dumbbell Bench Press', sets: 2, notes: '8–10 reps.' },
+          { name: 'Incline Dumbbell Fly', sets: 2, notes: '8–10 reps.' },
+          { name: 'Incline Machine Press', sets: 2, setType: 'drop', minis: 1, notes: '6–10 reps then a drop. He uses a Hammer Strength incline.' },
+          { name: 'Pec Deck', sets: 3, notes: '15 reps.' },
+          { name: 'Skull Crusher', sets: 2, notes: '8–10 reps with an EZ bar.' },
+          { name: 'Push-Up', sets: 2, notes: 'To failure, to finish.' },
+        ] },
+      { name: 'Back & Biceps', notes: 'Back thickness — four rows and pulldowns before any arm '
+          + 'work. Reported: 8–12 throughout.',
+        exercises: [
+          { name: 'Reverse-Grip Lat Pulldown', sets: 3, notes: '10–12 reps, close underhand grip.' },
+          { name: 'Chest-Supported Dumbbell Row', sets: 2, notes: '8–10 reps.' },
+          { name: 'T-Bar Row', sets: 2, setType: 'drop', minis: 1, notes: '8–10 reps then a drop. Chest supported.' },
+          { name: 'Chest-Supported Row', sets: 2, notes: '10–12 reps, machine.' },
+          { name: 'Straight-Arm Pulldown', sets: 2, notes: '10–12 reps. Written up as a cable lat extension.' },
+          { name: 'Machine Preacher Curl', sets: 2, notes: '10–12 reps.' },
+        ] },
+      { name: 'Shoulders & Chest', notes: 'Three of the five are drop sets, and it ends on a '
+          + 'superset. Reported: presses 6–10, raises 8–12.',
+        exercises: [
+          { name: 'Seated Dumbbell Shoulder Press', sets: 2, notes: '6–10 reps.' },
+          { name: 'Machine Shoulder Press', sets: 3, setType: 'drop', minis: 1, notes: '6–10 reps then a drop.' },
+          { name: 'Lateral Raise', sets: 2, setType: 'drop', minis: 1, notes: 'Seated dumbbell, 8–10 reps then a drop.' },
+          { name: 'Machine Lateral Raise', sets: 2, notes: '10–12 reps.' },
+          { name: 'Reverse Pec Deck', sets: 2, group: 0, notes: '10–12 reps. First half of a superset.' },
+          { name: 'Pec Deck', sets: 2, group: 0, notes: '10–12 reps, forward this time. Straight into it from the reverse.' },
+        ] },
+      { name: 'Hamstrings & Back', notes: 'Three different leg curls — the knee-flexion angle '
+          + 'changes what the hamstring does. Reported: curls 8–10, deadlifts 4–8.',
+        exercises: [
+          { name: 'Lying Leg Curl', sets: 2, notes: '8–10 reps.' },
+          { name: 'Deadlift', sets: 2, notes: '4–8 reps. The only truly heavy lift in the week.' },
+          { name: 'Seated Leg Curl', sets: 2, notes: '8–10 reps.' },
+          { name: 'Standing Leg Curl', sets: 2, notes: '8–10 reps per leg.' },
+          { name: 'Wide-Grip Lat Pulldown', sets: 3, notes: '8–10 reps. Back width today, not thickness.' },
+          { name: 'Straight-Arm Pulldown', sets: 2, notes: '10–12 reps.' },
+        ] },
+      { name: 'Arms', notes: 'Triceps and biceps alternating, with three drop sets. Reported: '
+          + '8–15 throughout. ⚠️ Shorter write-ups describe this day as tri-sets instead — see '
+          + 'the notes above.',
+        exercises: [
+          { name: 'Rope Pushdown', sets: 2, setType: 'drop', minis: 1, notes: '8–10 reps then a drop.' },
+          { name: 'Dumbbell Skull Crusher', sets: 2, notes: '8–10 reps on an incline bench.' },
+          { name: 'Preacher Curl', sets: 3, setType: 'drop', minis: 1, notes: 'EZ bar, 8–10 reps then a drop.' },
+          { name: 'Dumbbell Curl', sets: 2, notes: '10–12 reps.' },
+          { name: 'Cross-Body Cable Triceps Extension', sets: 2, notes: '10–15 reps.' },
+          { name: 'Cable Curl', sets: 2, setType: 'drop', minis: 1, notes: 'Low pulley with a V-bar, 10–12 reps then a drop.' },
+        ] },
+    ],
+  },
+
+  {
     id: 'preset-volume-landmarks',
     name: 'Volume Landmarks Hypertrophy',
     // ⚠️ THE AUTHOR IS US. Read the "three kinds of system" note at the top of

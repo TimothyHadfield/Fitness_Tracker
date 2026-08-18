@@ -2493,3 +2493,50 @@ Joining, dropping empty entries, deleting an exercise, shrinking the walk. Group
 reference between rows, and every reference needs someone to own what happens when the far end moves.
 
 **State at close:** **1032 data-layer + 212 render assertions green.**
+
+---
+
+## 2026-08-17 (last) — Chris Bumstead, the system set types were built for
+
+**Tim:** *"do the chris bumstead now."*
+
+Shipped as `preset-bumstead-8day`, **Chris Bumstead's 8-Day Split**. Nine ready-made systems now,
+six credited to real people.
+
+**Sourcing is good by this file's standards:** two published write-ups — Generation Iron and Set For
+Set — that agree exercise for exercise, on the same eight drop sets and the same superset.
+
+**This is the one the feature was for.** Eight of its exercises are drop sets, day one closes on a
+tri-set (single-leg press → sissy squat → seated calf raise) and day five on a superset (reverse pec
+deck → pec deck). Yesterday it would have been a list of the exercises in his programme rather than
+his programme, which is why it was on the "cannot ship" list in `docs/vision.md` §1.5.
+
+**Three things stated on screen because they are true and unflattering:**
+
+1. **It is an eight-day cycle, not a week.** Three on, one off, twice through. It drifts across the
+   calendar on purpose — `daysPerWeek: 6` is an approximation and the warning explains it.
+2. **It is a four-time Mr. Olympia's programme.** The volume, the machine selection and the sheer
+   number of drop sets assume somebody whose job is recovering from them. The notes say to run it
+   because you want to see how he trains, not because it is optimal for you.
+3. **The sources disagree twice**, and both disagreements are recorded rather than smoothed over:
+   whether day one ends in a tri-set (Set For Set says yes, Generation Iron lists the three plainly —
+   followed Set For Set, on the reasoning that a claim something is *grouped* is harder to invent
+   than to omit), and how much of **arm day** is tri-sets (shorter summaries say most of it; both
+   detailed write-ups show straight exercises with drop sets — followed the detailed ones, and
+   flagged it as the part most likely wrong).
+
+**One thing I got wrong and the test caught:** I wrote "seven drop sets" in the notes and the code
+comment. There are eight. The test asserted the count against the data rather than against my
+sentence, which is the only reason the number in front of the user is right.
+
+Checked in a browser: the detail screen, then adding it and walking into the tri-set — banner reads
+"TRI-SET · Round 1 of 3" with all three members listed and the current one marked, "Last one in the
+round — rest after this", and the forward button offering "Round 2 of 3".
+
+**State at close:** **1051 data-layer + 215 render assertions green.**
+
+**What is left in the vision**, for the next session: the **"% optimal" rating** (§1.3) is the big
+one and needs `docs/research.md` §6 grounded in primary sources first; the second half of §1.2
+(suggesting weights and reps) is blocked on the **strength estimator**, which is still the highest-
+value open item in the whole project; social (§1.1) is the hardest thing in the file. Finishing the
+**Nippard series** — three of six workouts — remains the other cheap piece of content work.
