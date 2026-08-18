@@ -40,16 +40,24 @@ rest was then done over the Identity Toolkit admin API:
 | Email/Password | ✅ enabled (console) |
 | Anonymous | ✅ enabled (API) |
 | Authorised domains | ✅ `localhost`, `fitness-tracker-th.firebaseapp.com`, `fitness-tracker-th.web.app`, **`timothyhadfield.github.io`** |
-| Google | ❌ **not enabled** — see below |
+| Google | ✅ enabled (console) — in use, and Tim has signed in with it |
 
-### Google sign-in still needs one toggle
+### Google sign-in — done, and the trap it left behind
 
-**Sign-in method → Google → Enable**, then pick a support email. This is the only piece the API
-cannot do: enabling Google requires an OAuth client ID and secret that the console auto-provisions
-but the API makes you supply.
+Enabling it was the one piece the API could not do: it needs an OAuth client ID and secret the
+console auto-provisions but the API makes you supply. **It has been done**, and Tim uses it — he
+reported a bug in it on 2026-08-16, which is how we know it is live.
 
-Until then the Google buttons will fail with *"That sign-in method is not enabled in Firebase yet."*
-Email/password and anonymous both work.
+⚠️ **This section said "not enabled" for a day after it was enabled**, and `progress.md` carried a
+note pointing out that this file was wrong. A doc that is known-wrong with the correction filed
+somewhere else is worse than one that is simply out of date, because it teaches the reader to
+distrust the file rather than to fix it.
+
+Two things learned from real use, both now in the code and in `progress.md` §9: **exactly one popup,
+ever** — recovering from "that account already exists" reuses the credential from the failed link
+rather than opening a second window the browser blocks — and **a cancelled sign-in must never be
+silent**, because `auth/popup-closed-by-user` is also raised when the SDK loses its handle on the
+window, so it is not reliably a decision.
 
 ---
 
@@ -156,7 +164,10 @@ documents.
 
 ### Still not verified
 
-- **Google sign-in** — not enabled yet, so untested.
-- **Anything in a real browser.** No browser has rendered this app at all. The account screens,
-  the popup/redirect branch, and `adoptLocalData()` running against genuine local data are all
-  unexercised.
+- **The Google REDIRECT path**, and Google sign-in inside the **installed PWA**. The popup path is
+  exercised in the real world; the redirect fallback depends on third-party cookies while the auth
+  domain differs from the origin, and nobody has tried it. See the PWA note below.
+- **`adoptLocalData()` against genuine local data.** It has never run for real.
+- **Any real device, and iOS Safari.** A browser has now rendered every screen — headless Chrome at
+  360–1280 px in both themes, driven with real mouse events — but that says nothing about touch, and
+  nothing about how Safari behaves.

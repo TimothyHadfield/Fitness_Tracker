@@ -2540,3 +2540,50 @@ one and needs `docs/research.md` §6 grounded in primary sources first; the seco
 (suggesting weights and reps) is blocked on the **strength estimator**, which is still the highest-
 value open item in the whole project; social (§1.1) is the hardest thing in the file. Finishing the
 **Nippard series** — three of six workouts — remains the other cheap piece of content work.
+
+---
+
+## 2026-08-17 (close) — Doc sweep for a chat reset
+
+**Tim:** *"prepare md files for chat reset"*
+
+Swept the docs rather than appending to them. Six features shipped today and the catch-up files had
+drifted in the specific way they always do: each change was recorded where it happened, and the
+*summary* claims at the top of each file were left describing yesterday.
+
+**What was actually wrong:**
+
+- **The status paragraph had two whole features missing** — no mention of set types or of Home
+  suggesting your next workout. Someone reading only the top of `progress.md` would not have known
+  either existed.
+- **"Open work" item 3 said the next thing Tim named was finishing the Nippard series.** Six features
+  later that was simply false. Rewritten to say what is actually true and more useful: the vision is
+  nearly out of *ungated* work — "% optimal" needs research before code, the rest of §1.2 needs the
+  estimator, social is the hardest thing in the file.
+- **§10 item 4 said "seven systems, four credited" and asked for set types to be built.** All three
+  claims were dead. It is nine and six, and set types shipped hours ago.
+- **§8 said none of the vision was started.** Three of its five ideas are now built or half built.
+- **The decisions table was out of numeric order again** — D23 sat above D22, because a new decision
+  gets inserted above a fixed anchor. Exactly the fault the last sweep fixed. Sorted, and this time
+  the gap at **D18** is explained in place: it is a *proposal*, not a lost decision.
+- **`docs/vision.md` opened with "nothing in it is being built"**, which stopped being true today.
+  Kept the rule it was protecting — nobody starts work off that file without Tim saying so — and
+  added a state table at the top so the reader can see where all five ideas stand without reading
+  three hundred lines.
+- **`docs/firebase-setup.md` said Google sign-in was not enabled**, while `progress.md` carried a
+  note saying that claim was wrong. **Fixed the source and deleted the note.** A doc that is
+  known-wrong with the correction filed somewhere else is worse than one that is merely out of date:
+  it teaches the reader to distrust the file instead of fixing it. Its "still not verified" list was
+  also a version behind — it claimed no browser had ever rendered the app.
+
+**Also added:** `js/set-types.js` to the file-upkeep table, next to `muscle-evidence.js` and
+`preset-systems.js`, because it is the third file whose *header* holds reasoning a future session
+needs before touching the code.
+
+**State at reset:** live, everything pushed, **1051 data-layer + 215 render assertions green**. Nine
+ready-made systems, six credited to real people. The biggest risk is unchanged and is not a code
+problem: **nobody has opened this app on a real phone.**
+
+The highest-value open item remains the **strength estimator and its simulator** — it is what would
+turn the two accuracy gaps in §9 from documented into measured, and it sits underneath the half of
+`docs/vision.md` §1.2 that is not built.

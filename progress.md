@@ -13,6 +13,13 @@ The app works with **no network** (D6), records weights in **lbs or kg**, has a 
 workout be logged for another day, lets a past record be edited from the calendar, and can mark a
 whole workout as a benchmark.
 
+**Home opens on the next workout in your rotation**, not a generic "Start a workout" — it reads your
+last session and offers the one after it in that programme, saying what it read.
+
+**Sets have TYPES**: supersets, tri-sets and giant sets (exercises done back to back, walked round by
+round, with the rest timer holding off until the end of a round), plus drop sets and myo-reps (mini-
+sets nested inside one set, which stays one hard set). D23.
+
 **Workouts live inside SYSTEMS** — a system is a programme holding several workouts — and there is an
 **Explore** screen of **nine** ready-made systems you can copy into your account. Six are credited
 to real people: Jeff Nippard, Dr. Mike Israetel, Chris Bumstead, Arnold Schwarzenegger, Mike
@@ -35,8 +42,13 @@ where every lift stands right now.
    constants are reasoned, not fitted. Fitting them is the open work, and it is what would let the
    two known accuracy gaps in §9 be closed rather than documented.
 2. **Tim opens the app on a real phone.** Unchanged, and still the biggest risk in the project.
-3. **`docs/vision.md`** — Tim's own list of where this goes next. Nothing there is scheduled; the
-   next thing he named is completing the Nippard series (three of six workouts are in).
+3. **`docs/vision.md` is nearly out of cheap wins.** Two of its five ideas are built (§1.4 the
+   comparison setting, §1.5 set types), §1.3 is built except for the "% optimal" number, and §1.2 is
+   half built. What is left is **gated**, not merely unstarted: the "% optimal" rating needs
+   `docs/research.md` §6 grounded in primary sources FIRST — it is a research commission, not a
+   coding session — the other half of §1.2 needs the estimator in item 1, and social (§1.1) is the
+   hardest thing in the file and the only one that makes other people's data a privacy problem.
+   The last ungated piece of content work is finishing the **Nippard series** (three of six).
 4. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on. Note that
    `muscle-evidence.js` now holds a *ranking* mapping; D3 needs a *volume* one, and they are not the
    same table — one asks "how strong", the other "how much work landed here".
@@ -153,14 +165,15 @@ Tim is the **manager**; Claude is the **builder**.
 |---|---|
 | `progress.md` | State, decisions, rules, next steps. **The catch-up file.** |
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |
-| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a schedule: nothing starts off it without him saying so. Five ideas; two are partly built (the comparison setting, and ready-made systems) and marked BUILT in place. §1.5 (set types) is the newest and is the one currently blocking other work |
+| `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a schedule: nothing starts off it without him saying so. Five ideas. §1.4 and §1.5 are **BUILT**, §1.3 is built bar its "% optimal" number, §1.2 is **half built**, §1.1 is untouched. Entries are marked BUILT in place and never deleted — the superseded reasoning above them is the point of the file |
 | `docs/spec.md` | Product + technical spec, data model |
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
+| `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
-| `docs/firebase-setup.md` | Firebase state. ⚠️ Says a Google console toggle is outstanding; it is not — Google sign-in is enabled and in use |
+| `docs/firebase-setup.md` | Firebase state, and what is still unverified. **Corrected 2026-08-17** — it had claimed for a day that Google sign-in was not enabled, while this file carried a note saying that claim was wrong. The source is fixed; the note is gone |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
 ---
@@ -567,8 +580,12 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D19 | **A muscle is rated by every exercise that trains it, converted by a ratio, and every rating carries a confidence.** Direct exercises decide the rating; a compound stands in for a secondary muscle ONLY when that muscle has nothing direct. Confidence is shown by DESATURATING the level colour, never by dimming it. | Tim, 2026-08-17: a full week of training produced one reading, because one lift per muscle meant 11 exercises out of the whole library could move the map. Coverage costs accuracy — the ratios are estimates, worst for machines — so confidence is what pays for it. Brightness could not carry confidence because brightness already carries the LEVEL: the ramp is a strictly monotone lightness scale, so a dimmed Elite would read as a lower level. Saturation is free, and grey already means "no data", so faded reads as "less sure" on the same axis. Fallback-only for secondaries keeps grey meaningful — it still answers "what am I not training". |
 | D20 | **The comparison group is a user setting: FOUR independent axes — population (lifters / everyone), sex, body weight, age — plus two presets, "Like me" and "Everyone".** Any mixed population is modelled as a real MIXTURE of distributions, never an invented combined median. | Tim, 2026-08-17. Axes rather than presets alone because "women, any body weight, my age" is a real question; presets on top because the two combinations most people want are the extremes and setting four things by hand to reach them is a chore. The caption naming the group is built by the same function that computes it, so the number and the population it refers to cannot drift apart. |
 | D21 | **D15 is narrowed, not repealed: ranking against people who do not lift is now offered, and untrained adults are given their OWN overlapping distribution rather than being assumed weaker than every lifter.** Untrained median = 0.55 × the lifter median. | Tim asked for a lift/don't-lift axis. D15's real objection was never "don't offer it" — it was that general-population data makes every user Elite. That was true of the OLD model, which assumed every non-lifter sat below every lifter and so forced any lifter above the 68th percentile, squashing seven levels into three. With an overlapping untrained distribution the levels keep spreading: a beginner lifter reads Proficient, a median lifter Expert, an elite lifter Elite — asserted in the tests. **The 0.55 is the weakest number in the file** (nobody has measured what the median adult can bench) and both the sheet and the detail panel say so. |
-| D23 | **Set types are TWO shapes, not one list.** A superset/tri-set/giant set is a `group` on adjacent exercises — a statement about the SPACE BETWEEN them. A drop set is `drops[]` nested INSIDE a recorded set. Rest fires at the end of a round, and after a drop rather than after the top set. | "Supersets, drop sets and tri-sets" sounds like three of a kind and is two of two, and building it as one list would have got both wrong. The nesting is the load-bearing half: `progress.md` §6 already locks "a drop set counts as ONE hard set", and storing drops inside the set makes that true **by construction** — every existing path counts `sets.length` and keeps counting one, so no analysis code has to know drop sets exist. Flattening drops into `sets` would have silently inflated every set count, every weekly volume figure and D3 when it lands. The rest rule is the other half: a timer that started between the two halves of a superset would be instructing the user to do the opposite of what a superset is. |
 | D22 | **A workout belongs to exactly ONE system.** | Sharing one workout between two programmes sounds useful and is not: editing it in one place would silently change the other, and "did my Push day change because I imported someone else's programme?" is a question this app should never raise. Deleting a system therefore deletes its workouts — but never the sessions already recorded from them, because history is a record of what happened and does not become untrue when the plan behind it is thrown away. |
+| D23 | **Set types are TWO shapes, not one list.** A superset/tri-set/giant set is a `group` on adjacent exercises — a statement about the SPACE BETWEEN them. A drop set is `drops[]` nested INSIDE a recorded set. Rest fires at the end of a round, and after a drop rather than after the top set. | "Supersets, drop sets and tri-sets" sounds like three of a kind and is two of two, and building it as one list would have got both wrong. The nesting is the load-bearing half: `progress.md` §6 already locks "a drop set counts as ONE hard set", and storing drops inside the set makes that true **by construction** — every existing path counts `sets.length` and keeps counting one, so no analysis code has to know drop sets exist. Flattening drops into `sets` would have silently inflated every set count, every weekly volume figure and D3 when it lands. The rest rule is the other half: a timer that started between the two halves of a superset would be instructing the user to do the opposite of what a superset is. |
+
+**D18 is deliberately absent.** It is a *proposal* in `docs/strength-estimate-plan.md` §7, not a
+locked decision — it would narrow D14, and D14 is locked, so it needs Tim's say-so first. §10 has
+the question. Nothing else is missing from this table.
 
 ### Standing recommendations
 
@@ -624,12 +641,17 @@ being a differentiator.
 - Post-session check-in feeding next week's volume
 - Deload prompting; equipment-aware substitution
 
-**Beyond the roadmap — `docs/vision.md`.** Tim's own running list of where he wants this to go:
-Strava-shaped **social** built for lifting, **smart systems** that adjust weights/reps and suggest
-which workout to do, **pre-designed programs ranked by how optimal they are as a percentage**, and a
-user-chosen **"Compared to:"** group on the muscle map. None of it is scheduled and none of it is
-started. Two of the four collide with locked decisions — social with **D7**, an "all people" comparison
-with **D15** — and `docs/vision.md` records those collisions rather than resolving them.
+**Beyond the roadmap — `docs/vision.md`.** Tim's running list, and **most of it moved on
+2026-08-17**. Built: the **"Compared to:" setting** (§1.4) and **set types** (§1.5). Built except for
+its headline number: **ready-made and creator systems** (§1.3) — nine of them — with the **"% optimal"
+rating** still missing and still needing research before code. Half built: **smart systems** (§1.2) —
+Home now suggests *which workout* to do; suggesting the *weights and reps* is untouched and waits on
+the estimator. Untouched: **social** (§1.1).
+
+Two of the five collided with locked decisions and both were resolved rather than ignored — an "all
+people" comparison narrowed **D15** into **D21**, and social still collides with **D7**. Note the
+pattern, because it has now happened twice: the objection turned out to be about a specific model
+rather than about the idea. `docs/vision.md` records collisions; it does not quietly resolve them.
 
 ---
 
@@ -766,12 +788,12 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
    Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
    part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line
    in `pickSource()` in `views-data.js`.
-4. **The creator library.** Seven systems now, four credited. Two things would grow it:
-   **finish the Nippard series** (three of six workouts are in — needs someone to watch the other
-   three videos, or a published write-up of them), and **build set types** (`docs/vision.md` §1.5),
-   which is the hard ceiling — Chris Bumstead and several others cannot be represented at all until
-   supersets, drop sets and tri-sets exist. §9 has the rules that apply to creator systems, and they
-   are not the same rule for each one.
+4. **The creator library.** Nine systems, six credited. The ceiling that used to bound it is gone —
+   set types shipped, and Bumstead and Israetel's real split went in behind them. What is left is
+   **finishing the Nippard series** (three of its six workouts are in — needs someone to watch the
+   other three videos, or a published write-up of them). §9 has the rules that apply to creator
+   systems, and they are deliberately **not the same rule for each one**: every system states its own
+   limitation, and a test fails if a non-video transcription falls through to the default warning.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
 6. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.

@@ -1,14 +1,30 @@
 # Vision — Tim's running list
 
-> **This file is a capture, not a plan, and nothing in it is being built.** It exists so ideas have
-> somewhere to live between having them and deciding on them. Tim adds to it whenever something
-> occurs to him; nobody should start work off this file without him saying so.
+> **This file is a capture, not a plan.** It exists so ideas have somewhere to live between having
+> them and deciding on them. Tim adds to it whenever something occurs to him; **nobody starts work
+> off this file without him saying so.**
+>
+> It used to say "nothing in it is being built", and on 2026-08-17 that stopped being true — Tim
+> asked for four of these in a day and most of the file is now built or half built. The RULE has not
+> changed and is the part that matters: an entry here is a want, not a queue. It is still his call,
+> every time.
 >
 > A roadmap lives in `progress.md` §8. An idea graduates from here to there only when Tim says it
-> does. Until then, an entry here is a want, not a commitment — the wording is his, and where
-> something conflicts with a locked decision the conflict is *noted*, never quietly resolved.
+> does, and where something conflicts with a locked decision the conflict is *noted*, never quietly
+> resolved. Twice now the conflict turned out to be with a specific model rather than with the idea
+> (D15 → D21), and re-examining it produced something better than either the old rule or an override.
 
 **Started:** 2026-08-16 · **Last added to:** 2026-08-17
+
+**Where each idea stands** — the detail, and the reasoning, is under each heading:
+
+| | Idea | State |
+|---|---|---|
+| §1.1 | Social, Strava-shaped | Not started. Hardest thing here, and collides with **D7** |
+| §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
+| §1.3 | Ready-made systems, ranked "% optimal" | **Built bar the number.** Nine systems, six credited. The "% optimal" rating needs research first |
+| §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
+| §1.5 | Set types | **BUILT** 2026-08-17 — supersets, tri-sets, drop sets, myo-reps |
 
 ---
 
