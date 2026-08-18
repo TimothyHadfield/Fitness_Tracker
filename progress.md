@@ -45,8 +45,8 @@ where every lift stands right now.
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1012 assertions, **no dependencies** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 194 assertions, mounts every screen |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1023 assertions, **no dependencies** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 210 assertions, mounts every screen |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -198,7 +198,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
 | **What's next** (home) | The big button on Home is **the next workout in your rotation**, not a generic "Start a workout" — `js/next-workout.js`, `docs/vision.md` §1.2 first half. It reads the most recent session, finds that workout in its system, and offers the one after it, **wrapping** at the end. The caption always says what it read ("Next in Push Pull Legs. You did Push 2 days ago"), and **Choose another workout** sits right underneath, so it never traps you. It is a LOOKUP, not advice — the order came from the user's own system, so this is Rule 6-safe in a way that "you should rest today" would not be. It never scolds and never refuses: train twice in a day and it says "You already did Push today — this is next when you are ready". Silent when it would have to guess: no history **and** more than one system means no suggestion at all. Skips past sessions whose workout has since been deleted (D22 keeps the history), rather than dead-ending. **The other half of §1.2 — suggesting the weights and reps — is NOT built and needs the estimator first** |
-| **Set types** | **Supersets, tri-sets, giant sets and drop sets** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise cycles Straight sets → Drop set → 2 drops → 3 → back (one tap for the common case), and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. Drop sets get "Strip the weight — add a drop" and record the drops nested inside the set |
+| **Set types** | **Supersets, tri-sets, giant sets, drop sets and myo-reps** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise opens a sheet naming all three set types *and explaining what each one is* (D8 — "myo-reps" is jargon), with a mini-set count under whichever is picked; and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. A nested set's button IS the instruction — "Strip the weight — add a drop" or "Rest 10–15 seconds — add a mini-set" — not the name of a technique. **Drop sets and myo-reps are the same nesting shape**, differing only in what changes between mini-sets, and are stored under `minis` |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
@@ -226,11 +226,11 @@ Press-and-hold repeats.
 ### Verified
 
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **1012 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1023 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **194 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **210 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -403,7 +403,8 @@ Workout     id, name, systemId, isBenchmark, order?,
             exercises[{ exerciseId, sets, notes, group?, setType?, drops? }],
             createdAt, updatedAt
             ── `group`: adjacent exercises sharing one form a superset/tri-set.
-               `setType: 'drop'` + `drops: n` plans n drops after every set.
+               `setType: 'drop'` + `minis: n` plans n drops after every set.
+               `setType: 'myo'` + `minis: n` plans n myo-rep match sets.
                ⚠️ normalizeWorkout() REBUILDS each exercise field by field, so
                any new field must be named there or it is lost on every read.
             ── `order` is the position it had in a ready-made programme. Absent
@@ -413,8 +414,10 @@ Workout     id, name, systemId, isBenchmark, order?,
                land at the end of it rather than in the middle.
 Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
             entries[{ exerciseId, exerciseName, group?, setType?,
-                      sets[{ weight, reps, time, distance, drops?[…] }] }]
-            ── ⚠️ `drops` live INSIDE a set, never as extra rows in `sets`.
+                      sets[{ weight, reps, time, distance, minis?[…] }] }]
+            ── ⚠️ `minis` live INSIDE a set, never as extra rows in `sets`.
+               Drops for a drop set, match sets for a myo-rep. Read through
+               minisOf(), which also reads the older `drops` key.
                That is what makes "a drop set is ONE hard set" true by
                construction: every count of sets.length keeps counting one,
                so no analysis path has to know drop sets exist (D23).
@@ -680,11 +683,16 @@ with **D15** — and `docs/vision.md` records those collisions rather than resol
 - **Rep normalisation assumes near-failure effort.** Every rep-based formula does. Bias is systematic
   per user per exercise, so trend and ordering survive. There is no RIR/RPE field — deliberate (D9).
 - ~~**No supersets, drop sets or tri-sets.**~~ **Closed 2026-08-17** — built, and D23 records the
-  two-shapes model. **Still missing: myo-reps, RIR, tempo.** Myo-reps are the *same nesting shape*
-  as a drop set (mini-sets after a top set, differing only in whether the weight comes down), so
-  they are a label and a rest hint rather than a model change — which matters because **Dr. Mike's
-  Floating Split is myo-reps almost end to end** and is still shipping with its structure removed.
-  Chris Bumstead is now buildable and has not been built.
+  two-shapes model. **Myo-reps followed the same day** and cost almost nothing, exactly as the
+  prediction said: same nesting shape, one label, one rest hint, one default count. **Dr. Mike's
+  Floating Split now ships with its real structure** — 11 of its exercises are myo-reps — and its
+  warning no longer has to say the structure was stripped out. **Still missing: RIR and tempo**,
+  both deliberate (D9). **Chris Bumstead is now buildable and has not been built.**
+- **⚠️ The stored key for mini-sets is `minis`, and `drops` is a legacy alias.** It shipped as
+  `drops` during the few hours when drop sets were the only nesting type. Keeping that name would
+  have meant every myo-rep set on disk claiming to be a list of drops — visible to anyone who
+  exported a backup, and false. `minisOf()` reads both; nothing writes `drops` any more, and both
+  save paths `delete` it.
 - ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
   canonically in pounds. Distance is still miles only.
 - **The Nippard system is a TRANSCRIPTION, and the screen says so.** It comes from published

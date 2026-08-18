@@ -794,13 +794,35 @@ ok(!data.querySelector('.rep-target'),
   ok(/SUPERSET|Superset/.test(b.textContent), 'linking brackets the two exercises');
   ok(/No rest — tap to separate/.test(b.textContent), 'and the control now offers to undo it');
 
-  // One tap to a drop set, another for a second drop.
+  // The set-type chip opens a sheet — at three types plus a count, cycling
+  // would have taken up to seven taps to get back where you started.
   find(/Straight sets/).click();
   await settle();
-  ok(/Drop set/.test(b.textContent), 'one tap on the chip makes it a drop set');
-  find(/^Drop set$/).click();
+  const sheet = document.querySelector('.sheet');
+  ok(Boolean(sheet), 'the set-type chip opens a sheet');
+  const sheetRow = (re) => [...sheet.querySelectorAll('button')].find((n) => re.test(n.textContent));
+  ok(Boolean(sheetRow(/Myo-reps/)) && Boolean(sheetRow(/Drop set/)) && Boolean(sheetRow(/Straight sets/)),
+     'showing all three types at once');
+  // D8: teach at the moment of use. "Myo-reps" is jargon and the sheet has to
+  // say what one IS, not just name it.
+  ok(/rest 10–15 seconds/i.test(sheet.textContent),
+     'and explaining what a myo-rep is rather than assuming you know');
+  ok(/strip the weight/i.test(sheet.textContent), 'and what a drop set is');
+
+  sheetRow(/Myo-reps/).click();
   await settle();
-  ok(/Drop set · 2 drops/.test(b.textContent), 'another tap adds a second drop');
+  ok(/Myo-reps · 3 mini-sets/.test(b.textContent),
+     'picking myo-reps defaults to three mini-sets — the usual 3–5');
+  ok(/Mini-sets/.test(document.querySelector('.sheet').textContent),
+     'and the count stepper appears under the type it counts');
+
+  document.querySelector('.sheet').querySelectorAll('button')
+    .forEach(() => {});
+  sheetRow(/Drop set/).click();
+  await settle();
+  ok(/Drop set/.test(b.textContent) && !/Myo-reps/.test(b.textContent),
+     'switching to a drop set replaces it rather than stacking');
+  document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
 
   find(/Save changes/).click();
   await settle(); await settle();
@@ -809,8 +831,8 @@ ok(!data.querySelector('.rep-target'),
   ok(saved.exercises[0].group != null && saved.exercises[0].group === saved.exercises[1].group,
      'the superset is actually SAVED, not just drawn');
   ok(saved.exercises[2].group === undefined, 'and the third exercise is left out of it');
-  ok(saved.exercises[0].setType === 'drop' && saved.exercises[0].drops === 2,
-     `the drop set is saved with its count (${JSON.stringify(saved.exercises[0])})`);
+  ok(saved.exercises[0].setType === 'drop' && saved.exercises[0].minis === 1,
+     `the set type is saved with its count (${JSON.stringify(saved.exercises[0])})`);
 }
 
 
@@ -877,7 +899,7 @@ ok(!data.querySelector('.rep-target'),
   {
     const w = await store.saveWorkout({
       name: 'Drop day',
-      exercises: [{ exerciseId: byName('Leg Extension').id, sets: 2, notes: '', setType: 'drop', drops: 2 }],
+      exercises: [{ exerciseId: byName('Leg Extension').id, sets: 2, notes: '', setType: 'drop', minis: 2 }],
     });
     localStorage.removeItem(DRAFT);
     const s = await mount(SessionView(w.id));
@@ -915,10 +937,52 @@ ok(!data.querySelector('.rep-target'),
     ok(Boolean(saved), 'the drop session saves');
     ok(saved && saved.entries[0].sets.length === 1,
        `only the set with numbers in it is kept, and it is ONE set (${saved && saved.entries[0].sets.length})`);
-    ok(saved && (saved.entries[0].sets[0].drops || []).length === 1,
+    ok(saved && (saved.entries[0].sets[0].minis || []).length === 1,
        'with its drop stored inside it rather than as another set');
     ok(saved && saved.entries[0].setType === 'drop',
        'and the record remembers it was a drop set');
+  }
+  /* ---- myo-reps ---- */
+  // Same nesting shape as a drop set, so what is asserted here is that the two
+  // are told APART: different instruction, different label, same one-hard-set
+  // rule. If they ever render identically the feature has failed at its only
+  // job, because the difference between them is the whole point.
+  {
+    const w = await store.saveWorkout({
+      name: 'Myo day',
+      exercises: [{ exerciseId: byName('Cable Curl').id, sets: 2, notes: '', setType: 'myo', minis: 3 }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    ok(/Rest 10–15 seconds/.test(s.textContent),
+       'a myo-rep tells you to rest briefly, not to strip the weight');
+    ok(!/Strip the weight/.test(s.textContent), 'and never shows the drop-set instruction');
+    ok(/3 mini-sets after each set/.test(s.textContent), 'stating how many are planned');
+    ok(/one hard set/i.test(s.textContent), 'and that the whole thing is still one hard set');
+
+    const rest = s.querySelector('.rest-bar');
+    type(s.querySelector('.step-value'), 50);
+    await settle();
+    ok(/Rest starts when you log a set/.test(rest.textContent),
+       'the top set of a myo-rep does not start the long rest either');
+
+    btn(s, /Rest 10–15 seconds/).click();
+    await settle();
+    ok(/mini-set 1/i.test(s.textContent) && !/drop 1/i.test(s.textContent),
+       'the mini-set is called a mini-set, not a drop');
+    type(s.querySelector('.step-value'), 50);
+    await settle();
+    ok(/Resting/.test(rest.textContent), 'and logging it starts the rest');
+    ok(Boolean(btn(s, /Another mini-set/)), 'with the button now offering another');
+
+    const finish = btn(s, /Finish workout/);
+    if (finish) { finish.click(); await settle(); await settle(); }
+    const saved = (await store.getSessions()).find((x) => x.workoutName === 'Myo day');
+    ok(saved && saved.entries[0].sets.length === 1, 'a myo-rep saves as ONE hard set');
+    ok(saved && (saved.entries[0].sets[0].minis || []).length === 1,
+       'with its mini-set nested inside');
+    ok(saved && saved.entries[0].setType === 'myo', 'and recorded as a myo-rep, not a drop set');
   }
   localStorage.removeItem(DRAFT);
 }

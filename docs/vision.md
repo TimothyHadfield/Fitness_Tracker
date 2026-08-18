@@ -262,10 +262,16 @@ The session runner walks a superset round by round — A, B, rest, A, B — beca
 all of B is not a superset, it is two exercises in a row. Nippard's Push and Israetel's Push 1 now
 ship with their documented supersets intact instead of flattened.
 
-**Still open: myo-reps.** Same nesting shape as a drop set, differing only in whether the weight
-comes down, so it is a label and a rest hint rather than a model change — and *Dr. Mike's Floating
-Split* is myo-reps almost end to end, so it is still shipping with its structure removed. **Chris
-Bumstead is now buildable and has not been built.** RIR and tempo remain deliberately absent (D9).
+**Myo-reps followed the same day**, and cost almost exactly what the note above predicted: the same
+nesting shape, one label, one rest hint, one default count (3, the low end of his usual 3–5). The
+set-type control became a **sheet** at that point — three types plus a count is past what a cycling
+chip can carry, and the sheet also has room to say what a myo-rep *is*, which D8 asks for and a chip
+label cannot.
+
+**The payoff is *Dr. Mike's Floating Split*.** It shipped hours earlier with a warning saying its
+structure had been stripped out; 11 of its exercises are now marked as myo-reps and that sentence
+has been deleted from the warning because it stopped being true. **Chris Bumstead is now buildable
+and has not been built.** RIR and tempo remain deliberately absent (D9).
 
 **Where this connects:** ranked pre-designed systems (§1.3) — several of the best-known programmes
 could not even be *entered* before this, so the celebrity library had a ceiling. Nothing here

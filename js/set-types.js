@@ -26,15 +26,29 @@
 // to remember the rule. Flattening drops into `sets` would have silently
 // inflated every set count, every weekly volume figure and D3 when it lands.
 //
-// Myo-reps are deliberately NOT here. They are the same nesting shape as a
-// drop set — mini-sets after a top set, differing only in whether the weight
-// comes down — so adding them later is a label and a rest hint, not a model
-// change. Tim asked for three things; this builds three things.
+// MYO-REPS were added a few hours after the rest (Tim, 2026-08-17) and cost
+// almost nothing, exactly as predicted: they are the same nesting shape as a
+// drop set, differing only in what changes between the mini-sets — the weight
+// comes down for a drop, the clock runs for ten seconds for a myo-rep. One
+// label, one rest hint, one default count.
+//
+// ⚠️ WHICH IS WHY THE STORED KEY IS `minis`, NOT `drops`. It shipped as
+// `drops` for the few hours when drop sets were the only nesting type, and
+// keeping that name would have meant every myo-rep set on disk claiming to be
+// a list of drops — visible to anyone who exported their backup, and false.
+// `minisOf()` still reads the old key so records written in that window keep
+// working; nothing writes it any more.
 //
 // Pure: no DOM, no store. Same reason as e1rm.js and next-workout.js.
 
 export const STRAIGHT = 'straight';
 export const DROP = 'drop';
+export const MYO = 'myo';
+
+/** Is this a set type whose sets carry mini-sets inside them? */
+export function isNested(setType) {
+  return setType === DROP || setType === MYO;
+}
 
 /** What to call a block of N exercises done back to back. */
 export function groupLabel(size) {
@@ -43,40 +57,68 @@ export function groupLabel(size) {
   return 'Superset';
 }
 
-/** Drops on a recorded set, always an array. */
-export function dropsOf(set) {
-  return Array.isArray(set && set.drops) ? set.drops : [];
+/**
+ * The mini-sets hanging off a recorded set, always an array.
+ *
+ * Drops for a drop set, match sets for a myo-rep. `set.drops` is read as a
+ * fallback for records written in the few hours before myo-reps existed and
+ * the key was renamed.
+ */
+export function minisOf(set) {
+  if (Array.isArray(set && set.minis)) return set.minis;
+  if (Array.isArray(set && set.drops)) return set.drops;
+  return [];
 }
 
 /**
  * HARD SETS — the number that volume is counted in.
  *
- * One drop set is one hard set no matter how many drops hang off it. This
- * function exists so that rule lives in exactly one place with a test on it,
- * rather than being an emergent property of how the data happens to be shaped.
+ * One drop set is one hard set no matter how many drops hang off it, and the
+ * same goes for a myo-rep and its match sets — `progress.md` §6 names both.
+ * This function exists so that rule lives in exactly one place with a test on
+ * it, rather than being an emergent property of how the data happens to be
+ * shaped.
  */
 export function hardSetCount(sets) {
   return Array.isArray(sets) ? sets.length : 0;
 }
 
-/** Every mini-set actually performed, drops included. For display only. */
+/** Every mini-set actually performed, continuations included. Display only. */
 export function miniSetCount(sets) {
   if (!Array.isArray(sets)) return 0;
-  return sets.reduce((n, s) => n + 1 + dropsOf(s).length, 0);
+  return sets.reduce((n, s) => n + 1 + minisOf(s).length, 0);
 }
+
+/** Default number of mini-sets, per type. Myo-reps are usually 3–5. */
+const DEFAULT_MINIS = { [DROP]: 1, [MYO]: 3 };
+const MAX_MINIS = 6;
 
 /** How a workout exercise describes its own set type, in words. */
 export function setTypeLabel(item) {
-  if (!item || item.setType !== DROP) return 'Straight sets';
-  const n = Number(item.drops) > 0 ? Number(item.drops) : 1;
+  const t = item && item.setType;
+  if (!isNested(t)) return 'Straight sets';
+  const n = plannedMinis(item);
+  if (t === MYO) return `Myo-reps · ${n} mini-sets`;
   return n === 1 ? 'Drop set' : `Drop set · ${n} drops`;
 }
 
-/** How many drops each set of this exercise plans for. */
-export function plannedDrops(item) {
-  if (!item || item.setType !== DROP) return 0;
-  const n = Number(item.drops);
-  return n > 0 ? Math.min(n, 4) : 1;
+/** What one mini-set is called on this exercise. */
+export function miniLabel(setType, n) {
+  if (setType === MYO) return n == null ? 'mini-set' : `Mini-set ${n}`;
+  return n == null ? 'drop' : `Drop ${n}`;
+}
+
+/** How many mini-sets each set of this exercise plans for. */
+export function plannedMinis(item) {
+  const t = item && item.setType;
+  if (!isNested(t)) return 0;
+  const n = Number(item.minis);
+  return n > 0 ? Math.min(n, MAX_MINIS) : DEFAULT_MINIS[t];
+}
+
+/** Clamp a user-chosen mini-set count into range. */
+export function clampMinis(n) {
+  return Math.max(1, Math.min(MAX_MINIS, Math.round(Number(n) || 1)));
 }
 
 /**

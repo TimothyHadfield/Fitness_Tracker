@@ -14,7 +14,7 @@
 
 import { store, todayISO } from './store.js';
 import { LOAD_LABEL } from './exercises.js';
-import { dropsOf } from './set-types.js';
+import { minisOf, miniLabel } from './set-types.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   confirmSheet, fmtDateLong,
@@ -46,7 +46,7 @@ export async function EditSessionView(sessionId) {
       // into the stored record before Save was ever pressed.
       sets: (e.sets || []).map((s) => ({
         ...s,
-        ...(dropsOf(s).length ? { drops: dropsOf(s).map((d) => ({ ...d })) } : {}),
+        ...(minisOf(s).length ? { minis: minisOf(s).map((d) => ({ ...d })) } : {}),
       })),
     })),
   };
@@ -122,12 +122,12 @@ export async function EditSessionView(sessionId) {
         // first, which is worse than not supporting them: someone opening a
         // recorded drop set would have seen half of what they did and assumed
         // the rest had been lost.
-        ...dropsOf(set).map((d, di) => numberBlock(d, {
+        ...minisOf(set).map((d, di) => numberBlock(d, {
           drop: true,
-          label: `Drop ${di + 1}`,
+          label: miniLabel(entry.setType, di + 1),
           onDelete: () => {
-            set.drops.splice(di, 1);
-            if (!set.drops.length) delete set.drops;
+            set.minis.splice(di, 1);
+            if (!set.minis.length) delete set.minis;
             renderList();
           },
         })),
@@ -140,7 +140,7 @@ export async function EditSessionView(sessionId) {
             entry.group != null || entry.setType
               ? el('div', { class: 'row-sub', text: [
                   entry.group != null ? 'part of a superset' : null,
-                  entry.setType ? 'drop set' : null,
+                  entry.setType ? miniLabel(entry.setType).toLowerCase() + 's' : null,
                 ].filter(Boolean).join(' · ') })
               : null,
           ),
@@ -187,11 +187,12 @@ export async function EditSessionView(sessionId) {
           ...(e.group == null ? {} : { group: e.group }),
           ...(e.setType ? { setType: e.setType } : {}),
           sets: e.sets
-            .filter((s) => hasNumbers(s, fields) || dropsOf(s).some((d) => hasNumbers(d, fields)))
+            .filter((s) => hasNumbers(s, fields) || minisOf(s).some((d) => hasNumbers(d, fields)))
             .map((s) => {
-              const kept = dropsOf(s).filter((d) => hasNumbers(d, fields));
+              const kept = minisOf(s).filter((d) => hasNumbers(d, fields));
               const out = { ...s };
-              if (kept.length) out.drops = kept; else delete out.drops;
+              if (kept.length) out.minis = kept; else delete out.minis;
+              delete out.drops;   // legacy key, never written any more
               return out;
             }),
         };

@@ -3,12 +3,12 @@
 import { store, DEFAULT_SETS, todayISO } from './store.js';
 import { suggestNext, describeSuggestion } from './next-workout.js';
 import {
-  DROP, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
-  setTypeLabel, plannedDrops, miniSetCount,
+  DROP, MYO, isNested, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
+  setTypeLabel, plannedMinis, clampMinis,
 } from './set-types.js';
 import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
 import {
-  el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
+  setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge,
 } from './ui.js';
 
@@ -172,6 +172,68 @@ export async function WorkoutsView() {
           'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
           + 'whatever you follow. Build one, or start from a ready-made one.'),
   });
+}
+
+/* ================================================================== *
+ * How one exercise's sets are structured
+ * ================================================================== */
+
+// Three types with a count is past what a cycling chip can carry, so this is a
+// sheet: every option visible, each explained in one line, and the count only
+// shown once it means something. The explanations matter more than the names —
+// "myo-reps" is jargon and the whole point of D8 is to teach at the moment of
+// use rather than expect somebody to already know.
+const SET_TYPES = [
+  { id: null, name: 'Straight sets', hint: 'Normal sets with a full rest between them.' },
+  { id: DROP, name: 'Drop set',
+    hint: 'Take the set, strip the weight, keep going. Counts as one hard set.' },
+  { id: MYO, name: 'Myo-reps',
+    hint: 'Take the set close to failure, rest 10–15 seconds, then squeeze out short '
+      + 'mini-sets at the same weight. Counts as one hard set.' },
+];
+
+export function openSetTypeSheet(item, onChange) {
+  const body = el('div', { class: 'list' });
+
+  const draw = () => {
+    setChildren(body, ...SET_TYPES.flatMap((t) => {
+      const on = (item.setType || null) === t.id;
+      const rows = [el('button', {
+        class: 'row' + (on ? ' is-on' : ''),
+        'aria-pressed': String(on),
+        onClick: () => {
+          if (t.id == null) { delete item.setType; delete item.minis; }
+          else { item.setType = t.id; item.minis = plannedMinis({ setType: t.id }); }
+          draw();
+          onChange();
+        },
+      },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: t.name }),
+          el('div', { class: 'row-sub wrap', text: t.hint }),
+        ),
+        on ? icon('check', 18) : null,
+      )];
+
+      // The count belongs under the type it counts, and nowhere at all when
+      // the answer is "straight sets".
+      if (on && t.id != null) {
+        rows.push(el('div', { class: 'builder-controls set-type-count' },
+          el('span', { class: 'builder-control-label',
+            text: t.id === MYO ? 'Mini-sets' : 'Drops' }),
+          miniStepper({
+            value: plannedMinis(item), min: 1, max: 6,
+            label: t.id === MYO ? 'mini-sets after each set' : 'drops after each set',
+            onChange: (v) => { item.minis = clampMinis(v); draw(); onChange(); },
+          }),
+        ));
+      }
+      return rows;
+    }));
+  };
+  draw();
+
+  openSheet({ title: 'How are these sets done?', body });
 }
 
 /* ================================================================== *
@@ -504,7 +566,7 @@ export async function WorkoutBuilderView(param) {
         const item = draft.exercises[i];   // the REAL one — see the note above
         const ex = exMap.get(item.exerciseId);
         const name = ex ? ex.name : 'Unknown exercise';
-        const isDrop = item.setType === DROP;
+        const nested = isNested(item.setType);
 
         wrap.append(el('div', { class: 'builder-item' },
           el('div', { class: 'builder-main' },
@@ -530,21 +592,16 @@ export async function WorkoutBuilderView(param) {
             }),
             ex && ex.loadType ? loadBadge(ex.loadType) : null,
 
-            // ONE TAP to a drop set, and one more for each extra drop. A sheet
-            // would be more explicit and would also be three taps for the
-            // commonest thing somebody wants here.
+            // This was a one-tap cycle while there were two states. At THREE
+            // types plus a count it stopped being a shortcut — you would have
+            // tapped up to seven times to get back where you started — so it
+            // opens a sheet where every option is visible at once.
             el('button', {
               type: 'button',
-              class: 'chip set-type' + (isDrop ? ' is-on' : ''),
-              'aria-pressed': String(isDrop),
-              title: 'Straight sets → drop set → more drops',
+              class: 'chip set-type' + (nested ? ' is-on' : ''),
+              'aria-pressed': String(nested),
               text: setTypeLabel(item),
-              onClick: () => {
-                const n = isDrop ? plannedDrops(item) : 0;
-                if (n >= 3) { delete item.setType; delete item.drops; }
-                else { item.setType = DROP; item.drops = n + 1; }
-                renderList();
-              },
+              onClick: () => openSetTypeSheet(item, renderList),
             }),
           ),
 

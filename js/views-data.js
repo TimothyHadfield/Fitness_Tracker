@@ -13,7 +13,7 @@ import {
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
-import { dropsOf, groupLabel } from './set-types.js';
+import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -191,10 +191,10 @@ export async function DayView(date) {
                 el('b', { text: `Set ${i + 1}` }),
                 el('span', { text: fmtSet(set, fields, loadType) }),
               ),
-              // Drops follow their set and are never given a set number of
-              // their own — one drop set is one hard set (progress.md §6).
-              ...dropsOf(set).map((d) => el('div', { class: 'detail-set is-drop' },
-                el('b', { text: '↳ drop' }),
+              // Mini-sets follow their set and are never given a set number
+              // of their own — one drop set or myo-rep is one hard set (§6).
+              ...minisOf(set).map((d) => el('div', { class: 'detail-set is-drop' },
+                el('b', { text: '↳ ' + miniLabel(e.setType).toLowerCase() }),
                 el('span', { text: fmtSet(d, fields, loadType) }),
               )),
             )),

@@ -155,11 +155,10 @@ export const PRESET_SYSTEMS = [
     //      specialty bars he uses (transformer bar, cambered bar, the CC squat
     //      machine) are mapped onto the nearest thing in the library.
     unofficial: true,
-    warning: 'Not official, and it loses something in translation. Nearly every set Dr. Mike does '
-      + 'here is a myo-rep or a giant set — this app can only record straight sets, so what you see '
-      + 'is his exercise choice with the set structure stripped out. It is also a CUTTING split, '
-      + 'built to hold muscle while dieting rather than to add it. Some set counts were never '
-      + 'reported and specialty bars are swapped for the nearest equivalent. Read the source.',
+    warning: 'Not official. Transcribed from the write-up on Renaissance Periodization’s own site, '
+      + 'not from him. It is a CUTTING split — built to hold muscle while dieting to 6 % body fat, '
+      + 'not to add it — so it is not a mass programme. Some set counts were never reported by '
+      + 'either source, and the specialty bars he uses are swapped for the nearest equivalent.',
     goal: 'Holding muscle while cutting',
     daysPerWeek: 6,
     minutes: 90,
@@ -170,12 +169,14 @@ export const PRESET_SYSTEMS = [
     notes: 'Transcribed from the write-up on Renaissance Periodization’s own site — not from him, '
       + 'and not from anything RP sells. A second write-up (BoxLife) agrees with it exercise for '
       + 'exercise, which is a firmer footing than most creator programmes get.\n\n'
-      + 'Read this before you run it. Two things make it unusual, and one of them is this app’s '
-      + 'fault. First, it is a CUTTING split: this is what he did while dieting down to 6 % body '
-      + 'fat, so it is built to hold muscle under fatigue, not to add it. Second, almost every set '
-      + 'he does is a myo-rep or a giant set — one hard set, then repeated mini-sets after a few '
-      + 'breaths — and this app can only log straight sets. So the exercises below are his and the '
-      + 'set structure is not. Where the source says "4 myo-rep match sets" you will see 4 sets.\n\n'
+      + 'Read this before you run it. It is a CUTTING split: this is what he did while dieting '
+      + 'down to 6 % body fat, so it is built to hold muscle under fatigue rather than to add it. '
+      + 'Run it to grow and you are running the wrong programme.\n\n'
+      + 'Almost every set he does is a MYO-REP — take the set close to failure, rest ten or fifteen '
+      + 'seconds, then squeeze out short mini-sets at the same weight. Those are marked as myo-reps '
+      + 'below and the app records them properly: the whole thing counts as one hard set, which is '
+      + 'the point of doing them. (Until 2026-08-17 it could not, and this programme shipped with '
+      + 'its structure flattened.)\n\n'
       + 'What "floating" means, and it is the best idea in here: there are no days of the week. You '
       + 'run Pull 1, Legs 1, Push 1, Pull 2, Legs 2, Push 2 and start again. Train when you have '
       + 'recovered, rest when you have not — one rest day, two, or none. It came out at six days a '
@@ -192,9 +193,9 @@ export const PRESET_SYSTEMS = [
           + 'about 40 total reps; laterals 4–6 sets to around 100 reps; curls one set of 40.',
         exercises: [
           { name: 'Neutral-Grip Pull-Up', sets: 5, notes: 'Weighted for 5–15 reps, descending. Then strip the weight and repeat the same grip — that second block is the point, not a cooldown.' },
-          { name: 'Chest-Supported Row', sets: 2, notes: 'Machine. About 40 reps in total across the sets.' },
-          { name: 'Lateral Raise', sets: 5, notes: 'Seated dumbbell. He accumulates close to 100 reps here. Written up as myo-rep match sets.' },
-          { name: 'Cable Curl', sets: 1, notes: '40 reps in one myo-rep set. One source says a lying dumbbell curl instead — either is a long-head biceps curl.' },
+          { name: 'Chest-Supported Row', sets: 2, setType: 'myo', minis: 3, notes: 'Machine. Myo-rep match sets — about 40 reps in total.' },
+          { name: 'Lateral Raise', sets: 5, setType: 'myo', minis: 3, notes: 'Seated dumbbell. Myo-rep match sets — he accumulates close to 100 reps here.' },
+          { name: 'Cable Curl', sets: 1, setType: 'myo', minis: 4, notes: '40 reps in one myo-rep set. One source says a lying dumbbell curl instead — either is a long-head biceps curl.' },
           { name: 'Wrist Curl', sets: 1, notes: 'Cable. 50 reps, as a finisher.' },
         ] },
       { name: 'Legs 1', notes: 'The hinge day. Abs first, then a good morning, leg press and a '
@@ -202,8 +203,8 @@ export const PRESET_SYSTEMS = [
         exercises: [
           { name: 'Decline Sit-Up', sets: 1, notes: '30 reps, to open the session.' },
           { name: 'Good Morning', sets: 3, notes: '5–15 reps. He uses a transformer bar — any safe hinge works.' },
-          { name: 'Leg Press', sets: 3, notes: '10–20 reps. Written up as myo-reps.' },
-          { name: 'Sissy Squat', sets: 1, notes: 'One giant set to failure, about 90 seconds and 30 reps. He uses a CC squat machine; a sissy squat is the closest free version.' },
+          { name: 'Leg Press', sets: 3, setType: 'myo', minis: 3, notes: '10–20 reps.' },
+          { name: 'Sissy Squat', sets: 1, setType: 'myo', minis: 4, notes: 'One giant myo-rep set to failure — about 90 seconds and 30 reps. He uses a CC squat machine; a sissy squat is the closest free version.' },
         ] },
       { name: 'Push 1', notes: 'Calves first, then a flat press, triceps paired with push-ups, '
           + 'biceps and a very long lateral-raise set. Reported: presses 5–15, curls 4×12, '
@@ -213,8 +214,8 @@ export const PRESET_SYSTEMS = [
           { name: 'Barbell Bench Press', sets: 3, notes: '5–15 reps. He uses a cambered bar for the extra stretch at the bottom.' },
           { name: 'Overhead Cable Extension', sets: 3, group: 0, notes: 'Straight into the push-ups — no rest between the two.' },
           { name: 'Push-Up', sets: 3, group: 0, notes: 'From a deficit, so the chest drops below the hands.' },
-          { name: 'Incline Dumbbell Curl', sets: 4, notes: '12 reps each, as myo-rep match sets.' },
-          { name: 'Lateral Raise', sets: 1, notes: 'One giant set, light, 50–75 total reps.' },
+          { name: 'Incline Dumbbell Curl', sets: 4, setType: 'myo', minis: 3, notes: '12 reps on the top set.' },
+          { name: 'Lateral Raise', sets: 1, setType: 'myo', minis: 5, notes: 'One giant myo-rep set, light, 50–75 total reps.' },
         ] },
       { name: 'Pull 2', notes: 'Same shape as Pull 1 with the grip changed — overhand rather than '
           + 'neutral. Front raises here instead of laterals. Several counts were never reported.',
@@ -229,17 +230,17 @@ export const PRESET_SYSTEMS = [
           + 'fatigue off a body already dieting. Reported: leg curls and belt squats 15–20 reps.',
         exercises: [
           { name: 'Lying Leg Curl', sets: 3, notes: '15–20 reps. Here instead of a hinge so the lower back gets a break.' },
-          { name: 'Belt Squat', sets: 3, notes: '15–20 reps, as myo-reps. Loads the legs without loading the spine.' },
+          { name: 'Belt Squat', sets: 3, setType: 'myo', minis: 3, notes: '15–20 reps. Loads the legs without loading the spine.' },
           { name: 'Bulgarian Split Squat', sets: 3, notes: 'He does these with the transformer bar.' },
         ] },
       { name: 'Push 2', notes: 'The heavier push day. Reported: incline press 10–20, flat bench '
           + '5–15, skull crushers 6 sets at 15–20.',
         exercises: [
-          { name: 'Incline Machine Press', sets: 3, notes: '10–20 reps, myo-reps.' },
+          { name: 'Incline Machine Press', sets: 3, setType: 'myo', minis: 3, notes: '10–20 reps.' },
           { name: 'Barbell Bench Press', sets: 3, notes: '5–15 reps, flat and straight-barred this time.' },
-          { name: 'Skull Crusher', sets: 6, notes: '15–20 reps, as myo-rep match sets. The most volume any exercise gets in the week.' },
+          { name: 'Skull Crusher', sets: 6, setType: 'myo', minis: 3, notes: '15–20 reps on the top set. The most volume any exercise gets in the week.' },
           { name: 'Cable Curl', sets: 1, notes: 'He uses a Free Motion cable station.' },
-          { name: 'Cable Front Raise', sets: 1, notes: 'Lying. One giant set to finish.' },
+          { name: 'Cable Front Raise', sets: 1, setType: 'myo', minis: 4, notes: 'Lying. One giant myo-rep set to finish.' },
         ] },
     ],
   },

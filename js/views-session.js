@@ -7,7 +7,7 @@ import {
   fmtSet, confirmSheet, fmtDateLong,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
-import { DROP, stepsFor, dropsOf, plannedDrops, groupLabel } from './set-types.js';
+import { DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel } from './set-types.js';
 
 const go = (hash) => { location.hash = hash; };
 const DRAFT_KEY = 'ftrack:v1:draftSession';
@@ -121,8 +121,8 @@ export async function SessionView(workoutId) {
         // isBenchmark above and for the same reason: editing the workout
         // template next month must not reshape a session already recorded.
         group: item.group == null ? null : item.group,
-        setType: item.setType === DROP ? DROP : null,
-        plannedDrops: plannedDrops(item),
+        setType: isNested(item.setType) ? item.setType : null,
+        plannedMinis: plannedMinis(item),
         sets,
         active: 0,
         activeDrop: null,
@@ -234,14 +234,14 @@ export async function SessionView(workoutId) {
     if (!step) return;
     const entry = state.entries[step.entryIndex];
     const ex = exMap.get(entry.exerciseId);
-    const isDrop = entry.setType === DROP;
+    const nested = isNested(entry.setType);
 
     if (entry.active >= entry.sets.length) entry.active = entry.sets.length - 1;
     const activeSet = entry.sets[entry.active] || entry.sets[0];
     // What the steppers are pointed at: the set itself, or one of its drops.
-    const drops = dropsOf(activeSet);
-    if (entry.activeDrop != null && entry.activeDrop >= drops.length) entry.activeDrop = null;
-    const target = entry.activeDrop == null ? activeSet : drops[entry.activeDrop];
+    const minis = minisOf(activeSet);
+    if (entry.activeDrop != null && entry.activeDrop >= minis.length) entry.activeDrop = null;
+    const target = entry.activeDrop == null ? activeSet : minis[entry.activeDrop];
 
     const setList = el('div', { class: 'set-list' });
 
@@ -280,18 +280,19 @@ export async function SessionView(workoutId) {
         // are — the same set continued at a lower weight. They are deliberately
         // not numbered as sets: one drop set is one hard set (progress.md §6),
         // and numbering them 1, 2, 3 would teach the opposite.
-        dropsOf(s).forEach((d, di) => {
+        minisOf(s).forEach((d, di) => {
           rows.push(el('div', { class: 'set-item set-drop' + (isHere && entry.activeDrop === di ? ' active' : '') },
             el('button', {
-              class: 'set-num drop-num', text: '↳', 'aria-label': `Edit drop ${di + 1} of set ${i + 1}`,
+              class: 'set-num drop-num', text: '↳',
+              'aria-label': `Edit ${miniLabel(entry.setType, di + 1)} of set ${i + 1}`,
               onClick: () => select(i, di),
             }),
             el('div', { class: 'set-vals', text: fmtSet(d, entry.fields, entry.loadType) }),
             el('button', {
-              class: 'set-del', 'aria-label': `Delete drop ${di + 1}`,
+              class: 'set-del', 'aria-label': `Delete ${miniLabel(entry.setType, di + 1)}`,
               onClick: () => {
-                s.drops.splice(di, 1);
-                if (!s.drops.length) delete s.drops;
+                s.minis.splice(di, 1);
+                if (!s.minis.length) delete s.minis;
                 entry.activeDrop = null;
                 saveDraft(state);
                 renderPane();
@@ -323,13 +324,13 @@ export async function SessionView(workoutId) {
           // set is not the end of the set: you strip the weight and carry on,
           // so rest waits for a drop.
           const midGroup = !step.restsAfter;
-          const midDropSet = isDrop && entry.activeDrop == null;
-          if (!midGroup && !midDropSet) startRest();
+          const midNestedSet = nested && entry.activeDrop == null;
+          if (!midGroup && !midNestedSet) startRest();
         },
       }).node);
 
-    const dropCount = drops.length;
-    const wantsDrops = isDrop ? entry.plannedDrops : 0;
+    const miniCount = minis.length;
+    const wantsMinis = nested ? entry.plannedMinis : 0;
 
     setChildren(pane,
       // The superset banner is the first thing on the screen, above the
@@ -376,28 +377,39 @@ export async function SessionView(workoutId) {
 
       el('div', { class: 'section-label', text: entry.activeDrop == null
         ? `Set ${entry.active + 1} of ${entry.sets.length}`
-        : `Set ${entry.active + 1} · drop ${entry.activeDrop + 1}` }),
+        : `Set ${entry.active + 1} · ${miniLabel(entry.setType, entry.activeDrop + 1).toLowerCase()}` }),
       el('div', { class: 'steppers' }, steppers),
 
-      // A drop set says what to do next in the one place you are looking. The
-      // button is the instruction: take the weight off and go again.
-      isDrop
+      // A nested set says what to do next in the one place you are looking, and
+      // the button IS the instruction rather than the name of a technique.
+      // "Strip the weight" and "Rest 10–15 seconds" are things you can act on;
+      // "Add drop" and "Add myo-rep" assume you already know what those are,
+      // which is the assumption D8 exists to refuse.
+      nested
         ? el('div', { class: 'drop-row' },
             el('button', {
               class: 'btn block drop-add',
               onClick: () => {
-                if (!Array.isArray(activeSet.drops)) activeSet.drops = [];
-                const from = drops.length ? drops[drops.length - 1] : activeSet;
-                activeSet.drops.push(pickFields(from, entry.fields));
-                entry.activeDrop = activeSet.drops.length - 1;
+                if (!Array.isArray(activeSet.minis)) activeSet.minis = [];
+                // A myo-rep match set is the SAME weight after a short rest, so
+                // carrying the numbers forward is right. A drop is lighter and
+                // the app cannot know by how much, so it carries them forward
+                // too and waits to be corrected — a guessed weight would be
+                // worse than an obvious one.
+                const from = minis.length ? minis[minis.length - 1] : activeSet;
+                activeSet.minis.push(pickFields(from, entry.fields));
+                entry.activeDrop = activeSet.minis.length - 1;
                 saveDraft(state);
                 renderPane();
               },
-            }, icon('down', 16),
-              dropCount ? 'Drop again' : 'Strip the weight — add a drop'),
-            el('div', { class: 'field-help', text: dropCount >= wantsDrops && wantsDrops
-              ? `${dropCount} drop${dropCount === 1 ? '' : 's'} recorded — this counts as one hard set.`
-              : `Planned: ${wantsDrops} drop${wantsDrops === 1 ? '' : 's'} after each set. The whole thing counts as one hard set.` }),
+            }, icon(entry.setType === MYO ? 'plus' : 'down', 16),
+              entry.setType === MYO
+                ? (miniCount ? 'Another mini-set' : 'Rest 10–15 seconds — add a mini-set')
+                : (miniCount ? 'Drop again' : 'Strip the weight — add a drop')),
+            el('div', { class: 'field-help', text: miniCount >= wantsMinis && wantsMinis
+              ? `${miniCount} ${miniLabel(entry.setType).toLowerCase()}${miniCount === 1 ? '' : 's'} recorded — this counts as one hard set.`
+              : `Planned: ${wantsMinis} ${miniLabel(entry.setType).toLowerCase()}${wantsMinis === 1 ? '' : 's'} after each set. `
+                + 'The whole thing counts as one hard set.' }),
           )
         : null,
 
@@ -449,16 +461,17 @@ export async function SessionView(workoutId) {
         // Carried so the calendar and the edit screen can show a recorded
         // session the way it was actually performed, not just as a flat list.
         ...(e.group == null ? {} : { group: e.group }),
-        ...(e.setType === DROP ? { setType: DROP } : {}),
+        ...(e.setType ? { setType: e.setType } : {}),
         sets: e.sets
-          .filter((s) => hasNumbers(s, e.fields) || dropsOf(s).some((d) => hasNumbers(d, e.fields)))
+          .filter((s) => hasNumbers(s, e.fields) || minisOf(s).some((d) => hasNumbers(d, e.fields)))
           .map((s) => {
-            const kept = dropsOf(s).filter((d) => hasNumbers(d, e.fields));
+            const kept = minisOf(s).filter((d) => hasNumbers(d, e.fields));
             const out = { ...s };
-            // An empty `drops: []` is noise in storage and reads as "this was a
+            // An empty `minis: []` is noise in storage and reads as "this was a
             // drop set with no drops", which is a different claim from "this
             // was a straight set".
-            if (kept.length) out.drops = kept; else delete out.drops;
+            if (kept.length) out.minis = kept; else delete out.minis;
+            delete out.drops;   // legacy key, never written any more
             return out;
           }),
       }))

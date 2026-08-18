@@ -9,7 +9,7 @@
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
 import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps, isRankableSet } from './e1rm.js';
-import { normalizeGroups, plannedDrops, DROP } from './set-types.js';
+import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 
 const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
@@ -272,7 +272,7 @@ export function normalizeWorkout(w) {
         exerciseId: e.exerciseId,
         sets: Number(e.sets) > 0 ? Number(e.sets) : DEFAULT_SETS,
         notes: e.notes || '',
-        ...(e.setType === DROP ? { setType: DROP, drops: plannedDrops(e) } : {}),
+        ...(isNested(e.setType) ? { setType: e.setType, minis: plannedMinis(e) } : {}),
         ...(e.group == null ? {} : { group: e.group }),
       }))),
     };
@@ -432,7 +432,7 @@ export const store = {
           // A preset that says "supersetted with the next one" has to arrive
           // that way, or copying somebody's programme quietly flattens it —
           // which is the whole complaint docs/vision.md §1.5 was written about.
-          ...(item.setType === DROP ? { setType: DROP, drops: plannedDrops(item) } : {}),
+          ...(isNested(item.setType) ? { setType: item.setType, minis: plannedMinis(item) } : {}),
           ...(item.group == null ? {} : { group: item.group }),
         });
       }

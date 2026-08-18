@@ -2421,3 +2421,41 @@ removed. **Chris Bumstead is now buildable and has not been built.**
 and 1180 px through the whole path — build the superset, tap a drop set, save, run it, watch the rest
 timer stay put mid-round and start after it, add a drop, then read it back on the calendar and
 through the edit form and save unchanged with everything preserved.
+
+---
+
+## 2026-08-17 (last) — Myo-reps, and Dr. Mike's split gets its structure back
+
+**Tim:** *"alright go straight into myo-reps and then review"*
+
+It cost what the previous note predicted: **the same nesting shape as a drop set**, differing only in
+what changes between mini-sets — the weight comes down for a drop, the clock runs for ten seconds for
+a myo-rep. One label, one rest hint, one default count (3, the low end of the usual 3–5).
+
+**The payoff is Dr. Mike's Floating Split.** It shipped a few hours earlier with a warning saying its
+set structure had been stripped out. **11 of its exercises are now marked as myo-reps**, and that
+sentence has been deleted from the warning because it stopped being true. A warning that has stopped
+being true is worse than no warning.
+
+**Three things changed shape along the way:**
+
+1. **The set-type chip became a sheet.** It was a one-tap cycle while there were two states. At three
+   types plus a count it would have taken up to seven taps to get back where you started, so it opens
+   a sheet with all three visible. That also bought room to say what each one *is* — "Take the set
+   close to failure, rest 10–15 seconds, then squeeze out short mini-sets at the same weight" — which
+   is what D8 asks for and what a chip label cannot do. "Myo-reps" is jargon.
+2. **The stored key was renamed `drops` → `minis`.** It shipped as `drops` during the few hours when
+   drop sets were the only nesting type. Keeping it would have meant every myo-rep set on disk
+   claiming to be a list of drops — visible to anyone who exported a backup, and false. `minisOf()`
+   reads both keys, nothing writes the old one, and both save paths delete it.
+3. **The button is still the instruction, not the technique.** "Rest 10–15 seconds — add a mini-set",
+   then "Another mini-set". Never "Add myo-rep", which assumes you already know.
+
+**One bug, caught by the tests immediately:** `openSetTypeSheet` used `setChildren`, which was not in
+this file's import list. The click threw and no sheet appeared. The render test asserting the sheet
+opens is what said so.
+
+**State at close:** **1023 data-layer + 210 render assertions green.** Driven in a browser: open the
+sheet, pick myo-reps, see the count stepper, close, confirm the chip reads "Myo-reps · 3 mini-sets",
+run the workout, confirm the instruction says rest rather than strip, add a mini-set, confirm it is
+labelled a mini-set and not a drop, and that the whole thing still saves as one hard set.

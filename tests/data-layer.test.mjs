@@ -2196,17 +2196,33 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     // counting one without knowing drop sets exist. Flattening them into `sets`
     // would have inflated every volume figure in the app.
     const sets = [
-      { weight: 185, reps: 8, drops: [{ weight: 135, reps: 6 }, { weight: 95, reps: 8 }] },
+      { weight: 185, reps: 8, minis: [{ weight: 135, reps: 6 }, { weight: 95, reps: 8 }] },
       { weight: 185, reps: 7 },
     ];
     ok(st.hardSetCount(sets) === 2, 'two sets with drops on one of them is TWO hard sets, not four');
     ok(st.miniSetCount(sets) === 4, 'but four mini-sets were actually performed');
-    ok(st.dropsOf(sets[1]).length === 0 && Array.isArray(st.dropsOf(sets[1])),
+    ok(st.minisOf(sets[1]).length === 0 && Array.isArray(st.minisOf(sets[1])),
        'a set with no drops reports an empty array, never undefined');
-    ok(st.setTypeLabel({ setType: st.DROP, drops: 2 }) === 'Drop set · 2 drops'
+    ok(st.setTypeLabel({ setType: st.DROP, minis: 2 }) === 'Drop set · 2 drops'
        && st.setTypeLabel({}) === 'Straight sets', 'a set type says what it is in words');
-    ok(st.plannedDrops({ setType: st.DROP }) === 1 && st.plannedDrops({}) === 0,
+    ok(st.plannedMinis({ setType: st.DROP }) === 1 && st.plannedMinis({}) === 0,
        'a drop set with no count planned means one drop');
+    ok(st.plannedMinis({ setType: st.MYO }) === 3,
+       'a myo-rep with no count planned means three mini-sets — the usual 3–5');
+    ok(st.setTypeLabel({ setType: st.MYO }) === 'Myo-reps · 3 mini-sets',
+       'and it calls them mini-sets, not drops');
+    ok(st.miniLabel(st.MYO, 2) === 'Mini-set 2' && st.miniLabel(st.DROP, 2) === 'Drop 2',
+       'the two nested types name their continuations differently');
+    ok(st.isNested(st.DROP) && st.isNested(st.MYO) && !st.isNested(null),
+       'both nested types are recognised as nested, and straight sets are not');
+
+    // ⚠️ The stored key was `drops` for the few hours when drop sets were the
+    // only nesting type. Records written then must keep working, or the rename
+    // silently eats somebody's workout.
+    ok(st.minisOf({ weight: 100, drops: [{ weight: 60, reps: 8 }] }).length === 1,
+       'a record written under the old `drops` key still reads back');
+    ok(st.miniSetCount([{ weight: 100, drops: [{}, {}] }]) === 3,
+       'and still counts its mini-sets');
   }
 
   /* ---- it SURVIVES a round trip through the store ---- */
@@ -2223,14 +2239,17 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       exercises: [
         { exerciseId: exId, sets: 3, notes: '', group: 0 },
         { exerciseId: exId2, sets: 3, notes: '', group: 0 },
-        { exerciseId: BUILT_IN_EXERCISES[2].id, sets: 3, notes: '', setType: 'drop', drops: 2 },
+        { exerciseId: BUILT_IN_EXERCISES[2].id, sets: 3, notes: '', setType: 'drop', minis: 2 },
+        { exerciseId: BUILT_IN_EXERCISES[3].id, sets: 3, notes: '', setType: 'myo' },
       ],
     });
     const back = (await store2.getWorkouts(sys.id))[0];
     ok(back.exercises[0].group != null && back.exercises[0].group === back.exercises[1].group,
        'a superset survives being written and read back');
-    ok(back.exercises[2].setType === 'drop' && back.exercises[2].drops === 2,
+    ok(back.exercises[2].setType === 'drop' && back.exercises[2].minis === 2,
        'and so does a drop set with its drop count');
+    ok(back.exercises[3].setType === 'myo' && back.exercises[3].minis === 3,
+       'a myo-rep survives too, defaulted to three mini-sets');
     ok(back.exercises[2].group === undefined, 'a solo exercise carries no group');
 
     // A recorded session keeps its drops, and they do not become extra sets.
@@ -2238,12 +2257,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       workoutId: back.id, workoutName: 'Grouped', date: '2026-08-17',
       entries: [{
         exerciseId: exId, exerciseName: 'x', group: 0,
-        sets: [{ weight: 185, reps: 8, drops: [{ weight: 135, reps: 6 }] }],
+        sets: [{ weight: 185, reps: 8, minis: [{ weight: 135, reps: 6 }] }],
       }],
     });
     const saved = (await store2.getSessions())[0];
     ok(saved.entries[0].sets.length === 1, 'a recorded drop set is still one set');
-    ok(st.dropsOf(saved.entries[0].sets[0]).length === 1, 'with its drop kept alongside it');
+    ok(st.minisOf(saved.entries[0].sets[0]).length === 1, 'with its drop kept alongside it');
     ok(saved.entries[0].group === 0, 'and the session remembers it was part of a superset');
     await store2.clearAll();
   }
@@ -2268,6 +2287,24 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const grouped = st.blocksOf(push.exercises).filter((b) => b.group != null);
     ok(grouped.length === 1 && grouped[0].items.length === 2,
        'copying Nippard\'s Push brings its superset with it');
+    await store2.clearAll();
+
+    // THE POINT OF MYO-REPS. Dr. Mike's Floating Split is myo-reps almost end
+    // to end, and until they existed it shipped with its structure flattened
+    // and a warning saying so. Copying it must now bring them across.
+    const iz = await store2.addPresetSystem(presetById('preset-israetel-floating-split'));
+    const all = await store2.getWorkouts(iz.system.id);
+    const myo = all.flatMap((w) => w.exercises).filter((e) => e.setType === st.MYO);
+    ok(myo.length >= 8,
+       `Dr. Mike's Floating Split copies in with its myo-reps intact (${myo.length} exercises)`);
+    ok(myo.every((e) => e.minis >= 1), 'each with a mini-set count');
+    // And the warning no longer claims the structure was stripped out, because
+    // it is not — a warning that has stopped being true is worse than none.
+    const preset = presetById('preset-israetel-floating-split');
+    ok(!/only record straight sets|structure stripped/i.test(preset.warning),
+       'and the warning no longer says the structure was removed');
+    ok(/CUTTING split/.test(preset.warning),
+       'while still leading with what IS still true of it');
     await store2.clearAll();
   }
 }
