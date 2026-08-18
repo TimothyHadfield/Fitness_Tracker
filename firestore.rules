@@ -136,15 +136,33 @@ service cloud.firestore {
     // right first time, and an invite link is a capability handed to one
     // person instead.
     function claimingUnclaimedInvite() {
+      // ⚠️ Every field is existence- and type-checked BEFORE it is used, and
+      // that is not defensive padding. Rules propagate errors out of an && even
+      // when an earlier operand is already false, so reading a field that might
+      // be missing turns a clean "denied" into an "evaluation error". Both
+      // refuse the write today — but an erroring rule is one whose behaviour
+      // depends on operand order, and the next person to add a condition here
+      // would be reordering something they cannot see. The emulator run on
+      // 2026-08-18 showed exactly this on three of the invite denials.
       return signedIn()
              && resource != null
              && !('claimedBy' in resource.data)
+             && 'expiresAt' in resource.data
+             && resource.data.expiresAt is timestamp
+             && request.time < resource.data.expiresAt
+             && 'claimedBy' in request.resource.data
              && request.resource.data.claimedBy == request.auth.uid
-             // Only the two claim fields may change. Without this the claimer
+             // Only the three claim fields may change. Without this the claimer
              // could rewrite the invite's owner or its expiry on the way past.
+             // ⚠️ LOAD-BEARING, and proved so rather than assumed: removing this
+             // line on 2026-08-18 made exactly one test flip from denied to
+             // ALLOWED — "a claimer cannot extend the expiry on the way past".
+             // Without it, redeeming a link is a write the claimer partly
+             // controls, and they can push the expiry out while they are in
+             // there. Everything else still passed, which is the point: this is
+             // the only thing standing between a claim and an edit.
              && request.resource.data.diff(resource.data)
-                  .affectedKeys().hasOnly(['claimedBy', 'claimedName', 'claimedAt'])
-             && request.time < resource.data.expiresAt;
+                  .affectedKeys().hasOnly(['claimedBy', 'claimedName', 'claimedAt']);
     }
 
     match /users/{userId}/invites/{token} {

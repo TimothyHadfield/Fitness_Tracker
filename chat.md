@@ -2770,3 +2770,44 @@ runs.**
 `sw.js precache is missing: js/social.js`. A module outside the precache is a module the app cannot
 load offline, and D6 says offline is non-negotiable. Added, and the rule is now written into
 `progress.md` beside the matching one about `COLLECTIONS` and `knownCollection()`.
+
+---
+
+## 2026-08-18 — The rules suite runs. It was the JDK vendor, not the version
+
+Tim picked "install Java 17" from the three options. That turned out to be the right instinct and the
+wrong number, and the way it failed is worth keeping.
+
+**Temurin 17 installed fine and the CLI refused it outright:** *"firebase-tools no longer supports
+Java version before 21."* So the emulator was never even reached. But that error is what identified
+the real variable — if the CLI demands 21 and 21 was already installed, the problem was never the
+*version*. It was the **vendor**. Installed **Temurin 21** alongside Oracle's, pointed `JAVA_HOME` at
+it, and the emulator started first time.
+
+**46 rules assertions, all passing** — the first tests in this project that run as somebody who is
+not you. The one that matters most is a regression test rather than a new feature: **a full-tier
+friend still cannot read the private sessions document.** The single unacceptable outcome of adding
+social was that it quietly widened the old paths, and that assertion is what stands against it.
+
+**The bisect was worth more than the fix it was meant to produce.** Chasing some cosmetic evaluation
+errors, the `diff().affectedKeys().hasOnly()` line was pulled out of the invite rule to see what it
+was doing. Exactly one assertion flipped from denied to **ALLOWED** — *a claimer cannot extend the
+expiry on the way past* — and everything else still passed. So that line is provably load-bearing and
+the test covering it is provably not vacuous. Both facts are now written into the rule itself, next
+to the line, because the project's own standard is that a test which passes with the protection
+removed is worse than none.
+
+**Left unexplained and said so:** four denials come back as an *evaluation error* rather than a clean
+`false`. All four are correctly denied and the legitimate claim is correctly allowed, so behaviour is
+right. Existence and type guards were added for every field the rule reads and three of the four
+survived that, so it is not a missing field. Recorded in `docs/social-plan.md` §7.1 rather than
+quietly dropped, because an erroring rule is one whose behaviour could depend on operand order.
+
+**The JDK trap is now `progress.md` §0.9**, since it cost about half an hour and presents as a broken
+install: on the Oracle JDK the emulator exits with code −1, an empty debug log and **zero bytes on
+both stdout and stderr**, while `--version` prints perfectly. The working window is narrow — the CLI
+needs Java ≥ 21, the emulator jar needs a JDK that is not Oracle's.
+
+Rules redeployed after the change. **Phase 1 is done: 73 projection assertions + 46 rules assertions,
+green.** Phase 2 — display name, the upgrade gate, invite links, per-person tier control — is next,
+and still publishes nothing.

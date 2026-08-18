@@ -66,7 +66,7 @@ where every lift stands right now.
 | **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
-| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing` then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — who may READ it. ⚠️ **WRITTEN BUT NEVER RUN**: the emulator will not start on this machine. `docs/social-plan.md` §7.1 has everything already tried |
+| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -140,6 +140,19 @@ It needs a server — ES modules do not load over `file://`.
    past Windows MAX_PATH, and `caches.open()` fails with "Unexpected internal error". That presents
    exactly as a broken service worker and is nothing of the sort. `C:/Users/timha/AppData/Local/Temp/cdp-<pid>`
    works. A *relative* user-data-dir makes Chrome fail to start at all.
+
+9. **The Firestore emulator dies SILENTLY on the Oracle JDK.** Exit code 4294967295 (−1), an empty
+   `firestore-debug.log`, and zero bytes on stdout *and* stderr — no stack trace, no `hs_err` file.
+   It presents as a broken install and is nothing of the sort: `java -jar <emulator> --version`
+   prints fine, so the JVM and the archive are both sound, and only *serving* dies. **Temurin 21
+   works first time.** Both JDKs are installed; point `JAVA_HOME` at
+   `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot` before running the rules tests.
+
+   ⚠️ Do not "fix" it with an older JDK: `firebase-tools` refuses to run below Java 21 outright, so
+   Temurin **17** — the obvious first guess, and the one recommended for this emulator everywhere —
+   is rejected by the CLI before the emulator is even reached. The working window is narrow: **the
+   CLI needs ≥ 21 and the emulator jar needs a JDK that is not Oracle's.** Cost about half an hour;
+   `docs/social-plan.md` §7.1 lists everything that was ruled out first.
 
 ---
 
@@ -291,6 +304,18 @@ Press-and-hold repeats.
   rather than a walk looking in the wrong place. Also asserted: an email address handed straight to
   the builder never reaches the output, body weight stays out even at full unless separately enabled,
   and a stored tier that is not recognised degrades to the *safest* value rather than the nearest
+- **46 rules assertions against the real rules engine** (`tests/rules.test.mjs`, Firestore emulator)
+  — **the first tests in this project that run as somebody who is not you.** Everything else asserts
+  a number; a permission can only be tested by attempting it as another user and being refused, which
+  nothing here could do before. The suite leads with denials on purpose: *a rule that permits
+  everything passes every positive test*. The load-bearing one is a regression test rather than a new
+  feature — **a full-tier friend still cannot read the private sessions document** — because the one
+  unacceptable outcome of adding social was that it widened the old paths. Also refused: a stranger
+  adding themselves to a viewers list, a viewer listing which tiers exist, anyone listing another
+  person's invites, and a claimer extending an invite's expiry on the way past.
+  **Mutation-checked:** deleting the `diff().affectedKeys()` line flipped exactly one assertion from
+  denied to allowed and left the rest passing, so that test is not vacuous and that rule line is
+  provably load-bearing
 - **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
   its gstatic imports redirected to a local SDK — not a lookalike: anonymous sign-in, read/write
   round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking preserving uid and
@@ -305,14 +330,6 @@ Press-and-hold repeats.
   only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —
   Tim is not doing phone testing until the site itself is done (2026-08-17). Unverified is not the
   same as unimportant: keep saying so, just don't propose it as the next job.
-- **⚠️ THE SOCIAL FIRESTORE RULES ARE NOT TESTED.** `firestore.rules` gained the shared-projection,
-  connection-graph and invite paths on 2026-08-18, and `tests/rules.test.mjs` covers them — but that
-  suite **has never been executed**, because the Firestore emulator exits instantly on this machine
-  with an empty log. What IS known: the rules **compile** (`firebase deploy` validates server-side and
-  they are deployed), and the diff is purely additive so the private-collection block is unchanged.
-  Neither is a statement about behaviour. Everything already tried, so it is not repeated, is in
-  `docs/social-plan.md` §7.1; the leading suspect is the JDK. **Nothing reads or writes these paths
-  yet**, so the exposure today is zero — but Phase 2 must not start until this runs.
 - **Google sign-in IS enabled and Tim uses it** (he reported a bug in it on 2026-08-16, so the
   console toggle has been done at some point). The popup path is exercised in the real world; the
   **redirect** path and the installed PWA still are not.
@@ -851,13 +868,13 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    limitation, and a test fails if a non-video transcription falls through to the default warning.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
-6. **Social — Phase 1 is BUILT, and one thing about it is unfinished.** `js/social.js` (tiers +
-   projection builder, pure, wired to nothing), the new `firestore.rules` paths, 73 passing
-   assertions and `tests/rules.test.mjs`. **The one open item is that the rules suite has never
-   run** — see NOT verified above and `docs/social-plan.md` §7.1. Getting the emulator to start is
-   therefore the next social job, ahead of any UI, and the leading suspect is the JDK (Java 21 is the
-   only one installed; Temurin 17 is the usual recommendation). **Phase 2 — display name, the upgrade
-   gate, invite links, per-person tier control — should not start until it does.**
+6. **Social — Phase 1 is DONE.** `js/social.js` (tiers + projection builder, pure, wired to no
+   screen), the new `firestore.rules` paths deployed, **73 projection assertions + 46 rules
+   assertions, all green**. The security is settled before anything exists to look at, which was the
+   entire point of the phasing. **Next is Phase 2** — display name, the upgrade-off-anonymous gate
+   (D25), invite links, accept, per-person tier control, disconnect — still with nothing published.
+   Then Phase 3, the profile page, which is the one that delivers what Tim asked for. **Two open
+   questions sit above this**, neither blocking: profile-only vs a feed, and mutual vs followers.
 7. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
 
 ### Open questions for Tim

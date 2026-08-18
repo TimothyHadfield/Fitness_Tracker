@@ -333,42 +333,47 @@ The suite has to include, at minimum:
 ⚠️ **A rules test that only asserts the allowed cases is worth almost nothing.** The failures that
 matter are all denials, and a rule that allows everything passes every positive test.
 
-### 7.1 ⚠️ The suite is WRITTEN and has never RUN — 2026-08-18
+### 7.1 The suite RUNS, and it needs Temurin — 2026-08-18
 
-`tests/rules.test.mjs` exists, covers every case in the list above, and **has not been executed once**,
-because the Firestore emulator will not start on this machine. Until it runs, **the rules in
-`firestore.rules` are unverified** beyond compiling. Do not let the presence of a test file read as
-a passing test file.
+**46 assertions, all passing**, against the real Firestore rules engine in the emulator.
 
-What is actually known about them: they **compile** — `firebase deploy --only firestore:rules`
-validates server-side and reported "compiled successfully" — and the diff that added them is purely
-additive, so the private-collection block is byte-for-byte what it was. Neither of those is a
-statement about behaviour.
+⚠️ **The emulator will not start on the Oracle JDK, and it does not say so.** It exits instantly with
+code 4294967295 (−1), an **empty** `firestore-debug.log`, and **zero bytes on both stdout and
+stderr** — no stack trace, no `hs_err` file, nothing. On **Temurin 21 it starts first time**. That
+one fact is the whole of this section; everything below is only there so nobody re-derives it.
 
-What was tried, so the next session does not repeat it:
+```
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot"
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"
+```
 
-- `firebase emulators:exec --only firestore` → the emulator exits immediately with code 4294967295
-  (−1) and `firestore-debug.log` is **empty**.
-- The jar is present and not corrupt: `--version` and `--help` both work and print normally. It is
-  only *serving* that dies.
-- Running the CLI's exact java command by hand — copied out of `firebase-debug.log`, including
-  `--database-edition standard` and `--single_project_mode` — fails identically, with **zero bytes on
-  both stdout and stderr**. There is no stack trace and no `hs_err` file.
-- Not a port conflict: nothing is listening on 8080, and `python -m http.server` binds a port on this
-  machine fine.
-- Not the sandbox: it fails the same way with the sandbox disabled.
-- Not the path: it fails the same from a short local directory as from the OneDrive project folder.
-- Not the working directory or temp: `-Djava.io.tmpdir` pointed somewhere writable changes nothing.
-- Java is 21.0.5 (Oracle), and it is the **only** JDK installed.
+Ruled out on the way, none of which was the cause: the port (nothing on 8080, and
+`python -m http.server` binds fine), the sandbox (identical with it off), the path (identical from a
+short local directory and from the OneDrive folder), `java.io.tmpdir`, and a corrupt jar —
+`--version` and `--help` both print normally, so the JVM starts and the archive is sound. It is only
+*serving* that dies. Running the CLI's exact java command by hand, copied out of
+`firebase-debug.log`, fails the same way.
 
-**The most likely remaining cause is the JDK**, since a silent instant exit with no JVM diagnostics
-is unusual for anything else. The next thing to try is a second JDK — Temurin 17 is the usual
-recommendation for this emulator — pointed at with `JAVA_HOME`. That is a machine change, so it is
-Tim's call rather than something to do unasked.
+⚠️ **And do not "fix" it by installing an older JDK.** `firebase-tools` 15.24 refuses to run on
+anything below 21 — *"firebase-tools no longer supports Java version before 21"* — so Temurin **17**
+is rejected outright by the CLI, having been the obvious first guess. The working combination is
+narrow: **CLI needs ≥ 21, and the emulator jar needs a JDK that is not Oracle's.**
 
-**Until it runs, the honest status line is: rules compile, rules are deployed, rules are untested.**
-Phase 2 should not start until this is resolved — Phase 1 exists precisely so that the security is
-settled before anything reads or writes real shared data.
+**What the run proved beyond "it passes".** The `diff().affectedKeys().hasOnly()` line in the invite
+rule was removed as an experiment, and exactly one assertion flipped from denied to **allowed**: *a
+claimer cannot extend the expiry on the way past*. Everything else still passed. So that line is
+load-bearing, the test covering it is not vacuous, and both facts are now recorded in the rule
+itself. A test that passes with the protection removed is worse than no test, and this one does not.
+
+**One thing left unexplained, stated rather than buried:** four denials arrive as an *evaluation
+error* in the emulator log rather than a clean `false` — the already-claimed, expired, claim-on-
+behalf and extend-expiry cases on the invite rule. Every one of them is correctly **denied**, and the
+legitimate claim is correctly allowed, so behaviour is right. Existence and type guards were added
+for every field the rule reads and three of the four survived them, so the cause is not a missing
+field. It was not chased further because the security outcome is correct either way; it is written
+down because an erroring rule is one whose behaviour could depend on operand order, and anyone adding
+a condition there should know it before they start.
 
 ---
 
