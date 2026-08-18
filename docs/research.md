@@ -314,21 +314,132 @@ rather than applying a population formula — the Marzagão structure would serv
 
 ---
 
-## 6. Training volume and the repetition continuum
+## 6. Training volume, frequency and the dose response
 
-Underpins **D3** (weekly sets per muscle group) and **D5**.
+Underpins **D3** (weekly sets per muscle group), **D5**, and the **"% optimal" rating**
+(`docs/optimal-rating-plan.md`). **Primary sources pulled 2026-08-18** — the note that used to sit
+here saying "do that before building D3" is discharged.
 
-- ~**10–20 hard sets per muscle per week** is the working hypertrophy target band. 🟡 Widely cited;
-  primary sources not yet pulled into this log — **do that before building D3.**
-- Schoenfeld et al., *Loading Recommendations for Muscle Strength, Hypertrophy, and Local Endurance:
-  A Re-Examination of the Repetition Continuum* (Sports, 2021) — the standard modern reference for
-  how load ranges map to adaptations. 🟡 Referenced, not yet read in full.
-- **Resolved without asking** (recorded in `progress.md`): drop sets / myo-reps count as **one** hard
-  set, extensions logged but not double-counted, else volume totals inflate and break the target
-  bands. Secondary-muscle weighting fixed at **0.5** with an advanced override.
+### 6.1 The central paper 🟢
 
-**Blocker:** `js/exercises.js` maps each exercise to a single `muscle` string. D3 needs a
-primary/secondary weighted mapping. See `docs/spec.md`.
+**Pelland JC, Remmert JF, Robinson ZP, Hinson SR, Zourdos MC. "The Resistance Training Dose Response:
+Meta-Regressions Exploring the Effects of Weekly Volume and Frequency on Muscle Hypertrophy and
+Strength Gains." *Sports Medicine*, accepted 14 Oct 2025, published online 4 Dec 2025.**
+doi:10.1007/s40279-025-02344-w · 67 studies · 2058 participants (79.1 % male, mean age 25.16 ± 5.22)
+· interventions averaged 10.42 ± 4.48 weeks.
+
+Volume treated as a **continuous** variable with seven candidate functional forms compared by Bayes
+factor, rather than the arbitrary buckets ("10–20 vs 20+") that earlier work compared.
+
+### 6.2 Hypertrophy vs volume 🟢
+
+- Best fit: **square root**. Marginal slope **0.24 % muscle size per set** at the mean volume of
+  12.25 fractional sets [95 % CrI 0.15, 0.33]; 100 % posterior probability the slope exceeds zero.
+- Comparable to Schoenfeld et al.'s earlier estimate of 0.38 % per set.
+- Smallest detectable effect size (SDES) = **2.05 %** for hypertrophy, 3.96 % for strength.
+- **Efficiency tiers, their Table 3** — fractional weekly sets *per muscle*:
+
+  | Tier | Sets | Additional sets per further detectable increment |
+  |---|---|---|
+  | Minimum effective dose | 4 | — (the point where the effect first exceeds the SDES) |
+  | Higher efficiency | 5–10 | ~6 |
+  | Intermediate efficiency | 11–18 | ~8.5 |
+  | Lower efficiency | 19–29 | ~10.75 |
+  | Lowest efficiency | 30–42 | ~12.5 |
+  | Unclear | 43+ | insufficient data, **or potentially less hypertrophy** |
+
+- **No plateau was identified** within the studied range, but the authors caution that few studies
+  explored beyond ~25 fractional weekly sets. The best-fit square-root model is "still compatible
+  with multiple functional forms (e.g., functional plateau, inverted-U)".
+
+⚠️ **This supersedes the "10–20 hard sets per muscle per week" band this section used to carry.**
+That band was 🟡 and widely repeated; the continuous model shows it is not a target so much as the
+middle of a curve that keeps rising while getting steadily less efficient. Where the old band said
+"do 10–20", the evidence says "4 gets you a detectable result, 5–10 is the best value per set, and
+past ~19 you are paying about 10 sets for each further increment".
+
+### 6.3 Frequency 🟢 — and it contradicts the popular position
+
+- **Hypertrophy: no consistently identifiable independent effect of frequency.** Reciprocal model,
+  slope 0.32 % [95 % CrI **−0.14**, 0.82] — the interval **contains zero**. Authors: *"any
+  independent effect of additional frequency is small and is not consistently identifiable across
+  modeling methods."* Aligns with Schoenfeld et al. 2019 in volume-equated studies (ES = 0.07
+  [95 % CI −0.08, 0.21]).
+- **Strength: frequency does matter.** Slope 3.27 % [95 % CrI 2.74, 3.84], 100 % probability > 0.
+  Frequency 1 → 2: ES 12.72 % [10.57, 15.05] → 17.32 % [14.34, 20.56]. Accelerating diminishing
+  returns beyond that. Higher frequency plausibly acts through *practice* of the tested movement.
+
+**Practical reading: for muscle growth, more training days is not itself better — where the sets land
+is what matters. For strength, more days genuinely is better, with fast diminishing returns.**
+
+### 6.4 How to count a set 🟢 — this settles the D3 blocker
+
+Three counting methods compared. **`fractional` — indirect (synergist) sets count as 0.5 — was best
+supported**, by "strong" to "very strong" evidence on the Kass–Raftery scale:
+
+| Comparison | 2×log(BF), hypertrophy volume | strength volume |
+|---|---|---|
+| fractional over `total` | 9.48 | 18.21 |
+| fractional over `direct` | 10.29 | 45.96 |
+
+*Direct* = the measured muscle is the primary force generator in the exercise. *Indirect* = the
+muscle is meaningfully trained but is a synergist.
+
+⚠️ **The old note here said "secondary-muscle weighting fixed at 0.5 with an advanced override",
+recorded in `progress.md` as *resolved without asking*. It was a guess, and the best-supported
+method in the literature independently landed on the same number.** That is a good outcome and it
+should not be over-read: the authors state plainly that 0.5 *"is still an assumption"* and that the
+method *"should be regarded as a heuristic to improve the accuracy of dose–response modeling, rather
+than a definitive standard for practical application across all contexts."* Keep the override.
+
+**The blocker is discharged.** `js/exercises.js` maps each exercise to a single `muscle` string; what
+D3 needs is a **binary direct/indirect flag per (exercise, muscle) pair** weighted 1.0 / 0.5 — which
+is *simpler* than the continuous weighting previously assumed, and now has a citation. Note this is
+a different table from `js/muscle-evidence.js`: that one asks "how strong is this muscle", this one
+asks "how much work landed here".
+
+### 6.5 What any of this explains 🟢
+
+**R²marginal = 22.3 %** (hypertrophy volume) and **26.1 %** (strength volume); R²conditional 73.3 %
+and 74.8 %. The programming variables explain roughly a **quarter** of the variance between training
+groups.
+
+⚠️ **This is the number that governs how any derived rating may be presented.** A model explaining a
+quarter of the variance cannot honestly separate an 83 % from an 87 %, which is why
+`docs/optimal-rating-plan.md` outputs banded ranges rather than points.
+
+### 6.6 Stated limitations, carried forward rather than buried
+
+- Cohorts are young (25.16 ± 5.22 years), predominantly male (79.1 %), and over-70s were excluded.
+- Interventions averaged **10.42 weeks** — this is short-run evidence being used to reason about
+  programmes people follow for years.
+- The authors **did not model** "indirect negative consequences (e.g., non-sustainability, injury,
+  psychological burnout)". Any rating that scores more volume as better without a ceiling is using
+  the model outside what it measured.
+- Moderator analyses are explicitly "hypothesis generating" only.
+- Volume was quantified per week, which the authors note is an arbitrary time base; a parallel paper
+  by the same group covers *per-session* volume. 🔴 **Not yet pulled.**
+
+### 6.7 Proximity to failure 🟡 — see also §3
+
+**Robinson ZP, Pelland JC, Remmert JF, Refalo MC, Jukic I, Steele J, Zourdos MC.** *Sports Medicine*
+54(9), 2024. doi:10.1007/s40279-024-02069-2.
+
+- **Hypertrophy increases as sets are taken closer to failure** — marginal slopes on estimated RIR
+  were negative with intervals excluding the null.
+- **Strength is largely indifferent to RIR** — intervals contained the null.
+- Graded 🟡 not 🟢 by the authors' own framing: RIR was **estimated from study descriptions rather
+  than measured**, overall fit quality was "modest", and the analysis is exploratory.
+
+⚠️ **Consequence for this app: the variable that most modulates whether a set produces growth is
+invisible to it.** There is no RIR field and that is deliberate (D9). Any volume-based rating is
+therefore conditional on "assuming sets are taken close to failure", and must say so.
+
+### 6.8 Still to pull 🔴
+
+Load / rep range (Schoenfeld's repetition continuum, 2021 — referenced, still not read in full),
+rest intervals, range of motion and lengthened partials, exercise selection and variation, and the
+per-session volume paper from §6.6. Each either enters the rating model or becomes a stated caveat.
 
 ---
 
@@ -417,6 +528,19 @@ Don't treat these as settled.
 ---
 
 ## 10. Sources
+
+**Training volume, frequency and the dose response** (§6, pulled 2026-08-18)
+
+- Pelland, Remmert, Robinson, Hinson & Zourdos (2025). *The Resistance Training Dose Response:
+  Meta-Regressions Exploring the Effects of Weekly Volume and Frequency on Muscle Hypertrophy and
+  Strength Gains.* Sports Medicine. doi:10.1007/s40279-025-02344-w —
+  https://link.springer.com/article/10.1007/s40279-025-02344-w · PubMed 41343037 ·
+  data and supplements at https://osf.io/6z3xu
+- Robinson, Pelland, Remmert, Refalo, Jukic, Steele & Zourdos (2024). *Exploring the Dose–Response
+  Relationship Between Estimated Resistance Training Proximity to Failure, Strength Gain, and Muscle
+  Hypertrophy: A Series of Meta-Regressions.* Sports Medicine 54(9).
+  doi:10.1007/s40279-024-02069-2 — https://pubmed.ncbi.nlm.nih.gov/38970765/ ·
+  preprint https://sportrxiv.org/index.php/server/preprint/view/295
 
 **Rep-normalisation / 1RM prediction**
 

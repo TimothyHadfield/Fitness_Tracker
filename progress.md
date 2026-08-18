@@ -193,6 +193,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to no screen yet |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
+| `docs/optimal-rating-plan.md` | **The "% optimal" rating** (`docs/vision.md` §1.3), planned 2026-08-18. **§2 is the part to read** — the evidence says frequency does *not* independently drive hypertrophy, so a rating must not reward training more days; and the models explain only ~a quarter of the variance, which is why the output is a band, never a point |
 | `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |
 | `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state, and what is still unverified. **Corrected 2026-08-17** — it had claimed for a day that Google sign-in was not enabled, while this file carried a note saying that claim was wrong. The source is fixed; the note is gone |
@@ -864,7 +865,11 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
   (dips, Egyptian lateral raises, cable kickbacks) from the 2023 series. Cross-check the date and the
   series before trusting any write-up.
 - **Exercise→muscle is a single string**, not the primary/secondary weighted mapping. **This must
-  change before D3.**
+  change before D3** — and since 2026-08-18 there is a published answer for *what* to change it to.
+  The best-supported counting method in the literature is **binary: direct 1.0, indirect 0.5**
+  (Pelland et al. 2025, `docs/research.md` §6.4), which is *simpler* than the continuous weighting
+  this line assumed for months. The 0.5 the project had already guessed "without asking" turns out to
+  match it. Still work — every exercise needs the flag per muscle — but no longer a design question.
 
 ---
 
@@ -901,7 +906,13 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    has run only as rules assertions with hand-written documents. That is the next social job, and it
    needs two real accounts. Phase 4 (a chronological feed, finer visibility axes) remains unstarted
    and still needs D7 narrowed first.
-7. **Tier 2**, starting with the exercise→muscle mapping change that D3 depends on.
+7. **The "% optimal" rating — `docs/optimal-rating-plan.md`.** Started 2026-08-18 on Tim's ask.
+   Phase 0 (research) is largely done and is in `docs/research.md` §6, which is now 🟢 where it was
+   🟡. **Phase 1 is the direct/indirect mapping over all 270 exercises — and it is the same piece of
+   work Tier 2 and D3 are blocked on**, so it pays for itself twice. Phases 2–4: the pure model, the
+   validation in §5 of the plan, then the screen.
+8. **Tier 2**, whose first move is now the *same* mapping as item 7 — see D3 and `docs/research.md`
+   §6.4 for what it should be.
 
 ### Open questions for Tim
 

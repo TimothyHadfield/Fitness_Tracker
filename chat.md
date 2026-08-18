@@ -2864,3 +2864,63 @@ else, claim, accept, publish, read their page — has run as rules assertions ag
 documents, never as the app talking to itself from two sides. That is reviewed code sitting on
 tested rules, which is exactly the shape `firebase-backend.js` was in before the 45 live checks
 closed it, and it wants the same treatment: two throwaway accounts, then deleted.
+
+---
+
+## 2026-08-18 — The "% optimal" rating: research first, and the evidence backs Tim's warning
+
+Tim: *"let's do the % optimal project now… Understand that this topic is still getting massive
+research done on it and a lot of the popular content on the internet is being challenged by studies
+and other research. Just because a workout has more time or excersizes doesn't necessarily mean it's
+more optimal."*
+
+He was right, and the literature says so more strongly than he put it.
+
+**The central paper** is Pelland, Remmert, Robinson, Hinson & Zourdos, *The Resistance Training Dose
+Response*, Sports Medicine, published 4 Dec 2025 — 67 studies, 2058 participants. It is close to
+purpose-built for this feature: volume as a **continuous** variable with seven functional forms
+compared by Bayes factor, **separate curves for hypertrophy and strength**, and — unusually — it
+publishes **efficiency tiers**, which is exactly the give/get question §1.3 asks.
+
+**Four findings that decide the design:**
+
+1. **Frequency has no consistently identifiable independent effect on hypertrophy.** Slope 0.32 %
+   [95 % CrI −0.14, 0.82] — the interval contains zero. For *strength* it matters a lot (3.27 %
+   [2.74, 3.84]). So training 5 days rather than 3 is not itself better for growth; where the sets
+   land is what matters. **A rating that scored days or hours as good would be contradicted by the
+   best available evidence** — precisely the failure Tim named before any of this was read.
+2. **Hypertrophy follows a square-root curve** — 0.24 % muscle size per set at 12.25 weekly sets —
+   with published efficiency tiers: 4 sets is the minimum effective dose, 5–10 is the best value per
+   set, and past ~19 you pay roughly 10 more sets per further detectable increment. No plateau was
+   found, but few studies went past ~25 sets, and 43+ is flagged as "insufficient data, **or
+   potentially less hypertrophy**".
+3. **The best-supported way to count a set is `fractional`: an indirect set counts as 0.5.** Strong
+   to very strong Bayes-factor support over both alternatives. **This discharges a blocker the
+   project has carried since the beginning** — `progress.md` §9 has said for months that
+   exercise→muscle must become a weighted mapping before D3. The evidence-backed answer is *binary*
+   direct/indirect at 1.0/0.5, which is simpler than the continuous weighting that was assumed. And
+   the 0.5 the project had already guessed "without asking" independently matches the best-supported
+   method — good, but the authors are explicit that 0.5 "is still an assumption".
+4. **The models explain about a quarter of the variance** (R²marginal 22.3 % hypertrophy, 26.1 %
+   strength). This is the governing number for presentation: a model explaining a quarter of the
+   variance **cannot honestly separate an 83 % from an 87 %**, so the output is a banded range, never
+   a point.
+
+**And the variable that matters most is invisible to the app.** Robinson et al. 2024 finds
+hypertrophy improves as sets are taken closer to failure, while strength is largely indifferent to
+RIR. This app has no RIR field, deliberately (D9). So any rating is conditional on "assuming sets are
+taken close to failure" and has to say so on screen. A programme cannot make you train hard.
+
+**The design that falls out** (`docs/optimal-rating-plan.md`): the output is never one number. It is
+**result** (% of achievable stimulus, banded), **cost** (days per week, time per session) and
+**efficiency** (result per hour) — and hypertrophy and strength are rated *separately*, because the
+same programme genuinely differs between them and a blend would hide the trade the user is choosing.
+100 % means "the most the evidence supports", not "the best programme in our library", because the
+latter would make a user's rating move when we add a system.
+
+`docs/research.md` §6 was 🟡 with a note saying "pull primary sources before building D3". It is now
+🟢 with the numbers, the credible intervals and the authors' own limitations, and the old "10–20 hard
+sets per muscle per week" band is marked as superseded — it is not a target, it is the middle of a
+curve that keeps rising while getting steadily less efficient.
+
+Two questions to Tim, neither blocking Phase 1: one number or two, and what 100 % should mean.
