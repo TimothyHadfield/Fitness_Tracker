@@ -161,6 +161,61 @@ ok(Array.isArray(g.under) && g.under.length > 0,
 ok(scored.find((s) => s.p.id === 'preset-volume-landmarks').r.under.length <= 1,
    'and the programme designed on volume landmarks misses at most one');
 
+/* ---------- rating a system the user built ---------- */
+// The only thing missing from a user's own system is how often they train it,
+// and the app already knows: it has their sessions. Measured beats declared.
+
+{
+  const { observedDaysPerWeek, rateUserSystem, MIN_OBSERVED_SPAN_DAYS } = await import('../js/optimal.js');
+
+  const back = (n) => {
+    const d = new Date(2026, 7, 18);
+    d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const TODAY = '2026-08-18';
+
+  // Three sessions a week for three weeks.
+  const threeAWeek = [];
+  for (let w = 0; w < 3; w++) for (const off of [0, 2, 4]) threeAWeek.push(back(w * 7 + off));
+  const obs = observedDaysPerWeek(threeAWeek, TODAY);
+  ok(obs && near(obs.daysPerWeek, 3.3, 0.4),
+     `nine sessions over nineteen days measures ~3 days a week (${obs.daysPerWeek.toFixed(2)})`);
+  ok(obs.sessions === 9, 'and counts the sessions it used');
+
+  ok(observedDaysPerWeek([back(0), back(1)], TODAY) === null,
+     `two days of history is not a rate — under ${MIN_OBSERVED_SPAN_DAYS} days it refuses to guess`);
+  ok(observedDaysPerWeek([], TODAY) === null, 'and no history says so rather than returning zero');
+  ok(observedDaysPerWeek([back(200), back(201)], TODAY) === null,
+     'sessions older than the window are ignored, not averaged in');
+
+  // Two people training the same three sessions in a day should not read as
+  // six days a week.
+  const dupes = [back(0), back(0), back(0), back(7), back(14), back(20)];
+  const dupeObs = observedDaysPerWeek(dupes, TODAY);
+  ok(dupeObs.sessions === 4, 'two workouts on one day is one training DAY, not two');
+
+  // The rating carries which basis it used, because the screen has to say.
+  const workouts = [
+    { id: 'w1', exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 4 }] },
+    { id: 'w2', exercises: [{ exerciseId: ex('Back Squat').id, sets: 4 }] },
+  ];
+  const measured = rateUserSystem(workouts, exMap, { sessionDates: threeAWeek, todayISO: TODAY });
+  const assumed = rateUserSystem(workouts, exMap, { sessionDates: [], todayISO: TODAY });
+  ok(measured.basis === 'measured' && assumed.basis === 'assumed',
+     'a rating says whether it measured your training or assumed it');
+  ok(/session/.test(measured.caption) && /Assuming/.test(assumed.caption),
+     'and the caption is built by the same function, so sentence and number cannot drift apart');
+  ok(measured.raw.hypertrophy !== assumed.raw.hypertrophy,
+     'and the two genuinely differ — how often you train it changes the answer');
+
+  // ⚠️ The trap from progress.md: a bare YYYY-MM-DD parsed with new Date() is
+  // UTC and lands a day early west of Greenwich.
+  ok(observedDaysPerWeek(['2026-08-18'], '2026-08-18') === null
+     && observedDaysPerWeek(threeAWeek, TODAY) !== null,
+     'dates are treated as LOCAL days, not UTC instants');
+}
+
 /* ---------- the sentence on screen ---------- */
 
 ok(/100/.test(explain(55)) && /nobody/.test(explain(55)),

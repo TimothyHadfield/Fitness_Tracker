@@ -1743,3 +1743,10 @@ a.row { text-decoration: none; }
   .rating-cell { min-width: 36px; }
   .rating-num { font-size: 13.5px; }
 }
+
+/* The rating on a system the user built. Sits above the workout list because
+   it describes the whole programme, and the badge aligns right so the heading
+   stays the content (Rule 3). */
+.own-rating { margin-bottom: 6px; }
+.own-rating-head { display: flex; align-items: center; gap: 12px; }
+.own-rating-head .section-label { flex: 1; min-width: 0; margin: 0; }

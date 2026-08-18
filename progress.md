@@ -66,7 +66,7 @@ where every lift stands right now.
 | **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
-| **Rating tests** | `node tests/optimal.test.mjs` — 33 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
+| **Rating tests** | `node tests/optimal.test.mjs` — 44 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -933,11 +933,10 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    needs two real accounts. Phase 4 (a chronological feed, finer visibility axes) remains unstarted
    and still needs D7 narrowed first.
 7. **The "% optimal" rating — BUILT 2026-08-18**, `docs/optimal-rating-plan.md`. Research, the
-   direct/indirect mapping, the scoring model and the badge on Explore all shipped the same day.
-   **What is left is deliberately not built**: the rating is on ready-made systems only, not on the
-   user's own — which is where it would actually be useful, and is the obvious next move. §6.8 of
-   `docs/research.md` also lists the axes still to pull (load, rest, range of motion, per-session
-   volume), each of which either enters the model or becomes a stated caveat.
+   direct/indirect mapping, the scoring model, the badge on Explore **and the rating on the user's
+   own systems** all shipped the same day. What is left is `docs/research.md` §6.8 — the axes still
+   to pull (load, rest, range of motion, per-session volume), each of which either enters the model
+   or becomes a stated caveat.
 8. **Tier 2 / D3 — the mapping it was blocked on now EXISTS.** `js/volume-map.js` already computes
    fractional weekly sets per muscle for any set of workouts (`weeklyVolume()`), which is the input
    D3's "weekly sets per muscle group vs target bands" needs. What is left for D3 is the screen and

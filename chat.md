@@ -3024,3 +3024,42 @@ the list says what 100 % would mean (42 hard sets per muscle every week, which n
 that the ratings assume training close to failure, and that more days is not itself better.
 
 ⚠️ Still on ready-made systems only. It would be more useful on the user's own programme.
+
+---
+
+## 2026-08-18 — Rating the user's own systems
+
+Tim: *"Is it possible to estimate the % optimal for workout systems that the user creates themselves,
+or is that too much work?"*
+
+Possible, and most of it was already done — the model never cared where a list of workouts came from.
+**One thing was genuinely missing**: a ready-made system declares its days per week and a user-built
+one does not, and that number is not optional. Three workouts done three days a week and the same
+three done six are different programmes.
+
+**The answer was to measure it rather than ask.** The app already has their sessions, so it counts
+distinct training days for that system over the last 28 days and divides by the span since the first
+session in it. Better than a declared number for the same reason a percentile beats a
+self-assessment: it is what they *do*, and it updates when their life changes. Same principle as
+`next-workout.js` — read the history, then say what you read.
+
+**It refuses rather than guesses.** Under two weeks of history there is no rate worth computing, so
+it assumes one pass per week and *says so*. The rating carries a `basis` of `measured` or `assumed`
+and the caption is built by the function that computed the number, so the sentence cannot drift from
+the answer.
+
+Caught while building: two workouts logged on one day is one training DAY, not two; and dates compare
+as local days rather than parsed, because `new Date('2026-08-18')` is UTC and lands a day early west
+of Greenwich — a trap `progress.md` already records twice, now pinned by a test.
+
+**On a seeded three-week Upper/Lower it read "Based on the 12 sessions you have logged in the last 3
+weeks — about 4.0 days a week", rated it 40 % growth / 65 % strength, and named the gap: calves.**
+That is the useful version of this feature. A rating on a shop window is interesting; a rating on
+your own programme tells you what to fix.
+
+Also fixed a scratch-harness bug worth remembering for next time: the CDP seeding script unwrapped
+`Runtime.evaluate` one level short, so the page silently navigated to `#/system/undefined` and
+screenshotted "That system no longer exists". A seeding step that fails quietly looks exactly like a
+feature that does not work.
+
+241 render assertions, 44 rating assertions, all suites green.

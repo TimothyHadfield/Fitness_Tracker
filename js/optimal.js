@@ -215,6 +215,88 @@ export function rateProgramme(workouts, exMap, opts = {}) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ * Rating a system the USER built
+ *
+ * A ready-made system declares how many days a week it is trained. One the user
+ * typed does not, and that number is not optional — it decides how often the
+ * rotation repeats, and getting it wrong scales every result. Three workouts
+ * trained three days a week and the same three trained six are not the same
+ * programme.
+ *
+ * ⚠️ The app does not have to ASK. It already knows how often they train it,
+ * because it has their sessions. Measuring what somebody actually does beats a
+ * number they typed once and never revisited — and it is the same principle as
+ * next-workout.js, which reads history and then says what it read.
+ * ------------------------------------------------------------------ */
+
+export const OBSERVE_WINDOW_DAYS = 28;
+/** Below this, a rate per week is noise. Two weeks is the floor. */
+export const MIN_OBSERVED_SPAN_DAYS = 14;
+
+const dayNumber = (iso) => {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  // Local midnight, split rather than parsed: new Date('2026-08-18') is UTC and
+  // lands a day early for everyone west of Greenwich.
+  return Math.floor(new Date(y, m - 1, d).getTime() / 86400000);
+};
+
+/**
+ * How many days a week they actually train this system.
+ *
+ * @param {string[]} dates    session dates (YYYY-MM-DD) belonging to the system
+ * @param {string}   todayISO clock passed in, so this stays pure
+ * @returns {{daysPerWeek: number, spanDays: number, sessions: number} | null}
+ *          null when there is not enough history to say — which the caller must
+ *          treat as "assume nothing", not as zero.
+ */
+export function observedDaysPerWeek(dates, todayISO, windowDays = OBSERVE_WINDOW_DAYS) {
+  const today = dayNumber(todayISO);
+  if (today === null) return null;
+
+  const days = [...new Set((dates || []).map(dayNumber).filter((d) => d !== null))]
+    .filter((d) => d <= today && d > today - windowDays);
+  if (!days.length) return null;
+
+  // Measured from their FIRST session in the window, not from the window edge —
+  // somebody three weeks into a new programme should be judged on those three
+  // weeks, not marked down for the week before it existed.
+  const spanDays = today - Math.min(...days) + 1;
+  if (spanDays < MIN_OBSERVED_SPAN_DAYS) return null;
+
+  const perWeek = days.length / (spanDays / 7);
+  return { daysPerWeek: Math.min(7, perWeek), spanDays, sessions: days.length };
+}
+
+/**
+ * Rate a system, working out for itself how often it is trained.
+ *
+ * Returns the rating plus a `basis` saying which it used, because the screen has
+ * to be able to say so. A rating computed from an assumption and a rating
+ * computed from ten sessions are not the same claim.
+ */
+export function rateUserSystem(workouts, exMap, { sessionDates, todayISO, minutesPerSession } = {}) {
+  const observed = observedDaysPerWeek(sessionDates, todayISO);
+  const daysPerWeek = observed ? observed.daysPerWeek : (workouts || []).length;
+
+  const rating = rateProgramme(workouts, exMap, { daysPerWeek, minutesPerSession });
+  return {
+    ...rating,
+    basis: observed ? 'measured' : 'assumed',
+    observed,
+    // Said in words by the module that computed it, so the sentence and the
+    // number cannot drift apart — the same reason next-workout.js builds its
+    // own caption.
+    caption: observed
+      ? `Based on the ${observed.sessions} session${observed.sessions === 1 ? '' : 's'} you have `
+        + `logged in the last ${Math.round(observed.spanDays / 7)} weeks — about `
+        + `${observed.daysPerWeek.toFixed(1)} days a week.`
+      : 'Assuming you train each workout once a week. Log a couple of weeks and this will be '
+        + 'measured from what you actually do instead.',
+  };
+}
+
 /**
  * What the number means, in a sentence, for the screen.
  *

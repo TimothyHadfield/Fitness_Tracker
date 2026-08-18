@@ -266,6 +266,54 @@ function ratingBadge(rating) {
   );
 }
 
+/**
+ * The rating for a system the user built themselves.
+ *
+ * The only thing a ready-made system has that this does not is a declared
+ * days-per-week — so it is MEASURED from their own logged sessions instead
+ * (js/optimal.js), and the caption says which of the two it used. A rating
+ * computed from an assumption and one computed from ten sessions are not the
+ * same claim and must not look alike.
+ *
+ * Returns null rather than an empty box when there is nothing to rate: an empty
+ * system, or one whose exercises all fall outside what can be scored.
+ */
+async function ownSystemRating(systemId, workouts) {
+  if (!systemId || !workouts || !workouts.length) return null;
+
+  const [{ rateUserSystem, explain }, exMap, sessions] = await Promise.all([
+    import('./optimal.js'), store.getExerciseMap(), store.getSessions(),
+  ]);
+
+  const ids = new Set(workouts.map((w) => w.id));
+  const sessionDates = sessions.filter((s) => ids.has(s.workoutId)).map((s) => s.date);
+
+  const rating = rateUserSystem(workouts, exMap, {
+    sessionDates,
+    todayISO: todayISO(),
+  });
+  if (!rating || !(rating.raw.hypertrophy > 0)) return null;
+
+  const under = rating.under;
+  return el('div', { class: 'own-rating' },
+    el('div', { class: 'own-rating-head' },
+      el('div', { class: 'section-label', text: 'How this programme rates' }),
+      ratingBadge(rating),
+    ),
+    el('div', { class: 'field-help', text: rating.caption }),
+    el('div', { class: 'field-help', text: explain(rating.hypertrophy) }),
+    // Coverage in words, never folded into the score — "a good programme that
+    // skips calves" should read as exactly that, and it is the most actionable
+    // thing on the screen.
+    under.length
+      ? el('div', { class: 'field-help', text:
+          `Under 4 sets a week, which is the least that produces a measurable change: `
+          + `${under.join(', ')}.` })
+      : el('div', { class: 'field-help', text:
+          'Every muscle group gets at least the minimum effective dose.' }),
+  );
+}
+
 /** Rate every preset once, so the list does not recompute per row. */
 async function rateAllPresets(presets) {
   const [{ rateProgramme }, exMap] = await Promise.all([
@@ -504,6 +552,7 @@ export async function SystemView(id) {
     ? [el('div', { class: 'field-help', text:
         'Name it first, then you can add workouts to it.' })]
     : [
+        await ownSystemRating(draft.id, workouts),
         el('div', { class: 'section-label', text: workouts.length
           ? plural(workouts.length, 'workout') : 'Workouts' }),
         workouts.length

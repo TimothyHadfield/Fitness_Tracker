@@ -1087,6 +1087,49 @@ ok(!data.querySelector('.rep-target'),
      'and that more days is not itself better for growth — the finding Tim predicted');
 }
 
+/* ========== The rating on a system the USER built ========== */
+{
+  const { SystemView } = await import(BASE + 'views-workouts.js');
+  await store.clearAll();
+
+  const sys = await store.saveSystem({ name: 'My Split' });
+  const bench = byName('Barbell Bench Press');
+  const squat = byName('Back Squat');
+  const row = byName('Barbell Row');
+  await store.saveWorkout({ name: 'Upper', systemId: sys.id, exercises: [
+    { exerciseId: bench.id, sets: 4 }, { exerciseId: row.id, sets: 4 },
+  ] });
+  await store.saveWorkout({ name: 'Lower', systemId: sys.id, exercises: [
+    { exerciseId: squat.id, sets: 5 },
+  ] });
+
+  const screen = await SystemView(sys.id);
+  await settle();
+  const text = () => screen.textContent.replace(/\s+/g, ' ');
+
+  ok(screen.querySelector('.own-rating'), 'a system you built yourself gets a rating too');
+  const nums = [...screen.querySelectorAll('.rating-num')].map((n) => n.textContent);
+  ok(nums.length === 2, 'the same two numbers as a ready-made one — growth and strength');
+  ok(nums.every((t) => Number(t.replace('%', '')) % 5 === 0), 'banded the same way');
+
+  // With no history it must say it is assuming, not quietly pretend to know.
+  ok(/Assuming you train each workout once a week/.test(text()),
+     'with no history it SAYS it is assuming how often you train, rather than guessing silently');
+  ok(/Nothing real reaches 100/.test(text()), 'and still explains what 100 % would mean');
+  // Coverage is the actionable part on your own programme.
+  ok(/Under 4 sets a week/.test(text()),
+     'and names the muscles under the minimum effective dose');
+
+  // An empty system has nothing to rate and must not render an empty box.
+  const empty = await store.saveSystem({ name: 'Nothing here' });
+  const emptyScreen = await SystemView(empty.id);
+  await settle();
+  ok(!emptyScreen.querySelector('.own-rating'),
+     'a system with no workouts shows no rating rather than an empty one');
+
+  await store.clearAll();
+}
+
 /* ================= Social ================= */
 // docs/social-plan.md, Phases 2-3. There is no cloud in jsdom, so what these
 // assert is the DEGRADED path — which is the one a real person on a train meets,

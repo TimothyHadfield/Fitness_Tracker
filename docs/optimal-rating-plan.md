@@ -369,3 +369,41 @@ be made visible, and it is only visible because frequency is *not* rewarded.
 
 ⚠️ **Still not built, deliberately:** the rating is on ready-made systems only. It is more useful on
 the user's own programme, and that is the obvious next move.
+
+---
+
+## 10. On the user's own systems — built 2026-08-18
+
+Tim: *"Is it possible to estimate the % optimal for workout systems that the user creates themselves,
+or is that too much work?"*
+
+Possible, and mostly already done — the model never cared where a list of workouts came from. **One
+thing was genuinely missing**: a ready-made system declares how many days a week it is trained, and
+one the user typed does not. That number is not optional. Three workouts trained three days a week
+and the same three trained six are not the same programme, and the rotation maths in §9 needs it.
+
+**The app does not ask. It measures.** `observedDaysPerWeek()` counts distinct training days for that
+system over the last 28 days and divides by the span since their first session in it. That beats a
+declared number the way a percentile beats a self-assessment — it is what they *do*, not what they
+intended, and it updates itself when their life changes. Same principle as `next-workout.js`: read
+the history, then say what you read.
+
+**It refuses rather than guesses.** Under 14 days of history there is no rate worth computing, so it
+falls back to assuming one pass through the rotation per week — and **says so on screen**. A rating
+computed from an assumption and one computed from twelve sessions are not the same claim and must not
+look alike, so the rating carries a `basis` of `measured` or `assumed`, and the caption is built by
+the same function that computes the number — the guard `next-workout.js` uses to stop a sentence
+drifting from its answer.
+
+Three details worth keeping:
+
+- **Two workouts logged on one day is one training DAY**, not two. Frequency is about days, and
+  double-counting would inflate it for anyone who does a second session.
+- **Dates compare as LOCAL days**, split rather than parsed — `new Date('2026-08-18')` is UTC and
+  lands a day early for everyone west of Greenwich. `progress.md` records this trap twice already;
+  it is now pinned by a test.
+- **Coverage is the actionable part on your own programme**, so the screen names the muscles under
+  four sets a week outright. On a seeded three-week Upper/Lower it read *"Based on the 12 sessions
+  you have logged in the last 3 weeks — about 4.0 days a week"*, rated it 40 % growth / 65 % strength,
+  and said the gap was calves. A rating on a shop window is interesting; a rating on your own
+  programme tells you what to fix.
