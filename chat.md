@@ -3586,3 +3586,43 @@ which is design before deferring the whole thing.
 
 **All seven suites green: data-layer (1069), demo, goals, optimal, volume-map, social, and 292 render
 assertions.**
+
+---
+
+## 2026-08-19 (end of session) — doc sweep for a chat reset
+
+Tim: *"prepare md files for chat reset."*
+
+`progress.md` had gained four features in one session (Goals, the system-badge cost numbers, the
+demo account, the ranking fix) and had drifted in the ways that file always drifts. Swept:
+
+**Contradictions found and fixed** — the kind that would actively mislead a fresh session:
+
+- The architecture tree said `tests/rules.test.mjs` was *"WRITTEN, NEVER RUN"* while §3 recorded 46
+  passing assertions from it, mutation-checked, on 2026-08-18. The tree was a year behind the truth.
+- **Two rows both titled "Ready-made systems"** in the §3 state table, one of which duplicated the
+  rating description. Merged into one **system badge** row.
+- A dangling *"Two numbers —"* fragment left by the four-number badge edit.
+- The header still described the badge as two numbers, and still carried a separate paragraph about
+  the cost numbers that repeated it.
+- `docs/vision.md` §1.3 had no **BUILT** marker in its heading — the only idea in the file missing
+  one — and still contained *"the % optimal number is still not built"*. Marked built, and the
+  paragraph struck through in place rather than deleted, per that file's own rule.
+
+**Counts corrected against a real run** rather than from memory: data-layer 1051 → **1069**, render
+280 → **292**, optimal 33/44 → **46**. Every `docs/`, `js/` and `tests/` path the file names was
+checked to exist — all 30 do.
+
+**One addition worth calling out.** §0 gained a tenth item: *use the demo account, do not hand-seed*.
+Every session before today wrote its own throwaway systems and sessions in order to screenshot a
+screen, which is slow and produces data far too thin to exercise the charts, the map or a goal. One
+sessionStorage flag now gets a full year that cannot touch real storage. It is appended at the END of
+§0 on purpose — inserting it at position 7 renumbered the list and would have broken the §0.6, §0.7
+and §0.9 cross-references used in four other places.
+
+Also folded in: the estimator item now points at **three** residual gaps rather than two, and carries
+the lesson from today — *check which half of a problem is calibration and which is design before
+deferring the whole thing.*
+
+**All seven suites green: data-layer (1069), demo (53), goals (88), optimal (46), volume-map (49),
+social (73), and 292 render assertions.**

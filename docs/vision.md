@@ -22,7 +22,7 @@
 |---|---|---|
 | §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — a Social tab, mutual friends, invite links, per-person visibility, a friend's page with their body map. **D7 never had to be reopened**: there is no feed. Untested between two real accounts |
 | §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
-| §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating now sits beside each one on Explore — **two numbers, growth and strength**, banded to 5 |
+| §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating sits beside each one on Explore and on the Workouts list — growth and strength, banded to 5. **Extended 2026-08-19**: the badge also carries the COST — days a week and minutes a session — because a score without what it asks of you is half a sentence |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
 | §1.5 | Set types | **BUILT** 2026-08-17 — supersets, tri-sets, drop sets, myo-reps |
 | §1.6 | **Goals** | Added 2026-08-18, **BUILT 2026-08-19** as a sixth nav tab — Phases 1 and 2 of `docs/goals-plan.md`. Goals are strength LEVELS over twelve weeks, with what they cost, what your training is actually doing, why progress stalls, and which programmes fit. **The on-track verdict is not built and the screen says why** — it is gated on the estimator. Progression stays decoupled and follows the ACSM 2-for-2 rule (§8) |
@@ -142,7 +142,7 @@ adjustment engine is only as good as its read on current capability. Also touche
 goal reconfigures the app) and **D8** (teach at the moment of use: it should say *why* it moved the
 weight).
 
-### 1.3 Pre-designed workout systems, ranked by how optimal they are
+### 1.3 Pre-designed workout systems, ranked by how optimal they are — **BUILT 2026-08-18**
 
 Ship pre-designed programs built for specific goals — high-intensity hypertrophy, time-optimal, and
 so on — and rank each one on **how "optimal" the system is as a whole, shown as a percentage**.
@@ -187,9 +187,13 @@ representable here), the other is a runnable programme built on what he teaches.
 that came out of the first attempt survives and is worth more than the mistake cost — **a system
 that FOLLOWS someone's method is not a system BY them.**
 
-The **"% optimal" number is still not built**, and it is now the obviously missing piece: nine
-programmes sitting in a list with no way to compare them is exactly the state this idea was written
-to fix. It would also be the honest way to show what a cutting split is and is not for.
+~~The **"% optimal" number is still not built**~~ — **BUILT 2026-08-18**, and the paragraph is kept
+because the reason it was wanted is the reason it works: nine programmes sitting in a list with no
+way to compare them was exactly the state this idea was written to fix. It is also the honest way to
+show what a cutting split is and is not for. **Extended 2026-08-19** on Tim's ask — the badge now
+carries what a programme COSTS beside how good it is: four numbers, growth and strength plus days a
+week and minutes a session, because "80 % strength" reads very differently at three days a week than
+at six.
 
 **Superseded note, kept for the reasoning:** Tim asked for Jeff Nippard's *Ultimate Push
 Pull Legs* first. The full 12-week system is a paid product on his site, and the free YouTube series

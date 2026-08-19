@@ -21,9 +21,10 @@ holding off until the end of a round), plus drop sets and myo-reps (mini-sets ne
 which stays one hard set). D23.
 
 **Workouts live inside SYSTEMS**, and there is an **Explore** screen of **nine** ready-made systems.
-Six are credited to real people. **Every system now carries a RATING** — two numbers, growth and
-strength, banded to 5 — on Explore, on the Workouts list and on a system's own screen, including
-systems the user built themselves.
+Six are credited to real people. **Every system carries a BADGE of four numbers** — growth and
+strength (banded to 5), plus **days a week and minutes a session** — on Explore, on the Workouts list
+and on a system's own screen, including systems the user built themselves. The scores say how good a
+programme is; the other two say what it costs, and a score without that is half a sentence.
 
 **Social is built**: mutual friends by invite link, per-person visibility (everything / my workouts /
 just that I trained / nothing), and a friend's page showing their body map and recent workouts.
@@ -31,7 +32,9 @@ just that I trained / nothing), and a friend's page showing their body map and r
 
 **The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
 rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
-desaturates the colour, and the **comparison group is the user's choice**.
+desaturates the colour, and the **comparison group is the user's choice**. ⚠️ **Since 2026-08-19 a
+rating is led by the most CREDIBLE evidence rather than the biggest number** — that inversion was the
+worst defect this model has had, and §9 is the write-up.
 
 **Neither chart mode is a dead end**: where there is not enough history to draw a line, they list
 where every lift stands right now.
@@ -43,9 +46,6 @@ what your logged training is *actually* delivering against it, **why progress st
 measurable causes kept apart from the four invisible ones, and which programmes give that muscle the
 volume the goal needs. ⚠️ **It gives no on-track verdict, and says so on screen** — that is gated on
 the estimator.
-
-**Every system now shows what it COSTS beside how good it is** — days a week and minutes a session,
-in the same badge as the growth and strength percentages, on Explore and on the Workouts list.
 
 **There is a DEMO ACCOUNT** (2026-08-19). Account → *View demo account* fills the app with a
 generated year of training — two programmes, ~200 sessions, benchmarks, weekly weigh-ins and a goal
@@ -62,11 +62,19 @@ publishing invented workouts to real friends is the one way this could do harm.
 **One thing gates almost everything left: the strength estimator.**
 
 1. **`docs/strength-estimate-plan.md`, Phase 0 — the estimator and its simulator.** Pure maths, a
-   simulator, no UI. **Blocked on nothing, and it is now the gate on four separate things:** the last
-   unbuilt half of `docs/vision.md` §1.2 (suggesting weights and reps), the **Goals verdict** — the
-   one visible hole in a feature that is otherwise finished and shipped — and the two known accuracy
-   gaps in §9 of this file. Its constants in `js/muscle-evidence.js` are reasoned, not fitted;
-   fitting them is the work. **This is now the single highest-value thing left in the project.**
+   simulator, no UI. **Blocked on nothing, and the single highest-value thing left.** It gates the
+   last unbuilt half of `docs/vision.md` §1.2 (suggesting weights and reps), the **Goals verdict** —
+   the one visible hole in a feature that is otherwise finished and shipped — and the **three
+   residual accuracy gaps in §9**, all of which are now about the same thing: a high-rep isolation
+   set extrapolates to a 1RM far harder than a low-rep compound does, and nothing shrinks it.
+   Its constants in `js/muscle-evidence.js` are reasoned, not fitted; fitting them is the work.
+
+   ⚠️ **Read §9 before starting, for the lesson as much as the numbers.** The standing position was
+   that none of this could be touched without the simulator. On 2026-08-19 a third of it turned out
+   to be a sort order — `rateMuscle()` was picking evidence by size rather than by credibility — and
+   fixing that moved an ordinary lifter's shoulders from Elite to Proficient without fitting a single
+   constant. **Check which half of a problem is calibration and which is design before deferring the
+   whole thing.**
 
 2. **Goals Phase 4 — progression.** `docs/goals-plan.md` §8 has the whole rule already (double
    progression, the ACSM 2-for-2 rule, the smallest increment inside 2–10 %, and say so when no
@@ -99,7 +107,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Data tests** | `node tests/data-layer.test.mjs` — 1069 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
-| **Rating tests** | `node tests/optimal.test.mjs` — 44 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
+| **Rating tests** | `node tests/optimal.test.mjs` — 46 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Goals tests** | `node tests/goals.test.mjs` — 88 assertions, **no dependencies**. The requirements model, and **the two things Goals refuses to do**: read the calendar to decide what it asks of you, and emit a verdict |
 | **Demo tests** | `node tests/demo.test.mjs` — 53 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal) and PLAUSIBLE, checked against the app's own modules rather than by eye |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 292 assertions, mounts every screen |
@@ -192,6 +200,21 @@ It needs a server — ES modules do not load over `file://`.
    CLI needs ≥ 21 and the emulator jar needs a JDK that is not Oracle's.** Cost about half an hour;
    `docs/social-plan.md` §7.1 lists everything that was ruled out first.
 
+10. **⚠️ Need a populated app to look at? Use the DEMO ACCOUNT — do not hand-seed one.** Every
+    session before 2026-08-19 wrote its own throwaway systems and sessions in order to screenshot a
+    screen, which is slow and produces data far too thin to exercise the charts, the muscle map or a
+    goal. There is now a generated year behind one flag: set
+    `sessionStorage['ftrack:v1:demo'] = '1'` and reload, and the store swaps to an in-memory backend
+    holding two programmes, ~200 sessions, 20 benchmarks, 53 weigh-ins and a goal part-way through.
+    **Nothing it does can reach localStorage or Firestore**, so it is also the safest thing to drive.
+    `demo.enter()` / `demo.exit()` in `store.js` do it with a reload. Clear the flag when you are
+    done, or your next screenshot is of somebody else's year — and note it is per-TAB, so a fresh
+    Chrome profile starts outside it.
+
+    It is also the fastest way to sanity-check a change to any derived number. Running the demo year
+    through the real ranking pipeline is what exposed the credibility inversion in §9, which 1069
+    assertions had missed for two months.
+
 ---
 
 ## 1. Working agreement
@@ -275,8 +298,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
 | **Seeing a deploy** | ⚠️ `sw.js` is stale-while-revalidate, so **the load right after a deploy serves the OLD app** and the change appears on the one after. That is deliberate (a hand-maintained cache version can freeze someone forever; this self-heals) but it is indistinguishable from a broken feature — Tim hit it and reported a rating as missing when it had shipped. Since 2026-08-18 the worker compares ETag/Last-Modified on revalidation and the page shows **"A new version is ready · Refresh"**. It OFFERS, never reloads: reloading unasked is right almost always and catastrophic once, mid-set with numbers unsaved |
-| **The "% optimal" rating** | **Four numbers beside every system since 2026-08-19 — growth, strength, days a week and minutes a session** (Tim: the percentages say how *good* a programme is and nothing about what it *costs*, which is the first thing you want before opening it). A ready-made system states its own minutes; one you typed has them **estimated** from the set count at ~3 min a set, and the cell's title says which. Two numbers — on the Workouts list, on Explore, and on a system's own screen. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts in it shows no rating rather than a 0 %. `js/optimal.js` |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**, and **each one now carries a rating** — two numbers, **growth** and **strength**, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength). Banded to 5, never a point, because the source models explain about a quarter of the variance. The screen states what 100 % would mean, that the numbers assume training close to failure, and that **more days is not itself better for growth**. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md`. |
+| **The system badge** | **Four numbers beside every system, in a 2×2 grid** — on Explore, on the Workouts list and on a system's own screen. **Growth and strength**, separately and never blended, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength); banded to 5, never a point, because the source models explain about a quarter of the variance. Plus, since 2026-08-19 on Tim's ask, **days a week and minutes a session** — the percentages say how *good* a programme is and nothing about what it *costs*, which is the first thing you want before opening it, and "80 % strength" reads very differently at three days a week than at six. A ready-made system states its own minutes; one you typed has them **estimated** from the set count at ~3 min a set, and the cell's `title` says which — "because the author said so" and "because we multiplied" are not the same claim. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts shows no badge rather than a 0 %. The Explore row summary no longer repeats days/minutes now the badge carries them. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md` |
 | **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
@@ -295,7 +317,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence, not the biggest** — it used to pick its top three by converted weight, so a face pull outvoted an overhead press benchmark and rated the lifter Elite; see §9. Three different exercises at most, one seat each. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence, not the biggest** — it used to pick its top three by converted weight, so a face pull outvoted an overhead press benchmark and rated the lifter Elite; see §9. Three different exercises at most, one seat each. ⚠️ **And since 2026-08-19 the rating is led by the most CREDIBLE of that evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
 | **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
@@ -355,7 +377,7 @@ Press-and-hold repeats.
   has every cloud write DENIED while localStorage keeps working — perfect on the machine it was
   written on, silently lossy for anyone signed in. It was never a test until `goals` was added on
   2026-08-19. **Mutation-checked**: removing `'goals'` from the rules flips exactly that assertion
-- **280 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **292 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -385,7 +407,7 @@ Press-and-hold repeats.
   them saved anything
 - Every class referenced in JS has a matching CSS rule
 - All assets serve 200 with correct MIME types from Pages
-- **33 rating assertions** (`tests/optimal.test.mjs`, no dependencies) — the curves are checked
+- **46 rating assertions** (`tests/optimal.test.mjs`, no dependencies) — the curves are checked
   against the PUBLISHED FIGURES, not just against their own slopes: a curve fitted to a slope can
   match it perfectly and still be the wrong curve, so the hypertrophy model must also reproduce the
   ~5-6 % at 12 sets and ~10.5 % at 42 that the paper plots, and the strength frequency model must hit
@@ -557,8 +579,14 @@ Fitness_Tracker/
 │   ├── demo.test.mjs           53 assertions, no dependencies — the demo year is
 │   │                           deterministic, and plausible enough that the
 │   │                           app's own analysis of it is not nonsense
-│   ├── rules.test.mjs          who may READ it. Needs the emulator.
-│   │                           ⚠️ WRITTEN, NEVER RUN — social-plan.md §7.1
+│   ├── optimal.test.mjs        46 assertions, no dependencies — the curves
+│   │                           reproduce the PUBLISHED figures, plus 3 refusals
+│   ├── volume-map.test.mjs     49 assertions, no dependencies — direct/indirect
+│   ├── rules.test.mjs          46 assertions — who may READ it. Needs the
+│   │                           Firestore emulator and Temurin 21 (§0.9). RUN and
+│   │                           mutation-checked 2026-08-18
+│   ├── sw-update.test.mjs      8 assertions — needs Chrome. Edits a file and
+│   │                           asserts the page offers a refresh
 │   └── render.test.mjs         292 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · vision.md · strength-map-plan.md · goals-plan.md
          strength-estimate-plan.md · optimal-rating-plan.md · social-plan.md
@@ -1143,9 +1171,10 @@ re-examining it produces something better than either the old rule or a plain ov
    and still needs D7 narrowed first.
 7. **The "% optimal" rating — BUILT 2026-08-18**, `docs/optimal-rating-plan.md`. Research, the
    direct/indirect mapping, the scoring model, the badge on Explore **and the rating on the user's
-   own systems** all shipped the same day. What is left is `docs/research.md` §6.8 — the axes still
-   to pull (load, rest, range of motion, per-session volume), each of which either enters the model
-   or becomes a stated caveat.
+   own systems** all shipped the same day; **days a week and minutes a session joined the badge on
+   2026-08-19**, so it now says what a programme costs as well as how good it is. What is left is
+   `docs/research.md` §6.8 — the axes still to pull (load, rest, range of motion, per-session
+   volume), each of which either enters the model or becomes a stated caveat.
 8. **Tier 2 / D3 — the mapping it was blocked on now EXISTS.** `js/volume-map.js` already computes
    fractional weekly sets per muscle for any set of workouts (`weeklyVolume()`), which is the input
    D3's "weekly sets per muscle group vs target bands" needs. What is left for D3 is the screen and
@@ -1161,7 +1190,8 @@ re-examining it produces something better than either the old rule or a plain ov
    **Precedent worth citing when asking:** D15 was narrowed the same way on 2026-08-17 (see D21), and
    D1 was narrowed on 2026-08-18 (see D26) — each time the objection turned out to be about a
    specific model rather than about the idea.
-*(Question 2, goals as levels or as a rate, is answered — see below.)*
+
+**That is the only question still open.** Everything else that was on this list has been answered:
 
 **Answered, so nobody re-asks:**
 
