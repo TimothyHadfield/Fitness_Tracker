@@ -435,6 +435,44 @@ quarter of the variance cannot honestly separate an 83 % from an 87 %, which is 
 invisible to it.** There is no RIR field and that is deliberate (D9). Any volume-based rating is
 therefore conditional on "assuming sets are taken close to failure", and must say so.
 
+### 6.9 Protein 🟢 — pulled 2026-08-18 for `docs/goals-plan.md`
+
+**Morton RW, et al.** *A systematic review, meta-analysis and meta-regression of the effect of
+protein supplementation on resistance training-induced gains in muscle mass and strength in healthy
+adults.* British Journal of Sports Medicine, 2018. 49 trials, 1,863 participants.
+
+- Benefit **plateaus at ~1.62 g/kg/day** — the breakpoint past which more protein did nothing
+  detectable. **= 0.73 g per lb.**
+- 95 % CI to ~2.2 g/kg/day **= 1.0 g per lb**.
+
+⚠️ **The folklore "1 gram per pound" is the TOP of the confidence interval, not the middle.** Not
+wrong, but presenting it as *the* target quietly turns an upper bound into a goal. The honest
+statement is **0.7–1.0 g/lb**.
+
+⚠️ Collides with **D1** (diet cut). The distinction is tracking versus recommending — see
+`docs/goals-plan.md` §3.3. D1 is locked, so this needs Tim.
+
+### 6.10 Sleep 🟡 — thinner than expected
+
+Mechanism documented (Knowles et al., *J Sci Med Sport*, 2018: inadequate sleep blunts adaptation and
+disturbs baseline muscle protein metabolism), but **no dose–response meta-analysis between hours
+slept and strength gained** exists of the kind §6 has for volume. So the app may say too little sleep
+will cost you; it may not state an hours target as a requirement with the firmness it states volume.
+
+### 6.11 Individual variability 🟢 — and it is the reason goals cannot promise numbers
+
+- Over a **12-week** programme, in people of the same age doing the same training, individual change
+  ranges **0–250 %** for strength and **−2 % to 59 %** for size.
+- **Early progression does not reliably predict later adaptation** — authors note this "challenges
+  the practicality of tailoring training programs based on short-term outcomes".
+- **Non-responders are rare**: in one 16-week analysis 82 % were robust or excellent responders, 5 %
+  poor.
+- **Individual responsiveness is reproducible** across repeated protocols after detraining.
+
+⚠️ **Together: population data cannot tell one person what they will gain in three months, but that
+person's own history predicts them well.** Any goal or projection must be calibrated to the
+individual's measured trend, and expressed as a range — never as a promised number from a table.
+
 ### 6.8 Still to pull 🔴
 
 Load / rep range (Schoenfeld's repetition continuum, 2021 — referenced, still not read in full),

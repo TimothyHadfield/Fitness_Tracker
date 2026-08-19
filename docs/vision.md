@@ -14,7 +14,7 @@
 > resolved. Twice now the conflict turned out to be with a specific model rather than with the idea
 > (D15 → D21), and re-examining it produced something better than either the old rule or an override.
 
-**Started:** 2026-08-16 · **Last added to:** 2026-08-17
+**Started:** 2026-08-16 · **Last added to:** 2026-08-18
 
 **Where each idea stands** — the detail, and the reasoning, is under each heading:
 
@@ -25,6 +25,7 @@
 | §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating now sits beside each one on Explore — **two numbers, growth and strength**, banded to 5 |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
 | §1.5 | Set types | **BUILT** 2026-08-17 — supersets, tri-sets, drop sets, myo-reps |
+| §1.6 | **Goals** | Added 2026-08-18. Planned in `docs/goals-plan.md`, nothing built. Three of its four parts are well supported; **the fourth — raising weights to hit a deadline — inverts the causality and should not be built as described** |
 
 ---
 
@@ -322,6 +323,45 @@ expressed before. RIR and tempo remain deliberately absent (D9).
 **Where this connects:** ranked pre-designed systems (§1.3) — several of the best-known programmes
 could not even be *entered* before this, so the celebrity library had a ceiling. Nothing here
 collided with a locked decision.
+
+### 1.6 Goals — pick one, and the app aims everything at it
+
+Tim, 2026-08-18, in his words:
+
+> *"Based on research, the site should have a 'goals' section, that gives the user maybe 3-5 options
+> of strength improvements, each with their own estimations/ranges of the needed number of workouts a
+> week, time per workout, amount of protein per lb of body weight, and hours of sleep in order to
+> reach this goal. Lets make the goals 3 months at a time. Additionally, once the goal is set when
+> you go on the workouts section, it will find a workout system that fits your goal. Then when you're
+> in a workout, it will automatically reasonably improve your weights or reps in order to be on
+> progress to meet your goal. If the user hasn't been going to the gym, or has been recording their
+> lifts for less weight than the site has been suggesting, then on the goals menu, it will tell you
+> if you're on track, ahead, or behind to meet your goal."*
+
+**Planned, not built — `docs/goals-plan.md`.** It is the most coherent idea in this file: it joins
+the % optimal rating, the systems and progression into one loop, and every piece has a home already.
+Three of the four parts are well supported. Four things came out of the research:
+
+- **A 12-week strength gain cannot be predicted for an individual.** Same age, same programme:
+  changes range **0–250 %**. So a goal must not promise a number. But **non-responders are rare** and
+  **individual responsiveness is reproducible**, so somebody's *own* history predicts them well even
+  though population data does not — which argues for goals expressed as **strength levels** (already
+  computed, already adjusted for body weight, sex and age) rather than predicted pounds.
+- **⚠️ Raising weights to hit a deadline is the one part that should not be built as described.**
+  Load must follow performance, not a calendar: somebody who missed two weeks would be handed
+  *heavier* weights than somebody on track, which is the opposite of right and the only failure mode
+  here that can cause physical harm. The fix keeps the feature — progression stays autoregulated from
+  the last session, and the goal informs rather than instructs.
+- **Protein and sleep are invisible to the app**, so they can be *conditions* of a goal but never
+  inputs to the on-track verdict — otherwise a sleep deficit gets blamed on training. Protein also
+  collides with **D1** (diet cut), narrowly: recommending a range is not tracking.
+- **Protein's honest number is 0.7–1.0 g/lb** (Morton 2018 — the plateau is 1.62 g/kg = 0.73 g/lb).
+  The popular "1 g per pound" is the *top of the confidence interval*, not the middle.
+
+**Where this collides:** **D1** (§3.3 of the plan) and Tim's own warning in §1.2 above — *"silent
+adjustment is the kind of thing that destroys trust if it is wrong once"* — which the plan adopts as
+propose-never-impose. It is also gated on the **strength estimator**, the same thing §1.2's second
+half waits on.
 
 ---
 

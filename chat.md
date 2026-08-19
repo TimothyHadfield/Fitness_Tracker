@@ -3132,3 +3132,54 @@ Tim's existing library is corrected rather than only new copies.
 
 Verified by copying all nine presets through the real store and comparing both paths: **all nine
 agree**. Tests pin it at both layers — the store carries the fields, and history beats a declaration.
+
+---
+
+## 2026-08-18 — Goals: the research, and the one part that should not be built as described
+
+Tim described a Goals section: 3–5 strength goals, each stating workouts/week, time per workout,
+protein per lb and hours of sleep; three-month horizons; the Workouts screen matching a system to the
+goal; weights raised automatically in-session to stay on pace; and an on track / ahead / behind
+verdict. He asked for real research and for problems to be raised rather than smoothed over.
+
+**It is the most coherent idea in the vision file** — it joins the rating, the systems and
+progression into one loop, and every piece has a home already. Three of the four parts are well
+supported. Written up as `docs/goals-plan.md`; research appended to `docs/research.md` §6.9–6.11.
+
+**What the research changed:**
+
+- **Protein: 0.7–1.0 g/lb, not 1 g/lb.** Morton et al. 2018 (49 trials, 1,863 participants) puts the
+  plateau at 1.62 g/kg = **0.73 g per lb**, with the CI reaching 1.0. So the folklore number is the
+  *top of the confidence interval*, not the middle — exactly the sort of popular claim Tim warned
+  about.
+- **Sleep is thinner than expected.** The mechanism is documented but there is no dose–response
+  meta-analysis between hours slept and strength gained. Graded 🟡 against protein's 🟢, which decides
+  how firmly the screen may word it.
+- **A 12-week gain cannot be predicted for an individual.** Same age, same programme: **0–250 %**
+  spread in strength change. Early progression does not reliably predict later adaptation. So a goals
+  table promising pounds is a promise the literature cannot support. **But** non-responders are rare
+  (82 % robust or excellent responders in one 16-week analysis) and individual responsiveness is
+  *reproducible* — so somebody's own history predicts them well even though population data does
+  not. That argues for goals as **strength levels**, which the app already computes and already
+  adjusts for body weight, sex and age.
+
+**The serious problem — §3.1 of the plan.** *"it will automatically improve your weights in order to
+be on progress to meet your goal"* inverts the causality. Load must follow performance and recovery,
+not a calendar: somebody who has missed two weeks and is "behind" would be handed **heavier** weights
+than somebody on track, when the right response to a lay-off is to come back lighter. Same for the
+week they slept badly or were ill. It is the only failure mode in this project that could cause
+physical harm rather than just be wrong on a screen.
+
+The fix keeps the feature: progression stays autoregulated from the last session, and the goal
+**informs rather than instructs** — "at this rate you land around here by November". Tim's own note
+in §1.2 already anticipated the other half: *"silent adjustment is the kind of thing that destroys
+trust if it is wrong once."*
+
+**Two smaller ones.** Protein and sleep are invisible to the app, so they can be *conditions* of a
+goal but never inputs to the verdict — otherwise a sleep deficit gets blamed on training. And
+protein collides with **D1** (diet cut), narrowly: recommending a range is not tracking, which is the
+same shape as D15 → D21, but D1 is locked so it needs his say-so.
+
+**And the gate:** "behind" computed off raw session numbers would fire on noise, since a working-set
+e1RM moves several percent day to day. It needs the estimator's uncertainty band — and a fourth
+verdict, **"too early to say"**. Same estimator §1.2's second half has been waiting on.
