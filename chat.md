@@ -3259,3 +3259,42 @@ answer; "do you want to eat 1.0 or 0.7 g/lb?" was not.
 **D26 proposed and ratified in conversation**: the app may RECOMMEND a protein range with its
 citation; it may not track food, hold a database, or ask what anybody ate. Narrows D1 the way D21
 narrowed D15 — D1's reasoning was about tracking, and none of it applies here.
+
+---
+
+## 2026-08-18 — Sleep, corrected; and a sweep for the chat reset
+
+**Tim was right about sleep and I was too quick.** I had called the evidence thin after a single
+search. He said he thought he had seen studies, and a second search found one I had missed:
+
+**Lamon et al., *Physiological Reports*, 2021** — one night of total sleep deprivation cut
+postprandial **muscle protein synthesis by 18 %**, with cortisol up and a sex-specific fall in
+testosterone. N = 13, randomised crossover. Building on earlier work showing reduced MPS after five
+nights of restriction.
+
+So the app can now say something **measured and cited** instead of vague. `research.md` §6.10 is
+rewritten and carries the correction openly, including that it was Tim's doubt that prompted it.
+
+⚠️ **The design conclusion does not change**, and that is worth being clear about: total deprivation
+is not 6 hours versus 8, and there is still no curve from habitual hours slept to strength gained. So
+sleep still cannot be *scaled* by goal ambition — it gets the same sentence at every level. What
+changed is that the sentence now has a number in it.
+
+**Then a full sweep for the chat reset.** `progress.md`'s header was still dated 2026-08-17 and
+described a project without Social, without the rating, and with an "Open work" list whose items 3
+and 4 had since been finished. Rewritten:
+
+- **A new "Open work — start here" section** at the top, ordered, and led by the one fact that
+  matters most: **the strength estimator now gates four separate things** — vision §1.2's second
+  half, the Goals verdict, and both accuracy gaps in §9.
+- **§7 Research** now summarises the four findings from §6 that a fresh session needs without
+  reading it, and lists what was added on 2026-08-18.
+- **§8** records that the vision is nearly empty, and that **three** of its six ideas collided with a
+  locked decision and every one was resolved rather than ignored (D15→D21, D7 side-stepped, D1→D26).
+- **§10** gains Goals as item 0, and **Open questions** now separates the two still open from the
+  five answered, so nobody re-asks them.
+- The file-upkeep table gains `js/optimal.js` and `js/volume-map.js`, with the warning that the
+  latter is **not** the same table as `muscle-evidence.js`.
+
+All five suites green at the reset: **data-layer, optimal, volume-map, social, and 246 render
+assertions.**

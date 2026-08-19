@@ -364,15 +364,19 @@ threshold is probably 0.73 g/lb, **but it could be as high as 1.0**.
 certainty; a relaxed one can live with the best estimate. Same gradient Tim asked for, resting on
 something true.
 
-### 10.3 Sleep cannot be scaled at all
+### 10.3 Sleep cannot be scaled — but the sentence got better
 
-There is **no dose–response** between hours slept and strength gained (§2.2). So "8 hours for the
-ambitious goal, 6 for the relaxed one" is not a claim this app can make — it would be inventing a
-curve that does not exist.
+⚠️ **Corrected 2026-08-18.** §2.2 called the sleep evidence thin. Tim doubted that and was right: a
+second search found **Lamon et al. 2021** — one night of total sleep deprivation cut postprandial
+**muscle protein synthesis by 18 %**, with cortisol up and testosterone down. `research.md` §6.10.
 
-What it can say: consistently short sleep blunts adaptation, the effect is real, and its size is
-unknown. That is the same sentence at every goal level. **A number that changes between goals implies
-a precision nobody has.**
+So the app can now say something **measured and cited** rather than vague: losing a night's sleep
+cuts the rate at which you build muscle by about a fifth.
+
+**The scaling conclusion is unchanged, though.** That is an experiment on *total deprivation*, not a
+curve from habitual hours to gains — nothing of the kind exists. So "8 hours for the ambitious goal,
+6 for the relaxed one" would still be inventing a curve. Sleep gets the **same sentence at every goal
+level**; what changed is that the sentence now carries a number.
 
 ### 10.4 What honestly DOES scale with ambition
 

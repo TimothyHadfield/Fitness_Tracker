@@ -4,10 +4,10 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-17
+**Last updated:** 2026-08-18
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
-end.
+end. Five nav tabs: Home, Workouts, Calendar, Data, **Social**.
 
 The app works with **no network** (D6), records weights in **lbs or kg**, has a rest timer, lets a
 workout be logged for another day, lets a past record be edited from the calendar, and can mark a
@@ -16,47 +16,59 @@ whole workout as a benchmark.
 **Home opens on the next workout in your rotation**, not a generic "Start a workout" — it reads your
 last session and offers the one after it in that programme, saying what it read.
 
-**Sets have TYPES**: supersets, tri-sets and giant sets (exercises done back to back, walked round by
-round, with the rest timer holding off until the end of a round), plus drop sets and myo-reps (mini-
-sets nested inside one set, which stays one hard set). D23.
+**Sets have TYPES**: supersets, tri-sets and giant sets (walked round by round, with the rest timer
+holding off until the end of a round), plus drop sets and myo-reps (mini-sets nested inside one set,
+which stays one hard set). D23.
 
-**Workouts live inside SYSTEMS** — a system is a programme holding several workouts — and there is an
-**Explore** screen of **nine** ready-made systems you can copy into your account. Six are credited
-to real people: Jeff Nippard, Dr. Mike Israetel, Chris Bumstead, Arnold Schwarzenegger, Mike
-Thurston, plus a sixth that follows Israetel's published *method* without claiming to be his own
-training.
+**Workouts live inside SYSTEMS**, and there is an **Explore** screen of **nine** ready-made systems.
+Six are credited to real people. **Every system now carries a RATING** — two numbers, growth and
+strength, banded to 5 — on Explore, on the Workouts list and on a system's own screen, including
+systems the user built themselves.
+
+**Social is built**: mutual friends by invite link, per-person visibility (everything / my workouts /
+just that I trained / nothing), and a friend's page showing their body map and recent workouts.
+⚠️ **Two accounts have never actually connected** — see NOT verified.
 
 **The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
 rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
-desaturates the colour, and the **comparison group is the user's choice** — lifters or everyone, sex,
-body weight, age.
+desaturates the colour, and the **comparison group is the user's choice**.
 
 **Neither chart mode is a dead end**: where there is not enough history to draw a line, they list
 where every lift stands right now.
 
-**Open work — start here:**
+---
 
-1. **`docs/strength-estimate-plan.md`, Phase 0** — the confidence-weighted estimator and its
-   simulator. Part of it arrived on 2026-08-17: `js/muscle-evidence.js` is a real confidence model,
-   but it was built for the BODY MAP, not the graph, and it has **no simulator behind it**. Its
-   constants are reasoned, not fitted. Fitting them is the open work, and it is what would let the
-   two known accuracy gaps in §9 be closed rather than documented.
-2. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
-   itself is finished. It is still the biggest untested risk in the project and that has not changed;
-   it is simply not the next thing. Don't keep raising it.
-3. **`docs/vision.md` is nearly out of cheap wins.** Two of its five ideas are built (§1.4 the
-   comparison setting, §1.5 set types), §1.3 is built except for the "% optimal" number, and §1.2 is
-   half built. What is left is **gated**, not merely unstarted: the "% optimal" rating needs
-   `docs/research.md` §6 grounded in primary sources FIRST — it is a research commission, not a
-   coding session — the other half of §1.2 needs the estimator in item 1, and social (§1.1) is the
-   hardest thing in the file and the only one that makes other people's data a privacy problem —
-   and it **now has a plan**, `docs/social-plan.md`, written 2026-08-17 on Tim's ask. None of it is
-   built. Its Phase 0 is two questions for him; its Phase 1 is rules, a projection builder and an
-   emulator test suite, with nothing on screen.
-   The last ungated piece of content work is finishing the **Nippard series** (three of six).
-4. Tier 2 proper, whose first move is the weighted exercise→muscle mapping D3 depends on. Note that
-   `muscle-evidence.js` now holds a *ranking* mapping; D3 needs a *volume* one, and they are not the
-   same table — one asks "how strong", the other "how much work landed here".
+## Open work — start here
+
+**One thing gates almost everything left: the strength estimator.**
+
+1. **`docs/strength-estimate-plan.md`, Phase 0 — the estimator and its simulator.** Pure maths, a
+   simulator, no UI. **Blocked on nothing, and it is now the gate on four separate things:** the last
+   unbuilt half of `docs/vision.md` §1.2 (suggesting weights and reps), the whole **Goals** feature's
+   on-track verdict (`docs/goals-plan.md`), and the two known accuracy gaps in §9 of this file. Its
+   constants in `js/muscle-evidence.js` are reasoned, not fitted; fitting them is the work.
+
+2. **Goals — `docs/goals-plan.md`.** Planned 2026-08-18 in detail, nothing built. Read **§8** (the
+   progression rule), **§9** (the *why progress stalls* section) and **§10** (what may and may not
+   scale with goal ambition). Phase order is in §6. Everything except the verdict could be built
+   before the estimator; the verdict cannot.
+
+3. **Social: get two accounts to connect.** Every screen is built and driven, but only against a
+   stubbed facade. The round trip — invite, open as somebody else, claim, accept, publish, read — has
+   never run. Needs two throwaway accounts against the live project, then deleted.
+
+4. **`docs/research.md` §6.8** — the axes still to pull (load/rep range, rest intervals, range of
+   motion, per-session volume). Each either sharpens the rating or becomes a stated caveat.
+
+5. **Finish the Nippard series** — three of six workouts are transcribed. The last ungated piece of
+   content work.
+
+6. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
+   itself is finished. Still the biggest untested risk; simply not the next thing. Don't raise it.
+
+**`docs/vision.md` is nearly empty.** Four of its six ideas are BUILT (§1.1 social, §1.3 ready-made
+systems + the rating, §1.4 the comparison setting, §1.5 set types). §1.2 is half built and waits on
+the estimator. §1.6 (goals) is planned, not built.
 
 | | |
 |---|---|
@@ -193,6 +205,8 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/research.md` | **All research, by category**, evidence graded 🟢🟡🔴 with sources. Append — never start a new research file |
 | `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
+| `js/optimal.js` | Not a doc. Read it before touching the rating: the dose-response curves are **fitted to published values, with the derivation in a comment on each constant**, and the header lists the three things the rating refuses to do — reward extra training days for growth, extrapolate past the evidence, or imply precision the source lacks |
+| `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5 |
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to no screen yet |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
@@ -735,8 +749,26 @@ which narrows D12 rather than breaching it. Both get locked if and when Phase 1 
 
 **All research lives in `docs/research.md`**, graded 🟢🟡🔴 with sources. Sections: e1RM /
 rep-normalisation · reps↔%1RM · proximity to failure · fatigue & rest · velocity-based training ·
-volume & the rep continuum · competitive landscape · data-viz colour · unverified claims ·
-strength standards & percentiles.
+**volume, frequency & the dose response** · competitive landscape · data-viz colour · unverified
+claims · strength standards & percentiles · **progression & load increments**.
+
+**§6 was rewritten from 🟡 to 🟢 on 2026-08-18** and is now the most load-bearing section in the file
+— the "% optimal" rating is built on it. The four findings a fresh session should know without
+reading it:
+
+- **Frequency has no consistently identifiable independent effect on hypertrophy** (CrI contains
+  zero), but it does matter for strength. So more training days is not itself better for growth.
+- **Volume follows a square-root curve** with published efficiency tiers: 4 sets/muscle/week is the
+  minimum effective dose, 5–10 is the best value per set, 43+ is off the end of the evidence.
+- **An indirect set counts as 0.5** — the best-supported counting method, and the answer D3 was
+  waiting for.
+- **The models explain about a quarter of the variance**, which is why every rating is banded.
+
+Added 2026-08-18: **§6.9 protein** (plateau at 0.73 g/lb; "1 g/lb" is the top of the CI),
+**§6.10 sleep** (one night's deprivation cuts muscle protein synthesis 18 %, but no dose–response
+from habitual hours exists), **§6.11 individual variability** (0–250 % spread over 12 weeks, yet
+non-responders are rare and individual response is reproducible) and **§12 progression** (the ACSM
+2-for-2 rule; a 5 lb jump only enters the recommended 2–10 % band at 50 lb and above).
 
 Competitive teardown: `docs/competitive-teardown.html`. Analysed Strong, Hevy, Boostcamp, Liftosaur,
 Alpha Progression, RP Hypertrophy, Fitbod.
@@ -770,17 +802,19 @@ being a differentiator.
 - Post-session check-in feeding next week's volume
 - Deload prompting; equipment-aware substitution
 
-**Beyond the roadmap — `docs/vision.md`.** Tim's running list, and **most of it moved on
-2026-08-17**. Built: the **"Compared to:" setting** (§1.4) and **set types** (§1.5). Built except for
-its headline number: **ready-made and creator systems** (§1.3) — nine of them — with the **"% optimal"
-rating** still missing and still needing research before code. Half built: **smart systems** (§1.2) —
-Home now suggests *which workout* to do; suggesting the *weights and reps* is untouched and waits on
-the estimator. Untouched: **social** (§1.1).
+**Beyond the roadmap — `docs/vision.md`.** Tim's running list, and **nearly all of it is now built**.
+BUILT: **social** (§1.1), **ready-made systems and the "% optimal" rating** (§1.3), the **"Compared
+to:" setting** (§1.4) and **set types** (§1.5). HALF BUILT: **smart systems** (§1.2) — Home suggests
+*which workout*; the weights and reps wait on the estimator. PLANNED, NOT BUILT: **goals** (§1.6),
+added 2026-08-18, `docs/goals-plan.md`.
 
-Two of the five collided with locked decisions and both were resolved rather than ignored — an "all
-people" comparison narrowed **D15** into **D21**, and social still collides with **D7**. Note the
-pattern, because it has now happened twice: the objection turned out to be about a specific model
-rather than about the idea. `docs/vision.md` records collisions; it does not quietly resolve them.
+**Three of the six collided with a locked decision, and every one was resolved rather than ignored:**
+an "all people" comparison narrowed **D15** into **D21**; social was expected to collide with **D7**
+and side-stepped it entirely by building a profile instead of a feed, so D7 stands untouched; and a
+protein recommendation narrowed **D1** into **D26**. Note the pattern, because it has now happened
+three times: **the objection turns out to be about a specific model rather than about the idea**, and
+re-examining it produces something better than either the old rule or a plain override.
+`docs/vision.md` records collisions; it does not quietly resolve them.
 
 ---
 
@@ -910,6 +944,17 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
 
 ## 10. Next steps
 
+*The short version is the **Open work** list at the top of this file. This section is the long one.*
+
+0. **GOALS — `docs/goals-plan.md`, planned 2026-08-18, nothing built.** Tim's biggest idea: pick a
+   three-month strength goal, see what it costs (sessions, sets, time, protein, sleep), have the app
+   match a system to it, and be told on track / ahead / behind. **Read §8, §9 and §10 of that plan
+   before touching it** — three things were resolved in conversation that are not obvious:
+   progression is **decoupled from the goal** and follows the ACSM 2-for-2 rule; the goals screen
+   carries a **why progress stalls** section whose value is separating what the app can measure from
+   what it cannot; and **only volume, time, frequency, effort and consistency scale with ambition** —
+   protein is a threshold and sleep cannot be scaled at all. **D26** (recommend protein, never track
+   it) narrows D1 and was ratified by Tim.
 1. **The simulator** — `docs/strength-estimate-plan.md` §11, Phase 0. **Blocked on nothing, and now
    the highest-value thing left.** `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
@@ -958,20 +1003,20 @@ rather than about the idea. `docs/vision.md` records collisions; it does not qui
    per-set plotting only, leaving the strength estimator free to draw on all evidence weighted by
    confidence. D14 is locked, so this needs Tim's say-so before Phase 2 of that plan. The fallback if
    he says no: ship the estimator as a separate, clearly labelled chart mode.
-   **Precedent worth citing when asking:** D15 was narrowed the same way on 2026-08-17 (see D21) —
-   the objection turned out to be about a specific model rather than about the idea, and re-examining
-   it produced something better than either the old rule or a plain override.
-2. **Social: profile-first, or a feed as well?** `docs/social-plan.md` §9. The recommendation is to
-   build a connection's **profile page** and no feed at all — it delivers the whole of what §1.1 asks
-   for ("see what a friend is doing"), and it needs **no narrowing of D7**, so the collision can be
-   judged later against something real. Answering this does not block Phase 1.
-3. **Social: mutual connections, or followers?** Same file. Recommendation is mutual, because it is
-   the harder one to reverse — mutual can grow into following, following cannot shrink back — and
-   because an asymmetric audience breaks the viewer-list model in §3.2 of that plan.
-4. **Does Tim want the "% optimal" rating for systems?** `docs/vision.md` §1.3 asks for one. Now that
-   ready-made systems exist it is buildable, and it would be the most scientifically load-bearing
-   number the app has ever shown. It needs grounding in `docs/research.md` §6 first — which is itself
-   marked 🟡, "primary sources not yet pulled into this log".
+   **Precedent worth citing when asking:** D15 was narrowed the same way on 2026-08-17 (see D21), and
+   D1 was narrowed on 2026-08-18 (see D26) — each time the objection turned out to be about a
+   specific model rather than about the idea.
+2. **Goals as levels, or as a rate?** `docs/goals-plan.md` §7. Recommendation: **levels** — the app
+   already computes them and already adjusts for body weight, sex and age, so a level goal makes no
+   prediction at all, which side-steps the 0–250 % individual variation problem entirely.
+
+**Answered, so nobody re-asks:**
+
+- ~~Social: profile-first or a feed?~~ **Profile-first, no feed** — built that way, D7 untouched.
+- ~~Social: mutual or followers?~~ **Mutual.**
+- ~~The "% optimal" rating: one number or two?~~ **Two** — growth and strength, rated separately.
+- ~~What does 100 % mean?~~ **The most the evidence supports**, not the best system in the library.
+- ~~May the app recommend protein?~~ **Yes** (D26) — recommend with a citation, never track.
 
 One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user

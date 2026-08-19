@@ -453,12 +453,36 @@ statement is **0.7–1.0 g/lb**.
 ⚠️ Collides with **D1** (diet cut). The distinction is tracking versus recommending — see
 `docs/goals-plan.md` §3.3. D1 is locked, so this needs Tim.
 
-### 6.10 Sleep 🟡 — thinner than expected
+### 6.10 Sleep 🟡 — quantified mechanism, no dose–response
 
-Mechanism documented (Knowles et al., *J Sci Med Sport*, 2018: inadequate sleep blunts adaptation and
-disturbs baseline muscle protein metabolism), but **no dose–response meta-analysis between hours
-slept and strength gained** exists of the kind §6 has for volume. So the app may say too little sleep
-will cost you; it may not state an hours target as a requirement with the firmness it states volume.
+⚠️ **Corrected 2026-08-18.** An earlier pass here said the evidence was merely "documented" and
+thinner than expected. **Tim doubted that, and he was right to** — a second search found a quantified
+experimental result that the first missed. The correction matters because it changes what the app is
+allowed to say.
+
+**Lamon S, et al. "The effect of acute sleep deprivation on skeletal muscle protein synthesis and the
+hormonal environment." *Physiological Reports*, 2021.** N = 13 (7 male, 6 female), randomised
+crossover, one night of total sleep deprivation vs normal sleep.
+
+- **Postprandial muscle protein synthesis fell 18 %** after a single night without sleep.
+- Accompanied by an acute rise in plasma **cortisol** and a **sex-specific fall in testosterone**.
+- Builds on earlier work finding reduced MPS after **five nights of sleep restriction**.
+
+Also: Knowles et al., *J Sci Med Sport*, 2018 — inadequate sleep blunts adaptation and disturbs
+baseline muscle protein metabolism.
+
+**So the app CAN say something concrete and cited**: losing a night's sleep measurably cuts the rate
+at which muscle is built, by about a fifth, along with a hormonal shift in the wrong direction.
+
+⚠️ **What still does not exist is a DOSE–RESPONSE between habitual hours slept and strength or size
+gained over a training programme** — nothing of the kind §6.2 has for volume. Total deprivation is
+not 6 hours versus 8. So:
+
+- ✅ "Short sleep measurably blunts muscle building — 18 % in one night of deprivation."
+- ❌ "You need 8 hours to hit this goal" / "7 hours for the relaxed goal, 9 for the ambitious one."
+
+The design consequence in `docs/goals-plan.md` §10.3 is unchanged — sleep cannot be *scaled* by goal
+ambition — but the sentence the app shows is now a measured number rather than a vague warning.
 
 ### 6.11 Individual variability 🟢 — and it is the reason goals cannot promise numbers
 
