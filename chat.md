@@ -3183,3 +3183,40 @@ same shape as D15 → D21, but D1 is locked so it needs his say-so.
 **And the gate:** "behind" computed off raw session numbers would fire on noise, since a working-set
 e1RM moves several percent day to day. It needs the estimator's uncertainty band — and a fourth
 verdict, **"too early to say"**. Same estimator §1.2's second half has been waiting on.
+
+---
+
+## 2026-08-18 — Progression, decoupled: Tim's guess was the published rule
+
+Tim agreed progression must have nothing to do with the goal, then asked what system it should
+follow, and proposed: add a rep for 2–3 weeks, then add weight and drop the reps back down.
+
+**That is the ACSM position stand almost word for word.** *Progression Models in Resistance Training
+for Healthy Adults* (2009): raise the load **2–10 %** once the lifter can beat the target by **1–2
+reps on two consecutive sessions** — the "2-for-2 rule". `docs/research.md` §12.
+
+**And "increasing the weight is usually too much" turned out to be literally true, with a number on
+it.** The smallest plate is often a bigger step than the evidence recommends: a 5 lb jump is 25 % at
+20 lb, 12.5 % at 40 lb, and **only enters the 2–10 % band at 50 lb and above**. Below that — most
+isolation work, most dumbbell work, every beginner's compounds — there is no honest load increment
+available and **a rep is the only increment fine enough**. Adding a rep to 3×10 at 40 lb is ~3 % more
+work; adding 5 lb is 12.5 %. The app should say so when no available jump fits, rather than silently
+proposing a 17 % increase.
+
+**He also corrected the plan, and he was right.** §2.3 had concluded from the 0–250 % spread that
+goals should avoid numbers. But the same literature says non-responders are rare (5 % poor
+responders) and individual response is *reproducible*. His framing — everyone can get stronger,
+stalls have practical causes, a target to aim at is not a promise — is the fair reading, and the plan
+now says so in §9.
+
+**The best idea in the exchange was his:** a *why progress stalls* section on the goals screen. What
+makes it work is the honest split — two causes the app can **measure** (volume under the minimum
+effective dose; not training often enough) and four it **cannot** (effort/proximity to failure,
+protein, sleep, life). Naming which is which also solves the earlier objection about invisible
+factors: they get stated prominently instead of quietly excluded from a verdict.
+
+**And the verdict bar is now explicitly asymmetric**, on his instruction: "behind" fires only when
+the estimator's band contains no trajectory reaching the target. Telling somebody they are behind
+when they are not is a much worse error than the reverse.
+
+Still gated on the estimator. Everything in this feature is.

@@ -25,7 +25,7 @@
 | §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating now sits beside each one on Explore — **two numbers, growth and strength**, banded to 5 |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
 | §1.5 | Set types | **BUILT** 2026-08-17 — supersets, tri-sets, drop sets, myo-reps |
-| §1.6 | **Goals** | Added 2026-08-18. Planned in `docs/goals-plan.md`, nothing built. Three of its four parts are well supported; **the fourth — raising weights to hit a deadline — inverts the causality and should not be built as described** |
+| §1.6 | **Goals** | Added 2026-08-18. Planned in `docs/goals-plan.md`, nothing built. **Resolved the same day**: progression is decoupled from the goal and follows the ACSM 2-for-2 rule (§8), and the goals screen gains a *why progress stalls* section (§9). Gated on the estimator |
 
 ---
 
@@ -357,6 +357,26 @@ Three of the four parts are well supported. Four things came out of the research
   collides with **D1** (diet cut), narrowly: recommending a range is not tracking.
 - **Protein's honest number is 0.7–1.0 g/lb** (Morton 2018 — the plateau is 1.62 g/kg = 0.73 g/lb).
   The popular "1 g per pound" is the *top of the confidence interval*, not the middle.
+
+**Resolved 2026-08-18, in the same exchange.** Tim agreed progression must be decoupled from the
+goal, and then asked for the system it should follow instead — which turned out to be almost exactly
+what he had already guessed:
+
+- **His proposal — add reps for 2–3 weeks, then add weight and drop the reps — is the standing ACSM
+  recommendation.** Raise the load 2–10 % once you can beat the target by 1–2 reps on two consecutive
+  sessions. `docs/research.md` §12.
+- **"Adding weight is usually too much" is literally true and now quantified.** A 5 lb jump is 25 %
+  at 20 lb, 12.5 % at 40 lb, and only enters the recommended 2–10 % band at **50 lb and above**. For
+  most isolation and dumbbell work there is no honest load increment available and **a rep is the
+  only step fine enough**.
+- **He was right that the plan's §2.3 was over-cautious**, and it has been revised. Non-responders
+  are rare (5 %) and individual response is reproducible, so "everyone can get stronger, and stalls
+  have practical causes" is a fair reading. A target to aim at is not a promise.
+- **The best idea in the exchange is his:** a *why progress stalls* section on the goals screen. Two
+  of its causes the app can measure (volume below the effective dose, not training often enough) and
+  four it cannot (effort, protein, sleep, life) — and saying which is which is the whole value.
+- **"Behind" only when it is extremely unlikely** — fires only when the estimator's band contains no
+  trajectory reaching the target. Everything else is "on track" or "too early to say".
 
 **Where this collides:** **D1** (§3.3 of the plan) and Tim's own warning in §1.2 above — *"silent
 adjustment is the kind of thing that destroys trust if it is wrong once"* — which the plan adopts as

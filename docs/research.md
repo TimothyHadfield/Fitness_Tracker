@@ -18,6 +18,7 @@ Each finding carries its evidence base, so it's clear which claims are solid and
 | Data-viz colour validation | [§8](#8-data-viz-colour-validation) |
 | Unverified / open | [§9](#9-unverified-claims-and-open-questions) |
 | Strength standards & percentiles | [§11](#11-strength-standards-and-percentile-ranking) |
+| Progression & load increments | [§12](#12-progression--how-much-to-add-and-when-) |
 | Full source list | [§10](#10-sources) |
 
 **Status legend** — 🟢 solid, multiple independent sources · 🟡 single good source · 🔴 thin or
@@ -648,6 +649,74 @@ Don't treat these as settled.
 **Competitive**
 
 - `docs/competitive-teardown.html` — full teardown of seven apps.
+
+---
+
+## 12. Progression — how much to add, and when 🟢
+
+*Researched 2026-08-18 for `docs/goals-plan.md` §8. Driver: Tim — progression must be decoupled from
+any goal, but it still needs a system, and "most of the time increasing the weight (even by a little)
+is too much".*
+
+### 12.1 The anchor
+
+**American College of Sports Medicine. "Progression Models in Resistance Training for Healthy
+Adults." *Med Sci Sports Exerc*, 2009.** The standing position stand, and it states the rule
+directly:
+
+> A **2–10 % increase in load** should be applied **when the individual can perform the current
+> workload for one to two repetitions over the desired number on two consecutive training
+> sessions** — the size of the increase chosen "on the basis of muscle group size and involvement".
+
+That is the **"2-for-2 rule"**, and it is the formal version of exactly what Tim described: earn the
+reps first, then take the weight up and let the reps fall back.
+
+Also stated: novices train around **8–12 RM**; intermediate and advanced use a wider **1–12 RM**
+range, periodised, with eventual emphasis on heavy loading.
+
+### 12.2 ⚠️ The finding that matters most for this app
+
+**2–10 % is often SMALLER than the smallest plate you own**, and that is why adding weight usually
+feels like too much. Computed against the app's own ±5 lb / ±2.5 kg stepper:
+
+| Working weight | +5 lb is | Within the 2–10 % band? |
+|---|---|---|
+| 20 lb | **25.0 %** | no — two and a half times the ceiling |
+| 30 lb | **16.7 %** | no |
+| 40 lb | **12.5 %** | no |
+| 50 lb | 10.0 % | just |
+| 100 lb | 5.0 % | comfortably |
+| 225 lb | 2.2 % | at the bottom of the band |
+
+**A 5 lb jump only falls inside the recommended band at 50 lb and above**, and only reaches the
+middle of it at 100 lb. Below that — which is most isolation work, most dumbbell work, and every
+beginner's compound lifts — the smallest jump available is a bigger step than the evidence
+recommends.
+
+**So Tim's instinct is right and now quantified: for light lifts, reps are the only increment fine
+enough to progress with.** Adding a rep to a 3×10 at 40 lb is roughly a 3 % increase in work; adding
+5 lb is 12.5 %.
+
+### 12.3 What this licenses the app to do
+
+- **Double progression**, which is the 2-for-2 rule applied: hold the weight, add reps up the range,
+  then add the smallest available load and drop back to the bottom of the range.
+- **Only suggest a load increase after two consecutive sessions at the top of the range**, not one.
+  One good session is noise; the position stand says two.
+- **Size the jump by the lift**, not by a fixed number: bigger muscle groups tolerate the top of the
+  2–10 % band, isolation work the bottom.
+- **Say when the jump is unavoidably too big.** At 30 lb there is no honest 2–10 % increment with
+  5 lb plates; the answer is another rep, another set, or microplates — and saying that is more use
+  than silently suggesting a 17 % jump.
+
+### 12.4 Limits
+
+- The 2–10 % band is a **practitioner consensus**, not a dose–response curve — there is no
+  meta-regression here of the kind `docs/research.md` §6 has for volume. 🟡 on the exact numbers,
+  🟢 on the shape (earn reps, then add load, in small steps).
+- It says nothing about what to do after a **missed block**. Coming back from a lay-off wants a
+  reduction, and how much is not covered by this source.
+- All of it assumes sets are taken near failure (§6.7), which the app cannot see.
 
 ---
 

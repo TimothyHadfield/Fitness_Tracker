@@ -5,6 +5,11 @@
 
 **Status:** plan · **Written:** 2026-08-18 · **Blocked on:** one decision (§7) and the estimator
 
+**Revised the same day** after Tim's reply — see **§8** (progression, decoupled from the goal, with
+the ACSM rule and the numbers behind "adding weight is usually too much") and **§9** (goals revised:
+he was right that §2.3 was over-cautious, and the *why progress stalls* section is the best idea in
+the exchange).
+
 ---
 
 ## 1. What Tim asked for
@@ -219,3 +224,102 @@ Deliberately last, because it is the only part that can hurt somebody.
    them, they are already adjusted for the individual, and they make no prediction at all.
 
 Neither blocks Phase 0, which is the estimator either way.
+
+---
+
+## 8. Progression — Tim's answer, and the research behind it (2026-08-18)
+
+Tim, after §3.1: *"You're right about the progressive overload part. The amount that the weight or
+reps increase should have nothing to do with your goal. However, it should still have a system…
+Most of the time increasing the weight (even by a little) is too much, so a good system could be
+increase the reps by 1 for 2-3 weeks, and then increase the weight while going back down in reps."*
+
+**That is double progression, and it is the standing ACSM recommendation almost word for word.**
+`docs/research.md` §12. The position stand says: raise the load **2–10 %** when the lifter can do
+**1–2 reps over the target on two consecutive sessions** — earn the reps, then take the weight.
+
+### 8.1 ⚠️ Why "adding weight is usually too much" is literally true
+
+The smallest plate is often a **bigger** step than the evidence recommends:
+
+| Working weight | A 5 lb jump is | Inside the 2–10 % band? |
+|---|---|---|
+| 20 lb | 25.0 % | no — two and a half times the ceiling |
+| 40 lb | 12.5 % | no |
+| 50 lb | 10.0 % | just |
+| 100 lb | 5.0 % | comfortably |
+| 225 lb | 2.2 % | bottom of the band |
+
+**A 5 lb jump only enters the recommended band at 50 lb and above.** Below that — most isolation
+work, most dumbbell work, every beginner's compounds — there is no honest load increment available,
+and **a rep is the only increment fine enough**. Adding one rep to 3×10 at 40 lb is about 3 % more
+work; adding 5 lb is 12.5 %.
+
+### 8.2 The rule the app will follow
+
+1. Hold the load and **add reps** up the prescribed range.
+2. When the top of the range is hit on **two consecutive sessions**, suggest the **smallest load
+   increment that lands inside 2–10 %**, and drop reps to the bottom of the range.
+3. Size it by the lift — compounds toward the top of the band, isolation toward the bottom.
+4. **When no available increment fits** (30 lb with 5 lb plates), say so and suggest another rep, an
+   extra set, or microplates. That is more useful than silently proposing a 17 % jump.
+5. **Propose, never impose.** It pre-fills, exactly as the runner already pre-fills last time's
+   numbers, and the user can overrule it.
+
+**Nothing in that rule reads the goal, the date, or how far behind anybody is** — which was §3.1's
+whole objection, and Tim's own conclusion.
+
+---
+
+## 9. Goals, revised — Tim, 2026-08-18
+
+He pushed back on §2.3's framing, and he is right:
+
+> *"I understand that sometimes people struggle to see results no matter the program and these
+> results vary, however I believe strongly that everyone is able to get stronger and if someone isn't
+> seeing results there are practical reasons to why this is happening, which we can talk about in the
+> goals setting as well. I do want the user to set an achievable goal … that they can use to drive
+> their decisions, but it's okay if they struggle to hit this goal. This doesn't mean the site is
+> promising them gains."*
+
+**The evidence backs him, and §2.3 was over-cautious in its conclusion.** The 0–250 % spread is real,
+but the same literature says **non-responders are rare** — 82 % robust or excellent responders,
+5 % poor — and that **individual responsiveness is reproducible**. "Almost everyone gets stronger,
+and variation is mostly explained by practical factors" is a fair reading of it. The distinction Tim
+draws is the right one: **a target to aim at is not a promise**, and the app was never going to be
+the thing that made it one.
+
+### 9.1 So the goals screen gains a section: *why progress stalls*
+
+This is the best idea in the exchange, because every item on the list is something the app has
+already researched or can already see:
+
+| Reason | What the app knows | Source |
+|---|---|---|
+| Volume below the minimum effective dose | **Measured** — it already names muscles under 4 sets/week | `research.md` §6.2 |
+| Not training often enough | **Measured** — sessions per week, from history | §6.3 |
+| Not training close enough to failure | **Invisible** — no RIR field (D9) | §6.7 |
+| Protein below ~0.7 g/lb | **Invisible** | §6.9 |
+| Too little sleep | **Invisible** | §6.10 |
+| Effort, stress, illness, life | **Invisible** | — |
+
+⚠️ **The honest split is the whole value of the section.** For the first two the app can say "this is
+you, and here is the number". For the rest it can only say "these matter and I cannot see them" —
+which is exactly what Tim asked for, and it also answers §3.2: the invisible factors get **named
+prominently on the goals screen** rather than quietly excluded from a verdict.
+
+### 9.2 The verdict bar is set high
+
+Tim: *"Telling the user they're behind should only happen if it's extremely unlikely they'll be able
+to reach their goal."*
+
+Adopted, and it is stricter than a naive reading of the band. **"Behind" fires only when the
+estimator's uncertainty band no longer contains any trajectory reaching the target** — not merely
+when the point estimate is short. Everything else is **"too early to say"** or **"on track"**.
+
+That asymmetry is deliberate: telling somebody they are behind when they are not is a far worse error
+than the reverse. It costs a user who was doing fine; the opposite costs a warning that arrives late.
+
+**This is the hard gate.** It cannot be built on raw session numbers — a working-set e1RM moves
+several percent day to day on sleep and timing alone — so it waits on
+`docs/strength-estimate-plan.md`. Same estimator as everything else.
