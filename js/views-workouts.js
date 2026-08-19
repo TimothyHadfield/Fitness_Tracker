@@ -9,7 +9,7 @@ import {
 import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
-  emptyState, relativeDay, miniStepper, loadBadge,
+  emptyState, relativeDay, miniStepper, loadBadge, trimNum,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -158,7 +158,7 @@ export async function WorkoutsView() {
           const names = workouts.filter((w) => w.systemId === sys.id).map((w) => w.name);
           return el('button', { class: 'row', onClick: () => go('#/system/' + sys.id) },
             el('div', { class: 'row-main' },
-              el('div', { class: 'row-title', text: sys.name }),
+              el('div', { class: 'row-title wrap', text: sys.name }),
               // `.wrap`, for the same reason as the Explore list: the rating
               // takes width off this line, and the workout names are what tell
               // you which programme this is. Clipping "Push · Pull · Legs" to
@@ -260,15 +260,35 @@ export function openSetTypeSheet(item, onChange) {
  */
 function ratingBadge(rating) {
   if (!rating) return null;
+
+  // Tim, 2026-08-19: the two percentages say how GOOD a programme is and say
+  // nothing about what it costs, which is the first thing anybody wants before
+  // they open it. Days and minutes are that cost, and they belong beside the
+  // scores rather than only inside the system — "80 % strength" reads very
+  // differently at 3 days a week than at 6.
+  //
+  // A 2x2 grid, not one row of four. Four cells side by side is ~180px, which
+  // on a 390px phone leaves the system's NAME with about half the row — and
+  // Rule 3 says the name is the content and the badge is the ornament.
+  const days = rating.daysPerWeek > 0
+    ? trimNum(Math.round(rating.daysPerWeek * 10) / 10)
+    : null;
+  const minutes = rating.minutesPerSession > 0 ? Math.round(rating.minutesPerSession) : null;
+
+  const cell = (value, cap, title) => el('div', { class: 'rating-cell', title: title || null },
+    el('div', { class: 'rating-num', text: value }),
+    el('div', { class: 'rating-cap', text: cap }),
+  );
+
   return el('div', { class: 'rating' },
-    el('div', { class: 'rating-cell' },
-      el('div', { class: 'rating-num', text: rating.hypertrophy + '%' }),
-      el('div', { class: 'rating-cap', text: 'growth' }),
-    ),
-    el('div', { class: 'rating-cell' },
-      el('div', { class: 'rating-num', text: rating.strength + '%' }),
-      el('div', { class: 'rating-cap', text: 'strength' }),
-    ),
+    cell(rating.hypertrophy + '%', 'growth'),
+    cell(rating.strength + '%', 'strength'),
+    days ? cell(days, 'days/wk', 'Training days a week') : null,
+    minutes
+      ? cell('~' + minutes, 'min', rating.minutesEstimated
+          ? 'Estimated from the set count, at about 3 minutes a set including rest'
+          : 'As stated by the programme')
+      : null,
   );
 }
 
@@ -430,20 +450,20 @@ export async function ExploreView() {
       el('div', { class: 'list' }, PRESET_SYSTEMS.map((p) =>
         el('button', { class: 'row', onClick: () => go('#/explore/' + p.id) },
           el('div', { class: 'row-main' },
-            el('div', { class: 'row-title' },
+            el('div', { class: 'row-title wrap' },
               p.name,
               added.has(p.id) ? el('span', { class: 'tag', text: 'Added' }) : null,
             ),
             // Whose it is, before anything else — but "follows X's method" and
             // "by X" are different claims and the list has to keep them apart.
-            // `.wrap`, because the rating now takes width off this line and it
-            // was clipping to "Jeff Nippard · 6 days/week · ~75 min…". Days and
-            // minutes are the COST half of what this screen is for — a rating
-            // shown without what it costs you is half a sentence.
+            // ⚠️ Days and minutes used to be repeated here. They moved INTO the
+            // badge on 2026-08-19, and repeating them in both places would be
+            // noise taking width off the summary — which is the line that
+            // actually tells you what the programme is.
             el('div', { class: 'row-sub wrap', text:
               (p.author && p.author !== 'Fitness Tracker' ? `${p.author} · `
                 : p.basedOn ? `Follows ${p.basedOn.person} · ` : '')
-              + `${p.daysPerWeek} days/week · ~${p.minutes} min · ${p.level}` }),
+              + p.level }),
             el('div', { class: 'row-sub wrap', text: p.summary }),
           ),
           ratingBadge(ratings.get(p.id)),

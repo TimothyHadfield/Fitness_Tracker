@@ -3298,3 +3298,116 @@ and 4 had since been finished. Rewritten:
 
 All five suites green at the reset: **data-layer, optimal, volume-map, social, and 246 render
 assertions.**
+
+---
+
+## 2026-08-19 — Goals, built
+
+Tim: *"okay I'm ready for you to build the Goals section. Remember this is an entirely new section
+displayed next to social, workouts, data, etc."*
+
+**Phases 1 and 2 of `docs/goals-plan.md` shipped.** A sixth nav tab between Data and Social — Goals
+is about your own training like everything to its left, and Social is the only tab about anybody
+else, so the boundary in the bar matches the boundary in the app.
+
+### What a goal is
+
+**One muscle moving up a strength LEVEL over twelve weeks.** Not "+30 lb on your bench". Individual
+change over a 12-week programme runs **0–250 %** for strength (research §6.11), so a predicted number
+of pounds is a promise the literature cannot support for anybody. A level makes no prediction at all
+— it says what would *count* as hitting the target, and the app already computes levels adjusted for
+body weight, sex and age. That answers the second open question in `progress.md` (levels or a rate)
+the way the plan recommended, taken without asking under the working agreement.
+
+Two screens to pick: which muscle, then which level. That gives every combination without a
+fabricated "3–5 goals" shortlist, and the second screen *is* that shortlist.
+
+### What the screen says
+
+- **What it costs** — hard sets a week on that muscle, sessions, minutes, protein, effort,
+  consistency, sleep. Every row carries its source, and the two that are ours say so
+  ("Our judgement", "Arithmetic, not a finding").
+- **What your training is actually doing** — measured from logged sessions, not from the plan. A
+  programme promising 12 sets a week and a history containing 4 give different answers, which is
+  exactly the gap somebody asking "why am I not progressing" needs to see.
+- **Why progress stalls** — Tim's own idea from 2026-08-18, and the best one in that exchange. Six
+  reasons, **two the app can measure and four it admits it cannot**. The split is the whole value:
+  nothing here will tell you your training is the problem when it might be your sleep.
+- **Programmes that fit** — ranked on what each gives *that muscle*, not on its headline rating. A
+  programme rated 85 % for strength is the wrong answer to "I want a stronger bench" if it gives the
+  chest three sets a week. Your own systems are ranked alongside the ready-made ones.
+
+### ⚠️ Two things it deliberately does not do, and says so
+
+**No on-track verdict.** That is Phase 3 and it is gated on the estimator. A day-to-day strength
+estimate swings several percent on sleep, food and time of day, so a verdict off raw numbers would
+tell somebody they were behind because they had a bad Tuesday. The screen states that outright —
+a silent gap where "on track" belongs reads as a broken feature, and a guess would be worse than
+either. It also sets the expectation Tim asked for: when it arrives it will only say "behind" if
+reaching the goal has genuinely become unlikely.
+
+**Nothing reads the deadline to decide a weight.** §3.1 of the plan is the only failure mode in this
+app that could cause physical harm — load following a calendar pushes hardest on somebody who has
+just missed two weeks. There is a test that fails the moment anything scales a requirement by how far
+behind schedule somebody is: two goals with identical numbers and start dates eleven weeks apart must
+produce byte-identical requirements. Progression (Phase 4) stays decoupled and is deliberately last.
+
+### Three things the build decided that the plan did not
+
+- **The target weight is FROZEN.** A level is a percentile, and the weight behind it moves with body
+  weight, age and the comparison group (D20). Recomputing it would make a goal quietly harder because
+  somebody gained four pounds.
+- **The ambition bands are anchored, not round numbers.** The dose-response models put a well-run
+  programme's strength effect at ~17–20 % over ~10 weeks, so under 10 % is below what they predict at
+  the minimum dose, 10–25 % straddles a good programme, and over 25 % is past the average response
+  entirely. ⚠️ A consequence worth knowing: one level is a **12–31 %** jump, so from the exact median
+  there is **no Steady goal on offer** — the app says Committed rather than inventing a gentler option
+  that does not exist.
+- **⚠️ Effort does NOT scale with ambition**, departing from §10.4 of the plan. That table is right
+  for hypertrophy, but these are *strength* goals and the same paper found strength largely
+  indifferent to reps in reserve. Scaling a requirement on evidence that says it does not move the
+  outcome is the same error §10.1 caught with protein. So effort is stated once, at every band, with
+  the split named on screen.
+
+### Then Tim, mid-build
+
+> *"Right now by each workout system it shows the % optimal for strength and muscle growth. I want it
+> to also have 2 numbers that display the workouts per week, and the estimated duration per workout,
+> so they get a good summary of the system before they analyze it."*
+
+Done. The badge on Explore, on the Workouts list and on a system's own screen is now **four numbers
+in a 2×2 grid** — growth, strength, days/wk, min. A row of four measures ~180 px and would leave the
+programme's *name* with half the row on a phone, and Rule 3 says the name is the content.
+
+A ready-made system states its own minutes; one you typed states nothing, so those are **estimated**
+from the set count at ~3 min a set — and the cell's title says which, because "~70 min because the
+author said so" and "~70 min because we multiplied" are not the same claim. The days and minutes were
+also **removed from the Explore row summary**, where they used to be duplicated, which gives that line
+its width back. Programme names now wrap rather than clipping to "Volume Landmarks Hypertr…".
+
+### What the browser found that jsdom could not
+
+Driven over CDP at 360 / 390 / 1180 px in both themes, with a real mouse click to set the goal.
+
+- **A multi-word `.tag` split into two pills.** The background and both rounded ends are painted per
+  line box, so "grows with the goal" rendered as a chip reading GROWS above a chip reading WITH THE
+  GOAL — two unrelated labels. Fixed with `white-space: nowrap` on `.tag` app-wide, and confirmed
+  from `getClientRects()`, which is the only thing that tells you a chip occupies two line boxes.
+- **A phrase in the numeric column crushed the row.** "Within 1–2 reps of failure" in a column sized
+  for "7–10" took 300 px and squeezed the label beside it into a five-word-tall stripe.
+
+And one the unit tests found before any of that: `Number(null)` is `0`, which is finite — so "nothing
+recorded for this muscle since the goal was set" would have shown an estimate of **zero** and reported
+the whole starting weight as a loss.
+
+### One thing closed on the way past
+
+`progress.md` has warned in prose since the beginning that a collection added to `COLLECTIONS` and
+not to `knownCollection()` has every cloud write **denied** while localStorage keeps working —
+perfect on the machine it was written on, silently lossy for anyone signed in. Adding `goals` made
+that worth closing rather than re-reading, so **there is now a test comparing the two lists**, and it
+was mutation-checked: removing `'goals'` from the rules flips exactly that assertion. The rules were
+deployed to `fitness-tracker-th`.
+
+**All six suites green: data-layer (1051 + the new collections guard), goals (88), optimal, volume-map,
+social, and 280 render assertions.**

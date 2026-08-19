@@ -309,6 +309,11 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 /* The default row subtitle is one clipped line, which is right for a name but
    wrong for a sentence. `.wrap` is the sentence version. */
 .row-sub.wrap { white-space: normal; overflow: visible; line-height: 1.4; }
+/* Same for a title, and it is the programme lists that need it: the rating
+   badge takes real width off the row, and a clipped "Volume Landmarks
+   Hypertr..." trades the one thing that identifies the programme for the
+   ornament beside it. Rule 3 — the name is the content. */
+.row-title.wrap { white-space: normal; overflow: visible; line-height: 1.25; }
 .row-meta { flex: none; font-size: 12.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 /* A row that is information rather than a destination. */
 .row.static { cursor: default; align-items: flex-start; }
@@ -316,7 +321,14 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .row.static .row-title { white-space: normal; }
 .row.static .row-sub { white-space: normal; overflow: visible; line-height: 1.4; }
 
-/* Small inline label beside a title — "Added", and whatever comes next. */
+/* Small inline label beside a title — "Added", and whatever comes next.
+   ⚠️ nowrap is load-bearing once a tag holds more than one word. A pill is a
+   single object, and letting it break mid-phrase paints TWO pills — the
+   background and both rounded ends are drawn per line box, so "grows with the
+   goal" rendered as a chip reading "GROWS" above a chip reading "WITH THE
+   GOAL". It reads as two unrelated labels. Whole pill, dropped to the next
+   line. Confirmed from getClientRects(), which is the only thing that tells
+   you a chip occupies two line boxes. */
 .tag {
   margin-left: 7px;
   padding: 1px 7px;
@@ -328,6 +340,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   letter-spacing: .04em;
   text-transform: uppercase;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* How a ready-made system explains itself. Paragraphs, because these are
@@ -1728,27 +1741,43 @@ a.row { text-decoration: none; }
    Two numbers, never one — a programme good for growth is often not the one
    good for strength, and a blend would hide the trade. Right-aligned in the
    leftover space so the system's name stays the content (Rule 3). */
-.rating { display: flex; gap: 12px; flex: none; text-align: right; }
-.rating-cell { min-width: 42px; }
+/* A 2x2 GRID rather than one row, since the badge gained days and minutes
+   (Tim, 2026-08-19). Four cells side by side measure about 180px, which on a
+   390px phone would leave the system's NAME with half the row — and Rule 3 says
+   the name is the content and the badge is what goes in the leftover. Two rows
+   of two costs height the row already has and no width at all. */
+.rating {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(46px, auto));
+  gap: 3px 12px;
+  flex: none;
+  text-align: right;
+}
 .rating-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .rating-cap {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
   text-transform: uppercase; color: var(--ink-faint); margin-top: 1px;
+  /* One cap per line, always. "days/wk" breaking after the slash would put a
+     stray "wk" under a number and read as a fifth measurement. */
+  white-space: nowrap;
 }
 /* Below ~380px the summary and the rating fight for the row. The rating is the
-   newer thing but the name is the content, so the rating stacks under rather
+   newer thing but the name is the content, so the rating gives up size rather
    than squeezing the title into an ellipsis. */
 @media (max-width: 380px) {
-  .rating { gap: 9px; }
-  .rating-cell { min-width: 36px; }
+  .rating { gap: 3px 9px; grid-template-columns: repeat(2, minmax(40px, auto)); }
   .rating-num { font-size: 13.5px; }
+  .rating-cap { font-size: 9px; letter-spacing: 0.04em; }
 }
 
 /* The rating on a system the user built. Sits above the workout list because
    it describes the whole programme, and the badge aligns right so the heading
    stays the content (Rule 3). */
 .own-rating { margin-bottom: 6px; }
-.own-rating-head { display: flex; align-items: center; gap: 12px; }
+/* Top-aligned since the badge became two rows: centring left the heading
+   floating against the middle of a taller block, reading as neither its label
+   nor a caption for the row above. */
+.own-rating-head { display: flex; align-items: flex-start; gap: 12px; }
 .own-rating-head .section-label { flex: 1; min-width: 0; margin: 0; }
 
 /* "A new version is ready." Sits above the bottom nav, out of the way of the
@@ -1776,4 +1805,87 @@ a.row { text-decoration: none; }
 /* On desktop the nav is a left sidebar, so there is no bottom bar to clear. */
 @media (min-width: 880px) {
   .update-bar { bottom: 16px; left: auto; right: 16px; transform: none; }
+}
+
+/* ================= Goals =================
+   docs/goals-plan.md. Rule 2 still applies — no boxes. The one place this
+   screen leans harder than the rest of the app is the hero, because Rule 3 says
+   start with the most important thing as big as you can, and on a goal screen
+   that is the target itself rather than any of the numbers under it. */
+
+.goal-intro { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+.goal-intro-title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.goal-intro-body { margin: 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; }
+
+.goal-screen { display: flex; flex-direction: column; gap: 16px; }
+
+.goal-hero { display: flex; flex-direction: column; gap: 2px; }
+.goal-hero-level {
+  font-size: 11px; font-weight: 750; letter-spacing: 0.09em; text-transform: uppercase;
+}
+.goal-hero-lift { font-size: 25px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.goal-hero-meta {
+  display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
+  font-size: 14px; font-weight: 650; color: var(--ink-soft); margin-top: 2px;
+}
+.goal-hero-meta .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.goal-hero-dot { color: var(--ink-faint); }
+
+/* Three numbers side by side rather than in a bordered grid: the start, the
+   now and the target are one sentence read left to right, and the bar under
+   them is the same sentence drawn. */
+.goal-nums { display: flex; gap: 18px; }
+.goal-nums .stat { padding: 0; background: none; }
+.goal-progress { gap: 7px; }
+
+.goal-verdict { display: flex; flex-direction: column; gap: 6px; }
+.goal-verdict-body { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
+
+.goal-ambition { display: flex; align-items: baseline; gap: 9px; }
+.goal-ambition-name { font-size: 16px; font-weight: 700; }
+.goal-ambition-gain {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 14px; font-weight: 650; color: var(--accent);
+}
+
+/* A requirement is a statement, not a destination, so it wraps rather than
+   clipping and its value is right-aligned where a chevron would be. */
+.req-row, .stall-row { align-items: flex-start; cursor: default; }
+.req-row:active, .stall-row:active { background: none; }
+.req-row .row-title, .stall-row .row-title { white-space: normal; }
+.req-value {
+  flex: none; align-self: center;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 15px; font-weight: 650; text-align: right; min-width: 62px;
+}
+.req-source {
+  font-size: 10.5px; font-weight: 650; letter-spacing: 0.04em;
+  color: var(--ink-faint); margin-top: 3px;
+}
+/* A requirement whose answer is words rather than a number. It sits under the
+   label instead of in the tabular column — that column is sized for "7-10", and
+   a sentence dropped into it takes 300px and crushes the label beside it into a
+   five-word-tall stripe. */
+.req-phrase { font-size: 13.5px; font-weight: 650; color: var(--ink); margin-top: 1px; }
+
+/* Status is never colour alone — every row already states its number and its
+   sentence, and the tint is a second, redundant cue on top of both. */
+.stall-row.is-short .req-value { color: var(--danger); }
+.stall-row.is-ok .req-value { color: var(--good); }
+.stall-row.is-unknown .req-value, .stall-row.is-invisible .req-value { color: var(--ink-faint); }
+.stall-row.is-invisible .row-title { color: var(--ink-soft); }
+
+.goal-option .row-title { font-weight: 700; }
+.goal-option-gain {
+  flex: none; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 14.5px; font-weight: 650; color: var(--ink-soft);
+}
+
+/* Six tabs rather than five. Each is still an equal share of the bar, but the
+   label can no longer push the share wider than it is: without min-width:0 a
+   flex item refuses to shrink below its content, so the longest label would
+   silently widen its own tab and squeeze the rest. */
+.navbar a { min-width: 0; }
+.navbar a span {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }

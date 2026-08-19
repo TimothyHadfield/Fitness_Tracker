@@ -1032,6 +1032,32 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      gone.length ? `sw.js precaches files that do not exist: ${gone.join(', ')}`
                  : 'every file sw.js precaches actually exists');
 
+  /* ---- COLLECTIONS must agree with firestore.rules ---- */
+  // ⚠️ Same shape of trap as the precache list, and worse. `progress.md` has
+  // warned in prose since the beginning that a collection added to store.js and
+  // not to knownCollection() has every cloud write DENIED while localStorage
+  // keeps working — so it looks perfect on the machine it was written on and
+  // silently loses data for anyone signed in. It had never been a test. Adding
+  // `goals` on 2026-08-19 is what made that gap worth closing rather than
+  // re-reading the warning.
+  const storeSrc = fsMod.readFileSync(pathMod.join(up, 'js', 'store.js'), 'utf8');
+  const rulesSrc = fsMod.readFileSync(pathMod.join(up, 'firestore.rules'), 'utf8');
+  const names = (src, re) => {
+    const m = src.match(re);
+    return m ? [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort() : null;
+  };
+  const declared = names(storeSrc, /const COLLECTIONS = \[([^\]]*)\]/);
+  const allowed = names(rulesSrc, /function knownCollection\(name\) \{\s*return name in \[([^\]]*)\]/);
+
+  ok(declared && declared.length > 0, `store.js declares its collections (${declared && declared.length})`);
+  ok(allowed && allowed.length > 0, 'firestore.rules lists the ones it will accept');
+  ok(JSON.stringify(declared) === JSON.stringify(allowed),
+     declared && allowed && JSON.stringify(declared) !== JSON.stringify(allowed)
+       ? `COLLECTIONS and knownCollection() disagree: only in store.js `
+         + `[${declared.filter((c) => !allowed.includes(c))}], only in rules `
+         + `[${allowed.filter((c) => !declared.includes(c))}]`
+       : 'every collection store.js writes is one firestore.rules will accept');
+
   // Cross-origin must be left alone: Firestore streams over long-polling and
   // the SDK comes from gstatic. Caching either would break sync to no purpose.
   ok(/url\.origin !== self\.location\.origin/.test(sw),

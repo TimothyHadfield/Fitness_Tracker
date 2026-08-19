@@ -17,7 +17,7 @@ const NS = 'ftrack:v1:';
 
 // ⚠️ Adding a collection here also requires adding it to knownCollection() in
 // firestore.rules and redeploying, or every cloud write to it is denied.
-const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems'];
+const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals'];
 
 /* ------------------------------------------------------------------ *
  * Local backend
@@ -589,6 +589,63 @@ export const store = {
       return null;
     };
     return scan((s) => s.workoutId === workoutId) || scan(() => true);
+  },
+
+  /* --- goals --- */
+
+  // docs/goals-plan.md. A goal is a target LEVEL for one muscle over twelve
+  // weeks, with the target weight frozen at the moment it was set — see
+  // buildGoal() in js/goals.js for why recomputing it would be wrong.
+  //
+  // ⚠️ ONE ACTIVE GOAL AT A TIME, and that is a product decision rather than a
+  // storage one. Every requirement on the goal screen — sets, sessions, minutes,
+  // protein — is stated for THE goal. Two at once and "how many sets do I need"
+  // has two answers, which is exactly the kind of ambiguity this screen exists
+  // to remove. Old goals are kept rather than deleted: whether a target was hit
+  // is the most useful thing a person can know when setting the next one.
+  async getGoals() {
+    const rows = await backend.read('goals');
+    return rows
+      .filter((g) => g && g.id && g.muscle)
+      .sort((a, b) => String(b.startDate || '').localeCompare(String(a.startDate || '')));
+  },
+
+  async activeGoal() {
+    const rows = await this.getGoals();
+    return rows.find((g) => g.status === 'active') || null;
+  },
+
+  // Setting a goal ends whichever one was running. It is never a silent
+  // replacement — the view asks first — but the store guarantees the invariant
+  // rather than trusting every caller to remember it.
+  async setGoal(goal) {
+    const rows = await backend.read('goals');
+    const now = new Date().toISOString();
+    const row = {
+      ...goal,
+      id: goal.id || uid('goal'),
+      status: 'active',
+      createdAt: goal.createdAt || now,
+      updatedAt: now,
+    };
+    const others = rows.map((g) => (g.id === row.id || g.status !== 'active'
+      ? g
+      : { ...g, status: 'ended', endedAt: now, endedReason: 'replaced' }));
+    await backend.write('goals', upsert(others, row));
+    return row;
+  },
+
+  async endGoal(id, reason = 'ended') {
+    const rows = await backend.read('goals');
+    const now = new Date().toISOString();
+    await backend.write('goals', rows.map((g) => (g.id === id
+      ? { ...g, status: 'ended', endedAt: now, endedReason: reason }
+      : g)));
+  },
+
+  async deleteGoal(id) {
+    const rows = await backend.read('goals');
+    await backend.write('goals', rows.filter((g) => g.id !== id));
   },
 
   /* --- settings --- */
@@ -1735,6 +1792,83 @@ export async function benchmarkComparison(minPoints = 2) {
   }
 
   return { fields: Object.keys(byField), byField, incomplete };
+}
+
+/**
+ * How much work one muscle has ACTUALLY been getting, from logged sessions.
+ *
+ * docs/goals-plan.md §9.1. This is the measured half of the "why progress
+ * stalls" section — the two rows the app can put a number against, as opposed to
+ * the four it has to admit it cannot see.
+ *
+ * ⚠️ It reads SESSIONS, not workouts, and the difference is the whole point.
+ * `weeklyVolume()` is normally handed a programme — what you intend to do. Here
+ * it is handed what was recorded, so a plan promising 12 sets a week and a
+ * history containing 4 give different answers, which is precisely the gap
+ * somebody asking "why am I not progressing" needs to see.
+ *
+ * Returns null below a two-week span, for the same reason
+ * `observedDaysPerWeek()` does: a rate per week measured over four days is
+ * noise, and reporting it as a fact would be worse than saying nothing.
+ */
+export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
+  const [sessions, exMap, { weeklyVolume, volumeContributions }] = await Promise.all([
+    store.getSessions(), store.getExerciseMap(), import('./volume-map.js'),
+  ]);
+
+  const dayNum = (iso) => {
+    const [y, m, d] = String(iso).split('-').map(Number);
+    // Local midnight, split rather than parsed — new Date('2026-08-18') is UTC.
+    return y && m && d ? Math.floor(new Date(y, m - 1, d).getTime() / 86400000) : null;
+  };
+  const todayNum = dayNum(today || todayISO());
+  if (todayNum === null) return null;
+
+  const inWindow = sessions.filter((s) => {
+    const n = dayNum(s.date);
+    return n !== null && n <= todayNum && n > todayNum - windowDays;
+  });
+  if (!inWindow.length) return null;
+
+  const first = Math.min(...inWindow.map((s) => dayNum(s.date)));
+  const spanDays = todayNum - first + 1;
+  if (spanDays < 14) return null;
+  const weeks = spanDays / 7;
+
+  // One pseudo-workout per session, its "planned" set count being what was
+  // actually recorded. A set with no numbers in it was never done, and both save
+  // paths already drop those — this guards the older rows that predate that.
+  const asWorkouts = inWindow.map((s) => ({
+    exercises: (s.entries || []).map((e) => ({
+      exerciseId: e.exerciseId,
+      sets: (e.sets || []).filter((set) => set
+        && Object.values(set).some((v) => Number(v) > 0)).length,
+    })).filter((e) => e.sets > 0),
+  }));
+
+  const weeklySets = weeklyVolume(asWorkouts, exMap, weeks).get(muscle) || 0;
+
+  // A session counts toward frequency only if it held DIRECT work for the
+  // muscle — the same rule weeklyFrequency() uses. Counting indirect work would
+  // make every pressing day a back day because of the deadlift.
+  let direct = 0;
+  for (const s of inWindow) {
+    const hit = (s.entries || []).some((e) => {
+      const ex = exMap.get(e.exerciseId);
+      if (!ex) return false;
+      return volumeContributions(ex).some((c) => c.muscle === muscle && c.kind === 'direct');
+    });
+    if (hit) direct++;
+  }
+
+  return {
+    muscle,
+    weeklySets,
+    sessionsPerWeek: direct / weeks,
+    sessions: inWindow.length,
+    spanDays,
+    windowDays,
+  };
 }
 
 // Everything recorded on a given date.

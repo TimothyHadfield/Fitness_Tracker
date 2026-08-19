@@ -1068,15 +1068,41 @@ ok(!data.querySelector('.rep-target'),
   ok(badges.length === PRESET_SYSTEMS.length,
      `every ready-made system carries a rating (${badges.length} of ${PRESET_SYSTEMS.length})`);
 
-  const nums = [...screen.querySelectorAll('.rating-num')].map((n) => n.textContent);
-  ok(nums.length === PRESET_SYSTEMS.length * 2, 'two numbers each — growth and strength, never a blend');
-  ok(nums.every((t) => /^\d+%$/.test(t)), 'each is a plain percentage');
-  ok(nums.every((t) => Number(t.replace('%', '')) % 5 === 0),
-     'and every one is banded to 5 — the models explain a quarter of the variance');
-  ok(nums.every((t) => Number(t.replace('%', '')) <= 100), 'nothing exceeds 100 %');
+  // The badge carries FOUR cells since 2026-08-19 — two scores and two costs —
+  // so the score assertions are scoped by their caption rather than by
+  // position. A cell read by index would silently start checking days/week the
+  // next time the order changes.
+  const cellsOf = (badge) => [...badge.querySelectorAll('.rating-cell')].map((c) => ({
+    cap: c.querySelector('.rating-cap').textContent,
+    num: c.querySelector('.rating-num').textContent,
+  }));
+  const all = [...badges].flatMap(cellsOf);
+  const scores = all.filter((c) => c.cap === 'growth' || c.cap === 'strength');
 
-  const caps = [...screen.querySelectorAll('.rating-cap')].map((n) => n.textContent);
-  ok(caps.includes('growth') && caps.includes('strength'), 'each number is labelled with what it rates');
+  ok(scores.length === PRESET_SYSTEMS.length * 2,
+     'two scores each — growth and strength, never a blend');
+  ok(scores.every((c) => /^\d+%$/.test(c.num)), 'each is a plain percentage');
+  ok(scores.every((c) => Number(c.num.replace('%', '')) % 5 === 0),
+     'and every one is banded to 5 — the models explain a quarter of the variance');
+  ok(scores.every((c) => Number(c.num.replace('%', '')) <= 100), 'nothing exceeds 100 %');
+
+  // Tim, 2026-08-19: what a programme COSTS, beside how good it is.
+  const days = all.filter((c) => c.cap === 'days/wk');
+  const mins = all.filter((c) => c.cap === 'min');
+  ok(days.length === PRESET_SYSTEMS.length,
+     'every ready-made system also shows its training days a week');
+  ok(mins.length === PRESET_SYSTEMS.length, 'and roughly how long a session takes');
+  ok(days.every((c) => Number(c.num) > 0 && Number(c.num) <= 7),
+     'days are a real number of days');
+  ok(mins.every((c) => /^~\d+$/.test(c.num)),
+     'minutes are marked approximate — no programme takes exactly 75 minutes');
+
+  // ⚠️ The cost must never be duplicated in the row summary as well. It used to
+  // live there, and leaving it in both places takes width off the one line that
+  // says what the programme actually is.
+  const subs = [...screen.querySelectorAll('.row-sub')].map((n) => n.textContent).join(' ');
+  ok(!/days\/week/.test(subs),
+     'and the row summary no longer repeats the days, now that the badge carries them');
 
   // The number cannot be left to explain itself: 55 % reads as a bad mark
   // unless the reader is told what 100 % would mean.
@@ -1108,9 +1134,22 @@ ok(!data.querySelector('.rep-target'),
   const text = () => screen.textContent.replace(/\s+/g, ' ');
 
   ok(screen.querySelector('.own-rating'), 'a system you built yourself gets a rating too');
-  const nums = [...screen.querySelectorAll('.rating-num')].map((n) => n.textContent);
-  ok(nums.length === 2, 'the same two numbers as a ready-made one — growth and strength');
+  const cellText = (root, cap) => [...root.querySelectorAll('.rating-cell')]
+    .filter((c) => c.querySelector('.rating-cap').textContent === cap)
+    .map((c) => c.querySelector('.rating-num').textContent);
+  const nums = [...cellText(screen, 'growth'), ...cellText(screen, 'strength')];
+  ok(nums.length === 2, 'the same two scores as a ready-made one — growth and strength');
   ok(nums.every((t) => Number(t.replace('%', '')) % 5 === 0), 'banded the same way');
+  // ⚠️ A system the user typed declares no session length, so its minutes are
+  // ESTIMATED from the set count. Showing nothing at all would be worse on a
+  // summary badge, and showing it unmarked would be a claim the author never
+  // made — so it is there, and the title says which it is.
+  ok(cellText(screen, 'days/wk').length === 1 && cellText(screen, 'min').length === 1,
+     'and it carries days a week and a session length like a ready-made one does');
+  const minCell = [...screen.querySelectorAll('.rating-cell')]
+    .find((c) => c.querySelector('.rating-cap').textContent === 'min');
+  ok(/Estimated from the set count/.test(minCell.getAttribute('title') || ''),
+     'with the estimate declared as an estimate, not passed off as the author’s figure');
 
   // With no history it must say it is assuming, not quietly pretend to know.
   ok(/Assuming you train each workout once a week/.test(text()),
@@ -1139,9 +1178,11 @@ ok(!data.querySelector('.rep-target'),
      'one badge — the system with workouts in it, not the empty one');
   ok(/My Split/.test(listText) && /Nothing here/.test(listText),
      'while both systems are still listed');
-  const listNums = [...list.querySelectorAll('.rating-num')].map((n) => n.textContent);
+  const listNums = [...cellText(list, 'growth'), ...cellText(list, 'strength')];
   ok(listNums.length === 2 && listNums.every((t) => Number(t.replace('%', '')) % 5 === 0),
      'growth and strength, banded the same as everywhere else');
+  ok(cellText(list, 'days/wk').length === 1 && cellText(list, 'min').length === 1,
+     'and the cost beside them, so the list says what a programme asks before you open it');
   ok(/Upper · Lower|Lower · Upper/.test(listText),
      'and the workout names still show in full — the rating did not clip them away');
 
@@ -1179,6 +1220,116 @@ ok(!data.querySelector('.rep-target'),
   ok(friend instanceof Node, 'a friend screen mounts for an unknown uid');
   ok(/not connected|not switched on|real account/i.test(text(friend)),
      'and says so rather than rendering a blank profile');
+}
+
+/* ================= Goals ================= */
+// docs/goals-plan.md, Phases 1-2. The model itself is covered by
+// tests/goals.test.mjs; what this checks is that every screen mounts, that the
+// two states with nothing to show still offer a route out, and — the one that
+// matters most — that the screen SAYS it cannot give a verdict rather than
+// leaving a gap somebody reads as a broken feature.
+{
+  const { GoalsView, GoalRouteView } = await import(BASE + 'views-goals.js');
+  const { candidateGoals, buildGoal } = await import(BASE + 'goals.js');
+  const { muscleStrength, todayISO } = await import(BASE + 'store.js');
+  const text = (node) => node.textContent.replace(/\s+/g, ' ');
+
+  await store.clearAll();
+
+  // ---- nothing known about the person at all ----
+  let goals = await mount(GoalsView());
+  ok(goals.querySelector('.topbar'), 'Goals renders with a header');
+  ok(/gender|body weight/i.test(text(goals)),
+     'with no profile it names what is missing rather than showing an empty screen');
+  ok(goals.querySelector('a[href="#/profile"]'), 'and links straight to the profile');
+
+  // ---- profile, but nothing recorded ----
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-08-15');
+  goals = await mount(GoalsView());
+  ok(/Nothing to aim at yet/i.test(text(goals)),
+     'with a profile but no history it says there is nothing to aim at yet');
+  ok(goals.querySelector('a[href="#/benchmark"]'), 'and offers a way to fix that');
+  ok(/target, not a promise/i.test(text(goals)),
+     'and states before anything is chosen that a goal is not a promise');
+
+  // ---- something to rank ----
+  const b = byName('Barbell Bench Press');
+  await store.saveBenchmark({
+    date: '2026-08-15', exerciseId: b.id, exerciseName: b.name,
+    values: { weight: 205, reps: 3 },
+  });
+
+  const picker = await mount(GoalRouteView('new'));
+  ok(/Chest/.test(text(picker)), 'the picker lists a muscle that has something recorded');
+  ok(/Barbell Bench Press/.test(text(picker)), 'named by the lift it is measured against');
+  ok(/freezes the weight/i.test(text(picker)),
+     'and says the target weight is frozen, so changing the comparison later cannot move it');
+
+  const levels = await mount(GoalRouteView('new/Chest'));
+  const levelText = text(levels);
+  ok(/Proficient|Advanced|Expert|Elite/.test(levelText),
+     'choosing a muscle offers the levels above where it is now');
+  ok(/\+\d+%/.test(levelText), 'each with how far it reaches');
+  ok(/is a prediction/i.test(levelText),
+     'and repeats that none of them is a prediction, at the moment somebody commits');
+
+  // ---- a goal is running ----
+  const { muscles, profile } = await muscleStrength();
+  const chest = muscles.get('Chest');
+  const option = candidateGoals('Chest', chest.estimate, chest.percentile, profile)[0];
+  await store.setGoal(buildGoal({
+    muscle: 'Chest', level: option.level, targetWeight: option.targetWeight,
+    startWeight: chest.estimate, startPercentile: chest.percentile,
+    startLevelKey: chest.level ? chest.level.key : null,
+    startDate: todayISO(), liftName: chest.lift.name, comparison: 'men who lift',
+  }));
+
+  goals = await mount(GoalsView());
+  const live = text(goals);
+  ok(/Barbell Bench Press/.test(live), 'the tab now shows the goal');
+  ok(goals.querySelector('.to-next-fill'), 'with a progress bar');
+  ok(/12 weeks left|11 weeks left/.test(live), 'and how long is left');
+
+  // ⚠️ THE ONE THAT MATTERS. The verdict is gated on the estimator, and the
+  // screen has to say so — a silent gap where "on track" belongs reads as a
+  // broken feature, and a guess would be worse than either.
+  ok(/will not tell you yet/i.test(live),
+     'it states outright that it will not give an on-track verdict yet');
+  ok(/bad Tuesday/i.test(live), 'and why — a day-to-day estimate swings several percent');
+
+  // "behind" is allowed exactly once on this screen: inside the paragraph
+  // explaining why there is no verdict, and in the future tense. Strip that
+  // paragraph out and the word must be gone — otherwise something somewhere has
+  // started passing judgement on the reader's training.
+  const withoutVerdict = goals.cloneNode(true);
+  withoutVerdict.querySelectorAll('.goal-verdict').forEach((n) => n.remove());
+  ok(!/behind|on track|ahead of/i.test(text(withoutVerdict)),
+     'and no verdict language appears anywhere outside that explanation');
+
+  // Requirements, and the two that must not look like dials.
+  ok(/Hard sets a week/i.test(live), 'the requirements are on the screen');
+  ok(/g\b/.test(live) && /Protein/i.test(live), 'including a protein figure');
+  ok(/a bar, not a dial/i.test(live),
+     'with protein labelled a threshold rather than something more of buys more muscle');
+  ok(/cannot see either/i.test(live),
+     'and protein and sleep stated as conditions the app cannot measure');
+
+  const stalls = await mount(GoalRouteView('stalls'));
+  const stallText = text(stalls);
+  ok(/What the app can measure/i.test(stallText) && /What it cannot see/i.test(stallText),
+     'the stalls screen keeps the measurable and unmeasurable reasons apart');
+  ok(/reps-in-reserve|reps in reserve/i.test(stallText),
+     'and names the invisible one that matters most');
+  ok(stalls.querySelectorAll('.stall-row').length === 6, 'six reasons in all');
+
+  const fits = await mount(GoalRouteView('systems'));
+  const fitText = text(fits);
+  ok(/sets a week on Chest/i.test(fitText),
+     'the matching screen ranks programmes by what the goal muscle actually gets');
+  ok(fits.querySelectorAll('.row').length > 3, 'and lists the ready-made systems');
+
+  await store.clearAll();
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

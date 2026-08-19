@@ -76,6 +76,10 @@ const PATHS = {
   // Two people, the second half-behind the first. Deliberately not a speech
   // bubble or a heart: this section is people, not messages or approval.
   people: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.4a6.5 6.5 0 0 1 3.5 5.6',
+  // A bullseye: two rings and a centre. The centre is a stroked 1.2r circle
+  // rather than a filled dot, so it needs no fill exception the way `play`
+  // does and still reads as solid at 21px in the tab bar.
+  target: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0M13.2 12a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0',
 };
 
 export function icon(name, size) {

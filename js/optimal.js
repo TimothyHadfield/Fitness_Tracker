@@ -156,6 +156,36 @@ export function weeksForRotation(workoutCount, daysPerWeek, cycleDays) {
 }
 
 /**
+ * Minutes a working set costs, including the rest after it.
+ *
+ * ⚠️ ARITHMETIC, NOT A FINDING. The rest-interval literature is on the "still to
+ * pull" list (docs/research.md §6.8), so this is a stated assumption used to
+ * turn a set count into a time cost — three minutes being a set of 30–45
+ * seconds plus a rest in the range people actually take. Anything shown from it
+ * says it is an estimate. js/goals.js re-exports this rather than keeping a
+ * second copy, so the goal screen's minutes and a system's badge can never
+ * disagree.
+ */
+export const MINUTES_PER_SET = 3;
+
+/**
+ * Roughly how long one session of this programme takes, from its set count.
+ *
+ * Only used where the programme does not DECLARE a length. A ready-made system
+ * states its own minutes and that is a better number than any arithmetic — it
+ * comes from whoever wrote the programme. One the user typed states nothing,
+ * and "no idea" is a worse answer on a summary badge than a stated estimate.
+ */
+export function estimateMinutesPerSession(workouts) {
+  const list = (workouts || []).filter((w) => w && (w.exercises || []).length);
+  if (!list.length) return null;
+  const total = list.reduce((sum, w) => sum
+    + w.exercises.reduce((s, e) => s + (Number(e.sets) > 0 ? Number(e.sets) : 0), 0), 0);
+  if (!total) return null;
+  return Math.round((total / list.length) * MINUTES_PER_SET);
+}
+
+/**
  * Rate a programme.
  *
  * @param {Array} workouts  [{ exercises: [{ exerciseId, sets }] }]
@@ -208,6 +238,15 @@ export function rateProgramme(workouts, exMap, opts = {}) {
     perHour: weeklyMinutes > 0 ? hypertrophy / (weeklyMinutes / 60) : null,
     daysPerWeek,
     weeklyMinutes: weeklyMinutes || null,
+    // What one session costs, for the summary badge. Declared beats estimated
+    // and `minutesEstimated` says which it is, because "~70 min because the
+    // author said so" and "~70 min because we multiplied the sets by three" are
+    // not the same claim and the screen has to be able to tell them apart.
+    // ⚠️ `perHour` and `weeklyMinutes` above still use the DECLARED figure only.
+    // Folding an estimate into them would quietly change the efficiency reading
+    // of every system the user typed themselves.
+    minutesPerSession: minutes || estimateMinutesPerSession(workouts),
+    minutesEstimated: !minutes,
     // Muscles that never reach the minimum effective dose of 4 sets. Reported
     // in words rather than folded into the number, so "good programme that
     // skips calves" reads as exactly that.

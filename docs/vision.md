@@ -25,7 +25,7 @@
 | §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating now sits beside each one on Explore — **two numbers, growth and strength**, banded to 5 |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
 | §1.5 | Set types | **BUILT** 2026-08-17 — supersets, tri-sets, drop sets, myo-reps |
-| §1.6 | **Goals** | Added 2026-08-18. Planned in `docs/goals-plan.md`, nothing built. **Resolved the same day**: progression is decoupled from the goal and follows the ACSM 2-for-2 rule (§8), and the goals screen gains a *why progress stalls* section (§9). Gated on the estimator |
+| §1.6 | **Goals** | Added 2026-08-18, **BUILT 2026-08-19** as a sixth nav tab — Phases 1 and 2 of `docs/goals-plan.md`. Goals are strength LEVELS over twelve weeks, with what they cost, what your training is actually doing, why progress stalls, and which programmes fit. **The on-track verdict is not built and the screen says why** — it is gated on the estimator. Progression stays decoupled and follows the ACSM 2-for-2 rule (§8) |
 
 ---
 
@@ -324,7 +324,7 @@ expressed before. RIR and tempo remain deliberately absent (D9).
 could not even be *entered* before this, so the celebrity library had a ceiling. Nothing here
 collided with a locked decision.
 
-### 1.6 Goals — pick one, and the app aims everything at it
+### 1.6 Goals — pick one, and the app aims everything at it — **BUILT 2026-08-19, bar the verdict**
 
 Tim, 2026-08-18, in his words:
 
@@ -338,7 +338,14 @@ Tim, 2026-08-18, in his words:
 > lifts for less weight than the site has been suggesting, then on the goals menu, it will tell you
 > if you're on track, ahead, or behind to meet your goal."*
 
-**Planned, not built — `docs/goals-plan.md`.** It is the most coherent idea in this file: it joins
+**BUILT 2026-08-19 — Phases 1 and 2 of `docs/goals-plan.md`.** A sixth nav tab. Pick a muscle, pick
+a level above where it is, and the app states what that costs, what your logged training is actually
+delivering against it, why progress stalls, and which programmes give that muscle the volume the goal
+needs. **Two parts are deliberately absent**: the on-track verdict (Phase 3, gated on the estimator —
+and the screen says so in as many words rather than leaving a gap) and the progression change
+(Phase 4, last on purpose because it is the only part that can hurt somebody).
+
+It is the most coherent idea in this file: it joins
 the % optimal rating, the systems and progression into one loop, and every piece has a home already.
 Three of the four parts are well supported. Four things came out of the research:
 
@@ -380,8 +387,23 @@ what he had already guessed:
 
 **Where this collides:** **D1** (§3.3 of the plan) and Tim's own warning in §1.2 above — *"silent
 adjustment is the kind of thing that destroys trust if it is wrong once"* — which the plan adopts as
-propose-never-impose. It is also gated on the **strength estimator**, the same thing §1.2's second
+propose-never-impose. The verdict is gated on the **strength estimator**, the same thing §1.2's second
 half waits on.
+
+**What building it changed, 2026-08-19.** Three things were decided in the build that the plan did
+not settle, and all three are recorded in `docs/goals-plan.md` §11:
+
+- **Effort does NOT scale with ambition**, which departs from §10.4 of the plan. That table is right
+  for hypertrophy — sets closer to failure build more muscle — but these goals are *strength* levels,
+  and the same paper found strength largely indifferent to reps in reserve. Scaling a requirement on
+  evidence that says it does not move the outcome is the same error §10.1 caught with protein.
+- **The ambition bands are anchored on the dose-response's own predicted effect sizes** (~17–20 %
+  strength gain over ~10 weeks), not on round numbers. One level is a 12–31 % jump, so from the exact
+  median there is no cheap goal on offer — and the app says Committed rather than inventing a gentler
+  option that does not exist.
+- **The target WEIGHT is frozen when the goal is set.** A level is a percentile, and the weight behind
+  it moves with body weight, age and the comparison group (D20). Recomputing it would make a goal
+  quietly harder because somebody gained four pounds.
 
 ---
 

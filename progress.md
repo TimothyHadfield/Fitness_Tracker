@@ -4,10 +4,10 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-19
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
-end. Five nav tabs: Home, Workouts, Calendar, Data, **Social**.
+end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
 
 The app works with **no network** (D6), records weights in **lbs or kg**, has a rest timer, lets a
 workout be logged for another day, lets a past record be edited from the calendar, and can mark a
@@ -36,6 +36,17 @@ desaturates the colour, and the **comparison group is the user's choice**.
 **Neither chart mode is a dead end**: where there is not enough history to draw a line, they list
 where every lift stands right now.
 
+**GOALS is built** (2026-08-19). A goal is one muscle moving up a **strength level** over twelve
+weeks — never a predicted number of pounds, because a 12-week gain cannot be predicted for an
+individual. The screen states what the goal costs (sets, sessions, minutes, protein, effort, sleep),
+what your logged training is *actually* delivering against it, **why progress stalls** with the two
+measurable causes kept apart from the four invisible ones, and which programmes give that muscle the
+volume the goal needs. ⚠️ **It gives no on-track verdict, and says so on screen** — that is gated on
+the estimator.
+
+**Every system now shows what it COSTS beside how good it is** — days a week and minutes a session,
+in the same badge as the growth and strength percentages, on Explore and on the Workouts list.
+
 ---
 
 ## Open work — start here
@@ -44,14 +55,16 @@ where every lift stands right now.
 
 1. **`docs/strength-estimate-plan.md`, Phase 0 — the estimator and its simulator.** Pure maths, a
    simulator, no UI. **Blocked on nothing, and it is now the gate on four separate things:** the last
-   unbuilt half of `docs/vision.md` §1.2 (suggesting weights and reps), the whole **Goals** feature's
-   on-track verdict (`docs/goals-plan.md`), and the two known accuracy gaps in §9 of this file. Its
-   constants in `js/muscle-evidence.js` are reasoned, not fitted; fitting them is the work.
+   unbuilt half of `docs/vision.md` §1.2 (suggesting weights and reps), the **Goals verdict** — the
+   one visible hole in a feature that is otherwise finished and shipped — and the two known accuracy
+   gaps in §9 of this file. Its constants in `js/muscle-evidence.js` are reasoned, not fitted;
+   fitting them is the work. **This is now the single highest-value thing left in the project.**
 
-2. **Goals — `docs/goals-plan.md`.** Planned 2026-08-18 in detail, nothing built. Read **§8** (the
-   progression rule), **§9** (the *why progress stalls* section) and **§10** (what may and may not
-   scale with goal ambition). Phase order is in §6. Everything except the verdict could be built
-   before the estimator; the verdict cannot.
+2. **Goals Phase 4 — progression.** `docs/goals-plan.md` §8 has the whole rule already (double
+   progression, the ACSM 2-for-2 rule, the smallest increment inside 2–10 %, and say so when no
+   honest increment exists). It needs no estimator. It is deliberately last because it is **the only
+   part of this app that could cause physical harm** — and §3.1 is the reason: nothing may raise a
+   weight because a deadline is approaching. Propose, never impose.
 
 3. **Social: get two accounts to connect.** Every screen is built and driven, but only against a
    stubbed facade. The round trip — invite, open as somebody else, claim, accept, publish, read — has
@@ -66,9 +79,9 @@ where every lift stands right now.
 6. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
    itself is finished. Still the biggest untested risk; simply not the next thing. Don't raise it.
 
-**`docs/vision.md` is nearly empty.** Four of its six ideas are BUILT (§1.1 social, §1.3 ready-made
-systems + the rating, §1.4 the comparison setting, §1.5 set types). §1.2 is half built and waits on
-the estimator. §1.6 (goals) is planned, not built.
+**`docs/vision.md` is empty of unstarted work.** Five of its six ideas are BUILT (§1.1 social, §1.3
+ready-made systems + the rating, §1.4 the comparison setting, §1.5 set types, §1.6 goals). §1.2 is
+half built and §1.6's verdict is the one hole in it — both wait on the same estimator.
 
 | | |
 |---|---|
@@ -79,7 +92,8 @@ the estimator. §1.6 (goals) is planned, not built.
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
 | **Rating tests** | `node tests/optimal.test.mjs` — 44 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 215 assertions, mounts every screen |
+| **Goals tests** | `node tests/goals.test.mjs` — 88 assertions, **no dependencies**. The requirements model, and **the two things Goals refuses to do**: read the calendar to decide what it asks of you, and emit a verdict |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 280 assertions, mounts every screen |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -210,7 +224,8 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to no screen yet |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
-| `docs/goals-plan.md` | **Goals** (`docs/vision.md` §1.6), planned 2026-08-18, nothing built. **§3 is the section to read** — four problems, one of them serious: raising weights to hit a deadline would hand heavier weights to somebody who has missed two weeks, which is backwards and is the only thing in this project that could cause physical harm. Also: a 12-week gain cannot be predicted for an individual (0–250 % spread), and protein collides with D1 |
+| `js/goals.js` | Not a doc. **Read its header before touching Goals**: it explains why a goal is a LEVEL and not a predicted number of pounds, why the target weight is FROZEN when the goal is set, and the two things the module refuses to do — read the deadline to decide what it asks of you, and emit a verdict |
+| `docs/goals-plan.md` | **Goals** (`docs/vision.md` §1.6). **Phases 1–2 BUILT 2026-08-19 — §11 records what the build decided that the plan did not.** **§3 is still the section to read** — four problems, one serious: raising weights to hit a deadline would hand heavier weights to somebody who has missed two weeks, which is backwards and is the only thing in this project that could cause physical harm. §8 is the progression rule Phase 4 needs. §10 is what may and may not scale with ambition — and §11.4 records where the build departed from it |
 | `docs/optimal-rating-plan.md` | **The "% optimal" rating** (`docs/vision.md` §1.3), planned 2026-08-18. **§2 is the part to read** — the evidence says frequency does *not* independently drive hypertrophy, so a rating must not reward training more days; and the models explain only ~a quarter of the variance, which is why the output is a band, never a point |
 | `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |
 | `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
@@ -250,7 +265,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
 | **Seeing a deploy** | ⚠️ `sw.js` is stale-while-revalidate, so **the load right after a deploy serves the OLD app** and the change appears on the one after. That is deliberate (a hand-maintained cache version can freeze someone forever; this self-heals) but it is indistinguishable from a broken feature — Tim hit it and reported a rating as missing when it had shipped. Since 2026-08-18 the worker compares ETag/Last-Modified on revalidation and the page shows **"A new version is ready · Refresh"**. It OFFERS, never reloads: reloading unasked is right almost always and catastrophic once, mid-set with numbers unsaved |
-| **The "% optimal" rating** | **Two numbers beside every system — growth and strength** — on the Workouts list, on Explore, and on a system's own screen. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts in it shows no rating rather than a 0 %. `js/optimal.js` |
+| **The "% optimal" rating** | **Four numbers beside every system since 2026-08-19 — growth, strength, days a week and minutes a session** (Tim: the percentages say how *good* a programme is and nothing about what it *costs*, which is the first thing you want before opening it). A ready-made system states its own minutes; one you typed has them **estimated** from the set count at ~3 min a set, and the cell's title says which. Two numbers — on the Workouts list, on Explore, and on a system's own screen. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts in it shows no rating rather than a 0 %. `js/optimal.js` |
 | **Ready-made systems** | Workouts → **Explore ready-made systems**, and **each one now carries a rating** — two numbers, **growth** and **strength**, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength). Banded to 5, never a point, because the source models explain about a quarter of the variance. The screen states what 100 % would mean, that the numbers assume training close to failure, and that **more days is not itself better for growth**. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md`. |
 | **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
@@ -272,6 +287,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
+| **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
@@ -285,11 +301,28 @@ Press-and-hold repeats.
 ### Verified
 
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **88 goals assertions** (`tests/goals.test.mjs`, no dependencies) — and the two that matter are
+  **refusals**, the same shape as `optimal.test.mjs`'s three. ⚠️ **Nothing reads the calendar to
+  decide what is asked of you**: two goals with identical numbers and start dates eleven weeks apart
+  must produce byte-identical requirements, with a companion assertion that a bigger *jump* does move
+  the band, so the first cannot pass vacuously. That test fails the moment anything scales a
+  requirement by how far behind schedule somebody is — which is `docs/goals-plan.md` §3.1, the only
+  thing in this app that could cause physical harm. ⚠️ **And no verdict**: `goalProgress()` for
+  somebody four days from the end having added nothing carries no key matching
+  `verdict|behind|ahead|status`. Also pinned: 0.73 g/lb converts to the published 1.62 g/kg and 1.0
+  to 2.2; protein is the SAME at Steady and Committed, which is what proves it is a threshold rather
+  than a dial; the sleep and effort text is byte-identical across every band; and the stall walk has
+  a **vacuity guard** — the same walk over adequate training must read OK
 - **1051 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
-- **215 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
+- **⚠️ `COLLECTIONS` in `store.js` is now checked against `knownCollection()` in `firestore.rules`.**
+  This file has warned in prose since the beginning that adding a collection to one and not the other
+  has every cloud write DENIED while localStorage keeps working — perfect on the machine it was
+  written on, silently lossy for anyone signed in. It was never a test until `goals` was added on
+  2026-08-19. **Mutation-checked**: removing `'goals'` from the rules flips exactly that assertion
+- **280 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
   opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
   correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
   one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
@@ -343,6 +376,17 @@ Press-and-hold repeats.
   rather than a walk looking in the wrong place. Also asserted: an email address handed straight to
   the builder never reaches the output, body weight stays out even at full unless separately enabled,
   and a stored tier that is not recognised degrades to the *safest* value rather than the nearest
+- **The Goals screens driven in a real browser over CDP** — 2026-08-19, at 360 / 390 / 1180 px in
+  both themes, against a scratch copy with the config blanked. Seen: the empty state, both picker
+  steps, a goal set with a **real mouse click** on a level, all four scroll positions of the goal
+  screen, the stalls screen and the programme matcher. **Two defects came out of it and neither was
+  visible to jsdom.** A multi-word `.tag` **split into two pills** — the background and both rounded
+  ends are painted per line box, so "grows with the goal" rendered as a chip reading GROWS above a
+  chip reading WITH THE GOAL, reading as two unrelated labels; fixed with `white-space: nowrap` on
+  `.tag` app-wide and confirmed from `getClientRects()`, which is the only thing that tells you a
+  chip occupies two line boxes. And a **phrase dropped into the numeric column** — "Within 1–2 reps
+  of failure" in a column sized for "7–10" took 300 px and squeezed the label beside it into a
+  five-word-tall stripe. Also confirmed here: six nav tabs fit at 360 px with no label clipped
 - **The Social screens driven in a real browser over CDP** — 2026-08-18, at 390 and 1180 px in both
   themes, against a scratch copy whose `social` facade is stubbed, so nothing touched the live
   project and no account was created. Seen: the friends list with all four visibility settings, the
@@ -427,6 +471,12 @@ Fitness_Tracker/
 │   ├── set-types.js            supersets/tri-sets (grouping) and drop sets
 │   │                           (nesting) — pure. Owns the walk the runner
 │   │                           follows and the one-drop-set-is-one-hard-set rule
+│   ├── goals.js                GOALS — pure. A goal is a LEVEL, never a predicted
+│   │                           number of pounds. Refuses two things: reading the
+│   │                           deadline to decide what it asks of you (that
+│   │                           would push hardest on somebody coming back from
+│   │                           a lay-off), and emitting an on-track verdict
+│   │                           (gated on the estimator)
 │   ├── social.js               VISIBILITY TIERS + the projection builder — pure.
 │   │                           NOT WIRED TO ANY SCREEN. Sharing publishes a
 │   │                           derived copy; it never widens a permission on
@@ -455,6 +505,8 @@ Fitness_Tracker/
 │   ├── views-social.js         the Social tab, a friend's page, accepting an
 │   │                           invite. Reads ONLY published copies — it cannot
 │   │                           reach anybody's private data even if it tries
+│   ├── views-goals.js          the Goals tab, the two-step picker, why progress
+│   │                           stalls, and programmes that fit the goal
 │   ├── views-edit-session.js   editing a workout already recorded (calendar → day → pencil)
 │   ├── views-profile.js        gender, birth year, body weight
 │   ├── views-account.js        account, sign-in, upgrade-from-anonymous
@@ -463,11 +515,14 @@ Fitness_Tracker/
 ├── tests/
 │   ├── data-layer.test.mjs     1051 assertions, no dependencies
 │   ├── social.test.mjs         73 assertions, no dependencies — what is SHARED
+│   ├── goals.test.mjs          88 assertions, no dependencies — the requirements
+│   │                           model, and the two REFUSALS
 │   ├── rules.test.mjs          who may READ it. Needs the emulator.
 │   │                           ⚠️ WRITTEN, NEVER RUN — social-plan.md §7.1
-│   └── render.test.mjs         215 jsdom assertions — mounts every screen
-└── docs/  spec.md · research.md · vision.md · strength-map-plan.md
-         strength-estimate-plan.md · firebase-setup.md · competitive-teardown.html
+│   └── render.test.mjs         280 jsdom assertions — mounts every screen
+└── docs/  spec.md · research.md · vision.md · strength-map-plan.md · goals-plan.md
+         strength-estimate-plan.md · optimal-rating-plan.md · social-plan.md
+         firebase-setup.md · competitive-teardown.html
 ```
 
 ### Key patterns
@@ -570,6 +625,17 @@ Benchmark   id, date, exerciseId, exerciseName, values{}, sourceSessionId?
             ── sourceSessionId set = DERIVED from a benchmark workout, and rebuilt
                from that session on every save. Absent = entered by hand, never touched.
 BodyWeight  id, date, weight, createdAt          ← one row per weigh-in
+Goal        id, muscle, liftName, targetLevel, targetLevelName, targetPercentile,
+            targetWeight, startWeight, startPercentile, startLevel, startDate,
+            endDate, ambition, gainPct, comparison, status, endedReason?
+            ── ⚠️ targetWeight is FROZEN in pounds, never recomputed. A level is
+               a PERCENTILE, and the weight behind it moves with body weight, age
+               and the comparison group (D20) — so recomputing it would make a
+               goal quietly harder because somebody gained four pounds. The
+               comparison it was computed against is stored alongside it and the
+               picker says so.
+            ── One row has status 'active' at a time; store.setGoal() ends any
+               other. Old goals are kept, never deleted.
 Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 ```
 
@@ -579,7 +645,8 @@ Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 
 ⚠️ **Adding a collection to `COLLECTIONS` also requires adding it to `knownCollection()` in
 `firestore.rules` and redeploying**, or every cloud write to it is denied while localStorage keeps
-working — invisible until someone signs in.
+working — invisible until someone signs in. **Since 2026-08-19 a test compares the two lists** and
+fails if they disagree, so only the *redeploy* is still on you. `goals` is in both and is deployed.
 
 ⚠️ **Adding a `js/` module also requires adding it to the precache list in `sw.js`.** There is a test
 that fails if you don't (`sw.js precache is missing: …`), which is how `js/social.js` was caught the
@@ -718,10 +785,13 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 locked decision — it would narrow D14, and D14 is locked, so it needs Tim's say-so first. §10 has
 the question. Nothing else is missing from this table.
 
-**D26 is a proposal in `docs/goals-plan.md` §10.5**, ratified in conversation by Tim on 2026-08-18
-and locking when built: *the app may RECOMMEND a protein range with its citation, but may not track
-food, hold a food database, or ask what anybody ate.* It narrows **D1** the way D21 narrowed D15 —
-D1's reasoning was about tracking, and none of it applies to one cited number on a goal screen.
+**D26 is LOCKED as of 2026-08-19**, having been ratified by Tim on 2026-08-18 and built the next
+day: *the app may RECOMMEND a protein range with its citation, but may not track food, hold a food
+database, or ask what anybody ate.* It narrows **D1** the way D21 narrowed D15 — D1's reasoning was
+about tracking, and none of it applies to one cited number on a goal screen. The Goals screen shows a
+daily gram figure from body weight, cites Morton 2018, and labels it *"a bar, not a dial"* rather
+than *"grows with the goal"*, because the same meta-analysis found more protein above the breakpoint
+does nothing. Nothing anywhere asks what anybody ate.
 
 **D24 and D25 are proposals too, in `docs/social-plan.md`**, and are not in the table for the same
 reason — nothing is built, so nothing is decided. D24: *sharing publishes a derived copy and never
@@ -802,11 +872,11 @@ being a differentiator.
 - Post-session check-in feeding next week's volume
 - Deload prompting; equipment-aware substitution
 
-**Beyond the roadmap — `docs/vision.md`.** Tim's running list, and **nearly all of it is now built**.
-BUILT: **social** (§1.1), **ready-made systems and the "% optimal" rating** (§1.3), the **"Compared
-to:" setting** (§1.4) and **set types** (§1.5). HALF BUILT: **smart systems** (§1.2) — Home suggests
-*which workout*; the weights and reps wait on the estimator. PLANNED, NOT BUILT: **goals** (§1.6),
-added 2026-08-18, `docs/goals-plan.md`.
+**Beyond the roadmap — `docs/vision.md`.** Tim's running list, and **all six ideas are started and
+five are finished**. BUILT: **social** (§1.1), **ready-made systems and the "% optimal" rating**
+(§1.3), the **"Compared to:" setting** (§1.4), **set types** (§1.5) and **goals** (§1.6, built
+2026-08-19). HALF BUILT: **smart systems** (§1.2) — Home suggests *which workout*; the weights and
+reps wait on the estimator, which is also the one hole left in §1.6.
 
 **Three of the six collided with a locked decision, and every one was resolved rather than ignored:**
 an "all people" comparison narrowed **D15** into **D21**; social was expected to collide with **D7**
@@ -946,15 +1016,18 @@ re-examining it produces something better than either the old rule or a plain ov
 
 *The short version is the **Open work** list at the top of this file. This section is the long one.*
 
-0. **GOALS — `docs/goals-plan.md`, planned 2026-08-18, nothing built.** Tim's biggest idea: pick a
-   three-month strength goal, see what it costs (sessions, sets, time, protein, sleep), have the app
-   match a system to it, and be told on track / ahead / behind. **Read §8, §9 and §10 of that plan
-   before touching it** — three things were resolved in conversation that are not obvious:
-   progression is **decoupled from the goal** and follows the ACSM 2-for-2 rule; the goals screen
-   carries a **why progress stalls** section whose value is separating what the app can measure from
-   what it cannot; and **only volume, time, frequency, effort and consistency scale with ambition** —
-   protein is a threshold and sleep cannot be scaled at all. **D26** (recommend protein, never track
-   it) narrows D1 and was ratified by Tim.
+0. **GOALS — BUILT 2026-08-19**, Phases 1 and 2 of `docs/goals-plan.md`. Pick a three-month strength
+   goal, see what it costs, see what your logged training is actually doing against it, read why
+   progress stalls, and find a programme that fits. **Two things are left.** The **verdict**
+   (Phase 3) waits on the estimator — the screen states that outright rather than leaving a gap that
+   reads as a broken feature. **Progression** (Phase 4) waits on nothing but is deliberately last,
+   because it is the only part of this app that can hurt somebody; §8 of the plan already has the
+   whole rule. **Read §11 of that plan before touching Goals** — it records three things the build
+   decided that the plan did not: the target weight is **frozen** when a goal is set, the ambition
+   bands are anchored on the dose-response's own predicted effect sizes, and **effort does NOT scale
+   with ambition**, which departs from §10.4 because these are strength goals and strength is
+   largely indifferent to reps in reserve.
+
 1. **The simulator** — `docs/strength-estimate-plan.md` §11, Phase 0. **Blocked on nothing, and now
    the highest-value thing left.** `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
@@ -1006,9 +1079,7 @@ re-examining it produces something better than either the old rule or a plain ov
    **Precedent worth citing when asking:** D15 was narrowed the same way on 2026-08-17 (see D21), and
    D1 was narrowed on 2026-08-18 (see D26) — each time the objection turned out to be about a
    specific model rather than about the idea.
-2. **Goals as levels, or as a rate?** `docs/goals-plan.md` §7. Recommendation: **levels** — the app
-   already computes them and already adjusts for body weight, sex and age, so a level goal makes no
-   prediction at all, which side-steps the 0–250 % individual variation problem entirely.
+*(Question 2, goals as levels or as a rate, is answered — see below.)*
 
 **Answered, so nobody re-asks:**
 
@@ -1017,6 +1088,10 @@ re-examining it produces something better than either the old rule or a plain ov
 - ~~The "% optimal" rating: one number or two?~~ **Two** — growth and strength, rated separately.
 - ~~What does 100 % mean?~~ **The most the evidence supports**, not the best system in the library.
 - ~~May the app recommend protein?~~ **Yes** (D26) — recommend with a citation, never track.
+- ~~Goals as levels, or as a rate?~~ **LEVELS**, which was the recommendation, taken without asking
+  under the working agreement and built on 2026-08-19. A level makes no prediction at all, which is
+  the only framing the 0–250 % individual variation leaves standing. A rate could still be added
+  beside it later if Tim wants one.
 
 One to raise if the Muscles map gets used in anger: whether to expose **raw e1RM** as a chart mode
 alongside normalised equivalent load. Lean is no — normalised load keeps numbers in units the user

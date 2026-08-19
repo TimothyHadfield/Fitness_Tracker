@@ -3,7 +3,11 @@
 > `docs/vision.md` §1.6. Tim, 2026-08-18. **Nothing here is built.** He asked for the research first
 > and for problems to be raised rather than smoothed over, so §3 is the important section.
 
-**Status:** plan · **Written:** 2026-08-18 · **Blocked on:** one decision (§7) and the estimator
+**Status:** **PHASES 1 AND 2 BUILT 2026-08-19** — see **§11**, which records three things decided in
+the build rather than in this plan (the frozen target weight, the ambition calibration, and effort
+NOT scaling, which departs from §10.4). Phase 3 (the verdict) is still gated on the estimator and
+Phase 4 (progression) is deliberately last.
+· **Written:** 2026-08-18
 
 **Revised the same day** after Tim's reply — see **§8** (progression, decoupled from the goal, with
 the ACSM rule and the numbers behind "adding weight is usually too much") and **§9** (goals revised:
@@ -203,10 +207,11 @@ This works today and needs nothing new.
 **Phase 0 — the estimator.** `docs/strength-estimate-plan.md` Phase 0. Nothing about the verdict is
 trustworthy without it. Blocked on nothing and already the project's top open item.
 
-**Phase 1 — goals as levels.** Pick a goal (§4A), store it with a start date and a three-month
-horizon, show its requirements. No verdict yet, no progression changes.
+**Phase 1 — goals as levels. BUILT 2026-08-19.** Pick a goal (§4A), store it with a start date and a
+three-month horizon, show its requirements. No verdict yet, no progression changes.
 
-**Phase 2 — matching.** Sort systems by the goal (§5).
+**Phase 2 — matching. BUILT 2026-08-19.** Sort systems by the goal (§5) — on the goal MUSCLE's weekly
+sets rather than on the headline rating; §11.5.
 
 **Phase 3 — the verdict.** On track / ahead / behind / too early to say, computed against the
 estimator's band.
@@ -218,10 +223,12 @@ Deliberately last, because it is the only part that can hurt somebody.
 
 ## 7. Questions for Tim
 
-1. **Narrow D1 to allow a protein *recommendation*?** No tracking, no food database — one cited range
-   on the goal screen. Recommendation: yes, and record it as a new decision the way D21 narrowed D15.
-2. **Goals as levels, or as a rate?** §4. Recommendation: **levels** first — the app already computes
-   them, they are already adjusted for the individual, and they make no prediction at all.
+1. ~~**Narrow D1 to allow a protein *recommendation*?**~~ **ANSWERED** — yes, ratified by Tim
+   2026-08-18 and recorded as **D26** (§10.5). Locked by the build on 2026-08-19.
+2. ~~**Goals as levels, or as a rate?**~~ **ANSWERED by building it: LEVELS**, which was the
+   recommendation. Taken without asking under the working agreement — the app already computes them,
+   they are already adjusted for the individual, and they make no prediction at all, which is the
+   only framing §2.3 leaves standing. A rate remains buildable later beside them if Tim wants it.
 
 Neither blocks Phase 0, which is the estimator either way.
 
@@ -407,3 +414,110 @@ Tim: *"a protein recommendation is good. It doesn't tell the user to track it on
 anything."* Same narrowing shape as D15 → D21: D1's reasoning was about *tracking* — an unwinnable
 food-database problem against uncrippled free competitors — and none of that applies to one cited
 range on a goal screen. Locks when built, like D24 and D25.
+
+---
+
+## 11. Built — 2026-08-19
+
+**Phases 1 and 2 are shipped.** Phase 3 (the verdict) and Phase 4 (progression) are not, and both
+absences are stated on screen rather than left as gaps.
+
+| File | What it is |
+|---|---|
+| `js/goals.js` | The model — pure maths, no DOM, no store, clock passed in. Ambition bands, the requirements, candidate goals, the frozen goal, progress, the stall reasons, the programme ranking |
+| `js/views-goals.js` | The tab and its three sub-screens |
+| `tests/goals.test.mjs` | **88 assertions, no dependencies** |
+| `js/store.js` | A `goals` collection, plus `trainingForMuscle()` — the measured half of §9.1 |
+| `firestore.rules` | `goals` added to `knownCollection()` and **deployed** |
+
+### 11.1 The shape
+
+**One active goal at a time.** Every requirement on the screen is stated for *the* goal; two at once
+and "how many sets do I need" has two answers, which is the ambiguity this screen exists to remove.
+Old goals are kept rather than deleted — whether a target was hit is the most useful thing a person
+has when setting the next one.
+
+Two screens to pick: **which muscle**, then **which level**. That gives every combination without a
+fabricated shortlist of "3–5 goals", and the second screen *is* that shortlist.
+
+### 11.2 ⚠️ The target weight is FROZEN, and this was not in the plan
+
+A level is a percentile. The weight behind it moves with body weight, with age, and with the
+comparison group the user picked (D20). Recomputing it would mean a goal getting quietly harder
+because somebody gained four pounds, or easier because they switched the comparison to "everyone".
+The weight, the level name and the comparison it was computed against are all stored at the moment
+the goal is set, and the picker says so.
+
+### 11.3 ⚠️ Ambition is DERIVED from the goal, and the bands are anchored
+
+A separate "how hard do you want to try" dial beside a target saying "reach Proficient" is two
+controls for one decision and they can disagree. Ambition is the size of the jump: the required
+increase in estimated max.
+
+The boundaries — 10 % and 25 % — are ours, but not arbitrary. The meta-regressions in `research.md`
+§6 put the strength effect of a well-dosed programme at roughly **17–20 % over interventions
+averaging 10.4 weeks**, and `js/optimal.js` already reproduces both curves. So under 10 % is below
+what those models predict even at the minimum dose; 10–25 % straddles a well-run programme; over
+25 % is past the average response in that literature entirely. That calibrates how much the app
+*asks of you* and predicts nothing about the reader — §2.3's 0–250 % is exactly why.
+
+⚠️ **A consequence worth knowing before anyone reports it as a bug:** one level is a **12–31 %** jump
+in estimated max, so from the exact median there is **no Steady goal on offer at all** — even the
+next level up is Committed. The app says so rather than inventing a gentler option that does not
+exist. Somebody two percentiles short of the next level does get a Steady one.
+
+### 11.4 ⚠️ Effort does not scale — a deliberate departure from §10.4
+
+§10.4 lists effort as scaling with ambition, and for **hypertrophy** it is right: sets closer to
+failure build more muscle. But these goals are **strength levels**, and the same paper found strength
+**largely indifferent to reps in reserve** (`research.md` §6.7). Scaling a requirement by ambition on
+evidence saying it does not move the outcome would be the same error §10.1 caught with protein.
+
+So effort is stated **once**, at every band, with the split named on screen: near-failure sets clearly
+build more muscle, and the strength evidence is largely indifferent to how close you go. Sleep is
+likewise identical at every band (§10.3), and protein moves between two values for the reason in
+§10.2 — margin, not more growth — and is labelled *"a bar, not a dial"* rather than *"grows with the
+goal"*.
+
+### 11.5 Matching (§5) ranks on the goal muscle, not the headline
+
+The rating's two percentages are averages over eleven muscles. A programme rated 85 % for strength is
+the wrong answer to "I want a stronger bench" if it gives the chest three sets a week. `rankSystems()`
+sorts on the goal muscle's fractional weekly sets against the requirement band, breaking ties on the
+overall strength score, and labels each row *fits / more than the goal asks / under / below the
+minimum effective dose*. The user's own systems are ranked alongside the ready-made ones — somebody
+already following a programme should find out whether it delivers, not be handed a shopping list.
+
+### 11.6 What the tests pin
+
+Two of them are **refusals**, and they are the same shape as the three in `tests/optimal.test.mjs`:
+
+- **Nothing reads the calendar to decide what is asked.** Two goals with identical numbers and start
+  dates eleven weeks apart must produce byte-identical requirements, with a companion assertion that
+  a bigger *jump* does move the band — so the first one cannot pass vacuously. This fails the moment
+  anything starts scaling a requirement by how far behind schedule somebody is, which is §3.1.
+- **No verdict.** `goalProgress()` for somebody four days from the end having added nothing must
+  carry no key matching `verdict|behind|ahead|status`, and the render suite strips the paragraph that
+  explains the missing verdict and asserts the words appear nowhere else on the screen.
+
+Plus: the set bands sit inside published efficiency tiers, protein is the same at Steady and
+Committed (proving it is not a dial), 0.73 g/lb converts to the published 1.62 g/kg and 1.0 to 2.2,
+sleep and effort text is byte-identical across bands, the stall walk has a **vacuity guard** (the
+same walk over adequate training must read OK), and a programme inside the band beats one rated 35
+points higher overall.
+
+### 11.7 Two defects the browser found and jsdom could not
+
+Driven over CDP at 360 / 390 / 1180 px in both themes, per `progress.md` §0.6.
+
+- **A multi-word `.tag` split into two pills.** The background and both rounded ends are painted per
+  line box, so "grows with the goal" rendered as a chip reading GROWS above a chip reading WITH THE
+  GOAL — two unrelated labels. `white-space: nowrap` on `.tag`, app-wide. Confirmed from
+  `getClientRects()`, which is the only thing that tells you a chip occupies two line boxes.
+- **A phrase in the numeric column crushed the row.** "Within 1–2 reps of failure" in a column sized
+  for "7–10" took 300 px and squeezed the label beside it into a five-word-tall stripe. Requirements
+  now carry `phrase: true`, and those render under the label instead.
+
+And one bug the unit tests found: `Number(null)` is `0`, which is finite — so "nothing recorded for
+this muscle since the goal was set" would have shown an estimate of **zero** and reported the whole
+starting weight as a loss.

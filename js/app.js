@@ -12,6 +12,7 @@ import { AccountView, SignInView } from './views-account.js';
 import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
 import { SocialView, FriendView, InviteView } from './views-social.js';
+import { GoalsView, GoalRouteView } from './views-goals.js';
 import { setUnits } from './units.js';
 
 const NAV = [
@@ -21,13 +22,18 @@ const NAV = [
   // Route stays #/graphs; only the label changed. Renaming the hash would
   // break nothing visible and churn the router for no user-facing gain.
   { hash: '#/graphs',   label: 'Data',     icon: 'chart' },
+  // Goals sits between Data and Social on purpose: it is about your own
+  // training, like everything to its left, and Social is the only tab that is
+  // about anybody else. It goes here rather than at the end so the boundary in
+  // the bar matches the boundary in the app.
+  { hash: '#/goals',    label: 'Goals',    icon: 'target' },
   { hash: '#/social',   label: 'Social',   icon: 'people' },
 ];
 
 // Routes that take over the whole screen (no bottom nav).
 // `friend` and `invite` are here but `social` is NOT: Social is a tab, and the
-// two screens you reach FROM it are not.
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite'];
+// two screens you reach FROM it are not. `goal` and `goals` are the same pair.
+const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -73,6 +79,11 @@ async function resolve(route) {
     case 'signin':    return SignInView();
     case 'profile':   return ProfileView();
     case 'social':    return SocialView();
+    case 'goals':     return GoalsView();
+    // #/goal/new, #/goal/new/<muscle>, #/goal/stalls, #/goal/systems — the
+    // whole tail is passed through and dispatched there, the same way `invite`
+    // keeps its two-part parameter together.
+    case 'goal':      return GoalRouteView(route.param);
     case 'friend':    return FriendView(route.param);
     // #/invite/<ownerUid>/<token> — the whole param is passed through, because
     // parse() joins the rest back together and the token is the second half.
