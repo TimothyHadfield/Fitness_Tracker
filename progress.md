@@ -96,7 +96,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1051 assertions, **no dependencies** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1069 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
 | **Rating tests** | `node tests/optimal.test.mjs` — 44 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
@@ -295,7 +295,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence, not the biggest** — it used to pick its top three by converted weight, so a face pull outvoted an overhead press benchmark and rated the lifter Elite; see §9. Three different exercises at most, one seat each. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
 | **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
@@ -312,6 +312,14 @@ Press-and-hold repeats.
 ### Verified
 
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **The ranking model's five new regression assertions** (`tests/data-layer.test.mjs`) — the ones
+  that were missing. ⚠️ **1051 assertions ran green over this bug for two months**, and the reason is
+  worth knowing: every multi-observation test used three DIFFERENT exercise ids with estimates a
+  couple of pounds apart, so neither half of the fault could show — not one exercise filling every
+  slot, and not a flattering conversion outvoting a credible one. The new ones use the shapes real
+  data produces: a low-quality high-rep observation beside a high-quality benchmark, and one exercise
+  logged on more days than another. **Mutation-checked** — reverting the sort line flips exactly
+  those five and nothing else
 - **53 demo assertions** (`tests/demo.test.mjs`, no dependencies) — and the two that matter are
   **determinism** and **plausibility**. The same day must build a byte-identical year, with a
   companion check that a different day *does* move it so the first is not vacuous; that is what makes
@@ -338,7 +346,7 @@ Press-and-hold repeats.
   to 2.2; protein is the SAME at Steady and Committed, which is what proves it is a threshold rather
   than a dial; the sleep and effort text is byte-identical across every band; and the stall walk has
   a **vacuity guard** — the same walk over adequate training must read OK
-- **1051 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1069 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
@@ -542,7 +550,7 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     1051 assertions, no dependencies
+│   ├── data-layer.test.mjs     1069 assertions, no dependencies
 │   ├── social.test.mjs         73 assertions, no dependencies — what is SHARED
 │   ├── goals.test.mjs          88 assertions, no dependencies — the requirements
 │   │                           model, and the two REFUSALS
@@ -946,31 +954,49 @@ re-examining it produces something better than either the old rule or a plain ov
   Dumbbell swaps of barbell lifts are solid; **machines are the weak case**, because gearing varies
   by brand and two "machine shoulder press" numbers may not describe the same resistance at all.
   Machine conversions carry a quality of 0.35–0.45 for exactly that reason.
-- **High-rep isolation work can still overstate a LEVEL.** A seated calf raise at 180×12 estimates a
-  417 lb standing calf raise and reads Elite off one set. Two inflations stack: the e1RM formula
-  extrapolating from 12 reps, and the seated→standing conversion. The screen says all of it — Fair
-  confidence, "1 session counted", and the 12-rep warning — but the level still says Elite. Fixing it
-  properly means either per-exercise spread (σ is one value for every lift today, and
-  `strength-standards.js` already flags that isolation work is probably wider) or shrinking high-rep
-  estimates. Neither should be guessed at without the simulator that `docs/strength-estimate-plan.md`
-  §11 describes.
+- ~~**A muscle was rated by its most FLATTERING evidence rather than its most credible.**~~
+  **FIXED 2026-08-19**, and it was the worst defect in the ranking model. `rateMuscle()` picked its
+  top three observations by **estimate**, so the single biggest converted number set the rating no
+  matter how little it was worth believing — while `evidenceWeight`, the number this module exists to
+  compute, was used only to average the winners afterwards. Measured on a year of ordinary training:
+  a 50 lb face pull for 15 reps (quality 0.25, weight **0.06**) beat an overhead press **benchmark**
+  (quality 1.00, three reps, weight **~1.00**) and rated the lifter **Elite, 99th percentile** on
+  shoulders, beside a Proficient chest. A sixteen-fold credibility inversion.
 
-  ⚠️ **The demo account made this concrete on 2026-08-19, and it is worth reading as a worked
-  example rather than a hypothetical.** A completely ordinary lifter — 190×6 bench, 245 squat,
-  305 deadlift, 115 overhead press — reads **Shoulders: Elite, 99th percentile**, next to a
-  Proficient chest. The whole of it comes from raise-type work: a 55 lb face pull for 15 and a
-  20 lb-per-hand lateral raise for 13. Both are converted at **ratio 0.30 with quality 0.25** in
-  `js/muscle-evidence.js`, and 0.30 is not unreasonable at *working weights* — 40 lb of lateral raise
-  against a 115 lb press really is about a third. The inflation is entirely in the REPS: a 13-rep
-  isolation set extrapolates to a 1RM far more aggressively than an 8-rep press does, so the
-  converted figure comes out at 250–320 lb of "overhead press" against an actual 145. And because
-  `rateMuscle()` takes the best estimate, the inflated one wins over the real press every time.
-  Two things follow. First, **the fix is not the ratio** — lowering it would break the working-weight
-  case to patch the high-rep one. It is either capping how far an isolation set may be extrapolated,
-  or giving isolation lifts their own σ, and §11's simulator is what would say which. Second,
-  **`rateMuscle()` taking the maximum is doing real damage here**: a direct, low-rep, high-quality
-  observation of the actual key lift loses to a converted high-rep one. That is worth revisiting
-  independently of the estimator.
+  ⚠️ **It was not a shoulders quirk — eight of eleven muscles had it**, and in every case the top
+  three slots were filled by *the same exercise on three different days*. So the file's own claim
+  that "averaging across DIFFERENT exercises cancels out error in any one ratio" had never once been
+  true, and the `agreement` term — which exists to ask whether independent readings corroborate each
+  other — was comparing an exercise against itself, finding perfect agreement, and pushing confidence
+  UP precisely where there was no second opinion at all.
+
+  Three changes, all of them restoring stated intent rather than inventing policy: **one seat per
+  exercise** in the top three, **ranked by credibility rather than by size** (ties broken on the
+  bigger estimate, so the upper-estimator character survives *within* a level of credibility), and
+  **depth measured over all admissible evidence** rather than over the three that won. The results on
+  the same year: Shoulders **Elite 99 % → Proficient 71 %** and now led by the actual overhead press;
+  Hamstrings led by the Romanian deadlift instead of a leg curl; Calves by the calf raise they
+  currently train instead of one dropped six months ago; every muscle inside a coherent 54–76 % band.
+  **Mutation-checked** — reverting the sort flips exactly the five new assertions and nothing else.
+
+- **The high-rep extrapolation itself is NOT fixed, and still wants the simulator.** What changed is
+  which evidence gets to *lead*; what did not change is that a 13-rep isolation set still converts to
+  an unshrunk 1RM. Three residuals, in descending order of how much they matter:
+  - A low-credibility conversion still **nudges** the number. The face pull above no longer sets the
+    shoulder rating but still adds about 9 % to it, because the aggregate is a weighted mean and the
+    outlier sits at twice the credible estimate. Bounding that means a robust estimator with a
+    tuning parameter, which is exactly what `docs/strength-estimate-plan.md` §11 is for.
+  - Where a muscle's **only** evidence is high-rep isolation, the level is still that unshrunk
+    conversion. The original example stands unchanged: a seated calf raise at 180×12 estimates a
+    417 lb standing calf raise and reads Elite off one set. Confidence is Low and the screen says so,
+    but the level does not move.
+  - A **single mistyped number** on a lift still defines that lift's contribution, because the
+    representative for an exercise is its best showing. That is also what makes a genuine PR count,
+    and telling the two apart needs a model of plausible progression — the same simulator.
+
+  Fixing any of these properly means either per-exercise spread (σ is one value for every lift today,
+  and `strength-standards.js` already flags that isolation work is probably wider) or shrinking
+  high-rep estimates toward the credible consensus. Neither should be guessed at.
 - **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
@@ -1078,12 +1104,14 @@ re-examining it produces something better than either the old rule or a plain ov
    largely indifferent to reps in reserve.
 
 1. **The simulator** — `docs/strength-estimate-plan.md` §11, Phase 0. **Blocked on nothing, and now
-   the highest-value thing left.** ⚠️ **The demo account handed it a concrete first target on
-   2026-08-19**: an ordinary lifter reads **Shoulders Elite** off a lateral raise and a face pull,
-   because a 13-rep isolation set extrapolates to a 1RM far harder than an 8-rep press does. §9 has
-   the full worked example, and it points at two separable questions — how far an isolation set may
-   honestly be extrapolated, and whether `rateMuscle()` should be taking the maximum at all when a
-   direct low-rep observation of the key lift is available.** `js/muscle-evidence.js` shipped a real confidence model whose
+   the highest-value thing left.** The demo account handed it a concrete target on 2026-08-19, and
+   **half of it turned out not to need the simulator at all**: `rateMuscle()` was selecting evidence
+   by size rather than by credibility, which is a design fault and was fixed the same day (§9). What
+   is left IS the simulator's: how far a high-rep isolation set may honestly be extrapolated, and
+   whether the aggregate should be robust to an outlier rather than a plain weighted mean. §9 lists
+   the three residuals. **Worth taking as a lesson before the next one** — the project's standing
+   position was that none of this could be touched without the simulator, and a third of it was a
+   sort order. `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
    closed by guessing at numbers. A simulator turns both into measurements.
 2. ~~**Tim opens the app on a real phone.**~~ **DEFERRED — Tim, 2026-08-17: "I don't want to work on

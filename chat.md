@@ -3497,3 +3497,92 @@ right at all when a direct low-rep observation of the key lift exists. Both want
 
 **All seven suites green: data-layer, demo (53), goals (88), optimal, volume-map, social, and 292
 render assertions.**
+
+---
+
+## 2026-08-19 (later still) — fixing what the demo found
+
+Tim: *"do you wanna try going in depth to fix the bug the demo found?"*
+
+The question worth settling first was **how much of it needed the estimator**. `progress.md` §9 has
+said for weeks that this class of problem "should not be guessed at without the simulator". That
+turned out to be true of part of it and completely untrue of the rest.
+
+### What was actually wrong
+
+`rateMuscle()` sorted its candidate observations by **`estimate`** — the converted number — and took
+the top three. `evidenceWeight`, the value this module exists to compute, was used only to *average*
+the winners afterwards. So the most flattering conversion set the rating regardless of what it was
+worth believing.
+
+Running the demo year through the real pipeline made the scale of it obvious:
+
+```
+Shoulders  295lb Elite  99%  1 distinct of 3
+   <- Face Pull 50x15 w=0.06 | Face Pull 50x14 w=0.06 | Face Pull 50x14 w=0.06
+```
+
+A weight-0.06 face pull beating a weight-1.00 overhead press **benchmark**. A sixteen-fold
+credibility inversion — and the file's own comment on the raise rule claimed they were admitted "at a
+quality that stops them ever outvoting a press."
+
+⚠️ **And "1 distinct of 3" was true of eight of the eleven muscles.** Every slot filled by the same
+exercise on three different days. So the other claim in that file — "averaging across DIFFERENT
+exercises is what cancels out error in any one ratio" — had never been true either. Worse, the
+`agreement` term was therefore comparing an exercise against itself, finding perfect agreement, and
+pushing confidence **up** exactly where there was no second opinion at all.
+
+### Three changes, all restoring stated intent
+
+- **One seat per exercise** in the top three. The representative is that exercise's best showing, so
+  the upper-estimator character survives where it belongs.
+- **Ranked by credibility, not by size.** Ties break on the bigger estimate, so a better showing
+  still wins *within* a level of credibility rather than across it.
+- **Depth measured over all admissible evidence**, not over the three that won — its own definition
+  is "how much evidence is there", and computing it from the winners never measured that. Somebody
+  who has squatted sixty times used to score the same as somebody who squatted three.
+
+None of that needed a number fitted from data. It needed the selection rule to respect the
+credibility the module was already computing.
+
+### The result on the same year
+
+| | before | after |
+|---|---|---|
+| Shoulders | **Elite, 99 %** off a face pull | **Proficient, 71 %** off the overhead press |
+| Chest | 288 lb off an incline dumbbell press | 251 lb, led by the bench benchmark |
+| Hamstrings | Advanced 88 % off a leg curl | Proficient 68 %, led by the Romanian deadlift |
+| Calves | led by a lift dropped six months ago | led by the calf raise they currently train |
+
+Every muscle now sits in a coherent 54–76 % band instead of Elite next to Novice. Verified from
+**computed styles**, not by eye: every Proficient muscle paints the identical hue, with chroma
+varying by confidence as designed.
+
+### ⚠️ Why 1051 assertions missed it
+
+Every multi-observation test in the suite used three *different* exercise ids with estimates a couple
+of pounds apart. Neither half of the fault could show up in that shape. The five new tests use the
+shapes real data produces — a low-quality high-rep observation beside a high-quality benchmark, and
+one exercise logged on more days than another — and were **mutation-checked**: reverting the sort
+line flips exactly those five and nothing else. The mutation run also printed the old answer for the
+record: a 145 lb press rated **321**.
+
+### What is still broken, and honestly is the simulator's
+
+The high-rep extrapolation itself is untouched. Three residuals, recorded in §9:
+
+- A low-credibility conversion still **nudges** the number — the face pull no longer sets the
+  shoulder rating but still adds ~9 % to it, because the aggregate is a weighted mean and the outlier
+  sits at twice the credible estimate. Bounding that means a robust estimator with a tuning
+  parameter.
+- Where a muscle's **only** evidence is high-rep isolation, the level is still that unshrunk
+  conversion. §9's original example — a seated calf raise reading Elite off one set — stands.
+- A **single mistyped number** still defines that exercise's contribution. So does a genuine PR, and
+  telling them apart needs a model of plausible progression.
+
+**The lesson worth keeping:** the standing position was that none of this could be touched without
+the simulator, and a third of it was a sort order. Check which half of a problem is calibration and
+which is design before deferring the whole thing.
+
+**All seven suites green: data-layer (1069), demo, goals, optimal, volume-map, social, and 292 render
+assertions.**

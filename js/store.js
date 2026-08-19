@@ -1578,6 +1578,10 @@ export async function muscleStrength() {
       basis: rating.kind,
       contributors: rating.used,
       contributorCount: rating.contributorCount,
+      // How many DIFFERENT exercises had a say, as opposed to how many sessions
+      // were counted. The two used to be conflated, and the difference is the
+      // whole of whether a reading is corroborated.
+      exerciseCount: rating.exerciseCount,
       newestAgeDays: rating.newestAgeDays,
       hint: raiseConfidenceHint(muscle, rating),
       // Kept for the panel, which still wants to show a real recorded set

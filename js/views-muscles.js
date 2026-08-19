@@ -259,9 +259,17 @@ function isChosen(axis, key, current, profile) {
 // should be able to look at a washed-out muscle, tap it, and find the bar short.
 function confidenceRow(m) {
   const pct = Math.round(m.confidence * 100);
-  const sources = m.contributorCount === 1
+  // Sessions AND exercises, because they answer different questions and the
+  // panel used to imply the first was the second. "40 sessions counted" reads
+  // as a well-corroborated number; "40 sessions counted, all of one exercise"
+  // is the honest version of the same fact, and it is the one that explains why
+  // the confidence bar beside it is not full.
+  const sessions = m.contributorCount === 1
     ? '1 session counted'
     : `${m.contributorCount} sessions counted`;
+  const sources = m.exerciseCount > 1
+    ? `${sessions} across ${m.exerciseCount} exercises`
+    : sessions;
   return el('div', { class: 'conf-row' },
     el('div', { class: 'conf-head' },
       el('span', { class: 'conf-label', text: 'Confidence' }),

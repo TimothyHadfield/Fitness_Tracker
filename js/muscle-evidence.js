@@ -397,11 +397,17 @@ const BENCHMARK_BONUS = 1.25;
  * Rating a muscle
  * ------------------------------------------------------------------ */
 
-// How many of the best observations the estimate is built from. One would let a
-// single mistyped number define a muscle forever; averaging everything would be
-// dragged down by every warm-up and every easy day. Best-of-3 is the standard
-// robust upper estimator, and averaging across DIFFERENT exercises is also what
-// cancels out error in any one ratio.
+// How many exercises the estimate is built from. One would let a single
+// mistyped number define a muscle forever; averaging everything would be
+// dragged down by every warm-up and every easy day.
+//
+// ⚠️ THREE EXERCISES, NOT THREE SETS, and that distinction was a real bug for
+// two months. This comment used to end "averaging across DIFFERENT exercises is
+// also what cancels out error in any one ratio" — and nothing in the code made
+// the three different. Running a year of ordinary training through it, EIGHT of
+// eleven muscles had all three slots filled by the same exercise on three
+// different days, so the error in that one ratio was never cancelled by
+// anything; it was averaged with itself. See rateMuscle().
 const TOP_N = 3;
 
 function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
@@ -414,18 +420,34 @@ function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
 //   depth     — how much admissible evidence there is
 //   agreement — do the contributing exercises tell the same story?
 //   freshness — how long ago was the newest of them?
-function confidenceOf(used) {
+function confidenceOf(used, all) {
   if (!used.length) return 0;
   const wsum = used.reduce((a, u) => a + u.evidenceWeight, 0);
   if (!(wsum > 0)) return 0;
 
   const quality = used.reduce((a, u) => a + u.quality * u.evidenceWeight, 0) / wsum;
-  const depth = 1 - Math.exp(-wsum / 1.5);
+
+  // ⚠️ DEPTH IS MEASURED OVER EVERYTHING ADMISSIBLE, not over the three that
+  // set the number. Its own definition is "how much admissible evidence there
+  // is", and computing it from the top three never measured that — somebody who
+  // has squatted sixty times scored the same as somebody who squatted three
+  // times, because both had three slots filled. It saturates, and saturating is
+  // right: past a certain amount of history, "more of it" stops being the thing
+  // holding the estimate back.
+  const total = (all || used).reduce((a, u) => a + u.evidenceWeight, 0);
+  const depth = 1 - Math.exp(-total / 1.5);
 
   // Spread of the estimates in log space, so it reads as a percentage
-  // disagreement rather than an absolute one. A lone observation cannot
-  // corroborate itself, so it is capped rather than scored — this is the
-  // closest thing available to the RIR field the app deliberately does not have.
+  // disagreement rather than an absolute one.
+  //
+  // ⚠️ This term is only meaningful because `used` now holds DIFFERENT
+  // exercises. Before that it was routinely handed the same exercise three
+  // times, which agrees with itself perfectly — so the term that exists to ask
+  // "do independent readings corroborate each other?" was reporting near-perfect
+  // corroboration precisely when there was none, and pushing confidence UP. One
+  // exercise cannot corroborate itself, so it is capped rather than scored, and
+  // that is the closest thing available to the RIR field the app deliberately
+  // does not have.
   let agreement = 0.55;
   if (used.length > 1) {
     const logs = used.map((u) => Math.log(u.estimate));
@@ -478,17 +500,59 @@ export function rateMuscle(observations) {
   })).filter((o) => o.evidenceWeight > 0);
   if (!scored.length) return null;
 
-  scored.sort((a, b) => b.estimate - a.estimate);
-  const used = scored.slice(0, TOP_N);
+  // ── One representative per EXERCISE ──────────────────────────────────────
+  // Its best showing: within a single exercise, the heaviest honest set is the
+  // thing worth knowing, and that has always been the intent. What is new is
+  // that an exercise now gets ONE seat rather than as many as it has days.
+  const perExercise = new Map();
+  for (const o of scored) {
+    const prev = perExercise.get(o.exerciseId);
+    if (!prev || o.estimate > prev.estimate) perExercise.set(o.exerciseId, o);
+  }
+
+  // ── ⚠️ RANKED BY CREDIBILITY, NOT BY SIZE ────────────────────────────────
+  //
+  // This line is the fix. It used to sort by `estimate`, which meant the single
+  // most FLATTERING conversion set the rating no matter how little it was worth
+  // believing — and `evidenceWeight`, the number this module computes precisely
+  // to say how much an observation is worth, was used only to average the
+  // winners afterwards.
+  //
+  // What that did in practice, measured on a year of ordinary training: a
+  // 50 lb face pull for 15 reps (quality 0.25, extrapolated from the very top of
+  // the rankable rep range, evidence weight 0.06) beat an overhead press
+  // BENCHMARK (quality 1.00, three reps, weight ~1.00) and rated the lifter's
+  // shoulders Elite, 99th percentile, next to a Proficient chest. A sixteen-fold
+  // credibility inversion, and it was not a shoulders quirk — the same thing
+  // happened to eight of eleven muscles.
+  //
+  // The rule this restores is one the file already claimed on line 157 about
+  // raises and rear-delt work: admitted "at a quality that stops them ever
+  // outvoting a press". They were outvoting the press. Now they cannot: the
+  // press is ranked first because it is more credible, and the raise still
+  // contributes, weighted by what it is worth.
+  //
+  // Ties break on the larger estimate, so between two equally credible readings
+  // the better showing still wins — the upper-estimator character is kept where
+  // it belongs, WITHIN a level of credibility rather than across it.
+  const candidates = [...perExercise.values()]
+    .sort((a, b) => (b.evidenceWeight - a.evidenceWeight) || (b.estimate - a.estimate));
+
+  const used = candidates.slice(0, TOP_N);
   const wsum = used.reduce((a, u) => a + u.evidenceWeight, 0);
   const estimate = used.reduce((a, u) => a + u.estimate * u.evidenceWeight, 0) / wsum;
 
   return {
     estimate,
-    confidence: confidenceOf(used),
+    confidence: confidenceOf(used, scored),
     used,
     kind,
     contributorCount: scored.length,
+    // How many DIFFERENT exercises had a say. One is not a failure — plenty of
+    // people bench and do nothing else for chest — but it is the difference
+    // between a corroborated reading and an uncorroborated one, so the panel
+    // gets to say which it is looking at.
+    exerciseCount: perExercise.size,
     newestAgeDays: Math.min(...scored.map((o) => o.ageDays)),
   };
 }
@@ -537,6 +601,18 @@ export function raiseConfidenceHint(muscle, rating) {
   }
   if (rating.contributorCount < 2) {
     return 'Only one session counts so far. A second would confirm it.';
+  }
+  // ⚠️ This one only became sayable once `used` held distinct exercises. Before
+  // that, three days of the same lift filled every slot and looked — to the
+  // agreement term and to anyone reading the panel — like three independent
+  // readings corroborating each other. Now the panel can name the real
+  // limitation: plenty of evidence, none of it a second opinion.
+  if (rating.exerciseCount < 2) {
+    const only = rating.used[0] && rating.used[0].exerciseName;
+    return only
+      ? `Everything here comes from ${only}. A different ${muscle.toLowerCase()} exercise would `
+        + 'give it something to agree with.'
+      : `Only one exercise counts toward this. A different ${muscle.toLowerCase()} exercise would confirm it.`;
   }
   const bestQuality = Math.max(...rating.used.map((u) => u.quality));
   if (bestQuality < 0.8 && keyLift) {

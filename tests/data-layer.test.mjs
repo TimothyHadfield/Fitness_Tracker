@@ -1498,6 +1498,74 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(oneDay.contributorCount === 1, 'three sets of one exercise on one day are one observation');
   ok(near(oneDay.estimate, 120, 1e-9), 'and it is the best of them');
 
+  /* ================================================================== *
+   * ⚠️ CREDIBILITY, NOT SIZE — the bug the demo account exposed
+   *
+   * These are the tests that were missing. Every assertion above uses three
+   * DIFFERENT exerciseIds with estimates a couple of pounds apart, so neither
+   * half of the fault could ever show: not one exercise filling every slot, and
+   * not a flattering conversion outvoting a credible one. 1051 assertions ran
+   * green over both for two months.
+   * ================================================================== */
+
+  // The shoulders case, reduced to its bones. A face pull at the top of the
+  // rankable rep range converts to a far bigger overhead press than the press
+  // itself measures — and it is worth a sixteenth as much. The press has to win.
+  const inversion = me.rateMuscle([
+    obs({ estimate: 145, quality: 1.00, reps: 3, exerciseId: 'press', isBenchmark: true }),
+    obs({ estimate: 324, quality: 0.25, reps: 15, exerciseId: 'facepull', date: '2026-08-16' }),
+    obs({ estimate: 320, quality: 0.25, reps: 15, exerciseId: 'facepull', date: '2026-08-15' }),
+    obs({ estimate: 318, quality: 0.25, reps: 15, exerciseId: 'facepull', date: '2026-08-14' }),
+  ]);
+  ok(inversion.used[0].exerciseId === 'press',
+     'the most CREDIBLE observation leads the rating, not the biggest one');
+  ok(inversion.estimate < 200,
+     `so a 145 lb press is not rated 300 by a face pull (${Math.round(inversion.estimate)} lb)`);
+  ok(inversion.estimate > 145,
+     'though the raise still counts for something — it is weighted down, not thrown away');
+
+  // The other half: one exercise may not occupy every seat. The whole reason
+  // for averaging three is to cancel error in any one ratio, and three readings
+  // of the same exercise cancel nothing.
+  const crowded = me.rateMuscle([
+    obs({ estimate: 300, quality: 0.3, exerciseId: 'iso', date: '2026-08-17' }),
+    obs({ estimate: 299, quality: 0.3, exerciseId: 'iso', date: '2026-08-16' }),
+    obs({ estimate: 298, quality: 0.3, exerciseId: 'iso', date: '2026-08-15' }),
+    obs({ estimate: 200, quality: 1.0, exerciseId: 'key' }),
+  ]);
+  ok(new Set(crowded.used.map((u) => u.exerciseId)).size === crowded.used.length,
+     'no exercise appears twice among the observations that set the rating');
+  ok(crowded.used.some((u) => u.exerciseId === 'key'),
+     'and an exercise cannot be crowded out by another one logged on more days');
+  ok(crowded.exerciseCount === 2, 'the rating says how many different exercises had a say');
+
+  // ⚠️ Repetition is not corroboration, and it used to read as though it were:
+  // the agreement term compared an exercise against itself, found perfect
+  // agreement, and pushed confidence UP for having no second opinion at all.
+  const oneLiftManyDays = me.rateMuscle([
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-17' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-16' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-15' }),
+  ]);
+  const threeLifts = me.rateMuscle([
+    obs({ estimate: 200, quality: 1, exerciseId: 'a' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'b' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'c' }),
+  ]);
+  ok(threeLifts.confidence > oneLiftManyDays.confidence,
+     `three exercises agreeing beats one exercise repeated (${threeLifts.confidence.toFixed(2)} > ${oneLiftManyDays.confidence.toFixed(2)})`);
+  ok(oneLiftManyDays.exerciseCount === 1 && oneLiftManyDays.contributorCount === 3,
+     'while still reporting three sessions of one exercise as exactly that');
+
+  // Depth means "how much evidence is there", so it has to count the sessions
+  // that did not make the top three. Somebody who has squatted forty times
+  // knows more about their squat than somebody who squatted once.
+  const manyDays = me.rateMuscle(Array.from({ length: 40 }, (_, i) =>
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', date: `2026-0${1 + (i % 9)}-0${1 + (i % 9)}` })));
+  const oneDayOnly = me.rateMuscle([obs({ estimate: 200, quality: 1, exerciseId: 'a' })]);
+  ok(manyDays.confidence > oneDayOnly.confidence,
+     `a long history of one lift beats a single session of it (${manyDays.confidence.toFixed(2)} > ${oneDayOnly.confidence.toFixed(2)})`);
+
   // Confidence responds to the four things it claims to.
   const lonely = me.rateMuscle([obs({ estimate: 200, quality: 0.35, exerciseId: 'a' })]);
   const solid = me.rateMuscle([
