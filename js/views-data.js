@@ -267,19 +267,48 @@ let compareField = null;
 // Keyed by exercise AND source, because the two sources can have different
 // habitual rep counts.
 const targetReps = new Map();
-// exerciseId -> 'benchmark' | 'workout'. Benchmarks win by default.
+// exerciseId -> 'benchmark' | 'workout'. An explicit tap always wins.
 const sourceChoice = new Map();
 
+// WHICHEVER SOURCE HAS MORE DAYS TO DRAW, ties to benchmarks.
+//
+// Tim, 2026-08-16: *"default should be mostly workout measurements"* — the one
+// part of that day's request that went unmet for three days. It used to hard
+// default to benchmarks whenever any existed, so an exercise with forty logged
+// sessions and two benchmarks opened on a two-point line and hid the forty.
+// Most people never record a benchmark at all; the ones who do record a handful
+// beside months of training.
+//
+// This is NOT a breach of D14. That rule is about never MIXING the two on one
+// line — a benchmark is taken fresh and a workout set comes after everything
+// else, so charting them together makes strength look like it swings wildly,
+// and one-point-per-day silently discarded a reading. Both problems are about
+// combining sources. Which single source is preselected is a different
+// question, and the chips are one tap away either way.
+//
+// Ties go to benchmarks because a deliberate test IS the better measurement —
+// this only overrules that when the other source has strictly more to show.
 function pickSource(opt) {
   const chosen = sourceChoice.get(opt.id);
   if (chosen && opt.usableSources.includes(chosen)) return chosen;
-  return opt.usableSources.includes('benchmark') ? 'benchmark' : opt.usableSources[0];
+  if (opt.usableSources.length < 2) return opt.usableSources[0];
+  const best = opt.usableSources.reduce((a, b) =>
+    ((opt.sources[b].days || 0) > (opt.sources[a].days || 0) ? b : a),
+  opt.usableSources.includes('benchmark') ? 'benchmark' : opt.usableSources[0]);
+  return best;
 }
 
 export async function GraphView() {
   const [options, comparison, bwPoints, bests] = await Promise.all([
     chartableExercises(2), benchmarkComparison(2), bodyWeightSeries(), currentBests(),
   ]);
+
+  // ONE weigh-in is enough to normalise a pull-up, where TWO are needed to draw
+  // a body-weight line — different questions, so they get different thresholds
+  // rather than sharing the convenient one.
+  const latestBodyWeight = bwPoints.length
+    ? Number(bwPoints[bwPoints.length - 1].value) || 0
+    : 0;
 
   // Two weigh-ins to make a line, the same bar every exercise has to clear.
   const bwOption = bwPoints.length >= 2
@@ -412,7 +441,13 @@ export async function GraphView() {
       return;
     }
 
-    const blocked = normalizeBlockedReason(opt.exercise);
+    // Passing the body weight changes what this can SAY, not just what it
+    // computes: without it a bodyweight exercise is told "we only chart the
+    // added load", which is a dead end. With it the caption can name the one
+    // thing that would fix it — a weigh-in — or stay silent because there is
+    // nothing to fix. `latestBodyWeight` is 0 when nobody has ever weighed in,
+    // which is exactly the case that wants the actionable wording.
+    const blocked = normalizeBlockedReason(opt.exercise, { bodyWeight: latestBodyWeight });
     const plot = el('div', { class: 'chart-wrap' });
     setChildren(host,
       plot,

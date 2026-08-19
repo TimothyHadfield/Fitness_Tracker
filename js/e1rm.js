@@ -25,6 +25,8 @@
 //
 // See docs/research.md section 1 for the evidence and the limits.
 
+import { bodyWeightFractionFor } from './exercises.js';
+
 const ALPHA = 0.85;   // sub-linear rep scaling
 const A = -2.55;      // k intercept
 const B = 4.58;       // k slope on ln(weight)
@@ -79,22 +81,148 @@ export function normalizeWeight(weight, fromReps, toReps) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Body weight as resistance
+ * ------------------------------------------------------------------ *
+ *
+ * A bodyweight movement logs the ADDED load and an assisted one logs the
+ * SUBTRACTED load, so neither number is the load on the muscle and neither is
+ * comparable to a barbell's. That is why both were refused outright — see the
+ * old comment preserved under canNormalize().
+ *
+ * What changed is that body weight is recorded as a dated series, so the
+ * missing term is available:
+ *
+ *   total resistance = fraction x body weight + added        (bodyweight)
+ *   total resistance = fraction x body weight - assistance   (assisted)
+ *
+ * TWO NUMBERS, HELD TO DIFFERENT STANDARDS, and keeping them apart is the whole
+ * honesty of this feature:
+ *
+ *   `fraction` — how much of your body weight the movement actually carries.
+ *     PUBLISHED BIOMECHANICS ONLY. It lives in exercises.js with a source on
+ *     every entry, and an exercise with no published figure gets no entry and
+ *     stays unrankable. This is not a place to reason from first principles.
+ *
+ *   `ratio`    — what that resistance is worth against the muscle's key lift.
+ *     A reasoned estimate, exactly like every other entry in the RATIOS table
+ *     in muscle-evidence.js, and carrying a quality that says so.
+ *
+ * ⚠️ THE BODY WEIGHT MUST BE THE ONE FROM THE DATE OF THE SET. Somebody who has
+ * lost 20 lb must not have last year's pull-ups re-scored at today's weight —
+ * that would rewrite their history every time they stood on a scale, and it
+ * would move in the wrong direction (losing weight would make their old
+ * pull-ups look easier). bodyWeightOn() is what enforces it.
+ */
+
+// A weigh-in carried FORWARD is what your weight was; a weigh-in carried
+// BACKWARD is an assumption. Both are usable, one is worth less.
+export const EXTRAPOLATED_BW_QUALITY = 0.70;
+
+function dayNumber(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return null;
+  // Date.UTC on both sides, so this is a pure day count with no local/UTC mix
+  // and no DST hole. Both operands are bare calendar dates, never instants.
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000;
+}
+
+/**
+ * What you weighed on `date`, from the dated weigh-in series.
+ *
+ * @param {Array} rows  [{ date: 'YYYY-MM-DD', weight }] in any order, POUNDS
+ * @param {string} date the day of the SET, not today
+ * @returns null if there is not a single weigh-in on record, else
+ *   { weight, date, basis, gapDays, quality }
+ *     basis 'carried'      — the newest weigh-in at or before that day
+ *     basis 'extrapolated' — every weigh-in is LATER, so the earliest one is
+ *                            carried backward. An assumption, and priced as one.
+ *
+ * Returning null rather than falling back to today's weight is the point. "We
+ * don't know" has to survive all the way to the screen; a silently guessed body
+ * weight would make up a number and show it in the same colour as a measured
+ * one, which is Rule 5 in reverse.
+ */
+export function bodyWeightOn(rows, date) {
+  const day = dayNumber(date);
+  const usable = (Array.isArray(rows) ? rows : [])
+    .map((r) => ({ weight: Number(r && r.weight), date: r && r.date, day: dayNumber(r && r.date) }))
+    .filter((r) => r.weight > 0 && r.day !== null)
+    .sort((a, b) => a.day - b.day);
+  if (!usable.length || day === null) return null;
+
+  let best = null;
+  for (const r of usable) { if (r.day <= day) best = r; else break; }
+  if (best) {
+    return {
+      weight: best.weight, date: best.date, basis: 'carried',
+      gapDays: day - best.day, quality: 1,
+    };
+  }
+  const first = usable[0];
+  return {
+    weight: first.weight, date: first.date, basis: 'extrapolated',
+    gapDays: first.day - day, quality: EXTRAPOLATED_BW_QUALITY,
+  };
+}
+
+/**
+ * The load actually resisted by one set of a bodyweight or assisted movement.
+ *
+ * @returns null when this exercise has no published fraction, or when no body
+ *   weight is known. Null means UNRANKABLE and must stay visible as such.
+ *   Otherwise { load, fraction, quality, base, added, assist }.
+ */
+export function totalResistance(exercise, loggedWeight, bodyWeight) {
+  const spec = bodyWeightFractionFor(exercise);
+  if (!spec) return null;
+  const bw = Number(bodyWeight);
+  if (!(bw > 0)) return null;
+
+  const base = spec.fraction * bw;
+  // A reps-only exercise logs no weight at all, which is not a missing number —
+  // it is zero added load, and the resistance is fully determined without it.
+  const extra = Number(loggedWeight);
+  const added = Number.isFinite(extra) && extra > 0 ? extra : 0;
+
+  const load = spec.assist ? base - added : base + added;
+  // More assistance than your own body weight is not a lighter lift, it is a
+  // nonsense entry. Refuse rather than produce a negative resistance.
+  if (!(load > 0)) return null;
+
+  return { load, fraction: spec.fraction, quality: spec.quality, base, added, assist: Boolean(spec.assist) };
+}
+
+/* ------------------------------------------------------------------ *
  * Which exercises this can honestly be applied to
  * ------------------------------------------------------------------ */
 
-// Bodyweight movements are excluded because the logged weight is the ADDED
-// load, not the total resistance — a dip logged at 25 lbs is really bodyweight
-// plus 25, and the ratio between the two shifts as the added weight changes, so
-// the distortion is not a constant offset that cancels out. The source study
-// excluded these outright for the same reason.
+// The original reasoning, kept because it is still true of every bodyweight
+// exercise WITHOUT a published fraction:
 //
-// Assisted movements are worse: there the logged weight is assistance, so more
-// weight means an easier lift. Normalising would inverse the whole chart.
+//   Bodyweight movements are excluded because the logged weight is the ADDED
+//   load, not the total resistance — a dip logged at 25 lbs is really bodyweight
+//   plus 25, and the ratio between the two shifts as the added weight changes,
+//   so the distortion is not a constant offset that cancels out. The source
+//   study excluded these outright for the same reason.
 //
-// Both become tractable once body-weight tracking exists (Tier 1) — total
-// resistance would then be computable.
-export function canNormalize(exercise) {
+//   Assisted movements are worse: there the logged weight is assistance, so more
+//   weight means an easier lift. Normalising would inverse the whole chart.
+//
+// What has changed is only that the missing term is now computable — for the
+// exercises somebody has actually measured. The rest stay refused.
+//
+// ⚠️ `opts` is not optional decoration. Called with one argument this returns
+// exactly what it always did, because one argument means "I have not looked up
+// a body weight" — which is the true state of any caller that has not been
+// wired up, and of any user with no weigh-in at all. A bodyweight movement
+// becomes normalisable only when a caller hands over a real body weight.
+export function canNormalize(exercise, opts) {
   if (!exercise || !Array.isArray(exercise.fields)) return false;
+  const spec = bodyWeightFractionFor(exercise);
+  if (spec) {
+    if (!exercise.fields.includes('reps')) return false;
+    return Number(opts && opts.bodyWeight) > 0;
+  }
   if (!exercise.fields.includes('weight') || !exercise.fields.includes('reps')) return false;
   if (exercise.equipment === 'Bodyweight') return false;
   if (/^assisted\b/i.test(exercise.name || '')) return false;
@@ -102,14 +230,33 @@ export function canNormalize(exercise) {
 }
 
 // Why normalisation is unavailable, for the caption. Null when it is available.
-export function normalizeBlockedReason(exercise) {
+//
+// Same arity rule as canNormalize(), for the same reason: with one argument the
+// wording is unchanged, because a caller that has not looked up a body weight
+// really is still charting added load. With `opts` it can say the true and far
+// more useful thing — that a weigh-in is the missing piece.
+export function normalizeBlockedReason(exercise, opts) {
   if (!exercise || !Array.isArray(exercise.fields)) return null;
+  const spec = bodyWeightFractionFor(exercise);
+  if (spec) {
+    if (!opts) {
+      if (!exercise.fields.includes('weight')) return null;
+      return spec.assist
+        ? 'the logged weight is assistance, not resistance'
+        : 'the logged weight is added load, not your total resistance';
+    }
+    if (!exercise.fields.includes('reps')) return null;
+    if (!(Number(opts.bodyWeight) > 0)) {
+      return 'we don’t know what you weighed — log a weigh-in and this becomes chartable';
+    }
+    return null;
+  }
   if (!exercise.fields.includes('weight') || !exercise.fields.includes('reps')) return null;
   if (/^assisted\b/i.test(exercise.name || '')) {
     return 'the logged weight is assistance, not resistance';
   }
   if (exercise.equipment === 'Bodyweight') {
-    return 'the logged weight is added load, not your total resistance';
+    return 'nobody has measured how much of your body weight this one carries';
   }
   return null;
 }

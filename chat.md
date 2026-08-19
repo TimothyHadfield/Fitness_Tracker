@@ -3709,3 +3709,78 @@ social (73), render (292).**
 by editing them through PowerShell — `Get-Content -Raw` in PS 5.1 decodes as ANSI, so writing back
 with `-Encoding utf8` double-encodes every em dash and arrow in the file. Both were restored from
 git and redone with the editor. **Do not bulk-edit these docs through PowerShell.**
+
+---
+
+## 2026-08-19, later — Tim asks for a directed multi-agent pass
+
+Tim: *"operate as a director or manager to explore improvements… create 3-7 subagents that
+individually work on specific tasks. Communicate with them and make sure each agent knows what the
+overall goals are… Come back to me once you don't know what else to work on anymore."*
+
+Five agents, run in two waves, each owning a **disjoint set of files** so they could not clobber one
+another. `progress.md`, `chat.md` and every commit were kept by the director. That file-ownership
+discipline was the single decision that made it work; the one time two agents did brush against each
+other (`js/e1rm.js` mid-edit) it cost the estimator agent a re-run against a pinned copy.
+
+### What shipped
+
+**Body weight into rep normalisation.** Pull-ups, chin-ups, dips and push-ups now rate a muscle. The
+research came back with the finding that *no published percent-of-bodyweight figure exists for a
+pull-up or a dip* — and the right answer was that none is needed, because in a free hang the hands
+carry all of it. Statics, not a citation. Push-ups use 0.75 from two labs half a percent apart, and
+the agent explicitly rejected the familiar 64 % figure because those studies measure different
+quantities. What has no honest figure stays refused, by name, permanently.
+
+**Goals progression** (Phase 4). Double progression, 2-for-2, smallest increment inside 2–10 %.
+`js/progression.js` has no clock and no import from `goals.js`, so the "a deadline may not make this
+ask for more" refusal is *structural*. Proven by mutation: doubling the step when a deadline is near
+flips exactly the refusal test and nothing else.
+
+**The estimator's Phase 0** — 771 lines of pure maths plus a simulator with a virtual lifter whose
+true 1RM curve is known. Bias +0.68 %, RMSE 4.63 %, and measured answers to all three of §9's
+residuals.
+
+**`docs/research.md` §6.8 pulled**, all four axes, and it found ACSM had published a **new position
+stand in March 2026** — the first in seventeen years — while this project was still citing the 2009
+one as current.
+
+**The rating now states what it cannot see**, in words, on screen: a workout stores a set count, not
+a weight, so 3×20 and 3×5 score the same for strength. Put as visible text rather than a `title`,
+because `title` does nothing on a phone.
+
+### Three bugs, none found by a test
+
+1. **The demo account could open empty.** `MemoryBackend.seed()` set a boolean before its first
+   `await`. Third time this project has hit boolean-instead-of-promise.
+2. **Progression anchored its rep range on the weakest set.** Reps fall across sets, so a lifter who
+   had just pressed 190 for 6 was told the weight moves "once you hit 5". Found in a browser; 150
+   assertions and jsdom had passed over it.
+3. **A "log a weigh-in" message that could never render**, because the map refuses to draw without
+   one. Dead UI, removed.
+
+### Director's notes, for whoever runs this next
+
+- **The briefs mattered more than the tasks.** Every agent was given the project's actual standard —
+  never overclaim, state what is unverified — and every one of them came back with an honest
+  "cannot be done" somewhere. The estimator agent reported that high-rep shrinkage *cannot be fitted*
+  rather than fitting it badly; the body-weight agent refused to invent a fraction for assisted
+  machines. That is the behaviour worth reproducing.
+- **Two agents improved on their brief and said so.** I told the rating agent to clamp per-session
+  volume at 24 rather than the literature's 11 because 11 rests on a preprint. It found the stronger
+  reason: **at 11 the clamp becomes a frequency reward**, because a real programme crosses it — which
+  would break the rating's oldest refusal. And the progression agent replaced my "pass no goal" brief
+  with a module that structurally cannot receive one.
+- **Correcting an agent mid-flight is worth doing.** Three steers went out and each changed the
+  output: don't chase a pull-up citation, don't mix two anthropometric tables, and close the lay-off
+  gap with a clock that may only ever *withhold*.
+- ⚠️ **Never trust a screenshot without checking what the server is serving.** A whole verification
+  pass came back clean against what turned out to be a **directory listing** — four stale
+  `python -m http.server` processes from earlier in the day were squatting on ports. The symptoms of
+  "no overflow, no split tags" and "nothing rendered at all" are identical. Assert something POSITIVE
+  about the page before believing anything negative about it.
+- ⚠️ **`location.hash = '#/data'` reports the new route without re-rendering** in this headless
+  build, and the real Data route is `#/graphs` anyway. Click the actual nav element instead. A
+  screenshot of the previous screen is indistinguishable from a feature that failed to ship.
+
+**2075 assertions across nine suites, all green.**

@@ -21,7 +21,9 @@
 // e1rm.js and strength-standards.js, which is the pattern that has caught real
 // bugs in this project because it is fully testable headlessly.
 
-import { e1rm, isRankableSet } from './e1rm.js';
+import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
+import { bodyWeightFractionFor } from './exercises.js';
+import { robustAggregate } from './strength-estimate.js';
 import { MUSCLE_LIFTS } from './strength-standards.js';
 
 /* ------------------------------------------------------------------ *
@@ -35,6 +37,58 @@ export function totalLoad(weight, loadType) {
   const w = Number(weight);
   if (!(w > 0)) return null;
   return loadType === 'per_side' ? w * 2 : w;
+}
+
+/**
+ * The load one set actually put on the body, whatever kind of exercise it is.
+ * This is the single entry point a caller wants: it routes a bodyweight or
+ * assisted movement through the body-weight arithmetic and everything else
+ * through totalLoad().
+ *
+ * @param {object} exercise
+ * @param {number} weight   what was LOGGED — added load, assistance, or the
+ *                          weight on the bar. May be absent on a reps-only
+ *                          exercise, which is zero added load, not missing data.
+ * @param {object} opts     { bodyWeight } in pounds, ON THE DATE OF THE SET.
+ * @returns pounds, or null when the set cannot be converted to a load at all.
+ *
+ * Every bodyweight exercise in the library is loadType 'total', so there is no
+ * per-side doubling to apply on that branch — asserted in tests/bodyweight.test.mjs
+ * so that adding a per-side bodyweight exercise cannot pass silently.
+ */
+export function setLoad(exercise, weight, opts) {
+  if (bodyWeightFractionFor(exercise)) {
+    const r = totalResistance(exercise, weight, opts && opts.bodyWeight);
+    return r ? r.load : null;
+  }
+  return totalLoad(weight, exercise ? exercise.loadType : 'total');
+}
+
+/**
+ * Why this exercise cannot rate a muscle, in words for the panel. Null when it
+ * can. The muscle map's counterpart to normalizeBlockedReason() in e1rm.js.
+ *
+ * The distinction it draws is the one that matters to somebody looking at a
+ * grey muscle: "log a weigh-in and this starts working" is a thing they can act
+ * on, and "nobody has measured this exercise" is a thing they cannot. Rolling
+ * both into one message would waste the first and overclaim the second.
+ */
+export function rankBlockedReason(exercise, opts) {
+  if (!exercise || !exercise.name) return null;
+  const spec = bodyWeightFractionFor(exercise);
+  if (spec) {
+    if (!Array.isArray(exercise.fields) || !exercise.fields.includes('reps')) return null;
+    if (!(Number(opts && opts.bodyWeight) > 0)) {
+      return 'this one lifts your own body weight, and we don’t know what you weigh — '
+        + 'log a weigh-in and it starts counting';
+    }
+    return null;
+  }
+  if (exercise.equipment === 'Bodyweight' || /^Assisted /.test(exercise.name)) {
+    return 'how much of your body weight this one carries has never been measured, '
+      + 'so it can’t be compared with a barbell';
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -70,6 +124,40 @@ const RATIOS = {
     [/Dumbbell Bench Press/, 0.72, 0.65],
     [/Incline Machine Press/, 0.82, 0.45],
     [/Machine Chest Press/, 0.95, 0.45],
+    // ── Bodyweight pressing ──────────────────────────────────────────────
+    // These are the only entries in this file whose `ratio` is above 1.00 for a
+    // reason worth stating: the load is your own body, which is far heavier
+    // than the bar most people bench. A ratio over 1 means "this exercise's
+    // resistance exceeds the key lift you could do", so dividing by it brings
+    // the number back down. Getting the direction wrong here is the same
+    // mistake that once gave a dumbbell row a 429 lb wrist curl.
+    //
+    // ⚠️ DERIVED FROM PUBLISHED STANDARDS, NOT FROM FEEL, and by the same
+    // technique crossMuscleRatio() already uses: take one population, read both
+    // lifts off it, divide. Strength Level publish 1RM standards for the dip in
+    // ADDED weight and for the bench press outright, both for a 180 lb male —
+    // the same reference body weight strength-standards.js quotes its medians
+    // at. Total dip resistance is 1.00 x 180 + added:
+    //     beginner (180+11)/127 = 1.50   novice (180+60)/169 = 1.42
+    //     intermediate (180+117)/220 = 1.35
+    //     advanced (180+180)/277 = 1.30  elite (180+247)/339 = 1.26
+    // The median is taken. ⚠️ The drift from 1.50 to 1.26 is NOT noise — it is
+    // real, and it is why `q` is down at machine level: body weight is a floor
+    // under a dip, so the weaker you are the more the dip flatters you. A fixed
+    // ratio therefore compresses everybody toward the middle, which understates
+    // strong lifters and overstates weak ones. That is the safe direction for
+    // the failure this rating most has to avoid — nobody gets rated Elite for
+    // dips they could always do — but it is a known bias, not a solved problem.
+    [/^Chest Dip$/, 1.35, 0.45],
+    // Push-up resistance is FIXED at 0.75 x body weight, so unlike a barbell it
+    // cannot be loaded — the rep count carries all of the information. Above 15
+    // reps the set stops being evidence of a maximum at all (D5), and Strength
+    // Level put the median 180 lb male at 38 push-ups, so in practice this rule
+    // only ever fires for relative beginners. That is exactly where it was
+    // calibrated: at 180 lb the resistance is 135, which at their beginner
+    // standard of 6 reps estimates 167 against a 127 lb bench (1.32), and at
+    // the 15-rep ceiling estimates 213 against roughly 154 (1.38).
+    [/^Push-Up$/, 1.35, 0.35],
     [/Dumbbell Pullover/, 0.35, 0.35],
     [/Pec Deck/, 0.55, 0.35],
     [/Cable Fly|Cable Crossover|Low-to-High|High-to-Low/, 0.40, 0.30],
@@ -91,6 +179,30 @@ const RATIOS = {
     [/Single-Arm Lat Pulldown/, 0.80, 0.40],
     [/Lat Pulldown|Pulldown/, 0.90, 0.50],
     [/Cable Pullover/, 0.45, 0.30],
+    // ── Bodyweight pulling ───────────────────────────────────────────────
+    // Same derivation as the dip above, off Strength Level's pull-up standards
+    // (added weight) and barbell row standards, both male at 180 lb. Total
+    // pull-up resistance is 1.00 x 180 + added:
+    //     beginner (180-4)/108 = 1.63   novice (180+32)/149 = 1.42
+    //     intermediate (180+74)/198 = 1.28
+    //     advanced (180+120)/255 = 1.18  elite (180+168)/315 = 1.10
+    // The median is taken, and their row median of 198 sits within 4 % of this
+    // app's own 205, so the two populations are not being spliced.
+    //
+    // ONE RULE FOR THE WHOLE FAMILY. Grip width is not separately calibrated
+    // and does not need to be: Strength Level's pull-up and chin-up 1RMs differ
+    // by under 1 % at every level (+74 vs +76 at the median), which is direct
+    // evidence that grip barely moves the maximum even though it plainly moves
+    // how the set feels.
+    //
+    // ⚠️ At 0.45 this lands just under FALLBACK_MIN_QUALITY, so a pull-up rates
+    // Back and nothing else — it will not stand in for Biceps, Traps or
+    // Forearms the way a barbell row does. That is deliberate. A chin-up
+    // genuinely does train biceps, but the conversion would be a body-weight
+    // fraction times a ratio that already drifts 1.10-1.63 times a cross-muscle
+    // ratio, and three estimates multiplied together is how the "machine for
+    // confidently wrong numbers" gets built.
+    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up)$/, 1.28, 0.45],
     // Deadlift family. These are tagged Back in the library and are genuinely
     // back work, but they are pulls, not rows — hence the wide conversions and
     // the low quality. Deadlift itself is ALSO the key lift for Glutes, which
@@ -184,6 +296,17 @@ const RATIOS = {
     [/^Close-Grip Bench Press$/, 1.00, 1.00],
     [/^California Press$/, 0.80, 0.45],
     [/^JM Press$/, 0.75, 0.50],
+    // Same dip resistance as the Chest entry, converted against the triceps key
+    // lift instead: (180 + 117) / 208 = 1.43 at the median, using Strength
+    // Level's close-grip bench standard for a 180 lb male.
+    //
+    // ⚠️ `q` is a step below the Chest entry and the reason is a SOURCING
+    // mismatch, not a maths one. Strength Level publish one dip standard and do
+    // not separate the upright, elbows-in triceps dip from the forward-leaning
+    // chest dip, so this converts a chest-dip-flavoured population figure to a
+    // triceps lift. The library treats them as two exercises; the source does
+    // not.
+    [/^Triceps Dip$/, 1.43, 0.35],
     [/Dumbbell Skull Crusher/, 0.42, 0.40],
     [/Skull Crusher/, 0.50, 0.50],
     [/Tate Press/, 0.35, 0.30],
@@ -257,7 +380,7 @@ const FALLBACK = {
 // Only a genuine compound may stand in for another muscle. A cable fly says
 // nothing about triceps, and letting it through would be the "machine for
 // confidently wrong numbers" the estimate plan warns about.
-const FALLBACK_MIN_QUALITY = 0.45;
+export const FALLBACK_MIN_QUALITY = 0.45;
 
 // The population conversion between two muscles' key lifts, taken from the
 // medians. Male and female medians differ slightly in ratio; the mean of the
@@ -296,21 +419,67 @@ function matchRule(muscle, name) {
 //   kind 'fallback' — a big lift standing in for a muscle with nothing direct.
 //
 // Returns [] for anything that cannot be converted to a load at all.
-export function contributionsFor(exercise) {
+export function contributionsFor(exercise, opts) {
   if (!exercise || !exercise.name) return [];
-  // Bodyweight and assisted work logs ADDED or SUBTRACTED load, not the load on
-  // the muscle, so its number is not comparable to a barbell's. Wiring body
-  // weight in is a known gap and is what would unlock these.
+
+  // ── Bodyweight and assisted work ─────────────────────────────────────────
+  //
+  // This used to be one line refusing the lot, and the reason was sound: the
+  // logged weight is ADDED or SUBTRACTED load, not the load on the muscle, so
+  // it is not comparable to a barbell's. The cost was that a pull-up rated no
+  // muscle at all, which for anyone whose back training is chin-ups meant a
+  // grey body map for work they had actually done.
+  //
+  // Body weight is now a dated series, so the missing term is computable — for
+  // the exercises with a published fraction (exercises.js) and for a user with
+  // a weigh-in. Both conditions are real gates, not formalities:
+  //
+  //   no fraction  -> still refused, permanently. See the exclusion list in
+  //                   exercises.js: an inverted row's fraction spans 37-79 %
+  //                   with the bar height, and the app records no bar height.
+  //   no weigh-in  -> refused for now, and rankBlockedReason() says so. NOT
+  //                   filled in from today's weight or from an average adult.
+  //
+  // ⚠️ `opts.bodyWeight` MUST be the weight on the date of the SET. Called with
+  // one argument this behaves exactly as it always did, because one argument
+  // means the caller has not looked one up — which is the honest state of both
+  // an unwired caller and a user who has never weighed in.
+  const bwSpec = bodyWeightFractionFor(exercise);
+  if (bwSpec) {
+    const bw = Number(opts && opts.bodyWeight);
+    if (!(bw > 0)) return [];
+    if (!Array.isArray(exercise.fields) || !exercise.fields.includes('reps')) return [];
+    // How well the FRACTION is known multiplies into every contribution, on top
+    // of how well the ratio converts. A push-up's 0.75 is a judgement between
+    // three force-plate figures measuring different things; a pull-up's 1.00 is
+    // statics. They must not arrive at the rating carrying the same weight.
+    //
+    // A body weight carried BACKWARD from a later weigh-in is an assumption and
+    // is priced here too — see bodyWeightOn() in e1rm.js.
+    const bwQuality = Number(opts && opts.bodyWeightQuality);
+    const scale = bwSpec.quality * (Number.isFinite(bwQuality) && bwQuality > 0 ? Math.min(1, bwQuality) : 1);
+    return buildContributions(exercise, scale);
+  }
+
+  // Anything bodyweight or assisted WITHOUT a published fraction is refused
+  // exactly as before. Equipment is never used to guess one.
   if (exercise.equipment === 'Bodyweight' || /^Assisted /.test(exercise.name)) return [];
   if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return [];
+  return buildContributions(exercise, 1);
+}
 
+// `qualityScale` discounts every contribution this exercise makes — 1 for an
+// ordinary weighted lift, less for a bodyweight one whose fraction or whose
+// body weight is imperfectly known.
+function buildContributions(exercise, qualityScale) {
   const out = [];
   const seen = new Set();
   const add = (muscle, ratio, quality, kind, via) => {
     if (!MUSCLE_LIFTS[muscle] || seen.has(muscle)) return;
-    if (!(ratio > 0) || !(quality > 0)) return;
+    const q = quality * qualityScale;
+    if (!(ratio > 0) || !(q > 0)) return;
     seen.add(muscle);
-    out.push({ muscle, ratio, quality, kind, via: via || null });
+    out.push({ muscle, ratio, quality: q, kind, via: via || null });
   };
 
   // 1. A muscle's own key lift is always its best possible evidence, wherever
@@ -543,8 +712,42 @@ export function rateMuscle(observations) {
     .sort((a, b) => (b.evidenceWeight - a.evidenceWeight) || (b.estimate - a.estimate));
 
   const used = candidates.slice(0, TOP_N);
-  const wsum = used.reduce((a, u) => a + u.evidenceWeight, 0);
-  const estimate = used.reduce((a, u) => a + u.estimate * u.evidenceWeight, 0) / wsum;
+
+  // ── ⚠️ WINSORISED, NOT A PLAIN WEIGHTED MEAN ─────────────────────────────
+  //
+  // The credibility sort above decided which evidence gets to LEAD. It did not
+  // stop a low-credibility outlier from still dragging the answer, because a
+  // weighted mean moves by an observation's weight share however implausible
+  // the observation is. §9's shoulders case survived the sort fix in exactly
+  // that reduced form: the face pull no longer set the rating but still added
+  // ~4 % to it, because it sat at twice the credible estimate.
+  //
+  // robustAggregate() clips every value into [median/(1+k), median x (1+k)]
+  // around the credibility-weighted median before averaging, at k = 0.25.
+  // The outlier keeps its direction and its vote; what it loses is the ability
+  // to pull an unbounded distance simply because it is large.
+  //
+  // WINSORISE RATHER THAN TRIM, and the reason is the third residual: a genuine
+  // PR and a typo are indistinguishable at the moment either arrives, so
+  // throwing the observation away would discard real progress. Clipping keeps
+  // it pushing the right way while it waits for something to corroborate it.
+  //
+  // ⚠️ THIS IS FITTED, NOT CHOSEN — docs/strength-estimate-plan.md §15.1, and
+  // k is pinned from both sides. Floor: the honest spread of one lift's daily
+  // bests around its own window median reaches x1.204 at the 99.99th percentile
+  // (n = 16,203), so below k ~ 0.21 it starts clipping days a lifter genuinely
+  // had. Ceiling: across 200 simulated muscles against a known truth the worst
+  // error falls 19.8 % -> 7.5 % at k = 0.25, and only to 9.2 % at k = 0.35.
+  // It is FREE rather than a trade: with no outlier present at all it still
+  // improved RMSE, 4.59 % -> 3.86 %.
+  //
+  // ⚠️ WHAT THIS DOES NOT FIX, so the two never get conflated. A x10 fat-finger
+  // arrives with HIGH credibility, so clipping toward the median of the top
+  // three barely touches it (measured: 343 % bias, unchanged). That is a
+  // different failure needing a different mechanism — a sequential per-exercise
+  // walk, which rateMuscle() does not do. §15.3.
+  const estimate = robustAggregate(used.map((u) => ({ x: u.estimate, w: u.evidenceWeight })));
+  if (!(estimate > 0)) return null;
 
   return {
     estimate,

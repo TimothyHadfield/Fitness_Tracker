@@ -22,7 +22,7 @@ const go = (hash) => { location.hash = hash; };
 let selected = null;
 
 export async function muscleGroupsPane(host, top) {
-  const { profile, muscles, ready } = await muscleStrength();
+  const { profile, muscles, blocked, ready } = await muscleStrength();
   // Changing the comparison group changes the percentile, the level, the
   // targets and the colours, so the whole pane is rebuilt rather than repainted.
   const reload = () => muscleGroupsPane(host, top);
@@ -104,7 +104,10 @@ export async function muscleGroupsPane(host, top) {
   function renderPanel() {
     setChildren(foot,
       legend(),
-      selected ? detail(muscles.get(selected), selected, profile) : summary(muscles),
+      selected
+        ? detail(muscles.get(selected), selected, profile,
+                 blocked ? blocked.get(selected) : null)
+        : summary(muscles),
     );
   }
 
@@ -309,17 +312,53 @@ function summary(muscles) {
  * Detail for one muscle
  * ------------------------------------------------------------------ */
 
-function detail(m, muscle, profile) {
+// `blocked` is work the user really did that the rating could not use. It is
+// rendered in BOTH branches on purpose: a grey muscle needs it to stop the panel
+// saying "nothing recorded" about thirty sets of pull-ups, and a rated muscle
+// needs it because a rating built on rows while ignoring every chin-up is
+// under-reporting its own evidence while looking complete.
+//
+// ⚠️ ONLY THE UNMEASURED CASE CAN REACH THIS SCREEN, and that is why there is no
+// "log a weigh-in" button here even though rankBlockedReason() can produce that
+// message. The map requires a body weight before it renders anything at all —
+// `profile.missing` includes it, and muscleStrength() returns ready:false — so
+// by the time a panel exists, a weigh-in exists and every bodyweight exercise
+// with a published fraction is already counting. What is left is the permanent
+// kind: an inverted row whose fraction spans 37–79 % with a bar height the app
+// does not record, or a handstand push-up nobody has ever put on a force plate.
+// Offering a button for those would be a promise the app cannot keep.
+//
+// The actionable wording is not wasted — it reaches the user on the GRAPH, in
+// normalizeBlockedReason(), which has no profile gate in front of it.
+function blockedNote(blocked) {
+  if (!blocked || !blocked.exercises.length) return null;
+  const names = blocked.exercises.map((e) => e.name);
+  const listed = names.length <= 2
+    ? names.join(' and ')
+    : `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`;
+  const sets = blocked.sets;
+  return el('div', { class: 'card' },
+    el('div', { class: 'field-help', text:
+      `${sets} set${sets === 1 ? '' : 's'} of ${listed} ${sets === 1 ? 'is' : 'are'} not counted `
+      + `here — ${blocked.exercises[0].reason}.` }),
+  );
+}
+
+function detail(m, muscle, profile, blocked) {
   if (!m) {
     const lift = keyLiftFor(muscle);
+    const note = blockedNote(blocked);
     return el('div', { class: 'card' },
       el('div', { class: 'section-label', text: muscle }),
       el('div', { class: 'field-help' },
         lift
-          ? `Nothing recorded for this muscle yet. Any exercise that trains it counts — `
-            + `${lift.name} is the standard it is measured against, but it is not the only thing `
-            + 'that rates it.'
+          ? (note
+            ? 'Nothing here can be ranked yet, but that is not the same as nothing recorded.'
+            : `Nothing recorded for this muscle yet. Any exercise that trains it counts — `
+              + `${lift.name} is the standard it is measured against, but it is not the only thing `
+              + 'that rates it.')
           : 'This muscle has no published strength standards, so it can\'t be ranked.'),
+      note,
       lift
         ? el('a', { class: 'btn primary block', href: '#/benchmark', text: `Benchmark ${lift.name}` })
         : null,
@@ -369,6 +408,8 @@ function detail(m, muscle, profile) {
       : null,
 
     m.hint ? el('div', { class: 'field-help', text: m.hint }) : null,
+
+    blockedNote(blocked),
 
     // The population is never assumed. It is whatever the header says it is,
     // built from the same function, so the percentile and the group it refers

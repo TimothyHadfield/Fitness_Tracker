@@ -13,13 +13,14 @@
 const { BUILT_IN_EXERCISES } = await import('../js/exercises.js');
 const { PRESET_SYSTEMS } = await import('../js/preset-systems.js');
 const {
-  DIRECT, INDIRECT, VOLUME_MUSCLES, SCORED_MUSCLES,
+  DIRECT, INDIRECT, INDIRECT_NOTE, VOLUME_MUSCLES, SCORED_MUSCLES, SESSION_CEILING,
   volumeContributions, weeklyVolume,
   hypertrophyTier, strengthTier, HYPERTROPHY_TIERS, STRENGTH_TIERS,
 } = await import('../js/volume-map.js');
 
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'PASS  ' : 'FAIL  ') + msg); if (!cond) fails++; };
+const near = (a, b, tol) => Math.abs(a - b) <= tol;
 
 const byName = new Map(BUILT_IN_EXERCISES.map((e) => [e.name, e]));
 const exMap = new Map(BUILT_IN_EXERCISES.map((e) => [e.id, e]));
@@ -38,6 +39,19 @@ const map = (name, muscle) => {
 ok(DIRECT === 1.0, 'a direct set counts as one set');
 ok(INDIRECT === 0.5,
    'an indirect set counts as HALF — the best-supported method in Pelland et al. 2025');
+
+// ⚠️ 0.5 is the biggest lever in the rating and it is a CHOICE, not a
+// measurement — the exploratory continuous fits put it nearer 0.32 for
+// hypertrophy, and moving it there drops five of the nine shipped ratings a
+// whole band (docs/research.md §6.17.1). The constant stays; what is asserted
+// here is that the app SAYS SO where somebody reads the number.
+ok(typeof INDIRECT_NOTE === 'string' && INDIRECT_NOTE.length > 80,
+   'the half-set weighting ships with a sentence explaining itself');
+ok(/choice/i.test(INDIRECT_NOTE) && /not a measured fact/i.test(INDIRECT_NOTE),
+   'and that sentence calls it a modelling choice rather than a fact');
+ok(/drop|lower/i.test(INDIRECT_NOTE),
+   'and says which way the ratings would move if the number were different — '
+   + 'a caveat that does not price itself is decoration');
 
 /* ---------- the cases the paper states outright ---------- */
 // Table 1 of that paper lists these classifications explicitly, so they are the
@@ -193,9 +207,96 @@ ok(covered >= 10,
 // The "more is always better" guard, from §5 of the plan. A fabricated
 // absurd programme must land in the band where the evidence gives out, not in
 // the best one.
-const absurd = weeklyVolume([{ exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 60 }] }], exMap, 1);
-ok(hypertrophyTier(absurd.get('Chest')).key === 'unclear',
+//
+// ⚠️ SPREAD OVER SIX SESSIONS, which is what "60 sets a week" means and what
+// this test always meant. It used to put all 60 in one session, which since the
+// per-session clamp shipped is a different claim — that case is asserted
+// separately below.
+const week = (n, per) => Array.from({ length: n }, () => ({
+  exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: per }],
+}));
+const absurd = weeklyVolume(week(6, 10), exMap, 1);
+ok(near(absurd.get('Chest'), 60, 1e-9)
+   && hypertrophyTier(absurd.get('Chest')).key === 'unclear',
    '60 sets of bench a week lands in "beyond the evidence", not in a better tier');
+
+/* ---------- the per-session clamp ---------- */
+// docs/research.md §6.12. The same refusal as the weekly ceiling, on the other
+// axis: never credit past the top of the data.
+
+ok(SESSION_CEILING === 24,
+   'one session is credited at most 24 fractional sets per muscle — the top of the per-session '
+   + 'range in Remmert et al. 2025');
+ok(SESSION_CEILING !== 11,
+   '⚠️ and NOT their ~11-set point of diminishing returns: an unreviewed preprint with an R² of '
+   + '16 %, a threshold its own authors call arbitrary, and growth that "continued to occur" past '
+   + 'it. Capping there would move a real shipped rating');
+
+const oneBigDay = weeklyVolume([{ exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 60 }] }], exMap, 1);
+ok(near(oneBigDay.get('Chest'), SESSION_CEILING, 1e-9),
+   `60 sets of chest in ONE session is credited as ${SESSION_CEILING}, not 60`);
+ok(near(oneBigDay.get('Triceps'), SESSION_CEILING, 1e-9),
+   'and the clamp is applied per MUSCLE, so the 30 indirect triceps sets are capped too');
+
+// The exploit, priced. The same 60 sets spread across three days are real
+// training and are credited in full; 60 in one day are not.
+const spread = weeklyVolume(week(3, 20), exMap, 1);
+ok(spread.get('Chest') > oneBigDay.get('Chest'),
+   `60 sets over three sessions credits ${spread.get('Chest')} and 60 in one credits `
+   + `${oneBigDay.get('Chest')} — the clamp is what closes that`);
+
+// ⚠️ AND THE OTHER DIRECTION, which is the one that matters. Splitting sets
+// across days must buy NOTHING below the ceiling, or the clamp has quietly
+// become the frequency reward js/optimal.js exists to refuse.
+const twelveInOne = weeklyVolume([{ exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 12 }] }], exMap, 1);
+const fourByThree = weeklyVolume(week(3, 4), exMap, 1);
+ok(near(twelveInOne.get('Chest'), fourByThree.get('Chest'), 1e-9)
+   && near(twelveInOne.get('Triceps'), fourByThree.get('Triceps'), 1e-9),
+   '12 sets in one day and 4+4+4 still count exactly the same — the clamp bites only past 24');
+
+// The whole justification for 24 rather than 11 is that 24 changes nothing
+// real. That is asserted, not asserted-about: every shipped system is recounted
+// with the clamp lifted and must come out identical.
+const unclamped = (workouts, weeks) => {
+  const out = new Map();
+  for (const w of workouts) {
+    for (const item of w.exercises || []) {
+      const e = exMap.get(item.exerciseId);
+      if (!e || !(item.sets > 0)) continue;
+      for (const c of volumeContributions(e)) {
+        out.set(c.muscle, (out.get(c.muscle) || 0) + item.sets * c.weight / weeks);
+      }
+    }
+  }
+  return out;
+};
+let moved = null;
+let biggestSession = 0;
+for (const p of PRESET_SYSTEMS) {
+  const workouts = p.workouts.map((w) => ({
+    exercises: (w.exercises || []).map((i) => {
+      const e = byName.get(i.name);
+      return e ? { exerciseId: e.id, sets: Number(i.sets) || 3 } : null;
+    }).filter(Boolean),
+  }));
+  const cycle = p.id === 'preset-bumstead-8day' ? 8 / 7 : 1;
+  const withClamp = weeklyVolume(workouts, exMap, cycle);
+  const without = unclamped(workouts, cycle);
+  for (const [m, v] of without) {
+    if (!near(withClamp.get(m) || 0, v, 1e-9)) moved = `${p.name} / ${m}`;
+  }
+  for (const w of workouts) {
+    for (const v of unclamped([w], 1).values()) biggestSession = Math.max(biggestSession, v);
+  }
+}
+ok(moved === null,
+   moved ? `the clamp moved a shipped system: ${moved}`
+         : 'the clamp changes NOTHING for any of the nine shipped systems — which is the whole '
+           + 'argument for putting it at 24 rather than at 11');
+ok(biggestSession > 11 && biggestSession < SESSION_CEILING,
+   `and the guard is not vacuous by being unreachable: the biggest single (session, muscle) figure `
+   + `in the library is ${biggestSession.toFixed(1)}, already past the 11 a stricter cap would have `
+   + `used`);
 
 /* ---------- an 8-day cycle is not a week ---------- */
 

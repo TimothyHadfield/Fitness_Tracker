@@ -7,6 +7,17 @@ import {
   setTypeLabel, plannedMinis, clampMinis,
 } from './set-types.js';
 import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
+// ⚠️ Statically imported, unlike the rest of the rating, and on purpose. These
+// are the CAVEATS that travel with the numbers — what the strength score cannot
+// see, and that "half a set" is a modelling choice — plus the exercise-order
+// note in the builder. Behind a dynamic import they would be a caveat that can
+// arrive late or not at all, which is the one failure mode a caveat may not
+// have. Both modules are pure and dependency-free (optimal.js imports only
+// volume-map.js), so this costs an import and nothing else.
+import {
+  STRENGTH_CAVEAT, STRENGTH_CAVEAT_SHORT, exerciseOrderNote,
+} from './optimal.js';
+import { INDIRECT_NOTE } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum,
@@ -282,7 +293,13 @@ function ratingBadge(rating) {
 
   return el('div', { class: 'rating' },
     cell(rating.hypertrophy + '%', 'growth'),
-    cell(rating.strength + '%', 'strength'),
+    // ⚠️ The strength cell carries what it cannot see. A planned workout stores
+    // a set count and no load, so 3x20 and 3x5 land on the same percentage —
+    // and load is the single biggest thing there is for strength (SMD 0.60,
+    // docs/research.md §6.13). A `title` alone does nothing on a phone, which is
+    // why the same caveat is spelled out in full on the system screen and under
+    // the Explore list rather than only here.
+    cell(rating.strength + '%', 'strength', STRENGTH_CAVEAT_SHORT),
     days ? cell(days, 'days/wk', 'Training days a week') : null,
     minutes
       ? cell('~' + minutes, 'min', rating.minutesEstimated
@@ -403,6 +420,12 @@ async function ownSystemRating(systemId, workouts, systemRow) {
           + `${under.join(', ')}.` })
       : el('div', { class: 'field-help', text:
           'Every muscle group gets at least the minimum effective dose.' }),
+    // ⚠️ The two things these numbers do not know, in full words, on the screen
+    // where somebody actually stops and reads them. D8: at the moment of use,
+    // never in a manual. Both strings come from the modules that own the
+    // constants they are about, so neither can drift.
+    el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
+    el('div', { class: 'field-help', text: INDIRECT_NOTE }),
   );
 }
 
@@ -478,6 +501,12 @@ export async function ExploreView() {
         + 'each programme delivers. Nothing real reaches 100 % — that would mean 42 hard sets per '
         + 'muscle every week. They assume you train close to failure, and more days is not itself '
         + 'better for growth.' }),
+      // ⚠️ These two go under the list, not only in a tooltip. A `title` is
+      // invisible on a phone, and this is where a stranger is comparing nine
+      // strength percentages against each other — the exact moment the number's
+      // blind spot matters most.
+      el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
+      el('div', { class: 'field-help', text: INDIRECT_NOTE }),
       el('div', { class: 'field-help', text:
         `${PRESET_SYSTEMS.length} to choose from, with more to come.` }),
     ],
@@ -735,11 +764,30 @@ export async function WorkoutBuilderView(param) {
   const listWrap = el('div', { class: 'list' });
   const countLabel = el('div', { class: 'section-label' });
 
+  // ⚠️ THE ONE OPINION THIS SCREEN HOLDS, and Design Rule 6 is the reason it is
+  // allowed to. ACSM's 2026 position stand grades exercise ORDER at 88 %
+  // quality of evidence — the highest of anything in it, and better than the
+  // dose-response models the whole rating is built on. The app already knows
+  // the order and has never said anything about it (docs/research.md §6.16.1).
+  //
+  // It is a NOTE and nothing more: it never blocks a save, never reorders
+  // anything, never moves a score, and its last sentence says outright that
+  // leaving the order alone is a legitimate answer. The sentence is built in
+  // js/optimal.js so it cannot drift from the rule that decides when to show it.
+  const orderNote = el('div', { class: 'field-help' });
+
+  function renderOrderNote() {
+    const note = exerciseOrderNote(draft.exercises, exMap);
+    orderNote.textContent = note ? note.text : '';
+    orderNote.hidden = !note;
+  }
+
   function renderList() {
     countLabel.textContent = draft.exercises.length
       ? `Exercises · ${plural(totalSets(draft), 'set')} total`
       : 'Exercises';
 
+    renderOrderNote();
     listWrap.replaceChildren();
 
     if (!draft.exercises.length) {
@@ -895,6 +943,7 @@ export async function WorkoutBuilderView(param) {
       ),
       countLabel,
       listWrap,
+      orderNote,
       el('button', {
         class: 'btn block',
         onClick: () => openExercisePicker({

@@ -26,6 +26,7 @@ import {
   candidateGoals, buildGoal, goalProgress, requirementsFor, stallReasons,
   rankSystems, FIT_LABEL,
 } from './goals.js';
+import { PROGRESSION_EXPLAINER } from './progression.js';
 import {
   el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, trimNum,
 } from './ui.js';
@@ -169,7 +170,12 @@ async function activeGoalScreen(goal, profile, muscles) {
   // session, and a goal screen that waits on that before painting anything is a
   // blank screen for as long as the read takes.
   const measuredHost = el('div', { class: 'goal-measured' });
-  body.append(measuredHost, moreRows());
+  // Progression sits AFTER what the goal asks and what you are doing, not
+  // between them — "what this asks of you" and "what you are actually doing" are
+  // a pair and a digression about weights in the middle of them reads as part of
+  // the requirement. It also puts the sentence that matters most — the goal does
+  // not set your weights — next to the screen's other honest limits.
+  body.append(measuredHost, progressionBlock(), moreRows());
 
   trainingForMuscle(goal.muscle)
     .then((measured) => measuredHost.append(measuredBlock(goal, req, measured)))
@@ -285,6 +291,30 @@ function verdictBlock(p) {
       ? el('div', { class: 'field-help', text:
           'This goal has run its twelve weeks. Ending it keeps the record.' })
       : null,
+  );
+}
+
+/**
+ * ⚠️ THE ONE THING A GOALS SCREEN MUST SAY ABOUT WEIGHTS IS THAT THE GOAL DOES
+ * NOT SET THEM.
+ *
+ * docs/goals-plan.md §3.1. The feature Tim originally described had the app
+ * raising weights to keep you on pace, and it is the only thing in this app that
+ * could cause physical harm: it would hand HEAVIER weights to somebody who has
+ * missed two weeks and is "behind", when the right answer is to come back
+ * lighter. He agreed and the rule was decoupled.
+ *
+ * Leaving that silent would be worse than saying it. Somebody who set a goal and
+ * then sees the runner pre-fill a heavier weight has every reason to assume the
+ * two are connected — so the screen states what the suggestion actually reads,
+ * which is the last two sessions of that exercise and nothing else. The
+ * sentences live in js/progression.js beside the rule they describe.
+ */
+function progressionBlock() {
+  return el('div', { class: 'goal-verdict' },
+    el('div', { class: 'section-label', text: 'And the weights themselves' }),
+    ...PROGRESSION_EXPLAINER.map((t) => el('p', { class: 'goal-verdict-body', text: t })),
+    el('div', { class: 'req-source', text: 'ACSM position stand 2009 · research.md §12' }),
   );
 }
 

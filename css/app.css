@@ -664,6 +664,43 @@ select.input {
 .prefill-note b { color: var(--accent); font-weight: 650; }
 .prefill-note svg { flex: none; color: var(--good); }
 
+/* What to lift next, and why — js/progression.js.
+   No box (Rule 2): the icon and the accent-weighted first line carry it, and
+   the sentence underneath is the same faint grey every other explanation on
+   this screen uses. align-items must be flex-start, not center — the reason
+   runs to two or three lines on a phone and centring floats the icon into the
+   middle of the paragraph. */
+.suggest-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 6px;
+}
+.suggest-note svg { flex: none; color: var(--accent); margin-top: 1px; }
+.suggest-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.suggest-head { font-size: 13px; font-weight: 650; color: var(--accent); }
+/* Kept tight on purpose. This sits between the exercise name and the steppers,
+   and on a 360px phone an exercise that also carries a superset banner and a
+   note has very little room left — measured, the whole block has to stay around
+   three lines or the steppers get pushed to the bottom of the pane. */
+.suggest-why { font-size: 11.5px; line-height: 1.42; color: var(--ink-faint); }
+/* The one-tap way back. Deliberately quiet — it is the escape hatch on a
+   proposal, not a second thing to decide between. */
+.suggest-toggle {
+  align-self: flex-start;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: 2px 0;
+}
+.suggest-toggle:active { color: var(--accent); }
+/* Nothing is being proposed, so nothing is highlighted. A lay-off note is an
+   explanation of why the numbers are last time's, not a call to act. */
+.suggest-note.is-hold .suggest-head { color: var(--ink-soft); font-weight: 600; }
+.suggest-note.is-hold svg { color: var(--ink-faint); }
+
 /* ⚠️ flex: none is load-bearing. .pane-scroll is a column flex container, so a
    child with min-height: 0 gets CRUSHED below its content height once the pane
    overflows — and because the rows keep their own size they spill out of the

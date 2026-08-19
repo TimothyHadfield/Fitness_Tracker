@@ -172,6 +172,27 @@ ok(chartable.find((c) => c.id === bench.id).normalizable, 'bench is flagged norm
 ok(chartable.find((c) => c.id === plank.id) === undefined
    || !chartable.find((c) => c.id === plank.id).normalizable, 'plank is not normalisable');
 
+/* ---------- which source a chart opens on ----------
+   Tim, 2026-08-16: "default should be mostly workout measurements". The graph
+   used to hard default to benchmarks whenever any existed, so an exercise with
+   months of logged sets and two benchmarks opened on a two-point line. Each
+   source now reports how many DISTINCT DAYS it can draw, and the view opens on
+   whichever has more. Days, not readings — ten sets in one afternoon is still
+   one point on a chart, and counting readings would have made any single heavy
+   session outvote a year of benchmarks.                                      */
+{
+  const bch = chartable.find((c) => c.id === bench.id);
+  ok(bch.sources.benchmark.days === 2,
+     `bench has two benchmark days (${bch.sources.benchmark.days})`);
+  ok(bch.sources.workout.days === 2,
+     `and two workout days, from three sets across them (${bch.sources.workout.days})`);
+  // The vacuity guard: without this the days count could be reading sets and
+  // the assertion above would still pass by coincidence.
+  const wObs = await weightRepObservations(bench.id, 'workout');
+  ok(new Set(wObs.map((o) => o.date)).size === 2 && wObs.length === 3,
+     `${wObs.length} workout sets fall on 2 days, so days and readings genuinely differ`);
+}
+
 /* ---------- rep-normalised series (line chart) ---------- */
 // bench observations: 135x5 bench, 135x8 + 135x7 workout, 155x6 workout, 175x3 bench
 const obs = await weightRepObservations(bench.id);
@@ -933,6 +954,59 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   });
   r = await muscleStrength();
   ok(r.muscles.has('Quads'), 'and starts ranking as soon as its key lift is logged');
+
+  /* ---- work the rating had to throw away is REPORTED, not silently dropped ----
+     The pull-up unlock created a second way for a muscle to be grey, and the
+     two are not interchangeable: "log a weigh-in and this starts counting" is
+     something a person can act on, and "nobody has measured this exercise" is
+     not. Before this the panel said "nothing recorded for this muscle yet" over
+     thirty sets of pull-ups, which was true of the rating and a lie about the
+     training.                                                                */
+  {
+    await st.clearAll();
+    await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+
+    // ⚠️ A weigh-in is logged here on purpose, and the reason is worth knowing:
+    // WITHOUT one the map does not render at all. `profile.missing` includes
+    // body weight and muscleStrength() returns ready:false, so "you have logged
+    // pull-ups but we don't know what you weigh" is unreachable on this screen —
+    // by the time there is a panel to read, every bodyweight exercise with a
+    // published fraction is already counting. That message reaches the user on
+    // the GRAPH instead, which has no profile gate. The blocked list on the map
+    // therefore only ever carries the PERMANENT kind.
+    await st.logBodyWeight(180, '2026-08-01');
+
+    const pullId = BUILT_IN_EXERCISES.find((e) => e.name === 'Pull-Up').id;
+    const invId = BUILT_IN_EXERCISES.find((e) => e.name === 'Inverted Row').id;
+    await st.saveSession({
+      workoutId: 'wp', workoutName: 'Pull', date: '2026-08-10',
+      entries: [
+        { exerciseId: pullId, exerciseName: 'Pull-Up',
+          sets: [{ weight: 0, reps: 8 }, { weight: 0, reps: 7 }] },
+        // Measured at 37–79 % of body weight depending on bar height, which the
+        // app does not record. Permanently unrankable, and it must SAY so
+        // rather than disappear.
+        { exerciseId: invId, exerciseName: 'Inverted Row',
+          sets: [{ reps: 12 }, { reps: 12 }, { reps: 10 }] },
+      ],
+    });
+
+    const rb = await muscleStrength();
+    ok(rb.muscles.has('Back'), 'pull-ups alone rank a muscle once a weigh-in exists');
+    const bl = rb.blocked.get('Back');
+    ok(Boolean(bl) && bl.sets === 3,
+       `and the three inverted-row sets are reported rather than vanishing (${bl && bl.sets})`);
+    ok(bl && !bl.fixable && /never been measured/.test(bl.exercises[0].reason),
+       'named as the permanent kind, so no button promises a fix that does not exist');
+    ok(bl && bl.exercises.every((e) => e.name !== 'Pull-Up'),
+       'and the pull-ups are NOT in that list — they counted');
+
+    // Vacuity guard. Without it the assertions above would pass just as well
+    // over a rating that had quietly stopped admitting bodyweight work at all.
+    const backOnly = rb.muscles.get('Back');
+    ok(backOnly.contributors.some((c) => /Pull-Up/.test(c.exerciseName)),
+       'the pull-up is genuinely among the evidence, not merely absent from the blocked list');
+  }
 
   // D5: a maximum is not inferred from a very high-rep set. Found live — a
   // 135x25 burnout set extrapolated to 258 lb, beat a genuine 205x5 top set,

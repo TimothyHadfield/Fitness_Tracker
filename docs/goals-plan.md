@@ -3,10 +3,11 @@
 > `docs/vision.md` §1.6. Tim, 2026-08-18. **Nothing here is built.** He asked for the research first
 > and for problems to be raised rather than smoothed over, so §3 is the important section.
 
-**Status:** **PHASES 1 AND 2 BUILT 2026-08-19** — see **§11**, which records three things decided in
-the build rather than in this plan (the frozen target weight, the ambition calibration, and effort
-NOT scaling, which departs from §10.4). Phase 3 (the verdict) is still gated on the estimator and
-Phase 4 (progression) is deliberately last.
+**Status:** **PHASES 1, 2 AND 4 BUILT 2026-08-19.** §11 records what Phases 1–2 decided that this
+plan did not (the frozen target weight, the ambition calibration, and effort NOT scaling, which
+departs from §10.4). **§12 does the same for Phase 4 — progression** — and it is the section to read
+before touching a weight suggestion. Phase 3 (the verdict) is still the only thing left, and is still
+gated on the estimator.
 · **Written:** 2026-08-18
 
 **Revised the same day** after Tim's reply — see **§8** (progression, decoupled from the goal, with
@@ -216,8 +217,9 @@ sets rather than on the headline rating; §11.5.
 **Phase 3 — the verdict.** On track / ahead / behind / too early to say, computed against the
 estimator's band.
 
-**Phase 4 — progression.** Autoregulated from the last session, proposed and never imposed (§3.1).
-Deliberately last, because it is the only part that can hurt somebody.
+**Phase 4 — progression. BUILT 2026-08-19.** Double progression from the last two sessions, proposed
+and never imposed (§3.1). It was deliberately last, because it is the only part that can hurt
+somebody. **§12** records what the build decided.
 
 ---
 
@@ -521,3 +523,188 @@ Driven over CDP at 360 / 390 / 1180 px in both themes, per `progress.md` §0.6.
 And one bug the unit tests found: `Number(null)` is `0`, which is finite — so "nothing recorded for
 this muscle since the goal was set" would have shown an estimate of **zero** and reported the whole
 starting weight as a loss.
+
+---
+
+## 12. Progression — BUILT 2026-08-19 (Phase 4)
+
+§8 is the rule and it was followed. This section is what the build had to decide that §8 did not, and
+it is the section to read before touching a weight suggestion.
+
+| File | What it is |
+|---|---|
+| `js/progression.js` | **The whole rule** — pure, no DOM, no store, **no clock of its own**. Rep ladder, the 2-for-2 gate, the smallest honest increment, the lay-off suppression, and the sentence explaining each |
+| `js/views-session.js` | The runner pre-fills the suggestion and says why, in one line, on the exercise |
+| `js/views-goals.js` | One block on the goal screen saying the goal does **not** set your weights |
+| `tests/goals.test.mjs` | 108 more assertions, taking it to **196** |
+| `sw.js` | `js/progression.js` precached (a module missing from the list is a module that cannot load offline, and there is a test) |
+
+### 12.1 ⚠️ It is its own module, and that is the safety argument
+
+§3.1 says nothing may raise a weight because a deadline is close. The strongest way to say that is
+not a comment — it is a module that **imports nothing from Goals, is handed no goal and no date, and
+has no clock of its own**. There is nothing for a deadline to be measured against even if somebody
+tried.
+
+Putting it in `js/goals.js` would have put the rule one variable away from the thing it must never
+read. Two tests hold the line: one feeds `goal`, `today`, `daysLeft`, `behindBy` and a `progress`
+object straight into the options bag and requires the output to be **byte-identical** to the call
+with none of them; the other reads the module's own import list and asserts it names neither
+`goals.js` nor `store.js`. **Mutation-checked** — adding four lines that double the step when
+`daysLeft < 14` flips exactly the first of those and nothing else.
+
+### 12.2 ⚠️ The rep RANGE is inferred, because the app has no field for it
+
+A workout stores a set **count**, not a rep range, so §8.2's "the prescribed range" does not exist
+anywhere in the data. It is inferred from what the lifter is actually doing, off a ladder of ordinary
+training ranges — **3–5, 6–8, 8–12, 12–15, 15–20** — with the first band whose top reaches your rep
+count winning, so a count sitting on a boundary is at the **top** of the lower band. That is what
+lets somebody running 3×8 earn a load increase at 8 instead of being walked to 12 first.
+
+**The ladder is ours and is labelled as ours.** What is published is the 2-for-2 rule, the 2–10 %
+band, and the position stand's 8–12 RM for novices / 1–12 RM beyond that — the ladder sits inside
+those and invents no dose–response. Nothing under 3 reps gets its own band, deliberately: a band
+ending at 1 would mean a load increase dropping somebody to a single.
+
+### 12.3 ⚠️ The range comes from the BEST set and the gate from the WEAKEST — and getting that wrong was only visible in a browser
+
+Reps almost always fall across the sets of a working weight. **190 × 6, 6, 4, 3 is an ordinary bench
+session, not a failed one.** The first build read one number — the minimum — for both jobs, and the
+demo account showed what that does: it told a lifter who had just pressed 190 for 6 that *"the weight
+moves once you have hit 5"*, a target they had beaten twice in that same session, and a load increase
+would then have dropped them to 3 reps.
+
+So the two numbers do different jobs. `bestAtTop` says **which range this lift is being trained in**,
+because that is what somebody can do fresh. `repsAtTop` — the minimum — **gates the load increase**,
+because double progression asks every set to reach the top before the weight moves. Pinned as a
+regression test with the real numbers from that session.
+
+Every test passed over that defect, and jsdom would have too: the sentence was well-formed and the
+markup was correct. Only reading it against real training showed it was wrong.
+
+### 12.4 "Size it by the lift" narrows the CEILING, it never raises the step
+
+§8.2 rule 2 says take the smallest increment inside 2–10 %; rule 3 says size it by the lift. Read as
+"compounds take a bigger step" those fight, and the bigger-step reading is dangerous — at 225 lb the
+largest increment inside the band is **20 lb**, which is not a step anybody should be handed.
+
+So the lift narrows the **ceiling** and the app always takes the **smallest** increment that clears
+the 2 % floor. A compound may go to 10 %; everything else is capped at **5 %**, half the band. That
+makes rule 3 bite in the direction that is safe to be wrong in: at 60 lb the same 5 lb plate is a
+step for a bench press and **no honest step at all** for a pushdown, which produces §8.2 rule 4's
+message instead.
+
+"Compound" is *both* halves of the position stand's own wording — "muscle group size **and**
+involvement": a large muscle group (`Chest, Back, Quads, Hamstrings, Glutes, Full Body`) **and** more
+than one muscle worked, taken from `volume-map.js`'s published direct/indirect table rather than a
+new judgement list. A pec deck is a big muscle worked alone and is sized as isolation. **An exercise
+the app has never seen falls through to the smaller step**, never the larger.
+
+A swept assertion covers the whole envelope rather than examples: every lift from 10 to 500 lb, three
+exercises, four histories — the heaviest jump proposed anywhere is **10.0 %**, nothing raises a weight
+without two consecutive sessions at the top, and nothing lowers a rep target while the load is held.
+
+### 12.5 Two refusals that must not share a sentence
+
+At 30 lb the smallest jump is 16.7 % and is simply past the band. At 60 lb on an isolation lift it is
+8.3 % — **inside** the published 2–10 %, refused only by §12.4's narrowing. A single message saying
+"2–10 % is the recommended step" would contradict itself on screen in the second case, so there are
+two, and a test asserts each says the right thing.
+
+### 12.6 Propose, never impose — and what that looks like
+
+The suggestion is laid over the numbers the runner already pre-fills, **only on the sets at the
+working weight** (a lighter set is a warm-up and flattening a ramp somebody built on purpose would be
+its own bug), and while the load is held **reps are never lowered** — a set that already beat the
+suggestion keeps its own number. The screen says `Suggested: …` with the reason in one line
+underneath, and carries **"Use last time's numbers instead"**, a one-tap toggle that edits the list
+in place so a set added mid-session is not lost by using it.
+
+⚠️ **It has to stay about three lines, and that was measured rather than judged.** The block sits
+between the exercise name and the steppers, so on a 360 px phone the worst case — a superset banner,
+a per-exercise note *and* a suggestion, which the demo's Push day happens to have — pushed the
+steppers to the very bottom of the pane and put every set below the fold. The sentences were
+shortened and the type tightened until the steppers fit; `getBoundingClientRect()` on the sets is
+what says so, and a screenshot alone would not have.
+
+### 12.7 What is on the Goals screen, and why anything is
+
+Progression is decoupled from the goal, so the temptation is to say nothing about it on the goal
+screen. That would be worse than saying it: somebody who sets a goal and then sees the runner
+pre-fill a heavier weight has every reason to assume the two are connected. One block —
+*"And the weights themselves"* — states the rule, states that **the goal never touches it and why a
+calendar-driven one would be backwards**, and states that it only proposes. The sentences live in
+`js/progression.js` beside the rule they describe, so they cannot drift from it.
+
+### 12.8 ⚠️ A clock may SUPPRESS a suggestion. It may never create or increase one.
+
+The first build shipped with a stated gap: two consecutive sessions meant two consecutive sessions of
+that exercise however far apart, so after a month off the rule could propose a step up from where you
+left off. **That is §3.1's failure arriving from the other side.** §3.1's objection was never that
+clocks are forbidden — it was that **time must not make the app ask for more** — and handing somebody
+a heavier weight than they have touched in a month does exactly that, whether the trigger is a
+deadline or a gap.
+
+The reason it was left open was that closing it appeared to need a clock and an invented deload
+number. **It needs neither, if the clock is only ever allowed to withhold.** So:
+
+- `suggestProgression()` takes one temporal fact, `daysSinceLast`, a plain day count **measured by
+  the caller**. There is still no clock in the module, no date arithmetic and nothing for a deadline
+  to be compared against — the structural test that asserts so still passes.
+- Past the threshold it returns **last time's numbers** and one sentence saying why. That is the
+  app's behaviour before progression existed. It prescribes **no reduction**, because nobody has
+  measured one.
+- The check runs **before every other branch**, so no path exists on which a gap reaches the load
+  rule at all.
+
+**The asymmetry is asserted as a property, not as cases**, which is what makes it hold whatever
+threshold is chosen: across 10 692 calls — every lift from 10 to 500 lb, three exercises, four
+histories, nine gap lengths — a gap never produces a suggestion heavier than the same history with no
+gap, and never conjures one where there was none. It changes 4 752 of them, so the property is a
+result rather than an unread argument. **Mutation-checked:** making a long gap triple the step
+instead of withholding it flips nine assertions.
+
+⚠️ **`LAYOFF_DAYS = 21` is ours and the constant says so.** `research.md` §12.4 records that the
+position stand "says nothing about what to do after a missed block", and no other source here offers
+a threshold. Three weeks rather than two because a fortnight between two sessions of one lift is
+inside plenty of people's normal cadence, and a threshold that fires on ordinary training would
+withhold the feature from the people using it correctly. **The cost of being wrong either way is one
+session at last time's numbers** — which is what makes a guessed threshold acceptable here and would
+not make a guessed deload percentage acceptable.
+
+On screen the lay-off note is deliberately quieter than a suggestion — grey rather than accent — and
+carries **no "use last time's numbers instead" toggle**, because nothing was proposed and there is
+nothing to undo.
+
+### 12.9 Bodyweight movements — and the band is a percentage of what you ACTUALLY lift
+
+Reps-only work was originally declined: the rule was stated in load *and* reps, so a push-up got
+nothing. **That is no longer defensible and has been closed**, because body-weight work landed in
+`js/e1rm.js` and `js/exercises.js` while this was being built and pull-ups, chin-ups and dips now
+rate a muscle through the real pipeline.
+
+- **A movement with no weight field gets "one more rep than last time"** — the same double
+  progression with the load lever removed, and the only progression a push-up has.
+- **⚠️ A movement where the lifter IS the load gets the ordinary rule, measured against the real
+  resistance.** `totalResistance()` in `e1rm.js` is imported, never copied — one body-weight table,
+  sourced line by line, not two that drift. Without it, 5 lb on a 25 lb dip belt reads as a **20 %**
+  jump and is refused; against ~205 lb of real resistance it is **2.4 %** and is exactly the step the
+  position stand describes. Twelve strict pull-ups twice over now earns a belt rather than a
+  fourteenth rep, and the sentence names the 205 lb so the percentage can be checked.
+- **Barbell, dumbbell and machine work is untouched.** `totalResistance()` returns null for
+  everything with no body-weight fraction, and a test asserts the suggestion is byte-identical with
+  and without a body weight for three such lifts.
+- **No body weight recorded → it degrades to "one more rep"** rather than guessing one.
+- ⚠️ **An assist machine runs the other way** — the number entered is help, so adding to it makes the
+  set easier, and a load rule there would propose a regression that reads like progress. Nothing in
+  the shipped table is flagged `assist` today (asserted, not assumed), and the guard is in place so
+  that the day one is, the suggestion degrades to a rep instead of silently inverting.
+
+### 12.10 Still not done
+
+- **The verdict (Phase 3)** is unchanged and still gated on the estimator.
+- **Nothing proposes a reduction, ever.** A lay-off withholds; it does not deload. That is a real
+  limitation and it is the same one the source has.
+- **The gap is measured per exercise, not per muscle or per programme.** Somebody who swapped barbell
+  rows for dumbbell rows for six weeks reads as away from barbell rows, because that is what the
+  history says.

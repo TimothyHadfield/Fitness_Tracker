@@ -367,6 +367,164 @@ const FORCE_TOTAL = new Set([
   'Sumo Squat', 'Single-Leg Calf Raise', 'Single-Leg Hip Thrust', 'Wrist Roller',
 ]);
 
+/* ------------------------------------------------------------------ *
+ * How much of your body weight a bodyweight movement actually carries
+ * ------------------------------------------------------------------ *
+ *
+ * Same shape as the two override lists above: a named table, and the reasoning
+ * for each entry sits beside it. What is different is the standard of proof.
+ *
+ * ⚠️ AN EXERCISE IS IN THIS TABLE ONLY IF THE FRACTION IS KNOWN — measured on a
+ * force plate, or fixed by statics. There is no fallback by equipment, no
+ * interpolation between neighbours and no "about right" entry. An exercise
+ * missing from this table stays unrankable and the screen says why, which is a
+ * shipping outcome rather than a hole. An invented fraction here would be worse
+ * than nothing: it would be multiplied by a real body weight, run through the
+ * e1RM curve and presented in the same colour as a measured lift.
+ *
+ * TWO KINDS OF ENTRY, and the difference is stated per entry:
+ *
+ *   'statics'  — the body hangs from the hands and nothing else touches the
+ *                ground, so the hands carry ALL of it. This is not a claim that
+ *                needs a study; it is the definition of a free hang, and it is a
+ *                stronger footing than a citation would be.
+ *
+ *                ⚠️ THE OBVIOUS REFINEMENT IS REFUSED ON PURPOSE. A pull-up
+ *                could be trimmed below 1.00 by subtracting the segments that
+ *                do not travel — the hands stay on the bar, and the forearms
+ *                barely rise — which is worth roughly four per cent. Doing that
+ *                means adopting a cadaver segment-mass table, and the two in
+ *                use disagree structurally rather than numerically: Winter's
+ *                thigh is 10.0 % of body mass and de Leva's is 14.16 %, because
+ *                Zatsiorsky's hip planes assign gluteal mass to the thigh where
+ *                Dempster cuts at the hip joint centre. They are not
+ *                interchangeable segment by segment. Winter's own fractions
+ *                trace, through Miller & Nelson (1973) and Plagenhoef (1971),
+ *                to eight embalmed white male cadavers of mean age ~68 and mean
+ *                mass ~60 kg, which Dempster's report itself calls smaller than
+ *                the population of interest. Four per cent is smaller than the
+ *                ratio noise already in this model, so the refinement would buy
+ *                precision the sample cannot support. 1.00 stands.
+ *
+ *   'measured' — the FEET share the load through a lever, so the split is a
+ *                genuine empirical quantity and nothing may be reasoned about
+ *                it. Only force-plate figures are accepted.
+ *
+ * `q` is how well the FRACTION is known — not how hard the exercise is, and not
+ * how well it converts to a barbell. That second question is the `ratio` in
+ * muscle-evidence.js and is a separate, weaker number. Keeping the two apart is
+ * the whole honesty of this feature: one is physics, the other is an estimate.
+ *
+ * ⚠️ WHAT IS DELIBERATELY ABSENT, so nobody re-derives it and quietly adds it:
+ *
+ *   Inverted Row — the fraction IS measured, and that is exactly why it is out.
+ *     Melrose & Dawes (2015, J Athl Enhanc 4:1) hold the start position at four
+ *     angles and get 37.4 % at 30 degrees, 52.9 % at 45, 68.1 % at 60 and 79.4 %
+ *     at 75; Vural et al. (2023, PLoS ONE 18(9):e0291608) put load cells on
+ *     suspension straps and get 69.5-75.7 % near horizontal. The number depends
+ *     entirely on the bar height, the app records no bar height, and a 2:1 range
+ *     on the single most important term is not something a citation can rescue.
+ *     Both sources are suspension-trainer work in any case, not a bar.
+ *
+ *   Incline Push-Up — Ebben et al. (2011) measured 55 % with the hands on a
+ *     30.5 cm box and 41 % on a 61 cm box. Same objection: the app does not
+ *     record the height, and 41 vs 55 is not a rounding difference.
+ *
+ *   Decline Push-Up — Ebben's two heights are close (70 % and 74 %), so the
+ *     height problem is mild. It is out for a different reason: those are peak
+ *     dynamic ground-reaction forces, a different measurement basis from the
+ *     static figure used for the standard push-up below, and mixing the two
+ *     scales would put a decline push-up BELOW a regular one, which is absurd.
+ *     Re-admitting it means re-basing the whole family on Ebben, not bolting
+ *     one number on.
+ *
+ *   Diamond and Wide-Grip Push-Up — no percent-of-body-mass figure exists for
+ *     hand placement. Gouvali & Boudolos (2005) tested those variants and
+ *     reported EMG only. NONE FOUND, so they stay out.
+ *
+ *   Assisted Pull-Up — the fraction is a pull-up's 1.00 and is not the problem.
+ *     What is unknown is how a machine's stack maps to load taken off you: the
+ *     counterweight linkage is not standardised across brands and nothing
+ *     published maps one to the other. Assuming 1:1 is the obvious guess and
+ *     is still a guess, on a machine, which is the exact shape of error
+ *     docs/strength-estimate-plan.md warns about. It stays unrankable.
+ *
+ *   Handstand and Pike Push-Up — the wall and the feet take an unrecorded share.
+ *     The "90-100 % of body weight" figure that circulates for handstand
+ *     push-ups is misattributed to a paper that studied ordinary push-ups.
+ *
+ *   Every lower-body and trunk bodyweight movement (Bodyweight Squat, Sissy
+ *     Squat, Cossack Squat, Nordic Hamstring Curl, Glute-Ham Raise, Single-Leg
+ *     Hip Thrust, Single-Leg Calf Raise, Back Extension, 45-Degree
+ *     Hyperextension, every Core hold) — out for a reason that is not about
+ *     sourcing at all. Their key lifts log EXTERNAL load carried BY a body that
+ *     is already there: a 275 lb back squat means 275 lb on the bar, on top of
+ *     the lifter. So converting a bodyweight squat to "an equivalent back
+ *     squat" needs the key lift's own body-weight component modelled first, and
+ *     without that the honest answer is that a bodyweight squat implies an
+ *     empty bar. Upper-body pressing and pulling do not have this problem —
+ *     a bench press and a push-up both resist a load at the hands, and a row
+ *     and a pull-up both pull one — which is why this table is upper body only.
+ *     Core is unrankable anyway (no published standards exist).
+ */
+export const BODY_WEIGHT_FRACTION = {
+  // ---- free hangs: 1.00 by statics, not by citation ----
+  // Nothing but the hands is in contact with anything, so the hands carry the
+  // whole body. Grip width barely moves the maximum, which is not an assumption:
+  // Strength Level's own 1RM standards for pull-ups and chin-ups at 180 lb male
+  // differ by under 1 % at every level (+74 vs +76 at the median), so one entry
+  // covers the family.
+  'Pull-Up':             { fraction: 1.00, q: 0.95, basis: 'statics' },
+  'Chin-Up':             { fraction: 1.00, q: 0.95, basis: 'statics' },
+  'Neutral-Grip Pull-Up':{ fraction: 1.00, q: 0.90, basis: 'statics' },
+  'Wide-Grip Pull-Up':   { fraction: 1.00, q: 0.90, basis: 'statics' },
+  // Parallel-bar dips. Same free hang, supported at the hands, legs clear.
+  'Chest Dip':           { fraction: 1.00, q: 0.95, basis: 'statics' },
+  'Triceps Dip':         { fraction: 1.00, q: 0.95, basis: 'statics' },
+  // ⚠️ Bench Dip is NOT here: the feet are on the floor and take an unrecorded
+  // share, which makes it the same problem as the inverted row.
+
+  // ---- feet on the floor: measured, or not admitted ----
+  //
+  // Suprak DN, Dawes J, Stephenson MD (2011), "The effect of position on the
+  // percentage of body mass supported during traditional and modified push-up
+  // variants", J Strength Cond Res 25(2):497-503 (PMID 20179649). Twenty-eight
+  // strength-trained men, hands on a force platform:
+  //     up position   69.16 % +/- 2.83
+  //     down position 75.04 % +/- 2.62
+  //
+  // THE DOWN POSITION IS THE ONE USED, on purpose. A set of push-ups fails at
+  // the bottom, and a 1RM is a quasi-static grind against the hardest point of
+  // the movement — so the bottom figure is the one that behaves like a weight
+  // on a bar. Independently reproduced: Mier et al. (2014), Int J Exerc Sci
+  // 7(2):161-168, force plates, n=37, give 74.6 % +/- 3.6 for men in the same
+  // static down position. Two labs, two samples, half a percent apart.
+  //
+  // ⚠️ Not the number most people quote. The familiar "a push-up is 64 % of
+  // your body weight" is Ebben et al. (2011), a peak dynamic ground-reaction
+  // force, and "66.4 %" is Gouvali & Boudolos (2005) at the top. All three are
+  // real force-plate measurements of DIFFERENT quantities, which is why they
+  // disagree. Mier also measured the dynamic maximum and got 97.7 % +/- 8.1 for
+  // men — that figure includes accelerating the body and is not comparable to a
+  // barbell load, so it is not used here either. `q` is well below the free
+  // hangs because which of these quantities belongs in a strength estimate is a
+  // judgement, not a measurement.
+  'Push-Up':             { fraction: 0.75, q: 0.70, basis: 'measured' },
+};
+
+/**
+ * The published body-weight fraction for one exercise, or null when there is
+ * none — which means "cannot be ranked or charted", never "assume something".
+ */
+export function bodyWeightFractionFor(exercise) {
+  if (!exercise || !exercise.name) return null;
+  const spec = BODY_WEIGHT_FRACTION[exercise.name];
+  // A custom exercise the user typed can never acquire an entry, and guessing
+  // one from its equipment is exactly what this table refuses to do.
+  if (!spec || exercise.isCustom) return null;
+  return { fraction: spec.fraction, quality: spec.q, basis: spec.basis, assist: false };
+}
+
 export function loadTypeFor(name, equipment, fields) {
   if (!fields.includes('weight')) return null;      // nothing to disambiguate
   if (FORCE_TOTAL.has(name)) return 'total';

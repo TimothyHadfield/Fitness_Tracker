@@ -15,7 +15,10 @@ const {
   hypertrophyResponse, strengthVolumeResponse, strengthFrequencyResponse,
   rateProgramme, weeksForRotation, band, explain,
   VOLUME_CEILING, STRENGTH_VOLUME_CEILING, STRENGTH_FREQ_CEILING,
+  STRENGTH_CAVEAT, STRENGTH_CAVEAT_SHORT,
+  isCompoundLift, exerciseOrderNote, ORDER_QOE,
 } = await import('../js/optimal.js');
+const { SESSION_CEILING } = await import('../js/volume-map.js');
 
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'PASS  ' : 'FAIL  ') + msg); if (!cond) fails++; };
@@ -105,6 +108,44 @@ ok(hypertrophyResponse(200) === hypertrophyResponse(42),
 ok(unclampedRatio > clampedRatio,
    `the clamp is what does it: unclamped the same comparison would run away to `
    + `${unclampedRatio.toFixed(2)}x`);
+
+/* ---------- refusal 2, the per-session half ---------- */
+// docs/research.md §6.12, shipped 2026-08-19. Same refusal, other axis: one
+// session is credited at most SESSION_CEILING fractional sets per muscle,
+// because that is the top of the per-session data range.
+
+const day = (sets) => rateProgramme(
+  [{ exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets }] }], exMap, { daysPerWeek: 1 });
+
+ok(near(day(60).raw.hypertrophy, day(200).raw.hypertrophy, 1e-9),
+   'past the top of the per-session data range the credit is FLAT — 60 sets of bench in one day '
+   + 'and 200 in one day score exactly the same');
+ok(day(60).hypertrophy === 20,
+   `and a 60-sets-in-one-day programme bands to 20 % growth, not the 25 % it scored before the `
+   + `clamp (${day(60).hypertrophy} %)`);
+
+// ⚠️ The vacuity guard, and it is the important one. The clamp must not have
+// turned into a frequency reward: below the ceiling, splitting sets across days
+// still buys nothing for growth. That is refusal 1, re-asserted against the new
+// code path rather than assumed to have survived it.
+const twelveOne = rateProgramme([{ exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 12 }] }], exMap, { daysPerWeek: 1 });
+const sixTwice = rateProgramme([
+  { exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 6 }] },
+  { exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 6 }] },
+], exMap, { daysPerWeek: 2 });
+ok(near(twelveOne.raw.hypertrophy, sixTwice.raw.hypertrophy, 1e-9),
+   '12 sets in one session and 6+6 STILL score identically for growth — the rejected '
+   + 'per-session-log-sum model scored the split 157 % higher, which is a frequency reward in a '
+   + 'per-session coat');
+
+// The decision the cap is: 24, not 11. Thurston is the system a cap at 11 would
+// have moved (55 -> 50 growth, on a preprint's self-described arbitrary
+// threshold), so his badge is pinned.
+ok(SESSION_CEILING === 24, 'per-session credit is capped at the top of the DATA, 24 fractional sets');
+ok(rate(preset('preset-thurston-6day')).hypertrophy === 55,
+   'and Mike Thurston\'s split still rates 55 % for growth — a cap at the 11-set point of '
+   + 'diminishing returns would have made it 50, on evidence nowhere near strong enough to move a '
+   + 'shipped number');
 
 /* ---------- refusal 3: no false precision ---------- */
 
@@ -238,6 +279,86 @@ ok(scored.find((s) => s.p.id === 'preset-volume-landmarks').r.under.length <= 1,
 
 ok(/100/.test(explain(55)) && /nobody/.test(explain(55)),
    'the explanation says outright that nothing real reaches 100 %');
+
+/* ---------- ⚠️ what the STRENGTH number does not know ---------- */
+// docs/research.md §6.13. A planned workout stores a set COUNT and no load, so
+// 3x20 and 3x5 are the same programme to this module. Load is worth SMD 0.60
+// [0.38, 0.82] for strength — bigger than anything the rating does model. The
+// model cannot be fixed without a data-model change; the CLAIM can, and must.
+
+{
+  const bench = { exercises: [{ exerciseId: ex('Barbell Bench Press').id, sets: 3 }] };
+  const heavy = rateProgramme([bench], exMap, { daysPerWeek: 1 });
+  const light = rateProgramme([bench], exMap, { daysPerWeek: 1 });
+  ok(heavy.strength === light.strength,
+     '⚠️ the app genuinely cannot tell 3x5 from 3x20 — a planned exercise carries a set count and '
+     + 'nothing else, which is exactly why the caveat has to exist');
+
+  for (const s of [STRENGTH_CAVEAT, STRENGTH_CAVEAT_SHORT]) {
+    ok(typeof s === 'string' && s.length > 60, 'the strength caveat is a real sentence');
+    ok(/heavy|weight/i.test(s), 'and it names what the score cannot see: how heavy the work is');
+    ok(/set count|sets/i.test(s), 'and says why — the app stores a count of sets');
+  }
+  ok(/3 sets of 20|3 sets of 5/.test(STRENGTH_CAVEAT) && /3 sets of 20/.test(STRENGTH_CAVEAT_SHORT),
+     'in the concrete form a stranger can check against their own programme, not in the abstract');
+  ok(/growth|size/i.test(STRENGTH_CAVEAT) && !/growth/i.test(STRENGTH_CAVEAT_SHORT),
+     'the long form says the GROWTH number is unaffected — load moves hypertrophy by SMD 0.12, an '
+     + 'interval crossing zero — and the badge-sized one does not have room to');
+}
+
+/* ---------- exercise order ---------- */
+// docs/research.md §6.16. ACSM 2026 grades exercise order at 88 % quality of
+// evidence, the highest of anything in the stand. This is a NOTE, never a
+// score: what is asserted is when it speaks and when it stays quiet.
+
+{
+  ok(ORDER_QOE === 88, 'the position stand\'s own quality-of-evidence grade is carried, not rounded');
+
+  const compound = ['Barbell Bench Press', 'Back Squat', 'Deadlift', 'Overhead Press',
+    'Barbell Row', 'Pull-Up', 'Lat Pulldown', 'Leg Press', 'Romanian Deadlift', 'Hip Thrust'];
+  const isolation = ['Lateral Raise', 'Dumbbell Fly', 'Leg Extension', 'Lying Leg Curl',
+    'Barbell Curl', 'Triceps Pushdown', 'Standing Calf Raise', 'Barbell Shrug', 'Face Pull',
+    'Cable Crossover'];
+  ok(compound.every((n) => isCompoundLift(ex(n))),
+     `all ${compound.length} of the multi-joint lifts somebody would want to be fresh for are `
+     + 'recognised as compounds');
+  ok(isolation.every((n) => !isCompoundLift(ex(n))),
+     `and none of ${isolation.length} isolation movements is — including the ones that touch two `
+     + 'muscles anyway (a curl has a grip; a face pull is not a heavy compound)');
+
+  const w = (...names) => names.map((n) => ({ exerciseId: ex(n).id }));
+
+  ok(exerciseOrderNote(w('Back Squat', 'Leg Press', 'Leg Extension', 'Lying Leg Curl'), exMap) === null,
+     'a workout that already puts its compounds first says NOTHING — silence is the common case '
+     + 'and an empty reassurance would be noise');
+  ok(exerciseOrderNote([], exMap) === null, 'and an empty workout says nothing');
+
+  const note = exerciseOrderNote(w('Leg Extension', 'Back Squat', 'Lying Leg Curl'), exMap);
+  ok(note && note.names.length === 1 && note.names[0] === 'Back Squat',
+     'a squat behind a leg extension is named, and only it');
+  ok(/88 %/.test(note.text) && /ACSM/.test(note.text),
+     'the note states the evidence and its grade rather than asserting a rule');
+  ok(/strength finding/.test(note.text) && /no claim about muscle size/.test(note.text),
+     '⚠️ and confines the claim to strength — the stand grades order under strength and makes no '
+     + 'equivalent claim for hypertrophy');
+  ok(/Leave the order alone/.test(note.text),
+     '⚠️ and says outright that leaving it is a legitimate answer. Design Rule 6: an opinion this '
+     + 'app has earned is still not a scold');
+
+  const two = exerciseOrderNote(w('Lateral Raise', 'Overhead Press', 'Triceps Pushdown', 'Barbell Bench Press'), exMap);
+  ok(two && two.names.length === 2 && /come after/.test(two.text),
+     'two late compounds are both named, and the sentence agrees with itself grammatically');
+
+  // Cardio is skipped rather than counted as isolation, so a warm-up on a bike
+  // does not put every lift behind it "out of order".
+  ok(exerciseOrderNote(w('Stationary Bike', 'Back Squat', 'Leg Extension'), exMap) === null,
+     'five minutes on a treadmill first is not isolation work — an exercise that produces no '
+     + 'countable volume is skipped');
+  // Vacuity guard for the line above: the same walk with a real isolation lift
+  // in that slot DOES fire, so the null is a result rather than a broken lookup.
+  ok(exerciseOrderNote(w('Leg Extension', 'Back Squat'), exMap) !== null,
+     'and the same shape with a leg extension in front of the squat does fire');
+}
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

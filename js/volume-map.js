@@ -39,6 +39,39 @@
 // heuristic to improve the accuracy of dose-response modeling, rather than a
 // definitive standard for practical application across all contexts."
 //
+// ── ⚠️ 0.5 IS THE BIGGEST LEVER IN THE WHOLE RATING, AND IT IS A CHOICE ──────
+//
+// Nothing else in js/optimal.js moves the shipped numbers as far as this one
+// constant, and until 2026-08-19 nothing said so. docs/research.md §6.17.1 has
+// the working; the short version:
+//
+//   Both papers ran an EXPLORATORY CONTINUOUS fit — "what weight would actually
+//   maximise model performance?" — and neither answer is 0.5. Remmert et al.
+//   (https://osf.io/cuvsa) put an indirect set at ~32 % of a direct one for
+//   hypertrophy and ~16 % for per-session strength; Pelland et al.
+//   (https://osf.io/rm4xy) at ~39 % for weekly strength volume. Remmert's
+//   authors write plainly: "one might reasonably critique the present study
+//   quantifying all indirect sets as 50 % of a direct set."
+//
+//   Computed against the nine shipped systems, moving 0.5 -> 0.32 drops FIVE of
+//   the nine growth ratings a whole band (Israetel, Thurston, Bumstead, Volume
+//   Landmarks and PPL). That is a larger effect than every other axis pulled in
+//   §6.12-§6.15 put together.
+//
+// ⚠️ KEEP 0.5 ANYWAY, and the reason is not inertia. 0.5 is the best-supported
+// of the three counting methods that were actually COMPARED against each other,
+// with the Bayes factors above. The continuous fits are exploratory analyses
+// reported in supplements, and swapping a tested heuristic for one of those
+// would be trading a measured comparison for a better-sounding guess. Pelland
+// et al. also say the right weight "likely depends on ... the hypertrophy/
+// strength outcome measured, the specific exercise trained, the repetition
+// range employed, and the training status of the participants" — i.e. there is
+// no single right number to move to.
+//
+// What changes instead is that the app SAYS SO. INDIRECT_NOTE below is the
+// sentence, and it is exported from here so the screen and the constant cannot
+// drift apart.
+//
 // ── WHERE THE CLASSIFICATIONS COME FROM ──────────────────────────────────────
 //
 // The big ones are not invented here. Table 1 of that paper lists exactly which
@@ -65,6 +98,19 @@
 
 export const DIRECT = 1.0;
 export const INDIRECT = 0.5;
+
+/**
+ * The one honest sentence about the line above, for the screen.
+ *
+ * Lives here rather than in a view because it describes this constant, and a
+ * caveat kept somewhere else is a caveat that goes stale the day the constant
+ * moves. Same reason optimal.js builds its own captions.
+ */
+export const INDIRECT_NOTE =
+  'Sets are counted fractionally: one for a muscle an exercise trains directly, half for one it '
+  + 'only helps with. That half is a modelling choice — the best-supported way of counting that has '
+  + 'been tested, but not a measured fact. Counting indirect work lower would drop several of these '
+  + 'percentages by a band.';
 
 /**
  * The muscle groups weekly volume is totalled over.
@@ -234,6 +280,46 @@ export function volumeContributions(exercise) {
 }
 
 /**
+ * The most fractional sets ONE SESSION may be credited with for one muscle.
+ *
+ * ⚠️ THIS IS THE SAME REFUSAL AS `VOLUME_CEILING = 42` IN optimal.js, ON THE
+ * OTHER AXIS: don't score past where the data goes. It is NOT a claim that sets
+ * stop working at 24, and it must never be described as one.
+ *
+ * 24 is the top of the per-session RANGE in Remmert et al. (2025), SportRxiv
+ * 537 — the same 67 studies and 2,058 participants as the weekly paper, counted
+ * per session instead of per week. Their per-session fractional volumes run
+ * 0–24 (mean 5.95 ± 4.49). Above 24 nobody has measured anything, so above 24
+ * this file credits nothing further.
+ *
+ * ⚠️ IT IS DELIBERATELY *NOT* 11, and that is the whole decision.
+ * docs/research.md §6.12 has the working. That paper's "point of undetectable
+ * outcome superiority" is ~11 fractional sets a session, and capping there
+ * would have been indefensible: it is a preprint still not peer reviewed 16
+ * months after posting, R²marginal is 16.1 %, the authors call the threshold
+ * "arbitrarily determined", and they say outright that above it hypertrophy
+ * "continued to occur, again in a decreasing manner" — undetectable is not the
+ * same as absent. Capping at 11 would have moved a real shipped rating
+ * (Thurston 55 % -> 50 % growth) on the strength of that. Capping at the top of
+ * the data range moves nothing real:
+ *
+ *   Effect on the nine shipped systems: NONE. The largest single (session,
+ *   muscle) figure in the whole library is 15.0 (Thurston, Chest day, Chest).
+ *   Effect on a fabricated 60-sets-in-one-day programme: 25 % -> 20 % growth.
+ *
+ * ⚠️ AND WHAT IT DOES NOT DO. Above 24 sets on one muscle in one day, splitting
+ * them across two days does now score higher — because the second day is
+ * credited and the 25th set of the first is not. That is the clamp declining to
+ * extrapolate, not a frequency reward: below the clamp, which is everywhere any
+ * real programme lives, 12 sets in one day and 4+4+4 still score identically
+ * for growth, and tests/optimal.test.mjs asserts it. The alternative modelled in
+ * §6.12.4 — summing a per-session response across sessions — scores six
+ * sessions of two 157 % above one session of twelve, reorders the nine, and IS
+ * refusal #1 in optimal.js wearing a per-session coat. It was rejected.
+ */
+export const SESSION_CEILING = 24;
+
+/**
  * Fractional weekly sets per muscle for a whole programme.
  *
  * @param {Array} workouts   [{ exercises: [{ exerciseId, sets }] }]
@@ -249,6 +335,13 @@ export function weeklyVolume(workouts, exMap, weeks = 1) {
   const span = weeks > 0 ? weeks : 1;
 
   for (const w of workouts || []) {
+    // ⚠️ Totalled PER WORKOUT first, then clamped, then added to the week. One
+    // element of `workouts` is one session — a planned workout when this is
+    // rating a programme, one recorded session when store.trainingForMuscle()
+    // calls it — so this loop is the only place a per-session ceiling can be
+    // applied at all.
+    const session = new Map();
+
     for (const item of (w && w.exercises) || []) {
       // ⚠️ ONE set is one set, whatever is nested inside it. A drop set or a
       // myo-rep counts once (D23), and because `sets` is a plain count that is
@@ -259,8 +352,12 @@ export function weeklyVolume(workouts, exMap, weeks = 1) {
       const ex = exMap && exMap.get ? exMap.get(item.exerciseId) : null;
       if (!ex) continue;
       for (const c of volumeContributions(ex)) {
-        out.set(c.muscle, (out.get(c.muscle) || 0) + sets * c.weight / span);
+        session.set(c.muscle, (session.get(c.muscle) || 0) + sets * c.weight);
       }
+    }
+
+    for (const [muscle, sets] of session) {
+      out.set(muscle, (out.get(muscle) || 0) + Math.min(sets, SESSION_CEILING) / span);
     }
   }
   return out;

@@ -419,7 +419,8 @@ quarter of the variance cannot honestly separate an 83 % from an 87 %, which is 
   the model outside what it measured.
 - Moderator analyses are explicitly "hypothesis generating" only.
 - Volume was quantified per week, which the authors note is an arbitrary time base; a parallel paper
-  by the same group covers *per-session* volume. 🔴 **Not yet pulled.**
+  by the same group covers *per-session* volume. ~~🔴 **Not yet pulled.**~~ **Pulled 2026-08-19 —
+  §6.12.**
 
 ### 6.7 Proximity to failure 🟡 — see also §3
 
@@ -492,7 +493,13 @@ ambition — but the sentence the app shows is now a measured number rather than
   the practicality of tailoring training programs based on short-term outcomes".
 - **Non-responders are rare**: in one 16-week analysis 82 % were robust or excellent responders, 5 %
   poor.
-- **Individual responsiveness is reproducible** across repeated protocols after detraining.
+- ~~**Individual responsiveness is reproducible** across repeated protocols after detraining.~~
+  **Refined 2026-08-19 — see §6.18.3.** Response magnitude *is* reproducible (r ≈ 0.67–0.76 across
+  two identical 10-week blocks); *non*-response is not — nobody was a non-responder twice on more
+  than one measure. The two halves of that sentence want keeping apart.
+
+⚠️ **This section shipped on 2026-08-18 with no citations at all**, which by this file's own rule is
+a defect. Sources are in **§6.18.3** and the numbers survived the check.
 
 ⚠️ **Together: population data cannot tell one person what they will gain in three months, but that
 person's own history predicts them well.** Any goal or projection must be calibrated to the
@@ -500,9 +507,566 @@ individual's measured trend, and expressed as a range — never as a promised nu
 
 ### 6.8 Still to pull 🔴
 
-Load / rep range (Schoenfeld's repetition continuum, 2021 — referenced, still not read in full),
+~~Load / rep range (Schoenfeld's repetition continuum, 2021 — referenced, still not read in full),
 rest intervals, range of motion and lengthened partials, exercise selection and variation, and the
-per-session volume paper from §6.6. Each either enters the rating model or becomes a stated caveat.
+per-session volume paper from §6.6. Each either enters the rating model or becomes a stated caveat.~~
+
+**PULLED 2026-08-19.** Four of the five are below: **per-session volume §6.12**, **load / rep range
+§6.13**, **rest intervals §6.14**, **range of motion §6.15**. **Exercise selection and variation is
+still not pulled** 🔴 — but §6.16 turned up an adjacent finding with better evidence than any of the
+four (exercise *order*), so that is where the next pull should start.
+
+Three of the four end as **stated caveats rather than model terms**, and that is the honest result
+rather than a failure to find something: the app stores no load, no reps, no rest and no range of
+motion on a *planned* workout, so three of these axes have nothing to attach to even if the evidence
+had been strong. It mostly is not. The one that does touch the model is per-session volume, and it
+touches it far less than expected — see §6.12.4.
+
+### 6.12 Per-session volume 🟡 — the ceiling that isn't one
+
+*Pulled 2026-08-19. Driver: the rating counts weekly sets with no per-session cap, so a programme
+doing 12 sets of chest in one day scores the same as one spreading them over three. Does it deserve
+to?*
+
+**Remmert JF, Pelland JC, Robinson ZP, Hinson SR, Zourdos MC. "Is There Too Much of a Good Thing?
+Meta-Regressions of the Effect of Per-Session Volume on Hypertrophy and Strength." SportRxiv
+preprint, posted 2 April 2025** (manuscript last modified March 2025).
+https://sportrxiv.org/index.php/server/preprint/view/537 · supplements https://osf.io/dqka3/
+
+This is the parallel project §6.6 flagged. Same laboratory, same 6,677-record search, the same **67
+studies / 2,058 participants** (mean age 25.16 ± 5.22, interventions 10.42 ± 4.48 weeks) as Pelland
+et al. — re-analysed with volume expressed **per session** instead of per week.
+
+#### 6.12.1 What it found
+
+Seven functional forms compared by BIC-approximated Bayes factor, as in the weekly paper.
+
+| | Hypertrophy | Strength |
+|---|---|---|
+| Best-supported counting method | **`fractional`** (2×log BF 3.72 over `total`, 0.96 over `direct`) | **`direct`** (9.87 over `fractional`, 6.95 over `total`) |
+| Best-fitting form | **linear-log** | **reciprocal** |
+| Effects / studies / participants | 220 / 35 / 1,032 | 490 / 66 / 2,020 |
+| Marginal slope at the mean | β = **0.393 %** [95 % CrI 0.202, 0.583] per set | β = **1.23 %** [0.941, 1.52] per set |
+| P(slope > 0) | 100 % | 100 % |
+| R²marginal / R²conditional | **16.1 %** / 73.8 % | **14.9 %** / 73.3 % |
+| Point of undetectable outcome superiority (PUOS) | **~11 fractional sets/session** | **~2 direct sets/session** |
+| Range of per-session volumes in the data | 5.95 ± 4.49 (**0–24**) fractional sets | 1.96 ± 2.22 (**0–10**) direct sets |
+
+Their Table 1 converts the PUOS between counting methods, which is what makes it usable against a
+model that counts fractionally:
+
+| | Total sets | Direct sets | Fractional sets |
+|---|---|---|---|
+| Hypertrophy | 13.835 | 8.165 | **11**\* |
+| Strength | 4.957 | **2**\* | 3.478 |
+
+\* the value from the best-fit model for that outcome, unconverted.
+
+#### 6.12.2 ⚠️ What a PUOS is NOT
+
+The authors are unusually careful here and it matters more than the number does:
+
+> "these PUOS values are not upper limits beyond which additional increases in outcomes are not
+> observed; rather, beyond these per-session set volume values, no pairwise comparisons to other
+> per-session set volume values showed a >50 % probability of the cumulative differences to exceed
+> the SDES."
+
+And, on the same page: *"it is paramount to understand that the PUOS values, while justifiable, were
+determined **arbitrarily**."* And in the conclusions: *"there is insufficient data with very high
+per-session set volumes. Therefore, it is unclear whether there is a point in which additional
+per-session sets attenuate adaptations, or if even higher per-session set volumes could be
+potentially beneficial."*
+
+So the finding is **"past ~11 sets in one session the extra sets stop being distinguishable"**, not
+"past ~11 they stop working". Above 11, *"hypertrophy outcomes continued to occur, again in a
+decreasing manner"*. Anything this app builds on the number has to preserve that distinction, or it
+will be claiming a ceiling the source explicitly refuses to claim.
+
+#### 6.12.3 ⚠️ It does not reconcile cleanly with the weekly model the rating already uses
+
+The authors raise this against themselves. Pelland et al. put the *weekly* PUOS at **~31 fractional
+sets** for hypertrophy and ~3 for strength. 11 sets/session × 3 sessions = 33 ≈ 31, which "seems to
+suggest a frequency of 3 weekly sessions with ~10 sets per-session" — except that Pelland et al. also
+found the effect of frequency beyond 1 was unlikely to exceed the SDES, *"which seemingly contradicts
+the findings of the present investigation"*. Their own reconciliation is that the two analyses use
+different best-fit forms (square root weekly, logarithmic per-session) and that the per-session PUOS
+times the *mean* frequency of 2.33 gives 25.6, ~5 sets short of 31.
+
+They then state the load-bearing gap outright: **no study has isolated per-session volume and
+frequency together.** *"In the absence of direct investigations, there are two competing
+hypotheses"* — higher frequency helps only when per-session volume is low, or higher frequency is
+needed *because* per-session volume gets too high — and *"the present investigation does not
+conclusively support either hypothesis."*
+
+**This is the reason a per-session term cannot simply be bolted on.** A model that sums a
+per-session response across sessions *is* a model that rewards training more days for growth, which
+is exactly the first thing `js/optimal.js` refuses to do, on the strength of §6.3. Modelled out
+(below), the two give materially different answers, and nothing in the literature says which is
+right.
+
+#### 6.12.4 What it would change — computed against the nine shipped systems
+
+Run through `rateProgramme` / `weeklyVolume` with the presets as they ship. **177 (workout, muscle)
+pairs across all nine systems. Median 4.5 fractional sets in a session, p90 10.0, max 15.0. Seven
+pairs — 4 % — exceed the PUOS of 11.**
+
+| System | d/wk | Growth now | with a hard cap at 11/session | Biggest single session | Pairs over 11 |
+|---|---|---|---|---|---|
+| Ultimate Push Pull Legs | 6 | 55 % | 55 % | 12.0 (Push 1 / Triceps) | 1 of 29 |
+| Dr. Mike's Floating Split | 6 | 50 % | 50 % | 9.0 (Push 2 / Triceps) | 0 of 28 |
+| The Golden Six | 3 | 35 % | 35 % | 5.5 (Golden Six / Shoulders) | 0 of 8 |
+| **Mike Thurston's Six-Day Split** | 6 | **55 %** | **50 %** | **15.0 (Chest / Chest)** | **5 of 23** |
+| Chris Bumstead's 8-Day Split | 6 | 45 % | 45 % | 11.0 (Chest & Triceps / Chest) | 0 of 22 |
+| Volume Landmarks Hypertrophy | 4 | 50 % | 50 % | 6.5 (Upper B / Shoulders) | 0 of 23 |
+| Push Pull Legs | 6 | 65 % | 65 % | 12.5 (Pull / Biceps) | 1 of 13 |
+| Upper / Lower | 4 | 50 % | 50 % | 10.0 (Lower / Quads) | 0 of 12 |
+| Full Body, 3 Days | 3 | 40 % | 40 % | 6.0 (Full Body B / Back) | 0 of 19 |
+
+**A hard cap at the PUOS changes exactly one banded rating out of nine**, and it changes it on the
+strength of a number the authors call arbitrary. Strength ratings: unchanged for all nine.
+
+The motivating worry, priced directly — 12 fractional sets on one muscle, split different ways:
+
+| Split | Weekly square-root model (ships) | Capped at 11 | Per-session log-sum |
+|---|---|---|---|
+| 12 in one session | 5.82 % | 5.57 % | 7.00 |
+| 6 + 6 | 5.82 % | 5.82 % | 10.62 |
+| 4 + 4 + 4 | 5.82 % | 5.82 % | 13.18 |
+| 2 × 6 sessions | 5.82 % | 5.82 % | 18.00 |
+
+**A cap barely moves it** (12 → 11 is one set, ~4 % relative). **A per-session log-sum moves it
+enormously** — and that column is a frequency reward in disguise: it says six sessions of 2 sets beat
+one session of 12 by 157 %, which no volume-equated study supports and §6.3 specifically contradicts.
+Re-ranking all nine under the log-sum model moves Thurston 3rd → 5th, Bumstead 7th → 9th and Golden
+Six 9th → 8th. **That reordering is the model's assumption talking, not the evidence.**
+
+#### 6.12.5 Recommendation
+
+1. **Do NOT adopt a per-session response model.** It is a frequency reward wearing a per-session
+   coat, and it breaks refusal #1 in `js/optimal.js`. Grade for that path: 🔴.
+2. **DO clamp per-session credit at 24 fractional sets per muscle** — the top of the per-session
+   *data range*, exactly parallel to the existing `VOLUME_CEILING = 42` clamp on weekly volume and
+   justified the same way ("don't extrapolate past the data", not "sets stop working here"). One
+   constant, one `Math.min` inside the per-workout loop.
+   **Computed effect: none on the nine — all nine unchanged.** It bites only on a fabricated
+   programme: 60 bench sets in a single weekly session currently scores **25 %** and would score
+   **20 %**. That is the same class of guard as the existing 60-sets-a-week test in
+   `tests/volume-map.test.mjs`, on the axis that guard does not cover.
+3. **Do NOT cap at 11.** It would move Thurston 55 → 50 on a number its own authors call arbitrary,
+   and the evidence says growth continues past 11 — just undetectably.
+4. **DO say it in words.** The screen can honestly report *"this programme puts 15 sets on Chest in
+   one session; past about 11 the research can no longer tell the extra ones apart"* — sourced,
+   caveated, and actionable without pretending to price it. That sentence is worth more than the
+   0–5 points any cap would move.
+
+**Grade: 🟡.** Excellent methods, large corpus, but a **preprint that was still not peer-reviewed as
+of August 2026** (16 months after posting), a self-described arbitrary threshold, R²marginal of
+16.1 %, and an unresolved contradiction with the weekly paper the rating is already built on.
+
+### 6.13 Load and rep range 🟢 — and the app cannot see either
+
+*Pulled 2026-08-19. Question: does the rating need to care whether sets are heavy or light?*
+
+#### 6.13.1 The evidence
+
+**Lopez P, Radaelli R, Taaffe DR, et al. "Resistance Training Load Effects on Muscle Hypertrophy and
+Strength Gain: Systematic Review and Network Meta-analysis." *Med Sci Sports Exerc* 2021;53(6):
+1206–1216.** doi:10.1249/MSS.0000000000002585 · 28 studies, 747 healthy adults. **All included
+studies took sets to volitional failure**, which is what makes the comparison fair.
+
+Bands: **low** > 15 RM or < 60 % 1RM · **moderate** 9–15 RM or 60–79 % · **high** ≤ 8 RM or ≥ 80 %.
+
+| Contrast | Hypertrophy SMD [95 % CI] | Strength SMD [95 % CI] |
+|---|---|---|
+| High vs low | 0.12 [−0.06, 0.29], *p* = 0.241 | **0.60 [0.38, 0.82]**, *p* < 0.001 |
+| Moderate vs low | 0.20 [−0.04, 0.44], *p* = 0.113 | **0.34 [0.05, 0.62]**, *p* = 0.003 |
+| High vs moderate | −0.09 [−0.33, 0.16], *p* = 0.469 | 0.26 [−0.02, 0.54], *p* = 0.068 |
+
+**Corroborated independently by the 2026 ACSM position stand (§6.16):** strength was enhanced by
+loads **≥ 80 % 1RM**, quality of evidence **79 % (high)** — one of its strongest recommendations —
+while hypertrophy *"was not affected by"* load once volume was equated.
+
+**So: for growth, load does not matter much if the set is hard. For strength, it matters a lot.**
+That asymmetry is the whole finding, and it is 🟢 — two independent syntheses, one of them a position
+stand built on 137 reviews.
+
+Two lesser sources, both worth knowing and neither worth modelling:
+
+- **Schoenfeld et al. (2021), *Sports* 9(2):32 — the "repetition continuum" paper this file has
+  cited since §10 was written — is STILL NOT READ IN FULL.** mdpi.com returns 403 to this session's
+  fetcher. It has now been listed as a source twice without anyone opening it. **Nothing in this file
+  should rest on it**; Lopez 2021 and ACSM 2026 carry the claim instead. 🔴 as a citation until
+  somebody reads it.
+- **Varovic D, Larsen S, Grgic J (2026). "Heavy or Light: Is Muscle Fiber Growth Load-Specific?"
+  SportRxiv preprint, 29 April 2026, doi:10.51224/SportRxiv.782** · 8 studies, 195 participants.
+  A *tendency* toward type I hypertrophy at 20–30 % 1RM (standardised mean change −0.251 to −0.123)
+  and type II at 60–90 % (0.095 to 0.223), with the authors noting *"95 % confidence and prediction
+  intervals were wide and in some cases included zero"*. 🔴 — interesting, not usable.
+
+#### 6.13.2 ⚠️ The structural problem, and it is bigger than the evidence
+
+**A planned workout in this app stores no load and no reps.** `normalizeWorkout()` in `js/store.js`
+rebuilds each exercise as `{ exerciseId, sets, notes, group?, setType?, minis? }` — a set *count* and
+nothing else. Every ready-made system puts its rep prescription in **prose `notes`** ("bench 3–5,
+Larsen press 10, Arnold press 8–10"). There is no field for a rating to read, and adding one would
+mean asking every user to type a rep target for every exercise before their programme could be
+scored, which D9 (progressive disclosure) rules out.
+
+**So load cannot enter the programme rating, and this is not a close call.**
+
+#### 6.13.3 Recommendation — a caveat, and one thing that is actually buildable
+
+- **The growth percentage is safe as it stands.** Lopez 2021 says load does not move hypertrophy when
+  sets are taken to failure, so the number the badge shows is not missing much. Add nothing.
+- **⚠️ The STRENGTH percentage is not safe, and this is the loudest thing in this pass.** A programme
+  of 3 × 20 and a programme of 3 × 5 currently receive **identical strength ratings**, and the
+  evidence says the heavy one is better by SMD 0.60 [0.38, 0.82] — a larger effect than anything the
+  rating does model. `js/optimal.js` already prints *"every score is conditional on sets being taken
+  close to failure"*; it needs the second half: **the strength score also assumes the work is heavy
+  (≥ 80 % 1RM, roughly ≤ 8 reps), and the app cannot check that.** Same sentence, same place, no
+  model change.
+- **What IS buildable, without a new field:** a *recorded* set stores `weight` and `reps`
+  (`Session.entries[].sets[]`). So while a *plan* is silent about load, **history is not**. The Goals
+  screen's "what your training is actually delivering" could report the share of logged sets done at
+  ≤ 8 reps against a strength goal — a measurement of what happened, not a model of what will. That
+  is the right home for this finding and it needs no estimator.
+
+**Effect on the nine shipped systems: none computable, because none of them carry machine-readable
+load.** That absence *is* the result.
+
+### 6.14 Rest intervals 🟡 — the smallest effect of the four
+
+*Pulled 2026-08-19. Question: does inter-set rest change the hypertrophy or strength return on a set?*
+
+#### 6.14.1 The evidence
+
+**Singer A, Wolf M, Generoso L, et al. "Give it a rest: a systematic review with Bayesian
+meta-analysis on the effect of inter-set rest interval duration on muscle hypertrophy." *Front Sports
+Act Living* 2024;6:1429789.** doi:10.3389/fspor.2024.1429789 · 9 RCTs, 19 measurements (thigh 10,
+arm 6, whole body 3).
+
+Binary split, **short ≤ 60 s vs longer > 60 s** (positive favours longer):
+
+| Site | SMD [95 % CrI] |
+|---|---|
+| Arm | 0.13 [−0.27, 0.51] |
+| Thigh | 0.17 [−0.13, 0.43] |
+| Whole body | −0.08 [−0.45, 0.29] |
+
+Four-category, effect vs control: short ≤ 60 s **0.47** · intermediate 61–119 s **0.65** · long
+120–179 s **0.55** · very long ≥ 180 s **0.50**. Conclusion: *"a small hypertrophic benefit to
+employing inter-set rest interval durations > 60 s"* but *"no appreciable differences in hypertrophy
+when resting > 90 s between sets."* **Every credible interval crosses zero.**
+
+**ACSM 2026 (§6.16), on strength:** *"strength was not affected … by short (< 1 min) versus long
+(> 1 min) between-set rest intervals"* — two reviews, quality of evidence 63 %.
+
+**Remmert et al. (§6.12), as a moderator:** rest length did **not** meaningfully moderate the
+per-session volume dose–response — *"the uncertainty intervals of all corresponding contrasts
+including zero"* — and they identified the PUOS *"with no meaningful effect of rest period length"*.
+This contradicts Krieger's unpublished 2017 analysis, which found diminishing returns above 6–8
+`total` sets/session **only when rest was ≥ 2 min**. Remmert's corpus is far larger (12 studies with
+≥ 10 sets/session vs Krieger's 2), so the newer null is the better bet, but say that it is contested.
+
+#### 6.14.2 ⚠️ What this contradicts in this file
+
+**§4 of this file reads as though rest length matters more than it does.** §4 leads on Willardson
+(2006) — *"3–5 min rest is needed to maintain intensity for strength goals"* — and Senna et al.
+(2011). Both are **acute within-session rep-performance** findings and both are correct as stated.
+But they sit under a heading a reader will take as advice, and the **chronic adaptation** evidence
+says rest length barely moves the outcome either way. §4's own "design implication" (prefer the first
+hard set of an exercise for e1RM) is untouched and still right. Nothing needs deleting; the
+distinction needs saying.
+
+#### 6.14.3 Recommendation — a caveat, plus one constant that gets a source
+
+- **It cannot enter the model even if it wanted to.** Rest is a **global user setting**
+  (`settings.restTarget`, one of 60/90/120/180 s, saved in `js/views-session.js`), not a property of
+  a workout or a programme, and no ready-made system declares one. And the effect is trivial.
+- **What it DOES license: `MINUTES_PER_SET = 3` in `js/optimal.js` stops being a bare assumption.**
+  That constant's own comment currently says *"ARITHMETIC, NOT A FINDING. The rest-interval
+  literature is on the 'still to pull' list (docs/research.md §6.8)"* — that pointer is now
+  dischargeable. Pelland et al.'s corpus reports the actual rest people took in the studies:
+  **1.80 ± 0.68 min for hypertrophy effects and 2.04 ± 0.79 min for strength effects** (their §3.3
+  and Fig. 2), median 1.75 min. A working set of 30–45 s plus ~2 min of rest is **~2.5–2.7 min**.
+  **3 min is at the top of that band but inside it**, so the constant survives — and it can now cite
+  a distribution instead of a shrug.
+- **Do not change it.** Moving 3 → 2.6 would shift `perHour` and the *estimated* minutes on
+  user-typed systems by ~13 % while leaving every ready-made system's badge alone (they declare their
+  own minutes), which is a change that makes two things that should agree disagree. Not worth it.
+
+**Effect on the nine shipped systems: none.** All nine declare their own session length.
+
+**Grade: 🟡.** Three sources agree the effect is small-to-null, but the hypertrophy meta-analysis is
+9 RCTs of mostly untrained, younger participants over 5–10 weeks with *"no data on torso
+musculature"*, and its authors say so.
+
+### 6.15 Range of motion 🟡 — and lengthened partials
+
+*Pulled 2026-08-19.*
+
+#### 6.15.1 The evidence
+
+**Wolf M, Androulakis-Korakakis P, Fisher J, Schoenfeld B, Steele J (2023). "Partial Vs Full Range of
+Motion Resistance Training: A Systematic Review and Meta-Analysis." *International Journal of
+Strength and Conditioning* 3(1).** doi:10.47206/ijsc.v3i1.182
+
+- Main model: **SMD 0.12 [95 % CI −0.02, 0.26] favouring full ROM** — trivial, interval touches zero.
+- Sub-group, **partials at LONG muscle lengths vs full ROM: −0.28 [−0.81, 0.16]** — the sign flips
+  toward the lengthened partial, and the interval is wide enough to mean nothing on its own.
+- Strength adaptations were greater when the trained ROM **matched the tested ROM** — a specificity
+  effect, not a ROM effect.
+- Authors: *"using a full or long ROM may enhance results for most outcomes"*, and partial ROM
+  *"might present an efficacious alternative for variation and personal preference, or where injury
+  prevents full-ROM resistance training."*
+
+**Wolf M, et al. "Lengthened partial repetitions elicit similar muscular adaptations as full range of
+motion repetitions during resistance training in trained individuals." *PeerJ* 2025;13:e18904.**
+doi:10.7717/peerj.18904 · within-participant, limbs randomised; **25 resistance-trained participants**
+(19 men, 6 women, 4.9 ± 4.1 y experience), **8 weeks**, eight upper-body exercises, 2 sessions/week,
+4 sets per exercise. Lengthened partials ≈ 50 % ROM from the fully lengthened position.
+
+| Outcome | Difference [95 % CrI] | Bayes factor |
+|---|---|---|
+| Elbow flexor MT, 45 % | −0.23 mm [−1.4, 0.94] | 0.19 |
+| Elbow flexor MT, 55 % | −0.08 mm [−1.1, 0.90] | 0.16 |
+| Elbow extensor MT, 45 % | 0.40 mm [−1.1, 1.9] | 0.20 |
+| Elbow extensor MT, 55 % | 0.82 mm [−0.44, 2.1] | 0.39 |
+| 10RM lat pulldown, full ROM | −1.2 kg [−3.7, 1.3] | 0.30 |
+
+**Every Bayes factor is 0.16–0.39 — moderate support for the NULL**, which is a stronger and rarer
+result than a wide interval. Authors: *"Trainees seeking to maximize muscle size should likely
+emphasize the stretched position, either by using a full ROM or LPs"*; adding the short-muscle-length
+half of the range *"did not appear to enhance muscle hypertrophy"*.
+
+**ACSM 2026 (§6.16)** lists **full range of motion as a STRENGTH enhancer** (quality of evidence
+50 %, moderate) and does **not** list ROM among the things that enhanced hypertrophy.
+
+**Read together: what matters is training the muscle at long lengths, not the distance the weight
+travels.** Full ROM gets you there by default; a lengthened partial gets you there too; a shortened
+partial does not.
+
+#### 6.15.2 Recommendation — a caveat, and specifically *not* a field
+
+- **Nothing enters the model.** ROM is a property of how a rep is performed. The app records nothing
+  about it and **should not start asking**: a per-set ROM field is jargon (D8), it is one more thing
+  to fill in mid-set (D9), and self-reported ROM is the kind of data that is wrong in a direction
+  that flatters. This is the clearest "the evidence is real and the app must not model it" case of
+  the four.
+- **It licenses a teaching note at the point of use (D8)**, which the app has a shape for already:
+  where an exercise's notes explain what it is for, they can honestly say *"train the stretch — full
+  range, or if you shorten it, shorten the top rather than the bottom"*, cited to Wolf 2023 + Wolf
+  2025 + ACSM 2026.
+- **Do not repeat the popular version.** "Lengthened partials beat full ROM" is not what these say.
+  The best current reading is **"similar, and both beat short-length work"**, and the 2025 trial's
+  own limitations list runs to seven items including 8 weeks being possibly too short and a
+  cross-education confound from the within-participant design.
+
+**Effect on the nine shipped systems: none.** No system declares a range of motion and none should.
+
+**Grade: 🟡.** One meta-analysis whose headline interval crosses zero, one well-designed but small
+8-week trial, and a position stand that grades its own ROM recommendation at 50 %.
+
+### 6.16 ⚠️ ACSM 2026 — the position stand this project did not know existed 🟢
+
+*Found 2026-08-19 while searching for §6.13. It bears on every section of this file and it supersedes
+one of them.*
+
+**Currier BS, D'Souza AC, Fiatarone Singh MA, et al. "American College of Sports Medicine Position
+Stand. Resistance Training Prescription for Muscle Function, Hypertrophy, and Physical Performance in
+Healthy Adults: An Overview of Reviews." *Med Sci Sports Exerc* 2026;58(4):851–872.**
+doi:10.1249/MSS.0000000000003897 · published online 5 March 2026 · chaired by Stuart M. Phillips ·
+**137 systematic reviews, > 30,000 participants** · **the first ACSM resistance-training position
+stand in 17 years.** Read via the free PMC copy, PMC12965823; the publisher's own page is paywalled.
+
+Recommendations, with the position stand's own quality-of-evidence scores:
+
+| Outcome | What helped | QoE |
+|---|---|---|
+| **Strength** | loads **≥ 80 % 1RM** (dose–response) | 79 % high |
+| | **2–3 sets** per session | 71 % high |
+| | **≥ 2 sessions/week** | 69 % mod–high |
+| | **full range of motion** | 50 % moderate |
+| | trained at the **beginning of the session**, not the end | **88 % high** |
+| **Hypertrophy** | **≥ 10 sets/week** (dose–response) | 50 % moderate |
+| | **eccentric contractions / overload** | 75 % high |
+| **Power** | loads **30–70 % 1RM**; volume ≤ 24 reps·sets; Olympic-style lifting | 75 % high |
+
+And the negatives, which are as useful: hypertrophy was **not** affected by load when volume was
+equated, and **not** affected by frequency (1 d/wk vs > 5 d/wk) when volume was equated. Strength was
+not affected by rest-interval length. **Training to momentary failure, equipment type, time under
+tension, blood flow restriction and periodisation did not consistently affect outcomes** — sufficient
+effort *"can be accomplished by … 'near-failure' or a target of 2–3 repetitions in reserve"*.
+
+#### 6.16.1 ⚠️ Four things this changes for this project
+
+1. **§12.1 of this file is stale.** It calls ACSM 2009 *"the standing position stand"*. It is not, as
+   of March 2026. See **§12.5** — the 2-for-2 rule is not repeated in the 2026 stand, though it is
+   not contradicted either; the 2026 stand simply declines to prescribe a progression rule.
+2. **The 2026 stand's headline hypertrophy volume figure is ≥ 10 sets/week, and this app's stated
+   minimum effective dose is 4.** Both are right and they answer different questions — Pelland's 4 is
+   *"where an effect first exceeds the smallest detectable effect size"*, ACSM's 10 is where the
+   dose–response is worth chasing — but `js/optimal.js` reports muscles under **4** as "under" and
+   says nothing about 10. Computed against the nine:
+
+   | System | muscles under 4/wk | muscles under 10/wk | the ones under 10 |
+   |---|---|---|---|
+   | Ultimate Push Pull Legs | 0 of 11 | 3 of 11 | Traps, Glutes, Calves |
+   | Dr. Mike's Floating Split | 2 | 4 | Traps, Hamstrings, Glutes, Calves |
+   | The Golden Six | 3 | **7** | Chest, Back, Traps, Forearms, Hamstrings, Glutes, Calves |
+   | Mike Thurston's Six-Day Split | 1 | 2 | Traps, Calves |
+   | Chris Bumstead's 8-Day Split | 3 | 5 | Traps, Quads, Hamstrings, Glutes, Calves |
+   | Volume Landmarks Hypertrophy | 1 | 4 | Traps, Forearms, Glutes, Calves |
+   | Push Pull Legs | 0 | 1 | Calves |
+   | Upper / Lower | 0 | 3 | Chest, Traps, Calves |
+   | Full Body, 3 Days | 0 | **8** | Chest, Traps, Biceps, Forearms, Quads, Hamstrings, Glutes, Calves |
+
+   **Calves are under 10 in all nine and Traps in eight of nine.** A programme can pass the app's
+   "every muscle gets the minimum effective dose" line and still leave eight of eleven muscles below
+   the figure a 2026 position stand puts in its abstract. That is worth a second tier in the wording,
+   not a change to the score.
+3. **Exercise ORDER is the highest-quality-of-evidence finding in the whole stand (88 %) and nothing
+   in this app models or mentions it.** Strength work belongs at the start of a session. The app
+   knows the order of exercises in every workout and every recorded session, so this is one of the
+   few remaining findings it could actually act on. **It replaces "exercise selection and variation"
+   as the top item on the still-to-pull list.**
+4. **"Training to failure is not required" is now a position-stand-level statement**, with 2–3 RIR
+   named as sufficient. §6.7 and `js/optimal.js` both currently phrase the caveat as *"conditional on
+   sets being taken close to failure"* — which is still right, and is now better supported as a
+   *floor* ("hard enough") rather than an *instruction* ("to failure"). Worth a wording pass wherever
+   the app says "close to failure", because telling strangers to train to failure is advice this
+   project should not be giving by implication.
+
+**Grade: 🟢.** A position stand over 137 systematic reviews, with per-recommendation quality grades —
+the strongest single source in this file. Its own limitation is inherited: an overview of reviews is
+only as good as the reviews, and the stand grades several of its own recommendations at 50 %.
+
+### 6.17 ⚠️ What this pass contradicts about what the app currently does
+
+The single most valuable output of the four pulls, collected in one place.
+
+#### 6.17.1 The 0.5 indirect weight is the largest untested assumption in the rating
+
+`js/volume-map.js` sets `INDIRECT = 0.5`, on §6.4's authority. That is still the best-supported of
+the three counting methods **that were tested**. But both papers ran an *exploratory continuous* fit
+asking what weight would actually maximise model performance, and neither answer is 0.5:
+
+- Remmert et al. (§6.12), https://osf.io/cuvsa — an indirect set is worth **~32 % of a direct set for
+  hypertrophy** and **~16 %** for per-session strength. They say plainly: *"one might reasonably
+  critique the present study quantifying all indirect sets as 50 % of a direct set."*
+- Pelland et al. (§6.1), https://osf.io/rm4xy — **~39 %** for weekly strength volume.
+- Pelland et al. also state the general form: *"the appropriate weighting of indirect sets likely
+  depends on several factors, including the hypertrophy/strength outcome measured, the specific
+  exercise trained, the repetition range employed, and the training status of the participants."*
+
+**Computed effect of moving 0.5 → 0.32 on the nine — five of nine growth ratings drop a band:**
+
+| System | Growth @ 0.5 | @ 0.32 | Strength @ 0.5 | @ 0.16 |
+|---|---|---|---|---|
+| Ultimate Push Pull Legs | 55 | 55 | 80 | 80 |
+| Dr. Mike's Floating Split | 50 | **45** | 80 | **75** |
+| The Golden Six | 35 | 35 | 55 | 55 |
+| Mike Thurston's Six-Day Split | 55 | **50** | 65 | 65 |
+| Chris Bumstead's 8-Day Split | 45 | **40** | 70 | **65** |
+| Volume Landmarks Hypertrophy | 50 | **45** | 80 | **75** |
+| Push Pull Legs | 65 | **60** | 80 | **75** |
+| Upper / Lower | 50 | 50 | 75 | 75 |
+| Full Body, 3 Days | 40 | 40 | 75 | **70** |
+
+**That is a far bigger lever than anything in §6.12–§6.15**, and it is one constant. **Recommendation:
+keep 0.5** — it is the best-supported of the methods actually compared, and switching to an
+exploratory continuous fit reported in a supplement would be trading a tested heuristic for a guess.
+**But state the sensitivity**, because "half a set" currently reads on screen as a fact and it is a
+choice with a five-band swing behind it.
+
+#### 6.17.2 The strength score assumes heavy work and cannot check
+
+See §6.13.3. `js/optimal.js` states one conditional (sets near failure) and needs two.
+
+#### 6.17.3 §4 reads as a rest-interval recommendation and is an acute-fatigue finding
+
+See §6.14.2.
+
+#### 6.17.4 §12.1 calls a 2009 document "the standing position stand"
+
+See §6.16.1 and §12.5.
+
+#### 6.17.5 §6.11 shipped with no citations
+
+Fixed in §6.18.3. It is cited **on the live Goals screen**, which makes it the one that mattered.
+
+### 6.18 Re-checks of §6.9, §6.10 and §6.11 — the three cited on the Goals screen
+
+*Checked 2026-08-19, because a wrong citation on screen is worse than a missing one and this file has
+had to correct itself about sleep once already.*
+
+#### 6.18.1 Protein (§6.9) 🟢 → **corroborated independently. No change needed.**
+
+**Tagawa R, Watanabe D, Ito K, et al. "Synergistic Effect of Increased Total Protein Intake and
+Strength Training on Muscle Strength: A Dose-Response Meta-analysis of Randomized Controlled Trials."
+*Sports Med Open* 2022;8:110.** · **82 RCTs, 3,940 participants** (59 studies / 2,440 participants
+with resistance training).
+
+- Muscle strength rose **0.72 % [95 % CI 0.40, 1.04] per 0.1 g/kg/day** of extra total protein,
+  **up to 1.5 g/kg/day, and nothing thereafter.**
+- **1.5 g/kg = 0.68 g per lb.** Morton's breakpoint was 1.62 g/kg = 0.73 g/lb.
+
+**Different corpus, different outcome (strength not fat-free mass), different method (spline
+regression not a two-line meta-regression) — and the breakpoint lands within 0.12 g/kg.** That is a
+real replication and it upgrades §6.9 from "one good meta-analysis" to two independent ones agreeing.
+The Goals screen's **0.73 g/lb is safe**, and if anything sits slightly *above* the newer estimate,
+which is the right side to err on.
+
+⚠️ **What is NOT settled** 🔴: several groups argue the plateau is an artefact of trial design and
+that trained lifters gain above 1.6 g/kg. No meta-analysis supports that yet, and the app should not
+move until one does. Tagawa's own limitations: English and Japanese only, PubMed and Ichushi-Web
+only, high heterogeneity, and spline modelling that is *"data-oriented"* and *"doesn't account for
+protein physiology"*.
+
+#### 6.18.2 Sleep (§6.10) 🟡 → **unchanged, and still no dose–response. The screen's sentence stands.**
+
+Searched again August 2026 specifically for a habitual-hours dose–response. There still is not one.
+What exists since the last pass is mechanistic or unfinished:
+
+- Sustained sleep restriction + resistance exercise, skeletal muscle transcriptomics in young
+  females — *Physiological Genomics*, 2024 (doi:10.1152/physiolgenomics.00010.2024). Mechanism, not
+  a training outcome.
+- **NCT06223776**, "Effects of Sleep Restrictions on Maximal Strength, Muscle Power, and Strength
+  Endurance in Resistance-trained Women" — **registered, not reported.** This is the study that would
+  change §6.10. Worth re-checking rather than re-searching.
+- Narrative and review material (e.g. *J Clin Med* 2025;14(21):7606) restates the mechanism without
+  adding a dose.
+
+**So the ✅/❌ pair in §6.10 is unchanged and still correct.** The app may say a night without sleep
+cuts muscle protein synthesis ~18 %; it may not say "you need 8 hours for this goal".
+
+#### 6.18.3 Individual variability (§6.11) 🟢 → **sources supplied, and one line refined**
+
+The numbers were right. They had no citation, which by this file's own standard made them a defect.
+
+- **Hubal MJ, Gordish-Dressman H, Thompson PD, et al. "Variability in muscle size and strength gain
+  after unilateral resistance training." *Med Sci Sports Exerc* 2005;37(6):964–972.** **n = 585**
+  (342 women, 243 men) across eight centres, **12 weeks** of progressive training of the
+  **non-dominant** elbow flexors, dominant arm as the within-person control. Changes: **biceps CSA
+  −2 % to +59 %**, **1RM 0 % to +250 %**, **MVC −32 % to +149 %**. That is where §6.11's "0–250 %"
+  and "−2 % to 59 %" come from, and the unilateral design is why it is the canonical citation — the
+  untrained arm controls for everything the trained arm was exposed to.
+- **Räntilä A, et al. "Repeated Resistance Training Reveals the Reproducibility of Muscle Strength
+  and Size Responses Within Individuals." *European Journal of Sport Science*, 2025.**
+  doi:10.1002/ejsc.70095 · PMC12659766 · untrained adults (32 ± 5 y) completed **two identical
+  10-week blocks separated by 10 weeks of detraining**.
+  - Response magnitude reproduced between blocks: **vastus lateralis CSA r = 0.697, biceps brachii
+    CSA r = 0.761, leg press 1RM r = 0.671** (all *p* ≤ 0.001); biceps curl 1RM only a trend
+    (r = 0.393, *p* = 0.095).
+  - ⚠️ **"Nonresponders were identified, but none were detected in both RT periods for more than one
+    variable."**
+
+⚠️ **The refinement that matters for Goals.** §6.11 said *"individual responsiveness is
+reproducible"*. Half of that is now well supported and half is not: **how much you respond is
+reproducible; being a non-responder is not.** Somebody who gains nothing in one block is not thereby
+a person who gains nothing — they were a non-responder *on that measure, in that block*. The Goals
+screen must never let a bad 12 weeks read as a verdict about the person, which is a second and
+independent reason for the refusal `js/goals.js` already implements.
 
 ---
 
@@ -669,6 +1233,55 @@ Don't treat these as settled.
 - Schoenfeld et al. (2021). *Loading recommendations for muscle strength, hypertrophy, and local
   endurance: a re-examination of the repetition continuum.* Sports 9(2), 32 —
   https://www.mdpi.com/2075-4663/9/2/32
+  ⚠️ **Listed here twice over and still never read in full** — mdpi.com refuses this project's
+  fetcher. Nothing in this file rests on it; see §6.13.1.
+
+**§6.8's four axes** (pulled 2026-08-19 — §6.12 to §6.16)
+
+- Remmert, Pelland, Robinson, Hinson & Zourdos (2025). *Is There Too Much of a Good Thing?
+  Meta-Regressions of the Effect of Per-Session Volume on Hypertrophy and Strength.* SportRxiv
+  preprint, 2 April 2025 — https://sportrxiv.org/index.php/server/preprint/view/537 ·
+  supplements https://osf.io/dqka3/ · **not peer-reviewed as of August 2026**
+- Currier, D'Souza, Fiatarone Singh, et al. (2026). *American College of Sports Medicine Position
+  Stand. Resistance Training Prescription for Muscle Function, Hypertrophy, and Physical Performance
+  in Healthy Adults: An Overview of Reviews.* Med Sci Sports Exerc 58(4), 851–872.
+  doi:10.1249/MSS.0000000000003897 — https://pmc.ncbi.nlm.nih.gov/articles/PMC12965823/ ·
+  PubMed 41843416
+- Lopez, Radaelli, Taaffe, et al. (2021). *Resistance Training Load Effects on Muscle Hypertrophy and
+  Strength Gain: Systematic Review and Network Meta-analysis.* Med Sci Sports Exerc 53(6), 1206–1216.
+  doi:10.1249/MSS.0000000000002585 — https://pmc.ncbi.nlm.nih.gov/articles/PMC8126497/
+- Varovic, Larsen & Grgic (2026). *Heavy or Light: Is Muscle Fiber Growth Load-Specific? A Systematic
+  Review and Meta-Regression.* SportRxiv preprint, 29 April 2026. doi:10.51224/SportRxiv.782 —
+  https://sportrxiv.org/index.php/server/preprint/view/782
+- Singer, Wolf, Generoso, et al. (2024). *Give it a rest: a systematic review with Bayesian
+  meta-analysis on the effect of inter-set rest interval duration on muscle hypertrophy.* Front
+  Sports Act Living 6, 1429789. doi:10.3389/fspor.2024.1429789 —
+  https://pmc.ncbi.nlm.nih.gov/articles/PMC11349676/
+- Wolf, Androulakis-Korakakis, Fisher, Schoenfeld & Steele (2023). *Partial Vs Full Range of Motion
+  Resistance Training: A Systematic Review and Meta-Analysis.* International Journal of Strength and
+  Conditioning 3(1). doi:10.47206/ijsc.v3i1.182 — https://journal.iusca.org/index.php/Journal/article/view/182
+- Wolf, et al. (2025). *Lengthened partial repetitions elicit similar muscular adaptations as full
+  range of motion repetitions during resistance training in trained individuals.* PeerJ 13, e18904.
+  doi:10.7717/peerj.18904 — https://pmc.ncbi.nlm.nih.gov/articles/PMC11829627/
+
+**Protein, sleep and individual variability** (§6.9–§6.11, re-checked 2026-08-19 — §6.18)
+
+- Morton, Murphy, McKellar, et al. (2018). *A systematic review, meta-analysis and meta-regression of
+  the effect of protein supplementation on resistance training-induced gains in muscle mass and
+  strength in healthy adults.* Br J Sports Med 52(6), 376–384 —
+  https://pubmed.ncbi.nlm.nih.gov/28698222/
+- Tagawa, Watanabe, Ito, et al. (2022). *Synergistic Effect of Increased Total Protein Intake and
+  Strength Training on Muscle Strength: A Dose-Response Meta-analysis of Randomized Controlled
+  Trials.* Sports Med Open 8, 110 — https://pmc.ncbi.nlm.nih.gov/articles/PMC9441410/
+- Lamon, Morabito, Arentson-Lantz, et al. (2021). *The effect of acute sleep deprivation on skeletal
+  muscle protein synthesis and the hormonal environment.* Physiological Reports 9(1), e14660.
+- Knowles, Drinkwater, Urwin, Lamon & Aisbett (2018). *Inadequate sleep and muscle strength:
+  implications for resistance training.* J Sci Med Sport 21(9), 959–968.
+- Hubal, Gordish-Dressman, Thompson, et al. (2005). *Variability in muscle size and strength gain
+  after unilateral resistance training.* Med Sci Sports Exerc 37(6), 964–972.
+- Räntilä, et al. (2025). *Repeated Resistance Training Reveals the Reproducibility of Muscle
+  Strength and Size Responses Within Individuals.* European Journal of Sport Science.
+  doi:10.1002/ejsc.70095 — https://pmc.ncbi.nlm.nih.gov/articles/PMC12659766/ · PubMed 41307987
 
 **Competitive**
 
@@ -685,8 +1298,9 @@ is too much".*
 ### 12.1 The anchor
 
 **American College of Sports Medicine. "Progression Models in Resistance Training for Healthy
-Adults." *Med Sci Sports Exerc*, 2009.** The standing position stand, and it states the rule
-directly:
+Adults." *Med Sci Sports Exerc*, 2009.** ~~The standing position stand~~ **⚠️ superseded as "the
+standing position stand" on 2026-03-05 — see §12.5 and §6.16.** Still the source of the rule, and it
+states it directly:
 
 > A **2–10 % increase in load** should be applied **when the individual can perform the current
 > workload for one to two repetitions over the desired number on two consecutive training
@@ -741,6 +1355,40 @@ enough to progress with.** Adding a rep to a 3×10 at 40 lb is roughly a 3 % inc
 - It says nothing about what to do after a **missed block**. Coming back from a lay-off wants a
   reduction, and how much is not covered by this source.
 - All of it assumes sets are taken near failure (§6.7), which the app cannot see.
+
+### 12.5 ⚠️ ACSM published a NEW position stand on 2026-03-05, and it does not repeat this rule
+
+*Added 2026-08-19. See §6.16 for the full extraction.*
+
+**Currier BS, D'Souza AC, Fiatarone Singh MA, et al. "American College of Sports Medicine Position
+Stand. Resistance Training Prescription for Muscle Function, Hypertrophy, and Physical Performance in
+Healthy Adults: An Overview of Reviews." *Med Sci Sports Exerc* 2026;58(4):851–872.**
+doi:10.1249/MSS.0000000000003897 · 137 systematic reviews, > 30,000 participants · **the first ACSM
+resistance-training position stand since 2009.**
+
+**What changes:** §12.1 called the 2009 document *"the standing position stand"*. As of 5 March 2026
+it is not. That phrase is struck above.
+
+**What does NOT change — and this is the important half.** The 2026 stand **neither restates nor
+contradicts** the 2-for-2 rule or the 2–10 % load band. It does not prescribe a progression rule at
+all. What it says about progression is broader and, for this app's audience, more interesting:
+
+> progressive overload *"refers to the need to increase the stimulus … such as load, volume, training
+> frequency, exercise selection, or duration"* — and *"progression is not necessary to achieve
+> beneficial outcomes"*, being *"likely a requirement only for those seeking continued longer term
+> progress."*
+
+**So `docs/goals-plan.md` §8 stands, and Goals Phase 4 does not need rewriting.** The 2-for-2 rule
+remains the only *specific*, quantified progression rule any position stand has published, and it is
+still sourced to ACSM — it is simply no longer sourced to the *current* one. Two consequences for
+what the app says out loud:
+
+1. **Stop calling ACSM 2009 "current" or "the standing position stand" anywhere.** Cite it by year.
+   The honest sentence is *"the last ACSM position stand to give a specific progression rule, 2009"*.
+2. **The 2026 stand licenses a gentler framing that suits this app better.** Progression is for
+   people chasing continued progress, not a duty. That fits `docs/goals-plan.md` §3.1 — the section
+   about never raising a weight because a deadline is approaching — and it gives that refusal a
+   position-stand citation it did not have.
 
 ---
 

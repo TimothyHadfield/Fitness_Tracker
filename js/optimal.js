@@ -33,19 +33,53 @@
 //    there is insufficient data "or potentially less hypertrophy". Without the
 //    clamp a square-root curve keeps rising forever and the rating eventually
 //    recommends 60 sets a week, which is the exact failure it exists to avoid.
+//    Since 2026-08-19 the SAME refusal runs on the per-session axis:
+//    `SESSION_CEILING = 24` in volume-map.js is the top of the per-session data
+//    range in Remmert et al. (2025), and its long comment says why the cap is
+//    not at that paper's ~11-set "point of diminishing returns". Effect on the
+//    nine shipped systems: none. Effect on 60 sets of bench in one day: 25 % ->
+//    20 %.
 // 3. ⚠️ IT DOES NOT PRETEND TO PRECISION. The source models explain about a
 //    QUARTER of the variance (R²marginal 22.3 % hypertrophy, 26.1 % strength).
 //    A model that weak cannot honestly separate 83 % from 87 %, so every score
 //    leaves here rounded to the nearest 5 and carries a range.
 //
-// And one it cannot do: the app has no RIR field (D9), so proximity to failure
-// — the variable that most decides whether a set grows anything — is invisible.
-// Every score is conditional on sets being taken close to failure, and the UI
-// has to say so. A programme cannot make you train hard.
+// And two it cannot do, both of which are things the UI has to say out loud
+// rather than things a comment can settle:
+//
+// A. The app has no RIR field (D9), so proximity to failure — the variable that
+//    most decides whether a set grows anything — is invisible. Every score is
+//    conditional on sets being taken HARD ENOUGH. (Phrased as a floor, not as
+//    an instruction: ACSM 2026 puts "training to momentary failure is not
+//    required" at position-stand level, with 2-3 reps in reserve named as
+//    sufficient. docs/research.md §6.16.1.) A programme cannot make you train
+//    hard.
+//
+// B. ⚠️ THE STRENGTH SCORE IS WRONG BY OMISSION, AND IT IS NOT A SMALL
+//    OMISSION. A planned workout stores a set COUNT and nothing else —
+//    normalizeWorkout() in store.js keeps { exerciseId, sets, notes, group?,
+//    setType?, minis? } and every ready-made system puts its rep prescription
+//    in prose notes. So 3x20 and 3x5 arrive here identical and leave here with
+//    the SAME strength percentage. The evidence says they are not the same:
+//    high load vs low load is SMD 0.60 [0.38, 0.82] for strength (Lopez et al.
+//    2021, corroborated by ACSM 2026 at 79 % quality of evidence for >= 80 %
+//    1RM) — a larger effect than anything this file does model. For hypertrophy
+//    the same contrast is SMD 0.12 [-0.06, 0.29], an interval crossing zero, so
+//    the GROWTH number is not missing much and needs no such caveat.
+//
+//    This cannot be fixed here. Fixing it means a load or rep-range field on a
+//    planned exercise, which is a data-model change and would make every user
+//    type a rep target before their programme could be scored — D9 rules that
+//    out. So the number stays and stops implying what it does not know:
+//    STRENGTH_CAVEAT below is the sentence, exported from this module for the
+//    same reason rateUserSystem() builds its own caption — a caveat kept in a
+//    view drifts away from the number it is about. docs/research.md §6.13.
 //
 // Pure: no DOM, no store. Same as e1rm.js, volume-map.js, social.js.
 
-import { SCORED_MUSCLES, weeklyVolume, weeklyFrequency } from './volume-map.js';
+import {
+  SCORED_MUSCLES, weeklyVolume, weeklyFrequency, volumeContributions,
+} from './volume-map.js';
 
 /* ------------------------------------------------------------------ *
  * The hypertrophy curve
@@ -158,13 +192,25 @@ export function weeksForRotation(workoutCount, daysPerWeek, cycleDays) {
 /**
  * Minutes a working set costs, including the rest after it.
  *
- * ⚠️ ARITHMETIC, NOT A FINDING. The rest-interval literature is on the "still to
- * pull" list (docs/research.md §6.8), so this is a stated assumption used to
- * turn a set count into a time cost — three minutes being a set of 30–45
- * seconds plus a rest in the range people actually take. Anything shown from it
- * says it is an estimate. js/goals.js re-exports this rather than keeping a
- * second copy, so the goal screen's minutes and a system's badge can never
- * disagree.
+ * ⚠️ ARITHMETIC, NOT A FINDING — but it is no longer an unsourced one. It was
+ * written when the rest-interval literature was on the "still to pull" list;
+ * that axis has since been pulled (docs/research.md §6.8), and the rest
+ * intervals actually used in the studies behind the dose-response are
+ * 1.80 ± 0.68 min for the hypertrophy effects and 2.04 ± 0.79 for the strength
+ * ones. Three minutes is a set of 30–45 seconds plus a rest at the TOP of that
+ * band — inside the observed distribution rather than beyond it, which is the
+ * right direction for a number that tells somebody how long a session takes.
+ * Erring long overestimates the cost of training; erring short would promise
+ * people a workout that does not fit in the time they have.
+ *
+ * The rest axis cannot enter the RATING for a separate reason: rest is a global
+ * user setting, not a property of a programme, so there is nothing per-system
+ * to score. And it would not move much if it could — the meta-analytic
+ * difference between short and long rest crosses zero on every measure.
+ *
+ * Anything shown from this says it is an estimate. js/goals.js re-exports it
+ * rather than keeping a second copy, so the goal screen's minutes and a
+ * system's badge can never disagree.
  */
 export const MINUTES_PER_SET = 3;
 
@@ -372,4 +418,127 @@ export function rateUserSystem(workouts, exMap, {
 export function explain(score) {
   return `${score} % of the most growth stimulus the research supports. Nothing real reaches 100 % `
        + '— that would mean 42 hard sets per muscle every week, which nobody recovers from.';
+}
+
+/* ------------------------------------------------------------------ *
+ * ⚠️ What the STRENGTH number does not know
+ *
+ * See B in the header. These two strings are the on-screen half of that, and
+ * they live here rather than in a view so that the caveat and the number ship
+ * together. The short one is for the badge's title, where four cells share a
+ * phone's width; the long one is for a screen with room to say it properly.
+ * ------------------------------------------------------------------ */
+
+export const STRENGTH_CAVEAT_SHORT =
+  'How much work a programme does, not how heavy it is. This app stores a set count, not a weight '
+  + 'or a rep range — so 3 sets of 20 and 3 sets of 5 score the same here, and for strength they '
+  + 'are not the same.';
+
+export const STRENGTH_CAVEAT =
+  'What the strength score cannot see: how heavy the sets are. A workout here stores a number of '
+  + 'sets, not a weight or a rep range, so a programme of 3 sets of 20 and a programme of 3 sets '
+  + 'of 5 get the same strength percentage. They are not the same — training at about 8 reps or '
+  + 'fewer builds clearly more strength than lighter work does, and that difference is bigger than '
+  + 'anything this score does measure. The growth percentage is not affected: for muscle size, how '
+  + 'hard the set is matters far more than how heavy it is.';
+
+/* ------------------------------------------------------------------ *
+ * Exercise order
+ *
+ * docs/research.md §6.16. ACSM's 2026 position stand (Currier et al., MSSE
+ * 58(4):851-872 — 137 systematic reviews, the first in seventeen years) grades
+ * exercise ORDER at 88 % quality of evidence, the highest of anything in it:
+ * work you want to get stronger at belongs at the start of a session.
+ *
+ * ⚠️ Design Rule 6 says no unearned opinions, and this is the test case for it.
+ * 88 % QoE from a position stand is about as earned as this project's evidence
+ * gets — better than the dose-response curves the whole rating is built on — so
+ * the app is allowed to say what it says. What it is NOT allowed to do is
+ * scold, refuse a save, reorder anything, or move a score:
+ *
+ *   - It does not enter the rating. The stand grades order under STRENGTH and
+ *     makes no equivalent claim for hypertrophy, and folding a per-position
+ *     multiplier into the score would mean inventing an effect size the stand
+ *     does not publish. See docs/optimal-rating-plan.md §9.
+ *   - It fires as a NOTE in the workout builder and nowhere else — at the one
+ *     moment somebody is deciding the order, which is D8.
+ *   - It says outright that leaving the order alone is a legitimate answer.
+ * ------------------------------------------------------------------ */
+
+/** The position stand's own quality-of-evidence grade for this one. */
+export const ORDER_QOE = 88;
+
+/**
+ * ⚠️ Not the same question as `isCompound()` in js/progression.js, and the two
+ * must not be merged. That one asks "how big an increment may this lift take"
+ * and deliberately only says yes for LARGE muscle groups. This one asks "is
+ * this a multi-joint lift somebody would want to be fresh for", which includes
+ * the overhead press and the pull-up.
+ *
+ * Judgement, and stated as judgement. The signal is volume-map's own
+ * contributions — a lift crossing two muscle groups or more is multi-joint —
+ * with two corrections:
+ *
+ *   - Forearms and Core are ignored, because nearly everything pays them
+ *     something and a curl is not a compound for having a grip.
+ *   - A short exclusion list for the multi-muscle movements nobody trains
+ *     heavy: face pulls, upright rows, pullovers, back extensions, shrugs,
+ *     carries, raises, flyes, crossovers and kickbacks.
+ *
+ * It errs toward NOT flagging (a glute-ham raise is a real compound and is
+ * excluded by the /raise/ rule), which is the right direction: a note that does
+ * not appear costs nothing, and one that appears over a correctly ordered
+ * workout costs the app's credibility.
+ */
+const NOT_COMPOUND = /face pull|upright row|pullover|extension|shrug|carry|raise|fly|crossover|kickback/i;
+
+export function isCompoundLift(exercise) {
+  if (!exercise) return false;
+  const parts = volumeContributions(exercise)
+    .filter((c) => c.muscle !== 'Forearms' && c.muscle !== 'Core');
+  if (parts.length < 2) return false;
+  return !NOT_COMPOUND.test(String(exercise.name || ''));
+}
+
+/**
+ * Compound lifts sitting behind isolation work, and the sentence to say about
+ * them.
+ *
+ * @param {Array} exercises [{ exerciseId }] in the order they will be performed
+ * @param {Map}   exMap     exerciseId -> exercise
+ * @returns {{names: string[], text: string} | null} null when there is nothing
+ *          to say — which is the common case and must stay silent, not render
+ *          an empty reassurance.
+ *
+ * Exercises that produce no countable volume (cardio, an id that is not in the
+ * library) are skipped rather than treated as isolation, so five minutes on a
+ * bike as a warm-up does not make the squat behind it "out of order".
+ */
+export function exerciseOrderNote(exercises, exMap) {
+  let seenIsolation = false;
+  const late = [];
+
+  for (const item of exercises || []) {
+    const ex = exMap && exMap.get ? exMap.get(item && item.exerciseId) : null;
+    if (!ex || !volumeContributions(ex).length) continue;
+    if (isCompoundLift(ex)) {
+      if (seenIsolation) late.push(ex.name);
+    } else {
+      seenIsolation = true;
+    }
+  }
+  if (!late.length) return null;
+
+  const names = late.length === 1
+    ? late[0]
+    : `${late.slice(0, -1).join(', ')} and ${late[late.length - 1]}`;
+
+  return {
+    names: late,
+    text: `${names} ${late.length === 1 ? 'comes' : 'come'} after isolation work. The 2026 ACSM `
+      + `position stand grades exercise order at ${ORDER_QOE} % quality of evidence — the highest `
+      + 'of anything in it — and what it found is that the lifts you want to get stronger at do '
+      + 'best at the start of a session, while you are fresh. That is a strength finding; it makes '
+      + 'no claim about muscle size. Leave the order alone if it is what you meant.',
+  };
 }

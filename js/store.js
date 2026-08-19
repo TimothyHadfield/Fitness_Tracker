@@ -62,11 +62,25 @@ const LocalBackend = {
 
 const MemoryBackend = {
   rows: new Map(),
-  seeded: false,
+  // ⚠️ A PROMISE, NOT A BOOLEAN, and this is the third time this project has
+  // met that distinction — see `ensureSystems()` in §4 of progress.md.
+  //
+  // A boolean set before an `await` marks the work as DONE at the moment it
+  // STARTS. Every concurrent caller then skips the wait and reads rows that are
+  // not there yet. `muscleStrength()` does exactly that: one `Promise.all` over
+  // profile, benchmarks, sessions and exercises, four reads racing a seed that
+  // has only just begun. The result was that entering the demo could show the
+  // muscle map asking for a body weight on an account holding 53 weigh-ins —
+  // then correcting itself on the next render, which is the signature of this
+  // bug and the reason it survives casual testing.
+  //
+  // Holding the promise makes every caller await the same seed, whether they
+  // are first or fifth. Caught 2026-08-19.
+  seeding: null,
 
   async seed() {
-    if (this.seeded) return;
-    this.seeded = true;
+    if (this.seeding) return this.seeding;
+    this.seeding = (async () => {
     const [{ buildDemoData }, current] = await Promise.all([
       import('./demo.js'),
       // The real settings, read straight off this device rather than through
@@ -82,6 +96,12 @@ const MemoryBackend = {
       theme: current.theme === 'light' ? 'light' : 'dark',
     });
     for (const c of COLLECTIONS) this.rows.set(c, data[c] ? structuredClone(data[c]) : []);
+    })();
+    // A failed seed must not latch. Leaving a rejected promise here would make
+    // every later read reject too, turning one transient import failure into a
+    // permanently broken demo.
+    this.seeding.catch(() => { this.seeding = null; });
+    return this.seeding;
   },
 
   async read(collection) {
@@ -1466,29 +1486,49 @@ export async function normalizedSeries(exerciseId, targetReps, source = null) {
 //
 // Returns one entry per rankable muscle group that has usable data.
 export async function muscleStrength() {
-  const [profile, benchmarks, sessions, exMap] = await Promise.all([
+  const [profile, benchmarks, sessions, exMap, bodyWeights] = await Promise.all([
     store.getProfile(), store.getBenchmarks(), store.getSessions(), store.getExerciseMap(),
+    store.getBodyWeights(),
   ]);
   const [
     { MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
       levelProgress, weightForPercentile, generalPopulationPercentile },
-    { contributionsFor, totalLoad, rateMuscle, confidenceBand, tintFor, raiseConfidenceHint },
+    { contributionsFor, setLoad, rateMuscle, confidenceBand, tintFor, raiseConfidenceHint,
+      rankBlockedReason },
+    { bodyWeightOn },
   ] = await Promise.all([
     import('./strength-standards.js'),
     import('./muscle-evidence.js'),
+    import('./e1rm.js'),
   ]);
 
   const out = new Map();
   if (profile.missing.length) return { profile, muscles: out, ready: false };
 
-  // Contributions are per exercise, not per set, so they are resolved once.
+  // ⚠️ Contributions are per exercise AND PER BODY WEIGHT, not per exercise
+  // alone. A pull-up done at 200 lb is a different load from the same pull-up at
+  // 170, so caching on exerciseId only would score a whole training history at
+  // whatever weight happened to be looked up first. The cache key carries both,
+  // rounded to the pound because that is the resolution weigh-ins are entered at
+  // and an unrounded float would defeat the cache entirely.
   const contribCache = new Map();
-  const contribFor = (exerciseId) => {
-    if (contribCache.has(exerciseId)) return contribCache.get(exerciseId);
+  const contribFor = (exerciseId, bw) => {
+    const key = `${exerciseId}@${bw ? Math.round(bw.weight) + ':' + bw.quality : 'none'}`;
+    if (contribCache.has(key)) return contribCache.get(key);
     const ex = exMap.get(exerciseId);
-    const c = ex ? contributionsFor(ex) : [];
-    contribCache.set(exerciseId, c);
+    const c = ex
+      ? contributionsFor(ex, bw ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality } : undefined)
+      : [];
+    contribCache.set(key, c);
     return c;
+  };
+
+  // What the lifter weighed on a given day, resolved once per DATE rather than
+  // once per set — a session with eight sets asks the same question eight times.
+  const bwCache = new Map();
+  const bodyWeightFor = (date) => {
+    if (!bwCache.has(date)) bwCache.set(date, bodyWeightOn(bodyWeights, date));
+    return bwCache.get(date);
   };
 
   const today = new Date(todayISO() + 'T00:00:00');
@@ -1500,6 +1540,9 @@ export async function muscleStrength() {
 
   // muscle -> observations, each already converted to that muscle's KEY LIFT.
   const byMuscle = new Map();
+  // muscle -> exerciseName -> { name, sets, reason, fixable }. Work the user
+  // really did that the rating had to throw away, kept so the panel can say so.
+  const blockedByMuscle = new Map();
 
   const record = (exerciseId, exerciseName, weight, reps, date, isBenchmark) => {
     // D5: a maximum is not inferred from a set above 15 reps. Without this the
@@ -1508,14 +1551,40 @@ export async function muscleStrength() {
     // informative set of the week. A benchmark gets no exemption — a 25-rep
     // benchmark is no more evidence of a max than a 25-rep set is.
     if (!isRankableSet(reps)) return;
-    const contributions = contribFor(exerciseId);
-    if (!contributions.length) return;
+    // ⚠️ The body weight of THE DAY OF THE SET, never today's. Somebody who has
+    // lost twenty pounds must not have last year's pull-ups re-scored at this
+    // year's weight — that would quietly rewrite history every time they
+    // stepped on the scales.
+    const bw = bodyWeightFor(date);
+    const contributions = contribFor(exerciseId, bw);
+    if (!contributions.length) {
+      // WHY a muscle is grey, when the answer is something the user can act on.
+      // Before this, logging thirty sets of pull-ups and being told "nothing
+      // recorded for this muscle yet" was true of the rating and a lie about
+      // the training. The distinction rankBlockedReason() draws is the one that
+      // matters: "log a weigh-in" is actionable, "nobody has measured this
+      // exercise" is not, and only the first is worth putting a button under.
+      const ex0 = exMap.get(exerciseId);
+      const why = ex0 && MUSCLE_LIFTS[ex0.muscle]
+        ? rankBlockedReason(ex0, bw ? { bodyWeight: bw.weight } : undefined)
+        : null;
+      if (why) {
+        if (!blockedByMuscle.has(ex0.muscle)) blockedByMuscle.set(ex0.muscle, new Map());
+        const bag = blockedByMuscle.get(ex0.muscle);
+        const name = exerciseName || ex0.name;
+        const prev = bag.get(name) || { name, sets: 0, reason: why, fixable: /weigh-in/.test(why) };
+        prev.sets += 1;
+        bag.set(name, prev);
+      }
+      return;
+    }
 
     const ex = exMap.get(exerciseId);
     // Ratios are in TOTAL load. A dumbbell row entered as 80 is 160 on the body,
     // and comparing the 80 against a barbell row would make every dumbbell
-    // lifter look weak.
-    const load = totalLoad(weight, ex ? ex.loadType : 'total');
+    // lifter look weak. setLoad() routes a bodyweight or assisted movement
+    // through the body-weight arithmetic and everything else straight through.
+    const load = setLoad(ex, weight, bw ? { bodyWeight: bw.weight } : undefined);
     if (load === null) return;
     const raw = e1rm(load, reps);
     if (raw === null) return;
@@ -1610,7 +1679,25 @@ export async function muscleStrength() {
     });
   }
 
-  return { profile, muscles: out, ready: true };
+  // Blocked work is reported for EVERY rankable muscle, not only the grey ones.
+  // A muscle can be rated off a barbell row and still be throwing away every
+  // pull-up the user has done, and that is worth saying in exactly the same
+  // words — the alternative is a panel that quietly under-reports its own
+  // evidence and looks complete while doing it.
+  const blocked = new Map();
+  for (const [muscle, bag] of blockedByMuscle) {
+    const list = [...bag.values()].sort((a, b) => b.sets - a.sets);
+    blocked.set(muscle, {
+      exercises: list,
+      sets: list.reduce((n, e) => n + e.sets, 0),
+      // Is there something the user can DO about it? Only a missing weigh-in
+      // is fixable; "nobody has measured this exercise" is not, and offering a
+      // button for it would be a false promise.
+      fixable: list.some((e) => e.fixable),
+    });
+  }
+
+  return { profile, muscles: out, blocked, ready: true };
 }
 
 // Every exercise that has at least `min` recorded data points, per field.
@@ -1674,7 +1761,11 @@ export async function chartableExercises(min = 2) {
       const r = perSource[src];
       const fields = Object.keys(r).filter((f) => f !== '__paired' && r[f].size >= min);
       const pairedDays = (r.__paired || new Set()).size;
-      sources[src] = { fields, pairedDays, normalizable: canNorm && pairedDays >= min };
+      // How many distinct DAYS this source can draw, which is what makes one
+      // source a better default than the other. Days rather than readings: ten
+      // sets on one afternoon is still one point on a chart.
+      const days = Math.max(pairedDays, 0, ...fields.map((f) => r[f].size));
+      sources[src] = { fields, pairedDays, days, normalizable: canNorm && pairedDays >= min };
     }
 
     // Offer the exercise only if at least ONE source can draw a line on its own.

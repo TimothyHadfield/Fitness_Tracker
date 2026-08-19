@@ -292,5 +292,63 @@ ok(kg.settings[0].gender === 'male' && kg.settings[0].birthYear === 1996,
 ok(JSON.stringify(kg.sessions) === JSON.stringify(data.sessions),
    'and changing the display unit does not change a single recorded number');
 
+/* ================================================================== *
+ * The demo backend is SINGLE-FLIGHT
+ *
+ * ⚠️ Everything above tests the generated year. This tests the thing that
+ * SERVES it, and it is a different failure entirely: the year can be perfect
+ * and still arrive empty.
+ *
+ * MemoryBackend.seed() used to set a boolean before its first `await`, which
+ * marks the work done at the moment it starts. Every concurrent caller then
+ * skipped the wait and read rows that were not there yet. muscleStrength() is
+ * exactly that caller — one Promise.all over profile, benchmarks, sessions and
+ * exercises — so entering the demo could show the muscle map asking for a body
+ * weight on an account holding 53 weigh-ins, then correcting itself on the next
+ * render. Third time this project has met a boolean-instead-of-a-promise;
+ * ensureSystems() is the other two.
+ * ================================================================== */
+{
+  const mem = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+    setItem: (k, v) => mem.set(k, String(v)),
+    removeItem: (k) => mem.delete(k),
+  };
+  const sess = new Map();
+  globalThis.sessionStorage = {
+    getItem: (k) => (sess.has(k) ? sess.get(k) : null),
+    setItem: (k, v) => sess.set(k, String(v)),
+    removeItem: (k) => sess.delete(k),
+  };
+  sess.set('ftrack:v1:demo', '1');
+
+  const { store, muscleStrength } = await import('../js/store.js');
+
+  // THE RACE, in the shape the app actually produces it: four reads issued
+  // together against a backend that has never been touched. Awaiting anything
+  // first would seed it and the test would pass over the bug.
+  const [profile, benchmarks, sessions, weighIns] = await Promise.all([
+    store.getProfile(), store.getBenchmarks(), store.getSessions(), store.getBodyWeights(),
+  ]);
+
+  ok(sessions.length > 100,
+     `the first concurrent read already sees the year (${sessions.length} sessions)`);
+  ok(benchmarks.length > 0, `and its benchmarks (${benchmarks.length})`);
+  ok(weighIns.length > 0, `and its weigh-ins (${weighIns.length})`);
+  ok(profile.missing.length === 0,
+     `and a complete profile, so the muscle map does not ask for data that is there `
+     + `(missing: ${JSON.stringify(profile.missing)})`);
+
+  // The vacuity guard. If the demo flag were not read at all, every assertion
+  // above would fail rather than pass — but if the backend were seeded by some
+  // earlier import, they would pass without proving anything about the race.
+  // A second concurrent burst must agree with the first, and the map must rate
+  // something, which is the user-visible symptom the bug produced.
+  const r = await muscleStrength();
+  ok(r.ready && r.muscles.size > 0,
+     `and the muscle map rates the demo year on first touch (${r.muscles.size} muscles)`);
+}
+
 console.log(`\n${fails === 0 ? 'All checks passed.' : fails + ' FAILED'}`);
 process.exit(fails === 0 ? 0 : 1);

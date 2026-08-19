@@ -4,7 +4,7 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-19
+**Last updated:** 2026-08-19 (second pass — see the section directly below the summary)
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -57,44 +57,83 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-19, second pass — five agents, and what came out of it
+
+A directed multi-agent session. **Read this before the Open work list, because it moved.**
+
+- **PULL-UPS, CHIN-UPS AND DIPS NOW RATE A MUSCLE.** Body weight is wired into rep normalisation.
+  There is **no published percent-of-bodyweight figure for either, and none is needed** — in a free
+  hang the hands carry all of it, which is statics, not a citation. Push-ups use a real measurement
+  (75 %, two labs half a percent apart). What has no honest figure stays unrankable and the screen
+  says which of the two kinds of "can't" applies.
+- **GOALS PROGRESSION IS BUILT** (Phase 4). Double progression, the 2-for-2 rule, the smallest
+  increment inside 2–10 %, and it says so when no honest increment exists. `js/progression.js` has
+  **no clock and no import from `goals.js`**, so §3.1's refusal is structural rather than promised.
+  Time enters through one day count and may only ever **suppress** a suggestion, never raise one.
+- **THE ESTIMATOR'S PHASE 0 IS DONE** — `js/strength-estimate.js` plus a simulator. Bias +0.68 %,
+  RMSE 4.63 %, and the three §9 residuals now have measured answers rather than opinions. One of
+  them shipped (below); one is declared unfittable and stays open.
+- **THE RATING SAYS WHAT IT CANNOT SEE.** A workout stores a set count, not a weight or a rep
+  range, so 3×20 and 3×5 score identically for strength — on screen, in words, not in a tooltip.
+- **`docs/research.md` §6.8 IS PULLED**, and it found that **ACSM published a new position stand on
+  2026-03-05**, the first in seventeen years. This file had been calling the 2009 one current.
+
+⚠️ **Three bugs were found by doing this, and none was found by a test:**
+
+1. **The demo account could open EMPTY.** `MemoryBackend.seed()` set a boolean before its first
+   `await`, so concurrent readers skipped the wait — and `muscleStrength()` is exactly that, four
+   reads in one `Promise.all`. The map asked for a body weight on an account holding 53 weigh-ins,
+   then corrected itself on the next render, which is why it survived every screenshot review.
+   **Third time this project has met boolean-instead-of-promise** — see `ensureSystems()` in §4.
+2. **Goals progression anchored its rep range on the WEAKEST set.** Reps fall across sets, so a
+   lifter who had just pressed 190 for 6 was told the weight moves "once you hit 5". Found by
+   driving a browser; 150 assertions and jsdom had all passed over it.
+3. **A "log a weigh-in" message that could never be shown.** The muscle map refuses to render
+   without a body weight, so that branch was dead UI. Removed there, kept on the graph where it
+   can actually be reached.
+
+---
+
 ## Open work — start here
 
-**One thing gates almost everything left: the strength estimator.**
+**The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
+it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
-1. **`docs/strength-estimate-plan.md`, Phase 0 — the estimator and its simulator.** Pure maths, a
-   simulator, no UI. **Blocked on nothing, and the single highest-value thing left.** It gates the
-   last unbuilt half of `docs/vision.md` §1.2 (suggesting weights and reps), the **Goals verdict** —
-   the one visible hole in a feature that is otherwise finished and shipped — and the **three
-   residual accuracy gaps in §9**, all of which are now about the same thing: a high-rep isolation
-   set extrapolates to a 1RM far harder than a low-rep compound does, and nothing shrinks it.
-   Its constants in `js/muscle-evidence.js` are reasoned, not fitted; fitting them is the work.
+1. **Social: get two accounts to connect. THIS IS NOW THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
+   Every screen is built and driven, but only against a stubbed facade. The round trip — invite,
+   open as somebody else, claim, accept, publish, read — has never run. Needs two throwaway accounts
+   against the live project, then deleted.
 
-   ⚠️ **Read §9 before starting, for the lesson as much as the numbers.** The standing position was
-   that none of this could be touched without the simulator. On 2026-08-19 a third of it turned out
-   to be a sort order — `rateMuscle()` was picking evidence by size rather than by credibility — and
-   fixing that moved an ordinary lifter's shoulders from Elite to Proficient without fitting a single
-   constant. **Check which half of a problem is calibration and which is design before deferring the
-   whole thing.**
+2. **The estimator, Phases 1–3** (`docs/strength-estimate-plan.md` §12). Phase 0 is **done** and its
+   numbers are in §15. What is left is wiring it to a screen, and **§16 sets the hard design
+   constraint: the uncertainty band fits inside a single strength level only 8.5 % of the time.**
+   Levels are 13–16 % apart and the band is ±12 %, so that is structural, not a tuning problem. A
+   body map that waited for certainty before colouring would be grey nine times in ten. **Phase 2
+   must be designed for the hedged reading**, not treat it as an edge case. This is what the Goals
+   verdict waits on.
 
-2. **Goals Phase 4 — progression.** `docs/goals-plan.md` §8 has the whole rule already (double
-   progression, the ACSM 2-for-2 rule, the smallest increment inside 2–10 %, and say so when no
-   honest increment exists). It needs no estimator. It is deliberately last because it is **the only
-   part of this app that could cause physical harm** — and §3.1 is the reason: nothing may raise a
-   weight because a deadline is approaching. Propose, never impose.
+3. **⚠️ Exercise ORDER is the highest-confidence finding this project has, and it is barely used.**
+   ACSM 2026 grades it at **88 % quality of evidence, the highest of anything in the stand**:
+   strength work belongs at the start of a session. The app knows the order of every workout and
+   every session. It currently ships a note in the builder and nothing more — deliberately, because
+   the stand publishes a *grade* and not an effect size, so a score penalty would have to be
+   invented. If it ever earns a number, its home is a report of what was **recorded**, not a rating
+   of what was planned.
 
-3. **Social: get two accounts to connect.** Every screen is built and driven, but only against a
-   stubbed facade. The round trip — invite, open as somebody else, claim, accept, publish, read — has
-   never run. Needs two throwaway accounts against the live project, then deleted.
+4. **Wire the load finding into a report of what you actually did.** Load is the single biggest
+   thing for strength (SMD 0.60) and a *planned* workout stores no reps — but a **recorded** set has
+   weight and reps, so "what share of your logged sets were at 8 reps or fewer" is a measurement
+   rather than a model. That is the honest way to close the gap the strength caveat now admits to.
 
-4. **`docs/research.md` §6.8** — the axes still to pull (load/rep range, rest intervals, range of
-   motion, per-session volume). Each either sharpens the rating or becomes a stated caveat.
+5. ~~**Finish the Nippard series**~~ **DONE 2026-08-19.** All six workouts. It turned up that **the
+   one shipped as "Pull" was the SECOND pull** — three days of a six-day programme, mislabelled.
 
-5. ~~**Finish the Nippard series**~~ **DONE 2026-08-19.** All six workouts are transcribed. See §3
-   and §9 — and note what it turned up: **the one shipped as "Pull" was the SECOND pull**, not the
-   first, so the system was three days of a six-day programme *and* mislabelled. Item 4 above is
-   now the last ungated piece of content work.
+6. ~~**`docs/research.md` §6.8**~~ **DONE 2026-08-19.** All four axes pulled. Two entered the model
+   (a per-session clamp, and `MINUTES_PER_SET` finally has a source), two became stated caveats.
 
-6. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
+7. ~~**Goals Phase 4 — progression.**~~ **BUILT 2026-08-19**, `js/progression.js`.
+
+8. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
    itself is finished. Still the biggest untested risk; simply not the next thing. Don't raise it.
 
 **`docs/vision.md` is empty of unstarted work.** Five of its six ideas are BUILT (§1.1 social, §1.3
@@ -106,12 +145,15 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1090 assertions, **no dependencies** |
+| **Everything at once** | 2075 assertions across nine suites. Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1098 assertions, **no dependencies** |
+| **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
+| **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
-| **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
-| **Rating tests** | `node tests/optimal.test.mjs` — 46 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
-| **Goals tests** | `node tests/goals.test.mjs` — 88 assertions, **no dependencies**. The requirements model, and **the two things Goals refuses to do**: read the calendar to decide what it asks of you, and emit a verdict |
-| **Demo tests** | `node tests/demo.test.mjs` — 53 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal) and PLAUSIBLE, checked against the app's own modules rather than by eye |
+| **Volume tests** | `node tests/volume-map.test.mjs` — 60 assertions, **no dependencies**. Direct/indirect mapping, the published efficiency tiers, and the per-session clamp |
+| **Rating tests** | `node tests/optimal.test.mjs` — 72 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
+| **Goals tests** | `node tests/goals.test.mjs` — 197 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier |
+| **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 292 assertions, mounts every screen |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
@@ -332,6 +374,10 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence, not the biggest** — it used to pick its top three by converted weight, so a face pull outvoted an overhead press benchmark and rated the lifter Elite; see §9. Three different exercises at most, one seat each. ⚠️ **And since 2026-08-19 the rating is led by the most CREDIBLE of that evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
 | **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
+| **Bodyweight lifts rank** | **Pull-ups, chin-ups, dips and push-ups rate a muscle** (2026-08-19). Their resistance is a fraction of body weight plus whatever was added, and the fraction is per exercise. ⚠️ **The pull-up and the dip are 1.00 by STATICS, not by citation** — nothing but the hands is in contact, so the hands carry all of it, and the research confirmed no published %BM figure exists for either. A push-up is 0.75 from two independent force-plate studies half a percent apart (Suprak 2011, Mier 2014); the familiar 64 % and 66 % figures measure *different quantities* and mixing them would be worse than choosing one. ⚠️ **Body weight is read from the DATE OF THE SET**, never today's — otherwise losing twenty pounds would rewrite last year's pull-ups. What has no honest fraction stays refused, permanently and by name: an inverted row is 37–79 % depending on a bar height the app does not record. The panel distinguishes the two kinds of "can't", because "log a weigh-in" is actionable and "nobody has measured this" is not. `js/exercises.js` `BODY_WEIGHT_FRACTION`, `totalResistance()` in `js/e1rm.js` |
+| **The map says what it is IGNORING** | A muscle no longer claims "nothing recorded" over work you did. Sets the rating had to discard are listed with the reason — three sets of inverted rows show as uncounted rather than vanishing. Rendered on rated muscles too, not just grey ones: a Back rating built on rows while silently dropping every chin-up is under-reporting its own evidence while looking complete |
+| **Progression** (Goals Phase 4) | **Double progression, in the session runner** — hold the load and add reps; at the top of the range on **two consecutive sessions** take the smallest increment inside **2–10 %** and drop to the bottom of the range. Says so when **no honest increment exists** (5 lb on 30 lb is a 17 % jump), and distinguishes "past the band" from "inside the band but bigger than we allow for isolation work". ⚠️ **`js/progression.js` has NO CLOCK and imports nothing from `goals.js`** — §3.1's refusal is structural, not a promise. Time enters as one day count and **may only SUPPRESS a suggestion, never raise one**: after a long gap it offers last time's numbers and says why, prescribing no deload because nobody has measured one. Swept over 10,692 calls — a gap never yields a heavier suggestion than the same history without one. Weighted pull-ups get the full rule via total resistance (5 lb on a 25 lb belt is 2.4 % of ~205 lb, not 20 % of 25); reps-only movements get "one more rep" |
+| **What the strength score cannot see** | ⚠️ **On screen, in words, not in a tooltip.** A planned workout stores a set count and no weight or rep range, so **3×20 and 3×5 get the same strength percentage** — and load is the single biggest thing there is for strength (SMD 0.60 vs 0.12 for growth). Stated on the system screen and under the Explore list, because `title` does nothing on a phone and a phone is where this app is read. The same treatment for the **0.5 indirect-set weight**: kept, because it is the best-supported method actually tested, but the screen now says it is a modelling choice and that counting indirect work lower would drop several percentages a band |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | **Demo account** | Account → **View demo account**. A generated year — two programmes, ~200 sessions, 20 benchmarks, 53 weigh-ins, a goal 16 % of the way through — so every screen has something in it. ⚠️ **In-memory only.** `store.js` swaps its backend for a Map, so there is no tap sequence — editing, deleting, importing, "delete all data" — that can reach a real record. The flag is in **sessionStorage**, so the demo cannot follow you into a new tab or survive closing the browser; that is the safety decision, because "opens the app tomorrow and sees a year they did not do" would be far worse than the feature is worth. A reload reseeds from the same default. **Social is refused** at `republish()`, not just on the screen. `js/demo.js` |
@@ -524,6 +570,12 @@ Fitness_Tracker/
 │   └── ink-back.webp           the only binary assets in the app
 ├── tools/build-body-art.py     regenerates js/body-art.js + img/ink-*.webp from the
 │                               JPG. Dev-only; needs pillow/numpy/scipy/potracer
+├── tools/strength-sim.mjs      THE SIMULATOR. A virtual lifter with a KNOWN 1RM
+│                               curve, logging realistically. Deterministic —
+│                               mulberry32, never Math.random()
+├── tools/strength-fit.mjs      re-runs every sweep the estimator's constants
+│                               came from, so a later session can re-derive
+│                               rather than trust
 ├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
 │   ├── app.js                  hash router + boot
@@ -542,6 +594,16 @@ Fitness_Tracker/
 │   │                           seeded. Never Math.random(), or "resets to the
 │   │                           default" stops being true. The SWITCH lives in
 │   │                           store.js; this file only builds the data
+│   ├── strength-estimate.js    THE ESTIMATOR — pure, clock passed in. Phase 0:
+│   │                           IMPORTED BY NOTHING IN THE APP on purpose.
+│   │                           Its constants are FITTED to tools/strength-sim,
+│   │                           not reasoned — and the ones that could not be
+│   │                           fitted say so on the constant
+│   ├── progression.js          DOUBLE PROGRESSION — pure, and deliberately
+│   │                           NOT part of goals.js. No clock, no import from
+│   │                           goals.js, so "a deadline may not make this ask
+│   │                           for more" is structural. Time may only ever
+│   │                           SUPPRESS a suggestion, never raise one
 │   ├── goals.js                GOALS — pure. A goal is a LEVEL, never a predicted
 │   │                           number of pounds. Refuses two things: reading the
 │   │                           deadline to decide what it asks of you (that
@@ -584,7 +646,10 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     1090 assertions, no dependencies
+│   ├── data-layer.test.mjs     1098 assertions, no dependencies
+│   ├── bodyweight.test.mjs     153 assertions, no dependencies — the fractions,
+│   │                           their sources, and what stays REFUSED
+│   ├── strength-estimate.test.mjs  72 assertions — measured simulator outcomes
 │   ├── social.test.mjs         73 assertions, no dependencies — what is SHARED
 │   ├── goals.test.mjs          88 assertions, no dependencies — the requirements
 │   │                           model, and the two REFUSALS
@@ -629,6 +694,16 @@ Fitness_Tracker/
   sets, the session screen's "Add another set" button was drawn over set 4 and hid sets 5 and 6.
   Anything tall inside a pane wants `flex: none`, and `min-height: 0` belongs only on a child that
   also handles its own overflow.
+- **⚠️ A BOOLEAN SET BEFORE AN `await` MARKS THE WORK DONE AT THE MOMENT IT STARTS.** This project
+  has now met this three times and it presents differently each time, so learn the shape rather
+  than the symptom. `MemoryBackend.seed()` did `this.seeded = true` and *then* awaited, so every
+  concurrent caller skipped the wait and read rows that were not there — and `muscleStrength()` is
+  exactly that caller, four reads in one `Promise.all`. **Entering the demo could show the muscle
+  map asking for a body weight on an account holding 53 weigh-ins**, then correct itself on the
+  next render, which is precisely why no screenshot review caught it. The fix is to hold the
+  PROMISE and return it, not a flag — and to clear it on rejection, or one transient import failure
+  latches the demo broken forever. `tests/demo.test.mjs` reproduces the race in the shape the app
+  produces it; reverting the fix gives 0 sessions and a profile missing gender and body weight.
 - **⚠️ A read-modify-write migration must be SINGLE-FLIGHT.** `ensureSystems()` reads two
   collections, decides, and writes both. Two callers running it at once each read "no systems", each
   created one, and the second write clobbered the first — leaving the list pointing at a row that no
@@ -970,10 +1045,25 @@ re-examining it produces something better than either the old rule or a plain ov
 
 ## 9. Known gaps — deliberate, not bugs
 
-- **Body weight is charted but not yet wired into rep normalisation** for the 54 bodyweight and
-  assisted exercises. Their logged weight is added or assisted load, not total resistance — which is now
-  computable. `canNormalize()` in `e1rm.js` still refuses them, and `contributionsFor()` in
-  `muscle-evidence.js` refuses them for ranking too — so a pull-up rates nothing at all.
+- ~~**Body weight is charted but not yet wired into rep normalisation.**~~ **CLOSED 2026-08-19.**
+  Pull-ups, chin-ups, dips and push-ups now rank. What remains open is narrower and is stated on
+  screen rather than hidden:
+  - **Measured, but the app lacks the parameter.** An inverted row is 37–79 % of body weight
+    depending on bar height; an incline push-up 41 % vs 55 % depending on hand height. The app
+    records neither, so both stay refused. Adding the parameter is the fix, not adding a number.
+  - **No published figure exists at all** for diamond and wide-grip push-ups, bench dips, handstand
+    and pike push-ups, ring dips or muscle-ups. ⚠️ **The "handstand push-up ≈ 90–100 % of body
+    weight" figure circulating online is misattributed** to a paper that studied push-ups. Do not
+    use anything from that lineage.
+  - **Assisted machines.** The fraction is fine; the counterweight linkage is not standardised and
+    nothing published maps a stack setting to the load it removes.
+  - **All lower-body and trunk bodyweight work**, for a different reason: their key lifts log
+    *external* load carried by a body that is already there, so a bodyweight squat converts to an
+    empty bar. Fixing that needs the key lift's own body-weight component modelled first.
+  - ⚠️ **A stale weigh-in gets no penalty.** Somebody who logs pull-ups for two years after one
+    weigh-in is scored at that old weight with full confidence. Carrying a weigh-in *backward* is
+    priced at 0.70; carrying it forward is not priced at all, and that is the same class of problem
+    this task set out to fix, arriving from the other side.
 - ~~**The Muscles figure's look is not signed off.**~~ **Closed 2026-08-16.** All four gaps — heavy
   keylines, dense striations, unpainted head/hands/feet/knees, heroic proportions — came in with
   Tim's illustration and are satisfied by construction rather than by drawing code: the ink layer
@@ -1019,24 +1109,32 @@ re-examining it produces something better than either the old rule or a plain ov
   currently train instead of one dropped six months ago; every muscle inside a coherent 54–76 % band.
   **Mutation-checked** — reverting the sort flips exactly the five new assertions and nothing else.
 
-- **The high-rep extrapolation itself is NOT fixed, and still wants the simulator.** What changed is
-  which evidence gets to *lead*; what did not change is that a 13-rep isolation set still converts to
-  an unshrunk 1RM. Three residuals, in descending order of how much they matter:
-  - A low-credibility conversion still **nudges** the number. The face pull above no longer sets the
-    shoulder rating but still adds about 9 % to it, because the aggregate is a weighted mean and the
-    outlier sits at twice the credible estimate. Bounding that means a robust estimator with a
-    tuning parameter, which is exactly what `docs/strength-estimate-plan.md` §11 is for.
-  - Where a muscle's **only** evidence is high-rep isolation, the level is still that unshrunk
-    conversion. The original example stands unchanged: a seated calf raise at 180×12 estimates a
-    417 lb standing calf raise and reads Elite off one set. Confidence is Low and the screen says so,
-    but the level does not move.
-  - A **single mistyped number** on a lift still defines that lift's contribution, because the
-    representative for an exercise is its best showing. That is also what makes a genuine PR count,
-    and telling the two apart needs a model of plausible progression — the same simulator.
-
-  Fixing any of these properly means either per-exercise spread (σ is one value for every lift today,
-  and `strength-standards.js` already flags that isolation work is probably wider) or shrinking
-  high-rep estimates toward the credible consensus. Neither should be guessed at.
+- **The three residuals now have MEASURED answers** (`docs/strength-estimate-plan.md` §15), and only
+  one of them shipped. This is the honest state:
+  - ~~A low-credibility conversion still **nudges** the number.~~ **FIXED 2026-08-19.**
+    `rateMuscle()` now winsorises into `[median/1.25, median×1.25]` before the weighted mean. The
+    face pull's nudge goes **+3.9 % → +1.0 %**; across 200 simulated muscles against known truth
+    **worst-case error halves, 19.8 % → 7.5 %**, and it improved RMSE *with no outlier present*,
+    which is what makes it free rather than a trade. k is pinned from both sides — below ~0.21 it
+    clips days a lifter genuinely had. ⚠️ **Two levels moved on the demo year** (Hamstrings and
+    Triceps, each one band); both are boundary straddles at 64.9 vs 65.0 and 49.8 vs 50.0, and
+    every clipped observation was high-rep isolation work converting to an implausible number.
+  - **High-rep extrapolation is NOT fixed, and now has a reason rather than a plan.** Shrinkage
+    **cannot be honestly fitted**: the extra spread at 15 reps comes out 0.01 / 0.07 / 0.12
+    depending entirely on a per-lifter rep-curve variance nobody has measured. So the 180×12 seated
+    calf raise still converts to 417 lb — but it now carries a **±21.3 % band spanning three
+    levels**, and `displayLevel()` returns `certain: false`, so the UI is not permitted to say
+    Elite. **Carrying the uncertainty is the answer; a guessed constant is not.**
+  - **A typo and a PR are separable above ~25 %, and not below 15 %.** A plausibility ceiling
+    quarantines (never deletes) an observation above what training could have delivered. At a
+    0.09 % false-positive rate: ×10 caught 100 %, +40 % 99 %, +25 % 77 %, +15 % 19 %. One ×10 fat
+    finger otherwise biases a year's reading by **343 %**, because every real set is then measured
+    against the typo. ⚠️ **The winsoriser does not fix this** — a ×10 typo arrives with high
+    credibility. Two different failures, two mechanisms.
+  - ⚠️ **None of this is validated against a human.** The simulator's e1RM is correct *by
+    construction*, and `docs/research.md` §1.3 says its absolute accuracy was never validated.
+    "Within 4.6 %" is a statement about the model, not about a person. §11.2's backtest against
+    held-out benchmarks is the only thing that changes that.
 - **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which

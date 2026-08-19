@@ -413,3 +413,150 @@ your workout systems listed, it also shows the % optimal on the side, even if th
 themselves"* — so the badge is now on **the Workouts list, Explore, and a system's own screen**, the
 same two numbers in all three. A system with no workouts gets no badge: an empty programme is
 unfinished, not bad, and showing it 0 % would be both wrong and discouraging.
+
+---
+
+## 11. What the research pass changed — 2026-08-19
+
+`docs/research.md` §6.8 was finally pulled: per-session volume (§6.12), load and rep range (§6.13),
+rest intervals (§6.14), range of motion (§6.15), plus **ACSM's 2026 position stand (§6.16)**, which
+nobody here knew existed. Four of its findings landed on this rating. **Three of the four are words
+rather than model terms, and that is the honest result rather than a failure to find something** —
+the app stores no load, no reps, no rest and no range of motion on a *planned* workout, so most of
+these axes have nothing to attach to even if the evidence had been strong.
+
+**Every one of the nine shipped systems' badges is unchanged by this pass.** That is the headline,
+and it was checked before and after each change rather than assumed:
+
+| System | Growth | Strength | days/wk |
+|---|---|---|---|
+| Ultimate Push Pull Legs | 55 % | 80 % | 6 |
+| Dr. Mike's Floating Split | 50 % | 80 % | 6 |
+| The Golden Six | 35 % | 55 % | 3 |
+| Mike Thurston's Six-Day Split | 55 % | 65 % | 6 |
+| Chris Bumstead's 8-Day Split | 45 % | 70 % | 6 |
+| Volume Landmarks Hypertrophy | 50 % | 80 % | 4 |
+| Push Pull Legs | 65 % | 80 % | 6 |
+| Upper / Lower | 50 % | 75 % | 4 |
+| Full Body, 3 Days | 40 % | 75 % | 3 |
+
+### 11.1 Per-session volume — clamp at 24, and specifically not at 11
+
+`SESSION_CEILING = 24` in `js/volume-map.js`. One session is credited at most 24 fractional sets per
+muscle, applied per muscle inside the per-workout loop of `weeklyVolume()`.
+
+**It is the same refusal as `VOLUME_CEILING = 42`, on the other axis** — don't score past where the
+data goes — and it is justified the same way: 24 is the top of the per-session *range* in Remmert et
+al. (2025), not a point where sets stop working. §6.12 has the numbers.
+
+⚠️ **The interesting decision is the one not taken.** That paper's "point of undetectable outcome
+superiority" is ~11 fractional sets a session, and capping there was rejected on four grounds: a
+preprint still not peer reviewed 16 months after posting, R²marginal of 16.1 %, a threshold the
+authors themselves call *"arbitrarily determined"*, and their own statement that above it hypertrophy
+*"continued to occur, again in a decreasing manner"*. Capping at 11 would have moved a real shipped
+rating — Thurston 55 % → 50 % growth. **The test suite now pins Thurston at 55 and asserts the
+ceiling is not 11**, so that decision cannot be undone by accident.
+
+**And a fifth ground, which only showed up under mutation testing and is the strongest of them: a cap
+at 11 breaks refusal #1.** With the ceiling at 11, 12 sets of chest in one day and 4+4+4 across three
+days no longer score the same for growth — `tests/optimal.test.mjs`'s oldest and most load-bearing
+assertion flips. At 11 the clamp *is* a frequency reward, because a realistic programme can cross it.
+At 24 nothing real can: the largest single (session, muscle) figure anywhere in the nine is **15.0**
+(Thurston, chest day, chest).
+
+**Rejected outright: summing a per-session response across sessions.** §6.12.4 modelled it. It scores
+six sessions of two sets **157 %** above one session of twelve, reorders the nine (Thurston 3rd → 5th,
+Bumstead 7th → 9th), and is refusal #1 in `js/optimal.js` wearing a per-session coat. Grade 🔴 for
+that path.
+
+**Measured effect.** Nine shipped systems: **zero change**, asserted by recounting every system with
+the clamp lifted and requiring identical results. A fabricated 60-sets-of-bench-in-one-day programme:
+**25 % → 20 %** growth. That is the shape a guard should have — nothing real moves, and an exploit
+closes.
+
+### 11.2 The 0.5 indirect weight — stated, not changed
+
+`INDIRECT = 0.5` stays. §6.17.1 is why it is now *stated*: both source papers ran exploratory
+continuous fits asking what weight actually maximises model performance, and neither answer is 0.5
+(~32 % for hypertrophy, ~39 % for weekly strength volume, ~16 % for per-session strength). **Moving
+0.5 → 0.32 drops five of the nine growth ratings a whole band.** It is the biggest lever in the whole
+rating and until now nothing said so.
+
+Keeping it is not inertia: 0.5 is the best-supported of the three counting methods that were actually
+*compared*, with strong-to-very-strong Bayes factors, and the continuous fits are exploratory
+analyses in supplements. Pelland et al. also say the right weight *"likely depends on"* the outcome,
+the exercise, the rep range and training status — so there is no single better number to move to.
+
+What changed is that `INDIRECT_NOTE` is exported from `js/volume-map.js` and rendered on the system
+screen and under the Explore list. It is exported from the module that owns the constant for the same
+reason `rateUserSystem()` builds its own caption: a caveat kept in a view drifts away from the number
+it is about.
+
+### 11.3 ⚠️ The strength score is wrong by omission, and now says so
+
+**A planned workout stores a set count and nothing else.** So 3 × 20 and 3 × 5 arrive at
+`rateProgramme()` identical and leave with the same strength percentage — while high vs low load is
+**SMD 0.60 [0.38, 0.82]** for strength (Lopez 2021, corroborated by ACSM 2026 at 79 % QoE for
+≥ 80 % 1RM), a larger effect than anything the rating does model. For hypertrophy the same contrast
+is SMD 0.12 with an interval crossing zero, so the growth number needs no such caveat and does not
+get one.
+
+**It cannot be fixed here.** A load or rep-range field on a planned exercise is a data-model change,
+and it would mean asking every user to type a rep target before their programme could be scored,
+which D9 rules out. So the model is unchanged and the *claim* is not: `STRENGTH_CAVEAT` and
+`STRENGTH_CAVEAT_SHORT` in `js/optimal.js` are on the badge's `title`, on a system's own screen and
+under the Explore list. Both are on screen in full text, not only in a tooltip — **a `title` does
+nothing on a phone**, and the phone is where this app is read.
+
+### 11.4 Exercise order — a note, not a term in the score
+
+ACSM 2026 grades exercise **order** at **88 % quality of evidence, the highest of anything in the
+stand**: work you want to get stronger at belongs at the start of a session. The app has always known
+the order of every workout and has never said anything about it.
+
+**Built: a note in the workout builder** (`exerciseOrderNote()` in `js/optimal.js`), shown when a
+compound lift sits behind isolation work. It names the lifts, states the finding and its grade,
+confines the claim to strength — the stand makes no equivalent claim for muscle size — and ends by
+saying that leaving the order alone is a legitimate answer. It never blocks a save, never reorders
+anything and never moves a score.
+
+**Deliberately NOT built: exercise order as a term in the strength score.** Three reasons, in order
+of weight:
+
+1. **The stand publishes a grade, not an effect size.** Feeding order into the score would mean
+   inventing the size of the penalty, which is exactly the failure §1 of this plan exists to prevent.
+   Every other component here traces to a published dose-response value; this one could not.
+2. **It would be a second unpriced modelling choice sitting on top of `STRENGTH_VOLUME_SHARE`**,
+   which is already flagged as the largest assumption in `optimal.js`.
+3. **A programme's exercise order is not quite what the finding is about.** ACSM's evidence is about
+   the *session*, and the session that happens is in the user's history, not in the plan. If order
+   ever earns a number, its home is the same place §6.13.3 puts the load finding: a report of what
+   was actually recorded, not a model of what a plan will do.
+
+**Compound classification is applied judgement and is labelled as such.** `isCompoundLift()` reads
+`volumeContributions()` — a lift crossing two muscle groups or more is multi-joint — ignoring
+Forearms and Core (nearly everything pays them something, and a curl is not a compound for having a
+grip) and excluding a short list of multi-muscle movements nobody trains heavy (face pulls, upright
+rows, pullovers, back extensions, shrugs, carries, raises, flyes, crossovers, kickbacks). **It errs
+toward not flagging** — a glute-ham raise is a real compound and the `/raise/` rule excludes it —
+which is the right direction: a note that fails to appear costs nothing, and one that appears over a
+correctly ordered workout costs the app's credibility.
+
+⚠️ **Not the same question as `isCompound()` in `js/progression.js`**, and the two must not be
+merged. That one asks how big a load increment a lift may take and deliberately answers yes only for
+large muscle groups; this one asks whether somebody would want to be fresh for it, which includes the
+overhead press and the pull-up.
+
+### 11.5 What this pass did NOT do
+
+- **`MINUTES_PER_SET = 3` is unchanged**, and §6.14.3 says why it should be: the rest-interval
+  corpus reports 1.80 ± 0.68 min for hypertrophy effects, so a 30–45 s set plus rest is ~2.5–2.7 min
+  and 3 is at the top of that band but inside it. Its comment still points at §6.8 as "still to
+  pull"; that pointer is now dischargeable and is left for whoever next opens that file.
+- **The "close to failure" wording pass** recommended by §6.16.1 — ACSM 2026 puts "training to
+  momentary failure is not required" at position-stand level, so the caveat is better phrased as a
+  floor than an instruction. The comment in `js/optimal.js` now says it that way; **the on-screen
+  string on Explore was left alone because `tests/render.test.mjs` pins `/close to failure/`**, and
+  that file was owned by another agent during this pass.
+- **Nothing on the Goals screen.** `js/views-goals.js` also shows weekly sets per muscle and carries
+  neither the indirect-weight note nor the strength caveat. Same reason.

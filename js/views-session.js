@@ -10,9 +10,33 @@ import { openExercisePicker } from './views-workouts.js';
 import {
   DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
 } from './set-types.js';
+import {
+  historyFor, lastSessionDate, suggestProgression, applySuggestion,
+} from './progression.js';
+import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 const DRAFT_KEY = 'ftrack:v1:draftSession';
+
+/**
+ * Whole days between two stored YYYY-MM-DD days.
+ *
+ * ⚠️ Split, never `new Date(iso)`, which reads a bare date as UTC and lands a
+ * day early for everybody west of Greenwich — the trap `next-workout.js` and
+ * `goals.js` both document.
+ *
+ * This lives here rather than in progression.js on purpose: that module is
+ * required to have no clock, and measuring a gap needs today. The runner does
+ * the measuring and hands it across as a plain number.
+ */
+function daysBetweenDays(fromISO, toISO) {
+  const parse = (iso) => {
+    const [y, m, d] = String(iso).split('-').map(Number);
+    return y && m && d ? new Date(y, m - 1, d).getTime() : null;
+  };
+  const a = parse(fromISO), b = parse(toISO);
+  return a === null || b === null ? null : Math.round((b - a) / 86400000);
+}
 
 /* ------------------------------------------------------------------ *
  * Draft persistence — a phone call or an app switch must not lose a workout
@@ -103,16 +127,55 @@ export async function SessionView(workoutId) {
       entries: [],
     };
 
+    // Read once for the whole workout rather than per exercise. The runner used
+    // store.lastSetsFor(), which reads every session each time it is called;
+    // progression needs the last TWO sessions of each lift, and historyFor()
+    // applies exactly the same precedence — this workout's own history first,
+    // the exercise anywhere else only if there is none.
+    const sessions = await store.getSessions();
+    const step = units.fromDisplay(units.weightStep());
+    // For pull-ups, dips and push-ups the lifter IS most of the load, so the
+    // 2–10 % band means nothing without this. Absent is fine — progression
+    // falls back to "one more rep" rather than guessing a body weight.
+    const latestWeight = await store.latestBodyWeight().catch(() => null);
+    const bodyWeight = latestWeight ? latestWeight.weight : null;
+
     for (const { item, ex } of planned) {
-      const last = await store.lastSetsFor(workout.id, ex.id);
+      const history = historyFor(sessions, { exerciseId: ex.id, workoutId: workout.id });
+      const last = history[0] || null;
       // Build exactly the number of sets the workout plans for. Where history
       // runs out, repeat the last recorded set rather than dropping to zero.
-      const sets = Array.from({ length: item.sets }, (_, i) => {
+      const lastSets = Array.from({ length: item.sets }, (_, i) => {
         if (!last || !last.length) return blankSet(ex.fields);
         return pickFields(last[Math.min(i, last.length - 1)], ex.fields);
       });
 
+      // ⚠️ PROPOSE, NEVER IMPOSE (docs/goals-plan.md §8.2 rule 5). The
+      // suggestion is laid over the numbers, the screen says it is a suggestion
+      // and why, and `lastSets` is kept so one tap puts last time's numbers
+      // back. It reads the last two sessions of this exercise and nothing about
+      // any goal or date — §3.1 is why, and js/progression.js has the whole
+      // reasoning.
+      //
+      // ⚠️ The gap is measured HERE, and it can only ever suppress. See rule 2
+      // in that module's header: after a long lay-off the suggestion is
+      // withheld and last time's numbers stand, because handing somebody a
+      // heavier weight than they have touched in a month is the same harm §3.1
+      // exists to prevent, arriving from the other side.
+      const lastDay = lastSessionDate(sessions, { exerciseId: ex.id, workoutId: workout.id });
+      const suggestion = suggestProgression({
+        history,
+        exercise: ex,
+        step,
+        daysSinceLast: lastDay ? daysBetweenDays(lastDay, state.date) : null,
+        bodyWeight,
+        fmt: units.withUnit,
+      });
+      const sets = applySuggestion(lastSets, suggestion);
+
       state.entries.push({
+        lastSets,
+        suggestion,
         exerciseId: ex.id,
         exerciseName: ex.name,
         fields: ex.fields,
@@ -376,6 +439,54 @@ export async function SessionView(workoutId) {
             el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
         : el('div', { class: 'prefill-note' },
             el('span', { text: 'First time logging this — your numbers will be remembered.' })),
+
+      // ⚠️ THE SUGGESTION SAYS WHY, IN ONE LINE, AT THE MOMENT OF USE (D8).
+      // "+5 lbs" with no reason is an instruction from nowhere; "top of the
+      // range twice in a row, so the smallest step inside 2–10 %" is the rule
+      // being taught while it is being used, which is the only place this app
+      // teaches anything.
+      //
+      // And it is a PROPOSAL. The numbers are pre-filled and every stepper
+      // overrides them, plus there is a one-tap way back to last time's — see
+      // docs/goals-plan.md §8.2 rule 5 and js/progression.js's header.
+      //
+      // ⚠️ A lay-off note is DELIBERATELY QUIETER than a suggestion, and it
+      // carries no toggle. Nothing was proposed, so there is nothing to undo —
+      // an "instead" link beside numbers that already are last time's would be
+      // offering a choice that does not exist. The visual weight matches how
+      // much is being asked, which here is nothing.
+      entry.suggestion
+        ? el('div', { class: 'suggest-note' + (entry.suggestion.kind === 'layoff' ? ' is-hold' : '') },
+            icon(entry.suggestion.kind === 'load' ? 'up'
+              : entry.suggestion.kind === 'layoff' ? 'check' : 'plus', 15),
+            el('div', { class: 'suggest-body' },
+              el('div', { class: 'suggest-head', text: entry.suggestion.kind === 'layoff'
+                ? 'No step up this time'
+                : entry.usingLast
+                  ? `Suggested was ${entry.suggestion.headline}`
+                  : `Suggested: ${entry.suggestion.headline}` }),
+              el('div', { class: 'suggest-why', text: entry.suggestion.why }),
+              entry.suggestion.kind === 'layoff' ? null : el('button', {
+                class: 'suggest-toggle',
+                text: entry.usingLast ? 'Use the suggestion' : 'Use last time’s numbers instead',
+                onClick: () => {
+                  entry.usingLast = !entry.usingLast;
+                  // ⚠️ Edited IN PLACE, not rebuilt from the original list. A
+                  // set added or deleted mid-session would otherwise vanish the
+                  // moment somebody tapped this, and any drop already recorded
+                  // with it. Only the numbers move; the shape of the list does
+                  // not.
+                  entry.sets = entry.usingLast
+                    ? entry.sets.map((s, i) => (i < entry.lastSets.length
+                        ? { ...s, ...entry.lastSets[i] } : s))
+                    : applySuggestion(entry.sets, entry.suggestion);
+                  entry.activeDrop = null;
+                  saveDraft(state);
+                  renderAll();
+                },
+              }),
+            ))
+        : null,
 
       el('div', { class: 'section-label', text: entry.activeDrop == null
         ? `Set ${entry.active + 1} of ${entry.sets.length}`
