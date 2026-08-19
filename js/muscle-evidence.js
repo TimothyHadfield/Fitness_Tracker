@@ -58,6 +58,10 @@ const RATIOS = {
     [/^Barbell Bench Press$/, 1.00, 1.00],
     [/^Close-Grip Bench Press$/, 0.88, 0.80],
     [/^Incline Barbell Bench Press$/, 0.85, 0.80],
+    // Both handicaps at once: 0.88 for the grip × 0.85 for the incline ≈ 0.75.
+    // Quality below either parent because that product is reasoned rather than
+    // measured — no standards are published for the combined lift.
+    [/^Close-Grip Incline Bench Press$/, 0.75, 0.65],
     [/^Decline Barbell Bench Press$/, 1.03, 0.75],
     [/^Floor Press$/, 0.92, 0.70],
     [/Smith Machine Bench Press/, 1.00, 0.50],

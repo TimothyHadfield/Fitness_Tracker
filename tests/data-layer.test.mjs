@@ -1974,6 +1974,63 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     }
   }
 
+  /* ---- the Nippard series is all six episodes, and they are six DIFFERENT
+         workouts ----------------------------------------------------------
+     Until 2026-08-19 this shipped three workouts while declaring six days a
+     week, so the rating ran the same three twice and called it the programme.
+     Two things need pinning, and the second is the one that matters: a count
+     of six is trivially satisfiable by duplicating a day.                   */
+  {
+    const nip = presetById('preset-nippard-ppl-2023');
+    const names = nip.workouts.map((w) => w.name);
+    ok(names.join(' | ') === 'Push 1 | Pull 1 | Legs 1 | Push 2 | Pull 2 | Legs 2',
+       'the Nippard series ships all six episodes, in the order they were published');
+    ok(nip.workouts.length === nip.daysPerWeek,
+       'and a six-day-a-week programme has six workouts, so the badge is not '
+       + 'rating the same days twice');
+
+    // The A/B pairs must be genuinely different sessions. Overlap is allowed —
+    // it is the same muscle group — but a pair sharing MOST of its exercises
+    // would mean somebody padded the count instead of transcribing the video.
+    const exOf = (n) => new Set(nip.workouts.find((w) => w.name === n).exercises.map((e) => e.name));
+    for (const day of ['Push', 'Pull', 'Legs']) {
+      const a = exOf(`${day} 1`);
+      const b = exOf(`${day} 2`);
+      const shared = [...a].filter((x) => b.has(x)).length;
+      ok(shared <= Math.min(a.size, b.size) / 2,
+         `${day} 2 is a different session from ${day} 1, not a repeat `
+         + `(${shared} exercise${shared === 1 ? '' : 's'} in common)`);
+    }
+
+    // The two exercises the second half of the series needed. Both are new, and
+    // a preset naming an exercise the library lacks is caught above — but a
+    // ranking model that silently ignores the main lift of a workout is not,
+    // because contributionsFor() returns [] for anything it has no rule for.
+    const { contributionsFor } = await import('../js/muscle-evidence.js');
+    const cgi = BUILT_IN_EXERCISES.find((e) => e.name === 'Close-Grip Incline Bench Press');
+    ok(Boolean(cgi), 'the library has the close-grip incline bench Push 2 opens on');
+    ok(contributionsFor(cgi).some((c) => c.muscle === 'Chest'),
+       'and it actually rates a muscle rather than being silently unrankable');
+
+    // A two-stack cable movement: the number entered is one side. Getting this
+    // wrong does not fail loudly, it halves every weight the exercise records.
+    const bof = BUILT_IN_EXERCISES.find((e) => e.name === 'Bent-Over Cable Fly');
+    ok(bof && bof.loadType === 'per_side',
+       'the bent-over cable fly is counted per side, like every other cable fly');
+
+    // Pull 1's lat pulldown is the series' only drop set. normalizeWorkout()
+    // rebuilds each exercise field by field, so a set type survives a copy only
+    // because it is named there — worth an assertion rather than an assumption.
+    await st.clearAll();
+    const copied = await st.addPresetSystem(nip);
+    const pull1 = (await st.getWorkouts(copied.system.id)).find((w) => w.name === 'Pull 1');
+    const { DROP } = await import('../js/set-types.js');
+    const pulldown = pull1.exercises.find((e) => e.setType === DROP);
+    ok(Boolean(pulldown) && pulldown.minis === 1,
+       'copying the series brings Pull 1\'s drop set across, with its one drop');
+    await st.clearAll();
+  }
+
   /* ---- every one of them actually copies in ---- */
   // The name-resolution check above is static. This is the end-to-end version:
   // add each system for real and assert nothing was silently dropped. They are
@@ -2426,10 +2483,10 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     await store2.clearAll();
     const { presetById } = await import('../js/preset-systems.js');
     const { system } = await store2.addPresetSystem(presetById('preset-nippard-ppl-2023'));
-    const push = (await store2.getWorkouts(system.id)).find((w) => w.name === 'Push');
+    const push = (await store2.getWorkouts(system.id)).find((w) => w.name === 'Push 1');
     const grouped = st.blocksOf(push.exercises).filter((b) => b.group != null);
     ok(grouped.length === 1 && grouped[0].items.length === 2,
-       'copying Nippard\'s Push brings its superset with it');
+       'copying Nippard\'s Push 1 brings its superset with it');
     await store2.clearAll();
 
     // THE POINT OF MYO-REPS. Dr. Mike's Floating Split is myo-reps almost end

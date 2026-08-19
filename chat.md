@@ -3626,3 +3626,86 @@ deferring the whole thing.*
 
 **All seven suites green: data-layer (1069), demo (53), goals (88), optimal (46), volume-map (49),
 social (73), and 292 render assertions.**
+
+---
+
+## 2026-08-19 — Tim reads one sentence and finds half a programme missing
+
+Tim, catching up, stopped on the open-work line *"finish the Nippard series — three of six workouts
+are transcribed"* and asked the obvious question nobody had asked: **why would a push/pull/legs need
+six workouts?** Is it two systems blended, or one?
+
+One system. His 2023 series is a **six-day** PPL — Push 1, Pull 1, Legs 1, Push 2, Pull 2, Legs 2 —
+and the second of each pair is not a repeat. Different exercises, different rep emphasis. That is
+the whole point of the A/B structure: each muscle twice a week without doing the identical session
+twice. So shipping one of each pair was never "half the programme"; it was **a different programme**.
+
+**And it was worse than under-shipped.** The system declared `daysPerWeek: 6` while holding three
+workouts, so the rating ran the same three twice and the rotation repeated a day that should have
+alternated. Nothing failed. The badge was plausible, all seven suites were green, and the screen
+looked finished. Tim said to do it "the same as before with online sourcing rather than trying to
+read the youtube video", which is exactly how the first three went in.
+
+**The find that mattered.** Working out the episode order from the video dates showed that the
+workout shipped as **"Pull" was the second pull, not the first**. Its Fitness Volt write-up (27 July
+2023) says only "the most recent issue" and carries no episode number, so it read as episode two
+when it was episode five. The real order is Jan / 13 Feb / 24 Feb / 3 Jun / 10 Jul / 7 Aug 2023.
+No test could have caught that. Only reading the dates could.
+
+**What went in:**
+
+- **Pull 1** (13 Feb) — lat pulldown to failure with a drop, omni-grip chest-supported row,
+  bottom-half pullover, omni-direction face pull, EZ curls, bottom-half preacher curls.
+- **Push 2** (3 Jun) — close-grip incline bench run 8 / 5 / 15, machine shoulder press, floor-reset
+  skull crushers, bent-over cable flyes, machine laterals at 20, plate front raises, diamond
+  push-ups to failure. The best-sourced workout of the six: two write-ups agree set for set.
+- **Legs 2** (7 Aug) — deadlift, stiff-legs, leg press, glute-ham raises, slow-eccentric leg
+  extensions, calves, roman chair leg raises.
+
+Two exercises were missing from the library and were added with their ranking ratios: **Close-Grip
+Incline Bench Press** (0.88 for the grip × 0.85 for the incline ≈ 0.75, at a lower quality because
+that product is reasoned rather than measured) and **Bent-Over Cable Fly** (per side, like every
+other cable fly).
+
+**Three things stated rather than smoothed over**, following what this file already does for
+Bumstead and Israetel:
+
+1. **Sourcing is uneven.** Push 2, Pull 2 and Legs 2 each have two independent write-ups that agree.
+   Push 1, Pull 1 and Legs 1 rest on one apiece. The system's own notes say so on screen.
+2. **One source disagreement.** Fitness Volt gives Legs 2 four sets of seated calf raises; BarBend
+   two seated and two standing. Totals match at four, so the more detailed source won — the same
+   call Bumstead's tri-set got.
+3. **One modelling compromise.** Pull 1's lat pulldown is two sets to failure plus *one* drop, and
+   `minis` plans a drop after every set. The app therefore plans one more than he does, and the
+   workout's own note says to skip it.
+
+The paid ebook stayed out, and it is worth recording *why that took active effort*: pirated copies
+of "The Ultimate Push Pull Legs System" sit on studylib and scribd and rank on the **first page** of
+almost every search for these workouts. The file header now names them so nobody treats one as a
+source.
+
+**Effect on the badge: none, and that is the interesting part.** It still reads 55 % growth / 80 %
+strength. What moved is underneath — chest 10 → 14 sets a week, triceps 24 → 18.5 — because doubling
+a triceps-heavy Push 1 had been overstating triceps and understating chest. A banded headline can
+sit still while the thing it summarises is wrong.
+
+**New tests, and one is deliberately not about the count.** Six workouts in published order, and
+`workouts.length === daysPerWeek` so a system can no longer declare more days than it can fill. But
+a count of six is trivially satisfiable by duplicating a day, so the load-bearing one asserts each
+A/B pair **shares at most half its exercises** (all three share zero). Plus: the new bench actually
+rates a muscle rather than being silently unrankable — **mutation-checked**, removing the ratio line
+flips exactly that assertion — the cable fly is counted per side, and the drop set survives being
+copied into an account.
+
+Driven in a real browser over CDP at 360 / 390 / 1180 px in both themes, on a scratch copy with the
+config blanked and the service worker deleted: all six workouts render, no `.tag` splits across two
+line boxes, nothing overflows the viewport, and no "null" text. Explore's row reads 55 / 80 / 6 days
+/ ~75 min.
+
+**All suites green: data-layer (1090), demo (53), goals (88), optimal (46), volume-map (49),
+social (73), render (292).**
+
+⚠️ **One process note for the next session.** Two `progress.md`-style files were briefly corrupted
+by editing them through PowerShell — `Get-Content -Raw` in PS 5.1 decodes as ANSI, so writing back
+with `-Encoding utf8` double-encodes every em dash and arrow in the file. Both were restored from
+git and redone with the editor. **Do not bulk-edit these docs through PowerShell.**

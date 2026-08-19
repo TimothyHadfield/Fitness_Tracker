@@ -89,8 +89,10 @@ publishing invented workouts to real friends is the one way this could do harm.
 4. **`docs/research.md` §6.8** — the axes still to pull (load/rep range, rest intervals, range of
    motion, per-session volume). Each either sharpens the rating or becomes a stated caveat.
 
-5. **Finish the Nippard series** — three of six workouts are transcribed. The last ungated piece of
-   content work.
+5. ~~**Finish the Nippard series**~~ **DONE 2026-08-19.** All six workouts are transcribed. See §3
+   and §9 — and note what it turned up: **the one shipped as "Pull" was the SECOND pull**, not the
+   first, so the system was three days of a six-day programme *and* mislabelled. Item 4 above is
+   now the last ungated piece of content work.
 
 6. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
    itself is finished. Still the biggest untested risk; simply not the next thing. Don't raise it.
@@ -104,7 +106,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1069 assertions, **no dependencies** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1090 assertions, **no dependencies** |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
 | **Rating tests** | `node tests/optimal.test.mjs` — 46 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
@@ -215,6 +217,15 @@ It needs a server — ES modules do not load over `file://`.
     through the real ranking pipeline is what exposed the credibility inversion in §9, which 1069
     assertions had missed for two months.
 
+11. **⚠️ Never bulk-edit a file through PowerShell.** `Get-Content -Raw` in PS 5.1 decodes as ANSI,
+    not UTF-8, so a read-modify-write with `Set-Content -Encoding utf8` **double-encodes every
+    non-ASCII character in the file** — every em dash, arrow and ⚠️ in these docs. It is silent, it
+    touches lines you never edited, and `git diff --stat` is how you notice: a four-line change
+    showing 98 changed lines is this and nothing else. Cost about ten minutes on 2026-08-19; both
+    files were restored with `git checkout --` and redone through the editor. Use the editing tools
+    for file content and keep PowerShell for running things. (Appended at the end for the same
+    reason item 10 was: renumbering breaks the §0.6 / §0.7 / §0.9 references used elsewhere.)
+
 ---
 
 ## 1. Working agreement
@@ -299,13 +310,14 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
 | **Seeing a deploy** | ⚠️ `sw.js` is stale-while-revalidate, so **the load right after a deploy serves the OLD app** and the change appears on the one after. That is deliberate (a hand-maintained cache version can freeze someone forever; this self-heals) but it is indistinguishable from a broken feature — Tim hit it and reported a rating as missing when it had shipped. Since 2026-08-18 the worker compares ETag/Last-Modified on revalidation and the page shows **"A new version is ready · Refresh"**. It OFFERS, never reloads: reloading unasked is right almost always and catastrophic once, mid-set with numbers unsaved |
 | **The system badge** | **Four numbers beside every system, in a 2×2 grid** — on Explore, on the Workouts list and on a system's own screen. **Growth and strength**, separately and never blended, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength); banded to 5, never a point, because the source models explain about a quarter of the variance. Plus, since 2026-08-19 on Tim's ask, **days a week and minutes a session** — the percentages say how *good* a programme is and nothing about what it *costs*, which is the first thing you want before opening it, and "80 % strength" reads very differently at three days a week than at six. A ready-made system states its own minutes; one you typed has them **estimated** from the set count at ~3 min a set, and the cell's `title` says which — "because the author said so" and "because we multiplied" are not the same claim. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts shows no badge rather than a 0 %. The Explore row summary no longer repeats days/minutes now the badge carries them. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md` |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves |
+| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves. **Nippard's is complete as of 2026-08-19** — all six workouts, Push 1 / Pull 1 / Legs 1 / Push 2 / Pull 2 / Legs 2, in the order the videos were published |
+| **⚠️ Half a programme reads exactly like a whole one** | The Nippard system shipped for two days as three workouts declaring **six days a week**, so the rating ran the same three twice and the rotation repeated a day that should have alternated. Nothing failed: the badge was plausible, every test passed, and the screen looked finished. **Tim caught it by reading the sentence** — "why would a push/pull/legs need six workouts?" Two lessons. A count a system *declares* and a count it can *fill* are different numbers and nothing was comparing them; there is now a test that does. And the one shipped as "Pull" was **the second pull, not the first** — the write-ups carry no episode number in their own text, so the order had to be recovered from the video dates. Anything transcribed from a series wants its episode number pinned down before its content is |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
 | **What's next** (home) | The big button on Home is **the next workout in your rotation**, not a generic "Start a workout" — `js/next-workout.js`, `docs/vision.md` §1.2 first half. It reads the most recent session, finds that workout in its system, and offers the one after it, **wrapping** at the end. The caption always says what it read ("Next in Push Pull Legs. You did Push 2 days ago"), and **Choose another workout** sits right underneath, so it never traps you. It is a LOOKUP, not advice — the order came from the user's own system, so this is Rule 6-safe in a way that "you should rest today" would not be. It never scolds and never refuses: train twice in a day and it says "You already did Push today — this is next when you are ready". Silent when it would have to guess: no history **and** more than one system means no suggestion at all. Skips past sessions whose workout has since been deleted (D22 keeps the history), rather than dead-ending. **The other half of §1.2 — suggesting the weights and reps — is NOT built and needs the estimator first** |
 | **Set types** | **Supersets, tri-sets, giant sets, drop sets and myo-reps** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise opens a sheet naming all three set types *and explaining what each one is* (D8 — "myo-reps" is jargon), with a mini-set count under whichever is picked; and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. A nested set's button IS the instruction — "Strip the weight — add a drop" or "Rest 10–15 seconds — add a mini-set" — not the name of a technique. **Drop sets and myo-reps are the same nesting shape**, differing only in what changes between mini-sets, and are stored under `minis` |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
-| Exercise library | **270 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
+| Exercise library | **272 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
 | Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
@@ -368,7 +380,7 @@ Press-and-hold repeats.
   to 2.2; protein is the SAME at Steady and Committed, which is what proves it is a threshold rather
   than a dial; the sleep and effort text is byte-identical across every band; and the stall walk has
   a **vacuity guard** — the same walk over adequate training must read OK
-- **1069 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1090 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
@@ -572,7 +584,7 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     1069 assertions, no dependencies
+│   ├── data-layer.test.mjs     1090 assertions, no dependencies
 │   ├── social.test.mjs         73 assertions, no dependencies — what is SHARED
 │   ├── goals.test.mjs          88 assertions, no dependencies — the requirements
 │   │                           model, and the two REFUSALS
@@ -1066,15 +1078,38 @@ re-examining it produces something better than either the old rule or a plain ov
 - ~~**Weight display is hard-coded to lbs.**~~ **Closed 2026-08-16.** lbs/kg in Settings, stored
   canonically in pounds. Distance is still miles only.
 - **The Nippard system is a TRANSCRIPTION, and the screen says so.** It comes from published
-  write-ups of the FREE YouTube series (Fitness Volt, BarBend), **not** from his paid 12-week ebook
-  and not from him. Two limits stated on the detail screen and in the data: the series runs to **six**
-  workouts and only one Push, one Pull and one Legs are here; and nobody involved watched the videos,
-  so the sets and reps are as reported. `unofficial: true` is what puts the warning on screen, and a
-  test asserts that anything credited to a real person carries a source URL, the flag, and a note
-  saying it is not their own writing. **Do not add the paid ebook's contents.**
-  Sources: [Fitness Volt push](https://fitnessvolt.com/jeff-nippard-push-workout/) ·
-  [Fitness Volt pull](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/) ·
-  [Fitness Volt legs](https://fitnessvolt.com/jeff-nippard-leg-day-workout/)
+  write-ups of the FREE YouTube series (Fitness Volt, BarBend, MuscleChemistry), **not** from his
+  paid 12-week ebook and not from him. Nobody involved watched the videos, so the sets and reps are
+  as reported. `unofficial: true` is what puts the warning on screen, and a test asserts that
+  anything credited to a real person carries a source URL, the flag, and a note saying it is not
+  their own writing. **Do not add the paid ebook's contents** — pirated copies of it sit on studylib
+  and scribd and rank on the first page of every search for these workouts.
+
+  ~~Only one Push, one Pull and one Legs are here.~~ **Closed 2026-08-19 — all six, in episode
+  order.** Two things came out of finishing it, and the second is the one worth remembering:
+
+  - **⚠️ SOURCING IS NOT EVEN ACROSS THE SIX, and the system's notes say so on screen.** Push 2,
+    Pull 2 and Legs 2 each have two independent write-ups that agree; Push 1, Pull 1 and Legs 1 rest
+    on one apiece. One disagreement is recorded rather than smoothed over — Fitness Volt gives Legs 2
+    four sets of *seated* calf raises, BarBend two seated and two standing. The totals match at four,
+    so the more detailed source was followed, which is the same call Bumstead's tri-set got.
+  - **⚠️ The workout shipped as "Pull" was the SECOND pull.** Its write-up says only "the most
+    recent issue" and carries no episode number, so it read as the first. The order had to be
+    recovered from the video dates — Jan, 13 Feb, 24 Feb, 3 Jun, 10 Jul, 7 Aug 2023. No test could
+    have caught that; only reading the dates could.
+
+  One modelling compromise, stated in the workout's own note rather than hidden: Pull 1's lat
+  pulldown is written up as two sets to failure plus **one** drop, and `minis` plans a drop after
+  every set — so the app plans one more than he does, and the note says to skip it.
+  Sources: [push 1](https://fitnessvolt.com/jeff-nippard-push-workout/) ·
+  [pull 1](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout/) ·
+  [legs 1](https://fitnessvolt.com/jeff-nippard-leg-day-workout/) ·
+  [push 2](https://fitnessvolt.com/jeff-nippard-science-based-push-day-workout/) and
+  [its second source](https://barbend.com/news/7-exercises-jeff-nippard-chest-shoulders-triceps/) ·
+  [pull 2](https://barbend.com/news/jeff-nippard-science-supported-back-and-biceps-workout/) and
+  [its second source](https://fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/) ·
+  [legs 2](https://fitnessvolt.com/jeff-nippard-science-based-leg-workout/) and
+  [its second source](https://www.musclechemistry.com/the-6-exercises-in-jeff-nippards-scientifically-perfect-lower-body-workout/)
 - **Every creator system has a DIFFERENT limitation, and each states its own.** The default warning
   ("transcribed from the free videos") is true of Nippard and false of the rest, so `warning`
   overrides it per system and a test fails if anything that is not a video transcription falls
@@ -1152,10 +1187,11 @@ re-examining it produces something better than either the old rule or a plain ov
    Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
    part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line
    in `pickSource()` in `views-data.js`.
-4. **The creator library.** Nine systems, six credited. The ceiling that used to bound it is gone —
-   set types shipped, and Bumstead and Israetel's real split went in behind them. What is left is
-   **finishing the Nippard series** (three of its six workouts are in — needs someone to watch the
-   other three videos, or a published write-up of them). §9 has the rules that apply to creator
+4. **The creator library — COMPLETE as far as sources allow.** Nine systems, six credited. The
+   ceiling that used to bound it is gone — set types shipped, Bumstead and Israetel's real split
+   went in behind them, and **the Nippard series was finished on 2026-08-19**: all six workouts,
+   found in published write-ups exactly as Tim's instruction said to look for them, no video
+   watched. Nothing here is waiting on content any more. §9 has the rules that apply to creator
    systems, and they are deliberately **not the same rule for each one**: every system states its own
    limitation, and a test fails if a non-video transcription falls through to the default warning.
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what

@@ -18,6 +18,7 @@ const RAW = [
   ['Incline Barbell Bench Press', 'Chest', 'Barbell', 'wr'],
   ['Decline Barbell Bench Press', 'Chest', 'Barbell', 'wr'],
   ['Close-Grip Bench Press', 'Chest', 'Barbell', 'wr'],
+  ['Close-Grip Incline Bench Press', 'Chest', 'Barbell', 'wr'],
   ['Floor Press', 'Chest', 'Barbell', 'wr'],
   // Bench press with the legs off the floor — no leg drive, no arch.
   ['Larsen Press', 'Chest', 'Barbell', 'wr'],
@@ -33,6 +34,9 @@ const RAW = [
   ['Cable Fly', 'Chest', 'Cable', 'wr'],
   ['Low-to-High Cable Fly', 'Chest', 'Cable', 'wr'],
   ['High-to-Low Cable Fly', 'Chest', 'Cable', 'wr'],
+  // Torso bent to near parallel with the floor, so the line of pull crosses the
+  // mid-pec rather than the upper or lower fibres.
+  ['Bent-Over Cable Fly', 'Chest', 'Cable', 'wr'],
   ['Cable Crossover', 'Chest', 'Cable', 'wr'],
   ['Cable Press Around', 'Chest', 'Cable', 'wr'],
   ['Chest Dip', 'Chest', 'Bodyweight', 'wr'],
@@ -346,7 +350,8 @@ export function slugify(name) {
 // Cable flys and crossovers each pull from their own stack, so the displayed
 // number is per side.
 const FORCE_PER_SIDE = new Set([
-  'Cable Fly', 'Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Cable Crossover',
+  'Cable Fly', 'Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Bent-Over Cable Fly',
+  'Cable Crossover',
   'Cable Rear Delt Fly', 'Cable Lateral Raise', 'Bayesian Cable Curl', 'Cable Kickback',
   'Machine Lateral Raise', 'Single-Arm Lat Pulldown', 'Meadows Row', 'Landmine Press',
   'Cable Press Around', 'Cross-Body Cable Y-Raise', 'Cross-Body Cable Triceps Extension',

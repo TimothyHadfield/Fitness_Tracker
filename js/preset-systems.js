@@ -6,19 +6,20 @@
 // exist now and are shown now, so a third-party system can never be presented as
 // though the app wrote it.
 //
-// ⚠️ WHAT IS NOT IN HERE, AND WHY. Tim asked (2026-08-17) for Jeff Nippard's
-// "Ultimate Push Pull Legs" as the first public system. It is not here, for two
-// reasons that are worth writing down so nobody re-litigates them by accident:
+// ⚠️ WHAT MAY NOT GO IN HERE. Tim asked (2026-08-17) for Jeff Nippard's
+// "Ultimate Push Pull Legs". What ships is a transcription of his FREE YouTube
+// series. What must never ship is the paid one:
 //
 //   1. The full 12-week system is a PAID product on jeffnippard.com — a 110-page
 //      ebook he sells. Copying its prescriptions into a public app is
-//      redistributing something he charges for.
-//   2. Nobody here can watch the videos. Secondary write-ups of the free YouTube
-//      series are partial and disagree with each other. Publishing a guess under
-//      a real person's name is worse than publishing nothing under it.
+//      redistributing something he charges for. Pirated copies of it sit on
+//      studylib and scribd and rank on the first page of every search for these
+//      workouts; they are not a source, they are the thing being protected.
+//   2. Nobody here can watch the videos, so every set and rep below is as
+//      REPORTED by a third party. Where two write-ups disagree, the entry says
+//      which was followed and why rather than picking one silently.
 //
-// The structure below is what a properly licensed or properly sourced third-party
-// system would slot into. See chat.md, 2026-08-17.
+// See chat.md, 2026-08-17 and 2026-08-19.
 //
 // The systems here are the app's own, built on what docs/research.md already
 // supports: ~10–20 hard sets per muscle per week (§6), compounds first while
@@ -71,30 +72,68 @@ export const PRESET_SYSTEMS = [
     author: 'Jeff Nippard',
     sourceName: 'The Ultimate Push Pull Legs Series (2023) — YouTube',
     sourceUrl: 'https://www.youtube.com/playlist?list=PLp4G6oBUcv8w-v9tpZeF8GSlGcyl_J_gx',
-    // ⚠️ NOT OFFICIAL, and the screen says so. These three workouts are
-    // transcribed from published write-ups of the FREE YouTube videos — Fitness
-    // Volt and BarBend — not from Jeff Nippard's paid 12-week ebook, and not
-    // from him. Two limits worth keeping in view:
-    //   · the series is SIX parts; this is one rotation of it, not all six
-    //   · nobody here watched the videos, so the sets and reps are as reported
-    // The `unofficial` flag is what puts that on screen rather than in a
-    // comment nobody reads.
+    // ⚠️ NOT OFFICIAL, and the screen says so. All six workouts are transcribed
+    // from published write-ups of the FREE YouTube videos — Fitness Volt,
+    // BarBend, MuscleChemistry — not from Jeff Nippard's paid 12-week ebook,
+    // and not from him. The `unofficial` flag is what puts that on screen
+    // rather than in a comment nobody reads.
+    //
+    // ── THE SIX PARTS, AND WHY IT IS SIX AND NOT THREE ──────────────────────
+    //
+    // It is a 6-day-a-week PPL, so a full pass is Push 1, Pull 1, Legs 1, Push
+    // 2, Pull 2, Legs 2. The second of each pair is NOT a repeat: the same
+    // muscles, different exercises and different rep emphasis. Push 1 opens on
+    // a flat bench top set of 3–5; Push 2 opens on a close-grip incline run
+    // 8 / 5 / 15. That is the whole point of the A/B structure — twice-weekly
+    // frequency without doing the identical session twice — so shipping one of
+    // each pair was not "half the programme", it was a different programme.
+    //
+    // ⚠️ THE ONE SHIPPED AS "Pull" UNTIL 2026-08-19 WAS THE SECOND PULL, not
+    // the first. It was dated by nobody, and its Fitness Volt write-up (27 July
+    // 2023) only says "the most recent issue". The episode order is fixed by
+    // the video dates, and that is what these six are ordered on:
+    //
+    //   1. Push 1  Jan 2023   fitnessvolt.com/jeff-nippard-push-workout/
+    //   2. Pull 1  13 Feb 23  fitnessvolt.com/jeff-nippard-back-and-biceps-workout/
+    //   3. Legs 1  24 Feb 23  fitnessvolt.com/jeff-nippard-leg-day-workout/
+    //   4. Push 2  3 Jun 23   fitnessvolt.com/jeff-nippard-science-based-push-day-workout/
+    //                         + barbend.com/news/7-exercises-jeff-nippard-chest-shoulders-triceps/
+    //   5. Pull 2  10 Jul 23  barbend.com/news/jeff-nippard-science-supported-back-and-biceps-workout/
+    //                         + fitnessvolt.com/jeff-nippard-back-and-biceps-workout-backed-by-science/
+    //   6. Legs 2  7 Aug 23   fitnessvolt.com/jeff-nippard-science-based-leg-workout/
+    //                         + musclechemistry.com (mirroring BarBend, whose original is now 410)
+    //
+    // ⚠️ Sourcing is NOT even across the six. Push 2, Pull 2 and Legs 2 each
+    // have two independent write-ups that agree; Push 1, Pull 1 and Legs 1 rest
+    // on one write-up apiece. Said plainly in `notes` rather than left for
+    // somebody to discover.
+    //
+    // ⚠️ DO NOT fill gaps from studylib/scribd copies of "The Ultimate Push
+    // Pull Legs System" — that is the paid ebook, uploaded without permission.
+    // It comes up on the first page of every search for these workouts.
     unofficial: true,
     goal: 'Hypertrophy',
     daysPerWeek: 6,
     minutes: 75,
     level: 'Intermediate',
-    summary: 'One rotation of Jeff Nippard’s 2023 YouTube series. Heavy top sets, then '
-      + 'high-rep isolation work chosen for stretch and peak contraction.',
+    summary: 'The whole of Jeff Nippard’s 2023 YouTube series — six workouts, two of each '
+      + 'day. Heavy top sets, then high-rep isolation work chosen for stretch and peak '
+      + 'contraction.',
     notes: 'Transcribed from published write-ups of the free YouTube videos, not from Jeff '
       + 'Nippard’s paid programme and not by him. Watch the series for his form cues and '
       + 'reasoning — they are most of the value and none of it fits in a workout log.\n\n'
-      + 'The series runs to six workouts; this is one Push, one Pull and one Legs from it.\n\n'
+      + 'Six days a week, one pass through all six workouts. The second Push, Pull and Legs '
+      + 'are not repeats of the first — same muscles, different exercises, different rep '
+      + 'emphasis — so each muscle is trained twice a week without doing the same session '
+      + 'twice.\n\n'
+      + 'Sourcing is not even across the six. Push 2, Pull 2 and Legs 2 each have two '
+      + 'independent write-ups that agree with each other. Push 1, Pull 1 and Legs 1 rest on '
+      + 'one write-up apiece, so treat their sets and reps as the least certain here.\n\n'
       + 'The pattern to notice: one heavy compound taken near a true maximum, then everything '
       + 'else lighter and further from failure, picked for where it loads the muscle rather than '
       + 'for how much weight moves.',
     workouts: [
-      { name: 'Push', notes: 'Chest, shoulders, triceps. One heavy press, then stretch- and '
+      { name: 'Push 1', notes: 'Chest, shoulders, triceps. One heavy press, then stretch- and '
           + 'contraction-biased work. Reported reps: bench 3–5, Larsen press 10, Arnold press '
           + '8–10, press-around 12–15, Y-raise 12–15, pressdown 8, cross-body extension 10–12.',
         exercises: [
@@ -109,17 +148,25 @@ export const PRESET_SYSTEMS = [
           { name: 'Overhead Cable Extension', sets: 3, group: 0, notes: 'Stretch-only partials, 8 reps. Straight into this from the pushdown.' },
           { name: 'Cross-Body Cable Triceps Extension', sets: 2, notes: '10–12 reps.' },
         ] },
-      { name: 'Pull', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
-          + '12–15, pull-ups to failure, Kroc rows 10–12, everything else 10–12.',
+      // ⚠️ The lat pulldown is written up as four FEEDER sets of 10 building to
+      // the working weight, then two sets to failure, then ONE drop of about
+      // 30 %. Feeder sets are warm-ups and the app does not record warm-ups
+      // (same treatment as the squat in Legs 1). The drop is the awkward half:
+      // the source puts it on the last set only, and `minis` plans one after
+      // EVERY set, so this plans one drop more than he does. The note says so.
+      { name: 'Pull 1', notes: 'Back, biceps, rear delts. Six exercises, and three of them '
+          + 'change grip or angle set to set rather than adding another exercise. Reported '
+          + 'reps: pulldown to failure around 10, rows 10–12, pullover 10–12, face pulls '
+          + '12–15, EZ curls 6–8, preacher curls 10–12.',
         exercises: [
-          { name: 'Single-Arm Lat Pulldown', sets: 3, notes: 'Half-kneeling, one arm. 12–15 reps.' },
-          { name: 'Pull-Up', sets: 1, notes: 'One set to failure. If you are cutting, aim to add a rep a week as your body weight drops.' },
-          { name: 'Kroc Row', sets: 3, notes: 'Heavy one-arm dumbbell row, 10–12 reps.' },
-          { name: 'Cable Shrug', sets: 3, notes: 'Shrug-ins from a low pulley — the traps fan out horizontally, so the cable angle suits them better than a barbell. 10–12 reps.' },
-          { name: 'Reverse Pec Deck', sets: 3, notes: '10–12 reps.' },
-          { name: 'Cable Curl', sets: 3, notes: 'Overhead, which biases the long head more than a standing curl. 10–12 reps.' },
+          { name: 'Lat Pulldown', sets: 2, setType: 'drop', minis: 1, notes: 'Medium grip. Four feeder sets of 10 first, building from easy to hard — they are warm-ups, so they are not planned here. Then two sets to failure at about 10 reps. The write-up puts ONE drop of about 30 % on the last set; this plans one on each, so skip the first if you are following it exactly.' },
+          { name: 'Chest-Supported Row', sets: 3, notes: 'Machine. Omni-grip — wide on the first set, closer on the second, neutral or underhand on the third. 10–12 reps each.' },
+          { name: 'Dumbbell Pullover', sets: 2, notes: 'Bottom half of the range only, where the lat is loaded at length. 10–12 reps. Supersetted with a 30-second static lat stretch per side.' },
+          { name: 'Face Pull', sets: 3, notes: 'Omni-direction — one set low-to-high, one mid-to-mid, one high-to-low. 12–15 reps each.' },
+          { name: 'EZ-Bar Curl', sets: 3, notes: '6–8 reps. The heavy biceps work of the session.' },
+          { name: 'Dumbbell Preacher Curl', sets: 2, notes: 'One arm at a time, bottom half of the range only. 10–12 reps.' },
         ] },
-      { name: 'Legs', notes: 'One heavy squat, then hinge, single-leg, hamstring and calf work. '
+      { name: 'Legs 1', notes: 'One heavy squat, then hinge, single-leg, hamstring and calf work. '
           + 'Reported: squat 2–4 near max plus two paused back-off sets, RDL 8–10, lunges 10 per '
           + 'leg, leg curls 10–12, calves 10–12.',
         exercises: [
@@ -129,6 +176,53 @@ export const PRESET_SYSTEMS = [
           { name: 'Seated Leg Curl', sets: 3, notes: '10–12 reps.' },
           { name: 'Leg Press Calf Raise', sets: 4, notes: '10–12 reps.' },
           { name: 'Decline Sit-Up', sets: 3, notes: 'Holding a plate. 10–12 reps.' },
+        ] },
+      // Push 2 is the best-sourced workout of the six: Fitness Volt and BarBend
+      // agree exercise for exercise, set for set, including the 8 / 5 / 15
+      // undulating scheme on the first lift.
+      { name: 'Push 2', notes: 'Chest, shoulders, triceps again, and almost nothing in common '
+          + 'with Push 1 — the press is close-grip and inclined, the chest work is a fly '
+          + 'rather than a press-around, and the triceps lead rather than finish. Reported '
+          + 'reps: close-grip incline 8 / 5 / 15, shoulder press 10–12, skull crushers 6–8, '
+          + 'cable flyes 10–12, lateral raises 20, front raises 15–20, push-ups to failure.',
+        exercises: [
+          { name: 'Close-Grip Incline Bench Press', sets: 3, notes: 'One weight is not carried across the three: 8 reps at a moderate weight, then 5 heavy, then 15 light. Rest 3–5 minutes between them.' },
+          { name: 'Machine Shoulder Press', sets: 3, notes: '10–12 reps. Let the upper arms break parallel at the bottom rather than stopping short.' },
+          { name: 'Skull Crusher', sets: 3, notes: 'Floor reset variation — EZ bar, narrow underhand grip, rolled back to the floor between reps so the elbow extends further. 6–8 reps.' },
+          { name: 'Bent-Over Cable Fly', sets: 3, notes: '10–12 reps, torso bent to near parallel so the line of pull crosses the mid-pec.' },
+          { name: 'Machine Lateral Raise', sets: 3, notes: '20 reps, but not 20 of the same rep: the first 5 with a five-second negative, then 15 at a normal cadence to near failure.' },
+          { name: 'Plate Front Raise', sets: 2, notes: '15–20 reps, rotating the plate inwards on the way up.' },
+          { name: 'Diamond Push-Up', sets: 1, notes: 'One set to failure to finish.' },
+        ] },
+      { name: 'Pull 2', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
+          + '12–15, pull-ups to failure, Kroc rows 10–12, everything else 10–12.',
+        exercises: [
+          { name: 'Single-Arm Lat Pulldown', sets: 3, notes: 'Half-kneeling, one arm. 12–15 reps.' },
+          { name: 'Pull-Up', sets: 1, notes: 'One set to failure. If you are cutting, aim to add a rep a week as your body weight drops.' },
+          { name: 'Kroc Row', sets: 3, notes: 'Heavy one-arm dumbbell row, 10–12 reps.' },
+          { name: 'Cable Shrug', sets: 3, notes: 'Shrug-ins from a low pulley — the traps fan out horizontally, so the cable angle suits them better than a barbell. 10–12 reps.' },
+          { name: 'Reverse Pec Deck', sets: 3, notes: '10–12 reps, changing grip each set — neutral, then overhand, then internally rotated.' },
+          { name: 'Cable Curl', sets: 3, notes: 'Overhead, which biases the long head more than a standing curl. 10–12 reps.' },
+        ] },
+      // ⚠️ ONE SOURCE DISAGREEMENT, recorded rather than smoothed over. Fitness
+      // Volt lists calves as 4 sets of SEATED calf raises; BarBend (via the
+      // MuscleChemistry mirror) lists 2 seated and 2 standing. The totals match
+      // at four sets, so this follows the more detailed one — the same call the
+      // Bumstead system made, on the reasoning that a source naming two
+      // variations is more likely to have watched than one naming a total.
+      { name: 'Legs 2', notes: 'Where Legs 1 opens on a squat, this opens on a deadlift, so the '
+          + 'hamstrings and glutes lead and the quads are hit with volume afterwards rather '
+          + 'than with load. Reported: deadlift one set of 5, stiff-legs 8, leg press 10–12, '
+          + 'glute-ham raises 8–10, leg extensions 8–10, calves 15–20, leg raises 10–20.',
+        exercises: [
+          { name: 'Deadlift', sets: 1, notes: 'Conventional or sumo. Four warm-up sets first — not planned here — then one working set of 5.' },
+          { name: 'Stiff-Leg Deadlift', sets: 2, notes: '8 reps at roughly 50–60 % of the deadlift top set.' },
+          { name: 'Leg Press', sets: 4, notes: '10–12 reps. Narrow foot placement to bias the quads, and no lockout — constant tension.' },
+          { name: 'Glute-Ham Raise', sets: 3, notes: '8–10 reps, cutting out the top quarter so the hamstrings keep the tension. No GHR machine? A partner holding your ankles for Nordic curls is the substitute he names.' },
+          { name: 'Leg Extension', sets: 3, notes: '8–10 reps with a three-second negative. This is the rectus femoris work a squat cannot give you.' },
+          { name: 'Seated Calf Raise', sets: 2, notes: '15–20 reps.' },
+          { name: 'Standing Calf Raise', sets: 2, notes: '15–20 reps.' },
+          { name: 'Captain’s Chair Leg Raise', sets: 3, notes: '10–20 reps, taken near failure. Written up as roman chair leg raises — the same station.' },
         ] },
     ],
   },
