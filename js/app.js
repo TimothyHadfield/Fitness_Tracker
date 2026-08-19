@@ -1,6 +1,6 @@
 // Router + boot.
 
-import { store } from './store.js';
+import { store, demo } from './store.js';
 import { el, icon, iconBtn, clear, profileButton } from './ui.js';
 import {
   HomeView, StartPickerView, WorkoutsView, SystemView, WorkoutBuilderView,
@@ -92,6 +92,29 @@ async function resolve(route) {
   }
 }
 
+/**
+ * "You are in the demo account."
+ *
+ * A strip above the header on every screen, not a toast and not a one-time
+ * dialog. Two things have to be true at every moment of a demo session and
+ * neither survives being said once: this is not your data, and nothing you
+ * change here is being kept. It also carries the way out, because a sandbox
+ * with no visible exit is its own kind of trap.
+ */
+function demoBar() {
+  return el('div', { class: 'demo-bar', role: 'status' },
+    el('span', { class: 'demo-bar-dot' }),
+    el('span', { class: 'demo-bar-text' },
+      el('b', { text: 'Demo account.' }),
+      ' Made-up data — change anything you like, nothing is saved.',
+    ),
+    el('button', {
+      class: 'btn small', text: 'Leave',
+      onClick: () => demo.exit(),
+    }),
+  );
+}
+
 let rendering = false;
 
 async function render() {
@@ -112,11 +135,18 @@ async function render() {
     } else {
       app.append(navbar(route.name));
     }
+    // ⚠️ Prepended to EVERY screen, here rather than in screenShell, so that no
+    // route can be reached without it — including the fullscreen ones and the
+    // error screen below. Somebody looking at a year of invented training must
+    // never be in any doubt about whose year it is; that mistake would be far
+    // worse than the feature is worth.
+    if (demo.active()) screen.prepend(demoBar());
     app.append(screen);
   } catch (err) {
     console.error(err);
     clear(app);
     app.append(el('div', { class: 'screen no-nav' },
+      demo.active() ? demoBar() : null,
       el('div', { class: 'pane-scroll' },
         el('div', { class: 'empty' },
           el('div', { class: 'empty-title', text: 'Something went wrong' }),

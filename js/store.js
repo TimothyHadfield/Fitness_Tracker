@@ -46,6 +46,57 @@ const LocalBackend = {
 };
 
 /* ------------------------------------------------------------------ *
+ * Demo backend — a year of invented training, in memory only
+ *
+ * ⚠️ THE POINT OF THIS BACKEND IS WHAT IT CANNOT DO. It holds a Map. It has no
+ * path to localStorage and no path to Firestore, so while the demo is on there
+ * is no sequence of taps — editing a workout, deleting a system, importing a
+ * backup, clearing all data — that can reach anybody's real records. That is a
+ * stronger guarantee than writing demo rows to a separate namespace and tidying
+ * up afterwards, because there is no tidying step left to fail.
+ *
+ * It is seeded on first read and reseeded on every page load, which is exactly
+ * what Tim asked for: edit whatever you like, and it is back to the default the
+ * next time you come in.
+ * ------------------------------------------------------------------ */
+
+const MemoryBackend = {
+  rows: new Map(),
+  seeded: false,
+
+  async seed() {
+    if (this.seeded) return;
+    this.seeded = true;
+    const [{ buildDemoData }, current] = await Promise.all([
+      import('./demo.js'),
+      // The real settings, read straight off this device rather than through
+      // the store — `active()` is mid-flight at this point and asking it would
+      // deadlock. Only two fields are taken, and both for the same reason:
+      // a demo that flips somebody from kg to lbs or light to dark reads as
+      // the app breaking rather than as a demo starting.
+      LocalBackend.read('settings').then((r) => r[0] || {}).catch(() => ({})),
+    ]);
+    const data = buildDemoData({
+      today: todayISO(),
+      units: current.units === 'kg' ? 'kg' : 'lbs',
+      theme: current.theme === 'light' ? 'light' : 'dark',
+    });
+    for (const c of COLLECTIONS) this.rows.set(c, data[c] ? structuredClone(data[c]) : []);
+  },
+
+  async read(collection) {
+    await this.seed();
+    return structuredClone(this.rows.get(collection) || []);
+  },
+
+  async write(collection, rows) {
+    await this.seed();
+    this.rows.set(collection, structuredClone(rows || []));
+    return true;
+  },
+};
+
+/* ------------------------------------------------------------------ *
  * Firebase backend — loaded lazily, only when switched on
  * ------------------------------------------------------------------ */
 
@@ -62,6 +113,11 @@ async function active() {
   if (activePromise) return activePromise;
 
   activePromise = (async () => {
+    // ⚠️ FIRST, before anything else and before any cloud connection. The demo
+    // must be incapable of reading or writing a real record, so it short-
+    // circuits above the branch that would reach for Firestore rather than
+    // being layered on top of it.
+    if (demo.active()) return MemoryBackend;
     if (!wantRemote()) return LocalBackend;
     try {
       const mod = await import('./firebase-backend.js');
@@ -119,6 +175,53 @@ async function adoptLocalData(mod) {
 const backend = {
   async read(collection) { return (await active()).read(collection); },
   async write(collection, rows) { return (await active()).write(collection, rows); },
+};
+
+/* ------------------------------------------------------------------ *
+ * The demo switch
+ *
+ * ⚠️ sessionStorage, NOT localStorage, and that is the safety decision rather
+ * than a convenience. Per-tab means the demo cannot follow somebody into a new
+ * tab and cannot survive closing the browser — so there is no state in which a
+ * person opens the app tomorrow, sees a year of training they did not do, and
+ * concludes their own history is gone. That failure would be far worse than the
+ * feature is valuable.
+ *
+ * Entering and leaving both RELOAD. The store caches its chosen backend in
+ * `activePromise`, `ensureSystems()` is single-flight, and units are seeded once
+ * at boot — swapping the data underneath all of that in place is a much larger
+ * surface than starting clean, for a transition that happens twice a session.
+ * ------------------------------------------------------------------ */
+
+const DEMO_FLAG = NS + 'demo';
+
+export const demo = {
+  active() {
+    try {
+      return typeof sessionStorage !== 'undefined' && Boolean(sessionStorage.getItem(DEMO_FLAG));
+    } catch (_) {
+      // Access can throw in some private-browsing modes. "No demo" is the right
+      // answer there: the feature is optional and the app is not.
+      return false;
+    }
+  },
+
+  available() {
+    try {
+      return typeof sessionStorage !== 'undefined';
+    } catch (_) { return false; }
+  },
+
+  enter() {
+    try { sessionStorage.setItem(DEMO_FLAG, '1'); } catch (_) { return false; }
+    location.reload();
+    return true;
+  },
+
+  exit() {
+    try { sessionStorage.removeItem(DEMO_FLAG); } catch (_) { /* leaving anyway */ }
+    location.reload();
+  },
 };
 
 /* ------------------------------------------------------------------ *
@@ -962,6 +1065,14 @@ async function socialMod() { return import('./social.js'); }
 // document with an old viewers list would keep somebody's access alive after
 // they were moved out of it, which is the one thing revocation has to be.
 async function republish() {
+  // ⚠️ THE GUARD THAT MATTERS, and it is here at the write rather than on the
+  // screen. This function builds a friend-visible projection out of
+  // store.getSessions() — which under the demo is INVENTED data — and writes it
+  // to the real Firestore for real friends to read. Every social mutator ends
+  // in a republish, so refusing here closes the whole leak in one place instead
+  // of relying on every future caller to remember. social.state() also reports
+  // the demo as unavailable, but that is the polite half; this is the seal.
+  if (demo.active()) throw new Error('Social is off while you are in the demo account.');
   const impl = requireRemote();
   const S = await socialMod();
   const graph = normalizeSocialGraph(await impl.readGraph());
@@ -1019,6 +1130,10 @@ export const social = {
    * connection to nobody).
    */
   async state() {
+    // Checked before the account, because the reason a demo user cannot be
+    // social has nothing to do with their account and telling them to sign in
+    // would be a wrong answer to the right question.
+    if (demo.active()) return { available: false, reason: 'demo', user: null };
     const a = await auth.state();
     if (a.mode !== 'cloud') {
       return { available: false, reason: a.degraded ? 'offline' : 'local', user: null };

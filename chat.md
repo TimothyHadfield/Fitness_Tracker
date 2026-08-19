@@ -3411,3 +3411,89 @@ deployed to `fitness-tracker-th`.
 
 **All six suites green: data-layer (1051 + the new collections guard), goals (88), optimal, volume-map,
 social, and 280 render assertions.**
+
+---
+
+## 2026-08-19 (later) — the demo account
+
+Tim: *"it's hard for me to really test out the website because I don't personally have very much
+information or actual data recorded and it's a lot of effort to do so … a button that says 'view
+demo account' which has pre-recorded realistic data for maybe a full year … allow the user to adjust
+any of this information however they want, but it doesn't save, and any time they login onto the
+demo account it resets back to the default."*
+
+Built. Account → **View demo account**, on every variant of that screen including the offline one,
+which is the branch where somebody most wants something to look at.
+
+### The safety model is the whole design
+
+⚠️ **Demo data never touches storage.** While the demo is on, `store.js` swaps its backend for an
+in-memory Map — so there is no tap sequence at all (edit a workout, delete a system, import a
+backup, "delete all data") that can reach a real record. That is a stronger guarantee than writing
+demo rows to a separate namespace and tidying up afterwards, because there is no tidying step left
+to fail.
+
+The flag lives in **sessionStorage**, per-tab. That is the safety decision rather than a convenience:
+the demo cannot follow you into a new tab or survive closing the browser, so there is no state in
+which somebody opens the app tomorrow, sees a year of training they did not do, and concludes their
+own history is gone. That failure would be far worse than the feature is worth. A strip across every
+screen says what you are looking at and carries the way out.
+
+⚠️ **Social is hard-disabled, and guarded at the write rather than on the screen.** `republish()`
+builds a friend-visible copy out of `store.getSessions()` — which under the demo is invented — and
+writes it to the real Firestore for real friends. Every social mutator ends in a republish, so it
+refuses there; `social.state()` reporting `reason: 'demo'` is the polite half.
+
+### Proved, not asserted
+
+Driven in a real browser with real data seeded first: the demo could not see it, it was still on
+disk, renaming a system inside the demo wrote nothing to localStorage, a reload restored the
+default, and leaving brought the real account back intact.
+
+### The year took three passes to become a person
+
+The generator is seeded — never `Math.random()` — so "resets to the default" is literal, and a test
+asserts the same day builds a byte-identical year with a companion check that a different day does
+move it.
+
+Getting the *numbers* right was the actual work, and two versions were wrong in ways worth recording:
+
+- **First pass: an Expert barbell curl next to a Novice bench.** One shared stall rate meant
+  isolation work outgrew the compounds — a curl with a five-rep range and a 5 lb step climbs as often
+  as a bench with a four-rep range, and 55 → 105 is a far bigger proportional jump than 135 → 185.
+- **Second pass: a 295×8 squat after twelve months.** Removing the first pass's destructive deload
+  (which had been modelling a deload as a permanent 10 % cut — not what a deload is) unmasked
+  compound stall rates that were far too low.
+
+The stall rates are now **calibrated rather than chosen**: derived from how many times each lift
+actually appears in the year and where a real lifter would finish. Deloads log lighter without
+touching the progression state, which gives the charts their dip and costs nothing.
+
+Two more found the same way:
+
+- **Benchmarks came out below the working sets they were meant to test.** A 3-rep test at 1.12× a
+  5-rep working weight estimates *lower*, so the demo's benchmark line would have shown the lifter
+  getting weaker every time they tested. Now 1.22×.
+- **The goal opened reading "Target reached".** It was built from the best bench e1RM, but the app
+  rates Chest from *every* exercise that trains it — and for this lifter the incline dumbbell press
+  converts to a higher bench-equivalent than the bench does. So the goal started at 227 while the
+  muscle map beside it said 288. It now runs the real ranking pipeline as of the day the goal was
+  set, and a test pins the two together.
+
+### ⚠️ And one finding that is about the APP, not the demo
+
+An entirely ordinary demo lifter — 190×6 bench, 245 squat, 305 deadlift, 115 overhead press — reads
+**Shoulders: Elite, 99th percentile**, sitting next to a Proficient chest.
+
+It comes from a 55 lb face pull for 15 and a 20 lb lateral raise for 13. Both convert at ratio 0.30,
+which is *not* unreasonable at working weights — 40 lb of lateral raise against a 115 lb press really
+is about a third. The inflation is entirely in the reps: a 13-rep isolation set extrapolates to a 1RM
+far harder than an 8-rep press, so it converts to 250–320 lb of "overhead press" against an actual
+145. And `rateMuscle()` takes the best estimate, so the inflated one beats the real press every time.
+
+This is `progress.md` §9's known gap with a concrete case attached, and it now points at two separable
+questions: how far an isolation set may honestly be extrapolated, and whether taking the maximum is
+right at all when a direct low-rep observation of the key lift exists. Both want the simulator.
+
+**All seven suites green: data-layer, demo (53), goals (88), optimal, volume-map, social, and 292
+render assertions.**

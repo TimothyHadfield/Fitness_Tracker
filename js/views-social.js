@@ -41,6 +41,18 @@ import {
 // because "you can't use this" with no route out is the thing this app is not
 // allowed to do.
 function unavailable(reason) {
+  // ⚠️ Not "sign in to use Social". The reason a demo user cannot be social has
+  // nothing to do with their account, and telling them to sign in would be a
+  // confidently wrong answer to the right question.
+  if (reason === 'demo') {
+    return emptyState(
+      'Social is off in the demo',
+      'Sharing publishes a copy of your training for a friend to read, and the demo account\'s '
+      + 'training is invented — publishing it to real people would be worse than not being able to '
+      + 'try this screen. Leave the demo and Social comes back exactly as it was.',
+      el('a', { class: 'btn primary', href: '#/account', text: 'Leave the demo' }),
+    );
+  }
   if (reason === 'anonymous') {
     return emptyState(
       'Social needs a real account',

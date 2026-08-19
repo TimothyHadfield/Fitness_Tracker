@@ -39,6 +39,15 @@ globalThis.localStorage = {
   setItem: (k, v) => mem.set(k, String(v)),
   removeItem: (k) => mem.delete(k),
 };
+// The demo flag lives here, and it is per-tab on purpose — see store.js. Without
+// it the demo simply reports itself unavailable, which would make every demo
+// assertion below pass by never running.
+const sess = new Map();
+globalThis.sessionStorage = {
+  getItem: (k) => (sess.has(k) ? sess.get(k) : null),
+  setItem: (k, v) => sess.set(k, String(v)),
+  removeItem: (k) => sess.delete(k),
+};
 
 const BASE = new URL('../js/', import.meta.url).href;
 const { BUILT_IN_EXERCISES } = await import(BASE + 'exercises.js');
@@ -1330,6 +1339,55 @@ ok(!data.querySelector('.rep-target'),
   ok(fits.querySelectorAll('.row').length > 3, 'and lists the ready-made systems');
 
   await store.clearAll();
+}
+
+/* ================= The demo account ================= */
+// The generated year itself is covered by tests/demo.test.mjs. What this checks
+// is the way IN and the way OUT, and — the one that matters — that a demo
+// session cannot reach Social, because publishing invented workouts to real
+// friends is the only way this feature could do actual harm.
+{
+  const { AccountView } = await import(BASE + 'views-account.js');
+  const { SocialView } = await import(BASE + 'views-social.js');
+  const { demo, social } = await import(BASE + 'store.js');
+  const text = (node) => node.textContent.replace(/\s+/g, ' ');
+
+  const account = await mount(AccountView());
+  ok(/View demo account/.test(text(account)), 'the Account screen offers the demo account');
+  ok(/nothing is saved/i.test(text(account)),
+     'and says before you tap it that nothing in there is kept');
+  ok(/Your own data is untouched/i.test(text(account)),
+     'and that your own data is safe, which is the other thing to say first');
+
+  // Entering for real reloads the page, which jsdom cannot do — so the flag is
+  // set directly and the screens are asked what they make of it.
+  sess.set('ftrack:v1:demo', '1');
+  ok(demo.active() === true, 'the demo flag is per-tab and reads back as active');
+
+  const inDemo = await mount(AccountView());
+  const demoText = text(inDemo);
+  ok(/You are in the demo account/i.test(demoText),
+     'the Account screen becomes the demo screen rather than showing account controls');
+  ok(!/Delete account|Sign out|Upload/i.test(demoText),
+     'and offers no account controls at all — none of them would mean anything here');
+  ok(/Leave the demo/i.test(demoText), 'with the way out on it');
+  ok(/starts it over/i.test(demoText), 'and it repeats that a reload starts over');
+
+  // ⚠️ THE ONE THAT MATTERS. republish() builds a friend-visible copy out of
+  // store.getSessions(), which in the demo is invented — so Social has to be
+  // refused, and refused for the RIGHT reason rather than by telling somebody
+  // to sign in to an account they are already signed into.
+  const state = await social.state();
+  ok(state.available === false && state.reason === 'demo',
+     'Social reports itself unavailable in the demo, and says demo is why');
+
+  const soc = await mount(SocialView());
+  ok(/Social is off in the demo/i.test(text(soc)),
+     'and the Social screen explains that rather than showing an empty friends list');
+  ok(!/Set up my account/i.test(text(soc)), 'without wrongly blaming the account');
+
+  sess.delete('ftrack:v1:demo');
+  ok(demo.active() === false, 'and leaving clears the flag');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

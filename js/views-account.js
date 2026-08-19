@@ -8,10 +8,76 @@
 // An anonymous account lives in one browser and nothing recovers it — clearing
 // site data destroys it permanently. That is stated plainly rather than buried.
 
-import { store, auth, probeOffline } from './store.js';
+import { store, auth, probeOffline, demo } from './store.js';
 import { el, screenShell, toast, confirmSheet, emptyState, openSheet } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
+
+/* ------------------------------------------------------------------ *
+ * The demo account
+ *
+ * Tim, 2026-08-19: he cannot judge screens he has no data for, and recording a
+ * year of training by hand to find out is not a reasonable ask.
+ *
+ * It sits on the Account screen and on EVERY variant of it — signed in,
+ * anonymous, offline, and cloud-not-configured. Looking around is not a thing
+ * you should have to have an account to do, and the offline branch is the one
+ * where somebody most wants something to look at.
+ * ------------------------------------------------------------------ */
+
+function demoCard() {
+  if (!demo.available()) return null;
+
+  return el('div', { class: 'card' },
+    el('div', { class: 'section-label', text: 'Just looking around' }),
+    el('div', { class: 'field-help' },
+      'The demo account is a made-up year of training — two programmes, a few hundred sessions, '
+      + 'benchmarks, body weight and a goal in progress. Every screen fills in, so you can see what '
+      + 'the app looks like in use without logging any of it yourself.'),
+    // Said before they tap it, not after. The two facts somebody needs in
+    // advance are that their own data is safe and that theirs is not what they
+    // will be looking at.
+    el('div', { class: 'field-help' },
+      'Change anything you like in there — it only lives in this tab, nothing is saved, and it '
+      + 'starts fresh every time. Your own data is untouched and waiting when you come back.'),
+    el('button', {
+      class: 'btn primary block', text: 'View demo account',
+      onClick: () => demo.enter(),
+    }),
+  );
+}
+
+/** What the Account screen becomes while the demo is on. */
+function demoScreen() {
+  return screenShell({
+    title: 'Account',
+    back: () => go('#/settings'),
+    scroll: [
+      el('div', { class: 'card' },
+        el('div', { class: 'section-label', text: 'You are in the demo account' }),
+        el('div', { class: 'field-help' },
+          'None of this is real. It is a generated year of training so that every screen has '
+          + 'something in it — the systems, the calendar, the graphs, the muscle map and the goal '
+          + 'are all built from it.'),
+        el('div', { class: 'field-help' },
+          'Nothing here is saved anywhere. Edit a workout, delete a system, log a session — it '
+          + 'lives in this tab and nowhere else, and reloading the page starts it over from the '
+          + 'same beginning.'),
+        // Named rather than left to be discovered. Somebody who taps Social and
+        // finds it refused should already know why.
+        el('div', { class: 'field-help' },
+          'Social is switched off while you are in here, because publishing invented workouts to '
+          + 'real friends would be worse than not being able to try it.'),
+      ),
+      el('button', {
+        class: 'btn primary block', text: 'Leave the demo',
+        onClick: () => demo.exit(),
+      }),
+      el('div', { class: 'field-help', style: 'text-align:center' },
+        'Your own account and everything in it is exactly where you left it.'),
+    ],
+  });
+}
 
 function refresh() {
   const h = location.hash;
@@ -37,17 +103,25 @@ async function run(button, label, fn) {
 }
 
 export async function AccountView() {
+  // Before anything asks the account a question. In the demo there is no
+  // account to ask about, and every control on the normal screen — upload,
+  // sign out, delete — would be either meaningless or alarming.
+  if (demo.active()) return demoScreen();
+
   const state = await auth.state();
 
   if (!auth.configured()) {
     return screenShell({
       title: 'Account',
       back: () => go('#/settings'),
-      scroll: emptyState(
-        'Accounts are not switched on yet',
-        'This app stores everything in this browser. Cloud accounts need a Firebase project — see docs/firebase-setup.md. Until then, use Download backup in Settings to keep a copy.',
-        el('a', { class: 'btn primary', href: '#/settings', text: 'Back to settings' }),
-      ),
+      scroll: [
+        emptyState(
+          'Accounts are not switched on yet',
+          'This app stores everything in this browser. Cloud accounts need a Firebase project — see docs/firebase-setup.md. Until then, use Download backup in Settings to keep a copy.',
+          el('a', { class: 'btn primary', href: '#/settings', text: 'Back to settings' }),
+        ),
+        demoCard(),
+      ],
     });
   }
 
@@ -161,6 +235,10 @@ function offlineScreen(state) {
               el('div', { class: 'field-help mono', text: state.error }))
           : null,
       ),
+
+      // Offered here too, and this is the branch where it is most wanted: no
+      // connection, nothing to sign into, and nothing to look at either.
+      demoCard(),
     ],
   });
 }
@@ -280,6 +358,9 @@ function anonymousScreen() {
         text: 'Sign in instead',
         onClick: () => go('#/signin'),
       }),
+
+      el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
+      demoCard(),
     ],
   });
 }
@@ -387,6 +468,8 @@ async function signedInScreen(user) {
             uploadBtn,
           )
         : null,
+
+      demoCard(),
 
       el('div', { class: 'section-label', text: 'Account' }),
       hasPassword ? passwordCard() : null,

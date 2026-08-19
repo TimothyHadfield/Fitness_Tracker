@@ -47,6 +47,14 @@ the estimator.
 **Every system now shows what it COSTS beside how good it is** — days a week and minutes a session,
 in the same badge as the growth and strength percentages, on Explore and on the Workouts list.
 
+**There is a DEMO ACCOUNT** (2026-08-19). Account → *View demo account* fills the app with a
+generated year of training — two programmes, ~200 sessions, benchmarks, weekly weigh-ins and a goal
+part-way through — so every screen can be judged without logging any of it. ⚠️ **It never touches
+storage**: the store swaps to an in-memory backend, so nothing in there can reach localStorage or
+Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
+strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
+publishing invented workouts to real friends is the one way this could do harm.
+
 ---
 
 ## Open work — start here
@@ -93,7 +101,8 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Volume tests** | `node tests/volume-map.test.mjs` — 49 assertions, **no dependencies**. Direct/indirect mapping + the published efficiency tiers |
 | **Rating tests** | `node tests/optimal.test.mjs` — 44 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Goals tests** | `node tests/goals.test.mjs` — 88 assertions, **no dependencies**. The requirements model, and **the two things Goals refuses to do**: read the calendar to decide what it asks of you, and emit a verdict |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 280 assertions, mounts every screen |
+| **Demo tests** | `node tests/demo.test.mjs` — 53 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal) and PLAUSIBLE, checked against the app's own modules rather than by eye |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 292 assertions, mounts every screen |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -224,6 +233,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to no screen yet |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
+| `js/demo.js` | Not a doc. The demo account's generated year. **Read its header before touching it**: it explains why the data never touches storage, why the flag is per-tab, and why nothing in it may use `Math.random()`. The switch itself is in `store.js` |
 | `js/goals.js` | Not a doc. **Read its header before touching Goals**: it explains why a goal is a LEVEL and not a predicted number of pounds, why the target weight is FROZEN when the goal is set, and the two things the module refuses to do — read the deadline to decide what it asks of you, and emit a verdict |
 | `docs/goals-plan.md` | **Goals** (`docs/vision.md` §1.6). **Phases 1–2 BUILT 2026-08-19 — §11 records what the build decided that the plan did not.** **§3 is still the section to read** — four problems, one serious: raising weights to hit a deadline would hand heavier weights to somebody who has missed two weeks, which is backwards and is the only thing in this project that could cause physical harm. §8 is the progression rule Phase 4 needs. §10 is what may and may not scale with ambition — and §11.4 records where the build departed from it |
 | `docs/optimal-rating-plan.md` | **The "% optimal" rating** (`docs/vision.md` §1.3), planned 2026-08-18. **§2 is the part to read** — the evidence says frequency does *not* independently drive hypertrophy, so a rating must not reward training more days; and the models explain only ~a quarter of the variance, which is why the output is a band, never a point |
@@ -290,6 +300,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
+| **Demo account** | Account → **View demo account**. A generated year — two programmes, ~200 sessions, 20 benchmarks, 53 weigh-ins, a goal 16 % of the way through — so every screen has something in it. ⚠️ **In-memory only.** `store.js` swaps its backend for a Map, so there is no tap sequence — editing, deleting, importing, "delete all data" — that can reach a real record. The flag is in **sessionStorage**, so the demo cannot follow you into a new tab or survive closing the browser; that is the safety decision, because "opens the app tomorrow and sees a year they did not do" would be far worse than the feature is worth. A reload reseeds from the same default. **Social is refused** at `republish()`, not just on the screen. `js/demo.js` |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so and reveals **Continue in this window instead**, a redirect-only route |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
@@ -301,6 +312,20 @@ Press-and-hold repeats.
 ### Verified
 
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
+- **53 demo assertions** (`tests/demo.test.mjs`, no dependencies) — and the two that matter are
+  **determinism** and **plausibility**. The same day must build a byte-identical year, with a
+  companion check that a different day *does* move it so the first is not vacuous; that is what makes
+  "resets to the default" literal rather than approximate. Plausibility is checked against the app's
+  OWN modules rather than by eye — the bench estimate ranks somewhere with room above and below, the
+  logged volume lands in a believable band, and the goal's starting figure equals what the muscle map
+  said on the day it was set. That last one is a regression test: the first version built the goal
+  from the bench press alone while the map rates Chest from every chest exercise, so the demo opened
+  on a goal already reading "Target reached" with the map beside it disagreeing
+- **The demo driven end to end in a real browser** — 2026-08-19. Real data seeded first, then the
+  button clicked: the demo could not see it (`demoSeesRealSystem: false`), it was still on disk
+  (`realStillOnDisk: true`), renaming a system inside the demo wrote nothing to localStorage
+  (`wroteToDisk: false`), a reload restored the default, and leaving brought the real account back
+  intact. Every tab screenshotted at 390 px plus the muscle map and the desktop layout
 - **88 goals assertions** (`tests/goals.test.mjs`, no dependencies) — and the two that matter are
   **refusals**, the same shape as `optimal.test.mjs`'s three. ⚠️ **Nothing reads the calendar to
   decide what is asked of you**: two goals with identical numbers and start dates eleven weeks apart
@@ -471,6 +496,10 @@ Fitness_Tracker/
 │   ├── set-types.js            supersets/tri-sets (grouping) and drop sets
 │   │                           (nesting) — pure. Owns the walk the runner
 │   │                           follows and the one-drop-set-is-one-hard-set rule
+│   ├── demo.js                 THE DEMO ACCOUNT'S YEAR — pure, deterministic,
+│   │                           seeded. Never Math.random(), or "resets to the
+│   │                           default" stops being true. The SWITCH lives in
+│   │                           store.js; this file only builds the data
 │   ├── goals.js                GOALS — pure. A goal is a LEVEL, never a predicted
 │   │                           number of pounds. Refuses two things: reading the
 │   │                           deadline to decide what it asks of you (that
@@ -517,9 +546,12 @@ Fitness_Tracker/
 │   ├── social.test.mjs         73 assertions, no dependencies — what is SHARED
 │   ├── goals.test.mjs          88 assertions, no dependencies — the requirements
 │   │                           model, and the two REFUSALS
+│   ├── demo.test.mjs           53 assertions, no dependencies — the demo year is
+│   │                           deterministic, and plausible enough that the
+│   │                           app's own analysis of it is not nonsense
 │   ├── rules.test.mjs          who may READ it. Needs the emulator.
 │   │                           ⚠️ WRITTEN, NEVER RUN — social-plan.md §7.1
-│   └── render.test.mjs         280 jsdom assertions — mounts every screen
+│   └── render.test.mjs         292 jsdom assertions — mounts every screen
 └── docs/  spec.md · research.md · vision.md · strength-map-plan.md · goals-plan.md
          strength-estimate-plan.md · optimal-rating-plan.md · social-plan.md
          firebase-setup.md · competitive-teardown.html
@@ -922,6 +954,23 @@ re-examining it produces something better than either the old rule or a plain ov
   `strength-standards.js` already flags that isolation work is probably wider) or shrinking high-rep
   estimates. Neither should be guessed at without the simulator that `docs/strength-estimate-plan.md`
   §11 describes.
+
+  ⚠️ **The demo account made this concrete on 2026-08-19, and it is worth reading as a worked
+  example rather than a hypothetical.** A completely ordinary lifter — 190×6 bench, 245 squat,
+  305 deadlift, 115 overhead press — reads **Shoulders: Elite, 99th percentile**, next to a
+  Proficient chest. The whole of it comes from raise-type work: a 55 lb face pull for 15 and a
+  20 lb-per-hand lateral raise for 13. Both are converted at **ratio 0.30 with quality 0.25** in
+  `js/muscle-evidence.js`, and 0.30 is not unreasonable at *working weights* — 40 lb of lateral raise
+  against a 115 lb press really is about a third. The inflation is entirely in the REPS: a 13-rep
+  isolation set extrapolates to a 1RM far more aggressively than an 8-rep press does, so the
+  converted figure comes out at 250–320 lb of "overhead press" against an actual 145. And because
+  `rateMuscle()` takes the best estimate, the inflated one wins over the real press every time.
+  Two things follow. First, **the fix is not the ratio** — lowering it would break the working-weight
+  case to patch the high-rep one. It is either capping how far an isolation set may be extrapolated,
+  or giving isolation lifts their own σ, and §11's simulator is what would say which. Second,
+  **`rateMuscle()` taking the maximum is doing real damage here**: a direct, low-rep, high-quality
+  observation of the actual key lift loses to a converted high-rep one. That is worth revisiting
+  independently of the estimator.
 - **Core, Neck and Cardio can never be ranked** — no published standards exist; the UI says so.
   Core is drawn (abs + obliques) so the figure looks right, but it always renders as No data.
 - **Percentile placement leans on the e1RM formula being *absolutely* accurate**, which
@@ -1029,7 +1078,12 @@ re-examining it produces something better than either the old rule or a plain ov
    largely indifferent to reps in reserve.
 
 1. **The simulator** — `docs/strength-estimate-plan.md` §11, Phase 0. **Blocked on nothing, and now
-   the highest-value thing left.** `js/muscle-evidence.js` shipped a real confidence model whose
+   the highest-value thing left.** ⚠️ **The demo account handed it a concrete first target on
+   2026-08-19**: an ordinary lifter reads **Shoulders Elite** off a lateral raise and a face pull,
+   because a 13-rep isolation set extrapolates to a 1RM far harder than an 8-rep press does. §9 has
+   the full worked example, and it points at two separable questions — how far an isolation set may
+   honestly be extrapolated, and whether `rateMuscle()` should be taking the maximum at all when a
+   direct low-rep observation of the key lift is available.** `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
    closed by guessing at numbers. A simulator turns both into measurements.
 2. ~~**Tim opens the app on a real phone.**~~ **DEFERRED — Tim, 2026-08-17: "I don't want to work on

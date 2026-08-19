@@ -52,6 +52,7 @@ const SHELL = [
   './js/optimal.js',
   './js/social.js',
   './js/goals.js',
+  './js/demo.js',
   './js/volume-map.js',
   './js/views-social.js',
   './js/views-goals.js',
