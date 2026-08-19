@@ -3220,3 +3220,42 @@ the estimator's band contains no trajectory reaching the target. Telling somebod
 when they are not is a much worse error than the reverse.
 
 Still gated on the estimator. Everything in this feature is.
+
+---
+
+## 2026-08-18 — Scaling requirements to the goal: right idea, one wrong lever
+
+Tim ratified the protein recommendation and asked for the requirements to scale with ambition —
+upper limit of protein and sleep for the most ambitious goal, lower limit for a relaxed one, so the
+user can see what they would be sacrificing.
+
+**The intent is the best thing about the goals screen** — it turns a goal from a wish into a trade.
+One part of the mechanism does not survive the evidence, and fixing it makes the point sharper.
+
+**Protein is a threshold, not a dial.** Morton et al. found a *plateau* at 1.62 g/kg — intakes above
+it produced no additional gains. So "more protein for a bigger goal" would imply exactly what that
+meta-analysis disproved, and would be the same shape of error as the "1 g/lb" folklore the research
+already corrected.
+
+**But the gradient Tim wants is defensible for a different reason.** The 95 % CI on the *breakpoint*
+runs to 2.2 g/kg (1.0 g/lb) — that is uncertainty about where the plateau sits, not a range of
+increasingly good intakes. So aiming at 1.0 means clearing the threshold **even if it sits at the top
+of the interval, and on the days you fall short**. The upper end buys **certainty and margin, not
+extra growth**. Same gradient he asked for, resting on something true.
+
+**Sleep cannot be scaled at all** — there is no dose–response between hours slept and strength
+gained, so "8 hours for ambitious, 6 for relaxed" would be inventing a curve. It gets the same
+sentence at every level.
+
+**What honestly does scale is a longer list than protein and sleep:** sets per muscle per week
+(strongly — a real dose–response with no plateau found), time per session, sessions per week for
+strength, how close to failure the sets end, and consistency.
+
+⚠️ **Which makes the trade sharper rather than vaguer.** The real sacrifice for an ambitious goal is
+**time in the gym and how hard the sets are**, plus *reliably* clearing the protein bar. "Do you want
+to train 5 hours a week to near-failure, or 3 hours comfortably?" is a question a user can actually
+answer; "do you want to eat 1.0 or 0.7 g/lb?" was not.
+
+**D26 proposed and ratified in conversation**: the app may RECOMMEND a protein range with its
+citation; it may not track food, hold a database, or ask what anybody ate. Narrows D1 the way D21
+narrowed D15 — D1's reasoning was about tracking, and none of it applies here.

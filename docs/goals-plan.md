@@ -323,3 +323,83 @@ than the reverse. It costs a user who was doing fine; the opposite costs a warni
 **This is the hard gate.** It cannot be built on raw session numbers — a working-set e1RM moves
 several percent day to day on sleep and timing alone — so it waits on
 `docs/strength-estimate-plan.md`. Same estimator as everything else.
+
+---
+
+## 10. Scaling the requirements to the goal — 2026-08-18
+
+Tim ratified the protein recommendation, and asked for the requirements to scale with ambition:
+
+> *"For a more ambitious goal with the most gains, it will need the upper limit (most optimal) for
+> protein intake, and sleep, but for a more relaxed goal with moderate gains, they might do alright
+> with the lower limit … This lets the user know what they should be willing to sacrifice."*
+
+**The intent is right and it is the best thing about the goals screen** — it turns a goal from a wish
+into a trade. But one part of the mechanism does not survive the evidence, and correcting it makes
+the point stronger rather than weaker.
+
+### 10.1 ⚠️ Protein is a THRESHOLD, not a dial
+
+Morton et al. found a **plateau at 1.62 g/kg/day** — *"intakes above this did not produce additional
+gains."* So protein is not a lever you push further for more growth. It is a bar you clear.
+
+Framing it as "ambitious → 1.0 g/lb, relaxed → 0.7 g/lb" would imply more protein buys more muscle,
+which is precisely what that meta-analysis found **not** to be true above the breakpoint. It would be
+the same shape of error as the "1 g/lb" folklore the research already corrected.
+
+### 10.2 But the gradient Tim wants IS defensible — for a different reason
+
+The **95 % CI on the breakpoint runs to ~2.2 g/kg (1.0 g/lb)**. That interval is uncertainty about
+*where the plateau sits*, not a range of increasingly good intakes. Read correctly, it says: the
+threshold is probably 0.73 g/lb, **but it could be as high as 1.0**.
+
+**That is a real reason to aim higher for an ambitious goal, and it is honest:**
+
+- Aim at **0.73** and you are at the best estimate of the threshold — but if the true breakpoint is
+  higher, or you miss by 20 % on a bad day, you drop under it.
+- Aim at **1.0** and you clear the threshold *even if it sits at the top of the interval*, and you
+  still clear it on the days you fall short.
+
+**So the upper end buys certainty and margin, not extra gains.** An ambitious goal wants that
+certainty; a relaxed one can live with the best estimate. Same gradient Tim asked for, resting on
+something true.
+
+### 10.3 Sleep cannot be scaled at all
+
+There is **no dose–response** between hours slept and strength gained (§2.2). So "8 hours for the
+ambitious goal, 6 for the relaxed one" is not a claim this app can make — it would be inventing a
+curve that does not exist.
+
+What it can say: consistently short sleep blunts adaptation, the effect is real, and its size is
+unknown. That is the same sentence at every goal level. **A number that changes between goals implies
+a precision nobody has.**
+
+### 10.4 What honestly DOES scale with ambition
+
+This is the useful list, and it is longer than protein and sleep:
+
+| Lever | Scales with the goal? | Why |
+|---|---|---|
+| **Sets per muscle per week** | **Yes, strongly** | A real dose–response with no plateau found (§2.4, `research.md` §6.2) |
+| **Time per session** | **Yes** | Follows from the sets |
+| **Sessions per week** | **Yes, for strength** | Frequency has a genuine effect on strength (§6.3) — though *not* on growth |
+| **Effort — how close to failure** | **Yes** | Hypertrophy improves as sets end nearer failure (§6.7) |
+| **Consistency** | **Yes** | An ambitious target tolerates fewer missed weeks |
+| Protein | **Threshold, with margin** | §10.2 — the upper end buys certainty, not extra growth |
+| Sleep | **No** | §10.3 — no dose–response exists |
+
+⚠️ **This makes the trade Tim described sharper, not vaguer.** The honest sacrifice for an ambitious
+goal is mostly **time in the gym and how hard the sets are**, plus **reliably** clearing the protein
+bar — not eating progressively more protein. "Do you want to train 5 hours a week to near-failure, or
+3 hours comfortably?" is a real question a user can answer. "Do you want to eat 1.0 or 0.7 g/lb?" was
+not.
+
+### 10.5 D1, narrowed — ratified by Tim 2026-08-18
+
+> **D26 (proposed):** the app may **recommend** a protein range with its citation. It may not track
+> food, hold a food database, or ask what anybody ate.
+
+Tim: *"a protein recommendation is good. It doesn't tell the user to track it on the app or
+anything."* Same narrowing shape as D15 → D21: D1's reasoning was about *tracking* — an unwinnable
+food-database problem against uncrippled free competitors — and none of that applies to one cited
+range on a goal screen. Locks when built, like D24 and D25.

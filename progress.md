@@ -704,6 +704,11 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 locked decision — it would narrow D14, and D14 is locked, so it needs Tim's say-so first. §10 has
 the question. Nothing else is missing from this table.
 
+**D26 is a proposal in `docs/goals-plan.md` §10.5**, ratified in conversation by Tim on 2026-08-18
+and locking when built: *the app may RECOMMEND a protein range with its citation, but may not track
+food, hold a food database, or ask what anybody ate.* It narrows **D1** the way D21 narrowed D15 —
+D1's reasoning was about tracking, and none of it applies to one cited number on a goal screen.
+
 **D24 and D25 are proposals too, in `docs/social-plan.md`**, and are not in the table for the same
 reason — nothing is built, so nothing is decided. D24: *sharing publishes a derived copy and never
 widens a permission on the source*, which is forced by the storage shape (one document holds every
