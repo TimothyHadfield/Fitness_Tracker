@@ -4,7 +4,10 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-19 (second pass — see the section directly below the summary)
+**Last updated:** 2026-08-19 (third pass). ⚠️ **Two things a fresh session must know before doing
+anything:** the section directly below this summary records what shipped today, and
+`docs/improvement-plan.md` §0 records **seven reviews that were briefed and never ran** — including
+the only accessibility audit this project has ever attempted. Re-run those before building.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -96,13 +99,34 @@ A directed multi-agent session. **Read this before the Open work list, because i
 
 ## Open work — start here
 
+⚠️ **READ `docs/improvement-plan.md` §0 BEFORE PICKING ANYTHING UP.** Tim asked (2026-08-19) for a
+plan plus a review of everything built. **Seven reviews were scoped, briefed and then all killed by
+a session usage limit before returning a single finding** — adversarial code review, UX, competitive,
+cross-screen consistency, accessibility, edge cases, and the live social round trip. Their briefs
+are recorded verbatim in that file so they can be re-run as written. **Re-running them is item 0.**
+Nothing in this project has been audited for accessibility, ever.
+
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
-1. **Social: get two accounts to connect. THIS IS NOW THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
+1. **Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
    Every screen is built and driven, but only against a stubbed facade. The round trip — invite,
    open as somebody else, claim, accept, publish, read — has never run. Needs two throwaway accounts
-   against the live project, then deleted.
+   against the live project, then deleted. **An attempt on 2026-08-19 died to the usage limit before
+   creating anything**; the brief is in `docs/improvement-plan.md` §0, including the trap that cost
+   it nothing yet but would have: use two SEPARATE browser profiles, not two tabs, or you will
+   "prove" a round trip that never crossed accounts.
+
+1b. **⚠️ THE FIRST-RUN PATH PROMISES ONE THING AND DELIVERS ANOTHER.** Verified by hand 2026-08-19.
+   On an empty account Home's primary button reads **"Create your first workout"** and lands on
+   `#/workouts`, a screen whose actions are **"New system"** and **"Explore ready-made systems"**.
+   Not a dead end — but a stranger must absorb *systems*, a concept that exists for the app's
+   benefit (D22) rather than theirs, before logging a single set. Install → first logged number is
+   about a dozen steps, and **the logging loop is the one thing apps beat spreadsheets at** (D4).
+   The fix is not to remove systems: make **Explore the primary first-run action**, so a ready-made
+   programme is one tap and teaches what a system is by example rather than by explanation — which
+   is D8 exactly. `docs/improvement-plan.md` §1.1 has the options. **Cheapest high-value change
+   available.**
 
 2. **The estimator, Phases 1–3** (`docs/strength-estimate-plan.md` §12). Phase 0 is **done** and its
    numbers are in §15. What is left is wiring it to a screen, and **§16 sets the hard design
@@ -306,7 +330,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `js/optimal.js` | Not a doc. Read it before touching the rating: the dose-response curves are **fitted to published values, with the derivation in a comment on each constant**, and the header lists the three things the rating refuses to do — reward extra training days for growth, extrapolate past the evidence, or imply precision the source lacks |
 | `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5 |
-| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to no screen yet |
+| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18 — but ⚠️ **no two accounts have ever connected**, so the app half is reviewed code, not verified behaviour |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `js/demo.js` | Not a doc. The demo account's generated year. **Read its header before touching it**: it explains why the data never touches storage, why the flag is per-tab, and why nothing in it may use `Math.random()`. The switch itself is in `store.js` |
@@ -427,7 +451,7 @@ Press-and-hold repeats.
   to 2.2; protein is the SAME at Steady and Committed, which is what proves it is a threshold rather
   than a dial; the sleep and effort text is byte-identical across every band; and the stall walk has
   a **vacuity guard** — the same walk over adequate training must read OK
-- **1090 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1098 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
@@ -535,6 +559,19 @@ Press-and-hold repeats.
 
 ### NOT verified
 
+- **⚠️ ACCESSIBILITY HAS NEVER BEEN AUDITED, AT ALL.** Not once, by anyone. No touch target has been
+  measured, no contrast checked outside the chart palette, no keyboard path walked, no screen-reader
+  structure examined, nothing tested at larger text. The app has **six nav tabs at 360 px**, an
+  irregular-SVG tap surface on the muscle map, and a great deal of load-bearing explanation in
+  `.field-help` grey. An audit was briefed on 2026-08-19 and killed by a usage limit before it
+  measured anything. **Do not let "the layout has been screenshotted" stand in for this** — they are
+  different claims, and this file's whole discipline is not confusing them.
+- **⚠️ Nothing written on 2026-08-19 has been adversarially reviewed.** A large amount of code
+  landed that day — `js/progression.js`, `js/strength-estimate.js`, the body-weight work across four
+  modules — much of it written fast by parallel agents. It passes 2075 assertions, many of them
+  mutation-checked, and each piece was driven in a browser by its author. **None of it has been
+  attacked by anybody trying to break it.** `js/progression.js` is the one that matters, because it
+  is the only part of this app that can cause physical harm.
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
   branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
   only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —
@@ -612,10 +649,13 @@ Fitness_Tracker/
 │   │                           a lay-off), and emitting an on-track verdict
 │   │                           (gated on the estimator)
 │   ├── social.js               VISIBILITY TIERS + the projection builder — pure.
-│   │                           NOT WIRED TO ANY SCREEN. Sharing publishes a
-│   │                           derived copy; it never widens a permission on
-│   │                           the private data. Built by whitelist, never by
-│   │                           deleting fields, because deletion fails OPEN
+│   │                           Wired to views-social.js since 2026-08-18, but
+│   │                           ⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED — every
+│   │                           screen was driven against a STUBBED facade.
+│   │                           Sharing publishes a derived copy; it never
+│   │                           widens a permission on the private data. Built
+│   │                           by whitelist, never by deleting fields,
+│   │                           because deletion fails OPEN
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
 │   │                           between them, and the confidence model — pure maths
 │   ├── optimal.js              the "% OPTIMAL" RATING — dose-response curves

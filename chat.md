@@ -3784,3 +3784,60 @@ because `title` does nothing on a phone.
   screenshot of the previous screen is indistinguishable from a feature that failed to ship.
 
 **2075 assertions across nine suites, all green.**
+
+---
+
+## 2026-08-19, later still — a review wave that never came back
+
+Tim: *"keep working. Make a large plan on what you want to do for improvements, and make sure you go
+back and review all the stuff we've built and think of any problems or errors we might've made…
+Think about human behavior and the design of the website as well as advantages or disadvantages with
+our website. Compare it to other websites."*
+
+Seven reviews were scoped and briefed — adversarial code review, human behaviour/UX, competitive
+refresh, cross-screen consistency, accessibility, edge cases and data integrity, and the live social
+round trip. All read-only, so they could run together safely.
+
+**Every one of them was killed by a session usage limit before returning a finding**, along with the
+sub-agents several had spawned. What arrived was fragments of their working notes, not results.
+
+**Nothing from that wave was treated as a result**, and `docs/improvement-plan.md` says so at the
+top and marks every unaudited section. That mattered more than usual here: the fragments *read* like
+findings, and it would have been easy and wrong to write them up as though they were.
+
+### The one thing recovered, and why it was worth checking
+
+One fragment was specific enough to chase by hand: *"The Home CTA 'Create your first workout' lands
+on 'No systems yet'."* Checked directly — and it was **half wrong**, which is the reason for
+checking. The Workouts screen is not a dead end; "New system" and "Explore ready-made systems" sit
+in its `top` region above the empty state.
+
+The real defect is a **promise/destination mismatch**. The button says *workout* and the destination
+talks about *systems* — a concept that exists for the app's benefit (D22: a workout belongs to
+exactly one system) rather than for the newcomer's. Install to first logged number is about a dozen
+steps, and D4 says the logging loop is the only thing apps beat spreadsheets at.
+
+Recommended fix, in `docs/improvement-plan.md` §1.1: **make Explore the primary first-run action.**
+One tap to a complete programme, and it teaches what a system is by example instead of by
+explanation — D8 exactly. Not built; it is a UX change Tim should see before it ships.
+
+### What is now written down
+
+`docs/improvement-plan.md` — the plan, with the seven review briefs recorded verbatim so they can be
+re-run without re-deriving them, a ranked list of where problems are most likely (a **fourth**
+single-flight bug is the top suspicion; today's contribution-cache bug was that same shape), and the
+order: verify what exists, fix the newcomer, finish what is half-built.
+
+Two questions were put to Tim and are open: **ratify D18**, and **is "a reason to come back
+tomorrow" a goal?** The app is deliberately free of streaks, badges and nudges, which is defensible
+— but it means retention rests entirely on the analysis being worth returning to, and that should be
+a decision rather than an accident.
+
+### For whoever picks this up
+
+- **Re-run the seven reviews first.** They are item 0 in the plan and item 0 in `progress.md`'s Open
+  work. Accessibility in particular has never been audited once, and nothing written on 2026-08-19
+  has been attacked by anyone trying to break it.
+- ⚠️ **A usage limit kills subagents mid-flight and their notifications look like completions.**
+  Read the `status` field, not the trailing text. A terminated agent's last line is whatever it
+  happened to be thinking about, and it reads exactly like a conclusion.
