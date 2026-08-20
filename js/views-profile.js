@@ -71,6 +71,12 @@ export async function ProfileView() {
     class: 'input',
     type: 'number',
     inputmode: 'decimal',
+    // ⚠️ This is the ONE control in the app with no visible label — the button
+    // under it says "Log today's weight" and carries the meaning for a sighted
+    // reader, so associateLabels() has nothing to attach and a screen reader got
+    // "edit text, blank". A placeholder is not a name: it disappears the moment
+    // anything is typed. Found by the 2026-08-20 audit.
+    'aria-label': `Body weight in ${units.units() === 'kg' ? 'kilograms' : 'pounds'}`,
     step: '0.1',
     placeholder: profile.bodyWeight ? units.fmtWeight(profile.bodyWeight) : (units.units() === 'kg' ? 'e.g. 82' : 'e.g. 180'),
   });

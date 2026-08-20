@@ -44,6 +44,50 @@ export function clear(node) {
 }
 
 /* ------------------------------------------------------------------ *
+ * ⚠️ Labels — associate every one with the control it names
+ *
+ * FOUND BY THE FIRST ACCESSIBILITY AUDIT THIS PROJECT HAS EVER HAD, 2026-08-20.
+ * The app renders 19 `el('label', { text: … })` calls and **not one of them was
+ * connected to anything.** A `.field` puts the label and the control next to
+ * each other, which looks correct and is correct visually — and a screen reader
+ * announces "edit text, blank", because a sibling is not an association. Every
+ * form in the app was affected: email and password on Account, birth year and
+ * gender on Profile, workout name and day on the edit screen, system name and
+ * notes in the builder, appearance and units in Settings.
+ *
+ * ⚠️ DONE AS A PASS OVER THE MOUNTED TREE, NOT AT 19 CALL SITES. Wiring each
+ * one by hand fixes today's 19 and nothing about the 20th — and the 20th will be
+ * written by somebody who has never read this comment, because the visual result
+ * of forgetting is indistinguishable from the visual result of remembering.
+ * Running it at the two places anything is mounted makes it structural.
+ *
+ * A control that already carries an aria-label is left alone: an explicit name
+ * beats a positional guess, and overwriting one would be how a good label gets
+ * replaced by a worse one.
+ */
+let labelSeq = 0;
+const NAMEABLE = 'input, select, textarea';
+
+export function associateLabels(root) {
+  if (!root || !root.querySelectorAll) return root;
+  for (const label of root.querySelectorAll('label')) {
+    if (label.htmlFor) continue;
+    // The control this label names: inside it if somebody wrapped, otherwise the
+    // next one along in the same .field. Scoped to the field so a label can
+    // never reach past its own group and name a stranger's input.
+    const field = label.closest('.field') || label.parentElement;
+    const control = label.querySelector(NAMEABLE)
+      || (field && field.querySelector(NAMEABLE));
+    if (!control) continue;
+    if (label.contains(control)) continue;        // already implicit, needs no id
+    if (control.getAttribute('aria-label')) continue;
+    if (!control.id) control.id = `f${++labelSeq}`;
+    label.htmlFor = control.id;
+  }
+  return root;
+}
+
+/* ------------------------------------------------------------------ *
  * Icons
  * ------------------------------------------------------------------ */
 
@@ -222,6 +266,8 @@ export function openSheet({ title, body, footer, onClose }) {
   }, sheet);
 
   document.body.append(backdrop);
+  // A sheet is mounted outside the router, so it needs the pass of its own.
+  associateLabels(sheet);
   document.addEventListener('keydown', onKey);
   return { close, sheet };
 }

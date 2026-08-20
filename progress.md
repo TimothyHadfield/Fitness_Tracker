@@ -6,10 +6,10 @@
 
 **Last updated:** 2026-08-20. ⚠️ **Two things a fresh session must know before doing anything:** the
 section directly below this summary records what came out of re-running the reviews, and
-`docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Two have
-now run** (adversarial code review, cross-screen consistency) and both found something real. **Five
-are still outstanding** — UX, competitive, accessibility, edge cases, and the live social round trip.
-Nothing in this project has been audited for accessibility, ever.
+`docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Three have
+now run** (adversarial code review, cross-screen consistency, and the first accessibility audit this
+project has ever had) and all three found something real. **Four are still outstanding** — UX,
+competitive, edge cases, and the live social round trip.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -64,9 +64,65 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ## 2026-08-20 — the review re-run, and the worst bug progression has had
 
-**Two of the seven reviews in `docs/improvement-plan.md` §0 have now RUN** — the adversarial code
-review and cross-screen consistency. Run serially by hand rather than as a seven-agent wave, because
-a seven-agent wave is what the usage limit killed last time. Both found something real.
+**Three of the seven reviews in `docs/improvement-plan.md` §0 have now RUN** — the adversarial code
+review, cross-screen consistency, and **the accessibility audit, which had never been run once in
+this project's life.** Run serially by hand rather than as a seven-agent wave, because a seven-agent
+wave is what the usage limit killed last time. All three found something real.
+
+### ⚠️ 0. ACCESSIBILITY HAS NOW BEEN AUDITED, AND IT FAILED
+
+This file has said in capitals for weeks that nothing here had ever been checked. It has been now:
+`tools/a11y-audit.mjs` drives a real browser over **44 screen/width/theme combinations** — eleven
+routes, 360 and 390 px, both themes, on the demo account — and measures **2272 rendered controls and
+4764 text elements**, reading each one's contrast against *the colour actually painted behind it*.
+
+**`--ink-faint` failed WCAG AA everywhere it was used, in both themes.** 3.94:1 dark and **3.05:1
+light** against `--ground`, where AA wants 4.5:1 for text under 18.66px — and every one of its 75
+uses is under 18.66px. That token carries `.field-help` and `.req-source`: **the caveats and the
+citations**, which is to say the load-bearing honesty this entire app is built on. 28 distinct
+class/theme pairs failed. **Now 0.**
+
+⚠️ **This project had already caught it once, in one place, and fixed only that place.** There is a
+comment in `css/app.css` beside `.chart .hover-date` that says --ink-faint measures 3.05:1 and fails
+AA — written months ago, acted on for that one line, and the token left in 75 others. *Finding a bug
+in a token and fixing the call site is how a bug survives a fix.*
+
+⚠️ **Raising faint alone would have collapsed the hierarchy.** Light `--ink-soft` was only 5.46:1, so
+an AA-passing faint landed half a step below it and the two were indistinguishable — **there was not
+room in the light palette for three text levels above AA**, which is a palette finding, not a
+rounding problem. Soft moved too. Both solved against `--rule-soft`, the worst surface either lands
+on, and re-measured in the browser rather than reasoned.
+
+**Two more, and each was invisible to the other kind of check:**
+
+- **Every `<label>` in the app named nothing.** 19 of them, and **not one was associated with its
+  control** — a `.field` puts them side by side, which is visually correct and programmatically
+  silent, so a screen reader announced *"edit text, blank"* on every form in the app: email and
+  password, birth year, workout name, system name, units. Fixed with `associateLabels()` in `ui.js`,
+  run at the two places anything mounts — **not at the 19 call sites**, because that fixes today's 19
+  and nothing about the 20th, and forgetting looks exactly like remembering.
+- **The calendar's TODAY number** switched to `--accent` and measured 3.94:1 in light. It appears on
+  **one cell in the month**, which is why no amount of reasoning would have found it. Moved to
+  `--ink`; the cell's accent ring and weight-800 already said "today" without colour, which is Design
+  Rule 5's general form.
+
+**Touch targets: `.icon-btn`, `.avatar-btn`, `.chip` and `.btn.small` measured 31–36 px** — clearing
+WCAG 2.2 AA (24 px) and missing Apple's 44. Grown to 44 with a pseudo-element so **the painted button
+does not move**: no real device has ever seen this app (deferred by Tim), and resizing a header
+control on hardware nobody has checked is a worse trade than a bigger hit area. ⚠️ **The first
+attempt used `::after` and silently broke — `.avatar-btn.at-risk::after` is the "not backed up" dot
+and wins on specificity, so the hit area vanished in exactly the state the audit had caught it in.**
+Caught by re-measuring, not by trusting the fix. It is `::before` now.
+
+**Two things are left and both are deliberate.** The inline text link "see the chart" is 71×16 —
+WCAG 2.2 SC 2.5.8 **exempts a target inside a sentence**, so it conforms. And *Delete this weigh-in*
+holds 36 px rather than 44, because its 44 px box would overlap the neighbouring row and giving a
+**destructive** control a hit area extending over its neighbours is worse than the 36 px that already
+passes AA.
+
+⚠️ **What this audit did NOT do**, so nobody reads more into it than it earned: no keyboard path was
+walked, no screen reader was run, nothing was tested at larger text, and no real device was touched.
+Contrast, touch targets, accessible names and horizontal overflow are what it measured.
 
 ### ⚠️ 1. PROGRESSION DESTROYED THE REP RANGE IT HAD JUST TOLD YOU TO USE
 
@@ -243,7 +299,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 2088 assertions across nine suites. Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | 2114 assertions across ten suites. Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1098 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
@@ -252,7 +308,9 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Rating tests** | `node tests/optimal.test.mjs` — 72 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Goals tests** | `node tests/goals.test.mjs` — 206 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 292 assertions, mounts every screen |
+| **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
+| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 296 assertions, mounts every screen |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -633,18 +691,21 @@ Press-and-hold repeats.
 
 ### NOT verified
 
-- **⚠️ ACCESSIBILITY HAS NEVER BEEN AUDITED, AT ALL.** Not once, by anyone. No touch target has been
-  measured, no contrast checked outside the chart palette, no keyboard path walked, no screen-reader
-  structure examined, nothing tested at larger text. The app has **six nav tabs at 360 px**, an
-  irregular-SVG tap surface on the muscle map, and a great deal of load-bearing explanation in
-  `.field-help` grey. An audit was briefed on 2026-08-19 and killed by a usage limit before it
-  measured anything. **Do not let "the layout has been screenshotted" stand in for this** — they are
-  different claims, and this file's whole discipline is not confusing them.
+- **⚠️ ACCESSIBILITY IS PART-AUDITED as of 2026-08-20, and the part that ran FAILED.** Contrast,
+  touch targets, accessible names and horizontal overflow have now been measured in a real browser
+  across 44 screen/width/theme combinations — see the section above; `--ink-faint` failed AA
+  everywhere it was used and every label in the app named nothing. Both fixed and re-measured.
+  ⚠️ **Four things were NOT checked and remain completely unknown: no keyboard path has been walked,
+  no screen reader has ever been run against this app, nothing has been tested at larger text, and
+  the muscle map's irregular-SVG tap surface was not hit-tested.** Six nav tabs at 360 px were
+  confirmed to fit and not overflow, which is a layout fact and not a touch one. **Do not let
+  "contrast passes" stand in for "accessible"** — they are different claims, and this file's whole
+  discipline is not confusing them.
 - **⚠️ The 2026-08-19 code is PART-reviewed as of 2026-08-20.** `js/progression.js` — the one that
   matters, because it is the only part of this app that can cause physical harm — **has now been
   attacked, and it broke**: the rep range collapsed under the module's own advice (see the 2026-08-20
   section). Fixed, swept and mutation-checked. **`js/strength-estimate.js` and the body-weight work
-  across four modules have still not been attacked by anybody trying to break them.** They pass 2088
+  across four modules have still not been attacked by anybody trying to break them.** They pass 2114
   assertions and each was driven in a browser by its author, which is exactly what progression had
   too the day before it turned out to be wrong.
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect

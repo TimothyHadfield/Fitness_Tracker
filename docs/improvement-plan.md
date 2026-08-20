@@ -23,22 +23,20 @@ their briefs are recorded here so nobody has to re-derive them.
 | **Human behaviour / UX** | The app judged as a product for strangers. Jargon leaks, first-run path, what brings anyone back | Not run — one finding recovered by hand, §1.1 |
 | **Competitive** | Whether the differentiation still holds in Aug 2026; what rivals do better; what users complain about now | Not run |
 | **Cross-screen consistency** | Two screens disagreeing about the same fact | ✅ **RAN 2026-08-20 — found one**, below. Two §3 hypotheses checked and CLOSED |
-| **Accessibility / mobile reality** | Touch targets, contrast, keyboard, screen readers, text scaling. **Never audited once** | Not run |
+| **Accessibility / mobile reality** | Touch targets, contrast, keyboard, screen readers, text scaling. **Never audited once** | ✅ **RAN 2026-08-20 — contrast, touch targets and accessible names. FAILED ON ALL THREE**, below. Keyboard, screen readers and text scaling still NOT checked |
 | **Edge cases / data integrity** | Deletion, timezones, scale, absurd values, backup restore, a suspected FOURTH single-flight bug | Not run — but the suspected fourth single-flight bug was checked and is CLOSED |
 | **Social round trip, live** | Two throwaway accounts actually connecting against the live project | Not run |
 
-**The single most valuable of the five still open is the social round trip**, because it is the only
-item that converts a large built feature from "reviewed code" to "verified". The second is
-accessibility, which has never been done once and is now the only review with *no* evidence behind
-it at all.
+**The single most valuable of the four still open is the social round trip**, because it is the only
+item that converts a large built feature from "reviewed code" to "verified".
 
 ⚠️ **RUN THEM SERIALLY, NOT AS AN AGENT WAVE.** The 2026-08-19 attempt launched seven at once and the
-usage limit killed every one before a single finding came back. Two run by hand on 2026-08-20 cost a
-fraction of that and returned two real defects. The lesson is not "agents are bad" — it is that seven
+usage limit killed every one before a single finding came back. Three run by hand on 2026-08-20 cost
+a fraction of that and returned real defects in every one. The lesson is not "agents are bad" — it is that seven
 parallel deep reviews is more than a session can pay for, and a review that returns nothing is worth
 exactly nothing.
 
-### What the two that ran actually found
+### What the three that ran actually found
 
 1. **⚠️ Progression destroyed the rep range it had just prescribed.** The band was inferred from ONE
    session; `REP_BANDS` share their boundaries and `repRangeFor()` resolves a boundary downwards on
@@ -59,6 +57,22 @@ exactly nothing.
    fractional-sets note was a hand-written paraphrase of `INDIRECT_NOTE` that had already lost "not a
    measured fact". `INDIRECT_NOTE` is now a shared stem plus a per-screen consequence clause, both
    imported statically. **This was §3 hypothesis 2 and it was right.**
+
+3. **⚠️ Accessibility failed on every axis that was measured**, and §3 hypothesis 5 was right.
+   `--ink-faint` — the token carrying `.field-help` and `.req-source`, the caveats and the citations
+   — measured **3.94:1 dark and 3.05:1 light** against 4.5:1 AA, across 28 class/theme pairs and all
+   75 of its uses. **Every `<label>` in the app named nothing**: 19 of them, none associated, so a
+   screen reader said "edit text, blank" on every form. The calendar's today number failed at 3.94:1
+   in light, on one cell in the month. Touch targets ran 31–36 px.
+
+   ⚠️ **The project had already caught the contrast bug once and fixed one call site.** A comment
+   beside `.chart .hover-date` records the 3.05:1 measurement and the token stayed in 75 other
+   places. *Finding a bug in a token and fixing the call site is how a bug survives its own fix.*
+
+   ⚠️ **And the fix broke silently on the first attempt** — an `::after` hit area collided with
+   `.avatar-btn.at-risk::after`, the backup dot, which wins on specificity. Nothing looked wrong.
+   Re-measuring is what found it. **Verify a fix with the instrument that found the bug**, not by
+   reading the change back.
 
 **Closed, not findings:** the suspected fourth single-flight bug (§3.1) — the contribution cache
 already carries body weight in its key — and the per-session clamp, which lives inside

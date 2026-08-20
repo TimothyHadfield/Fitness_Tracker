@@ -1390,5 +1390,64 @@ ok(!data.querySelector('.rep-target'),
   ok(demo.active() === false, 'and leaving clears the flag');
 }
 
+/* ================================================================== *
+ * ⚠️ LABELS ARE ASSOCIATED WITH THEIR CONTROLS
+ *
+ * Found by the first accessibility audit this project ever had, 2026-08-20: the
+ * app rendered 19 `el('label', { text: … })` calls and NOT ONE was connected to
+ * anything. A .field puts the label next to the control, which is visually
+ * correct and programmatically silent — a screen reader announced "edit text,
+ * blank" on every form in the app.
+ *
+ * ⚠️ jsdom IS THE RIGHT TOOL HERE, FOR ONCE. An association is structure, not
+ * paint, so unlike the contrast and hit-area work this needs no browser. What it
+ * cannot tell you is whether the name is a GOOD one — only that there is one.
+ * ================================================================== */
+{
+  const { associateLabels } = await import(BASE + 'ui.js');
+  const div = (cls) => { const d = document.createElement('div'); if (cls) d.className = cls; return d; };
+  const lab = (t) => { const l = document.createElement('label'); l.textContent = t; return l; };
+  const inp = () => document.createElement('input');
+
+  const field = div('field');
+  const label = lab('Birth year');
+  const input = inp();
+  field.append(label, input);
+  associateLabels(field);
+  ok(!!input.id && label.htmlFor === input.id,
+     'a label and its sibling control inside a .field are wired together');
+
+  // ⚠️ Scoped to the field. A label must never reach past its own group — the
+  // first field's label naming the second field's input is worse than no name
+  // at all, because it reads as correct to everything that checks for one.
+  const two = div();
+  const f1 = div('field'); const l1 = lab('Email');
+  const f2 = div('field'); const i2 = inp();
+  f1.append(l1); f2.append(i2); two.append(f1, f2);
+  associateLabels(two);
+  ok(!l1.htmlFor, 'and a label with no control in its own field names nothing rather than a stranger');
+
+  const kept = div('field');
+  const kl = lab('Weight');
+  const ki = inp();
+  ki.setAttribute('aria-label', 'Body weight in pounds');
+  kept.append(kl, ki);
+  associateLabels(kept);
+  ok(ki.getAttribute('aria-label') === 'Body weight in pounds' && !kl.htmlFor,
+     'and a control that already carries an aria-label is left alone, never overwritten');
+
+  // ⚠️ VACUITY GUARD. If the ids were a constant, every assertion above would
+  // still pass and two labels would point at one input.
+  const a = div('field'); const b = div('field');
+  const la = lab('One'); const ia = inp();
+  const lb = lab('Two'); const ib = inp();
+  a.append(la, ia); b.append(lb, ib);
+  const both = div(); both.append(a, b);
+  associateLabels(both);
+  ok(ia.id && ib.id && ia.id !== ib.id && la.htmlFor === ia.id && lb.htmlFor === ib.id,
+     'two fields get two DISTINCT ids — generated, not a constant');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
+

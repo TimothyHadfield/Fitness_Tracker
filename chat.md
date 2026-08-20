@@ -3910,3 +3910,78 @@ UX / human behaviour, competitive, **accessibility** (never done once, and now t
 no evidence behind it at all), edge cases / data integrity, and **the live social round trip** —
 still the single most valuable, because it is the only one that turns a large built feature from
 reviewed code into verified behaviour.
+
+---
+
+## 2026-08-20, later — the accessibility audit, run for the first time
+
+Third of the seven reviews. This file and `progress.md` have both said in capitals for weeks that
+nothing here had ever been checked for accessibility. That is no longer true, and **what ran
+failed.**
+
+`tools/a11y-audit.mjs` drives a real browser over **44 screen/width/theme combinations** — eleven
+routes, 360 and 390 px, both themes, on the demo account — and measures **2272 rendered controls and
+4764 text elements**, taking each one's contrast against *the colour actually painted behind it*
+rather than against the colour it was supposed to be on.
+
+### `--ink-faint` failed AA everywhere it was used, in both themes
+
+3.94:1 dark, **3.05:1 light**, against the 4.5:1 AA wants for text under 18.66px — and all 75 uses
+of that token are under 18.66px. It carries `.field-help` and `.req-source`: **the caveats and the
+citations.** The load-bearing honesty this whole app is built on was the least readable text on the
+screen. 28 class/theme pairs failed; **now 0.**
+
+⚠️ **This project had already found it once and fixed one line.** There is a comment beside
+`.chart .hover-date` recording the 3.05:1 measurement — written months ago, acted on there, and the
+token left in 75 other places. *Finding a bug in a token and fixing the call site is how a bug
+survives its own fix.*
+
+⚠️ And there was no room to fix it cleanly: light `--ink-soft` was only 5.46:1, so an AA-passing
+faint landed half a step below it and the two were indistinguishable. **The light palette could not
+hold three text levels above AA.** Both moved, solved against `--rule-soft` — the worst surface
+either lands on — and re-measured in the browser.
+
+### Every label in the app named nothing
+
+19 `el('label')` calls, **not one associated with its control.** A `.field` puts them side by side,
+which is visually right and programmatically silent, so a screen reader announced *"edit text,
+blank"* on every form in the app — email, password, birth year, workout name, system name, units.
+
+Fixed with a pass over the mounted tree at the two places anything mounts, **not at the 19 call
+sites**. Wiring them by hand fixes today's 19 and nothing about the 20th, and the 20th gets written
+by somebody who never read the comment — because forgetting looks exactly like remembering.
+
+### The one that only a browser could find
+
+The calendar's **today** number switches to `--accent` and measured 3.94:1 in light. It appears on
+**one cell in the month**. No amount of reading the stylesheet would have surfaced it. Moved to
+`--ink`; the accent ring and weight-800 already said "today" without colour.
+
+### ⚠️ And the fix broke silently on the first attempt
+
+Touch targets ran 31–36 px — clearing WCAG 2.2 AA (24 px) and missing Apple's 44 — so the hit areas
+were grown with a pseudo-element, leaving the painted button where it is. **`::after` collided with
+`.avatar-btn.at-risk::after`, the "not backed up" dot, which wins on specificity**, so the hit area
+vanished in exactly the state the audit had caught it in. Nothing looked wrong. Re-measuring is what
+found it. It is `::before` now. **Verify a fix with the instrument that found the bug.**
+
+### Left alone, on purpose
+
+The inline link "see the chart" is 71×16 and **WCAG 2.2 exempts a target inside a sentence**. And
+*Delete this weigh-in* keeps 36 px rather than 44, because a 44 px box would reach over the
+neighbouring row and a **destructive** control should not have a hit area extending past itself.
+
+### ⚠️ What this did NOT check
+
+No keyboard path walked, no screen reader run, nothing tested at larger text, and the muscle map's
+irregular-SVG tap surface not hit-tested. Contrast, touch targets, accessible names and horizontal
+overflow are what it measured, and that is all it may be said to have shown.
+
+Two tests came out of it. `tests/a11y.test.mjs` (22 assertions, no dependencies) pins the palette at
+the **token** level; the audit measures the **screen**. Each has now caught something the other could
+not — the token test found a latent light-theme pair no screen currently paints, the audit found the
+accent number on one cell in the month.
+
+**Four reviews still open:** UX / human behaviour, competitive, edge cases / data integrity, and the
+live social round trip — still the most valuable, because it is the only one that turns a large
+built feature from reviewed code into verified behaviour.

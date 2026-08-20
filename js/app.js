@@ -1,7 +1,7 @@
 // Router + boot.
 
 import { store, demo } from './store.js';
-import { el, icon, iconBtn, clear, profileButton } from './ui.js';
+import { el, icon, iconBtn, clear, profileButton, associateLabels } from './ui.js';
 import {
   HomeView, StartPickerView, WorkoutsView, SystemView, WorkoutBuilderView,
   ExploreView, ExploreDetailView,
@@ -142,6 +142,9 @@ async function render() {
     // worse than the feature is worth.
     if (demo.active()) screen.prepend(demoBar());
     app.append(screen);
+    // ⚠️ Every screen, here rather than in screenShell, for the same reason the
+    // demo bar is: no route may be reached without it. See associateLabels().
+    associateLabels(screen);
   } catch (err) {
     console.error(err);
     clear(app);
