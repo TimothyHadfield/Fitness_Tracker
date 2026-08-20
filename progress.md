@@ -4,10 +4,12 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-19 (third pass). ⚠️ **Two things a fresh session must know before doing
-anything:** the section directly below this summary records what shipped today, and
-`docs/improvement-plan.md` §0 records **seven reviews that were briefed and never ran** — including
-the only accessibility audit this project has ever attempted. Re-run those before building.
+**Last updated:** 2026-08-20. ⚠️ **Two things a fresh session must know before doing anything:** the
+section directly below this summary records what came out of re-running the reviews, and
+`docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Two have
+now run** (adversarial code review, cross-screen consistency) and both found something real. **Five
+are still outstanding** — UX, competitive, accessibility, edge cases, and the live social round trip.
+Nothing in this project has been audited for accessibility, ever.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -60,6 +62,72 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-20 — the review re-run, and the worst bug progression has had
+
+**Two of the seven reviews in `docs/improvement-plan.md` §0 have now RUN** — the adversarial code
+review and cross-screen consistency. Run serially by hand rather than as a seven-agent wave, because
+a seven-agent wave is what the usage limit killed last time. Both found something real.
+
+### ⚠️ 1. PROGRESSION DESTROYED THE REP RANGE IT HAD JUST TOLD YOU TO USE
+
+**The rep band was inferred from ONE session, and the app's own advice changed that session.**
+`REP_BANDS` share their boundaries — 8 is the top of 6–8 *and* the bottom of 8–12, and so are 12 and
+15 — and `repRangeFor()` resolves a boundary **downwards** on purpose, so that somebody running 3×8
+earns a load increase at 8 instead of being walked up to 12 first. That is right for reading a
+session cold and wrong the moment the app produced the session:
+
+```
+  "+5 lbs and back to 8 reps"      ← said with range 8–12
+  next session, 8 reps read cold   → range 6–8, and you are already at the top of it
+  two sessions later               → +5 lbs again, and back to 6 reps
+```
+
+**A lifter who did exactly what they were told was migrated out of 8–12 into 6–8 and left there.**
+Measured over twelve obedient sessions: 185 × 10 became **200 × 6**, taking a load increase every
+second session instead of walking the range — roughly twice as often as double progression
+prescribes, out of the one module in this app whose stated bias is to err small and the only one that
+can hurt somebody. Three of the five bands collapse this way (8, 12 and 15 are all shared
+boundaries); only 3–5 and 6–8 were safe.
+
+**Nothing was going to catch this.** 197 assertions, every one of them mutation-checked or swept, and
+every single one handed the module a history somebody else wrote. **Not one closed the loop** —
+suggest, obey, feed it back, ask whether the app still agrees with itself. The general lesson is
+bigger than progression: *a rule that reads its own output needs a test that plays it forward*, and
+this project now has one.
+
+Fixed with `trainingRange()`: the range is read across the recent history rather than from the last
+session, so the app's own instruction cannot erase the range that produced it. ⚠️ **The asymmetry is
+the safety argument, not a side effect.** `REP_BANDS` tops rise, so history can only ever widen the
+range *upward* — and a higher range makes the top harder to reach and drops the reps less far when it
+is reached. **This fix is structurally incapable of proposing a heavier weight than the old code
+did**, only of withholding one, which is the same shape as the lay-off rule. Swept over every weight,
+rep count and prior session; asserted directly. The stated cost: somebody genuinely moving from 12s
+to triples is held in their old range for a few sessions while the 12s fall out of the window. That
+is the cautious failure and it is the one to have.
+
+Nine new assertions, **mutation-checked** — reverting to one-session reading flips exactly three and
+leaves the rest passing.
+
+### 2. The Goals programme matcher showed a strength percentage with no caveat
+
+Every row of *Programmes that fit* prints `…% strength` and a count of weekly sets — **the identical
+figures Explore and the system screen show** — and the screen carried neither caveat beside them. The
+strength one (3×20 and 3×5 score the same) was simply **absent**. The fractional-sets one was there
+but as a **hand-written paraphrase** of `INDIRECT_NOTE` that had already lost *"not a measured
+fact"* — the exact drift `volume-map.js`'s own header says a caveat must not be able to do.
+
+`INDIRECT_NOTE` is now the shared stem plus a **per-screen consequence clause**
+(`INDIRECT_NOTE_RATING` / `INDIRECT_NOTE_SETS`), because "would drop these percentages a band" says
+nothing beside a figure that is not a percentage — which is *why* somebody paraphrased it. Both are
+imported statically, for the reason `views-workouts.js` already states: a caveat that can arrive late
+is the one kind that must not exist. A test holds both variants to the same bar.
+
+**Two §0 hypotheses were checked and are CLOSED, not findings:** the suspected fourth single-flight
+bug — the contribution cache already carries body weight in its key — and the per-session clamp,
+which lives inside `weeklyVolume()` so all three callers get it.
+
+---
+
 ## 2026-08-19, second pass — five agents, and what came out of it
 
 A directed multi-agent session. **Read this before the Open work list, because it moved.**
@@ -100,11 +168,17 @@ A directed multi-agent session. **Read this before the Open work list, because i
 ## Open work — start here
 
 ⚠️ **READ `docs/improvement-plan.md` §0 BEFORE PICKING ANYTHING UP.** Tim asked (2026-08-19) for a
-plan plus a review of everything built. **Seven reviews were scoped, briefed and then all killed by
-a session usage limit before returning a single finding** — adversarial code review, UX, competitive,
-cross-screen consistency, accessibility, edge cases, and the live social round trip. Their briefs
-are recorded verbatim in that file so they can be re-run as written. **Re-running them is item 0.**
-Nothing in this project has been audited for accessibility, ever.
+plan plus a review of everything built. Seven reviews were scoped, briefed and then all killed by a
+session usage limit before returning a single finding. Their briefs are recorded verbatim in that
+file so they can be re-run as written, and **re-running the rest is still item 0.**
+
+**Two ran on 2026-08-20 and both found something real** — the adversarial code review (progression
+destroyed its own rep range; see the section above) and cross-screen consistency (the Goals matcher
+printed a strength percentage with no caveat). **Five are still outstanding: UX / human behaviour,
+competitive, accessibility, edge cases / data integrity, and the live social round trip.** Nothing in
+this project has been audited for accessibility, ever. ⚠️ **Run them serially, not as a parallel
+agent wave** — that is what the usage limit killed on 2026-08-19, and doing two by hand cost far less
+than the wave did while actually returning findings.
 
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
@@ -169,14 +243,14 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 2075 assertions across nine suites. Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | 2088 assertions across nine suites. Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1098 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
-| **Volume tests** | `node tests/volume-map.test.mjs` — 60 assertions, **no dependencies**. Direct/indirect mapping, the published efficiency tiers, and the per-session clamp |
+| **Volume tests** | `node tests/volume-map.test.mjs` — 64 assertions, **no dependencies**. Direct/indirect mapping, the published efficiency tiers, and the per-session clamp |
 | **Rating tests** | `node tests/optimal.test.mjs` — 72 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
-| **Goals tests** | `node tests/goals.test.mjs` — 197 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier |
+| **Goals tests** | `node tests/goals.test.mjs` — 206 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 292 assertions, mounts every screen |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
@@ -401,7 +475,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | **Bodyweight lifts rank** | **Pull-ups, chin-ups, dips and push-ups rate a muscle** (2026-08-19). Their resistance is a fraction of body weight plus whatever was added, and the fraction is per exercise. ⚠️ **The pull-up and the dip are 1.00 by STATICS, not by citation** — nothing but the hands is in contact, so the hands carry all of it, and the research confirmed no published %BM figure exists for either. A push-up is 0.75 from two independent force-plate studies half a percent apart (Suprak 2011, Mier 2014); the familiar 64 % and 66 % figures measure *different quantities* and mixing them would be worse than choosing one. ⚠️ **Body weight is read from the DATE OF THE SET**, never today's — otherwise losing twenty pounds would rewrite last year's pull-ups. What has no honest fraction stays refused, permanently and by name: an inverted row is 37–79 % depending on a bar height the app does not record. The panel distinguishes the two kinds of "can't", because "log a weigh-in" is actionable and "nobody has measured this" is not. `js/exercises.js` `BODY_WEIGHT_FRACTION`, `totalResistance()` in `js/e1rm.js` |
 | **The map says what it is IGNORING** | A muscle no longer claims "nothing recorded" over work you did. Sets the rating had to discard are listed with the reason — three sets of inverted rows show as uncounted rather than vanishing. Rendered on rated muscles too, not just grey ones: a Back rating built on rows while silently dropping every chin-up is under-reporting its own evidence while looking complete |
-| **Progression** (Goals Phase 4) | **Double progression, in the session runner** — hold the load and add reps; at the top of the range on **two consecutive sessions** take the smallest increment inside **2–10 %** and drop to the bottom of the range. Says so when **no honest increment exists** (5 lb on 30 lb is a 17 % jump), and distinguishes "past the band" from "inside the band but bigger than we allow for isolation work". ⚠️ **`js/progression.js` has NO CLOCK and imports nothing from `goals.js`** — §3.1's refusal is structural, not a promise. Time enters as one day count and **may only SUPPRESS a suggestion, never raise one**: after a long gap it offers last time's numbers and says why, prescribing no deload because nobody has measured one. Swept over 10,692 calls — a gap never yields a heavier suggestion than the same history without one. Weighted pull-ups get the full rule via total resistance (5 lb on a 25 lb belt is 2.4 % of ~205 lb, not 20 % of 25); reps-only movements get "one more rep" |
+| **Progression** (Goals Phase 4) | **Double progression, in the session runner** — hold the load and add reps; at the top of the range on **two consecutive sessions** take the smallest increment inside **2–10 %** and drop to the bottom of the range. Says so when **no honest increment exists** (5 lb on 30 lb is a 17 % jump), and distinguishes "past the band" from "inside the band but bigger than we allow for isolation work". ⚠️ **`js/progression.js` has NO CLOCK and imports nothing from `goals.js`** — §3.1's refusal is structural, not a promise. Time enters as one day count and **may only SUPPRESS a suggestion, never raise one**: after a long gap it offers last time's numbers and says why, prescribing no deload because nobody has measured one. Swept over 10,692 calls — a gap never yields a heavier suggestion than the same history without one. Weighted pull-ups get the full rule via total resistance (5 lb on a 25 lb belt is 2.4 % of ~205 lb, not 20 % of 25); reps-only movements get "one more rep". ⚠️ **The rep range is read across the recent history, NOT from the last session alone** — `trainingRange()`, fixed 2026-08-20. Read from one session, the app's own "back to 8 reps" came back next time as the top of 6–8, and an obedient lifter was moved out of 8–12 for good and given weight every second session. History may only ever widen the range *upward*, so the fix is structurally incapable of proposing a heavier weight than the old code did — the same asymmetry the lay-off rule has |
 | **What the strength score cannot see** | ⚠️ **On screen, in words, not in a tooltip.** A planned workout stores a set count and no weight or rep range, so **3×20 and 3×5 get the same strength percentage** — and load is the single biggest thing there is for strength (SMD 0.60 vs 0.12 for growth). Stated on the system screen and under the Explore list, because `title` does nothing on a phone and a phone is where this app is read. The same treatment for the **0.5 indirect-set weight**: kept, because it is the best-supported method actually tested, but the screen now says it is a modelling choice and that counting indirect work lower would drop several percentages a band |
 | Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently |
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
@@ -566,12 +640,13 @@ Press-and-hold repeats.
   `.field-help` grey. An audit was briefed on 2026-08-19 and killed by a usage limit before it
   measured anything. **Do not let "the layout has been screenshotted" stand in for this** — they are
   different claims, and this file's whole discipline is not confusing them.
-- **⚠️ Nothing written on 2026-08-19 has been adversarially reviewed.** A large amount of code
-  landed that day — `js/progression.js`, `js/strength-estimate.js`, the body-weight work across four
-  modules — much of it written fast by parallel agents. It passes 2075 assertions, many of them
-  mutation-checked, and each piece was driven in a browser by its author. **None of it has been
-  attacked by anybody trying to break it.** `js/progression.js` is the one that matters, because it
-  is the only part of this app that can cause physical harm.
+- **⚠️ The 2026-08-19 code is PART-reviewed as of 2026-08-20.** `js/progression.js` — the one that
+  matters, because it is the only part of this app that can cause physical harm — **has now been
+  attacked, and it broke**: the rep range collapsed under the module's own advice (see the 2026-08-20
+  section). Fixed, swept and mutation-checked. **`js/strength-estimate.js` and the body-weight work
+  across four modules have still not been attacked by anybody trying to break them.** They pass 2088
+  assertions and each was driven in a browser by its author, which is exactly what progression had
+  too the day before it turned out to be wrong.
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
   branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
   only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —

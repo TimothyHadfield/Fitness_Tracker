@@ -27,6 +27,12 @@ import {
   rankSystems, FIT_LABEL,
 } from './goals.js';
 import { PROGRESSION_EXPLAINER } from './progression.js';
+// ⚠️ Static, not a dynamic import, for the reason views-workouts.js states at
+// its own top: a caveat that can arrive late or not at all is the one kind of
+// caveat that must not exist. The rating these qualify is loaded dynamically
+// further down; the sentences qualifying it are not.
+import { INDIRECT_NOTE_SETS } from './volume-map.js';
+import { STRENGTH_CAVEAT } from './optimal.js';
 import {
   el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, trimNum,
 } from './ui.js';
@@ -693,9 +699,15 @@ async function GoalSystemsView() {
 
       el('div', { class: 'list' }, ranked.map((r) => systemRow(r, goal))),
 
-      el('div', { class: 'field-help', text:
-        'Set counts are fractional: a set that trains the muscle directly counts as one, and a set '
-        + 'where it is a helper counts as a half. That is the best-supported way to count them.' }),
+      // ⚠️ THE SAME CAVEATS THAT TRAVEL WITH THESE NUMBERS EVERYWHERE ELSE.
+      // Every row above prints a strength percentage and a count of weekly sets
+      // — the identical figures Explore and the system screen show — and this
+      // screen carried neither caveat beside them. The strength one was simply
+      // absent; the fractional-sets one was a hand-written paraphrase that had
+      // already lost "not a measured fact". Imported now, so a number and the
+      // sentence qualifying it cannot appear on one screen and not another.
+      el('div', { class: 'field-help', text: INDIRECT_NOTE_SETS }),
+      el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
       el('div', { class: 'field-help', text:
         'Adding a programme copies it into your systems. It never changes a goal, and it never '
         + 'changes any weight you have recorded.' }),

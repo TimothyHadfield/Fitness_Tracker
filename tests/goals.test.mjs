@@ -38,7 +38,8 @@ const {
   HORIZON_WEEKS, MINUTES_PER_SET, SLEEP_LINE, EFFORT_LINE,
 } = await import('../js/goals.js');
 const {
-  LOAD_BAND, ISOLATION_MAX, LAYOFF_DAYS, REP_BANDS, repRangeFor, isCompound, loadCeiling,
+  LOAD_BAND, ISOLATION_MAX, LAYOFF_DAYS, REP_BANDS, repRangeFor, trainingRange,
+  isCompound, loadCeiling,
   smallestHonestIncrement, sessionSummary, historyFor, lastSessionDate,
   suggestProgression, applySuggestion, PROGRESSION_EXPLAINER,
 } = await import('../js/progression.js');
@@ -654,6 +655,90 @@ ok(unearned === 0,
    'and not one of them raises the weight without two consecutive sessions at the top of the range');
 ok(repsFell === 0,
    'nor lowers the rep target while the load is being held — reps only fall when the weight rises');
+
+/* ================================================================== *
+ * ⚠️⚠️ THE CLOSED LOOP — the rule must survive its OWN advice
+ *
+ * Every test above hands the module a history somebody else wrote. None of them
+ * asked the question that actually matters in the app: if a lifter does exactly
+ * what the app tells them, session after session, does the app still agree with
+ * itself?
+ *
+ * It did not. `REP_BANDS` share their boundaries (8 tops 6–8 and bottoms 8–12;
+ * so do 12 and 15) and `repRangeFor` resolves a boundary DOWNWARDS on purpose.
+ * So "+5 lb and back to 8 reps", said with range 8–12, came back next session as
+ * 8 reps read cold — the top of 6–8 — and the lifter was already at the top of a
+ * range they had never chosen. Two sessions later, another load increase.
+ *
+ * Measured: an obedient lifter starting at 185 × 10 in the 8–12 range was
+ * carried to 200 × 6 in twelve sessions, taking weight every second session and
+ * never seeing 8–12 again. Not a display bug — a module whose stated bias is to
+ * err small was adding load roughly twice as often as double progression says.
+ *
+ * The fix is `trainingRange()`: read the range across the recent history, so the
+ * app's own instruction cannot erase the range that produced it.
+ * ================================================================== */
+
+// Drive the loop the way the app does: suggest, obey, feed it back.
+const walk = (startWeight, startReps, n = 12) => {
+  const setsOf = (w, r) => S(w, r);
+  const hist = [setsOf(startWeight, startReps)];
+  const seen = [];
+  for (let i = 0; i < n; i++) {
+    const s = suggestProgression({ history: hist, exercise: BENCH, step: 5 });
+    if (!s) break;
+    seen.push(s);
+    hist.unshift(setsOf(s.weight, s.reps));      // the lifter does exactly as told
+  }
+  return seen;
+};
+
+const obedient = walk(185, 10);
+ok(obedient.every((s) => s.range.join('-') === '8-12'),
+   '⚠️ a lifter who does exactly what the app says stays in the range the app put them in — '
+   + 'over twelve sessions the range never once moves off 8–12');
+ok(obedient.filter((s) => s.kind === 'load').length === 2,
+   'and takes two load increases in twelve sessions, not six — one full walk up the range each time');
+
+// ⚠️ VACUITY GUARD. If `range` were pinned to a constant the assertion above
+// would pass and mean nothing. A lifter genuinely training in a different range
+// must still get a different one.
+ok(walk(300, 4)[0].range.join('-') === '3-5',
+   'somebody training in fours is read as 3–5, so the walk above is not asserting a constant');
+ok(walk(60, 16)[0].range.join('-') === '15-20', 'and somebody training in sixteens as 15–20');
+
+// The property underneath, swept: history may only ever WIDEN the range upward.
+// That is what makes this fix incapable of causing harm — a higher range makes
+// the top harder to reach and drops the reps less far when it is reached, so it
+// can only ever withhold a load increase, never bring one forward. Same
+// asymmetry as the lay-off rule.
+let narrowed = 0;
+let broughtForward = 0;
+for (let w = 20; w <= 400; w += 10) {
+  for (let r = 3; r <= 20; r++) {
+    for (const older of [3, 6, 8, 10, 12, 15, 20]) {
+      const alone = suggestProgression({ history: [S(w, r)], exercise: BENCH, step: 5 });
+      const withPast = suggestProgression({
+        history: [S(w, r), S(w - 5, older)], exercise: BENCH, step: 5,
+      });
+      if (!alone || !withPast) continue;
+      if (withPast.range[1] < alone.range[1]) narrowed++;
+      if (withPast.weight > alone.weight) broughtForward++;
+    }
+  }
+}
+ok(narrowed === 0,
+   '⚠️ over every weight, rep count and past session, adding history never NARROWS the range');
+ok(broughtForward === 0,
+   'and never produces a heavier suggestion than the same session read alone — so reading the '
+   + 'history can only ever hold the weight back, which is the only safe direction');
+
+ok(trainingRange([S(190, 8), S(185, 12)]).join('-') === '8-12',
+   'the range is read across sessions: 8 reps today after 12 last time is still 8–12 training');
+ok(trainingRange([S(190, 8)]).join('-') === '6-8',
+   'while 8 reps with no history behind it reads cold as the top of 6–8, unchanged');
+ok(trainingRange([]) === repRangeFor(0) && trainingRange(null).join('-') === '3-5',
+   'and an empty history falls to the lowest band rather than throwing');
 
 /* ================================================================== *
  * ⚠️⚠️ REFUSAL 4 — time may SUPPRESS a suggestion, never create or raise one

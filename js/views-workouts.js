@@ -17,7 +17,7 @@ import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exerc
 import {
   STRENGTH_CAVEAT, STRENGTH_CAVEAT_SHORT, exerciseOrderNote,
 } from './optimal.js';
-import { INDIRECT_NOTE } from './volume-map.js';
+import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum,
@@ -425,7 +425,7 @@ async function ownSystemRating(systemId, workouts, systemRow) {
     // never in a manual. Both strings come from the modules that own the
     // constants they are about, so neither can drift.
     el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
-    el('div', { class: 'field-help', text: INDIRECT_NOTE }),
+    el('div', { class: 'field-help', text: INDIRECT_NOTE_RATING }),
   );
 }
 
@@ -506,7 +506,7 @@ export async function ExploreView() {
       // strength percentages against each other — the exact moment the number's
       // blind spot matters most.
       el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
-      el('div', { class: 'field-help', text: INDIRECT_NOTE }),
+      el('div', { class: 'field-help', text: INDIRECT_NOTE_RATING }),
       el('div', { class: 'field-help', text:
         `${PRESET_SYSTEMS.length} to choose from, with more to come.` }),
     ],

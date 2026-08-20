@@ -3841,3 +3841,72 @@ a decision rather than an accident.
 - ⚠️ **A usage limit kills subagents mid-flight and their notifications look like completions.**
   Read the `status` field, not the trailing text. A terminated agent's last line is whatever it
   happened to be thinking about, and it reads exactly like a conclusion.
+
+---
+
+## 2026-08-20 — "catch up with progress.md / try again"
+
+Tim asked to retry the thing the usage limit killed: the seven-review re-run. **Run serially by
+hand rather than as a seven-agent wave**, on the grounds that the wave is what died last time and
+returned nothing at all. Two reviews completed, both found something real, both fixed.
+
+### ⚠️ Progression destroyed the rep range it had just told you to use
+
+The one bug in this app that could have handed somebody a weight they should not have been given.
+
+`REP_BANDS` share their boundaries — 8 tops 6–8 *and* bottoms 8–12; so do 12 and 15 — and
+`repRangeFor()` resolves a boundary **downwards on purpose**, so somebody running 3×8 earns a load
+increase at 8 rather than being marched to 12 first. That is correct for reading a session cold and
+wrong the instant the app itself produced the session:
+
+```
+  "+5 lbs and back to 8 reps"      ← said with range 8–12
+  next session, 8 reps read cold   → range 6–8, already at the top
+  two sessions later               → +5 lbs again, back to 6 reps
+```
+
+Driven as a closed loop — suggest, obey, feed it back — a lifter starting at **185 × 10 in 8–12
+ended at 200 × 6**, taking weight every second session instead of walking the range. Roughly twice
+the rate double progression prescribes, from the module whose header says it errs small on purpose.
+
+**Not one of 197 assertions could have caught it, and the reason is worth more than the fix.** Every
+test handed the module a history written by the test. **None played the module's own output back
+into it.** A rule that consumes what it produced needs a test that closes the loop; there is one now,
+and anything else in this codebase of that shape wants the same.
+
+Fixed with `trainingRange()` — read the range across recent history, not from the last session.
+⚠️ **The safety argument is structural, not a claim:** `REP_BANDS` tops rise, so history can only
+widen the range *upward*, and a wider range makes the top harder to reach and drops the reps less far
+when it is reached. The fix **cannot** propose a heavier weight than the old code did, only withhold
+one — the same asymmetry the lay-off rule has, and swept over every weight, rep count and prior
+session to prove it. Mutation-checked: reverting to one-session reading flips exactly three
+assertions.
+
+Stated cost, not hidden: somebody genuinely switching from 12s to triples is held in their old range
+for a few sessions. That is the cautious failure, and it is the one to have.
+
+### The Goals matcher showed a strength percentage with no caveat
+
+Every row of *Programmes that fit* prints `…% strength` and a weekly set count — the same figures
+Explore and the system screen show — and carried **neither** caveat. The strength one was absent
+outright; the fractional-sets one was a hand-written paraphrase of `INDIRECT_NOTE` that had already
+dropped *"not a measured fact"*, which is exactly the drift that file's header warns against.
+
+`INDIRECT_NOTE` is now a shared stem plus a per-screen consequence clause — "would drop these
+percentages a band" is meaningless beside a figure that is not a percentage, which is *why* somebody
+paraphrased it rather than importing it. Both variants ship from the module beside the constant they
+describe, both imported statically, both held to the same bar by a test.
+
+### Checked and closed rather than found
+
+- **The suspected fourth single-flight bug.** The contribution cache already carries body weight in
+  its key.
+- **The per-session clamp.** It lives inside `weeklyVolume()`, so the badge, the Goals requirements
+  and the Goals matcher all get the clamped number.
+
+### Still open — five of seven
+
+UX / human behaviour, competitive, **accessibility** (never done once, and now the only review with
+no evidence behind it at all), edge cases / data integrity, and **the live social round trip** —
+still the single most valuable, because it is the only one that turns a large built feature from
+reviewed code into verified behaviour.

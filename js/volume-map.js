@@ -109,8 +109,27 @@ export const INDIRECT = 0.5;
 export const INDIRECT_NOTE =
   'Sets are counted fractionally: one for a muscle an exercise trains directly, half for one it '
   + 'only helps with. That half is a modelling choice — the best-supported way of counting that has '
-  + 'been tested, but not a measured fact. Counting indirect work lower would drop several of these '
-  + 'percentages by a band.';
+  + 'been tested, but not a measured fact.';
+
+/**
+ * ⚠️ The consequence clause is PER SCREEN, and it is the half that was being
+ * lost. The same 0.5 reaches the reader as a percentage on Explore and as a
+ * count of sets on the Goals screens, and "would drop these percentages by a
+ * band" is meaningless beside a figure that is not a percentage — which is
+ * exactly why the Goals screen had a hand-written paraphrase of this constant
+ * instead of the constant. That paraphrase dropped "not a measured fact"
+ * altogether and was free to drift the day this line moves, which is the failure
+ * this file's header says a caveat must not have.
+ *
+ * So: one shared statement of what the 0.5 IS, and one sentence per screen
+ * saying what would change without it. Both ship from here, beside the number
+ * they describe.
+ */
+export const INDIRECT_NOTE_RATING = `${INDIRECT_NOTE} Counting indirect work lower would drop `
+  + 'several of these percentages by a band.';
+
+export const INDIRECT_NOTE_SETS = `${INDIRECT_NOTE} Counting indirect work lower would put several `
+  + 'of these programmes further below what this goal asks for.';
 
 /**
  * The muscle groups weekly volume is totalled over.

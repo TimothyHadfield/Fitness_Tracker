@@ -13,7 +13,8 @@
 const { BUILT_IN_EXERCISES } = await import('../js/exercises.js');
 const { PRESET_SYSTEMS } = await import('../js/preset-systems.js');
 const {
-  DIRECT, INDIRECT, INDIRECT_NOTE, VOLUME_MUSCLES, SCORED_MUSCLES, SESSION_CEILING,
+  DIRECT, INDIRECT, INDIRECT_NOTE, INDIRECT_NOTE_RATING, INDIRECT_NOTE_SETS,
+  VOLUME_MUSCLES, SCORED_MUSCLES, SESSION_CEILING,
   volumeContributions, weeklyVolume,
   hypertrophyTier, strengthTier, HYPERTROPHY_TIERS, STRENGTH_TIERS,
 } = await import('../js/volume-map.js');
@@ -49,9 +50,24 @@ ok(typeof INDIRECT_NOTE === 'string' && INDIRECT_NOTE.length > 80,
    'the half-set weighting ships with a sentence explaining itself');
 ok(/choice/i.test(INDIRECT_NOTE) && /not a measured fact/i.test(INDIRECT_NOTE),
    'and that sentence calls it a modelling choice rather than a fact');
-ok(/drop|lower/i.test(INDIRECT_NOTE),
-   'and says which way the ratings would move if the number were different — '
-   + 'a caveat that does not price itself is decoration');
+// ⚠️ THE CONSEQUENCE CLAUSE IS PER SCREEN, because the same 0.5 reaches the
+// reader as a percentage on Explore and as a count of sets on the Goals
+// screens, and "would drop these percentages a band" says nothing beside a
+// figure that is not a percentage. Both variants are held to the same bar: each
+// must carry the shared explanation AND price itself in its own units. This is
+// the assertion that stops a screen quietly shipping a weaker paraphrase — the
+// Goals programme matcher had one, and it had already lost "not a measured
+// fact".
+for (const [name, note] of [['rating', INDIRECT_NOTE_RATING], ['sets', INDIRECT_NOTE_SETS]]) {
+  ok(note.startsWith(INDIRECT_NOTE),
+     `the ${name} caveat is built from the shared one, so the two cannot drift apart`);
+  const priced = note.slice(INDIRECT_NOTE.length);
+  ok(priced.length > 20 && /drop|lower|below/i.test(priced),
+     `and the ${name} one says which way ITS numbers would move if 0.5 were different — `
+     + 'a caveat that does not price itself is decoration');
+}
+ok(INDIRECT_NOTE_RATING !== INDIRECT_NOTE_SETS,
+   'and the two price themselves differently, which is the whole reason there are two');
 
 /* ---------- the cases the paper states outright ---------- */
 // Table 1 of that paper lists these classifications explicitly, so they are the

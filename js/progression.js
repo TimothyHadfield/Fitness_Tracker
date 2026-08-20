@@ -178,6 +178,48 @@ export function repRangeFor(reps) {
   return band || REP_BANDS[REP_BANDS.length - 1];
 }
 
+/**
+ * The range this lift is being TRAINED in — read across recent sessions, not
+ * from the last one alone.
+ *
+ * ⚠️ ONE SESSION CANNOT ANSWER THIS, AND READING IT FROM ONE SESSION MEANT THE
+ * APP DESTROYED THE RANGE IT HAD JUST TOLD SOMEBODY TO USE. The bands share
+ * their boundaries — 8 is the top of 6–8 and the bottom of 8–12, and so are 12
+ * and 15 — and `repRangeFor` resolves a boundary DOWNWARDS on purpose (see
+ * above), so that somebody running 3×8 earns a load increase at 8 rather than
+ * being walked to 12 first. That is right for reading a session cold and wrong
+ * the moment the app's own advice produced the session:
+ *
+ *   "+5 lb and back to 8 reps"   ← said with range 8–12
+ *   next session, 8 reps read cold  → range 6–8, already at the top
+ *   two sessions later            → +5 lb again, and back to 6 reps
+ *
+ * A lifter who did exactly as they were told was migrated out of 8–12 into 6–8
+ * and left there, taking a load increase every two sessions instead of walking
+ * the range — faster than double progression prescribes, from a module whose
+ * whole stated bias is to err small. Measured over twelve obedient sessions:
+ * 185 × 10 became 200 × 6, and the range never came back.
+ *
+ * ⚠️ THE MAXIMUM, AND THAT ASYMMETRY IS THE POINT. History may only ever widen
+ * the range upward, never narrow it — `REP_BANDS` tops rise, so a larger input
+ * can never return a lower band. A higher range makes the top HARDER to reach
+ * and drops the reps LESS far when it is, so this can only ever withhold a load
+ * increase, never bring one forward. Same shape as the lay-off rule: the safe
+ * direction is the only direction it can push. A swept test asserts it directly.
+ *
+ * The cost is stated rather than hidden: somebody genuinely moving from 12s to
+ * triples is held in their old range until the 12s fall out of the window, which
+ * is a few sessions of the app declining to add weight. That is the cautious
+ * failure, and it is the one to have.
+ */
+export function trainingRange(history) {
+  const best = (history || [])
+    .map(sessionSummary)
+    .filter(Boolean)
+    .reduce((m, r) => Math.max(m, r.bestAtTop), 0);
+  return repRangeFor(best);
+}
+
 /* ------------------------------------------------------------------ *
  * Reading a session
  * ------------------------------------------------------------------ */
@@ -348,6 +390,11 @@ export function suggestProgression({
   const last = sessionSummary((history || [])[0]);
   if (!last) return null;
 
+  // ⚠️ Across the history, never from `last` alone — see trainingRange(). Read
+  // from one session, the app's own "back to 8 reps" was re-read next time as
+  // the top of 6–8 and quietly moved the lifter down a band for good.
+  const range = trainingRange(history);
+
   // ⚠️ THE BAND IS A PERCENTAGE OF WHAT YOU ARE ACTUALLY LIFTING, and on a
   // pull-up most of that is you. `totalResistance()` in e1rm.js is the app's one
   // answer to "how much load was that really" — imported rather than copied,
@@ -390,7 +437,7 @@ export function suggestProgression({
     return {
       fromWeight: weightless ? null : last.topWeight,
       fromReps: last.repsAtTop,
-      range: repRangeFor(last.bestAtTop),
+      range,
       compound: isCompound(exercise),
       kind: 'layoff',
       daysSinceLast: gap,
@@ -417,7 +464,7 @@ export function suggestProgression({
     return {
       fromWeight: null,
       fromReps: last.repsAtTop,
-      range: repRangeFor(last.bestAtTop),
+      range,
       compound: isCompound(exercise),
       kind: 'repsOnly',
       weight: null,
@@ -427,9 +474,8 @@ export function suggestProgression({
     };
   }
 
-  // ⚠️ The range comes from the BEST set and the gate from the weakest — see
+  // ⚠️ The range comes from the BEST sets and the gate from the weakest — see
   // sessionSummary(). Using one number for both is the defect the browser found.
-  const range = repRangeFor(last.bestAtTop);
   const rangeText = `${range[0]}–${range[1]}`;
   const atTop = last.repsAtTop >= range[1];
 
