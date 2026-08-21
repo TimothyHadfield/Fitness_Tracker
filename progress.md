@@ -63,6 +63,98 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-21, second pass — the phone findings, FIXED
+
+**Everything in the survey below is now done except what needs a device.** Tim asked whether the
+fixes were known or needed his help; one was his call and he took it. **2114 → 2141 assertions, all
+green**, plus the sw-update test.
+
+### ⚠️ Tim's decision: reading is the screen, editing is behind the pencil
+
+Offered three shapes for the system screen; he chose the one this file recommended, and it applies to
+**workouts** as well as systems. So there are now two screens where there was one:
+
+```
+  #/system/<id>        the programme: its workouts, its notes, then how it rates
+  #/system/<id>/edit   the form: name, notes, Save, Delete
+  #/workout/<id>       what the workout is — and START it
+  #/workout/<id>/edit  the builder
+```
+
+**Measured before and after, same phone, same demo account: the first workout inside a programme went
+from 468px down a 445px pane to 38px down a 748px one.** The form and the pinned Save/Delete were
+303px of permanent chrome; they are gone from the reading screen entirely.
+
+⚠️ **The workout screen gained something it never had: a way to start the workout.** `#/workout/<id>`
+was the builder, so the obvious path — Workouts → my programme → the day I am about to do — was the
+one path that could not begin a session. Only Home's next-workout button and `#/start` could. *Start
+workout* is now the pinned primary action there.
+
+⚠️ **Delete came out of both pinned footers** and sits past the end of the scroll. A destructive
+control permanently under the thumb of somebody rearranging exercises is a slip waiting to happen;
+past the end of a list it is a journey.
+
+⚠️ **And the first version of the workout screen rendered "Unknown exercise · undefined sets" six
+times.** `blocksOf()` yields `{ item, index }` wrappers — the builder needs the index to write back
+through — and mapping the wrapper straight into a row silently produces nothing. Every assertion
+written for that screen passed over it; **a screenshot caught it**, and there is now a test that
+reads what the rows actually say rather than that they exist.
+
+### The keyboard: `--kb`, and one fix for every screen
+
+`app.js` publishes `window.visualViewport`'s hidden height as `--kb`, and `#app` and `.sheet-backdrop`
+subtract it. Verified by driving the value by hand at 393×852: the session runner's footer moves from
+**789–852 to 453–516**, exactly clearing a 336px keyboard, with *Next exercise* reachable. The picker
+sheet now ends at the keyboard's top edge with **Done visible**.
+
+The picker's 16 filter chips also became **one horizontally-scrolling row** rather than four wrapped
+ones — Rule 1 permits inner scrolling for a genuinely unbounded list, and wrapped, the filter was
+taller than the thing it filters. **Exercises visible with the keyboard up: 3 → 7.**
+
+⚠️ **NOT VERIFIED ON A DEVICE, and it cannot be from here.** Headless Chrome has no software
+keyboard, so `--kb` was driven by hand. The mechanism is documented iOS behaviour; the confirmation
+has to come from an iPhone, and until it does this stays an unverified fix.
+
+### The rest, each verified in the browser
+
+- **⚠️ `#/settings` crashed in the demo account and does not now.** `auth.state()` tested
+  `impl === LocalBackend` and MemoryBackend is a **third** backend, so it fell into the cloud branch
+  and called a `currentUser()` it has never had. Fixed in `auth.state()` rather than by a fourth
+  `demo.active()` guard at the call site — `AccountView` and `social.state()` already carry their
+  own, which is exactly why nobody noticed this one. Returns `mode: 'demo'`, deliberately not
+  `'local'`: a demo session is not saving to this device either, and Settings must not tell somebody
+  their data is safe here when it is nowhere. **Mutation-checked — reverting reproduces the exact
+  TypeError at the new assertion.**
+- **The mode switch says three options again.** `.seg` had `min-width: 0`, so "Bar Chart" was
+  squeezed to 62px, needed 65, and painted the overflow under its neighbour. Now content-sized with
+  an ellipsis backstop, **a hairline between unselected segments**, and 44px tall — real pixels this
+  time, because an `overflow: hidden` box clips a pseudo-element grown past its own height, which
+  would have measured 36px while the rule claimed 44.
+- **The calendar lands on the current month** — `offsetFromPaneTop: 0`, was 287px short. It was
+  never bad arithmetic: the current month is the last section, so the scroll was **clamped**. It is
+  given exactly the trailing room the shortfall needs.
+- **Textareas grow to their content**, app-wide, from the same two mount points as
+  `associateLabels()`. `field-sizing: content` is the CSS answer and Safari does not have it.
+- **kg can be typed.** Weight moved to `inputmode="decimal"`; `numeric` is the iOS keypad with no
+  decimal point, and kg shows one.
+- **Both `:hover` rules are behind `@media (hover: hover)`.** The body-map one mattered: a fade left
+  behind by a thumb is D19's encoding for *less sure*.
+- **The demo bar owes the top safe-area inset**, since it is prepended above the only element that
+  was paying it — and `.demo-bar + .topbar` stops it being paid twice.
+- **The axis picks its precision from the gap between gridlines** — 279.9 · 248.1 · 216.3 became
+  whole pounds, without a body-weight chart printing the same figure on two adjacent lines.
+- **The rating prose has paragraph gaps**, and sits *below* the workout list rather than above it.
+  Nothing is hidden or shortened: on a phone the caveats are load-bearing, and a disclosure is how a
+  caveat stops being read.
+
+### Still open from the survey
+
+Everything in the "needs hardware" list below, and the two smaller layout items — **Explore's badge
+squeezing each description to ~28 characters**, and **Goals opening on two paragraphs of prose before
+any number.**
+
+---
+
 ## 2026-08-21 — the first iPhone pass: what a phone-shaped look found
 
 **Tim opened the phone work** ("I want to start making it really good for working with on the
@@ -341,15 +433,19 @@ than the wave did while actually returning findings.
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
-0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is now
-   the live thread. The first pass is the dated section above; **nothing in it is fixed yet.** Two
-   things to take from it before picking anything up. **`#/settings` crashes in the demo account**,
-   which blocks judging any other screen from inside the tool built for judging screens, so it goes
-   first. And the largest item is not a bug list at all — **the app has no `visualViewport` handling
-   whatsoever**, so on iOS every pinned bottom action sits under the keyboard; that is one shared fix
-   for the session runner, every Save, every Done and the exercise picker, and it wants doing once in
-   `screenShell`/`ui.js` rather than per screen. The design half — **view and edit are the same
-   screen, and the edit form wins** — is the bigger change and the one worth deciding before typing.
+0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is the
+   live thread. The survey and the fixes are the two dated sections above. **Everything measurable
+   is done.** What is left, in order:
+
+   - **⚠️ THE KEYBOARD FIX NEEDS A PHONE, and only Tim can close it.** `--kb` is written from
+     `visualViewport` and verified by driving the value by hand — headless Chrome has no software
+     keyboard, so nothing here can prove it. **Open the session runner, tap the weight, and see
+     whether "Next exercise" is still reachable.** Same question in the exercise picker. Until that
+     answer exists this is an unverified fix, and it must keep saying so.
+   - The four **reasoned-not-measured** items in the survey (haptics, the long-press callout, whether
+     a `setTimeout` focus raises the keyboard, the native date control). All need the same device.
+   - Two layout items nobody has done: **Explore's badge cuts every description to ~28 characters**,
+     and **Goals opens on two paragraphs of prose before any number.**
 
 1. **Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
    Every screen is built and driven, but only against a stubbed facade. The round trip — invite,
@@ -413,7 +509,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 2114 assertions across ten suites. Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | 2141 assertions across ten suites. Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1098 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
@@ -424,7 +520,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 296 assertions, mounts every screen |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 316 assertions, mounts every screen. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |

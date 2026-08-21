@@ -121,10 +121,35 @@ export async function CalendarView() {
   });
 
   // Land on the current month once the screen is in the document.
+  //
+  // ⚠️ THE SCROLL HAS TO BE GIVEN SOMETHING TO SCROLL AGAINST FIRST. The current
+  // month is the LAST section in the list, so a scroller that ends with it
+  // cannot bring it to the top: the assignment below is silently CLAMPED to
+  // `scrollHeight - clientHeight` and the calendar opens with the previous month
+  // filling the top of the screen. Measured 2026-08-21 at 393×852 — it asked for
+  // 4363, got 4076, and 287px of a phone showed July when today was in August.
+  // Deterministic, every visit, and invisible to every existing test because
+  // nothing asserts where a scroller ended up.
+  //
+  // The arithmetic was never wrong, so the fix is not new arithmetic. The last
+  // month is given exactly the trailing room the shortfall needs and no more —
+  // padding it by a fixed fraction of the viewport would work too and would put
+  // half a screen of void under December for the sake of August.
   setTimeout(() => {
     const pane = screen.querySelector('.pane-scroll');
     const current = screen.querySelector('[data-current-month]');
-    if (pane && current) pane.scrollTop = current.offsetTop - pane.offsetTop;
+    if (!pane || !current) return;
+
+    const last = pane.lastElementChild;
+    if (last) {
+      const shortfall = pane.clientHeight - last.getBoundingClientRect().height;
+      last.style.paddingBottom = shortfall > 0 ? `${Math.ceil(shortfall)}px` : '';
+    }
+
+    // Measured against the pane rather than through offsetTop: the two elements
+    // do not share an offsetParent (the pane's is #app, a month's is body), so
+    // subtracting one from the other only works by coincidence of layout.
+    pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top;
   }, 0);
 
   return screen;
@@ -792,12 +817,25 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
 
   // More gridlines when there is more height to fill.
   const steps = ih > 300 ? 5 : ih > 170 ? 4 : 3;
+
+  // ⚠️ THE AXIS PRECISION FOLLOWS THE GAP BETWEEN GRIDLINES, not a fixed decimal
+  // place. The old rule rounded every label to 0.1, which on a squat chart printed
+  // 279.9 · 248.1 · 216.3 — a tenth of a pound on a barbell, which is a precision
+  // nobody has and reads as a machine talking rather than a number. Rounding to
+  // whole numbers unconditionally is the opposite mistake: a body-weight chart
+  // spanning three pounds would print the same figure on two adjacent lines.
+  //
+  // Deriving it from the step keeps both from happening — every label is as
+  // coarse as it can be while still being different from its neighbour.
+  const gap = (vMax - vMin) / steps;
+  const dp = gap >= 5 ? 0 : gap >= 0.5 ? 1 : 2;
+
   for (let i = 0; i <= steps; i++) {
-    const v = vMin + ((vMax - vMin) * i) / steps;
+    const v = vMin + gap * i;
     const yy = y(v);
     add('line', { x1: padL, x2: W - padR, y1: yy, y2: yy }, 'grid-line');
     const t = add('text', { x: padL - 7, y: yy + 3.5, 'text-anchor': 'end' }, 'axis-text');
-    t.textContent = field === 'time' ? fmtTime(v) : trimNum(Math.round(v * 10) / 10);
+    t.textContent = field === 'time' ? fmtTime(v) : trimNum(Number(v.toFixed(dp)));
   }
 
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(ts[i]).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
@@ -931,6 +969,18 @@ function stat(label, value, cls = '', sub) {
 // What Settings says about where the data lives. It must never claim a backup
 // exists when it doesn't — an anonymous account is one browser-clear from gone.
 function describeAccount(state, configured) {
+  // Checked before `configured`, because in the demo the answer has nothing to
+  // do with whether cloud accounts are switched on: nothing here is being
+  // stored anywhere at all, and both of the other answers would be false.
+  if (state.mode === 'demo') {
+    return {
+      title: 'Demo account',
+      sub: 'Nothing here is saved — not to this device, not to an account',
+      dataHelp: 'You are looking at made-up data. Reloading starts it over, and leaving brings '
+        + 'your real account back exactly as it was. Download backup and Delete all data below '
+        + 'act on this demo only.',
+    };
+  }
   if (!configured) {
     return {
       title: 'This device only',

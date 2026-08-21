@@ -148,9 +148,21 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    Shell
    ========================================================================== */
 
+/* ⚠️ `--kb` IS HOW MUCH OF THE SCREEN THE SOFTWARE KEYBOARD IS COVERING, and
+   without it this whole layout is wrong on a phone the moment anybody types.
+   Every screen here is a fixed header, one scrolling middle and a fixed footer
+   inside a box locked to the viewport height — and on iOS the keyboard does NOT
+   shrink that box. It is drawn on top of it. So the footer, which is where this
+   app puts the primary action of every screen, goes underneath it: measured
+   2026-08-21 on a 393×852 iPhone, the keyboard's top edge lands at y=516 and
+   the session runner's "Next exercise" sits at 789–852. Same for every Save
+   changes, every Done, and the exercise picker's results.
+
+   app.js keeps the value in sync from window.visualViewport — the only API that
+   reports this — and it stays 0 on a desktop, where the rule is a no-op. */
 #app {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: calc(100dvh - var(--kb, 0px));
+  max-height: calc(100dvh - var(--kb, 0px));
   display: flex;
   flex-direction: column-reverse;
   overflow: hidden;
@@ -225,6 +237,12 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    specificity, so an ::after hit area silently vanished in exactly the state the
    audit had caught it in. The dot was never at risk; the hit area was. Caught by
    re-measuring after the fix rather than by trusting it. */
+/* ⚠️ `.seg` is deliberately NOT in this list, and the reason is worth keeping:
+   it needs `overflow: hidden` for its ellipsis backstop, and an overflow-hidden
+   box CLIPS a pseudo-element grown past its own height — the hit area would
+   silently measure 36px again while the rule claimed 44. It is given a real
+   44px instead, further down. Two mechanisms, and only one of them survives
+   contact with `overflow: hidden`. */
 .icon-btn, .avatar-btn, .chip, .btn.small { position: relative; }
 .icon-btn::before, .avatar-btn::before, .chip::before, .btn.small::before {
   content: '';
@@ -513,6 +531,25 @@ select.input {
 }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* A filter row that scrolls sideways instead of wrapping. Rule 1 allows inner
+   scrolling for a genuinely unbounded list, and sixteen muscle groups above a
+   272-row list is exactly that: wrapped, the filter was taller than the thing
+   it filters. `flex: none` because this sits in a column flex parent that would
+   otherwise crush it, and the scrollbar is hidden because a swipe is the
+   gesture here — the partial chip at the right edge is what says "more". */
+.chips-scroll {
+  flex: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* The gutter, so the first and last chip are not welded to the edge. */
+  margin-inline: calc(var(--pad) * -1);
+  padding-inline: var(--pad);
+}
+.chips-scroll::-webkit-scrollbar { display: none; }
+.chips-scroll > .chip { flex: none; }
 .chip {
   padding: 7px 12px;
   border-radius: 999px;
@@ -1003,23 +1040,64 @@ select.input {
   padding: 2px;
 }
 .seg {
-  flex: 1;
-  min-height: 36px;
+  position: relative;
+  flex: 1 1 auto;
+  /* 44px, painted, rather than the invisible pseudo-element the 2026-08-20
+     audit used elsewhere — see the note beside that rule. This one is the mode
+     switch for the entire Data tab and it is worth the 8px it costs the header.
+     Tim opened the phone work on 2026-08-21, so "do not move pixels on hardware
+     nobody has checked" no longer applies the way it did the day before. */
+  min-height: 44px;
   border-radius: 7px;
   font-size: 13.5px;
   font-weight: 650;
   color: var(--ink-faint);
-  /* "Bar Chart" broke onto two lines at every width tested, desktop included —
-     it never overflowed, it just looked broken. The cause is the flex default
-     min-width:auto, which lets a flex item be squeezed below its own content
-     and wrap instead. white-space stops the wrap; min-width:0 stops the squeeze
-     turning into an overflow. */
+  /* ⚠️ THE 2026-08-17 FIX TURNED A WRAP INTO A CLIP, and the clip was worse.
+     "Bar Chart" used to break onto two lines; `white-space: nowrap` with
+     `min-width: 0` stopped that by letting the item be squeezed BELOW its own
+     label instead — measured at phone size on 2026-08-21, "Bar Chart" needed
+     65px and was given 62, and with no overflow rule the extra 3px was painted
+     under the neighbouring segment. On the Muscles tab the selected pill sits
+     on top of it and the control reads "Bar Char".
+
+     `flex: 1 1 auto` with a content-width floor is the actual answer: the three
+     share the leftover space but none is ever squeezed below its own text. The
+     ellipsis is a backstop for a width nobody has yet, and it degrades to
+     "Bar C…" rather than to two labels painted on top of each other. */
   white-space: nowrap;
-  min-width: 0;
+  min-width: -webkit-fit-content;
+  min-width: fit-content;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0 6px;
 }
 .seg[aria-selected="true"] { background: var(--ground); color: var(--ink); }
 .seg:disabled { opacity: .35; pointer-events: none; }
+
+/* ⚠️ A HAIRLINE BETWEEN UNSELECTED SEGMENTS, because without one this control
+   states the wrong number of options. Only the selected segment is painted, so
+   the other two share one continuous background with nothing between them — at
+   393px "Graph | Bar Chart Muscles" reads as TWO choices, and the second of
+   them appears to be called "Bar Chart Muscles". Measured 2026-08-21.
+
+   The rule is suppressed either side of the selection, which is where the
+   painted pill already does the separating — the same reason iOS's own control
+   drops it there. Rule 2 still holds: this is a hairline, not a border box. */
+   ⚠️ Drawn at left:0, INSIDE the box, not in the 2px gap at left:-2px: the
+   ellipsis backstop above needs `overflow: hidden`, which would clip anything
+   hanging outside. 2px off the true midpoint is invisible on a 1px rule; a
+   divider that silently fails to render is not. */
+.seg + .seg::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  background: var(--rule);
+}
+.seg[aria-selected="true"]::after,
+.seg[aria-selected="true"] + .seg::after { display: none; }
 
 .bar-legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--ink-faint); }
 .bar-legend span { display: flex; align-items: center; gap: 5px; }
@@ -1207,8 +1285,13 @@ select.input {
    Sheet / toast
    ========================================================================== */
 
+/* The bottom inset is `--kb`, for the same reason #app has it: a fixed element
+   is positioned against the LAYOUT viewport, which the keyboard does not
+   change, so a bottom sheet with a search box in it puts its own results — and
+   its Done button — underneath the keyboard it just raised. The exercise picker
+   is the worst case in the app: 272 exercises, and 3 of them visible. */
 .sheet-backdrop {
-  position: fixed; inset: 0; z-index: 60;
+  position: fixed; inset: 0 0 var(--kb, 0px) 0; z-index: 60;
   background: rgba(0,0,0,.55);
   display: flex;
   align-items: flex-end;
@@ -1221,7 +1304,9 @@ select.input {
   background: var(--ground);
   width: 100%;
   max-width: 620px;
-  max-height: 90dvh;
+  /* 90dvh normally — a sheet that reaches the top stops reading as a sheet —
+     but never taller than the backdrop, which the keyboard has already shortened. */
+  max-height: min(90dvh, 100%);
   border-radius: 16px 16px 0 0;
   display: flex;
   flex-direction: column;
@@ -1478,7 +1563,7 @@ select.input {
   .cal-tag { font-size: 10.5px; padding: 2.5px 4px; }
 
   .sheet-backdrop { align-items: center; }
-  .sheet { border-radius: 14px; max-height: 82dvh; }
+  .sheet { border-radius: 14px; max-height: min(82dvh, 100%); }
 
   .session-footer { justify-content: center; padding-bottom: 12px; }
   .session-footer > * { max-width: 820px; }
@@ -1611,7 +1696,16 @@ select.input {
 }
 
 .body-region { cursor: pointer; transition: opacity .12s ease; }
-.body-region:hover { opacity: .82; }
+/* ⚠️ GUARDED, because on a touch screen :hover STICKS after a tap — and on this
+   particular element a leftover fade is not a cosmetic artefact, it is a false
+   statement. D19 encodes CONFIDENCE as desaturation of the muscle's own colour:
+   faded means "less sure about this rating". A muscle left at .82 because a
+   thumb touched it would be read as the app hedging. Found 2026-08-21 on the
+   first pass at phone size; `@media (hover: hover)` keeps it for a mouse and
+   removes it entirely from every device that does not have one. */
+@media (hover: hover) {
+  .body-region:hover { opacity: .82; }
+}
 /* Selection dims the others rather than recolouring the one — the fill is
    carrying the level and must not be overwritten by the interaction state. */
 .body-map[data-selected] .body-region:not(.is-selected) { opacity: .38; }
@@ -1825,7 +1919,11 @@ a.row { text-decoration: none; }
 
 /* A row that is a button must not look like a button — it is a row. */
 .as-button { border: 0; font: inherit; cursor: pointer; }
-.as-button:hover .row-title { color: var(--accent); }
+/* Guarded for the same reason .body-region:hover is — a tapped row would keep
+   an accent title indefinitely, which this app uses to mean "current". */
+@media (hover: hover) {
+  .as-button:hover .row-title { color: var(--accent); }
+}
 
 .btn.small { min-height: 34px; padding-inline: 11px; font-size: 13px; }
 
@@ -1895,7 +1993,15 @@ a.row { text-decoration: none; }
 /* The rating on a system the user built. Sits above the workout list because
    it describes the whole programme, and the badge aligns right so the heading
    stays the content (Rule 3). */
-.own-rating { margin-bottom: 6px; }
+/* ⚠️ A GAP, because these are five separate claims and they were painting as
+   one. `.field-help` carries no margin and this box carried no gap, so the
+   caption, the score's explanation, the coverage line and the two caveats ran
+   together into ~350 unbroken grey words — measured on a phone 2026-08-21,
+   where it filled the screen. Nothing here is hidden or shortened: on a phone
+   the caveats are load-bearing and a disclosure is how a caveat stops being
+   read. They are simply no longer a wall, and the workout list now sits above
+   them so nobody has to scroll past them to reach their own programme. */
+.own-rating { margin-bottom: 6px; display: flex; flex-direction: column; gap: 7px; }
 /* Top-aligned since the badge became two rows: centring left the heading
    floating against the middle of a taller block, reading as neither its label
    nor a caption for the row above. */
@@ -2023,7 +2129,15 @@ a.row { text-decoration: none; }
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 7px var(--pad);
+  /* ⚠️ THE TOP INSET IS OWED HERE, not only by .topbar. The bar is prepended
+     ABOVE the header (app.js does it for every route, including the fullscreen
+     ones), so it — not .topbar — is what sits under the notch. `.topbar` was
+     the only rule in this file padding safe-area-inset-top, so in the demo, and
+     under the black-translucent status bar the installed PWA asks for, this
+     text ran beneath the Dynamic Island. Found 2026-08-21.
+
+     ⚠️ And .topbar must then NOT pad it a second time — see the rule below. */
+  padding: calc(env(safe-area-inset-top, 0px) + 7px) var(--pad) 7px;
   background: var(--accent-dim);
   border-bottom: 1px solid var(--accent);
   font-size: 12.5px;
@@ -2038,6 +2152,11 @@ a.row { text-decoration: none; }
 }
 .demo-bar-text { flex: 1; min-width: 0; }
 .demo-bar .btn { flex: none; }
+/* Whichever element is FIRST owes the inset, and only that one. With the demo
+   bar present the header is no longer against the top of the screen, so leaving
+   its inset in place would push the title down by the height of the notch for
+   no reason. */
+.demo-bar + .topbar { padding-top: 9px; }
 
 /* Below ~380px the sentence is what matters and the dot is decoration. */
 @media (max-width: 380px) {

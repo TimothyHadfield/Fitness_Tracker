@@ -54,7 +54,7 @@ const { BUILT_IN_EXERCISES } = await import(BASE + 'exercises.js');
 const { store } = await import(BASE + 'store.js');
 const { GraphView, CalendarView, SettingsView } = await import(BASE + 'views-data.js');
 const { ProfileView } = await import(BASE + 'views-profile.js');
-const { HomeView, WorkoutsView, SystemView, StartPickerView } = await import(BASE + 'views-workouts.js');
+const { HomeView, WorkoutsView, SystemRouteView, WorkoutRouteView, StartPickerView } = await import(BASE + 'views-workouts.js');
 const { LEVELS } = await import(BASE + 'strength-standards.js');
 const { MAPPED_MUSCLES } = await import(BASE + 'body-map.js');
 
@@ -706,7 +706,7 @@ ok(!data.querySelector('.rep-target'),
      'the migrated system does not claim to be empty — the bug the race caused');
 
   const sys = (await store.getSystems())[0];
-  const detail = await mount(SystemView(sys.id));
+  const detail = await mount(SystemRouteView(sys.id));
   ok(/Push/.test(detail.textContent) && /Legs/.test(detail.textContent),
      'opening a system shows its workouts');
   ok(/New workout/.test(detail.textContent), 'and offers to add another');
@@ -715,8 +715,63 @@ ok(!data.querySelector('.rep-target'),
 
   ok(/New system/.test((await mount(WorkoutsView())).textContent),
      'a system can be created from the list');
-  const blank = await mount(SystemView('new'));
+  const blank = await mount(SystemRouteView('new'));
   ok(/Create system/.test(blank.textContent), 'the new-system screen offers to create one');
+
+  /* ── Reading and editing are two screens, 2026-08-21 ──────────────────────
+     ⚠️ These are POSITION tests as much as presence tests, and the bug they
+     exist for was invisible to every assertion above: `#/system/<id>` used to
+     BE the editor, so the workouts were present and correct and 468px below the
+     fold on a phone, behind a name field, a notes box and a Save/Delete pinned
+     to the bottom of the screen. "Is it on the screen" passed the whole time.
+     Tim chose the split on 2026-08-21; what follows is what must stay true. */
+  const detailText = detail.textContent.replace(/\s+/g, ' ');
+  ok(!/System name|Save changes|Delete system/.test(detailText),
+     'opening a system is READING it — no name field, no Save, no Delete');
+  ok(Boolean([...detail.querySelectorAll('button')]
+       .find((n) => /edit this system/i.test(n.getAttribute('aria-label') || ''))),
+     'and the way to edit it is a pencil in the header');
+  // The workouts come FIRST. A phone has one screenful and this is what it is for.
+  const firstLabel = detail.querySelector('.pane-scroll .section-label');
+  ok(firstLabel && /workout/i.test(firstLabel.textContent),
+     'the workouts are the first thing in the pane, above the rating and the notes');
+
+  const editor = await mount(SystemRouteView(sys.id + '/edit'));
+  const editorText = editor.textContent.replace(/\s+/g, ' ');
+  ok(/System name/.test(editorText) && /Save changes/.test(editorText),
+     'the pencil route is the form');
+  ok(/Delete system/.test(editorText), 'which is where Delete lives now');
+  ok(!editor.querySelector('.pane-bottom .btn.danger'),
+     'and Delete is NOT pinned to the bottom of the screen, under the thumb');
+
+  /* ── The same split on a workout, and the thing it fixes ─────────────── */
+  const pushId = (await store.getWorkouts(sys.id))[0].id;
+  const wDetail = await mount(WorkoutRouteView(pushId));
+  const wText = wDetail.textContent.replace(/\s+/g, ' ');
+  ok(/Start workout/.test(wText),
+     'a workout you open can be STARTED — the path Workouts → my programme → today had no way to begin one');
+  ok(!/Add exercise|Delete workout|Workout name/.test(wText),
+     'and opening it is not the builder');
+  // ⚠️ blocksOf() hands back { item, index } wrappers rather than exercises, and
+  // the first version of this screen mapped the wrapper straight into a row —
+  // six lines of "Unknown exercise · undefined sets". Every assertion above
+  // passed over it, because none of them read what the rows actually SAY. A
+  // screenshot caught it. This is that screenshot, as a test.
+  const pushWorkout = (await store.getWorkouts(sys.id))[0];
+  const firstExName = (await store.getExerciseMap()).get(pushWorkout.exercises[0].exerciseId).name;
+  ok(wText.includes(firstExName), 'and it names its exercises');
+  ok(!/Unknown exercise|undefined/.test(wText),
+     'reading them through blocksOf’s wrapper, not past it');
+  ok(/\d+ sets?/.test(wText), 'with the planned set count on each');
+  const startBtn = [...wDetail.querySelectorAll('.pane-bottom button')]
+    .find((n) => /Start workout/.test(n.textContent));
+  ok(Boolean(startBtn) && startBtn.classList.contains('primary'),
+     'Start is the pinned primary action, not one option among several');
+
+  const wEditor = await mount(WorkoutRouteView(pushId + '/edit'));
+  ok(/Add exercise/.test(wEditor.textContent), 'and /edit is still the builder');
+  ok(!wEditor.querySelector('.pane-bottom .btn.danger'),
+     'with Delete out of the pinned footer there too');
 
   // Starting a workout must still reach every workout, whatever system it is in.
   const start = await mount(StartPickerView());
@@ -1124,7 +1179,7 @@ ok(!data.querySelector('.rep-target'),
 
 /* ========== The rating on a system the USER built ========== */
 {
-  const { SystemView } = await import(BASE + 'views-workouts.js');
+  const { SystemRouteView } = await import(BASE + 'views-workouts.js');
   await store.clearAll();
 
   const sys = await store.saveSystem({ name: 'My Split' });
@@ -1138,7 +1193,7 @@ ok(!data.querySelector('.rep-target'),
     { exerciseId: squat.id, sets: 5 },
   ] });
 
-  const screen = await SystemView(sys.id);
+  const screen = await SystemRouteView(sys.id);
   await settle();
   const text = () => screen.textContent.replace(/\s+/g, ' ');
 
@@ -1170,7 +1225,7 @@ ok(!data.querySelector('.rep-target'),
 
   // An empty system has nothing to rate and must not render an empty box.
   const empty = await store.saveSystem({ name: 'Nothing here' });
-  const emptyScreen = await SystemView(empty.id);
+  const emptyScreen = await SystemRouteView(empty.id);
   await settle();
   ok(!emptyScreen.querySelector('.own-rating'),
      'a system with no workouts shows no rating rather than an empty one');
@@ -1386,8 +1441,48 @@ ok(!data.querySelector('.rep-target'),
      'and the Social screen explains that rather than showing an empty friends list');
   ok(!/Set up my account/i.test(text(soc)), 'without wrongly blaming the account');
 
+  // ⚠️ SETTINGS, INSIDE THE DEMO. This threw for the whole of the demo's life:
+  // `auth.state()` tested `impl === LocalBackend`, and MemoryBackend is neither
+  // that nor the remote one, so it fell into the cloud branch and called a
+  // `currentUser()` it has never had. Every route was checked by hand on
+  // 2026-08-19 EXCEPT the two behind the header icons, and this was one of them.
+  // The screen a person uses to judge the app crashed inside the account built
+  // for judging the app.
+  //
+  // Asserted three ways so it cannot half-regress: the state object, the screen
+  // rendering at all, and the words on it — because the first version of the fix
+  // could have returned mode 'local', which renders fine and tells somebody in
+  // the demo that their data is safe on this device. It is not on this device.
+  // It is nowhere.
+  // ⚠️ `active()` memoises its choice of backend, and the app only ever reaches
+  // the demo through a RELOAD, which throws that memo away. A test setting the
+  // flag in a live module has to do the same by hand, or it is asking the
+  // question of whichever backend was already chosen.
+  const { auth } = await import(BASE + 'store.js');
+  await auth.retry();
+  const demoState = await auth.state();
+  ok(demoState.mode === 'demo', 'auth.state() knows the demo is its own backend, not "local"');
+  ok(demoState.user === null && demoState.degraded === false,
+     'and reports no account rather than a degraded one');
+
+  const { SettingsView } = await import(BASE + 'views-data.js');
+  const settings = await mount(SettingsView());
+  ok(/Demo account/i.test(text(settings)),
+     'Settings opens in the demo instead of throwing "impl.currentUser is not a function"');
+  ok(/Nothing here is saved/i.test(text(settings)),
+     'and says nothing is being stored, rather than claiming this device holds it');
+  ok(!/Saving to this device/i.test(text(settings)),
+     'the wrong-but-plausible answer is specifically absent');
+
   sess.delete('ftrack:v1:demo');
   ok(demo.active() === false, 'and leaving clears the flag');
+
+  // The same screen outside the demo must be unaffected — otherwise the fix
+  // above could be "always say demo", which passes everything before this line.
+  await auth.retry();
+  const realSettings = await mount(SettingsView());
+  ok(!/Demo account/i.test(text(realSettings)),
+     'and Settings outside the demo does not claim to be one');
 }
 
 /* ================================================================== *

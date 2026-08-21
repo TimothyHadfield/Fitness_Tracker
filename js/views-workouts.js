@@ -622,7 +622,80 @@ export async function ExploreDetailView(id) {
  * One system: its workouts, and its name
  * ================================================================== */
 
-export async function SystemView(id) {
+/**
+ * ⚠️ A SYSTEM HAS TWO SCREENS NOW, AND IT USED TO HAVE ONE.
+ *
+ * `#/system/<id>` opened the EDITOR: a name field and a notes box pinned above,
+ * Save changes and Delete system pinned below, and the workouts somewhere under
+ * the rating. Measured on a phone 2026-08-21 — 303px of an 852px screen was
+ * permanently form, and **the first workout was 468px down a 445px pane**, so
+ * the Push/Pull/Legs you opened the programme to reach was more than a full
+ * screenful below the fold. A full-width *Delete system* sat in the thumb zone
+ * the whole time.
+ *
+ * Tim chose the split on 2026-08-21: reading is the screen, editing is behind
+ * the pencil. That is the pattern a calendar day already uses, so it is not a
+ * new idea in this app — it is the one the Workouts tab had missed.
+ *
+ *   #/system/<id>        the programme: its workouts, then how it rates
+ *   #/system/<id>/edit   the form: name, notes, Save, Delete
+ *   #/system/new         the form, with nothing to read yet
+ */
+export async function SystemRouteView(param) {
+  const [id, tail] = String(param || '').split('/');
+  if (id === 'new' || tail === 'edit') return SystemEditorView(id);
+  return SystemDetailView(id);
+}
+
+async function SystemDetailView(id) {
+  const existing = await store.getSystem(id);
+  if (!existing) {
+    return screenShell({
+      title: 'Not found', back: () => go('#/workouts'),
+      scroll: emptyState('That system no longer exists', 'It may have been deleted.'),
+    });
+  }
+
+  const workouts = await store.getWorkouts(id);
+
+  return screenShell({
+    title: existing.name,
+    back: () => go('#/workouts'),
+    // The pencil, not a "Settings" or a "…". It names the one thing it does.
+    actions: [iconBtn('edit', 'Edit this system', () => go('#/system/' + id + '/edit'))],
+    scroll: [
+      // The workouts FIRST. They are why anybody opens a programme, and on a
+      // phone "first" is the only position that means anything.
+      el('div', { class: 'section-label', text: workouts.length
+        ? plural(workouts.length, 'workout') : 'Workouts' }),
+      workouts.length
+        ? el('div', { class: 'list' }, workouts.map((w) =>
+            el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
+              el('div', { class: 'row-main' },
+                el('div', { class: 'row-title', text: w.name }),
+                el('div', { class: 'row-sub', text:
+                  `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
+                  + (w.isBenchmark ? ' · benchmark' : '') }),
+              ),
+              chevron(),
+            )))
+        : emptyState('No workouts in this system yet',
+            'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+      el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + id) },
+        icon('plus'), 'New workout'),
+      // The notes are the author's own words about the programme, so they read
+      // here rather than only inside the form that happens to edit them.
+      existing.notes
+        ? el('div', { class: 'preset-notes' },
+            el('div', { class: 'section-label', text: 'Notes' }),
+            el('p', { text: existing.notes }))
+        : null,
+      await ownSystemRating(id, workouts, existing),
+    ],
+  });
+}
+
+async function SystemEditorView(id) {
   const isNew = id === 'new';
   const existing = isNew ? null : await store.getSystem(id);
 
@@ -652,9 +725,11 @@ export async function SystemView(id) {
     if (!draft.name.trim()) { toast('Give your system a name first'); nameInput.focus(); return; }
     const saved = await store.saveSystem({ ...draft, name: draft.name.trim() });
     toast(isNew ? 'System created' : 'System saved');
-    // A brand-new system is empty, so land the user back inside it where the
-    // "New workout" button is, rather than on the list looking at an empty row.
-    go(isNew ? '#/system/' + saved.id : '#/workouts');
+    // Both cases now land on the system itself. Saving an EXISTING one used to
+    // drop you back on the top-level list, which was the right escape from a
+    // screen that was only a form; from an editor reached by a pencil it throws
+    // away the place you were reading and makes you walk back in.
+    go('#/system/' + (saved.id || id));
   }
 
   function remove() {
@@ -669,42 +744,30 @@ export async function SystemView(id) {
     });
   }
 
-  const scroll = isNew
-    ? [el('div', { class: 'field-help', text:
-        'Name it first, then you can add workouts to it.' })]
-    : [
-        await ownSystemRating(draft.id, workouts, existing),
-        el('div', { class: 'section-label', text: workouts.length
-          ? plural(workouts.length, 'workout') : 'Workouts' }),
-        workouts.length
-          ? el('div', { class: 'list' }, workouts.map((w) =>
-              el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
-                el('div', { class: 'row-main' },
-                  el('div', { class: 'row-title', text: w.name }),
-                  el('div', { class: 'row-sub', text:
-                    `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
-                    + (w.isBenchmark ? ' · benchmark' : '') }),
-                ),
-                chevron(),
-              )))
-          : emptyState('No workouts in this system yet',
-              'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
-        el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + draft.id) },
-          icon('plus'), 'New workout'),
-      ];
-
+  // The form is the whole screen now, so it lives in the scroll rather than
+  // being pinned above a list it no longer shares the screen with. Only Save is
+  // pinned — Delete moves into a danger zone at the bottom of the scroll, where
+  // you have to travel to reach it, rather than sitting under the thumb of
+  // somebody who came here to rename something.
   return screenShell({
-    title: isNew ? 'New system' : draft.name,
-    back: () => go('#/workouts'),
-    top: [
+    title: isNew ? 'New system' : 'Edit system',
+    back: () => go(isNew ? '#/workouts' : '#/system/' + id),
+    scroll: [
       el('div', { class: 'field' }, el('label', { text: 'System name' }), nameInput),
       el('div', { class: 'field' }, el('label', { text: 'Notes' }), notesInput),
+      isNew
+        ? el('div', { class: 'field-help', text: 'Name it first, then you can add workouts to it.' })
+        : el('div', { class: 'danger-zone' },
+            el('button', { class: 'btn danger block', text: 'Delete system', onClick: remove }),
+            el('div', { class: 'field-help', text: workouts.length
+              ? `Deletes this programme and ${plural(workouts.length, 'workout')} inside it. `
+                + 'Workouts you have already recorded stay in your history.'
+              : 'It has no workouts in it.' }),
+          ),
     ],
-    scroll,
-    bottom: [
-      el('button', { class: 'btn primary block', text: isNew ? 'Create system' : 'Save changes', onClick: save }),
-      isNew ? null : el('button', { class: 'btn danger block', text: 'Delete system', onClick: remove }),
-    ],
+    bottom: el('button', {
+      class: 'btn primary block', text: isNew ? 'Create system' : 'Save changes', onClick: save,
+    }),
   });
 }
 
@@ -712,9 +775,102 @@ export async function SystemView(id) {
  * Workout builder
  * ================================================================== */
 
-// Route is `#/workout/<id>` to edit, `#/workout/new/<systemId>` to create — a
-// new workout has to know which system it is being added to, and there is no
-// sensible way to ask afterwards.
+/**
+ * ⚠️ A WORKOUT HAS TWO SCREENS NOW, for the same reason a system does, and the
+ * cost here was higher. `#/workout/<id>` opened the BUILDER, so tapping "Push"
+ * inside your programme handed you a name field, a benchmark toggle, an editable
+ * exercise list and a *Delete workout* — and **no way to start it**. The only
+ * routes into a session were Home's next-workout button and `#/start`, so the
+ * obvious path (Workouts → my programme → the day I am about to do) was the one
+ * path that could not begin it. Measured on a phone 2026-08-21: *Add exercise*
+ * sat ~500px below the fold and the last exercise row was cut in half by the
+ * pinned Save/Delete.
+ *
+ *   #/workout/<id>            what this workout is, and Start it
+ *   #/workout/<id>/edit       the builder
+ *   #/workout/new/<systemId>  the builder, empty — a new workout has to know
+ *                             which system it joins and there is no sensible
+ *                             way to ask afterwards
+ */
+export async function WorkoutRouteView(param) {
+  const [id, tail] = String(param || '').split('/');
+  if (id === 'new' || tail === 'edit') return WorkoutBuilderView(param);
+  return WorkoutDetailView(id);
+}
+
+async function WorkoutDetailView(id) {
+  const [exMap, workout] = await Promise.all([store.getExerciseMap(), store.getWorkout(id)]);
+
+  if (!workout) {
+    return screenShell({
+      title: 'Not found', back: () => go('#/workouts'),
+      scroll: emptyState('That workout no longer exists', 'It may have been deleted.'),
+    });
+  }
+
+  const home = workout.systemId ? '#/system/' + workout.systemId : '#/workouts';
+
+  // Read from the same block walk the builder and the runner use, so a superset
+  // reads as a superset here rather than as three unrelated exercises.
+  const blocks = blocksOf(workout.exercises);
+
+  const exerciseRow = (item) => {
+    const ex = exMap.get(item.exerciseId);
+    return el('div', { class: 'row static' },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: ex ? ex.name : 'Unknown exercise' }),
+        el('div', { class: 'row-sub wrap', text:
+          [ex ? ex.muscle : null, ex ? ex.equipment : null,
+           // setTypeLabel() already carries the count, and it says "Straight
+           // sets" for the ordinary case — which is every row on most workouts
+           // and is not worth a line.
+           isNested(item.setType) ? setTypeLabel(item) : null,
+          ].filter(Boolean).join(' · ') }),
+      ),
+      el('div', { class: 'row-meta', text: plural(item.sets, 'set') }),
+    );
+  };
+
+  return screenShell({
+    title: workout.name,
+    sub: `${plural(workout.exercises.length, 'exercise')} · ${plural(totalSets(workout), 'set')}`,
+    back: () => go(home),
+    actions: [iconBtn('edit', 'Edit this workout', () => go('#/workout/' + id + '/edit'))],
+    scroll: [
+      workout.isBenchmark
+        ? el('div', { class: 'field-help', text:
+            'Benchmark workout — the best set of every exercise you record here is filed as a '
+            + 'benchmark for that day.' })
+        : null,
+      // ⚠️ blocksOf() yields `{ item, index }` WRAPPERS, not the exercises —
+      // the builder needs the index to write back through. Mapping the wrapper
+      // straight into a row renders "Unknown exercise · undefined sets" for
+      // every line, which is what the first version of this screen did.
+      ...blocks.map((b) => (b.items.length > 1
+        // A joined block keeps its bracket and its name, the same way the
+        // builder and the runner draw it.
+        ? el('div', { class: 'builder-group' },
+            el('div', { class: 'builder-group-head' },
+              el('div', { class: 'builder-group-label', text: groupLabel(b.items.length) })),
+            el('div', { class: 'list' }, b.items.map((w) => exerciseRow(w.item))))
+        : el('div', { class: 'list' }, b.items.map((w) => exerciseRow(w.item))))),
+      workout.exercises.some((e) => e.notes)
+        ? el('div', { class: 'preset-notes' },
+            el('div', { class: 'section-label', text: 'Notes' }),
+            workout.exercises.filter((e) => e.notes).map((e) => {
+              const ex = exMap.get(e.exerciseId);
+              return el('p', {}, el('b', { text: (ex ? ex.name : 'Exercise') + ' — ' }), e.notes);
+            }))
+        : null,
+    ],
+    // The reason this screen exists. A workout you are looking at is nearly
+    // always one you are about to do.
+    bottom: el('button', {
+      class: 'btn primary block lg', onClick: () => go('#/session/' + id),
+    }, icon('play'), 'Start workout'),
+  });
+}
+
 export async function WorkoutBuilderView(param) {
   const [id, newSystemId] = String(param || '').split('/');
   const isNew = id === 'new';
@@ -918,9 +1074,12 @@ export async function WorkoutBuilderView(param) {
   async function save() {
     if (!draft.name.trim()) { toast('Give your workout a name first'); nameInput.focus(); return; }
     if (!draft.exercises.length) { toast('Add at least one exercise'); return; }
-    await store.saveWorkout({ ...draft, name: draft.name.trim() });
+    const saved = await store.saveWorkout({ ...draft, name: draft.name.trim() });
     toast(isNew ? 'Workout created' : 'Workout saved');
-    go(home);
+    // Editing returns to the workout you were reading; creating returns to the
+    // system, which is where the "New workout" button is and therefore where
+    // somebody building a programme is most likely going next.
+    go(isNew ? home : '#/workout/' + (saved && saved.id ? saved.id : id));
   }
 
   function remove() {
@@ -931,11 +1090,20 @@ export async function WorkoutBuilderView(param) {
     });
   }
 
+  // ⚠️ THE NAME FIELD CAME OUT OF `top`. Pinned, it cost 86px of every phone
+  // screen for a field you touch once in the life of a workout, and it pushed
+  // "Add exercise" — the thing this screen is FOR — about 500px below the fold.
+  // In the scroll it costs that space once, at the top, where you are anyway.
+  //
+  // Delete came out of `bottom` for the harder reason: pinned, it is a
+  // destructive control permanently under the thumb of somebody who is
+  // rearranging exercises. It now sits past the end of the list, which is a
+  // journey rather than a slip.
   return screenShell({
     title: isNew ? 'New workout' : 'Edit workout',
-    back: () => go(home),
-    top: el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
+    back: () => go(isNew ? home : '#/workout/' + id),
     scroll: [
+      el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
       el('div', { class: 'field' },
         el('label', { text: 'Kind' }),
         el('div', { class: 'chips' }, benchToggle),
@@ -956,11 +1124,16 @@ export async function WorkoutBuilderView(param) {
           },
         }),
       }, icon('plus'), 'Add exercise'),
+      isNew ? null : el('div', { class: 'danger-zone' },
+        el('button', { class: 'btn danger block', text: 'Delete workout', onClick: remove }),
+        el('div', { class: 'field-help', text:
+          'Workouts you have already recorded stay in your history and on your calendar. '
+          + 'Only the template is removed.' }),
+      ),
     ],
-    bottom: [
-      el('button', { class: 'btn primary block', text: isNew ? 'Create workout' : 'Save changes', onClick: save }),
-      isNew ? null : el('button', { class: 'btn danger block', text: 'Delete workout', onClick: remove }),
-    ],
+    bottom: el('button', {
+      class: 'btn primary block', text: isNew ? 'Create workout' : 'Save changes', onClick: save,
+    }),
   });
 }
 
@@ -981,7 +1154,13 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
     onInput: (e) => { query = e.target.value.trim().toLowerCase(); render(); },
   });
 
-  const chipRow = el('div', { class: 'chips' },
+  // ⚠️ ONE SCROLLING ROW, not four wrapped ones. Sixteen muscle groups wrapped
+  // to 142px of a phone screen — between the search box and the results, which
+  // are the only two things anybody opens this sheet for. With the keyboard up
+  // that left THREE of 272 exercises visible, measured 2026-08-21. A row you
+  // swipe costs 36px and puts the first five groups on screen, which is where
+  // the common ones already are.
+  const chipRow = el('div', { class: 'chips chips-scroll' },
     el('button', { class: 'chip', 'aria-pressed': 'true', text: 'All', onClick: (e) => setMuscle(null, e.target) }),
     MUSCLE_GROUPS.map((m) =>
       el('button', { class: 'chip', 'aria-pressed': 'false', text: m, onClick: (e) => setMuscle(m, e.target) })),

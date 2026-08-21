@@ -4057,3 +4057,72 @@ desktop engine at phone metrics cannot show them.
 manipulation`, `overscroll-behavior: none`, 16px on every control so iOS cannot zoom on focus,
 `--safe-b` on the navbar and sheets, and the 44px hit areas from yesterday's audit. The session
 runner reads well at both widths.
+
+---
+
+## 2026-08-21, second pass — the phone fixes
+
+Tim asked whether I knew what to do or needed help. Answer was: nine of eleven I could just do, one
+needed a phone in his hand afterwards, and one was his call. He took the call.
+
+### His decision: reading is the screen, editing is behind the pencil
+
+Offered three shapes for the system screen and he picked the recommended one. It applies to workouts
+as well, so two screens where there was one:
+
+```
+#/system/<id>        the programme — its workouts first, then notes, then how it rates
+#/system/<id>/edit   name, notes, Save, Delete
+#/workout/<id>       what the workout is, and START it
+#/workout/<id>/edit  the builder
+```
+
+Measured either side of the change on the same phone and the same demo account: **the first workout
+inside a programme moved from 468px down a 445px pane to 38px down a 748px one.**
+
+The workout screen gained something it never had — **a way to start the workout**. `#/workout/<id>`
+was the builder, so Workouts → my programme → today was the one obvious path that could not begin a
+session. And **Delete came out of both pinned footers**; a destructive control under the thumb of
+somebody rearranging exercises is a slip, past the end of a list it is a journey.
+
+⚠️ **The first version of the new workout screen printed "Unknown exercise · undefined sets" six
+times.** `blocksOf()` yields `{ item, index }` wrappers and I mapped the wrapper straight into a row.
+Every assertion I had written for that screen passed over it — they checked that things were present,
+not what they said. **A screenshot caught it.** There is now a test that reads the rows.
+
+### The keyboard
+
+`--kb` from `visualViewport`, subtracted by `#app` and the sheet backdrop. One fix, every screen.
+Verified by driving the value by hand: the session footer moves 789–852 → **453–516**, exactly
+clearing a 336px keyboard, *Next exercise* reachable. The picker sheet ends at the keyboard edge with
+Done visible, and its 16 filter chips became one scrolling row instead of four wrapped ones —
+**3 → 7 exercises visible with the keyboard up.**
+
+⚠️ **Cannot be verified from here and is not claimed to be.** Headless Chrome has no software
+keyboard. Tim has to open the runner on his phone and tap the weight.
+
+### The rest
+
+- Settings crashed in the demo because `auth.state()` knew of two backends and there are three.
+  Fixed in `auth.state()`, not with a fourth `demo.active()` guard at the call site — `AccountView`
+  and `social.state()` already carry their own, which is exactly why this one went unnoticed. Returns
+  `mode: 'demo'`, not `'local'`: a demo session is not saving to this device either. Mutation-checked.
+- The mode switch says three options again — content-sized segments, a hairline between the
+  unselected pair, 44px tall. Painted 44 rather than the audit's pseudo-element trick, because an
+  `overflow: hidden` box clips a pseudo-element grown past its own height and it would have measured
+  36 while the rule claimed 44.
+- The calendar lands on the current month. It was never bad arithmetic — the current month is the
+  last section, so the scroll was **clamped**. It gets exactly the trailing room the shortfall needs.
+- Textareas grow to their content, app-wide, from the same mount points as `associateLabels()`.
+- kg can be typed — `inputmode="decimal"` on weight.
+- Both `:hover` rules behind `@media (hover: hover)`.
+- The demo bar pays the top safe-area inset, and the topbar stops paying it twice.
+- Axis precision follows the gridline gap, so 279.9 became 280 without a body-weight chart printing
+  the same number twice.
+- The rating prose has paragraph gaps and sits below the workout list. Nothing hidden or shortened —
+  on a phone those caveats are load-bearing, and a disclosure is how a caveat stops being read.
+
+2141 assertions green, plus the service-worker test.
+
+**Left:** the device confirmations, Explore's badge squeezing descriptions to ~28 characters, and
+Goals opening on prose instead of a number.

@@ -1,9 +1,9 @@
 // Router + boot.
 
 import { store, demo } from './store.js';
-import { el, icon, iconBtn, clear, profileButton, associateLabels } from './ui.js';
+import { el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas } from './ui.js';
 import {
-  HomeView, StartPickerView, WorkoutsView, SystemView, WorkoutBuilderView,
+  HomeView, StartPickerView, WorkoutsView, SystemRouteView, WorkoutRouteView,
   ExploreView, ExploreDetailView,
 } from './views-workouts.js';
 import { SessionView, BenchmarkView } from './views-session.js';
@@ -64,10 +64,12 @@ async function resolve(route) {
     case 'home':      return HomeView();
     case 'start':     return StartPickerView();
     case 'workouts':  return WorkoutsView();
-    case 'system':    return SystemView(route.param);
+    // #/system/<id> reads it, #/system/<id>/edit and #/system/new are the form.
+    case 'system':    return SystemRouteView(route.param);
     // #/explore lists them, #/explore/<id> is one of them.
     case 'explore':   return route.param ? ExploreDetailView(route.param) : ExploreView();
-    case 'workout':   return WorkoutBuilderView(route.param);
+    // #/workout/<id> reads it and starts it; /edit and new/<systemId> build it.
+    case 'workout':   return WorkoutRouteView(route.param);
     case 'session':   return SessionView(route.param);
     case 'benchmark': return BenchmarkView();
     case 'calendar':  return CalendarView();
@@ -143,8 +145,10 @@ async function render() {
     if (demo.active()) screen.prepend(demoBar());
     app.append(screen);
     // ⚠️ Every screen, here rather than in screenShell, for the same reason the
-    // demo bar is: no route may be reached without it. See associateLabels().
+    // demo bar is: no route may be reached without it. See associateLabels()
+    // and autoGrowTextareas().
     associateLabels(screen);
+    autoGrowTextareas(screen);
   } catch (err) {
     console.error(err);
     clear(app);
@@ -165,7 +169,65 @@ async function render() {
 
 window.addEventListener('hashchange', render);
 
+/**
+ * ⚠️ THE SOFTWARE KEYBOARD, WHICH THIS LAYOUT OTHERWISE CANNOT SEE.
+ *
+ * Every screen in this app is a fixed header, one scrolling middle and a fixed
+ * footer inside a box locked to the viewport height (Design Rule 1) — and the
+ * footer is where the primary action of every screen lives. On iOS the keyboard
+ * does not shrink the viewport; it is painted ON TOP of it, and `100dvh`,
+ * `innerHeight` and every media query carry on reporting the full screen. So
+ * the footer stays exactly where it was, underneath the keyboard.
+ *
+ * Measured 2026-08-21 at 393×852 with a 336px keyboard: the usable area ends at
+ * y=516 and the session runner's "Next exercise" sits at 789–852. The same is
+ * true of every "Save changes", every "Done", and the exercise picker — where
+ * the sheet raises its own keyboard and then hides its own results behind it.
+ *
+ * `window.visualViewport` is the only API that reports any of this. What it
+ * gives is published as `--kb` and the CSS subtracts it, so the app occupies
+ * the part of the screen that is actually visible. On a desktop the value
+ * stays 0 and every rule using it is a no-op.
+ *
+ * ⚠️ NOT VERIFIED ON A DEVICE. Headless Chrome has no software keyboard, so
+ * nothing here can prove itself — the mechanism is documented behaviour, and
+ * the confirmation has to come from an iPhone. Keep saying so until it does.
+ */
+function trackKeyboard() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const apply = () => {
+    // offsetTop matters as well as height: iOS may also shift the visual
+    // viewport down to reveal the focused field, and the part of the layout
+    // viewport that is hidden is everything below the visible slice.
+    const hidden = window.innerHeight - vv.height - vv.offsetTop;
+    // A few pixels of disagreement are normal while browser chrome animates,
+    // and reacting to those would make the whole app twitch during a scroll.
+    // A keyboard is never small.
+    const kb = hidden > 60 ? Math.round(hidden) : 0;
+    document.documentElement.style.setProperty('--kb', kb + 'px');
+  };
+
+  vv.addEventListener('resize', apply);
+  vv.addEventListener('scroll', apply);
+  apply();
+
+  // Once the pane has shrunk, whatever was focused can be outside it — the
+  // field is above the keyboard but below the new bottom edge. The pane is the
+  // nearest scrollable ancestor, so this scrolls that and never the window,
+  // which cannot scroll anyway.
+  document.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (!el || !el.matches || !el.matches('input, select, textarea')) return;
+    setTimeout(() => {
+      if (el.isConnected) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 250);
+  });
+}
+
 (async function boot() {
+  trackKeyboard();
   const settings = await store.getSettings();
   document.documentElement.setAttribute('data-theme', settings.theme === 'light' ? 'light' : 'dark');
   // Seeded once, here, because the stepper and the set formatter are synchronous

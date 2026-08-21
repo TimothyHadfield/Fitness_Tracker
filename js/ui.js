@@ -88,6 +88,48 @@ export function associateLabels(root) {
 }
 
 /* ------------------------------------------------------------------ *
+ * ⚠️ Textareas — grow to their own content
+ *
+ * FOUND 2026-08-21, on the first pass over the app at phone size. A system's
+ * Notes box is `rows="2"` and the demo account's notes are three lines, so the
+ * screen showed 66px of a 90px sentence and simply stopped mid-word. It has a
+ * scrollbar in the sense that the browser will scroll it; on a phone there is
+ * no scrollbar drawn and no indication that anything is missing, so the text
+ * reads as having ended.
+ *
+ * `resize: vertical` does not help — dragging a resize handle is a mouse
+ * gesture and there is no handle under a thumb. `field-sizing: content` is the
+ * CSS answer and Safari does not have it yet, which is the browser this matters
+ * on. So: measure and set, on mount and on every keystroke.
+ *
+ * Run from the same two mount points as associateLabels(), and for the same
+ * reason — a per-call-site fix covers the textareas that exist today.
+ * ------------------------------------------------------------------ */
+
+const MAX_GROW = 260;   // past this it is a document, and scrolling is right
+
+export function autoGrowTextareas(root) {
+  if (!root || !root.querySelectorAll) return root;
+  for (const ta of root.querySelectorAll('textarea')) {
+    if (ta.dataset.autogrow) continue;
+    ta.dataset.autogrow = '1';
+    const fit = () => {
+      // Collapse first: without this the box can only ever get taller, because
+      // scrollHeight of an already-tall element includes the height it was
+      // given rather than the height it needs.
+      ta.style.height = 'auto';
+      ta.style.height = `${Math.min(ta.scrollHeight, MAX_GROW)}px`;
+      ta.style.overflowY = ta.scrollHeight > MAX_GROW ? 'auto' : 'hidden';
+    };
+    ta.addEventListener('input', fit);
+    // The value is often assigned after construction (`notesInput.value = …`),
+    // so the first measurement waits for the frame the element is laid out in.
+    requestAnimationFrame(fit);
+  }
+  return root;
+}
+
+/* ------------------------------------------------------------------ *
  * Icons
  * ------------------------------------------------------------------ */
 
@@ -266,8 +308,9 @@ export function openSheet({ title, body, footer, onClose }) {
   }, sheet);
 
   document.body.append(backdrop);
-  // A sheet is mounted outside the router, so it needs the pass of its own.
+  // A sheet is mounted outside the router, so it needs the passes of its own.
   associateLabels(sheet);
+  autoGrowTextareas(sheet);
   document.addEventListener('keydown', onKey);
   return { close, sheet };
 }
@@ -376,7 +419,13 @@ export function stepper({ field, value, onChange, suffix }) {
   const input = el('input', {
     class: 'step-value mono',
     type: field === 'time' ? 'text' : 'number',
-    inputmode: field === 'distance' ? 'decimal' : 'numeric',
+    // ⚠️ `numeric` is the iOS keypad WITH NO DECIMAL POINT, so it must only go
+    // on a field that can never hold one. Weight can: kilograms are stored as
+    // pounds and shown to one decimal, and the kg step is 2.5 — so a kg user
+    // reading "62.5" was handed a keyboard that could not type it, and had to
+    // reach for the ± buttons to enter a number the screen was already showing.
+    // Found 2026-08-21. Reps stay `numeric`: half a rep is not a thing.
+    inputmode: (field === 'distance' || field === 'weight') ? 'decimal' : 'numeric',
     value: display(current),
     'aria-label': meta.label,
   });

@@ -976,6 +976,32 @@ export const auth = {
   // Where the data actually lives right now, after any fallback.
   async state() {
     const impl = await active();
+
+    // ⚠️ THE DEMO IS A THIRD BACKEND, AND THIS FUNCTION USED TO KNOW OF TWO.
+    // The test below was `impl === LocalBackend`, so MemoryBackend — which is
+    // neither that nor the remote one — fell through to the cloud branch and
+    // called `impl.currentUser()`, a method it has never had. Settings threw
+    // "impl.currentUser is not a function" for the whole of the demo's life and
+    // nothing else did, because `AccountView` and `social.state()` both check
+    // `demo.active()` themselves before they get here. Found 2026-08-21, on the
+    // first pass over the app at phone size.
+    //
+    // Handled HERE rather than by adding a third `demo.active()` guard at the
+    // call site, for the reason associateLabels() gives: guarding at the call
+    // sites fixes today's callers and nothing about the next one, and the next
+    // one will be written by somebody who has never met MemoryBackend.
+    //
+    // The mode is its own value rather than 'local'. A demo session is not
+    // saving to this device either — it is saving nowhere — and "your data is
+    // on this device" is a false claim to put in front of somebody whose data
+    // is about to vanish on reload.
+    if (impl === MemoryBackend) {
+      return {
+        mode: 'demo', user: null, degraded: false, error: null,
+        offline: false, lastAccount: lastKnownAccount(),
+      };
+    }
+
     if (impl === LocalBackend) {
       return {
         mode: 'local',
