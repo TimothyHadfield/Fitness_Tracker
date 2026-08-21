@@ -4185,3 +4185,41 @@ storage only grows.
 
 ⚠️ **None of this makes Google sign-in work on the iPhone.** It makes it fail honestly and makes the
 next report diagnostic. 2145 assertions green.
+
+---
+
+## 2026-08-21, fourth pass — the first run
+
+Tim asked what to work on. Recommended the first-run path and took it: it is the one thing standing
+between this app and anybody who is not him, it is squarely the phone thread he opened, and the
+morning's restructure had already built most of what it needed.
+
+**The defect:** an empty account said *"Create your first workout"* and landed on a screen whose
+actions are *"New system"* and *"Explore ready-made systems"*. Promised a workout, delivered a
+system — the app's own word for its own convenience — and a stranger had to learn it before logging
+a set.
+
+**The fix is not to remove systems, it is to stop making anybody read about one.** Explore leads on a
+first run, so a programme is one tap and it teaches the idea by example rather than by explanation.
+Everything downstream already worked: copy a programme in and `suggestNext()` returns `isStart`, so
+Home's next paint says "▶ Push 1 · First workout in Ultimate Push Pull Legs".
+
+Walked on a brand-new account at 393×852 with real mouse events:
+
+```
+1  Pick a programme          → Explore
+2  Ultimate Push Pull Legs   → the programme
+3  Add to my systems         → the copied system
+4  Push 1                    → the workout
+5  Start workout             → the runner, steppers live
+```
+
+**Five taps from cold install to a loggable set**, against about a dozen.
+
+Also: "Record a benchmark" is gone from the first run — it asks somebody who has never trained to
+record a maximum — and so is the "Recent activity" heading, which was standing over an empty list.
+
+⚠️ **The old test was green over this the whole time**, because it asserted the screen said "Create
+your first workout" — the exact string that was wrong. It pins the property now: one tap from a real
+programme, the word "system" absent from the first screen, and the destination asserted by driving
+the tap rather than reading a label.

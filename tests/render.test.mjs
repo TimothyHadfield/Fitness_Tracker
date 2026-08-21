@@ -1149,10 +1149,36 @@ ok(!data.querySelector('.rep-target'),
   const { presetById } = await import(BASE + 'preset-systems.js');
 
   await store.clearAll();
-  // Nothing at all: the old behaviour, and no suggestion invented from nowhere.
+
+  /* ⚠️ THE FIRST RUN — rewritten 2026-08-21, and the assertion it replaces was
+     passing over the defect. It checked for "Create your first workout", which
+     is exactly the string that was WRONG: it promised a workout and landed on
+     `#/workouts`, whose actions are "New system" and "Explore ready-made
+     systems". A stranger had to learn what a system is before logging a set.
+     Verified by hand 2026-08-19; the test had been green throughout.
+
+     What is pinned now is the property, not the wording: the first thing an
+     empty account is offered must be one tap from a real programme, and must
+     not make anybody read the word "system" to get there. */
   let home = await mount(HomeView());
-  ok(/Create your first workout/.test(home.textContent),
-     'an empty account still asks you to build something');
+  const firstBtn = home.querySelector('.btn.primary.lg');
+  ok(Boolean(firstBtn), 'an empty account leads with one clear action');
+  ok(!/Create your first workout/.test(home.textContent),
+     'and it is NOT the old promise of a workout that delivered a system');
+  ok(!/\bsystem\b/i.test(home.textContent),
+     '⚠️ the app’s own word for its own convenience (D22) does not appear on the first screen');
+  ok(/Record a benchmark/.test(home.textContent) === false,
+     'nor does the most jargon-heavy action in the app, asked of somebody who has never trained');
+  ok(!/Recent activity/.test(home.textContent),
+     'and there is no heading standing over an empty list');
+
+  // The tap has to reach Explore. Asserted by driving it, not by reading a label.
+  firstBtn.click();
+  await settle();
+  ok(location.hash === '#/explore',
+     `the first action opens the ready-made programmes (${location.hash})`);
+  location.hash = '#/home';
+  await settle();
 
   const { system } = await store.addPresetSystem(presetById('preset-ppl'));
   const ws = await store.getWorkouts(system.id);

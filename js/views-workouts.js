@@ -44,6 +44,32 @@ export async function HomeView() {
   // away on "Choose another workout", and the caption always says what it read.
   const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
 
+  /* ⚠️ THE FIRST RUN IS ITS OWN SCREEN, and it did not used to be.
+   *
+   * The empty account's primary button read "Create your first workout" and
+   * landed on `#/workouts`, whose two actions are "New system" and "Explore
+   * ready-made systems". So it promised a WORKOUT and delivered a SYSTEM — and
+   * a stranger had to absorb what a system is, a concept that exists for the
+   * app's benefit (D22) rather than theirs, before logging a single set. Install
+   * to first logged number was about a dozen steps, and the logging loop is the
+   * one thing apps beat spreadsheets at (D4). Verified by hand 2026-08-19,
+   * carried in the improvement plan as the cheapest high-value change available,
+   * and built 2026-08-21.
+   *
+   * ⚠️ THE FIX IS NOT TO REMOVE SYSTEMS. It is to stop making anybody read about
+   * one. Explore is the primary action, so a real programme is one tap, and it
+   * teaches what a system is BY EXAMPLE — which is D8 exactly: at the moment of
+   * use, never as a manual. Everything downstream already worked; this was the
+   * one broken link. Copy a programme in and `suggestNext()` immediately returns
+   * `isStart`, so Home's very next paint says "▶ Push · First workout in Push
+   * Pull Legs" with no further decisions asked of anybody.
+   *
+   * "Record a benchmark" is deliberately ABSENT here. It is the most jargon-
+   * heavy action in the app and it asks somebody who has never trained to record
+   * a maximum. It comes back the moment there is anything at all.
+   */
+  const firstRun = !workouts.length && !sessions.length;
+
   const top = next
     ? [
         el('button', {
@@ -61,28 +87,52 @@ export async function HomeView() {
         el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
           icon('flag'), 'Record a benchmark'),
       ]
+    : firstRun
+      ? [
+          el('button', {
+            class: 'btn primary lg block', onClick: () => go('#/explore'),
+          }, icon('search'), 'Pick a programme'),
+
+          // What the tap actually does, before it is taken. The word "system"
+          // is not used: it is the app's word, and the screen it leads to
+          // demonstrates the idea better than this sentence could explain it.
+          el('div', { class: 'field-help', text:
+            'Nine ready-made programmes, from Arnold’s Golden Six to Jeff Nippard’s. '
+            + 'Pick one and it is copied into your account — yours to change, and you can '
+            + 'start its first workout straight away.' }),
+
+          el('button', { class: 'btn block', onClick: () => go('#/system/new') },
+            icon('plus'), 'Build my own instead'),
+        ]
+      : [
+          el('button', {
+            class: 'btn primary lg block', onClick: () => go('#/start'),
+          }, icon('play'), 'Start a workout'),
+
+          el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
+            icon('flag'), 'Record a benchmark'),
+        ];
+
+  // A heading over an empty list is a heading over nothing. On a first run the
+  // buttons above ARE the content (Rule 3), so the space below them stays quiet
+  // rather than announcing an absence.
+  const scroll = firstRun
+    ? []
     : [
-        el('button', {
-          class: 'btn primary lg block',
-          onClick: () => (workouts.length ? go('#/start') : go('#/workouts')),
-        }, icon('play'), workouts.length ? 'Start a workout' : 'Create your first workout'),
-
-        el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
-          icon('flag'), 'Record a benchmark'),
+        el('div', { class: 'section-label', text: 'Recent activity' }),
+        recent.length
+          ? el('div', { class: 'list' }, recent.map(sessionRow))
+          : emptyState('Nothing recorded yet',
+              'Once you finish a workout or log a benchmark, it will show up here and on your calendar.'),
       ];
-
-  const scroll = [
-    el('div', { class: 'section-label', text: 'Recent activity' }),
-    recent.length
-      ? el('div', { class: 'list' }, recent.map(sessionRow))
-      : emptyState('Nothing recorded yet',
-          'Once you finish a workout or log a benchmark, it will show up here and on your calendar.'),
-  ];
 
   return screenShell({
     profile: true,
     title: 'Fitness Tracker',
-    sub: workouts.length ? `${plural(workouts.length, 'workout')} saved` : 'Get started below',
+    // "Get started below" said nothing the buttons did not. On a first run the
+    // header earns its row by naming the app once — which is the one moment
+    // that is genuinely useful — and nothing else.
+    sub: workouts.length ? `${plural(workouts.length, 'workout')} saved` : null,
     actions: [iconBtn('sliders', 'Settings', () => go('#/settings'))],
     top,
     scroll,

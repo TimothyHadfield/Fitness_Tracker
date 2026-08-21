@@ -63,6 +63,49 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-21, fourth pass — the first run: 12 steps to 5
+
+**Built on Tim's ask for a recommendation.** `docs/improvement-plan.md` §1.1 has carried this as the
+cheapest high-value change available since 2026-08-19, and the restructure earlier the same day made
+it most of the way there without meaning to.
+
+**The defect:** an empty account's primary button read *"Create your first workout"* and landed on
+`#/workouts`, whose two actions are *"New system"* and *"Explore ready-made systems"*. It **promised a
+workout and delivered a system** — a concept that exists for the app's benefit (D22) rather than the
+user's — and a stranger had to absorb it before logging a single set. D4 says the logging loop is the
+one thing apps beat spreadsheets at.
+
+**The fix is not to remove systems. It is to stop making anybody read about one.** Explore is the
+primary action on a first run, so a real programme is one tap, and it teaches what a system is **by
+example** — D8 exactly. Everything downstream already worked and this was the one broken link:
+copying a programme in makes `suggestNext()` return `isStart`, so Home's very next paint reads
+**"▶ Push 1 · First workout in Ultimate Push Pull Legs"** with no further decision asked of anybody.
+
+**Measured, on a brand-new account at 393×852 with real mouse events:**
+
+```
+  tap 1  Pick a programme          → Explore
+  tap 2  Ultimate Push Pull Legs   → the programme, with its warning and its notes
+  tap 3  Add to my systems         → the copied system, its six workouts listed
+  tap 4  Push 1                    → the workout: its exercises, its supersets
+  tap 5  Start workout             → the runner, Barbell Bench Press, steppers live
+```
+
+**Five taps from a cold install to a loggable set**, against about a dozen before.
+
+Two smaller things went with it. **"Record a benchmark" is absent from the first run** — it is the
+most jargon-heavy action in the app and it asks somebody who has never trained to record a maximum;
+it returns the moment there is anything at all. And **the "Recent activity" heading is gone from the
+first run**, because a heading standing over an empty list is a heading over nothing.
+
+⚠️ **The old test was green over this the whole time.** It asserted the screen said *"Create your
+first workout"* — which is precisely the string that was wrong. It now pins the property instead of
+the wording: the first action must be one tap from a real programme, **the word "system" must not
+appear on the first screen at all**, and the tap is asserted by driving it rather than by reading a
+label.
+
+---
+
 ## 2026-08-21, third pass — ⚠️ GOOGLE SIGN-IN IS BROKEN ON THE IPHONE, and why
 
 **The first bug report from a real device.** Tim, 2026-08-21: *"when I try signing in with google, it
@@ -533,7 +576,10 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    it nothing yet but would have: use two SEPARATE browser profiles, not two tabs, or you will
    "prove" a round trip that never crossed accounts.
 
-1b. **⚠️ THE FIRST-RUN PATH PROMISES ONE THING AND DELIVERS ANOTHER.** Verified by hand 2026-08-19.
+1b. ~~**⚠️ THE FIRST-RUN PATH PROMISES ONE THING AND DELIVERS ANOTHER.**~~ **BUILT 2026-08-21 —
+   five taps from a cold install to a loggable set, measured, against about a dozen. See the
+   fourth-pass section above.** What follows is the original finding, kept because the reasoning is
+   what chose the fix. Verified by hand 2026-08-19.
    On an empty account Home's primary button reads **"Create your first workout"** and lands on
    `#/workouts`, a screen whose actions are **"New system"** and **"Explore ready-made systems"**.
    Not a dead end — but a stranger must absorb *systems*, a concept that exists for the app's
