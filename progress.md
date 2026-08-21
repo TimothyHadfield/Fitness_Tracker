@@ -63,6 +63,69 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-21, third pass — ⚠️ GOOGLE SIGN-IN IS BROKEN ON THE IPHONE, and why
+
+**The first bug report from a real device.** Tim, 2026-08-21: *"when I try signing in with google, it
+opens a popup for a second, and then quickly closes it and nothing happens."* This is the path §9 has
+called the riskiest untested one in the project, and it was right.
+
+### ⚠️ The root cause is the authDomain, and it is a CONFIGURATION fault, not a code one
+
+The app is served from **`timothyhadfield.github.io`** and `firebase-config.js` points `authDomain`
+at **`fitness-tracker-th.firebaseapp.com`**. Those are different origins, and Firebase's own guidance
+([redirect-best-practices](https://firebase.google.com/docs/auth/web/redirect-best-practices)) is
+explicit about what that costs: the auth handler needs cross-origin access to storage, and
+**Safari 16.1+, Firefox 109+ and Chrome M115+ all block it.** Safari 16.1 shipped in 2022, so this is
+every iPhone in existence.
+
+⚠️ **Nothing in this repo can fix that.** The five options Firebase give are all outside the code:
+point `authDomain` at the app's own domain, proxy `/__/auth/`, self-host the handler files, use the
+provider SDK directly, or stay on the popup. **This project is already on the popup**, which is their
+recommended workaround, and it is failing anyway.
+
+⚠️ **The awkward part of the real fix:** the handler must live at the DOMAIN ROOT — the app is a
+GitHub *project* page at `/Fitness_Tracker/`, so `/__/auth/handler` belongs to the
+`timothyhadfield.github.io` **user-page repo**, a different repository, and would then be shared by
+every project on that domain. Also needs `.nojekyll`, or Pages drops anything starting with `_`.
+**Not started, and not to be started without Tim saying so** — email sign-in works on iOS today and
+is the only thing standing between him and a backed-up account.
+
+### Three code faults met at that symptom, and all three are fixed
+
+Only the first is about Google at all. The other two are why it presented as *nothing*.
+
+1. **⚠️ A HUNG PROMISE LEFT A DEAD BUTTON.** `run()` awaits its function, and the popup's promise on
+   iOS can simply never settle — the handler loses its storage, the window closes, and the SDK is
+   holding a promise nobody will resolve. **No throw means no catch**, so the button sat on
+   "Opening…" for ever with no toast, no fallback and no explanation. That is the literal
+   "nothing happens". Fixed with a patience timer. **⚠️ It races the UI, NEVER the sign-in** — a real
+   sign-in behind two-factor takes minutes, and aborting one because a timer expired would be a worse
+   bug than this. The timer takes the button back and speaks; the auth promise is left running and
+   the auth listener still picks it up if it lands. **Mutation-checked: removing the timer flips
+   exactly those two assertions.**
+2. **Every failure was a 2.4-second toast.** On a phone that is indistinguishable from nothing
+   happening, which is precisely how it got reported. Failures on this screen are now a **persistent
+   line that stays put** — and it prints the **Firebase error code**, because everything above is
+   inference about a device nobody here can run and the code is the only fact available. Without it
+   the next report is "nothing happens" again.
+3. **⚠️ THE ESCAPE HATCH COULD NOT WORK.** *"Continue in this window instead"* is
+   `signInWithRedirect` — the exact flow the cross-origin authDomain breaks. The one route this file
+   called "the route that always works" was the one guaranteed to fail on his phone. There is now
+   `redirectCanComplete(config)`, and the fallback is only offered where it can finish; where it
+   cannot, the screen names **email**, which works. ⚠️ **And `prefersRedirect()` used to return true
+   for an iOS home-screen app** — so the installed PWA was choosing between a route that *might* fail
+   and one that *cannot*, and picking the second. It now only prefers redirect where redirect works.
+
+⚠️ **Asserted on ORIGINS, never on a browser sniff.** The list of browsers that partition third-party
+storage only grows; a sniff written today is wrong next year. The question the code asks is the one
+that actually decides it — are the two origins the same?
+
+⚠️ **NONE OF THIS MAKES GOOGLE SIGN-IN WORK ON THE IPHONE.** It makes it *fail honestly*, and it
+makes the next report diagnostic instead of "nothing happens". Say so plainly; do not let three real
+fixes read as a solved problem.
+
+---
+
 ## 2026-08-21, second pass — the phone findings, FIXED
 
 **Everything in the survey below is now done except what needs a device.** Tim asked whether the
@@ -947,9 +1010,14 @@ Press-and-hold repeats.
   documents; the app half is reviewed code. This is the same shape of gap `firebase-backend.js`
   carried before the 45 live checks closed it, and it wants the same treatment: two throwaway
   accounts against the live project, then delete them.
-- **Google sign-in IS enabled and Tim uses it** (he reported a bug in it on 2026-08-16, so the
-  console toggle has been done at some point). The popup path is exercised in the real world; the
-  **redirect** path and the installed PWA still are not.
+- **⚠️ GOOGLE SIGN-IN DOES NOT WORK ON IOS, reported from a real device 2026-08-21** — the popup
+  opens, closes a second later, and nothing happens. **The cause is configuration, not code:** the
+  app is on `timothyhadfield.github.io` and `authDomain` is `fitness-tracker-th.firebaseapp.com`, and
+  Firebase document the auth flow as unable to complete cross-origin on Safari 16.1+, Firefox 109+
+  and Chrome M115+. See the 2026-08-21 third-pass section. Three code faults around it are fixed and
+  **the sign-in still does not work** — it now fails visibly and prints its error code instead of
+  looking like a dead button. The desktop popup path is exercised in the real world; the **redirect**
+  path is now known to be unusable in this configuration on any current browser.
 
 ---
 

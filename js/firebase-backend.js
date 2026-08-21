@@ -285,7 +285,7 @@ export const FirebaseBackend = {
       provider: new c.auth.GoogleAuthProvider(),
       currentUser: user,
       anon: Boolean(user && user.isAnonymous),
-      preferRedirect: forceRedirect || prefersRedirect(),
+      preferRedirect: forceRedirect || prefersRedirect(FIREBASE_CONFIG),
     });
     if (out.cancelled) return { status: 'cancelled' };
     if (!out.user) return { status: 'redirecting' };
@@ -367,8 +367,53 @@ export function describeUser(u) {
   };
 }
 
-export function prefersRedirect() {
+/**
+ * ⚠️ IS `signInWithRedirect` EVEN CAPABLE OF FINISHING HERE?
+ *
+ * Firebase's own guidance (firebase.google.com/docs/auth/web/redirect-best-practices):
+ * the redirect flow needs cross-origin access to storage on the authDomain, and
+ * **Safari 16.1+, Firefox 109+ and Chrome M115+ all block that**. So whenever the
+ * app is served from one origin and `authDomain` points at another —
+ * `timothyhadfield.github.io` against `fitness-tracker-th.firebaseapp.com`, which
+ * is exactly this project — redirect cannot complete on a modern browser.
+ *
+ * This is not browser sniffing, and deliberately so: the list of browsers that
+ * partition third-party storage only grows, and a sniff written today is wrong
+ * next year. The question asked here is the one that actually decides it — are
+ * the two origins the same?
+ *
+ * Tim reported the symptom on an iPhone on 2026-08-21: the Google popup opens,
+ * closes a second later, and nothing happens. What made it worse than a failed
+ * sign-in was that the app's recovery — "Continue in this window instead" — is a
+ * redirect, so the one escape hatch offered was the one route his browser
+ * cannot finish either.
+ */
+export function redirectCanComplete(config) {
   if (typeof window === 'undefined') return false;
+  const domain = config && config.authDomain;
+  if (!domain) return false;
+  // Same origin as the page means the storage the handler needs is first-party,
+  // which is the one arrangement no browser partitions.
+  return domain === window.location.hostname;
+}
+
+/**
+ * ⚠️ NO LONGER "iOS home screen → redirect".
+ *
+ * It used to return true for an installed PWA, on the reasoning that a popup
+ * inside one is usually blocked outright. That reasoning still holds — but the
+ * conclusion did not, because with a cross-origin authDomain the redirect it
+ * sent people to **cannot complete either**. It was choosing between a route
+ * that might fail and a route that is documented not to work, and picking the
+ * second.
+ *
+ * So redirect is now only preferred where it can actually finish. Where it
+ * cannot, the popup is attempted and its failure is EXPLAINED rather than
+ * papered over with an escape hatch that leads nowhere.
+ */
+export function prefersRedirect(config) {
+  if (typeof window === 'undefined') return false;
+  if (!redirectCanComplete(config)) return false;
   if (window.navigator && window.navigator.standalone === true) return true;   // iOS home screen
   if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
   return false;

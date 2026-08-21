@@ -4140,3 +4140,48 @@ with the other honest limit, the one about weights. Not hidden, not shortened, n
 this asks of you* now starts 325px into a 445px pane on the smallest phone. Its closing line said
 "everything below is measured rather than judged" and now says "every number on this screen" — a
 caveat that survives a move but stops describing anything is worse than one never written.
+
+---
+
+## 2026-08-21, third pass — Google sign-in on the iPhone
+
+Tim, from a real device: *"when I try signing in with google, it opens a popup for a second, and then
+quickly closes it and nothing happens."* The first bug report this project has had from hardware, and
+it landed on the exact path §9 has called the riskiest untested one.
+
+### The root cause is not code
+
+The app is served from `timothyhadfield.github.io`; `authDomain` is `fitness-tracker-th.firebaseapp.com`.
+Different origins — and Firebase's own guidance says the auth handler needs cross-origin storage that
+**Safari 16.1+, Firefox 109+ and Chrome M115+ all block**. Safari 16.1 is from 2022, so that is every
+iPhone there is. All five of Firebase's remedies are outside this repo, and the project is already on
+the one they recommend (popup).
+
+The real fix is awkward and I have not started it: the auth handler has to live at the domain ROOT,
+and the app is a GitHub *project* page, so `/__/auth/handler` belongs to the `timothyhadfield.github.io`
+user-page repo — a different repository, shared with every other project on that domain, plus a
+`.nojekyll`. Worth doing only if Tim wants Google specifically; **email sign-in works on iOS today**.
+
+### Three code faults met at that symptom, and all three are fixed
+
+Only the first is about Google.
+
+1. **A hung promise left a dead button.** The popup's promise on iOS can simply never settle. No
+   throw means no catch, so `run()` awaited for ever and the button sat on "Opening…" with no toast
+   and no fallback. That is the literal "nothing happens". There is a patience timer now — and it
+   **races the UI, never the sign-in**, because a real sign-in behind two-factor takes minutes and
+   cancelling one on a timer would be worse than the bug. Mutation-checked.
+2. **Every failure was a 2.4-second toast**, which on a phone is indistinguishable from nothing. It
+   is a permanent line now, and it prints the Firebase error code — everything above is inference
+   about a device I cannot run, and the code is the only fact available.
+3. **The escape hatch could not work.** "Continue in this window instead" is `signInWithRedirect`,
+   the exact flow the cross-origin authDomain breaks. The route this file called "the one that always
+   works" was the one guaranteed to fail on his phone. It is offered only where it can finish now,
+   and `prefersRedirect()` no longer sends an installed iOS app to it — that was choosing between a
+   route that might fail and one that cannot, and picking the second.
+
+Asserted on origins, never on a browser sniff: the list of browsers that partition third-party
+storage only grows.
+
+⚠️ **None of this makes Google sign-in work on the iPhone.** It makes it fail honestly and makes the
+next report diagnostic. 2145 assertions green.

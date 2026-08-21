@@ -592,6 +592,45 @@ ok(!fb.isPopupFailure({ code: 'auth/wrong-password' }), 'unrelated errors do not
 ok(fb.isAlreadyLinked({ code: 'auth/credential-already-in-use' }), 'already-linked detected');
 ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect preference');
 
+/* ---------- can the redirect flow even finish here? ---------- */
+// ⚠️ Reported by Tim from an iPhone, 2026-08-21: the Google popup opens, closes
+// a second later, and nothing happens. The part worth pinning is not the popup —
+// it is that the app's RECOVERY was a redirect, and Firebase document
+// signInWithRedirect as unable to complete whenever the authDomain is a
+// different origin from the app, because Safari 16.1+, Firefox 109+ and Chrome
+// M115+ all block the cross-origin storage the handler needs.
+// (firebase.google.com/docs/auth/web/redirect-best-practices)
+//
+// This project is exactly that shape: served from timothyhadfield.github.io,
+// authDomain fitness-tracker-th.firebaseapp.com. So the one route the UI called
+// "the route that always works" was the one guaranteed not to.
+//
+// Asserted on ORIGINS rather than on a browser sniff, deliberately: the list of
+// browsers that partition third-party storage only grows, and a sniff written
+// today is wrong next year.
+{
+  const realWindow = globalThis.window;
+  globalThis.window = { location: { hostname: 'timothyhadfield.github.io' }, navigator: {} };
+
+  ok(fb.redirectCanComplete({ authDomain: 'fitness-tracker-th.firebaseapp.com' }) === false,
+     'a cross-origin authDomain cannot complete a redirect — this project, on Tim’s phone');
+  ok(fb.redirectCanComplete({ authDomain: 'timothyhadfield.github.io' }) === true,
+     'and a same-origin one can, which is the fix if it is ever wanted');
+  ok(fb.redirectCanComplete({}) === false, 'no authDomain is not a working redirect either');
+
+  // ⚠️ THE REGRESSION THAT MATTERS. prefersRedirect() used to return true for an
+  // iOS home-screen app on the reasoning that a popup there is usually blocked.
+  // True — but it was choosing between a route that MIGHT fail and one that
+  // CANNOT work, and picking the second.
+  globalThis.window.navigator.standalone = true;
+  ok(fb.prefersRedirect({ authDomain: 'fitness-tracker-th.firebaseapp.com' }) === false,
+     'an installed iOS app is NOT sent to a redirect that cannot finish');
+  ok(fb.prefersRedirect({ authDomain: 'timothyhadfield.github.io' }) === true,
+     'but it still prefers one where the redirect genuinely works — the reasoning survives');
+
+  globalThis.window = realWindow;
+}
+
 /* ---------- what to do when a Google sign-in fails ---------- */
 // Reported by Tim: "sometimes when I sign in using google, it says Your browser
 // blocked the sign-in window". The popup was not the problem. Linking an

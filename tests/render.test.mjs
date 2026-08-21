@@ -420,13 +420,77 @@ ok(!data.querySelector('.rep-target'),
   await settle(); await settle();
 
   ok(calls.length === 1 && !calls[0].forceRedirect, 'tapping it tries the popup first');
-  ok(!escapeBtn.hidden, 'a cancelled sign-in reveals the way through, rather than doing nothing');
   ok(!gBtn.disabled, 'and leaves the button usable rather than stuck on "Opening…"');
 
-  escapeBtn.click();
-  await settle(); await settle();
-  ok(calls.length === 2 && calls[1].forceRedirect === true,
-     'the fallback forces the redirect route, which no popup blocker can stop');
+  /* ⚠️ WHAT A CANCELLED SIGN-IN OWES THE USER — rewritten 2026-08-21 after Tim
+     reported from an iPhone that the popup opens, closes, and nothing happens.
+     This block used to assert only that the redirect fallback appeared. That is
+     the wrong contract on his phone: `signInWithRedirect` cannot finish when the
+     authDomain is a different origin from the app, which is this project, so
+     revealing it was offering a route guaranteed to fail.
+
+     The contract now is the one that is actually true everywhere: SOMETHING
+     VISIBLE AND PERMANENT is said, and what it offers is a route that works. */
+  const statusText = () => [...screen.querySelectorAll('.field-help')]
+    .filter((n) => !n.hidden).map((n) => n.textContent).join(' ');
+  ok(/closed before finishing/i.test(statusText()),
+     'a cancelled sign-in SAYS so, on the screen rather than in a 2.4-second toast');
+
+  const { redirectCanComplete } = await import(BASE + 'firebase-backend.js');
+  const { FIREBASE_CONFIG } = await import(BASE + 'firebase-config.js');
+  if (redirectCanComplete(FIREBASE_CONFIG)) {
+    ok(!escapeBtn.hidden, 'where a redirect can finish, it is offered');
+    escapeBtn.click();
+    await settle(); await settle();
+    ok(calls.length === 2 && calls[1].forceRedirect === true,
+       'and it forces the redirect route, which no popup blocker can stop');
+  } else {
+    ok(escapeBtn.hidden,
+       'where a redirect CANNOT finish, it is not offered — the bug was offering it anyway');
+    ok(/email and password/i.test(statusText()),
+       'and the route that does work on that device is named instead');
+  }
+
+  /* ⚠️ THE ONE THAT PRODUCED "NOTHING HAPPENS" — a promise that never settles.
+     On iOS Safari the popup's handler page can lose the storage it needs, the
+     window closes, and the SDK is left holding a promise nobody will resolve.
+     No throw means no catch: `run()` awaited for ever and the button sat on
+     "Opening…" with no toast, no fallback and no explanation. Literally nothing.
+
+     ⚠️ The fix races the UI, NEVER the sign-in — a real sign-in behind
+     two-factor can take minutes, and aborting one because a timer expired would
+     be a worse bug than this one. So the assertion is that the BUTTON comes
+     back and the screen speaks, while the auth promise is still outstanding. */
+  {
+    let settledTheAuth = false;
+    // A promise that never resolves on its own — the iOS case exactly.
+    auth.signInGoogle = () => new Promise(() => { settledTheAuth = false; });
+
+    // Fire the patience timer immediately instead of waiting 40 seconds. Only
+    // the long one: short timers belong to the app and must keep their timing.
+    const realSetTimeout = globalThis.setTimeout;
+    globalThis.setTimeout = (fn, ms, ...rest) =>
+      (ms >= 30000 ? realSetTimeout(fn, 0) : realSetTimeout(fn, ms, ...rest));
+
+    const hung = await mount(AccountView());
+    const hungBtn = [...hung.querySelectorAll('button')]
+      .find((b) => /Continue with Google/.test(b.textContent));
+
+    hungBtn.click();
+    await settle(); await settle(); await settle();
+
+    globalThis.setTimeout = realSetTimeout;
+
+    ok(!hungBtn.disabled,
+       'a popup promise that NEVER settles still hands the button back — the literal "nothing happens"');
+    ok(/closed without finishing/i.test(
+         [...hung.querySelectorAll('.field-help')].filter((n) => !n.hidden)
+           .map((n) => n.textContent).join(' ')),
+       'and says so on the screen instead of waiting for ever');
+    ok(settledTheAuth === false,
+       '⚠️ and the sign-in itself was never cancelled — the UI is raced, not the auth, '
+       + 'because a real sign-in behind two-factor takes minutes');
+  }
 
   auth.signInGoogle = realGoogle;
   auth.state = realState;

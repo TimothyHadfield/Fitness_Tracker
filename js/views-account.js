@@ -257,44 +257,112 @@ function offlineScreen(state) {
  * offer the redirect as one tap rather than taking it for them.
  * ------------------------------------------------------------------ */
 
+/**
+ * ⚠️ WHAT TIM SAW ON AN IPHONE, 2026-08-21: "it opens a popup for a second, then
+ * quickly closes it and nothing happens." Three separate faults met there, and
+ * only the first is about Google at all.
+ *
+ * 1. **A hung promise left a dead button.** `run()` awaits its function, and on
+ *    iOS Safari the popup's promise can simply never settle — the handler page
+ *    loses the storage it needs, the window closes, and the SDK is left holding
+ *    a promise nobody will resolve. No throw means no catch, so the button sat
+ *    on "Opening…" for ever and *nothing happened* in the most literal sense.
+ * 2. **Every failure was a 2.4-second toast.** On a phone that is indisting-
+ *    uishable from nothing happening, which is exactly how it got reported.
+ * 3. **The escape hatch could not work.** "Continue in this window instead" is
+ *    `signInWithRedirect`, and Firebase document that as broken whenever the
+ *    authDomain is a different origin from the app — which is this project on
+ *    every browser Tim owns. The one route offered as the reliable one was the
+ *    one guaranteed to fail.
+ *
+ * ⚠️ THE UI IS RACED, NOT THE SIGN-IN. Nothing here cancels the auth promise: a
+ * real sign-in behind two-factor can genuinely take minutes, and aborting one
+ * because a timer expired would be a far worse bug than the one being fixed.
+ * The timer only takes the BUTTON back and says what to do; if the sign-in does
+ * eventually land, the auth listener still picks it up.
+ */
+const POPUP_PATIENCE_MS = 40000;
+
 function googleButton({ label, className, onDone }) {
   const btn = el('button', { class: className, text: label });
+
+  // Persistent, not a toast. This screen is where somebody has just watched a
+  // window flash and vanish, and it owes them a sentence that stays put.
+  const status = el('div', { class: 'field-help', hidden: true });
+  const say = (text) => { status.textContent = text; status.hidden = false; };
+
   const escape = el('button', {
     class: 'btn block', hidden: true,
     text: 'Continue in this window instead',
     onClick: async () => {
-      // Redirect only — no popup to block. This is the route that always works.
       await run(escape, 'Redirecting…', () => auth.signInGoogle({ forceRedirect: true }));
     },
   });
 
+  // Offered only where it can actually finish. Where it cannot, the honest
+  // advice is the route that does work on this device, which is email.
+  async function offerFallback() {
+    const { redirectCanComplete } = await import('./firebase-backend.js');
+    const { FIREBASE_CONFIG } = await import('./firebase-config.js');
+    if (redirectCanComplete(FIREBASE_CONFIG)) {
+      escape.hidden = false;
+      return 'Or continue in this window instead.';
+    }
+    return 'Google sign-in does not complete in this browser. Use an email and password '
+      + 'below — it works everywhere, and it keeps everything you have already logged.';
+  }
+
+  const release = () => { btn.disabled = false; btn.textContent = label; };
+
   btn.addEventListener('click', async () => {
+    status.hidden = true;
+    let settled = false;
+
+    const patience = setTimeout(async () => {
+      if (settled) return;
+      // The promise is still out there and may yet succeed — this only stops
+      // the screen pretending to be busy.
+      release();
+      say('The sign-in window closed without finishing. ' + await offerFallback());
+    }, POPUP_PATIENCE_MS);
+
     let cancelled = false;
     const ok = await run(btn, 'Opening…', async () => {
-      const res = await auth.signInGoogle();
-      if (res && res.status === 'cancelled') {
+      try {
+        const res = await auth.signInGoogle();
+        if (res && res.status === 'cancelled') {
+          cancelled = true;
+          say('The sign-in window closed before finishing. ' + await offerFallback());
+          return;
+        }
+        if (res && res.status === 'signed-in') toast('Account secured');
+      } catch (err) {
+        // ⚠️ The code goes ON THE SCREEN. Everything above is inference about a
+        // device nobody here can run; the code is the fact. Without it the next
+        // report is "nothing happens" again and we are no better off.
+        say(`Google sign-in failed: ${err && err.code ? err.code : 'no error code'}. `
+          + await offerFallback());
         cancelled = true;
-        toast('Sign-in window closed before finishing');
-        escape.hidden = false;
         return;
       }
-      if (res && res.status === 'signed-in') toast('Account secured');
     });
+
+    settled = true;
+    clearTimeout(patience);
 
     if (cancelled) {
       // run() hands the button back only when fn THROWS, on the assumption that
       // success navigates away. A cancelled sign-in does neither, so without
       // this the button sits on "Opening…" for good — which is the dead button
       // all over again, one layer up.
-      btn.disabled = false;
-      btn.textContent = label;
+      release();
       return;
     }
     // 'redirecting' navigates away, so nothing after this runs in that case.
     if (ok) onDone();
   });
 
-  return { btn, escape };
+  return { btn, escape, status };
 }
 
 /* ------------------------------------------------------------------ *
@@ -341,6 +409,7 @@ function anonymousScreen() {
       ),
 
       googleBtn,
+      google.status,
       google.escape,
 
       el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
@@ -580,6 +649,7 @@ export async function SignInView() {
 
       el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
       googleBtn,
+      google.status,
       google.escape,
       resetBtn,
     ],
