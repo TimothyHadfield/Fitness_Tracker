@@ -63,6 +63,63 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-21, fifth pass — the body map: the figure stops moving
+
+**Tim, from the phone:** *"When you tap a muscle the whole thing shrinks and moves upwards to make
+room for more words at the bottom. This disconnects the body from the arms and just makes it harder
+to see. I don't want to ever move the body (in direction or size), so to make room for the words,
+just make way less words on the bottom."*
+
+⚠️ **Rule 3's corollary already said this and the phone never obeyed it.** "Content must not shrink
+because you asked it a question" was written for exactly this screen, and the DESKTOP honoured it —
+a muscle opens in a side column so the figure keeps its size. On a phone the panel stacks
+underneath, and `.body-wrap` was `flex: 1`: a flex item whose instruction is *give up whatever the
+thing below you needs*. So the figure shrank and rose by however many words the panel had. **A rule
+kept in one layout and broken in the other is not a rule**, and nothing was comparing them.
+
+`.body-wrap` is now a **fixed 57 %** and `.body-foot` takes what is left and scrolls inside it.
+Measured in a real engine, tapping Quads: **393×852 body `{x:14, y:176, w:365, h:348.3}` before and
+byte-identical after; 375×667 `{x:14, y:176, w:347, h:242.8}` likewise.** ⚠️ **jsdom cannot check
+this** — it has no layout, so `getBoundingClientRect` is all zeros. It needed a browser and it always
+will.
+
+### The panel: a paragraph down to 18 words
+
+It carried a source sentence, a confidence block (label, band, percentage, bar, corroboration line),
+up to three multi-line caveats, a restatement of the comparison group, and **a seven-row table of
+per-level weight targets**. Now:
+
+```
+  Quads                                    Proficient
+  320 lbs   stronger than 66%
+  ▮▮▮▮▮▮░░░░░░░░░░░░░  47 lbs to Advanced
+  High confidence · 170 sessions, 4 exercises
+  from Back Squat 300×3, Jul 10
+```
+
+**Cut entirely:** the seven-row target table — six of its rows are weights for levels nobody is near,
+and the seventh is what the to-next bar already says. The confidence **bar** — D19 paints confidence
+as the muscle's own fade and the legend explains it, so a second bar drew the same quantity twice and
+competed with the to-next bar beside it. "Newest N days ago" and the confidence percentage.
+
+**Cut as a repetition, not as a claim:** the panel's restatement of the comparison group. ⚠️ **D15
+still holds** — the UI must always say "of people who lift" — and it is still said, by the header,
+which is `.pane-top` and therefore **fixed and on screen at every moment the panel is**. What went was
+the second copy, not the claim.
+
+⚠️ **KEPT, one line each: every caveat, the corroboration, and the source set.** This app's whole
+credibility is that it does not overclaim. **Shortening a caveat is allowed; softening one is not** —
+the fallback note, the high-rep note, the general-population note and the blocked-sets note all still
+make exactly the claim they made, in a line instead of a paragraph. Sessions AND exercises stayed for
+the same reason: "170 sessions" reads as well corroborated and "170 sessions, 4 exercises" is the
+honest version of it.
+
+**A word count is now a test.** Every other assertion on this panel checks something is PRESENT, and
+the failure mode being guarded is things quietly accumulating until it is a wall again — which no
+presence check can ever catch. A clean rating is capped at 40 words; it currently runs 18.
+
+---
+
 ## 2026-08-21, fourth pass — the first run: 12 steps to 5
 
 **Built on Tim's ask for a recommendation.** `docs/improvement-plan.md` §1.1 has carried this as the

@@ -9,8 +9,11 @@
 // separate, clearly-labelled line.
 
 import { store, muscleStrength } from './store.js';
+// `weightForPercentile` and `MUSCLE_LIFTS` left with the seven-row target table
+// on 2026-08-21 — nothing on this screen asks what a level is worth in pounds
+// any more, only what the next one costs, and `m.toNext` carries that.
 import {
-  LEVELS, MUSCLE_LIFTS, UNRANKABLE, weightForPercentile, keyLiftFor,
+  LEVELS, UNRANKABLE, keyLiftFor,
   COMPARE_OPTIONS, normalizeCompare, comparisonLabel, comparePreset, matchesPreset,
 } from './strength-standards.js';
 import { bodySvg, setSelected } from './body-map.js';
@@ -257,37 +260,28 @@ function isChosen(axis, key, current, profile) {
  * Confidence
  * ------------------------------------------------------------------ */
 
-// A bar and a word, never the colour alone. The bar is the same fade the muscle
-// itself is painted with, so the two are obviously the same quantity — someone
-// should be able to look at a washed-out muscle, tap it, and find the bar short.
-function confidenceRow(m) {
-  const pct = Math.round(m.confidence * 100);
-  // Sessions AND exercises, because they answer different questions and the
-  // panel used to imply the first was the second. "40 sessions counted" reads
-  // as a well-corroborated number; "40 sessions counted, all of one exercise"
-  // is the honest version of the same fact, and it is the one that explains why
-  // the confidence bar beside it is not full.
-  const sessions = m.contributorCount === 1
-    ? '1 session counted'
-    : `${m.contributorCount} sessions counted`;
+/**
+ * Confidence, in one line.
+ *
+ * ⚠️ THE BAR IS GONE AND THE WORD IS NOT. It used to be a labelled row, a
+ * percentage, a progress bar and a corroboration sentence — four elements for a
+ * quantity the figure above is ALREADY showing, because D19 paints confidence as
+ * the fade on the muscle itself and the legend says "Faded = less sure". Drawing
+ * it a second time as a bar taught nothing the colour had not, and it sat next
+ * to the to-next bar, where two bars measuring different things is worse than
+ * one bar and a word.
+ *
+ * Sessions AND exercises stay, because they answer different questions and
+ * dropping the second would let the first mislead: "40 sessions" reads as well
+ * corroborated, and "40 sessions, all of one exercise" is the same fact told
+ * honestly. It is the shortest form of that, not the absence of it.
+ */
+function confidenceLine(m) {
+  const sessions = m.contributorCount === 1 ? '1 session' : `${m.contributorCount} sessions`;
   const sources = m.exerciseCount > 1
-    ? `${sessions} across ${m.exerciseCount} exercises`
+    ? `${sessions}, ${m.exerciseCount} exercises`
     : sessions;
-  return el('div', { class: 'conf-row' },
-    el('div', { class: 'conf-head' },
-      el('span', { class: 'conf-label', text: 'Confidence' }),
-      el('span', { class: 'conf-band', text: m.band.name }),
-      el('span', { class: 'conf-pct mono', text: `${pct}%` }),
-    ),
-    el('div', { class: 'conf-bar' },
-      el('div', {
-        class: 'conf-fill lv-' + (m.level ? m.level.key : 'below'),
-        style: `width:${Math.max(3, pct)}%`,
-      })),
-    el('div', { class: 'conf-sub', text: sources
-      + (m.newestAgeDays === 0 ? ', newest today'
-        : `, newest ${Math.round(m.newestAgeDays)} day${m.newestAgeDays === 1 ? '' : 's'} ago`) }),
-  );
+  return `${m.band.name} confidence · ${sources}`;
 }
 
 function summary(muscles) {
@@ -337,11 +331,11 @@ function blockedNote(blocked) {
     ? names.join(' and ')
     : `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`;
   const sets = blocked.sets;
-  return el('div', { class: 'card' },
-    el('div', { class: 'field-help', text:
-      `${sets} set${sets === 1 ? '' : 's'} of ${listed} ${sets === 1 ? 'is' : 'are'} not counted `
-      + `here — ${blocked.exercises[0].reason}.` }),
-  );
+  // One line, same claim. It has to keep naming the exercises: the whole point
+  // is that a muscle must not read as "nothing recorded" over work somebody
+  // actually did, and "3 sets not counted" without saying which is no better.
+  return el('div', { class: 'muscle-warn', text:
+    `${sets} set${sets === 1 ? '' : 's'} of ${listed} not counted — ${blocked.exercises[0].reason}.` });
 }
 
 function detail(m, muscle, profile, blocked) {
@@ -366,70 +360,46 @@ function detail(m, muscle, profile, blocked) {
   }
 
   const pct = Math.round(m.percentile);
-  const rows = LEVELS.map((l) => {
-    const target = weightForPercentile(l.percentile, muscle, profile);
-    const reached = m.percentile >= l.percentile;
-    return el('div', { class: 'target-row' + (reached ? ' reached' : '') },
-      el('i', { class: 'lv-sw lv-' + l.key }),
-      el('span', { class: 'target-name', text: l.name }),
-      el('span', { class: 'target-pct mono', text: `top ${100 - l.percentile}%` }),
-      // Ceil, never round. If the panel says 295 lb, lifting 295 has to be
-      // enough — rounding 295.4 down to 295 would show a target that does not
-      // actually clear the threshold.
-      el('span', { class: 'target-wt mono', text: units.withUnit(Math.ceil(target)) }),
-    );
-  });
 
-  return el('div', { class: 'card' },
+  /* ⚠️ WHAT THIS PANEL NO LONGER SHOWS, and why — Tim, 2026-08-21: "make way
+     less words on the bottom… if there's anything you think isn't that
+     important to show, then don't show it."
+
+     GONE — the seven-row table of per-level weight targets. It was the largest
+     thing here by a distance, and six of its seven rows are weights for levels
+     somebody is nowhere near. The one row that is actionable is the next one,
+     and the to-next bar already carries it with its own progress.
+
+     GONE — the restatement of the comparison group. It read "Stronger than 71%
+     of men who lift — at my body weight, around 30", which is the same sentence
+     the header states. ⚠️ That header is `.pane-top`, which is FIXED and
+     therefore on screen at every moment this panel is, so D15's rule that the
+     UI must say "of people who lift" is still kept — by the line that is always
+     visible rather than by two lines that agreed with each other.
+
+     GONE — "newest N days ago", the confidence percentage, and the confidence
+     bar. See confidenceLine().
+
+     KEPT, because the app's credibility is the reason it exists: where the
+     number came from (Rule 5), how well corroborated it is, and every caveat.
+     They are one line each now. **Shortening a caveat is allowed; softening one
+     is not** — none of them lost a claim, only words. */
+
+  return el('div', { class: 'card muscle-detail' },
     el('div', { class: 'muscle-head' },
       el('span', { class: 'muscle-name', text: muscle }),
       el('span', { class: 'muscle-level lv-text-' + (m.level ? m.level.key : 'below'),
         text: m.level ? m.level.name : 'Below Beginner' }),
     ),
 
-    // Where the number came from is never left unsaid (Rule 5). Now that a
-    // rating can come from an exercise that is NOT the key lift, saying which
-    // exercise matters more than it ever did: "195 lb bench" and "195 lb
-    // converted from a dumbbell press" deserve different amounts of trust, and
-    // the panel has to let someone tell them apart.
-    el('div', { class: 'field-help' },
-      `${units.withUnit(Math.round(m.estimate))} estimated ${m.lift.name}`
-      + ` · best from ${m.best.exerciseName}, ${units.fmtWeight(m.best.weight)}`
-      + (m.best.loadType === 'per_side' ? '/side' : '')
-      + `×${m.best.reps} on ${fmtDateShort(m.best.date)}`
-      + (m.best.source === 'workout' ? ', logged in a workout' : ', benchmarked')),
+    // The two things somebody taps a muscle to find out, on one line and big
+    // enough to read at arm's length.
+    el('div', { class: 'muscle-stat' },
+      el('span', { class: 'muscle-est mono', text: units.withUnit(Math.round(m.estimate)) }),
+      el('span', { class: 'muscle-pct', text: `stronger than ${pct}%` }),
+    ),
 
-    confidenceRow(m),
-
-    m.basis === 'fallback'
-      ? el('div', { class: 'chart-caption warn' }, el('span', {
-          text: 'No direct exercise for this muscle yet — this is inferred from the big lifts '
-            + 'that also work it, so treat it as a rough placing.' }))
-      : null,
-
-    m.hint ? el('div', { class: 'field-help', text: m.hint }) : null,
-
-    blockedNote(blocked),
-
-    // The population is never assumed. It is whatever the header says it is,
-    // built from the same function, so the percentile and the group it refers
-    // to cannot drift apart when the comparison is changed.
-    el('div', { class: 'field-help' },
-      `Stronger than ${pct}% of ${comparisonLabel(profile).main.replace(/^vs\. /, '')}`
-      + ` — ${comparisonLabel(profile).sub}.`),
-
-    // When the comparison includes people who do not lift, say so in the panel
-    // as well as the header — that reading is much softer evidence than a
-    // ranking against lifters, and it should never be quoted without the caveat.
-    profile && normalizeCompare(profile.compare).pool === 'everyone'
-      ? el('div', { class: 'field-help general' },
-          'This compares you against adults in general, most of whom do not lift. '
-          + 'What an untrained adult can lift has never really been measured, so treat '
-          + 'this as a rough placing rather than a number to quote.')
-      : null,
-
-    // The near goal. Five levels alone left gaps big enough to train through
-    // without the colour moving; this is what keeps a target close.
+    // The near goal, and the only target worth a row of its own.
     m.next
       ? el('div', { class: 'to-next' },
           el('div', { class: 'to-next-bar' },
@@ -437,15 +407,37 @@ function detail(m, muscle, profile, blocked) {
           el('div', { class: 'to-next-label' },
             `${units.withUnit(Math.ceil(m.toNext))} to ${m.next.name}`),
         )
-      : el('div', { class: 'field-help', text: 'Top level reached.' }),
+      : el('div', { class: 'muscle-meta', text: 'Top level reached.' }),
 
-    !m.confident
-      ? el('div', { class: 'chart-caption warn' }, el('span', {
-          text: `Estimated from a ${m.best.reps}-rep set. Ranking is most reliable from sets of `
-            + '5 reps or fewer — benchmark heavier for a firmer placing.' }))
+    el('div', { class: 'muscle-meta', text: confidenceLine(m) }),
+
+    // Rule 5: never let an inference look like a measurement. The estimate above
+    // is converted; this names the set it was converted FROM, which is what lets
+    // somebody tell "195 lb bench" from "195 lb inferred off a dumbbell press".
+    el('div', { class: 'muscle-meta', text:
+      `from ${m.best.exerciseName} ${units.fmtWeight(m.best.weight)}`
+      + (m.best.loadType === 'per_side' ? '/side' : '')
+      + `×${m.best.reps}, ${fmtDateShort(m.best.date)}` }),
+
+    m.basis === 'fallback'
+      ? el('div', { class: 'muscle-warn', text:
+          'Inferred from the big lifts that also work it — a rough placing.' })
       : null,
 
-    el('div', { class: 'section-label', text: `${m.lift.name} targets` }),
-    el('div', { class: 'targets' }, rows),
+    !m.confident
+      ? el('div', { class: 'muscle-warn', text:
+          `From a ${m.best.reps}-rep set. Benchmark heavier for a firmer placing.` })
+      : null,
+
+    // Softer evidence than a ranking against lifters, and it must never be
+    // quoted without saying so.
+    profile && normalizeCompare(profile.compare).pool === 'everyone'
+      ? el('div', { class: 'muscle-warn', text:
+          'Compared against adults in general, most of whom do not lift — a rough placing.' })
+      : null,
+
+    m.hint ? el('div', { class: 'muscle-meta', text: m.hint }) : null,
+
+    blockedNote(blocked),
   );
 }

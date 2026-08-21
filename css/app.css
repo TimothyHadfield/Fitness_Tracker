@@ -1586,7 +1586,11 @@ select.input {
      nearly half the height. The two are about even at 860, and stability wins
      the tie. The fluid width is what keeps that true at the narrow end. */
   .graph-host.is-muscles { flex-direction: row; align-items: stretch; gap: 18px; }
-  .graph-host.is-muscles .body-wrap { flex: 1; min-width: 0; }
+  /* ⚠️ `height: auto` undoes the 57% the phone layout uses. Here the panel is a
+     COLUMN beside the figure rather than a block under it, so the figure's
+     height is the container's and a percentage of it would shrink the one thing
+     this whole rule exists to keep still. */
+  .graph-host.is-muscles .body-wrap { flex: 1; min-width: 0; height: auto; }
   .graph-host.is-muscles .body-foot {
     width: clamp(260px, 32%, 340px);
     flex: none;
@@ -1672,8 +1676,25 @@ select.input {
 /* min-width:0 guards the flexbox trap where an item's automatic minimum size is
    its INTRINSIC width: this SVG's viewBox is over 1000 wide, so without it a
    narrow phone could be pushed wider than its own viewport. */
+/* ⚠️ THE FIGURE NEVER MOVES AND NEVER RESIZES. Tim, 2026-08-21: "I don't want
+   to ever move the body (in direction or size)."
+
+   It used to be `flex: 1`, which is the opposite instruction — a flex item that
+   gives up whatever the panel below it needs. So tapping a muscle grew the
+   panel, the figure shrank to fit what was left and slid upward, and the arms
+   visibly detached from the body at the exact moment somebody was trying to
+   look at them. Rule 3's corollary already said content must not shrink because
+   you asked it a question; the desktop side-column obeyed it and the phone
+   never did.
+
+   The share is FIXED, so the figure is identical whether a muscle is selected
+   or not, and the panel takes what is left and scrolls inside it. The real
+   answer to "the panel needs more room" is fewer words in the panel, which is
+   the other half of this change. */
 .body-wrap {
-  flex: 1; min-height: 0; min-width: 0;
+  flex: none;
+  height: 57%;
+  min-width: 0;
   display: flex; align-items: center; justify-content: center;
 }
 .body-map { width: 100%; height: 100%; max-width: 100%; max-height: 100%; display: block; }
@@ -1800,20 +1821,47 @@ select.input {
 .lv-key-note { color: var(--ink-faint); }
 .lv-pct { color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
 
-/* Confidence in the detail panel. */
-.conf-row { display: flex; flex-direction: column; gap: 4px; }
-.conf-head { display: flex; align-items: baseline; gap: 7px; }
-.conf-label {
-  font-size: 10.5px; font-weight: 750; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
-.conf-band { font-size: 13px; font-weight: 700; flex: 1; }
-.conf-pct { font-size: 11.5px; color: var(--ink-faint); }
-.conf-bar { height: 6px; background: var(--raised); border-radius: 3px; overflow: hidden; }
-.conf-fill { height: 100%; border-radius: 3px; background: var(--lv-mix, var(--accent)); }
-.conf-sub { font-size: 11.5px; color: var(--ink-faint); }
+/* Confidence is one line of .muscle-meta now — the row, the percentage and the
+   bar went with the paragraph on 2026-08-21. The muscle's own fade already IS
+   the confidence (D19), so a second bar drawing the same quantity taught
+   nothing and competed with the to-next bar beside it. */
 
-.body-foot { flex: none; display: flex; flex-direction: column; gap: 8px; max-height: 46%; overflow-y: auto; }
+/* Takes what the figure does not, and scrolls inside it. `max-height: 46%` here
+   was the other side of the old bug: capping the panel is not the same as
+   fixing the figure, because anything under the cap still stole height from it. */
+.body-foot { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+
+/* ── The detail panel, rebuilt short (Tim, 2026-08-21) ──────────────────────
+   "Make way less words on the bottom. We want it to be easy to understand, not
+   a paragraph." It was a paragraph: a source sentence, a confidence block with
+   a bar and a corroboration line, up to three multi-line caveats, a restatement
+   of the comparison group the fixed header already carries, and a seven-row
+   table of per-level weight targets. The lead is now the two things somebody
+   taps a muscle to find out — what it is and what it lifts — and everything
+   else is one short line or gone. */
+.muscle-detail { gap: 7px; }
+
+/* The answer, big enough to be the answer. */
+.muscle-stat { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.muscle-est {
+  font-size: 21px; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.muscle-pct { font-size: 13.5px; color: var(--ink-soft); font-weight: 600; }
+
+/* One quiet line. Used for where the number came from and how well corroborated
+   it is — both of which are Rule 5 obligations and neither of which is worth a
+   sentence. */
+.muscle-meta { font-size: 11.5px; color: var(--ink-faint); line-height: 1.35; }
+
+/* A caveat, compressed to a line. Still full-strength ink and still a hairline
+   bracket — these are load-bearing (the whole app rests on them) and shortening
+   one is allowed where softening it is not. */
+.muscle-warn {
+  border-left: 2px solid var(--accent);
+  padding-left: 9px;
+  font-size: 11.5px; line-height: 1.35; color: var(--ink-soft);
+}
 
 .basis { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .basis-main { font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 3px; }
@@ -1851,16 +1899,9 @@ select.input {
 .to-next-fill { height: 100%; background: var(--accent); border-radius: 3px; }
 .to-next-label { font-size: 12.5px; font-weight: 650; color: var(--ink-soft); }
 
-.targets { display: flex; flex-direction: column; }
-.target-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 5px 0; font-size: 13px; color: var(--ink-faint);
-  border-top: 1px solid var(--rule-soft);
-}
-.target-row.reached { color: var(--ink); font-weight: 620; }
-.target-name { flex: 1; min-width: 0; }
-.target-pct { font-size: 11px; color: var(--ink-faint); }
-.target-wt { width: 74px; text-align: right; }
+/* The seven-row per-level target table was removed on 2026-08-21: six of its
+   seven rows are weights for levels somebody is nowhere near, and the seventh
+   is what .to-next already says with a bar. */
 
 .lv-name { white-space: nowrap; }
 

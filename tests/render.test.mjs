@@ -185,14 +185,60 @@ ok(/Chest/.test(data.textContent), 'tapping chest opens its detail');
 // The comparison group is now the user's choice, so the caption is no longer one
 // fixed string. The invariant it has to keep is the one that matters: whatever
 // group is named, it is always a group of people who LIFT. Never the public.
-ok(/who lifts?\b/i.test(data.textContent),
-   'the caption names a population that lifts — never implies the general population');
+// ⚠️ ASSERTED ON THE HEADER, not on the whole screen — changed 2026-08-21 when
+// the panel stopped restating the comparison group. D15's rule is unchanged and
+// unweakened: the UI must always say "of people who lift". What changed is WHERE
+// it is said. `.pane-top` is `flex: none`, so that line is on screen at every
+// moment the panel is, and two lines agreeing with each other was the redundancy
+// worth cutting rather than the claim.
+//
+// (The old assertion read the whole screen and passed on the panel's copy. It
+// broke here for a reason worth knowing: textContent concatenates with no
+// separator, so the header alone reads "…who lift180 lbs" and `\b` after
+// "lift" never matches. It was a boundary artefact, not a lost claim.)
+const compareHeader = data.querySelector('.pane-top');
+ok(compareHeader && /who lifts?/i.test(compareHeader.textContent),
+   'the fixed header names a population that lifts — never implies the general population');
 ok(!/\d+% of (all )?(people|adults)\b(?! who)/i.test(data.textContent),
    'and never claims a percentile against people in general');
 ok(/\d+ lbs to (Beginner|Novice|Intermediate|Proficient|Advanced|Expert|Elite)/.test(data.textContent),
    'the detail shows the weight needed for the next level');
-ok(data.querySelectorAll('.target-row').length === LEVELS.length,
-   'all seven per-level weight targets are listed');
+
+/* ── The panel is short, and stays short (Tim, 2026-08-21) ─────────────────
+   "Make way less words on the bottom. We want it to be easy to understand, not
+   a paragraph." It was a paragraph — a source sentence, a confidence block with
+   a bar and a corroboration line, up to three multi-line caveats, a restatement
+   of the header, and a seven-row table of per-level weight targets.
+
+   ⚠️ A WORD COUNT, because that is the actual property asked for and nothing
+   else measures it. Every other assertion here checks that something is
+   PRESENT; the failure mode this guards is things quietly accumulating until
+   the panel is a wall again, which no presence check can ever catch. */
+const panel = data.querySelector('.muscle-detail');
+ok(Boolean(panel), 'tapping a muscle opens the short detail panel');
+ok(!data.querySelector('.target-row'),
+   'the seven-row per-level target table is gone — six of its rows were levels nobody is near');
+ok(!data.querySelector('.conf-bar'),
+   'and so is the confidence bar, which drew the same quantity as the muscle’s own fade (D19)');
+
+// ⚠️ This fixture is a CLEAN rating — one benchmark at 225×1, no fallback, no
+// high-rep flag, no blocked sets — so the count measures the common path, which
+// is the one that accumulates. A muscle carrying three caveats will legitimately
+// run longer; the caveats are the one thing here allowed to cost words.
+const panelWords = panel.textContent.trim().split(/\s+/).length;
+ok(panelWords <= 40,
+   `a clean rating fits in ${panelWords} words — a glance, not a paragraph (cap 40)`);
+
+// ...and it still says the four things somebody taps a muscle to find out.
+const panelText = panel.textContent.replace(/\s+/g, ' ');
+ok(/Chest/.test(panelText), 'it names the muscle');
+ok(/Intermediate/.test(panelText), 'and the level it has reached');
+ok(/\d+ lbs\b/.test(panelText) && /stronger than \d+%/.test(panelText),
+   'the estimate and the percentile, which are the two numbers the screen exists for');
+ok(/confidence/i.test(panelText),
+   '⚠️ and how much to believe it — shortened to a word, never dropped');
+ok(/from .+\d+×\d+/.test(panelText),
+   '⚠️ and the set it was converted FROM (Rule 5: an inference must not look like a measurement)');
 ok(Boolean(data.querySelector('.to-next-fill')), 'progress bar toward the next level renders');
 const selectedNow = data.querySelectorAll('.body-region.is-selected');
 ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length} regions)`);

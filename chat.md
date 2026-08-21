@@ -4223,3 +4223,39 @@ record a maximum — and so is the "Recent activity" heading, which was standing
 your first workout" — the exact string that was wrong. It pins the property now: one tap from a real
 programme, the word "system" absent from the first screen, and the destination asserted by driving
 the tap rather than reading a label.
+
+---
+
+## 2026-08-21, fifth pass — the body map stops moving
+
+Tim, from the phone: tapping a muscle shrank the figure and pulled it upward to make room for the
+words, disconnecting the arms from the body. "I don't want to ever move the body (in direction or
+size), so to make room for the words, just make way less words on the bottom."
+
+**Rule 3's corollary already said this, and the phone never obeyed it.** "Content must not shrink
+because you asked it a question" was written for this exact screen. The desktop honoured it — a side
+column, so the figure keeps its size. On a phone the panel stacks underneath and `.body-wrap` was
+`flex: 1`, which is the instruction *give up whatever the thing below you needs*. A rule kept in one
+layout and broken in the other is not a rule, and nothing was comparing the two.
+
+Fixed 57 % for the figure; the panel takes what is left and scrolls inside it. Measured tapping
+Quads: 393×852 `{x:14, y:176, w:365, h:348.3}` before and byte-identical after; same on the SE.
+⚠️ jsdom cannot check this — no layout, so every rect is zero. It needed a browser.
+
+### 18 words
+
+Cut entirely: the seven-row per-level target table (six rows are levels nobody is near, the seventh
+is what the to-next bar already says), the confidence bar (D19 already paints confidence as the
+muscle's own fade — a second bar drew it twice and competed with the to-next bar), the confidence
+percentage, and "newest N days ago".
+
+Cut as a repetition rather than a claim: the panel's restatement of the comparison group. D15 still
+holds and is still said — by the header, which is fixed and on screen whenever the panel is.
+
+⚠️ Kept, one line each: every caveat, the corroboration and the source set. **Shortening a caveat is
+allowed; softening one is not.** None of them lost a claim.
+
+There is a word count in the tests now. Everything else asserts something is present; the failure
+being guarded is accumulation, which no presence check catches. Cap 40, currently 18.
+
+333 render assertions green.
