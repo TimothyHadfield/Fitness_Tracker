@@ -4,12 +4,13 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-20. ⚠️ **Two things a fresh session must know before doing anything:** the
-section directly below this summary records what came out of re-running the reviews, and
-`docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Three have
-now run** (adversarial code review, cross-screen consistency, and the first accessibility audit this
-project has ever had) and all three found something real. **Four are still outstanding** — UX,
-competitive, edge cases, and the live social round trip.
+**Last updated:** 2026-08-21. ⚠️ **Three things a fresh session must know before doing anything:**
+**Tim has opened the iPhone work** (2026-08-21 — the deferral in §10.2 is over, and the first pass is
+the section directly below this summary); the 2026-08-20 section records what came out of re-running
+the reviews; and `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never
+ran. **Three have now run** (adversarial code review, cross-screen consistency, and the first
+accessibility audit this project has ever had) and all three found something real. **Four are still
+outstanding** — UX, competitive, edge cases, and the live social round trip.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -59,6 +60,107 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-21 — the first iPhone pass: what a phone-shaped look found
+
+**Tim opened the phone work** ("I want to start making it really good for working with on the
+iPhone… formatting, design and usability emphasized"). §10.2's deferral is therefore **over**. This
+was a survey, not a build — nothing below is fixed yet. Driven over CDP at **393×852 and 375×667**
+with `mobile: true` and touch emulation, on the demo account, against a scratch copy.
+
+⚠️ **Still no real device.** Everything here was measured in a desktop engine at phone metrics. The
+four items in "needs hardware" below are reasoned from documented iOS behaviour and are **not**
+measured; they are marked as such and must stay marked until a phone says otherwise.
+
+### Bugs, measured
+
+1. **⚠️ SETTINGS CRASHES IN THE DEMO ACCOUNT** — `impl.currentUser is not a function`, every time,
+   with or without a Firebase config, and **only** in the demo. `auth.state()` in `store.js` branches
+   on `impl === LocalBackend`; **`MemoryBackend` is neither that nor a remote impl**, so it falls into
+   the cloud branch and calls a method it does not have. `#/account`, `#/profile`, `#/social` and
+   `#/goals` are all fine — Settings is the one screen that does not catch. The demo is the tool for
+   judging every other screen, so this blocks the phone work itself. The shape is the same
+   two-backend assumption `active()` already had to make explicit for the demo.
+2. **"Bar Chart" is clipped in the Data mode switch** — `scrollWidth` 65 against `clientWidth` 62, at
+   both widths and in both states. Worse than the clipping: the two unselected segments share one
+   transparent background with **no divider**, so at 393px the control reads as *"Graph | Bar Chart
+   Muscles"* — two options where there are three. On the Muscles tab the selected pill sits over it
+   and it renders as **"Bar Char"**.
+3. **The calendar cannot land on the current month, and the top third shows the previous one.**
+   `CalendarView` sets `pane.scrollTop` to the right number — 4363 — and the browser **clamps it to
+   4076**, because the current month is the LAST section in the scroller and there is not enough
+   content below it to bring it to the top. 287px short, deterministic, on every visit, warm or cold.
+   Not a coordinate-space bug: the arithmetic is correct and the scroller simply cannot honour it.
+   The fix is trailing room (a `padding-bottom` of one pane height on the last month), not new maths.
+4. **The system Notes textarea clips its own content** — `clientHeight` 66 against `scrollHeight` 90
+   on the demo's own notes, with `rows="2"` and `resize: vertical`, which does nothing under touch.
+   Text simply stops mid-sentence with no cue.
+5. **A kg user cannot type a decimal weight.** `stepper()` sets `inputmode` to `decimal` only for
+   distance, so weight gets `numeric` — the iOS digits-only keypad, **no decimal point** — while
+   `units.js` gives kg one decimal and a 2.5 step. The ± buttons still work; the keyboard cannot
+   express what the display shows.
+
+### The structural one: the keyboard versus a locked layout
+
+**Nothing in this app reads `window.visualViewport`** — the grep is clean across every file. `#app`
+is `100dvh` with `html, body { overflow: hidden }`, and **the iOS keyboard does not shrink that**; it
+overlays it. So every fixed `.pane-bottom` goes *under* the keyboard the moment a field is focused.
+Measured on a 393×852 iPhone with a 336px keyboard, the visible area ends at **y = 516** — and the
+session runner's bottom bar, the one carrying **Next exercise**, sits at **789–852**. The same is
+true of every *Save changes* and every *Done*.
+
+The sharpest case is the **exercise picker**: the sheet is 767px of an 852px viewport, its 16
+muscle-group chips take **142px — four rows** — between the search box and the results, and with the
+keyboard up **3 of 272 exercises are visible**. It auto-focuses that search box, so this is the
+default state of the screen rather than an edge case.
+
+### Design and formatting, in the order they cost the most
+
+- **⚠️ Opening a programme puts you inside an edit form.** `#/system/<id>` is the system EDITOR: a
+  name field and a notes box pinned above (184px) and **Save changes + Delete system** pinned below
+  (119px), leaving a 445px pane — and **the first workout is 468px down it**, so the Push/Pull/Legs
+  you came for is more than a full screenful below the fold, behind the rating and ~350 words of
+  caveat prose. The workout screen repeats it exactly: **Add exercise is ~500px below the fold** and
+  the last visible exercise row is sliced through the middle by the bottom bar. **A full-width
+  *Delete* in the thumb zone of a screen you mostly came to read** is the other half of the problem.
+- **The badge squeezes the words on Explore.** The 2×2 rating takes about 40% of each row, cutting
+  every description to ~28 characters and 5–6 short lines. Rule 3 says the name and the sentence are
+  the content.
+- **Goals opens on two paragraphs of prose.** On a 375×667 SE, *"On track?"* and its two paragraphs
+  fill the screen and the second is cut mid-word; no requirement, cost or number is reachable without
+  scrolling. The honesty is right and its position is not.
+- **The system rating renders as a wall** — roughly 350 grey words with no spacing between the
+  paragraphs, so five separate claims read as one block.
+- **The graph's y-axis carries one decimal** — 279.9, 248.1, 216.3. False precision on a barbell.
+- **⚠️ Two `:hover` rules will stick after a tap on iOS**: `.body-region:hover { opacity: .82 }` and
+  `.as-button:hover .row-title`. The first is the bad one — **a fade left behind on a tapped muscle
+  is exactly this app's own encoding for "less sure"** (D19), so a touch artefact would be read as a
+  confidence claim.
+- **The demo bar takes no safe-area inset.** It is prepended above `.topbar`, and `.topbar` is the
+  only thing in the stylesheet that pads `env(safe-area-inset-top)` — so in the demo, and under
+  `apple-mobile-web-app-status-bar-style: black-translucent`, it runs beneath the Dynamic Island.
+  Nothing anywhere uses `safe-area-inset-left/right`, which is the landscape version of the same.
+- **Home spends a header row on "Fitness Tracker · 7 workouts saved"** — the app's own name, on the
+  screen of somebody who is already in it.
+
+### ⚠️ Needs hardware — reasoned, NOT measured
+
+- `navigator.vibrate` is called on every stepper bump and **iOS Safari has no Vibration API**, so the
+  one haptic in the app never fires on the device it was written for.
+- The press-and-hold steppers set no `-webkit-touch-callout` and no `user-select`, so a 420ms hold is
+  the same gesture iOS uses to raise a selection callout.
+- The picker's search box is focused inside `setTimeout(…, 120)`, which **breaks the user-gesture
+  chain**, so iOS will likely show a caret and no keyboard.
+- The session runner's date is a native `<input type="date">` styled with a dashed underline; iOS
+  draws its own control and that styling is unlikely to survive.
+
+**What was already right and should not be touched:** `viewport-fit=cover` with the apple meta tags,
+`-webkit-tap-highlight-color: transparent`, `touch-action: manipulation`, `overscroll-behavior: none`
+(no pull-to-refresh), 16px on every control so iOS cannot zoom on focus, `--safe-b` on the navbar and
+the sheets, and the 44px hit areas from the 2026-08-20 audit. The session runner itself reads well at
+both widths — big steppers, the primary action under the thumb, the rest bar out of the way.
 
 ---
 
@@ -239,6 +341,16 @@ than the wave did while actually returning findings.
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
+0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is now
+   the live thread. The first pass is the dated section above; **nothing in it is fixed yet.** Two
+   things to take from it before picking anything up. **`#/settings` crashes in the demo account**,
+   which blocks judging any other screen from inside the tool built for judging screens, so it goes
+   first. And the largest item is not a bug list at all — **the app has no `visualViewport` handling
+   whatsoever**, so on iOS every pinned bottom action sits under the keyboard; that is one shared fix
+   for the session runner, every Save, every Done and the exercise picker, and it wants doing once in
+   `screenShell`/`ui.js` rather than per screen. The design half — **view and edit are the same
+   screen, and the edit form wins** — is the bigger change and the one worth deciding before typing.
+
 1. **Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
    Every screen is built and driven, but only against a stubbed facade. The round trip — invite,
    open as somebody else, claim, accept, publish, read — has never run. Needs two throwaway accounts
@@ -287,8 +399,10 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
 
 7. ~~**Goals Phase 4 — progression.**~~ **BUILT 2026-08-19**, `js/progression.js`.
 
-8. ~~**Tim opens the app on a real phone.**~~ **DEFERRED by Tim, 2026-08-17** — not until the site
-   itself is finished. Still the biggest untested risk; simply not the next thing. Don't raise it.
+8. ~~**Tim opens the app on a real phone.**~~ ~~**DEFERRED by Tim, 2026-08-17.**~~ **REOPENED by
+   Tim, 2026-08-21** — see item 0. The phone is now the thing being worked on. A real device still
+   has not been touched, so everything in the 2026-08-21 pass is desktop-engine measurement at phone
+   metrics and says nothing about touch, iOS Safari or the installed PWA.
 
 **`docs/vision.md` is empty of unstarted work.** Five of its six ideas are BUILT (§1.1 social, §1.3
 ready-made systems + the rating, §1.4 the comparison setting, §1.5 set types, §1.6 goals). §1.2 is
@@ -710,9 +824,11 @@ Press-and-hold repeats.
   too the day before it turned out to be wrong.
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
   branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
-  only — it says nothing about how a phone actually behaves in the hand. **Deferred on purpose** —
-  Tim is not doing phone testing until the site itself is done (2026-08-17). Unverified is not the
-  same as unimportant: keep saying so, just don't propose it as the next job.
+  only — it says nothing about how a phone actually behaves in the hand. ⚠️ **No longer deferred:
+  Tim opened the iPhone work on 2026-08-21** and the first survey is in the dated section above — but
+  it was run at phone *metrics* in a desktop engine, so it still is not a device. Four things in it
+  are explicitly reasoned rather than measured (haptics, the long-press callout, whether a
+  `setTimeout` focus raises the keyboard, and the native date control) and must keep saying so.
 - **⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.** Social is built and every screen has been driven in a
   browser — but against a **stubbed** `social` facade, so the actual round trip (create an invite,
   open it as somebody else, claim it, accept, publish, read the other person's page) has never run

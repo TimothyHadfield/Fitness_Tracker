@@ -3985,3 +3985,75 @@ accent number on one cell in the month.
 **Four reviews still open:** UX / human behaviour, competitive, edge cases / data integrity, and the
 live social round trip — still the most valuable, because it is the only one that turns a large
 built feature from reviewed code into verified behaviour.
+
+---
+
+## 2026-08-21 — "make it really good on the iPhone": the first phone-shaped look
+
+Tim opened the phone work and asked for an in-depth look before he starts judging it himself, with
+formatting, design and usability emphasised. The 2026-08-17 deferral is over.
+
+A survey, not a build. Driven over CDP at **393×852 and 375×667**, `mobile: true`, touch emulation,
+demo account, scratch copy with the config blanked and then pointed at a project that does not exist.
+Nothing was fixed.
+
+### The one that blocks the rest
+
+**`#/settings` crashes in the demo account** — `impl.currentUser is not a function`. `auth.state()`
+branches on `impl === LocalBackend`, and `MemoryBackend` is neither that nor a remote impl, so it
+falls into the cloud branch and calls a method it has never had. Reproduced with the config blanked
+and with it present; `#/account`, `#/profile`, `#/social` and `#/goals` are all fine. The demo is the
+instrument for looking at every other screen, so a crash inside it is first in the queue.
+
+### The structural one
+
+**Nothing in the app reads `window.visualViewport`.** `#app` is `100dvh` under `overflow: hidden`,
+and the iOS keyboard does not shrink that — it covers it. Measured on a 393×852 iPhone with a 336px
+keyboard: the visible area ends at **y = 516**, and the session runner's **Next exercise** sits at
+789–852. Every *Save changes* and every *Done* is in the same place. The picker is the sharpest case
+— 16 filter chips take 142px, and with the keyboard up **3 of 272 exercises are visible**, in a sheet
+that auto-focuses its own search box.
+
+One fix, once, in the shell — not per screen.
+
+### The design one
+
+**View and edit are the same screen, and the edit form wins.** Opening a programme lands in the
+system EDITOR: name field and notes pinned above (184px), *Save changes* and *Delete system* pinned
+below (119px), a 445px pane between them — and **the first workout is 468px down it**. The workouts
+you opened the programme to reach are more than a screenful below the fold, behind the rating and
+~350 words of caveat. The workout screen repeats it: *Add exercise* ~500px down, last row sliced by
+the bottom bar. And a full-width **Delete** sits in the thumb zone of a screen you came to read.
+
+### Smaller, measured
+
+- **"Bar Chart" is clipped** in the Data mode switch (65 vs 62), and with no divider between the two
+  unselected segments it reads as *"Graph | Bar Chart Muscles"* — two options where there are three.
+- **The calendar cannot land on the current month.** It asks for 4363 and the browser clamps to
+  4076, because the current month is the last section and nothing sits below it to scroll against.
+  287px short, every visit. The arithmetic is right; the scroller has no room. Trailing space fixes
+  it, not new maths.
+- The system **Notes textarea clips its own text** (66 vs 90) with no cue under touch.
+- **A kg user cannot type a decimal.** Weight gets `inputmode="numeric"` — the digits-only iOS
+  keypad — while kg display carries one decimal and steps by 2.5.
+- **Two `:hover` rules stick after a tap on iOS.** `.body-region:hover { opacity: .82 }` is the bad
+  one: a fade left on a tapped muscle is exactly this app's own encoding for *less sure*.
+- The **demo bar takes no `safe-area-inset-top`** — it is prepended above the one element that pads.
+- Explore's badge takes ~40% of each row and cuts every description to ~28 characters over 5–6 lines.
+- Goals opens on two paragraphs of prose that fill a 667px screen before any number.
+- The graph's y-axis carries one decimal — 279.9, 248.1. False precision on a barbell.
+
+### Reasoned, not measured — and marked that way
+
+`navigator.vibrate` (the app's only haptic) does nothing on iOS. No `-webkit-touch-callout` on the
+press-and-hold steppers. The picker focuses its search inside a `setTimeout`, which breaks the
+gesture chain and probably shows a caret with no keyboard. The runner's `<input type="date">` is
+styled with a dashed underline iOS will not honour. **None of these were seen happening**, and a
+desktop engine at phone metrics cannot show them.
+
+### What was already right
+
+`viewport-fit=cover` plus the apple meta tags, transparent tap highlight, `touch-action:
+manipulation`, `overscroll-behavior: none`, 16px on every control so iOS cannot zoom on focus,
+`--safe-b` on the navbar and sheets, and the 44px hit areas from yesterday's audit. The session
+runner reads well at both widths.
