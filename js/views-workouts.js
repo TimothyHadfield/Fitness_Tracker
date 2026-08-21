@@ -167,7 +167,7 @@ export async function WorkoutsView() {
       ? el('div', { class: 'list' }, systems.map((sys) => {
           const n = countIn(sys.id);
           const names = workouts.filter((w) => w.systemId === sys.id).map((w) => w.name);
-          return el('button', { class: 'row', onClick: () => go('#/system/' + sys.id) },
+          return el('button', { class: 'row row-rated', onClick: () => go('#/system/' + sys.id) },
             el('div', { class: 'row-main' },
               el('div', { class: 'row-title wrap', text: sys.name }),
               // `.wrap`, for the same reason as the Explore list: the rating
@@ -471,7 +471,7 @@ export async function ExploreView() {
         'Pick one and it is copied into your systems. From then on it is yours — rename it, '
         + 'change the exercises, delete what you do not do.' }),
       el('div', { class: 'list' }, PRESET_SYSTEMS.map((p) =>
-        el('button', { class: 'row', onClick: () => go('#/explore/' + p.id) },
+        el('button', { class: 'row row-rated', onClick: () => go('#/explore/' + p.id) },
           el('div', { class: 'row-main' },
             el('div', { class: 'row-title wrap' },
               p.name,

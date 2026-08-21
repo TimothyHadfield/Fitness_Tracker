@@ -4126,3 +4126,17 @@ keyboard. Tim has to open the runner on his phone and tap the weight.
 
 **Left:** the device confirmations, Explore's badge squeezing descriptions to ~28 characters, and
 Goals opening on prose instead of a number.
+
+### And the last two, same session
+
+**Explore's badge dropped to its own line** below 700px. Usable text width 200px → **338px of 393**,
+and the summaries went from five or six 28-character stubs to three real sentences. The 2×2 grid was
+right when the alternative was four cells beside a name; there is just no arrangement of four numbers
+that leaves a sentence room on a 393px screen while sitting next to it.
+
+**Goals leads with the goal.** The two paragraphs about the missing verdict sat third and filled an
+SE screen — a goal opening on an explanation of what the screen does *not* say. Moved down to sit
+with the other honest limit, the one about weights. Not hidden, not shortened, no disclosure. *What
+this asks of you* now starts 325px into a 445px pane on the smallest phone. Its closing line said
+"everything below is measured rather than judged" and now says "every number on this screen" — a
+caveat that survives a move but stops describing anything is worse than one never written.

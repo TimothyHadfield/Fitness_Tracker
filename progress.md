@@ -147,11 +147,26 @@ has to come from an iPhone, and until it does this stays an unverified fix.
   Nothing is hidden or shortened: on a phone the caveats are load-bearing, and a disclosure is how a
   caveat stops being read.
 
+### The last two layout items, also done
+
+- **Explore's badge stopped sharing the row.** Below 700px it drops to its own line and the text
+  takes the full width — **200px of usable text width became 338px of 393**, and the summaries went
+  from five or six 28-character stubs to three real lines. The 2×2 grid was the right answer when
+  the alternative was four cells beside a name; the honest reading is that no arrangement of four
+  numbers leaves a sentence enough room on a 393px screen while sitting next to it. Freed of the
+  name, four across finally fits.
+- **Goals leads with the goal again.** The two paragraphs explaining the missing verdict sat third
+  and filled a 375×667 screen, so a goal opened on an explanation of what the screen does NOT say
+  and nothing it does say was reachable without scrolling. Moved down — **not hidden, not shortened,
+  not folded into a disclosure** — to sit with the screen's other honest limit, the one about
+  weights, which is where `progressionBlock`'s own note already argues these belong. *What this asks
+  of you* now starts 325px into a 445px pane on the smallest phone. ⚠️ **Its closing sentence said
+  "everything below is measured rather than judged" and now says "every number on this screen"** — a
+  caveat that survives being moved but stops describing anything is worse than one never written.
+
 ### Still open from the survey
 
-Everything in the "needs hardware" list below, and the two smaller layout items — **Explore's badge
-squeezing each description to ~28 characters**, and **Goals opening on two paragraphs of prose before
-any number.**
+Only the **"needs hardware"** list below. Nothing measurable is left.
 
 ---
 

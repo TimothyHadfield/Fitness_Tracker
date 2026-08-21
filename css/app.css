@@ -1990,6 +1990,35 @@ a.row { text-decoration: none; }
   .rating-cap { font-size: 9px; letter-spacing: 0.04em; }
 }
 
+/* ⚠️ ON A PHONE THE BADGE STOPS SHARING THE ROW AND TAKES ITS OWN LINE.
+   The 2×2 grid was the right answer when the alternative was four cells in a
+   line — it stopped the badge eating half the row. It still ate about 150px of
+   393, and on Explore that is the difference between a readable sentence and a
+   28-character column: every summary wrapped to five or six stubs ("The whole
+   of Jeff Nippard's 2023 / YouTube series — six workouts, two of / each day").
+   Measured 2026-08-21. Rule 3 again — the sentence is the content — and the
+   honest reading is that there is no arrangement of four numbers that leaves a
+   sentence enough width on a 393px screen while sitting beside it.
+
+   So the text gets the whole width and the numbers get their own line, where
+   four across finally fits comfortably. `order` keeps the chevron up on line
+   one with the title, because a chevron stranded beside the badge reads as
+   pointing at the badge. */
+@media (max-width: 700px) {
+  .row-rated { flex-wrap: wrap; }
+  .row-rated .row-chev { order: 1; }
+  .row-rated .rating {
+    order: 2;
+    width: 100%;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0 10px;
+    text-align: left;
+    margin-top: 4px;
+  }
+  /* Freed of the badge, the two lines of text no longer need to be stubs. */
+  .row-rated .row-sub.wrap { line-height: 1.35; }
+}
+
 /* The rating on a system the user built. Sits above the workout list because
    it describes the whole programme, and the badge aligns right so the heading
    stays the content (Rule 3). */

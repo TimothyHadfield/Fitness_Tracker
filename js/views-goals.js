@@ -165,10 +165,17 @@ async function activeGoalScreen(goal, profile, muscles) {
     }),
   });
 
+  // ⚠️ THE VERDICT EXPLANATION MOVED DOWN ON 2026-08-21, and only down — it is
+  // not hidden, shortened or folded into a disclosure. On a 375×667 phone it sat
+  // third and its two paragraphs filled the whole screen, so a goal opened on an
+  // explanation of something the screen does NOT say, and nothing it does say —
+  // no requirement, no cost, no measurement — was reachable without scrolling.
+  //
+  // It now sits with the screen's other honest limit, the one about weights,
+  // which is where progressionBlock's own note already argues these belong.
   body.append(
     goalHero(goal, p),
     progressBlock(goal, p, m),
-    verdictBlock(p),
     requirementsBlock(goal, req),
   );
 
@@ -181,7 +188,7 @@ async function activeGoalScreen(goal, profile, muscles) {
   // a pair and a digression about weights in the middle of them reads as part of
   // the requirement. It also puts the sentence that matters most — the goal does
   // not set your weights — next to the screen's other honest limits.
-  body.append(measuredHost, progressionBlock(), moreRows());
+  body.append(measuredHost, verdictBlock(p), progressionBlock(), moreRows());
 
   trainingForMuscle(goal.muscle)
     .then((measured) => measuredHost.append(measuredBlock(goal, req, measured)))
@@ -290,9 +297,13 @@ function verdictBlock(p) {
       + 'swings several percent on sleep, food and what time you trained, so a verdict built on it '
       + 'would tell you that you were behind because you had a bad Tuesday.' }),
     el('p', { class: 'goal-verdict-body', text:
+      // ⚠️ "everything ABOVE", not "below" — this block moved down the screen on
+      // 2026-08-21 and the sentence pointed at what used to follow it. A caveat
+      // that survives being moved but stops describing anything is worse than
+      // one that was never written.
       'When it does arrive it will only say you are behind if reaching the goal has genuinely '
-      + 'become unlikely — never on one flat week. Until then, everything below is measured rather '
-      + 'than judged.' }),
+      + 'become unlikely — never on one flat week. Until then, every number on this screen is '
+      + 'measured rather than judged.' }),
     p.expired
       ? el('div', { class: 'field-help', text:
           'This goal has run its twelve weeks. Ending it keeps the record.' })
