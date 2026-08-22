@@ -186,12 +186,17 @@ Ranked by where I would look first, given what this codebase has already been bi
 
 **Tier A — verify what exists.** Nothing new should be built before these.
 
-1. Re-run the seven reviews in §0. Start with the social round trip and the adversarial review.
+1. Re-run the reviews in §0. **Three have run** (adversarial, cross-screen, accessibility) and all
+   three found something real; **four are left** — UX, competitive, edge cases, and the social round
+   trip. Start with the social round trip. ⚠️ **Serially, not as a parallel wave** — the wave is what
+   the usage limit killed on 2026-08-19, and doing them by hand cost less and actually returned
+   findings.
 2. Act on whatever they find.
 
 **Tier B — the newcomer.**
 
-3. Fix the first-run path (§1.1). Cheapest high-value change available.
+3. ~~Fix the first-run path (§1.1).~~ **DONE 2026-08-21** — Explore leads an empty account, and
+   install → first logged set is **five taps, measured**, against about a dozen before.
 4. Sweep for jargon reaching a screen without explanation. D8 says teach at the moment of use; that
    rule needs auditing rather than assuming.
 

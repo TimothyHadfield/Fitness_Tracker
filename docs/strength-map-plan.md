@@ -356,7 +356,7 @@ committing to a palette.** Requirements are stricter than usual here:
 | 1 | Standards table + `js/strength-standards.js` — percentile lookup, pure and unit-testable |
 | 2 | Muscle → key-lift mapping, level computation from benchmarks |
 | 3 | The SVG body, both views, per-muscle fills |
-| 4 | Tap a muscle → highlight, per-level weight targets for its key lift, "X lb to next level" |
+| 4 | Tap a muscle → highlight, per-level weight targets for its key lift, "X lb to next level". ⚠️ **The per-level table was BUILT and then CUT on 2026-08-21** — six of its seven rows are weights for levels nobody is near and the seventh is what "X lb to next level" already says. Do not rebuild it from this row |
 | 5 | Later: incorporate workout lifts (Tim's own note), weighted secondary-muscle contributions |
 
 Phases 1 and 2 are pure logic and fully testable headlessly — same approach as `e1rm.js`, which

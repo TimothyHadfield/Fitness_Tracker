@@ -4,13 +4,24 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-21. ⚠️ **Three things a fresh session must know before doing anything:**
-**Tim has opened the iPhone work** (2026-08-21 — the deferral in §10.2 is over, and the first pass is
-the section directly below this summary); the 2026-08-20 section records what came out of re-running
-the reviews; and `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never
-ran. **Three have now run** (adversarial code review, cross-screen consistency, and the first
-accessibility audit this project has ever had) and all three found something real. **Four are still
-outstanding** — UX, competitive, edge cases, and the live social round trip.
+**Last updated:** 2026-08-22 (a staleness sweep; the last code change was 2026-08-21).
+⚠️ **Four things a fresh session must know before doing anything:**
+
+1. **The iPhone is the live thread** (Tim, 2026-08-21 — the deferral in §10.2 is over). **Five passes
+   ran that day** and they are the five dated sections directly below this summary, newest first: the
+   survey, the fixes, Google sign-in, the first run, the body map. **Everything measurable is done.**
+2. ⚠️ **Two things are waiting on TIM, and nothing in this repo can close either.** The **keyboard
+   fix is still unverified** — it is the biggest structural change made on the phone and it needs a
+   real device (see Open work item 0), and he has been asked twice. And **Google sign-in still does
+   not work on the iPhone**: the cause is configuration, not code, the fix touches a repo outside
+   this one, and it has deliberately not been started. Email sign-in works there today.
+3. **A real iPhone has still never opened this app.** Everything from 2026-08-21 is a desktop engine
+   driven at phone metrics. It says nothing about touch, about iOS Safari, or about the installed
+   PWA — and four survey items are explicitly reasoned rather than measured for that reason.
+4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Three
+   have now run** (adversarial code review, cross-screen consistency, and the first accessibility
+   audit this project has ever had) and all three found something real. **Four are still
+   outstanding** — UX, competitive, edge cases, and the live social round trip.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -480,7 +491,7 @@ on, and re-measured in the browser rather than reasoned.
 
 **Touch targets: `.icon-btn`, `.avatar-btn`, `.chip` and `.btn.small` measured 31–36 px** — clearing
 WCAG 2.2 AA (24 px) and missing Apple's 44. Grown to 44 with a pseudo-element so **the painted button
-does not move**: no real device has ever seen this app (deferred by Tim), and resizing a header
+does not move**: no real device has ever seen this app, and resizing a header
 control on hardware nobody has checked is a worse trade than a bigger hit area. ⚠️ **The first
 attempt used `::after` and silently broke — `.avatar-btn.at-risk::after` is the "not backed up" dot
 and wins on specificity, so the hit area vanished in exactly the state the audit had caught it in.**
@@ -600,28 +611,42 @@ plan plus a review of everything built. Seven reviews were scoped, briefed and t
 session usage limit before returning a single finding. Their briefs are recorded verbatim in that
 file so they can be re-run as written, and **re-running the rest is still item 0.**
 
-**Two ran on 2026-08-20 and both found something real** — the adversarial code review (progression
-destroyed its own rep range; see the section above) and cross-screen consistency (the Goals matcher
-printed a strength percentage with no caveat). **Five are still outstanding: UX / human behaviour,
-competitive, accessibility, edge cases / data integrity, and the live social round trip.** Nothing in
-this project has been audited for accessibility, ever. ⚠️ **Run them serially, not as a parallel
-agent wave** — that is what the usage limit killed on 2026-08-19, and doing two by hand cost far less
-than the wave did while actually returning findings.
+**Three have now run and all three found something real** — the adversarial code review (progression
+destroyed its own rep range), cross-screen consistency (the Goals matcher printed a strength
+percentage with no caveat), and the **accessibility audit**, the first this project has ever had,
+which failed. All three are written up in the 2026-08-20 section. **Four are still outstanding: UX /
+human behaviour, competitive, edge cases / data integrity, and the live social round trip.**
+⚠️ **Run them serially, not as a parallel agent wave** — that is what the usage limit killed on
+2026-08-19, and doing them by hand cost far less than the wave did while actually returning
+findings.
 
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
 0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is the
-   live thread. The survey and the fixes are the two dated sections above. **Everything measurable
-   is done.** What is left, in order:
+   live thread. **Five passes ran that day** — the five dated sections above. **Everything
+   measurable is done**, including eleven measured defects, the view/edit split, the first run
+   (twelve steps to five), and the body map (the figure no longer moves or resizes when a muscle is
+   tapped). What is left, in order:
 
-   - **⚠️ THE KEYBOARD FIX NEEDS A PHONE, and only Tim can close it.** `--kb` is written from
-     `visualViewport` and verified by driving the value by hand — headless Chrome has no software
-     keyboard, so nothing here can prove it. **Open the session runner, tap the weight, and see
-     whether "Next exercise" is still reachable.** Same question in the exercise picker. Until that
-     answer exists this is an unverified fix, and it must keep saying so.
-   - The four **reasoned-not-measured** items in the survey (haptics, the long-press callout, whether
-     a `setTimeout` focus raises the keyboard, the native date control). All need the same device.
+   - **⚠️ THE KEYBOARD FIX NEEDS A PHONE, and only Tim can close it. He has been asked twice and it
+     is still open.** `--kb` is written from `visualViewport` and verified by driving the value by
+     hand — headless Chrome has no software keyboard, so nothing here can prove it. **Open the
+     session runner, tap the weight, and see whether "Next exercise" is still reachable.** Same
+     question in the exercise picker. Until that answer exists this is an unverified fix, and it
+     must keep saying so. ⚠️ **Do not quietly promote it** because the tests are green; no test in
+     this repo can see a software keyboard.
+   - **⚠️ GOOGLE SIGN-IN DOES NOT WORK ON THE IPHONE, and the fix is not in this repo.** The three
+     code faults around the symptom are fixed, so it now fails visibly and prints its error code
+     instead of doing nothing — but it still fails. The cause is that the app is served from
+     `timothyhadfield.github.io` while `authDomain` is `fitness-tracker-th.firebaseapp.com`, and
+     Safari's storage partitioning will not let that flow complete cross-origin. **The real fix is
+     the auth handler at the domain root**, which lives in the separate `timothyhadfield.github.io`
+     user-page repo shared across projects, and needs `.nojekyll`. **Not started — it changes a repo
+     Tim owns for other things, so it wants his say-so.** Email sign-in works on iOS today.
+   - The four **reasoned-not-measured** items in the survey (haptics — iOS has no Vibration API at
+     all, so the stepper's `navigator.vibrate` never fires; the long-press callout; whether a
+     `setTimeout` focus raises the keyboard; the native date control). All need the same device.
    - Two layout items nobody has done: **Explore's badge cuts every description to ~28 characters**,
      and **Goals opens on two paragraphs of prose before any number.**
 
@@ -690,8 +715,8 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 2141 assertions across ten suites. Only `render` needs `npm i jsdom`; the rest need nothing |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1098 assertions, **no dependencies** |
+| **Everything at once** | 2156 assertions across ten suites. Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
@@ -701,7 +726,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 316 assertions, mounts every screen. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 333 assertions, mounts every screen. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -858,7 +883,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `js/demo.js` | Not a doc. The demo account's generated year. **Read its header before touching it**: it explains why the data never touches storage, why the flag is per-tab, and why nothing in it may use `Math.random()`. The switch itself is in `store.js` |
 | `js/goals.js` | Not a doc. **Read its header before touching Goals**: it explains why a goal is a LEVEL and not a predicted number of pounds, why the target weight is FROZEN when the goal is set, and the two things the module refuses to do — read the deadline to decide what it asks of you, and emit a verdict |
-| `docs/improvement-plan.md` | **The plan, written 2026-08-19 on Tim's ask.** ⚠️ **§0 is the part to read first** — it lists seven reviews that were scoped and briefed and then **all killed by a session usage limit before returning anything**. Sections marked ⚠️ NOT AUDITED are hypotheses, not findings. §1.1 is the one finding verified by hand: the first-run path promises "workout" and delivers "system" |
+| `docs/improvement-plan.md` | **The plan, written 2026-08-19 on Tim's ask.** ⚠️ **§0 is the part to read first** — it lists seven reviews that were scoped and briefed and then **all killed by a session usage limit before returning anything**. Sections marked ⚠️ NOT AUDITED are hypotheses, not findings. **Three of the seven have since run and four are left**, and the table in §0 carries each one's status. §1.1 — the first-run path promising "workout" and delivering "system" — was the one finding verified by hand, and it was **fixed 2026-08-21** |
 | `docs/goals-plan.md` | **Goals** (`docs/vision.md` §1.6). **Phases 1–2 BUILT 2026-08-19 — §11 records what the build decided that the plan did not.** **§3 is still the section to read** — four problems, one serious: raising weights to hit a deadline would hand heavier weights to somebody who has missed two weeks, which is backwards and is the only thing in this project that could cause physical harm. §8 is the progression rule Phase 4 needs. §10 is what may and may not scale with ambition — and §11.4 records where the build departed from it |
 | `docs/optimal-rating-plan.md` | **The "% optimal" rating** (`docs/vision.md` §1.3), planned 2026-08-18. **§2 is the part to read** — the evidence says frequency does *not* independently drive hypertrophy, so a rating must not reward training more days; and the models explain only ~a quarter of the variance, which is why the output is a band, never a point |
 | `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |
@@ -919,7 +944,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence, not the biggest** — it used to pick its top three by converted weight, so a face pull outvoted an overhead press benchmark and rated the lifter Elite; see §9. Three different exercises at most, one seat each. ⚠️ **And since 2026-08-19 the rating is led by the most CREDIBLE of that evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. On a screen ≥ 860px the detail opens in a **side column beside the figures**, so picking a muscle never resizes the body; below that it stacks underneath. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). Tap → level, percentile, progress bar, all seven per-level weight targets. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that it picked its top three by converted weight, so a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. ⚠️ **Picking a muscle never moves or resizes the body, in either layout** (2026-08-21). On a screen ≥ 860px the detail opens in a **side column beside the figures**; below that it stacks underneath, and the figure holds a fixed 57 % of the pane while the panel takes what is left and scrolls inside itself. Before that fix the phone's figure shrank and rose by however many words the panel happened to have. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). ⚠️ **Tap → five lines and no more** (2026-08-21, Tim: "we want it to be easy to understand, not a paragraph"): level, estimate + percentile, the bar to the next level, the confidence line, and the set the number came from. The seven-row table of per-level weight targets, the confidence bar and the confidence percentage were cut. **Every caveat survived, one line each** — shortening a caveat is allowed, softening one is not — and a **40-word cap is a test**, because every other assertion on this panel checks something is present and none of them can catch words piling back up. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
 | **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
 | **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | **Bodyweight lifts rank** | **Pull-ups, chin-ups, dips and push-ups rate a muscle** (2026-08-19). Their resistance is a fraction of body weight plus whatever was added, and the fraction is per exercise. ⚠️ **The pull-up and the dip are 1.00 by STATICS, not by citation** — nothing but the hands is in contact, so the hands carry all of it, and the research confirmed no published %BM figure exists for either. A push-up is 0.75 from two independent force-plate studies half a percent apart (Suprak 2011, Mier 2014); the familiar 64 % and 66 % figures measure *different quantities* and mixing them would be worse than choosing one. ⚠️ **Body weight is read from the DATE OF THE SET**, never today's — otherwise losing twenty pounds would rewrite last year's pull-ups. What has no honest fraction stays refused, permanently and by name: an inverted row is 37–79 % depending on a bar height the app does not record. The panel distinguishes the two kinds of "can't", because "log a weigh-in" is actionable and "nobody has measured this" is not. `js/exercises.js` `BODY_WEIGHT_FRACTION`, `totalResistance()` in `js/e1rm.js` |
@@ -974,7 +999,7 @@ Press-and-hold repeats.
   to 2.2; protein is the SAME at Steady and Committed, which is what proves it is a threshold rather
   than a dial; the sleep and effort text is byte-identical across every band; and the stall walk has
   a **vacuity guard** — the same walk over adequate training must read OK
-- **1098 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
+- **1103 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
   directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
   **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
   muscle group would otherwise fail silently on a screen nobody re-checks
@@ -1096,16 +1121,23 @@ Press-and-hold repeats.
   matters, because it is the only part of this app that can cause physical harm — **has now been
   attacked, and it broke**: the rep range collapsed under the module's own advice (see the 2026-08-20
   section). Fixed, swept and mutation-checked. **`js/strength-estimate.js` and the body-weight work
-  across four modules have still not been attacked by anybody trying to break them.** They pass 2114
+  across four modules have still not been attacked by anybody trying to break them.** They pass 2156
   assertions and each was driven in a browser by its author, which is exactly what progression had
-  too the day before it turned out to be wrong.
+  too the day before it turned out to be wrong. **The count is not the point** — passing a suite its
+  own author wrote is not the same as surviving somebody trying to break it.
 - **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
   branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
   only — it says nothing about how a phone actually behaves in the hand. ⚠️ **No longer deferred:
-  Tim opened the iPhone work on 2026-08-21** and the first survey is in the dated section above — but
-  it was run at phone *metrics* in a desktop engine, so it still is not a device. Four things in it
-  are explicitly reasoned rather than measured (haptics, the long-press callout, whether a
-  `setTimeout` focus raises the keyboard, and the native date control) and must keep saying so.
+  Tim opened the iPhone work on 2026-08-21** and five passes of it are in the dated sections above —
+  but every one was run at phone *metrics* in a desktop engine, so it still is not a device. Four
+  things in it are explicitly reasoned rather than measured (haptics, the long-press callout, whether
+  a `setTimeout` focus raises the keyboard, and the native date control) and must keep saying so.
+- **⚠️ THE KEYBOARD FIX IS SHIPPED AND UNPROVEN.** `--kb`, written from `window.visualViewport`, is
+  the largest structural change the phone work made: it shortens `#app` by the keyboard's height so a
+  fixed footer stays reachable, and every screen inherits it. It was verified only by **driving the
+  variable by hand** — headless Chrome has no software keyboard, and `100dvh` does not shrink for
+  one. **Green tests say nothing about this.** Only Tim opening the session runner and tapping the
+  weight can close it; he has been asked twice. Until then it stays here, in NOT verified.
 - **⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.** Social is built and every screen has been driven in a
   browser — but against a **stubbed** `social` facade, so the actual round trip (create an invite,
   open it as somebody else, claim it, accept, publish, read the other person's page) has never run
@@ -1221,7 +1253,7 @@ Fitness_Tracker/
 │   ├── firebase-config.js      REAL KEYS — project fitness-tracker-th, live
 │   └── firebase-backend.js     Firestore + auth adapter
 ├── tests/
-│   ├── data-layer.test.mjs     1098 assertions, no dependencies
+│   ├── data-layer.test.mjs     1103 assertions, no dependencies
 │   ├── bodyweight.test.mjs     153 assertions, no dependencies — the fractions,
 │   │                           their sources, and what stays REFUSED
 │   ├── strength-estimate.test.mjs  72 assertions — measured simulator outcomes
@@ -1839,8 +1871,11 @@ re-examining it produces something better than either the old rule or a plain ov
    with ambition**, which departs from §10.4 because these are strength goals and strength is
    largely indifferent to reps in reserve.
 
-1. **The simulator** — `docs/strength-estimate-plan.md` §11, Phase 0. **Blocked on nothing, and now
-   the highest-value thing left.** The demo account handed it a concrete target on 2026-08-19, and
+1. **The simulator** — `docs/strength-estimate-plan.md` §11. ⚠️ **Phase 0 is DONE** (its numbers are
+   in §15 of that plan, and `tools/strength-fit.mjs` re-derives every constant rather than trusting
+   it); **Phases 1–3 are what is left**, and §16 sets their hard design constraint. The rest of this
+   item is the reasoning that got there, kept because it is the lesson.
+   The demo account handed it a concrete target on 2026-08-19, and
    **half of it turned out not to need the simulator at all**: `rateMuscle()` was selecting evidence
    by size rather than by credibility, which is a design fault and was fixed the same day (§9). What
    is left IS the simulator's: how far a high-rep isolation set may honestly be extrapolated, and
@@ -1850,12 +1885,14 @@ re-examining it produces something better than either the old rule or a plain ov
    sort order. `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
    closed by guessing at numbers. A simulator turns both into measurements.
-2. ~~**Tim opens the app on a real phone.**~~ **DEFERRED — Tim, 2026-08-17: "I don't want to work on
-   the iPhone for a while, only once we're completely done with the actual site."** The risk is
-   unchanged and still real — the layout has been seen at phone widths in Chrome, but a screenshot
-   says nothing about touch (tap targets on the body map, press-and-hold on the steppers, scroll
-   feel), nor about iOS Safari or the installed PWA. It stays in §3 NOT verified. It is just not
-   scheduled, and it should stop being offered as the next job.
+2. ~~**Tim opens the app on a real phone.**~~ ~~**DEFERRED — Tim, 2026-08-17.**~~ ⚠️ **REOPENED by
+   Tim, 2026-08-21, and it is now the live thread — see Open work item 0.** Five passes ran that day
+   and everything measurable is done. **The risk this item was written about is the part that
+   survived:** a screenshot says nothing about touch, about iOS Safari, or about the installed PWA,
+   and every one of those five passes was a desktop engine driven at phone metrics. So it stays in §3
+   NOT verified, and the two things only a device can settle — **the keyboard fix** and the four
+   reasoned-not-measured items — are still open. **Tim has since reported one real-device bug**
+   (Google sign-in), which is exactly the class of thing no amount of this could have found.
 3. **The graph still defaults to benchmarks when an exercise has both sources.** The opposite of what
    Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
    part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line
@@ -1900,7 +1937,17 @@ re-examining it produces something better than either the old rule or a plain ov
    D1 was narrowed on 2026-08-18 (see D26) — each time the objection turned out to be about a
    specific model rather than about the idea.
 
-**That is the only question still open.** Everything else that was on this list has been answered:
+2. **⚠️ May the auth handler go in the `timothyhadfield.github.io` user-page repo?** That is the only
+   real fix for Google sign-in on the iPhone (2026-08-21 third pass), and it means adding files —
+   plus `.nojekyll` — to a repo Tim owns that serves his other projects too. **Not started for that
+   reason.** Email sign-in works on iOS today, so nothing is blocked on the answer; it is just that
+   nobody should touch another repo without being told to.
+
+**Two questions, and one thing that is not a question but an ASK:** ⚠️ **Tim, open the session runner
+on your phone and tap the weight — is "Next exercise" still reachable?** He has been asked twice and
+it is still unanswered, and it is the one thing standing between the keyboard fix and being able to
+call it verified. Nothing in this repo can answer it. Everything else that was on this list has been
+answered:
 
 **Answered, so nobody re-asks:**
 

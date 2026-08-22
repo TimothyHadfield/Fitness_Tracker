@@ -4259,3 +4259,43 @@ There is a word count in the tests now. Everything else asserts something is pre
 being guarded is accumulation, which no presence check catches. Cap 40, currently 18.
 
 333 render assertions green.
+
+---
+
+## 2026-08-22 — end of session, prepared for a chat reset
+
+Swept the docs for staleness and contradiction rather than appending to them. What was wrong:
+
+- **Test counts were stale in five places** — 2141 total against a real **2156**, data-layer 1098
+  against **1103**, render 316 against **333**. The two new `redirectCanComplete`/`prefersRedirect`
+  assertions and the muscle-panel ones had never been counted back into the table.
+- **The header and Open work contradicted each other on the reviews.** The header said three had run
+  and four were outstanding; Open work still said two ran and five were outstanding, listing
+  accessibility as unaudited — which the 2026-08-20 audit had already disproved in the same file.
+- **§3's Muscles row described the panel that was deleted the day before** — "tap → level,
+  percentile, progress bar, all seven per-level weight targets" — and claimed picking a muscle never
+  resizes the body **only on desktop**, which was the exact defect Tim reported.
+- **§10 item 2 still read "DEFERRED — Tim, 2026-08-17"** for the phone work Tim reopened, and told a
+  fresh session it "should stop being offered as the next job". It is the live thread.
+- **§10 item 1 called the simulator's Phase 0 the highest-value thing left.** Phase 0 is done.
+- The Muscles row had two copies of the same sentence about credible evidence, from separate edits.
+- `docs/strength-map-plan.md` Phase 4 still specified the per-level target table as work to do. It
+  was built and then cut; the row now says so, so nobody rebuilds it from the plan.
+
+**The README was the worst of it, and it is the public front door.** It said *"no accounts"* and
+*"your data stays in your browser"* — both untrue since Firebase went in, and the second is a claim
+about privacy, which is the kind you do not get to be casually wrong about. It also still described
+Firestore as *"written and waiting"*, listed 265 exercises against a real 272, and did not mention
+systems, the body map, Goals, Social, set types or the demo account — most of the app. Rewritten,
+with a **Your data** section that says plainly what leaves the browser and when.
+
+Promoted into §3 NOT verified, because it was only living in Open work: **the keyboard fix is
+shipped and unproven.** It is the largest structural change the phone work made, no test in this
+repo can see a software keyboard, and green tests must not be allowed to launder it.
+
+Added a second **open question for Tim** — whether the auth handler may go in his user-page repo,
+which is the only real fix for Google sign-in on the iPhone and the reason it has not been started.
+
+State at close: **2156 assertions green across ten suites**, everything pushed and live. Two
+questions waiting on Tim, and one ask that is not a question: **tap the weight in the session runner
+on your phone and see whether "Next exercise" is still reachable.**
