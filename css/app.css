@@ -880,6 +880,31 @@ select.input {
 .nav-arrow svg { width: 22px; height: 22px; }
 .session-footer .btn { flex: 1; }
 
+/* ⚠️ A FAILED SAVE AT THE END OF A WORKOUT, said on the screen and left there.
+   Until 2026-08-22 this failure was completely silent: `finish()` awaited the
+   save unguarded, so a full localStorage meant the user tapped Finish and
+   nothing happened at all. A toast would not do — 2.4 seconds on a phone is
+   indistinguishable from nothing happening, which is exactly how the same
+   class of bug was reported from an iPhone on the sign-in screen. It sits
+   directly above the button that failed.
+
+   ⚠️ No fill and no box — Rule 2. It borrows `.preset-warning`'s shape, which
+   is this app's established way of saying something that must not be skimmed:
+   a --danger hairline and full-strength ink. Full-strength because --ink-faint
+   failed AA in the 2026-08-20 audit and this is the least skippable sentence
+   in the product. */
+.save-error {
+  flex: none;
+  margin: 0 var(--pad) 8px;
+  padding-left: 11px;
+  border-left: 2px solid var(--danger);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.save-error[hidden] { display: none; }
+.save-error strong { color: var(--danger); }
+
 /* ==========================================================================
    Calendar
    ========================================================================== */

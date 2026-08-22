@@ -401,9 +401,12 @@ function measuredBlock(goal, req, measured) {
 
   return el('div', { class: 'card' },
     el('h2', { class: 'section-head', text: 'What you are actually doing' }),
+    // ⚠️ `heading`, not `reason` — this section says what you ARE doing, so a
+    // row that is being met must not be titled with the thing that goes wrong.
+    // *Why progress stalls* keeps `reason`, because there the row names a cause.
     ...rows.map((r) => el('div', { class: 'row stall-row is-' + r.status },
       el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: r.reason }),
+        el('div', { class: 'row-title', text: r.heading || r.reason }),
         el('div', { class: 'row-sub wrap', text: r.detail }),
       ),
       el('div', { class: 'req-value mono', text: r.value === null ? '—' : String(r.value) }),

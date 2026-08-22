@@ -82,7 +82,7 @@
 // volume-map.js and optimal.js.
 
 import { volumeContributions } from './volume-map.js';
-import { totalResistance } from './e1rm.js';
+import { totalResistance, MAX_EVIDENCE_REPS } from './e1rm.js';
 
 /* ------------------------------------------------------------------ *
  * The published numbers
@@ -446,6 +446,65 @@ export function suggestProgression({
       headline: 'what you did last time',
       why: `It has been about ${Math.round(gap / 7)} weeks since you last did this one, so this is `
         + 'what you last did rather than a step up. Take it from wherever it feels right today.',
+    };
+  }
+
+  // ── 0a. THE REP CEILING — the terminal state this rule did not have ──
+  //
+  // ⚠️ TWO BRANCHES BELOW USED TO ADD A REP FOREVER. `repsOnly` and
+  // `noIncrement` both returned `repsAtTop + 1` with nothing to stop them, so a
+  // lifter who did exactly what the app said was walked from a 20 lb lateral
+  // raise at 10 reps to **20 × 37** over thirty sessions, and a 60 lb curl to
+  // 60 × 34. Found 2026-08-22 by playing the rule forward through the runner's
+  // own save path, on the branches the 2026-08-20 play-forward test did not
+  // cover. That test walked the bench, which is the branch that had already
+  // been fixed. *Play every branch forward, not the one that broke.*
+  //
+  // ⚠️ IT WAS ALSO CONTRADICTING TWO OTHER PARTS OF THIS APP. `REP_BANDS` stop
+  // at 20, so past 20 the suggestion prints a range it is already outside of —
+  // "another rep, 37" over "range 15–20". And D5 refuses a set above
+  // MAX_EVIDENCE_REPS as evidence of a maximum, so the app's own advice was
+  // walking the exercise out of its own muscle map.
+  //
+  // So there is a ceiling, and reaching it is a REFUSAL rather than a smaller
+  // step: hold last time's numbers, say why, and name the ways up. That is the
+  // same shape as the lay-off branch above and as `noIncrement` itself — this
+  // module's answer to "no honest step exists" is always to say so, never to
+  // invent one.
+  const REP_CEILING = REP_BANDS[REP_BANDS.length - 1][1];
+  const atCeiling = last.repsAtTop >= REP_CEILING;
+
+  // ⚠️ ONLY the pull-up case, and the `last.weightless` term is what makes it
+  // so. A pull-up is weightless because nobody has told the app what the lifter
+  // weighs, and "log a weigh-in" is then a true and actionable thing to say. A
+  // 20 lb lateral raise is NOT that: it has a weight, it is simply one the
+  // plates cannot honestly step. Without this term the ceiling told somebody
+  // holding two dumbbells to weigh themselves and get a belt.
+  const couldLoad = !assisted && last.weightless
+    && fields.includes('weight') && !(bodyBase > 0);
+
+  if (atCeiling && (weightless || smallestHonestIncrement(resistance, step, loadCeiling(exercise)) === null)) {
+    return {
+      fromWeight: weightless ? null : last.topWeight,
+      fromReps: last.repsAtTop,
+      range,
+      compound: isCompound(exercise),
+      kind: 'repCeiling',
+      weight: weightless ? null : last.topWeight,
+      reps: last.repsAtTop,
+      headline: weightless
+        ? `the same again — ${last.repsAtTop}`
+        : `the same again — ${last.repsAtTop} ${atLoad}`,
+      why: `${last.repsAtTop} reps is the top of every range this app uses, and past about there `
+        + 'more reps is a different quality of training rather than a step up in strength — sets '
+        + `above ${MAX_EVIDENCE_REPS} do not count as evidence of a maximum here. So this stops `
+        + 'asking for another rep. '
+        + (couldLoad
+          ? 'Log a weigh-in and this exercise gets the full rule, since the app can then say what a '
+            + 'percentage would be a percentage of. Adding weight with a belt works too.'
+          : weightless
+            ? 'A harder variation, or adding weight if you can, is the way on from here.'
+            : 'Microplates, an extra set, or a harder variation are the ways on from here.'),
     };
   }
 

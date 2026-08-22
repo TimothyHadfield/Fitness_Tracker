@@ -427,6 +427,75 @@ ok(!data.querySelector('.rep-target'),
   const fresh = await mount(SessionView(w.id));
   ok(fresh.querySelector('.session-date').value === todayISO(),
      'yesterday\'s abandoned draft is still dropped, and the new one is for today');
+
+  /* ⚠️ A FAILED SAVE AT THE END OF A WORKOUT — the one failure in this app that
+     can cost somebody their training.
+     Until 2026-08-22 `finish()` awaited the save unguarded and the app has no
+     `unhandledrejection` handler, so a full localStorage meant the promise
+     rejected, `showFinished()` never ran, and the user tapped Finish and
+     NOTHING HAPPENED. Reproduced here by making the store throw. */
+  {
+    const screen = await mount(SessionView(w.id));
+    const wv = screen.querySelector('.step-value');
+    wv.value = '145';
+    wv.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    await settle();
+    for (const b of screen.querySelectorAll('button')) {
+      if (/Next exercise/.test(b.textContent)) { b.click(); await settle(); }
+    }
+    const fin = [...screen.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent));
+
+    const real = store.saveSession;
+    store.saveSession = async () => { throw new Error('Could not save. Your browser storage may be full.'); };
+    const countBefore = (await store.getSessions()).length;
+    fin.click(); await settle(); await settle();
+
+    const err = screen.querySelector('.save-error');
+    ok(err && !err.hidden, 'a save that fails SAYS SO on the screen rather than doing nothing');
+    ok(/storage may be full/i.test(err.textContent),
+       'and it passes on the reason the backend actually gave, not a generic apology');
+    // ⚠️ THE LOAD-BEARING ONE. The draft is the only remaining copy of the
+    // session, so clearing it before the save has landed would turn a
+    // recoverable error into lost training.
+    ok(localStorage.getItem(DRAFT) !== null,
+       'and the draft is KEPT, because it is the only other copy of what was just done');
+    ok(document.querySelector('.finish-hero') === null,
+       'and it does not claim the workout was saved');
+
+    // Recovery: the same tap works once the store does.
+    store.saveSession = real;
+    fin.click(); await settle(); await settle();
+    ok((await store.getSessions()).length === countBefore + 1,
+       'tapping Finish again after the problem clears saves it, with nothing lost');
+  }
+
+  /* ⚠️ THE DEMO ACCOUNT MAY NOT WRITE A DRAFT TO REAL STORAGE.
+     `store.js` swaps its whole backend inside the demo, but the draft never
+     went through the store — it was written straight to localStorage, so
+     running a workout in the demo left invented sets on the real device and
+     they survived leaving it. Every screen of the demo carries a strip saying
+     "nothing is saved". Found by the UX review, 2026-08-22. */
+  {
+    const { demo } = await import(BASE + 'store.js');
+    localStorage.removeItem(DRAFT);
+    sessionStorage.setItem('ftrack:v1:demo', '1');
+    ok(demo.active(), 'the demo flag is on for this check, so it is not passing vacuously');
+
+    const screen = await mount(SessionView(w.id));
+    const wv = screen.querySelector('.step-value');
+    wv.value = '99';
+    wv.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    await settle();
+
+    ok(localStorage.getItem(DRAFT) === null,
+       '⚠️ a workout run inside the demo writes NOTHING to real localStorage');
+    ok(sessionStorage.getItem(DRAFT) !== null,
+       'while the draft still exists, so an app switch inside the demo loses nothing either');
+
+    sessionStorage.removeItem('ftrack:v1:demo');
+    sessionStorage.removeItem(DRAFT);
+    localStorage.removeItem(DRAFT);
+  }
 }
 
 /* ========= a cancelled Google sign-in is never a dead end ========= */

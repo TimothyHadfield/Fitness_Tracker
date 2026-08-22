@@ -4352,3 +4352,77 @@ needs any more, and it would have meant touching the `timothyhadfield.github.io`
 
 State at close: **2156 assertions green** (data-layer and render re-run after the edits), everything
 pushed. **No questions and no asks outstanding for Tim** for the first time in a while.
+
+---
+
+## 2026-08-22, second pass — the years view, and three reviews at once
+
+Tim, with a screenshot of another app's workout-history grid: *"I want another way to display the
+workout days in Calendar so each day is a tiny box and is colored or not colored depending on if you
+worked out that day. This will show years of data in one screen."* Plus: *"if you're confident you
+know what to improve then just start working on it, feel free to deploy as many sub-agents as you
+need."*
+
+### The years view
+
+`#/calendar` now has a **Months / Years** switch. Years draws one square per day, one row per year,
+newest first, with "141 days trained" beside each. Two years of the demo fit in the top half of a
+375×667 phone.
+
+It is **binary**, which is what he asked for and also what the numbers allow: the month view's
+workout and benchmark colours are ΔE 6.5 apart under protanopia, which the data-viz guidance permits
+only alongside a label or a texture, and a 5.7px square has room for neither. The two arguments
+agreeing is why it needed no compromise.
+
+Tapping a square **selects** rather than navigates. At 5.7px a tap that navigated would open the
+wrong day about as often as the right one, so it fills a readout that holds its row whether or not
+anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met
+by equivalence — every day is still reachable at 40px in Months.
+
+**Two bugs came out of building it and neither was visible to a test.** A bare `1fr` is
+`minmax(auto,1fr)`, so the month strip sized itself to its own labels, came out a third wider than
+the grid it labels, and put **"Nov" over the 20th of August** — found by asking the browser what
+date sat under each label, because nothing about a row of month names over a grid of squares looks
+wrong. It was hiding a second fault: the grid was overflowing its pane and clipping ten weeks off
+every year. And the mode switch first rebuilt the screen and swapped the node in, which silently
+threw away the demo account's "nothing is saved" strip, because `app.js` prepends that into the node
+a view returns. **A view does not own the node it returned.**
+
+### Three reviews at once, against this file's own advice
+
+progress.md has said "serially, never an agent wave" since seven parallel reviews died to a usage
+limit on 2026-08-19. Tim authorised a wave; three worked, each with a written brief and a list of
+files it must not touch. The narrower lesson is now recorded: **seven is what failed, and file
+conflicts are the thing to plan for.**
+
+**Edge cases** found a day index floored from local midnight, which collapses a day across DST in any
+zone sitting at UTC+0 in winter — two logged sessions counted as one, a 28-day window measured 27.
+Fixed. It also found the progression rule ratcheting reps forever on two branches, and a completely
+silent failure if a save fails at the end of a workout.
+
+**The social round trip** finally ran against the live project — two accounts, two separate Chrome
+profiles. It works, and tier enforcement holds on the wire rather than only in the UI. Expired
+invites read as open, because `expiresAt` comes back as a Timestamp and `NaN <= now` is false; fixed.
+Disconnect is one-sided while the sheet promises otherwise; reported rather than guessed at. It also
+corrected this repo's own docs — the project does not hold zero users and zero documents, it holds
+seven and nineteen, two of them Tim's real accounts, and that stale sentence had gone into a brief
+for an agent that was deleting things.
+
+**UX** found the best single thing on the list: Goals told a user doing 10.9 sets against a 7–10
+target, in bold, **"Not enough sets on this muscle"** — number green beside it, row class already
+`is-ok`. The code knew; only the headline had not been told. Rule 6 forbids unearned opinions, and an
+unearned negative one is the same fault, on the one screen holding measured proof somebody was doing
+the work.
+
+### Fixed after the reviews
+
+The rep ratchet (a ceiling that refuses rather than stepping smaller — and its first version told a
+man holding two dumbbells to weigh himself and buy a belt, caught by its own test). The silent save
+(said on screen, draft kept, tap again works). The Goals headline. And the demo account writing
+drafts into real localStorage — near-harmless, except that a strip on every demo screen says
+"nothing is saved", which makes it a false claim rather than a stray key.
+
+State at close: **2252 assertions green across eleven suites**, everything pushed. Six of the seven
+reviews have now run and every one found something real. The UX list is the open work, and it is
+judgement rather than bugs — the headline item being that **nothing a user can see on Home ever
+grows**.

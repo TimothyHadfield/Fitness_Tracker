@@ -567,10 +567,38 @@ export function stallReasons({ requirements, measured, muscle }) {
     };
   })();
 
+  /**
+   * ⚠️ TWO SCREENS READ THESE ROWS AND THEY ARE ASKING DIFFERENT QUESTIONS.
+   *
+   * *Why progress stalls* asks "what could be wrong", so `reason` is a CAUSE
+   * and "Not enough sets on this muscle" is the right name for it whether or
+   * not it is happening to you.
+   *
+   * *What you are actually doing* asks "how am I going", and there the same
+   * fixed string is simply false for anybody meeting the target: a lifter doing
+   * 10.9 sets against a 7–10 target read **"Not enough sets on this muscle"** in
+   * bold, with the number beside it in green and the grey sub-line underneath
+   * correctly saying they were over. Headlines get read; grey sub-lines do not.
+   *
+   * So a row carries a `heading` that follows its status, and the screens pick.
+   * ⚠️ **This is Rule 6 from the other side.** The rule forbids unearned
+   * opinions, and the app is careful never to congratulate anyone for a number
+   * that does not deserve it — but an unearned NEGATIVE verdict is the same
+   * fault, and this was the one screen in the app holding measured evidence
+   * that somebody was doing the work.
+   */
+  const heading = (status, { ok, short, unknown }) =>
+    (status === 'ok' ? ok : status === 'unknown' ? unknown : short);
+
   return [
     {
       key: 'volume',
       reason: 'Not enough sets on this muscle',
+      heading: heading(volume.status, {
+        ok: 'Enough sets on this muscle',
+        short: 'Not enough sets on this muscle',
+        unknown: 'Sets on this muscle',
+      }),
       visible: true,
       source: 'research.md §6.2',
       ...volume,
@@ -578,6 +606,11 @@ export function stallReasons({ requirements, measured, muscle }) {
     {
       key: 'frequency',
       reason: 'Not training it often enough',
+      heading: heading(frequency.status, {
+        ok: 'Training it often enough',
+        short: 'Not training it often enough',
+        unknown: 'How often you train it',
+      }),
       visible: true,
       source: 'research.md §6.3',
       ...frequency,

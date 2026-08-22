@@ -21,13 +21,14 @@
    touch, and **three of the four "needs hardware" survey items are still reasoned rather than
    measured**. ⚠️ **Do not let one good device report promote the rest** — what a phone confirmed is
    listed in Verified and nothing beyond it.
-4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Four
-   have now run** — adversarial code review, cross-screen consistency, the first accessibility audit
-   this project has ever had, and **edge cases / data integrity (2026-08-22)** — and **every one of
-   the four found something real**, which is the strongest argument available for running the rest.
-   **Three are still outstanding**: UX / human behaviour, competitive, and the live social round
-   trip. ⚠️ **The edge-case review's findings are only PART fixed** — two shipped, and the serious
-   remainder are items 1a–1d in Open work. Do not read "the review ran" as "the review is closed".
+4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **SIX
+   HAVE NOW RUN and every single one found something real** — adversarial code review, cross-screen
+   consistency, the first accessibility audit this project ever had, and, all on 2026-08-22, **edge
+   cases / data integrity, the live social round trip, and human behaviour / UX.** **Only the
+   competitive review is left**, and it is the one that inspects the market rather than the app.
+   ⚠️ **Running them is not the same as closing them.** Six fixes shipped on 2026-08-22; **two
+   edge-case findings (0b) and the whole UX list are still open**, and the UX list contains the
+   sharpest unaddressed thing in the product: nothing a user can see on Home ever grows.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -77,6 +78,134 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-22, fifth pass — the UX review, and four fixes off the back of two reviews
+
+**All seven reviews have now been run or accounted for.** The human-behaviour / UX one ran last and
+found the sharpest single thing on this list. Four fixes shipped: two from the edge-case review's
+serious findings, one from UX, and one leak that made a safety claim false.
+
+### ⚠️ 1. FIXED — progression ratcheted reps forever, on the two branches nobody played forward
+
+`noIncrement` and `repsOnly` both returned `repsAtTop + 1` with nothing to stop them. Played forward
+through the runner's own save path: **a 20 lb lateral raise, obeyed, reaches 20 × 37**; a 60 lb curl
+reaches 60 × 34; push-ups reach 45. Past 20 there is no `REP_BAND` left, so it printed a range it was
+already outside of — *"another rep, 37"* over *"range 15–20"* — and past `MAX_EVIDENCE_REPS` **D5
+refuses the set as evidence, so the app's own advice walked the exercise out of its own muscle map.**
+
+There is now a **rep ceiling at the top of the top band**, and reaching it is a **refusal rather than
+a smaller step**: last time's numbers, the reason, and the ways on (microplates, an extra set, a
+harder variation — or, for a bodyweight lift the app cannot load, *log a weigh-in and this gets the
+full rule*). Same shape as the lay-off branch and as `noIncrement` itself. ⚠️ **The ceiling stops the
+rep ladder, not progression** — a lift with an honest increment available still takes the weight at
+20 reps, and there is an assertion for exactly that, because replacing a runaway with a dead end
+would be the worse bug.
+
+⚠️ **THE LESSON IS THE TEST, NOT THE BUG.** The 2026-08-20 fix came with a play-forward test — and it
+walks the **bench**, which is the branch that had already broken. *A rule that reads its own output
+needs a test that plays it forward on **every** branch.* The two branches with no terminal state had
+never been walked once. Both are now, to forty sessions.
+
+⚠️ **One thing the first version of this fix got wrong**, caught by its own test: it told a lifter
+holding two 20 lb dumbbells to *log a weigh-in and get a belt*. The "could be loaded if we knew your
+body weight" case is a **pull-up**, and the term that distinguishes them is that the entered weight
+is zero. Advice that is true of another exercise is still wrong advice.
+
+### ⚠️ 2. FIXED — a failed save at the end of a workout was completely silent
+
+`finish()` awaited `store.saveSession()` unguarded, and this app has no `unhandledrejection` handler
+anywhere. So a full localStorage meant the promise rejected, `clearDraft()` and `showFinished()`
+never ran, and **the user tapped Finish, at the end of a workout, and nothing happened at all.** The
+backend was already throwing the right words — *"Could not save. Your browser storage may be full."*
+— and nobody was listening for them.
+
+It now says so **on the screen, above the button that failed, and it stays there** — the same
+argument as the sign-in screen: 2.4 seconds of toast on a phone is indistinguishable from nothing
+happening, which is exactly how that one got reported. ⚠️ **The draft is deliberately NOT cleared on
+failure**: it is the only remaining copy of the session, so clearing it before the save has landed
+would turn a recoverable error into lost training. Tapping Finish again works. ⚠️ **And the
+`scrollIntoView` inside the handler is guarded** — an exception thrown inside the handler for a
+failed save puts the user straight back to a Finish button that does nothing.
+
+### ⚠️ 3. FIXED — Goals told a user meeting their target that they were short
+
+The UX review's best finding. Somebody doing **10.9 sets a week against a 7–10 target** read, in
+bold at the top of *What you are actually doing*:
+
+```
+  Not enough sets on this muscle                     10.9
+  10.9 sets a week, against the 7–10 this goal asks for.
+```
+
+The number beside it was **green** and the row's own class was already `is-ok` — **the code knew.**
+Only the headline had not been told, because `reason` is a fixed string. Headlines get read and grey
+sub-lines do not, so the one screen in this app that holds *measured evidence a user is doing the
+work* said the opposite.
+
+⚠️ **This is Rule 6 from the other side.** The rule forbids unearned opinions and this project is
+careful never to congratulate anybody for a number that has not earned it — but **an unearned
+NEGATIVE verdict is the same fault**, and it is the one that costs a user something. A row now
+carries a status-aware `heading` alongside its `reason`, and the two screens pick: *What you are
+actually doing* uses the heading, *Why progress stalls* keeps the cause name, because there a row
+names a cause whether or not it is happening to you.
+
+### ⚠️ 4. FIXED — the demo account was writing drafts to real localStorage
+
+Every screen of the demo carries a strip saying *"nothing is saved"*, and §0.10 of this file said
+*"nothing it does can reach localStorage"*. **Both were false.** `store.js` swaps its whole backend
+in the demo, but the session runner's draft never went through the store — it went straight to
+localStorage, so running a workout in the demo left invented sets on the real device, and they
+survived leaving it. Now keyed to the demo flag's own storage. ⚠️ **The defect is the false claim,
+not the stray key.** The leak was near-harmless; a safety sentence that is not true is not.
+
+### The UX review's findings that are NOT fixed — the honest list
+
+Ranked as it delivered them. **None of these is a bug; all are judgements with a stated trade-off**,
+and two of them argue for moving caveats, which this project does not do casually.
+
+1. **⚠️ NOTHING A USER CAN SEE ON HOME EVER GROWS.** A fresh account and an account with a year of
+   training and 200 sessions render *the same layout with a longer list*. The only number in the
+   header is "7 workouts saved", which counts the **plan**, not the training. The app is not short of
+   rewarding readouts — a rising curve with **+90 · +54.5 %**, per-lift deltas, *"251 lbs, stronger
+   than 62 %"*, a filled month — **and every one of them is behind the Data tab.** Nowhere does
+   anything say you hit a personal best. Two suggested fixes: one line under Home's primary button
+   drawn from what Data already computes, and a best-ever line on the finish screen. ⚠️ **The second
+   is Rule 5-safe and worth noting**: "you typed a bigger number than you have ever typed before" is
+   a comparison of two recorded sets, and the typo argument in `strength-estimate.js` is about
+   admitting an observation into a *derived* estimate. **The years view shipped the same day is the
+   same instinct — but it lands in Calendar, tab 3.** This finding is about Home.
+2. **"Programme" becomes "systems" on the very next tap.** Home says *"Pick a programme"* and
+   *"Nine ready-made programmes"*; Explore's title is *"Ready-made systems"*; the button is *"Add to
+   my systems"*. **This is improvement-plan §1.1's fault reappearing one screen later** — and the
+   word's only definition in the whole app sits in the Workouts empty state, which is precisely the
+   screen the first-run fix now routes a new user past. The test written with that fix pins *"the
+   word 'system' must not appear on the first screen"*; **screen two was never covered.**
+3. **Explore ranks nine programmes by a number it explains nine cards later**, ~2000px down. The
+   Golden Six, which the app's own subtitle calls a reasonable way to start, carries the lowest pair
+   on the screen (35/55) beside a six-day programme at 55/80 — so a stranger comparing numbers picks
+   the six-day one. And the flagship programme's detail screen opens with a red disclaimer before a
+   single exercise appears.
+4. **"Hard sets" is the unit the whole volume model rests on, is never defined, and is not what the
+   app counts.** `weeklyVolume()` credits **every logged set** — there is no warm-up exclusion on the
+   volume path — so somebody who logs warm-ups is measured against a target built on sets near
+   failure and told "10.9 sets a week" when their hard-set count might be six. ⚠️ **This one is
+   closest to a real defect** rather than a judgement: it is the number Goals measures the user by.
+5. **The red "not backed up" dot is on from the first paint**, including on an empty account with
+   nothing to lose and **inside the demo where nothing is real**, and its only explanation is a
+   `title` attribute, which does nothing on a phone.
+6. Smaller: the rest chip reads *"no target"* (a state, not an action); *Programmes that fit* lists
+   Upper/Lower twice, correctly and confusingly; the muscle-map legend prints bare percentages with
+   no word for what they are; a first-timer's stepper starts at 0 with 5 lb steps and the field does
+   not look typeable.
+
+**And what it said is already right, which is worth recording because it was looked for:** the
+five-tap first run holds (re-walked cold); the missed-week sentence — *"It has been about 10 weeks
+since you last did this one, so this is what you last did rather than a step up"* — is called the
+best-judged sentence in the app; day 2 teaches double progression at the moment of use; **e1RM never
+leaks into the UI**; the muscle panel carries a percentile, a next step and its evidence in four
+lines with no jargon; and neither chart mode dead-ends.
 
 ---
 
@@ -843,13 +972,17 @@ plan plus a review of everything built. Seven reviews were scoped, briefed and t
 session usage limit before returning a single finding. Their briefs are recorded verbatim in that
 file so they can be re-run as written, and **re-running the rest is still item 0.**
 
-**Four have now run and every one found something real** — the adversarial code review (progression
+**SIX have now run and every one found something real** — the adversarial code review (progression
 destroyed its own rep range), cross-screen consistency (the Goals matcher printed a strength
-percentage with no caveat), the **accessibility audit**, the first this project has ever had, which
-failed, and **edge cases / data integrity (2026-08-22)**, which found the DST day-index bug and
-five things that are still open. The first three are in the 2026-08-20 section and the fourth has
-its own on 2026-08-22. **Three are still outstanding: UX / human behaviour, competitive, and the
-live social round trip.**
+percentage with no caveat), the **accessibility audit**, the first this project ever had, which
+failed, and on 2026-08-22 **edge cases / data integrity** (the DST day-index bug and eight more),
+**the live social round trip** (it works; two defects), and **human behaviour / UX** (Goals told a
+user meeting their target that they were short). The first three are in the 2026-08-20 section and
+the rest have their own on 2026-08-22. **Only the competitive review is outstanding.**
+
+⚠️ **The UX review's list is where the unfinished work is**, and it is judgement rather than bugs —
+so it wants Tim's eye more than the others did. Item 1 on it is the sharpest unaddressed thing in
+the product: **nothing a user can see on Home ever grows.**
 
 ⚠️ **On running them as agents.** The 2026-08-19 attempt launched seven at once and a usage limit
 killed all seven before one finding came back; this file has said "serially, never a wave" ever
@@ -893,16 +1026,12 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
 0b. **⚠️ THE EDGE-CASE REVIEW'S UNFIXED FINDINGS — 2026-08-22, and two of them can lose work.**
    Full write-up in the third-pass section above; these are the ones nobody has done.
 
-   - **⚠️ (a) PROGRESSION RATCHETS REPS WITH NO TERMINAL STATE.** An obedient lifter on a 20 lb
-     lateral raise is walked to **20×37**, and past 15 reps the app's own `MAX_EVIDENCE_REPS` refuses
-     the set — so its own advice deletes the exercise from its own muscle map. **This is the only
-     part of the app that can cause physical harm, and it is the second bug found in it.** The
-     2026-08-20 play-forward test covers the bench branch only; `noIncrement` and `repsOnly` were
-     never played forward. The fix needs a terminal state and a play-forward test **per branch**.
-   - **⚠️ (b) A FAILED SAVE AT THE END OF A WORKOUT IS SILENT.** `finish()` awaits `saveSession()`
-     unguarded and the app has no `unhandledrejection` handler, so a full localStorage means the user
-     taps Finish and *nothing happens*, with the session unsaved. `LocalBackend` already throws the
-     right words and nothing catches them. **Cheapest serious fix on this list.**
+   - ~~**⚠️ (a) PROGRESSION RATCHETS REPS WITH NO TERMINAL STATE.**~~ ✅ **FIXED 2026-08-22** — a rep
+     ceiling at the top of the top band, which **refuses** rather than stepping smaller, and both
+     branches are now played forward to forty sessions. See the fifth-pass section.
+   - ~~**⚠️ (b) A FAILED SAVE AT THE END OF A WORKOUT IS SILENT.**~~ ✅ **FIXED 2026-08-22** — it
+     says so on the screen above the button that failed, keeps the draft (the only other copy), and
+     the same tap works again once the problem clears.
    - **⚠️ (c) THE FIRESTORE CEILING IS ~950 SESSIONS AND THE DOCS SAY 3,000.** Measured at ~1,100
      bytes a session against the 1 MiB per-document cap. Writes fail silently mid-workout past it —
      and (b) is what makes them silent. `docs/firebase-setup.md` needs correcting whether or not the
@@ -1007,7 +1136,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2233 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | **2252 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
@@ -1116,6 +1245,13 @@ It needs a server — ES modules do not load over `file://`.
     `sessionStorage['ftrack:v1:demo'] = '1'` and reload, and the store swaps to an in-memory backend
     holding two programmes, ~200 sessions, 20 benchmarks, 53 weigh-ins and a goal part-way through.
     **Nothing it does can reach localStorage or Firestore**, so it is also the safest thing to drive.
+    ⚠️ **That sentence was FALSE for months and is true again as of 2026-08-22.** The store swaps its
+    backend, but the session runner's draft never went through the store — it went straight to
+    localStorage, so running a workout in the demo left invented sets on the real device and they
+    survived leaving it. Found by the UX review. The draft now follows the demo flag into
+    sessionStorage. **The lesson is about the claim, not the leak**: this file and a strip on every
+    demo screen both said "nothing is saved", and the one write that bypassed the store was the one
+    nobody thought to check. *An absolute safety claim needs a test, not a design argument.*
     `demo.enter()` / `demo.exit()` in `store.js` do it with a reload. Clear the flag when you are
     done, or your next screenshot is of somebody else's year — and note it is per-TAB, so a fresh
     Chrome profile starts outside it.

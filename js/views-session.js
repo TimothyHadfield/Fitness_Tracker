@@ -1,6 +1,6 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, todayISO } from './store.js';
+import { store, todayISO, demo } from './store.js';
 import { LOAD_LABEL } from './exercises.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
@@ -42,13 +42,42 @@ function daysBetweenDays(fromISO, toISO) {
  * Draft persistence — a phone call or an app switch must not lose a workout
  * ------------------------------------------------------------------ */
 
+/**
+ * ⚠️ THE DEMO ACCOUNT DOES NOT WRITE DRAFTS TO DISK.
+ *
+ * `store.js` swaps its whole BACKEND for an in-memory one inside the demo, so
+ * no invented session can reach localStorage or Firestore — but the draft never
+ * went through the store. It is written straight to localStorage from here, so
+ * running a workout inside the demo left `ftrack:v1:draftSession` full of
+ * made-up sets on the real device, and it survived leaving the demo. Found by
+ * the UX review, 2026-08-22.
+ *
+ * ⚠️ It was near-harmless in practice and that is not the point. A strip on
+ * every screen of the demo says *"nothing is saved"*, and progress.md §0.10
+ * said *"nothing it does can reach localStorage"*. **Both were false**, and in
+ * this project a claim that is false is a bigger defect than the leak it
+ * describes. sessionStorage matches the demo flag's own lifetime: per tab, gone
+ * when the browser closes, and never visible to the real account.
+ */
+const draftStore = () => {
+  try {
+    return demo.active() ? sessionStorage : localStorage;
+  } catch (_) {
+    return localStorage;
+  }
+};
+
 function saveDraft(d) {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch (_) {}
+  try { draftStore().setItem(DRAFT_KEY, JSON.stringify(d)); } catch (_) {}
 }
 export function loadDraft() {
-  try { const r = localStorage.getItem(DRAFT_KEY); return r ? JSON.parse(r) : null; } catch (_) { return null; }
+  try { const r = draftStore().getItem(DRAFT_KEY); return r ? JSON.parse(r) : null; } catch (_) { return null; }
 }
 export function clearDraft() {
+  // ⚠️ Cleared from BOTH. A draft written before this fix is sitting in real
+  // localStorage on somebody's phone right now, and the demo is the one place
+  // that can no longer see it to tidy it up.
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch (_) {}
   try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
 }
 
@@ -203,6 +232,11 @@ export async function SessionView(workoutId) {
   const progress = el('div', { class: 'session-progress' });
   const pane = el('div', { class: 'pane-scroll' });
   const footer = el('div', { class: 'session-footer' });
+
+  // Sits directly above the footer that carries Finish, so the explanation and
+  // the button that failed are in the same glance. Hidden until it is needed,
+  // and it is the only thing in this view that persists an error.
+  const saveError = el('div', { class: 'save-error', role: 'alert', hidden: true });
 
   /**
    * The walk.
@@ -610,18 +644,59 @@ export async function SessionView(workoutId) {
       return;
     }
 
-    await store.saveSession({
-      workoutId: state.workoutId,
-      workoutName: state.workoutName,
-      date: state.date,
-      startedAt: state.startedAt,
-      finishedAt: new Date().toISOString(),
-      isBenchmark: Boolean(state.isBenchmark),
-      entries: cleaned,
-    });
+    /* ⚠️ THE ONE PLACE IN THIS APP WHERE A FAILURE COSTS SOMEBODY THEIR WORK.
+     *
+     * This `await` was unguarded until 2026-08-22, and the app has no
+     * `unhandledrejection` handler — so a full localStorage meant the promise
+     * rejected, `clearDraft()` and `showFinished()` never ran, and the user
+     * tapped **Finish**, at the end of a workout, and NOTHING HAPPENED. The
+     * backend was already throwing the right words ("Could not save. Your
+     * browser storage may be full."); nobody was listening for them.
+     *
+     * ⚠️ THE DRAFT IS NOT CLEARED ON FAILURE, and that is the whole point.
+     * The draft is the only remaining copy of the session, so clearing it
+     * before the save is known to have landed would turn a recoverable error
+     * into lost training. Leaving it means the numbers are still on the screen
+     * and still on disk, and Finish can simply be tapped again.
+     *
+     * The message is persistent rather than a toast for the same reason the
+     * sign-in screen's is: 2.4 seconds is indistinguishable from nothing
+     * happening, which is exactly how the original was reported from a phone.
+     */
+    try {
+      await store.saveSession({
+        workoutId: state.workoutId,
+        workoutName: state.workoutName,
+        date: state.date,
+        startedAt: state.startedAt,
+        finishedAt: new Date().toISOString(),
+        isBenchmark: Boolean(state.isBenchmark),
+        entries: cleaned,
+      });
+    } catch (err) {
+      saveFailed(err);
+      return;
+    }
 
     clearDraft();
     showFinished(cleaned);
+  }
+
+  // Said on the screen, not in a toast, and it stays until the save works.
+  function saveFailed(err) {
+    const msg = (err && err.message) || 'Could not save this workout.';
+    setChildren(saveError,
+      el('strong', { text: 'Not saved. ' }),
+      el('span', { text: `${msg} Your numbers are still here — nothing has been thrown away. `
+        + 'Tap Finish again, or free up some space and then tap it.' }),
+    );
+    saveError.hidden = false;
+    // ⚠️ Guarded, and not as politeness to jsdom. An exception thrown INSIDE the
+    // handler for a failed save puts the user straight back where they started:
+    // a tap on Finish that does nothing at all. The message is the job; the
+    // scroll is a nicety, and a nicety may not be able to take the message down
+    // with it.
+    if (typeof saveError.scrollIntoView === 'function') saveError.scrollIntoView({ block: 'nearest' });
   }
 
   function showFinished(entries) {
@@ -779,6 +854,7 @@ export async function SessionView(workoutId) {
     progress,
     pane,
     restBar,
+    saveError,
     footer,
   );
 }

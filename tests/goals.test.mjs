@@ -359,6 +359,29 @@ const unknown = stallReasons({ requirements: req, measured: null, muscle: 'Chest
 ok(unknown.filter((r) => r.visible).every((r) => r.status === 'unknown' && r.value === null),
    'with too little history the two measurable rows say "not enough yet", never zero');
 
+/* ⚠️ A ROW THAT IS BEING MET MUST NOT BE HEADLINED WITH THE THING THAT GOES
+   WRONG. Found by the UX review, 2026-08-22: somebody doing 10.9 sets a week
+   against a 7–10 target read "Not enough sets on this muscle" in bold, with the
+   number beside it in green and the sub-line underneath correctly saying they
+   were over. The row's own class was already `is-ok` — only the headline had
+   not been told. Rule 6 forbids unearned opinions, and an unearned NEGATIVE one
+   is the same fault; this was the single screen in the app holding measured
+   proof that a user was doing the work. */
+ok(fineReasons.find((r) => r.key === 'volume').heading === 'Enough sets on this muscle'
+   && fineReasons.find((r) => r.key === 'frequency').heading === 'Training it often enough',
+   '⚠️ a user who is MEETING the target is told so, not told the opposite in bold');
+ok(shortReasons.find((r) => r.key === 'volume').heading === 'Not enough sets on this muscle',
+   'and somebody genuinely short still reads that they are short');
+ok(unknown.filter((r) => r.visible).every((r) => !/^Not /.test(r.heading)),
+   'and "not measured yet" is never headlined as a failure either');
+
+// ⚠️ `reason` survives untouched, because the OTHER screen needs it. On "Why
+// progress stalls" a row names a CAUSE, and a cause is called by its name
+// whether or not it is happening to you.
+ok(fineReasons.every((r) => typeof r.reason === 'string' && r.reason)
+   && fineReasons.find((r) => r.key === 'volume').reason === 'Not enough sets on this muscle',
+   'while the cause name is unchanged, so the stalls screen still reads as a list of causes');
+
 /* ================================================================== *
  * Matching a programme to the goal
  * ================================================================== */
@@ -706,6 +729,78 @@ ok(obedient.filter((s) => s.kind === 'load').length === 2,
 ok(walk(300, 4)[0].range.join('-') === '3-5',
    'somebody training in fours is read as 3–5, so the walk above is not asserting a constant');
 ok(walk(60, 16)[0].range.join('-') === '15-20', 'and somebody training in sixteens as 15–20');
+
+/* ==================================================================
+ * ⚠️ PLAY EVERY BRANCH FORWARD, NOT THE ONE THAT BROKE — 2026-08-22
+ *
+ * The walk above exists because of the 2026-08-20 bug, and it walks the BENCH,
+ * which is the branch that bug was in. The edge-case review played the other
+ * two forward and found both ratcheting reps with no terminal state at all:
+ *
+ *   Lateral Raise 20 lb, obeyed 30 times  →  20 × 37     (kind: noIncrement)
+ *   Barbell Curl 60 lb, obeyed 30 times   →  60 × 34     (kind: noIncrement)
+ *   Push-Up, obeyed 30 times              →  45 reps     (kind: repsOnly)
+ *
+ * Both branches returned `repsAtTop + 1` unconditionally. Past 20 there is no
+ * REP_BAND left, so the suggestion printed a range it was already outside of;
+ * and past MAX_EVIDENCE_REPS the app's own D5 gate refuses the set as evidence,
+ * so its advice walked the exercise out of its own muscle map.
+ *
+ * The fix is a ceiling that REFUSES rather than steps smaller — the same shape
+ * as the lay-off branch and as `noIncrement` itself.
+ * ================================================================== */
+{
+  // A 20 lb dumbbell: 5 lb is a 25 % jump, so `noIncrement` is the only branch
+  // this lift can ever reach, forever. That is what made it ratchet.
+  const DUMBBELL = { id: 'x-lat', name: 'Lateral Raise', muscle: 'Shoulders', fields: ['weight', 'reps'] };
+  const PUSHUP = { id: 'x-push', name: 'Push-Up', muscle: 'Chest', fields: ['reps'] };
+
+  const walkEx = (exercise, w, r, n = 40) => {
+    const hist = [S(w, r)];
+    let last = null;
+    for (let i = 0; i < n; i++) {
+      const s = suggestProgression({ history: hist, exercise, step: 5 });
+      if (!s) break;
+      last = s;
+      hist.unshift(S(s.weight == null ? 0 : s.weight, s.reps));
+    }
+    return { last, reps: last && last.reps, weight: last && last.weight };
+  };
+
+  const lat = walkEx(DUMBBELL, 20, 10);
+  ok(lat.reps <= 20,
+     `⚠️ forty obedient sessions on a 20 lb lateral raise end at ${lat.reps} reps, not 37 — `
+     + 'the rep ladder has a top');
+  ok(lat.last.kind === 'repCeiling' && lat.weight === 20,
+     'and it stops by REFUSING — last time\'s numbers and a reason, never a smaller step it cannot justify');
+  ok(/microplates|extra set|harder variation/i.test(lat.last.why),
+     'and it names the ways on from there rather than leaving somebody stuck at the top of a range');
+
+  const push = walkEx(PUSHUP, 0, 15);
+  ok(push.reps <= 20 && push.last.kind === 'repCeiling',
+     `⚠️ and so does the reps-only branch — push-ups end at ${push.reps}, not 45`);
+
+  // ⚠️ THE CEILING MUST NOT BLOCK A REAL LOAD STEP. A bench at the top of its
+  // range with an honest increment available must still get the weight, or the
+  // fix would have replaced a runaway with a dead end — which is worse, because
+  // it would stop progression for everybody who can actually progress.
+  // Two sessions at the top, because the 2-for-2 rule is what earns the step.
+  const heavy = suggestProgression({ history: [S(185, 20), S(185, 20)], exercise: BENCH, step: 5 });
+  ok(heavy.kind === 'load' && heavy.weight > 185,
+     'a lift with an honest increment available still takes the weight at 20 reps — '
+     + 'the ceiling stops the rep ladder, not progression');
+
+  // ⚠️ And the ceiling's advice must fit the lift it is talking about. A
+  // dumbbell holder is not to be told to weigh themselves and buy a belt.
+  const dumbbellCeiling = suggestProgression({ history: [S(20, 20), S(20, 20)], exercise: DUMBBELL, step: 5 });
+  ok(!/weigh-in|belt/i.test(dumbbellCeiling.why),
+     'and a loaded lift at the ceiling is not given the bodyweight advice');
+
+  // Vacuity guard: below the ceiling the rep step is untouched.
+  const below = suggestProgression({ history: [S(20, 12), S(20, 12)], exercise: DUMBBELL, step: 5 });
+  ok(below.kind === 'noIncrement' && below.reps === 13,
+     'and below the ceiling another rep is still exactly what it asks for');
+}
 
 // The property underneath, swept: history may only ever WIDEN the range upward.
 // That is what makes this fix incapable of causing harm — a higher range makes
