@@ -647,8 +647,13 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    - The four **reasoned-not-measured** items in the survey (haptics — iOS has no Vibration API at
      all, so the stepper's `navigator.vibrate` never fires; the long-press callout; whether a
      `setTimeout` focus raises the keyboard; the native date control). All need the same device.
-   - Two layout items nobody has done: **Explore's badge cuts every description to ~28 characters**,
-     and **Goals opens on two paragraphs of prose before any number.**
+   - ~~Two layout items nobody has done: Explore's badge, and Goals opening on prose.~~ **BOTH DONE
+     the same day** — the second pass's "last two layout items" section above has the measurements
+     (Explore's badge drops to its own line below 700px, giving the summary 338px of 393 instead of
+     200; Goals' two honesty paragraphs moved down beside the screen's other stated limit). This
+     bullet survived the second pass as a stale copy and is kept struck through rather than deleted,
+     because a line saying "nobody has done this" over work that shipped is exactly the failure this
+     file exists to prevent.
 
 1. **Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
    Every screen is built and driven, but only against a stubbed facade. The round trip — invite,
