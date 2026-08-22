@@ -2536,6 +2536,25 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'a record written under the old `drops` key still reads back');
     ok(st.miniSetCount([{ weight: 100, drops: [{}, {}] }]) === 3,
        'and still counts its mini-sets');
+
+    // ⚠️ AND THE PLAN SIDE OF THE RENAME, WHICH minisOf() DOES NOT COVER.
+    // `drops` was the key on BOTH shapes: an array of mini-sets inside a
+    // recorded set, and a COUNT on a workout exercise. minisOf() reads the old
+    // array; plannedMinis() read only `minis`, so a workout planned with four
+    // drops came back as one — the default — and a backup taken in that window
+    // restores as a different workout from the one that was saved. Silent, and
+    // it looks exactly like the plan having always said one.
+    ok(st.plannedMinis({ setType: st.DROP, drops: 4 }) === 4,
+       'a workout planned under the old `drops` key keeps its four drops');
+    ok(st.plannedMinis({ setType: st.MYO, drops: 5 }) === 5,
+       'and the same for myo-rep match sets');
+    // `minis` wins where both are present, and an ARRAY under `drops` — the
+    // recorded-set shape arriving where a count belongs — falls to the default
+    // rather than to NaN.
+    ok(st.plannedMinis({ setType: st.DROP, minis: 2, drops: 6 }) === 2,
+       'the current key wins where a row carries both');
+    ok(st.plannedMinis({ setType: st.DROP, drops: [{}, {}] }) === 1,
+       'and a mini-set ARRAY under `drops` is not a count — it falls back to the default');
   }
 
   /* ---- it SURVIVES a round trip through the store ---- */
@@ -2656,6 +2675,68 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   }
 }
 
+/* ================================================================== *
+ * ⚠️ trainingForMuscle() counts CALENDAR days, in every timezone
+ *
+ * The "why progress stalls" numbers on the Goals screen — sets a week and
+ * sessions a week on one muscle — are a rate, so they are only as good as the
+ * day count underneath them.
+ *
+ * That day count used to be `Math.floor(localMidnight / 86400000)`, which is a
+ * stable index only while the zone's UTC offset stays on one side of zero.
+ * Europe/London, Dublin, Lisbon and the Canaries are UTC+0 in winter and UTC+1
+ * in summer, so local midnight sits on the same UTC day all winter and on the
+ * PREVIOUS one all summer — and the index steps by 0 or 2 across each DST
+ * change. Measured before the fix: 28 consecutive training days spanning
+ * 29 March 2026 reported a 27-day span and 14.52 sets a week instead of 14.00.
+ *
+ * Run in a CHILD PROCESS under an explicit TZ. Node cannot restore the system
+ * zone once process.env.TZ has been reassigned, so flipping it in-process would
+ * silently re-zone every assertion after this one.
+ * ================================================================== */
+{
+  const { execFileSync } = await import('node:child_process');
+  const storeUrl = new URL('../js/store.js', import.meta.url).href;
+  const exUrl = new URL('../js/exercises.js', import.meta.url).href;
+  const probe = `
+    const mem = new Map();
+    globalThis.localStorage = {
+      getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+      setItem: (k, v) => mem.set(k, String(v)),
+      removeItem: (k) => mem.delete(k),
+    };
+    const { store, trainingForMuscle } = await import(${JSON.stringify(storeUrl)});
+    const { BUILT_IN_EXERCISES } = await import(${JSON.stringify(exUrl)});
+    const bench = BUILT_IN_EXERCISES.find((e) => e.name === 'Barbell Bench Press');
+    // 28 consecutive days of two bench sets, straddling the spring DST change.
+    const sessions = [];
+    for (let i = 0; i < 28; i++) {
+      const d = new Date(Date.UTC(2026, 2, 15) + i * 86400000).toISOString().slice(0, 10);
+      sessions.push({ id: 's' + i, workoutId: 'w', workoutName: 'W', date: d,
+        entries: [{ exerciseId: bench.id, exerciseName: bench.name,
+          sets: [{ weight: 185, reps: 5 }, { weight: 185, reps: 5 }] }] });
+    }
+    await store.importAll({ sessions });
+    const t = await trainingForMuscle('Chest', 28, '2026-04-11');
+    console.log(JSON.stringify([t.sessions, t.spanDays, Math.round(t.weeklySets * 100) / 100]));
+  `;
+  const run = (tz) => JSON.parse(execFileSync(process.execPath, ['--input-type=module', '-e', probe],
+    { env: { ...process.env, TZ: tz }, encoding: 'utf8' }).trim());
+
+  const london = run('Europe/London');
+  ok(london[1] === 28,
+     '⚠️ 28 consecutive training days span 28 days in Europe/London too — the clocks going '
+     + 'forward must not shorten the window a weekly rate is divided by');
+  ok(london[2] === 14,
+     'so two sets a day for four weeks is 14 sets a week, not 14.52 — a rate is only as good as '
+     + 'the day count under it');
+
+  // Vacuity guard: a zone whose offset never crosses UTC+0 was always right, so
+  // the assertions above are about the ZONE rather than about these dates.
+  const ny = run('America/New_York');
+  ok(JSON.stringify(ny) === JSON.stringify(london),
+     'and every zone agrees — a calendar day is not a local instant');
+}
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

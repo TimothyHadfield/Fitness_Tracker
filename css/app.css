@@ -986,6 +986,105 @@ select.input {
 .legend i.b { background: var(--good); }
 
 /* ==========================================================================
+   The year grid — a year of training as one row of squares
+   ==========================================================================
+
+   Tim, 2026-08-22: one tiny box per day, coloured if he trained, so that years
+   of history read on a single screen.
+
+   ⚠️ THE CELL SIZE IS NOT A STYLE CHOICE. 53 week-columns have to cross a
+   393px phone, which leaves about 6px each — that IS the feature, and every
+   decision below follows from it. Nothing in here may be given a fixed pixel
+   width: the columns are `1fr` so a year always spans exactly the space it has,
+   on any screen, at any year length (a leap year opening on a Sunday takes 54).
+
+   ⚠️ ONE COLOUR, DELIBERATELY. The month view paints workouts in --accent and
+   benchmark-only days in --good. Those two measure ΔE 6.5 apart under
+   protanopia in the light theme, which is inside the band the data-viz guidance
+   allows ONLY with a secondary encoding — and a 6px square has room for no
+   label, no texture and no gap. So this view says "trained" and the Months view
+   keeps the distinction. See js/year-grid.js for the full reasoning. */
+
+.cal-modes { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cal-modes .segmented { width: 100%; }
+
+/* The readout holds its row even with nothing selected — Design Rule 3's
+   corollary. Revealing it on tap would shift every grid below it downward at
+   the exact moment somebody was pointing at one. */
+.yr-readout {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; min-height: 34px; padding: 0 2px;
+  background: none; border: 0; text-align: left;
+  font-size: 12.5px; color: var(--ink-faint);
+  border-top: 1px solid var(--rule-soft);
+}
+.yr-readout:disabled { pointer-events: none; }
+/* ⚠️ `display: flex` BEATS the hidden attribute. The UA sheet gives [hidden]
+   `display: none` at the lowest precedence, so any rule setting a display wins
+   and the element stays on screen — which is exactly what happened: the
+   Workout/Benchmark legend went on being drawn over a Years view that paints
+   neither. Anything in this file toggled by `.hidden = true` needs this. */
+.yr-readout[hidden], .legend[hidden] { display: none; }
+.yr-r-date { flex: none; font-weight: 750; color: var(--ink); }
+.yr-r-what {
+  flex: 1; min-width: 0; color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.yr-readout .row-chev { flex: none; color: var(--ink-faint); display: flex; }
+
+.yr { display: flex; flex-direction: column; gap: 3px; }
+.yr-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.yr-title { font-size: 15.5px; font-weight: 750; letter-spacing: -0.015em; }
+.yr-count { font-size: 11.5px; color: var(--ink-soft); }
+
+/* Two columns — the day-name gutter and the squares — and two rows, with the
+   month strip sharing the squares' column track so its labels land on the
+   weeks they name. */
+.yr-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 2px 4px;
+}
+.yr-months { grid-area: 1 / 2; display: grid; grid-template-rows: auto; }
+/* ⚠️ EVERY LABEL IS PINNED TO ROW 1. Twelve labels each spanning several
+   columns overlap, and an auto-placed grid resolves an overlap by opening a new
+   row — so the strip came out as a diagonal staircase twelve rows deep,
+   pushing the squares half a screen down. Explicit placement is allowed to
+   overlap; auto-placement is not. The span stays under the ~4.3 columns a month
+   occupies so the labels do not actually collide. */
+.yr-month {
+  grid-row: 1;
+  font-size: 9px; line-height: 1.1; color: var(--ink-soft);
+  overflow: hidden; white-space: nowrap; letter-spacing: -0.02em;
+}
+.yr-dows {
+  grid-area: 2 / 1;
+  display: grid; grid-template-rows: repeat(7, 1fr);
+  font-size: 8.5px; color: var(--ink-soft);
+}
+.yr-dow { display: flex; align-items: center; line-height: 1; }
+
+/* A 1px gap, not the 2px the month calendar uses. At a 6px pitch a 2px gap is a
+   third of the picture, and the squares stop reading as a run of days. */
+.yr-grid {
+  grid-area: 2 / 2;
+  display: grid; grid-template-rows: repeat(7, auto);
+  gap: 1px;
+  cursor: pointer;
+}
+/* aspect-ratio is what makes the square square: the column is 1fr, and the
+   height follows the width rather than being guessed at. */
+.yr-cell { aspect-ratio: 1; border-radius: 1.5px; background: var(--rule-soft); }
+.yr-cell.on { background: var(--accent); }
+
+/* Today and the selected day are RINGS, not fills — a fill would be a second
+   thing the colour of "you trained" and would read as one. Drawn outside the
+   box so a 6px square keeps all 6 pixels of its own colour. */
+.yr-cell.today { box-shadow: 0 0 0 1px var(--ink-soft); }
+.yr-cell.sel { box-shadow: 0 0 0 1.5px var(--ink); position: relative; z-index: 1; }
+
+/* ==========================================================================
    Graph
    ========================================================================== */
 

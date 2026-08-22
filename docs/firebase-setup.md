@@ -174,8 +174,14 @@ across two suites, all passing:
 - a document carrying an unexpected field · `rows` that isn't a list
 - an oversized write (5,001 rows) · deleting a document
 
-Test accounts and their documents were deleted afterwards; the project holds zero users and zero
-documents.
+Test accounts and their documents were deleted afterwards.
+
+⚠️ **This used to read "the project holds zero users and zero documents", and it has been false ever
+since Tim first signed in.** As of **2026-08-22 it holds 7 users and 19 documents**, including two
+real accounts of his carrying real training data. That stale sentence was quoted into a brief for an
+agent whose job involved deleting test accounts — **snapshot the live baseline and diff against it,
+never clean up to an absolute zero.** A count of a live project is only true on the day it is
+written, so write the date beside it.
 
 ### Still not verified
 

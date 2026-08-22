@@ -14,9 +14,15 @@ import {
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { minisOf, groupLabel, miniLabel } from './set-types.js';
+import { yearsToShow, buildYear, daysLabel, DOW_LABELS } from './year-grid.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
+
+// Which way the calendar is being read. Module-level so it survives leaving the
+// screen and coming back — somebody who prefers the year view should not have
+// to re-pick it after every trip to a day.
+let calMode = 'months'; // 'months' | 'years'
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -101,24 +107,188 @@ function monthBlock(year, month, activity, today) {
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * The year grid — years of training on one screen
+ *
+ * Tim, 2026-08-22, with a reference image: one tiny box per day, coloured if
+ * he trained. The maths is in `js/year-grid.js`; this is the drawing.
+ *
+ * ⚠️ TAP SELECTS, IT DOES NOT NAVIGATE — and that is a touch decision, not a
+ * preference. A cell here is about 6px on a 393px phone, because 53 weeks have
+ * to fit across, which is the whole point of the view. Six pixels is under any
+ * hit-target standard there is, so a tap that navigated would send people to
+ * days they did not mean roughly as often as to days they did. Instead a tap
+ * fills a readout that stays on screen, and the readout itself is the
+ * full-width control that opens the day. Two taps, neither of them a gamble.
+ *
+ * ⚠️ WCAG 2.5.8 is satisfied by EQUIVALENCE, not by exemption. Every day
+ * reachable here is reachable at 40px in the Months view, one tap away on the
+ * same screen — the standard's own "equivalent control" case. The small squares
+ * are an enhancement layered over that, never the only route to a day, which is
+ * also why the grid is a picture with a summary rather than 366 focus stops
+ * nobody can land on.
+ * ------------------------------------------------------------------ */
+
+function yearsPane(activity, today, onPick) {
+  const active = (isoDate) => {
+    const rec = activity.get(isoDate);
+    return Boolean(rec && (rec.sessions.length || rec.benchmarks.length));
+  };
+
+  const years = yearsToShow([...activity.keys()], today);
+  return years.map((year) => {
+    const g = buildYear(year, active, today);
+
+    const cells = [];
+    g.columns.forEach((week, ci) => {
+      week.forEach((cell, ri) => {
+        if (!cell) return;
+        const cls = ['yr-cell'];
+        if (cell.active) cls.push('on');
+        if (cell.isToday) cls.push('today');
+        cells.push(el('div', {
+          class: cls.join(' '),
+          style: `grid-column:${ci + 1};grid-row:${ri + 1}`,
+          dataset: { iso: cell.iso },
+        }));
+      });
+    });
+
+    const grid = el('div', {
+      class: 'yr-grid',
+      style: `grid-template-columns:repeat(${g.columns.length},minmax(0,1fr))`,
+      role: 'img',
+      'aria-label': `${year}: ${daysLabel(g.activeDays)}. Open the Months view to reach a day.`,
+      onClick: (e) => {
+        const box = e.target.closest('.yr-cell');
+        if (!box) return;
+        grid.querySelectorAll('.yr-cell.sel').forEach((n) => n.classList.remove('sel'));
+        box.classList.add('sel');
+        onPick(box.dataset.iso);
+      },
+    }, cells);
+
+    return el('section', { class: 'yr' },
+      el('div', { class: 'yr-head' },
+        el('h2', { class: 'yr-title', text: String(year) }),
+        el('span', { class: 'yr-count', text: daysLabel(g.activeDays) }),
+      ),
+      // The month strip lives INSIDE the two-column body so it shares the
+      // grid's own column track. Sitting outside it, it would have to guess the
+      // width of the day-name gutter, and a month label one gutter out of true
+      // is worse than no month labels at all.
+      el('div', { class: 'yr-body' },
+        // ⚠️ minmax(0,1fr), NEVER 1fr. A bare `1fr` is `minmax(auto, 1fr)`, so
+        // each column refuses to shrink below the min-content of the label
+        // sitting in it — 53 columns each forced to the width of "Jan" made
+        // this strip a third wider than the grid it labels and slid every
+        // month leftward. Measured 2026-08-22: "Nov" sat over 20 August.
+        // A month label two columns out of true is a lie nobody can catch by
+        // eye at 7px, which is exactly why it was measured rather than looked at.
+        el('div', { class: 'yr-months', style: `grid-template-columns:repeat(${g.columns.length},minmax(0,1fr))` },
+          g.monthLabels.map((m) => el('span', {
+            class: 'yr-month', text: m.text, style: `grid-column:${m.col + 1}/span 4`,
+          }))),
+        el('div', { class: 'yr-dows' },
+          DOW_LABELS.map((d) => el('span', { class: 'yr-dow', text: d }))),
+        grid,
+      ),
+    );
+  });
+}
+
 export async function CalendarView() {
   const activity = await activityByDate();
   const today = todayISO();
   const months = monthRange(activity);
 
+  // ⚠️ RESERVED, NEVER REVEALED. The readout holds its row whether or not a day
+  // is selected, because Design Rule 3's corollary — content must not shrink
+  // because you asked it a question — is exactly what a line appearing on tap
+  // would break: every grid below it would jump by its height the first time
+  // anybody touched a square. Empty, it says what to do instead.
+  const readout = el('button', {
+    class: 'yr-readout', 'aria-live': 'polite', disabled: true,
+    text: 'Tap a day to see what you did',
+  });
+
+  const pickDay = (isoDate) => {
+    const rec = activity.get(isoDate) || { sessions: [], benchmarks: [] };
+    const names = rec.sessions.map((s) => s.workoutName || 'Workout');
+    if (rec.benchmarks.length) names.push(`${rec.benchmarks.length} benchmark${rec.benchmarks.length > 1 ? 's' : ''}`);
+    readout.disabled = false;
+    readout.onclick = () => go('#/day/' + isoDate);
+    // ⚠️ The YEAR is part of the date here, where it is not on other screens.
+    // This is the one view in the app showing several years at once, and
+    // "Jul 14" over a grid holding four different July 14ths names nothing.
+    setChildren(readout,
+      el('span', { class: 'yr-r-date', text: `${fmtDateShort(isoDate)}, ${isoDate.slice(0, 4)}` }),
+      el('span', { class: 'yr-r-what', text: names.length ? names.join(' · ') : 'Nothing recorded' }),
+      chevron(),
+    );
+  };
+
   // The grid is the content, so the legend rides in the header rather than
-  // costing a row of its own.
+  // costing a row of its own. In Years mode the legend would be wrong — that
+  // view paints one colour on purpose — so it is hidden and the readout takes
+  // the row underneath instead.
+  const legend = el('div', { class: 'legend' },
+    el('span', {}, el('i', { class: 'w' }), 'Workout'),
+    el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
+  );
+
+  const tabs = [['months', 'Months'], ['years', 'Years']].map(([m, label]) =>
+    el('button', {
+      class: 'seg', role: 'tab', 'aria-selected': String(calMode === m), text: label,
+      onClick: () => { if (calMode !== m) { calMode = m; paint(); } },
+    }));
+
   const screen = screenShell({
     profile: true,
-    title: el('div', { class: 'cal-topbar' },
-      el('h1', { text: 'Calendar' }),
-      el('div', { class: 'legend' },
-        el('span', {}, el('i', { class: 'w' }), 'Workout'),
-        el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
-      ),
-    ),
-    scroll: months.map(({ year, month }) => monthBlock(year, month, activity, today)),
+    title: el('div', { class: 'cal-topbar' }, el('h1', { text: 'Calendar' }), legend),
+    top: el('div', { class: 'cal-modes' },
+      el('div', { class: 'segmented', role: 'tablist' }, tabs), readout),
+    scroll: [],
   });
+
+  /**
+   * ⚠️ THE SCREEN NODE IS NEVER REPLACED, only repainted — and that is not a
+   * performance choice.
+   *
+   * `app.js` PREPENDS things into the node a view returns: in the demo account
+   * it prepends the "nothing is saved" strip. The first version of this switch
+   * rebuilt the whole screen and swapped it in, which silently threw that strip
+   * away — so switching to Years inside the demo removed the one thing on the
+   * page saying the data is invented. Caught by a screenshot, not by a test.
+   *
+   * The general rule, which is worth more than this instance: **a view does not
+   * own the node it returned.** Anything re-rendering itself in place must
+   * repaint its own contents and leave the container alone.
+   */
+  function paint() {
+    const isYears = calMode === 'years';
+    tabs.forEach((b) => b.setAttribute('aria-selected', String(b.textContent === (isYears ? 'Years' : 'Months'))));
+    legend.hidden = isYears;
+    readout.hidden = !isYears;
+
+    const pane = screen.querySelector('.pane-scroll');
+    if (isYears) {
+      setChildren(pane, ...(activity.size
+        ? yearsPane(activity, today, pickDay)
+        : [emptyState('No training recorded yet',
+          'Every day you finish a workout fills in a square here. A year fits on one screen.')]));
+      pane.scrollTop = 0;
+    } else {
+      setChildren(pane, ...months.map(({ year, month }) => monthBlock(year, month, activity, today)));
+      landOnCurrentMonth(screen);
+    }
+  }
+
+  paint();
+  return screen;
+}
+
+function landOnCurrentMonth(screen) {
 
   // Land on the current month once the screen is in the document.
   //

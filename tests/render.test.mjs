@@ -705,6 +705,85 @@ ok(!data.querySelector('.rep-target'),
   localStorage.removeItem('ftrack:v1:draftSession');
 }
 
+/* ========== the calendar's YEARS view (Tim, 2026-08-22) ========== */
+{
+  // A session last year and one today, so two year rows exist and the counts
+  // are not both zero.
+  const w = await store.saveWorkout({ name: 'Grid test', exercises: [] });
+  const todayIso = new Date().toLocaleDateString('en-CA');
+  const lastYear = `${Number(todayIso.slice(0, 4)) - 1}-06-15`;
+  for (const date of [todayIso, lastYear]) {
+    await store.saveSession({ workoutId: w.id, workoutName: 'Grid test', date, entries: [] });
+  }
+
+  const screen = await mount(CalendarView());
+  const segs = () => [...screen.querySelectorAll('.seg')];
+  ok(segs().map((b) => b.textContent).join() === 'Months,Years',
+     'the calendar offers Months and Years');
+  ok(screen.querySelectorAll('.cal-month').length > 0 && !screen.querySelector('.yr-grid'),
+     'and opens on Months, which is what it has always been');
+
+  segs().find((b) => b.textContent === 'Years').click();
+  await settle();
+
+  ok(screen.querySelectorAll('.yr-grid').length >= 2,
+     'switching to Years draws a grid for this year and last');
+  ok(!screen.querySelector('.cal-month'), 'and the month blocks are gone rather than stacked underneath');
+
+  /* ⚠️ THE REGRESSION THIS EXISTS FOR. The first version of the switch rebuilt
+     the whole screen and swapped the new node in — which silently discarded the
+     demo account's "nothing is saved" strip, because app.js PREPENDS that into
+     the node the view returned. Switching to Years inside the demo removed the
+     one line on the page saying the data is invented.
+
+     ⚠️ ASSERTED AGAINST THE DOCUMENT, NOT AGAINST `screen`. Under the bug the
+     test's own reference goes stale: the original node is detached and keeps
+     both the strip and its old contents, so a `screen.querySelector` would
+     still find the strip and pass over the exact fault it was written for.
+     What matters is whether the strip is still ON SCREEN beside a rendered
+     grid — so that is what is asked. */
+  const stowaway = document.createElement('div');
+  stowaway.className = 'demo-bar';
+  screen.prepend(stowaway);
+  segs().find((b) => b.textContent === 'Months').click();
+  await settle();
+  segs().find((b) => b.textContent === 'Years').click();
+  await settle();
+  ok(document.querySelector('.demo-bar') === stowaway && !!document.querySelector('.yr-grid'),
+     'and switching mode repaints IN PLACE, so anything the router prepended is still on screen');
+
+  // Re-queried after the round trip: the panes were repainted, so anything held
+  // from before it is detached and would answer questions about a dead screen.
+  const grids = [...document.querySelectorAll('.yr-grid')];
+
+  // The squares are days, and the label counts what is drawn.
+  const cells = grids[0].querySelectorAll('.yr-cell');
+  const y = Number(todayIso.slice(0, 4));
+  const days = (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) ? 366 : 365;
+  ok(cells.length === days, `this year draws one square per day (${cells.length})`);
+  ok(grids[0].querySelectorAll('.yr-cell.on').length === 1, 'exactly one of them is coloured in');
+  ok(/1 day trained/.test(screen.textContent), 'and the count beside the year says DAYS, matching the squares');
+
+  // The legend belongs to Months — a Years grid paints one colour on purpose,
+  // so a Workout/Benchmark key over it would describe a distinction it is not
+  // making. `hidden` alone does not do this: display:flex outranks it.
+  const legend = screen.querySelector('.legend');
+  ok(legend && legend.hasAttribute('hidden'), 'the workout/benchmark legend is dropped in Years');
+
+  // Tap selects; it does not navigate. At ~6px a tap that navigated would be a
+  // gamble, so the readout is the thing that opens the day.
+  const readout = screen.querySelector('.yr-readout');
+  ok(readout && readout.disabled, 'the readout starts inert, and holds its row rather than appearing');
+  const hash = globalThis.location ? globalThis.location.hash : '';
+  grids[0].querySelector('.yr-cell.on').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  await settle();
+  ok(!readout.disabled && /Grid test/.test(readout.textContent),
+     'tapping a square names what was done that day');
+  ok((globalThis.location ? globalThis.location.hash : '') === hash,
+     'and does NOT navigate — a 6px target may not be a one-tap trip to another screen');
+  ok(grids[0].querySelectorAll('.yr-cell.sel').length === 1, 'exactly one square reads as selected');
+}
+
 /* ================= the rest timer ================= */
 {
   const { SessionView } = await import(BASE + 'views-session.js');

@@ -24,17 +24,22 @@ their briefs are recorded here so nobody has to re-derive them.
 | **Competitive** | Whether the differentiation still holds in Aug 2026; what rivals do better; what users complain about now | Not run |
 | **Cross-screen consistency** | Two screens disagreeing about the same fact | ✅ **RAN 2026-08-20 — found one**, below. Two §3 hypotheses checked and CLOSED |
 | **Accessibility / mobile reality** | Touch targets, contrast, keyboard, screen readers, text scaling. **Never audited once** | ✅ **RAN 2026-08-20 — contrast, touch targets and accessible names. FAILED ON ALL THREE**, below. Keyboard, screen readers and text scaling still NOT checked |
-| **Edge cases / data integrity** | Deletion, timezones, scale, absurd values, backup restore, a suspected FOURTH single-flight bug | Not run — but the suspected fourth single-flight bug was checked and is CLOSED |
-| **Social round trip, live** | Two throwaway accounts actually connecting against the live project | Not run |
+| **Edge cases / data integrity** | Deletion, timezones, scale, absurd values, backup restore, a suspected FOURTH single-flight bug | ✅ **RAN 2026-08-22 — found a DST day-index bug (fixed) and eight more**, four of them serious and still open: progression ratcheting reps with no terminal state, a silent save failure at the end of a workout, a ~950-session Firestore ceiling against a documented 3,000, and an unvalidated backup restore. See `progress.md`, 2026-08-22 third pass. The suspected fourth single-flight bug was checked earlier and is CLOSED |
+| **Social round trip, live** | Two throwaway accounts actually connecting against the live project | ✅ **RAN 2026-08-22 — the whole trip, and it FOUND TWO DEFECTS**, below. Accounts and documents deleted; project verified back to its exact pre-run state |
 
-**The single most valuable of the four still open is the social round trip**, because it is the only
-item that converts a large built feature from "reviewed code" to "verified".
+~~**The single most valuable of the four still open is the social round trip**~~ — **it has now run**,
+and it did what it was scoped to do: it converted the largest built feature in the project from
+"reviewed code" to "verified", and it found two things no amount of reading had. **Edge cases ran
+the same day.** **Two still open**: human behaviour / UX, and competitive.
 
-⚠️ **RUN THEM SERIALLY, NOT AS AN AGENT WAVE.** The 2026-08-19 attempt launched seven at once and the
-usage limit killed every one before a single finding came back. Three run by hand on 2026-08-20 cost
-a fraction of that and returned real defects in every one. The lesson is not "agents are bad" — it is that seven
-parallel deep reviews is more than a session can pay for, and a review that returns nothing is worth
-exactly nothing.
+⚠️ **ON RUNNING THESE AS AGENTS — the old warning here was too broad.** The 2026-08-19 attempt
+launched seven at once and a usage limit killed every one before a single finding came back, and
+this section has said "serially, never a wave" ever since. **Tim authorised a wave again on
+2026-08-22 and a small one worked**: three at once, each with a written brief and an explicit list
+of files it must not touch, and each returned real findings. So the lesson is narrower than it was
+written — **seven is what failed, and FILE CONFLICTS are the thing to plan for.** Two agents did
+edit `progress.md` concurrently and their edits coexisted only because they were writing different
+sections. A review that returns nothing is still worth exactly nothing.
 
 ### What the three that ran actually found
 
@@ -73,6 +78,43 @@ exactly nothing.
    `.avatar-btn.at-risk::after`, the backup dot, which wins on specificity. Nothing looked wrong.
    Re-measuring is what found it. **Verify a fix with the instrument that found the bug**, not by
    reading the change back.
+
+4. **⚠️ The social round trip ran, and the security half held everywhere it was pushed.** Two email
+   accounts in two separate Chrome profiles — the trap this brief warned about, and the uids were
+   compared before anything was shared. Everything below was checked against **what Firestore
+   actually handed the other account**, not against what the screen said:
+
+   - At *just that I trained*, the published document holds three workout names and three dates and
+     **no number anywhere**. The whitelist builder and the absence guard do what they claim.
+   - The other account's private `sessions`, `benchmarks`, `bodyWeight`, `settings` and
+     `social/graph` are all `permission-denied`, and so is **listing** `shared/` or `invites/`.
+   - The sharpest test available with two accounts: a `shared/mid` document was made to **exist**,
+     holding every weight and rep, with the viewer deliberately left out of its `viewers` list.
+     Firestore refused it. So the list-inside-the-document design is genuinely enforced, not
+     enforced-by-absence.
+   - Moving somebody down a tier, and disconnecting them, each cut access to a document that was
+     **still there** — revocation is real, not just a UI state.
+   - Body weight stayed absent from `full` until it was separately opted into, appeared when it was,
+     and genuinely vanished from the document when it was turned off again (whole-document write,
+     not a merge).
+
+   **⚠️ Two defects, and both needed the browser to find:**
+
+   - **Every expired invite read as `open`.** `expiresAt` is written as a Date, so the SDK reads it
+     back as a **Timestamp object**. `Date.parse()` on one is NaN, and `NaN <= now` is false — so
+     the comparison that decides expiry always said "not expired". A link three weeks stale showed
+     the "Connect" screen, and the only thing that stopped the claim was `firestore.rules`, arriving
+     as a raw "Missing or insufficient permissions". Fixed in `js/social.js`; six new assertions in
+     `tests/social.test.mjs` fail without it. **The old tests missed it because their fixture had no
+     `expiresAt` at all** — they only ever exercised the fallback the app never takes. *A pure
+     module has to be handed the shape the network really returns, not a tidier one.* This is the
+     same lesson as the progression bug above, one layer down.
+   - **⚠️ Disconnect is one-sided, and the confirm sheet says the opposite. NOT FIXED.**
+     `social.remove()` edits only the leaver's graph, so the other person's published copy still
+     lists them in `viewers` — **the leaver can still read their data after pressing Disconnect**,
+     while the sheet promises "you will not see theirs". The other side is never told, and the
+     leaver loses the screen that would let them notice. A real mutual disconnect needs a document
+     the other client can read, which is a new rules path and a design decision, not a small fix.
 
 **Closed, not findings:** the suspected fourth single-flight bug (§3.1) — the contribution cache
 already carries body weight in its key — and the per-session clamp, which lives inside

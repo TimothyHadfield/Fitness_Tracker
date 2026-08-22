@@ -108,11 +108,24 @@ export function miniLabel(setType, n) {
   return n == null ? 'drop' : `Drop ${n}`;
 }
 
-/** How many mini-sets each set of this exercise plans for. */
+/**
+ * How many mini-sets each set of this exercise plans for.
+ *
+ * ⚠️ `drops` is read as a fallback for the same reason minisOf() reads it: the
+ * old key was used on BOTH shapes, and this is the half minisOf() cannot cover.
+ * On a recorded set `drops` was an array of mini-sets; on a workout exercise it
+ * was this COUNT. Reading only `minis` meant a workout planned with four drops
+ * came back as one — the default — so a backup taken in that window restored as
+ * a different workout from the one that was saved, and it looked exactly like
+ * the plan having always said one.
+ *
+ * `Number([{…}])` is NaN, so a mini-set array arriving here where a count
+ * belongs falls to the default rather than through it.
+ */
 export function plannedMinis(item) {
   const t = item && item.setType;
   if (!isNested(t)) return 0;
-  const n = Number(item.minis);
+  const n = Number(item.minis > 0 ? item.minis : item.drops);
   return n > 0 ? Math.min(n, MAX_MINIS) : DEFAULT_MINIS[t];
 }
 

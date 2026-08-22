@@ -2054,8 +2054,16 @@ export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
 
   const dayNum = (iso) => {
     const [y, m, d] = String(iso).split('-').map(Number);
-    // Local midnight, split rather than parsed — new Date('2026-08-18') is UTC.
-    return y && m && d ? Math.floor(new Date(y, m - 1, d).getTime() / 86400000) : null;
+    // ⚠️ SPLIT, then Date.UTC. Two traps, and only this form clears both.
+    // `new Date('2026-08-18')` reads a bare date as UTC midnight and lands a day
+    // early west of Greenwich — splitting avoids that. But splitting into a
+    // LOCAL Date and flooring, which is what this did until 2026-08-22, is a
+    // stable day index only while the zone's UTC offset stays on one side of
+    // zero. Europe/London, Dublin, Lisbon and the Canaries are UTC+0 in winter
+    // and UTC+1 in summer, so the index steps by 0 or 2 across each DST change:
+    // 28 consecutive training days over 29 March 2026 measured a 27-day span and
+    // 14.52 sets a week instead of 14.00. Date.UTC has no offset to move.
+    return y && m && d ? Math.round(Date.UTC(y, m - 1, d) / 86400000) : null;
   };
   const todayNum = dayNum(today || todayISO());
   if (todayNum === null) return null;

@@ -56,6 +56,7 @@ const SHELL = [
   './js/progression.js',
   './js/demo.js',
   './js/volume-map.js',
+  './js/year-grid.js',
   './js/views-social.js',
   './js/views-goals.js',
   './js/units.js',

@@ -21,10 +21,13 @@
    touch, and **three of the four "needs hardware" survey items are still reasoned rather than
    measured**. ⚠️ **Do not let one good device report promote the rest** — what a phone confirmed is
    listed in Verified and nothing beyond it.
-4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Three
-   have now run** (adversarial code review, cross-screen consistency, and the first accessibility
-   audit this project has ever had) and all three found something real. **Four are still
-   outstanding** — UX, competitive, edge cases, and the live social round trip.
+4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Four
+   have now run** — adversarial code review, cross-screen consistency, the first accessibility audit
+   this project has ever had, and **edge cases / data integrity (2026-08-22)** — and **every one of
+   the four found something real**, which is the strongest argument available for running the rest.
+   **Three are still outstanding**: UX / human behaviour, competitive, and the live social round
+   trip. ⚠️ **The edge-case review's findings are only PART fixed** — two shipped, and the serious
+   remainder are items 1a–1d in Open work. Do not read "the review ran" as "the review is closed".
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
@@ -74,6 +77,162 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-22, third pass — ⚠️ THE EDGE-CASE REVIEW RAN, AND IT FOUND A LOT
+
+**Six of the seven reviews in `docs/improvement-plan.md` §0 have now run.** The edge-case / data
+integrity one is the fifth, and like every one before it, it found something real. **Two fixes
+shipped with it; the rest is written up below and the serious ones are now Open work items.**
+
+### ⚠️ Fixed: a day number floored from LOCAL midnight collapses a day across DST
+
+`js/optimal.js` and `js/store.js` both turned an ISO date into a day index with
+`Math.floor(new Date(y, m-1, d) / 86400000)`. **That is a stable index only while the zone's UTC
+offset stays on one side of zero.** Europe/London, Dublin, Lisbon and the Canaries are UTC+0 in
+winter and UTC+1 in summer, so local midnight sits on one UTC day all winter and the previous one
+all summer — and the index steps by **0 or 2** across each change.
+
+```
+  TZ=Europe/London
+  dayNum('2026-03-30') - dayNum('2026-03-29')  →  0      two days, one number
+  dayNum('2026-10-26') - dayNum('2026-10-25')  →  2      one day, two numbers
+```
+
+Measured consequences, both reproduced: `observedDaysPerWeek()` de-dupes on that number, so **two
+logged sessions counted as one** and every "% optimal" rating for a user-built system read low,
+caption included. And `trainingForMuscle()` over 28 consecutive training days reported **a 27-day
+span and 14.52 sets a week instead of 28 and 14.00** — the numbers the Goals stalls screen is built
+on. Fixed to `Date.UTC`, which has no offset to move, matching what `e1rm.js` and
+`strength-estimate.js` already did correctly. ⚠️ **This is the THIRD form of the date trap this
+project has met** — `new Date(iso)` reading as UTC, a UTC instant compared to a local day, and now a
+local midnight floored into a day index. Tests spawn a child process under an explicit `TZ`, because
+Node cannot restore the system zone once `process.env.TZ` is reassigned.
+
+### ⚠️ Fixed: a workout planned with four drops read back as one
+
+`plannedMinis()` read only `minis`, but `drops` was the legacy key on **both** shapes — an array of
+mini-sets inside a recorded set, and this **count** on a workout exercise. `minisOf()` covers the
+first; nothing covered the second. So a workout saved in that window restored as a different workout
+from the one that was saved, and it looked exactly like the plan having always said one.
+
+### ⚠️ NOT fixed, and now Open work — the serious ones
+
+1. **⚠️ PROGRESSION RATCHETS REPS FOREVER ON TWO BRANCHES, and walks the lift out of the app's own
+   ranking.** Played forward through the runner's real glue, not the module alone: a Lateral Raise
+   at 20 lb, obeyed for 30 sessions, goes **20×10 → 20×37**, taking `noIncrement` every session from
+   13 on. Barbell Curl 60×8 → **60×34**. `repRangeFor()` tops out at 15–20, so past 20 reps the
+   branch that would raise the weight is **unreachable and there is no terminal state at all** — it
+   prescribes 37 reps while printing "range 15–20". And past 15 reps `MAX_EVIDENCE_REPS` (D5) refuses
+   the set as evidence, so **the app's own advice removes the exercise from its own muscle map**.
+   ⚠️ **This is the 2026-08-20 lesson landing on a different branch.** The play-forward test written
+   then walks the bench at 185 lb — the branch that had the original bug — and the two branches with
+   no terminal state were never played forward. *A rule that reads its own output needs a test that
+   plays it forward, on every branch, not on the one that broke.*
+2. **⚠️ A STORAGE FAILURE WHILE FINISHING A WORKOUT IS COMPLETELY SILENT.** `finish()` in
+   `views-session.js` awaits `saveSession()` unguarded, and there is no `unhandledrejection` handler
+   anywhere in the app. `LocalBackend.write` throws a perfectly good message — "Could not save. Your
+   browser storage may be full." — and **nobody ever sees it**: the promise rejects, nothing is
+   stored, `clearDraft()` and `showFinished()` never run. Reproduced by making `setItem` throw.
+   The user taps Finish, at the end of a workout, and nothing happens.
+3. **⚠️ THE FIRESTORE CEILING IS ~950 SESSIONS, NOT 3,000.** Measured: 3,000 sessions is **3,298,891
+   bytes**, 3.1× over the 1 MiB per-document cap, at ~1,100 bytes a session. Cloud writes begin
+   failing at about **950 sessions — roughly four and a half years at four a week** — and by finding
+   2 they fail *silently, mid-workout*. `docs/firebase-setup.md` has been claiming 3,000 since the
+   beginning. Splitting `sessions` into a document per session is the fix the design already
+   anticipates.
+4. **Restore from backup half-imports, and one malformed row takes down every screen but Settings.**
+   `importAll()` validates almost nothing: `{sessions:[{id:'s1'}]}` gets stored and then
+   `getSessions()` throws on `b.date.localeCompare`, which takes out Home, Workouts, Calendar, Data,
+   Muscles and Goals through the router's catch. **Settings still renders**, so "delete all data" is
+   reachable — recoverable, not bricked. It also accepts `{foo:1}` and `{workouts:'oops'}` without
+   complaint and then toasts "Backup restored" having restored nothing.
+5. **Restore is a partial MERGE, and a workout with a dead `systemId` is invisible forever.**
+   Restoring a pre-systems backup leaves current systems in place; a workout pointing at a system
+   that no longer exists is returned by `getWorkouts()`, rendered by no system screen, and
+   **`ensureSystems()` will not adopt it** because it only looks for workouts with *no* `systemId`,
+   never a dead one. The user sees an empty Workouts screen with every workout still on disk.
+   ⚠️ Same rule this project already learned from the other side: *a foreign key is only valid while
+   the rest of that set still exists.*
+6. **"Restore from backup" has no confirmation**, while "delete all data" two lines below it has a
+   `confirmSheet`. Restoring is equally destructive.
+7. **A ×10 typo rates a muscle Elite, end to end** — confirmed on screen, not merely in theory: one
+   `10000 × 5` bench renders **"Chest: Elite, good confidence"**. §9 already records that the
+   winsoriser cannot catch this and that the plausibility ceiling is unwired; this is the proof it
+   reaches the user. The stepper has a floor and **no ceiling**, so 10,000 is typeable.
+8. **Render cost at 3,000 sessions**: CalendarView builds **14,074 nodes in 461 ms** because
+   `monthRange()` eagerly builds every month back to the earliest record; `muscleStrength()` takes
+   **743 ms** in desktop Node. Not a crash — a stall, and unmeasured on a phone.
+
+**Checked and CLEAN, which is worth as much as the findings:** no `NaN`, `undefined`, `Infinity` or
+`[object Object]` painted anywhere across six screens driven with absurd values (10000×5, −50×0,
+100×500, a goal with `targetWeight: 0` and `startPercentile: NaN`); export → clear → import → export
+is byte-identical; `dropOrphanGroups()` is complete for every deletion reachable from the UI;
+deletion cascades honour D22; all nine preset systems copy structurally identically; and **the bench
+progression loop is healthy through the real save path** — 24 obedient sessions, range never leaves
+8–12, 185×10 → 205×10, which is the `trainingRange()` fix holding up outside its own unit test.
+
+---
+
+## 2026-08-22, second pass — the calendar grows a YEARS view
+
+**Tim asked for it with a reference image** (2026-08-22): *"another way to display the workout days
+in Calendar so each day is a tiny box and is colored or not colored depending on if you worked out
+that day. This will show years of data in one screen."*
+
+Built. `#/calendar` now carries a **Months / Years** switch; Years draws one square per day, one row
+per year, newest first, with a *"141 days trained"* count beside each. `js/year-grid.js` holds the
+maths (pure, clock passed in, no DOM), `views-data.js` draws it. **Two years of the demo account
+fit in the top half of a 375×667 screen with room to spare.**
+
+### ⚠️ It is BINARY, and that is a measurement rather than a preference
+
+The month view paints a workout in `--accent` and a benchmark-only day in `--good`. Those two
+measure **ΔE 6.5 apart under protanopia in the light theme** (the `dataviz` validator, run before a
+line of it was written), which the guidance permits *only* alongside a secondary encoding — a label,
+a texture, a gap. **A 6px square has room for none of them.** So one square means one thing, "you
+trained", and the Months view keeps the distinction. A distinction nobody can see is not a
+distinction; it is two colours. This is also exactly what Tim asked for, and the two arguments
+agreeing is the reason it needed no compromise.
+
+### ⚠️ Tapping SELECTS. It does not navigate
+
+A cell is **5.7px** on a 393px phone, because 53 week-columns have to fit across — that *is* the
+feature. Six pixels is under every hit-target standard there is, so a tap that navigated would open
+days people did not mean about as often as days they did. A tap fills a readout line that **holds
+its row whether or not anything is selected** (Rule 3's corollary — revealing it on tap would shove
+every grid below it downward at the moment somebody was pointing at one), and the readout is the
+full-width control that opens the day. ⚠️ **WCAG 2.5.8 is satisfied by EQUIVALENCE, not by
+exemption**: every day here is reachable at 40px in the Months view, one tap away on the same screen.
+
+### ⚠️ Two bugs came out of building it, and NEITHER was visible to a test
+
+1. **`1fr` is `minmax(auto, 1fr)`, so the month strip sized itself to its own labels.** Fifty-three
+   columns each refusing to shrink below the width of "Jan" made the strip a third wider than the
+   grid it labels — and **"Nov" sat over the 20th of August**. It looked completely plausible: a row
+   of month names above a grid of squares, evenly spaced, simply lying. Found by asking the browser
+   `document.elementFromPoint()` under each label and printing the date it landed on. `minmax(0,1fr)`
+   fixes it. **A month label two columns out of true cannot be caught by eye at 6px**, which is why
+   it was measured instead. The arithmetic half is now pinned in `tests/year-grid.test.mjs`.
+   ⚠️ **The same bug was hiding a second one**: the grid itself was overflowing its pane, so the last
+   ten weeks of every year were being clipped off the right-hand edge.
+2. **⚠️ A VIEW DOES NOT OWN THE NODE IT RETURNED.** The mode switch first re-ran the view and swapped
+   the new screen in — which silently threw away the demo account's *"nothing is saved"* strip,
+   because `app.js` **prepends** that into the node the view hands back. Switching to Years inside
+   the demo removed the one line on the page saying the data is invented. **Caught by looking at a
+   screenshot, not by a test.** It now repaints its own contents in place and leaves the container
+   alone. Pinned by a test that plants a `.demo-bar` and asserts it survives the round trip —
+   ⚠️ **asserted against the DOCUMENT, not against the view's own reference**, because under the bug
+   that reference goes stale and still holds the strip, so the obvious form of the test passes over
+   the exact fault it was written for. **Mutation-checked**: reintroducing the node swap flips
+   exactly that assertion.
+
+**45 new assertions in `tests/year-grid.test.mjs`** — every day of the year drawn exactly once
+across seven years including leap years and a Sunday opening, every square in the row its weekday
+actually falls on, every month label on its own month, and the count naming **days** rather than
+workouts, because one square is one day and a header reading "155 workouts" over 150 squares is a
+number that does not describe the thing beside it.
 
 ---
 
@@ -684,14 +843,20 @@ plan plus a review of everything built. Seven reviews were scoped, briefed and t
 session usage limit before returning a single finding. Their briefs are recorded verbatim in that
 file so they can be re-run as written, and **re-running the rest is still item 0.**
 
-**Three have now run and all three found something real** — the adversarial code review (progression
+**Four have now run and every one found something real** — the adversarial code review (progression
 destroyed its own rep range), cross-screen consistency (the Goals matcher printed a strength
-percentage with no caveat), and the **accessibility audit**, the first this project has ever had,
-which failed. All three are written up in the 2026-08-20 section. **Four are still outstanding: UX /
-human behaviour, competitive, edge cases / data integrity, and the live social round trip.**
-⚠️ **Run them serially, not as a parallel agent wave** — that is what the usage limit killed on
-2026-08-19, and doing them by hand cost far less than the wave did while actually returning
-findings.
+percentage with no caveat), the **accessibility audit**, the first this project has ever had, which
+failed, and **edge cases / data integrity (2026-08-22)**, which found the DST day-index bug and
+five things that are still open. The first three are in the 2026-08-20 section and the fourth has
+its own on 2026-08-22. **Three are still outstanding: UX / human behaviour, competitive, and the
+live social round trip.**
+
+⚠️ **On running them as agents.** The 2026-08-19 attempt launched seven at once and a usage limit
+killed all seven before one finding came back; this file has said "serially, never a wave" ever
+since. **Tim authorised a wave again on 2026-08-22 and a small one worked** — three at once, each
+given a written brief and a list of files it must not touch, returned real findings. The lesson is
+narrower than the old warning: **seven is what failed, and the file conflicts are what to plan
+for**, not the parallelism itself.
 
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
@@ -725,13 +890,65 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      because a line saying "nobody has done this" over work that shipped is exactly the failure this
      file exists to prevent.
 
-1. **Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**
-   Every screen is built and driven, but only against a stubbed facade. The round trip — invite,
-   open as somebody else, claim, accept, publish, read — has never run. Needs two throwaway accounts
-   against the live project, then deleted. **An attempt on 2026-08-19 died to the usage limit before
-   creating anything**; the brief is in `docs/improvement-plan.md` §0, including the trap that cost
-   it nothing yet but would have: use two SEPARATE browser profiles, not two tabs, or you will
-   "prove" a round trip that never crossed accounts.
+0b. **⚠️ THE EDGE-CASE REVIEW'S UNFIXED FINDINGS — 2026-08-22, and two of them can lose work.**
+   Full write-up in the third-pass section above; these are the ones nobody has done.
+
+   - **⚠️ (a) PROGRESSION RATCHETS REPS WITH NO TERMINAL STATE.** An obedient lifter on a 20 lb
+     lateral raise is walked to **20×37**, and past 15 reps the app's own `MAX_EVIDENCE_REPS` refuses
+     the set — so its own advice deletes the exercise from its own muscle map. **This is the only
+     part of the app that can cause physical harm, and it is the second bug found in it.** The
+     2026-08-20 play-forward test covers the bench branch only; `noIncrement` and `repsOnly` were
+     never played forward. The fix needs a terminal state and a play-forward test **per branch**.
+   - **⚠️ (b) A FAILED SAVE AT THE END OF A WORKOUT IS SILENT.** `finish()` awaits `saveSession()`
+     unguarded and the app has no `unhandledrejection` handler, so a full localStorage means the user
+     taps Finish and *nothing happens*, with the session unsaved. `LocalBackend` already throws the
+     right words and nothing catches them. **Cheapest serious fix on this list.**
+   - **⚠️ (c) THE FIRESTORE CEILING IS ~950 SESSIONS AND THE DOCS SAY 3,000.** Measured at ~1,100
+     bytes a session against the 1 MiB per-document cap. Writes fail silently mid-workout past it —
+     and (b) is what makes them silent. `docs/firebase-setup.md` needs correcting whether or not the
+     split to a document-per-session is done.
+   - **(d) Restore from backup validates almost nothing, MERGES rather than replaces, and has no
+     confirmation** — while "delete all data" two lines below it has one. A malformed row takes out
+     every screen but Settings; a dead `systemId` hides a workout forever; `{foo:1}` toasts "Backup
+     restored" having restored nothing.
+
+1. ~~**Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**~~
+   ✅ **RAN 2026-08-22 AGAINST THE LIVE PROJECT — it works, and it found two defects.** Two
+   throwaway email accounts in two SEPARATE Chrome profiles (different uids, confirmed before
+   anything was shared), driven over CDP with real mouse events. Invite → open as somebody else →
+   claim → accept → set a tier → publish → read, all the way through, then both accounts and all
+   eleven of their documents deleted and the project checked back to the exact 7-user / 19-document
+   state it started in. **⚠️ The brief said the project held zero users and zero documents. It did
+   not** — it holds Tim's two real accounts and their training data. Anything that "cleans up to
+   zero" would destroy them. Snapshot the baseline first and diff against it.
+
+   **Enforcement was checked ON THE WIRE, not in the UI.** At *just that I trained* the published
+   document contains three names and three dates and no number anywhere. Reading the private
+   `collections/sessions`, `benchmarks`, `bodyWeight`, `settings` and `social/graph` of the other
+   account is refused, and so is LISTING `shared/` or `invites/`. The sharpest test: a `shared/mid`
+   document was made to exist, holding every weight and rep, with the viewer left out of its
+   `viewers` list — Firestore refused it. Moving somebody down a tier and disconnecting them both
+   cut access to a document that still existed.
+
+   **Two defects, both found by driving it:**
+   - **Every expired invite read as `open`.** `expiresAt` is stored as a Date, so the SDK returns a
+     **Timestamp object**; `Date.parse()` on one is NaN and `NaN <= now` is false. A link three
+     weeks stale offered "Connect", and only the rules stopped the claim — surfacing as a raw
+     "Missing or insufficient permissions". "That link has expired" could never be shown. **Fixed**
+     in `js/social.js` (`instantMillis`), with six assertions in `tests/social.test.mjs` that fail
+     without it. The old tests missed it because their fixture had no `expiresAt` at all, so they
+     only ever exercised the fallback path the app never takes. *A pure module has to be handed the
+     shape the network really returns.*
+   - **⚠️ Disconnect is one-sided, and the confirm sheet says otherwise. NOT FIXED — design call.**
+     `social.remove()` edits only MY graph, so their published copy still lists me in `viewers` and
+     **I can still read their data after pressing Disconnect** — while the sheet promises "you will
+     not see theirs" (`js/views-social.js` ~484). They are never told I left, and I lose the screen
+     that would let me notice. A real mutual disconnect needs something their client can read, which
+     is a new rules path, not a small fix.
+
+   Original note kept: the brief is in `docs/improvement-plan.md` §0, including the trap — use two
+   SEPARATE browser profiles, not two tabs, or you will "prove" a round trip that never crossed
+   accounts.
 
 1b. ~~**⚠️ THE FIRST-RUN PATH PROMISES ONE THING AND DELIVERS ANOTHER.**~~ **BUILT 2026-08-21 —
    five taps from a cold install to a loggable set, measured, against about a dozen. See the
@@ -790,11 +1007,12 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 2156 assertions across ten suites. Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | **2233 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
-| **Social tests** | `node tests/social.test.mjs` — 73 assertions, **no dependencies**. What a person SHARES |
+| **Social tests** | `node tests/social.test.mjs` — 81 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 64 assertions, **no dependencies**. Direct/indirect mapping, the published efficiency tiers, and the per-session clamp |
 | **Rating tests** | `node tests/optimal.test.mjs` — 72 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Goals tests** | `node tests/goals.test.mjs` — 206 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier |
@@ -953,7 +1171,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `js/optimal.js` | Not a doc. Read it before touching the rating: the dose-response curves are **fitted to published values, with the derivation in a comment on each constant**, and the header lists the three things the rating refuses to do — reward extra training days for growth, extrapolate past the evidence, or imply precision the source lacks |
 | `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5 |
-| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18 — but ⚠️ **no two accounts have ever connected**, so the app half is reviewed code, not verified behaviour |
+| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `js/demo.js` | Not a doc. The demo account's generated year. **Read its header before touching it**: it explains why the data never touches storage, why the flag is per-tab, and why nothing in it may use `Math.random()`. The switch itself is in `store.js` |
@@ -1013,7 +1231,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
-| Calendar | Continuous vertical month scroll, sticky headings, opens on current month; active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks |
+| Calendar | **Two ways to read it, on a Months / Years switch.** **Months** is the original: continuous vertical month scroll, sticky headings, opens on the current month, active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks. **Years** (2026-08-22, Tim's ask with a reference image) draws **one tiny square per day**, one row per year, newest first, with "141 days trained" beside each — years of training on a single screen, and two years fit in the top half of a 375×667 phone. ⚠️ **It is BINARY** — coloured or not — where Months distinguishes workouts from benchmarks, because those two tokens measure ΔE 6.5 apart under protanopia and a 5.7px square has no room for the label or texture that would make a second colour legal. ⚠️ **Tapping a square SELECTS it and does not navigate**: at 5.7px a tap that navigated would open the wrong day about as often as the right one, so it fills a readout line that holds its row whether or not anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met by **equivalence** — every day is reachable at 40px in Months, one tap away. `js/year-grid.js` |
 | **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). **No mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
@@ -1184,8 +1402,13 @@ Press-and-hold repeats.
   its gstatic imports redirected to a local SDK — not a lookalike: anonymous sign-in, read/write
   round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking preserving uid and
   data, sign-out, sign-back-in, password change, account deletion leaving no data, error mapping.
-  Seven rule violations all refused. Test users and documents deleted; the project holds **zero users
-  and zero documents**.
+  Seven rule violations all refused. Test users and documents deleted.
+  ⚠️ **This line used to end "the project holds zero users and zero documents", and that stopped
+  being true the moment Tim signed in.** On 2026-08-22 it held **7 users and 19 documents**,
+  including his two real accounts and their training. It was still being quoted as "zero" in a brief
+  handed to an agent whose job involved deleting things — so **snapshot the real baseline and diff
+  against it; never clean up to an absolute.** A true statement about a live project has a date on
+  it or it is a trap.
 
 ### NOT verified
 
@@ -1313,6 +1536,11 @@ Fitness_Tracker/
 │   │                           indirect 0.5, plus the published efficiency
 │   │                           tiers. ⚠️ NOT the same table as muscle-evidence:
 │   │                           that asks "how strong", this asks "how much work"
+│   ├── year-grid.js            THE CALENDAR'S YEARS VIEW — pure, clock passed
+│   │                           in. A year as columns of weeks, Monday first,
+│   │                           with the month-label columns. Binary on
+│   │                           purpose: one square means "trained", because
+│   │                           two hues are not separable at 6px
 │   ├── units.js                lbs/kg — pure maths. EVERYTHING IS STORED IN POUNDS;
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
@@ -1347,6 +1575,11 @@ Fitness_Tracker/
 │   │                           app's own analysis of it is not nonsense
 │   ├── optimal.test.mjs        46 assertions, no dependencies — the curves
 │   │                           reproduce the PUBLISHED figures, plus 3 refusals
+│   ├── year-grid.test.mjs      45 assertions, no dependencies — every day of
+│   │                           the year drawn exactly once (leap years, a
+│   │                           Sunday opening), every square in the row its
+│   │                           weekday really falls on, every month label on
+│   │                           its own month
 │   ├── volume-map.test.mjs     49 assertions, no dependencies — direct/indirect
 │   ├── rules.test.mjs          46 assertions — who may READ it. Needs the
 │   │                           Firestore emulator and Temurin 21 (§0.9). RUN and

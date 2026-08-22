@@ -322,5 +322,53 @@ ok(inviteState(null, '2026-08-18T00:00:00.000Z') === 'invalid', 'nonsense is inv
 ok(inviteState({ token: 'abc' }, '2026-08-18T00:00:00.000Z') === 'invalid',
    'an invite with no creation date and no expiry is invalid, NOT open');
 
+/* ------------------------------------------------------------------ *
+ * ⚠️ THE SHAPE THE NETWORK REALLY RETURNS
+ *
+ * Everything above hands inviteState a fixture with NO `expiresAt`, so it only
+ * ever tested the derive-from-createdAt fallback. The app never takes that
+ * path: store.js writes `expiresAt` as a Date, so the Firestore SDK reads it
+ * back as a TIMESTAMP OBJECT. `Date.parse()` on one of those is NaN and
+ * `NaN <= now` is false — so before 2026-08-22 every expired invite read as
+ * `open`, and the "that link has expired" screen could not be reached. Driven
+ * against the live project that day: an invite three weeks stale offered
+ * "Connect", and only firestore.rules stopped the claim.
+ *
+ * These fakes are duck-typed exactly as the real ones are — a Timestamp, a
+ * Timestamp that has been through JSON, and a Date.
+ * ------------------------------------------------------------------ */
+
+const stamp = (iso) => ({
+  seconds: Math.floor(Date.parse(iso) / 1000),
+  nanoseconds: 0,
+  toMillis() { return this.seconds * 1000; },
+  toDate() { return new Date(this.seconds * 1000); },
+  toString() { return `Timestamp(seconds=${this.seconds}, nanoseconds=0)`; },
+});
+
+const stamped = { token: 'abc', createdAt: '2026-08-17T00:00:00.000Z' };
+
+ok(inviteState({ ...stamped, expiresAt: stamp('2026-08-24T00:00:00.000Z') },
+               '2026-08-18T00:00:00.000Z') === 'open',
+   'a Firestore Timestamp expiry in the future is open');
+ok(inviteState({ ...stamped, expiresAt: stamp('2026-08-24T00:00:00.000Z') },
+               '2026-08-25T00:00:00.000Z') === 'expired',
+   '⚠️ and one in the PAST is expired — Date.parse() on a Timestamp is NaN, and NaN <= now is false');
+ok(inviteState({ ...stamped, expiresAt: { seconds: Math.floor(Date.parse('2026-08-24T00:00:00.000Z') / 1000) } },
+               '2026-08-25T00:00:00.000Z') === 'expired',
+   'a Timestamp that has been through JSON — no methods, just seconds — expires too');
+ok(inviteState({ ...stamped, expiresAt: new Date('2026-08-24T00:00:00.000Z') },
+               '2026-08-25T00:00:00.000Z') === 'expired',
+   'and so does a plain Date, which is what store.js hands the SDK on the way in');
+ok(inviteState({ ...stamped, expiresAt: {} }, '2026-08-18T00:00:00.000Z') === 'invalid',
+   'an expiry that is present but unreadable is invalid, NOT open — it must fail closed');
+ok(inviteState({ ...stamped, expiresAt: stamp('2026-08-24T00:00:00.000Z'), claimedBy: 'alex' },
+               '2026-08-18T00:00:00.000Z') === 'claimed',
+   'claimed still beats expiry, whatever shape the expiry is in');
+
+ok(inviteExpiry(stamp('2026-08-17T00:00:00.000Z')) === '2026-08-24T00:00:00.000Z',
+   'inviteExpiry reads a Timestamp too, so the fallback cannot be the odd one out');
+ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expiry');
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

@@ -322,9 +322,26 @@ export const MIN_OBSERVED_SPAN_DAYS = 14;
 const dayNumber = (iso) => {
   const [y, m, d] = String(iso).split('-').map(Number);
   if (!y || !m || !d) return null;
-  // Local midnight, split rather than parsed: new Date('2026-08-18') is UTC and
-  // lands a day early for everyone west of Greenwich.
-  return Math.floor(new Date(y, m - 1, d).getTime() / 86400000);
+  // ⚠️ SPLIT, then Date.UTC — pure calendar arithmetic with no zone in it at
+  // all. Two things have to be true here and only this form gives both.
+  //
+  //   `new Date(iso)` reads a bare date as UTC midnight and lands a day early
+  //   for everyone west of Greenwich. That is the trap progress.md §4 records,
+  //   and splitting the string is what avoids it.
+  //
+  //   ⚠️ But splitting into a LOCAL Date and flooring — which is what this did
+  //   until 2026-08-22 — only yields a stable day index while the zone's UTC
+  //   offset stays on one side of zero. Europe/London, Dublin, Lisbon and the
+  //   Canaries are UTC+0 in winter and UTC+1 in summer, so local midnight sits
+  //   on the same UTC day all winter and on the PREVIOUS one all summer, and
+  //   the index jumps by 0 or 2 across each DST change. 29 and 30 March 2026
+  //   collapsed to one number, so two logged sessions counted as one and every
+  //   "% optimal" rating built on observed frequency read low.
+  //
+  // Date.UTC has no offset to move, so the difference between two day numbers
+  // is exactly the number of calendar days everywhere. Same form as
+  // dayNumber() in strength-estimate.js and e1rm.js.
+  return Math.round(Date.UTC(y, m - 1, d) / 86400000);
 };
 
 /**

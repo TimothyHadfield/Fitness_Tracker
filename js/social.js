@@ -459,9 +459,48 @@ export function newInviteToken(randomBytes) {
   return out;
 }
 
+/**
+ * Milliseconds since the epoch, from any of the shapes a stored instant
+ * actually arrives in.
+ *
+ * ⚠️ THIS IS NOT DEFENSIVE PADDING — the shipped path needed it and did not
+ * have it. store.js writes an invite's `expiresAt` as `new Date(...)`, so the
+ * Firestore SDK hands it back as a **Timestamp object**, not a string.
+ * `Date.parse(timestamp)` is NaN, and `NaN <= now` is FALSE — so the old
+ * comparison called every expired invite `open`. Measured against the live
+ * project on 2026-08-22: an invite three weeks past its expiry showed the
+ * "Connect" screen, and the only thing that stopped the claim was
+ * firestore.rules, which surfaced as a raw "Missing or insufficient
+ * permissions." The one refusal message the plan says to get right — "that
+ * link has expired" — could never be shown.
+ *
+ * The tests missed it because their fixture has no `expiresAt` at all, so they
+ * only ever exercised the `inviteExpiry(createdAt)` fallback. *A pure module
+ * has to be handed the shape the network really returns*, not a tidier one.
+ *
+ * Duck-typed rather than imported: this module has no SDK and must stay
+ * assertable with no browser, no network and no emulator.
+ */
+export function instantMillis(value) {
+  if (value == null) return NaN;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+  if (typeof value === 'string') return Date.parse(value);
+  if (value instanceof Date) return value.getTime();
+  if (typeof value !== 'object') return NaN;
+  if (typeof value.toMillis === 'function') { try { return value.toMillis(); } catch (_) { return NaN; } }
+  if (typeof value.toDate === 'function') {
+    try { return value.toDate().getTime(); } catch (_) { return NaN; }
+  }
+  // A Timestamp that has been through JSON — the shape a cached or exported
+  // document comes back as.
+  if (Number.isFinite(value.seconds)) return value.seconds * 1000;
+  if (Number.isFinite(value._seconds)) return value._seconds * 1000;
+  return NaN;
+}
+
 export function inviteExpiry(createdAt, days = INVITE_TTL_DAYS) {
-  const t = Date.parse(createdAt);
-  if (Number.isNaN(t)) return null;
+  const t = instantMillis(createdAt);
+  if (!Number.isFinite(t)) return null;
   return new Date(t + days * 86400000).toISOString();
 }
 
@@ -509,9 +548,16 @@ export const PROBE_ORDER = [FULL, MID, LIGHT];
 export function inviteState(invite, nowISO) {
   if (!invite || typeof invite.token !== 'string' || !invite.token) return 'invalid';
   if (invite.claimedBy) return 'claimed';
-  const expires = invite.expiresAt || inviteExpiry(invite.createdAt);
-  if (!expires) return 'invalid';
+  // A stored expiry wins; only a MISSING one falls back to deriving it from the
+  // creation date. An expiry that is present but unreadable returns `invalid`
+  // rather than quietly deriving a new one — the old code's silent widening is
+  // what this whole function exists to prevent.
+  const expires = instantMillis(
+    invite.expiresAt == null ? inviteExpiry(invite.createdAt) : invite.expiresAt);
   const now = Date.parse(nowISO);
-  if (Number.isNaN(now)) return 'invalid';
-  return Date.parse(expires) <= now ? 'expired' : 'open';
+  // ⚠️ Both guards BEFORE the comparison, and that ordering is the bug.
+  // `NaN <= now` is false, so an unreadable expiry compared directly reads as
+  // "not expired" — the safest-looking line in the file failing open.
+  if (!Number.isFinite(expires) || !Number.isFinite(now)) return 'invalid';
+  return expires <= now ? 'expired' : 'open';
 }

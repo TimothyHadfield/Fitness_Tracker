@@ -275,6 +275,59 @@ ok(scored.find((s) => s.p.id === 'preset-volume-landmarks').r.under.length <= 1,
      'dates are treated as LOCAL days, not UTC instants');
 }
 
+/* ---------- ⚠️ a day number must be a CALENDAR count, in every zone ---------- *
+ *
+ * The fix above — split the string, build a local Date — solves the "a day early
+ * west of Greenwich" half and quietly introduces the other half. `Math.floor(
+ * localMidnight / 86400000)` is a stable day index only while the zone's UTC
+ * offset stays on one side of zero. In Europe/London, Dublin, Lisbon and the
+ * Canaries it does not: GMT is UTC+0, BST is UTC+1, so local midnight sits on
+ * the same UTC day all winter and on the PREVIOUS one all summer, and the index
+ * jumps by 0 or 2 across each DST change.
+ *
+ * 29 and 30 March 2026 are two different days that collapse to one number, so
+ * two logged sessions read as one and the whole "% optimal" rating for a
+ * user-built system is computed from an understated frequency. `e1rm.js` and
+ * `strength-estimate.js` already do this the right way — Date.UTC on the split
+ * parts, which has no zone in it at all.
+ *
+ * Run in a CHILD PROCESS under an explicit TZ, because Node cannot restore the
+ * system zone once process.env.TZ has been reassigned — flipping it in-process
+ * would silently re-zone every assertion after this one.
+ * -------------------------------------------------------------------------- */
+{
+  const { execFileSync } = await import('node:child_process');
+  const url = new URL('../js/optimal.js', import.meta.url).href;
+  const probe = `
+    const { observedDaysPerWeek } = await import(${JSON.stringify(url)});
+    const spring = observedDaysPerWeek(['2026-03-29', '2026-03-30'], '2026-04-12');
+    const autumn = observedDaysPerWeek(['2026-10-25', '2026-10-26'], '2026-11-08');
+    console.log(JSON.stringify({
+      spring: spring && [spring.sessions, spring.spanDays],
+      autumn: autumn && [autumn.sessions, autumn.spanDays],
+    }));
+  `;
+  const run = (tz) => JSON.parse(execFileSync(process.execPath, ['--input-type=module', '-e', probe],
+    { env: { ...process.env, TZ: tz }, encoding: 'utf8' }).trim());
+
+  const london = run('Europe/London');
+  ok(london.spring[0] === 2,
+     '⚠️ 29 and 30 March are two training days in Europe/London too — a day number floored from '
+     + 'LOCAL midnight collapses them into one when the clocks go forward, so two logged sessions '
+     + 'read as one');
+  ok(london.spring[1] === 15 && london.autumn[1] === 15,
+     'and the span either side of a DST change is still fifteen days — the clocks moving cannot '
+     + 'lengthen or shorten the window a rate is measured over');
+  ok(london.autumn[0] === 2, 'and the autumn change does not lose a day either');
+
+  // Vacuity guard: the same probe in a zone whose offset never crosses zero must
+  // give the same answers, so the assertions above are about the ZONE and not
+  // about these particular dates.
+  const ny = run('America/New_York');
+  ok(JSON.stringify(ny) === JSON.stringify(london),
+     'and a zone that never crosses UTC+0 was always right, which is why this hid');
+}
+
 /* ---------- the sentence on screen ---------- */
 
 ok(/100/.test(explain(55)) && /nobody/.test(explain(55)),
