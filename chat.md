@@ -4299,3 +4299,56 @@ which is the only real fix for Google sign-in on the iPhone and the reason it ha
 State at close: **2156 assertions green across ten suites**, everything pushed and live. Two
 questions waiting on Tim, and one ask that is not a question: **tap the weight in the session runner
 on your phone and see whether "Next exercise" is still reachable.**
+
+---
+
+## 2026-08-22 — a real iPhone, and both open questions answered
+
+Tim, catching a fresh session up, brought the two answers this project has been waiting on:
+
+> *"next exercise is still reachable, as well as the exercise picker. Google sign-in actually works
+> now."*
+
+Asked which surface, since the claim depends on it. **The app installed to his home screen** — he
+has no native build, so that is the installed PWA, which is the path the docs have called the
+riskiest untested one in the project.
+
+**Both closed, and one of them says this file was wrong.**
+
+The **keyboard fix is verified**. `--kb` shipped unproven because headless Chrome has no software
+keyboard and `100dvh` does not shrink for one, so it had only ever been checked by driving the
+variable by hand. A phone confirmed both cases the survey named — the session runner's *Next
+exercise* and the exercise picker, which was the sharpest case in the whole survey.
+
+**Google sign-in works, and the 2026-08-21 write-up got two things wrong.** It said in capitals that
+none of the three fixes would make it work. It did work, and the mechanism is the part that was
+filed as a footnote: `prefersRedirect()` used to return true for an installed iOS app, so the PWA
+went straight to `signInWithRedirect` — the one route a cross-origin `authDomain` genuinely cannot
+finish. Taking that away left it on the **popup**, and the popup works there. The false premise
+underneath it — *"popups are blocked in an iOS home-screen app"* — was written in three places and
+is what made the code choose the broken route in the first place.
+
+What did **not** change, and was corrected carefully rather than relaxed: the storage-partitioning
+analysis still holds, `redirectCanComplete()` is still right, and *"Continue in this window
+instead"* still must not be offered where it cannot finish.
+
+Swept it through `progress.md`, `docs/firebase-setup.md`, `js/firebase-backend.js` and
+`js/views-account.js`. The wrong reasoning is struck through and kept beside the correction rather
+than deleted, because the wrong premise is why the code did the wrong thing for months.
+
+One behaviour change fell out of it. After a failed Google sign-in the screen said *"Google sign-in
+does not complete in this browser"* — a **prediction**, and now a demonstrably wrong one. It says
+*"That did not complete"* instead. Telling somebody their browser cannot do the thing it just failed
+at once is a worse error than telling them it failed.
+
+Two things deliberately **not** promoted on the back of one good report. Whether the picker's
+`setTimeout` focus raises the keyboard **by itself** is still unknown — the picker was judged with a
+keyboard up, but nobody recorded whether it rose unprompted or after a tap, and those are different
+findings. And an ordinary **Safari tab** has not been retried since the fixes, which is probably
+where the original bug report came from.
+
+**The auth-handler question is withdrawn.** It was the only real fix for a redirect flow nobody
+needs any more, and it would have meant touching the `timothyhadfield.github.io` user-page repo.
+
+State at close: **2156 assertions green** (data-layer and render re-run after the edits), everything
+pushed. **No questions and no asks outstanding for Tim** for the first time in a while.

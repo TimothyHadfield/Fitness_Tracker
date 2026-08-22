@@ -109,15 +109,30 @@ your own OAuth token proves nothing, because project owners bypass rules via IAM
 
 ---
 
-## Known risk — test this first
+## ~~Known risk — test this first~~ ✅ Tested 2026-08-22, and it works
 
-**Google sign-in inside the installed PWA.** Popups are blocked in an iOS home-screen app, so the
-code falls back to `signInWithRedirect` — which itself depends on third-party cookies while the auth
-domain (`fitness-tracker-th.firebaseapp.com`) differs from the site origin
-(`timothyhadfield.github.io`), and Chrome and Safari are both restricting those. **Add the app to
-your home screen and try Google sign-in there before trusting it.** If it fails, the fallbacks in
-order are: use email/password inside the PWA, or move the app to a custom domain and set
-`authDomain` to a subdomain of it so the cookies are first-party.
+**Google sign-in inside the installed PWA works**, confirmed on Tim's iPhone in the app added to his
+home screen. It was broken when he first reported it on 2026-08-21 — popup opens, closes, nothing
+happens — and the fix is recorded in `progress.md`'s 2026-08-21 third pass and 2026-08-22 sections.
+
+⚠️ **What this page used to say, and why it was wrong, because the wrong half is load-bearing:**
+
+> ~~Popups are blocked in an iOS home-screen app, so the code falls back to `signInWithRedirect`.~~
+
+**They are not blocked** — the popup is what completes there. That false premise is exactly what
+made `prefersRedirect()` send the installed PWA to `signInWithRedirect`, and **redirect is the
+route that genuinely cannot finish**: it needs cross-origin access to storage while the auth domain
+(`fitness-tracker-th.firebaseapp.com`) differs from the site origin (`timothyhadfield.github.io`),
+which Safari 16.1+, Firefox 109+ and Chrome M115+ all block. So the second half of the old warning
+stands and only the first half was wrong.
+
+**Still true, and not to be relaxed:** redirect cannot complete in this configuration, so the app
+offers *"Continue in this window instead"* only where `redirectCanComplete()` is true and names
+email everywhere else. If the redirect flow is ever genuinely needed, the fix is a custom domain
+with `authDomain` on a subdomain of it, or the auth handler served from the site's own root.
+
+⚠️ **Not retested since the fix: an ordinary Safari tab** — probably the surface the original bug
+report came from.
 
 ---
 
@@ -164,10 +179,12 @@ documents.
 
 ### Still not verified
 
-- **The Google REDIRECT path**, and Google sign-in inside the **installed PWA**. The popup path is
-  exercised in the real world; the redirect fallback depends on third-party cookies while the auth
-  domain differs from the origin, and nobody has tried it. See the PWA note below.
+- **The Google REDIRECT path.** ⚠️ Not merely untested — **known unusable in this configuration**,
+  because the auth domain differs from the origin. It is no longer offered where it cannot finish.
+  ~~And Google sign-in inside the installed PWA.~~ ✅ **That one is tested and works** (2026-08-22).
 - **`adoptLocalData()` against genuine local data.** It has never run for real.
-- **Any real device, and iOS Safari.** A browser has now rendered every screen — headless Chrome at
-  360–1280 px in both themes, driven with real mouse events — but that says nothing about touch, and
-  nothing about how Safari behaves.
+- **An ordinary iOS SAFARI TAB.** A real iPhone has now used the app installed to the home screen —
+  Google sign-in completes and the keyboard fix holds — but a Safari tab has not been retried since
+  the 2026-08-21 fixes, and it is likely where the original bug report came from.
+- **Touch, and everything else about a device.** Headless Chrome has rendered every screen at
+  360–1280 px in both themes with real mouse events; that says nothing about a finger.

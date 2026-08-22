@@ -275,6 +275,15 @@ function offlineScreen(state) {
  *    every browser Tim owns. The one route offered as the reliable one was the
  *    one guaranteed to fail.
  *
+ * ✅ UPDATE 2026-08-22: GOOGLE SIGN-IN NOW WORKS ON HIS IPHONE, in the app
+ * installed to the home screen. Fault 3 is why, and not in the way it was
+ * written: taking redirect away from the installed PWA left it on the POPUP,
+ * which works there. The premise that an installed iOS app blocks popups —
+ * which is what sent it to redirect in the first place — was simply false.
+ * Redirect still cannot complete cross-origin, so nothing here relaxes.
+ * ⚠️ Untested since the fix: an ordinary Safari tab, which is probably where
+ * the original report came from.
+ *
  * ⚠️ THE UI IS RACED, NOT THE SIGN-IN. Nothing here cancels the auth promise: a
  * real sign-in behind two-factor can genuinely take minutes, and aborting one
  * because a timer expired would be a far worse bug than the one being fixed.
@@ -308,8 +317,13 @@ function googleButton({ label, className, onDone }) {
       escape.hidden = false;
       return 'Or continue in this window instead.';
     }
-    return 'Google sign-in does not complete in this browser. Use an email and password '
-      + 'below — it works everywhere, and it keeps everything you have already logged.';
+    // ⚠️ Says what HAPPENED, not what this browser can do. It used to read
+    // "Google sign-in does not complete in this browser", which was a prediction
+    // — and on 2026-08-22 a real iPhone completed exactly that sign-in in the
+    // installed app. Telling somebody their browser cannot do the thing it just
+    // failed at once is a worse error than telling them it failed.
+    return 'That did not complete. Use an email and password below — it works '
+      + 'everywhere, and it keeps everything you have already logged.';
   }
 
   const release = () => { btn.disabled = false; btn.textContent = label; };

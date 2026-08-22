@@ -401,11 +401,13 @@ export function redirectCanComplete(config) {
  * ⚠️ NO LONGER "iOS home screen → redirect".
  *
  * It used to return true for an installed PWA, on the reasoning that a popup
- * inside one is usually blocked outright. That reasoning still holds — but the
- * conclusion did not, because with a cross-origin authDomain the redirect it
- * sent people to **cannot complete either**. It was choosing between a route
- * that might fail and a route that is documented not to work, and picking the
- * second.
+ * inside one is usually blocked outright. ⚠️ **THAT REASONING IS FALSE, and a
+ * real iPhone said so on 2026-08-22**: Google sign-in completes through the
+ * POPUP in the installed home-screen app, which is precisely the case this
+ * function used to route around. The conclusion was independently wrong too,
+ * because with a cross-origin authDomain the redirect it sent people to
+ * **cannot complete either** — so it was choosing between a route that works
+ * and a route that is documented not to, and picking the second.
  *
  * So redirect is now only preferred where it can actually finish. Where it
  * cannot, the popup is attempted and its failure is EXPLAINED rather than
@@ -471,9 +473,12 @@ export async function googleSignInFlow({
     return { redirected: true };
   };
 
-  // A popup inside an installed PWA is usually blocked outright, so go straight
-  // to redirect there. Elsewhere try the popup first — it keeps the app state
-  // alive — and fall back if the browser refuses.
+  // Redirect only where prefersRedirect() says it can actually finish. ⚠️ NOT
+  // "installed app → redirect": a popup in an installed iOS app was measured
+  // working on 2026-08-22, so the old rule was routing the one environment it
+  // cared about onto the one route that cannot complete. Everywhere else the
+  // popup goes first anyway — it keeps the app state alive — and falls back
+  // only when the browser actually refuses to open it.
   if (preferRedirect) return goRedirect();
 
   try {

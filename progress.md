@@ -4,20 +4,23 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-22 (a staleness sweep; the last code change was 2026-08-21).
+**Last updated:** 2026-08-22 (a real iPhone finally opened the app; the last code change was
+2026-08-21).
 ⚠️ **Four things a fresh session must know before doing anything:**
 
 1. **The iPhone is the live thread** (Tim, 2026-08-21 — the deferral in §10.2 is over). **Five passes
    ran that day** and they are the five dated sections directly below this summary, newest first: the
    survey, the fixes, Google sign-in, the first run, the body map. **Everything measurable is done.**
-2. ⚠️ **Two things are waiting on TIM, and nothing in this repo can close either.** The **keyboard
-   fix is still unverified** — it is the biggest structural change made on the phone and it needs a
-   real device (see Open work item 0), and he has been asked twice. And **Google sign-in still does
-   not work on the iPhone**: the cause is configuration, not code, the fix touches a repo outside
-   this one, and it has deliberately not been started. Email sign-in works there today.
-3. **A real iPhone has still never opened this app.** Everything from 2026-08-21 is a desktop engine
-   driven at phone metrics. It says nothing about touch, about iOS Safari, or about the installed
-   PWA — and four survey items are explicitly reasoned rather than measured for that reason.
+2. ✅ **The two things that were waiting on Tim are BOTH CLOSED — 2026-08-22, on a real iPhone, in
+   the app installed to his home screen.** The **keyboard fix works**: *Next exercise* is reachable
+   with the keyboard up, and so is the exercise picker. And **Google sign-in WORKS in the installed
+   PWA** — see the 2026-08-22 section, which also records that two of the previous day's stated
+   conclusions were wrong.
+3. **A real device has now opened this app exactly once, and it settled two things.** Everything
+   else from 2026-08-21 is still a desktop engine driven at phone metrics: it says nothing about
+   touch, and **three of the four "needs hardware" survey items are still reasoned rather than
+   measured**. ⚠️ **Do not let one good device report promote the rest** — what a phone confirmed is
+   listed in Verified and nothing beyond it.
 4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **Three
    have now run** (adversarial code review, cross-screen consistency, and the first accessibility
    audit this project has ever had) and all three found something real. **Four are still
@@ -71,6 +74,65 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-22 — ✅ A REAL IPHONE, AND BOTH OPEN QUESTIONS CLOSED
+
+**The first time a real device has ever opened this app**, and it closed the two things nothing in
+this repo could. Tim, from the app **installed on his home screen** (not a Safari tab — he has no
+native build, so "the installed PWA" and "added to home screen" are the same thing here):
+
+> *"next exercise is still reachable, as well as the exercise picker. Google sign-in actually works
+> now."*
+
+### ✅ The keyboard fix is VERIFIED
+
+`--kb` was the largest structural change the phone work made and it shipped unproven, because
+headless Chrome has no software keyboard and `100dvh` does not shrink for one — it was verified only
+by driving the variable by hand. **A phone has now confirmed both cases the survey called out**: the
+session runner's *Next exercise* stays reachable with the keyboard up, and so does the exercise
+picker, which was the sharpest case in the survey (3 of 272 exercises visible before the fix).
+
+⚠️ **One thing this does NOT settle.** The survey's reasoned item *"the picker's search box is
+focused inside `setTimeout(…, 120)`, which breaks the user-gesture chain, so iOS will likely show a
+caret and no keyboard"* is **still unmeasured**. The picker was judged with a keyboard up, but
+nobody recorded whether it rose by itself or after a tap on the search box — and those are different
+findings. It stays in "needs hardware" until somebody says which.
+
+### ✅ Google sign-in WORKS in the installed PWA — and yesterday's write-up was wrong twice
+
+The section below this one argues at length that this could not happen. **Two of its conclusions
+were wrong, and the mechanism explains both.**
+
+**What actually fixed it was `prefersRedirect()`.** It used to return `true` for an iOS home-screen
+app, so the installed PWA went **straight to `signInWithRedirect`** — the one route a cross-origin
+`authDomain` genuinely cannot finish. The third pass stopped it preferring a route that cannot
+complete, which means the PWA now attempts the **popup** instead. The popup works. So the fix that
+mattered was not one of the three "code faults met at the symptom"; it was the one filed as a
+footnote to the third of them.
+
+⚠️ **The false claim was "popups are blocked in an iOS home-screen app."** It is written in
+`js/firebase-backend.js`, in `docs/firebase-setup.md` and in §9 of this file, and it is the premise
+the old redirect preference was built on. **A device says otherwise.** Both files are corrected;
+the reasoning is left in place with the correction beside it, because the wrong premise is why the
+code did the wrong thing and deleting it hides that.
+
+⚠️ **What has NOT changed, and must not be quietly relaxed:** `signInWithRedirect` still cannot
+complete in this configuration, on any current browser. `redirectCanComplete()` is still correct,
+*"Continue in this window instead"* must still stay hidden where it cannot finish, and the fallback
+must still name **email**. The origins are still different. Nothing about the storage-partitioning
+analysis was wrong — only the claim about what the PWA can do *instead*.
+
+⚠️ **The Safari-tab path is now the untested one, and it is the surface the original bug came
+from.** Tim's 2026-08-21 report — popup opens, closes a second later, nothing happens — was not
+recorded as Safari or home-screen. It works in the installed app; whether an ordinary Safari tab
+completes has not been checked since the fixes shipped. **Do not write "Google sign-in works on
+iOS"** — write what was measured, which is the installed PWA.
+
+**One open question for Tim is therefore MOOT** — the auth handler in the `timothyhadfield.github.io`
+user-page repo. It was the only real fix for a redirect flow nobody needs any more. Not started, and
+now not needed; the analysis stays in §10 in case the app ever moves domain.
 
 ---
 
@@ -176,6 +238,12 @@ label.
 
 ## 2026-08-21, third pass — ⚠️ GOOGLE SIGN-IN IS BROKEN ON THE IPHONE, and why
 
+> ✅ **SUPERSEDED 2026-08-22 — IT WORKS NOW, in the installed PWA.** Read the section above for what
+> was actually wrong with the reasoning here. Kept in full because the diagnosis was mostly right
+> and its fixes are what shipped: **the storage-partitioning analysis still holds** and redirect
+> still cannot complete. What was wrong was the premise that a popup is blocked inside an installed
+> iOS app — so stopping the PWA preferring redirect quietly moved it onto a route that works.
+
 **The first bug report from a real device.** Tim, 2026-08-21: *"when I try signing in with google, it
 opens a popup for a second, and then quickly closes it and nothing happens."* This is the path §9 has
 called the riskiest untested one in the project, and it was right.
@@ -231,9 +299,13 @@ Only the first is about Google at all. The other two are why it presented as *no
 storage only grows; a sniff written today is wrong next year. The question the code asks is the one
 that actually decides it — are the two origins the same?
 
-⚠️ **NONE OF THIS MAKES GOOGLE SIGN-IN WORK ON THE IPHONE.** It makes it *fail honestly*, and it
-makes the next report diagnostic instead of "nothing happens". Say so plainly; do not let three real
-fixes read as a solved problem.
+~~⚠️ **NONE OF THIS MAKES GOOGLE SIGN-IN WORK ON THE IPHONE.**~~ ✅ **WRONG — it did, and item 3 is
+why.** Written on the belief that the popup could not run in an installed iOS app either, so that
+moving the PWA off redirect only bought an honest failure. **A device disagreed on 2026-08-22.**
+The rest of the paragraph stood: it does also make failures diagnostic instead of silent, and that
+is still worth having. ⚠️ **The lesson is the shape, not the outcome** — this was a confident
+negative prediction about hardware nobody here can run, written in capitals, and the way it was
+caught was somebody opening the app. Reason about a device all you like; label it as reasoning.
 
 ---
 
@@ -285,9 +357,10 @@ The picker's 16 filter chips also became **one horizontally-scrolling row** rath
 ones — Rule 1 permits inner scrolling for a genuinely unbounded list, and wrapped, the filter was
 taller than the thing it filters. **Exercises visible with the keyboard up: 3 → 7.**
 
-⚠️ **NOT VERIFIED ON A DEVICE, and it cannot be from here.** Headless Chrome has no software
-keyboard, so `--kb` was driven by hand. The mechanism is documented iOS behaviour; the confirmation
-has to come from an iPhone, and until it does this stays an unverified fix.
+~~⚠️ **NOT VERIFIED ON A DEVICE, and it cannot be from here.**~~ ✅ **VERIFIED ON A REAL IPHONE,
+2026-08-22** — *Next exercise* reachable and the picker usable, in the installed home-screen app.
+Headless Chrome has no software keyboard, so `--kb` was driven by hand and the confirmation had to
+come from a phone. It came.
 
 ### The rest, each verified in the browser
 
@@ -629,24 +702,21 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    (twelve steps to five), and the body map (the figure no longer moves or resizes when a muscle is
    tapped). What is left, in order:
 
-   - **⚠️ THE KEYBOARD FIX NEEDS A PHONE, and only Tim can close it. He has been asked twice and it
-     is still open.** `--kb` is written from `visualViewport` and verified by driving the value by
-     hand — headless Chrome has no software keyboard, so nothing here can prove it. **Open the
-     session runner, tap the weight, and see whether "Next exercise" is still reachable.** Same
-     question in the exercise picker. Until that answer exists this is an unverified fix, and it
-     must keep saying so. ⚠️ **Do not quietly promote it** because the tests are green; no test in
-     this repo can see a software keyboard.
-   - **⚠️ GOOGLE SIGN-IN DOES NOT WORK ON THE IPHONE, and the fix is not in this repo.** The three
-     code faults around the symptom are fixed, so it now fails visibly and prints its error code
-     instead of doing nothing — but it still fails. The cause is that the app is served from
-     `timothyhadfield.github.io` while `authDomain` is `fitness-tracker-th.firebaseapp.com`, and
-     Safari's storage partitioning will not let that flow complete cross-origin. **The real fix is
-     the auth handler at the domain root**, which lives in the separate `timothyhadfield.github.io`
-     user-page repo shared across projects, and needs `.nojekyll`. **Not started — it changes a repo
-     Tim owns for other things, so it wants his say-so.** Email sign-in works on iOS today.
-   - The four **reasoned-not-measured** items in the survey (haptics — iOS has no Vibration API at
-     all, so the stepper's `navigator.vibrate` never fires; the long-press callout; whether a
-     `setTimeout` focus raises the keyboard; the native date control). All need the same device.
+   - ~~**⚠️ THE KEYBOARD FIX NEEDS A PHONE.**~~ ✅ **CLOSED 2026-08-22 — it works.** *Next exercise*
+     is reachable with the keyboard up and the picker is usable, confirmed on Tim's iPhone in the
+     installed home-screen app.
+   - ~~**⚠️ GOOGLE SIGN-IN DOES NOT WORK ON THE IPHONE.**~~ ✅ **CLOSED 2026-08-22 — it works in the
+     installed PWA**, and the auth-handler job in the user-page repo is **moot**. The third pass
+     fixed it by accident: stopping the PWA preferring `signInWithRedirect` (which cannot complete
+     cross-origin) moved it onto the popup, and the popup works. See the 2026-08-22 section for the
+     two claims that turned out to be wrong. ⚠️ **A Safari tab has still not been retested** since
+     the fixes shipped, and that is probably where the original report came from.
+   - The **reasoned-not-measured** items in the survey — **three still open**, one now half open.
+     Still untouched: haptics (iOS has no Vibration API at all, so the stepper's `navigator.vibrate`
+     never fires), the long-press callout, and the native date control. ⚠️ **Half open: whether the
+     picker's `setTimeout` focus raises the keyboard BY ITSELF.** The picker was judged with a
+     keyboard up on 2026-08-22, but nobody recorded whether it rose unprompted or after a tap, and
+     those are different findings. All need the same device.
    - ~~Two layout items nobody has done: Explore's badge, and Goals opening on prose.~~ **BOTH DONE
      the same day** — the second pass's "last two layout items" section above has the measurements
      (Explore's badge drops to its own line below 700px, giving the summary 338px of 393 instead of
@@ -960,7 +1030,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
 | **Demo account** | Account → **View demo account**. A generated year — two programmes, ~200 sessions, 20 benchmarks, 53 weigh-ins, a goal 16 % of the way through — so every screen has something in it. ⚠️ **In-memory only.** `store.js` swaps its backend for a Map, so there is no tap sequence — editing, deleting, importing, "delete all data" — that can reach a real record. The flag is in **sessionStorage**, so the demo cannot follow you into a new tab or survive closing the browser; that is the safety decision, because "opens the app tomorrow and sees a year they did not do" would be far worse than the feature is worth. A reload reseeds from the same default. **Social is refused** at `republish()`, not just on the screen. `js/demo.js` |
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
-| Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so and reveals **Continue in this window instead**, a redirect-only route |
+| Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so, and offers **Continue in this window instead** — but ⚠️ **only where that redirect can actually finish**, which this configuration is not, so here it names **email** instead. ✅ **Works on a real iPhone in the installed home-screen app** (2026-08-22), which is the path this file spent months calling the riskiest untested one; the popup is what runs there, and the belief that an installed iOS app blocks popups was simply wrong |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
 | Settings | Dark/light, **lbs/kg**, profile, account, export/restore backup, delete all |
 
@@ -969,6 +1039,13 @@ Press-and-hold repeats.
 
 ### Verified
 
+- ✅ **ON A REAL IPHONE, 2026-08-22 — the only two things in this list a device has ever confirmed.**
+  In the app **installed to the home screen**: the **keyboard fix** holds (*Next exercise* reachable
+  in the session runner with the keyboard up, and the exercise picker usable), and **Google sign-in
+  completes**. ⚠️ **Read the scope narrowly.** This was one person, one phone, one surface, and two
+  questions — it says nothing about touch targets, about a Safari tab, or about any of the three
+  survey items still marked reasoned-not-measured. **Everything else in this list is still a
+  desktop engine, jsdom, or an emulator**
 - All **22 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
 - **The ranking model's five new regression assertions** (`tests/data-layer.test.mjs`) — the ones
   that were missing. ⚠️ **1051 assertions ran green over this bug for two months**, and the reason is
@@ -1130,19 +1207,19 @@ Press-and-hold repeats.
   assertions and each was driven in a browser by its author, which is exactly what progression had
   too the day before it turned out to be wrong. **The count is not the point** — passing a suite its
   own author wrote is not the same as surviving somebody trying to break it.
-- **No real device, and no iOS Safari.** Touch targets, the installed PWA, the Google popup/redirect
-  branch, `adoptLocalData()` against real local data. Headless Chrome covers desktop-engine layout
-  only — it says nothing about how a phone actually behaves in the hand. ⚠️ **No longer deferred:
-  Tim opened the iPhone work on 2026-08-21** and five passes of it are in the dated sections above —
-  but every one was run at phone *metrics* in a desktop engine, so it still is not a device. Four
-  things in it are explicitly reasoned rather than measured (haptics, the long-press callout, whether
-  a `setTimeout` focus raises the keyboard, and the native date control) and must keep saying so.
-- **⚠️ THE KEYBOARD FIX IS SHIPPED AND UNPROVEN.** `--kb`, written from `window.visualViewport`, is
-  the largest structural change the phone work made: it shortens `#app` by the keyboard's height so a
-  fixed footer stays reachable, and every screen inherits it. It was verified only by **driving the
-  variable by hand** — headless Chrome has no software keyboard, and `100dvh` does not shrink for
-  one. **Green tests say nothing about this.** Only Tim opening the session runner and tapping the
-  weight can close it; he has been asked twice. Until then it stays here, in NOT verified.
+- **Almost everything about a real device.** ⚠️ **A phone has now opened the app exactly once
+  (2026-08-22) and settled exactly two things** — the keyboard fix and Google sign-in in the
+  installed PWA, both moved to Verified. **Everything else on this line stands:** touch targets,
+  `adoptLocalData()` against real local data, and how the app behaves in an ordinary **Safari tab**,
+  which is now the *less* tested of the two surfaces. Headless Chrome covers desktop-engine layout
+  only. Of the four survey items that are reasoned rather than measured, **three are still
+  reasoned** — haptics (iOS has no Vibration API), the long-press callout, and the native date
+  control — plus the open half of the fourth: whether the picker's `setTimeout` focus raises the
+  keyboard **by itself**, which the device visit did not record either way.
+- ~~**⚠️ THE KEYBOARD FIX IS SHIPPED AND UNPROVEN.**~~ ✅ **CLOSED 2026-08-22 — see Verified.**
+  `--kb`, written from `window.visualViewport`, was the largest structural change the phone work
+  made, and it was verified only by driving the variable by hand until a real iPhone confirmed both
+  cases the survey named.
 - **⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.** Social is built and every screen has been driven in a
   browser — but against a **stubbed** `social` facade, so the actual round trip (create an invite,
   open it as somebody else, claim it, accept, publish, read the other person's page) has never run
@@ -1150,14 +1227,14 @@ Press-and-hold repeats.
   documents; the app half is reviewed code. This is the same shape of gap `firebase-backend.js`
   carried before the 45 live checks closed it, and it wants the same treatment: two throwaway
   accounts against the live project, then delete them.
-- **⚠️ GOOGLE SIGN-IN DOES NOT WORK ON IOS, reported from a real device 2026-08-21** — the popup
-  opens, closes a second later, and nothing happens. **The cause is configuration, not code:** the
-  app is on `timothyhadfield.github.io` and `authDomain` is `fitness-tracker-th.firebaseapp.com`, and
-  Firebase document the auth flow as unable to complete cross-origin on Safari 16.1+, Firefox 109+
-  and Chrome M115+. See the 2026-08-21 third-pass section. Three code faults around it are fixed and
-  **the sign-in still does not work** — it now fails visibly and prints its error code instead of
-  looking like a dead button. The desktop popup path is exercised in the real world; the **redirect**
-  path is now known to be unusable in this configuration on any current browser.
+- ~~**⚠️ GOOGLE SIGN-IN DOES NOT WORK ON IOS**~~ ✅ **IT WORKS — installed PWA, 2026-08-22.** Broken
+  when reported on 2026-08-21 (popup opens, closes, nothing happens) and fixed by the third pass
+  moving the installed PWA off `signInWithRedirect`, which a cross-origin `authDomain` genuinely
+  cannot finish, onto the popup, which a device now says works. ⚠️ **Two narrower things are still
+  NOT verified and are easy to over-read:** Google sign-in in an **ordinary Safari tab** since the
+  fixes shipped — the surface the original report probably came from — and the **redirect** path,
+  which remains unusable in this configuration on any current browser and is deliberately not
+  offered where it cannot complete.
 
 ---
 
@@ -1767,10 +1844,13 @@ re-examining it produces something better than either the old rule or a plain ov
   reported by Tim as "your browser blocked the sign-in window" (2026-08-16). The recovery now reuses
   the credential from the failed link via `signInWithCredential`, which needs no window. Anything
   added to this flow must not open a window outside the original click.
-- **Google sign-in inside the installed PWA is the riskiest untested path.** Popups are blocked in an
-  iOS home-screen app, so the code falls back to `signInWithRedirect`, which depends on third-party
-  cookies while the auth domain differs from the origin. Fallbacks: email/password in the PWA, or a
-  custom domain with `authDomain` on a subdomain of it.
+- ~~**Google sign-in inside the installed PWA is the riskiest untested path.**~~ ✅ **TESTED
+  2026-08-22, and it works** — it was the riskiest path and it is now the only one a device has
+  confirmed. ⚠️ **The premise written here was false**: *"popups are blocked in an iOS home-screen
+  app"* is what sent the PWA to `signInWithRedirect`, and redirect is the thing that actually cannot
+  complete while the auth domain differs from the origin. A popup in an installed iOS app works.
+  Kept rather than deleted because the wrong premise is why the code did the wrong thing for months.
+  The custom-domain fallback is still the answer **if the redirect flow is ever needed again**.
 - **Rep normalisation assumes near-failure effort.** Every rep-based formula does. Bias is systematic
   per user per exercise, so trend and ordering survive. There is no RIR/RPE field — deliberate (D9).
 - ~~**No supersets, drop sets or tri-sets.**~~ **Closed 2026-08-17** — built, and D23 records the
@@ -1890,14 +1970,16 @@ re-examining it produces something better than either the old rule or a plain ov
    sort order. `js/muscle-evidence.js` shipped a real confidence model whose
    constants were reasoned rather than fitted, and §9 lists two accuracy gaps that cannot honestly be
    closed by guessing at numbers. A simulator turns both into measurements.
-2. ~~**Tim opens the app on a real phone.**~~ ~~**DEFERRED — Tim, 2026-08-17.**~~ ⚠️ **REOPENED by
-   Tim, 2026-08-21, and it is now the live thread — see Open work item 0.** Five passes ran that day
-   and everything measurable is done. **The risk this item was written about is the part that
-   survived:** a screenshot says nothing about touch, about iOS Safari, or about the installed PWA,
-   and every one of those five passes was a desktop engine driven at phone metrics. So it stays in §3
-   NOT verified, and the two things only a device can settle — **the keyboard fix** and the four
-   reasoned-not-measured items — are still open. **Tim has since reported one real-device bug**
-   (Google sign-in), which is exactly the class of thing no amount of this could have found.
+2. ~~**Tim opens the app on a real phone.**~~ ⚠️ **REOPENED 2026-08-21 and PARTLY CLOSED 2026-08-22
+   — he opened it.** Five passes ran on the 21st and everything measurable is done; on the 22nd a
+   real iPhone confirmed **the keyboard fix** and **Google sign-in in the installed PWA**.
+   **This item was worth every word of its warning:** the same device produced the project's only
+   real-device *bug* report (Google sign-in) and its only real-device *refutation* (a popup is not
+   blocked in an installed iOS app) — both the class of thing no amount of desktop-engine work could
+   have found, in both directions. What is left needs the same phone and is small: three
+   reasoned-not-measured items, whether the picker's focus raises the keyboard unprompted, touch
+   targets, and a **Safari tab**, which is now the surface with less evidence behind it than the
+   installed app.
 3. **The graph still defaults to benchmarks when an exercise has both sources.** The opposite of what
    Tim asked for on 2026-08-16 ("default should be mostly workout measurements") and still the one
    part of that request unmet. Properly, it is Phase 3 of the estimate plan; cheaply, it is one line
@@ -1942,16 +2024,13 @@ re-examining it produces something better than either the old rule or a plain ov
    D1 was narrowed on 2026-08-18 (see D26) — each time the objection turned out to be about a
    specific model rather than about the idea.
 
-2. **⚠️ May the auth handler go in the `timothyhadfield.github.io` user-page repo?** That is the only
-   real fix for Google sign-in on the iPhone (2026-08-21 third pass), and it means adding files —
-   plus `.nojekyll` — to a repo Tim owns that serves his other projects too. **Not started for that
-   reason.** Email sign-in works on iOS today, so nothing is blocked on the answer; it is just that
-   nobody should touch another repo without being told to.
+2. ~~**⚠️ May the auth handler go in the `timothyhadfield.github.io` user-page repo?**~~ ✅ **MOOT —
+   withdrawn 2026-08-22.** It was the only real fix for a redirect flow, and Google sign-in works in
+   the installed PWA without one. **Nobody needs to touch that repo.** Keep the analysis (2026-08-21
+   third pass) only against the day this app moves domain or needs redirect again.
 
-**Two questions, and one thing that is not a question but an ASK:** ⚠️ **Tim, open the session runner
-on your phone and tap the weight — is "Next exercise" still reachable?** He has been asked twice and
-it is still unanswered, and it is the one thing standing between the keyboard fix and being able to
-call it verified. Nothing in this repo can answer it. Everything else that was on this list has been
+**One question left, and no outstanding ask.** ⚠️ **The 2026-08-22 device visit closed both** — the
+keyboard fix is verified and Google sign-in works. Everything else that was on this list has been
 answered:
 
 **Answered, so nobody re-asks:**
@@ -1961,6 +2040,10 @@ answered:
 - ~~The "% optimal" rating: one number or two?~~ **Two** — growth and strength, rated separately.
 - ~~What does 100 % mean?~~ **The most the evidence supports**, not the best system in the library.
 - ~~May the app recommend protein?~~ **Yes** (D26) — recommend with a citation, never track.
+- ~~Is "Next exercise" reachable on your phone with the keyboard up?~~ **YES** (2026-08-22), and the
+  picker too. Asked three times; the answer closed the biggest unverified fix in the phone work.
+- ~~Does Google sign-in work on the iPhone?~~ **YES, in the installed home-screen app** (2026-08-22).
+  A Safari tab has not been retested since the fixes.
 - ~~Goals as levels, or as a rate?~~ **LEVELS**, which was the recommendation, taken without asking
   under the working agreement and built on 2026-08-19. A level makes no prediction at all, which is
   the only framing the 0–250 % individual variation leaves standing. A rate could still be added
