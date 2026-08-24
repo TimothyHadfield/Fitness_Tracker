@@ -4632,3 +4632,73 @@ not read "I can't see X" as X being broken** — check the live site first.
 
 `progress.md`'s header block is now three items rather than five, with the two closed ones struck
 through in place instead of deleted, and Open work 0a is closed.
+
+---
+
+## 2026-08-24, second pass — the app went to a gym, and came back with a bug
+
+Tim trained with a friend and logged the session on his phone. *"For the most part it worked great,
+but I did find some areas of improvement."* Four asks. Two shipped the same day; two are design work
+with his decisions recorded.
+
+### The one that was a bug
+
+He did assisted pull-ups at 70 lb, at a body weight of 180. Two more good sessions and the app would
+have suggested **"+5 lb and back to 6 reps"** — more assistance, an easier set, printed as progress.
+
+The guard against exactly this had been in `progression.js` for weeks, with a comment saying nothing
+in the table was flagged assisted yet. True — and `Assisted Pull-Up` was in the library the whole
+time, with no fraction entry, so the flag could never be set and the machine fell through to the
+ordinary weighted rule. Two green assertions pinned the guard's existence by reading the source.
+
+Recorded as a lesson because it generalises: **a branch no accepted input can reach is not defensive
+code, it is a comment that reads like defensive code** — and it stopped both the person who wrote it
+and the person who tested it from looking. Six reviews and 2300 assertions had passed over it. Only
+using the app in a gym found it.
+
+### The design call, and what it costs
+
+Asked him how far the real number should go. His answer: treat an assisted pull-up as a pull-up with
+the assistance subtracted. Said once, plainly, that this means accepting the machine's plate number
+as pounds actually taken off him — nothing published maps a stack setting to load relief, and the
+linkage is not standardised across brands — then built it under that assumption. The assumption is
+priced as the lowest confidence in the fraction table (0.65, below the push-up's 0.70) rather than
+written as a disclaimer, so an assisted set desaturates its own colour on the body map and loses to
+a real pull-up as evidence. Noted as a known limitation that the error scales with how much help is
+taken, and a single confidence number cannot express that.
+
+Admitting it took two lines — a table entry and reading the flag instead of hardcoding false —
+because everything else already keyed off that one flag. Adding an Assisted Dip is now a one-liner.
+
+### The convenience that nearly invented training
+
+His second ask was that the first set's numbers carry into the next. The first version filled every
+set below on the first keystroke, and two render tests killed it: the app keeps any set with numbers
+in it, so logging one set and stopping would have recorded three, inflating volume and the muscle map
+with work he had not done. It now fills a set when that set is opened, which is the same thing from
+his side and cannot credit anybody for a set they never looked at.
+
+### Two more found by looking at a screenshot
+
+Neither reachable by a test. Every set opens at zero assistance, so the readout's first state was
+"your 180 less 0 of help" — arithmetic on nothing, in the one place the app is trying to make an
+unintuitive number clear. And the stepper label read "Weight of help", because that slot exists to
+say what kind of weight the number is ("total", "per side"). Now "no help set, so this is a pull-up"
+and "Weight · assistance".
+
+### The two that are not built
+
+**Swapping an exercise mid-workout** — his call: today only, the saved plan unchanged. Told him where
+the cost actually is: supersets, fetching history for an exercise the session did not start with, and
+keeping the sets already recorded on the original.
+
+**Joint workouts** — the biggest idea in the list, and built differently from how he described it.
+He asked for one phone writing into both accounts; that needs a rule letting one account write into
+another's private data, and sessions are one document, so a bad write replaces a whole history rather
+than a row. He chose the version where the friend's half is sent and their own app saves it on
+accept. Also flagged that switching names has to switch the whole suggestion — two people on the same
+workout are not on the same weights — and offered logging a guest with no account, which is the case
+he actually hit, because his friend could not sign in.
+
+His friend's sign-in failure is recorded and not chased; he asked to investigate it himself first.
+Noted that an ordinary Safari tab is still the one surface no working device has confirmed.

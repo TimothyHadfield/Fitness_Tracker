@@ -131,10 +131,38 @@ ok(totalResistance(pullUp, 0, null) === null, 'no body weight means no resistanc
 ok(totalResistance(pullUp, 0, 0) === null, 'a zero body weight is not a body weight');
 ok(totalResistance(ex('Inverted Row'), 0, 180) === null,
    '⚠️ an inverted row has no published fraction, so it has no resistance either');
-ok(totalResistance(ex('Assisted Pull-Up'), 60, 180) === null,
-   '⚠️ an assisted pull-up is refused — the machine\'s counterweight linkage is not standardised');
 ok(totalResistance(ex('Barbell Bench Press'), 185, 180) === null,
    'a barbell lift is not a body-weight lift and does not go through this path');
+
+/* ------------------------------------------------------------------ *
+ * The assist branch — SUBTRACTION, and it was unreachable until 2026-08-24
+ * ------------------------------------------------------------------ */
+//
+// ⚠️ This arithmetic has been in e1rm.js since the body-weight work landed and
+// no exercise in the app could reach it, because `Assisted Pull-Up` had no
+// fraction entry and bodyWeightFractionFor() hardcoded `assist: false`. The cost
+// was not that the branch was untested — it is that the assist machine fell
+// through to the ordinary weighted path, where MORE weight reads as a HARDER
+// set. See tests/progression for what that did to the suggestion.
+const assistedPullUp = ex('Assisted Pull-Up');
+const assist70 = totalResistance(assistedPullUp, 70, 180);
+ok(assist70 !== null && near(assist70.load, 110),
+   '⚠️ 70 lbs of assistance at 180 lbs body weight is 110 lbs of resistance — SUBTRACTED, not added');
+ok(assist70 !== null && assist70.assist === true && near(assist70.base, 180) && near(assist70.added, 70),
+   'and the parts come back separately, so a screen can say 180 less 70 rather than just "110"');
+ok(near(totalResistance(assistedPullUp, 0, 180).load, 180),
+   'no assistance at all is a pull-up: the whole body weight, and no special case for it');
+ok(near(totalResistance(assistedPullUp, 30, 200).load, 170),
+   'and it tracks the person, not a constant — the same 30 lbs off a heavier lifter leaves more');
+
+// ⚠️ THE ONE REFUSAL THIS BRANCH MUST KEEP. A negative resistance is not a very
+// easy set, it is a nonsense entry, and printing "-20 lbs on you" would be worse
+// than printing nothing.
+ok(totalResistance(assistedPullUp, 180, 180) === null,
+   '⚠️ assistance equal to body weight is refused, not reported as a zero-pound lift');
+ok(totalResistance(assistedPullUp, 250, 180) === null, 'and more help than you weigh is refused too');
+ok(totalResistance(assistedPullUp, 70, null) === null,
+   'and with no weigh-in it is refused exactly like a pull-up — the 70 is never treated as the load');
 
 /* ================================================================== *
  * 3. The fraction table — and above all, what is NOT in it
@@ -160,6 +188,26 @@ ok(Object.values(BODY_WEIGHT_FRACTION).every((s) => s.fraction > 0 && s.fraction
 ok(BODY_WEIGHT_FRACTION['Pull-Up'].q > BODY_WEIGHT_FRACTION['Push-Up'].q,
    'statics beats a force plate: the pull-up\'s fraction outranks the push-up\'s');
 
+// ⚠️ THE ASSIST ENTRY MUST BE THE LEAST TRUSTED THING IN THIS TABLE, and the
+// ordering is the whole of how the admission stays honest. Its fraction is a
+// pull-up's 1.00 and is not in doubt; what is assumed is that the machine's
+// stack number is pounds taken off the lifter, and unlike the push-up — where
+// the uncertainty is a JUDGEMENT between three published force-plate figures —
+// there is nothing published on either side of this one. If a later session
+// raises this q, the argument for raising it has to be a source.
+ok(BODY_WEIGHT_FRACTION['Assisted Pull-Up'].assist === true,
+   '⚠️ the assist flag lives on the TABLE ENTRY, so a name regex is never what decides the sign');
+ok(BODY_WEIGHT_FRACTION['Assisted Pull-Up'].q < BODY_WEIGHT_FRACTION['Push-Up'].q,
+   '⚠️ and an assisted set is the least-trusted evidence in the table — below even the push-up');
+ok(BODY_WEIGHT_FRACTION['Assisted Pull-Up'].fraction === BODY_WEIGHT_FRACTION['Pull-Up'].fraction,
+   'while its FRACTION is a pull-up\'s exactly — you hang from your hands either way');
+// The flag is opt-in, not a default somebody could invert by accident.
+ok(Object.entries(BODY_WEIGHT_FRACTION)
+     .filter(([, s]) => s.assist).map(([n]) => n).join() === 'Assisted Pull-Up',
+   'and it is the ONLY assisted entry today — adding a second is a deliberate line, not a side effect');
+ok(bodyWeightFractionFor(ex('Pull-Up')).assist === false,
+   '⚠️ an ordinary pull-up reports assist FALSE rather than undefined — the sign is always stated');
+
 // ⚠️ THE EXCLUSION LIST. These are the ones a later session will be tempted to
 // fill in, and each is out for a stated reason rather than for want of looking.
 const MUST_STAY_UNRANKABLE = [
@@ -171,7 +219,14 @@ const MUST_STAY_UNRANKABLE = [
   ['Bench Dip', 'the feet are on the floor and take an unrecorded share'],
   ['Handstand Push-Up', 'the wall takes an unrecorded share; the circulated figure is misattributed'],
   ['Pike Push-Up', 'the feet take an unrecorded share'],
-  ['Assisted Pull-Up', 'the machine\'s counterweight linkage is not standardised'],
+  // ⚠️ 'Assisted Pull-Up' WAS on this list and was taken off on 2026-08-24, on
+  // Tim's instruction, after he used the app in a gym and his back training
+  // rated nothing. The objection that put it here — the counterweight linkage
+  // is not standardised, so the stack's number is not proven to be pounds off
+  // you — is still true and is now priced in `q` instead. That is a different
+  // decision from the rest of this list, which stay out because their FRACTION
+  // is unknown; here the fraction is a pull-up's and the SUBTRACTED term is the
+  // assumption. Do not read its removal as licence to fill in the others.
   ['Bodyweight Squat', 'its key lift logs EXTERNAL load, so the conversion is degenerate'],
   ['Nordic Hamstring Curl', 'same — the Romanian deadlift logs the bar, not the body'],
   ['Glute-Ham Raise', 'same'],
@@ -218,6 +273,13 @@ ok(setLoad(ex('Dumbbell Row'), 80, { bodyWeight: 180 }) === 160,
    'and still doubles a per-side dumbbell entry');
 ok(setLoad(pullUp, 45) === null,
    'setLoad with no body weight refuses a pull-up rather than treating 45 as the load');
+// ⚠️ The one that decides whether the muscle map is right or inverted. Every
+// rating in the app converts through setLoad(), so if this returned 70 the
+// machine would rate a lifter STRONGER the more help they took.
+ok(setLoad(assistedPullUp, 70, { bodyWeight: 180 }) === 110,
+   '⚠️ setLoad on an assist machine returns 110, not 70 — the rating sees resistance, never the stack');
+ok(setLoad(assistedPullUp, 70) === null,
+   'and with no body weight it refuses, rather than falling back to the 70 it must never use');
 ok(totalLoad(80, 'per_side') === 160 && totalLoad(185, 'total') === 185,
    'totalLoad itself is untouched');
 
@@ -232,7 +294,30 @@ ok(totalLoad(80, 'per_side') === 160 && totalLoad(185, 'total') === 185,
 
 ok(contributionsFor(pullUp).length === 0,
    '⚠️ contributionsFor(exercise) with ONE argument still rates nothing for a pull-up');
-ok(contributionsFor(ex('Assisted Pull-Up')).length === 0, 'and nothing for an assisted pull-up');
+ok(contributionsFor(assistedPullUp).length === 0,
+   'and nothing for an assisted pull-up — which since 2026-08-24 means "no weigh-in yet", not "never"');
+// ⚠️ Asserted from the other side too, because the line above now passes for a
+// DIFFERENT REASON than it used to and a passing test that has quietly changed
+// its meaning is worth less than no test. Before, it held because the exercise
+// was permanently unrankable; now it holds only because no body weight was
+// handed over. Without this pair, deleting the assist entry altogether would
+// leave the suite green.
+const assistedContribs = contributionsFor(assistedPullUp, { bodyWeight: 180 });
+ok(assistedContribs.length > 0,
+   '⚠️ hand it a body weight and an assisted pull-up DOES rate a muscle');
+ok(assistedContribs.length > 0 && assistedContribs.every((c) => c.quality < 1),
+   'and every contribution it makes is discounted — the linkage assumption is paid for here');
+// ⚠️ VACUITY GUARD ON THE LENGTHS, not just on one of them. `[].every()` is
+// true, so without the equality this whole comparison passed while
+// assistedContribs was empty — which is exactly the state it was in five
+// minutes ago, and the assertion said nothing about it.
+const realContribs = contributionsFor(pullUp, { bodyWeight: 180 });
+ok(assistedContribs.length === realContribs.length && realContribs.length > 0
+   && assistedContribs.every((c, i) => c.muscle === realContribs[i].muscle
+        && c.quality < realContribs[i].quality),
+   '⚠️ and discounted BELOW a real pull-up muscle for muscle, so it loses as evidence where they meet');
+ok(assistedContribs.every((c, i) => near(c.ratio, realContribs[i].ratio)),
+   'while the RATIO is identical — 110 lbs of pulling is 110 lbs of pulling, whoever is holding it up');
 ok(contributionsFor(ex('Barbell Row')).length > 0, 'while an ordinary lift is unaffected');
 ok(canNormalize(pullUp) === false && canNormalize(pushUp) === false,
    'canNormalize(exercise) with one argument still refuses bodyweight work');

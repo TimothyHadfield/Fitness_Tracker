@@ -644,8 +644,11 @@ Stated plainly, because the numbers in §11.0 look more confident than the thing
 - **The plausibility ceiling is calibrated for a TRAINED lifter.** A genuine novice gains faster than
   any curve in the simulator. Nothing gates a beginner's first three months today, and nothing should
   until it is measured.
-- **Bodyweight and assisted exercises are still invisible**, exactly as they are to `e1rm.js` and
-  `muscle-evidence.js`. Nothing here changes that.
+- **Bodyweight and assisted exercises are invisible to the SIMULATOR**, which is now a narrower
+  statement than when it was written: `e1rm.js` and `muscle-evidence.js` both convert them where a
+  published fraction and a weigh-in exist (bodyweight 2026-08-19, assisted 2026-08-24). Nothing here
+  changes that, and the estimator has never been fitted against a body-weight lift — so an assisted
+  pull-up reaching the estimator would be scored by a curve fitted on barbell histories.
 - **The simulator models one exercise per lifter** for the estimator, and a separate three-exercise
   construction for the muscle aggregate. A real lifter's Chest is rated from several exercises whose
   histories interleave, and that combined case has not been simulated end to end.

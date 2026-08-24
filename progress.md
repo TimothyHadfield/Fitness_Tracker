@@ -4,8 +4,9 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-24 — Tim confirmed the two things that were blocking everything. The nine
-dated passes below are 2026-08-22, newest first. Read the top three; the rest is why.
+**Last updated:** 2026-08-24 — **the app was used in a real gym session for the first time**, and it
+found a live inversion. That pass is the top dated section; the nine below it are 2026-08-22, newest
+first. Read the top three; the rest is why.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
 wrong URL. I can see the year view now."* So **he is on a current build and the app is usable**, and
@@ -37,11 +38,17 @@ about is why the next report should still be checked against the live site first
    **competitive** review is left, and it inspects the market rather than the app.
    ⚠️ **Running a review is not closing it.** Eight fixes shipped that day; **two edge-case findings
    and the whole UX list are still open** (Open work 0b and 1).
-3. **A real device has opened this app exactly twice, and settled three things** — the keyboard fix
-   works, Google sign-in works in the installed PWA, and the app can get stuck on the auth handler.
-   Everything else about touch is still a desktop engine driven at phone metrics, and **three
-   "needs hardware" survey items remain reasoned rather than measured.** ⚠️ **Do not let a good
-   device report promote the rest**: what a phone confirmed is in Verified and nothing beyond it.
+3. **⚠️ IT HAS NOW BEEN TRAINED WITH, AND THAT IS A DIFFERENT KIND OF EVIDENCE FROM LOOKING AT IT.**
+   Tim ran a real session with a friend on 2026-08-24 — *"for the most part it worked great"* — and
+   the single defect it turned up was one **no test, no review and no screenshot had found in five
+   months**: the assist machine's suggestion ran backwards. Six reviews and 2300 assertions had all
+   passed over it. **Prefer a gym report to anything in this file.** The four asks it produced are
+   the newest dated section; two shipped, two are Open work 0d and 0e.
+   Before that, a real device had opened the app exactly twice, settling three things — the keyboard
+   fix works, Google sign-in works in the installed PWA, and the app can get stuck on the auth
+   handler. Everything else about touch is still a desktop engine driven at phone metrics, and
+   **three "needs hardware" survey items remain reasoned rather than measured.** ⚠️ **Do not let a
+   good device report promote the rest**: what a phone confirmed is in Verified and nothing beyond it.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. **Five nav tabs: Home, Workouts, RECORD, Data, Goals** — Record is the big middle button, and
@@ -92,6 +99,113 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-24 — ⚠️ THE APP WAS USED IN A GYM, AND IT FOUND A LIVE INVERSION
+
+**The first time this app has been used for what it is for.** Tim trained with a friend, logged the
+session on his phone, and came back with four improvements. *"For the most part it worked great."*
+
+⚠️ **ONE OF THE FOUR WAS A BUG, AND ONLY USING IT COULD HAVE FOUND IT.** He did assisted pull-ups.
+Two more good sessions and the app would have told him **"+5 lb and back to 6 reps"** on an assist
+machine — proposing *more help*, making the set easier, and printing it as progress under an
+upward-pointing arrow.
+
+### How a guard that was written for exactly this failed to fire
+
+`progression.js` has had this since the body-weight work landed:
+
+```js
+  const assisted = Boolean(res && res.assist);   // then: never propose a load step
+```
+
+and beside it a comment reading *"Nothing in the table is flagged `assist` today; this is here so
+that the day one is, the suggestion degrades to a rep rather than silently inverting."* Both
+sentences were true. `tests/goals.test.mjs` asserted both — that no exercise was flagged, and that
+the guard was present — and both assertions were green.
+
+⚠️ **`Assisted Pull-Up` was in the exercise library the whole time.** It had no entry in the
+body-weight fraction table, so `totalResistance()` returned null, so `res.assist` could never be
+read, so the flag could never be true — and the machine fell through to the **ordinary weighted
+load rule**, where more weight is a harder set. Three layers each behaved correctly in isolation.
+
+⚠️ **THE LESSON IS ABOUT THE GUARD, NOT THE MACHINE.** *A branch that no input the app accepts can
+reach is not defensive code — it is a comment that reads like defensive code, and it stops people
+looking.* It stopped two: whoever wrote it, and whoever wrote the test that pinned it. **If a
+guard's own note says "nothing hits this today", that is the moment to check whether something
+should.** The two source-regex assertions are gone; what replaces them drives the real function with
+the real exercise and **plays it forward through forty obeyed sessions**, which is the rep-ceiling
+lesson from 2026-08-22 arriving on the branch that did not exist when it was learned.
+**Mutation-checked**: restoring the `+` flips exactly six assertions, including the play-forward.
+
+### The design call, and the assumption it rests on
+
+Tim's instruction: *"the assisted pull up should be treated the same as a regular pull up, but the
+weight should be auto adjusted … body weight − assisted weight."* His arithmetic is right — 180 lb
+at 70 lb of assistance is 110 lb — and `totalResistance()` had computed exactly that, for a branch
+nothing could reach.
+
+⚠️ **The objection that kept it out is still true and is now PRICED rather than waved away.** A
+machine's stack says 70; nothing published says 70 lb comes off *you*, and the counterweight linkage
+is not standardised across brands. It went in at **`q` 0.65 — the lowest number in the fraction
+table, below the push-up's 0.70** — so an assisted set desaturates its own colour on the body map and
+loses to a real pull-up wherever they meet. The reason it sits below the push-up is worth keeping: a
+push-up's uncertainty is a *judgement between three published force-plate figures*, and this one has
+**nothing published on either side of it**.
+
+⚠️ **And the error is not constant — it scales with the help taken.** At 10 lb of assist a wrong
+linkage is a rounding error; at 120 lb off a 180 lb lifter it moves two thirds of the load. A single
+`q` cannot say that, because `contributionsFor()` is per exercise and per body weight and never sees
+the set. **Recorded as a known limitation: the number is most trustworthy where it matters least.**
+
+**What the admission actually took was two lines** — a table entry, and `bodyWeightFractionFor()`
+reading `spec.assist` instead of hardcoding `false`. Everything else keys off that one flag, which is
+why the muscle map, the charts, `setLoad()` and the progression rule all started working together.
+**Adding an Assisted Dip is now a one-line job.** ⚠️ **The name regexes are kept** as the fallback for
+an assisted exercise added *without* a fraction — that is what stops the next one being read as load.
+
+**What progression does now:** the step is subtraction, clamped at zero — 3 lb of help minus a 5 lb
+step is not a −2 lb setting, it is an unassisted pull-up — and at zero help twice at the top it
+**refuses and names another exercise** (*"these are pull-ups; log them as Pull-Up, then a belt"*),
+which is the same shape as the rep ceiling and the lay-off branch. Every sentence was swept too:
+*"at 70 lbs"* is a lie on this machine, so it reads *"with 70 lbs of help"*.
+
+### Set 2 fills itself the first time — and the first version of it invented training
+
+Tim: *"once the user puts in their measurements for the first rep, put those same measurements in for
+the next set."* An exercise **with** history already does this; the column of zeros only ever appears
+on a lift never logged before, which is exactly where somebody is least sure what to type.
+
+⚠️ **THE FIRST VERSION FILLED EVERY SET BELOW ON THE FIRST KEYSTROKE, AND TWO RENDER TESTS KILLED
+IT.** `finish()` keeps any set with numbers in it — so logging one set and stopping would have
+recorded three, inflating that lifter's volume, weekly sets and muscle map with **work they did not
+do**. The convenience is worthless if it invents training. It now fills a set **when that set is
+opened**, which is the same thing from the user's side and cannot credit anybody for a set they
+never looked at. **Mutation-checked**: removing it flips exactly the two assertions written for it.
+
+### Two more bugs, and both were found by looking at a screenshot
+
+Neither was reachable by a test, which is now the third time on this project:
+
+1. **The readout did arithmetic on nothing.** Every set opens at zero assistance, so the first thing
+   anybody would have read was *"180 lbs on you — your 180 less 0 of help"*, in the one place the app
+   is trying to make an unintuitive number clear. At zero the machine is not helping, so it says
+   *"180 lbs on you — no help set, so this is a pull-up"*.
+2. **The stepper label read "Weight of help".** The suffix slot sits directly after the field name and
+   exists to say what KIND of weight the number is — *"total"*, *"per side"* — so a prepositional
+   phrase does not fit it. It reads **"Weight · assistance"** now.
+
+**Measured at 360 / 375 / 393 px**, with a body weight on record: the readout is **one line at every
+width, no horizontal overflow**, and on a repeat session the suggestion reads *"less help — 65 lbs
+and back to 8 reps"* over *"5 lbs comes off the stack — that takes you from 110 lbs to 115 lbs of your
+own weight, a 4.5 % step inside the recommended 2–10 %."*
+
+### ⚠️ Two of his four asks are NOT built — see Open work 0d and 0e
+
+**Swapping an exercise mid-workout** and **joint workouts** are both open, both have Tim's design
+decision recorded, and the second is the bigger idea in the list. His friend's sign-in also failed
+and **that is an unread bug report** — he asked to leave it for now.
 
 ---
 
@@ -1312,6 +1426,61 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      because a line saying "nobody has done this" over work that shipped is exactly the failure this
      file exists to prevent.
 
+0d. **⚠️ SWAP AN EXERCISE MID-WORKOUT — Tim, 2026-08-24, from the gym.** *"Allow the user to change
+   the specific exercise they're doing once they're already in the workout so it's easy to improvise
+   in case they want or need to switch something up."* The machine is taken, the gym is busy, or it
+   just feels wrong today.
+
+   **His decision, asked and answered: TODAY ONLY.** The swap applies to this session and the saved
+   workout is unchanged next time. That matches what the runner already does on purpose — `isBenchmark`,
+   `group`, `setType` and `plannedMinis` are all *copied from the template at the moment the session
+   starts*, so that editing a workout next month cannot reshape a session already recorded.
+
+   ⚠️ **It is more work than it looks, and here is where the cost is.** Three things:
+   - **Set types.** Swapping one leg of a tri-set has to keep the group intact, or the round walker
+     in `set-types.js` loses a member mid-round.
+   - **History.** The runner reads every session ONCE at session start and builds each entry's
+     `lastSets`, `suggestion` and `hadHistory` from it. A swapped-in exercise has to go and get its
+     own, or it arrives with no suggestion and a column of zeros.
+   - **The sets already recorded.** If the machine was taken after two sets, two sets were done.
+     They stay, under the original exercise; the swap starts a new entry rather than rewriting one.
+
+0e. **⚠️ JOINT WORKOUTS — Tim, 2026-08-24. The biggest idea in his list.** *"one person can record
+   both measurements for both people on one phone and account and then the data is saved to each
+   users specific account … 2+ names at the top that the user could click on to switch between which
+   user they are recording the data to."* Restricted to people who are already friends.
+
+   **His decision, asked and answered: THE OTHER PERSON ACCEPTS IT.** Not a direct write into their
+   account. ⚠️ **This is the load-bearing choice and the reason it was worth asking.** A direct write
+   needs a Firestore rule letting account A write into account B's private collections, and
+   `sessions` is **one document per collection** (D-shape recorded in §4) — so a single bad write
+   does not corrupt one row, it **replaces someone's entire training history**. `docs/social-plan.md`
+   §2 already argues this from the other side: sharing publishes a derived copy rather than widening
+   a permission, precisely so that nobody's client can reach into anybody else's data.
+
+   **The shape that follows:** the recorder's phone runs the session with two or more names on it,
+   then publishes each friend's half to something they own and their client reads — the same
+   `invites/`-style path that already exists — and **their** app writes it into **their** account on
+   accept. Rules stay "only you write your own data". They also get to see what was logged in their
+   name before it lands, which a direct write never offers.
+
+   ⚠️ **SWITCHING NAMES HAS TO SWITCH THE WHOLE SUGGESTION, not just the destination.** Two people
+   doing the same workout are not on the same weights: each name carries its own history, its own
+   `trainingRange()`, its own next step. A version that only changed where the number was saved would
+   hand both lifters the same prescription, which is the one thing this app's progression rule is
+   built never to do.
+
+   **Worth building alongside it:** logging for a **guest** — a name with no account — kept in the
+   recorder's own data and handed over later if that person joins. That is the case Tim actually hit,
+   because his friend could not sign in at all.
+
+0f. **⚠️ HIS FRIEND'S SIGN-IN FAILED, AND NOBODY KNOWS HOW.** 2026-08-24: *"The login either wasn't
+   working for my friends phone or we messed something up."* Tim asked to leave it — *"I need to
+   investigate it further"* — so this is recorded rather than chased. ⚠️ **It may not be new:** an
+   ordinary Safari tab is the one surface no working device has ever confirmed (item 0), and it is
+   probably where Tim's own 2026-08-21 report came from. **Do not close that item on the strength of
+   the installed PWA working.**
+
 0b. **⚠️ THE EDGE-CASE REVIEW'S UNFIXED FINDINGS — 2026-08-22, and two of them can lose work.**
    Full write-up in the third-pass section above; these are the ones nobody has done.
 
@@ -1447,20 +1616,20 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2263 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | **2303 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
-| **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1119 assertions, **no dependencies** |
+| **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 81 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 64 assertions, **no dependencies**. Direct/indirect mapping, the published efficiency tiers, and the per-session clamp |
-| **Rating tests** | `node tests/optimal.test.mjs` — 72 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
-| **Goals tests** | `node tests/goals.test.mjs` — 206 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier |
+| **Rating tests** | `node tests/optimal.test.mjs` — 76 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
+| **Goals tests** | `node tests/goals.test.mjs` — 229 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier. ⚠️ Since 2026-08-24 it also **plays an assist machine forward through forty obeyed sessions** and asserts it never once proposes more assistance. That section replaced two assertions that were green while the bug was live, because they read the SOURCE for a guard rather than driving the function with the exercise that reaches it |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 333 assertions, mounts every screen. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
-| **Deploy-notice test** | `node tests/sw-update.test.mjs` — 8 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 367 assertions, mounts every screen. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
@@ -2462,8 +2631,15 @@ re-examining it produces something better than either the old rule or a plain ov
     and pike push-ups, ring dips or muscle-ups. ⚠️ **The "handstand push-up ≈ 90–100 % of body
     weight" figure circulating online is misattributed** to a paper that studied push-ups. Do not
     use anything from that lineage.
-  - **Assisted machines.** The fraction is fine; the counterweight linkage is not standardised and
-    nothing published maps a stack setting to the load it removes.
+  - ~~**Assisted machines.**~~ **ADMITTED 2026-08-24 on Tim's instruction**, and it is the one entry
+    in the fraction table resting on an assumption rather than a source. The fraction is fine — a
+    pull-up's 1.00 — and the objection was never about it: the counterweight linkage is not
+    standardised and nothing published maps a stack setting to the load it removes. That is still
+    true. ⚠️ **What changed is the cost of refusing.** Tim did 70 lb assisted pull-ups in a gym and
+    his back rated nothing, which is the same grey-map complaint that admitted the pull-up in the
+    first place. Priced at `q` 0.65 — the lowest in the table, below the push-up — rather than
+    disclaimed. **And the error is not constant**: it scales with how much help is taken, so the
+    number is most trustworthy where it matters least. A single `q` cannot express that.
   - **All lower-body and trunk bodyweight work**, for a different reason: their key lifts log
     *external* load carried by a body that is already there, so a bodyweight squat converts to an
     empty bar. Fixing that needs the key lift's own body-weight component modelled first.

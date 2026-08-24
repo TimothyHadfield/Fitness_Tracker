@@ -89,6 +89,14 @@ export function normalizeWeight(weight, fromReps, toReps) {
  * comparable to a barbell's. That is why both were refused outright — see the
  * old comment preserved under canNormalize().
  *
+ * ⚠️ THE ASSIST HALF OF THIS WAS DEAD CODE UNTIL 2026-08-24. The `spec.assist`
+ * branch below was written with the bodyweight work and no exercise could set
+ * the flag — `Assisted Pull-Up` had no fraction entry, and bodyWeightFractionFor()
+ * hardcoded `assist: false`. So the one assist machine in the app went through
+ * the ordinary weighted path instead, where more weight reads as a harder set.
+ * If you are adding an assisted exercise, the flag goes on the TABLE ENTRY in
+ * exercises.js; nothing here needs changing.
+ *
  * What changed is that body weight is recorded as a dated series, so the
  * missing term is available:
  *
@@ -210,6 +218,15 @@ export function totalResistance(exercise, loggedWeight, bodyWeight) {
 //
 // What has changed is only that the missing term is now computable — for the
 // exercises somebody has actually measured. The rest stay refused.
+//
+// ⚠️ Note what the paragraph above is and is not saying, because the assist
+// entry added on 2026-08-24 does not contradict it. Normalising the RAW number
+// would still invert the chart; nothing normalises the raw number. What is
+// charted is `fraction × body weight − assistance`, which rises as the
+// assistance falls. The regex below is now only a fallback for an assisted
+// exercise with no fraction entry, and it must stay: the day somebody adds
+// "Assisted Dip" to the library without adding a fraction for it, this is what
+// stops the stack setting being read as a load.
 //
 // ⚠️ `opts` is not optional decoration. Called with one argument this returns
 // exactly what it always did, because one argument means "I have not looked up

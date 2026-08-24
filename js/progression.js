@@ -410,20 +410,46 @@ export function suggestProgression({
 
   // ⚠️ An ASSIST machine runs the other way — the number you enter is help, so
   // adding to it makes the set EASIER. A load rule that proposed "+5 lb" there
-  // would be proposing a regression while reading like progress. Nothing in the
-  // table is flagged `assist` today; this is here so that the day one is, the
-  // suggestion degrades to a rep rather than silently inverting.
+  // would be proposing a regression while reading like progress.
+  //
+  // ⚠️ AND UNTIL 2026-08-24 THAT IS EXACTLY WHAT IT DID. This guard was written
+  // as a precaution for "the day one is flagged", and the comment above it said
+  // nothing in the table was — which was true, and hid the fact that
+  // `Assisted Pull-Up` was in the app the whole time with no fraction entry.
+  // No entry means `res` is null, means `assisted` is false, means the assist
+  // machine fell through to the ordinary load rule: Tim's 70 lb assisted pull-up
+  // was two good sessions away from being told "+5 lb and back to 6 reps",
+  // making the set easier and calling it progress. Found in the gym on
+  // 2026-08-24, by using it.
+  //
+  // ⚠️ THE LESSON IS ABOUT THE GUARD, NOT THE MACHINE. A branch that cannot be
+  // reached by any input the app accepts is not defensive code, it is a comment
+  // that reads like defensive code — and it stopped anybody looking, twice. If a
+  // guard's own note says "nothing hits this today", that is the moment to check
+  // whether something should.
   const assisted = Boolean(res && res.assist);
   const resistance = res ? res.load : last.topWeight;
   const bodyBase = res ? res.base : 0;
 
-  const weightless = assisted
-    || !fields.includes('weight')
+  // ⚠️ ASSISTED IS NOT WEIGHTLESS ANY MORE. It used to be folded in here so the
+  // suggestion degraded to "one more rep" — safe, and wrong in a way that
+  // compounds: taking 5 lb off the stack is a real, honest, measurable step
+  // forward, and a rule that never proposes one leaves the lifter to work out
+  // their own progression on the single exercise where the numbers are least
+  // intuitive. The direction is handled at the load branch instead.
+  const weightless = !fields.includes('weight')
     || (last.weightless && !(bodyBase > 0));
 
   // "at 190 lbs" is right; "at 0 lbs" is not — an unweighted pull-up is done at
   // body weight, and that is what the sentence has to call it.
-  const atLoad = last.topWeight > 0 ? `at ${fmt(last.topWeight)}` : 'at body weight';
+  //
+  // ⚠️ And "at 70 lbs" is a lie on an assist machine, where the 70 is help. One
+  // phrase, resolved once, so no branch below can describe that number as weight
+  // lifted — the sentences are the whole product here (D8) and a correct number
+  // under a wrong preposition is still wrong advice.
+  const atLoad = assisted
+    ? (last.topWeight > 0 ? `with ${fmt(last.topWeight)} of help` : 'with no help')
+    : (last.topWeight > 0 ? `at ${fmt(last.topWeight)}` : 'at body weight');
 
   // ── 0. A long gap SUPPRESSES, and that is the only thing time may do ──
   //
@@ -574,15 +600,36 @@ export function suggestProgression({
       kind: 'repeat',
       weight: last.topWeight,
       reps: last.repsAtTop,
-      headline: last.topWeight > 0
-        ? `the same again — ${fmt(last.topWeight)} × ${last.repsAtTop}`
-        : `the same again — ${last.repsAtTop} at body weight`,
+      headline: assisted
+        ? `the same again — ${last.repsAtTop} ${atLoad}`
+        : last.topWeight > 0
+          ? `the same again — ${fmt(last.topWeight)} × ${last.repsAtTop}`
+          : `the same again — ${last.repsAtTop} at body weight`,
       why: `Every set reached the top of ${rangeText} last time. Do it again and the weight goes up `
         + '— the rule asks for two sessions, because one is noise.',
     };
   }
 
   // ── 3. At the top twice: take the smallest honest step ────────────────
+  //
+  // ⚠️ ON AN ASSIST MACHINE THE STEP IS SUBTRACTION, and it has a floor the
+  // barbell case does not: assistance stops at zero. Below zero is not a heavier
+  // lift, it is a different exercise — so the terminal state names that exercise
+  // rather than inventing a number, which is this module's answer everywhere
+  // else it runs out of honest moves.
+  if (assisted && !(last.topWeight > 0)) {
+    return {
+      ...base,
+      kind: 'assistGone',
+      weight: last.topWeight,
+      reps: last.repsAtTop,
+      headline: 'no help left to take off',
+      why: `You hit the top of ${rangeText} twice in a row with the machine set to nothing, so `
+        + 'these are pull-ups. Log them as Pull-Up from here — then the way up is a belt or a '
+        + 'dumbbell between your feet, and this exercise has no step left to give.',
+    };
+  }
+
   const ceiling = loadCeiling(exercise);
   // ⚠️ Against the RESISTANCE, not against the number typed into the box. On a
   // barbell they are the same; on a dip belt they are not, and the band is a
@@ -610,17 +657,53 @@ export function suggestProgression({
       headline: `another rep — ${last.repsAtTop + 1} ${atLoad}`,
       // "a 8.3 % jump" reads as a typo. 8, 11 and 18 are the percentages in
       // range that are spoken with a vowel.
-      why: `The smallest weight you can add here is ${/^(8|11|18)/.test(String(pct)) ? 'an' : 'a'} `
+      //
+      // ⚠️ "add" is wrong on an assist machine — the plate comes OFF the stack.
+      // Same arithmetic, opposite verb, and the verb is what the reader acts on.
+      why: `The smallest ${assisted ? 'change you can make here' : 'weight you can add here'} is `
+        + `${/^(8|11|18)/.test(String(pct)) ? 'an' : 'a'} `
         + `${pct} % jump, `
         + (overBand
           ? `past the recommended ${bandText()}. `
           : `and that step is sized by the lift — a single-muscle exercise wants the bottom of the `
             + `${bandText()} band. `)
-        + 'A rep, an extra set, or microplates are the ways up.',
+        + (assisted
+          ? 'A rep or an extra set are the ways up — an assist stack has no microplates.'
+          : 'A rep, an extra set, or microplates are the ways up.'),
     };
   }
 
-  const pct = Math.round((inc / resistance) * 1000) / 10;
+  // ⚠️ CLAMPED AT ZERO. `inc` is sized against the resistance (your body weight
+  // less the help), so on a lifter down to their last few pounds of assistance
+  // it can be larger than the assistance itself — and 3 lb minus a 5 lb step is
+  // not a −2 lb setting, it is an unassisted pull-up. Taking the rest off is a
+  // SMALLER step than the band asks for, which is the one direction this module
+  // is willing to be wrong in (see ISOLATION_MAX).
+  const drop = assisted ? Math.min(inc, last.topWeight) : inc;
+  const pct = Math.round(((assisted ? drop : inc) / resistance) * 1000) / 10;
+
+  if (assisted) {
+    const nextAssist = last.topWeight - drop;
+    return {
+      ...base,
+      kind: 'load',
+      weight: nextAssist,
+      reps: range[0],
+      addedWeight: -drop,
+      pct,
+      headline: nextAssist > 0
+        ? `less help — ${fmt(nextAssist)} and back to ${range[0]} reps`
+        : `no help — ${range[0]} unassisted reps`,
+      // Naming the resistance outright is worth more here than anywhere else in
+      // this function: the number in the box goes DOWN while the work goes UP,
+      // and a lifter watching that box is entitled to see the number that rose.
+      why: `Top of ${rangeText} twice in a row, so ${fmt(drop)} comes off the stack — that takes you `
+        + `from ${fmt(resistance)} to ${fmt(resistance + drop)} of your own weight, a ${pct} % step `
+        + `inside the recommended ${bandText()}. Reps back to ${range[0]}`
+        + (nextAssist > 0 ? '.' : ', and these are pull-ups now.'),
+    };
+  }
+
   return {
     ...base,
     kind: 'load',

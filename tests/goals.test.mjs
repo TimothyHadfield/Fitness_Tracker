@@ -1002,19 +1002,98 @@ for (const ex of [BENCH, PUSHDOWN, PEC_DECK]) {
      `body weight changes nothing at all for ${ex.name} — it is not part of that lift`);
 }
 
-// ⚠️ AN ASSIST MACHINE RUNS THE OTHER WAY: the number you enter is help, so
-// adding to it makes the set EASIER. Nothing in the shipped table is flagged
-// that way, which is asserted rather than assumed — and the guard is asserted
-// present, so the day an assisted variant is added the suggestion degrades to a
-// rep instead of silently proposing a regression that reads like progress.
-const assistFlags = BUILT_IN_EXERCISES
-  .map((e) => totalResistance(e, 10, 180))
-  .filter((r) => r && r.assist);
-ok(assistFlags.length === 0,
-   'no shipped exercise is flagged as assisted today, so that branch is unreachable');
-ok(/const assisted = Boolean\(res && res\.assist\)/.test(progressionSource)
-   && /assisted\s*\n?\s*\|\|/.test(progressionSource),
-   'and the guard is in place for when one is — an assisted lift falls back to a rep');
+/* ================================================================== *
+ * AN ASSIST MACHINE RUNS THE OTHER WAY
+ * ================================================================== */
+//
+// ⚠️ THIS SECTION REPLACES TWO ASSERTIONS THAT PASSED WHILE THE BUG WAS LIVE.
+// They said "no shipped exercise is flagged as assisted today, so that branch is
+// unreachable" and "the guard is in place for when one is" — both true, both
+// green, and both about a guard keyed on a flag that `Assisted Pull-Up` could
+// never set because it had no fraction entry. The exercise was in the app the
+// whole time, going through the ORDINARY load rule, where adding weight reads as
+// a harder set. Tim did 70 lb assisted pull-ups in a gym on 2026-08-24 and was
+// two good sessions from being told "+5 lb and back to 6 reps".
+//
+// ⚠️ SO NOTHING HERE ASSERTS ON THE SOURCE ANY MORE. A regex proving a guard
+// exists cannot tell you whether anything reaches it; only driving the real
+// function with the real exercise can. Same lesson as the rep ceiling, arriving
+// from the other side: the earlier test was watching the wrong thing entirely.
+const ASSISTED = exOf('Assisted Pull-Up');
+const assistedFlagged = BUILT_IN_EXERCISES
+  .map((e) => ({ e, r: totalResistance(e, 10, 180) }))
+  .filter((x) => x.r && x.r.assist)
+  .map((x) => x.e.name);
+ok(assistedFlagged.join() === 'Assisted Pull-Up',
+   '⚠️ exactly one shipped exercise is flagged assisted, so the branch below is REACHABLE');
+
+const assistTop = suggestProgression({
+  history: [S(70, 12), S(70, 12)], exercise: ASSISTED, step: 5, bodyWeight: 180,
+});
+ok(assistTop && assistTop.kind === 'load' && assistTop.weight === 65,
+   '⚠️ top of the range twice takes 5 lbs OFF the stack — 70 becomes 65, never 75');
+ok(assistTop && assistTop.weight < 70,
+   'which is the whole assertion: the number in the box goes DOWN as the lifter gets stronger');
+ok(assistTop && /less help/.test(assistTop.headline) && /115/.test(assistTop.why),
+   'and the sentence names the resistance that ROSE — 110 to 115 — not just the setting that fell');
+ok(assistTop && !/\bat 70\b/.test(assistTop.why + assistTop.headline),
+   '⚠️ and never calls the assistance a weight lifted: "at 70 lbs" is a lie on this machine');
+
+// Mid-range and at-the-top-once hold the help steady and ask for a rep, exactly
+// like every other lift. Only the direction of the load step is special.
+const assistMid = suggestProgression({
+  history: [S(70, 9)], exercise: ASSISTED, step: 5, bodyWeight: 180,
+});
+ok(assistMid && assistMid.weight === 70 && assistMid.reps === 10,
+   'below the top of the range the help is held and a rep is added, as anywhere else');
+ok(assistMid && /with 70 lbs of help/.test(assistMid.why),
+   'and it is described as help rather than as load');
+
+// ⚠️ THE FLOOR. `inc` is sized against the resistance, so on a lifter down to
+// their last few pounds of assistance it is bigger than the assistance itself —
+// and 3 minus 5 is not a −2 lb setting, it is an unassisted pull-up.
+const assistFloor = suggestProgression({
+  history: [S(3, 12), S(3, 12)], exercise: ASSISTED, step: 5, bodyWeight: 180,
+});
+ok(assistFloor && assistFloor.weight === 0,
+   '⚠️ 3 lbs of help minus a 5 lb step is clamped to ZERO, never to a negative setting');
+ok(assistFloor && /no help/.test(assistFloor.headline),
+   'and it says so, because taking the last of it off is the thing being proposed');
+
+// And the terminal state, which names another exercise rather than inventing a
+// number — the same shape as the rep ceiling and the lay-off branch.
+const assistGone = suggestProgression({
+  history: [S(0, 12), S(0, 12)], exercise: ASSISTED, step: 5, bodyWeight: 180,
+});
+ok(assistGone && assistGone.kind === 'assistGone' && assistGone.weight === 0,
+   '⚠️ at zero help twice at the top there is no step left, and it refuses rather than inventing one');
+ok(assistGone && /Pull-Up/.test(assistGone.why) && /belt|dumbbell/.test(assistGone.why),
+   'and it names the way on — log these as Pull-Up, then add a belt');
+
+// ⚠️ PLAYED FORWARD THROUGH FORTY SESSIONS, obeying it every time. This is the
+// test the rep-ceiling bug taught this project to write, applied to the branch
+// that did not exist when that lesson was learned: a rule that reads its own
+// output has to be walked to its terminal state, not sampled once.
+let assistAt = 120;
+let assistReps = 12;
+let assistSaw = 0;
+let assistWentUp = false;
+for (let i = 0; i < 40; i++) {
+  const s = suggestProgression({
+    history: [S(assistAt, assistReps), S(assistAt, assistReps)],
+    exercise: ASSISTED, step: 5, bodyWeight: 180,
+  });
+  if (!s) break;
+  if (s.weight != null && s.weight > assistAt) assistWentUp = true;
+  if (s.kind === 'assistGone') { assistSaw = i; break; }
+  assistAt = s.weight == null ? assistAt : s.weight;
+  assistReps = Math.max(s.reps, 12);
+}
+ok(!assistWentUp,
+   '⚠️ over forty obeyed sessions it NEVER proposes more assistance — not once, on any branch');
+ok(assistAt === 0 && assistSaw > 0,
+   `and it walks 120 lbs of help down to zero and then stops (${assistSaw} sessions), rather than going negative`);
+ok(assistAt >= 0, 'the setting is never negative at any point on that walk');
 
 // The swept property again, in the units that matter here: the step is never
 // more than the ceiling of what is really being lifted, at any body weight.

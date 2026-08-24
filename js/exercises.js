@@ -442,12 +442,35 @@ const FORCE_TOTAL = new Set([
  *     hand placement. Gouvali & Boudolos (2005) tested those variants and
  *     reported EMG only. NONE FOUND, so they stay out.
  *
- *   Assisted Pull-Up — the fraction is a pull-up's 1.00 and is not the problem.
- *     What is unknown is how a machine's stack maps to load taken off you: the
+ *   Assisted Pull-Up — WAS excluded, ADMITTED 2026-08-24 on Tim's call, and the
+ *     original objection is still true, so it is priced rather than waved away.
+ *     The fraction is a pull-up's 1.00 and never was the problem. What is
+ *     unknown is how a machine's stack maps to load taken off you: the
  *     counterweight linkage is not standardised across brands and nothing
- *     published maps one to the other. Assuming 1:1 is the obvious guess and
- *     is still a guess, on a machine, which is the exact shape of error
- *     docs/strength-estimate-plan.md warns about. It stays unrankable.
+ *     published maps one to the other, so 1:1 is the obvious guess and is still
+ *     a guess, on a machine.
+ *
+ *     ⚠️ WHAT CHANGED IS NOT THE EVIDENCE, IT IS WHAT REFUSING WAS COSTING.
+ *     Tim used the app in a gym on 2026-08-24 and did assisted pull-ups, and a
+ *     refusal meant his back training rated nothing at all — the same grey-map
+ *     complaint that admitted the pull-up in the first place. His instruction:
+ *     treat it as a pull-up with the assistance subtracted. That is exactly what
+ *     `totalResistance()` already computed for the `assist` branch nobody could
+ *     reach.
+ *
+ *     ⚠️ THE GUESS IS PAID FOR IN `q`, NOT IN A DISCLAIMER. 0.65 is below the
+ *     push-up's 0.70 and well below the free hangs' 0.95, so an assisted set
+ *     desaturates its own colour on the body map and loses to a real pull-up as
+ *     evidence. The reason it sits below the push-up is worth stating: a
+ *     push-up's uncertainty is a JUDGEMENT between three published force-plate
+ *     figures, and this one has nothing published on either side of it.
+ *
+ *     ⚠️ AND THE ERROR IS NOT CONSTANT — it scales with how much help you take.
+ *     At 10 lb of assist a wrong linkage moves the load by a rounding error; at
+ *     120 lb off a 180 lb lifter it moves two thirds of it. A single `q` cannot
+ *     express that, because contributionsFor() is per exercise and per body
+ *     weight and never sees the set. Known limitation, recorded here rather than
+ *     hidden: the number is most trustworthy where it matters least.
  *
  *   Handstand and Pike Push-Up — the wall and the feet take an unrecorded share.
  *     The "90-100 % of body weight" figure that circulates for handstand
@@ -510,6 +533,20 @@ export const BODY_WEIGHT_FRACTION = {
   // hangs because which of these quantities belongs in a strength estimate is a
   // judgement, not a measurement.
   'Push-Up':             { fraction: 0.75, q: 0.70, basis: 'measured' },
+
+  // ---- the one that runs the other way ----
+  //
+  // ⚠️ `assist` INVERTS THE SIGN of the logged weight everywhere it is read:
+  // total resistance is fraction x body weight MINUS the number entered, and a
+  // step forward is LESS of it. Every consumer keys off this flag rather than
+  // off the name, which is why adding an Assisted Dip here is a one-line job and
+  // adding one anywhere else would not be.
+  //
+  // The fraction is the free hang's 1.00 for the same statics reason as Pull-Up
+  // above — you hang from your hands, the machine pushes on your knees or feet
+  // and that push is the subtracted term, not a change in what carries you.
+  // The exclusion note above this table is the full argument for `q`.
+  'Assisted Pull-Up':    { fraction: 1.00, q: 0.65, basis: 'statics', assist: true },
 };
 
 /**
@@ -522,7 +559,13 @@ export function bodyWeightFractionFor(exercise) {
   // A custom exercise the user typed can never acquire an entry, and guessing
   // one from its equipment is exactly what this table refuses to do.
   if (!spec || exercise.isCustom) return null;
-  return { fraction: spec.fraction, quality: spec.q, basis: spec.basis, assist: false };
+  // ⚠️ Read from the entry, NOT hardcoded false. It was hardcoded while the
+  // table held only bodyweight movements, and the cost was invisible: the
+  // assisted branch existed in totalResistance(), the guard existed in
+  // progression.js, and neither could be reached by any exercise in the app —
+  // so an assist machine was silently handled as if adding weight made it
+  // harder. A flag with no way of ever being true is a comment, not a flag.
+  return { fraction: spec.fraction, quality: spec.q, basis: spec.basis, assist: Boolean(spec.assist) };
 }
 
 export function loadTypeFor(name, equipment, fields) {

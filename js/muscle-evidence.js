@@ -202,7 +202,15 @@ const RATIOS = {
     // fraction times a ratio that already drifts 1.10-1.63 times a cross-muscle
     // ratio, and three estimates multiplied together is how the "machine for
     // confidently wrong numbers" gets built.
-    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up)$/, 1.28, 0.45],
+    // ⚠️ ASSISTED IS IN THE SAME FAMILY AT THE SAME RATIO, and it belongs here
+    // rather than in a line of its own: the ratio converts RESISTANCE to the
+    // muscle's key lift, and by the time it is applied the assistance has
+    // already been subtracted — 110 lb of assisted pull-up is the same 110 lb of
+    // pulling as a lifter who weighs 110. What is less certain about it is the
+    // 110 itself, and that is priced once, in the fraction table's `q`, rather
+    // than twice. Added 2026-08-24; without it the exercise had a fraction and
+    // still rated nothing, because this regex is anchored.
+    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up|Assisted Pull-Up)$/, 1.28, 0.45],
     // Deadlift family. These are tagged Back in the library and are genuinely
     // back work, but they are pulls, not rows — hence the wide conversions and
     // the low quality. Deadlift itself is ALSO the key lift for Glutes, which

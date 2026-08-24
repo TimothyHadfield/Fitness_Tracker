@@ -159,7 +159,7 @@ to `k(w)` must follow it. That maps directly onto our existing `loadType` field:
 | Weighted, 1 rep | `r = 1` → returns `w` exactly. Correct by construction |
 | Weighted, 11–15 reps | Usable, flag as lower confidence (D5) |
 | Weighted, >15 reps | Don't normalise across it — endurance and pain tolerance dominate |
-| Bodyweight / assisted | **Excluded.** Logged weight is added/assisted load, not total resistance — the paper excluded these outright |
+| Bodyweight / assisted | Logged weight is added/assisted load, not total resistance — the paper excluded these outright. **This app now converts instead**, but only where a published body-weight fraction exists and a weigh-in is on record; everything else stays excluded. See §1.4 |
 | Time / distance only | Not applicable — no load-rep tradeoff exists |
 | Weight-only (no reps field) | Nothing to normalise |
 
@@ -207,9 +207,16 @@ Lives in `js/e1rm.js` (pure maths, no DOM) with the series work in `js/store.js`
   a diagonal hatch rather than a fade, so the cue survives greyscale and colour-blindness and the
   validated series colours stay untouched.
 - Call the output **"equivalent load"**, not "your max".
-- **Bodyweight and assisted exercises are excluded** (see §1.4). Assisted is the sharper case: the
-  logged weight is *assistance*, so more weight means an easier lift and normalising would invert
-  the chart entirely.
+- ~~**Bodyweight and assisted exercises are excluded**~~ (see §1.4) — **both now admitted, bodyweight
+  on 2026-08-19 and assisted on 2026-08-24**, and only for the exercises with a published body-weight
+  fraction and a user with a weigh-in. The original reasoning stands and is why it took two goes: the
+  logged weight is *assistance*, so more weight means an easier lift and normalising the raw number
+  would invert the chart entirely. What changed is that the missing term is computable —
+  `fraction × body weight − assistance` — so the chart never sees the raw number at all.
+  ⚠️ **The assist admission carries an assumption the bodyweight one does not**: that a machine's
+  stack number is pounds actually taken off the lifter. Nothing published maps one to the other, the
+  linkage is not standardised across brands, and it is priced as the lowest `q` in the fraction table
+  (0.65, below the push-up's 0.70) rather than disclaimed. `js/exercises.js` carries the full note.
 - Real bug caught while testing: `Number(null)` is `0`, so a null rep count clamped up to 1 and a
   missing default target silently became "1 rep" instead of falling back. `clampReps` now type-guards.
 

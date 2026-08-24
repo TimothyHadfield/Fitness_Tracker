@@ -1,7 +1,8 @@
 // The in-workout recording flow, plus the benchmark form.
 
 import { store, todayISO, demo } from './store.js';
-import { LOAD_LABEL } from './exercises.js';
+import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
+import { totalResistance } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong,
@@ -224,6 +225,13 @@ export async function SessionView(workoutId) {
         lastSummary: last && last.length ? fmtSet(last[0], ex.fields, ex.loadType) : null,
       });
     }
+    // ⚠️ Kept on the DRAFT, not looked up again at render time, and the reason is
+    // the same one bodyWeightOn() exists for: this is what the lifter weighed on
+    // the day of the session. A weigh-in logged tomorrow must not retroactively
+    // change what today's screen said their assisted pull-ups were worth.
+    // Dropped at save time — finish() rebuilds every entry from named fields —
+    // so it never reaches storage.
+    state.bodyWeight = bodyWeight;
     saveDraft(state);
   }
 
@@ -344,7 +352,56 @@ export async function SessionView(workoutId) {
 
     const setList = el('div', { class: 'set-list' });
 
+    /**
+     * The FIRST time you ever do an exercise, opening set 2 fills it from set 1.
+     *
+     * Tim, after using this in a gym on 2026-08-24: "once the user puts in their
+     * measurements for the first rep, put those same measurements in for the
+     * next set so it's easy to adjust next." An exercise with history already
+     * behaves this way — the runner pre-fills every set from the last session
+     * and lays the suggestion over it — so the only place anybody meets a column
+     * of zeros is a lift they have never logged, which is exactly where they are
+     * least sure what to type.
+     *
+     * ⚠️ FILLED WHEN THE SET IS OPENED, NOT WHEN THE ONE ABOVE IS TYPED, and the
+     * difference is what somebody gets credited for. The eager version wrote
+     * numbers into every set below on the first keystroke — and finish() keeps
+     * any set that has numbers in it, so a lifter who logged one set and stopped
+     * would have had two more recorded that they never performed, inflating
+     * their volume, their muscle map and their weekly sets. Two render tests
+     * caught it. Filling on open cannot do that: a set nobody opened stays blank
+     * and is dropped at save, exactly as before.
+     *
+     * ⚠️ GATED ON `hadHistory` as well. With history the sets are not blank —
+     * they are last time's numbers, possibly a deliberate ramp of 95, 135, 135 —
+     * and there is nothing to fill in.
+     *
+     * ⚠️ AND ONLY INTO A SET WITH NOTHING IN IT. "Empty" is the whole condition,
+     * so this can never overwrite a number somebody typed, and never touches a
+     * set twice.
+     */
+    function fillOnOpen(i) {
+      if (entry.hadHistory || i <= 0 || i >= entry.sets.length) return;
+      const s = entry.sets[i];
+      if (entry.fields.some((f) => Number(s[f]) > 0)) return;
+      if (minisOf(s).length) return;
+      // The nearest set above with anything in it — not strictly i-1, so
+      // skipping a set does not hand the next one a row of zeros.
+      for (let j = i - 1; j >= 0; j--) {
+        const src = entry.sets[j];
+        if (entry.fields.some((f) => Number(src[f]) > 0)) {
+          // Fields only. A drop hangs off the set it was stripped from and the
+          // app has never claimed to know how much lighter it is, so copying
+          // one into a set nobody has reached yet would be a guess arriving
+          // before the question.
+          entry.sets[i] = { ...s, ...pickFields(src, entry.fields) };
+          return;
+        }
+      }
+    }
+
     function select(i, dropIndex) {
+      if (dropIndex == null) fillOnOpen(i);
       entry.active = i;
       entry.activeDrop = dropIndex;
       saveDraft(state);
@@ -404,14 +461,67 @@ export async function SessionView(workoutId) {
     }
     renderSets();
 
+    // ⚠️ AN ASSIST MACHINE'S NUMBER IS THE ONE NUMBER IN THIS APP THAT MEANS THE
+    // OPPOSITE OF WHAT IT LOOKS LIKE. 70 in the box is 70 pounds of HELP, so the
+    // box goes down as you get stronger — and a lifter watching only that box is
+    // watching their progress run backwards. Tim asked for the real number
+    // beside it after doing assisted pull-ups in a gym on 2026-08-24, and it is
+    // the same argument the suggestion sentences make: say the thing at the
+    // moment of use, where it is being acted on (D8).
+    //
+    // Silent when there is no weigh-in, on purpose. Without a body weight there
+    // is no second number to show, and inventing one from an average adult is
+    // exactly what the fraction table refuses to do.
+    const assistSpec = ex ? bodyWeightFractionFor(ex) : null;
+    const showsAssist = Boolean(assistSpec && assistSpec.assist && state.bodyWeight > 0);
+    const assistLine = showsAssist ? el('div', { class: 'assist-readout' }) : null;
+    function renderAssist() {
+      if (!assistLine) return;
+      const res = totalResistance(ex, target.weight, state.bodyWeight);
+      // null is a real answer here — more help than you weigh is not a lighter
+      // set, it is a typo, and totalResistance() refuses it rather than printing
+      // a negative load.
+      // ⚠️ ONE SHORT LINE, and the units appear once. "110 lbs on you — 180 lbs
+      // of body weight less 70 lbs of help" is three units in a row and wrapped
+      // to three lines at 360px, under a stepper somebody is using mid-set. The
+      // bold number is the one that matters and is the only one that needs its
+      // unit spelled out. Measured at 360, 375 and 393: one line, no overflow.
+      //
+      // ⚠️ AND THE ZERO CASE GETS ITS OWN SENTENCE. Every set opens at zero, so
+      // the first thing anybody would have seen was "your 180 less 0 of help" —
+      // arithmetic performed on nothing, in the one place the app is trying to
+      // make an unintuitive number clear. Found by looking at it; no test would
+      // have called that wrong. At zero the machine is not helping and the
+      // honest reading is that this is a pull-up.
+      if (!res) {
+        setChildren(assistLine,
+          el('span', { class: 'is-warn', text: 'That is more help than you weigh — check the number.' }));
+      } else if (!(res.added > 0)) {
+        setChildren(assistLine,
+          el('span', {}, el('b', { text: units.withUnit(res.load) }), ' on you — no help set, so this is a pull-up'));
+      } else {
+        setChildren(assistLine,
+          el('span', {}, el('b', { text: units.withUnit(res.load) }), ' on you — your ',
+            `${units.fmtWeight(res.base)} less ${units.fmtWeight(res.added)} of help`));
+      }
+    }
+    renderAssist();
+
     const steppers = entry.fields.map((f) =>
       stepper({
         field: f,
         value: target[f],
-        suffix: f === 'weight' && entry.loadType ? LOAD_LABEL[entry.loadType] : null,
+        // ⚠️ "of help" read as "Weight of help" in the label, because the suffix
+        // sits directly after the field name — the slot exists to say what KIND
+        // of weight this is ("total", "per side"), and a prepositional phrase
+        // does not fit it. Caught in a screenshot at 360px.
+        suffix: f === 'weight' && entry.loadType
+          ? (showsAssist ? 'assistance' : LOAD_LABEL[entry.loadType])
+          : null,
         onChange: (v) => {
           target[f] = v;
           saveDraft(state);
+          renderAssist();
           renderSets();
           // Recording a number IS finishing a set, so that is when rest starts.
           // No extra button to remember to press mid-workout.
@@ -526,6 +636,7 @@ export async function SessionView(workoutId) {
         ? `Set ${entry.active + 1} of ${entry.sets.length}`
         : `Set ${entry.active + 1} · ${miniLabel(entry.setType, entry.activeDrop + 1).toLowerCase()}` }),
       el('div', { class: 'steppers' }, steppers),
+      assistLine,
 
       // A nested set says what to do next in the one place you are looking, and
       // the button IS the instruction rather than the name of a technique.

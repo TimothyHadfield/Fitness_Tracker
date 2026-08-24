@@ -1352,6 +1352,92 @@ ok(!data.querySelector('.rep-target'),
     ok(saved && saved.entries[0].setType === 'myo', 'and recorded as a myo-rep, not a drop set');
   }
   localStorage.removeItem(DRAFT);
+
+  /* ---- opening set 2 for the first time fills it from set 1 ---- *
+   *
+   * Tim, from a gym on 2026-08-24: "once the user puts in their measurements for
+   * the first rep, put those same measurements in for the next set so it's easy
+   * to adjust next."
+   *
+   * ⚠️ THE HALF THAT MATTERS IS THE SET NOBODY OPENED. The first version of this
+   * filled every set below on the first keystroke, and finish() keeps any set
+   * with numbers in it — so logging one set and stopping recorded three, and the
+   * lifter's volume, weekly sets and muscle map all counted work they had not
+   * done. That is asserted here directly, because it is the failure mode, and
+   * the convenience is worthless if it invents training. */
+  {
+    const w = await store.saveWorkout({
+      name: 'Fill day',
+      exercises: [{ exerciseId: byName('Barbell Curl').id, sets: 3, notes: '' }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    ok(/First time logging this/.test(s.textContent),
+       'a lift with no history says so, which is the only case this fills');
+
+    const setBtn = (n) => Array.from(s.querySelectorAll('.set-num'))
+      .find((b) => b.textContent === String(n));
+    type(s.querySelectorAll('.step-value')[0], 65);
+    await settle();
+    type(s.querySelectorAll('.step-value')[1], 10);
+    await settle();
+
+    setBtn(2).click();
+    await settle();
+    const vals = Array.from(s.querySelectorAll('.step-value')).map((i) => Number(i.value));
+    ok(vals[0] === 65 && vals[1] === 10,
+       '⚠️ opening set 2 arrives pre-filled with set 1\'s numbers, ready to adjust');
+
+    // Adjust it, so the two sets differ and the copy cannot be mistaken for a
+    // coincidence — and so the next assertion is about set 3 alone.
+    type(s.querySelectorAll('.step-value')[1], 8);
+    await settle();
+
+    const finish = btn(s, /Finish workout/);
+    if (finish) { finish.click(); await settle(); await settle(); }
+    const saved = (await store.getSessions()).find((x) => x.workoutName === 'Fill day');
+    ok(saved && saved.entries[0].sets.length === 2,
+       `⚠️ set 3 was never opened, so it is NOT saved — two sets, not three (${saved && saved.entries[0].sets.length})`);
+    ok(saved && saved.entries[0].sets[1].weight === 65 && saved.entries[0].sets[1].reps === 8,
+       'and the filled set kept the edit made to it, not the number it was filled with');
+  }
+  localStorage.removeItem(DRAFT);
+
+  /* ---- an assist machine says what you are really lifting ---- *
+   *
+   * ⚠️ The box says 70 and the lifter is moving 110. Tim asked for the real
+   * number beside it after doing assisted pull-ups on 2026-08-24 — and this is
+   * the same screen whose progression rule was, until that day, about to tell
+   * him to ADD assistance and call it progress. */
+  {
+    const { todayISO: today } = await import(BASE + 'store.js');
+    await store.logBodyWeight(180, today());
+    const w = await store.saveWorkout({
+      name: 'Assist day',
+      exercises: [{ exerciseId: byName('Assisted Pull-Up').id, sets: 2, notes: '' }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    type(s.querySelectorAll('.step-value')[0], 70);
+    await settle();
+    const readout = s.querySelector('.assist-readout');
+    ok(Boolean(readout), 'an assisted lift carries a readout under its steppers');
+    ok(readout && /110/.test(readout.textContent),
+       '⚠️ which names the 110 lbs actually being lifted, not just the 70 on the stack');
+    ok(readout && /180/.test(readout.textContent) && /70/.test(readout.textContent),
+       'and shows the arithmetic — 180 of body weight less 70 of help — rather than a bare number');
+    ok(/of help/.test(s.textContent),
+       'and the stepper itself calls the number help, so the box is not read as load');
+
+    // ⚠️ More help than you weigh is a typo, not a very easy set.
+    type(s.querySelectorAll('.step-value')[0], 250);
+    await settle();
+    ok(/more help than you weigh/i.test(s.querySelector('.assist-readout').textContent),
+       'and 250 lbs of help on a 180 lb lifter is called out rather than shown as a negative load');
+  }
+  localStorage.removeItem(DRAFT);
 }
 
 

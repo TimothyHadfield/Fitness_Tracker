@@ -104,8 +104,16 @@ ok(
 );
 ok(!canNormalize(byName('Pull-Up')),
    'bodyweight excluded — logged weight is added load, not total resistance');
+// ⚠️ LABEL CORRECTED 2026-08-24. This line used to read "assisted excluded" and
+// it still passes, but for a completely different reason: the exercise now has a
+// fraction, so what refuses it here is the missing body weight, exactly as for
+// the pull-up above. A green assertion whose stated reason has quietly stopped
+// being the real one is worth less than no assertion — the positive case is
+// pinned in tests/bodyweight.test.mjs, which is where the arithmetic lives.
 ok(!canNormalize(byName('Assisted Pull-Up')),
-   'assisted excluded — logged weight is assistance, so more weight is easier');
+   'assisted needs a weigh-in like any other body-weight lift — one argument still refuses it');
+ok(canNormalize(byName('Assisted Pull-Up'), { bodyWeight: 180 }),
+   '⚠️ …and IS normalisable once a body weight is known, which is what changed');
 ok(!canNormalize(byName('Plank')), 'time-only exercise cannot be normalised');
 ok(!canNormalize(byName('Push-Up')), 'reps-only exercise has no weight to normalise');
 ok(!canNormalize(byName('Running')), 'cardio cannot be normalised');
@@ -1591,9 +1599,15 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   }
 
   // Bodyweight and assisted work logs added or subtracted load, not the load on
-  // the muscle, so it cannot be converted at all yet.
+  // the muscle, so with no body weight in hand it cannot be converted at all.
   ok(me.contributionsFor(byName('Pull-Up')).length === 0, 'bodyweight work is not rated');
-  ok(me.contributionsFor(byName('Assisted Pull-Up')).length === 0, 'assisted work is not rated');
+  // ⚠️ Same correction as canNormalize above: this passes because no body weight
+  // was passed, NOT because assisted work is unrankable. It stopped being
+  // unrankable on 2026-08-24.
+  ok(me.contributionsFor(byName('Assisted Pull-Up')).length === 0,
+     'and neither is assisted work, until a weigh-in makes the subtraction possible');
+  ok(me.contributionsFor(byName('Assisted Pull-Up'), { bodyWeight: 180 }).length > 0,
+     '⚠️ …which it then does — the assist machine rates a muscle off resistance, not off the stack');
 
   // ---- cross-muscle conversion comes from the published medians ----
   ok(near(me.crossMuscleRatio('Chest', 'Triceps'), ((225 / 185) + (100 / 85)) / 2, 1e-9),
