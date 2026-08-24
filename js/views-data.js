@@ -245,9 +245,13 @@ export async function CalendarView() {
 
   const screen = screenShell({
     profile: true,
-    title: el('div', { class: 'cal-topbar' }, el('h1', { text: 'Calendar' }), legend),
+    // ⚠️ The four-way Data switch IS the header, exactly as it is on #/graphs —
+    // the two screens are one tab now and must not look like two. What used to
+    // be an <h1> reading "Calendar" is the selected segment saying it instead,
+    // which is the same word doing the same job in less room (Rule 3).
+    title: dataTabs('calendar'),
     top: el('div', { class: 'cal-modes' },
-      el('div', { class: 'segmented', role: 'tablist' }, tabs), readout),
+      el('div', { class: 'segmented sub', role: 'tablist' }, tabs), legend, readout),
     scroll: [],
   });
 
@@ -323,6 +327,50 @@ function landOnCurrentMonth(screen) {
   }, 0);
 
   return screen;
+}
+
+/**
+ * THE DATA SWITCH — four ways of looking backwards, in one control.
+ *
+ * Tim's five-tab redesign (2026-08-22) folded the Calendar tab into Data. Both
+ * are the past — one drawn as squares, one as lines — and the calendar was
+ * already the odd tab out: every other tab answered a question and it displayed
+ * a record.
+ *
+ * ⚠️ THE FOUR ARE NOT THE SAME KIND OF THING, and the control deliberately hides
+ * that. Calendar is its own ROUTE (`#/calendar`, so a day stays deep-linkable
+ * and the years grid keeps its own state); the three chart modes are in-page
+ * state on `#/graphs`. Making all four navigate would have turned a chart
+ * toggle into four new URLs for no gain, and making all four in-page would have
+ * meant nesting a whole screen inside another.
+ *
+ * ⚠️ "Bars", not "Bar Chart". The 2026-08-21 phone survey measured the
+ * THREE-segment version clipping this exact label to "Bar Char" at 393px. A
+ * fourth segment takes another quarter of the row, so the label had to lose a
+ * word rather than the row lose a segment.
+ */
+const DATA_TABS = [['calendar', 'Calendar'], ['trend', 'Graph'], ['compare', 'Bars'], ['muscles', 'Muscles']];
+
+function dataTabs(active, onChartMode) {
+  return el('div', { class: 'segmented', role: 'tablist' },
+    DATA_TABS.map(([key, label]) =>
+      el('button', {
+        class: 'seg', role: 'tab', 'aria-selected': String(key === active),
+        // NOTHING here is disabled. Both chart modes fall back to the
+        // current-bests list when they cannot draw a line, so a tab always
+        // leads somewhere useful — which is the whole point of that list
+        // existing. Disabling them was what made a new user's Data screen
+        // feel empty.
+        disabled: false,
+        text: label,
+        onClick: () => {
+          if (key === 'calendar') { go('#/calendar'); return; }
+          graphMode = key;
+          if (onChartMode) onChartMode();
+          else go('#/graphs');       // arriving from the calendar
+        },
+      })),
+  );
 }
 
 /* ================================================================== *
@@ -525,19 +573,7 @@ export async function GraphView() {
   const top = el('div', { class: 'graph-controls' });
   const host = el('div', { class: 'graph-host' });
 
-  const modeSwitch = el('div', { class: 'segmented', role: 'tablist' },
-    [['trend', 'Graph'], ['compare', 'Bar Chart'], ['muscles', 'Muscles']].map(([m, label]) =>
-      el('button', {
-        class: 'seg', role: 'tab', 'aria-selected': String(graphMode === m),
-        // NOTHING here is disabled any more. Both chart modes fall back to the
-        // current-bests list when they cannot draw a line, so a tab always leads
-        // somewhere useful — which is the whole point of that list existing.
-        // Disabling them was what made a new user's Data screen feel empty.
-        disabled: false,
-        text: label,
-        onClick: () => { graphMode = m; render(); },
-      })),
-  );
+  const modeSwitch = dataTabs(graphMode, () => render());
 
   /* ---------- trend (line, all sources) ---------- */
 
@@ -797,9 +833,10 @@ export async function GraphView() {
   }
 
   async function render() {
-    const order = ['trend', 'compare', 'muscles'];
+    // Indexed off the shared list, so adding or reordering a segment cannot
+    // leave the selected state pointing at the wrong one.
     modeSwitch.querySelectorAll('.seg').forEach((b, i) =>
-      b.setAttribute('aria-selected', String(graphMode === order[i])));
+      b.setAttribute('aria-selected', String(DATA_TABS[i][0] === graphMode)));
     // Muscles is the one mode with a side panel on a wide screen, so it is the
     // one mode that lays out as a row. The class carries that; the CSS decides
     // at which width it actually applies.

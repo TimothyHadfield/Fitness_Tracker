@@ -20,7 +20,7 @@ import {
 import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
-  emptyState, relativeDay, miniStepper, loadBadge, trimNum,
+  emptyState, relativeDay, miniStepper, loadBadge, trimNum, youFriendsTabs,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -80,12 +80,16 @@ export async function HomeView() {
         el('div', { class: 'field-help', text: describeSuggestion(next) }),
 
         // Not "Start a workout" any more — the button above already starts one,
-        // so this one has to say what is DIFFERENT about it.
-        el('button', { class: 'btn block', onClick: () => go('#/start') },
+        // so this one has to say what is DIFFERENT about it. It points at the
+        // Record tab now, which is where every other way of logging lives.
+        el('button', { class: 'btn block', onClick: () => go('#/record') },
           icon('list'), 'Choose another workout'),
 
-        el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
-          icon('flag'), 'Record a benchmark'),
+        // ⚠️ "Record a benchmark" is GONE FROM HERE, moved to the Record tab
+        // in Tim's five-tab redesign. Home keeps the one button no other screen
+        // can offer — the next workout in your own rotation — and stops being a
+        // second, quieter copy of a tab that is now the biggest target on the
+        // screen.
       ]
     : firstRun
       ? [
@@ -105,12 +109,12 @@ export async function HomeView() {
             icon('plus'), 'Build my own instead'),
         ]
       : [
+          // Nothing to suggest — more than one system and no history, so
+          // suggestNext() stays silent rather than guessing. The Record tab is
+          // where the choice lives.
           el('button', {
-            class: 'btn primary lg block', onClick: () => go('#/start'),
+            class: 'btn primary lg block', onClick: () => go('#/record'),
           }, icon('play'), 'Start a workout'),
-
-          el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
-            icon('flag'), 'Record a benchmark'),
         ];
 
   // A heading over an empty list is a heading over nothing. On a first run the
@@ -129,12 +133,12 @@ export async function HomeView() {
   return screenShell({
     profile: true,
     title: 'Fitness Tracker',
+    top: [youFriendsTabs('you'), ...(Array.isArray(top) ? top : [top])],
     // "Get started below" said nothing the buttons did not. On a first run the
     // header earns its row by naming the app once — which is the one moment
     // that is genuinely useful — and nothing else.
     sub: workouts.length ? `${plural(workouts.length, 'workout')} saved` : null,
     actions: [iconBtn('sliders', 'Settings', () => go('#/settings'))],
-    top,
     scroll,
   });
 }
@@ -155,7 +159,22 @@ function sessionRow(s) {
  * Pick which workout to start
  * ================================================================== */
 
-export async function StartPickerView() {
+/**
+ * RECORD — the middle tab, and the biggest target in the app.
+ *
+ * ⚠️ This is the old start picker with the benchmark action folded in, not a
+ * new screen. Tim's five-tab redesign (2026-08-22) moved *"start a workout"*
+ * and *"record a benchmark"* off Home and into one place, and the reason it
+ * deserves the middle slot is **D4**: the logging loop is the single thing this
+ * app beats a spreadsheet at. Until now it was two ordinary buttons partway
+ * down Home.
+ *
+ * `tab: true` is the nav destination. `tab: false` is the old `#/start` deep
+ * link, which still opens the same screen as a pushed page with a back button —
+ * "Choose another workout" on Home has linked there for months and a hash
+ * somebody bookmarked must not start 404ing because a tab bar was redesigned.
+ */
+export async function StartPickerView({ tab = false } = {}) {
   const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
 
   // GROUPED, not nested. Making someone pick a system and then a workout would
@@ -175,13 +194,40 @@ export async function StartPickerView() {
   );
 
   const scroll = groups.length
-    ? groups.flatMap((g) => (groups.length > 1
-        ? [el('div', { class: 'section-label', text: g.sys.name }), el('div', { class: 'list' }, g.items.map(row))]
-        : [el('div', { class: 'list' }, g.items.map(row))]))
-    : emptyState('No workouts yet', 'Build a workout first, then you can run it here.',
-        el('button', { class: 'btn primary', text: 'Build a workout', onClick: () => go('#/workouts') }));
+    ? [
+        el('div', { class: 'section-label', text: 'Start a workout' }),
+        ...groups.flatMap((g) => (groups.length > 1
+          ? [el('div', { class: 'section-label sub', text: g.sys.name }), el('div', { class: 'list' }, g.items.map(row))]
+          : [el('div', { class: 'list' }, g.items.map(row))])),
+      ]
+    : [
+        // ⚠️ On an empty account this screen must not be a dead end. The
+        // first-run work (2026-08-21) got install-to-first-logged-set down to
+        // five taps by making a ready-made programme the primary action, and a
+        // brand-new user tapping the biggest button in the app lands HERE — so
+        // it has to offer the same route rather than "build a workout first".
+        emptyState('Nothing to run yet',
+          'Pick a ready-made programme and its first workout is one tap away, or build your own.',
+          el('button', { class: 'btn primary', text: 'Pick a programme', onClick: () => go('#/explore') })),
+        el('button', { class: 'btn block', onClick: () => go('#/system/new') },
+          icon('plus'), 'Build my own instead'),
+      ];
 
-  return screenShell({ title: 'Start a workout', back: () => go('#/home'), scroll });
+  // A benchmark is a deliberate one-off test rather than a session, so it sits
+  // apart from the list rather than in it — and it is pinned, because the list
+  // above is the common case and this must not need scrolling past.
+  const bottom = el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
+    icon('flag'), 'Record a benchmark');
+
+  return screenShell({
+    profile: tab,
+    title: 'Record',
+    sub: 'Log a session, or a one-off best',
+    // A tab has no back button: there is nothing behind it to go back to.
+    back: tab ? null : () => go('#/home'),
+    scroll,
+    bottom,
+  });
 }
 
 /* ================================================================== *

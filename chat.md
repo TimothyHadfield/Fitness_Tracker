@@ -4497,3 +4497,44 @@ one round trip of latency instead of one per collection per tab.
 
 2257 assertions green, plus a browser smoke test that walks every tab twice and fails on any console
 error.
+
+---
+
+## 2026-08-22, fifth pass — six tabs became five
+
+Tim's design call: five tabs, the middle one bigger and labelled **Record**, Social folded into Home
+on the left, Calendar folded into Data on the right, Goals unchanged.
+
+Told him the shape is right, and that the middle button is the part the app's own rules had been
+arguing for all along — **D4** says the logging loop is the one thing this beats a spreadsheet at, so
+recording training should be the biggest, most central target on every screen. It was two ordinary
+buttons partway down Home.
+
+**Record** is the old start picker with the benchmark action folded in and pinned underneath.
+`#/start` and `#/benchmark` both still resolve, because "Choose another workout" has linked to one of
+them for months and a bookmarked hash must not start 404ing because a tab bar was redesigned.
+
+**Social → Home** behind a You / Friends switch, built as two real links across two routes rather
+than a state machine inside one screen — so the back button, a bookmark and a shared invite link all
+keep working, and neither screen had to be nested in the other. The screen is titled **Friends** now:
+`social.js` is the code's word for the feature, and a person has friends. Five user-facing strings
+went with it, because "Social is off in the demo" under a tab labelled Friends is exactly the
+"system" vs "programme" fault the UX review found last time.
+
+**Calendar → Data**, so the Data switch is Calendar · Graph · Bars · Muscles. "Bar Chart" lost a word
+on purpose: the survey measured the three-segment version clipping that exact label at 393px, and a
+fourth segment takes another quarter of the row.
+
+**Three defects, every one found by looking at a screenshot rather than by a test.** The Record label
+was clipped by its own circle. The five labels did not share a baseline — every tab centred its own
+stack, which is identical while all the icons are the same size and falls apart the moment one is
+bigger, sitting the middle word 7px low and making the bigger tab read as a mistake instead of as
+emphasis; bottom-aligning them fixed it and it is now measured at three widths. And the You / Friends
+switch rendered as two underlined links in an oversized box, because `.seg` was written for buttons
+and an anchor is inline. That last one turned out to be live on `.btn` as well, unnoticed — "Leave
+the demo" was underlined. Third time this project has met anchor-styled-as-button.
+
+Measured at 360 / 375 / 393: no clipping, no overflow, tabs 72–79 × 54, middle icon 30 against 21,
+and every merged tab stays lit on the routes it now owns.
+
+2261 assertions green. Tim said he will keep working on the design, Home especially.

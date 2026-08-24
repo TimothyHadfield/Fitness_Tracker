@@ -31,7 +31,8 @@
    sharpest unaddressed thing in the product: nothing a user can see on Home ever grows.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
-end. Six nav tabs: Home, Workouts, Calendar, Data, **Goals**, **Social**.
+end. **Five nav tabs: Home, Workouts, RECORD, Data, Goals** — Record is the big middle button, and
+Social and Calendar were folded into Home and Data on 2026-08-22.
 
 The app works with **no network** (D6), records weights in **lbs or kg**, has a rest timer, lets a
 workout be logged for another day, lets a past record be edited from the calendar, and can mark a
@@ -78,6 +79,76 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-22, eighth pass — SIX TABS BECAME FIVE, and the middle one is Record
+
+**Tim's design call**, and the app's own rules had been arguing for the central part of it since the
+beginning: *"I want to narrow down the number of base bars at the bottom of the iphone screen to 5,
+and have the middle one be slightly bigger than the others."*
+
+```
+   Home        Workouts        ( + )        Data        Goals
+   + Friends                  RECORD      + Calendar
+```
+
+⚠️ **THE BIG MIDDLE BUTTON IS THE ONE PART THAT IS NOT A MATTER OF TASTE.** D4 says the logging loop
+is the single thing this app beats a spreadsheet at — so recording training should be the largest,
+most central, hardest-to-miss target on every screen. It was two ordinary buttons partway down Home.
+Tim asked for a design improvement and it lands exactly on the app's stated priority.
+
+**Record** is the old start picker with the benchmark action folded in and pinned at the bottom: the
+workout list grouped by programme, *Record a benchmark* underneath. ⚠️ **`#/start` and `#/benchmark`
+both still resolve** — "Choose another workout" has linked to one of them for months and a
+bookmarked hash must not start 404ing because a tab bar was redesigned.
+
+**Social → Home.** Both answer "what is going on", one for you and one for the people you train
+with, and they are the two screens you open to *look* rather than to *do*. They share a **You /
+Friends** switch. ⚠️ **The switch is two real LINKS across two routes**, not a state machine inside
+one screen, so the back button, a bookmark and a shared invite link all keep working and neither
+screen had to be nested in the other. ⚠️ **And the screen is now titled "Friends"** — `social.js` is
+the code's word for the feature; a person has friends. Five user-facing strings were swept with it,
+because *"Social is off in the demo"* under a tab labelled Friends is the "system" vs "programme"
+fault the UX review found, and it is cheaper not to introduce it than to unpick it later.
+
+**Calendar → Data.** Both are the past, one drawn as squares and one as lines; the calendar was
+already the odd tab out, because every other tab answers a question and it displayed a record. The
+Data switch is now **Calendar · Graph · Bars · Muscles**, and it is the calendar's header too, so the
+two screens read as one tab. ⚠️ **"Bar Chart" lost a word on purpose**: the 2026-08-21 survey
+measured the THREE-segment version clipping that exact label to "Bar Char" at 393px, and a fourth
+segment takes another quarter of the row.
+
+⚠️ **The four segments are not the same kind of thing, and the control hides that deliberately.**
+Calendar is its own ROUTE, so a day stays deep-linkable and the years grid keeps its own state; the
+three chart modes are in-page state on `#/graphs`. Making all four navigate would have invented four
+URLs for a chart toggle; making all four in-page would have meant nesting a whole screen inside
+another.
+
+### Three defects, all found by looking at it rather than by a test
+
+1. **The Record label was clipped by its own circle.** A 26px icon with 6px padding, a gap and a
+   label came to 53px inside a 54px bar. Caught in a screenshot, then pinned by measuring the
+   label's bottom against the bar's.
+2. **⚠️ THE LABELS DID NOT SHARE A BASELINE, and that is what made the bigger tab look like a
+   mistake rather than emphasis.** Every tab centred *its own* stack, which is identical while all
+   five icons are the same size and falls apart the moment one is bigger — the taller middle tab
+   centred lower and sat its word ~7px below the other four. They are bottom-aligned now, so the
+   words line up and the icon grows upward. Measured at 360, 375 and 393: **all five label tops
+   identical at every width.**
+3. **⚠️ AN `<a>` IS NOT A `<button>`, and `.seg` was written for buttons.** The You / Friends switch
+   first rendered as two underlined links floating in an oversized box, because an anchor is inline
+   — `min-height` does nothing to it and the UA underlines it. Fixed on the class with a matched
+   `line-height` rather than flex or grid, both of which would have centred the label and quietly
+   killed the `text-overflow` backstop that exists *because this control has already clipped a label
+   once*. ⚠️ **The same fault was live on `.btn`** and nobody had noticed: "Leave the demo" is an
+   anchor and was underlined. Fixed on the class, so it covers the next one too. This is the third
+   time this project has met anchor-styled-as-button — the social review found it in the friend rows.
+
+**Measured at 360 / 375 / 393 px:** five tabs, no label clipped, no horizontal overflow, tab boxes
+72–79 px wide by 54 tall (comfortably past the 44 px target), middle icon **30 px against 21**. Every
+merged tab stays lit on the routes it now owns — `#/social` lights Home, `#/calendar` lights Data —
+which is what stops a merge feeling like a dead end.
 
 ---
 
@@ -1253,7 +1324,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2257 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | **2261 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
@@ -1491,8 +1562,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that it picked its top three by converted weight, so a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. ⚠️ **Picking a muscle never moves or resizes the body, in either layout** (2026-08-21). On a screen ≥ 860px the detail opens in a **side column beside the figures**; below that it stacks underneath, and the figure holds a fixed 57 % of the pane while the panel takes what is left and scrolls inside itself. Before that fix the phone's figure shrank and rose by however many words the panel happened to have. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). ⚠️ **Tap → five lines and no more** (2026-08-21, Tim: "we want it to be easy to understand, not a paragraph"): level, estimate + percentile, the bar to the next level, the confidence line, and the set the number came from. The seven-row table of per-level weight targets, the confidence bar and the confidence percentage were cut. **Every caveat survived, one line each** — shortening a caveat is allowed, softening one is not — and a **40-word cap is a test**, because every other assertion on this panel checks something is present and none of them can catch words piling back up. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
-| **Social** (nav) | A fifth tab beside Home, Workouts, Calendar and Data. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
-| **Goals** (nav) | A sixth tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
+| **Friends** (was Social) | ⚠️ **No longer its own tab — it is the Friends half of HOME** since 2026-08-22, reached by a You / Friends switch, and the screen is titled **Friends** rather than Social because that is what a person has. `#/social` is still its route. **Mutual friends, and a list you VISIT — there is no feed**, which is how it delivers "see what my friends are doing" without reopening D7. Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
+| **Goals** (nav) | The far-right tab. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | **Bodyweight lifts rank** | **Pull-ups, chin-ups, dips and push-ups rate a muscle** (2026-08-19). Their resistance is a fraction of body weight plus whatever was added, and the fraction is per exercise. ⚠️ **The pull-up and the dip are 1.00 by STATICS, not by citation** — nothing but the hands is in contact, so the hands carry all of it, and the research confirmed no published %BM figure exists for either. A push-up is 0.75 from two independent force-plate studies half a percent apart (Suprak 2011, Mier 2014); the familiar 64 % and 66 % figures measure *different quantities* and mixing them would be worse than choosing one. ⚠️ **Body weight is read from the DATE OF THE SET**, never today's — otherwise losing twenty pounds would rewrite last year's pull-ups. What has no honest fraction stays refused, permanently and by name: an inverted row is 37–79 % depending on a bar height the app does not record. The panel distinguishes the two kinds of "can't", because "log a weigh-in" is actionable and "nobody has measured this" is not. `js/exercises.js` `BODY_WEIGHT_FRACTION`, `totalResistance()` in `js/e1rm.js` |
 | **The map says what it is IGNORING** | A muscle no longer claims "nothing recorded" over work you did. Sets the rating had to discard are listed with the reason — three sets of inverted rows show as uncounted rather than vanishing. Rendered on rated muscles too, not just grey ones: a Back rating built on rows while silently dropping every chin-up is under-reporting its own evidence while looking complete |
 | **Progression** (Goals Phase 4) | **Double progression, in the session runner** — hold the load and add reps; at the top of the range on **two consecutive sessions** take the smallest increment inside **2–10 %** and drop to the bottom of the range. Says so when **no honest increment exists** (5 lb on 30 lb is a 17 % jump), and distinguishes "past the band" from "inside the band but bigger than we allow for isolation work". ⚠️ **`js/progression.js` has NO CLOCK and imports nothing from `goals.js`** — §3.1's refusal is structural, not a promise. Time enters as one day count and **may only SUPPRESS a suggestion, never raise one**: after a long gap it offers last time's numbers and says why, prescribing no deload because nobody has measured one. Swept over 10,692 calls — a gap never yields a heavier suggestion than the same history without one. Weighted pull-ups get the full rule via total resistance (5 lb on a 25 lb belt is 2.4 % of ~205 lb, not 20 % of 25); reps-only movements get "one more rep". ⚠️ **The rep range is read across the recent history, NOT from the last session alone** — `trainingRange()`, fixed 2026-08-20. Read from one session, the app's own "back to 8 reps" came back next time as the top of 6–8, and an obedient lifter was moved out of 8–12 for good and given weight every second session. History may only ever widen the range *upward*, so the fix is structurally incapable of proposing a heavier weight than the old code did — the same asymmetry the lay-off rule has |
@@ -1625,7 +1696,8 @@ Press-and-hold repeats.
   `.tag` app-wide and confirmed from `getClientRects()`, which is the only thing that tells you a
   chip occupies two line boxes. And a **phrase dropped into the numeric column** — "Within 1–2 reps
   of failure" in a column sized for "7–10" took 300 px and squeezed the label beside it into a
-  five-word-tall stripe. Also confirmed here: six nav tabs fit at 360 px with no label clipped
+  five-word-tall stripe. Also confirmed here: the nav fit at 360 px with no label clipped — six tabs
+  then, five since 2026-08-22
 - **The Social screens driven in a real browser over CDP** — 2026-08-18, at 390 and 1180 px in both
   themes, against a scratch copy whose `social` facade is stubbed, so nothing touched the live
   project and no account was created. Seen: the friends list with all four visibility settings, the
@@ -1671,7 +1743,7 @@ Press-and-hold repeats.
   everywhere it was used and every label in the app named nothing. Both fixed and re-measured.
   ⚠️ **Four things were NOT checked and remain completely unknown: no keyboard path has been walked,
   no screen reader has ever been run against this app, nothing has been tested at larger text, and
-  the muscle map's irregular-SVG tap surface was not hit-tested.** Six nav tabs at 360 px were
+  the muscle map's irregular-SVG tap surface was not hit-tested.** The nav bar at 360 px was
   confirmed to fit and not overflow, which is a layout fact and not a touch one. **Do not let
   "contrast passes" stand in for "accessible"** — they are different claims, and this file's whole
   discipline is not confusing them.

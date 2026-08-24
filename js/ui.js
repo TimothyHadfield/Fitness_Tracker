@@ -189,6 +189,31 @@ export function iconBtn(name, label, onClick, cls = 'icon-btn') {
   return el('button', { class: cls, 'aria-label': label, title: label, onClick }, icon(name));
 }
 
+/**
+ * The You / Friends switch — the seam where Social was folded into Home.
+ *
+ * ⚠️ REAL LINKS ACROSS TWO ROUTES, not a state machine inside one screen.
+ * `#/home` and `#/social` stay separate views that each render this control,
+ * so the back button, a bookmark and a shared invite link all keep working
+ * exactly as they did, and neither screen had to be nested inside the other.
+ * The nav bar lights the same tab for both (see `NAV[].match` in app.js).
+ *
+ * ⚠️ "Friends" rather than "Social". `js/social.js` calls the feature social
+ * because that is what it is; a person has friends. The app's own rule about
+ * saying the thing rather than the term (D8) applies to its own vocabulary
+ * first — this is the same fault the UX review found in "system" vs
+ * "programme", caught before it shipped rather than after.
+ */
+export function youFriendsTabs(active) {
+  return el('div', { class: 'segmented', role: 'tablist' },
+    [['you', 'You', '#/home'], ['friends', 'Friends', '#/social']].map(([key, label, href]) =>
+      el('a', {
+        class: 'seg', role: 'tab', href,
+        'aria-selected': String(key === active),
+      }, label)),
+  );
+}
+
 export function chevron() {
   return el('span', { class: 'row-chev' }, icon('right'));
 }

@@ -15,24 +15,56 @@ import { SocialView, FriendView, InviteView } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { setUnits } from './units.js';
 
+/**
+ * FIVE TABS, AND THE MIDDLE ONE IS THE POINT.
+ *
+ * Tim, 2026-08-22, cutting six down to five: *"I want to narrow down the number
+ * of base bars at the bottom … and have the middle one be slightly bigger than
+ * the others. This will improve readability and design."*
+ *
+ * ⚠️ The big middle button is not decoration, and it is the one part of this
+ * that the app's own rules already argued for. **D4 says the logging loop is
+ * the single thing apps beat spreadsheets at** — so the act of recording
+ * training should be the largest, most central, hardest-to-miss target on
+ * every screen. It was previously two buttons down a list on Home.
+ *
+ * Where the other two went, and why each merge is defensible rather than
+ * merely tidy:
+ *
+ *   SOCIAL → HOME. Both answer "what is going on", one for you and one for the
+ *   people you train with, and they are the two screens you open to look rather
+ *   than to do. They share a You / Friends switch. ⚠️ It also happens to fix
+ *   something the UX review found: Home shows nothing that changes as you use
+ *   the app, and a friend's training is the one thing on it that is never the
+ *   same twice.
+ *
+ *   CALENDAR → DATA. Both are the past: one as squares, one as lines. The
+ *   calendar was already the odd tab out — every other tab answers a question,
+ *   and it displayed a record.
+ *
+ * `match` is which route names light this tab up. A merged tab owns more than
+ * one route, and the alternative — a tab that goes dark when you are plainly
+ * still inside it — is how a merge starts feeling like a dead end.
+ */
 const NAV = [
-  { hash: '#/home',     label: 'Home',     icon: 'home' },
-  { hash: '#/workouts', label: 'Workouts', icon: 'dumbbell' },
-  { hash: '#/calendar', label: 'Calendar', icon: 'calendar' },
+  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home', 'social', 'friend', 'invite'] },
+  { hash: '#/workouts', label: 'Workouts', icon: 'dumbbell', match: ['workouts', 'system', 'workout', 'explore'] },
+  // ⚠️ The hash is #/record and the view is the old start picker with the
+  // benchmark action folded in. Both #/start and #/benchmark still resolve, so
+  // nothing that linked to them — including a bookmarked deep link — breaks.
+  { hash: '#/record',   label: 'Record',   icon: 'plus',     match: ['record', 'start', 'benchmark', 'session'], primary: true },
   // Route stays #/graphs; only the label changed. Renaming the hash would
   // break nothing visible and churn the router for no user-facing gain.
-  { hash: '#/graphs',   label: 'Data',     icon: 'chart' },
-  // Goals sits between Data and Social on purpose: it is about your own
-  // training, like everything to its left, and Social is the only tab that is
-  // about anybody else. It goes here rather than at the end so the boundary in
-  // the bar matches the boundary in the app.
-  { hash: '#/goals',    label: 'Goals',    icon: 'target' },
-  { hash: '#/social',   label: 'Social',   icon: 'people' },
+  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs', 'calendar', 'day', 'edit'] },
+  { hash: '#/goals',    label: 'Goals',    icon: 'target',   match: ['goals', 'goal'] },
 ];
 
 // Routes that take over the whole screen (no bottom nav).
 // `friend` and `invite` are here but `social` is NOT: Social is a tab, and the
 // two screens you reach FROM it are not. `goal` and `goals` are the same pair.
+// ⚠️ `record` is NOT here — it is a tab now, and a tab that hides the bar it
+// lives in cannot be tapped twice. `start` stays: it is the old deep link and
+// still opens the picker as a pushed screen with a back button.
 const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal'];
 
 function parse(hash) {
@@ -54,7 +86,9 @@ function navbar(active) {
     NAV.map((n) =>
       el('a', {
         href: n.hash,
-        'aria-current': n.hash === '#/' + active ? 'page' : null,
+        class: n.primary ? 'nav-primary' : null,
+        // A merged tab owns several routes; it stays lit for all of them.
+        'aria-current': n.match.includes(active) ? 'page' : null,
       }, icon(n.icon), el('span', { text: n.label }))),
   );
 }
@@ -62,7 +96,9 @@ function navbar(active) {
 async function resolve(route) {
   switch (route.name) {
     case 'home':      return HomeView();
-    case 'start':     return StartPickerView();
+    case 'record':    return StartPickerView({ tab: true });
+    // The old deep link, kept working: same screen, pushed rather than a tab.
+    case 'start':     return StartPickerView({ tab: false });
     case 'workouts':  return WorkoutsView();
     // #/system/<id> reads it, #/system/<id>/edit and #/system/new are the form.
     case 'system':    return SystemRouteView(route.param);

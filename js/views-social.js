@@ -26,7 +26,7 @@
 import { store, auth, social } from './store.js';
 import {
   el, icon, iconBtn, screenShell, emptyState, openSheet, confirmSheet, toast,
-  fmtDateLong, relativeDay, chevron, setChildren, fmtSet,
+  fmtDateLong, relativeDay, chevron, setChildren, fmtSet, youFriendsTabs,
 } from './ui.js';
 import {
   TIERS, TIER_LABEL, TIER_DETAIL, NONE, LIGHT, MID, FULL,
@@ -46,16 +46,16 @@ function unavailable(reason) {
   // confidently wrong answer to the right question.
   if (reason === 'demo') {
     return emptyState(
-      'Social is off in the demo',
+      'Sharing is off in the demo',
       'Sharing publishes a copy of your training for a friend to read, and the demo account\'s '
       + 'training is invented — publishing it to real people would be worse than not being able to '
-      + 'try this screen. Leave the demo and Social comes back exactly as it was.',
+      + 'try this screen. Leave the demo and your friends come back exactly as they were.',
       el('a', { class: 'btn primary', href: '#/account', text: 'Leave the demo' }),
     );
   }
   if (reason === 'anonymous') {
     return emptyState(
-      'Social needs a real account',
+      'Friends need a real account',
       'You are signed in anonymously, which lives only in this browser. Add an email or Google '
       + 'sign-in so friends are connecting to an account that will still be here tomorrow. Your '
       + 'training history comes with you.',
@@ -65,7 +65,7 @@ function unavailable(reason) {
   if (reason === 'offline') {
     return emptyState(
       'Not connected right now',
-      'Social needs a connection. Everything else in the app carries on working — you can log a '
+      'Friends needs a connection. Everything else in the app carries on working — you can log a '
       + 'whole workout offline and it will sync when you are back.',
       el('button', {
         class: 'btn', text: 'Try again',
@@ -74,7 +74,7 @@ function unavailable(reason) {
     );
   }
   return emptyState(
-    'Social is not switched on',
+    'Friends is not switched on',
     'This copy of the app is storing your data on this device only, so there is no account for a '
     + 'friend to connect to.',
   );
@@ -121,7 +121,8 @@ export async function SocialView() {
 
   if (!state.available) {
     return screenShell({
-      title: 'Social', profile: true,
+      title: 'Friends', profile: true,
+      top: youFriendsTabs('friends'),
       scroll: unavailable(state.reason),
     });
   }
@@ -130,9 +131,14 @@ export async function SocialView() {
 
   const body = el('div', { class: 'list' });
   const screen = screenShell({
-    title: 'Social',
+    // ⚠️ "Friends", not "Social" — this is half of the Home tab now, and the
+    // switch above it says Friends. Two names for one screen is the "system"
+    // vs "programme" fault the UX review found, and it is cheaper to not
+    // introduce it than to go back and unpick it.
+    title: 'Friends',
     sub: `You appear as ${state.name}`,
     profile: true,
+    top: youFriendsTabs('friends'),
     actions: [iconBtn('edit', 'Change your display name', () => renameSheet(state.name))],
     scroll: body,
     bottom: el('button', {

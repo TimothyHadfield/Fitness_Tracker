@@ -333,7 +333,14 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* ⚠️ BOTTOM-ALIGNED, so all five LABELS share one baseline. Centring each
+     tab's own content looks identical while every icon is the same size, and
+     falls apart the moment one of them is bigger: the taller middle tab
+     centred its stack lower and pushed its label ~7px below the other four,
+     which reads as a mistake rather than as emphasis. Aligning the words and
+     letting the icon grow upward is what makes the bigger tab look deliberate. */
+  justify-content: flex-end;
+  padding-bottom: 8px;
   gap: 2px;
   text-decoration: none;
   color: var(--ink-faint);
@@ -342,6 +349,42 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 }
 .navbar a svg { width: 21px; height: 21px; }
 .navbar a[aria-current="page"] { color: var(--accent); }
+
+/* ⚠️ THE MIDDLE TAB IS BIGGER BECAUSE D4 SAYS IT IS THE POINT — the logging
+   loop is the single thing this app beats a spreadsheet at, so recording
+   training is the largest and most central target on every screen. Tim asked
+   for five tabs with a bigger middle on 2026-08-22; the app's own rules had
+   been arguing for it since the beginning.
+
+   ⚠️ It grows the ICON, not the row. A taller navbar would cost every screen
+   the same pixels for the sake of one control, and `--bar-h` is what every
+   `100dvh` calculation and every `--safe-b` inset in this file is measured
+   against. The circle is drawn inside the height the bar already had. */
+/* 30px against 21px — half again as big, and a filled circle besides, which
+   reads as bigger still. Sized so that the icon, the gap and the label clear
+   the bar's own height with the labels aligned; a larger circle would either
+   push the word out of the bar or break that alignment. */
+/* No gap override: the 2px it inherits is what puts its label on exactly the
+   same baseline as the other four. A 3px gap here left it one pixel low. */
+.navbar a.nav-primary svg {
+  width: 22px; height: 22px;
+  padding: 4px;
+  box-sizing: content-box;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+/* The selected state is already carried by the fill; recolouring the glyph on
+   top of it would leave accent-on-accent. The LABEL still moves, so the
+   selected tab is never signalled by colour alone (Rule 5's general form). */
+.navbar a.nav-primary[aria-current="page"] svg { background: var(--accent); color: var(--accent-ink); }
+.navbar a.nav-primary[aria-current="page"] { color: var(--accent); }
+
+/* A segmented control that is subordinate to another one above it — the
+   Months/Years switch under the Data tabs. Same control, quieter: it is a
+   choice WITHIN the screen the row above already chose. */
+.segmented.sub { padding: 2px; }
+.segmented.sub .seg { min-height: 34px; font-size: 12.5px; }
 
 /* The sidebar brand row exists only on desktop. On mobile the navbar is a
    bottom tab bar, where an app title and an account button would both be
@@ -362,6 +405,18 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   text-transform: uppercase;
   color: var(--ink-faint);
   padding-top: 2px;
+}
+
+/* A label UNDER another label — a programme's name inside "Start a workout" on
+   the Record tab. Two identical all-caps rows in a stack read as two sections
+   at the same level, which is the opposite of what the nesting means. Sentence
+   case and no tracking make the second one subordinate without another size. */
+.section-label.sub {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
 }
 
 /* Rows are separated by rules, not wrapped in borders. Negative margins let
@@ -476,6 +531,12 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   background: var(--raised);
   color: var(--ink);
   transition: transform .06s ease;
+  /* ⚠️ Several buttons in this app are <a> elements, because they navigate and
+     a link is the honest element for that. Without this the UA underlines them
+     and one button in a row of identical ones looks different for no reason —
+     visible on "Leave the demo", and the same fault the social review found in
+     the friend rows. Fixed on the class so it covers the next one too. */
+  text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
 .btn svg { width: 18px; height: 18px; }
@@ -1195,6 +1256,24 @@ select.input {
   text-overflow: ellipsis;
   padding: 0 6px;
 }
+/* ⚠️ AN <a> IS NOT A <button>, and `.seg` was written for buttons. An anchor
+   is inline, so `min-height` does nothing to it and the UA underlines it — the
+   You / Friends switch first rendered as two underlined links floating in an
+   oversized box. This is the same fault the social review found in the friend
+   rows, arriving from the other direction.
+
+   `display: block` with a matched `line-height`, rather than flex or grid:
+   both of those would centre the label and quietly kill the `text-overflow`
+   backstop above, which exists because this control has already clipped a
+   label once. A block box keeps it. */
+a.seg {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  line-height: 44px;
+}
+.segmented.sub a.seg { line-height: 34px; }
+
 .seg[aria-selected="true"] { background: var(--ground); color: var(--ink); }
 .seg:disabled { opacity: .35; pointer-events: none; }
 

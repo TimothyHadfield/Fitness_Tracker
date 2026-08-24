@@ -87,8 +87,13 @@ for (const [name, view] of [
 // Empty account, no chartable data at all.
 let data = await mount(GraphView());
 let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
-ok(tabs.length === 3, `mode switch shows all three tabs with NO data (${JSON.stringify(tabs)})`);
+// ⚠️ FOUR since 2026-08-22: the Calendar tab was folded into Data when the nav
+// went from six tabs to five. The count is asserted rather than just the
+// contents, because a segment silently disappearing is exactly the class of bug
+// this block was written for.
+ok(tabs.length === 4, `mode switch shows all four tabs with NO data (${JSON.stringify(tabs)})`);
 ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
+ok(tabs.includes('Calendar'), 'and the calendar is reachable from Data, which is where it lives now');
 
 const musclesTab = [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
 ok(!musclesTab.disabled, 'Muscles tab is not disabled');
@@ -256,9 +261,9 @@ ok(data.querySelector('.graph-host').classList.contains('is-muscles'),
 await settle();
 ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard change');
 
-[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bar Chart').click();
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
-ok(data.querySelectorAll('.seg').length === 3, 'Bar Chart mode keeps the mode switch');
+ok(data.querySelectorAll('.seg').length === 4, 'Bars mode keeps the mode switch');
 
 /* ============ neither chart mode is ever a dead end ============ */
 // Tim, 2026-08-17: a chart needs the same lift on two days, but the numbers
@@ -266,7 +271,7 @@ ok(data.querySelectorAll('.seg').length === 3, 'Bar Chart mode keeps the mode sw
 // the current-bests list rather than an empty state, and no tab is disabled.
 ok(![...data.querySelectorAll('.seg')].some((b) => b.disabled),
    'no mode tab is ever disabled — each one leads somewhere useful');
-for (const mode of ['Graph', 'Bar Chart']) {
+for (const mode of ['Graph', 'Bars']) {
   [...data.querySelectorAll('.seg')].find((b) => b.textContent === mode).click();
   await settle();
   const rows = data.querySelectorAll('.best-row');
@@ -786,9 +791,22 @@ ok(!data.querySelector('.rep-target'),
   }
 
   const screen = await mount(CalendarView());
-  const segs = () => [...screen.querySelectorAll('.seg')];
+  // ⚠️ Scoped to the SUBORDINATE control. Since the six-tab nav became five
+  // (2026-08-22) the calendar's header carries the four-way Data switch, so an
+  // unscoped `.seg` query now sweeps up six segments from two different
+  // controls — and would have gone on "passing" while asserting nothing about
+  // either of them.
+  const segs = () => [...screen.querySelectorAll('.segmented.sub .seg')];
   ok(segs().map((b) => b.textContent).join() === 'Months,Years',
      'the calendar offers Months and Years');
+
+  // The merge itself: the calendar is inside Data and says so.
+  const dataSegs = [...screen.querySelectorAll('.topbar .seg')].map((b) => b.textContent);
+  ok(dataSegs.join() === 'Calendar,Graph,Bars,Muscles',
+     `the calendar's header IS the Data switch (${dataSegs.join()})`);
+  ok([...screen.querySelectorAll('.topbar .seg')]
+       .find((b) => b.getAttribute('aria-selected') === 'true').textContent === 'Calendar',
+     'and Calendar is the segment showing as selected');
   ok(screen.querySelectorAll('.cal-month').length > 0 && !screen.querySelector('.yr-grid'),
      'and opens on Months, which is what it has always been');
 
@@ -1547,7 +1565,13 @@ ok(!data.querySelector('.rep-target'),
 
   const social = await SocialView();
   ok(social instanceof Node, 'the Social screen mounts');
-  ok(/Social/.test(text(social)), 'and is titled Social');
+  // ⚠️ "Friends", not "Social", since the six-tab nav became five on
+  // 2026-08-22: this screen is half of the Home tab now and the switch above it
+  // says Friends. The module is still social.js — that is the code's word for
+  // the feature, and this asserts the word the USER sees.
+  ok(/Friends/.test(text(social)), 'and is titled Friends');
+  ok(!/Social/.test(text(social)),
+     'and does not also call itself Social — one screen, one name');
   // The important one: with no account reachable it must explain itself rather
   // than render an empty friends list, which would read as "you have no
   // friends" when the truth is "we cannot ask".
@@ -1721,8 +1745,8 @@ ok(!data.querySelector('.rep-target'),
      'Social reports itself unavailable in the demo, and says demo is why');
 
   const soc = await mount(SocialView());
-  ok(/Social is off in the demo/i.test(text(soc)),
-     'and the Social screen explains that rather than showing an empty friends list');
+  ok(/Sharing is off in the demo/i.test(text(soc)),
+     'and the Friends screen explains that rather than showing an empty friends list');
   ok(!/Set up my account/i.test(text(soc)), 'without wrongly blaming the account');
 
   // ⚠️ SETTINGS, INSIDE THE DEMO. This threw for the whole of the demo's life:
