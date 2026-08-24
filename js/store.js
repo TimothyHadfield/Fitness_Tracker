@@ -1685,12 +1685,14 @@ export async function muscleStrength() {
     { MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
       levelProgress, weightForPercentile, generalPopulationPercentile },
     { contributionsFor, setLoad, rateMuscle, confidenceBand, tintFor, raiseConfidenceHint,
-      rankBlockedReason },
+      rankBlockedReason, fatigueFactor },
     { bodyWeightOn },
+    { volumeContributions },
   ] = await Promise.all([
     import('./strength-standards.js'),
     import('./muscle-evidence.js'),
     import('./e1rm.js'),
+    import('./volume-map.js'),
   ]);
 
   const out = new Map();
@@ -1735,7 +1737,7 @@ export async function muscleStrength() {
   // really did that the rating had to throw away, kept so the panel can say so.
   const blockedByMuscle = new Map();
 
-  const record = (exerciseId, exerciseName, weight, reps, date, isBenchmark) => {
+  const record = (exerciseId, exerciseName, weight, reps, date, isBenchmark, priorByMuscle) => {
     // D5: a maximum is not inferred from a set above 15 reps. Without this the
     // formula extrapolates a 135x25 burnout set to 258 lb, which beats a real
     // 205x5 top set and moves the muscle a whole level on the back of the least
@@ -1782,6 +1784,11 @@ export async function muscleStrength() {
 
     for (const c of contributions) {
       if (!byMuscle.has(c.muscle)) byMuscle.set(c.muscle, []);
+      // ⚠️ How much work this muscle had ALREADY TAKEN when this exercise
+      // started, which is the term rateMuscle() needs to tell a heavy set from
+      // a tired one. Absent for a benchmark, and rightly so: a benchmark is its
+      // own session and has nothing in front of it.
+      const priorVolume = (priorByMuscle && priorByMuscle.get(c.muscle)) || 0;
       byMuscle.get(c.muscle).push({
         estimate: raw / c.ratio,
         rawE1rm: raw,
@@ -1798,6 +1805,8 @@ export async function muscleStrength() {
         exerciseId,
         exerciseName: exerciseName || (ex ? ex.name : exerciseId),
         source: isBenchmark ? 'benchmark' : 'workout',
+        priorVolume,
+        fatigueFactor: fatigueFactor(priorVolume),
       });
     }
   };
@@ -1807,9 +1816,29 @@ export async function muscleStrength() {
     record(b.exerciseId, b.exerciseName, v.weight, v.reps, b.date, true);
   }
   for (const s of sessions) {
+    // ⚠️ WALKED IN ORDER, and the order is the whole point. `entries` is stored
+    // in the order the workout was performed, so everything before the current
+    // entry is work this lifter had already done when they reached it.
+    //
+    // ⚠️ Counted with volume-map.js's own weights rather than a second opinion —
+    // direct 1.0, indirect 0.5. That module exists to answer "how much work
+    // landed on this muscle", which is exactly the question here, and a private
+    // tally would be a third muscle table to keep in sync with the other two.
+    const priorByMuscle = new Map();
     for (const entry of s.entries || []) {
-      for (const set of entry.sets || []) {
-        record(entry.exerciseId, entry.exerciseName, set.weight, set.reps, s.date, Boolean(s.isBenchmark));
+      const sets = entry.sets || [];
+      for (const set of sets) {
+        record(entry.exerciseId, entry.exerciseName, set.weight, set.reps, s.date,
+          Boolean(s.isBenchmark), priorByMuscle);
+      }
+      // ⚠️ AFTER this exercise's own sets are recorded, never before. An
+      // exercise does not fatigue itself: its first set is as fresh as the
+      // lifter was when they walked up to it, and charging it for its own
+      // volume would discount every first exercise in every session.
+      const ex = exMap.get(entry.exerciseId);
+      if (!ex) continue;
+      for (const c of volumeContributions(ex)) {
+        priorByMuscle.set(c.muscle, (priorByMuscle.get(c.muscle) || 0) + sets.length * c.weight);
       }
     }
   }

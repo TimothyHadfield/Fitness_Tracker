@@ -4746,3 +4746,41 @@ and 136 lb of barbell row, and the competing explanation is that doubling a one-
 a two-arm barbell row is generous — which has never been checked against anything.
 
 Plan in `docs/fatigue-plan.md`, three tiers, nothing built.
+
+---
+
+## 2026-08-24, fourth pass — the fatigue plan, built and deployed
+
+Tim: *"make a plan and test it out and once you feel good about it deploy it now."* Tiers 1 and 2
+shipped; Tier 3, the load multiplier, deliberately not built.
+
+Every observation now carries how much work that muscle had already taken earlier in the same
+session, counted with volume-map's own direct/indirect weights and tallied **after** each exercise's
+own sets — an exercise does not fatigue itself, and charging it for its own volume would discount the
+first exercise of every session. A graded factor discounts it, and the muscle panel says which lift
+led and that doing it earlier would read better.
+
+**Tim's session now reads 141 lb led by the dumbbell row at 0.36 confidence**, against 145 lb led by
+the fatigued pulldown at 0.44. The check that mattered was the demo year: every muscle moves under
+3.5 %, eight of eleven are still led by the same fresh lift, and confidence falls only on the four
+muscles trained after compounds. A safety rail, not a rewrite, which is what the plan said it had to
+be.
+
+**One rule in my own plan was wrong and its test caught it.** I had written "confidence must not rise
+because of a fatigued reading" as an absolute, asserted it, and it failed. A third reading landing
+*between* two that disagree genuinely does tighten the picture — his three imply 115, 229 and 136, and
+the 136 sits in the middle. A fatigued reading is weaker evidence, not anti-evidence. Replaced with
+the property that is actually provable: the same reading taken tired yields less confidence than taken
+fresh. The end-to-end rise is now +0.01 against +0.04, recorded as measured rather than legislated.
+
+Both halves mutation-checked: removing the fatigue term flips five assertions, counting prior volume
+before an exercise's own sets rather than after flips four.
+
+**Found while driving the browser to look at it:** `#/muscles` is not a route and silently renders
+Home — the map is a mode on `#/graphs`. `tools/a11y-audit.mjs` lists `#/muscles` in its ROUTES, so
+the accessibility audit has been measuring Home twice and **the body map's panel has never been
+audited**. Recorded, not chased.
+
+Told Tim plainly that this does not establish he is stronger than 145 lb — his three lifts still
+disagree two-fold, and the competing explanation, that doubling a one-arm dumbbell row onto a two-arm
+barbell row is generous, is untouched.

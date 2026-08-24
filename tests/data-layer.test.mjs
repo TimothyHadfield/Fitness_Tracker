@@ -1874,6 +1874,163 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await st.clearAll();
 }
 
+/* ================= within-session fatigue ================= *
+ *
+ * ⚠️ TIM'S SESSION, 2026-08-24, and the defect it exposed. He did assisted
+ * pull-ups, then dumbbell rows, then lat pulldowns, and was too worn out to load
+ * the pulldown. The pulldown then LED his Back rating — not because the app
+ * rates pulldowns highly (it does not; the row family outranks them) but because
+ * `evidenceWeight` multiplies by `repFactor(reps)`, which rewards low reps on
+ * the premise that few reps means the weight was near a limit.
+ *
+ *     Lat Pulldown   quality 0.50 x repFactor(8)  = 0.425   <- led
+ *     Dumbbell Row   quality 0.60 x repFactor(10) = 0.420
+ *
+ * It led by 0.005, entirely because fatigue held him to 8 reps instead of 10.
+ * ⚠️ So fatigue did not merely depress the reading, it PROMOTED the depressed
+ * reading — and adding it moved his Back rating down 32 % while moving his
+ * confidence UP. docs/fatigue-plan.md.
+ */
+{
+  const { store: st, muscleStrength } = await import('../js/store.js');
+  const { fatigueFactor, FATIGUE_HALF_SETS, rateMuscle } = await import('../js/muscle-evidence.js');
+
+  /* ---------- the factor itself ---------- */
+  ok(fatigueFactor(0) === 1 && fatigueFactor(undefined) === 1 && fatigueFactor(null) === 1,
+     'no prior work means no discount, and so does not knowing');
+  ok(fatigueFactor(-5) === 1, 'and negative prior volume is refused rather than becoming a BONUS');
+  ok(near(fatigueFactor(FATIGUE_HALF_SETS), 0.5),
+     `the constant means what it says: ${FATIGUE_HALF_SETS} prior sets halves the credibility`);
+  ok(fatigueFactor(1) > fatigueFactor(3) && fatigueFactor(3) > fatigueFactor(9),
+     'and it falls monotonically with prior work');
+  // ⚠️ THE ONE PROPERTY THAT MAKES A JUDGED CONSTANT ACCEPTABLE HERE. At no
+  // value of prior volume may this function return more than 1 — it can only
+  // ever withhold credibility, never manufacture it. That asymmetry is the whole
+  // argument for shipping a number nobody has measured.
+  let everAbove = false;
+  for (let v = 0; v <= 200; v += 0.25) if (fatigueFactor(v) > 1) everAbove = true;
+  ok(!everAbove, '⚠️ and across 800 values it NEVER exceeds 1 — it can only discount');
+
+  /* ---------- the arity contract ---------- */
+  const base = (over) => ({
+    estimate: 200, quality: 0.6, kind: 'direct', reps: 8, ageDays: 1,
+    isBenchmark: false, exerciseId: 'a', exerciseName: 'A', date: '2026-08-01', ...over,
+  });
+  const noField = rateMuscle([base({}), base({ exerciseId: 'b', exerciseName: 'B', estimate: 180 })]);
+  const explicitOne = rateMuscle([
+    base({ fatigueFactor: 1 }),
+    base({ exerciseId: 'b', exerciseName: 'B', estimate: 180, fatigueFactor: 1 }),
+  ]);
+  ok(near(noField.estimate, explicitOne.estimate) && near(noField.confidence, explicitOne.confidence),
+     '⚠️ an observation with NO fatigue field rates identically to a fresh one — unwired callers unchanged');
+
+  /* ---------- Tim's session, end to end through the store ---------- */
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs', compare: 'lifters' });
+  await st.logBodyWeight(180, '2026-08-01');
+  const eid = (n) => byName(n).id;
+  const day = new Date().toISOString().slice(0, 10);
+  const ent = (n, w, r, sets = 3) => ({
+    exerciseId: eid(n), exerciseName: n,
+    sets: Array.from({ length: sets }, () => ({ weight: w, reps: r })),
+  });
+  const AP = ent('Assisted Pull-Up', 70, 8);
+  const DR = ent('Dumbbell Row', 70, 10);
+  const LP = ent('Lat Pulldown', 90, 8);
+
+  const rateOrder = async (entries) => {
+    for (const s of await st.getSessions()) await st.deleteSession(s.id);
+    await st.saveSession({ workoutId: 'bd', workoutName: 'Back day', date: day, entries });
+    return (await muscleStrength()).muscles.get('Back');
+  };
+
+  const asDone = await rateOrder([AP, DR, LP]);
+  ok(asDone.contributors[0].exerciseName !== 'Lat Pulldown',
+     '⚠️ the lat pulldown he did third no longer LEADS his Back rating');
+  ok(asDone.contributors.find((c) => c.exerciseName === 'Lat Pulldown'),
+     'while still counting — it is discounted, not thrown away (dropping it outright measured WORSE)');
+
+  const lp = asDone.contributors.find((c) => c.exerciseName === 'Lat Pulldown');
+  const dr = asDone.contributors.find((c) => c.exerciseName === 'Dumbbell Row');
+  const ap = asDone.contributors.find((c) => c.exerciseName === 'Assisted Pull-Up');
+  ok(ap.priorVolume === 0 && ap.fatigueFactor === 1,
+     '⚠️ the FIRST exercise is never discounted — an exercise does not fatigue itself');
+  ok(dr.priorVolume === 3 && lp.priorVolume === 6,
+     `prior volume counts the sets that came before: row ${dr.priorVolume}, pulldown ${lp.priorVolume}`);
+  ok(lp.fatigueFactor < dr.fatigueFactor && dr.fatigueFactor < ap.fatigueFactor,
+     'and the discount is GRADED, not a flag — the third lift is discounted harder than the second');
+
+  /* ---------- ⚠️ ORDER NOW MATTERS AT ALL, which it did not before ---------- */
+  const reversed = await rateOrder([LP, DR, AP]);
+  ok(Math.abs(reversed.estimate - asDone.estimate) > 0.5
+     || reversed.contributors[0].exerciseName !== asDone.contributors[0].exerciseName,
+     '⚠️ the SAME three exercises in a different order now rate differently — before this they did not');
+  ok(reversed.contributors[0].exerciseName === 'Lat Pulldown',
+     'and done first, the pulldown leads again — the discount is about order, not about pulldowns');
+
+  /* ---------- ⚠️ CONFIDENCE, AND A RULE THAT HAD TO BE WEAKENED ---------- *
+   *
+   * The original defect: adding the fatigued third exercise moved Tim's Back
+   * estimate 32 % WORSE and his confidence UP, 0.40 -> 0.44, because `depth`
+   * counted it like any other reading.
+   *
+   * ⚠️ "CONFIDENCE MUST NEVER RISE ON A FATIGUED READING" WAS THE FIRST RULE
+   * WRITTEN HERE, AND IT IS WRONG. This test asserted it and failed, correctly.
+   * A third reading that lands BETWEEN two that disagree genuinely does tighten
+   * the picture — his three imply 115, 229 and 136, and the 136 sits in the
+   * middle, so the `agreement` term rises on its own account and deserves to.
+   * A fatigued reading is weaker evidence, not anti-evidence.
+   *
+   * So the provable property is the narrower one below, and the end-to-end rise
+   * is recorded as the measured fact it is rather than legislated away.
+   */
+  const tiredObs = (f) => ([
+    { estimate: 229, quality: 0.6, kind: 'direct', reps: 10, ageDays: 1, isBenchmark: false,
+      exerciseId: 'dr', exerciseName: 'Dumbbell Row', date: day, fatigueFactor: 1 },
+    { estimate: 136, quality: 0.5, kind: 'direct', reps: 8, ageDays: 1, isBenchmark: false,
+      exerciseId: 'lp', exerciseName: 'Lat Pulldown', date: day, fatigueFactor: f },
+  ]);
+  const asFresh = rateMuscle(tiredObs(1));
+  const asTired = rateMuscle(tiredObs(fatigueFactor(6)));
+  ok(asTired.confidence < asFresh.confidence,
+     `⚠️ the SAME reading taken tired yields less confidence than taken fresh `
+     + `(${asFresh.confidence.toFixed(3)} -> ${asTired.confidence.toFixed(3)})`);
+  ok(asTired.used[0].exerciseName === 'Dumbbell Row' && asFresh.used[0].exerciseName === 'Lat Pulldown',
+     'and it stops leading, which is the same fact seen from the other side');
+
+  const twoFresh = await rateOrder([AP, DR]);
+  const plusTired = await rateOrder([AP, DR, LP]);
+  const rise = plusTired.confidence - twoFresh.confidence;
+  ok(rise < 0.02,
+     `⚠️ and end to end the fatigued third exercise now barely moves confidence at all `
+     + `(+${rise.toFixed(3)}, against +0.04 before the fatigue term)`);
+
+  /* ---------- the hint, which is worth more than the weighting ---------- */
+  ok(/cleaner reading/.test(asDone.hint || '') && /Dumbbell Row/.test(asDone.hint || ''),
+     '⚠️ the panel names the lift and says doing it earlier would read better');
+  ok(!/tired you were/.test(asDone.hint || ''),
+     'and does not claim to know how tired he was, which nobody measured');
+  const freshFirst = await rateOrder([ent('Lat Pulldown', 140, 8), AP, DR]);
+  ok(!/cleaner reading/.test(freshFirst.hint || ''),
+     'and the hint is silent when the leading reading was taken fresh');
+  // Measured 2026-08-24: doing that pulldown first at a weight he could actually
+  // use is worth ~60 lb, where every re-weighting scheme measured was worth
+  // under 5. A fatigued set is MISSING information, not corrupted information.
+  ok(freshFirst.estimate > asDone.estimate + 40,
+     `one fresh reading is worth far more than the discount ever is `
+     + `(${Math.round(asDone.estimate)} -> ${Math.round(freshFirst.estimate)})`);
+
+  /* ---------- a benchmark stands alone ---------- */
+  for (const s of await st.getSessions()) await st.deleteSession(s.id);
+  await st.saveBenchmark({ exerciseId: eid('Barbell Row'), exerciseName: 'Barbell Row',
+    date: day, values: { weight: 225, reps: 5 } });
+  const bm = (await muscleStrength()).muscles.get('Back');
+  ok(bm.contributors[0].fatigueFactor === 1 && bm.contributors[0].priorVolume === 0,
+     '⚠️ a benchmark is never fatigued — it is its own session, with nothing in front of it');
+
+  await st.clearAll();
+}
+
 /* ================= current bests: numbers without a trend ================= */
 // Tim, 2026-08-17: the chart modes need two days before they draw anything, so a
 // new user who had logged a whole workout was told "Nothing to chart yet" while

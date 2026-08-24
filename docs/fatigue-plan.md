@@ -10,8 +10,62 @@ which he did third and could barely load.
 > its calculation of strength estimation."*
 
 ⚠️ **HE IS RIGHT THAT SOMETHING IS WRONG, AND RIGHT ABOUT WHICH LIFT LED.** He is wrong about the
-reason, and the real reason is sharper, smaller and more fixable than the one he proposed. **Nothing
-in this file is built.** §5 is the recommendation.
+reason, and the real reason is sharper, smaller and more fixable than the one he proposed.
+
+---
+
+## ✅ BUILT 2026-08-24 — Tiers 1 and 2. Tier 3 remains closed.
+
+Tim: *"make a plan and test it out and once you feel good about it deploy it."* Shipped the same day.
+**What follows is the plan as written; this section records what shipped and where the plan was
+wrong.**
+
+**In `js/store.js`:** `muscleStrength()` walks each session's entries in order and carries a running
+per-muscle tally of prior work, counted with `volume-map.js`'s own weights (direct 1.0, indirect 0.5).
+⚠️ **Counted AFTER each exercise's own sets**, never before — an exercise does not fatigue itself, and
+charging it for its own volume would discount the first exercise of every session. Every observation
+now carries `priorVolume` and `fatigueFactor`.
+
+**In `js/muscle-evidence.js`:** `fatigueFactor()` and `FATIGUE_HALF_SETS = 5`, folded into
+`evidenceWeight` and into the quality term of `confidenceOf()`. Plus the hint (item 5), which is the
+part measured to be worth the most.
+
+**Measured after shipping, on Tim's session:**
+
+```
+                        estimate   confidence   leader
+  before                  145 lb      0.44      Lat Pulldown  (done third)
+  after                   141 lb      0.36      Dumbbell Row
+  same three, pulldown first          0.40      Lat Pulldown
+```
+
+**And on the demo account's year, which is the check that mattered:** every muscle moves **under
+3.5 %** (largest: Forearms −3.4 %), while confidence falls exactly where it should — Biceps
+0.83 → 0.69, Forearms 0.60 → 0.48, Shoulders 0.61 → 0.53, Triceps 0.66 → 0.55. Those four are the
+muscles trained after compounds. **Eight of eleven muscles are still led by the same fresh lift.**
+A safety rail, not a rewrite, exactly as §2 argued it had to be.
+
+### ⚠️ ONE RULE IN THIS PLAN WAS WRONG, and the test caught it
+
+§5 item 3 said **"confidence must not RISE because of a fatigued reading"**. It was written as an
+absolute, asserted as an absolute, and **failed** — correctly.
+
+A third reading that lands *between* two that disagree genuinely does tighten the picture. Tim's
+three imply 115, 229 and 136 lb; the 136 sits in the middle, so the `agreement` term rises on its own
+account and deserves to. **A fatigued reading is weaker evidence, not anti-evidence**, and a rule that
+treats it as anti-evidence is wrong in the other direction.
+
+What is asserted instead is the property that is actually provable: **the same reading taken tired
+yields less confidence than taken fresh.** End to end the rise is now +0.01 against +0.04 before,
+recorded as a measured fact rather than legislated away.
+
+**Mutation-checked, both halves.** Removing the fatigue term from `evidenceWeight` flips five
+assertions; counting prior volume *before* an exercise's own sets instead of after flips four.
+
+**Still open:** §4's research question, and the §6 confound — **it is still not established that Tim
+is stronger than 145 lb.**
+
+---
 
 ---
 

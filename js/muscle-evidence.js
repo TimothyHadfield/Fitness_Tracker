@@ -606,7 +606,16 @@ function confidenceOf(used, all) {
   const wsum = used.reduce((a, u) => a + u.evidenceWeight, 0);
   if (!(wsum > 0)) return 0;
 
-  const quality = used.reduce((a, u) => a + u.quality * u.evidenceWeight, 0) / wsum;
+  // ⚠️ THE EFFECTIVE QUALITY, fatigue included, and that is the fix for the
+  // sharpest half of the 2026-08-24 finding. Adding a fatigued third exercise
+  // to Tim's back session made the estimate 32 % WORSE and the confidence
+  // HIGHER — 0.40 to 0.44 — because `depth` counts admissible evidence and
+  // nothing told this function that some of it was worth less. An observation
+  // you have reason to distrust must never make the app more certain.
+  //
+  // Both paths are closed by one term: `depth` sums evidenceWeight, which now
+  // carries fatigue, and the quality term reads it directly here.
+  const quality = used.reduce((a, u) => a + u.quality * fatigueOf(u) * u.evidenceWeight, 0) / wsum;
 
   // ⚠️ DEPTH IS MEASURED OVER EVERYTHING ADMISSIBLE, not over the three that
   // set the number. Its own definition is "how much admissible evidence there
@@ -642,11 +651,65 @@ function confidenceOf(used, all) {
   return Math.min(1, Math.pow(quality * depth * agreement * fresh, 0.25));
 }
 
+/* ------------------------------------------------------------------ *
+ * Within-session fatigue
+ * ------------------------------------------------------------------ */
+
+/**
+ * Prior work on a muscle, in sets, at which an observation of it is worth half
+ * as much.
+ *
+ * ⚠️ THIS NUMBER IS OURS AND NOTHING SUPPORTS IT, in the same way LAYOFF_DAYS
+ * and the rep ladder in progression.js are ours. The ACSM 2026 stand grades
+ * exercise order at 88 % quality of evidence — the highest of anything in it —
+ * but publishes a GRADE and not an effect size, so there is nothing to fit to.
+ * See docs/fatigue-plan.md §4.
+ *
+ * ⚠️ IT IS ACCEPTABLE HERE FOR THE REASON A GUESSED DELOAD PERCENTAGE IS NOT:
+ * it can only ever DISCOUNT. At any value it withholds credibility from an
+ * observation; at no value can it make a muscle read stronger than the sets
+ * recorded, and at no value can it put weight on a bar. That asymmetry is what
+ * lets a judged constant stand in for a measured one.
+ *
+ * Five sets rather than three or ten, and the argument is at least stateable:
+ * this app's own volume model puts a muscle's whole WEEKLY target near 7–10
+ * sets, so five in a single session before another exercise even starts is a
+ * lot of prior work. Measured consequence, which is the real check: across the
+ * demo account's year every muscle moves under 2 % at this value, and 0 of 11
+ * change which lift leads them. It bites on badly-ordered sessions and leaves
+ * well-ordered ones alone, which is exactly the job.
+ */
+export const FATIGUE_HALF_SETS = 5;
+
+/**
+ * How much an observation is discounted for work already done on that muscle
+ * earlier in the same session.
+ *
+ * @param {number} priorVolume  sets on this muscle already logged that day,
+ *   counted with volume-map.js's own weights — direct 1.0, indirect 0.5.
+ * @returns 1 for a fresh observation, falling toward 0. Never above 1: a
+ *   fatigued reading is never worth MORE, and this function is the only place
+ *   that could accidentally say otherwise.
+ */
+export function fatigueFactor(priorVolume) {
+  const v = Number(priorVolume);
+  if (!Number.isFinite(v) || v <= 0) return 1;
+  return 1 / (1 + v / FATIGUE_HALF_SETS);
+}
+
+// ⚠️ Absent means FRESH, and every caller that has not been wired up gets
+// exactly the behaviour it had before this existed. Same arity contract as
+// contributionsFor()'s `opts`: an observation with no fatigue field is one
+// nobody has measured fatigue for, and inventing a discount for it would
+// quietly re-rate every history in the app.
+const fatigueOf = (o) => (Number.isFinite(o.fatigueFactor) ? o.fatigueFactor : 1);
+
 /**
  * Rate one muscle from its observations.
  *
  * @param {Array} observations  { estimate, quality, kind, reps, ageDays,
- *                                isBenchmark, exerciseId, exerciseName, date }
+ *                                isBenchmark, exerciseId, exerciseName, date,
+ *                                fatigueFactor? }
  *   `estimate` is already converted to the muscle's KEY LIFT in pounds.
  * @returns null when nothing is admissible, else
  *   { estimate, confidence, used[], kind, contributorCount, newestAgeDays }
@@ -676,8 +739,22 @@ export function rateMuscle(observations) {
     // bar — and overwriting it here silently replaced every displayed lift with
     // its own confidence score. Caught by the test asserting a 205 lb set; it
     // read 0.91.
+    // ⚠️ THE FATIGUE TERM IS HERE BECAUSE THE DEFECT IS HERE. `repFactor`
+    // rewards low reps, on the premise that few reps means the weight was near
+    // a limit — and that premise is FALSE for a lifter who stopped early
+    // because the muscle was already spent. Measured on Tim's 2026-08-24
+    // session: a lat pulldown done third scored 0.50 x repFactor(8) = 0.425 and
+    // out-ranked his dumbbell row at 0.60 x repFactor(10) = 0.420. It led the
+    // whole rating BY 0.005, entirely because fatigue held him to 8 reps
+    // instead of 10.
+    //
+    // ⚠️ So fatigue did not merely depress the reading — it PROMOTED the
+    // depressed reading. A fatigued set and a heavy near-max set are
+    // indistinguishable to a rep count; this is the term that tells them apart,
+    // and it is the whole reason the rating moved 32 % on one exercise.
+    // docs/fatigue-plan.md §1.
     evidenceWeight: o.quality * repFactor(o.reps) * recencyWeight(o.ageDays)
-      * (o.isBenchmark ? BENCHMARK_BONUS : 1),
+      * fatigueOf(o) * (o.isBenchmark ? BENCHMARK_BONUS : 1),
   })).filter((o) => o.evidenceWeight > 0);
   if (!scored.length) return null;
 
@@ -829,6 +906,39 @@ export function raiseConfidenceHint(muscle, rating) {
         + 'give it something to agree with.'
       : `Only one exercise counts toward this. A different ${muscle.toLowerCase()} exercise would confirm it.`;
   }
+  // ⚠️ THE HIGHEST-VALUE LINE IN THIS FUNCTION, and it is worth saying why.
+  // Every re-weighting scheme measured against Tim's 2026-08-24 session moved
+  // his Back rating by under 5 lb. Doing the same lat pulldown FIRST, at the
+  // weight he could actually use fresh, moved it by 60.
+  //
+  // ⚠️ A FATIGUED SET IS MISSING INFORMATION, NOT CORRUPTED INFORMATION. There
+  // is no weighting that recovers a number nobody recorded, so the only real
+  // fix is another observation — and this is the one place in the app that can
+  // ask for one. docs/fatigue-plan.md §3.
+  //
+  // ⚠️ And it is not a one-session problem. rateMuscle() keeps the BEST-EVER
+  // estimate per exercise, which sounds like it heals itself and does not:
+  // programme order is fixed, so a lift that is always third is always
+  // understated, for as long as that programme runs. One fresh session fixes it
+  // permanently, and nothing else does.
+  // ⚠️ TWO SETS, because below that the line is not worth its own space. At one
+  // set of prior work the discount is 17 % and the advice would be noise on a
+  // phone; at two it is 29 % and the reading really is being held back. This is
+  // a DISPLAY threshold, not a model one — the discount itself applies from the
+  // first set either way, and nothing about the rating depends on this number.
+  const HINT_MIN_PRIOR_SETS = 2;
+  const led = rating.used[0];
+  if (led && fatigueOf(led) < 1 && led.priorVolume >= HINT_MIN_PRIOR_SETS) {
+    // ⚠️ Says what was measured and nothing more. An earlier draft read "it says
+    // more about how tired you were than how strong you are", which is a claim
+    // about a cause nobody measured — and at a 29 % discount it is simply
+    // false. What is true is that the set came after other work and that doing
+    // it earlier would read better. Rule 5.
+    return `Your best reading here is ${led.exerciseName}, done after about `
+      + `${Math.round(led.priorVolume)} sets of ${muscle.toLowerCase()} work that session. `
+      + 'Doing it earlier in a session once would give it a cleaner reading.';
+  }
+
   const bestQuality = Math.max(...rating.used.map((u) => u.quality));
   if (bestQuality < 0.8 && keyLift) {
     return `Based on close matches rather than the standard lift. A heavy set of ${keyLift} would confirm it.`;

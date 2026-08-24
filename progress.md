@@ -201,7 +201,7 @@ width, no horizontal overflow**, and on a repeat session the suggestion reads *"
 and back to 8 reps"* over *"5 lbs comes off the stack — that takes you from 110 lbs to 115 lbs of your
 own weight, a 4.5 % step inside the recommended 2–10 %."*
 
-### ⚠️ A fifth thing came out of the same session — and it is measured, not built
+### ⚠️ A fifth thing came out of the same session — WITHIN-SESSION FATIGUE, now shipped
 
 He also suspected the app was rating his back off the lat pulldown he did **third**, when he was too
 worn out to load it. **He is right that something is wrong.** Measured: the fatigued third exercise
@@ -213,8 +213,29 @@ pulldown out-ranked his best lift **by 0.005, purely on a rep count fatigue caus
 re-weighting scheme is worth more than 5 lb, while doing the lift *fresh* is worth 60 — because a
 fatigued set is **missing** information, not corrupted information.
 
-Plan in `docs/fatigue-plan.md`, Open work **0g**. **Nothing is built.** Read §1 before touching
-`rateMuscle()`; the load multiplier is Tier 3 and should not be built at all.
+**Tiers 1 and 2 shipped the same day** on Tim's *"deploy it now"*: every observation now carries the
+prior work on that muscle from earlier in the session, a graded `fatigueFactor` discounts it, and the
+panel says *"done after about 3 sets of back work that session — doing it earlier once would give it
+a cleaner reading."* His session now reads **141 lb led by the dumbbell row, confidence 0.36**, and
+the demo year moves **under 3.5 % on every muscle** with confidence falling only on the four trained
+after compounds. ⚠️ **Read `docs/fatigue-plan.md` §1 before touching `rateMuscle()`, and note that
+one rule in that plan was WRONG and its own test caught it** — "confidence must never rise on a
+fatigued reading" is too strong, because a reading that lands between two disagreeing ones really
+does tighten the picture. **The load multiplier is Tier 3 and should not be built at all.**
+
+### ⚠️ Found while driving the browser: `#/muscles` IS NOT A ROUTE, and the a11y audit thinks it is
+
+Verifying the fatigue work on a phone-sized viewport meant opening the muscle panel, and
+`location.hash = '#/muscles'` **rendered Home**. There is no `muscles` case in `app.js`'s `resolve()`
+— the map is a MODE on `#/graphs`, reached by the Data tab's Calendar · Graph · Bars · Muscles
+switch — so the router falls through to its `default: return HomeView()`.
+
+⚠️ **`tools/a11y-audit.mjs` lists `['#/muscles', 'Muscles']` in its ROUTES.** That means the audit
+has been **measuring Home twice and reporting it as the muscle map**, and the body map's panel —
+contrast on seven level colours, the tap targets on the figure — **has never actually been audited.**
+Not fixed, not chased; recorded because a coverage claim that is false is worse than a gap that is
+known. It is one line in the audit tool and one route in the router, and somebody should decide which
+of the two is the bug.
 
 ### ⚠️ Two of his four asks are NOT built — see Open work 0d and 0e
 
@@ -1489,8 +1510,13 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    recorder's own data and handed over later if that person joins. That is the case Tim actually hit,
    because his friend could not sign in at all.
 
-0g. **⚠️ WITHIN-SESSION FATIGUE DISTORTS THE MUSCLE RATING — measured 2026-08-24, plan written,
-   nothing built.** Full write-up in `docs/fatigue-plan.md`; §1 is the finding and §5 is the plan.
+0g. ~~**⚠️ WITHIN-SESSION FATIGUE DISTORTS THE MUSCLE RATING**~~ ✅ **TIERS 1 AND 2 BUILT AND
+   DEPLOYED 2026-08-24**, same day as the finding, on Tim's *"deploy it now"*. The finding and the
+   measurements are below and still worth reading; `docs/fatigue-plan.md` opens with what shipped.
+   ⚠️ **Tier 3 — the load multiplier — is deliberately NOT built and should stay that way**, and the
+   §6 confound is unresolved: **it is still not established that Tim is stronger than 145 lb.**
+
+   Full write-up in `docs/fatigue-plan.md`; §1 is the finding and §5 is the plan.
 
    Tim did assisted pull-ups, then dumbbell rows, then lat pulldowns, and suspected the app was
    rating his back off the exercise he was too tired to load. **He is right that something is wrong
@@ -1676,9 +1702,9 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2303 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2324 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1119 assertions, **no dependencies** |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1140 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 81 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
@@ -1687,7 +1713,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Goals tests** | `node tests/goals.test.mjs` — 229 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier. ⚠️ Since 2026-08-24 it also **plays an assist machine forward through forty obeyed sessions** and asserts it never once proposes more assistance. That section replaced two assertions that were green while the bug was live, because they read the SOURCE for a guard rather than driving the function with the exercise that reaches it |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
-| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
+| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. ⚠️ **Its `#/muscles` route does not exist and silently renders Home** (found 2026-08-24), so it has been auditing Home twice and **the body map's panel has never been audited at all**. Fix the ROUTES entry to `#/graphs` plus a click on the Muscles segment, or give the router the route. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 367 assertions, mounts every screen. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
