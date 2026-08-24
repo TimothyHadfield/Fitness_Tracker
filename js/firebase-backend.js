@@ -67,13 +67,37 @@ async function init() {
 
     const authClient = auth.getAuth(app);
 
-    // A Google sign-in that went the redirect route lands back here. This must
-    // run before the anonymous fallback below, or we would create a throwaway
-    // anonymous account on top of a successful sign-in.
-    try {
-      await auth.getRedirectResult(authClient);
-    } catch (err) {
-      console.error('Google redirect sign-in failed', err);
+    /* A Google sign-in that went the redirect route lands back here. This must
+     * run before the anonymous fallback below, or we would create a throwaway
+     * anonymous account on top of a successful sign-in.
+     *
+     * ⚠️ ONLY ASKED WHERE A REDIRECT COULD HAVE HAPPENED — added 2026-08-22
+     * after Tim hit this on his iPhone:
+     *
+     *     "Unable to process request due to missing initial state. This may
+     *      happen if browser sessionStorage is inaccessible or accidentally
+     *      cleared … 2) Using signInWithRedirect in a storage-partitioned
+     *      browser environment."
+     *
+     * That is `auth/missing-initial-state`, and calling `getRedirectResult()`
+     * is what asks for the state it is complaining about. On iOS Safari the
+     * sessionStorage the redirect flow needs is partitioned away from this
+     * origin, so the question cannot be answered — and in THIS configuration it
+     * should never be asked, because `redirectCanComplete()` is false: the app
+     * is on `timothyhadfield.github.io` and the authDomain is not, so a redirect
+     * could never legitimately have been started in the first place.
+     *
+     * ⚠️ Guarded on the same predicate the sign-in path uses, not on a browser
+     * check. The day this app moves to a domain where redirect works, both
+     * halves start working together — a guard that had to be remembered
+     * separately is a guard that gets forgotten.
+     */
+    if (redirectCanComplete(FIREBASE_CONFIG)) {
+      try {
+        await auth.getRedirectResult(authClient);
+      } catch (err) {
+        console.error('Google redirect sign-in failed', err);
+      }
     }
 
     // Keep a live subscription — the uid can change at any time (sign in, sign

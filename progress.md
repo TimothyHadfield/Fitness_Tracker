@@ -82,6 +82,56 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-22, ninth pass — ⚠️ "missing initial state" ON THE IPHONE
+
+**Tim, opening the app:** *"Unable to process request due to missing initial state. This may happen
+if browser sessionStorage is inaccessible or accidentally cleared … 2) Using signInWithRedirect in a
+storage-partitioned browser environment."*
+
+That is Firebase's `auth/missing-initial-state`. ⚠️ **The wording is the SDK's own, and this app never
+contains that string** — `requireRemote()` says "Not connected to your account right now" and the
+router's error box prints `err.message`, so a raw SDK sentence reaching a user means either the SDK
+threw into a view or **he is looking at Firebase's own auth-handler page rather than at this app.**
+
+### What was wrong on our side, and it is now fixed
+
+`init()` called **`getRedirectResult()` on every single boot** — and calling it is precisely what asks
+for the "initial state" the error is about. On iOS Safari the sessionStorage that the redirect flow
+keeps its state in is partitioned away from this origin, so the question cannot be answered.
+
+⚠️ **And in this configuration the question should never have been asked at all.**
+`redirectCanComplete()` is false here — the app is served from `timothyhadfield.github.io` and the
+authDomain is `fitness-tracker-th.firebaseapp.com` — so **a redirect could never legitimately have
+been started**, and there was never any result to collect. The boot path was asking a question its
+own sign-in path already knew was meaningless.
+
+It is now guarded on that same predicate. ⚠️ **The same predicate, not a browser check**: the day
+this app moves to a domain where redirect works, both halves start working together, and a guard
+that has to be remembered separately is a guard that gets forgotten. **Mutation-checked** —
+removing it flips exactly the new assertion.
+
+⚠️ **Asserted on the SOURCE, and the reason is worth recording.** `init()` cannot be unit-tested
+without the live SDK, a network and a browser, so the test reads `firebase-backend.js` and requires
+the guard to sit immediately above the call. Same shape as the `sw.js` precache check: a structural
+assertion is worth more than none, and what must not quietly come back is the *unguarded* call.
+
+### ⚠️ What this does NOT explain, and must not be claimed to
+
+**A guard added today cannot fix a build already on his phone**, and the most likely reason he is
+seeing Firebase's page at all is that his installed app is sitting on the auth handler URL from a
+redirect an OLDER build started — the build where `prefersRedirect()` still returned true for an
+installed iOS app. `start_url` is `./index.html#/home`, so a **cold** launch goes to the app; a
+*resumed* one returns to whatever page was last open, which is the same mechanism as the stale-app
+problem in the sixth pass.
+
+**Told him plainly:** fully close the app and reopen (a cold start ignores the stuck page), and if
+that fails, remove the home-screen icon and re-add it, which resets the app to `start_url`. ⚠️ **His
+training is in his account, not in the icon** — he signs in with email, so the data is in Firestore
+and re-adding cannot lose it. That would NOT be true of an anonymous account (D12), which is why the
+answer says which case it depends on rather than "don't worry".
+
+---
+
 ## 2026-08-22, eighth pass — SIX TABS BECAME FIVE, and the middle one is Record
 
 **Tim's design call**, and the app's own rules had been arguing for the central part of it since the

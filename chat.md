@@ -4538,3 +4538,34 @@ Measured at 360 / 375 / 393: no clipping, no overflow, tabs 72–79 × 54, middl
 and every merged tab stays lit on the routes it now owns.
 
 2261 assertions green. Tim said he will keep working on the design, Home especially.
+
+---
+
+## 2026-08-22, sixth pass — "missing initial state" on the iPhone
+
+Tim opened the app and got Firebase's `auth/missing-initial-state` page: *"…2) Using
+signInWithRedirect in a storage-partitioned browser environment."*
+
+Checked rather than guessed where that text could come from. **This app never contains that string** —
+`requireRemote()` says "Not connected to your account right now", and the router's error box prints
+`err.message`. So a raw SDK sentence in front of a user means either the SDK threw into a view, or he
+is looking at Firebase's own auth-handler page instead of at the app.
+
+One thing was genuinely wrong on our side. `init()` called **`getRedirectResult()` on every boot**,
+and calling it is exactly what asks for the "initial state" the error names. On iOS the sessionStorage
+that the redirect flow keeps its state in is partitioned away from this origin, so the question cannot
+be answered — and in this configuration it should never be asked, because `redirectCanComplete()` is
+already false: the app is on github.io, the authDomain is not, so a redirect could never legitimately
+have started and there was never a result to collect. The boot path was asking a question the sign-in
+path already knew was meaningless. Guarded on that same predicate, so if the app ever moves to a
+domain where redirect works, both halves start working together.
+
+Asserted on the source, because `init()` cannot be unit-tested without the live SDK, a network and a
+browser — the same shape as the sw.js precache check. Mutation-checked.
+
+Said plainly what this does **not** fix: a guard added today cannot reach a build already on his
+phone, and the likeliest reason he is seeing that page at all is his installed app resuming onto the
+auth handler URL from a redirect an older build started. `start_url` is `./index.html#/home`, so a
+cold launch goes to the app; a resumed one returns to whatever was last open. Told him to fully close
+and reopen, and to re-add the home-screen icon if that fails — and that his training is safe because
+he signs in with email, which would not have been true of an anonymous account.

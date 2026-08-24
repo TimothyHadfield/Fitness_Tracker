@@ -631,6 +631,35 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
   globalThis.window = realWindow;
 }
 
+/* ⚠️ AND THE BOOT PATH ASKS THE SAME QUESTION — 2026-08-22.
+ *
+ * Tim opened the app on his iPhone and got Firebase's own page:
+ *
+ *   "Unable to process request due to missing initial state … 2) Using
+ *    signInWithRedirect in a storage-partitioned browser environment."
+ *
+ * That is `auth/missing-initial-state`, and calling `getRedirectResult()` is
+ * what asks for the state it complains about. In THIS configuration a redirect
+ * could never legitimately have started — the app is on github.io and the
+ * authDomain is not — so the question should never be asked at boot either.
+ *
+ * ⚠️ ASSERTED ON THE SOURCE, because `init()` cannot be unit-tested without the
+ * live SDK, a network and a browser. It is the same shape as the sw.js precache
+ * check: a structural assertion is worth more than no assertion, and what must
+ * not silently come back is the UNGUARDED call. */
+{
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../js/firebase-backend.js', import.meta.url), 'utf8');
+  const call = src.indexOf('auth.getRedirectResult(');
+  ok(call !== -1, 'the redirect result is still collected somewhere — the flow is not silently gone');
+
+  // The guard must sit above the call, in the same function.
+  const guard = src.lastIndexOf('if (redirectCanComplete(FIREBASE_CONFIG))', call);
+  ok(guard !== -1 && call - guard < 400,
+     '⚠️ getRedirectResult() is only called where a redirect could actually have completed — '
+     + 'asking otherwise is what produced auth/missing-initial-state on an iPhone');
+}
+
 /* ---------- what to do when a Google sign-in fails ---------- */
 // Reported by Tim: "sometimes when I sign in using google, it says Your browser
 // blocked the sign-in window". The popup was not the problem. Linking an
