@@ -4459,3 +4459,41 @@ which is the whole point. Mutation-checked.
 Told him plainly that none of this reaches the build already on his phone — that copy has no
 listener to fire, so he has to pick the new version up once by hand. After that it should never be
 necessary again.
+
+---
+
+## 2026-08-22, fourth pass — "it's pretty laggy when I click the bars at the bottom"
+
+Tim asked whether the nav lag was Firebase's free tier or his phone. **Neither**, and the measurement
+said so before anything was changed. At 4× CPU throttling in a real browser, building a screen costs
+11–72 ms. What each tab actually did was ask the backend for whole collections it had already been
+handed: **Workouts 5 reads, Goals 7**, and `sessions` re-fetched by four of the six tabs.
+
+On Firestore every one of those is a `getDoc`, and a `getDoc` **waits for the server even with
+offline persistence turned on** — persistence is a fallback for being offline, not a fast path. So a
+tab tap cost a network round trip per collection, some serialised: about 400 ms on good wifi and over
+a second on cellular, for data already in the page.
+
+`store.js` now keeps each collection in memory. Every tab does **zero blocking reads** after the
+first visit, re-measured the same way.
+
+The interesting part was the line the cache may not cross. This store does read-modify-write
+everywhere, so serving *those* reads from a cache would mean writing a stale list back over storage
+and erasing anything changed on another device. Getters are cached; mutations still read straight
+from the backend. `saveSettings` was the single exception and now reads fresh — with an assertion
+that flips the moment the hazard is put back, which is what proves it is load-bearing rather than
+decorative.
+
+Two things surfaced on the way. `ensureSystems()` was re-reading two collections on *every* call to
+re-answer a migration question settled months ago — and it runs on both `getSystems()` and
+`getWorkouts()`, so the Workouts tab was paying two round trips for it. A latch was the obvious fix
+and the tests rejected it inside a minute: "no orphans, so never look again" is true of a running app
+and false of a restored backup, a different account, or a test seeding storage directly. Routing the
+*check* through the cache while the *fix-up* still reads fresh is the honest version of the same
+saving.
+
+Also warmed all eight collections in one parallel batch after the first paint, so the whole app costs
+one round trip of latency instead of one per collection per tab.
+
+2257 assertions green, plus a browser smoke test that walks every tab twice and fails on any console
+error.

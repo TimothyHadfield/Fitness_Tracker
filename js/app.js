@@ -1,6 +1,6 @@
 // Router + boot.
 
-import { store, demo } from './store.js';
+import { store, demo, warmReadCache } from './store.js';
 import { el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas } from './ui.js';
 import {
   HomeView, StartPickerView, WorkoutsView, SystemRouteView, WorkoutRouteView,
@@ -236,6 +236,14 @@ function trackKeyboard() {
   if (!location.hash) location.hash = '#/home';
   await render();
   registerServiceWorker();
+  // ⚠️ AFTER the first screen is on the page, and never awaited. Every tab
+  // needs some of the same collections, and left to the screens those reads
+  // happen a few at a time, per visit — the Goals tab alone asked for seven,
+  // and on Firestore each one is a network round trip. Fetching them once in
+  // parallel here means the whole app costs one round trip of latency instead
+  // of one per collection per tab. Nothing waits for it and it cannot fail
+  // loudly: this screen already works without it.
+  warmReadCache();
 })();
 
 // Registered AFTER the first render, and never awaited. D6 says a gym with no

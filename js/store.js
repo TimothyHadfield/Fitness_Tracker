@@ -194,8 +194,118 @@ async function adoptLocalData(mod) {
 
 const backend = {
   async read(collection) { return (await active()).read(collection); },
-  async write(collection, rows) { return (await active()).write(collection, rows); },
+  async write(collection, rows) {
+    const okay = await (await active()).write(collection, rows);
+    // We have just decided what this collection contains, so the cache is not
+    // guessing — it is recording. Set AFTER the await: a write that threw has
+    // changed nothing, and caching what we hoped to store would be a lie the
+    // rest of the session reads back as fact.
+    readCache.set(collection, (rows || []).slice());
+    lastRead.set(collection, Date.now());
+    return okay;
+  },
 };
+
+/* ------------------------------------------------------------------ *
+ * THE READ CACHE — why tapping a nav tab used to wait for the network
+ *
+ * ⚠️ Measured 2026-08-22, after Tim reported the nav bar feeling laggy on his
+ * iPhone on good signal. Building a screen is NOT the cost: at 4× CPU
+ * throttling every tab renders in 11–72 ms. What each tab did was ask the
+ * backend for whole collections it had already been given:
+ *
+ *     Workouts  5 reads     Calendar  2 reads
+ *     Data      4 reads     Goals     7 reads
+ *
+ * and `sessions` was re-fetched by four of the six. On Firestore every one of
+ * those is a `getDoc`, and a `getDoc` waits for the SERVER even with offline
+ * persistence enabled — the local copy is a fallback for being offline, not a
+ * fast path. So a tab tap cost one round trip per collection, serially in
+ * places: about 400 ms on good wifi and over a second on cellular, for data
+ * already sitting in the page. **It was never Firebase being slow, and never
+ * the phone. It was asking the same questions again.**
+ *
+ * ⚠️ THE CACHE IS ONLY FOR READ-ONLY GETTERS, AND THAT IS THE SAFETY ARGUMENT.
+ * This store does read-modify-write everywhere: read a collection, change one
+ * row, write the whole thing back. Serving one of THOSE reads from a cache
+ * would mean a second device's change is invisible when the list is written
+ * back — and the write would erase it. Mutations therefore keep calling
+ * `backend.read` directly and are exactly as safe as they were before this
+ * existed. `saveSettings` was the single exception, reading through a getter
+ * before writing, and it now reads fresh.
+ *
+ * ⚠️ REVALIDATION IS SILENT AND NEVER RE-RENDERS. A background refresh keeps
+ * the NEXT navigation correct; nothing repaints under a thumb. That is the same
+ * call sw.js makes about a new deploy, for the same reason — being briefly out
+ * of date is a small cost, and a screen rearranging itself mid-tap is not.
+ * ------------------------------------------------------------------ */
+
+const readCache = new Map();
+const lastRead = new Map();
+const revalidating = new Set();
+
+// Long enough that a burst of tab switching costs nothing, short enough that a
+// change made on another device shows up within a minute of ordinary use.
+const REVALIDATE_MS = 30000;
+
+/** Drop everything. Anything that changes WHOSE data this is must call it. */
+export function clearReadCache() {
+  readCache.clear();
+  lastRead.clear();
+}
+
+/**
+ * Fetch every collection once, in PARALLEL, so the first tap on any tab is
+ * already warm.
+ *
+ * ⚠️ The saving is the shape of the waiting, not the number of bytes. Left to
+ * the screens, these reads happen a few at a time, per screen, and some of them
+ * are serialised behind each other — the Goals tab alone asked for seven. Done
+ * here they are one `Promise.all`, so the whole app costs ONE round trip of
+ * latency instead of one per collection per visit.
+ *
+ * ⚠️ Fire-and-forget, and failure is silent. It is called after the first
+ * screen is already on the page, so nothing waits for it, and a cold start in a
+ * gym with no signal must not produce an error about an optimisation (D6). Any
+ * collection it misses is simply read the old way when a screen asks.
+ */
+export function warmReadCache() {
+  return Promise.all(COLLECTIONS.map((c) => readCached(c).catch(() => null)))
+    .then(() => undefined)
+    .catch(() => undefined);
+}
+
+async function readCached(collection) {
+  if (readCache.has(collection)) {
+    maybeRevalidate(collection);
+    // ⚠️ A COPY of the array, every time. Callers sort and filter these rows —
+    // `getSessions()` sorts on the way out — and an in-place sort of the cached
+    // array would quietly reorder what everybody else is about to be handed.
+    // The row objects themselves are shared, which is what the store has always
+    // done; it is the list that is now long-lived.
+    return readCache.get(collection).slice();
+  }
+  const rows = await backend.read(collection);
+  readCache.set(collection, rows.slice());
+  lastRead.set(collection, Date.now());
+  return rows;
+}
+
+function maybeRevalidate(collection) {
+  if (revalidating.has(collection)) return;
+  if (Date.now() - (lastRead.get(collection) || 0) < REVALIDATE_MS) return;
+  revalidating.add(collection);
+  backend.read(collection)
+    .then((rows) => {
+      readCache.set(collection, rows.slice());
+      lastRead.set(collection, Date.now());
+    })
+    // ⚠️ Silent. This runs while somebody is using the app, very often in a gym
+    // with no signal, and a failed refresh is the absence of news rather than an
+    // error (D6). The cached rows stay exactly as they were.
+    .catch(() => {})
+    .finally(() => revalidating.delete(collection));
+}
 
 /* ------------------------------------------------------------------ *
  * The demo switch
@@ -416,7 +526,7 @@ export const store = {
   /* --- exercises --- */
 
   async getExercises() {
-    const custom = await backend.read('customExercises');
+    const custom = await readCached('customExercises');
     return [...BUILT_IN_EXERCISES, ...custom];
   },
 
@@ -456,22 +566,45 @@ export const store = {
   ensureSystems() {
     if (systemsMigration) return systemsMigration;
     systemsMigration = (async () => {
+      // ⚠️ THE CHECK READS THROUGH THE CACHE; THE FIX-UP DOES NOT.
+      //
+      // This runs on every getSystems() and every getWorkouts(), and it used to
+      // cost TWO backend reads each time to re-answer a question that is
+      // settled for good on almost every account — on Firestore that is two
+      // network round trips on the Workouts tab, every visit. Measured
+      // 2026-08-22 while working out why the nav bar felt laggy.
+      //
+      // ⚠️ A LATCH WAS THE WRONG FIX and the tests said so immediately. "No
+      // orphans, so never check again" is true of a running app and false of
+      // anything that can put old-shape rows back underneath it — a restored
+      // backup, a different account, a test seeding localStorage directly. The
+      // cache is the honest version of the same saving: it makes the check
+      // cheap without ever claiming the answer cannot change.
       const [systems, workouts] = await Promise.all([
+        readCached('systems'), readCached('workouts'),
+      ]);
+      if (!workouts.some((w) => !w.systemId)) return systems.map(normalizeSystem);
+
+      // ⚠️ From here it is a READ-MODIFY-WRITE, so it re-reads the real thing.
+      // Rewriting a whole collection from a cached copy is how a change made
+      // somewhere else gets erased.
+      const [freshSystems, freshWorkouts] = await Promise.all([
         backend.read('systems'), backend.read('workouts'),
       ]);
-      const orphans = workouts.filter((w) => !w.systemId);
-      if (!orphans.length) return systems.map(normalizeSystem);
+      const orphans = freshWorkouts.filter((w) => !w.systemId);
+      if (!orphans.length) return freshSystems.map(normalizeSystem);
+      const [systemsRows, workoutsRows] = [freshSystems, freshWorkouts];
 
-      let home = systems[0];
+      let home = systemsRows[0];
       if (!home) {
         const now = new Date().toISOString();
         home = { id: uid('sys'), name: DEFAULT_SYSTEM_NAME, notes: '', createdAt: now, updatedAt: now };
-        systems.push(home);
-        await backend.write('systems', systems);
+        systemsRows.push(home);
+        await backend.write('systems', systemsRows);
       }
       for (const w of orphans) w.systemId = home.id;
-      await backend.write('workouts', workouts);
-      return systems.map(normalizeSystem);
+      await backend.write('workouts', workoutsRows);
+      return systemsRows.map(normalizeSystem);
     })();
     // Cleared once settled, so a later call re-checks. After the first run there
     // are no orphans left, so re-checking costs two reads and writes nothing.
@@ -606,7 +739,7 @@ export const store = {
    */
   async getWorkouts(systemId) {
     await this.ensureSystems();
-    const rows = await backend.read('workouts');
+    const rows = await readCached('workouts');
     const all = rows.map(normalizeWorkout).sort((a, b) => {
       const ao = Number.isFinite(a.order) ? a.order : Infinity;
       const bo = Number.isFinite(b.order) ? b.order : Infinity;
@@ -616,7 +749,7 @@ export const store = {
   },
 
   async getWorkout(id) {
-    const rows = await backend.read('workouts');
+    const rows = await readCached('workouts');
     const row = rows.find((r) => r.id === id);
     return row ? normalizeWorkout(row) : null;
   },
@@ -639,12 +772,12 @@ export const store = {
   /* --- completed sessions --- */
 
   async getSessions() {
-    const rows = await backend.read('sessions');
+    const rows = await readCached('sessions');
     return rows.sort((a, b) => b.date.localeCompare(a.date));
   },
 
   async getSession(id) {
-    const rows = await backend.read('sessions');
+    const rows = await readCached('sessions');
     return rows.find((r) => r.id === id) || null;
   },
 
@@ -674,7 +807,7 @@ export const store = {
    * that counts. See pickBenchmarkSet for how "counts" is decided.
    */
   async getBenchmarks() {
-    const rows = await backend.read('benchmarks');
+    const rows = await readCached('benchmarks');
     return rows.sort((a, b) => b.date.localeCompare(a.date));
   },
 
@@ -727,7 +860,7 @@ export const store = {
   // to remove. Old goals are kept rather than deleted: whether a target was hit
   // is the most useful thing a person can know when setting the next one.
   async getGoals() {
-    const rows = await backend.read('goals');
+    const rows = await readCached('goals');
     return rows
       .filter((g) => g && g.id && g.muscle)
       .sort((a, b) => String(b.startDate || '').localeCompare(String(a.startDate || '')));
@@ -774,12 +907,17 @@ export const store = {
   /* --- settings --- */
 
   async getSettings() {
-    const rows = await backend.read('settings');
+    const rows = await readCached('settings');
     return rows[0] || { id: 'settings', units: 'lbs', theme: 'dark' };
   },
 
   async saveSettings(patch) {
-    const current = await this.getSettings();
+    // ⚠️ NOT this.getSettings(). This is a read-modify-write: it reads the row,
+    // merges a patch into it and writes the whole thing back, so a cached copy
+    // could silently drop a field changed on another device. Every other
+    // mutation in this store already reads straight from the backend; this was
+    // the only one going through a cached getter.
+    const current = await backend.read('settings').then((r) => r[0] || {});
     const next = { ...current, ...patch, id: 'settings' };
     await backend.write('settings', [next]);
     return next;
@@ -798,6 +936,12 @@ export const store = {
     for (const c of COLLECTIONS) {
       if (Array.isArray(data[c])) await backend.write(c, data[c]);
     }
+    // ⚠️ A restored backup is the ONE way old-shape workouts — the ones with no
+    // systemId — can come back after the migration has already run and latched
+    // itself off. Clearing it makes the next read re-check. The cache is
+    // cleared with it: every collection has just been replaced wholesale, and
+    // `backend.write` only refreshed the ones this file actually carried.
+    clearReadCache();
   },
 
   /* --- profile + body weight --- */
@@ -807,7 +951,7 @@ export const store = {
   // storing only that would throw away the trend line Tier 1 wants — and it
   // would be a migration later. One row per weigh-in costs nothing now.
   async getBodyWeights() {
-    const rows = await backend.read('bodyWeight');
+    const rows = await readCached('bodyWeight');
     return rows
       .filter((r) => r && typeof r.weight === 'number' && r.weight > 0 && r.date)
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -1036,16 +1180,37 @@ export const auth = {
     return this.state();
   },
 
+  /**
+   * ⚠️ THE CACHE IS DROPPED ON EVERY IDENTITY CHANGE, and this is the hook that
+   * guarantees it.
+   *
+   * The read cache is keyed by collection and NOT by account, because the store
+   * only ever serves one account at a time — but sign-in, sign-out, an
+   * anonymous account being upgraded and an account being deleted all change
+   * WHOSE rows those are. Clearing here rather than at each call site is the
+   * same argument `associateLabels()` makes: this fixes today's transitions and
+   * the next one somebody adds, and forgetting looks exactly like remembering.
+   *
+   * It runs BEFORE the app's own handler, so nothing downstream can read a
+   * previous account's rows out of the cache.
+   */
   onChange(fn) {
     if (!remoteImpl) return () => {};
-    return remoteImpl.onUserChange(fn);
+    return remoteImpl.onUserChange((...args) => {
+      clearReadCache();
+      return fn(...args);
+    });
   },
 
   async signUpEmail(email, password) { return requireRemote().signUpEmail(email, password); },
   async signInEmail(email, password) { return requireRemote().signInEmail(email, password); },
   async signInGoogle(opts) { return requireRemote().signInGoogle(opts); },
   async sendPasswordReset(email) { return requireRemote().sendPasswordReset(email); },
-  async signOut() { forgetLastAccount(); return requireRemote().signOut(); },
+  async signOut() {
+    forgetLastAccount();
+    clearReadCache();
+    return requireRemote().signOut();
+  },
   async changePassword(currentPassword, newPassword) {
     return requireRemote().changePassword(currentPassword, newPassword);
   },

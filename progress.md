@@ -81,6 +81,83 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-22, seventh pass — the nav bar was slow because the app kept re-asking
+
+**Tim:** *"sometimes when interacting with the website, it's pretty laggy, especially when I click on
+the different bars at the bottom … even when I have good wifi and cell service. Is this just because
+Firebase is free and not great, or something with my phone?"*
+
+**Neither.** Measured before changing anything, in a real browser at 393×852 with **4× CPU
+throttling** — building a screen is not the cost:
+
+```
+  tab         paint     backend reads
+  Home          16 ms   0
+  Workouts      15 ms   5   systems, workouts, customExercises, sessions
+  Calendar      36 ms   2   sessions, benchmarks
+  Data          42 ms   4   systems, workouts, sessions
+  Goals         10 ms   7   settings, bodyWeight, benchmarks, sessions, customExercises, goals
+  Social        15 ms   0
+```
+
+⚠️ **Every tab asked the backend for whole collections it had already been given**, and `sessions`
+was re-fetched by four of the six. On Firestore each of those is a `getDoc` — **and a `getDoc` waits
+for the SERVER even with offline persistence enabled.** Persistence is a fallback for being offline,
+not a fast path. So a tab tap cost one network round trip per collection, some of them serialised:
+roughly **400 ms on good wifi and over a second on cellular**, for data already sitting in the page.
+**It was never Firebase being slow and never the phone. The app was asking the same questions again.**
+
+### The fix: a read cache, and the line it may not cross
+
+`store.js` now keeps each collection in memory. **After the change every tab does ZERO blocking
+reads** — re-measured the same way, 10–42 ms and nothing on the wire.
+
+⚠️ **THE CACHE SERVES READ-ONLY GETTERS AND NOTHING ELSE, and that is the whole safety argument.**
+This store does read-modify-write everywhere: read a collection, change one row, write the whole
+list back. Serving *those* reads from a cache means writing a stale list back over storage —
+**anything changed on another device would be erased.** Mutations therefore still call
+`backend.read` directly and are exactly as safe as before. `saveSettings` was the one exception,
+reading through a getter before writing; it now reads fresh, and there is an assertion for it that
+**flips the moment the hazard is reintroduced** (mutation-checked).
+
+Three more things it does, each for a stated reason. **A write updates the cache after it succeeds**
+— caching what we hoped to store would be a lie the rest of the session reads back as fact.
+**Every getter hands out a copy of the list**, because callers sort and filter these rows and an
+in-place sort would reorder what everybody else is about to be given. And **the cache is dropped on
+every identity change**, wired into `onChange` rather than at each call site — the argument
+`associateLabels()` already makes, that fixing today's transitions and not tomorrow's is how this
+kind of bug survives its own fix.
+
+⚠️ **Staleness is bounded and silent.** A cached read kicks off a background refresh at most every
+30 seconds; nothing re-renders under a thumb, so the *next* navigation is correct rather than the
+current screen rearranging itself. That is the same call `sw.js` makes about a new deploy, for the
+same reason. A failed refresh is the absence of news, not an error (D6).
+
+### Two things found on the way
+
+- **⚠️ `ensureSystems()` re-read two collections on EVERY call, forever** — and it is called by both
+  `getSystems()` and `getWorkouts()`, so the Workouts tab paid two network round trips to re-answer
+  a migration question settled months ago. The check now reads through the cache; **the fix-up path
+  still reads fresh**, because that half is a read-modify-write.
+  ⚠️ **A latch was the first attempt and the tests rejected it inside a minute.** "No orphans, so
+  never look again" is true of a running app and false of anything that can put old-shape rows back
+  underneath it — a restored backup, a different account, a test seeding storage directly. The cache
+  is the honest version of the same saving: it makes the check cheap without ever claiming the answer
+  cannot change.
+- **The cache has exactly one contract — the store is the only writer** — and three tests break it
+  deliberately, writing straight to localStorage to imitate what an older build left behind. They now
+  say so and clear the cache. A real app never needs that: rows predating the store are read on a
+  cold start with the cache empty, and a second tab is the one case that can go briefly stale.
+
+**Also warmed at boot.** After the first screen is painted, all eight collections are fetched in one
+parallel batch, so the whole app costs **one round trip of latency instead of one per collection per
+tab**. Never awaited, and silent on failure — the screen already works without it.
+
+**Six new assertions**, plus a real-browser smoke test that walks every tab twice and fails on any
+console error.
+
+---
+
 ## 2026-08-22, sixth pass — ⚠️ THE INSTALLED APP NEVER ASKED WHETHER IT WAS OUT OF DATE
 
 **Tim, hours after the years view shipped:** *"I can't see where the setting is within the calendar
@@ -1176,7 +1253,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2252 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | **2257 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
@@ -1664,7 +1741,11 @@ Fitness_Tracker/
 ├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
 ├── js/
 │   ├── app.js                  hash router + boot
-│   ├── store.js                data layer — async, backend-agnostic
+│   ├── store.js                data layer — async, backend-agnostic. Holds
+│   │                           the READ CACHE: getters are served from
+│   │                           memory, mutations always read fresh,
+│   │                           because a read-modify-write from a stale
+│   │                           copy erases whatever changed elsewhere
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
 │   ├── preset-systems.js       ready-made systems to browse and copy. Shaped so a

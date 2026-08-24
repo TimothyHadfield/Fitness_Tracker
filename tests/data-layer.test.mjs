@@ -1911,7 +1911,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 /* ================= workout systems ================= */
 // A SYSTEM is a programme — a named group of workouts (Tim, 2026-08-17).
 {
-  const { store: st } = await import('../js/store.js');
+  const { store: st, clearReadCache } = await import('../js/store.js');
   const id = (n) => byName(n).id;
 
   /* ---- migration: workouts saved before systems existed ---- */
@@ -1922,6 +1922,14 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     { id: 'w1', name: 'Push', exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 4 }], createdAt: '2026-01-01' },
     { id: 'w2', name: 'Legs', exerciseIds: [id('Back Squat')], createdAt: '2026-01-02' },
   ]));
+  // ⚠️ THE READ CACHE'S ONE CONTRACT: the store is the only writer. This test
+  // deliberately breaks that to imitate rows an older build left on disk, so it
+  // has to say so — otherwise it is asserting against a cached copy taken
+  // before the line above ran. A real app never needs this: rows that predate
+  // the store are read on a cold start, when the cache is empty. A second TAB
+  // is the one case that can go briefly stale, and the background revalidation
+  // catches it within 30 seconds.
+  clearReadCache();
 
   let systems = await st.getSystems();
   ok(systems.length === 1, `orphaned workouts are adopted into one system (${systems.length})`);
@@ -1948,6 +1956,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
     { id: 'r1', name: 'Push', exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 3 }] },
   ]));
+  clearReadCache();   // seeded past the store — see the note above
   const [raceSystems, raceWorkouts] = await Promise.all([st.getSystems(), st.getWorkouts()]);
   ok(raceSystems.length === 1,
      `concurrent callers produce exactly one system (${raceSystems.length})`);
@@ -1958,6 +1967,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
     { id: 'r2', name: 'Pull', exercises: [{ exerciseId: id('Barbell Row'), sets: 3 }] },
   ]));
+  clearReadCache();   // seeded past the store — see the note above
   await Promise.all([st.getSystems(), st.getWorkouts(), st.getSystems(), st.getWorkouts()]);
   ok((await st.getSystems()).length === 1, 'four concurrent callers still produce one system');
 
@@ -2736,6 +2746,77 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   const ny = run('America/New_York');
   ok(JSON.stringify(ny) === JSON.stringify(london),
      'and every zone agrees — a calendar day is not a local instant');
+}
+
+/* ==================================================================
+ * THE READ CACHE — 2026-08-22
+ *
+ * Tim reported the nav bar feeling laggy on his iPhone on good signal.
+ * Measured: building a screen costs 11-72 ms at 4x CPU throttling, and every
+ * tab then asked the backend for whole collections it had already been given —
+ * Workouts 5 reads, Goals 7, and `sessions` re-fetched by four of the six. On
+ * Firestore each of those is a getDoc that waits for the server even with
+ * offline persistence on. It was never Firebase being slow.
+ *
+ * ⚠️ The dangerous half is not the speed, it is WHICH reads may be cached. This
+ * store does read-modify-write everywhere, and serving one of those from a
+ * cache means writing a whole collection back from a stale copy — which erases
+ * anything changed elsewhere. So: getters cached, mutations never.
+ * ================================================================== */
+{
+  const { store: st, clearReadCache } = await import('../js/store.js');
+
+  // Count trips to real storage, which is what a getDoc would be in the cloud.
+  const realGet = localStorage.getItem;
+  let hits = [];
+  localStorage.getItem = (k) => { hits.push(k); return realGet(k); };
+  const readsOf = (c) => hits.filter((k) => k === 'ftrack:v1:' + c).length;
+
+  await st.clearAll();
+  clearReadCache();
+
+  hits = [];
+  await st.getSessions();
+  const firstReads = readsOf('sessions');
+  await st.getSessions();
+  await st.getSessions();
+  ok(firstReads === 1 && readsOf('sessions') === 1,
+     `three getSessions() calls hit storage once, not three times (${readsOf('sessions')})`);
+
+  // ⚠️ Fast is worthless if it is wrong. A write must be visible immediately —
+  // the cache records what was written rather than waiting to be told.
+  const cw = await st.saveWorkout({ name: 'Cache test', exercises: [] });
+  await st.saveSession({ workoutId: cw.id, workoutName: 'Cache test', date: '2026-08-22', entries: [] });
+  const after = await st.getSessions();
+  ok(after.length === 1 && after[0].workoutName === 'Cache test',
+     'and a session saved a moment ago is in the very next read, not one refresh later');
+
+  // ⚠️ THE SAFETY PROPERTY. saveSettings is a read-modify-write: it merges a
+  // patch into the stored row and writes the whole row back. If it read through
+  // the cache, a value changed anywhere else would be silently overwritten.
+  await st.saveSettings({ units: 'lbs' });
+  await st.getSettings();                       // warm the cache
+  const raw = JSON.parse(localStorage.getItem('ftrack:v1:settings'));
+  raw[0].gender = 'female';                     // changed behind the store's back
+  localStorage.setItem('ftrack:v1:settings', JSON.stringify(raw));
+  await st.saveSettings({ units: 'kg' });       // must NOT write from the cached copy
+  const merged = JSON.parse(localStorage.getItem('ftrack:v1:settings'))[0];
+  ok(merged.units === 'kg' && merged.gender === 'female',
+     '⚠️ a read-modify-write reads FRESH — saving units does not erase a field set elsewhere');
+
+  // The rows handed out are a copy of the list, so a caller sorting or
+  // splicing them cannot reorder what everybody else is about to be given.
+  clearReadCache();
+  const listA = await st.getSessions();
+  listA.length = 0;
+  const listB = await st.getSessions();
+  ok(listB.length === 1, 'emptying a returned array does not empty the cache behind it');
+
+  clearReadCache();
+  ok((await st.getSessions()).length === 1,
+     'and clearing the cache re-reads from storage rather than returning nothing');
+
+  localStorage.getItem = realGet;
 }
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
