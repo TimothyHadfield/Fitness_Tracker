@@ -201,6 +201,21 @@ width, no horizontal overflow**, and on a repeat session the suggestion reads *"
 and back to 8 reps"* over *"5 lbs comes off the stack — that takes you from 110 lbs to 115 lbs of your
 own weight, a 4.5 % step inside the recommended 2–10 %."*
 
+### ⚠️ A fifth thing came out of the same session — and it is measured, not built
+
+He also suspected the app was rating his back off the lat pulldown he did **third**, when he was too
+worn out to load it. **He is right that something is wrong.** Measured: the fatigued third exercise
+drops his Back rating **32 %** and *raises* his confidence.
+
+⚠️ **The mechanism is the opposite of the obvious one. Fatigue does not just depress a reading — it
+PROMOTES it**, because `evidenceWeight` rewards low reps and a spent lifter does few reps. His
+pulldown out-ranked his best lift **by 0.005, purely on a rep count fatigue caused**. And no
+re-weighting scheme is worth more than 5 lb, while doing the lift *fresh* is worth 60 — because a
+fatigued set is **missing** information, not corrupted information.
+
+Plan in `docs/fatigue-plan.md`, Open work **0g**. **Nothing is built.** Read §1 before touching
+`rateMuscle()`; the load multiplier is Tier 3 and should not be built at all.
+
 ### ⚠️ Two of his four asks are NOT built — see Open work 0d and 0e
 
 **Swapping an exercise mid-workout** and **joint workouts** are both open, both have Tim's design
@@ -1474,6 +1489,46 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    recorder's own data and handed over later if that person joins. That is the case Tim actually hit,
    because his friend could not sign in at all.
 
+0g. **⚠️ WITHIN-SESSION FATIGUE DISTORTS THE MUSCLE RATING — measured 2026-08-24, plan written,
+   nothing built.** Full write-up in `docs/fatigue-plan.md`; §1 is the finding and §5 is the plan.
+
+   Tim did assisted pull-ups, then dumbbell rows, then lat pulldowns, and suspected the app was
+   rating his back off the exercise he was too tired to load. **He is right that something is wrong
+   and right about which lift led. The mechanism is not the one he proposed.**
+
+   **Measured on his session:** adding the fatigued third exercise moved Back from **212 lb to 145 lb
+   — down 32 % — and moved confidence UP, 0.40 to 0.44.**
+
+   ⚠️ **FATIGUE DOES NOT ONLY DEPRESS A READING, IT PROMOTES IT.** `evidenceWeight` multiplies by
+   `repFactor(reps)`, which rewards low reps because a near-max set is better evidence of a maximum.
+   A spent lifter also does few reps. His pulldown scored `0.50 × repFactor(8) = 0.425` and his
+   dumbbell row `0.60 × repFactor(10) = 0.420` — **the fatigued lift led by 0.005, entirely because
+   fatigue held him to 8 reps instead of 10.** The app cannot tell "few reps because it was heavy"
+   from "few reps because I was cooked", and resolves it the wrong way.
+
+   ⚠️ **AND NO RE-WEIGHTING SCHEME IS WORTH MUCH.** Every variant measured moves his rating by under
+   5 lb; doing the same pulldown *first* moves it by **60**. A fatigued set is **missing** information,
+   not corrupted information, and you cannot re-weight your way to a number nobody recorded. So the
+   highest-value item is not a correction factor — it is `raiseConfidenceHint()` telling him to do
+   that lift first once, after which best-ever-per-exercise keeps it permanently.
+   ⚠️ **Programme order is usually fixed**, so an exercise that is always third is always understated,
+   for as long as the programme runs — not for one session.
+
+   ⚠️ **Scale, so it is not overbuilt:** across the demo account's year, **0 of 11 muscles** are led
+   by a lift that was not that muscle's first of the day, and a graded fatigue term moves every one of
+   them by under 2 %. A well-ordered programme never hits this. **Build it as a safety rail for the
+   sessions where order and credibility disagree, not as a rewrite of the rating.**
+
+   ⚠️ **The load multiplier Tim suggested is Tier 3 and should not be built.** It needs a published
+   decrement in maximal strength per unit of prior same-muscle volume; the order literature reports
+   *reps at a fixed load*, not 1RM, and it is **the only option on the table that can make a number
+   bigger than what was observed**. Same wall as Open work item 3 — the ACSM order finding is graded
+   88 % but publishes no effect size — hit from the other side.
+
+   ⚠️ **And the confound is unresolved:** his three lifts imply 115, 229 and 136 lb of barbell row.
+   **Do not tell him he is stronger than 145.** The other candidate explanation is that doubling a
+   one-arm dumbbell row onto a two-arm barbell row is generous, which has never been checked.
+
 0f. **⚠️ HIS FRIEND'S SIGN-IN FAILED, AND NOBODY KNOWS HOW.** 2026-08-24: *"The login either wasn't
    working for my friends phone or we messed something up."* Tim asked to leave it — *"I need to
    investigate it further"* — so this is recorded rather than chased. ⚠️ **It may not be new:** an
@@ -1588,6 +1643,11 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    the stand publishes a *grade* and not an effect size, so a score penalty would have to be
    invented. If it ever earns a number, its home is a report of what was **recorded**, not a rating
    of what was planned.
+   ⚠️ **2026-08-24: this finding now has a second customer, and the same wall.** Item 0g needs
+   exercise order for the opposite purpose — not to score a programme, but to stop a fatigued reading
+   leading the muscle rating — and hits the identical problem: the grade justifies *ordering* and
+   *discounting*, never *arithmetic*. `docs/fatigue-plan.md` §4. **A sourced effect size would unblock
+   both at once**, which makes that one research question worth more than either item alone.
 
 4. **Wire the load finding into a report of what you actually did.** Load is the single biggest
    thing for strength (SMD 0.60) and a *planned* workout stores no reps — but a **recorded** set has
@@ -1823,6 +1883,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/demo.js` | Not a doc. The demo account's generated year. **Read its header before touching it**: it explains why the data never touches storage, why the flag is per-tab, and why nothing in it may use `Math.random()`. The switch itself is in `store.js` |
 | `js/goals.js` | Not a doc. **Read its header before touching Goals**: it explains why a goal is a LEVEL and not a predicted number of pounds, why the target weight is FROZEN when the goal is set, and the two things the module refuses to do — read the deadline to decide what it asks of you, and emit a verdict |
 | `docs/improvement-plan.md` | **The plan, written 2026-08-19 on Tim's ask.** ⚠️ **§0 is the part to read first** — it lists seven reviews that were scoped and briefed and then **all killed by a session usage limit before returning anything**. Sections marked ⚠️ NOT AUDITED are hypotheses, not findings. **Three of the seven have since run and four are left**, and the table in §0 carries each one's status. §1.1 — the first-run path promising "workout" and delivering "system" — was the one finding verified by hand, and it was **fixed 2026-08-21** |
+| `docs/fatigue-plan.md` | **Within-session fatigue and the strength estimate**, written 2026-08-24 on Tim's ask after a real back session. **Plan only — nothing in it is built.** ⚠️ **§1 is the part to read**: fatigue does not merely depress a reading, it **promotes** it, because `evidenceWeight` rewards low reps and a spent lifter does few reps. His fatigued third exercise out-ranked his best lift by 0.005, entirely on a rep count. §3 is why no re-weighting scheme is worth more than 5 lb while doing the lift fresh is worth 60, and §4 is why the load multiplier he suggested is the one option that cannot be built honestly today |
 | `docs/goals-plan.md` | **Goals** (`docs/vision.md` §1.6). **Phases 1–2 BUILT 2026-08-19 — §11 records what the build decided that the plan did not.** **§3 is still the section to read** — four problems, one serious: raising weights to hit a deadline would hand heavier weights to somebody who has missed two weeks, which is backwards and is the only thing in this project that could cause physical harm. §8 is the progression rule Phase 4 needs. §10 is what may and may not scale with ambition — and §11.4 records where the build departed from it |
 | `docs/optimal-rating-plan.md` | **The "% optimal" rating** (`docs/vision.md` §1.3), planned 2026-08-18. **§2 is the part to read** — the evidence says frequency does *not* independently drive hypertrophy, so a rating must not reward training more days; and the models explain only ~a quarter of the variance, which is why the output is a band, never a point |
 | `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |

@@ -4702,3 +4702,47 @@ he actually hit, because his friend could not sign in.
 
 His friend's sign-in failure is recorded and not chased; he asked to investigate it himself first.
 Noted that an ordinary Safari tab is still the one surface no working device has confirmed.
+
+---
+
+## 2026-08-24, third pass — fatigue, and a finding neither of us expected
+
+Tim, from the same gym session: he did assisted pull-ups, then dumbbell rows, then lat pulldowns, and
+suspected the app rated his back off the pulldown he was too worn out to load. He proposed weighting
+later exercises less, or multiplying their load up, or some combination, and asked for a plan.
+
+Measured his session through the real modules before designing anything. **He is right that
+something is wrong and right about which lift led.** Adding the fatigued third exercise moves his
+Back rating from 212 lb to 145 lb — down 32 % — and moves his confidence *up*, 0.40 to 0.44. Being
+more certain because of a reading you have reason to distrust is indefensible on any view.
+
+**The mechanism is the opposite of the obvious one.** Credibility is `quality × repFactor(reps) ×
+recency`, and `repFactor` rewards low reps, because a near-max set is good evidence of a max. A spent
+lifter also does few reps. His pulldown scored 0.50 × 0.85 = 0.425; his dumbbell row 0.60 × 0.70 =
+0.420. **The fatigued lift led by 0.005, entirely because fatigue held him to 8 reps instead of 10.**
+Fatigue does not merely depress a reading — it promotes it. Also corrected two things in his mental
+model: the app rates `Back` (keyed on Barbell Row), not "Lats", and it does not consider a pulldown
+the most reliable read on his back — the row family outranks it.
+
+**Then every fix I proposed failed on his actual data, which was worth more than the plan.** Dropping
+fatigued readings outright gives 115 lb — worse than today — because his only completely fresh lift
+was the assisted pull-up, his weakest evidence. So fatigue has to be graded, not a flag. And every
+re-weighting variant moves his rating by under 5 lb, while doing the same pulldown *first* moves it by
+60. **A fatigued set is missing information, not corrupted information — you cannot re-weight your way
+to a number nobody recorded.** That reordered the whole plan: the highest-value item is the app
+telling him to do that lift first once, not any correction factor.
+
+Checked the scale before recommending anything be built: across the demo year, **0 of 11 muscles** are
+led by a lift that was not that muscle's first of the day, and a graded fatigue term moves all of them
+under 2 %. A well-ordered programme never hits this. So it is a safety rail, not a rewrite.
+
+Told him the load multiplier he suggested should not be built: it needs a published decrement in
+maximal strength per unit of prior volume, the order literature reports reps at a fixed load rather
+than 1RM, and it is the only option that can make a number *bigger* than what was observed. Same wall
+as the ACSM order finding — graded 88 %, no effect size — hit from the other side.
+
+And said plainly that the plan does not prove he is stronger than 145. His three lifts imply 115, 229
+and 136 lb of barbell row, and the competing explanation is that doubling a one-arm dumbbell row onto
+a two-arm barbell row is generous — which has never been checked against anything.
+
+Plan in `docs/fatigue-plan.md`, three tiers, nothing built.
