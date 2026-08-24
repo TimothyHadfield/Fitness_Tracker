@@ -4,31 +4,41 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-22 (a real iPhone finally opened the app; the last code change was
-2026-08-21).
-⚠️ **Four things a fresh session must know before doing anything:**
+**Last updated:** 2026-08-22, end of a long session — **nine dated passes ran that day** and they are
+the nine sections directly below this summary, newest first. Read the top three; the rest is why.
 
-1. **The iPhone is the live thread** (Tim, 2026-08-21 — the deferral in §10.2 is over). **Five passes
-   ran that day** and they are the five dated sections directly below this summary, newest first: the
-   survey, the fixes, Google sign-in, the first run, the body map. **Everything measurable is done.**
-2. ✅ **The two things that were waiting on Tim are BOTH CLOSED — 2026-08-22, on a real iPhone, in
-   the app installed to his home screen.** The **keyboard fix works**: *Next exercise* is reachable
-   with the keyboard up, and so is the exercise picker. And **Google sign-in WORKS in the installed
-   PWA** — see the 2026-08-22 section, which also records that two of the previous day's stated
-   conclusions were wrong.
-3. **A real device has now opened this app exactly once, and it settled two things.** Everything
-   else from 2026-08-21 is still a desktop engine driven at phone metrics: it says nothing about
-   touch, and **three of the four "needs hardware" survey items are still reasoned rather than
-   measured**. ⚠️ **Do not let one good device report promote the rest** — what a phone confirmed is
-   listed in Verified and nothing beyond it.
+⚠️ **FIVE THINGS A FRESH SESSION MUST KNOW BEFORE DOING ANYTHING:**
+
+1. **⚠️ TIM MAY STILL BE LOCKED OUT OF THE APP ON HIS PHONE. ASK HIM FIRST.** He opened it on
+   2026-08-22 and got Firebase's own page — *"Unable to process request due to missing initial
+   state"* — filling the screen, with no app around it. **His installed home-screen app is stuck on
+   the Google auth handler URL** from a redirect an older build started; iOS resumes an installed app
+   on its last page. The code cause is fixed (ninth pass) but **a fix cannot reach a build already on
+   his phone.** He was told: swipe the app fully closed and reopen, then Safari, then re-add the
+   icon. **Nothing is known about whether that worked — find out before assuming the app is usable
+   for him.**
+2. **⚠️ HE HAS NEVER CONFIRMED SEEING ANY WORK FROM 2026-08-22, and there is a reason.** The whole
+   day's work — the years grid, the five-tab nav, the speed fix — went out while his phone was
+   serving a cached build. He reported the years view as *missing* hours after it shipped, and the
+   cause was that an installed app never asks whether it is out of date (sixth pass, fixed). **Assume
+   he is behind until he says otherwise, and do not treat "I can't see X" as "X is broken"** — check
+   the live site first, which is what found it last time.
+3. **THE PHONE IS THE LIVE THREAD, and design is now Tim's half of it.** He said on 2026-08-22:
+   *"I'll work more on this design and areas that need improvement (especially home)."* So **do not
+   redesign Home unasked** — but the UX review's finding about it is the sharpest open thing in the
+   product and is item 1 in Open work.
 4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **SIX
-   HAVE NOW RUN and every single one found something real** — adversarial code review, cross-screen
+   HAVE NOW RUN and every one found something real** — adversarial code review, cross-screen
    consistency, the first accessibility audit this project ever had, and, all on 2026-08-22, **edge
-   cases / data integrity, the live social round trip, and human behaviour / UX.** **Only the
-   competitive review is left**, and it is the one that inspects the market rather than the app.
-   ⚠️ **Running them is not the same as closing them.** Six fixes shipped on 2026-08-22; **two
-   edge-case findings (0b) and the whole UX list are still open**, and the UX list contains the
-   sharpest unaddressed thing in the product: nothing a user can see on Home ever grows.
+   cases / data integrity, the live social round trip, and human behaviour / UX.** Only the
+   **competitive** review is left, and it inspects the market rather than the app.
+   ⚠️ **Running a review is not closing it.** Eight fixes shipped that day; **two edge-case findings
+   and the whole UX list are still open** (Open work 0b and 1).
+5. **A real device has opened this app exactly twice, and settled three things** — the keyboard fix
+   works, Google sign-in works in the installed PWA, and the app can get stuck on the auth handler.
+   Everything else about touch is still a desktop engine driven at phone metrics, and **three
+   "needs hardware" survey items remain reasoned rather than measured.** ⚠️ **Do not let a good
+   device report promote the rest**: what a phone confirmed is in Verified and nothing beyond it.
 
 **Status:** Live and working. **Tier 1 is complete.** Firebase is provisioned and verified end to
 end. **Five nav tabs: Home, Workouts, RECORD, Data, Goals** — Record is the big middle button, and
@@ -1232,11 +1242,29 @@ for**, not the parallelism itself.
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
+0a. **⚠️ FIRST, BEFORE ANY CODE: IS TIM ACTUALLY ABLE TO USE THE APP, AND IS HE ON THE CURRENT
+   BUILD?** Two separate things went wrong on 2026-08-22 and **neither has a confirmed outcome.**
+
+   - **He got locked out.** Firebase's *"missing initial state"* page filling his screen, because his
+     installed app is sitting on the Google auth handler URL from a redirect an older build started.
+     Recovery he was given: swipe the app fully closed and reopen; then Safari; then remove and
+     re-add the home-screen icon. **Ask whether it worked.** The code cause is fixed but the fix
+     cannot reach the build already installed.
+   - **He has never confirmed seeing ANY of 2026-08-22's work.** His phone served a cached build all
+     day; he reported the years grid as missing hours after it shipped. ⚠️ **So do not read "X is
+     broken" as X being broken** — check the live site first (`curl` the deployed file, or drive a
+     clean browser profile at the live URL). That is what settled it last time, in one command.
+
+   Nothing on this list is worth starting while the answer to either is unknown, because the work
+   cannot be seen and a bug report cannot be trusted.
+
 0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is the
-   live thread. **Five passes ran that day** — the five dated sections above. **Everything
-   measurable is done**, including eleven measured defects, the view/edit split, the first run
-   (twelve steps to five), and the body map (the figure no longer moves or resizes when a muscle is
-   tapped). What is left, in order:
+   live thread. **Five passes ran on the 21st and four more on the 22nd** — nine dated sections
+   above. Everything measurable from the survey is done (eleven measured defects, the view/edit
+   split, the first run from twelve steps to five, the body map holding still), and on the 22nd:
+   **the years grid, the five-tab nav with Record in the middle, the nav-speed fix, the resume
+   update check, the rep ceiling, the silent-save fix, the Goals headline and the demo draft leak.**
+   What is left, in order:
 
    - ~~**⚠️ THE KEYBOARD FIX NEEDS A PHONE.**~~ ✅ **CLOSED 2026-08-22 — it works.** *Next exercise*
      is reachable with the keyboard up and the picker is usable, confirmed on Tim's iPhone in the
@@ -1253,6 +1281,9 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      picker's `setTimeout` focus raises the keyboard BY ITSELF.** The picker was judged with a
      keyboard up on 2026-08-22, but nobody recorded whether it rose unprompted or after a tap, and
      those are different findings. All need the same device.
+   - **⚠️ AN ORDINARY SAFARI TAB IS NOW THE LESS-TESTED SURFACE.** Everything a device has confirmed
+     was in the app installed to the home screen. A Safari tab has not been retried since the
+     2026-08-21 auth fixes, and it is probably where the original Google sign-in report came from.
    - ~~Two layout items nobody has done: Explore's badge, and Goals opening on prose.~~ **BOTH DONE
      the same day** — the second pass's "last two layout items" section above has the measurements
      (Explore's badge drops to its own line below 700px, giving the summary 338px of 393 instead of
@@ -1278,6 +1309,28 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      confirmation** — while "delete all data" two lines below it has one. A malformed row takes out
      every screen but Settings; a dead `systemId` hides a workout forever; `{foo:1}` toasts "Backup
      restored" having restored nothing.
+
+0c. **⚠️ THE UX REVIEW'S LIST — judgement rather than bugs, and Tim has claimed the design half.**
+   Written up in the fifth pass above. He said he would work on the design himself, *"especially
+   home"*, so **the design decisions here are his** — but the findings are measured and the reasoning
+   is recorded, and item 1 is the sharpest unaddressed thing in the product:
+
+   - **⚠️ NOTHING A USER CAN SEE ON HOME EVER GROWS.** A fresh account and an account with a year of
+     training and 200 sessions render the same layout with a longer list. Every rewarding readout in
+     the app — a rising curve with **+90 · +54.5 %**, per-lift deltas, *"stronger than 62 %"*, a
+     filled month — is behind the Data tab, and **nothing anywhere says you hit a personal best.**
+     Two suggested fixes and their trade-offs are in the fifth pass; the finish-screen one is
+     Rule 5-safe because "you typed a bigger number than you ever have" compares two *recorded*
+     sets. ⚠️ **The Friends half of Home now gives it one thing that is never the same twice**, which
+     is a start and not an answer.
+   - **"Hard sets" is never defined, and is not what the app counts.** `weeklyVolume()` credits every
+     logged set with no warm-up exclusion, so somebody who logs warm-ups is measured against a target
+     built on sets near failure. ⚠️ **This one is closest to a real defect** rather than a judgement:
+     it is the number Goals measures the user by.
+   - **"Programme" becomes "system" on the next tap** — improvement-plan §1.1's fault one screen
+     later, and the word's only definition sits on the screen the first-run fix now routes past.
+   - Explore ranks nine programmes by a number it explains nine cards later; the red "not backed up"
+     dot is on from the first paint including in the demo; and the smaller items listed in the pass.
 
 1. ~~**Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**~~
    ✅ **RAN 2026-08-22 AGAINST THE LIVE PROJECT — it works, and it found two defects.** Two
@@ -1374,7 +1427,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2261 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
+| **Everything at once** | **2263 assertions across eleven suites.** Only `render` needs `npm i jsdom`; the rest need nothing |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1103 assertions, **no dependencies** |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 153 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why** |
@@ -1507,6 +1560,36 @@ It needs a server — ES modules do not load over `file://`.
     for file content and keep PowerShell for running things. (Appended at the end for the same
     reason item 10 was: renumbering breaks the §0.6 / §0.7 / §0.9 references used elsewhere.)
 
+12. **⚠️ THE STORE CACHES ITS READS, AND ITS ONE CONTRACT IS THAT THE STORE IS THE ONLY WRITER.**
+    Since 2026-08-22 `store.js` keeps each collection in memory, because every tab was re-fetching
+    collections it already had and on Firestore each of those is a network round trip. Two things
+    follow for anybody working on this:
+
+    - **If you write to `localStorage` directly** — a test seeding old-shape rows, a script setting
+      up a scenario — the store will not see it. Call the exported **`clearReadCache()`** and say why.
+      Three tests in `data-layer.test.mjs` do exactly this and carry the note.
+    - **Cached getters only.** Mutations read straight from the backend on purpose: this store does
+      read-modify-write everywhere, and rewriting a whole collection from a stale copy erases
+      whatever changed elsewhere. **If you add a mutation, read fresh.** `saveSettings` was the one
+      that went through a getter and there is an assertion pinning it.
+
+13. **⚠️ WHEN TIM SAYS SOMETHING IS MISSING OR BROKEN, CHECK THE LIVE SITE BEFORE READING CODE.**
+    This has now happened twice in one day and both times the app was fine and his phone was serving
+    a cached build — once for the years grid hours after it shipped, once as a Firebase auth page
+    filling the screen. **One command settles it:**
+
+    ```bash
+    curl -s https://timothyhadfield.github.io/Fitness_Tracker/js/views-data.js | grep -c Years
+    curl -s -o /dev/null -w '%{http_code}
+' https://timothyhadfield.github.io/Fitness_Tracker/js/year-grid.js
+    ```
+
+    Then, if the file is deployed, drive a **clean browser profile at the live URL** (§0.6) — a fresh
+    profile has no service worker, so it sees what the server is really serving. Only after that is
+    it a code question. ⚠️ **An installed home-screen app resumes on its last page and can be many
+    builds behind**; the app now checks for updates on resume, but a build that predates that fix
+    cannot help itself.
+
 ---
 
 ## 1. Working agreement
@@ -1605,8 +1688,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
-| Calendar | **Two ways to read it, on a Months / Years switch.** **Months** is the original: continuous vertical month scroll, sticky headings, opens on the current month, active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks. **Years** (2026-08-22, Tim's ask with a reference image) draws **one tiny square per day**, one row per year, newest first, with "141 days trained" beside each — years of training on a single screen, and two years fit in the top half of a 375×667 phone. ⚠️ **It is BINARY** — coloured or not — where Months distinguishes workouts from benchmarks, because those two tokens measure ΔE 6.5 apart under protanopia and a 5.7px square has no room for the label or texture that would make a second colour legal. ⚠️ **Tapping a square SELECTS it and does not navigate**: at 5.7px a tap that navigated would open the wrong day about as often as the right one, so it fills a readout line that holds its row whether or not anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met by **equivalence** — every day is reachable at 40px in Months, one tap away. `js/year-grid.js` |
-| **Data** (nav) | Three modes: **Graph** (measured SVG line + hover crosshair), **Bar Chart** (paired bars), **Muscles** (body map). **No mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
+| Calendar | ⚠️ **Not its own tab since 2026-08-22 — it is the first segment of DATA**, and its header IS the four-way Data switch, so the two read as one tab. `#/calendar` is still its route, so a day stays deep-linkable. **Two ways to read it, on a Months / Years switch below that.** **Months** is the original: continuous vertical month scroll, sticky headings, opens on the current month, active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks. **Years** (2026-08-22, Tim's ask with a reference image) draws **one tiny square per day**, one row per year, newest first, with "141 days trained" beside each — years of training on a single screen, and two years fit in the top half of a 375×667 phone. ⚠️ **It is BINARY** — coloured or not — where Months distinguishes workouts from benchmarks, because those two tokens measure ΔE 6.5 apart under protanopia and a 5.7px square has no room for the label or texture that would make a second colour legal. ⚠️ **Tapping a square SELECTS it and does not navigate**: at 5.7px a tap that navigated would open the wrong day about as often as the right one, so it fills a readout line that holds its row whether or not anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met by **equivalence** — every day is reachable at 40px in Months, one tap away. `js/year-grid.js` |
+| **Data** (nav) | **Four segments since 2026-08-22: Calendar · Graph · Bars · Muscles.** ⚠️ They are not the same kind of thing and the control hides that on purpose — **Calendar is its own ROUTE** (so a day stays deep-linkable and the years grid keeps its state) while the three chart modes are in-page state on `#/graphs`. ⚠️ **"Bar Chart" lost a word**: the 2026-08-21 survey measured the three-segment version clipping that exact label to "Bar Char" at 393px, and a fourth segment takes another quarter of the row. **Graph** (measured SVG line + hover crosshair), **Bars** (paired bars), **Muscles** (body map). **No mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
@@ -1801,8 +1884,8 @@ Press-and-hold repeats.
   matters, because it is the only part of this app that can cause physical harm — **has now been
   attacked, and it broke**: the rep range collapsed under the module's own advice (see the 2026-08-20
   section). Fixed, swept and mutation-checked. **`js/strength-estimate.js` and the body-weight work
-  across four modules have still not been attacked by anybody trying to break them.** They pass 2156
-  assertions and each was driven in a browser by its author, which is exactly what progression had
+  across four modules have still not been attacked by anybody trying to break them.** They pass every
+  assertion in the suite and each was driven in a browser by its author, which is exactly what progression had
   too the day before it turned out to be wrong. **The count is not the point** — passing a suite its
   own author wrote is not the same as surviving somebody trying to break it.
 - **Almost everything about a real device.** ⚠️ **A phone has now opened the app exactly once
@@ -1926,12 +2009,15 @@ Fitness_Tracker/
 │   ├── body-map.js             composes the fill paths + the ink masks
 │   ├── exercises.js            270-exercise library + load-type rules
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
-│   ├── views-workouts.js       home, SYSTEMS list, one system, workout builder,
+│   ├── views-workouts.js       home, the RECORD tab (StartPickerView — the
+│   │                           workout list plus the benchmark action),
+│   │                           SYSTEMS list, one system, workout builder,
 │   │                           Explore ready-made systems, exercise picker
 │   ├── views-session.js        session runner, benchmark form
 │   ├── views-data.js           calendar, day detail, Data screen, settings
 │   ├── views-muscles.js        the Muscles pane
-│   ├── views-social.js         the Social tab, a friend's page, accepting an
+│   ├── views-social.js         the FRIENDS half of Home, a friend's page,
+│   │                           accepting an
 │   │                           invite. Reads ONLY published copies — it cannot
 │   │                           reach anybody's private data even if it tries
 │   ├── views-goals.js          the Goals tab, the two-step picker, why progress
@@ -2606,7 +2692,8 @@ re-examining it produces something better than either the old rule or a plain ov
 5. **Wire body weight into rep normalisation** for bodyweight/assisted exercises. It is also what
    would let pull-ups and dips rate a muscle at all — `contributionsFor()` refuses them today.
 6. **Social — BUILT, and never used by two real accounts.** Phases 1–3 all shipped on 2026-08-18:
-   the tier model and projection builder, the rules, the Social tab, invite links, a friend's page.
+   the tier model and projection builder, the rules, the Social screen (the Friends half of Home
+   since 2026-08-22), invite links, a friend's page.
    **Both open questions were answered by building the recommendation** — mutual friends, and a list
    you visit rather than a feed — so D7 never had to be reopened. **What is NOT verified is the only
    thing that matters next: no two accounts have ever actually connected.** Every screen has been

@@ -30,8 +30,9 @@ on more than one device.
   actually is. Tap one for the number, the level, and the set it came from.
 - **Goals** — one muscle, one strength level, twelve weeks. It states what that costs and what your
   logged training is delivering against it.
-- **Calendar and graphs** — every workout and benchmark on the day you did it; trends for anything
-  you've recorded twice, from workout sets as well as one-off records.
+- **Calendar and graphs** — every workout and benchmark on the day you did it, month by month or as
+  **one square per day so whole years fit on a single screen**; trends for anything you've recorded
+  twice, from workout sets as well as one-off records.
 - **Friends** — mutual only, invite by link, and **you choose per person** how much they see:
   everything, just your workouts, just that you trained, or nothing.
 - **A demo account** — Account → *View demo account* fills every screen with a generated year of
@@ -59,11 +60,11 @@ python -m http.server 8765
 ## Tests
 
 ```bash
-node tests/data-layer.test.mjs     # 1103 assertions, no dependencies
+node tests/data-layer.test.mjs     # 1117 assertions, no dependencies
 npm i jsdom && node tests/render.test.mjs
 ```
 
-Ten suites, 2156 assertions. Only `render` needs anything installed. `progress.md` lists the rest,
+Eleven suites, 2263 assertions. Only `render` needs anything installed. `progress.md` lists the rest,
 including what each one is actually for — and, more usefully, what is **not** verified.
 
 ## Project layout

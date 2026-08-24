@@ -4569,3 +4569,36 @@ auth handler URL from a redirect an older build started. `start_url` is `./index
 cold launch goes to the app; a resumed one returns to whatever was last open. Told him to fully close
 and reopen, and to re-add the home-screen icon if that fails — and that his training is safe because
 he signs in with email, which would not have been true of an anonymous account.
+
+---
+
+## 2026-08-22, close of session — prepared for a chat reset
+
+Tim asked for the md files to be prepared for a reset. Nine passes ran today, so the job was a
+staleness sweep rather than a summary — the failure mode this file exists to prevent is a fresh
+session reading something that stopped being true hours ago.
+
+**Swept and corrected:** the assertion count in three places (2156 → **2263**, and the README still
+said "Ten suites"); the README's calendar line, which predated the years grid; `views-social.js` and
+the Social phase-6 note, both still calling Friends "the Social tab"; the architecture tree, which did
+not know about the Record tab or that `store.js` now holds a read cache; and the §3 rows for Calendar
+and Data, which still described Calendar as its own tab with a three-way switch.
+
+**Rewrote the two things a fresh session actually acts on.** The header block now leads with the fact
+that **Tim may still be locked out** — his installed app was sitting on Firebase's auth handler page
+and nobody knows whether the recovery worked — and with the fact that **he has never confirmed seeing
+any of today's work**, because his phone served a cached build all day and he reported the years grid
+as missing hours after it shipped. Both are things a next session would otherwise waste an hour
+rediscovering, and one of them changes how to read his next bug report.
+
+**Open work was restructured** into 0a (is he unstuck and up to date — ask before writing code),
+0 (the iPhone thread), 0b (the edge-case review's two remaining findings), 0c (the UX review's list,
+with Home at the top and a note that Tim has claimed the design half himself). Reordered so the
+numbering matches the reading order, which it did not.
+
+**Two operational lessons appended to §0**, both earned today: the read cache's one contract — the
+store is the only writer, so anything seeding storage directly must call `clearReadCache()` and
+mutations must read fresh — and *check the live site before reading code*, with the one-line curl that
+settled it twice.
+
+Everything pushed. 2263 assertions green across eleven suites.
