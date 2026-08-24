@@ -107,7 +107,58 @@ self.addEventListener('message', (e) => {
   if (e.data === 'has-update' && sawUpdate && e.source) {
     e.source.postMessage('assets-updated');
   }
+
+  // ⚠️ THE INSTALLED APP NEVER ASKED, AND THAT IS HOW A DEPLOY GOES UNSEEN.
+  // Everything above only runs off the `fetch` handler, so an update is spotted
+  // only while the page is actually requesting assets — that is, on a real page
+  // load. An installed home-screen app is RESUMED rather than reloaded: iOS
+  // brings the existing document back, nothing is fetched, and the worker has
+  // no reason to look. So the app could sit on a build from weeks ago, with the
+  // update machinery working perfectly and never once consulted.
+  //
+  // Reported by Tim on 2026-08-22 as "I can't see where the setting is" for a
+  // feature that had been live for hours. The live site was serving it; his
+  // phone had simply never asked.
+  if (e.data === 'check-assets') e.waitUntil(revalidateShell());
 });
+
+// How long to leave it between checks. A resume is a common event and the shell
+// is ~30 small files; on an unchanged deploy every one answers 304, but that is
+// still thirty conditional requests and this app is used in basements on bad
+// signal. Five minutes makes it invisible in normal use while still catching a
+// deploy well before the next one.
+const RECHECK_MS = 5 * 60 * 1000;
+let lastCheck = 0;
+
+/**
+ * Ask the network whether the shell has moved, without a page load.
+ *
+ * ⚠️ It reuses `isDifferent` and `announceUpdate` rather than reimplementing
+ * the comparison — the point of this function is WHEN the question is asked,
+ * not what counts as an answer. A second definition of "has this changed" is
+ * exactly how two code paths start disagreeing about whether a deploy happened.
+ *
+ * ⚠️ Failure is silent on purpose. This runs on resume, which is very often the
+ * moment somebody has walked into a gym with no signal, and a failed update
+ * check is not an error — it is simply the absence of news (D6).
+ */
+async function revalidateShell() {
+  const now = Date.now();
+  if (sawUpdate || now - lastCheck < RECHECK_MS) return;
+  lastCheck = now;
+
+  const cache = await caches.open(CACHE);
+  await Promise.all(SHELL.map(async (url) => {
+    try {
+      const hit = await cache.match(url);
+      if (!hit) return;
+      const res = await fetch(new Request(url, { cache: 'no-cache' }));
+      if (!res || !res.ok || res.type !== 'basic') return;
+      if (isDifferent(hit, res)) await announceUpdate();
+      await cache.put(url, res.clone());
+    } catch (_) { /* offline, and that is not an error here */ }
+  }));
+}
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;

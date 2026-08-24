@@ -81,6 +81,46 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-22, sixth pass — ⚠️ THE INSTALLED APP NEVER ASKED WHETHER IT WAS OUT OF DATE
+
+**Tim, hours after the years view shipped:** *"I can't see where the setting is within the calendar
+section that displays every single day like how we talked about."*
+
+**Nothing was wrong with the feature.** The live site was serving it — checked directly:
+`js/year-grid.js` answers 200 with the right MIME type, `views-data.js` carries the switch, and a
+clean browser profile pointed at the live URL shows **Months / Years** on the first load. His phone
+was running an older copy of the app and had never been told there was a newer one.
+
+⚠️ **THE UPDATE MACHINERY WAS FINE AND WAS NEVER CONSULTED.** Everything in the 2026-08-18 deploy
+notice hangs off the service worker's `fetch` handler: it spots a change while *serving a request*,
+which means on a real page load. **An installed home-screen app is resumed, not reloaded.** iOS
+hands back the document that was already open, nothing is fetched, and the worker has no reason to
+look. The app can sit weeks behind the live site while every part of the mechanism works exactly as
+designed.
+
+⚠️ **This is the second time a claim about "the app updates itself" has turned out to have a hole in
+the case nobody drove**, and both were found by Tim reporting shipped work as missing. The first was
+the stale load after a deploy (2026-08-18). This is the resumed app. **The pattern worth keeping: a
+self-healing mechanism needs to be asked when it heals, not only whether it can.**
+
+The page now posts `check-assets` on `visibilitychange` and on `online`; the worker revalidates the
+shell against ETag/Last-Modified, throttled to five minutes, silent when offline (D6 — a failed
+check on a gym's dead wifi is the absence of news, not an error), and reuses `isDifferent` and
+`announceUpdate` rather than growing a second opinion about what "changed" means. It still only
+OFFERS.
+
+**Tested with no navigation at all**, which is the whole point — `tests/sw-update.test.mjs` deploys a
+change to a page that is just sitting there, fires what a resume fires, and asserts the offer
+appears. **Mutation-checked**: removing the listener flips exactly those two assertions.
+⚠️ **The test needed a fresh worker generation to run at all**, because `announceUpdate` speaks once
+per worker lifetime by design — a deploy changes a dozen files and the user needs one sentence.
+
+⚠️ **NONE OF THIS REACHES THE COPY ALREADY ON TIM'S PHONE.** That build has no listener to fire. He
+has to pick up the new version once, by hand, the way he always had to — after that this is the last
+time it should ever be necessary.
+
+---
+
 ## 2026-08-22, fifth pass — the UX review, and four fixes off the back of two reviews
 
 **All seven reviews have now been run or accounted for.** The human-behaviour / UX one ran last and
@@ -1352,7 +1392,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Area | State |
 |---|---|
 | **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
-| **Seeing a deploy** | ⚠️ `sw.js` is stale-while-revalidate, so **the load right after a deploy serves the OLD app** and the change appears on the one after. That is deliberate (a hand-maintained cache version can freeze someone forever; this self-heals) but it is indistinguishable from a broken feature — Tim hit it and reported a rating as missing when it had shipped. Since 2026-08-18 the worker compares ETag/Last-Modified on revalidation and the page shows **"A new version is ready · Refresh"**. It OFFERS, never reloads: reloading unasked is right almost always and catastrophic once, mid-set with numbers unsaved |
+| **Seeing a deploy** | ⚠️ `sw.js` is stale-while-revalidate, so **the load right after a deploy serves the OLD app** and the change appears on the one after. That is deliberate (a hand-maintained cache version can freeze someone forever; this self-heals) but it is indistinguishable from a broken feature — Tim hit it and reported a rating as missing when it had shipped. Since 2026-08-18 the worker compares ETag/Last-Modified on revalidation and the page shows **"A new version is ready · Refresh"**. It OFFERS, never reloads: reloading unasked is right almost always and catastrophic once, mid-set with numbers unsaved. ⚠️ **AND SINCE 2026-08-22 IT ASKS ON RESUME, which is the case that had been missing entirely.** Every check above hangs off the `fetch` handler, so an update was only ever spotted while the page was requesting assets — that is, on a real page load. **An installed home-screen app is RESUMED, not reloaded**: iOS hands back the document that was already there, nothing is fetched, and the worker is never consulted. So the app could sit weeks behind the live site with the update machinery working perfectly and never once asked. Tim reported it as a missing feature — the years view had been live for hours and his phone had simply never asked. `visibilitychange` and `online` now post `check-assets`, the worker revalidates the shell (throttled to five minutes, silent when offline), and the same offer appears. Proved by a test that finds a deploy **with no navigation at all**, mutation-checked |
 | **The system badge** | **Four numbers beside every system, in a 2×2 grid** — on Explore, on the Workouts list and on a system's own screen. **Growth and strength**, separately and never blended, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength); banded to 5, never a point, because the source models explain about a quarter of the variance. Plus, since 2026-08-19 on Tim's ask, **days a week and minutes a session** — the percentages say how *good* a programme is and nothing about what it *costs*, which is the first thing you want before opening it, and "80 % strength" reads very differently at three days a week than at six. A ready-made system states its own minutes; one you typed has them **estimated** from the set count at ~3 min a set, and the cell's `title` says which — "because the author said so" and "because we multiplied" are not the same claim. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts shows no badge rather than a 0 %. The Explore row summary no longer repeats days/minutes now the badge carries them. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md` |
 | **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves. **Nippard's is complete as of 2026-08-19** — all six workouts, Push 1 / Pull 1 / Legs 1 / Push 2 / Pull 2 / Legs 2, in the order the videos were published |
 | **⚠️ Half a programme reads exactly like a whole one** | The Nippard system shipped for two days as three workouts declaring **six days a week**, so the rating ran the same three twice and the rotation repeated a day that should have alternated. Nothing failed: the badge was plausible, every test passed, and the screen looked finished. **Tim caught it by reading the sentence** — "why would a push/pull/legs need six workouts?" Two lessons. A count a system *declares* and a count it can *fill* are different numbers and nothing was comparing them; there is now a test that does. And the one shipped as "Pull" was **the second pull, not the first** — the write-ups carry no episode number in their own text, so the order had to be recovered from the video dates. Anything transcribed from a series wants its episode number pinned down before its content is |

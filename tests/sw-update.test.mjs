@@ -137,6 +137,43 @@ await send('Page.navigate', { url: URL_ }); await sleep(2500);
 ok(await js("fetch('css/app.css').then(r=>r.text()).then(t=>t.includes('deploy marker'))"),
    'and the next load really does serve the new file');
 
+/* ---------- ⚠️ THE RESUMED APP — a deploy spotted with NO page load ----------
+   Everything above navigates, and navigating is the one thing an installed
+   home-screen app does NOT do when you reopen it: iOS resumes the document
+   that was already there, so nothing is fetched and the worker is never
+   consulted. The update machinery could work perfectly and still never fire.
+
+   Tim reported exactly this on 2026-08-22 — a feature live for hours that his
+   phone had simply never asked about. So: deploy a change and then, WITHOUT
+   navigating, do what coming back to the app does. */
+// ⚠️ A fresh worker generation first. `announceUpdate` deliberately speaks ONCE
+// per worker lifetime — a deploy changes a dozen files and the user needs one
+// sentence, not twelve — so the phase above has already spent this worker's
+// announcement. Editing sw.js itself installs a new one, which is the only
+// honest way to get back to a state where an update can still be announced.
+appendFileSync(join(dir, 'sw.js'), '\n// new worker generation\n');
+await send('Page.navigate', { url: URL_ }); await sleep(3000);
+await send('Page.navigate', { url: URL_ }); await sleep(2500);
+ok(!(await js("!!document.querySelector('.update-bar')")),
+   'a fresh worker with nothing new to report says nothing');
+
+appendFileSync(join(dir, 'js', 'ui.js'), '\n// resume marker\n');
+await sleep(1200);
+ok(!(await js("!!document.querySelector('.update-bar')")),
+   'and the deploy ALONE does not reach a page that is just sitting there');
+
+// What coming back to an installed app does — and nothing else. No navigation,
+// which is the whole point: that is what iOS does not do on resume.
+await js(`(async () => {
+  document.dispatchEvent(new Event('visibilitychange'));
+  await new Promise((r) => setTimeout(r, 2500));
+})()`);
+
+ok(await js("!!document.querySelector('.update-bar')"),
+   '⚠️ reopening the app finds a deploy with NO navigation at all — the installed-PWA case');
+ok(/new version/i.test(await js("(document.querySelector('.update-bar')||{}).textContent||''")),
+   'and offers the same refresh, rather than reloading somebody mid-set');
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 ws.close();
 chrome.kill();

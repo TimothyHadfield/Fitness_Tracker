@@ -4426,3 +4426,36 @@ State at close: **2252 assertions green across eleven suites**, everything pushe
 reviews have now run and every one found something real. The UX list is the open work, and it is
 judgement rather than bugs — the headline item being that **nothing a user can see on Home ever
 grows**.
+
+---
+
+## 2026-08-22, third pass — "I can't see where the setting is"
+
+Tim, hours after the years view shipped: *"I can't see where the setting is within the calendar
+section that displays every single day like how we talked about. did you get interupted?"*
+
+Not interrupted — and nothing was wrong with the feature. Checked the live site directly rather than
+guessing: `js/year-grid.js` answers 200 with the right MIME type, the deployed `views-data.js`
+carries the switch, and a clean browser profile pointed at the live URL shows **Months / Years** on
+the very first load. His phone was running an older copy and had never been told a newer one existed.
+
+**The update machinery was working perfectly and was never being asked.** Every check hangs off the
+service worker's `fetch` handler — it notices a deploy while *serving a request*, which means on a
+real page load. An installed home-screen app is **resumed, not reloaded**: iOS hands back the
+document that was already open, nothing is fetched, and the worker has no reason to look. The app
+can sit weeks behind the live site with every part of the mechanism behaving as designed.
+
+That is the second time a claim about the app updating itself has had a hole in the one case nobody
+drove, and both were found by Tim reporting shipped work as missing — the first was the stale load
+right after a deploy, back on 2026-08-18. The pattern worth keeping: **a self-healing mechanism needs
+to be asked when it heals, not only whether it can.**
+
+Fixed: the page now asks on `visibilitychange` and on `online`, the worker revalidates the shell
+against ETag/Last-Modified, throttled to five minutes and silent when offline. It still only offers a
+refresh — nothing reloads a page that might have unsaved numbers on it. Tested by deploying a change
+to a page that is just sitting there and firing what a resume fires, with **no navigation at all**,
+which is the whole point. Mutation-checked.
+
+Told him plainly that none of this reaches the build already on his phone — that copy has no
+listener to fire, so he has to pick the new version up once by hand. After that it should never be
+necessary again.

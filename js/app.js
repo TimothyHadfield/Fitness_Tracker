@@ -251,6 +251,35 @@ function registerServiceWorker() {
   navigator.serviceWorker.addEventListener('message', (e) => {
     if (e.data === 'assets-updated') offerRefresh();
   });
+
+  /**
+   * ⚠️ ASK AGAIN WHENEVER THE APP COMES BACK TO THE FOREGROUND.
+   *
+   * The worker only notices a deploy while it is serving fetches, which means
+   * on a real page load. **An installed home-screen app is resumed, not
+   * reloaded** — iOS hands back the document that was already there, nothing is
+   * requested, and the update machinery is never consulted at all. So the app
+   * could sit weeks behind the live site while working exactly as designed.
+   *
+   * Tim reported this on 2026-08-22 as a missing feature: the years view had
+   * been live for hours, the server was serving it, and his phone had simply
+   * never asked. The check is throttled inside the worker, and it still only
+   * OFFERS — nothing here reloads a page that might have unsaved numbers on it.
+   */
+  const askForUpdates = () => {
+    if (document.visibilityState !== 'visible') return;
+    const sw = navigator.serviceWorker.controller;
+    if (sw) sw.postMessage('check-assets');
+    // Also re-fetch sw.js itself, which is the only way a CHANGED WORKER is
+    // ever picked up — the message above only revalidates the shell it caches.
+    navigator.serviceWorker.getRegistration()
+      .then((reg) => reg && reg.update())
+      .catch(() => {});
+  };
+
+  document.addEventListener('visibilitychange', askForUpdates);
+  // A phone that has just found signal again is the other moment worth asking.
+  window.addEventListener('online', askForUpdates);
 }
 
 /**
