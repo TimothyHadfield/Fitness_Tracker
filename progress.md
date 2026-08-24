@@ -4,37 +4,40 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-22, end of a long session — **nine dated passes ran that day** and they are
-the nine sections directly below this summary, newest first. Read the top three; the rest is why.
+**Last updated:** 2026-08-24 — Tim confirmed the two things that were blocking everything. The nine
+dated passes below are 2026-08-22, newest first. Read the top three; the rest is why.
 
-⚠️ **FIVE THINGS A FRESH SESSION MUST KNOW BEFORE DOING ANYTHING:**
+✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
+wrong URL. I can see the year view now."* So **he is on a current build and the app is usable**, and
+the old items 1 and 2 of this list are struck below rather than deleted, because what they warned
+about is why the next report should still be checked against the live site first.
 
-1. **⚠️ TIM MAY STILL BE LOCKED OUT OF THE APP ON HIS PHONE. ASK HIM FIRST.** He opened it on
-   2026-08-22 and got Firebase's own page — *"Unable to process request due to missing initial
-   state"* — filling the screen, with no app around it. **His installed home-screen app is stuck on
-   the Google auth handler URL** from a redirect an older build started; iOS resumes an installed app
-   on its last page. The code cause is fixed (ninth pass) but **a fix cannot reach a build already on
-   his phone.** He was told: swipe the app fully closed and reopen, then Safari, then re-add the
-   icon. **Nothing is known about whether that worked — find out before assuming the app is usable
-   for him.**
-2. **⚠️ HE HAS NEVER CONFIRMED SEEING ANY WORK FROM 2026-08-22, and there is a reason.** The whole
-   day's work — the years grid, the five-tab nav, the speed fix — went out while his phone was
-   serving a cached build. He reported the years view as *missing* hours after it shipped, and the
-   cause was that an installed app never asks whether it is out of date (sixth pass, fixed). **Assume
-   he is behind until he says otherwise, and do not treat "I can't see X" as "X is broken"** — check
-   the live site first, which is what found it last time.
-3. **THE PHONE IS THE LIVE THREAD, and design is now Tim's half of it.** He said on 2026-08-22:
+- ~~**Tim may still be locked out**~~ — he is not. He reports the cause as **the wrong URL**, not the
+  app failing. ⚠️ **That neither confirms nor needs the "stuck on the auth handler" theory** the
+  ninth pass wrote up. The fix that shipped stands on its own argument — `getRedirectResult()` was
+  being called on every boot in a configuration where a redirect can never have been started — and
+  **nobody has established what URL he actually had.** If Firebase's page ever fills his screen
+  again, that is a new report, not a recurrence of a diagnosed one.
+- ~~**He has never confirmed seeing any work from 2026-08-22**~~ — **he has now: the years view.**
+  ⚠️ **What is NOT known is what got him there** — the resume update check from the sixth pass, or
+  simply opening the right URL. So the sixth pass's fix is still **unconfirmed in the field**, and
+  the standing rule survives its own trigger: **do not read "I can't see X" as X being broken** —
+  check the live site first, which is what settled it in one command last time.
+
+⚠️ **THREE THINGS A FRESH SESSION MUST KNOW BEFORE DOING ANYTHING:**
+
+1. **THE PHONE IS THE LIVE THREAD, and design is now Tim's half of it.** He said on 2026-08-22:
    *"I'll work more on this design and areas that need improvement (especially home)."* So **do not
    redesign Home unasked** — but the UX review's finding about it is the sharpest open thing in the
    product and is item 1 in Open work.
-4. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **SIX
+2. `docs/improvement-plan.md` §0 records seven reviews briefed on 2026-08-19 that never ran. **SIX
    HAVE NOW RUN and every one found something real** — adversarial code review, cross-screen
    consistency, the first accessibility audit this project ever had, and, all on 2026-08-22, **edge
    cases / data integrity, the live social round trip, and human behaviour / UX.** Only the
    **competitive** review is left, and it inspects the market rather than the app.
    ⚠️ **Running a review is not closing it.** Eight fixes shipped that day; **two edge-case findings
    and the whole UX list are still open** (Open work 0b and 1).
-5. **A real device has opened this app exactly twice, and settled three things** — the keyboard fix
+3. **A real device has opened this app exactly twice, and settled three things** — the keyboard fix
    works, Google sign-in works in the installed PWA, and the app can get stuck on the auth handler.
    Everything else about touch is still a desktop engine driven at phone metrics, and **three
    "needs hardware" survey items remain reasoned rather than measured.** ⚠️ **Do not let a good
@@ -139,6 +142,15 @@ that fails, remove the home-screen icon and re-add it, which resets the app to `
 training is in his account, not in the icon** — he signs in with email, so the data is in Firestore
 and re-adding cannot lose it. That would NOT be true of an anonymous account (D12), which is why the
 answer says which case it depends on rather than "don't worry".
+
+### ✅ Resolved 2026-08-24 — and the diagnosis above was never tested
+
+Tim: *"I'm not locked out, I think I just had the wrong URL."* ⚠️ **So the stuck-auth-handler story
+in this section is an unfalsified hypothesis, not a finding** — plausible, consistent with the
+symptom, and never once checked against the URL his phone actually had. It is left standing because
+it is the best available account of a real screenshot, but **it must not be cited as something this
+project has established.** The code change stands separately: asking for redirect state that cannot
+exist here was wrong on its own terms, before any of this.
 
 ---
 
@@ -326,6 +338,12 @@ per worker lifetime by design — a deploy changes a dozen files and the user ne
 ⚠️ **NONE OF THIS REACHES THE COPY ALREADY ON TIM'S PHONE.** That build has no listener to fire. He
 has to pick up the new version once, by hand, the way he always had to — after that this is the last
 time it should ever be necessary.
+
+**2026-08-24 — he has picked it up.** The years view is on his screen. ⚠️ **That does not verify this
+fix.** He also reports having had the wrong URL, so opening the right one is a complete explanation
+on its own, and nobody watched a resume produce the offer on a device. **This mechanism has been seen
+working only in `tests/sw-update.test.mjs`** — the next deploy he notices without being told is the
+first real evidence, and it is worth asking for once.
 
 ---
 
@@ -1242,21 +1260,23 @@ for**, not the parallelism itself.
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
-0a. **⚠️ FIRST, BEFORE ANY CODE: IS TIM ACTUALLY ABLE TO USE THE APP, AND IS HE ON THE CURRENT
-   BUILD?** Two separate things went wrong on 2026-08-22 and **neither has a confirmed outcome.**
+0a. ~~**⚠️ FIRST, BEFORE ANY CODE: IS TIM ACTUALLY ABLE TO USE THE APP, AND IS HE ON THE CURRENT
+   BUILD?**~~ ✅ **BOTH ANSWERED YES, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
+   wrong URL. I can see the year view now."* **The list below is unblocked.**
 
-   - **He got locked out.** Firebase's *"missing initial state"* page filling his screen, because his
-     installed app is sitting on the Google auth handler URL from a redirect an older build started.
-     Recovery he was given: swipe the app fully closed and reopen; then Safari; then remove and
-     re-add the home-screen icon. **Ask whether it worked.** The code cause is fixed but the fix
-     cannot reach the build already installed.
-   - **He has never confirmed seeing ANY of 2026-08-22's work.** His phone served a cached build all
-     day; he reported the years grid as missing hours after it shipped. ⚠️ **So do not read "X is
-     broken" as X being broken** — check the live site first (`curl` the deployed file, or drive a
-     clean browser profile at the live URL). That is what settled it last time, in one command.
+   - **Not locked out**, and he puts it down to the wrong URL rather than to the app. ⚠️ **The
+     "installed app stuck on the auth handler" diagnosis is therefore neither confirmed nor
+     refuted** — it was never checked against what he actually had open. The ninth pass's fix keeps
+     its own justification, which never depended on this report: `getRedirectResult()` was being
+     called on every boot in a configuration where a redirect can never legitimately have started.
+   - **He is on a current build** — the years view is on his screen, which is the same feature he
+     reported missing on the 22nd. ⚠️ **What moved him onto it is unknown**: the resume update check
+     (sixth pass) has still never been seen to fire in the field, only in `tests/sw-update.test.mjs`.
+     Do not upgrade it to verified on the strength of this.
 
-   Nothing on this list is worth starting while the answer to either is unknown, because the work
-   cannot be seen and a bug report cannot be trusted.
+   ⚠️ **The rule those two items existed to teach outlives them: do not read "X is broken" as X
+   being broken.** Check the live site first — `curl` the deployed file, or drive a clean browser
+   profile at the live URL. That is what settled the years-view report in one command.
 
 0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is the
    live thread. **Five passes ran on the 21st and four more on the 22nd** — nine dated sections

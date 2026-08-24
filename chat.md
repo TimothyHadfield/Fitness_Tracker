@@ -4602,3 +4602,33 @@ mutations must read fresh — and *check the live site before reading code*, wit
 settled it twice.
 
 Everything pushed. 2263 assertions green across eleven suites.
+
+---
+
+## 2026-08-24 — both blockers closed, by Tim in one sentence
+
+Asked to catch up on `progress.md`, reported where things stood, and asked the one question the file
+said to ask before writing any code: is he able to use the app, and is he on the current build.
+
+**Tim:** *"I'm not locked out, I think I just had the wrong URL. I can see the year view now."*
+
+That closes the two things that were blocking every open item — he is not stuck on Firebase's
+"missing initial state" page, and he is on a build that has 2026-08-22's work in it.
+
+**What was recorded, and what was deliberately not.** Two claims in the docs were about to be
+promoted on the strength of this and neither survives a close reading:
+
+- The **stuck-auth-handler diagnosis** in the ninth pass was never checked against the URL his phone
+  actually had. It is a plausible account of a real screenshot and it stays, marked as an
+  unfalsified hypothesis rather than a finding. The code fix it came with keeps its own argument —
+  asking for redirect state in a configuration where a redirect cannot start was wrong regardless.
+- The **resume update check** from the sixth pass is still unverified in the field. He had the wrong
+  URL, so opening the right one explains the years view completely on its own; nobody watched a
+  resume produce the update offer on a device. It has been seen working only in
+  `tests/sw-update.test.mjs`. The first deploy he notices without being told is the real evidence.
+
+The standing rule that came out of the 22nd survives its own trigger and is kept in Open work: **do
+not read "I can't see X" as X being broken** — check the live site first.
+
+`progress.md`'s header block is now three items rather than five, with the two closed ones struck
+through in place instead of deleted, and Open work 0a is closed.
