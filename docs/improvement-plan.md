@@ -219,8 +219,14 @@ Ranked by where I would look first, given what this codebase has already been bi
    inference is the app's own invention rather than a published rule.
 4. **Deletion and dangling references.** Two bugs of this shape already fixed. The untested case is
    a custom exercise deleted under a year of history.
-5. **Accessibility.** Never audited. Six nav tabs at 360 px, irregular SVG tap targets on the muscle
-   map, and a great deal of load-bearing explanation in `.field-help` grey.
+5. ~~**Accessibility.** Never audited.~~ ✅ **AUDITED 2026-08-20 AND IT FAILED — this hypothesis was
+   right.** `--ink-faint`, the token carrying `.field-help`, missed AA in both themes across all 75
+   of its uses; every `<label>` in the app named nothing; touch targets ran 31–36 px. All fixed and
+   re-measured — see `progress.md`, 2026-08-20 §0. ⚠️ **Two of the three things named here were NOT
+   checked and are still unknown**: the muscle map's irregular SVG tap targets were never hit-tested,
+   and no keyboard path, screen reader or larger-text setting has ever been tried. (The nav bar was
+   six tabs when this was written and is **five** since 2026-08-22; it was confirmed to fit at
+   360 px both times.)
 
 ---
 
