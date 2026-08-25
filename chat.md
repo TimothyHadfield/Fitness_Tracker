@@ -4892,3 +4892,33 @@ because it lands on his illustration.
 
 Recorded a warning with it: the tool's `hit44` flag fails 1616 of 2068 controls on already-audited
 screens, so it is a tripwire for finding candidates and not a defect count.
+
+---
+
+## 2026-08-24, close of session — prepared for a chat reset
+
+Tim asked for the md files to be prepared for a reset. Eight passes ran today, so this was a
+staleness sweep rather than a summary — the failure mode this file exists to prevent is a fresh
+session acting on something that stopped being true a few hours ago.
+
+**Four stale claims found and corrected**, all of them things a fresh session reads early:
+"Two accounts have never actually connected" in the status block and again in the architecture tree
+(closed on the 22nd); "a phone has opened the app exactly once" (three times now, and trained with);
+and the accessibility section's "44 screen/width/theme combinations", which was never true — two of
+those eleven routes did not exist, so Home was measured three times and the Data screen and body map
+never once. The historical section keeps its original numbers with a correction beside them, because
+rewriting what a past run measured would hide the fault rather than record it.
+
+**Open work got an INDEX rather than a renumbering.** The letters had drifted out of reading order
+again as items were inserted, and the 2026-08-22 fix for that was to reorder — which cannot be
+repeated now, because items elsewhere in the file and in `docs/` cite them by letter. A ten-row index
+in priority order sits at the top instead, saying which are open, which closed today, and which two
+questions are waiting on Tim rather than on the next session.
+
+**The header block leads with what changed.** One gym session produced four defects that six
+commissioned reviews and 2300 assertions had all missed, and every one was diagnosed wrongly on the
+first guess — including by this file. That is now the third thing a fresh session reads, because it
+is the most useful thing anybody could know before picking work up.
+
+Architecture tree updated for the fatigue term, the exercise swap, the assist flag and the set fill.
+Assertion counts recounted across progress.md and README. Everything pushed, 2369 green.

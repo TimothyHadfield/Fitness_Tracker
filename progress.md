@@ -4,9 +4,14 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-24 — **the app was used in a real gym session for the first time**, and it
-found a live inversion. That pass is the top dated section; the nine below it are 2026-08-22, newest
-first. Read the top three; the rest is why.
+**Last updated:** 2026-08-24, end of a long day — **the app was used in a real gym session for the
+first time, and eight passes ran off the back of it.** They are the four `2026-08-24` sections at the
+top, newest first; the nine below them are 2026-08-22. Read the top three points here, then the
+**Open work index**, and nothing else unless you need the why.
+
+⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green:
+**2369 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
+logged warm-ups should be excluded from the volume count, and his friend's failed sign-in.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
 wrong URL. I can see the year view now."* So **he is on a current build and the app is usable**, and
@@ -36,14 +41,19 @@ about is why the next report should still be checked against the live site first
    consistency, the first accessibility audit this project ever had, and, all on 2026-08-22, **edge
    cases / data integrity, the live social round trip, and human behaviour / UX.** Only the
    **competitive** review is left, and it inspects the market rather than the app.
-   ⚠️ **Running a review is not closing it.** Eight fixes shipped that day; **two edge-case findings
-   and the whole UX list are still open** (Open work 0b and 1).
+   ⚠️ **Running a review is not closing it.** Most of the edge-case list closed on 2026-08-24; **the
+   UX list is still the open one** (Open work 0c).
 3. **⚠️ IT HAS NOW BEEN TRAINED WITH, AND THAT IS A DIFFERENT KIND OF EVIDENCE FROM LOOKING AT IT.**
    Tim ran a real session with a friend on 2026-08-24 — *"for the most part it worked great"* — and
-   the single defect it turned up was one **no test, no review and no screenshot had found in five
-   months**: the assist machine's suggestion ran backwards. Six reviews and 2300 assertions had all
-   passed over it. **Prefer a gym report to anything in this file.** The four asks it produced are
-   the newest dated section; two shipped, two are Open work 0d and 0e.
+   it turned up **four defects no test, no review and no screenshot had found in five months.** Six
+   reviews and 2300 assertions had passed over every one of them:
+   the assist machine's suggestion ran **backwards**; a fatigued third exercise **led** a muscle
+   rating and *raised* its confidence; the dumbbell row **flattered every lifter by 15 %**; and
+   restoring a backup could **take down every screen but Settings**.
+   ⚠️ **PREFER A GYM REPORT TO ANYTHING IN THIS FILE.** One session produced more real findings than
+   six commissioned reviews. What made them findable was somebody *using* it, and what made them
+   fixable was measuring before designing — every one of those four was diagnosed wrongly on the
+   first guess, including by this file.
    Before that, a real device had opened the app exactly twice, settling three things — the keyboard
    fix works, Google sign-in works in the installed PWA, and the app can get stuck on the auth
    handler. Everything else about touch is still a desktop engine driven at phone metrics, and
@@ -65,6 +75,10 @@ last session and offers the one after it in that programme, saying what it read.
 holding off until the end of a round), plus drop sets and myo-reps (mini-sets nested inside one set,
 which stays one hard set). D23.
 
+**A workout can change its mind mid-session** (2026-08-24): **Swap** an exercise for another one, for
+today only. If sets are already logged it splits — what you did stays under the exercise you did it
+on — and the saved workout is never touched.
+
 **Workouts live inside SYSTEMS**, and there is an **Explore** screen of **nine** ready-made systems.
 Six are credited to real people. **Every system carries a BADGE of four numbers** — growth and
 strength (banded to 5), plus **days a week and minutes a session** — on Explore, on the Workouts list
@@ -73,13 +87,21 @@ programme is; the other two say what it costs, and a score without that is half 
 
 **Social is built**: mutual friends by invite link, per-person visibility (everything / my workouts /
 just that I trained / nothing), and a friend's page showing their body map and recent workouts.
-⚠️ **Two accounts have never actually connected** — see NOT verified.
+✅ **Two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier,
+publish, read, downgrade, disconnect, each checked against what Firestore actually hands the other
+account. ⚠️ **Disconnect is still ONE-SIDED** (Open work 0j); the sheet stopped claiming otherwise on
+2026-08-24.
 
 **The body map** is Tim's own illustration, split into a recolourable fill layer and an ink layer. It
 rates every muscle from **every exercise that trains it**, each rating carrying a **confidence** that
 desaturates the colour, and the **comparison group is the user's choice**. ⚠️ **Since 2026-08-19 a
 rating is led by the most CREDIBLE evidence rather than the biggest number** — that inversion was the
 worst defect this model has had, and §9 is the write-up.
+⚠️ **Two more corrections landed on 2026-08-24, both found by Tim training with it.** A reading is
+now discounted for **work already done on that muscle earlier in the same session** — fatigue used to
+*promote* a bad reading, because a rep count cannot tell a heavy set from a tired one. And four
+**per-side dumbbell ratios were 7–15 % too generous**; the errors are not a constant, so the rest of
+that table is still suspect (Open work 0h).
 
 **Neither chart mode is a dead end**: where there is not enough history to draw a line, they list
 where every lift stands right now.
@@ -1394,6 +1416,12 @@ This file has said in capitals for weeks that nothing here had ever been checked
 routes, 360 and 390 px, both themes, on the demo account — and measures **2272 rendered controls and
 4764 text elements**, reading each one's contrast against *the colour actually painted behind it*.
 
+⚠️ **CORRECTION, 2026-08-24: two of those eleven routes were not routes.** `#/data` and `#/muscles`
+have no case in `resolve()` and silently rendered Home, so this run measured Home three times and
+**never once measured the Data screen or the body map.** Everything below still stands — it is about
+the palette, which is global — but the coverage figure in this section was never what it claimed.
+Fixed in the tool and re-run; see the last pass of 2026-08-24.
+
 **`--ink-faint` failed WCAG AA everywhere it was used, in both themes.** 3.94:1 dark and **3.05:1
 light** against `--ground`, where AA wants 4.5:1 for text under 18.66px — and every one of its 75
 uses is under 18.66px. That token carries `.field-help` and `.req-source`: **the caveats and the
@@ -1540,6 +1568,30 @@ A directed multi-agent session. **Read this before the Open work list, because i
 ---
 
 ## Open work — start here
+
+### ⚠️ THE INDEX. Read this first; the lettered sections below are in the order they were WRITTEN
+
+⚠️ **The letters are not the reading order and cannot be renumbered** — items elsewhere in this file
+and in `docs/` cite them by letter ("Open work 0b and 1"), and silently moving a letter would break
+a reference somebody follows. This index is the reading order instead. **Rebuilt 2026-08-24.**
+
+**Nothing is blocking. Tim can use the app and is on a current build (0a, closed).**
+
+| | What | State |
+|---|---|---|
+| **1** | **0e — joint workouts** | ⚠️ **OPEN, and the biggest thing Tim has asked for.** Design decided (the friend accepts; never a direct write into their account). **Needs a plan doc before code** — it touches the sharing rules |
+| **2** | **0h — the ratio table runs too low, which flatters** | ⚠️ **OPEN.** Four anchors corrected 2026-08-24 by 7–15 %; the errors are **not a constant**, so every remaining reasoned entry needs deriving on its own. Moves real numbers on every body map |
+| **3** | **0c — the UX list** | ⚠️ **OPEN, and Tim has claimed the design half.** "Nothing on Home ever grows" is the sharpest unaddressed thing in the product. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
+| **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call** — measured for the first time 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
+| **5** | **0j — mutual disconnect** | ⚠️ **OPEN.** The sheet stopped promising it on 2026-08-24; the feature is still one-sided. Needs a new rules path |
+| **6** | **0b(c) — the ~950-session cloud ceiling** | ⚠️ Docs corrected; **nothing warns as it approaches**. Nobody is near it. The document-per-session split is a migration over live data and its own job |
+| **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
+| **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. §16 sets the hard constraint |
+| **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
+| **10** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
+
+**Closed 2026-08-24 and kept below for the reasoning:** 0a (both blockers), 0d (exercise swap),
+0g (within-session fatigue), 0b(d) (restore from backup).
 
 ⚠️ **READ `docs/improvement-plan.md` §0 BEFORE PICKING ANYTHING UP.** Tim asked (2026-08-19) for a
 plan plus a review of everything built. Seven reviews were scoped, briefed and then all killed by a
@@ -1921,7 +1973,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Goals tests** | `node tests/goals.test.mjs` — 232 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier. ⚠️ Since 2026-08-24 it also **plays an assist machine forward through forty obeyed sessions** and asserts it never once proposes more assistance. That section replaced two assertions that were green while the bug was live, because they read the SOURCE for a guard rather than driving the function with the exercise that reaches it |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
-| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over 44 screen/width/theme combinations and measures 2272 controls and 4764 text elements. ⚠️ **Its `#/muscles` route does not exist and silently renders Home** (found 2026-08-24), so it has been auditing Home twice and **the body map's panel has never been audited at all**. Fix the ROUTES entry to `#/graphs` plus a click on the Muscles segment, or give the router the route. Needs a scratch copy with the config blanked; the header has the commands. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
+| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **52** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 380 assertions, mounts every screen. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
@@ -2358,10 +2410,14 @@ Press-and-hold repeats.
   touch targets, accessible names and horizontal overflow have now been measured in a real browser
   across 44 screen/width/theme combinations — see the section above; `--ink-faint` failed AA
   everywhere it was used and every label in the app named nothing. Both fixed and re-measured.
-  ⚠️ **Four things were NOT checked and remain completely unknown: no keyboard path has been walked,
-  no screen reader has ever been run against this app, nothing has been tested at larger text, and
-  the muscle map's irregular-SVG tap surface was not hit-tested.** The nav bar at 360 px was
-  confirmed to fit and not overflow, which is a layout fact and not a touch one. **Do not let
+  ⚠️ **AND THE 44 COMBINATIONS WERE NOT WHAT THEY LOOKED LIKE.** Two of the tool's routes —
+  `#/data` and `#/muscles` — **are not routes at all** and silently rendered Home, so until
+  2026-08-24 the Data screen and the body map had **never been audited** and Home was measured three
+  times. Fixed in the tool, re-run over **52** combinations: **contrast is clean on all sixteen
+  newly covered ones**, and the map's own targets were hit-tested for the first time — Traps 42×11
+  at 360 px, with no larger equivalent, which is Open work 0i.
+  ⚠️ **Three things are still completely unknown: no keyboard path has been walked, no screen reader
+  has ever been run against this app, and nothing has been tested at larger text.** **Do not let
   "contrast passes" stand in for "accessible"** — they are different claims, and this file's whole
   discipline is not confusing them.
 - **⚠️ The 2026-08-19 code is PART-reviewed as of 2026-08-20.** `js/progression.js` — the one that
@@ -2372,9 +2428,10 @@ Press-and-hold repeats.
   assertion in the suite and each was driven in a browser by its author, which is exactly what progression had
   too the day before it turned out to be wrong. **The count is not the point** — passing a suite its
   own author wrote is not the same as surviving somebody trying to break it.
-- **Almost everything about a real device.** ⚠️ **A phone has now opened the app exactly once
-  (2026-08-22) and settled exactly two things** — the keyboard fix and Google sign-in in the
-  installed PWA, both moved to Verified. **Everything else on this line stands:** touch targets,
+- **Almost everything about a real device.** ⚠️ **A phone has now opened the app three times and,
+  on 2026-08-24, been TRAINED with for a whole session.** What that settled is the keyboard fix,
+  Google sign-in in the installed PWA, and — far more valuable — four defects no review had found
+  (see the top of this file). **What it did NOT settle is everything on this line:** touch targets,
   `adoptLocalData()` against real local data, and how the app behaves in an ordinary **Safari tab**,
   which is now the *less* tested of the two surfaces. Headless Chrome covers desktop-engine layout
   only. Of the four survey items that are reasoned rather than measured, **three are still
@@ -2385,13 +2442,14 @@ Press-and-hold repeats.
   `--kb`, written from `window.visualViewport`, was the largest structural change the phone work
   made, and it was verified only by driving the variable by hand until a real iPhone confirmed both
   cases the survey named.
-- **⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.** Social is built and every screen has been driven in a
-  browser — but against a **stubbed** `social` facade, so the actual round trip (create an invite,
-  open it as somebody else, claim it, accept, publish, read the other person's page) has never run
-  end to end against Firestore. The rules half of it is genuinely tested, with hand-written
-  documents; the app half is reviewed code. This is the same shape of gap `firebase-backend.js`
-  carried before the 45 live checks closed it, and it wants the same treatment: two throwaway
-  accounts against the live project, then delete them.
+- ~~**⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.**~~ ✅ **CLOSED 2026-08-22.** Two throwaway accounts in
+  two separate Chrome profiles ran the whole round trip against the live project — invite, claim,
+  accept, tier, publish, read, downgrade, disconnect — with enforcement checked **on the wire**
+  rather than in the UI, then both accounts and all eleven of their documents deleted. Two defects
+  came out of it: expired invites read as open (**fixed**), and disconnect is one-sided while the
+  sheet said otherwise (**sheet corrected 2026-08-24; the feature is still one-sided — Open work
+  0j**). ⚠️ **The brief claimed the project held zero users. It does not** — it holds Tim's two real
+  accounts. Snapshot the baseline before touching it.
 - ~~**⚠️ GOOGLE SIGN-IN DOES NOT WORK ON IOS**~~ ✅ **IT WORKS — installed PWA, 2026-08-22.** Broken
   when reported on 2026-08-21 (popup opens, closes, nothing happens) and fixed by the third pass
   moving the installed PWA off `signInWithRedirect`, which a cross-origin `authDomain` genuinely
@@ -2466,15 +2524,20 @@ Fitness_Tracker/
 │   │                           a lay-off), and emitting an on-track verdict
 │   │                           (gated on the estimator)
 │   ├── social.js               VISIBILITY TIERS + the projection builder — pure.
-│   │                           Wired to views-social.js since 2026-08-18, but
-│   │                           ⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED — every
-│   │                           screen was driven against a STUBBED facade.
+│   │                           Wired to views-social.js since 2026-08-18, and
+│   │                           ✅ two real accounts ran the whole round trip
+│   │                           against the live project on 2026-08-22.
+│   │                           ⚠️ Disconnect is still ONE-SIDED (Open work 0j).
 │   │                           Sharing publishes a derived copy; it never
 │   │                           widens a permission on the private data. Built
 │   │                           by whitelist, never by deleting fields,
 │   │                           because deletion fails OPEN
 │   ├── muscle-evidence.js      WHICH exercises rate WHICH muscle, the ratios
-│   │                           between them, and the confidence model — pure maths
+│   │                           between them, and the confidence model — pure maths.
+│   │                           ⚠️ Since 2026-08-24 it also discounts a reading for
+│   │                           WORK ALREADY DONE ON THAT MUSCLE THAT SESSION
+│   │                           (`fatigueFactor`), because a rep count cannot tell a
+│   │                           heavy set from a tired one. docs/fatigue-plan.md
 │   ├── optimal.js              the "% OPTIMAL" RATING — dose-response curves
 │   │                           fitted to published values, clamped at the top
 │   │                           of the evidence, banded to 5. Pure maths
@@ -2491,13 +2554,19 @@ Fitness_Tracker/
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
 │   ├── body-map.js             composes the fill paths + the ink masks
-│   ├── exercises.js            270-exercise library + load-type rules
+│   ├── exercises.js            272-exercise library + load-type rules, and the
+│   │                           BODY-WEIGHT FRACTION table. ⚠️ `assist: true` on an
+│   │                           entry INVERTS the sign of the logged weight
+│   │                           everywhere (Assisted Pull-Up, 2026-08-24)
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
 │   ├── views-workouts.js       home, the RECORD tab (StartPickerView — the
 │   │                           workout list plus the benchmark action),
 │   │                           SYSTEMS list, one system, workout builder,
 │   │                           Explore ready-made systems, exercise picker
-│   ├── views-session.js        session runner, benchmark form
+│   ├── views-session.js        session runner, benchmark form. Swap an exercise
+│   │                           mid-workout (splits if sets are logged), fills
+│   │                           set 2 from set 1 the first time, and shows what
+│   │                           an assist machine really leaves on you
 │   ├── views-data.js           calendar, day detail, Data screen, settings
 │   ├── views-muscles.js        the Muscles pane
 │   ├── views-social.js         the FRIENDS half of Home, a friend's page,
