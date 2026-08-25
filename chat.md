@@ -4816,3 +4816,28 @@ which "Delete all data" two lines below it has had all along, and the sheet name
 rather than 3,000. Corrected. The "fails silently" half turned out to be half-closed already, because
 `finish()` has caught save failures since the 22nd whichever backend threw; what is still open is
 that nothing warns as the limit approaches.
+
+---
+
+## 2026-08-24, sixth pass — swapping an exercise mid-workout
+
+The last of Tim's gym asks that was buildable. A quiet **Swap** button beside the exercise name opens
+the picker; the saved workout is untouched, which was his call.
+
+The half that mattered was the sets already done. If the machine was taken after two sets, two sets
+were done — on the original exercise. So a swap with work logged splits: the original keeps exactly
+what was really recorded, and the new exercise is inserted directly after it. A swap with nothing
+logged replaces in place, because an empty entry is not a record of anything. Mutation-checked:
+making it always replace flips the two assertions about the kept sets.
+
+Inserted after rather than appended, and that stopped being cosmetic the same day — muscleStrength()
+now reads entry order to score fatigue, so an exercise dropped at the end of the list would be scored
+as though it came last. The kept half leaves a superset, because a group's rounds are walked by
+membership and three exercises in a two-exercise round would desynchronise the walker mid-workout.
+
+Two things the tests caught in my own test rather than the code: I asserted "Leg Press" was gone from
+a header where the feature itself prints "Swapped in for Leg Press", and I finished a workout without
+walking to the end, so nothing saved and four assertions failed on an empty list.
+
+Measured at 360/375/393: the button is 71x44, clear of the library's longest exercise name, no
+horizontal overflow.

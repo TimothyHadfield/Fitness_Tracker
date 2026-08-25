@@ -1404,6 +1404,95 @@ ok(!data.querySelector('.rep-target'),
   }
   localStorage.removeItem(DRAFT);
 
+  /* ---- swapping an exercise mid-workout ---- *
+   *
+   * Tim, from a gym on 2026-08-24: "Allow the user to change the specific
+   * exercise they're doing once they're already in the workout so it's easy to
+   * improvise in case they want or need to switch something up."
+   *
+   * ⚠️ THE HALF THAT MATTERS IS THE SETS ALREADY DONE. If the machine was taken
+   * after two sets, two sets were done — and they were done on the ORIGINAL
+   * exercise. A swap that overwrote the entry would delete real training. */
+  {
+    const w = await store.saveWorkout({
+      name: 'Swap day',
+      exercises: [
+        { exerciseId: byName('Leg Press').id, sets: 3, notes: 'machine by the window' },
+        { exerciseId: byName('Leg Extension').id, sets: 3, notes: '' },
+      ],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    const swapBtn = () => Array.from(s.querySelectorAll('.swap-btn'))[0];
+    ok(Boolean(swapBtn()), 'every exercise offers a swap');
+
+    /* --- nothing logged yet: replace in place --- */
+    swapBtn().click();
+    await settle();
+    // The picker caps its list at 150 rows, so anything further down the library
+    // has to be searched for — which is what a person does anyway.
+    const pick = (name) => {
+      const box = document.querySelector('.search-results')
+        && document.querySelector('input[type="search"]');
+      // window.Event, not the bare global — in Node 24 `Event` resolves to the
+      // runtime's own, which jsdom rejects as "not of type 'Event'".
+      if (box) { box.value = name; box.dispatchEvent(new window.Event('input', { bubbles: true })); }
+      const row = Array.from(document.querySelectorAll('.search-results .row'))
+        .find((b) => new RegExp('^' + name).test((b.textContent || '').trim()));
+      if (row) row.click();
+      return Boolean(row);
+    };
+    ok(pick('Hack Squat'), 'the swap opens the exercise picker');
+    await settle(); await settle();
+    ok(/Hack Squat/.test(s.textContent), '⚠️ with nothing logged the exercise is replaced in place');
+    ok(!/Leg Press/.test(s.querySelector('.session-ex-name').textContent),
+       'and the one it replaced is no longer the exercise you are on — an empty entry is not a record');
+    ok(/Swapped in for Leg Press/.test(s.textContent),
+       'and the screen says what it swapped in for, and that it is today only');
+    ok(!/machine by the window/.test(s.textContent),
+       'the note belonged to the exercise that was replaced, so it does not follow');
+
+    /* --- ⚠️ sets already logged: SPLIT, keeping what was done --- */
+    type(s.querySelectorAll('.step-value')[0], 200);
+    await settle();
+    type(s.querySelectorAll('.step-value')[1], 8);
+    await settle();
+    swapBtn().click();
+    await settle();
+    ok(pick('Goblet Squat'), 'and the picker opens again with work already logged');
+    await settle(); await settle();
+    ok(/Goblet Squat/.test(s.querySelector('.session-head').textContent),
+       'the swapped-in exercise is what you land on');
+
+    // Walk to the end — the split inserted an exercise, so "Finish" is two
+    // steps away rather than under the thumb.
+    for (let i = 0; i < 8 && !btn(s, /Finish workout/); i++) {
+      const next = btn(s, /Next exercise|Straight into|Round/);
+      if (!next) break;
+      next.click();
+      await settle();
+    }
+    const finish = btn(s, /Finish workout/);
+    ok(Boolean(finish), 'the walk reaches the end of the swapped workout');
+    if (finish) { finish.click(); await settle(); await settle(); }
+    const saved = (await store.getSessions()).find((x) => x.workoutName === 'Swap day');
+    const names = saved ? saved.entries.map((e) => e.exerciseName) : [];
+    ok(names.includes('Hack Squat'),
+       `⚠️ the 200x8 done on the Hack Squat is KEPT under its own name (${names.join(', ')})`);
+    const kept = saved && saved.entries.find((e) => e.exerciseName === 'Hack Squat');
+    ok(kept && kept.sets.length === 1 && kept.sets[0].weight === 200,
+       'exactly the one set that was really done, not the three that were planned');
+    ok(names.indexOf('Hack Squat') < names.indexOf('Leg Extension'),
+       '⚠️ and it stays in session ORDER — muscleStrength() reads that order to score fatigue');
+
+    /* --- the workout itself is untouched: today only --- */
+    const plan = await store.getWorkout(w.id);
+    ok(plan.exercises[0].exerciseId === byName('Leg Press').id,
+       '⚠️ and the SAVED WORKOUT still says Leg Press — a swap is for this session only');
+  }
+  localStorage.removeItem(DRAFT);
+
   /* ---- an assist machine says what you are really lifting ---- *
    *
    * ⚠️ The box says 70 and the lifter is moving 110. Tim asked for the real

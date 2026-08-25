@@ -118,6 +118,15 @@ export async function SessionView(workoutId) {
     for (const f of fields) s[f] = typeof src[f] === 'number' ? src[f] : 0;
     return s;
   }
+  // ⚠️ Filter on the exercise's OWN FIELDS, not on Object.values(set). A set
+  // carries a `minis` array, and `Number([{…}])` is NaN — so the old blanket
+  // check happened to work, but only by accident, and it would have thrown away
+  // a set whose numbers were all in its drops. Hoisted out of finish() on
+  // 2026-08-24 because the exercise swap asks the same question: has this
+  // exercise actually been done yet?
+  const hasNumbers = (s, fields) => fields.some((f) => Number(s[f]) > 0);
+  const setIsRecorded = (s, fields) =>
+    hasNumbers(s, fields) || minisOf(s).some((d) => hasNumbers(d, fields));
 
   const settings = await store.getSettings();
 
@@ -568,10 +577,31 @@ export async function SessionView(workoutId) {
       // The per-side / total distinction is carried by the stepper's own label,
       // so it isn't repeated here.
       el('div', { class: 'session-head' },
-        el('h2', { class: 'session-ex-name', text: entry.exerciseName }),
+        el('div', { class: 'session-head-row' },
+          el('h2', { class: 'session-ex-name', text: entry.exerciseName }),
+          // ⚠️ QUIET, and beside the name rather than under the numbers. Swapping
+          // is a thing you do occasionally when a machine is taken; it must be
+          // findable without competing with the steppers, which are what this
+          // screen is for (D4). Same reasoning as the suggestion's undo link.
+          el('button', {
+            class: 'swap-btn',
+            title: 'Use a different exercise for this session',
+            onClick: () => openExercisePicker({
+              exMap,
+              title: 'Swap this exercise',
+              closeOnPick: true,
+              onPick: (picked) => swapExercise(step.entryIndex, picked),
+            }),
+          }, icon('swap', 15), 'Swap'),
+        ),
         el('div', { class: 'session-ex-meta' },
           `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
         ),
+        // Says which of the two things a swap just did, because they are
+        // different and only one of them left a record behind.
+        entry.swappedFrom
+          ? el('div', { class: 'session-ex-meta', text: `Swapped in for ${entry.swappedFrom} — today only.` })
+          : null,
       ),
 
       entry.notes
@@ -715,13 +745,119 @@ export async function SessionView(workoutId) {
     renderFooter();
   }
 
-  async function finish() {
-    // ⚠️ Filter on the exercise's OWN FIELDS, not on Object.values(set). A set
-    // now carries a `drops` array, and `Number([{…}])` is NaN — so the old
-    // blanket check happened to work, but only by accident, and it would have
-    // thrown away a set whose numbers were all in its drops.
-    const hasNumbers = (s, fields) => fields.some((f) => Number(s[f]) > 0);
+  /**
+   * Everything the runner needs to know about an exercise it is about to show:
+   * last time's numbers, and what to suggest.
+   *
+   * ⚠️ Pulled out of the session-start loop so the SWAP can reuse it. The runner
+   * reads every session ONCE at the start and builds all of this up front, which
+   * is right for a workout whose exercises are known — and leaves an exercise
+   * swapped in mid-session with no history and a column of zeros unless it can
+   * go and ask. `store.getSessions()` is served from the read cache, so asking
+   * again mid-workout costs nothing on the wire.
+   */
+  async function readingFor(ex) {
+    const sessions = await store.getSessions();
+    const history = historyFor(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
+    const last = history[0] || null;
+    const lastDay = lastSessionDate(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
+    const suggestion = suggestProgression({
+      history,
+      exercise: ex,
+      step: units.fromDisplay(units.weightStep()),
+      daysSinceLast: lastDay ? daysBetweenDays(lastDay, state.date) : null,
+      bodyWeight: state.bodyWeight,
+      fmt: units.withUnit,
+    });
+    return { history, last, suggestion };
+  }
 
+  /**
+   * Swap the exercise at `index` for another one, FOR THIS SESSION ONLY.
+   *
+   * Tim, after a gym session on 2026-08-24: *"Allow the user to change the
+   * specific exercise they're doing once they're already in the workout so it's
+   * easy to improvise in case they want or need to switch something up."* The
+   * machine is taken, the gym is busy, or it just feels wrong today.
+   *
+   * ⚠️ THE SAVED WORKOUT IS NOT TOUCHED — his call, asked and answered. It is
+   * also what the runner already does everywhere else: `isBenchmark`, `group`,
+   * `setType` and `plannedMinis` are all copied from the template at the moment
+   * the session starts, precisely so that improvising today cannot reshape the
+   * programme, and editing the programme next month cannot reshape a session
+   * already recorded.
+   *
+   * ⚠️ SETS ALREADY RECORDED ARE KEPT, UNDER THE EXERCISE THEY WERE DONE ON. If
+   * the machine was taken after two sets, two sets were done — and they were
+   * done on the leg press, not on the thing that replaced it. So a swap with
+   * work already logged SPLITS: the original keeps its recorded sets and the new
+   * exercise is inserted directly after it. A swap with nothing logged replaces
+   * in place, because an empty entry is not a record of anything.
+   *
+   * ⚠️ Inserted AFTER, never appended to the end, and that is not cosmetic any
+   * more: `muscleStrength()` reads entry order to work out how much work a
+   * muscle had already taken when each exercise started. An exercise dropped at
+   * the end of the list would be scored as though it came after everything.
+   */
+  async function swapExercise(index, newEx) {
+    const entry = state.entries[index];
+    if (!entry || !newEx) return;
+    const { last, suggestion } = await readingFor(newEx);
+
+    const lastSets = Array.from({ length: entry.plannedSets || 1 }, (_, i) => {
+      if (!last || !last.length) return blankSet(newEx.fields);
+      return pickFields(last[Math.min(i, last.length - 1)], newEx.fields);
+    });
+
+    const fresh = {
+      lastSets,
+      suggestion,
+      exerciseId: newEx.id,
+      exerciseName: newEx.name,
+      fields: newEx.fields,
+      loadType: newEx.loadType,
+      notes: '',                 // the note belonged to the exercise being replaced
+      plannedSets: entry.plannedSets,
+      group: entry.group,
+      setType: entry.setType,
+      plannedMinis: entry.plannedMinis,
+      sets: applySuggestion(lastSets, suggestion),
+      active: 0,
+      activeDrop: null,
+      hadHistory: Boolean(last && last.length),
+      lastSummary: last && last.length ? fmtSet(last[0], newEx.fields, newEx.loadType) : null,
+      swappedFrom: entry.exerciseName,
+    };
+
+    const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields));
+    if (recorded.length) {
+      entry.sets = recorded;
+      entry.active = Math.min(entry.active, recorded.length - 1);
+      entry.activeDrop = null;
+      // ⚠️ The kept half leaves the superset. A group's rounds are walked by
+      // membership, so letting both halves stay in it would put three exercises
+      // in a two-exercise round and desynchronise the walker mid-workout. The
+      // half you are still doing keeps the group; the half you have finished
+      // becomes what it now is — some sets you did.
+      if (entry.group != null) { entry.group = null; entry.setType = null; }
+      state.entries.splice(index + 1, 0, fresh);
+      toast(`Swapped to ${newEx.name}`);
+      // ⚠️ `state.index` walks STEPS, not entries, and a split rebuilds the walk
+      // — a superset contributes one step per member per round, so the two
+      // indices are not the same number and adding one to it lands wherever it
+      // happens to land. Find the step that belongs to the new entry instead.
+      // goToStep() saves and renders, so nothing else is needed here.
+      const at = steps().findIndex((s) => s.entryIndex === index + 1);
+      goToStep(at >= 0 ? at : state.index);
+      return;
+    }
+    state.entries[index] = fresh;
+    saveDraft(state);
+    renderAll();
+    toast(`Swapped to ${newEx.name}`);
+  }
+
+  async function finish() {
     const entries = state.entries
       .map((e) => ({
         exerciseId: e.exerciseId,

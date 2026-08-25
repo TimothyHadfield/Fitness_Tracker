@@ -1544,24 +1544,29 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      because a line saying "nobody has done this" over work that shipped is exactly the failure this
      file exists to prevent.
 
-0d. **⚠️ SWAP AN EXERCISE MID-WORKOUT — Tim, 2026-08-24, from the gym.** *"Allow the user to change
-   the specific exercise they're doing once they're already in the workout so it's easy to improvise
-   in case they want or need to switch something up."* The machine is taken, the gym is busy, or it
-   just feels wrong today.
+0d. ~~**⚠️ SWAP AN EXERCISE MID-WORKOUT**~~ ✅ **BUILT AND DEPLOYED 2026-08-24.** A quiet **Swap**
+   button beside the exercise name opens the picker; 71 × 44 px, measured clear of the library's
+   longest name at 360 px. **TODAY ONLY — the saved workout is untouched**, which was Tim's call and
+   is what the runner already does with `isBenchmark`, `group` and `setType`.
 
-   **His decision, asked and answered: TODAY ONLY.** The swap applies to this session and the saved
-   workout is unchanged next time. That matches what the runner already does on purpose — `isBenchmark`,
-   `group`, `setType` and `plannedMinis` are all *copied from the template at the moment the session
-   starts*, so that editing a workout next month cannot reshape a session already recorded.
+   ⚠️ **IT SPLITS RATHER THAN REPLACING WHEN WORK HAS BEEN LOGGED**, and that is the half that
+   mattered. If the machine was taken after two sets, two sets were done — **on the original
+   exercise**. So a swap with sets recorded keeps the original, trimmed to what was really done, and
+   inserts the new exercise directly after it. A swap with nothing logged replaces in place, because
+   an empty entry is not a record of anything. **Mutation-checked**: making it always replace flips
+   the two assertions about the kept sets.
 
-   ⚠️ **It is more work than it looks, and here is where the cost is.** Three things:
-   - **Set types.** Swapping one leg of a tri-set has to keep the group intact, or the round walker
-     in `set-types.js` loses a member mid-round.
-   - **History.** The runner reads every session ONCE at session start and builds each entry's
-     `lastSets`, `suggestion` and `hadHistory` from it. A swapped-in exercise has to go and get its
-     own, or it arrives with no suggestion and a column of zeros.
-   - **The sets already recorded.** If the machine was taken after two sets, two sets were done.
-     They stay, under the original exercise; the swap starts a new entry rather than rewriting one.
+   ⚠️ **INSERTED AFTER, NOT APPENDED, and that stopped being cosmetic today** — `muscleStrength()`
+   now reads entry order to score within-session fatigue (0g), so an exercise dropped at the end of
+   the list would be scored as though it came after everything.
+
+   ⚠️ **The kept half LEAVES a superset.** A group's rounds are walked by membership, so letting
+   both halves stay in would put three exercises in a two-exercise round and desynchronise the walker
+   mid-workout. The half you are still doing keeps the group.
+
+   History is re-read for the swapped-in exercise, so it arrives with its own suggestion rather than
+   a column of zeros — cheap, because `getSessions()` is served from the read cache.
+   `openExercisePicker` grew a `closeOnPick` option: adding exercises is repeated, swapping one is not.
 
 0e. **⚠️ JOINT WORKOUTS — Tim, 2026-08-24. The biggest idea in his list.** *"one person can record
    both measurements for both people on one phone and account and then the data is saved to each

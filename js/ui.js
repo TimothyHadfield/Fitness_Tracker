@@ -157,6 +157,10 @@ const PATHS = {
   link: 'M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 1 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 1 0 5.66 5.66l1-1',
   'link-off': 'M9.5 14.5 7 17a3.5 3.5 0 0 1-5-5l2.5-2.5M14.5 9.5 17 7a3.5 3.5 0 0 1 5 5l-2.5 2.5M3 3l18 18',
   edit: 'M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z',
+  // Two arrows passing in opposite directions — one thing out, another in.
+  // Deliberately not a circular "refresh": swapping an exercise replaces it
+  // with something different, it does not reload the same one.
+  swap: 'M4 8.5h15M15.5 5l3.5 3.5-3.5 3.5M20 15.5H5M8.5 12 5 15.5 8.5 19',
   flag: 'M5 21V4h13l-2.5 4L18 12H5',
   person: 'M12 12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0',
   // Two people, the second half-behind the first. Deliberately not a speech

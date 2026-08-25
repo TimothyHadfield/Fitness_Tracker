@@ -1237,7 +1237,13 @@ export async function WorkoutBuilderView(param) {
  * Exercise picker sheet
  * ================================================================== */
 
-export async function openExercisePicker({ exMap, onPick, title = 'Add exercise' }) {
+/**
+ * @param closeOnPick  ⚠️ Adding exercises to a workout is a REPEATED action, so
+ *   the sheet stays open and ticks each row as it goes. Swapping one is a SINGLE
+ *   action — you are mid-set, you wanted a different machine, and leaving the
+ *   sheet over the screen would mean the next thing you do is dismiss it.
+ */
+export async function openExercisePicker({ exMap, onPick, title = 'Add exercise', closeOnPick = false }) {
   const all = exMap ? [...exMap.values()] : await store.getExercises();
   let filterMuscle = null;
   let query = '';
@@ -1286,10 +1292,10 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
     list.forEach((ex) => {
       const btn = el('button', { class: 'row', onClick: () => {
         const ok = onPick(ex);
-        if (ok !== false) {
-          btn.style.borderColor = 'var(--good)';
-          btn.querySelector('.row-chev').replaceChildren(icon('check'));
-        }
+        if (ok === false) return;
+        if (closeOnPick) { close(); return; }
+        btn.style.borderColor = 'var(--good)';
+        btn.querySelector('.row-chev').replaceChildren(icon('check'));
       } },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: ex.name }),
