@@ -1258,14 +1258,48 @@ export async function SettingsView() {
     onChange: async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      // ⚠️ READ AND CHECKED BEFORE ANYTHING IS ASKED, so the sheet can say what
+      // is actually in the file. A confirmation that cannot name what it is
+      // about to do is a speed bump, not a safeguard.
+      let data, summary;
       try {
-        await store.importAll(JSON.parse(await file.text()));
-        toast('Backup restored');
-        location.hash = '#/home';
+        data = JSON.parse(await file.text());
+        summary = store.inspectBackup(data);
       } catch (err) {
         toast(err.message || 'That file could not be read');
+        e.target.value = '';
+        return;
       }
       e.target.value = '';
+
+      // ⚠️ RESTORING IS AS DESTRUCTIVE AS DELETING, and until 2026-08-24 it was
+      // the only one of the two with no confirmation — "Delete all data" two
+      // lines below it has had one all along. It replaces every collection,
+      // including ones the file does not carry, so everything currently in the
+      // account goes.
+      const parts = [];
+      if (summary.counts.sessions) parts.push(`${summary.counts.sessions} workout records`);
+      if (summary.counts.workouts) parts.push(`${summary.counts.workouts} workouts`);
+      if (summary.counts.benchmarks) parts.push(`${summary.counts.benchmarks} benchmarks`);
+      if (summary.counts.bodyWeight) parts.push(`${summary.counts.bodyWeight} weigh-ins`);
+      const what = parts.length ? parts.join(', ') : `${summary.total} records`;
+
+      confirmSheet({
+        title: 'Restore this backup?',
+        message: `It holds ${what}. Restoring REPLACES everything in this account — `
+          + 'anything you have logged since that backup was made will be gone. '
+          + 'This cannot be undone.',
+        confirmLabel: 'Replace everything',
+        onConfirm: async () => {
+          try {
+            await store.importAll(data);
+            toast('Backup restored');
+            location.hash = '#/home';
+          } catch (err) {
+            toast(err.message || 'That file could not be read');
+          }
+        },
+      });
     },
   });
 

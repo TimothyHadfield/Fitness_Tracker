@@ -4784,3 +4784,35 @@ audited**. Recorded, not chased.
 Told Tim plainly that this does not establish he is stronger than 145 lb — his three lifts still
 disagree two-fold, and the competing explanation, that doubling a one-arm dumbbell row onto a two-arm
 barbell row is generous, is untouched.
+
+---
+
+## 2026-08-24, fifth pass — the batch
+
+Tim: *"deploy everything you just mentioned and are ready to work on."* Three shipped in one pass;
+the exercise swap follows separately.
+
+**The dumbbell row was flattering everyone by 15 %,** and this is the other half of his lat question
+— running the opposite way from the fatigue finding. The ratio was 0.85, a reasoned estimate. Derived
+properly from published standards, the way the dip and pull-up entries in the same file already are,
+it is 0.98. A smaller ratio makes the estimate bigger, so every dumbbell row in the app read about
+15 % too strong. His three back readings go from 229/115/136 to 199/115/136: same 141 lb rating,
+confidence up from 0.36 to 0.41, because better-calibrated inputs agree better.
+
+Fixed exactly one entry on purpose. Dumbbell bench press is wrong the same way — 0.72 against a
+published 0.81 — and moving it alone would leave incline and decline relatively more generous than
+flat. The family needs one pass; filed as open work. The wider point is filed with it: a *reasoned*
+ratio in that table has now been shown to be 15 % out in the flattering direction, so every entry
+without a derivation is suspect.
+
+**Restore from backup could take the app down and asked nobody first.** `{sessions:[{id:'s1'}]}`
+stored fine and then killed every screen but Settings. Now every row is checked before any row is
+written, so there is no half-restore; `{foo:1}` is refused rather than toasting "Backup restored"
+over nothing; and it replaces every collection including the ones the file does not carry, which is
+what kills the dangling `systemId` that used to hide a workout forever. It has a confirmation now,
+which "Delete all data" two lines below it has had all along, and the sheet names what is in the file.
+
+**The Firestore ceiling doc was wrong by 3×** — ~1,100 bytes a session, not 300, so ~950 sessions
+rather than 3,000. Corrected. The "fails silently" half turned out to be half-closed already, because
+`finish()` has caught save failures since the 22nd whichever backend threw; what is still open is
+that nothing warns as the limit approaches.

@@ -102,6 +102,88 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-24, later — ⚠️ THE DUMBBELL ROW WAS FLATTERING EVERYONE BY 15 %
+
+Tim: *"deploy everything you just mentioned and are ready to work on."* Three shipped in this pass.
+
+### ⚠️ 1. The other half of the lat question, and it ran the OTHER way
+
+The fatigue work established that Tim's lat pulldown was dragging his Back rating down. It left the
+competing explanation untested: **is the dumbbell row's conversion generous?** It is.
+
+`RATIOS.Back` had `Dumbbell Row` at **0.85**, a reasoned estimate. Derived properly, by the technique
+the dip and pull-up entries in the same file already use — one population, both lifts, a 180 lb male,
+divide — Strength Level publish the dumbbell row **per dumbbell**, which this app doubles:
+
+```
+                DB row x2   barbell row   ratio
+  beginner          88          108        0.81
+  novice           134          149        0.90
+  intermediate     194          198        0.98
+  advanced         264          255        1.04
+  elite            342          315        1.09      median 0.98
+```
+
+⚠️ **A SMALLER RATIO MAKES THE ESTIMATE BIGGER**, because the estimate divides by it. At 0.85 instead
+of 0.98 every dumbbell row in the app read about **15 % stronger than it should**. The barbell row
+denominators are the same five numbers the pull-up derivation already uses, so the two are not
+spliced from different populations.
+
+**Tim's three back readings go from 229 / 115 / 136 to 199 / 115 / 136** — his rating stays 141 lb
+and his **confidence rises 0.36 → 0.41**, because better-calibrated inputs agree better. That is the
+shape of a correct fix: the same answer, more trust in it.
+
+⚠️ **ONE ENTRY MOVED, AND ONLY ONE, DELIBERATELY.** `Dumbbell Bench Press` is wrong the same way and
+was measured against the same source — **0.72 against a published 0.81** — and is NOT fixed, because
+correcting it alone would leave `Incline Dumbbell Bench Press` (0.62) and `Decline` (0.76) relatively
+more generous than the flat version, which is a new inconsistency. **The whole dumbbell family needs
+re-deriving in one pass; that is now Open work 0h.** Raising the row alone was safe because it
+preserves its own family's ordering — a chest-supported row still sits below it, as it must.
+
+### ⚠️ 2. Restore from backup could take the app down, and asked nobody first
+
+The edge-case review's finding (0b(d)), fixed. `importAll()` validated almost nothing:
+`{sessions:[{id:'s1'}]}` stored fine and then `getSessions()` threw on `b.date.localeCompare`,
+**taking out Home, Workouts, Calendar, Data, Muscles and Goals** through the router's catch. Settings
+still rendered, so it was recoverable by deleting everything.
+
+Three changes. **`inspectBackup()` checks every row before any row is written** — so a good
+`workouts` followed by a bad `sessions` no longer half-restores. **It is a gatekeeper, not a schema:**
+only the fields whose absence actually crashes a screen are required, because refusing somebody's own
+data over a missing optional field is the worse failure.
+
+**`{foo:1}` is now refused rather than toasting "Backup restored" having restored nothing** — a
+restore that silently does nothing is worse than one that fails, because the user walks away
+believing their training is back.
+
+⚠️ **AND IT REPLACES EVERY COLLECTION, INCLUDING ONES THE FILE DOES NOT CARRY.** A backup is a
+snapshot of a whole account, so "restore" means "put me back in that state". The old merge left
+untouched collections behind, and that produced the fault this codebase already knows by name — *a
+foreign key is only valid while the rest of that set still exists*: restoring a pre-systems backup
+kept the CURRENT systems, so a restored workout could point at a system that was never in the file,
+returned by `getWorkouts()`, rendered by no screen, and never adopted by `ensureSystems()` because
+that only looks for workouts with **no** systemId rather than a dead one. Invisible forever.
+Replacing wholesale cannot produce it: the pre-systems backup clears systems too, its workouts have
+no systemId, and the migration adopts them on the next read.
+
+**And it has a confirmation now**, which "Delete all data" two lines below it has had all along. The
+sheet names what is in the file — *"It holds 4 workout records, 2 workouts…"* — because a
+confirmation that cannot say what it is about to do is a speed bump, not a safeguard.
+
+### ⚠️ 3. `docs/firebase-setup.md` had the ceiling wrong by 3×
+
+It claimed ~300 bytes a session and about 3,000 workouts. Measured on 2026-08-22: **1,100 bytes a
+session, and 3,000 sessions is 3.1× over the 1 MiB cap.** The real ceiling is **~950 sessions, about
+four and a half years at four a week.** Corrected.
+
+⚠️ **The "fails silently" half of that finding is already half-closed and the doc now says so
+precisely.** A rejected cloud write surfaces on screen — `finish()` has wrapped `saveSession()` in a
+try/catch since 2026-08-22 and the message stays above the button that failed, whichever backend
+threw it. **What is still true is that nothing warns as the limit approaches.** The split to a
+document per session is a migration over live training data and stays its own job.
+
+---
+
 ## 2026-08-24 — ⚠️ THE APP WAS USED IN A GYM, AND IT FOUND A LIVE INVERSION
 
 **The first time this app has been used for what it is for.** Tim trained with a friend, logged the
@@ -1571,14 +1653,29 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    - ~~**⚠️ (b) A FAILED SAVE AT THE END OF A WORKOUT IS SILENT.**~~ ✅ **FIXED 2026-08-22** — it
      says so on the screen above the button that failed, keeps the draft (the only other copy), and
      the same tap works again once the problem clears.
-   - **⚠️ (c) THE FIRESTORE CEILING IS ~950 SESSIONS AND THE DOCS SAY 3,000.** Measured at ~1,100
-     bytes a session against the 1 MiB per-document cap. Writes fail silently mid-workout past it —
-     and (b) is what makes them silent. `docs/firebase-setup.md` needs correcting whether or not the
-     split to a document-per-session is done.
-   - **(d) Restore from backup validates almost nothing, MERGES rather than replaces, and has no
-     confirmation** — while "delete all data" two lines below it has one. A malformed row takes out
-     every screen but Settings; a dead `systemId` hides a workout forever; `{foo:1}` toasts "Backup
-     restored" having restored nothing.
+   - **⚠️ (c) THE FIRESTORE CEILING IS ~950 SESSIONS** — ✅ **docs corrected 2026-08-24**, and the
+     "fails silently" half turns out to be half-closed already: a rejected cloud write surfaces on
+     screen, because `finish()` has caught `saveSession()` since 2026-08-22 whichever backend threw.
+     ⚠️ **Still open: nothing warns as the limit approaches**, and the split to a document per
+     session is a migration over live training data that stays its own job. Nobody is near it —
+     Tim's account holds a few dozen sessions.
+   - ~~**(d) Restore from backup validates almost nothing, MERGES rather than replaces, and has no
+     confirmation**~~ ✅ **FIXED 2026-08-24.** Every row is checked before any row is written, so
+     there is no half-restore; `{foo:1}` is refused rather than toasting success over nothing; every
+     collection is replaced including the ones the file does not carry, which is what kills the dead
+     `systemId`; and it has a confirmation that names what is in the file.
+
+0h. **⚠️ THE DUMBBELL FAMILY'S RATIOS ARE REASONED, AND THE ONE THAT WAS CHECKED WAS WRONG BY 15 %.**
+   `Dumbbell Row` was corrected 2026-08-24 from 0.85 to a published 0.98 (see the section above).
+   ⚠️ **`Dumbbell Bench Press` is wrong the same way and was measured against the same source —
+   0.72 against a published 0.81 — and is deliberately NOT fixed**, because moving it alone would
+   leave `Incline Dumbbell Bench Press` (0.62) and `Decline` (0.76) relatively more generous than the
+   flat version. **The family has to be re-derived in one pass**, by the technique the dip, pull-up
+   and now dumbbell row entries use: one population, both lifts, a 180 lb male, divide.
+   ⚠️ **And the finding generalises beyond dumbbells.** What was established is that a *reasoned*
+   ratio in that table can be 15 % out in the flattering direction. Every entry with no derivation
+   comment is now suspect, and the machine entries (`q` 0.35–0.50) have the same status. This is a
+   bounded research job with a known method, and it moves real numbers on real body maps.
 
 0c. **⚠️ THE UX REVIEW'S LIST — judgement rather than bugs, and Tim has claimed the design half.**
    Written up in the fifth pass above. He said he would work on the design himself, *"especially

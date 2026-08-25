@@ -138,10 +138,27 @@ report came from.
 
 ## Scale and cost
 
-Each collection is a single Firestore document, capped at 1 MB. Workouts, benchmarks, and custom
-exercises will never come close. `sessions` grows forever at roughly 300 bytes each — about 3,000
-workouts before it matters. When it does, split `sessions` into one document per session; nothing
-else in the design changes.
+Each collection is a single Firestore document, capped at 1 MiB. Workouts, benchmarks, and custom
+exercises will never come close.
+
+⚠️ **`sessions` IS THE ONE THAT RUNS OUT, AND THIS SECTION WAS WRONG ABOUT WHEN — corrected
+2026-08-24.** It claimed roughly 300 bytes a session and about 3,000 workouts. **Measured** by the
+edge-case review on 2026-08-22: 3,000 real sessions serialise to **3,298,891 bytes**, which is
+**3.1× over the cap**, at about **1,100 bytes a session** rather than 300. The real ceiling is
+therefore **about 950 sessions — roughly four and a half years at four workouts a week.**
+
+⚠️ **What happens at the ceiling.** The write is rejected by Firestore, so the *cloud copy* stops
+updating. It is no longer silent at the point it matters: since 2026-08-22 a failed save at the end
+of a workout says so on screen, above the button that failed, and keeps the draft. **But nothing
+warns as the limit approaches**, and nothing says which of your data is and is not backed up once it
+has been passed — the local copy keeps working, so the app carries on looking fine.
+
+**The fix is the one this design always anticipated:** split `sessions` into one document per
+session. Nothing else in the design changes, but it is a **migration over live training data** and
+belongs in its own pass rather than bolted onto something else.
+
+⚠️ **Nobody is near this yet.** Tim's account holds a few dozen sessions. Recorded here so the number
+is right when somebody checks it, not because it is urgent.
 
 The free Spark plan covers 50,000 reads and 20,000 writes per day. Reading a whole collection as one
 document means opening the app costs about five reads.

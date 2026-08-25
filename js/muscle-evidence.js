@@ -173,7 +173,31 @@ const RATIOS = {
     [/Chest-Supported Dumbbell Row/, 0.80, 0.55],
     [/Chest-Supported Row/, 0.95, 0.45],
     [/Meadows Row/, 0.55, 0.45],
-    [/Dumbbell Row/, 0.85, 0.60],
+    // ⚠️ 0.85 UNTIL 2026-08-24, AND IT WAS FLATTERING EVERY DUMBBELL ROW BY ~15 %.
+    // Tim asked whether his lats were really as weak as the app said; this was
+    // the other half of the answer, and it ran the other way from the fatigue
+    // finding — one of his three back lifts was reading too HIGH.
+    //
+    // ⚠️ NOW DERIVED FROM PUBLISHED STANDARDS rather than reasoned, by the same
+    // technique as the dip and pull-up entries: one population, both lifts, all
+    // at a 180 lb male, divide. Strength Level publish the dumbbell row PER
+    // DUMBBELL, so the total is doubled — which is what this app logs it as.
+    //     beginner  (44x2)/108 = 0.81   novice (67x2)/149 = 0.90
+    //     intermediate (97x2)/198 = 0.98
+    //     advanced (132x2)/255 = 1.04   elite (171x2)/342... /315 = 1.09
+    // Median 0.98. The barbell row denominators are the SAME five numbers the
+    // pull-up derivation below already uses, so the two are not spliced from
+    // different populations.
+    //
+    // ⚠️ The drift from 0.81 to 1.09 is real, in the same way the dip's is, and
+    // it is why `q` stays at 0.60 rather than rising now that the ratio is
+    // sourced: a fixed ratio compresses everybody toward the middle, so this
+    // still overstates weak lifters and understates strong ones.
+    //
+    // ⚠️ ORDERING PRESERVED, which is why this entry could move alone: a
+    // chest-supported row removes the torso english, so less weight moves and a
+    // lower ratio is correct — 0.80 still sits below this, as it must.
+    [/Dumbbell Row/, 0.98, 0.60],
     [/Machine Row|Hammer Strength Row/, 1.00, 0.45],
     [/Seated Cable Row|Wide-Grip Seated Row/, 1.00, 0.50],
     [/Single-Arm Lat Pulldown/, 0.80, 0.40],

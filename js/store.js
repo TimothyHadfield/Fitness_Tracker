@@ -931,17 +931,101 @@ export const store = {
     return out;
   },
 
+  /**
+   * Read a backup file and say what is in it, WITHOUT writing anything.
+   *
+   * ⚠️ SEPARATED FROM importAll() SO THE USER CAN BE ASKED FIRST. Restoring
+   * replaces everything, and until 2026-08-24 it did that with no confirmation
+   * while "Delete all data" two lines below it had one. You cannot confirm what
+   * you have not been told, so the sheet needs the counts before the write.
+   *
+   * @returns { counts: {collection: n}, total }
+   * @throws with a sentence naming what is wrong, never a generic apology.
+   */
+  inspectBackup(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('That file is not a backup.');
+    }
+    const known = COLLECTIONS.filter((c) => data[c] !== undefined);
+    if (!known.length) {
+      // ⚠️ `{foo:1}` used to import "successfully" and toast "Backup restored"
+      // having restored nothing at all. A restore that silently does nothing is
+      // worse than one that fails, because the user walks away believing their
+      // training is back.
+      throw new Error('That file has no workout data in it — it may not be a backup from this app.');
+    }
+    // ⚠️ EVERY ROW IS CHECKED BEFORE ANY ROW IS WRITTEN, and that ordering is
+    // the fix. A half-import used to be reachable: `{sessions:[{id:'s1'}]}`
+    // stored fine and then `getSessions()` threw on `b.date.localeCompare`,
+    // taking out Home, Workouts, Calendar, Data, Muscles and Goals through the
+    // router's catch. Settings still rendered, so it was recoverable rather
+    // than bricked — but only by deleting everything.
+    const isDate = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v);
+    // Only the fields whose absence actually CRASHES a screen. This is a
+    // gatekeeper, not a schema: rejecting a backup for a missing optional field
+    // would lock people out of their own data over nothing.
+    const REQUIRED = {
+      sessions: (r) => (isDate(r.date) ? null : 'a session with no usable date'),
+      benchmarks: (r) => (isDate(r.date) ? null : 'a benchmark with no usable date'),
+      bodyWeight: (r) => (isDate(r.date) && typeof r.weight === 'number' && r.weight > 0
+        ? null : 'a weigh-in with no usable date or weight'),
+      workouts: (r) => (r.exercises === undefined || Array.isArray(r.exercises)
+        ? null : 'a workout whose exercise list is not a list'),
+    };
+    const counts = {};
+    for (const c of known) {
+      const rows = data[c];
+      if (!Array.isArray(rows)) {
+        throw new Error(`That backup's ${c} is not a list, so it cannot be restored.`);
+      }
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || typeof r !== 'object' || Array.isArray(r)) {
+          throw new Error(`That backup has a damaged ${c} entry (number ${i + 1}), so nothing was restored.`);
+        }
+        if (typeof r.id !== 'string' || !r.id) {
+          throw new Error(`That backup has a ${c} entry with no id (number ${i + 1}), so nothing was restored.`);
+        }
+        const problem = REQUIRED[c] && REQUIRED[c](r);
+        if (problem) {
+          throw new Error(`That backup contains ${problem} (number ${i + 1}), so nothing was restored.`);
+        }
+      }
+      counts[c] = rows.length;
+    }
+    return { counts, total: Object.values(counts).reduce((a, b) => a + b, 0) };
+  },
+
   async importAll(data) {
-    if (!data || typeof data !== 'object') throw new Error('That file is not a valid backup.');
+    // Throws before a single byte is written if anything is wrong.
+    const summary = this.inspectBackup(data);
+
+    // ⚠️ EVERY COLLECTION IS REPLACED, INCLUDING THE ONES THE FILE DOES NOT
+    // CARRY, and that is a deliberate change from the merge this used to do.
+    //
+    // A backup is a SNAPSHOT of a whole account — exportAll() writes all eight
+    // collections — so "restore" means "put me back in that state". The old
+    // merge left collections the file did not mention untouched, and the result
+    // was a class of bug the rest of this codebase already knows by name: a
+    // foreign key is only valid while the rest of that set still exists.
+    // Restoring a pre-systems backup kept the CURRENT systems, so a restored
+    // workout could point at a system that was never in the file — returned by
+    // getWorkouts(), rendered by no system screen, and never adopted by
+    // ensureSystems(), which only looks for workouts with NO systemId rather
+    // than a dead one. The workout was on disk and invisible forever.
+    //
+    // Replacing wholesale cannot produce that: a pre-systems backup clears
+    // systems too, its workouts have no systemId, and ensureSystems() adopts
+    // them on the next read, which is exactly what that migration is for.
     for (const c of COLLECTIONS) {
-      if (Array.isArray(data[c])) await backend.write(c, data[c]);
+      await backend.write(c, Array.isArray(data[c]) ? data[c] : []);
     }
     // ⚠️ A restored backup is the ONE way old-shape workouts — the ones with no
     // systemId — can come back after the migration has already run and latched
     // itself off. Clearing it makes the next read re-check. The cache is
-    // cleared with it: every collection has just been replaced wholesale, and
-    // `backend.write` only refreshed the ones this file actually carried.
+    // cleared with it: every collection has just been replaced wholesale.
     clearReadCache();
+    return summary;
   },
 
   /* --- profile + body weight --- */

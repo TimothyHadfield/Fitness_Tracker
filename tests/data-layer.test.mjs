@@ -373,6 +373,67 @@ await store.importAll(dump);
 ok((await store.getSessions()).length === 4, 'import restores sessions');
 ok((await store.getWorkout(w.id)).exercises[0].sets === 4, 'import preserves planned set counts');
 
+/* ---------- ⚠️ restore: what it refuses, and what it replaces ---------- *
+ *
+ * Found by the edge-case review 2026-08-22, fixed 2026-08-24. `importAll()`
+ * validated almost nothing, MERGED rather than replaced, and had no
+ * confirmation while "Delete all data" two lines below it had one.
+ */
+const rejects = (bad, why) => {
+  let threw = null;
+  try { store.inspectBackup(bad); } catch (e) { threw = e; }
+  ok(threw instanceof Error && threw.message.length > 10, why);
+  return threw;
+};
+rejects(null, 'a null file is refused');
+rejects('not json', 'a string is refused');
+rejects([], 'a bare array is refused — a backup is an object of collections');
+// ⚠️ This one used to toast "Backup restored" having restored nothing at all,
+// which is worse than failing: the user walks away believing it worked.
+rejects({ foo: 1 }, '⚠️ a file with no recognised collection is refused, not silently "restored"');
+rejects({ workouts: 'oops' }, 'a collection that is not a list is refused');
+// ⚠️ THE ONE THAT TOOK THE APP DOWN. `{sessions:[{id:'s1'}]}` stored fine and
+// then getSessions() threw on `b.date.localeCompare`, killing every screen but
+// Settings through the router's catch.
+const dateless = rejects({ sessions: [{ id: 's1' }] },
+  '⚠️ a session with no date is refused BEFORE it is written, not after it breaks every screen');
+ok(/date/.test(dateless.message), 'and the message names the actual problem');
+rejects({ sessions: [{ date: '2026-01-01' }] }, 'a row with no id is refused');
+rejects({ bodyWeight: [{ id: 'b', date: '2026-01-01', weight: 0 }] }, 'a zero weigh-in is refused');
+rejects({ benchmarks: [{ id: 'x', date: 'whenever' }] }, 'an unparseable benchmark date is refused');
+
+// ⚠️ NOTHING IS WRITTEN WHEN ANYTHING IS WRONG. The old code wrote each
+// collection as it walked, so a good `workouts` followed by a bad `sessions`
+// left the account half-restored.
+const before = (await store.getSessions()).length;
+let halfThrew = false;
+try {
+  await store.importAll({ workouts: [{ id: 'wX', name: 'X', exercises: [] }], sessions: [{ id: 'bad' }] });
+} catch { halfThrew = true; }
+ok(halfThrew && (await store.getSessions()).length === before
+   && !(await store.getWorkouts()).some((x) => x.id === 'wX'),
+   '⚠️ a backup that is bad ANYWHERE writes nothing — no half-restore');
+
+// ⚠️ A COLLECTION THE FILE DOES NOT CARRY IS CLEARED, NOT LEFT BEHIND. This is
+// the dangling-foreign-key fix: restoring a pre-systems backup used to keep the
+// CURRENT systems, so a restored workout could point at a system that was never
+// in the file — on disk, returned by getWorkouts(), rendered by no screen, and
+// never adopted by ensureSystems() because that only looks for workouts with NO
+// systemId rather than a dead one.
+await store.importAll(dump);
+ok((await store.getSessions()).length === 4, 'a full backup still restores everything');
+await store.importAll({ workouts: [] });
+ok((await store.getSessions()).length === 0,
+   '⚠️ and a partial backup CLEARS what it does not carry — a restore is a snapshot, not a merge');
+await store.importAll(dump);
+ok((await store.getSessions()).length === 4, 'and the full backup restores again afterwards');
+
+// The counts the confirmation sheet is built from have to be real, or the sheet
+// is asking somebody to approve a number nobody computed.
+const summary = store.inspectBackup(dump);
+ok(summary.counts.sessions === 4 && summary.total >= 4,
+   `inspectBackup reports what is actually in the file (${summary.counts.sessions} sessions)`);
+
 /* ---------- custom exercises ---------- */
 const custom = makeCustomExercise({ name: 'Sled Sprint', muscle: 'Cardio', equipment: 'Other', fields: ['time'] });
 ok(custom.loadType === null, 'custom time-only exercise gets no load type');
@@ -1874,6 +1935,35 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await st.clearAll();
 }
 
+/* ================= the dumbbell row ratio, now sourced ================= *
+ *
+ * ⚠️ 0.85 until 2026-08-24, and it inflated every dumbbell row by ~15 %. A
+ * SMALLER ratio makes the estimate BIGGER, which is the direction that flatters,
+ * and it was the second half of the answer to Tim's "are my lats really this
+ * weak" — one of his three back lifts was reading too high.
+ *
+ * Derived from Strength Level at a 180 lb male, dumbbell row published PER
+ * DUMBBELL and doubled, over the same five barbell row numbers the pull-up
+ * entry already uses: 88/108, 134/149, 194/198, 264/255, 342/315 -> median 0.98.
+ */
+{
+  const me2 = await import('../js/muscle-evidence.js');
+  const dbRow = me2.contributionsFor(byName('Dumbbell Row')).find((c) => c.muscle === 'Back');
+  ok(dbRow && near(dbRow.ratio, 0.98),
+     `⚠️ a dumbbell row converts at 0.98 of a barbell row, from published standards (${dbRow && dbRow.ratio})`);
+  // ⚠️ ORDERING, which is what let this entry move on its own. A chest-supported
+  // row removes the torso english, so less weight moves and its ratio must stay
+  // BELOW the free version. If somebody re-derives that one, this catches a
+  // crossover rather than letting the family quietly invert.
+  const csRow = me2.contributionsFor(byName('Chest-Supported Dumbbell Row')).find((c) => c.muscle === 'Back');
+  ok(csRow && csRow.ratio < dbRow.ratio,
+     'and a chest-supported row still sits below it, because bracing costs you weight');
+  // The direction of the whole conversion, stated once so it cannot be inverted
+  // by accident — this is the mistake that once produced a 429 lb wrist curl.
+  ok(me2.contributionsFor(byName('Barbell Row')).find((c) => c.muscle === 'Back').ratio === 1.00,
+     'while the key lift itself is 1.00 by definition');
+}
+
 /* ================= within-session fatigue ================= *
  *
  * ⚠️ TIM'S SESSION, 2026-08-24, and the defect it exposed. He did assisted
@@ -1998,12 +2088,21 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(asTired.used[0].exerciseName === 'Dumbbell Row' && asFresh.used[0].exerciseName === 'Lat Pulldown',
      'and it stops leading, which is the same fact seen from the other side');
 
-  const twoFresh = await rateOrder([AP, DR]);
-  const plusTired = await rateOrder([AP, DR, LP]);
-  const rise = plusTired.confidence - twoFresh.confidence;
-  ok(rise < 0.02,
-     `⚠️ and end to end the fatigued third exercise now barely moves confidence at all `
-     + `(+${rise.toFixed(3)}, against +0.04 before the fatigue term)`);
+  // ⚠️ A SECOND ASSERTION WAS REMOVED HERE ON 2026-08-24, AND THE REASON IS THE
+  // POINT. It read "the fatigued third exercise now barely moves confidence at
+  // all (rise < 0.02)" and it passed — until the Dumbbell Row ratio was
+  // corrected from 0.85 to 0.98 later the same day, when the rise went to
+  // +0.059 and it failed.
+  //
+  // It was never measuring the fatigue term. With better-calibrated inputs his
+  // three readings agree MORE, so a third one landing between them tightens the
+  // picture MORE, so confidence rises MORE — which is correct behaviour and had
+  // nothing to do with fatigue. A magnitude threshold pinned to numbers from a
+  // different part of the system is a test that fails when something unrelated
+  // gets better. What replaced it is a comparison the feature actually controls.
+  ok(asDone.confidence < reversed.confidence,
+     `⚠️ the same three exercises give LESS confidence when the leader is the tired one `
+     + `(${asDone.confidence.toFixed(2)} as done, ${reversed.confidence.toFixed(2)} pulldown-first)`);
 
   /* ---------- the hint, which is worth more than the weighting ---------- */
   ok(/cleaner reading/.test(asDone.hint || '') && /Dumbbell Row/.test(asDone.hint || ''),
