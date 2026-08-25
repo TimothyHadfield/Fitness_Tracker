@@ -9,9 +9,22 @@
 //   users/{uid}/collections/{collectionName}  →  { rows: [...], updatedAt }
 //
 // One document per collection keeps reads cheap and mirrors the local backend's
-// read-whole / write-whole API exactly. Firestore caps a document at 1 MB;
-// `sessions` is the only collection that grows forever (~300 bytes each, so
-// roughly 3,000 workouts). When that day comes, split it to one doc per session.
+// read-whole / write-whole API exactly. Firestore caps a document at 1 MiB, and
+// `sessions` is the only collection that grows forever.
+//
+// ⚠️ THIS COMMENT SAID "~300 bytes each, so roughly 3,000 workouts" UNTIL
+// 2026-08-24, AND THE FIGURE THAT REPLACED IT WAS ALSO WRONG. The correction
+// that day measured JSON length — ~1,100 bytes a session, ceiling ~950 — but
+// Firestore charges 32 bytes per MAP and 8 per NUMBER regardless of how short
+// the text is, which on this app's data is **1.66× the JSON**. The real figure
+// is ~2,000 bytes a session and a ceiling near **520 — about two and a half
+// years at four a week.**
+//
+// Nobody should ever have to trust this line again: `store.cloudUsage()`
+// computes it from the account's own rows and Settings warns from 80 %. That
+// exists precisely because a constant copied into prose has now gone stale
+// twice.
+// When that day comes, split this to one doc per session.
 //
 // Account model (chosen 2026-08-15): anonymous first, upgrade later. A visitor
 // starts logging immediately with an anonymous account, then adds email or

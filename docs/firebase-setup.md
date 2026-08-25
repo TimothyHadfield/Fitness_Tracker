@@ -141,24 +141,47 @@ report came from.
 Each collection is a single Firestore document, capped at 1 MiB. Workouts, benchmarks, and custom
 exercises will never come close.
 
-⚠️ **`sessions` IS THE ONE THAT RUNS OUT, AND THIS SECTION WAS WRONG ABOUT WHEN — corrected
-2026-08-24.** It claimed roughly 300 bytes a session and about 3,000 workouts. **Measured** by the
-edge-case review on 2026-08-22: 3,000 real sessions serialise to **3,298,891 bytes**, which is
-**3.1× over the cap**, at about **1,100 bytes a session** rather than 300. The real ceiling is
-therefore **about 950 sessions — roughly four and a half years at four workouts a week.**
+⚠️ **`sessions` IS THE ONE THAT RUNS OUT, AND THIS SECTION HAS NOW BEEN WRONG ABOUT WHEN TWICE, BOTH
+TIMES IN THE OPTIMISTIC DIRECTION.**
+
+| written | claim | why it was wrong |
+|---|---|---|
+| before 2026-08-24 | ~300 bytes a session, ~3,000 workouts | a guess nobody had serialised |
+| 2026-08-24, first | ~1,100 bytes a session, **~950 sessions** | measured `JSON.stringify` length — but Firestore does not charge JSON length |
+| 2026-08-24, second | **~2,000 bytes a session, ~520 sessions** | Firestore's own published accounting, computed by `store.cloudUsage()` |
+
+**The real ceiling is about 520 sessions — roughly two and a half years at four workouts a week.**
+
+⚠️ **WHY THE JSON MEASUREMENT WAS 1.66× OPTIMISTIC, because it is not a fudge factor.** Firestore
+charges a flat **32 bytes for every map** and **8 for every number**, however short they look written
+down. One recorded set — `{"weight":205,"reps":6}` — is **23 bytes of JSON and 60 to Firestore**. A
+session carries ~17 of those plus a map per exercise, and `entries` is **88 % of the whole
+collection**, so the map overhead *is* the document rather than a rounding error on it. The demo
+year's sessions come to 1,216 JSON bytes each, which agrees with the review's ~1,100 — the two
+measurements are of the same data, and only one of them is of the thing Firestore bills.
+
+⚠️ **NEVER VERIFIED AGAINST A REAL REJECTION.** Confirming it means writing a megabyte to the live
+project and watching it fail, which is not worth doing to a real account. It is the published
+arithmetic applied honestly, and it errs high.
 
 ⚠️ **What happens at the ceiling.** The write is rejected by Firestore, so the *cloud copy* stops
 updating. It is no longer silent at the point it matters: since 2026-08-22 a failed save at the end
-of a workout says so on screen, above the button that failed, and keeps the draft. **But nothing
-warns as the limit approaches**, and nothing says which of your data is and is not backed up once it
-has been passed — the local copy keeps working, so the app carries on looking fine.
+of a workout says so on screen, above the button that failed, and keeps the draft.
 
-**The fix is the one this design always anticipated:** split `sessions` into one document per
+✅ **AND SOMETHING WARNS AS IT APPROACHES, since 2026-08-24.** `store.cloudUsage()` sizes every one
+of this account's collection documents by Firestore's own rules and reports the fullest; Settings
+paints a warning above *Download backup* from **80 %**, naming the percentage *and* how many more
+records fit — derived from **this account's** rows, not from any constant in this file. It is silent
+below the threshold on purpose: an always-on warning is wallpaper by the time it comes true.
+
+**Still open — the fix this design always anticipated:** split `sessions` into one document per
 session. Nothing else in the design changes, but it is a **migration over live training data** and
-belongs in its own pass rather than bolted onto something else.
+belongs in its own pass rather than bolted onto something else. The 80 % threshold exists to leave
+room for it: the remaining fifth of a megabyte is about 100 sessions, or six months at four a week.
 
 ⚠️ **Nobody is near this yet.** Tim's account holds a few dozen sessions. Recorded here so the number
-is right when somebody checks it, not because it is urgent.
+is right when somebody checks it, not because it is urgent — and the app now computes it rather than
+trusting this paragraph, which is the point of the last three rows of that table.
 
 The free Spark plan covers 50,000 reads and 20,000 writes per day. Reading a whole collection as one
 document means opening the app costs about five reads.

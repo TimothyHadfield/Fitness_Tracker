@@ -3,6 +3,7 @@
 import {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
   normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL, currentBests,
+  CLOUD_WARN_AT,
 } from './store.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
@@ -1228,9 +1229,72 @@ function describeAccount(state, configured) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ * The cloud is running out of room
+ *
+ * ⚠️ SILENT UNTIL IT MATTERS, and that is the design. The UX review's fifth
+ * finding was that the red "not backed up" dot is on from the first paint,
+ * including on an empty account with nothing to lose — a permanent warning is
+ * wallpaper within a week and stops being read at the moment it becomes true.
+ * This returns nothing at all below CLOUD_WARN_AT, which on Tim's few dozen
+ * sessions is every day for about the next four years.
+ *
+ * ⚠️ IT NAMES A NUMBER OF RECORDS, NOT A PERCENTAGE ALONE. "84 % full" is not
+ * an instruction. "About 170 more workout records" is the same fact in the unit
+ * the person actually thinks in, and it is derived from THEIR rows rather than
+ * from the ~1,100-byte population average the docs carry.
+ * ------------------------------------------------------------------ */
+
+// What one row of each collection is called out loud. Sessions is the only one
+// that can realistically get here, but naming the collection the check actually
+// found keeps the sentence true if that ever stops being so.
+const ROW_NOUN = {
+  sessions: ['workout record', 'workout records'],
+  workouts: ['workout', 'workouts'],
+  benchmarks: ['benchmark', 'benchmarks'],
+  bodyWeight: ['weigh-in', 'weigh-ins'],
+  customExercises: ['custom exercise', 'custom exercises'],
+  systems: ['programme', 'programmes'],
+  goals: ['goal', 'goals'],
+  settings: ['setting', 'settings'],
+};
+
+// Exported for the tests, not for another screen. The only branch that matters
+// is one nobody will see until it is already too late to design it, so it is
+// driven directly rather than through a Settings render that cannot reach it —
+// `cloudUsage()` returns null on every backend a test can stand up.
+export function cloudFullWarning(usage) {
+  if (!usage || usage.fraction < CLOUD_WARN_AT) return null;
+  const [one, many] = ROW_NOUN[usage.collection] || ['record', 'records'];
+  const left = usage.rowsLeft;
+
+  // ⚠️ THE "FULL" BRANCH KEYS OFF ROOM FOR ONE MORE ROW, NOT OFF 100 %. The
+  // stored document can never be over the cap — the write that put it there
+  // would have been refused — so a `fraction >= 1` test describes a state
+  // nothing can reach. What is reachable is sitting at 99 % with every new
+  // save bouncing, and that is the state a user is actually in when they come
+  // looking at this screen.
+  const full = left === 0;
+
+  return el('div', { class: 'storage-warning' },
+    el('b', { text: full
+      ? 'Your account has no room for new ' + many
+      : 'Your account is running out of room' }),
+    ' ',
+    full
+      ? `Your ${many} have reached the size limit for one account, so saving a new one `
+        + 'is being refused. Download a backup now — it holds everything, and it is not '
+        + 'subject to this limit.'
+      : `Your ${many} are using ${Math.round(usage.fraction * 100)} % of the space one account `
+        + `can hold — room for ${left === 1 ? `one more ${one}` : `about ${left} more`}. After `
+        + 'that, new ones stop saving to your account. Download a backup so nothing depends on '
+        + 'the cloud copy alone.',
+  );
+}
+
 export async function SettingsView() {
-  const [settings, accountState, profile] = await Promise.all([
-    store.getSettings(), auth.state(), store.getProfile(),
+  const [settings, accountState, profile, cloud] = await Promise.all([
+    store.getSettings(), auth.state(), store.getProfile(), store.cloudUsage(),
   ]);
   const accountLine = describeAccount(accountState, auth.configured());
   // Say what is missing rather than just "Profile" — this is what gates the
@@ -1369,6 +1433,9 @@ export async function SettingsView() {
       el('div', { class: 'section-label', text: 'Your data' }),
       el('div', { class: 'card' },
         el('div', { class: 'field-help', text: accountLine.dataHelp }),
+        // Above the button it is asking for, not below it — the same placement
+        // argument `.save-error` makes.
+        cloudFullWarning(cloud),
         el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
         el('button', { class: 'btn ghost block', text: 'Restore from backup', onClick: () => fileInput.click() }),
         fileInput,

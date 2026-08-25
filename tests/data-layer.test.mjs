@@ -661,6 +661,95 @@ ok(!fb.isPopupFailure({ code: 'auth/wrong-password' }), 'unrelated errors do not
 ok(fb.isAlreadyLinked({ code: 'auth/credential-already-in-use' }), 'already-linked detected');
 ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect preference');
 
+/* ---------- ⚠️ how full the cloud is — Open work 0b(c) ---------- *
+ *
+ * The edge-case review found that nothing warns as the 1 MiB per-document cap
+ * approaches, and that the project's own estimate of where that cap lands was
+ * wrong by 3× (~300 bytes a session claimed, ~1,100 measured). `cloudUsage()`
+ * replaces the constant with arithmetic over the account's real rows.
+ *
+ * ⚠️ THE SHARPEST ASSERTION HERE IS THAT A NUMBER COSTS 8 BYTES. Firestore
+ * charges 8 for every number; `JSON.stringify(225)` is three characters. A
+ * training history is mostly numbers, so a size check built on JSON length
+ * UNDER-counts and would fire after the thing it warns about. Two assertions
+ * below fail the moment anybody "simplifies" this to a stringify.
+ */
+const {
+  firestoreValueBytes, firestoreDocBytes, FIRESTORE_DOC_LIMIT, CLOUD_WARN_AT,
+} = await import('../js/store.js');
+
+// The published charges, one per type (Firestore → Usage and limits → Storage size).
+ok(firestoreValueBytes(null) === 1 && firestoreValueBytes(undefined) === 1, 'null costs 1 byte');
+ok(firestoreValueBytes(true) === 1 && firestoreValueBytes(false) === 1, 'a boolean costs 1 byte');
+ok(firestoreValueBytes(0) === 8 && firestoreValueBytes(-3.75) === 8 && firestoreValueBytes(1e9) === 8,
+   'EVERY number costs 8 bytes, whatever it looks like written down');
+ok(firestoreValueBytes('abc') === 4, 'a string costs its UTF-8 bytes + 1');
+ok(firestoreValueBytes('é') === 3, 'and it is UTF-8 bytes, not characters');
+ok(firestoreValueBytes(new Date()) === 8, 'a date is stored as a timestamp: 8 bytes');
+
+// ⚠️ The two that stop this becoming JSON.stringify().length.
+ok(firestoreValueBytes(225) === 8 && JSON.stringify(225).length === 3,
+   '⚠️ a number costs MORE than its text — 8 against 3 — so JSON length under-counts');
+ok(firestoreValueBytes({ weight: 225, reps: 5 }) > JSON.stringify({ weight: 225, reps: 5 }).length,
+   '⚠️ and a set of numbers costs more in Firestore than it does as JSON');
+
+// A map pays 32 for existing; an array pays for its contents and nothing more.
+ok(firestoreValueBytes([]) === 0, 'an empty array is free');
+ok(firestoreValueBytes({}) === 32, 'an empty map still costs 32');
+ok(firestoreValueBytes([1, 2, 3]) === 24, 'an array is the sum of its values — no per-array overhead');
+ok(firestoreValueBytes({ a: 1 }) === 32 + 2 + 8, 'a map is 32 + each key + each value');
+ok(firestoreValueBytes([{ a: 1 }, { a: 1 }]) === 2 * firestoreValueBytes({ a: 1 }),
+   'nesting composes rather than compounding');
+ok(firestoreValueBytes({ a: 1, b: undefined }) === firestoreValueBytes({ a: 1 }),
+   'an undefined field is not charged, because the SDK refuses to send one');
+
+// The document wrapper: a name, the two fields the backend really writes, +32.
+ok(firestoreDocBytes('sessions', []) > 0 && firestoreDocBytes('sessions', []) < 200,
+   'an empty collection document is overhead only');
+ok(firestoreDocBytes('sessions', [{ id: 's1' }]) > firestoreDocBytes('sessions', []),
+   'and it grows with the rows');
+
+ok(FIRESTORE_DOC_LIMIT === 1048576, 'the cap is Firestore\'s 1 MiB, not a number we chose');
+ok(CLOUD_WARN_AT > 0.5 && CLOUD_WARN_AT < 1,
+   'the warning threshold leaves runway rather than firing at the wall');
+
+// ⚠️ CROSS-CHECK AGAINST THE INDEPENDENT MEASUREMENT — AND IT FOUND THAT
+// MEASUREMENT SHORT. The edge-case review serialised 3,000 real-shaped sessions
+// and got ~1,100 bytes each, giving a ceiling near 950. The demo year agrees
+// with it exactly on JSON — ~1,200 bytes a session — so the two are measuring
+// the same kind of data and the demo is not unusually fat. What the review's
+// number leaves out is that Firestore does not charge JSON length. The ratio
+// asserted below is the whole finding: **the ceiling is nearer 520 sessions
+// than 950**, and the doc has been corrected to say so.
+{
+  const { buildDemoData } = await import('../js/demo.js');
+  const demoData = buildDemoData({ today: '2026-08-24', units: 'lbs', theme: 'dark' });
+  const sess = demoData.sessions;
+  const bytes = firestoreDocBytes('sessions', sess);
+  const jsonPer = Buffer.byteLength(JSON.stringify(sess), 'utf8') / sess.length;
+  const per = bytes / sess.length;
+  const ceiling = Math.floor(FIRESTORE_DOC_LIMIT / per);
+
+  ok(sess.length > 100, `demo year has ${sess.length} sessions to measure`);
+  ok(jsonPer > 900 && jsonPer < 1500,
+     `demo sessions are ordinary-sized: ${jsonPer.toFixed(0)} JSON bytes each, vs the ~1,100 the review measured`);
+  ok(per / jsonPer > 1.4 && per / jsonPer < 2.0,
+     `⚠️ Firestore charges ${(per / jsonPer).toFixed(2)}× the JSON — 32 bytes a map and 8 a number is not a rounding error`);
+  ok(ceiling > 400 && ceiling < 700,
+     `⚠️ so the real ceiling is ~${ceiling} sessions, NOT the ~950 the JSON measurement implied`);
+  // The set row that makes the case in one line.
+  ok(firestoreValueBytes({ weight: 205, reps: 6 }) === 60
+     && JSON.stringify({ weight: 205, reps: 6 }).length === 23,
+     '⚠️ one recorded set: 23 bytes of JSON, 60 to Firestore');
+}
+
+// ⚠️ THE SAFETY CLAIM. This suite runs with the cloud configured and
+// unreachable, so the store is on the local backend — where the limit is
+// localStorage's, a different size and a different failure. Quoting a Firestore
+// ceiling here would be a confident number about the wrong storage.
+ok(await store.cloudUsage() === null,
+   '⚠️ cloudUsage() says NOTHING unless the data really is in Firestore');
+
 /* ---------- can the redirect flow even finish here? ---------- */
 // ⚠️ Reported by Tim from an iPhone, 2026-08-21: the Google popup opens, closes
 // a second later, and nothing happens. The part worth pinning is not the popup —

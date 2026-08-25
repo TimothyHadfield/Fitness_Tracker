@@ -5,12 +5,12 @@
 > answer "what did we say about X".
 
 **Last updated:** 2026-08-24, end of a long day — **the app was used in a real gym session for the
-first time, and eight passes ran off the back of it.** They are the four `2026-08-24` sections at the
+first time, and nine passes ran off the back of it.** They are the five `2026-08-24` sections at the
 top, newest first; the nine below them are 2026-08-22. Read the top three points here, then the
 **Open work index**, and nothing else unless you need the why.
 
 ⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green:
-**2369 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
+**2406 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
 logged warm-ups should be excluded from the volume count, and his friend's failed sign-in.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
@@ -124,7 +124,101 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
-## 2026-08-24, last pass — the ratio sweep, a sheet that lied, and two dead routes
+## 2026-08-24, last pass — ⚠️ THE CLOUD CEILING WAS WRONG AGAIN, THE OTHER WAY THIS TIME
+
+Tim: *"if something is solidly planned and ready to build, go ahead and build it."* Two items were
+decided and unblocked — the two touch targets Open work 0i calls "ordinary and cheap", and 0b(c)'s
+*"nothing warns as the limit approaches"*. Both shipped. **The second one found that the number it
+was built to warn about is itself wrong by 1.66×.**
+
+### ⚠️ 1. THE ~950-SESSION CEILING IS REALLY ~520, AND THE MISTAKE IS THREE COMMITS OLD
+
+`docs/firebase-setup.md` was corrected on the morning of the 24th: not ~300 bytes a session and
+3,000 workouts, but ~1,100 and about 950. **That correction measured `JSON.stringify` length, and
+Firestore does not charge JSON length.**
+
+```
+                                        JSON    Firestore
+  one recorded set {weight:205,reps:6}     23           60      2.6x
+  one session (demo year, 17 sets)      1,216        2,015      1.66x
+  ceiling                             862 sess     520 sess
+```
+
+⚠️ **THE 1.66× IS A MECHANISM, NOT A FUDGE FACTOR.** Firestore charges a flat **32 bytes for every
+map** and **8 for every number**, however short they look written down. A session is ~17 set maps
+plus a map per exercise, and `entries` is **88 % of the whole collection** — so the map overhead
+*is* the document rather than a rounding error on it.
+
+⚠️ **The demo year is NOT unusually fat, and that had to be checked before the finding stood.** Its
+sessions come to **1,216 JSON bytes each against the review's ~1,100** — the two measurements agree
+on the same data. Only one of them is measuring the thing Firestore bills. There is an assertion for
+that agreement, so the cross-check cannot quietly stop being a cross-check.
+
+⚠️ **THE REAL LESSON IS ABOUT CONSTANTS COPIED INTO PROSE.** This number has now gone stale twice,
+both times optimistically, and on the second occasion `js/firebase-backend.js` was still carrying
+the *first* wrong figure — the morning's fix had corrected the doc and missed the source comment two
+files away. So the fix is not a third number: **`store.cloudUsage()` computes it from the account's
+own rows**, and both prose copies now point at it instead of restating it.
+
+⚠️ **NEVER VERIFIED AGAINST A REAL REJECTION, and must not be described as if it were.** Confirming
+it means writing a megabyte to the live project and watching it fail. It is the published
+arithmetic — Firestore → Usage and limits → Storage size — applied honestly, and it errs high.
+
+### 2. The warning itself, and the two things it refuses to do
+
+Settings' *Your data* card paints a warning above **Download backup** from **80 %**, naming the
+percentage *and* how many more records fit.
+
+⚠️ **IT SAYS NOTHING BELOW THE THRESHOLD, and that is the design rather than an omission.** The UX
+review's fifth finding is that the red "not backed up" dot is on from the first paint, including on
+an empty account with nothing to lose — **a permanent warning is wallpaper within a week and stops
+being read at the moment it becomes true.** On Tim's few dozen sessions this is silent for about the
+next two years.
+
+⚠️ **AND IT SAYS NOTHING UNLESS THE DATA REALLY IS IN FIRESTORE.** On this device the limit is
+localStorage's, a different size and a different failure; in the demo there is no limit because
+there is no storage. `cloudUsage()` returns `null` on both, with the assertion that flips if that
+guard goes. A confident number about the wrong storage is the fault this file keeps meeting.
+
+⚠️ **The "full" branch keys off room for ONE MORE ROW, not on the fraction reaching 1.** A stored
+document can never be over the cap — the write that put it there would have been refused — so a
+`fraction >= 1` test describes a state nothing can reach. What is reachable is sitting at 99 % with
+every new save bouncing, which is the state somebody is actually in when they come looking.
+
+**Also: the runway per row is this account's, not the docs' ~1,100.** Somebody logging twelve
+exercises a session has bigger rows than somebody logging four, and the number of workouts they are
+told they have left should be theirs. The last population average this project trusted was out by 3×.
+
+**Measured at 360 / 375 / 393 px in both themes:** one block, 332–365 px wide, **no horizontal
+overflow at any width**, body text **16.25:1** dark and **15.84:1** light, the `--danger` heading
+**5.16:1** and **5.47:1** — all past 4.5:1. It borrows `.preset-warning`'s shape (a danger hairline,
+full-strength ink, no fill and no box — Rule 2), which is this app's third use of that shape and its
+established way of saying *do not skim this*.
+
+**Mutation-checked, four ways**: charging a number its JSON length flips 5 assertions; letting
+`cloudUsage()` answer on the local backend flips the safety one; painting below the threshold flips
+2; keying "full" off `fraction >= 1` flips 3.
+
+### 3. The two touch targets from 0i — the ones that are not Tim's illustration
+
+Both measured before and after, at 360 / 375 / 393 px:
+
+```
+                              before      after
+  comparison button (Muscles)  332x38     332x44
+  chart exercise select        156x36     156x44
+```
+
+**The 8 px comes off the chart**, which had 501 and now has 493. The control being reliably hittable
+is worth more than eight pixels of line. **No horizontal overflow at any width.**
+
+⚠️ **THE BODY MAP'S OWN TARGETS ARE UNTOUCHED AND STILL OPEN** — Traps 42×11 at 360 px, and the
+figure is the only way to select a muscle. That lands on Tim's illustration, so it stays his call.
+0i is now *the illustration only*.
+
+---
+
+## 2026-08-24, fourth pass — the ratio sweep, a sheet that lied, and two dead routes
 
 ### ⚠️ 1. THREE MORE RATIOS, AND THE ERROR IS NOT A CONSTANT
 
@@ -1420,7 +1514,7 @@ routes, 360 and 390 px, both themes, on the demo account — and measures **2272
 have no case in `resolve()` and silently rendered Home, so this run measured Home three times and
 **never once measured the Data screen or the body map.** Everything below still stands — it is about
 the palette, which is global — but the coverage figure in this section was never what it claimed.
-Fixed in the tool and re-run; see the last pass of 2026-08-24.
+Fixed in the tool and re-run; see the FOURTH pass of 2026-08-24 (the ratio sweep).
 
 **`--ink-faint` failed WCAG AA everywhere it was used, in both themes.** 3.94:1 dark and **3.05:1
 light** against `--ground`, where AA wants 4.5:1 for text under 18.66px — and every one of its 75
@@ -1582,9 +1676,9 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **1** | **0e — joint workouts** | ⚠️ **OPEN, and the biggest thing Tim has asked for.** Design decided (the friend accepts; never a direct write into their account). **Needs a plan doc before code** — it touches the sharing rules |
 | **2** | **0h — the ratio table runs too low, which flatters** | ⚠️ **OPEN.** Four anchors corrected 2026-08-24 by 7–15 %; the errors are **not a constant**, so every remaining reasoned entry needs deriving on its own. Moves real numbers on every body map |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, and Tim has claimed the design half.** "Nothing on Home ever grows" is the sharpest unaddressed thing in the product. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
-| **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call** — measured for the first time 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
+| **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call, and now the ILLUSTRATION ONLY.** The two ordinary controls beside it went to 44 px on 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
 | **5** | **0j — mutual disconnect** | ⚠️ **OPEN.** The sheet stopped promising it on 2026-08-24; the feature is still one-sided. Needs a new rules path |
-| **6** | **0b(c) — the ~950-session cloud ceiling** | ⚠️ Docs corrected; **nothing warns as it approaches**. Nobody is near it. The document-per-session split is a migration over live data and its own job |
+| **6** | **0b(c) — the cloud ceiling, which is ~520 sessions and not ~950** | ✅ **The warning half is BUILT** (Settings, from 80 %, computed from the account's own rows). ⚠️ **The ceiling was corrected a second time the same day** — the morning's figure measured JSON, and Firestore charges 1.66× that. **Still open: the document-per-session split**, a migration over live data. Nobody is near it |
 | **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. §16 sets the hard constraint |
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
@@ -1786,12 +1880,21 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    - ~~**⚠️ (b) A FAILED SAVE AT THE END OF A WORKOUT IS SILENT.**~~ ✅ **FIXED 2026-08-22** — it
      says so on the screen above the button that failed, keeps the draft (the only other copy), and
      the same tap works again once the problem clears.
-   - **⚠️ (c) THE FIRESTORE CEILING IS ~950 SESSIONS** — ✅ **docs corrected 2026-08-24**, and the
-     "fails silently" half turns out to be half-closed already: a rejected cloud write surfaces on
-     screen, because `finish()` has caught `saveSession()` since 2026-08-22 whichever backend threw.
-     ⚠️ **Still open: nothing warns as the limit approaches**, and the split to a document per
-     session is a migration over live training data that stays its own job. Nobody is near it —
-     Tim's account holds a few dozen sessions.
+   - **⚠️ (c) THE FIRESTORE CEILING IS ~520 SESSIONS, NOT ~950** — ⚠️ **corrected TWICE on
+     2026-08-24, both times optimistically.** The morning's fix replaced a guess (~300 bytes a
+     session) with a `JSON.stringify` measurement (~1,100, ceiling ~950); the evening's found that
+     **Firestore charges 1.66× the JSON** — a flat 32 bytes per map and 8 per number — so it is
+     ~2,000 bytes a session and about **520 sessions, two and a half years at four a week**. One
+     recorded set is 23 bytes of JSON and 60 to Firestore, and `entries` is 88 % of the collection.
+     ✅ **Something warns now**: `store.cloudUsage()` sizes every collection document by Firestore's
+     own published rules and Settings paints a warning above *Download backup* from **80 %**,
+     silent below it and silent on any backend that is not Firestore.
+     ✅ The "fails silently" half was already half-closed: a rejected cloud write surfaces on screen,
+     because `finish()` has caught `saveSession()` since 2026-08-22 whichever backend threw.
+     ⚠️ **Still open: the split to a document per session**, a migration over live training data
+     that stays its own job. Nobody is near it — Tim's account holds a few dozen sessions, and the
+     80 % threshold is chosen to leave about six months to do the migration calmly.
+     ⚠️ **Never verified against a real rejection**, and must not be described as if it were.
    - ~~**(d) Restore from backup validates almost nothing, MERGES rather than replaces, and has no
      confirmation**~~ ✅ **FIXED 2026-08-24.** Every row is checked before any row is written, so
      there is no half-restore; `{foo:1}` is refused rather than toasting success over nothing; every
@@ -1817,16 +1920,20 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    the machine's leverage, which is why those `q` values are already low. If a source cannot be
    found, the honest outcome is to say so in the table rather than leave the guess unlabelled.
 
-0i. **⚠️ THE BODY MAP'S TOUCH TARGETS, measured for the first time 2026-08-24** — see the last-pass
-   section above. At 360px the smallest muscles are **Traps 42×11, Glutes 39×16, Shoulders 62×18,
-   Neck 24×17**, and **the figure is the only way to select a muscle**, so the year grid's
-   equivalence argument is not available. ⚠️ **This lands on Tim's illustration, so it is his call**
-   — the cheap options are a larger invisible hit area per path, or a list beside the figure.
-   Also just under 44: the comparison button (332×38) and the chart's exercise `select` (156×36),
-   both ordinary controls and both cheap.
+0i. **⚠️ THE BODY MAP'S TOUCH TARGETS — NOW THE ILLUSTRATION ONLY.** Measured for the first time
+   2026-08-24; see that day's fourth-pass section. At 360px the smallest muscles are **Traps 42×11,
+   Glutes 39×16, Shoulders 62×18, Neck 24×17**, and **the figure is the only way to select a
+   muscle**, so the year grid's equivalence argument is not available. ⚠️ **This lands on Tim's
+   illustration, so it is his call** — the cheap options are a larger invisible hit area per path,
+   or a list beside the figure.
+
+   ~~Also just under 44: the comparison button (332×38) and the chart's exercise `select`
+   (156×36).~~ ✅ **BOTH AT 44 px, 2026-08-24**, measured before and after at 360 / 375 / 393 with no
+   horizontal overflow at any width. The 8 px came off the chart, which had 501 and now has 493 —
+   a control being reliably hittable is worth more than eight pixels of line.
 
 0j. **⚠️ MUTUAL DISCONNECT IS STILL NOT BUILT.** The sheet was corrected on 2026-08-24 to stop
-   promising it (see the last-pass section), which is not the same as fixing it. `social.remove()`
+   promising it (see that day's fourth-pass section), which is not the same as fixing it. `social.remove()`
    edits only your own graph, so after disconnecting you can still read their training until they
    disconnect too. A real mutual disconnect needs something their client can read — a new rules
    path, not a small fix. `docs/social-plan.md` §2 is the section to read first.
@@ -1962,9 +2069,9 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2369 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2406 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1169 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1193 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 81 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
@@ -1974,7 +2081,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **52** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 380 assertions, mounts every screen. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 393 assertions, mounts every screen. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -2492,7 +2599,13 @@ Fitness_Tracker/
 │   │                           the READ CACHE: getters are served from
 │   │                           memory, mutations always read fresh,
 │   │                           because a read-modify-write from a stale
-│   │                           copy erases whatever changed elsewhere
+│   │                           copy erases whatever changed elsewhere.
+│   │                           Also HOW FULL THE CLOUD IS — cloudUsage()
+│   │                           sizes each collection document by
+│   │                           Firestore's published rules (32 bytes a
+│   │                           map, 8 a number, NOT JSON length) and
+│   │                           returns null on any backend that is not
+│   │                           Firestore. Settings warns from 80 %
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
 │   ├── preset-systems.js       ready-made systems to browse and copy. Shaped so a

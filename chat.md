@@ -4922,3 +4922,51 @@ is the most useful thing anybody could know before picking work up.
 
 Architecture tree updated for the fatigue term, the exercise swap, the assist flag and the set fill.
 Assertion counts recounted across progress.md and README. Everything pushed, 2369 green.
+
+---
+
+## 2026-08-24, ninth pass — "build whatever is solidly planned"
+
+Tim, after the reset: *"catch up with progress.md"*, then *"if something is solidly planned and
+ready to build, go ahead and build it."* Two items on the index were decided and genuinely
+unblocked, and everything above them was not: 0e needs a plan doc before code, 0h needs published
+standards derived per entry, 0c is Tim's design half, 0j needs a new rules path.
+
+### The two touch targets from 0i
+
+The comparison button on the muscle screen and the chart's exercise picker, which the audit had
+measured at 332x38 and 156x36. Both to 44, both re-measured at 360 / 375 / 393 with no horizontal
+overflow. The eight pixels came off the chart, which had 501. **The body map's own targets were left
+alone** — those land on Tim's illustration, so 0i is now the illustration only.
+
+### The cloud warning, and what building it turned up
+
+0b(c) said "nothing warns as the limit approaches". Built: `store.cloudUsage()` sizes every one of
+the account's collection documents and Settings warns above *Download backup* from 80 %, naming both
+the percentage and how many more workouts fit.
+
+**And the limit it was built to warn about turned out to be wrong by 1.66x** — three commits after
+that same number was corrected. The morning's fix measured `JSON.stringify` length. Firestore does
+not charge JSON length: it charges a flat 32 bytes per map and 8 per number, so one recorded set
+`{weight:205,reps:6}` is 23 bytes of JSON and **60** to Firestore. A session is ~17 of those, and
+`entries` is 88 % of the collection. **The real ceiling is ~520 sessions, not ~950** — two and a half
+years at four a week rather than four and a half.
+
+Checked before believing it: the demo year's sessions are 1,216 JSON bytes each against the review's
+~1,100, so the two measurements agree on the data and only one of them is measuring the thing
+Firestore bills. There is an assertion for that agreement.
+
+`js/firebase-backend.js` was still carrying the *first* wrong figure — the morning's fix corrected
+the doc and missed the source comment two files away. So the answer is not a third number written
+down: both prose copies now point at the function that computes it from the account's own rows.
+
+Two things the warning deliberately refuses to do. It says **nothing below 80 %**, because the UX
+review's fifth finding is that an always-on warning is wallpaper by the time it comes true. And it
+says **nothing at all unless the data really is in Firestore** — on this device the limit is
+localStorage's and in the demo there is none, and a confident number about the wrong storage is the
+fault this project keeps meeting. Both have assertions that flip if the guard goes.
+
+Not verified against a real rejection, and the docs say so: confirming it means writing a megabyte
+to the live project and watching it fail.
+
+2406 green across eleven suites, four mutation checks, pushed.

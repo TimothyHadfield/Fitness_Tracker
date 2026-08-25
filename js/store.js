@@ -207,6 +207,96 @@ const backend = {
 };
 
 /* ------------------------------------------------------------------ *
+ * HOW FULL THE CLOUD IS — the 1 MiB ceiling, measured rather than assumed
+ *
+ * ⚠️ THIS EXISTS BECAUSE THE PROJECT'S OWN ESTIMATE OF IT HAS NOW BEEN WRONG
+ * TWICE, IN THE SAME DIRECTION. `docs/firebase-setup.md` claimed ~300 bytes a
+ * session and about 3,000 workouts until 2026-08-24, when a real serialisation
+ * put it at ~1,100 and the ceiling at ~950. That correction measured
+ * `JSON.stringify` length — and Firestore does not charge JSON length. On this
+ * app's own data the true cost is **1.66× the JSON**, so the ceiling is nearer
+ * **520 sessions, about two and a half years at four a week**, not four and a
+ * half. A constant nobody can check drifts twice; a function that reads the
+ * account's actual rows cannot. The number below is this account's, not a
+ * population's.
+ *
+ * ⚠️ WHERE THE 1.66× COMES FROM, because it is not a fudge factor. Firestore
+ * charges a flat 32 bytes for every MAP and 8 for every NUMBER, however short
+ * they look written down. One recorded set — `{"weight":205,"reps":6}` — is 23
+ * bytes of JSON and **60 to Firestore**. A session is ~17 of those plus an
+ * entry map each, and `entries` is 88 % of the collection, so the overhead is
+ * the document rather than a rounding error on it. A check built on JSON bytes
+ * would UNDER-count and fire after the thing it was warning about. These are
+ * the published rules (Firestore → Usage and limits → Storage size):
+ *
+ *     string      UTF-8 bytes + 1        array    sum of its values
+ *     number      8                      map      sum of keys+values, + 32
+ *     boolean     1                      doc      name + fields + 32
+ *     null        1                      name     each segment + 1, + 16
+ *
+ * ⚠️ NEVER VERIFIED AGAINST A REAL REJECTION, and it must not be described as
+ * if it were. Confirming it means writing a megabyte to the live project and
+ * watching it fail, which is not worth doing to Tim's account. It is the
+ * published arithmetic, applied honestly, and it errs high — see the uid note.
+ * ------------------------------------------------------------------ */
+
+// Firestore's hard per-document cap. Not a tuning knob.
+export const FIRESTORE_DOC_LIMIT = 1048576;
+
+// Warn from here up. Chosen for RUNWAY rather than for tidiness: the remaining
+// fifth of a megabyte is about 100 sessions, or six months at four a week,
+// which is long enough to do the document-per-session migration calmly. A
+// warning that leaves no time to act is just an accusation.
+export const CLOUD_WARN_AT = 0.8;
+
+const ENC = new TextEncoder();
+// A field name and a string value are charged the same way: UTF-8 bytes + 1.
+const fsString = (s) => ENC.encode(s).length + 1;
+
+/** Bytes Firestore charges for one value. Exported for the tests. */
+export function firestoreValueBytes(v) {
+  if (v === null || v === undefined) return 1;
+  switch (typeof v) {
+    case 'boolean': return 1;
+    case 'number': return 8;
+    case 'string': return fsString(v);
+    default: break;
+  }
+  if (Array.isArray(v)) {
+    let n = 0;
+    for (const x of v) n += firestoreValueBytes(x);
+    return n;   // ⚠️ no +32 — an array pays for its contents and nothing else
+  }
+  if (v instanceof Date) return 8;               // stored as a timestamp
+  let n = 32;
+  for (const k of Object.keys(v)) {
+    // `undefined` never reaches Firestore — the SDK refuses it outright — so
+    // counting it would price a field that cannot exist.
+    if (v[k] === undefined) continue;
+    n += fsString(k) + firestoreValueBytes(v[k]);
+  }
+  return n;
+}
+
+/**
+ * Bytes the document at `users/{uid}/collections/{name}` would occupy, given
+ * the rows the backend is about to write into it. The shape is fixed by
+ * `FirebaseBackend.write`: `{ rows, updatedAt }`.
+ *
+ * ⚠️ The uid is assumed to be a standard 28-character Firebase one rather than
+ * read off the live user, and that is deliberate: it keeps this function pure
+ * and testable, and the whole document NAME is ~60 bytes against a 1,048,576
+ * budget. Getting it exactly right would be precision theatre.
+ */
+export function firestoreDocBytes(collection, rows) {
+  const segments = ['users', 'x'.repeat(28), 'collections', String(collection)];
+  const name = segments.reduce((n, s) => n + ENC.encode(s).length + 1, 0) + 16;
+  return name + 32
+    + fsString('rows') + firestoreValueBytes(rows || [])
+    + fsString('updatedAt') + 8;
+}
+
+/* ------------------------------------------------------------------ *
  * THE READ CACHE — why tapping a nav tab used to wait for the network
  *
  * ⚠️ Measured 2026-08-22, after Tim reported the nav bar feeling laggy on his
@@ -921,6 +1011,69 @@ export const store = {
     const next = { ...current, ...patch, id: 'settings' };
     await backend.write('settings', [next]);
     return next;
+  },
+
+  /* --- how full the cloud is --- */
+
+  /**
+   * The fullest of this account's cloud documents, against Firestore's 1 MiB
+   * cap. `null` when the answer would be about somebody else's storage.
+   *
+   * ⚠️ NULL UNLESS THE DATA REALLY IS IN FIRESTORE. On this device the limit is
+   * localStorage's, which is a different size and a different failure; in the
+   * demo there is no limit at all because there is no storage. Quoting a
+   * Firestore ceiling on either would be a confident number about the wrong
+   * thing — the fault this file keeps meeting from other directions.
+   *
+   * ⚠️ EVERY COLLECTION, NOT JUST `sessions`. Sessions is the one that grows
+   * forever and it is what the doc and the review both talk about, but hard-
+   * coding that makes the check silently wrong the day something else does. It
+   * costs nothing to ask all eight and report the worst.
+   *
+   * Reads go through the cache, so after the boot warm this is free and touches
+   * the network not at all. It is a read-only getter, which is the only kind the
+   * cache is allowed to serve.
+   *
+   * @returns {Promise<null|{collection, rows, bytes, limit, fraction,
+   *                         bytesPerRow, rowsLeft}>}
+   */
+  async cloudUsage() {
+    const impl = await active();
+    if (!remoteImpl || impl !== remoteImpl) return null;
+
+    // ⚠️ ONE Promise.all, NOT a loop with an await in it. On a cold Settings
+    // open the cache can still be empty, and eight sequential `readCached`
+    // calls would be eight serialised round trips — precisely the shape of the
+    // lag Tim reported on 2026-08-22, reintroduced by an optimisation's own
+    // status readout.
+    const all = await Promise.all(COLLECTIONS.map((c) => readCached(c)));
+
+    let worst = null;
+    for (let i = 0; i < COLLECTIONS.length; i++) {
+      const bytes = firestoreDocBytes(COLLECTIONS[i], all[i]);
+      if (!worst || bytes > worst.bytes) {
+        worst = { collection: COLLECTIONS[i], rows: all[i].length, bytes };
+      }
+    }
+    if (!worst) return null;
+
+    // ⚠️ Per-row cost comes from THIS account, not from the ~1,100 bytes the
+    // docs record. That figure is a population average over somebody else's
+    // sessions, and the last population average this project trusted was out by
+    // 3×. Somebody logging twelve exercises a session has bigger rows than
+    // somebody logging four, and the runway they are told about should be
+    // theirs.
+    const bytesPerRow = worst.rows ? worst.bytes / worst.rows : null;
+    const left = FIRESTORE_DOC_LIMIT - worst.bytes;
+    return {
+      collection: worst.collection,
+      rows: worst.rows,
+      bytes: worst.bytes,
+      limit: FIRESTORE_DOC_LIMIT,
+      fraction: worst.bytes / FIRESTORE_DOC_LIMIT,
+      bytesPerRow,
+      rowsLeft: bytesPerRow ? Math.max(0, Math.floor(left / bytesPerRow)) : null,
+    };
   },
 
   /* --- data portability (P6: permanence) --- */

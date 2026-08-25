@@ -1966,6 +1966,47 @@ ok(!data.querySelector('.rep-target'),
   const realSettings = await mount(SettingsView());
   ok(!/Demo account/i.test(text(realSettings)),
      'and Settings outside the demo does not claim to be one');
+
+  /* ---- ⚠️ the cloud-full warning — Open work 0b(c) ---- *
+   *
+   * Driven directly rather than through a Settings render, because no test can
+   * stand up a Firestore backend and `cloudUsage()` correctly returns null on
+   * every backend that can be stood up. So the branches below are the ONLY way
+   * the wording of a warning nobody will see for years gets read at all.
+   */
+  const { cloudFullWarning } = await import(BASE + 'views-data.js');
+  const usage = (fraction, rowsLeft, collection = 'sessions') => ({
+    collection, rows: 500, bytes: Math.round(1048576 * fraction),
+    limit: 1048576, fraction, bytesPerRow: 2000, rowsLeft,
+  });
+
+  ok(cloudFullWarning(null) === null, 'no usage figure paints nothing');
+  ok(cloudFullWarning(usage(0.10, 900)) === null,
+     '⚠️ an account with room to spare is told NOTHING — the always-on warning is the one nobody reads');
+  ok(cloudFullWarning(usage(0.79, 110)) === null, 'and it stays silent right up to the threshold');
+
+  const near = text(await mount(cloudFullWarning(usage(0.84, 84))));
+  ok(/running out of room/i.test(near), 'at 84 % it says the account is running out of room');
+  ok(/84 %/.test(near), 'and states the percentage it is talking about');
+  ok(/about 84 more/.test(near),
+     '⚠️ and converts it to a number of workout records, because a percentage is not an instruction');
+  ok(/backup/i.test(near), 'and names the one thing that helps');
+  ok(!/refused/i.test(near), 'without claiming anything has failed yet');
+
+  const full = text(await mount(cloudFullWarning(usage(0.995, 0))));
+  ok(/no room for new workout records/i.test(full),
+     '⚠️ the full branch keys off room for ONE MORE ROW, not on the fraction reaching 1 — a stored '
+     + 'document can never be over the cap, because the write that put it there would have been refused');
+  ok(/refused/i.test(full), 'and says plainly that saving is being refused');
+  ok(!/running out of room/i.test(full), 'the softer sentence is gone once it is actually full');
+
+  const oneLeft = text(await mount(cloudFullWarning(usage(0.99, 1))));
+  ok(/one more workout record/i.test(oneLeft) && !/about 1 more/.test(oneLeft),
+     'room for exactly one more reads as English, not as "about 1 more"');
+
+  const weighIns = text(await mount(cloudFullWarning(usage(0.9, 40, 'bodyWeight'))));
+  ok(/weigh-ins/.test(weighIns) && !/workout record/.test(weighIns),
+     'it names the collection the check actually found, rather than assuming sessions');
 }
 
 /* ================================================================== *
