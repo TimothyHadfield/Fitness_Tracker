@@ -341,6 +341,22 @@ ok(shortReasons.find((r) => r.key === 'volume').status === 'short'
 ok(shortReasons.find((r) => r.key === 'volume').detail.includes('minimum effective dose'),
    'and below 4 sets it names the minimum effective dose rather than only the goal');
 
+/* ⚠️ "HARD SET" IS THE UNIT THE WHOLE VOLUME MODEL RESTS ON, and until
+   2026-08-24 it was never defined anywhere in the app — the UX review's finding
+   closest to a real defect, because it is the number Goals measures the user by.
+   The target is in hard sets; `weeklyVolume()` counts every logged set with no
+   warm-up exclusion. The gap is now SAID rather than silently corrected: the
+   only available correction is a load threshold, and unlike every other judged
+   constant in this project its error runs both ways — it would throw away
+   genuine back-off work, which is often the hardest set of the session. */
+ok(/close to failure/.test(req.rows.find((r) => r.key === 'sets').detail)
+   && /[Ww]arm-ups do not count/.test(req.rows.find((r) => r.key === 'sets').detail),
+   '⚠️ the requirement DEFINES a hard set — close to failure, warm-ups excluded');
+for (const [label, rs] of [['short', shortReasons]]) {
+  ok(/every set you logged/.test(rs.find((r) => r.key === 'volume').detail),
+     `and the ${label} measured row admits the app counts every logged set, warm-ups included`);
+}
+
 // ⚠️ VACUITY GUARD, the same one tests/social.test.mjs leans on. If "short"
 // came back for every input the assertions above would be meaningless, so the
 // identical call with adequate training has to come back OK.
@@ -349,6 +365,13 @@ const fineReasons = stallReasons({
   measured: { weeklySets: 9, sessionsPerWeek: 2, spanDays: 28, sessions: 8 },
   muscle: 'Chest',
 });
+// ⚠️ AND THE CAVEAT MATTERS MOST HERE, which is not obvious. On the "short"
+// branches an inflated count only softens bad news; on this one the app is
+// saying the work IS being done, so warm-ups padding the number would be an
+// unearned positive verdict — the same fault the headline fix on this screen
+// corrected from the other side on 2026-08-22.
+ok(/every set you logged/.test(fineReasons.find((r) => r.key === 'volume').detail),
+   '⚠️ the OK branch carries the caveat too — an inflated count there is an unearned verdict');
 ok(fineReasons.find((r) => r.key === 'volume').status === 'ok'
    && fineReasons.find((r) => r.key === 'frequency').status === 'ok',
    'the same walk over adequate training reads OK — so "short" is a result, not the only answer');

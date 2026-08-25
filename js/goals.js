@@ -263,7 +263,16 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         // The muscle qualifier moved out of the LABEL and into the sentence: the
         // label shares its line with a chip, and "Hard sets a week, on this
         // muscle" pushed that chip onto a second line on every phone.
-        detail: `On this muscle specifically. ${a.setsWhy}`,
+        //
+        // ⚠️ "HARD SET" IS THE UNIT THIS WHOLE MODEL RESTS ON AND WAS NEVER
+        // DEFINED ANYWHERE IN THE APP. The UX review called that the finding
+        // closest to a real defect, because it is the number Goals measures the
+        // user by — and the app counts something slightly different from what
+        // the research counted. Defined here, at the one place the target is
+        // stated, and the mismatch is admitted in the measured row rather than
+        // hidden. See MEASURED_SETS_CAVEAT below.
+        detail: `On this muscle specifically. A hard set means a working set taken close to failure `
+          + `— roughly one to three reps left in you. Warm-ups do not count toward it. ${a.setsWhy}`,
         source: 'Pelland et al. 2025, Table 3',
         scales: true,
       },
@@ -513,6 +522,22 @@ export function stallReasons({ requirements, measured, muscle }) {
   const has = measured && Number.isFinite(measured.weeklySets);
   const round = (n) => Math.round(n * 10) / 10;
 
+  // ⚠️ THE APP COUNTS EVERY SET YOU LOGGED. The target above is in HARD sets —
+  // working sets near failure — and there is no warm-up exclusion on the volume
+  // path, so somebody who logs their warm-ups is measured against a number built
+  // on sets they did not take near failure.
+  //
+  // ⚠️ SAID RATHER THAN SILENTLY CORRECTED, and the reason is the direction of
+  // the available fix. Excluding sets below some fraction of the day's top set
+  // would catch warm-ups — and would also throw away genuine back-off work,
+  // which is often the hardest set of the session. That is a judged threshold
+  // whose error runs BOTH ways, unlike every other judged constant in this
+  // project, so it is not one this file may quietly make. This is the same call
+  // the rating makes when it says out loud that a workout stores a set count and
+  // not a rep range: name what cannot be seen, on screen, in words.
+  const MEASURED_SETS_CAVEAT = ' This counts every set you logged, warm-ups included — '
+    + 'so if you log warm-ups, your real hard-set count is lower.';
+
   const volume = (() => {
     if (!has) {
       return {
@@ -528,7 +553,8 @@ export function stallReasons({ requirements, measured, muscle }) {
         status: 'short',
         value: round(v),
         detail: `${round(v)} sets a week is below the minimum effective dose of 4. That is the `
-          + 'point where the evidence first sees a detectable change at all.',
+          + 'point where the evidence first sees a detectable change at all.'
+          + MEASURED_SETS_CAVEAT,
       };
     }
     if (v < req.sets[0]) {
@@ -536,14 +562,21 @@ export function stallReasons({ requirements, measured, muscle }) {
         status: 'short',
         value: round(v),
         detail: `${round(v)} sets a week against the ${req.sets[0]}–${req.sets[1]} this goal `
-          + 'asks for. Enough to make progress, less than this target wants.',
+          + 'asks for. Enough to make progress, less than this target wants.'
+          + MEASURED_SETS_CAVEAT,
       };
     }
     return {
       status: 'ok',
       value: round(v),
+      // ⚠️ The caveat matters MOST on this branch, and that is not obvious. The
+      // two above already tell somebody they are short, so an inflated count can
+      // only soften bad news. Here it is the opposite: the app is saying the
+      // work is being done, and if warm-ups are padding the number that is an
+      // unearned positive verdict — the exact fault the headline fix on this
+      // screen corrected from the other side on 2026-08-22 (Rule 6).
       detail: `${round(v)} sets a week, against the ${req.sets[0]}–${req.sets[1]} this goal `
-        + 'asks for.',
+        + 'asks for.' + MEASURED_SETS_CAVEAT,
     };
   })();
 

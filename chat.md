@@ -4841,3 +4841,25 @@ walking to the end, so nothing saved and four assertions failed on an empty list
 
 Measured at 360/375/393: the button is 71x44, clear of the library's longest exercise name, no
 horizontal overflow.
+
+---
+
+## 2026-08-24, seventh pass — "hard sets", said rather than silently corrected
+
+The last of the batch. "Hard set" is the unit the whole volume model rests on, it was never defined
+anywhere in the app, and the app counts something slightly different from what the research counted:
+the target is in hard sets, `weeklyVolume()` credits every logged set with no warm-up exclusion.
+
+The requirement row now defines it — *a working set taken close to failure, roughly one to three reps
+left, warm-ups excluded* — and every measured volume row admits the app counts every set you logged.
+
+**Deliberately not corrected**, and the reason is the direction of the error. The available fix is a
+load threshold: exclude sets below some fraction of the day's top set. That catches warm-ups and also
+throws away genuine back-off work, which is often the hardest set of the session. Every other judged
+constant in this project — LAYOFF_DAYS, FATIGUE_HALF_SETS, the rep ladder — is acceptable *because it
+can only withhold*. This one errs both ways, so it is not a call to make quietly. Left as Tim's.
+
+The caveat matters most on the OK branch and that is not obvious: on the short branches an inflated
+count only softens bad news, but there the app is saying the work IS being done, so warm-up padding
+would be an unearned positive verdict — the same fault the headline fix corrected from the other side
+on the 22nd. Mutation-checked: emptying the caveat flips both assertions.
