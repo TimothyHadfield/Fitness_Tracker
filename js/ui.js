@@ -347,7 +347,12 @@ export function openSheet({ title, body, footer, onClose }) {
 export function confirmSheet({ title, message, confirmLabel = 'Delete', danger = true, onConfirm }) {
   const { close } = openSheet({
     title,
-    body: el('p', { text: message, style: 'margin:0;color:var(--ink-soft);line-height:1.5' }),
+    // ⚠️ `pre-line` so a message can hold a second paragraph. Added 2026-08-24
+    // for the disconnect sheet, where the honest wording is two ideas — what
+    // this does, and what it pointedly does NOT do — and running them together
+    // buries the second. No existing message contains a newline, so nothing
+    // else changes shape.
+    body: el('p', { text: message, style: 'margin:0;color:var(--ink-soft);line-height:1.5;white-space:pre-line' }),
     footer: el('div', { class: 'btn-row' },
       el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
       el('button', {

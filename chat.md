@@ -4863,3 +4863,32 @@ The caveat matters most on the OK branch and that is not obvious: on the short b
 count only softens bad news, but there the app is saying the work IS being done, so warm-up padding
 would be an unearned positive verdict — the same fault the headline fix corrected from the other side
 on the 22nd. Mutation-checked: emptying the caveat flips both assertions.
+
+---
+
+## 2026-08-24, eighth pass — the ratio sweep, a sheet that lied, two dead routes
+
+**Three more ratios derived**, all reasoned too low and therefore flattering: dumbbell bench
+0.72 → 0.81, dumbbell shoulder press 0.88 → 1.01, dumbbell curl 0.88 → 0.94. With the row from
+earlier that is 15, 12, 15 and 7 per cent — **not a constant**, which is the finding that matters:
+no blanket factor fixes that table, every remaining reasoned entry has to be derived on its own.
+Four neighbours moved with their anchors and are labelled as still-reasoned; decline dumbbell bench
+*had* to move or it would have claimed a decline is harder to load than a flat press. On the demo's
+barbell-led year this is Chest −1.6 % and Shoulders −1.3 %; on a dumbbell-led history it is far
+bigger, which is exactly who it was mis-rating.
+
+**The disconnect sheet promised something false** — "and you will not see theirs" — when
+`social.remove()` only edits your own graph. Corrected first and separately from building the real
+mutual disconnect, because a half-built feature is a known gap and a screen stating the opposite of
+what the code does is a lie the user acts on.
+
+**`#/data` and `#/muscles` are not routes**, and the accessibility audit listed both, so it had been
+measuring Home twice and the Data screen and body map had never been audited at all. Fixed the tool
+to use `#/graphs` plus in-page mode steps, including one that selects a muscle so the panel exists.
+Re-ran: 52 combinations, 16 never measured before. **Contrast is clean — zero text below 4.5:1.**
+The real finding is the map's own targets: Traps 42x11, Glutes 39x16 at 360px, and the figure is the
+only way to select a muscle, so the year grid's equivalence argument does not apply. Left for Tim,
+because it lands on his illustration.
+
+Recorded a warning with it: the tool's `hit44` flag fails 1616 of 2068 controls on already-audited
+screens, so it is a tripwire for finding candidates and not a defect count.

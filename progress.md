@@ -102,6 +102,82 @@ publishing invented workouts to real friends is the one way this could do harm.
 
 ---
 
+## 2026-08-24, last pass — the ratio sweep, a sheet that lied, and two dead routes
+
+### ⚠️ 1. THREE MORE RATIOS, AND THE ERROR IS NOT A CONSTANT
+
+The dumbbell row correction earlier in the day established a class of error. Three more per-side
+dumbbell anchors, derived the same way — Strength Level per dumbbell, doubled, over the key lift's
+own five numbers at a 180 lb male:
+
+```
+                            app    published   inflation
+  Dumbbell Bench Press      0.72      0.81        12 %
+  Dumbbell Shoulder Press   0.88      1.01        15 %
+  Dumbbell Curl             0.88      0.94         7 %
+  Dumbbell Row (earlier)    0.85      0.98        15 %
+```
+
+⚠️ **ALL FOUR TOO LOW, WHICH FLATTERS** — the estimate divides by the ratio. ⚠️ **And 7, 12, 15,
+15 % is NOT a constant offset, which is the finding that matters most: no blanket correction would
+have fixed this table, and every remaining reasoned entry has to be derived on its own.**
+
+⚠️ **A ratio above 1.00 is not a mistake.** Two dumbbells outweigh the bar most people can press
+overhead, so 1.01 is right and dividing by it brings the number back down.
+
+**Four neighbours moved with their anchors and are NOT measurements** — the old reasoned offsets
+carried across a corrected anchor, labelled as such in the file. **Decline dumbbell bench had to
+move**: at 0.76 it would have sat below the corrected flat press, claiming a decline is harder to
+load than a flat one. Hammer Curl was left alone because 0.98 against a corrected 0.94 still orders
+correctly, and scaling it would have stacked a guess on a guess.
+
+**Measured effect**: on the demo account's barbell-led year, Chest −1.6 %, Shoulders −1.3 %, nothing
+else moves. **On a dumbbell-led history it is much larger** — Tim's row reading fell 13 %. Which is
+exactly the population it was mis-rating.
+
+### ⚠️ 2. The disconnect sheet promised something false
+
+*"...and you will not see theirs."* `social.remove()` edits only MY graph, so their published copy
+still lists me in its `viewers` and **I can go on reading their training after pressing it.** Found
+by the live social round trip on 2026-08-22 and left standing for two days, because the real fix is
+a mutual disconnect needing a rules path their client can read.
+
+⚠️ **The sentence is corrected first and separately, on purpose.** A half-built feature is a known
+gap; a screen stating the opposite of what the code does is a lie the user acts on. It now says the
+disconnect cuts your side only. `confirmSheet` gained `white-space: pre-line` so the warning can be
+two paragraphs — nothing else uses a newline.
+
+### ⚠️ 3. `#/data` AND `#/muscles` ARE NOT ROUTES, and the audit had been auditing Home twice
+
+Found while driving the muscle panel for the fatigue work. `resolve()` has no case for either and
+falls through to `default: return HomeView()`. `tools/a11y-audit.mjs` listed **both**, so **the Data
+screen and the body map had never been audited at all** — not their contrast, not their targets.
+
+Fixed in the tool: the real route is `#/graphs` and the four data views are in-page modes, so a
+route row can now carry a step to run after navigating. Four rows cover Graph, Bars, Muscles, and
+**Muscles with a muscle selected** — the panel does not exist until one is tapped, so auditing the
+map without that measures the figure and none of the words beside it.
+
+**Re-run: 52 route/width/theme combinations, 16 of them never measured before.**
+
+✅ **CONTRAST IS CLEAN.** Zero text nodes below 4.5:1 across all sixteen. The palette work holds on
+the screens nobody had checked.
+
+⚠️ **The body map's own targets are small**, and this is a real finding on Tim's illustration: at
+360px the smallest muscles are **Traps 42×11, Glutes 39×16, Shoulders 62×18, Neck 24×17**, and
+**the figure is the only way to select a muscle** — there is no list beside it, so the year grid's
+equivalence argument (every 6px day also reachable at 40px in Months) is *not* available here.
+⚠️ **Not fixed: it lands on the illustration, which is Tim's half.** Also just under: the comparison
+button (332×38) and the chart's exercise `select` (156×36).
+
+⚠️ **DO NOT READ THE TOOL'S `hit44` COUNT AS A DEFECT COUNT.** It hit-tests the corners of a 44px box
+centred on the control, so anything narrower than 44px in either dimension fails by construction —
+**1616 of 2068 controls on the previously audited screens fail it too.** It is a tripwire for
+finding candidates, not an acceptance test, and reporting it as "41 failures" would be a number that
+sounds like a verdict and is not one.
+
+---
+
 ## 2026-08-24, later — ⚠️ THE DUMBBELL ROW WAS FLATTERING EVERYONE BY 15 %
 
 Tim: *"deploy everything you just mentioned and are ready to work on."* Three shipped in this pass.
@@ -1670,17 +1746,38 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      collection is replaced including the ones the file does not carry, which is what kills the dead
      `systemId`; and it has a confirmation that names what is in the file.
 
-0h. **⚠️ THE DUMBBELL FAMILY'S RATIOS ARE REASONED, AND THE ONE THAT WAS CHECKED WAS WRONG BY 15 %.**
-   `Dumbbell Row` was corrected 2026-08-24 from 0.85 to a published 0.98 (see the section above).
-   ⚠️ **`Dumbbell Bench Press` is wrong the same way and was measured against the same source —
-   0.72 against a published 0.81 — and is deliberately NOT fixed**, because moving it alone would
-   leave `Incline Dumbbell Bench Press` (0.62) and `Decline` (0.76) relatively more generous than the
-   flat version. **The family has to be re-derived in one pass**, by the technique the dip, pull-up
-   and now dumbbell row entries use: one population, both lifts, a 180 lb male, divide.
-   ⚠️ **And the finding generalises beyond dumbbells.** What was established is that a *reasoned*
-   ratio in that table can be 15 % out in the flattering direction. Every entry with no derivation
-   comment is now suspect, and the machine entries (`q` 0.35–0.50) have the same status. This is a
-   bounded research job with a known method, and it moves real numbers on real body maps.
+0h. **⚠️ THE RATIO TABLE'S REASONED ENTRIES RUN TOO LOW, WHICH FLATTERS. Four anchors corrected
+   2026-08-24; the rest of the table is still unchecked.** Done: `Dumbbell Row` 0.85 → 0.98,
+   `Dumbbell Bench Press` 0.72 → 0.81, `Dumbbell Shoulder Press` 0.88 → 1.01, `Dumbbell Curl`
+   0.88 → 0.94, each derived from published standards at a 180 lb male. Four neighbours were carried
+   across their corrected anchor and are **still reasoned, not measured**: Incline and Decline
+   Dumbbell Bench, Seated Dumbbell Shoulder Press, Arnold Press.
+
+   ⚠️ **THE ERRORS WERE 7, 12, 15 AND 15 % — NOT A CONSTANT.** No blanket factor fixes this table.
+   Every remaining reasoned entry has to be derived on its own, by the technique now used four times:
+   one population, both lifts, a 180 lb male, divide, take the median.
+
+   **Still unchecked, in rough order of how much they move a rating:** the rest of the dumbbell
+   biceps family (Hammer, Incline, Concentration, Preacher, Zottman, Spider, Cross-Body); every
+   MACHINE entry (`q` 0.35–0.50 — Leg Press 2.00, Hack Squat 1.15, Machine Row 1.00, Pec Deck 0.55,
+   Machine Hip Thrust 1.20); the cable entries; and the deadlift family's 1.40–1.85 against Back.
+   ⚠️ **Machines are the harder half and may not be derivable at all** — a leg press ratio depends on
+   the machine's leverage, which is why those `q` values are already low. If a source cannot be
+   found, the honest outcome is to say so in the table rather than leave the guess unlabelled.
+
+0i. **⚠️ THE BODY MAP'S TOUCH TARGETS, measured for the first time 2026-08-24** — see the last-pass
+   section above. At 360px the smallest muscles are **Traps 42×11, Glutes 39×16, Shoulders 62×18,
+   Neck 24×17**, and **the figure is the only way to select a muscle**, so the year grid's
+   equivalence argument is not available. ⚠️ **This lands on Tim's illustration, so it is his call**
+   — the cheap options are a larger invisible hit area per path, or a list beside the figure.
+   Also just under 44: the comparison button (332×38) and the chart's exercise `select` (156×36),
+   both ordinary controls and both cheap.
+
+0j. **⚠️ MUTUAL DISCONNECT IS STILL NOT BUILT.** The sheet was corrected on 2026-08-24 to stop
+   promising it (see the last-pass section), which is not the same as fixing it. `social.remove()`
+   edits only your own graph, so after disconnecting you can still read their training until they
+   disconnect too. A real mutual disconnect needs something their client can read — a new rules
+   path, not a small fix. `docs/social-plan.md` §2 is the section to read first.
 
 0c. **⚠️ THE UX REVIEW'S LIST — judgement rather than bugs, and Tim has claimed the design half.**
    Written up in the fifth pass above. He said he would work on the design himself, *"especially
@@ -1813,9 +1910,9 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2358 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2369 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1163 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1169 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 81 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |

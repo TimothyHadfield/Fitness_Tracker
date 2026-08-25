@@ -487,8 +487,23 @@ export async function FriendView(uid) {
       class: 'btn danger block', text: 'Disconnect',
       onClick: () => confirmSheet({
         title: 'Disconnect?',
-        message: `${conn.name || 'They'} will no longer be able to see anything of yours, and you `
-          + 'will not see theirs. It cannot un-see anything they have already looked at.',
+        // ⚠️ THIS SHEET USED TO PROMISE SOMETHING FALSE. It said "and you will
+        // not see theirs", and `social.remove()` edits only MY graph — their
+        // published copy still lists me in its `viewers`, so I can go on reading
+        // their training after pressing this. Found by the live social round
+        // trip on 2026-08-22 and left standing for two days because the real fix
+        // is a mutual disconnect, which needs something their client can read
+        // and therefore a new rules path.
+        //
+        // ⚠️ The sentence is corrected first and separately, on purpose. A
+        // half-built feature is a known gap; a screen that states the opposite
+        // of what the code does is a lie the user acts on — they press this
+        // believing a link is cut in both directions, and it is not. Say what
+        // actually happens until the other half exists.
+        message: `${conn.name || 'They'} will no longer be able to see anything of yours, and they `
+          + 'drop off your friends list. It cannot un-see anything they have already looked at.\n\n'
+          + 'This only cuts YOUR side. Until they disconnect too, or change what they share, '
+          + 'their training may still be readable by this account.',
         confirmLabel: 'Disconnect',
         onConfirm: async () => {
           try { await social.remove(uid); toast('Disconnected.'); location.hash = '#/social'; }

@@ -197,9 +197,42 @@ await connect();
 await send('Page.enable');
 await send('Runtime.enable');
 
+// ⚠️ `#/data` AND `#/muscles` WERE NOT ROUTES, and this list has been quietly
+// auditing Home under both names — found 2026-08-24 while driving the muscle
+// panel for something else. `app.js` `resolve()` has no case for either and
+// falls through to `default: return HomeView()`, so **the Data screen and the
+// body map have never been audited at all**: not their contrast, not their
+// touch targets, not the seven level colours the map is built on. A coverage
+// claim that is false is worse than a gap that is known.
+//
+// The real route is `#/graphs`, and the four data views are IN-PAGE MODES on it
+// rather than routes (progress.md, the eighth pass of 2026-08-22 explains why:
+// four URLs for a chart toggle would have been inventing routes). So a row can
+// carry a third element — an expression run after navigating — and that is what
+// reaches the modes and selects a muscle.
+const clickText = (sel, text) => `(() => {
+  const el = Array.from(document.querySelectorAll(${JSON.stringify(sel)}))
+    .find((n) => (n.textContent || '').trim() === ${JSON.stringify(text)});
+  if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  return Boolean(el);
+})()`;
+
 const ROUTES = [
   ['#/', 'Home'], ['#/workouts', 'Workouts'], ['#/explore', 'Explore'],
-  ['#/calendar', 'Calendar'], ['#/data', 'Data'], ['#/muscles', 'Muscles'],
+  ['#/calendar', 'Calendar'],
+  ['#/graphs', 'Data · Graph'],
+  ['#/graphs', 'Data · Bars', clickText('.seg, button, a', 'Bars')],
+  // ⚠️ Two steps, and the second is the point: the panel only exists once a
+  // muscle is SELECTED, so auditing the map without tapping one measures the
+  // figure and none of the words beside it.
+  ['#/graphs', 'Muscles', clickText('.seg, button, a', 'Muscles')],
+  ['#/graphs', 'Muscles · panel',
+    `${clickText('.seg, button, a', 'Muscles')};
+     await new Promise((r) => setTimeout(r, 600));
+     (() => { const m = document.querySelector('[data-muscle="Chest"]')
+       || document.querySelector('[data-muscle]');
+       if (m) m.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(m); })()`],
   ['#/goals', 'Goals'], ['#/social', 'Social'], ['#/settings', 'Settings'],
   ['#/account', 'Account'], ['#/profile', 'Profile'],
 ];
@@ -225,8 +258,14 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     await evaluate(`document.documentElement.setAttribute('data-theme','${dark ? 'dark' : 'light'}')`);
     await sleep(300);
 
-    for (const [hash, name] of ROUTES) {
+    for (const [hash, name, after] of ROUTES) {
       await goto(hash);
+      if (after) {
+        // Wrapped in an async IIFE so a step can await its own settling — the
+        // muscle panel needs the map painted before a muscle can be tapped.
+        try { await evaluate(`(async () => { ${after} })()`); } catch { /* step is best-effort */ }
+        await sleep(700);
+      }
       await evaluate(`document.documentElement.setAttribute('data-theme','${dark ? 'dark' : 'light'}')`);
       await sleep(150);
       try {

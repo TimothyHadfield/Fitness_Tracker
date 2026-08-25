@@ -1962,6 +1962,48 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   // by accident — this is the mistake that once produced a 429 lb wrist curl.
   ok(me2.contributionsFor(byName('Barbell Row')).find((c) => c.muscle === 'Back').ratio === 1.00,
      'while the key lift itself is 1.00 by definition');
+
+  /* ⚠️ THE REST OF THE PER-SIDE DUMBBELL SWEEP, 2026-08-24. Three more anchors
+     derived the same way, all reasoned too LOW, all therefore inflating their
+     lifter — the estimate divides by the ratio.
+
+       dumbbell bench press   0.72 -> 0.81   (43,64,89,119,152)x2 / (127,169,220,277,339)
+       dumbbell shoulder press 0.88 -> 1.01  (34,50,71,94,120)x2 / (75,104,140,181,226)
+       dumbbell curl          0.88 -> 0.94   (19,32,49,71,95)x2 / (49,73,104,140,180)
+
+     ⚠️ 7 %, 12 % and 15 % — NOT a constant offset, which is the finding that
+     matters most here: no blanket correction would have fixed this table, and
+     every remaining reasoned entry has to be derived on its own. */
+  const ratio = (name, muscle) => {
+    const c = me2.contributionsFor(byName(name)).find((x) => x.muscle === muscle);
+    return c ? c.ratio : null;
+  };
+  ok(near(ratio('Dumbbell Bench Press', 'Chest'), 0.81), 'a dumbbell bench converts at 0.81 of a barbell bench');
+  ok(near(ratio('Dumbbell Shoulder Press', 'Shoulders'), 1.01),
+     '⚠️ and a dumbbell shoulder press ABOVE 1.00 — two dumbbells outweigh the bar most people press');
+  ok(near(ratio('Dumbbell Curl', 'Biceps'), 0.94), 'and a dumbbell curl at 0.94 of a barbell curl');
+
+  // ⚠️ ORDERING WITHIN EACH FAMILY, which is what forced the un-measured
+  // neighbours to move with their anchor. Decline HAD to: at its old 0.76 it
+  // would have sat below the corrected flat press, saying a decline dumbbell
+  // press is harder to load than a flat one, which is backwards.
+  ok(ratio('Decline Dumbbell Bench Press', 'Chest') > ratio('Dumbbell Bench Press', 'Chest'),
+     '⚠️ decline still allows MORE than flat — the inversion the anchor move would have created');
+  ok(ratio('Incline Dumbbell Bench Press', 'Chest') < ratio('Dumbbell Bench Press', 'Chest'),
+     'and incline still allows less');
+  ok(ratio('Arnold Press', 'Shoulders') < ratio('Dumbbell Shoulder Press', 'Shoulders'),
+     'an Arnold press still allows less than a straight dumbbell press');
+  ok(ratio('Hammer Curl', 'Biceps') > ratio('Dumbbell Curl', 'Biceps'),
+     'and a neutral grip still allows more than a supinated one');
+
+  // ⚠️ THE DIRECTION OF THE WHOLE CLASS OF ERROR, pinned once. Every reasoned
+  // per-side dumbbell ratio checked so far was too LOW, and too low flatters.
+  // If a later session "corrects" one downward, this is the sentence to reread.
+  for (const [n, m] of [['Dumbbell Row', 'Back'], ['Dumbbell Bench Press', 'Chest'],
+                        ['Dumbbell Shoulder Press', 'Shoulders'], ['Dumbbell Curl', 'Biceps']]) {
+    ok(ratio(n, m) >= 0.80,
+       `${n} converts at ${ratio(n, m)} — every measured per-side anchor sits far above the guesses they replaced`);
+  }
 }
 
 /* ================= within-session fatigue ================= *

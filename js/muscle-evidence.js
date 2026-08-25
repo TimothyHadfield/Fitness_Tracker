@@ -119,9 +119,34 @@ const RATIOS = {
     [/^Decline Barbell Bench Press$/, 1.03, 0.75],
     [/^Floor Press$/, 0.92, 0.70],
     [/Smith Machine Bench Press/, 1.00, 0.50],
-    [/Incline Dumbbell Bench Press/, 0.62, 0.60],
-    [/Decline Dumbbell Bench Press/, 0.76, 0.55],
-    [/Dumbbell Bench Press/, 0.72, 0.65],
+    // ⚠️ THE PER-SIDE DUMBBELL SWEEP, 2026-08-24. See the note above the Back
+    // table's Dumbbell Row entry for how this class of error was found. Every
+    // reasoned per-side dumbbell ratio checked so far has been too LOW, which
+    // inflates the lifter, because the estimate divides by it.
+    //
+    // Strength Level publish the dumbbell bench PER DUMBBELL; this app logs it
+    // per side and doubles. Against their barbell bench at a 180 lb male — the
+    // same five numbers the Chest Dip derivation above already uses:
+    //     beginner (43x2)/127 = 0.68   novice (64x2)/169 = 0.76
+    //     intermediate (89x2)/220 = 0.81
+    //     advanced (119x2)/277 = 0.86  elite (152x2)/339 = 0.90
+    // Median 0.81, against a reasoned 0.72 — a 12 % inflation.
+    //
+    // ⚠️ The drift from 0.68 to 0.90 is real and runs the same way as the dip's:
+    // two dumbbells demand stabilisation a bar does not, and that costs a novice
+    // proportionally more. A fixed ratio therefore still understates strong
+    // dumbbell pressers and overstates weak ones, which is why `q` does not rise
+    // now that the number is sourced.
+    //
+    // ⚠️ INCLINE AND DECLINE ARE NOT MEASURED — they are the old REASONED
+    // offsets carried across the corrected anchor (x 0.81/0.72), so the family
+    // keeps the shape somebody chose for it while resting on a number that is
+    // now real. Decline HAD to move: at 0.76 it would have sat below the
+    // corrected flat press, saying a decline dumbbell press is harder to load
+    // than a flat one, which is backwards. Both stay open in 0h.
+    [/Incline Dumbbell Bench Press/, 0.70, 0.55],
+    [/Decline Dumbbell Bench Press/, 0.86, 0.50],
+    [/Dumbbell Bench Press/, 0.81, 0.65],
     [/Incline Machine Press/, 0.82, 0.45],
     [/Machine Chest Press/, 0.95, 0.45],
     // ── Bodyweight pressing ──────────────────────────────────────────────
@@ -295,9 +320,25 @@ const RATIOS = {
     [/^Z Press$/, 0.85, 0.50],
     [/Smith Machine Overhead Press/, 1.05, 0.45],
     [/Machine Shoulder Press/, 1.10, 0.45],
-    [/Seated Dumbbell Shoulder Press/, 0.85, 0.60],
-    [/Dumbbell Shoulder Press/, 0.88, 0.60],
-    [/Arnold Press/, 0.78, 0.50],
+    // ⚠️ Same sweep, and the largest error found in it — 15 %. Strength Level's
+    // dumbbell shoulder press, per dumbbell and doubled, against their barbell
+    // shoulder press at a 180 lb male:
+    //     beginner (34x2)/75 = 0.91   novice (50x2)/104 = 0.96
+    //     intermediate (71x2)/140 = 1.01
+    //     advanced (94x2)/181 = 1.04  elite (120x2)/226 = 1.06
+    // Median 1.01, against a reasoned 0.88.
+    //
+    // ⚠️ A RATIO ABOVE 1.00 IS NOT A MISTAKE HERE, and the Chest table's
+    // bodyweight note already explains the direction: it means two dumbbells
+    // total MORE than the bar this lifter could press overhead, so dividing by
+    // it brings the number back down. Getting that direction wrong is the error
+    // that once gave a dumbbell row a 429 lb wrist curl.
+    //
+    // Seated and Arnold are the old reasoned offsets carried across the
+    // corrected anchor (x 1.01/0.88), not measurements. Open in 0h.
+    [/Seated Dumbbell Shoulder Press/, 0.98, 0.55],
+    [/Dumbbell Shoulder Press/, 1.01, 0.60],
+    [/Arnold Press/, 0.90, 0.45],
     [/Landmine Press/, 0.60, 0.35],
     [/Upright Row/, 0.70, 0.35],
     // Raises and rear-delt work load a fraction of a press and vary hugely with
@@ -322,7 +363,22 @@ const RATIOS = {
     [/Zottman Curl/, 0.72, 0.35],
     [/Bayesian Cable Curl/, 0.80, 0.35],
     [/Cable Curl/, 0.95, 0.45],
-    [/Dumbbell Curl/, 0.88, 0.55],
+    // ⚠️ Same sweep, and the SMALLEST error in it — 7 %, which is worth noting
+    // as much as the largest: the reasoned numbers were not uniformly wrong by a
+    // fixed amount, so no blanket correction factor would have fixed the table.
+    // Each anchor has to be derived on its own.
+    //     beginner (19x2)/49 = 0.78   novice (32x2)/73 = 0.88
+    //     intermediate (49x2)/104 = 0.94
+    //     advanced (71x2)/140 = 1.01  elite (95x2)/180 = 1.06
+    // Median 0.94, against a reasoned 0.88.
+    //
+    // ⚠️ Hammer Curl stays at 0.98 and is now BELOW this pair's implied
+    // relationship rather than above it — a neutral grip is stronger than a
+    // supinated one, so 0.98 against a corrected 0.94 still orders correctly and
+    // is left alone rather than scaled on top of a number nobody measured. The
+    // rest of the dumbbell biceps entries are unchanged for the same reason and
+    // stay open in 0h.
+    [/Dumbbell Curl/, 0.94, 0.55],
   ],
   Triceps: [ // key: Close-Grip Bench Press
     [/^Close-Grip Bench Press$/, 1.00, 1.00],
