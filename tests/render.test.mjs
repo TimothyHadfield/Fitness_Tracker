@@ -998,6 +998,11 @@ ok(!data.querySelector('.rep-target'),
 }
 
 /* ================= the rest timer ================= */
+// ⚠️ OFF BY DEFAULT SINCE 2026-08-28 — Tim: "I don't love the rest timer
+// personally… it's easy for me to feel it out myself." Off is the absence of
+// the bar, not a disabled bar; On restores exactly what shipped. The block
+// below therefore proves the DEFAULT first, then turns it on and proves the
+// old behaviour unchanged.
 {
   const { SessionView } = await import(BASE + 'views-session.js');
   const DRAFT = 'ftrack:v1:draftSession';
@@ -1007,10 +1012,26 @@ ok(!data.querySelector('.rep-target'),
     name: 'Rest test',
     exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '' }],
   });
+
+  /* ---- the default: no bar, and logging a set starts nothing ---- */
+  const off = await mount(SessionView(rw.id));
+  ok(!off.querySelector('.rest-bar'),
+     '⚠️ by default there is NO rest bar on the workout screen — absent, not greyed');
+  const offWt = off.querySelector('.step-value');
+  offWt.value = '135';
+  offWt.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  const offDraft = JSON.parse(localStorage.getItem(DRAFT));
+  ok(offDraft.restStartedAt === undefined,
+     'and logging a set writes no rest timestamp into the draft — off means off');
+  localStorage.removeItem(DRAFT);
+
+  /* ---- turned on: everything that shipped, unchanged ---- */
+  await store.saveSettings({ restTimer: true });
   const s = await mount(SessionView(rw.id));
 
   const bar = s.querySelector('.rest-bar');
-  ok(Boolean(bar), 'the session has a rest timer');
+  ok(Boolean(bar), 'with the setting on, the session has a rest timer');
   ok(s.querySelector('.rest-clock').textContent === '--:--',
      'it shows nothing until a set is actually logged');
 
@@ -1048,7 +1069,7 @@ ok(!data.querySelector('.rep-target'),
   ok((await store.getSettings()).restTarget === 60, 'the target is remembered');
 
   localStorage.removeItem(DRAFT);
-  await store.saveSettings({ restTarget: 0 });
+  await store.saveSettings({ restTarget: 0, restTimer: false });
 }
 
 /* ================= the stepper in kilograms ================= */
@@ -1339,6 +1360,11 @@ ok(!data.querySelector('.rep-target'),
 {
   const { SessionView } = await import(BASE + 'views-session.js');
   const DRAFT = 'ftrack:v1:draftSession';
+
+  // The rest timer is off by default (2026-08-28). These blocks assert the
+  // superset/drop-set HOLDOFF rules — when the timer must NOT fire — which is
+  // only observable with the timer on.
+  await store.saveSettings({ restTimer: true });
 
   const type = (node, value) => {
     node.value = String(value);
@@ -1686,6 +1712,7 @@ ok(!data.querySelector('.rep-target'),
        'and 250 lbs of help on a 180 lb lifter is called out rather than shown as a negative load');
   }
   localStorage.removeItem(DRAFT);
+  await store.saveSettings({ restTimer: false });
 }
 
 

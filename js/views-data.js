@@ -1459,6 +1459,15 @@ export async function SettingsView() {
     toast(on ? 'Showing percentiles' : 'Showing rankings only');
   }
 
+  // Shows or hides the rest bar on the workout screen. Nothing stored changes;
+  // a draft's old restStartedAt just stops being painted.
+  function setRestTimer(on, e) {
+    store.saveSettings({ restTimer: on });
+    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    e.target.setAttribute('aria-pressed', 'true');
+    toast(on ? 'Rest timer on' : 'Rest timer off');
+  }
+
   // Changing units re-labels the app; it does NOT touch a single stored number.
   // Everything is kept in pounds, so switching back and forth is lossless.
   function setUnits(u, e) {
@@ -1550,6 +1559,35 @@ export async function SettingsView() {
           'Off shows your ranking — Beginner, Intermediate, Elite — and nothing else. '
           + 'On also shows the percentile behind it. The rankings are worked out the same '
           + 'way either way; this only decides how much of the working you see.' }),
+      ),
+
+      /* ⚠️ REST TIMER — OFF BY DEFAULT, and the default is Tim's own read of
+       * training (2026-08-28): *"I don't love the rest timer personally. When
+       * I'm working out it just doesn't help and it's easy for me to feel it
+       * out myself."* Off means the bar is not on the workout screen at all —
+       * not greyed, not collapsed, absent. On restores exactly the bar that
+       * shipped: it starts when a set is logged, and its little chip cycles an
+       * optional target.
+       *
+       * ⚠️ Existing accounts flip to off too, because the setting defaults by
+       * ABSENCE. That is deliberate rather than an oversight — the person who
+       * asked for off-by-default is also the app's heaviest user, and anybody
+       * who misses the bar has a one-tap way back. */
+      el('div', { class: 'field' },
+        el('label', { text: 'Rest timer' }),
+        el('div', { class: 'chips' },
+          el('button', {
+            class: 'chip', 'aria-pressed': String(settings.restTimer !== true),
+            text: 'Off', onClick: (e) => setRestTimer(false, e),
+          }),
+          el('button', {
+            class: 'chip', 'aria-pressed': String(settings.restTimer === true),
+            text: 'On', onClick: (e) => setRestTimer(true, e),
+          }),
+        ),
+        el('div', { class: 'field-help', text:
+          'On shows a rest clock at the bottom of the workout screen. It starts when you '
+          + 'log a set, and you can give it a target to count against.' }),
       ),
 
       el('div', { class: 'section-label', text: 'You' }),

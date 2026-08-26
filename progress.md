@@ -4,7 +4,12 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-28.
+**Last updated:** 2026-08-28, second pass — **the usability drive**. The gym loop was walked in a
+real browser at iPhone metrics for the first time, and out of it: ⚠️ **THE REST TIMER IS OFF BY
+DEFAULT NOW**, behind Settings → Rest timer (Tim: *"it just doesn't help… it's a sub-feature"*),
+and **its improvement list is DECLINED — do not resurface it**. Four findings stand and wait on his
+pick, the biggest two being **no wake lock** (the screen sleeps mid-workout) and **prefill counts
+as recorded** (Finish saves sets you never did). That day's second-pass section has the list.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` to the
 newest carries the git date **2026-08-26**, including everything headed 2026-08-25, -26, -27 and
@@ -280,6 +285,71 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-28, second pass — ⚠️ THE USABILITY DRIVE, AND THE REST TIMER IS OFF BY DEFAULT
+
+Tim asked for a usability analysis of the app — *"focusing on usability and looking for potential
+design errors. Remember this app should be as hands-free as possible and is meant to be used on the
+iPhone so it's quick."* The whole gym loop was driven in headless Chrome at 390×844 on the demo
+account — Record → Weightlifting → Start → all nine steps → Finish — with screenshots and geometry
+at every stage, plus the Run quick-log. First time anybody has walked the runner end to end in a
+browser rather than reading it.
+
+### What shipped from it — the rest timer is a setting now, OFF by default
+
+Tim, on reading the findings (three of seven were about the rest bar): *"I don't love the rest
+timer personally. When I'm working out it just doesn't help and it's easy for me to feel it out
+myself. Leave it as a default turned off setting that the user can turn on. Let's not work on
+improving it at all right now because it's a sub-feature."*
+
+- **Off is the absence of the bar**, not a disabled bar — nothing renders, nothing ticks, and
+  logging a set writes no `restStartedAt` into the draft. **On restores exactly what shipped**,
+  cycling target chip and all.
+- The gate is inside `startRest()` itself, so the superset / drop-set holdoff rules stay untouched
+  for whoever turns it on — and the tests that prove those rules now switch it on first.
+- **Settings → "Rest timer"**, Off/On chips, next to More details. Existing accounts flip to off
+  too, because the setting defaults by absence — deliberate: the person who asked is the heaviest
+  user, and the way back is one tap.
+
+⚠️ **THE REST-TIMER IMPROVEMENT LIST IS DECLINED, NOT DEFERRED.** The findings below marked *(rest —
+declined)* were put to Tim and he said no to all of them — "it's a sub-feature". **Do not pick them
+up, suggest them, or fold them into other work.** Same standing as the PINNED table.
+
+### The findings, ranked against "hands-free and quick"
+
+1. ⚠️ **NO WAKE LOCK ANYWHERE.** The screen sleeps in 30–60 s, so every set starts with wake +
+   Face ID. `navigator.wakeLock.request('screen')` held while a draft is active (re-acquired on
+   `visibilitychange`) is one change and is the single biggest hands-free lever in the app.
+   iOS ≥ 16.4. **Reported, not built — waiting on Tim's pick.**
+2. ⚠️ **PREFILLED COUNTS AS RECORDED, so Finish saves sets you never did.** Proven end to end: a
+   20-set demo workout "completed" with one nudge and nine Next taps, every set saved at last
+   time's numbers — into volume, ratings, the feed and progression. Cutting a real session short
+   at exercise 4 of 6 walks through 5 and 6 to reach Finish and saves them in full, silently. The
+   hands-free-respecting fix is one line at Finish when whole exercises were never touched, not
+   per-set confirmation. **For an app whose brand is refusing to invent numbers, this invents
+   entire sets. Reported, not built.**
+3. *(rest — declined)* The happy path had no "done" gesture, so matching the suggestion exactly
+   never started the timer.
+4. *(rest — declined)* The rest clock was the smallest important number on the screen (20 px
+   against the steppers' ~44 px).
+5. *(rest — declined)* "No target" default meant the done-signal never fired out of the box.
+6. **Record's chooser layer taxes every gym day** — Record → Weightlifting → Start is three taps
+   where two would do, and the chooser's own caption already knows the answer ("Next in your
+   rotation: Legs"). Putting "Start Legs" directly on Record keeps the activity list below it and
+   gives the daily path its tap back. **Reported, not built.**
+7. **Small, real**: a bare "28" typed into the Run log's Time field parses as 28 *seconds* — the
+   likeliest way a runner enters minutes records a world-record 5k without comment. And the
+   "no target" chip reads as a status, not a control. **Reported, not built.**
+
+**What the drive confirmed is GOOD and should not be broken chasing any of this**: the runner's
+huge stepper digits, last-time + suggestion with its reasoning shown, whole-row set selection,
+Next/Finish in the thumb zone, and drafts that survive backgrounding with the clock derived from a
+timestamp rather than accumulated.
+
+**Tests: render 535 → 537.** The driver script is throwaway (scratchpad), built on the a11y
+audit's CDP plumbing; the a11y audit itself remains the tool of record for contrast and targets.
 
 ---
 
@@ -3135,6 +3205,7 @@ than left at the top where they were written.
 | **5** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED.** Invisible hit halos grow every muscle ~10 px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44 px lands on **Tim's illustration**, so it stays his call |
 | **6** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report; he asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. ⚠️ **It has questions for Tim** — §16 sets the hard constraint (the band fits inside one level only 8.5 % of the time), and §14 asks whether the estimator may draw on all evidence at once (narrowing D14). ⚠️ **The plan's claim that Phase 1 is blocked on data the store does not carry is WRONG** — see the 2026-08-28 section, item 5. `setIndex` and `exerciseIndex` are array positions in data already on disk, derivable at any time. Phase 1 is small; what gates the feature is Phase 2, and Phase 2 needs him |
+| **15** | **the usability findings — waiting on Tim's pick** | ⚠️ Four standing findings from the 2026-08-28 usability drive, reported to him and not yet chosen from: **no wake lock** (the biggest hands-free lever), **prefill counts as recorded at Finish** (invents sets, silently), the **Record chooser's extra tap**, and the Run log's **"28" = 28 seconds** parse. See that day's second-pass section. ⚠️ **The rest-timer items in the same list are DECLINED, not waiting** — do not resurface them |
 
 ### ⚠️ PINNED — real work, deliberately NOT queued. Do not offer these as "the next thing to do"
 

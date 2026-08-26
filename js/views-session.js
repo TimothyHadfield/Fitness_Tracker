@@ -1328,6 +1328,17 @@ export async function SessionView(workoutId) {
 
   /* ---- rest timer ---- */
   //
+  // ⚠️ OFF BY DEFAULT SINCE 2026-08-28, BEHIND A SETTING — Tim's call, and his
+  // words are the design note: *"I don't love the rest timer personally. When
+  // I'm working out it just doesn't help and it's easy for me to feel it out
+  // myself."* So the bar does not render and nothing ever ticks unless the
+  // Settings switch is on. A 2026-08-28 usability pass had a list of
+  // improvements for this bar (a done-gesture to start it on the happy path,
+  // bigger digits, a default target); ⚠️ **he explicitly declined all of them**
+  // — "it's a sub-feature" — so do not pick those up without him asking.
+  //
+  // Everything below is unchanged for the user who turns it on.
+  //
   // Counts UP from the last set rather than down from a target, because the
   // count-up is true without being configured: open the app, see how long you
   // have been standing there. A target is optional on top of it, and only then
@@ -1337,6 +1348,7 @@ export async function SessionView(workoutId) {
   // throttles timers in a backgrounded tab, so a counter that added a second
   // per tick would silently run slow — which is exactly what a rest timer is
   // for, and exactly when the app is not in front of you.
+  const restEnabled = settings.restTimer === true;
   const REST_TARGETS = [0, 60, 90, 120, 180];
   let restTarget = REST_TARGETS.includes(Number(settings.restTarget))
     ? Number(settings.restTarget) : 0;
@@ -1398,13 +1410,18 @@ export async function SessionView(workoutId) {
     }, 1000);
   }
 
+  // ⚠️ Gated HERE rather than at the call sites, so the superset / drop-set
+  // exceptions in the stepper's onChange stay exactly as they are for the user
+  // who turns the timer on, and the runner never has to know the feature can
+  // be off. Off means off: no timestamp written into the draft, no interval.
   function startRest() {
+    if (!restEnabled) return;
     state.restStartedAt = Date.now();
     saveDraft(state);
     ensureTicking();
   }
 
-  if (state.restStartedAt) ensureTicking();
+  if (restEnabled && state.restStartedAt) ensureTicking();
   paintRest();
 
   /* ---- which day this is recorded for ---- */
@@ -1496,7 +1513,8 @@ export async function SessionView(workoutId) {
     peopleBar,
     progress,
     pane,
-    restBar,
+    // Off by default (Tim, 2026-08-28) — the bar simply is not on the screen.
+    restEnabled ? restBar : null,
     saveError,
     footer,
   );
