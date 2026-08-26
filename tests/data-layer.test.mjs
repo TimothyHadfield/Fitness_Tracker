@@ -2484,16 +2484,43 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ and a dumbbell shoulder press ABOVE 1.00 — two dumbbells outweigh the bar most people press');
   ok(near(ratio('Dumbbell Curl', 'Biceps'), 0.94), 'and a dumbbell curl at 0.94 of a barbell curl');
 
-  // ⚠️ ORDERING WITHIN EACH FAMILY, which is what forced the un-measured
-  // neighbours to move with their anchor. Decline HAD to: at its old 0.76 it
-  // would have sat below the corrected flat press, saying a decline dumbbell
-  // press is harder to load than a flat one, which is backwards.
-  ok(ratio('Decline Dumbbell Bench Press', 'Chest') > ratio('Dumbbell Bench Press', 'Chest'),
-     '⚠️ decline still allows MORE than flat — the inversion the anchor move would have created');
+  /* ⚠️ THE LAST FOUR NAMES ON 0h, DERIVED 2026-08-28. Same technique, same
+     population, same 180 lb male. All three that could be derived had been
+     CARRIED across a corrected anchor rather than measured:
+
+       decline dumbbell bench  0.86 -> 0.76  (36,57,84,117,153)x2 / bench
+       seated dumbbell press   0.98 -> 1.08  (40,56,76,98,122)x2  / OHP
+       Arnold press            0.90 -> 0.77  (23,37,54,75,98)x2   / OHP
+
+     Spider curl is closed as NOT DERIVABLE: SL's table is for the barbell
+     version and this library's lift is a dumbbell one.
+
+     ⚠️ THE ASSERTION BELOW USED TO SAY THE OPPOSITE, AND THAT IS THE POINT.
+     It read "decline still allows MORE than flat — the inversion the anchor
+     move would have created", pinning an ORDERING that had been reasoned from
+     "a decline moves more load". True of a barbell (Decline Barbell is 1.03
+     against a flat 1.00, and that still holds below). False of dumbbells,
+     because what caps a heavy decline dumbbell press is getting the bells
+     into position. The measurement puts decline below flat at every level but
+     elite. A test that encodes an argument rather than a measurement will
+     defend the argument — this one did, for four days. */
+  ok(near(ratio('Decline Dumbbell Bench Press', 'Chest'), 0.76),
+     'decline dumbbell bench is 0.76, measured — the 0.86 it carried was reasoned');
+  ok(ratio('Decline Dumbbell Bench Press', 'Chest') < ratio('Dumbbell Bench Press', 'Chest'),
+     '⚠️ and it sits BELOW flat, which is what the source says and what the old assertion denied');
+  ok(ratio('Decline Barbell Bench Press', 'Chest') > ratio('Barbell Bench Press', 'Chest'),
+     'while the BARBELL decline still sits above its flat press — the mechanism was real, just not transferable');
   ok(ratio('Incline Dumbbell Bench Press', 'Chest') < ratio('Dumbbell Bench Press', 'Chest'),
      'and incline still allows less');
+
+  ok(near(ratio('Seated Dumbbell Shoulder Press', 'Shoulders'), 1.08),
+     'a seated dumbbell press is 1.08, measured');
+  ok(ratio('Seated Dumbbell Shoulder Press', 'Shoulders') > ratio('Dumbbell Shoulder Press', 'Shoulders'),
+     '⚠️ ABOVE standing — a bench takes out the legs and the bracing, so the same bells imply a smaller press');
+  ok(near(ratio('Arnold Press', 'Shoulders'), 0.77), 'and an Arnold press is 0.77');
   ok(ratio('Arnold Press', 'Shoulders') < ratio('Dumbbell Shoulder Press', 'Shoulders'),
-     'an Arnold press still allows less than a straight dumbbell press');
+     'still below a straight dumbbell press, because the rotation costs you weight');
+
   ok(ratio('Hammer Curl', 'Biceps') > ratio('Dumbbell Curl', 'Biceps'),
      'and a neutral grip still allows more than a supinated one');
 

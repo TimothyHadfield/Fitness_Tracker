@@ -129,6 +129,31 @@ export function rankBlockedReason(exercise, opts) {
 //      published standard" or "carried across a corrected anchor" — so the
 //      next sweep can see at a glance what is measured and what is not.
 //
+// ⚠️ THE SWEEP FINISHED ON 2026-08-28 AND 0h IS CLOSED. The last four names on
+// it were decline dumbbell bench, seated dumbbell shoulder press, Arnold press
+// and spider curl. Three were derived; spider curl is closed as NOT DERIVABLE
+// and labelled, because SL's table is for a barbell and this library's lift is
+// a dumbbell. A fourth finding joins the three above, and it is a different
+// kind from all of them:
+//
+//   4. ⚠️ THE WORST ENTRIES WERE NOT THE UNCHECKED ONES — THEY WERE THE ONES
+//      SOMEBODY HAD REASONED ABOUT. Every earlier finding was a guess nobody
+//      had tested. These three were all ARGUED FOR in comments, and two of
+//      them inverted an ordering the argument was specifically trying to get
+//      right: decline was raised above flat because "a decline moves more
+//      load" (true of a barbell, false of dumbbells), and seated shoulder
+//      press was left below standing, which says a back support makes you
+//      weaker. A confident mechanism in a comment is not evidence, and it
+//      reads exactly like evidence to the next person. Where an entry carries
+//      an argument and no numbers, check the argument FIRST.
+//
+// ⚠️ WHAT IS STILL A GUESS, so the next reader does not have to re-derive it:
+// the entries that say so. Machine Row, Single-Leg Extension, Machine Hip
+// Thrust, Glute Bridge, the cable fly family and Spider Curl are all labelled
+// "no published standard" and were each checked at least once. They are not
+// open work; they are answered, and the answer is that no honest division
+// exists.
+//
 // Where a derivation's five ratios drift widely across levels, `q` went DOWN
 // or stayed low even though the median is now sourced — a fixed ratio still
 // compresses everybody toward the middle. Where the drift is nearly flat
@@ -183,13 +208,35 @@ const RATIOS = {
      * source. It also lands just below the flat press's 0.81, which is the
      * ordering an incline has to keep.
      *
-     * ⚠️ DECLINE IS STILL NOT MEASURED — the old reasoned offset carried across
-     * the corrected anchor. It sits ABOVE the flat press on purpose (a decline
-     * genuinely moves more load); at the original 0.76 it sat below, claiming a
-     * decline is harder to load than a flat one, which is backwards. Open in 0h.
+     * ⚠️ DECLINE IS MEASURED NOW (2026-08-28), AND THE REASONING THIS COMMENT
+     * USED TO CARRY WAS WRONG — 0h's last chest entry, closed. SL decline
+     * dumbbell press 36/57/84/117/153 per dumbbell, doubled, over bench
+     * 127/169/220/277/339 → 0.567/0.675/0.764/0.845/0.903, median 0.764.
+     *
+     * ⚠️ THAT IS THE NUMBER THAT WAS HERE BEFORE SOMEBODY REASONED IT UPWARD.
+     * This entry read 0.76 originally; on 2026-08-24 it was raised to 0.86 on
+     * the argument that "a decline genuinely moves more load", so sitting below
+     * the flat press was "backwards". The argument is sound for a BARBELL —
+     * Decline Barbell Bench Press is 1.03 against a flat 1.00 above, and that
+     * ordering survives — and it does not transfer to dumbbells, because what
+     * limits a heavy decline dumbbell press is getting the bells into position
+     * on a declined bench, not the press. SL's own population declines LESS
+     * than it flat presses at every level but elite.
+     *
+     * ⚠️ THE LESSON IS THE ONE 0h KEEPS TEACHING FROM A NEW ANGLE. Every
+     * previous finding was a guess that had never been checked. This was a
+     * measurement-shaped number OVERWRITTEN by a plausible mechanism, and the
+     * mechanism was real but belonged to a different implement. A reasoned
+     * override of an unexplained number should be the thing that gets checked
+     * first, not the thing that gets trusted.
+     *
+     * The error under-credited decline pressers by ~12 %, which is the rarer
+     * direction here and the harmless one. q rises off the floor now the median
+     * is sourced, but only a step: the 1.59x drift is the widest in the
+     * pressing family, so a single number still compresses badly.
      */
     [/Incline Dumbbell Bench Press/, 0.80, 0.72],
-    [/Decline Dumbbell Bench Press/, 0.86, 0.50],
+    [/Decline Dumbbell Bench Press/, 0.76, 0.55],
     [/Dumbbell Bench Press/, 0.81, 0.65],
     [/Incline Machine Press/, 0.82, 0.45],
     // 2026-08-26 sweep: SL machine chest press 88/137/200/274/356 over bench
@@ -456,11 +503,44 @@ const RATIOS = {
     // it brings the number back down. Getting that direction wrong is the error
     // that once gave a dumbbell row a 429 lb wrist curl.
     //
-    // Seated and Arnold are the old reasoned offsets carried across the
-    // corrected anchor (x 1.01/0.88), not measurements. Open in 0h.
-    [/Seated Dumbbell Shoulder Press/, 0.98, 0.55],
+    /* ⚠️ SEATED AND ARNOLD ARE MEASURED NOW (2026-08-28) — 0h's last two
+     * shoulder entries, closed. Both were carried offsets, and both were wrong
+     * in the direction that matters most, because BOTH inverted an ordering
+     * rather than merely mis-sizing one:
+     *
+     *   seated  40/56/76/98/122 x2 over OHP 75/104/140/181/226
+     *           -> 1.067 1.077 1.086 1.083 1.080   median 1.08 (was 0.98)
+     *   Arnold  23/37/54/75/98  x2 over the same
+     *           -> 0.613 0.712 0.771 0.829 0.867   median 0.77 (was 0.90)
+     *
+     * ⚠️ SEATED USED TO SIT BELOW STANDING, WHICH SAID YOU PRESS LESS WITH A
+     * BACK SUPPORT THAN WITHOUT ONE. It is 1.08 against standing's 1.01: a
+     * bench takes the legs and the bracing out, so the same dumbbells overhead
+     * seated imply a SMALLER standing press than they would done standing.
+     * That is the ordering the carried 0.98 had upside down.
+     *
+     * ⚠️ AND ARNOLD USED TO SIT ABOVE IT, which said the rotation is free. At
+     * 0.77 it sits well below both, so pressing a given weight through the
+     * rotation implies a bigger straight press — which is what the rotation
+     * costing something means, expressed as a ratio.
+     *
+     * ⚠️ SEATED'S DRIFT IS 1.02x, THE FLATTEST THING IN THIS FILE — flatter
+     * than the incline dumbbell bench's 1.06x, which earned its q on exactly
+     * this argument. Five ratios spanning 1.067 to 1.086 really are a
+     * population constant, so a single number costs a lifter almost nothing:
+     * 0.55 -> 0.70. It stops SHORT of the incline press's 0.72 for a caveat
+     * worth stating rather than burying: a table that flat could also be one SL
+     * derived from another rather than measured independently, and there is no
+     * way to tell from outside. The numbers are not quite constant, which
+     * argues against that — but "not quite" is not evidence, so the last step
+     * is not taken.
+     *
+     * Arnold drifts 1.41x, so its q rises only a step (0.45 -> 0.50): the
+     * rotation gates novices hard and the median is still a bad single answer.
+     */
+    [/Seated Dumbbell Shoulder Press/, 1.08, 0.70],
     [/Dumbbell Shoulder Press/, 1.01, 0.60],
-    [/Arnold Press/, 0.90, 0.45],
+    [/Arnold Press/, 0.77, 0.50],
     [/Landmine Press/, 0.60, 0.35],
     // 2026-08-26 sweep: SL upright row 53/87/132/187/248 over OHP →
     // 0.71/0.84/0.94/1.03/1.10, median 0.94. Was 0.70 — flattering ~26 %.
@@ -535,9 +615,16 @@ const RATIOS = {
     // SL 20/33/48/67/88 ×2 → 0.82/0.90/0.92/0.96/0.98, median 0.92 (was 0.62
     // — the family's biggest flatter).
     [/Concentration Curl/, 0.92, 0.40],
-    // Reasoned, and stuck: SL's spider curl standards are for the BARBELL
-    // version (29/50/78/111/149) and this library's Spider Curl is a dumbbell
-    // lift, so there is nothing honest to divide. Checked 2026-08-26.
+    // ⚠️ REASONED, AND NOW CLOSED AS NOT DERIVABLE RATHER THAN LEFT OPEN.
+    // Re-checked 2026-08-28, the last name on 0h's list: SL's spider curl
+    // standards are 29/50/78/111/149 and the page's own equipment note is
+    // "Barbell weights include the weight of the bar" — so they are for the
+    // BARBELL version, while this library's Spider Curl is a dumbbell lift
+    // logged per side. There is no dumbbell spider curl table to divide by,
+    // and dividing a per-side dumbbell load by a barbell population would be
+    // the mistake this whole sweep exists to undo. It stays a labelled guess,
+    // which is the honest outcome the sweep's own rule 3 asks for. Do not
+    // re-open this without a NEW SOURCE; the arithmetic has been tried twice.
     [/Spider Curl/, 0.70, 0.40],
     // SL 11/23/41/64/90 ×2 → 0.45/0.63/0.79/0.91/1.00, median 0.79 (was
     // 0.72). The widest drift of any dumbbell lift in the file — the rotation
