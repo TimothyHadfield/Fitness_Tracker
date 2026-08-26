@@ -4,12 +4,28 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-28, second pass — **the usability drive**. The gym loop was walked in a
-real browser at iPhone metrics for the first time, and out of it: ⚠️ **THE REST TIMER IS OFF BY
-DEFAULT NOW**, behind Settings → Rest timer (Tim: *"it just doesn't help… it's a sub-feature"*),
-and **its improvement list is DECLINED — do not resurface it**. Four findings stand and wait on his
-pick, the biggest two being **no wake lock** (the screen sleeps mid-workout) and **prefill counts
-as recorded** (Finish saves sets you never did). That day's second-pass section has the list.
+**Last updated:** 2026-08-28, fifth pass.
+
+🚨 **THE FOURTH PASS WAS AN EMERGENCY AND ITS SECTION IS REQUIRED READING.** The sharding
+migration's "emptied = migrated" flag blanked Tim's calendar (his phone, on the old cached build,
+reads only the legacy document). **His two recorded sessions were never gone from the server and
+are restored** — but PITR is off, so the stale-cache scenario cannot be disproved, and ⚠️ **if he
+says more than Pull 08-24 + Legs 08-25 ever existed in the cloud, believe him and start at his
+phone's localStorage.** The redesign: the shard path **cannot address the legacy document at all**
+(a frozen backup floor now), mass deletes are **refused** without a declared wholesale flag, and
+every account keeps a **7-day rolling cloud backup** plus **immutable pre-wipe snapshots** that
+ABORT the wipe if they fail. Rules 117, deployed.
+
+**Fifth pass: Data → Research** (Tim's ask) — strength-vs-age per muscle group from Harbo 2012's
+measured bands, eight honest lines, ⚠️ **Chest/Back/Traps named as unmeasured rather than drawn**,
+after finding that Strength Level's by-age tables are one shared curve wearing eleven names.
+
+**Second pass — the usability drive**: the gym loop walked in a real browser at iPhone metrics for
+the first time. ⚠️ **THE REST TIMER IS OFF BY DEFAULT NOW**, behind Settings → Rest timer (Tim:
+*"it just doesn't help… it's a sub-feature"*), and **its improvement list is DECLINED — do not
+resurface it**. Four findings stand and wait on his pick, the biggest two being **no wake lock**
+(the screen sleeps mid-workout) and **prefill counts as recorded** (Finish saves sets you never
+did). That day's second-pass section has the list.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` to the
 newest carries the git date **2026-08-26**, including everything headed 2026-08-25, -26, -27 and
@@ -285,6 +301,97 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-28, fourth pass — 🚨 THE EMERGENCY: THE MIGRATION'S FLAG ERASED TIM'S CALENDAR
+
+Tim: *"Emergency. I think something you did erased the workout sessions I recorded to my account.
+My calendar is empty and my muscle group says nothing to rank yet. This can never happen. You need
+to make it extremely difficult to erase data from people's accounts and even if you do, there's
+some backup saved or something like that."*
+
+### What actually happened, established by reading the live Firestore before touching anything
+
+The sharding migration ran on his account (`0WQLOA…`) at 19:16:09 on the git-day: it moved the
+sessions the legacy document held into per-session documents, **verified every one landed, and then
+emptied the legacy document — its "migrated" flag.** His phone was still on the **previous build**
+via the service-worker cache, and old builds read ONLY that document. Empty document → empty
+calendar → *"nothing to rank yet."*
+
+⚠️ **THE SESSIONS WERE NEVER GONE FROM THE SERVER.** Both recorded sessions — Pull 2026-08-24
+(6 exercises) and Legs 2026-08-25 (4) — sat safe in the shard documents the whole time. They were
+**restored into the legacy document via the Firestore REST API** (the CLI's own owner credential,
+reads first, one write, verified by read-back), so old and new builds both see them again.
+
+⚠️ **WHAT CANNOT BE RULED OUT, stated rather than hidden**: PITR is disabled on the project
+(1-hour retention, elapsed), so there is no server-side history of the emptied document. The
+migration provably moved everything the legacy read HANDED it — but a stale offline-cache read
+could have handed it less than the server held, and verification cannot see what it was never
+shown. Everything else on the account (6 workouts, 2 systems, goals, settings, the weigh-in) is
+intact, and the account's whole write pattern is consistent with exactly two sessions ever having
+been in the cloud. ⚠️ **If Tim believes more than Pull + Legs were recorded to his account, that is
+a fact only he has, and it changes where to look next: his phone's localStorage may hold pre-cloud
+rows (Account → upload from this device reads them).**
+
+### The design that replaced it — Tim's instruction is the specification
+
+1. ⚠️ **ADOPTION, NOT MIGRATION — the shard path can no longer address the legacy document at
+   all.** No ref exists in the factory; it cannot write, empty, or "tidy" it, and the test double's
+   strongest assertion is that NO setDoc is ever issued. Legacy rows are adopted into the shard
+   (idempotent upserts), reads merge both sources (shard wins), and the legacy document stays
+   forever as a **frozen backup floor** that old builds still read and write. This also closes the
+   stale-cache hole — a partial read now adopts less, instead of destroying the difference.
+2. ⚠️ **GUARDS.** A sharded write that would delete more than **2 rows** in one write is refused
+   outright — nothing committed — unless the caller declares `wholesale`. The store refuses any
+   non-wholesale write of `[]` over a collection the cache knows holds ≥ 5 rows. The legitimate
+   emptiers (Clear all, Restore, deleteSystem, benchmark rebuilds) each declare themselves with
+   the reason at the call site.
+3. ⚠️ **BACKUPS IN THE USER'S OWN ACCOUNT** (`users/{uid}/backups/*`, owner-only): a **7-day
+   rolling ring** (`rolling-{weekday}-{collection}`, refreshed at most every 20 h, prunes itself
+   by overwrite) plus **immutable `snap-*` snapshots taken BEFORE Clear all and Restore run** —
+   and ⚠️ **a failed snapshot ABORTS the wipe.** Rolling writes are never awaited on a save path.
+   The rules deny update on `snap-*` even to the owner: a pre-wipe snapshot the wipe could
+   overwrite protects nothing. **Rules tests 108 → 117, deployed.**
+
+⚠️ **THE LESSON, for the next clever flag:** the migration's verification was sound about what it
+saw; the *flag* was the fault, twice — it blinded every old client, and it turned "what I read" into
+"all there is". **A flag that destroys information is not a flag.**
+
+---
+
+## 2026-08-28, fifth pass — THE RESEARCH TAB (Data · Research)
+
+Tim: *"I'm really curious about where some of our information is coming from and how the site does
+its calculations, as well as displaying just useful research… a graph with the x axis as age, y
+axis % of maximum average strength for that muscle group… one line per muscle group… adjust the x
+axis so that it only displays data from people it has solid evidence from."*
+
+⚠️ **THE FINDING THAT SHAPED IT: Strength Level's by-age tables are ONE shared age model.** Bench,
+deadlift and wrist curl, normalised to their peaks, agree within rounding at every age
+(85.4 / 85.3 / 85.6 % at 15). Eleven lines from that source would be one line wearing eleven names —
+so the chart draws from **Harbo, Brincks & Andersen 2012** (Eur J Appl Physiol 112:267–275,
+DOI 10.1007/s00421-011-1975-3): 93 men and 85 women, 15–83, every major muscle group measured on
+the same dynamometer. **Table 5's measured means by age band**, plotted at each band's mean age —
+which bounds the x axis at **24–74 (men) / 25–73 (women)**, Tim's "solid evidence" clip falling
+straight out of the data rather than being a judgement.
+
+- ⚠️ **EIGHT LINES, NOT ELEVEN, AND THE SCREEN SAYS WHY** — no study measures pressing, rowing or
+  shrugging across ages in a general population, so **Chest, Back and Traps are named as missing
+  rather than invented.** `js/research-data.js` carries the data and the whole sourcing argument.
+- The dashed reference line is the app's own grading curve (McCulloch/Foster — one curve for every
+  lift), drawn against what the measured groups actually did. The prose block under the chart also
+  answers the "where do the numbers come from" half: Strength Level standards and ratios, Marzagão
+  2026 e1RM, powerlifting age grading, ratings from the user's own recorded sets.
+- Built per the dataviz method: eight categorical hues **machine-validated** against all four dark
+  surfaces and white (three hues under 3:1 on white → the labelled legend chips and the table view
+  are the required relief, not niceties); fixed slot order; tap a band for a readout, tap a muscle
+  to follow one line; series follow the profile's sex; isokinetic torque named as what it is.
+- Driven and screenshotted at 390 and 360 in both themes — the four-segment row does not clip.
+  Research added to the a11y audit's routes and `research-data.js` to the SW precache.
+
+**Tests: data-layer 1443, render 550** — normalisation, ranges, the refused groups, and the
+Shoulders-peak-in-the-30s shape that one shared curve cannot produce.
 
 ---
 
