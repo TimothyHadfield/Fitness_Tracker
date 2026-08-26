@@ -279,6 +279,25 @@ export function sessionSummary(sets) {
 }
 
 /**
+ * The LAST entry in `session` that logged sets for this exercise.
+ *
+ * ⚠️ A DELIBERATE COPY of the helper in `js/store.js`, which carries the full
+ * write-up of why it exists (one session can hold the same exercise twice —
+ * the swap splits, and swapping back splits again). It is duplicated rather
+ * than imported because this module is pure and importing the store would
+ * invert the dependency; three lines is the cheaper price. Change one, change
+ * both.
+ *
+ * Last rather than first: after a swap-back the first entry is the sets you
+ * gave up on, and this feeds the pre-fill for next time.
+ */
+function lastLoggedEntry(session, exerciseId) {
+  const hits = (session.entries || [])
+    .filter((e) => e.exerciseId === exerciseId && e.sets && e.sets.length);
+  return hits.length ? hits[hits.length - 1] : null;
+}
+
+/**
  * The recent sessions of one exercise, newest first, as arrays of sets.
  *
  * Same precedence the runner's own pre-fill has always used: this workout's own
@@ -293,8 +312,8 @@ function scanSessions(sessions, { exerciseId, workoutId, limit = 4 } = {}) {
     const out = [];
     for (const s of sessions || []) {
       if (!filterFn(s)) continue;
-      const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
-      if (entry && entry.sets && entry.sets.length) out.push({ date: s.date, sets: entry.sets });
+      const entry = lastLoggedEntry(s, exerciseId);
+      if (entry) out.push({ date: s.date, sets: entry.sets });
       if (out.length >= limit) break;
     }
     return out;

@@ -3826,5 +3826,82 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   iclear();
 }
 
+/* ================= ⚠️ THE SAME EXERCISE TWICE IN ONE SESSION =================
+   Fixed 2026-08-28. Four readers did `entries.find(e => e.exerciseId === id)`
+   and stopped at the first hit, so a second entry for the same exercise was
+   invisible to the chart, to the modal rep count and to the pre-fill.
+
+   ⚠️ REACHABLE THROUGH THE SWAP, not through the editor. The workout editor
+   refuses a duplicate outright; the runner splits an entry when sets are
+   already logged, so swapping away from a lift and back again — the machine
+   was taken, then it freed up — leaves two entries under one exerciseId.
+
+   The shape below is exactly what that leaves behind:
+     Leg Press  2 sets   (what you managed before the machine was taken)
+     Hack Squat 1 set    (what you did instead)
+     Leg Press  2 sets   (heavier, once it freed up)                          */
+{
+  const { store: st, seriesForExercise: series2, weightRepObservations: obs2 }
+    = await import('../js/store.js');
+  await st.clearAll();
+
+  const press = byName('Leg Press');
+  const hack = byName('Hack Squat');
+  const swapped = {
+    workoutId: 'wSwap', workoutName: 'Legs', date: '2026-09-01',
+    entries: [
+      { exerciseId: press.id, exerciseName: press.name, sets: [{ weight: 300, reps: 10 }, { weight: 300, reps: 9 }] },
+      { exerciseId: hack.id, exerciseName: hack.name, sets: [{ weight: 200, reps: 8 }] },
+      { exerciseId: press.id, exerciseName: press.name, sets: [{ weight: 360, reps: 6 }, { weight: 360, reps: 5 }] },
+    ],
+  };
+  await st.saveSession(swapped);
+
+  const sets = await obs2(press.id, 'workout');
+  ok(sets.length === 4,
+     `every set of both entries is an observation (${sets.length}) — the second entry used to vanish`);
+  ok(sets.filter((o) => o.weight === 360).length === 2,
+     'including the two heavy sets, which came after the swap back');
+
+  const pts = await series2(press.id, 'weight', 'workout');
+  ok(pts.length === 1 && pts[0].value === 360,
+     `the day's best set is the best across BOTH entries (${pts[0] && pts[0].value}), not the first entry's 300`);
+
+  // ⚠️ LAST rather than first. The pre-fill answers "what did you do on this
+  // lift last time", and the first entry is the two sets you gave up on.
+  const pre = await st.lastSetsFor('wSwap', press.id);
+  ok(pre && pre.length === 2 && pre[0].weight === 360,
+     `the pre-fill reads the entry you FINISHED (${pre && pre[0].weight}), not the abandoned stub`);
+
+  // The other exercise in the session is untouched by any of this.
+  const hackObs = await obs2(hack.id, 'workout');
+  ok(hackObs.length === 1 && hackObs[0].weight === 200, 'an exercise logged once still reads once');
+
+  /* ---------- progression sees the same thing ---------- */
+  const { historyFor } = await import('../js/progression.js');
+  const hist = historyFor([swapped], { exerciseId: press.id, workoutId: 'wSwap' });
+  ok(hist.length === 1 && hist[0][0].weight === 360,
+     `progression reads one row per session, and it is the finished entry (${hist[0][0].weight})`);
+
+  /* ---------- and the muscle map was never wrong here ----------
+     It walks every entry in order, because it has to for the fatigue
+     discount. Asserted so a later refactor cannot quietly regress it to the
+     `.find()` shape the other four had.                                     */
+  const { muscleStrength } = await import('../js/store.js');
+  await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
+  await st.logBodyWeight(180, '2026-09-01');
+  const quads = (await muscleStrength()).muscles.get('Quads');
+  const lp = quads && quads.contributors.find((c) => c.exerciseName === 'Leg Press');
+  ok(lp && lp.weight === 360,
+     `the leg press contributes its heaviest set (${lp && lp.weight}), which lives in the third entry`);
+  // ⚠️ The sharpest evidence that the walk is ordered rather than grouped: the
+  // set is charged for the two leg-press sets AND the hack squat that came
+  // before it — 3 sets of prior Quads volume, not 0 and not 2.
+  ok(lp && lp.priorVolume === 3,
+     `and it is charged for everything done before it in the session (${lp && lp.priorVolume} sets)`);
+
+  await st.clearAll();
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

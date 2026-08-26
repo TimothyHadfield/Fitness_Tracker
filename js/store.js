@@ -473,6 +473,55 @@ function upsert(rows, row) {
   return rows;
 }
 
+/* ------------------------------------------------------------------ *
+ * ⚠️ ONE SESSION CAN HOLD THE SAME EXERCISE TWICE, AND FOUR READERS
+ * ASSUMED IT COULD NOT (fixed 2026-08-28).
+ *
+ * Every one of them did `entries.find(e => e.exerciseId === id)` and stopped
+ * at the first hit, so the second entry's sets were silently invisible — not
+ * dropped from storage, just never read. The workout EDITOR refuses a
+ * duplicate ("Already in this workout"), which is why this looked safe; the
+ * RUNNER does not, because the exercise swap splits:
+ *
+ *     swap Leg Press → Hack Squat with two sets already logged
+ *       → [Leg Press (2 sets), Hack Squat (rest)]
+ *     swap Hack Squat → Leg Press when that machine frees up
+ *       → [Leg Press (2 sets), Hack Squat (n sets), Leg Press (rest)]
+ *
+ * — which is an ordinary thing to do in a busy gym, and exactly the
+ * improvisation the swap was built for on 2026-08-24.
+ *
+ * The damage was quiet and ran in the flattering-to-nobody direction: the
+ * chart's best set for that day, the modal rep count, and the pre-fill for
+ * next time all read the FIRST entry, which after a swap-back is the
+ * abandoned stub rather than the work that was actually finished.
+ *
+ * ⚠️ `muscleStrength()` was never affected — it walks every entry in order,
+ * because it has to for the fatigue discount. That is the shape the rest of
+ * these readers should have had.
+ * ------------------------------------------------------------------ */
+
+/** Every entry in `session` for this exercise, in the order performed. */
+function entriesFor(session, exerciseId) {
+  return (session.entries || []).filter((e) => e.exerciseId === exerciseId);
+}
+
+/**
+ * The LAST entry in `session` that logged sets for this exercise.
+ *
+ * ⚠️ Last rather than first, and that is the whole point of the helper. These
+ * callers want "what did you do on this lift last time" to pre-fill the next
+ * session, and after a swap-back the first entry is the two sets you gave up
+ * on. The last one is the work you finished.
+ *
+ * ⚠️ `js/progression.js` carries a copy of this, deliberately — see the note
+ * there. Change one, change both.
+ */
+function lastLoggedEntry(session, exerciseId) {
+  const hits = entriesFor(session, exerciseId).filter((e) => e.sets && e.sets.length);
+  return hits.length ? hits[hits.length - 1] : null;
+}
+
 export const DEFAULT_SETS = 3;
 
 /* ------------------------------------------------------------------ *
@@ -976,8 +1025,8 @@ export const store = {
     const scan = (filterFn) => {
       for (const s of sessions) {
         if (!filterFn(s)) continue;
-        const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
-        if (entry && entry.sets && entry.sets.length) return entry.sets;
+        const entry = lastLoggedEntry(s, exerciseId);
+        if (entry) return entry.sets;
       }
       return null;
     };
@@ -2220,10 +2269,10 @@ export async function seriesForExercise(exerciseId, field, source = null) {
 
   if (source !== 'benchmark') {
     for (const s of sessions) {
-      const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
-      if (!entry) continue;
-      const vals = (entry.sets || [])
-        .map((set) => set[field])
+      // Every entry for this exercise, not just the first — see entriesFor().
+      // The day's best set is the best across all of them.
+      const vals = entriesFor(s, exerciseId)
+        .flatMap((entry) => (entry.sets || []).map((set) => set[field]))
         .filter((v) => typeof v === 'number' && !Number.isNaN(v));
       if (!vals.length) continue;
       points.push({ date: s.date, value: Math.max(...vals), source: 'workout', label: s.workoutName });
@@ -2285,9 +2334,13 @@ export async function weightRepObservations(exerciseId, source = null) {
 
   if (source !== 'benchmark') {
     for (const s of sessions) {
-      const entry = (s.entries || []).find((e) => e.exerciseId === exerciseId);
-      if (!entry) continue;
-      for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', s.workoutName);
+      // ⚠️ Every entry, and every SET of every entry. This function's whole
+      // contract is "one row per set" — the modal rep count is counted over
+      // these rows — so a second entry going unread is a set that was
+      // performed and does not vote. See entriesFor().
+      for (const entry of entriesFor(s, exerciseId)) {
+        for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', s.workoutName);
+      }
     }
   }
   if (source !== 'workout') {
