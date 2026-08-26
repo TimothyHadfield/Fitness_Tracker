@@ -2186,7 +2186,9 @@ ok(!data.querySelector('.rep-target'),
 
   const { SettingsView } = await import(BASE + 'views-data.js');
   const settings = await mount(SettingsView());
-  ok(/Demo account/i.test(text(settings)),
+  // (The row that said "Demo account" moved to the Account screen 2026-08-26;
+  // what this assertion always meant is "the screen mounts in the demo".)
+  ok(settings.querySelector('.topbar') && /Nothing here is saved/i.test(text(settings)),
      'Settings opens in the demo instead of throwing "impl.currentUser is not a function"');
   ok(/Nothing here is saved/i.test(text(settings)),
      'and says nothing is being stored, rather than claiming this device holds it');
@@ -2578,6 +2580,111 @@ ok(!data.querySelector('.rep-target'),
   const p2 = [...s2.querySelectorAll('.palette-chip')].find((c) => c.getAttribute('aria-pressed') === 'true');
   ok(p2 && /Gold/.test(p2.textContent), 'an unrecognised stored palette degrades to Gold, never to nothing');
   await store.saveSettings({ palette: 'gold' });
+}
+
+/* ================= the Account screen owns the person (2026-08-26) =================
+   Tim: the profile icon should show ALL account and profile details, back
+   should go Home not Settings, and the account-ish rows should leave the
+   Settings menu. Plus the profile photo. */
+{
+  const { AccountView } = await import(BASE + 'views-account.js');
+  const { SettingsView } = await import(BASE + 'views-data.js');
+  const text = (n) => n.textContent;
+
+  const acct = await mount(AccountView());
+  ok(/Add a photo|Change photo/.test(text(acct)), 'the Account screen offers a profile photo');
+  ok(acct.querySelector('.avatar-face'), 'with a visible face slot');
+  ok(/Your details/.test(text(acct)), 'the profile row lives on Account now');
+  ok(/Download backup/.test(text(acct)) && /Restore from backup/.test(text(acct)),
+     'and so do backup and restore');
+  ok(/Delete all data/.test(text(acct)), 'and delete-all');
+
+  // Back goes to the MAIN screen. Settings has its own button.
+  const backBtn = acct.querySelector('.topbar .icon-btn');
+  window.location.hash = '#/account';
+  backBtn.click();
+  await settle();
+  ok(window.location.hash === '#/home', `Account's back goes Home, not Settings (${window.location.hash})`);
+
+  const st = await mount(SettingsView());
+  ok(!/Download backup/.test(text(st)) && !/Delete all data/.test(text(st)),
+     'Settings no longer carries the data controls');
+  ok(/Account & profile/.test(text(st)),
+     'but keeps one pointer row, so nobody who always found them here is stranded');
+  ok(/Goals/.test(text(st)), 'and Goals stays — it is not an account detail');
+
+  // The photo: store a tiny data URL directly (the canvas resize path needs a
+  // real browser) and confirm both the Account face and the top-left button
+  // wear it.
+  const PIXEL = 'data:image/jpeg;base64,/9j/4AAQSkZJRg==';
+  await store.saveSettings({ avatar: PIXEL });
+  const acct2 = await mount(AccountView());
+  const faceImg = acct2.querySelector('.avatar-face img');
+  ok(faceImg && faceImg.getAttribute('src') === PIXEL, 'a stored photo shows on the Account screen');
+  ok(/Change photo/.test(text(acct2)) && /Remove/.test(text(acct2)),
+     'and the controls flip to change/remove');
+
+  const { HomeView } = await import(BASE + 'views-workouts.js');
+  const home = await mount(HomeView());
+  await settle(); await settle();
+  const btnImg = home.querySelector('.avatar-btn .avatar-img');
+  ok(btnImg && btnImg.getAttribute('src') === PIXEL,
+     'the top-left account button wears the photo everywhere');
+  await store.saveSettings({ avatar: '' });
+}
+
+/* ================= Record is a category chooser (2026-08-26) =================
+   Tim: "when you open Record, it should show you maybe a few options to
+   categorize different types of workouts, and one of them is weightlifting,
+   which leads you to the current page." */
+{
+  const { RecordChooserView, StartPickerView } = await import(BASE + 'views-workouts.js');
+  const { ActivityLogView } = await import(BASE + 'views-session.js');
+
+  const chooser = await mount(RecordChooserView());
+  ok(/Weightlifting/.test(chooser.textContent), 'Weightlifting is one of the options');
+  const lift = [...chooser.querySelectorAll('button')].find((b) => /Weightlifting/.test(b.textContent));
+  ok(lift && lift.classList.contains('primary'),
+     'and it is the biggest — lifting is still the common case and must not slow down');
+  for (const label of ['Run', 'Swim', 'Cycle', 'Climb', 'Something else']) {
+    ok(new RegExp(label).test(chooser.textContent), `the chooser offers ${label}`);
+  }
+  ok(/never rated|ratings still come from lifting/i.test(chooser.textContent),
+     'and says plainly that activities are recorded, not rated');
+  lift.click();
+  await settle();
+  ok(window.location.hash === '#/start', 'Weightlifting leads to the full recorder');
+
+  // The full recorder now shows a time estimate per workout. (An earlier
+  // block clears all data, so seed one workout for the row to estimate.)
+  await store.saveWorkout({
+    name: 'Timed day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 10, notes: '' }],
+  });
+  const picker = await mount(StartPickerView({ tab: false }));
+  ok(/~30 min/.test(picker.textContent),
+     'each workout row carries a rounded time estimate (10 sets × 3 min before any recording exists)');
+
+  // The quick activity log saves a REAL session.
+  const before = (await store.getSessions()).length;
+  const act = await mount(ActivityLogView('Running'));
+  ok(/Running/.test(act.textContent), 'the preset activity is filled in');
+  const timeStep = [...act.querySelectorAll('.step-value')];
+  ok(timeStep.length >= 1, 'time and distance steppers render');
+  const tv = act.querySelector('.step-value');
+  tv.value = '30';
+  tv.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...act.querySelectorAll('button')].find((b) => /Save activity/.test(b.textContent)).click();
+  await settle(); await settle();
+  const sessions = await store.getSessions();
+  ok(sessions.length === before + 1, 'saving an activity writes one session');
+  const run = sessions.find((x) => x.workoutName === 'Running');
+  ok(run && run.entries.length === 1 && run.entries[0].exerciseName === 'Running',
+     'a real session row, one entry, under the activity\'s name — calendar, feed and backups all see it');
+  ok(!('workoutId' in run) || !run.workoutId,
+     'and it points at no workout, so the rotation suggestion skips it rather than choking');
+  await store.deleteSession(run.id);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

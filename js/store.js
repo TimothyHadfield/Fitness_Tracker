@@ -1852,6 +1852,38 @@ export const social = {
     return requireRemote().deleteReaction(ownerUid, reactionId);
   },
 
+  /**
+   * Repair a connection's stored display name from what they publish.
+   *
+   * ⚠️ WHY A PLACEHOLDER CAN BE STORED AT ALL: accepting somebody's invite
+   * happens BEFORE they have accepted you back, so their published profile is
+   * not readable yet and the graph stores 'Friend'. Their real name becomes
+   * readable the moment they accept — but nothing ever went back to fix the
+   * stored row, so Tim's friend showed as "Friend" in every list while her
+   * own page (which reads the published doc) showed "Autumn Dossey". Found
+   * by Tim, 2026-08-26. Screens that show a placeholder call this; it
+   * persists the published name so every other screen is right from then on.
+   * A real stored name is never overwritten — you may have renamed them
+   * deliberately, and their published name is theirs to change, not to
+   * impose.
+   */
+  async healConnectionName(uid) {
+    const impl = requireRemote();
+    const graph = normalizeSocialGraph(await impl.readGraph());
+    const row = graph.connections.find((c) => c.uid === uid);
+    if (!row) return null;
+    if (row.name && row.name !== 'Friend') return row.name;
+    const { doc } = await this.friend(uid);
+    const published = doc && doc.profile && typeof doc.profile.name === 'string'
+      ? doc.profile.name.trim().slice(0, 60) : '';
+    if (!published) return row.name || null;
+    row.name = published;
+    // No republish: viewers derive from uid and tier, and the name is a
+    // local label — nothing another account can read changed.
+    await impl.writeGraph(graph);
+    return published;
+  },
+
   /** Force every projection to be rebuilt — after logging a workout, say. */
   async publish() { return republish(); },
 };

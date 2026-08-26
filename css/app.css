@@ -338,6 +338,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .avatar-btn {
   width: 34px; height: 34px;
   flex: none;
+  overflow: hidden;
   display: grid; place-items: center;
   border-radius: 50%;
   background: var(--raised);
@@ -767,6 +768,19 @@ select.input {
   white-space: nowrap;
 }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* The chosen profile photo, in the account button and on the Account screen.
+   The button clips it round via overflow; the card face is its own circle. */
+.avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.avatar-card { display: flex; align-items: flex-start; gap: 14px; }
+.avatar-face {
+  flex: none; width: 64px; height: 64px; border-radius: 50%;
+  background: var(--raised); color: var(--ink-soft);
+  display: grid; place-items: center; overflow: hidden;
+}
+.avatar-face img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.avatar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Settings' colour picker: each chip carries its palette's accent as a dot,
    so the choice is visible before it is made. The dot keeps a hairline ring

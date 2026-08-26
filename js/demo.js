@@ -714,6 +714,10 @@ export function buildDemoFeed(today) {
         // published at mid and above). Only SOME sessions carry one, because
         // that is the live shape: it is optional and people forget it.
         if (rand() > 0.4) act.location = f.location;
+        // Duration, same gate (2026-08-26): minutes rounded to five, and not
+        // on every card — sessions recorded before finishedAt existed have
+        // none, and the fixture keeps the wire's raggedness.
+        if (rand() > 0.25) act.minutes = 40 + 5 * Math.floor(rand() * 9);
       }
 
       out.push({ uid: f.uid, name: f.name, tier: f.tier, act });

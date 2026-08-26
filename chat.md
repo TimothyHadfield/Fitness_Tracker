@@ -5248,3 +5248,41 @@ demo carries the palette in like units and theme. Verified over CDP with real cl
 --accent changes per pick, teal+light composes, gold clears, reload re-applies. Render 462→470,
 2,635 assertions green, docs/colour-options deleted (superseded), artifact page marked decided.
 Pushed.
+
+---
+
+## 2026-08-26, second wave — six items from Tim, then three more mid-build
+
+All shipped except the AirPods work, which he said to plan and not deploy.
+
+RECORD IS A CATEGORY CHOOSER (D2 narrowed to D27). Weightlifting first and biggest, leading to
+the unchanged full recorder; Run/Walk/Swim/Cycle/Climb/Something-else each open a quick log that
+saves a real session — calendar, feed, backups all see it, the muscle map and ratings never do.
+Library gained Walking, Rock Climbing, Bouldering. docs/activities-plan.md holds the plan.
+
+THE ROTATION BUG HE REPORTED: his self-built system has no order, so "next in rotation" was
+alphabetical — after Legs came Pull, not Push. The rule is least-recently-done now (never-done
+counts as longest-waiting; rotation order is the tie-break so ordered programmes lose nothing).
+His exact Pull-Monday/Legs-Tuesday scenario is a pinned regression test.
+
+DURATIONS: the hidden timer he asked for has existed all along (startedAt/finishedAt on every
+session). Record rows now show ~N min — the median of that workout's own recordings, sets×3min
+until any exist, rounded to 5. Feed cards say "· 45 min ·" at the my-workouts tier and above;
+finishedAt itself is still never published, and overnight-draft garbage is guarded out.
+
+ACCOUNT: profile photo (client-resized, worn by the top-left button, not shared to friends),
+profile row + backup/restore + delete-all moved out of Settings onto the Account screen, and back
+from Account goes Home. Settings keeps a pointer row.
+
+THE "Friend"/"Autumn Dossey" BUG: accepting an invite happens before the other side accepts back,
+so her name was unreadable at accept time and the placeholder stuck. healConnectionName() now
+persists the published name whenever a screen can read it; unverified in the field until Tim's
+phone opens Friends.
+
+AIRPODS (docs/airpods-plan.md, NOT deployed): head-motion is native-only — impossible for a web
+app, verified with sources. Stem presses ARE buildable via MediaSession with a silent looped
+track; costs owning Now Playing (no Spotify at the same time), so opt-in only. Waiting on his go.
+
+2,683 assertions across eleven suites, all green. Docs swept for a chat reset; the outstanding
+verifications (CDP pass on the new screens, palette audit beyond Gold, two field checks) are
+Open work item 14.

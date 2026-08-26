@@ -508,6 +508,28 @@ ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expi
      'capped at 80 characters at the builder, matching the input cap');
 }
 
+/* ---------- duration: minutes rounded to five, mid and above ---------- */
+{
+  const s = {
+    id: 's10', date: '2026-08-20', workoutName: 'Push',
+    startedAt: '2026-08-20T18:00:00.000Z', finishedAt: '2026-08-20T18:47:00.000Z',
+    entries: [],
+  };
+  ok(!('minutes' in projectSession(s, LIGHT)),
+     'duration is NOT published at light — it rides the same gate as the start time');
+  ok(projectSession(s, MID).minutes === 45,
+     `47 minutes publishes as 45 — rounded to five, so the exact finish stays private (${projectSession(s, MID).minutes})`);
+  ok(!('finishedAt' in projectSession(s, FULL)),
+     '⚠️ finishedAt itself is STILL never published, at any tier');
+  ok(!('minutes' in projectSession({ ...s, finishedAt: '2026-08-21T08:00:00.000Z' }, MID)),
+     'a draft left open overnight publishes NO duration rather than a fourteen-hour one');
+  ok(!('minutes' in projectSession({ ...s, finishedAt: s.startedAt }, MID)),
+     'a zero-length stamp pair (the quick activity log) publishes no duration');
+  const noFinish = { ...s }; delete noFinish.finishedAt;
+  ok(!('minutes' in projectSession(noFinish, MID)),
+     'sessions from before finishedAt existed publish no key — missing is missing');
+}
+
 /* ---------- reactions: kudos + comments (0l) ---------- */
 {
   const {

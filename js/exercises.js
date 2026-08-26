@@ -306,6 +306,14 @@ const RAW = [
   ['Elliptical', 'Cardio', 'Machine', 'dt'],
   ['Stair Climber', 'Cardio', 'Machine', 'dt'],
   ['Swimming', 'Cardio', 'Other', 'dt'],
+  // Added 2026-08-26 with the Record activity chooser: the non-lifting
+  // activities Tim named. Filed under Cardio because that is this library's
+  // "recorded, never rated" group — the honest slot until a dedicated
+  // Activity group exists (docs/activities-plan.md §4). Climbing is
+  // time-only: nobody logs a distance up a wall.
+  ['Walking', 'Cardio', 'Other', 'dt'],
+  ['Rock Climbing', 'Cardio', 'Other', 't'],
+  ['Bouldering', 'Cardio', 'Other', 't'],
   ['Jump Rope', 'Cardio', 'Other', 't'],
   ['Ski Erg', 'Cardio', 'Machine', 'dt'],
   ['Hiking', 'Cardio', 'Other', 'dt'],

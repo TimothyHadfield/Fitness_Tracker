@@ -4,16 +4,31 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-26, end of day. **Tim authorised the whole backlog in one message and
-SEVEN PIECES SHIPPED THE SAME DAY** (seven dated sections below): guest workouts (0e's guest
-half), kudos + comments with a new tested rules path (0l), location on feed cards as a typed
-label (0m), the ratio sweep — 28 lifts derived from published standards (0h substantially
-closed), personal bests on the finish screen, invisible body-map hit halos (0i's cheap half),
-and the polish sweep (Explore explainer, word-swap bridge, the backup dot waits for data). The
-eighth closed too: **Tim picked ALL THREE colour options, so Settings now has a Colour choice**
-(Gold · Teal · Indigo · Ember, each with a designed light theme — eighth-pass section). Tests now
-**2,635 across eleven suites** (data-layer 1235, render 470, social 128, a11y 85), plus 66 rules
-assertions in the emulator. He also pre-authorised sub-agents.
+**Last updated:** 2026-08-26, prepared for a chat reset. **2026-08-26 was the biggest build day
+this project has had — NINE dated sections below, all deployed the same day**, every one on Tim's
+explicit instruction:
+
+- **Guest workouts** (0e's guest half), **kudos + comments** on a new tested rules path (0l),
+  **location** as a typed label (0m), **the ratio sweep** — 28 lifts derived from published
+  standards (0h nearly closed), **personal bests on the finish screen**, **body-map hit halos**
+  (0i's cheap half), the **polish sweep**, and **four colour palettes as a Settings choice** (0k
+  closed — Tim picked all three options).
+- Then a second wave: **Record is a CATEGORY CHOOSER and the app records non-lifting activities**
+  (runs, swims, climbs — D2 narrowed to **D27**: recorded first-class, modelled not at all);
+  **the rotation suggestion is least-recently-done now** (it was reading alphabetical order on
+  self-built systems — Tim caught it with Pull/Legs/Push); **workout durations** — estimate per
+  Record row from each workout's own recorded times, minutes on feed cards at mid+; **the
+  Account screen owns the person** (profile photo, profile row, backups, delete — moved from
+  Settings; back goes Home); **the "Friend"-instead-of-name bug self-heals**; and
+  **`docs/airpods-plan.md`** (research done, NOTHING deployed, his instruction — stem presses
+  buildable, head-motion impossible on web).
+
+**Tests: 2,683 across eleven suites** (data-layer 1250, render 497, social 134, a11y 85), plus
+66 rules assertions in the emulator and 12 in sw-update. Tim also **pre-authorised sub-agents**
+(saved to memory). ⚠️ **Two things the reset must carry:** the friend-name heal and everything
+from the second wave are **jsdom-tested but not yet screenshotted or field-confirmed** — a CDP
+visual pass and Tim's own phone are the outstanding verifications; and the full browser AUDIT has
+still only ever run on the Gold palette.
 
 The day before (2026-08-25) the app was restructured, and most of what a
 2026-08-24 reader knew about its shape is now wrong. Three batches landed after the second gym
@@ -29,9 +44,11 @@ session, all on Tim's instructions:
 about "five tabs ending in Goals", "Home opens on the next workout" or the old OKLCH level ramp is
 history, not the app. Read the top three points here, then the **Open work index**.
 
-⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green:
-**2474 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
-logged warm-ups should be excluded from the volume count, and his friend's failed sign-in.
+⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are
+green. Three things wait on *him*, not on you — whether logged warm-ups should be excluded from
+the volume count (0c), his friend's failed sign-in (0f), and a go/no-go on building the AirPods
+stem-press controls (`docs/airpods-plan.md` §4 — plan approved-to-write only, build not
+authorised).
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
 wrong URL. I can see the year view now."* So **he is on a current build and the app is usable**, and
@@ -170,6 +187,90 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-26, ninth pass — ⚠️ THE SECOND WAVE: ACTIVITIES, DURATION, THE ROTATION FIX, THE
+## ACCOUNT SCREEN, AND TWO PLAN DOCS
+
+Tim sent six items, then three more mid-build. Everything except the AirPods work (plan-only on
+his instruction) shipped.
+
+### 1. ⚠️ RECORD IS A CATEGORY CHOOSER, AND THE APP RECORDS NON-LIFTING ACTIVITIES (D27)
+
+*"Make the site more applicable to non-weight-lifting fitness activities such as running,
+climbing, swimming…"* **D2 ("Lifting only") narrows to D27** — the D15→D21 pattern again:
+**activities are RECORDED first-class and MODELLED not at all.** The Record tab now opens on a
+chooser — Weightlifting first and biggest, carrying the next-in-rotation name, leading to the
+unchanged full recorder at `#/start` — then Run / Walk-or-hike / Swim / Cycle / Climb / Something
+else, each opening a quick log (date, activity, time/distance) that saves a REAL session. So the
+calendar, the feed, backups and the cloud ceiling all see an activity through machinery that
+already existed, and the muscle map and ratings never see it at all (no `workoutId`, Cardio group
+= unrankable — both asserted). Library gained Walking, Rock Climbing, Bouldering.
+`docs/activities-plan.md` holds D27's reasoning and Phase 2 (pace shown-not-judged, an Activity
+group label, activity PRs — needing design first).
+
+### 2. ⚠️ THE ROTATION SUGGESTION WAS READING AN ORDER NOBODY WROTE — now least-recently-done
+
+Tim, with a counter-example: *"Monday I did Pull, Tuesday Legs… my next workout is Push"* — the
+app said Pull. **The bug: a self-built system has no `order`, so its "rotation" was
+alphabetical** — Legs → Pull → Push — and next-after-Legs was Monday's Pull. The rule is now
+**the workout you have not done for the longest** (never-done = longest of all), with rotation
+position as the tie-break — so an ordered programme cycled correctly loses nothing (the two rules
+coincide under obedience), and out-of-order training gets the answer a person gives instantly.
+The caption says what was read: *"It's been longest since this one — 5 days ago."* Tim's exact
+scenario is a pinned regression test.
+
+### 3. ⚠️ WORKOUT DURATION — the timer he asked for already existed
+
+*"Start a hidden timer… record it… display this in the friend's feed… contribute to the time
+estimation (round to the nearest ~5 min)."* **`startedAt`/`finishedAt` have been on every session
+all along**, so every past session is already a measurement. Built the read side: each Record row
+shows **`~45 min`** — the MEDIAN of that workout's own recorded durations (one interrupted
+session cannot drag it), sets × 3 min before any exist (the badge's published figure), rounded to
+5. **Feed cards show minutes at MID and above** — *"Today at 6:32 PM · 45 min · Ironworks Gym"*.
+⚠️ The old "finishedAt is never published" note NARROWS rather than falls: minutes rounded to
+five at the tier that already carries the start time reveals "about 45 minutes", never the exact
+instant the gym was left — and `finishedAt` itself is still never published, asserted at every
+tier. Sanity guards both sides: a draft left open overnight, or a back-dated quick log, publishes
+and averages NOTHING (5 min ≤ duration ≤ 6 h).
+
+### 4. The Account screen owns the person now, and has a face
+
+- **Profile photo**: square-cropped and resized client-side to 256px JPEG (~20 KB — the settings
+  document shares the 1 MiB ceiling), stored as `settings.avatar`, shown on the Account screen
+  and as the top-left account button itself. ⚠️ **Local-only: NOT published into the social
+  projection** — publishing a face is a widening that gets its own decision.
+- **Everything account-ish moved out of Settings** (Tim's ask): the profile row, backup/restore,
+  the cloud warning and Delete-all now live on the Account screen in every account state
+  (signed-in, anonymous, offline, unconfigured). Settings keeps appearance/colour/units/details/
+  Goals plus one pointer row so nobody who always found them there is stranded.
+- **Back from Account goes Home**, not Settings — all five states. Settings has its own button.
+
+### 5. ⚠️ "Friend" vs "Autumn Dossey" — the accept-flow placeholder, now self-healing
+
+The bug: accepting somebody's invite happens BEFORE they accept you back, so their published
+profile is unreadable at that moment and the graph stores the placeholder `'Friend'` — and
+nothing ever went back to fix it. Her page showed the real name because it reads the published
+doc. **`social.healConnectionName()`**: whenever a screen holds both a placeholder row and a
+readable published name (friends list, friend page), it persists the published name into the
+graph — a real stored name is never overwritten. The feed's comment-author names also prefer
+published names now. ⚠️ **Unverified in the field**: needs Tim's account to confirm Autumn heals
+on his next Friends visit — jsdom cannot drive the cloud path.
+
+### 6. AirPods — researched, planned, NOT deployed (his instruction)
+
+`docs/airpods-plan.md`, from live web research: **head-motion control is impossible for a web app**
+(CMHeadphoneMotionManager is native-only, no web exposure, no standards work); **stem presses ARE
+buildable** via MediaSession — the page plays a silent looped track, owns Now Playing, and
+single/double/triple press become rest-timer/next-set/back, with the lock screen as a free status
+display. The priced costs: occupies Now Playing (no simultaneous Spotify — must be opt-in,
+off by default), the ~30 s paused-while-locked session kill, battery. §4 is the build order if he
+says go; §3 is the dead-end table so nobody re-litigates Web Bluetooth on iOS.
+
+**Tests: data-layer 1235 → 1250, render 470 → 497, social 128 → 134.** All suites green.
+⚠️ **Not yet screenshotted**: the chooser, activity log and account restructure are jsdom-tested;
+a CDP visual pass is queued with the next batch.
 
 ---
 
@@ -2386,6 +2487,9 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **9c** | **0m — location on feed cards** | ✅ **BUILT AND DEPLOYED 2026-08-26** — a hand-typed label (never GPS), carried forward between sessions, published at mid+ beside `startedAt`. The privacy decision is that nothing more precise than what the owner typed can exist to leak. See the third-pass section |
 | **10** | **0k — the colour direction** | ✅ **CLOSED 2026-08-26 — Tim picked ALL THREE.** Settings → Colour: Gold/Teal/Indigo/Ember, each with a designed light theme, swept by the a11y suite (22 → 85), CDP-verified. See the eighth-pass section. Remaining: the full browser audit has only run on Gold |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
+| **12** | **activities, Phase 2** | ⚠️ **OPEN** — `docs/activities-plan.md` §3: an Activity group label, pace shown-not-judged, activity charts check, feed activity glyphs, activity PRs (needs design). Phase 1 (the chooser + quick log) shipped 2026-08-26 |
+| **13** | **AirPods stem-press controls** | ⚠️ **WAITING ON TIM'S GO** — `docs/airpods-plan.md`. Buildable via MediaSession; costs Now Playing (no simultaneous Spotify) so opt-in only. §4 is the build order, starting with a half-day device spike. **Nothing deployed, on his instruction** |
+| **14** | **the outstanding verification pass** | ⚠️ **OPEN** — a CDP screenshot round over the 2026-08-26 second wave (chooser, activity log, account screen), the full browser audit on the three new palettes (it has only ever run on Gold), and two field checks on Tim's phone: the friend-name heal, and a real reaction round-trip with Autumn's account |
 
 **Closed 2026-08-24 and kept below for the reasoning:** 0a (both blockers), 0d (exercise swap),
 0g (within-session fatigue), 0b(d) (restore from backup).
@@ -2772,7 +2876,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2635 assertions across eleven suites** (recounted 2026-08-26), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2683 assertions across eleven suites** (recounted 2026-08-26 end of day: data-layer 1250, render 497, social 134, a11y 85), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -2985,6 +3089,8 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/social-plan.md` | **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |
 | `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state, and what is still unverified. **Corrected 2026-08-17** — it had claimed for a day that Google sign-in was not enabled, while this file carried a note saying that claim was wrong. The source is fixed; the note is gone |
+| `docs/activities-plan.md` | **Non-lifting activities**, written 2026-08-26. §1 is D27 (recorded, never modelled — the D2 narrowing); Phase 1 (the Record chooser + quick log) is BUILT; §3 is Phase 2; §4 is what is deliberately not planned (no GPS routes, no fitness modelling) |
+| `docs/airpods-plan.md` | **AirPods remote control — PLAN ONLY, nothing deployed, on Tim's instruction.** §1: head-motion is impossible for a web app, stem presses are buildable via MediaSession. §2 the design + priced costs (occupies Now Playing → opt-in only); §3 the dead-end table; §4 the build order if he says go, starting with an on-device spike |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
 ---
@@ -3025,7 +3131,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **⚠️ Half a programme reads exactly like a whole one** | The Nippard system shipped for two days as three workouts declaring **six days a week**, so the rating ran the same three twice and the rotation repeated a day that should have alternated. Nothing failed: the badge was plausible, every test passed, and the screen looked finished. **Tim caught it by reading the sentence** — "why would a push/pull/legs need six workouts?" Two lessons. A count a system *declares* and a count it can *fill* are different numbers and nothing was comparing them; there is now a test that does. And the one shipped as "Pull" was **the second pull, not the first** — the write-ups carry no episode number in their own text, so the order had to be recovered from the video dates. Anything transcribed from a series wants its episode number pinned down before its content is |
 | **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
 | **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
-| **What's next** (RECORD) | ⚠️ **On RECORD since 2026-08-25, not Home** — Tim: *"so we don't double dip."* The big button is **the next workout in your rotation**, not a generic "Start a workout" — `js/next-workout.js`, `docs/vision.md` §1.2 first half. It reads the most recent session, finds that workout in its system, and offers the one after it, **wrapping** at the end. The caption always says what it read ("Next in Push Pull Legs. You did Push 2 days ago"), and **Choose another workout** sits right underneath, so it never traps you. It is a LOOKUP, not advice — the order came from the user's own system, so this is Rule 6-safe in a way that "you should rest today" would not be. It never scolds and never refuses: train twice in a day and it says "You already did Push today — this is next when you are ready". Silent when it would have to guess: no history **and** more than one system means no suggestion at all. Skips past sessions whose workout has since been deleted (D22 keeps the history), rather than dead-ending. **The other half of §1.2 — suggesting the weights and reps — is NOT built and needs the estimator first** |
+| **Record** (nav) | ⚠️ **A CATEGORY CHOOSER since 2026-08-26** — Weightlifting (first, biggest, carries the next-in-rotation name, leads to the full recorder at `#/start`) plus Run / Walk-or-hike / Swim / Cycle / Climb / Something else, each a quick activity log saving a real session (D27: recorded, never modelled). The lifting picker’s rows each show **`~N min`** — the median of that workout’s own recorded durations, sets × 3 min before any exist, rounded to 5. ⚠️ **The suggestion is LEAST-RECENTLY-DONE since 2026-08-26** (`js/next-workout.js`) — the old next-in-list rule read alphabetical order on self-built systems and told Tim to repeat Monday’s Pull; never-done counts as longest-waiting, rotation order survives as the tie-break, and the caption says what was read. Still a LOOKUP, never advice; silent when it would have to guess; skips sessions whose workout was deleted **and** activity sessions (no workoutId). **§1.2’s other half — suggesting weights and reps — still waits on the estimator** |
 | **Set types** | **Supersets, tri-sets, giant sets, drop sets and myo-reps** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise opens a sheet naming all three set types *and explaining what each one is* (D8 — "myo-reps" is jargon), with a mini-set count under whichever is picked; and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. A nested set's button IS the instruction — "Strip the weight — add a drop" or "Rest 10–15 seconds — add a mini-set" — not the name of a technique. **Drop sets and myo-reps are the same nesting shape**, differing only in what changes between mini-sets, and are stored under `minis` |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **272 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
@@ -3053,7 +3159,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so, and offers **Continue in this window instead** — but ⚠️ **only where that redirect can actually finish**, which this configuration is not, so here it names **email** instead. ✅ **Works on a real iPhone in the installed home-screen app** (2026-08-22), which is the path this file spent months calling the riskiest untested one; the popup is what runs there, and the belief that an installed iOS app blocks popups was simply wrong |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
-| Settings | Dark/light, **lbs/kg**, profile, account, export/restore backup, delete all |
+| Settings | Dark/light, **Colour** (Gold/Teal/Indigo/Ember since 2026-08-26), **lbs/kg**, More details, Goals link. ⚠️ **Profile, backup/restore and delete-all MOVED to the Account screen 2026-08-26** (Tim's ask); one pointer row remains |
+| Account | ⚠️ **The person, since 2026-08-26**: profile photo (client-resized to ~20 KB, `settings.avatar`, worn by the top-left button, NOT published to friends), profile row, backup/restore + cloud warning, delete-all, sign in/out — in every account state. **Back goes Home**, not Settings |
 
 **Stepper increments:** reps ±1 · weight **±5 lbs or ±2.5 kg** · time ±10 sec · distance ±0.1 mi.
 Press-and-hold repeats.
@@ -3527,6 +3634,10 @@ Workout     id, name, systemId, isBenchmark, order?,
                name — so a copied split keeps its shape and your own additions
                land at the end of it rather than in the middle.
 Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
+            location?,        ← typed label (0m), absent when none; never GPS
+            ── an ACTIVITY session (2026-08-26) is this same shape with NO
+               workoutId: one entry, one set of time/distance. That absence is
+               what keeps it out of the rotation suggestion and progression.
             entries[{ exerciseId, exerciseName, group?, setType?,
                       sets[{ weight, reps, time, distance, minis?[…] }] }]
             ── ⚠️ `minis` live INSIDE a set, never as extra rows in `sets`.
@@ -3707,6 +3818,12 @@ about tracking, and none of it applies to one cited number on a goal screen. The
 daily gram figure from body weight, cites Morton 2018, and labels it *"a bar, not a dial"* rather
 than *"grows with the goal"*, because the same meta-analysis found more protein above the breakpoint
 does nothing. Nothing anywhere asks what anybody ate.
+
+**D27 is LOCKED as of 2026-08-26**, by Tim's instruction to make the site fit running, climbing
+and swimming: *activities are RECORDED first-class — calendar, feed, backups, cloud ceiling —
+and MODELLED not at all: never the muscle map, the ratings, volume or progression.* It narrows
+**D2** the way D21 narrowed D15: D2's real content was that the analysis is lifting-evidence-
+based, and that stays fully true. `docs/activities-plan.md` §1.
 
 **D24 and D25 are proposals too, in `docs/social-plan.md`**, and are not in the table for the same
 reason — nothing is built, so nothing is decided. D24: *sharing publishes a derived copy and never

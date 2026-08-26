@@ -3,10 +3,10 @@
 import { store, demo, warmReadCache } from './store.js';
 import { el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas } from './ui.js';
 import {
-  HomeView, StartPickerView, WorkoutsView, SystemRouteView, WorkoutRouteView,
-  ExploreView, ExploreDetailView,
+  HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
+  WorkoutRouteView, ExploreView, ExploreDetailView,
 } from './views-workouts.js';
-import { SessionView, BenchmarkView } from './views-session.js';
+import { SessionView, BenchmarkView, ActivityLogView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
 import { AccountView, SignInView } from './views-account.js';
 import { ProfileView } from './views-profile.js';
@@ -52,7 +52,7 @@ const NAV = [
   // ⚠️ The hash is #/record and the view is the old start picker with the
   // benchmark action folded in. Both #/start and #/benchmark still resolve, so
   // nothing that linked to them — including a bookmarked deep link — breaks.
-  { hash: '#/record',   label: 'Record',   icon: 'plus',     match: ['record', 'start', 'benchmark', 'session'], primary: true },
+  { hash: '#/record',   label: 'Record',   icon: 'plus',     match: ['record', 'start', 'benchmark', 'session', 'activity'], primary: true },
   // Route stays #/graphs; only the label changed. Renaming the hash would
   // break nothing visible and churn the router for no user-facing gain.
   // ⚠️ CALENDAR LEFT DATA AND TOOK GOALS' SLOT — Tim, 2026-08-25: *"I want to
@@ -117,9 +117,13 @@ function navbar(active) {
 async function resolve(route) {
   switch (route.name) {
     case 'home':      return HomeView();
-    case 'record':    return StartPickerView({ tab: true });
-    // The old deep link, kept working: same screen, pushed rather than a tab.
+    // The Record tab is the CATEGORY CHOOSER since 2026-08-26 — weightlifting
+    // plus the activities. The full lifting recorder lives behind it at
+    // #/start, which is also the old deep link, still working.
+    case 'record':    return RecordChooserView();
     case 'start':     return StartPickerView({ tab: false });
+    // #/activity/<exercise name> prefills; bare #/activity opens the picker.
+    case 'activity':  return ActivityLogView(route.param);
     case 'workouts':  return WorkoutsView();
     // #/system/<id> reads it, #/system/<id>/edit and #/system/new are the form.
     case 'system':    return SystemRouteView(route.param);

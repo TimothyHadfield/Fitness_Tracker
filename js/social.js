@@ -317,6 +317,26 @@ export function projectSession(session, tier) {
     out.startedAt = new Date(startedMs).toISOString();
   }
 
+  // ── DURATION, IN MINUTES ROUNDED TO FIVE — Tim, 2026-08-26 ────────────────
+  //
+  // The old note here said finishedAt is deliberately not published because
+  // start plus finish hands over how long somebody was out of the house. Tim
+  // asked for the session length on the feed card, so the claim NARROWS
+  // rather than falls: what is published is minutes rounded to the nearest
+  // five, at MID and above where startedAt already is — so a reader learns
+  // "about 45 minutes", never the exact instant the gym was left. The
+  // rounding is the concession the old argument keeps. finishedAt itself is
+  // still never published, and the same sanity guards the estimate uses
+  // apply: a draft left open overnight publishes NO duration rather than a
+  // fourteen-hour one.
+  const finishedMs = instantMillis(session.finishedAt);
+  if (Number.isFinite(startedMs) && Number.isFinite(finishedMs)) {
+    const mins = (finishedMs - startedMs) / 60000;
+    if (mins >= 5 && mins <= 360) {
+      out.minutes = Math.max(5, Math.round(mins / 5) * 5);
+    }
+  }
+
   // ── LOCATION, AND WHY IT SITS BESIDE startedAt AND NOT AT LIGHT ────────────
   //
   // Open work 0m. Tim asked for Strava's "{date} at {time} · {place}" line.

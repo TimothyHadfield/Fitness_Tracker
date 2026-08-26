@@ -2798,10 +2798,46 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   {
     const s = call({ workouts: PPL, sessions: [sess('wPush', '2026-08-15', 'Push')] });
     ok(s && s.workout.id === 'wPull', 'after Push, the next workout is Pull');
-    ok(s.reason === 'rotation', 'and it says it read that off the rotation');
-    ok(s.daysSince === 2, 'it knows how long ago the last one was');
-    ok(s.lastName === 'Push', 'and what the last one was');
-    ok(/Push Pull Legs/.test(describeSuggestion(s)) && /Push/.test(describeSuggestion(s)),
+    ok(s.reason === 'stalest', 'and it says it chose the workout waited on longest (2026-08-26 rule)');
+  }
+
+  /* ---- ⚠️ TIM'S COUNTER-EXAMPLE, 2026-08-26 — the reason the rule changed ----
+   * Monday Pull, Tuesday Legs. The old next-in-list rule looked only at the
+   * newest session, and on a self-built system with no `order` the list is
+   * alphabetical — Legs, Pull, Push — so "after Legs" was Monday's Pull again.
+   * The least-recently-done rule answers Push, which is the answer a person
+   * gives instantly. */
+  {
+    const unordered = [
+      { id: 'wLegs', name: 'Legs', systemId: 'sA', exercises: [] },
+      { id: 'wPull', name: 'Pull', systemId: 'sA', exercises: [] },
+      { id: 'wPush', name: 'Push', systemId: 'sA', exercises: [] },
+    ];
+    const s = call({ workouts: unordered, sessions: [
+      sess('wLegs', '2026-08-16', 'Legs'),
+      sess('wPull', '2026-08-15', 'Pull'),
+      sess('wPush', '2026-08-10', 'Push'),
+    ] });
+    ok(s && s.workout.id === 'wPush',
+       '⚠️ Pull Monday, Legs Tuesday → Push — not Monday\'s Pull again (the bug Tim reported)');
+    ok(s.nextDaysSince === 7, `and it knows how long Push has waited (${s.nextDaysSince} days)`);
+
+    // Never-done beats everything — do the thing you have not done.
+    const s2 = call({ workouts: unordered, sessions: [
+      sess('wLegs', '2026-08-16', 'Legs'),
+      sess('wPull', '2026-08-15', 'Pull'),
+    ] });
+    ok(s2 && s2.workout.id === 'wPush' && s2.nextNeverDone === true,
+       'a workout never done at all is the stalest of all');
+
+    // Ties break by rotation order AFTER the last workout done, so a fresh
+    // copy of an ORDERED programme still walks the author\'s sequence.
+    const s3 = call({ workouts: PPL, sessions: [sess('wPush', '2026-08-15', 'Push')] });
+    ok(s3.workout.id === 'wPull',
+       'with Pull and Legs both never done, the author\'s order picks Pull — programme order survives as the tie-break');
+    ok(s3.daysSince === 2, 'it knows how long ago the last one was');
+    ok(s3.lastName === 'Push', 'and what the last one was');
+    ok(/Push Pull Legs/.test(describeSuggestion(s3)) && /Push/.test(describeSuggestion(s3)),
        'the caption names the system and the last workout');
     // The button carries the name, so the sentence under it must not repeat it.
     ok(!/\bPull\b/.test(describeSuggestion(s).replace('Push Pull Legs', '')),
@@ -3345,6 +3381,44 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'and clearing the cache re-reads from storage rather than returning nothing');
 
   localStorage.getItem = realGet;
+}
+
+/* ==================================================================
+ * WORKOUT DURATION — the estimate on Record and the minutes on feed cards
+ * (Tim, 2026-08-26). The timer he asked for already existed: startedAt and
+ * finishedAt are on every session. These pin the read side.
+ * ================================================================== */
+{
+  const { sessionMinutes, roundMinutes, estimateWorkoutMinutes } =
+    await import('../js/next-workout.js');
+
+  const s = (mins) => ({
+    workoutId: 'w1',
+    startedAt: '2026-08-20T10:00:00.000Z',
+    finishedAt: new Date(Date.parse('2026-08-20T10:00:00.000Z') + mins * 60000).toISOString(),
+  });
+
+  ok(sessionMinutes(s(47)) === 47, 'a session knows how long it took');
+  ok(sessionMinutes(s(2)) === null, 'under five minutes is not a workout — dropped');
+  ok(sessionMinutes(s(14 * 60)) === null, 'a draft left open overnight is dropped, not averaged in');
+  ok(sessionMinutes({ startedAt: 'x', finishedAt: 'y' }) === null, 'garbage stamps are dropped');
+  ok(sessionMinutes({}) === null, 'sessions from before finishedAt existed are dropped');
+
+  ok(roundMinutes(47) === 45 && roundMinutes(48) === 50, 'estimates round to the nearest 5 minutes');
+  ok(roundMinutes(2) === 5, 'and never below 5');
+
+  const w = { id: 'w1', exercises: [{ sets: 4 }, { sets: 3 }, { sets: 3 }] };
+  const none = estimateWorkoutMinutes(w, []);
+  ok(none && none.minutes === 30 && none.measured === false,
+     `no history falls back to sets × 3 min (${none && none.minutes})`);
+  const one = estimateWorkoutMinutes(w, [s(52)]);
+  ok(one && one.minutes === 50 && one.measured === true && one.count === 1,
+     'one recording replaces the guess with a measurement');
+  const many = estimateWorkoutMinutes(w, [s(40), s(45), s(240), s(46)]);
+  ok(many && many.minutes === 45,
+     `the MEDIAN, so one four-hour outlier cannot drag the estimate (${many && many.minutes})`);
+  ok(estimateWorkoutMinutes({ id: 'w2', exercises: [] }, []) === null,
+     'a workout with no sets estimates nothing rather than "5 min"');
 }
 
 /* ==================================================================

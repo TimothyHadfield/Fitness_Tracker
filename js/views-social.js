@@ -192,14 +192,26 @@ async function fillSocial(body, state) {
       + '"just that I trained" until you change it.' }));
   } else {
     for (const c of state.connections) {
+      const title = el('div', { class: 'row-title', text: c.name || 'Friend' });
       parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(c.uid)}` },
         el('div', { class: 'row-icon' }, icon('person')),
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: c.name || 'Friend' }),
+          title,
           el('div', { class: 'row-sub', text: `They can see: ${TIER_LABEL[c.tier] || TIER_LABEL[LIGHT]}` }),
         ),
         chevron(),
       ));
+      // ⚠️ A row still saying "Friend" is the accept-flow placeholder: their
+      // real name was not readable at accept time (they had not accepted back
+      // yet), and nothing ever went back to fix the stored row — so Tim's
+      // friend was "Friend" in every list and "Autumn Dossey" on her own
+      // page. Heal from the published profile, update in place, and the
+      // stored graph is right for every screen from then on.
+      if (!c.name || c.name === 'Friend') {
+        social.healConnectionName(c.uid)
+          .then((n) => { if (n && title.isConnected) title.textContent = n; })
+          .catch(() => {});
+      }
     }
   }
 
@@ -422,6 +434,12 @@ export async function FriendView(uid) {
   try { seen = await social.friend(uid); } catch (_) {}
 
   const name = (seen.doc && seen.doc.profile && seen.doc.profile.name) || conn.name || 'Friend';
+  // Opening their page is the other moment their real name is in hand while
+  // the graph may still hold the accept-flow placeholder — persist it, so the
+  // lists stop saying "Friend" even if this screen is the only one visited.
+  if (!conn.name || conn.name === 'Friend') {
+    social.healConnectionName(uid).catch(() => {});
+  }
   const body = el('div', { class: 'list' });
 
   const screen = screenShell({

@@ -1346,79 +1346,15 @@ export function cloudFullWarning(usage) {
 }
 
 export async function SettingsView() {
-  const [settings, accountState, profile, cloud] = await Promise.all([
-    store.getSettings(), auth.state(), store.getProfile(), store.cloudUsage(),
+  // ⚠️ SLIMMED 2026-08-26 on Tim's instruction: the profile row, the backup /
+  // restore card and Delete all data moved to the ACCOUNT screen (the profile
+  // icon), where the person lives. Settings is how the app looks and reads;
+  // the account is who you are and what you own. views-account.js
+  // `personalSections()` is where all of it went.
+  const [settings, accountState] = await Promise.all([
+    store.getSettings(), auth.state(),
   ]);
   const accountLine = describeAccount(accountState, auth.configured());
-  // Say what is missing rather than just "Profile" — this is what gates the
-  // Muscle Groups map, and a silent empty profile is why it would look broken.
-  const profileLine = profile.missing.length
-    ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
-    : `${profile.gender === 'female' ? 'Female' : 'Male'}`
-      + (profile.age ? `, ${profile.age}` : '')
-      + `, ${units.withUnit(profile.bodyWeight)}`;
-
-  async function doExport() {
-    const data = await store.exportAll();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = el('a', { href: url, download: `fitness-tracker-backup-${todayISO()}.json` });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('Backup downloaded');
-  }
-
-  const fileInput = el('input', {
-    type: 'file', accept: 'application/json', style: 'display:none',
-    onChange: async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      // ⚠️ READ AND CHECKED BEFORE ANYTHING IS ASKED, so the sheet can say what
-      // is actually in the file. A confirmation that cannot name what it is
-      // about to do is a speed bump, not a safeguard.
-      let data, summary;
-      try {
-        data = JSON.parse(await file.text());
-        summary = store.inspectBackup(data);
-      } catch (err) {
-        toast(err.message || 'That file could not be read');
-        e.target.value = '';
-        return;
-      }
-      e.target.value = '';
-
-      // ⚠️ RESTORING IS AS DESTRUCTIVE AS DELETING, and until 2026-08-24 it was
-      // the only one of the two with no confirmation — "Delete all data" two
-      // lines below it has had one all along. It replaces every collection,
-      // including ones the file does not carry, so everything currently in the
-      // account goes.
-      const parts = [];
-      if (summary.counts.sessions) parts.push(`${summary.counts.sessions} workout records`);
-      if (summary.counts.workouts) parts.push(`${summary.counts.workouts} workouts`);
-      if (summary.counts.benchmarks) parts.push(`${summary.counts.benchmarks} benchmarks`);
-      if (summary.counts.bodyWeight) parts.push(`${summary.counts.bodyWeight} weigh-ins`);
-      const what = parts.length ? parts.join(', ') : `${summary.total} records`;
-
-      confirmSheet({
-        title: 'Restore this backup?',
-        message: `It holds ${what}. Restoring REPLACES everything in this account — `
-          + 'anything you have logged since that backup was made will be gone. '
-          + 'This cannot be undone.',
-        confirmLabel: 'Replace everything',
-        onConfirm: async () => {
-          try {
-            await store.importAll(data);
-            toast('Backup restored');
-            location.hash = '#/home';
-          } catch (err) {
-            toast(err.message || 'That file could not be read');
-          }
-        },
-      });
-    },
-  });
 
   function setTheme(theme, e) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -1562,42 +1498,16 @@ export async function SettingsView() {
         ),
         el('span', { class: 'row-chev' }, chevron()),
       ),
-      el('a', { class: 'row', href: '#/profile' },
-        el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: 'Profile' }),
-          el('div', { class: 'row-sub', text: profileLine }),
-        ),
-        el('span', { class: 'row-chev' }, chevron()),
-      ),
+      // One pointer, not the details: profile, backup and delete moved to the
+      // Account screen (2026-08-26, Tim). The row survives so somebody who has
+      // always found them here is redirected rather than stranded.
       el('a', { class: 'row', href: '#/account' },
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: accountLine.title }),
-          el('div', { class: 'row-sub', text: accountLine.sub }),
+          el('div', { class: 'row-title', text: 'Account & profile' }),
+          el('div', { class: 'row-sub', text: 'Photo, your details, backups — now under the profile icon' }),
         ),
         el('span', { class: 'row-chev' }, chevron()),
       ),
-
-      el('div', { class: 'section-label', text: 'Your data' }),
-      el('div', { class: 'card' },
-        el('div', { class: 'field-help', text: accountLine.dataHelp }),
-        // Above the button it is asking for, not below it — the same placement
-        // argument `.save-error` makes.
-        cloudFullWarning(cloud),
-        el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
-        el('button', { class: 'btn ghost block', text: 'Restore from backup', onClick: () => fileInput.click() }),
-        fileInput,
-      ),
-
-      el('button', {
-        class: 'btn danger block',
-        text: 'Delete all data',
-        onClick: () => confirmSheet({
-          title: 'Delete everything?',
-          message: 'Every workout, record, benchmark and custom exercise will be permanently erased. Download a backup first if you are not sure.',
-          confirmLabel: 'Delete everything',
-          onConfirm: async () => { await store.clearAll(); toast('All data deleted'); location.hash = '#/home'; },
-        }),
-      }),
 
       el('div', { style: 'font-size:12.5px;color:var(--ink-faint);text-align:center;line-height:1.5' },
         'Fitness Tracker · ' + accountLine.sub.toLowerCase()),

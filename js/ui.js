@@ -252,7 +252,7 @@ export function profileButton() {
     title: 'Account',
   }, glyph);
 
-  const paint = (state, hasData) => {
+  const paint = (state, hasData, avatar) => {
     const user = state && state.user;
     const secured = Boolean(user && user.secured);
     btn.classList.toggle('secured', secured);
@@ -262,12 +262,19 @@ export function profileButton() {
     // warning stays (hasData defaults true), because unknown is not safe.
     btn.classList.toggle('at-risk', !secured && hasData);
 
+    // A chosen photo beats every fallback glyph — it IS the person, which is
+    // what an initial or a silhouette were standing in for. The aria labels
+    // below still carry the account state; only the picture changes.
+    const face = avatar && typeof avatar === 'string' && avatar.startsWith('data:image/')
+      ? el('img', { class: 'avatar-img', src: avatar, alt: '' })
+      : null;
+
     if (secured && user.email) {
-      glyph.replaceChildren(document.createTextNode(user.email.trim()[0].toUpperCase()));
+      glyph.replaceChildren(face || document.createTextNode(user.email.trim()[0].toUpperCase()));
       btn.setAttribute('aria-label', `Account — signed in as ${user.email}`);
       btn.setAttribute('title', user.email);
     } else if (secured) {
-      glyph.replaceChildren(icon('person'));
+      glyph.replaceChildren(face || icon('person'));
       btn.setAttribute('aria-label', 'Account — signed in');
       btn.setAttribute('title', 'Account');
     } else if (state && state.lastAccount && state.lastAccount.email) {
@@ -275,16 +282,16 @@ export function profileButton() {
       // stays — anything logged right now genuinely is not backed up yet — but
       // calling that "no account" would be false and is what makes an offline
       // session look like being signed out.
-      glyph.replaceChildren(document.createTextNode(state.lastAccount.email.trim()[0].toUpperCase()));
+      glyph.replaceChildren(face || document.createTextNode(state.lastAccount.email.trim()[0].toUpperCase()));
       btn.setAttribute('aria-label',
         `Account — signed in as ${state.lastAccount.email}, but offline right now`);
       btn.setAttribute('title', 'Offline — recent changes have not uploaded yet');
     } else if (hasData) {
-      glyph.replaceChildren(icon('person'));
+      glyph.replaceChildren(face || icon('person'));
       btn.setAttribute('aria-label', 'Account — your data is not backed up');
       btn.setAttribute('title', 'Your data is not backed up');
     } else {
-      glyph.replaceChildren(icon('person'));
+      glyph.replaceChildren(face || icon('person'));
       btn.setAttribute('aria-label', 'Account — not signed in');
       btn.setAttribute('title', 'Account');
     }
@@ -303,7 +310,12 @@ export function profileButton() {
           return Boolean(s.length || w.length || b.length || bw.length || g.length);
         } catch (_) { return true; }   // unknown is not safe — keep the warning
       };
-      const repaint = async () => paint(await auth.state(), await dataAtRisk());
+      const avatarOf = async () => {
+        try { return (await store.getSettings()).avatar || null; }
+        catch (_) { return null; }
+      };
+      const repaint = async () =>
+        paint(await auth.state(), await dataAtRisk(), await avatarOf());
       await repaint();
 
       // A new button is built on every navigation, so the subscription has to

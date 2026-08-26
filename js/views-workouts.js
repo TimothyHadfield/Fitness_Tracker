@@ -1,7 +1,7 @@
 // Home, workout list, workout builder, exercise picker.
 
 import { store, social, DEFAULT_SETS, todayISO } from './store.js';
-import { suggestNext, describeSuggestion } from './next-workout.js';
+import { suggestNext, describeSuggestion, estimateWorkoutMinutes } from './next-workout.js';
 import {
   DROP, MYO, isNested, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
   setTypeLabel, plannedMinis, clampMinis,
@@ -165,6 +165,11 @@ async function fillFeed(body) {
    * then the name the sender published with, then 'Someone': a
    * friend-of-a-friend's comment is real and should not render as broken. */
   const names = new Map(state.connections.map((c) => [c.uid, c.name]));
+  // A published profile name beats the stored graph name — the graph can hold
+  // the accept-flow "Friend" placeholder (see healConnectionName in store.js).
+  for (const s of seen) {
+    if (s && s.doc && s.doc.profile && s.doc.profile.name) names.set(s.conn.uid, s.doc.profile.name);
+  }
   names.set(state.uid, 'You');
   const uids = [...new Set(entries.map((e) => e.uid))];
   const reactionMaps = new Map();
@@ -261,7 +266,9 @@ function feedCard(e) {
   // Same here — and there is never a location yet, so the line is currently
   // always just the left half. Written this way so adding one is one term.
   const when = [relativeDay(a.date), fmtClock(a.startedAt)].filter(Boolean).join(' at ');
-  const meta = [when, a.location].filter(Boolean).join(' · ');
+  // Minutes ride between the time and the place — "Today at 6:32 PM · 45 min ·
+  // Ironworks Gym" — and drop out silently where a session has none.
+  const meta = [when, a.minutes ? `${a.minutes} min` : null, a.location].filter(Boolean).join(' · ');
 
   // What they did. `entries` only exists at "my workouts" and above — at the
   // lowest tier a friend shares that they trained and nothing else, and the
@@ -482,6 +489,65 @@ function fmtClock(iso) {
  * "Choose another workout" on Home has linked there for months and a hash
  * somebody bookmarked must not start 404ing because a tab bar was redesigned.
  */
+/**
+ * RECORD — the category chooser (Tim, 2026-08-26: *"when you open Record, it
+ * should show you maybe a few options to categorize different types of
+ * workouts, and one of them is weightlifting, which leads you to the current
+ * page"*). The app stops assuming every workout is a barbell: lifting keeps
+ * the full recorder, and running, swimming, cycling, climbing or anything
+ * else gets a quick log that saves a real session — calendar, feed and
+ * backups all see it. docs/activities-plan.md is the larger plan; lifting
+ * stays the analytical core (the muscle map and ratings read lifts only).
+ *
+ * Weightlifting is FIRST and BIGGEST, and carries the next-in-rotation name,
+ * because it is still the common case and the chooser must not slow the
+ * mid-gym loop it sits in front of by more than the one tap Tim priced in.
+ */
+export async function RecordChooserView() {
+  const [systems, workouts, sessions] = await Promise.all([
+    store.getSystems(), store.getWorkouts(), store.getSessions(),
+  ]);
+  const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
+
+  const activity = (label, exerciseName) =>
+    el('a', { class: 'row', href: exerciseName ? `#/activity/${encodeURIComponent(exerciseName)}` : '#/activity' },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: label }),
+      ),
+      el('span', { class: 'row-chev' }, chevron()),
+    );
+
+  return screenShell({
+    profile: true,
+    title: 'Record',
+    sub: 'What kind of training?',
+    scroll: [
+      el('button', {
+        class: 'btn primary lg block',
+        onClick: () => go('#/start'),
+      }, icon('play'), 'Weightlifting'),
+      el('div', { class: 'field-help', text: next
+        ? `Your workouts, sets and reps. Next in your rotation: ${next.workout.name}.`
+        : 'Your workouts, sets and reps — the full recorder.' }),
+
+      el('div', { class: 'section-label', text: 'Or log an activity' }),
+      el('div', { class: 'list' },
+        activity('Run', 'Running'),
+        activity('Walk or hike', 'Walking'),
+        activity('Swim', 'Swimming'),
+        activity('Cycle', 'Outdoor Cycling'),
+        activity('Climb', 'Rock Climbing'),
+        activity('Something else', null),
+      ),
+      el('div', { class: 'field-help', text:
+        'Activities go on your calendar and into your feed like any workout. '
+        + 'Muscle ratings still come from lifting only.' }),
+    ],
+    bottom: el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
+      icon('flag'), 'Record a benchmark'),
+  });
+}
+
 export async function StartPickerView({ tab = false } = {}) {
   const [systems, workouts, sessions] = await Promise.all([
     store.getSystems(), store.getWorkouts(), store.getSessions(),
@@ -526,13 +592,22 @@ export async function StartPickerView({ tab = false } = {}) {
   // is not — a triangle could as easily mean "expand" — and this is the screen
   // where being certain matters most, because the cost of being wrong is
   // starting a session you did not mean to start mid-gym.
-  const row = (w) => el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: w.name }),
-      el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
-    ),
-    el('span', { class: 'row-start' }, 'Start', icon('play', 12)),
-  );
+  // The time each workout takes (Tim, 2026-08-26): the median of ITS OWN
+  // recorded durations once any exist — startedAt/finishedAt have been on
+  // every session all along — and sets × 3 min before that. Rounded to 5,
+  // and "~" carries the honesty either way.
+  const row = (w) => {
+    const est = estimateWorkoutMinutes(w, sessions);
+    return el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: w.name }),
+        el('div', { class: 'row-sub', text:
+          `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
+          + (est ? ` · ~${est.minutes} min` : '') }),
+      ),
+      el('span', { class: 'row-start' }, 'Start', icon('play', 12)),
+    );
+  };
 
   // ⚠️ THE SYSTEM NAME IS ALWAYS SHOWN NOW, INCLUDING WHEN THERE IS ONLY ONE.
   // This reverses a call made on 2026-08-22 — "a sole heading is decoration" —
@@ -596,8 +671,9 @@ export async function StartPickerView({ tab = false } = {}) {
     profile: tab,
     title: 'Record',
     sub: 'Log a session, or a one-off best',
-    // A tab has no back button: there is nothing behind it to go back to.
-    back: tab ? null : () => go('#/home'),
+    // Since 2026-08-26 the Record TAB is the category chooser and this whole
+    // screen is the Weightlifting option behind it, so back goes there.
+    back: tab ? null : () => go('#/record'),
     scroll,
     bottom,
   });

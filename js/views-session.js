@@ -1503,6 +1503,133 @@ export async function SessionView(workoutId) {
 }
 
 /* ================================================================== *
+ * Quick activity log — a run, a swim, a climb (2026-08-26)
+ *
+ * The non-lifting half of Record's category chooser. It saves a REAL
+ * session — one entry, one set of time/distance — so the calendar, the feed,
+ * backups and the cloud ceiling all see it with machinery that already
+ * exists. Nothing here reaches the muscle map or the ratings: cardio-group
+ * exercises have always been unrankable, and that is the design, not a gap
+ * (docs/activities-plan.md).
+ * ================================================================== */
+
+export async function ActivityLogView(presetName) {
+  const exMap = await store.getExerciseMap();
+  const preset = presetName
+    ? [...exMap.values()].find((e) => e.name === decodeURIComponent(presetName))
+    : null;
+
+  const state = {
+    date: todayISO(),
+    exercise: preset || null,
+    values: {},
+  };
+  if (preset) for (const f of preset.fields) state.values[f] = 0;
+
+  const dateInput = el('input', {
+    class: 'input', type: 'date', value: state.date, max: todayISO(),
+    'aria-label': 'Day this activity happened',
+    onChange: (e) => { state.date = e.target.value || todayISO(); },
+  });
+
+  const exBtn = el('button', { class: 'row', onClick: pickExercise },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: preset ? preset.name : 'Choose an activity' }),
+      el('div', { class: 'row-sub', text: preset
+        ? 'Tap to log a different activity instead'
+        : 'Anything in the library, or create your own' }),
+    ),
+    el('span', { class: 'row-chev' }, icon('right')),
+  );
+
+  const stepWrap = el('div', { class: 'steppers' });
+  const saveBtn = el('button', {
+    class: 'btn primary block', text: 'Save activity',
+    disabled: !preset, onClick: save,
+  });
+
+  function renderSteppers() {
+    setChildren(stepWrap,
+      ...state.exercise.fields.map((f) =>
+        stepper({
+          field: f,
+          value: state.values[f] || 0,
+          onChange: (v) => { state.values[f] = v; },
+        }).node),
+    );
+  }
+  if (preset) renderSteppers();
+
+  function pickExercise() {
+    openExercisePicker({
+      exMap,
+      title: 'Choose activity',
+      onPick: (ex) => {
+        state.exercise = ex;
+        state.values = {};
+        for (const f of ex.fields) state.values[f] = 0;
+        exBtn.querySelector('.row-title').textContent = ex.name;
+        exBtn.querySelector('.row-sub').textContent = `${ex.muscle} · ${ex.equipment}`;
+        renderSteppers();
+        saveBtn.disabled = false;
+        document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
+        return true;
+      },
+    });
+  }
+
+  async function save() {
+    if (!state.exercise) { toast('Pick an activity first'); return; }
+    if (!Object.values(state.values).some((v) => Number(v) > 0)) {
+      toast('Enter a time or a distance');
+      return;
+    }
+    // ⚠️ startedAt is NOW, not a guess about when the run happened — the same
+    // contract the runner keeps when a session is back-dated: the date moved,
+    // the clock did not. A back-dated activity simply publishes no duration,
+    // because sessionMinutes() drops sub-5-minute stamps.
+    const now = new Date().toISOString();
+    try {
+      await store.saveSession({
+        workoutName: state.exercise.name,
+        date: state.date,
+        startedAt: now,
+        finishedAt: now,
+        isBenchmark: false,
+        entries: [{
+          exerciseId: state.exercise.id,
+          exerciseName: state.exercise.name,
+          sets: [{ ...state.values }],
+        }],
+      });
+    } catch (err) {
+      toast((err && err.message) || 'Could not save this activity.');
+      return;
+    }
+    toast('Activity saved');
+    go('#/day/' + state.date);
+  }
+
+  return screenShell({
+    title: preset ? preset.name : 'Log an activity',
+    sub: 'Counts as training — never rated',
+    back: () => go('#/record'),
+    top: [
+      el('div', { class: 'field' }, el('label', { text: 'Date' }), dateInput),
+      el('div', { class: 'field' }, el('label', { text: 'Activity' }), exBtn),
+    ],
+    scroll: [
+      stepWrap,
+      el('div', { class: 'field-help', text:
+        'Saved to your calendar and shared like any workout, under whatever each friend is '
+        + 'allowed to see. It never touches your muscle map or strength ratings — those read '
+        + 'lifting only.' }),
+    ],
+    bottom: saveBtn,
+  });
+}
+
+/* ================================================================== *
  * Benchmark
  * ================================================================== */
 

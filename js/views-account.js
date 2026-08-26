@@ -8,8 +8,10 @@
 // An anonymous account lives in one browser and nothing recovers it — clearing
 // site data destroys it permanently. That is stated plainly rather than buried.
 
-import { store, auth, probeOffline, demo } from './store.js';
-import { el, screenShell, toast, confirmSheet, emptyState, openSheet } from './ui.js';
+import { store, auth, probeOffline, demo, todayISO } from './store.js';
+import { el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron } from './ui.js';
+import { cloudFullWarning } from './views-data.js';
+import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -51,7 +53,7 @@ function demoCard() {
 function demoScreen() {
   return screenShell({
     title: 'Account',
-    back: () => go('#/settings'),
+    back: () => go('#/home'),
     scroll: [
       el('div', { class: 'card' },
         el('div', { class: 'section-label', text: 'You are in the demo account' }),
@@ -102,6 +104,195 @@ async function run(button, label, fn) {
   return true;
 }
 
+/* ------------------------------------------------------------------ *
+ * The person, not just the login — Tim, 2026-08-26: "when you click on the
+ * account button it should show all account and profile details, not just
+ * backup or whatever." The photo, the profile, and the data controls that
+ * used to live in Settings now travel with the account, whatever state the
+ * account is in.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The profile photo. Stored as a small data URL in settings (`avatar`):
+ * resized to 256px and JPEG-compressed CLIENT-SIDE before it is stored, so a
+ * 12 MB camera photo becomes ~20 KB — the settings document has a 1 MiB
+ * ceiling shared with everything else, and cloudUsage() charges every byte.
+ * Local-only for now: the avatar is NOT published into the social projection,
+ * so friends do not see it — publishing a face is a widening that gets its
+ * own decision, not a side effect of this feature.
+ */
+function avatarCard(settings, user) {
+  const hasPhoto = typeof settings.avatar === 'string' && settings.avatar.startsWith('data:image/');
+  const face = el('span', { class: 'avatar-face' },
+    hasPhoto ? el('img', { src: settings.avatar, alt: '' }) : icon('person', 30));
+
+  const fileInput = el('input', {
+    type: 'file', accept: 'image/*', style: 'display:none',
+    onChange: async (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      try {
+        const dataUrl = await shrinkImage(file, 256);
+        await store.saveSettings({ avatar: dataUrl });
+        toast('Photo saved');
+        refresh();
+      } catch (err) {
+        toast((err && err.message) || 'That image could not be read.');
+      }
+    },
+  });
+
+  const name = (user && user.email) || settings.displayName || '';
+  return el('div', { class: 'card avatar-card' },
+    face,
+    el('div', { class: 'avatar-main' },
+      name ? el('div', { class: 'row-title', text: name }) : null,
+      el('div', { class: 'avatar-actions' },
+        el('button', {
+          class: 'btn small', text: hasPhoto ? 'Change photo' : 'Add a photo',
+          onClick: () => fileInput.click(),
+        }),
+        hasPhoto ? el('button', {
+          class: 'btn small ghost', text: 'Remove',
+          onClick: async () => { await store.saveSettings({ avatar: '' }); toast('Photo removed'); refresh(); },
+        }) : null,
+      ),
+      el('div', { class: 'field-help', text:
+        'Shown on your account button. Only on this account — friends do not see it.' }),
+    ),
+    fileInput,
+  );
+}
+
+/** File → square-cropped, resized data URL. Throws a plain sentence. */
+function shrinkImage(file, size) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const side = Math.min(img.naturalWidth, img.naturalHeight);
+        if (!side) throw new Error('That image could not be read.');
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const cx = (img.naturalWidth - side) / 2;
+        const cy = (img.naturalHeight - side) / 2;
+        canvas.getContext('2d').drawImage(img, cx, cy, side, side, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      } catch (err) { reject(err); }
+      finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read.')); };
+    img.src = url;
+  });
+}
+
+/** Everything personal that used to live in Settings: profile, data, delete. */
+async function personalSections({ mode }) {
+  const [settings, profile, cloud] = await Promise.all([
+    store.getSettings(), store.getProfile(), store.cloudUsage(),
+  ]);
+
+  // Say what is missing rather than just "Profile" — this gates the muscle
+  // map, and a silent empty profile is why it would look broken.
+  const profileLine = profile.missing.length
+    ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
+    : `${profile.gender === 'female' ? 'Female' : 'Male'}`
+      + (profile.age ? `, ${profile.age}` : '')
+      + `, ${units.withUnit(profile.bodyWeight)}`;
+
+  async function doExport() {
+    const data = await store.exportAll();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = el('a', { href: url, download: `fitness-tracker-backup-${todayISO()}.json` });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Backup downloaded');
+  }
+
+  const fileInput = el('input', {
+    type: 'file', accept: 'application/json', style: 'display:none',
+    onChange: async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      // ⚠️ READ AND CHECKED BEFORE ANYTHING IS ASKED, so the sheet can say what
+      // is actually in the file. A confirmation that cannot name what it is
+      // about to do is a speed bump, not a safeguard.
+      let data, summary;
+      try {
+        data = JSON.parse(await file.text());
+        summary = store.inspectBackup(data);
+      } catch (err) {
+        toast(err.message || 'That file could not be read');
+        e.target.value = '';
+        return;
+      }
+      e.target.value = '';
+
+      const parts = [];
+      if (summary.counts.sessions) parts.push(`${summary.counts.sessions} workout records`);
+      if (summary.counts.workouts) parts.push(`${summary.counts.workouts} workouts`);
+      if (summary.counts.benchmarks) parts.push(`${summary.counts.benchmarks} benchmarks`);
+      if (summary.counts.bodyWeight) parts.push(`${summary.counts.bodyWeight} weigh-ins`);
+      const what = parts.length ? parts.join(', ') : `${summary.total} records`;
+
+      confirmSheet({
+        title: 'Restore this backup?',
+        message: `It holds ${what}. Restoring REPLACES everything in this account — `
+          + 'anything you have logged since that backup was made will be gone. '
+          + 'This cannot be undone.',
+        confirmLabel: 'Replace everything',
+        onConfirm: async () => {
+          try {
+            await store.importAll(data);
+            toast('Backup restored');
+            go('#/home');
+          } catch (err) {
+            toast(err.message || 'That file could not be read');
+          }
+        },
+      });
+    },
+  });
+
+  return [
+    el('div', { class: 'section-label', text: 'Profile' }),
+    el('a', { class: 'row', href: '#/profile' },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: 'Your details' }),
+        el('div', { class: 'row-sub', text: profileLine }),
+      ),
+      el('span', { class: 'row-chev' }, chevron()),
+    ),
+
+    el('div', { class: 'section-label', text: 'Your data' }),
+    el('div', { class: 'card' },
+      el('div', { class: 'field-help', text: mode === 'cloud-secured'
+        ? 'Your data syncs to your account and works offline. A downloaded backup is still the only copy you control directly.'
+        : 'Your data lives only in this browser. Clearing your browsing data will erase it permanently. Add an account, or download a backup.' }),
+      cloudFullWarning(cloud),
+      el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
+      el('button', { class: 'btn ghost block', text: 'Restore from backup', onClick: () => fileInput.click() }),
+      fileInput,
+    ),
+
+    el('button', {
+      class: 'btn danger block',
+      text: 'Delete all data',
+      onClick: () => confirmSheet({
+        title: 'Delete everything?',
+        message: 'Every workout, record, benchmark and custom exercise will be permanently erased. Download a backup first if you are not sure.',
+        confirmLabel: 'Delete everything',
+        onConfirm: async () => { await store.clearAll(); toast('All data deleted'); go('#/home'); },
+      }),
+    }),
+  ];
+}
+
 export async function AccountView() {
   // Before anything asks the account a question. In the demo there is no
   // account to ask about, and every control on the normal screen — upload,
@@ -109,26 +300,30 @@ export async function AccountView() {
   if (demo.active()) return demoScreen();
 
   const state = await auth.state();
+  const settings = await store.getSettings();
 
   if (!auth.configured()) {
     return screenShell({
       title: 'Account',
-      back: () => go('#/settings'),
+      back: () => go('#/home'),
       scroll: [
+        avatarCard(settings, null),
         emptyState(
           'Accounts are not switched on yet',
-          'This app stores everything in this browser. Cloud accounts need a Firebase project — see docs/firebase-setup.md. Until then, use Download backup in Settings to keep a copy.',
-          el('a', { class: 'btn primary', href: '#/settings', text: 'Back to settings' }),
+          'This app stores everything in this browser. Cloud accounts need a Firebase project — see docs/firebase-setup.md. Until then, Download backup below keeps a copy.',
         ),
+        ...await personalSections({ mode: 'local' }),
         demoCard(),
       ],
     });
   }
 
-  if (state.mode === 'local') return offlineScreen(state);
+  if (state.mode === 'local') return offlineScreen(state, await personalSections({ mode: 'local' }), settings);
 
   const user = state.user || {};
-  return user.isAnonymous ? anonymousScreen() : signedInScreen(user);
+  return user.isAnonymous
+    ? anonymousScreen(await personalSections({ mode: 'anonymous' }), settings)
+    : signedInScreen(user, await personalSections({ mode: 'cloud-secured' }), settings);
 }
 
 /* ------------------------------------------------------------------ *
@@ -141,7 +336,7 @@ export async function AccountView() {
  * the technical string is available but is not the headline.
  * ------------------------------------------------------------------ */
 
-function offlineScreen(state) {
+function offlineScreen(state, sections = [], settings = {}) {
   // Framed as a CONNECTION problem in both branches. The failure that lands
   // anyone here is an SDK that would not load, which is essentially always
   // connectivity — leading with "your account" sent Tim looking for a bug in
@@ -202,7 +397,7 @@ function offlineScreen(state) {
 
   return screenShell({
     title: 'Account',
-    back: () => go('#/settings'),
+    back: () => go('#/home'),
     scroll: [
       el('div', { class: 'card' },
         headingEl,
@@ -220,10 +415,9 @@ function offlineScreen(state) {
         status,
 
         el('div', { class: 'field-help' },
-          'Your workouts are safe either way. Settings → Download backup keeps a copy on this device.'),
+          'Your workouts are safe either way. Download backup below keeps a copy on this device.'),
 
         retryBtn,
-        el('a', { class: 'btn block', href: '#/settings', text: 'Back to settings' }),
 
         // Kept, because it is what makes a real fault diagnosable — just not as
         // the first thing a user reads. Always available, never expanded: the
@@ -235,6 +429,9 @@ function offlineScreen(state) {
               el('div', { class: 'field-help mono', text: state.error }))
           : null,
       ),
+
+      avatarCard(settings, state.lastAccount),
+      ...sections,
 
       // Offered here too, and this is the branch where it is most wanted: no
       // connection, nothing to sign into, and nothing to look at either.
@@ -383,7 +580,7 @@ function googleButton({ label, className, onDone }) {
  * Anonymous — the upgrade path
  * ------------------------------------------------------------------ */
 
-function anonymousScreen() {
+function anonymousScreen(sections = [], settings = {}) {
   const email = el('input', { class: 'input', type: 'email', autocomplete: 'email', placeholder: 'you@example.com' });
   const password = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: 'At least 6 characters' });
 
@@ -410,7 +607,7 @@ function anonymousScreen() {
 
   return screenShell({
     title: 'Account',
-    back: () => go('#/settings'),
+    back: () => go('#/home'),
     scroll: [
       el('div', { class: 'card' },
         el('div', { class: 'section-label', text: 'Your data is not backed up' }),
@@ -442,6 +639,9 @@ function anonymousScreen() {
         onClick: () => go('#/signin'),
       }),
 
+      avatarCard(settings, null),
+      ...sections,
+
       el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
       demoCard(),
     ],
@@ -452,7 +652,7 @@ function anonymousScreen() {
  * Signed in
  * ------------------------------------------------------------------ */
 
-async function signedInScreen(user) {
+async function signedInScreen(user, sections = [], settings = {}) {
   const local = await auth.localRowCounts();
   const localTotal = Object.values(local).reduce((n, v) => n + v, 0);
   // Only an email/password account has a password to change. A Google account
@@ -532,11 +732,11 @@ async function signedInScreen(user) {
 
   return screenShell({
     title: 'Account',
-    back: () => go('#/settings'),
+    back: () => go('#/home'),
     scroll: [
+      avatarCard(settings, user),
       el('div', { class: 'card' },
         el('div', { class: 'section-label', text: 'Signed in' }),
-        el('div', { class: 'row-title', text: user.email || 'Google account' }),
         el('div', { class: 'field-help' },
           'Your workouts sync to this account and are available on any device you sign in on. '
           + 'Logging still works with no signal — it uploads when you reconnect.'),
@@ -551,6 +751,8 @@ async function signedInScreen(user) {
             uploadBtn,
           )
         : null,
+
+      ...sections,
 
       demoCard(),
 
