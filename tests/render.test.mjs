@@ -175,13 +175,30 @@ ok(biceps && biceps.classList.contains('lv-none'), 'biceps stays grey with no be
 const core = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Core'));
 ok(core && core.classList.contains('lv-none'), 'core is grey — no published standards');
 
-// Legend present, so level is never colour-alone. Seven levels, No data, and
-// the note explaining the confidence fade — without that last one the fade is
-// an unexplained visual and reads as a rendering fault.
-ok(data.querySelectorAll('.lv-key-item').length === LEVELS.length + 2,
-   'legend lists every level, No data, and the faded-means-less-sure note');
+/* ⚠️ THE KEY IS CHIPS, AND THEY ARE NOT DECORATION.
+ *
+ * Rebuilt 2026-08-25 on Tim's reference image: one chip per level, the level's
+ * name inside it, shaded in its colour. The palette that came with it fails the
+ * dataviz validator's CVD adjacency check on green↔orange, and the validator's
+ * own rule is that such a failure is survivable ONLY with direct labels. These
+ * chips ARE those labels, so a change that shrinks them back toward unlabelled
+ * swatches takes the palette's justification away with it. That is why the name
+ * inside each chip is asserted rather than just the count.
+ */
+const chips = [...data.querySelectorAll('.lv-chip')];
+ok(chips.length === LEVELS.length, `the key is ${chips.length} chips, one per level`);
+ok(LEVELS.every((l) => chips.some((c) => c.textContent.includes(l.name))),
+   '⚠️ every level NAME is inside its own chip — the secondary encoding the palette depends on');
+ok(LEVELS.every((l) => chips.some((c) => c.classList.contains('lv-' + l.key))),
+   'and each chip carries its level class, so it is shaded in that level\'s colour');
+// "No data" and the fade are notes, not levels: making them chips would invent
+// two rankings nobody can reach.
+ok(data.querySelectorAll('.lv-key-item').length === 2,
+   'No data and the confidence fade stay notes rather than becoming levels');
 ok([...data.querySelectorAll('.lv-key-item')].some((n) => /less sure/i.test(n.textContent)),
    'and the fade is explained in words, not left as colour alone');
+ok(!/\d+%/.test(data.querySelector('.lv-key').textContent),
+   '⚠️ and the key carries NO percentages by default — the level is the answer, the percentile is the working');
 
 /* ================= tapping a muscle ================= */
 chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
@@ -238,8 +255,13 @@ ok(panelWords <= 40,
 const panelText = panel.textContent.replace(/\s+/g, ' ');
 ok(/Chest/.test(panelText), 'it names the muscle');
 ok(/Intermediate/.test(panelText), 'and the level it has reached');
-ok(/\d+ lbs\b/.test(panelText) && /stronger than \d+%/.test(panelText),
-   'the estimate and the percentile, which are the two numbers the screen exists for');
+ok(/\d+ lbs\b/.test(panelText), 'and the estimate, which is the number the screen exists for');
+/* ⚠️ NO PERCENTILE BY DEFAULT — Tim, 2026-08-25: "showing the percentile is a
+ * little harsh for some people." What must stay true is that hiding it hides a
+ * READOUT and not the reasoning: the level above is still computed from that
+ * same percentile, which is why `Intermediate` is asserted two lines up. */
+ok(!/stronger than/.test(panelText) && !/\b\d+%/.test(panelText),
+   '⚠️ but NOT the percentile — the ranking is the answer, and being ranked against people by number is the part that stings');
 ok(/confidence/i.test(panelText),
    '⚠️ and how much to believe it — shortened to a word, never dropped');
 ok(/from .+\d+×\d+/.test(panelText),
@@ -247,6 +269,45 @@ ok(/from .+\d+×\d+/.test(panelText),
 ok(Boolean(data.querySelector('.to-next-fill')), 'progress bar toward the next level renders');
 const selectedNow = data.querySelectorAll('.body-region.is-selected');
 ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length} regions)`);
+
+/* ⚠️ AND "MORE DETAILS" BRINGS IT BACK — otherwise this is not a setting, it is
+ * a deletion with a switch next to it. Both directions are asserted, because a
+ * one-way test passes just as well against a hard-coded `false`. */
+{
+  /* Two traps here, both worth naming because they cost a run each:
+   *   - the muscle pane is async inside a SYNC click handler, so it needs more
+   *     than one turn of the loop to land;
+   *   - `selected` in views-muscles.js is MODULE-level and survives a remount,
+   *     so Chest is still open from the block above and clicking it again would
+   *     toggle it shut. Open one only if nothing is open. */
+  const openMuscles = async () => {
+    const node = await mount(GraphView());
+    const seg = [...node.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
+    if (seg) seg.click();
+    for (let i = 0; i < 6; i++) await settle();
+    if (!node.querySelector('.muscle-detail')) {
+      const c = [...node.querySelectorAll('.body-region')]
+        .find((r) => (r.getAttribute('aria-label') || '').startsWith('Chest'));
+      if (c) c.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      for (let i = 0; i < 4; i++) await settle();
+    }
+    return node;
+  };
+
+  await store.saveSettings({ moreDetails: true });
+  const on = await openMuscles();
+  ok(Boolean(on.querySelector('.muscle-detail')), 'a muscle panel is open to read');
+  const onText = on.querySelector('.muscle-detail').textContent.replace(/\s+/g, ' ');
+  ok(/stronger than \d+%/.test(onText),
+     '⚠️ with More details on, the percentile is back on the muscle panel');
+  ok(/\d+%/.test(on.querySelector('.lv-key').textContent),
+     'and the key shows what each level is worth, which is the other half of the working');
+
+  await store.saveSettings({ moreDetails: false });
+  const off = await openMuscles();
+  ok(!/\d+%/.test(off.querySelector('.lv-key').textContent),
+     'and turning it off hides them again — the switch works in both directions');
+}
 
 /* ============ the side-panel layout hook ============ */
 // On a wide screen the detail sits BESIDE the figures rather than under them,

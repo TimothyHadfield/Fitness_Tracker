@@ -12,7 +12,7 @@ top, newest first; the nine below them are 2026-08-22. Read the top three points
 **Open work index**, and nothing else unless you need the why.
 
 ⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green:
-**2419 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
+**2428 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
 logged warm-ups should be excluded from the volume count, and his friend's failed sign-in.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
@@ -123,6 +123,119 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-25, later — ⚠️ TIM'S OWN COLOUR KEY, AND THE GREY THAT WAS TOO GREY
+
+Three things off his second gym session's follow-up. A fourth — the whole-app colour direction — he
+asked to see options for rather than have decided, and that is still open.
+
+### ⚠️ 1. THE LEVEL PALETTE IS HIS NOW, AND IT COSTS SOMETHING REAL
+
+He sent a screenshot of another app's key and asked for *"the exact same colors that this image uses
+in order, but add one more"*. Sampled off the image, they are **Material Design**:
+
+```
+  Beginner  red    #F44336      Advanced  blue   #2196F3
+  Novice    orange #FF9800      Expert    purple #9C27B0
+  Interm.   green  #4CAF50      Elite     pink   #FF4081
+  Proficient       #4DD0E1   ← the added one, Material Cyan 300
+```
+
+⚠️ **WHERE THE SEVENTH GOES WAS NOT A FREE CHOICE.** Five of his six level names are ours, so keeping
+each on its reference colour leaves exactly one hole — **Proficient, between green and blue** — and
+the hue sweep has exactly one gap, in the same place.
+
+⚠️ **WHICH CYAN WAS MEASURED, NOT PICKED.** Six candidates through the dataviz validator; the
+deciding number is the normal-vision adjacency floor:
+
+```
+  Cyan 500  #00BCD4   blue↔cyan  ΔE 12.6  FAIL   ← the family-perfect tone, and the one
+                                                    a full-colour reader cannot tell from Advanced
+  Teal 500  #009688   green↔teal ΔE 12.5  FAIL
+  Cyan 300  #4DD0E1   blue↔cyan  ΔE 17.6  PASS   ← chosen
+```
+
+⚠️ **WHAT IT COSTS, STATED RATHER THAN BURIED.** The ramp it replaces was built in OKLCH with
+**strictly monotone lightness**, which is what made it read as a scale rather than a rainbow.
+Material's tones do not, so **the ordinal lightness cue is gone** — Novice is now lighter than Elite.
+Measured on the seven: lightness band FAIL, CVD adjacency FAIL (green↔orange ΔE 3.6 protan),
+normal-vision floor PASS, purple 2.76:1 against the dark surface.
+
+⚠️ **THREE OF THOSE FOUR ARE INHERITED FROM HIS SIX, NOT CAUSED BY THE SEVENTH** — every rejected
+candidate above made something worse; this one makes nothing worse.
+
+⚠️ **AND THE MITIGATION IS THE OTHER THING HE ASKED FOR.** The validator's rule is that a CVD failure
+is survivable *"ONLY with secondary encoding: direct labels"*. The new key **is** those labels, which
+is why the render test asserts the level NAME inside each chip rather than just counting them.
+
+⚠️ **ONE THING THE REFERENCE IMAGE GETS WRONG AND THIS DOES NOT.** It puts white text on all six —
+2.16:1 on its orange, and 1.84:1 on the cyan had we copied it. The ink here is chosen per chip from
+the chip's own luminance: **worst of the seven is 4.95:1**, most far above.
+
+⚠️ **AND THE TWO THEMES NOW AGREE.** The old ramp ran its hues in *opposite* order in light mode, so
+Beginner was blue in dark and green in light — the same level, two colours, and a screenshot shared
+between two users could disagree with itself.
+
+### ⚠️ 2. THE KEY IS CHIPS — and the audit caught what that broke
+
+*"The key is too small and not clear enough… mini round boxes right below the picture of the human
+with the name of the ranking inside and the box shaded in the color that it is."* Built: seven chips,
+26 px tall, name inside, measured 46–98 px wide with no horizontal overflow at 390 px in both themes.
+It replaced a 10 px swatch, an 11 px grey name and a 10 px percentage, three to a line.
+
+⚠️ **A LEVEL COLOUR IS A FILL COLOUR, NOT A TEXT COLOUR, AND THE AUDIT IS WHAT ESTABLISHED THAT.**
+`.lv-text-*` painted the level word in the ramp colour, which the old per-theme ramp was built to
+support. Under the Material palette the audit measured **"Advanced" at 2.83:1** on Goals in the light
+theme — the only sub-4.5 node in **4,970 measured**. On a light ground the blue is 2.83, the cyan 1.6,
+the pink 3.0; on a dark ground the purple is 2.89. **There is no assignment of these seven to text
+that clears AA in both themes.** So the level word wears the colour as a *background* and picks its
+own ink, which also makes a level look identical everywhere it appears.
+
+### ⚠️ 3. "MORE DETAILS", OFF BY DEFAULT
+
+*"Showing the percentile is a little harsh for some people… the default is that it's turned off and
+just shows your ranking, and not any percentiles anywhere."* Built as a Settings toggle.
+
+⚠️ **IT HIDES A READOUT, NOT A CALCULATION, and the help text says so.** Every level still comes from
+the same percentile it always did. Percentiles surfaced in exactly two places, both on the muscle
+screen — the key and the panel's *"stronger than 71 %"* — and both are now behind it.
+
+⚠️ **D15 IS NOT WEAKENED.** Its rule is that the app must never imply the comparison is against
+everyone, and that is carried by the `.pane-top` header, which is fixed and on screen whenever the
+panel is. Removing a number does not remove the sentence that qualifies it.
+
+**Both directions are asserted**, because a one-way test passes just as well against a hard-coded
+`false`.
+
+### ⚠️ 4. THE GREY WAS PASSING AA AND STILL TOO GREY
+
+*"The pure white text is fine to read, the grey text is really challenging to spot and read."* He is
+right, and the numbers say why it was not caught: **the two most common type sizes in the whole
+stylesheet are 12.5 px and 11.5 px**, and **71 rules paint `--ink-faint`** — the app's default body
+text was two steps below its headings with almost nothing in between.
+
+```
+                  dark            light
+  faint   5.44  ->  8.52    5.24  ->  8.53
+  soft    7.15  -> 11.33    7.20  -> 11.32
+```
+
+⚠️ **THIS IS THE FIRST CHANGE TO THESE TOKENS NOT MADE TO REACH AA.** The 2026-08-20 raise was a
+failure being fixed; this one is a pass that was not enough. **The worst cell in the table is now
+7.12, above what the *best* faint cell managed before.** `.field-help` — the caveats and citations
+this whole app rests on — went 12.5 → 13.5 px.
+
+⚠️ **`tests/a11y.test.mjs` REJECTED THE FIRST ATTEMPT** at these values for letting the two themes
+drift 1.9 apart; they are now within 0.01 at each step. **Re-audited: 52 combinations, 4,970 text
+nodes, zero below 4.5:1, zero horizontal overflow, median ratio 9.19.**
+
+### Still open — the colour direction he asked to see options for
+
+*"The entire cite is just really colorless. Besides a few buttons that are massive and orange (which
+is just too much sometimes), everything is black and white. Maybe brainstorm a few options."* The
+legibility half is done; **the palette direction is a taste call and is his to make.** Open work 0k.
 
 ---
 
@@ -1773,7 +1886,8 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. §16 sets the hard constraint |
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
-| **10** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
+| **10** | **0k — the colour direction** | ⚠️ **OPEN, and Tim asked for OPTIONS rather than a decision.** *"The entire cite is just really colorless… a few buttons that are massive and orange (which is just too much sometimes)."* The legibility half shipped 2026-08-25; the palette direction is his call |
+| **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
 
 **Closed 2026-08-24 and kept below for the reasoning:** 0a (both blockers), 0d (exercise swap),
 0g (within-session fatigue), 0b(d) (restore from backup).
@@ -2160,7 +2274,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2419 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2428 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1193 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -2172,7 +2286,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **52** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 406 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 415 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |

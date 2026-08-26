@@ -25,7 +25,13 @@ const go = (hash) => { location.hash = hash; };
 let selected = null;
 
 export async function muscleGroupsPane(host, top) {
-  const { profile, muscles, blocked, ready } = await muscleStrength();
+  const [{ profile, muscles, blocked, ready }, settings] = await Promise.all([
+    muscleStrength(), store.getSettings(),
+  ]);
+  // ⚠️ OFF BY DEFAULT — Tim, 2026-08-25: *"showing the percentile is a little
+  // harsh for some people."* The level is the answer; the percentile is the
+  // working behind it, and the working is what stings. See SettingsView.
+  const more = settings.moreDetails === true;
   // Changing the comparison group changes the percentile, the level, the
   // targets and the colours, so the whole pane is rebuilt rather than repainted.
   const reload = () => muscleGroupsPane(host, top);
@@ -106,10 +112,10 @@ export async function muscleGroupsPane(host, top) {
 
   function renderPanel() {
     setChildren(foot,
-      legend(),
+      legend(more),
       selected
         ? detail(muscles.get(selected), selected, profile,
-                 blocked ? blocked.get(selected) : null)
+                 blocked ? blocked.get(selected) : null, more)
         : summary(muscles),
     );
   }
@@ -126,23 +132,46 @@ export async function muscleGroupsPane(host, top) {
  * Legend — always on screen, so level is never colour-alone
  * ------------------------------------------------------------------ */
 
-function legend() {
-  return el('div', { class: 'lv-key' },
-    ...LEVELS.map((l) =>
-      el('span', { class: 'lv-key-item' },
-        el('i', { class: 'lv-sw lv-' + l.key }),
-        el('span', { class: 'lv-name', text: l.name }),
-        el('span', { class: 'lv-pct', text: `${l.percentile}%` }),
-      )),
-    el('span', { class: 'lv-key-item' },
-      el('i', { class: 'lv-sw lv-none' }),
-      el('span', { class: 'lv-name', text: 'No data' }),
+/**
+ * The key: one chip per level, the level's name inside it, shaded in its colour.
+ *
+ * ⚠️ Tim, 2026-08-25, after using it in a gym: *"the key is too small and not
+ * clear enough… mini round boxes right below the picture of the human with the
+ * name of the ranking inside and the box shaded in the color that it is."* It
+ * was a 10px swatch, an 11px grey name and a 10px percentage, three to a line.
+ *
+ * ⚠️ AND THE CHIPS ARE LOAD-BEARING, NOT DECORATIVE. The palette they draw from
+ * (2026-08-25, his reference image) fails the CVD adjacency check on
+ * green↔orange, and the validator's own rule is that such a failure is
+ * survivable only with direct labels. These are the direct labels. Anything
+ * that shrinks them back toward swatches takes that argument away with it.
+ *
+ * ⚠️ NO PERCENTAGES UNLESS "MORE DETAILS" IS ON. His words: *"showing the
+ * percentile is a little harsh for some people."* The level is the answer; the
+ * percentile behind it is the working.
+ */
+function legend(moreDetails) {
+  return el('div', { class: 'lv-key-wrap' },
+    el('div', { class: 'lv-key' },
+      ...LEVELS.map((l) =>
+        el('span', { class: 'lv-chip lv-' + l.key },
+          l.name,
+          moreDetails ? el('span', { class: 'lv-pct', text: `${l.percentile}%` }) : null,
+        )),
     ),
-    // Without this the fade is an unexplained visual, and an unexplained
-    // visual reads as a rendering bug rather than as information.
-    el('span', { class: 'lv-key-item lv-key-note' },
-      el('i', { class: 'lv-sw lv-faded' }),
-      el('span', { class: 'lv-name', text: 'Faded = less sure' }),
+    // "No data" and the fade are not levels, so they stay notes rather than
+    // becoming two more chips somebody could try to rank themselves against.
+    el('div', { class: 'lv-notes' },
+      el('span', { class: 'lv-key-item' },
+        el('i', { class: 'lv-sw lv-none' }),
+        el('span', { class: 'lv-name', text: 'No data' }),
+      ),
+      // Without this the fade is an unexplained visual, and an unexplained
+      // visual reads as a rendering bug rather than as information.
+      el('span', { class: 'lv-key-item lv-key-note' },
+        el('i', { class: 'lv-sw lv-faded' }),
+        el('span', { class: 'lv-name', text: 'Faded = less sure' }),
+      ),
     ),
   );
 }
@@ -338,7 +367,7 @@ function blockedNote(blocked) {
     `${sets} set${sets === 1 ? '' : 's'} of ${listed} not counted — ${blocked.exercises[0].reason}.` });
 }
 
-function detail(m, muscle, profile, blocked) {
+function detail(m, muscle, profile, blocked, moreDetails) {
   if (!m) {
     const lift = keyLiftFor(muscle);
     const note = blockedNote(blocked);
@@ -394,9 +423,22 @@ function detail(m, muscle, profile, blocked) {
 
     // The two things somebody taps a muscle to find out, on one line and big
     // enough to read at arm's length.
+    //
+    // ⚠️ "stronger than 71 %" IS BEHIND "More details" SINCE 2026-08-25, and it
+    // is the reason the setting exists — Tim: *"showing the percentile is a
+    // little harsh for some people."* The level name is still right above this
+    // line in `.muscle-head`, so nothing is hidden about WHERE somebody stands;
+    // what goes is the ranking of them against other people, stated as a number.
+    //
+    // ⚠️ D15 IS NOT WEAKENED BY THIS. Its rule is that the app must never imply
+    // the comparison is against everyone — carried by the `.pane-top` header,
+    // which is fixed and therefore on screen whenever this panel is. Removing a
+    // number does not remove the sentence that qualifies it.
     el('div', { class: 'muscle-stat' },
       el('span', { class: 'muscle-est mono', text: units.withUnit(Math.round(m.estimate)) }),
-      el('span', { class: 'muscle-pct', text: `stronger than ${pct}%` }),
+      moreDetails
+        ? el('span', { class: 'muscle-pct', text: `stronger than ${pct}%` })
+        : null,
     ),
 
     // The near goal, and the only target worth a row of its own.

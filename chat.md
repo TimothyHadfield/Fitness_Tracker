@@ -5008,3 +5008,45 @@ exercise now makes the pane scroll where it just fit; the footer is pinned and a
 screen.
 
 2419 green, three mutation checks, pushed.
+
+---
+
+## 2026-08-25, later — his colour key, and the grey that was too grey
+
+**The level palette is Tim's now.** He sent a screenshot of another app's key and asked for the exact
+same colours in order plus one more. Sampled off the image they are Material Design 500s. Five of his
+six level names are ours, so keeping each on its reference colour left exactly one hole — Proficient,
+between green and blue — and the hue sweep has its only gap in the same place. Cyan.
+
+Which cyan was measured rather than picked: Cyan 500 is the family-perfect tone and is the one a
+full-colour reader cannot tell from Advanced (ΔE 12.6, FAIL). Cyan 300 #4DD0E1 passes at 17.6.
+
+Told him what it costs rather than burying it: the ramp it replaces had strictly monotone lightness,
+which is what made it read as a scale, and Material's tones do not — so the ordinal lightness cue is
+gone, and the palette fails the CVD adjacency check on green↔orange. Three of the four failures are
+inherited from his six; the added cyan makes nothing worse, which is why every other candidate was
+rejected. The mitigation is the thing he asked for in the same message: the key's chips ARE the
+"direct labels" the validator demands as the price of that failure.
+
+One thing his reference gets wrong and this does not: it puts white text on all six chips, 2.16:1 on
+its orange. Ink here is chosen per chip from the chip's own luminance — worst of seven is 4.95:1.
+
+**The audit earned its keep again.** Converting to one palette across both themes broke `.lv-text-*`,
+which painted the level word in the ramp colour: "Advanced" measured 2.83:1 on Goals in the light
+theme, the only sub-4.5 node in 4,970. There is no assignment of these seven to text that clears AA
+in both themes — they are fills. So the level word became a chip too, which also means a level looks
+identical everywhere it appears.
+
+**"More details", off by default.** Percentiles surfaced in exactly two places, both on the muscle
+screen, and both are behind it now. It hides a readout, not a calculation, and the help text says so.
+
+**The grey was passing AA and still too grey.** The numbers say why nobody caught it: the two most
+common type sizes in the stylesheet are 12.5px and 11.5px, and 71 rules paint --ink-faint. Faint went
+5.44 -> 8.52 dark and 5.24 -> 8.53 light; the worst cell in the table is now above what the best
+faint cell managed before. The a11y test rejected the first attempt for letting the themes drift 1.9
+apart. Re-audited: 52 combinations, zero below 4.5:1, zero overflow, median 9.19.
+
+The colour DIRECTION — his "everything is black and white" point — is left open as Open work 0k,
+because he asked for options rather than a decision.
+
+2428 green, pushed.

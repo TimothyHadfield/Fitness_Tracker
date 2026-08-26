@@ -1374,6 +1374,15 @@ export async function SettingsView() {
     e.target.setAttribute('aria-pressed', 'true');
   }
 
+  // Changing this shows or hides a readout. It touches no stored number and no
+  // rating: the levels are computed from percentiles either way.
+  function setMoreDetails(on, e) {
+    store.saveSettings({ moreDetails: on });
+    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    e.target.setAttribute('aria-pressed', 'true');
+    toast(on ? 'Showing percentiles' : 'Showing rankings only');
+  }
+
   // Changing units re-labels the app; it does NOT touch a single stored number.
   // Everything is kept in pounds, so switching back and forth is lossless.
   function setUnits(u, e) {
@@ -1412,6 +1421,42 @@ export async function SettingsView() {
         el('div', { class: 'field-help', text:
           'Display only. Weights are stored the same way either way, so switching '
           + 'back and forth never changes anything you have recorded.' }),
+      ),
+
+      /* ⚠️ MORE DETAILS — OFF BY DEFAULT, and the default is the point.
+       *
+       * Tim, 2026-08-25: *"showing the percentile is a little harsh for some
+       * people, so I think there should be a setting called 'more details' …
+       * but the default is that it's turned off and just shows your ranking
+       * (beginner, intermediate, etc.) and not any percentiles anywhere (even
+       * though the rankings are still based on the percentiles and stuff)."*
+       *
+       * ⚠️ IT HIDES A READOUT, NOT A CALCULATION, and the help text says so.
+       * Every level still comes from the same percentile it always did; this
+       * decides whether the raw number is put in front of you. Hiding a number
+       * that is still driving the answer would be dishonest if the app pretended
+       * otherwise — so it does not.
+       *
+       * ⚠️ AND IT IS DELIBERATELY NOT A "SIMPLE MODE". It has one job today.
+       * Rolling other things under it later is Tim's stated plan; naming it for
+       * a scope it does not have yet would be a promise the switch cannot keep.
+       */
+      el('div', { class: 'field' },
+        el('label', { text: 'More details' }),
+        el('div', { class: 'chips' },
+          el('button', {
+            class: 'chip', 'aria-pressed': String(settings.moreDetails !== true),
+            text: 'Off', onClick: (e) => setMoreDetails(false, e),
+          }),
+          el('button', {
+            class: 'chip', 'aria-pressed': String(settings.moreDetails === true),
+            text: 'On', onClick: (e) => setMoreDetails(true, e),
+          }),
+        ),
+        el('div', { class: 'field-help', text:
+          'Off shows your ranking — Beginner, Intermediate, Elite — and nothing else. '
+          + 'On also shows the percentile behind it. The rankings are worked out the same '
+          + 'way either way; this only decides how much of the working you see.' }),
       ),
 
       el('div', { class: 'section-label', text: 'You' }),

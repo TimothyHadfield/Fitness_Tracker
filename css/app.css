@@ -18,13 +18,13 @@
   --raised:      #1E2427;
   --raised-hi:   #282F33;
   --ink:         #ECEFEE;
-  --ink-soft:    #98A1A6;
+  --ink-soft:    #C3CACE;
   /* ⚠️ CHANGED 2026-08-20 (was #6B7479) — the first accessibility audit this
      project has ever had measured it at 3.94:1 on --ground and 3.29:1 on
      --raised, against the 4.5:1 WCAG AA needs for text under 18.66px. EVERY use
      of this token is under 18.66px. See the note on the light values below;
      the three-step scale and its measured ratios are documented there. */
-  --ink-faint:   #848B8F;
+  --ink-faint:   #A7B0B5;
   --rule:        #242A2E;
   --rule-soft:   #1C2225;
 
@@ -83,9 +83,21 @@
      .cal-day sit — and verified by re-running the audit, not by eye.
 
        ground / surface / raised / rule-soft   dark                    light
-       ink                                     16.25 15.14 13.58 14.72  15.84 17.49 14.30 13.78
-       soft                                     7.15  6.66  5.97  6.47   7.20  7.95  6.50  6.27
-       faint                                    5.44  5.06  4.54  4.92   5.24  5.79  4.73  4.56
+       ink                                     16.25 15.14 13.58 13.91  15.84 17.49 14.30 13.78
+       soft                                    11.33 10.56  9.47  9.70  11.32 12.50 10.22  9.85
+       faint                                    8.52  7.94  7.12  7.30   8.53  9.41  7.70  7.42
+
+     ⚠️ RAISED AGAIN 2026-08-25, and this time not to reach AA — it was already
+     past it — but because passing AA is not the same as being READABLE. Tim,
+     after a gym session: "the pure white text is fine to read, the grey text is
+     really challenging to spot and read". Faint went 5.44 -> 8.52 dark and
+     5.24 -> 8.53 light; soft went 7.15 -> 11.33 and 7.20 -> 11.32. The worst
+     cell in the whole table is now 7.12, above what the BEST faint cell managed
+     before. (was: dark soft #98A1A6 faint #848B8F, light soft #4B5256 faint
+     #62666A.)
+     ⚠️ The three steps stay strictly ordered and the two themes stay within
+     0.01 of each other at each step — tests/a11y.test.mjs enforces both, and it
+     rejected the first attempt at these values for drifting 1.9 apart.
 
      ⚠️ --rule-soft is in that table because tests/a11y.test.mjs put it there and
      the browser could not have. It is the darkest light surface and the lightest
@@ -98,8 +110,8 @@
      Three visibly separated steps, every one above AA, and the two themes now
      sit within 0.4 of each other at each step rather than 0.9 apart.
      (was: --ink-soft #5C6469, --ink-faint #868D92) */
-  --ink-soft:    #4B5256;
-  --ink-faint:   #62666A;
+  --ink-soft:    #333433;
+  --ink-faint:   #45464B;
   --rule:        #D6D9D3;
   --rule-soft:   #E3E5E0;
 
@@ -484,7 +496,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .row:active { background: var(--raised); }
 .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .row-title { font-weight: 600; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row-sub { font-size: 12.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { font-size: 13px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* The default row subtitle is one clipped line, which is right for a name but
    wrong for a sentence. `.wrap` is the sentence version. */
 .row-sub.wrap { white-space: normal; overflow: visible; line-height: 1.4; }
@@ -602,7 +614,13 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 12px; font-weight: 650; color: var(--ink-faint); letter-spacing: 0.03em; text-transform: uppercase; }
-.field-help { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }
+/* ⚠️ 13.5px, RAISED FROM 12.5 ON 2026-08-25. This class is the app's prose —
+   the caveats, the citations, the explanations — and 12.5px was the single most
+   common size in this stylesheet, with 11.5 second. Tim, from the gym: "the
+   grey text is really challenging to spot and read". It was not only the
+   colour; the app's DEFAULT body text was two steps below its headings and
+   there was almost nothing in between. */
+.field-help { font-size: 13.5px; color: var(--ink-faint); line-height: 1.45; }
 
 /* Inline text link, for when a sentence needs to point somewhere and a button
    would shout. Underlined on the words only — the accent alone is not enough
@@ -1954,61 +1972,85 @@ a.seg {
 /* ==========================================================================
    Muscle Groups — the body map
    ==========================================================================
-   The level ramp is ORDINAL and MULTI-HUE: seven steps sweeping ~250° of hue
-   (blue → violet → magenta → red → orange → gold → green) with STRICTLY
-   MONOTONE lightness. Tim asked for a wide range of bright colour; monotone
-   lightness is what keeps it a scale rather than a rainbow, and it is the same
-   construction viridis and plasma use.
+   ⚠️ REPLACED 2026-08-25 ON TIM'S INSTRUCTION, and the trade-off is real and
+   deliberate. He sent a screenshot of another app's key and asked for *"the
+   exact same colors that this image uses in order, but add one more"*. Sampled
+   off that image, they are the MATERIAL DESIGN palette:
 
-   Generated in OKLCH at the sRGB gamut edge (chroma capped 0.19–0.20) and
-   validated with the dataviz skill's validator:
-     - monotone lightness ....... PASS both modes
-     - adjacent ΔL >= 0.06 ...... PASS both modes
-     - light end clears surface . PASS both modes (2.46:1 dark, 2.11:1 light)
-     - single hue ............... FAILS BY DESIGN — this is the deliberate part
-   Because hue is being spent, the ramp was additionally stress-tested against
-   the CATEGORICAL all-pairs checks, which the previous one-hue ramp was never
-   held to. Worst pair of any two levels:
-                          normal vision      protan/deutan
-     one-hue ramp (old)   ΔE  8.0 / 6.9      ΔE 7.5 / 6.7
-     this ramp (new)      ΔE 13.8 / 11.4     ΔE 6.9 / 6.0
-   So it is markedly easier to read for full colour vision and level with the
-   old ramp under colour blindness. Both sit in the CVD floor band, which is
-   legal only with secondary encoding — this screen always shows the legend and
-   names the level in text on tap, so the requirement is met.
-   Do not hand-edit these values; regenerate and re-validate. */
+     Beginner  red    #F44336     Advanced  blue   #2196F3
+     Novice    orange #FF9800     Expert    purple #9C27B0
+     Interm.   green  #4CAF50     Elite     pink   #FF4081
+     Proficient       #4DD0E1  ← the added one
 
-/* Matches this sheet's convention: bare :root is DARK, [data-theme="light"]
-   overrides. Getting this backwards would ship the light ramp into dark mode
-   the moment the explicit data-theme attribute stopped being set. */
+   ⚠️ WHERE THE SEVENTH GOES WAS NOT A FREE CHOICE. Five of his six level names
+   are ours (Beginner, Novice, Intermediate, Advanced, Elite), so keeping each
+   on its reference colour leaves exactly one hole — Proficient, between green
+   and blue — and the hue sweep has exactly one gap, in the same place. Cyan.
+
+   ⚠️ WHICH CYAN WAS MEASURED, NOT PICKED. Six candidates through the dataviz
+   validator; the number that decides it is the normal-vision adjacency floor:
+
+     Cyan 500  #00BCD4   blue↔cyan ΔE 12.6  FAIL — the family-perfect tone, and
+                                             the one a full-colour reader cannot
+                                             tell from Advanced
+     Cyan 400  #26C6DA   blue↔cyan ΔE 14.9  FAIL
+     Teal 500  #009688   green↔teal ΔE 12.5 FAIL
+     Cyan 300  #4DD0E1   blue↔cyan ΔE 17.6  PASS  ← chosen
+     Cyan A400 #00E5FF               PASS, but electric enough to break the family
+
+   ⚠️ WHAT THIS PALETTE COSTS, STATED PLAINLY. The ramp it replaces was built in
+   OKLCH with STRICTLY MONOTONE LIGHTNESS, which is what made it read as a scale
+   rather than a rainbow. Material's tones do not do that, so **the ordinal
+   lightness cue is gone** — Novice (L .77) is now lighter than Elite (L .67).
+   Measured on the seven, dark surface:
+
+     lightness band .......... FAIL  orange, green, cyan and pink outside it
+     chroma floor ............ PASS
+     CVD adjacency ........... FAIL  green↔orange ΔE 3.6 protan
+     normal-vision floor ..... PASS  worst adjacent 17.8 (orange↔red)
+     contrast vs surface ..... WARN  purple 2.76:1
+
+   ⚠️ THREE OF THOSE FOUR ARE INHERITED FROM HIS SIX, NOT CAUSED BY THE SEVENTH.
+   The added cyan makes nothing worse; every rejected candidate above did.
+
+   ⚠️ AND THE MITIGATION IS THE THING HE ASKED FOR IN THE SAME BREATH. The
+   validator's own note says a CVD failure is survivable "ONLY with secondary
+   encoding: direct labels, gaps, or texture". The new key is exactly that —
+   every colour carries its LEVEL NAME inside its own chip, and tapping a muscle
+   states the level in words. Level is never colour-alone, so green↔orange being
+   hard to separate costs a reader nothing they cannot read directly.
+
+   ⚠️ ONE THING THE REFERENCE IMAGE GETS WRONG AND THIS DOES NOT: it puts white
+   text on every chip, which is 2.16:1 on orange and would be 1.84:1 on cyan.
+   The ink here is chosen per chip from the chip's own luminance — see .lv-chip
+   — so the worst of the seven is 4.95:1 and most are far above.
+
+   ⚠️ AND THE TWO THEMES NOW AGREE. The old ramp ran its hues in OPPOSITE order
+   in light mode, so Beginner was blue in the dark theme and green in the light
+   one — the same level, two colours, and a screenshot shared between two users
+   could disagree with itself. One set of seven, both themes. */
+
+/* One palette, both themes. See the note above for why that is a change. */
 :root {
-  --lv-beginner:     #005190;
-  --lv-novice:       #6D47C8;
-  --lv-intermediate: #C344A1;
-  --lv-proficient:   #F55A64;
-  --lv-advanced:     #FF8F1E;
-  --lv-expert:       #E5C600;
-  --lv-elite:        #9BFB78;
-  /* Below the 5th percentile — an 8th step continuing the ramp past its dim
-     end, so it still reads as "lowest" rather than as a separate category. */
-  --lv-below:        #003968;
+  --lv-beginner:     #F44336;   /* Material Red 500    */
+  --lv-novice:       #FF9800;   /* Material Orange 500 */
+  --lv-intermediate: #4CAF50;   /* Material Green 500  */
+  --lv-proficient:   #4DD0E1;   /* Material Cyan 300   — the added step */
+  --lv-advanced:     #2196F3;   /* Material Blue 500   */
+  --lv-expert:       #9C27B0;   /* Material Purple 500 */
+  --lv-elite:        #FF4081;   /* Material Pink A200  */
+  /* Below the 5th percentile. A DARKER red rather than an eighth hue: it is not
+     a level of its own, it is "under the bottom one", and giving it a hue of its
+     own would make it look like one. */
+  --lv-below:        #8E1D14;
   /* No data sits OUTSIDE the ramp entirely: neutral, zero chroma, so it can
      never be mistaken for a low level. */
   --lv-none:         #282F33;
 }
-/* Light is its own selected ramp, not an inversion: the same hue sweep, run so
-   that the STRONGEST level is the darkest and therefore the most prominent
-   against a pale ground. Same invariant as dark (stronger = louder), opposite
-   lightness direction, because the surface is opposite. */
 :root[data-theme="light"] {
-  --lv-beginner:     #5CC02F;
-  --lv-novice:       #A79000;
-  --lv-intermediate: #BA6400;
-  --lv-proficient:   #C21535;
-  --lv-advanced:     #920079;
-  --lv-expert:       #4A0A9E;
-  --lv-elite:        #002A5A;
-  --lv-below:        #76DA4E;
+  /* Only the two non-level tokens change. The seven hues are mid-tone Material
+     colours that carry on both surfaces, and a level meaning one colour
+     everywhere is worth more than a per-theme optimisation. */
   --lv-none:         #DBDED7;
 }
 
@@ -2142,9 +2184,52 @@ a.seg {
 .lv-elite        { --lv-mix: var(--lv-elite); }
 .lv-below        { --lv-mix: var(--lv-below); }
 
-/* Legend. Always present, so a level is never communicated by colour alone. */
-.lv-key { display: flex; flex-wrap: wrap; gap: 4px 10px; }
-.lv-key-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-soft); }
+/* ⚠️ THE KEY IS CHIPS NOW — Tim, 2026-08-25: *"the key is too small and not
+   clear enough. I think the key should be mini round boxes right below the
+   picture of the human with the name of the ranking inside and the box shaded
+   in the color that it is. Make these decent sized so it's clear to the user."*
+
+   What it replaced was a 10px swatch, an 11px grey name and a 10px mono
+   percentage, wrapped three to a line — the smallest text on the screen doing
+   the job of explaining every colour on it.
+
+   ⚠️ THE CHIP IS ALSO WHY THE NEW PALETTE IS ALLOWED TO FAIL ITS CVD CHECK.
+   Naming each colour in its own chip is the "direct labels" the validator
+   demands as the price of that failure. It is not decoration; it is the
+   secondary encoding. See the palette note above.
+
+   ⚠️ INK PER CHIP, FROM THE CHIP'S OWN LUMINANCE. The reference image puts
+   white on all six, which is 2.16:1 on its orange. Six of these seven are light
+   enough to take near-black; purple is not and takes white. The rule is the
+   chip's luminance, not a list, so it stays true if a colour is ever changed. */
+.lv-key { display: flex; flex-wrap: wrap; gap: 6px; }
+.lv-chip {
+  display: inline-flex; align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: #10161A;
+}
+/* Purple is the one chip too dark for near-black ink: 2.89:1 against it, 6.30:1
+   against white. Every other chip clears 4.95:1 with the dark ink. */
+.lv-chip.lv-expert { color: #FFFFFF; }
+.lv-chip.lv-beginner     { background: var(--lv-beginner); }
+.lv-chip.lv-novice       { background: var(--lv-novice); }
+.lv-chip.lv-intermediate { background: var(--lv-intermediate); }
+.lv-chip.lv-proficient   { background: var(--lv-proficient); }
+.lv-chip.lv-advanced     { background: var(--lv-advanced); }
+.lv-chip.lv-expert       { background: var(--lv-expert); }
+.lv-chip.lv-elite        { background: var(--lv-elite); }
+/* "No data" and the fade note are NOT levels, so they are not chips. They are
+   quiet notes under the row — making them look like levels would add two
+   rankings nobody can reach. */
+.lv-notes { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
+
+.lv-key-item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-soft); }
 .lv-sw { width: 10px; height: 10px; border-radius: 2px; flex: none; display: inline-block; }
 .lv-sw.lv-beginner { background: var(--lv-beginner); }
 .lv-sw.lv-novice { background: var(--lv-novice); }
@@ -2191,7 +2276,7 @@ a.seg {
 /* One quiet line. Used for where the number came from and how well corroborated
    it is — both of which are Rule 5 obligations and neither of which is worth a
    sentence. */
-.muscle-meta { font-size: 11.5px; color: var(--ink-faint); line-height: 1.35; }
+.muscle-meta { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }
 
 /* A caveat, compressed to a line. Still full-strength ink and still a hairline
    bracket — these are load-bearing (the whole app rests on them) and shortening
@@ -2255,16 +2340,43 @@ a.seg {
 
 .lv-name { white-space: nowrap; }
 
-/* The level word beside a muscle name. Uses the ramp colour, but the word is
-   always present — identity is never colour-alone. Steps at the dim end of the
-   dark ramp and the light end of the light ramp are too low-contrast for text,
-   so those fall back to ink. */
-.lv-text-below, .lv-text-beginner, .lv-text-novice { color: var(--ink-soft); }
-.lv-text-intermediate { color: var(--ink); }
-.lv-text-proficient { color: var(--lv-proficient); }
-.lv-text-advanced { color: var(--lv-advanced); }
-.lv-text-expert { color: var(--lv-expert); }
-.lv-text-elite { color: var(--lv-elite); }
+/* ⚠️ THE LEVEL WORD IS A CHIP NOW, NOT COLOURED TEXT — 2026-08-25.
+   It used to be painted in the ramp colour, with the dim steps falling back to
+   ink. That worked because the old ramp was BUILT for it: monotone lightness,
+   one ramp per theme, tuned so the bright end cleared the dark ground and the
+   dark end cleared the light one.
+
+   ⚠️ THE MATERIAL PALETTE IS NOT A TEXT PALETTE, and the audit caught it rather
+   than a person: "Advanced" rendered at **2.83:1** on Goals in the light theme,
+   the only sub-4.5 text in 4,970 measured nodes. On a light ground the blue is
+   2.83, the cyan 1.6, the pink 3.0; on a dark ground the purple is 2.89. There
+   is no assignment of these seven to text that clears AA in both themes,
+   because they were chosen to be FILLS.
+
+   So the word wears the colour as a background and picks its own ink, exactly
+   as the key's chips do — which also means the level looks the same wherever it
+   appears, and the key teaches that vocabulary on the way in. */
+.lv-text-below, .lv-text-beginner, .lv-text-novice,
+.lv-text-intermediate, .lv-text-proficient,
+.lv-text-advanced, .lv-text-expert, .lv-text-elite {
+  display: inline-flex; align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #10161A;
+  white-space: nowrap;
+}
+.lv-text-expert { color: #FFFFFF; }
+/* "Below Beginner" is not a level, so it does not get a level's chip — it stays
+   plain ink. Giving it one would invent an eighth ranking. */
+.lv-text-below { background: none; padding: 0; color: var(--ink-soft); }
+.lv-text-beginner     { background: var(--lv-beginner); }
+.lv-text-novice       { background: var(--lv-novice); }
+.lv-text-intermediate { background: var(--lv-intermediate); }
+.lv-text-proficient   { background: var(--lv-proficient); }
+.lv-text-advanced     { background: var(--lv-advanced); }
+.lv-text-expert       { background: var(--lv-expert); }
+.lv-text-elite        { background: var(--lv-elite); }
 
 /* A drop in a recorded day, and in the edit form. Indented and labelled
    "drop", never numbered as a set — one drop set is one hard set. */
