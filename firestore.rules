@@ -103,6 +103,36 @@ service cloud.firestore {
     }
 
     // ================================================================
+    // BACKUPS — users/{uid}/backups/*, 2026-08-28. Safety copies of the
+    // account's own collections, written by the owner's client: a 7-day
+    // rolling ring (`rolling-{weekday}-{collection}`) plus immutable
+    // snapshots taken before the two flows allowed to wipe wholesale
+    // (`snap-{stamp}-{collection}`). Exists because a migration emptied
+    // the sessions document on 2026-08-26 and there was no copy to reach
+    // for. Owner-only in every direction — a backup of private data is
+    // exactly as private as the data.
+    //
+    // ⚠️ `snap-*` DOCUMENTS CANNOT BE UPDATED, BY ANYONE. A pre-wipe
+    // snapshot that the wipe itself could overwrite protects nothing.
+    // The rolling ring must be updatable — overwriting last Tuesday IS
+    // the pruning — so mutability follows the id prefix.
+    // ================================================================
+
+    function validBackup() {
+      return request.resource.data.keys().hasOnly(
+               ['collection', 'part', 'rows', 'reason', 'at', 'updatedAt'])
+          && request.resource.data.rows is list;
+    }
+
+    match /users/{userId}/backups/{backupId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && validBackup();
+      allow update: if isOwner(userId) && validBackup()
+                    && backupId.matches('rolling-.*');
+      allow delete: if isOwner(userId);
+    }
+
+    // ================================================================
     // SOCIAL — docs/social-plan.md, Phase 1.
     //
     // ⚠️ READ THIS BEFORE CHANGING ANYTHING ABOVE THIS LINE.

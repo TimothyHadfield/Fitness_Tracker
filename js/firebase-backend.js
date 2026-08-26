@@ -195,6 +195,10 @@ function docRef(c, collection) {
  * @param {{fs: object, db: object}} c   the Firestore surface
  * @param {string} uid                   whose data this is
  */
+// The most sessions one non-wholesale write may delete. Ordinary use deletes
+// one at a time; two leaves room for a same-write edge nobody has met yet.
+export const MASS_DELETE_MAX = 2;
+
 export function createShardIO(c, uid) {
   // id → JSON of the row as this tab last saw it, per collection. What makes a
   // write cost one document instead of five hundred.
@@ -207,7 +211,9 @@ export function createShardIO(c, uid) {
   const memo = new Map();
 
   const col = (name) => c.fs.collection(c.db, 'users', uid, name);
-  const legacyRef = (name) => c.fs.doc(c.db, 'users', uid, 'collections', name);
+  // ⚠️ There is deliberately NO ref to users/{uid}/collections/{name} in this
+  // factory. The sharded path has no way to address the legacy document, so
+  // no future edit here can write to it by accident. See the prohibition below.
 
   async function readShard(collection) {
     const snap = await c.fs.getDocs(col(collection));
@@ -234,48 +240,43 @@ export function createShardIO(c, uid) {
     }
   }
 
-  /**
-   * Move a whole-list document into per-row documents, once.
+  /* ⚠️ THE LEGACY DOCUMENT IS NEVER WRITTEN BY THIS MODULE. NOT EMPTIED, NOT
+   * "TIDIED", NOT TOUCHED — and this paragraph is a LOAD-BEARING PROHIBITION,
+   * written after the design it replaces erased the sessions off Tim's own
+   * calendar on 2026-08-26 (progress.md, the 2026-08-28 emergency section).
    *
-   * ⚠️ THE ORDER IS THE ENTIRE SAFETY ARGUMENT, and it is the order the
-   * handoff accept path uses for the same reason: write the new copy, PROVE it
-   * arrived, and only then let go of the old one. Emptying the legacy document
-   * first — or in the same batch — turns any failure in between into somebody's
-   * training history being gone.
+   * The first migration wrote the shards, verified them by re-reading, and
+   * then emptied the whole-list document as its "migrated" flag. The
+   * verification was sound about what it saw; the emptying was the mistake,
+   * twice over:
    *
-   * ⚠️ IT IS PROVED BY RE-READING, not by the writes not throwing. A batch that
-   * commits without error is a batch the server accepted; it is not yet a
-   * document you can read back.  The re-read costs one extra pass over the
-   * collection and happens once in the life of an account.
+   *   1. Every client running the PREVIOUS build reads ONLY that document.
+   *      Emptying it showed every old client a blank training history —
+   *      which is exactly what Tim's phone did.
+   *   2. A `getDoc` served from a stale offline cache would migrate the rows
+   *      the cache knew about and then overwrite the SERVER's fuller document
+   *      with an empty list. Verification cannot catch that, because it can
+   *      only verify what was read.
    *
-   * If verification fails the legacy document is LEFT ALONE, the rows are
-   * still returned to the caller, and the next read tries again. A migration
-   * that cannot finish is a migration that has changed nothing.
+   * So the design is now ADOPTION, not migration: legacy rows that are not in
+   * the shard yet are copied in (idempotent — upserts by id), reads always
+   * merge both sources with the shard winning, and the whole-list document is
+   * left exactly as it was, forever, as a frozen at-adoption backup floor
+   * that old builds can still read and still write. The one cost is that a
+   * post-adoption edit made on an OLD build is invisible to new builds until
+   * that row's id is new; that was already the documented collision rule.
    */
-  async function migrate(collection, legacyRows) {
-    const existing = await readShard(collection);
-    const { writes } = shardDiff(
-      shardSnapshot(existing), mergeShardAndLegacy(existing, legacyRows));
 
+  async function adopt(collection, legacyRows) {
+    const existing = await readShard(collection);
+    const merged = mergeShardAndLegacy(existing, legacyRows);
+    const { writes } = shardDiff(shardSnapshot(existing), merged);
     if (writes.length) {
       await commitOps(writes.map((row) => ({
         kind: 'set', ref: c.fs.doc(col(collection), String(row.id)), row,
       })));
     }
-
-    const after = await readShard(collection);
-    const landed = new Set(after.map((r) => String(r.id)));
-    const missing = legacyRows.filter((r) => r && r.id != null && !landed.has(String(r.id)));
-    if (missing.length) {
-      console.warn(
-        `Migration of ${collection} is incomplete — ${missing.length} row(s) did not land. `
-        + 'Leaving the old copy in place; it will be retried on the next read.');
-      return mergeShardAndLegacy(after, legacyRows);
-    }
-
-    // Verified. Now, and only now, the old copy may go.
-    await c.fs.setDoc(legacyRef(collection), { rows: [], updatedAt: c.fs.serverTimestamp() });
-    return after;
+    return merged;
   }
 
   return {
@@ -285,20 +286,19 @@ export function createShardIO(c, uid) {
      *   the caller has already read it, so this does not read it twice.
      */
     async read(collection, legacyRows) {
-      // ⚠️ BOTH SOURCES, EVERY READ, FOREVER — not just until the migration
-      // has run. Checking the legacy document costs the one `getDoc` the read
-      // path was already doing, and it is what makes a client that predates
-      // sharding recoverable rather than a silent divergence: whatever it
-      // wrote gets adopted on the next read here. Stop checking and that
-      // becomes data sitting in a document nothing opens.
+      // ⚠️ BOTH SOURCES, EVERY READ, FOREVER. The legacy getDoc was already
+      // paid before sharding existed, and it is what makes an old client's
+      // writes recoverable rather than a silent divergence: whatever it wrote
+      // gets adopted into the shard on the next read here. Once everything is
+      // adopted, adopt() computes zero writes and this is read-only.
       const rows = legacyRows.length
-        ? await migrate(collection, legacyRows)
+        ? await adopt(collection, legacyRows)
         : await readShard(collection);
       memo.set(collection, shardSnapshot(rows));
       return rows;
     },
 
-    async write(collection, rows) {
+    async write(collection, rows, opts) {
       // ⚠️ NO MEMO MEANS NO GROUND TRUTH, SO READ FIRST. Without this, a write
       // that is the first thing this tab does to the collection — `clearAll()`,
       // or restoring a backup — would find nothing to delete and leave every
@@ -313,6 +313,25 @@ export function createShardIO(c, uid) {
       }
 
       const { writes, deletes } = shardDiff(memo.get(collection), rows);
+
+      /* ⚠️ THE MASS-DELETE GUARD — 2026-08-28, Tim: "make it extremely
+       * difficult to erase data from people's accounts."
+       *
+       * No ordinary user action deletes more than one session at a time. The
+       * only flows that legitimately remove many rows at once are Clear all
+       * and Restore from backup, and both now declare themselves with
+       * `wholesale` after taking a cloud snapshot first (store.js). Anything
+       * else asking to delete more than MASS_DELETE_MAX rows in one write is
+       * assumed to be a BUG — a stale read, a bad merge, a future refactor —
+       * and the entire write is refused, not trimmed: a write whose delete
+       * half is wrong has no trustworthy halves.
+       */
+      if (!(opts && opts.wholesale) && deletes.length > MASS_DELETE_MAX) {
+        throw new Error(
+          `Refusing to delete ${deletes.length} ${collection} rows in one write. `
+          + 'If this is a real bulk removal it must go through the wholesale path.');
+      }
+
       const target = col(collection);
       await commitOps([
         ...writes.map((row) => ({ kind: 'set', ref: c.fs.doc(target, String(row.id)), row })),
@@ -331,6 +350,7 @@ export function createShardIO(c, uid) {
     },
   };
 }
+
 
 // The live one, rebuilt whenever the uid changes. Never shared across accounts
 // — see the memo note in createShardIO().
@@ -366,13 +386,27 @@ export const FirebaseBackend = {
     return shards(c).read(collection, legacy);
   },
 
-  async write(collection, rows) {
+  async write(collection, rows, opts) {
     const c = await init();
-    if (SHARDED_COLLECTIONS.includes(collection)) return shards(c).write(collection, rows);
+    if (SHARDED_COLLECTIONS.includes(collection)) return shards(c).write(collection, rows, opts);
     await c.fs.setDoc(docRef(c, collection), {
       rows,
       updatedAt: c.fs.serverTimestamp(),
     });
+    return true;
+  },
+
+  /**
+   * One backup document at users/{uid}/backups/{id} — the store decides when
+   * and what (see the CLOUD BACKUPS section in store.js); this only holds the
+   * path. Owner-only under the rules; `rolling-*` ids may be overwritten (the
+   * 7-day ring), `snap-*` ids are immutable.
+   */
+  async writeBackup(id, data) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'backups', String(id)),
+      { ...data, updatedAt: c.fs.serverTimestamp() });
     return true;
   },
 

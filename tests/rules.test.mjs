@@ -167,6 +167,37 @@ await denied(setDoc(shard(asTim, TIM, 'invented', 'x'),
   { row: {}, updatedAt: serverTimestamp() }),
   '⚠️ and a subcollection the app does not shard is not a free storage bucket');
 
+/* ⚠️ BACKUPS — users/{uid}/backups/*, added 2026-08-28 after a migration
+ * emptied the sessions document on Tim's real account. A backup of private
+ * data is exactly as private as the data, and the snap-* ones must be
+ * immutable or the wipe they exist to survive could overwrite them. */
+const backup = (db, uid, id) => doc(db, 'users', uid, 'backups', id);
+const backupDoc = { collection: 'sessions', part: 0, rows: [{ id: 's1' }],
+  reason: 'rolling', at: '2026-08-28T00:00:00Z', updatedAt: serverTimestamp() };
+
+await allowed(setDoc(backup(asTim, TIM, 'rolling-3-sessions'), backupDoc),
+  'the owner writes a rolling backup');
+await allowed(setDoc(backup(asTim, TIM, 'rolling-3-sessions'),
+  { ...backupDoc, rows: [{ id: 's1' }, { id: 's2' }] }),
+  'and overwrites it next week — the ring prunes itself by overwrite');
+await allowed(setDoc(backup(asTim, TIM, 'snap-abc-sessions'), backupDoc),
+  'and writes a pre-wipe snapshot');
+await denied(setDoc(backup(asTim, TIM, 'snap-abc-sessions'),
+  { ...backupDoc, rows: [] }),
+  '⚠️ but even the OWNER cannot overwrite a snap — the wipe it protects against must not reach it');
+await allowed(deleteDoc(backup(asTim, TIM, 'snap-abc-sessions')),
+  'though they may delete one deliberately');
+
+await denied(getDoc(backup(asAlex, TIM, 'rolling-3-sessions')),
+  'a FULL-tier friend cannot read a backup — it is the private data again');
+await denied(getDocs(collection(asAlex, 'users', TIM, 'backups')),
+  'nor list them');
+await denied(setDoc(backup(asAlex, TIM, 'rolling-9-x'), backupDoc),
+  'nor write one into somebody else\'s account');
+await denied(setDoc(backup(asTim, TIM, 'rolling-3-sessions'),
+  { ...backupDoc, extra: 'nope' }),
+  'and an invented field is refused at the wire, like everywhere else');
+
 console.log('\n--- Projections: only the listed viewers ---\n');
 
 await allowed(getDoc(shared(asAlex, TIM, 'full')), 'a viewer listed on full reads the full projection');

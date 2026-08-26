@@ -197,17 +197,122 @@ async function adoptLocalData(mod) {
 
 const backend = {
   async read(collection) { return (await active()).read(collection); },
-  async write(collection, rows) {
-    const okay = await (await active()).write(collection, rows);
+  async write(collection, rows, opts) {
+    /* ⚠️ THE ZERO-GUARD — 2026-08-28, after Tim's calendar came up empty.
+     *
+     * "This can never happen. You need to make it extremely difficult to
+     * erase data from people's accounts." This is the store-side half of that
+     * (the sharded backend has its own mass-delete guard): NO ordinary write
+     * may take a collection the cache knows is substantial down to nothing.
+     * Every legitimate emptier — Clear all, Restore from backup — declares
+     * itself wholesale and snapshots to the cloud first. Anything else
+     * writing [] over real rows is a bug by definition: a stale read, a
+     * failed merge, an exception that left a list half-built. Refusing costs
+     * a correct caller nothing, because there are no correct callers.
+     *
+     * ⚠️ Judged against the CACHE, not a fresh read — the guard must not add
+     * a round trip to every write. A cold cache means no opinion, and the
+     * sharded backend's memo-fill covers the collections where emptiness
+     * costs the most.
+     */
+    const known = readCache.get(collection);
+    if (!(opts && opts.wholesale)
+        && (!rows || rows.length === 0)
+        && known && known.length >= 5) {
+      throw new Error(
+        `Refusing to overwrite ${known.length} ${collection} rows with an empty list. `
+        + 'Clearing a collection must go through the wholesale path.');
+    }
+
+    const okay = await (await active()).write(collection, rows, opts);
     // We have just decided what this collection contains, so the cache is not
     // guessing — it is recording. Set AFTER the await: a write that threw has
     // changed nothing, and caching what we hoped to store would be a lie the
     // rest of the session reads back as fact.
     readCache.set(collection, (rows || []).slice());
     lastRead.set(collection, Date.now());
+    // Fire-and-forget: keep the rolling cloud backup fresh. Never awaited and
+    // never allowed to fail a save — a backup is worthless if taking it can
+    // cost somebody the workout they just recorded.
+    maybeRollCloudBackup().catch(() => {});
     return okay;
   },
 };
+
+/* ------------------------------------------------------------------ *
+ * CLOUD BACKUPS — users/{uid}/backups/*, 2026-08-28.
+ *
+ * ⚠️ WHY THIS EXISTS: on 2026-08-26 the sharding migration emptied the
+ * whole-list sessions document on Tim's account and his calendar came up
+ * blank. His instruction afterwards is the specification: "make it extremely
+ * difficult to erase data from people's accounts, and even if you do, there's
+ * some backup saved." The guards above are the first half; this is the second
+ * — copies that exist BEFORE anything goes wrong, in the user's own account,
+ * owner-only under the same rules discipline as everything else.
+ *
+ * Two kinds, one shape ({collection, part, rows, reason, at}):
+ *
+ *   rolling-{weekday}-{collection}   A 7-day ring. Refreshed at most once per
+ *                                    20 hours, by overwrite, so it prunes
+ *                                    itself — up to a week of daily copies of
+ *                                    every collection, forever, ~9 small doc
+ *                                    writes a day at most.
+ *   snap-{stamp}-{collection}        Taken immediately before the two flows
+ *                                    allowed to wipe wholesale (Clear all,
+ *                                    Restore from backup). Immutable — the
+ *                                    rules deny update on snap ids.
+ *
+ * ⚠️ NEVER AWAITED ON A SAVE PATH and never allowed to throw out of it — a
+ * backup that can fail somebody's save is a backup that costs training data
+ * to protect training data. The pre-wipe snapshot IS awaited, because there
+ * the whole point is happening-before.
+ *
+ * Rows are chunked at 250 per part so no backup document can approach the
+ * 1 MiB cap even after the source collection sharded past it.
+ * ------------------------------------------------------------------ */
+
+const ROLL_KEY = NS + 'lastCloudRollBackup';
+const ROLL_EVERY_MS = 20 * 3600 * 1000;
+const BACKUP_CHUNK = 250;
+
+async function writeCloudBackup(idPrefix, reason) {
+  const impl = await active();
+  if (!remoteImpl || impl !== remoteImpl || !impl.writeBackup) return false;
+  const at = new Date().toISOString();
+  for (const collection of COLLECTIONS) {
+    const rows = await impl.read(collection);
+    for (let part = 0; part * BACKUP_CHUNK < Math.max(1, rows.length); part++) {
+      const chunk = rows.slice(part * BACKUP_CHUNK, (part + 1) * BACKUP_CHUNK);
+      const id = `${idPrefix}-${collection}` + (part ? `-p${part}` : '');
+      await impl.writeBackup(id, { collection, part, rows: chunk, reason, at });
+    }
+  }
+  return true;
+}
+
+/** The rolling ring. Cheap enough to call after every write; throttles itself. */
+async function maybeRollCloudBackup() {
+  const last = Number(localStorage.getItem(ROLL_KEY) || 0);
+  if (Date.now() - last < ROLL_EVERY_MS) return;
+  const impl = await active();
+  if (!remoteImpl || impl !== remoteImpl) return;
+  // Stamp FIRST: several writes land in a burst when a workout finishes, and
+  // each would otherwise start its own sweep. Losing one sweep to a failure
+  // costs at most 20 hours of freshness on a copy that is one of seven.
+  localStorage.setItem(ROLL_KEY, String(Date.now()));
+  await writeCloudBackup(`rolling-${new Date().getDay()}`, 'rolling');
+}
+
+/**
+ * The pre-wipe snapshot. AWAITED by its two callers, and a failure ABORTS the
+ * wipe: cancelling a Clear-all because the safety copy could not be taken is
+ * an inconvenience; proceeding without one is how a mistake becomes permanent.
+ */
+async function snapshotBeforeWipe(reason) {
+  const impl = await active();
+  if (!remoteImpl || impl !== remoteImpl) return;   // local/demo: nothing cloud to protect
+  await writeCloudBackup(`snap-${Date.now().toString(36)}`, reason);
+}
 
 /* ------------------------------------------------------------------ *
  * HOW FULL THE CLOUD IS — the 1 MiB ceiling, measured rather than assumed
@@ -578,7 +683,10 @@ export function pickBenchmarkSet(sets, fields) {
 async function dropSessionBenchmarks(sessionId) {
   const rows = await backend.read('benchmarks');
   const kept = rows.filter((r) => r.sourceSessionId !== sessionId);
-  if (kept.length !== rows.length) await backend.write('benchmarks', kept);
+  // ⚠️ `wholesale`: every benchmark can come from one session, so deleting that
+  // session legitimately empties the collection. The filter ran over rows read
+  // in this same call, which is the invariant the zero-guard exists to protect.
+  if (kept.length !== rows.length) await backend.write('benchmarks', kept, { wholesale: true });
 }
 
 async function syncSessionBenchmarks(session) {
@@ -608,7 +716,10 @@ async function syncSessionBenchmarks(session) {
   }
 
   if (kept.length !== rows.length || made.length) {
-    await backend.write('benchmarks', [...kept, ...made]);
+    // ⚠️ `wholesale` for the same reason dropSessionBenchmarks gives: re-saving
+    // the session every benchmark came from, with its flag now off, produces a
+    // legitimately empty list from rows read in this same call.
+    await backend.write('benchmarks', [...kept, ...made], { wholesale: true });
   }
 }
 
@@ -787,8 +898,11 @@ export const store = {
     const [systems, workouts] = await Promise.all([
       backend.read('systems'), backend.read('workouts'),
     ]);
-    await backend.write('workouts', workouts.filter((w) => w.systemId !== id));
-    await backend.write('systems', systems.filter((r) => r.id !== id));
+    // ⚠️ `wholesale`: deleting the only system legitimately empties `workouts`,
+    // and the zero-guard would otherwise refuse a flow the user just confirmed
+    // on a screen that names what it deletes. The rows really were read first.
+    await backend.write('workouts', workouts.filter((w) => w.systemId !== id), { wholesale: true });
+    await backend.write('systems', systems.filter((r) => r.id !== id), { wholesale: true });
   },
 
   /**
@@ -1285,8 +1399,13 @@ export const store = {
     // Replacing wholesale cannot produce that: a pre-systems backup clears
     // systems too, its workouts have no systemId, and ensureSystems() adopts
     // them on the next read, which is exactly what that migration is for.
+    // ⚠️ SNAPSHOT FIRST (2026-08-28): a restore REPLACES every collection, so
+    // what stands right now is about to stop existing anywhere. The snapshot
+    // makes "I restored the wrong file" recoverable; a failure aborts the
+    // restore before a single collection has been touched.
+    await snapshotBeforeWipe('pre-restore');
     for (const c of COLLECTIONS) {
-      await backend.write(c, Array.isArray(data[c]) ? data[c] : []);
+      await backend.write(c, Array.isArray(data[c]) ? data[c] : [], { wholesale: true });
     }
     // ⚠️ A restored backup is the ONE way old-shape workouts — the ones with no
     // systemId — can come back after the migration has already run and latched
@@ -1422,7 +1541,12 @@ export const store = {
   },
 
   async clearAll() {
-    for (const c of COLLECTIONS) await backend.write(c, []);
+    // ⚠️ SNAPSHOT FIRST, AND A FAILED SNAPSHOT ABORTS THE CLEAR (2026-08-28).
+    // Clearing without the safety copy is how a mis-tap becomes permanent;
+    // aborting costs a retry. On the local and demo backends this is a no-op —
+    // there is no cloud copy to protect.
+    await snapshotBeforeWipe('pre-clear');
+    for (const c of COLLECTIONS) await backend.write(c, [], { wholesale: true });
   },
 };
 
