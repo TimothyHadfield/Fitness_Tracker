@@ -2479,6 +2479,40 @@ ok(!data.querySelector('.rep-target'),
      'a set below the best is not congratulated — the trophy stays meaningful');
 }
 
+/* ================= body-map hit halos (0i) =================
+   jsdom cannot hit-test, so what is pinned here is the STRUCTURE the design
+   depends on: a halo per muscle, wired to the same pick, hidden from
+   assistive tech, and — the load-bearing bit — every halo BEFORE every fill,
+   because SVG hit-testing takes the topmost element and a halo may only win
+   where no real muscle is painted. */
+{
+  const { bodySvg, MAPPED_MUSCLES } = await import(BASE + 'body-map.js');
+  let picked = null;
+  const svg = bodySvg(new Map(), null, (m) => { picked = m; });
+
+  const halos = [...svg.querySelectorAll('.body-halo')];
+  const fills = [...svg.querySelectorAll('.body-region')];
+  ok(halos.length > 0 && halos.length === fills.length,
+     `every muscle path has exactly one halo (${halos.length})`);
+  ok(halos.every((h) => h.getAttribute('aria-hidden') === 'true' && !h.hasAttribute('tabindex')),
+     'halos are invisible to assistive tech and the keyboard — the real paths are the controls');
+
+  // Document order: within each view group, the last halo still precedes the
+  // first fill, so no halo can ever sit on top of a painted muscle.
+  const groups = [...svg.querySelectorAll('g[transform]')];
+  ok(groups.length >= 2 && groups.every((view) => {
+    const kids = [...view.children];
+    const lastHalo = kids.map((n) => n.classList && n.classList.contains('body-halo')).lastIndexOf(true);
+    const firstFill = kids.findIndex((n) => n.classList && n.classList.contains('body-region'));
+    return lastHalo >= 0 && firstFill > lastHalo;
+  }), '⚠️ every halo precedes every fill — enlargement can never steal a tap from a painted muscle');
+
+  const trapsHalo = halos.find((h) => h.dataset.haloFor === 'Traps');
+  ok(Boolean(trapsHalo), 'the smallest measured muscle has a halo');
+  trapsHalo.dispatchEvent(new window.Event('click', { bubbles: true }));
+  ok(picked === 'Traps', 'tapping a halo picks its muscle');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

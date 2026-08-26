@@ -91,6 +91,29 @@ export function bodySvg(levels, selected, onPick) {
     // would be a hole in the page rather than part of a body.
     g.append(mk('path', { d: art.body }, 'body-paper'));
 
+    /* ⚠️ INVISIBLE HIT HALOS, UNDER EVERY FILL (Open work 0i, without touching
+     * Tim's illustration by a single pixel). At 360px the smallest muscles
+     * measure 42×11 (Traps) and 24×17 (Neck), and the figure is the only way
+     * to select a muscle. Each halo is the muscle's own path with a fat
+     * transparent stroke and `pointer-events: all`, so the tappable region is
+     * the muscle plus ~10 screen px in every direction — and NOTHING is
+     * painted.
+     *
+     * ⚠️ ALL HALOS COME BEFORE ALL FILLS, and that ordering is the design:
+     * SVG hit-testing takes the topmost element, so a halo can only ever win
+     * where no real muscle is painted. A tap on a neighbouring muscle's
+     * actual body still goes to that muscle; the halo only claims the dead
+     * space around its own — enlargement without theft. aria-hidden and no
+     * tabindex: these are duplicate geometry, not controls, and a screen
+     * reader or keyboard already has the real paths.
+     */
+    for (const [muscle, d] of Object.entries(art.muscles)) {
+      const halo = mk('path', { d, 'aria-hidden': 'true' }, 'body-halo');
+      halo.dataset.haloFor = muscle;
+      halo.addEventListener('click', () => onPick(muscle));
+      g.append(halo);
+    }
+
     for (const [muscle, d] of Object.entries(art.muscles)) {
       const info = levels.get(muscle);
       const node = mk('path', { d }, [

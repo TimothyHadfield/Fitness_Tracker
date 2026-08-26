@@ -2196,6 +2196,17 @@ a.seg {
 }
 
 .body-region { cursor: pointer; transition: opacity .12s ease; }
+/* The invisible hit halo behind each muscle (0i). Nothing is painted — the
+   stroke exists only as hit-test geometry. 60 viewBox units ≈ ±10px on a
+   360px screen. `pointer-events: all` makes interior + stroke band count
+   despite fill/stroke being none/transparent. */
+.body-halo {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 60;
+  pointer-events: all;
+  cursor: pointer;
+}
 /* ⚠️ GUARDED, because on a touch screen :hover STICKS after a tap — and on this
    particular element a leftover fade is not a cosmetic artefact, it is a false
    statement. D19 encodes CONFIDENCE as desaturation of the muscle's own colour:

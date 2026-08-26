@@ -5205,3 +5205,13 @@ with "Personal best: Overhead Press — 105 lbs, up from 100". Recorded vs recor
 estimates; weight where the lift has one, reps where it does not, time and distance left alone
 (Rule 6). First-ever lifts are not congratulated — a trophy for showing up would make the trophy
 noise. Three render tests pin beaten / not beaten / nothing-to-beat. 452 render assertions green.
+
+Sixth piece: BODY-MAP HIT HALOS (0i's cheap half). Every muscle path gets an invisible duplicate
+with a fat transparent stroke — the tappable region grows ~10px in every direction and the
+illustration doesn't change by a pixel. All halos render before all fills, so a halo can only win
+where no real muscle is painted: enlargement never steals a tap from a neighbour. Verified over
+CDP at 360px — probes 3/6/9px outside the Traps lobe hit its halo, a real click 5px off the art
+selects Traps (the first probe used the bbox centre and "found" it broken; that centre is the
+spine gap between the lobes, §0.6's exact trap). Also drove the demo feed, the location chip and
+the people bar at 360 — no overflow anywhere, screenshots eyeballed. What's still under 44px is
+the art itself, which stays Tim's call.

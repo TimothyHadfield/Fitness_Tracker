@@ -168,6 +168,48 @@ which drives the demo.
 
 ---
 
+## 2026-08-26, fifth pass — PERSONAL BESTS ON FINISH, AND THE BODY MAP GROWS INVISIBLE HANDS
+
+### 1. The finish screen celebrates a recorded number beating every recorded number
+
+UX review item 1's last half — *"nothing anywhere says you hit a personal best"* — closed the
+Rule-5-safe way: `personalBests()` compares the number just typed against the biggest number ever
+recorded for that lift, **benchmarks included, estimates excluded** — no e1RM, no model, recorded
+vs recorded only. The finish screen leads with *"Personal best: Overhead Press — 105 lbs, up from
+100"* in the app's do-not-skim hairline shape, pointed at good news for once.
+
+⚠️ **Only where there was something to beat.** A first-ever lift is trivially a maximum, and
+celebrating it would teach that the trophy is noise. Weight where the lift has one; reps only
+where it does not; time and distance left alone (Rule 6 — the app has no opinion on which
+direction of a mile is better). ⚠️ **On a retry after a mid-save failure the session excludes
+itself from its own history**, or it would beat itself. Three render tests pin beaten / not beaten
+/ nothing-to-beat.
+
+### 2. ⚠️ THE BODY MAP'S TAP TARGETS — grown without touching Tim's art (0i, the cheap half)
+
+Every muscle path now has an **invisible hit halo**: the same path with a fat transparent stroke
+and `pointer-events: all`, so the tappable region is the muscle plus ~10 screen px in every
+direction — and nothing is painted. **Tim's illustration is unchanged by a single pixel.**
+
+⚠️ **ALL HALOS RENDER BEFORE ALL FILLS, and that ordering is the design**: SVG hit-testing takes
+the topmost element, so a halo only ever wins where no real muscle is painted — enlargement can
+never steal a tap from a neighbouring muscle's actual body. Asserted structurally in render tests.
+
+✅ **MEASURED IN A REAL BROWSER OVER CDP at 360px**: probes 3, 6 and 9 px outside the painted
+Traps lobe all land on its halo, and a real mouse click 5 px off the art **selects Traps** — the
+panel opens. Traps' effective target grows from 44×15 to roughly 64×35. ⚠️ **Probe honestly**: the
+first probe used the bbox centre and "found" the halo broken — the centre of Traps' bounding box
+is the spine gap between its two lobes, the exact trap §0.6 documents for Chest.
+
+⚠️ **Not everything reaches 44 px**, and anything more lands on the illustration itself, which
+stays Tim's call. 0i's remainder is now genuinely the art only.
+
+**Also driven in the same CDP pass at 360px**: the demo feed (28 cards, 13 carrying locations, no
+overflow), the runner header with the location chip (a long gym name ellipsises at 93 px, header
+never overflows), the location sheet round-trip, and the people bar. Screenshots eyeballed.
+
+---
+
 ## 2026-08-26, fourth pass — ⚠️ THE RATIO SWEEP (0h substantially closed)
 
 **28 lifts fetched from Strength Level's published 180 lb male standards in one day**, every
@@ -2245,7 +2287,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **1** | **0e — joint workouts** | ⚠️ **THE GUEST HALF IS BUILT AND DEPLOYED, 2026-08-26** — people chips in the runner, per-person suggestions, own collection, day-view section; see that day's section. **Still open: the friend-accept half** (publish a session to a real friend's account for them to accept) — same new-rules-path wall as 0l, and 0l is being built first |
 | **2** | **0h — the ratio table** | ✅ **SUBSTANTIALLY CLOSED 2026-08-26** — 28 lifts derived from published standards in one sweep, 23 pinned as assertions; see the fourth-pass section. **Small remainder stays open**: lateral raises, machine triceps extension, the carried dumbbell-bench/shoulder offsets, spider curl (source/library equipment mismatch) |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, but its headline item CLOSED on 2026-08-25**: *"nothing a user can see on Home ever grows"* was answered by making Home a feed, which is nothing but growth. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
-| **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call, and now the ILLUSTRATION ONLY.** The two ordinary controls beside it went to 44 px on 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
+| **4** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED 2026-08-26** — invisible hit halos grow every muscle ~10px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44px lands on the illustration itself and stays Tim's call |
 | **5** | **0j — mutual disconnect** | ⚠️ **OPEN.** The sheet stopped promising it on 2026-08-24; the feature is still one-sided. Needs a new rules path |
 | **6** | **0b(c) — the cloud ceiling, which is ~520 sessions and not ~950** | ✅ **The warning half is BUILT** (Settings, from 80 %, computed from the account's own rows). ⚠️ **The ceiling was corrected a second time the same day** — the morning's figure measured JSON, and Firestore charges 1.66× that. **Still open: the document-per-session split**, a migration over live data. Nobody is near it |
 | **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
