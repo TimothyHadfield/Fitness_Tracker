@@ -5286,3 +5286,68 @@ track; costs owning Now Playing (no Spotify at the same time), so opt-in only. W
 2,683 assertions across eleven suites, all green. Docs swept for a chat reset; the outstanding
 verifications (CDP pass on the new screens, palette audit beyond Gold, two field checks) are
 Open work item 14.
+
+────────────────────────────────────────────────────────────────────────────
+2026-08-27 — the cropper, two iPhone bugs, activities phase 2, the palette audit
+
+Tim asked me to finish the items I'd said were fully specified, then sent two phone reports and
+two research questions while I was building.
+
+PROFILE PHOTO CROPPER — his ask: "sometimes the user's face isn't centered and large in the
+middle... display the image with a circle in the middle showing what their profile icon is
+actually going to look like, and let them move it and zoom it." Built: a "Position your photo"
+sheet, square stage with the circle inscribed, drag to move, slider/pinch/wheel to zoom.
+js/image-crop.js is a new pure module — the crop is a square in SOURCE pixels, so the same photo
+crops the same way whatever phone it was done on. What the circle frames is literally what the
+canvas cuts (both derive from one state, and there's an assertion that they agree). The invariant
+that matters: the crop square can never leave the image, so an avatar can never save with a blank
+wedge. Swept 1,925 combinations, zero escapes; mutation-checked both ways.
+
+HIS IPHONE BUG 1 — the profile photo rendering huge in the top-left with no circle. Chrome at
+390px would NOT reproduce it (34x34, circular), so I can't claim to have seen it. But there was a
+real latent fault: .avatar-glyph had no size of its own, and its parent sizes itself to its
+content, so the photo's width:100% was a cyclic percentage — and an engine is free to break that
+cycle by using the image's intrinsic 256px. Blink picks 34, WebKit apparently picks 256. Fixed by
+pinning everything to a definite box (position:absolute; inset:0). NEEDS TIM TO LOOK — I can't
+verify a fix for a bug I can't reproduce.
+
+FOUND WHILE LOOKING: a CSS comment was never closed (217 opens, 218 closes), and the parser was
+swallowing the .seg + .seg::after rule with it. That's the hairline between unselected segments —
+the thing that stops "Graph | Bar Chart Muscles" reading as two choices. It has never rendered.
+Mutation-checked.
+
+HIS IPHONE BUG 2 — "clicking friends in the home menu has a long delay and lag that's alarming."
+Four causes, all fixed: the router awaits the view before swapping the DOM (so the old screen sat
+under his thumb — Friends now paints immediately and fills in after); the invite list was fetched
+TWICE per visit; a friend's three visibility tiers were probed one at a time, paying a round trip
+per refusal, times every friend; and the cloud reads weren't cached at all — they are now, same
+30-second discipline as everything else. Pinned by a test that hands the screen a network which
+never answers.
+
+ACTIVITIES PHASE 2 (items 1-4): activities got their own group instead of being filed under
+Cardio, and it's unrankable and produces no volume — both asserted, because that's D27 failing
+quietly if it's wrong. Pace shown on anything with a distance and a time, never coloured good or
+bad. Feed cards now carry a dumbbell or a route glyph, and stopped printing "Running" under
+"Running".
+
+PALETTE AUDIT CLOSED: the full browser audit had only ever run on Gold. It now runs on all four —
+240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow. Plus the queued screenshot
+pass over the second wave: no horizontal overflow anywhere.
+
+AIRPODS ANSWER — his question: would head motion work if it were an App Store app? Yes.
+CMHeadphoneMotionManager is a real public API (AirPods Pro/Max/3rd gen/Beats Fit Pro, NOT AirPods
+2). But a WKWebView wrapper doesn't get it — needs a native Swift bridge, $99/yr, and review,
+where guideline 4.2 rejects repackaged websites. Head motion alone isn't worth a native app;
+HealthKit might be.
+
+INTEGRATIONS RESEARCH (docs/integrations-plan.md, nothing built) — his question about pulling from
+Strava/Cronometer/Apple Fitness/MacroFactor. The finding that reorders it: the blocker is not
+"website vs app", it's the missing SERVER. Strava's token exchange needs a client secret and has
+no PKCE, and a native app is just as public a client. Also: Strava's 2026 agreement forbids
+showing one user's Strava data to another user, which lands straight on the Home feed. Apple
+Health has no web or server API at all — native only. Cronometer and MacroFactor have no public
+API but both export files. So: FILE IMPORT works today as a website and needs nothing from
+anybody; live sync needs Firebase Blaze turned on; importing food would narrow D1/D26 and is his
+call.
+
+2,738 assertions across eleven suites, all green.

@@ -6,7 +6,13 @@ import {
   DROP, MYO, isNested, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
   setTypeLabel, plannedMinis, clampMinis,
 } from './set-types.js';
-import { MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP } from './exercises.js';
+import {
+  MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
+} from './exercises.js';
+
+/** The library's Activity shelf, by lowercased name — see feedCard(). */
+const ACTIVITY_NAMES = new Set(
+  BUILT_IN_EXERCISES.filter((e) => e.muscle === 'Activity').map((e) => e.name.toLowerCase()));
 // ⚠️ Statically imported, unlike the rest of the rating, and on purpose. These
 // are the CAVEATS that travel with the numbers — what the strength score cannot
 // see, and that "half a set" is a modelling choice — plus the exercise-order
@@ -277,9 +283,26 @@ function feedCard(e) {
     .map((x) => x && x.name)
     .filter(Boolean);
 
-  const did = names.length
-    ? el('div', { class: 'feed-did', text: names.join(' · ') })
-    : el('div', { class: 'feed-did is-quiet', text: 'They share that they trained, not what they did.' });
+  const title = a.name || 'Workout';
+
+  /* ⚠️ A RUN SHOULD READ AS A RUN WITHOUT BEING READ — activities-plan §3
+   * item 4. The projection carries no group (it publishes what was done, not
+   * how this app files it), so the kind is recovered on the CLIENT by matching
+   * the title against the library's own Activity shelf. Presentation only:
+   * getting it wrong shows the wrong little glyph and changes nothing else,
+   * which is why a name match is an acceptable way to decide it. */
+  const isActivity = ACTIVITY_NAMES.has(title.trim().toLowerCase());
+
+  // An activity session is one entry named after itself, so the card was
+  // printing "Running" directly under "Running". Say it once.
+  const said = names.length === 1 && names[0].trim().toLowerCase() === title.trim().toLowerCase()
+    ? [] : names;
+
+  const did = said.length
+    ? el('div', { class: 'feed-did', text: said.join(' · ') })
+    : names.length
+      ? null
+      : el('div', { class: 'feed-did is-quiet', text: 'They share that they trained, not what they did.' });
 
   return el('article', { class: 'feed-card' },
     el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
@@ -292,7 +315,9 @@ function feedCard(e) {
     // ⚠️ The workout's name is the LARGEST text in the card, above the athlete's
     // own name — which is Strava's hierarchy, and it is right: you scan a feed
     // for what happened, and whose it is qualifies it.
-    el('h2', { class: 'feed-title', text: a.name || 'Workout' }),
+    el('h2', { class: 'feed-title' },
+      el('span', { class: 'feed-kind' }, icon(isActivity ? 'activity' : 'dumbbell', 16)),
+      title),
     did,
     feedActions(e),
   );

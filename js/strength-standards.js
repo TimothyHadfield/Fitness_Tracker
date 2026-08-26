@@ -82,7 +82,10 @@ export const MUSCLE_LIFTS = {
   // permanently, and the UI says so rather than letting it look like a bug.
 };
 
-export const UNRANKABLE = ['Core', 'Neck', 'Cardio'];
+// ⚠️ 'Activity' joins these the day it exists, not later. A group that is not
+// in this list is a group the map will try to RANK — and there is no published
+// standard that turns a 40-minute hike into a percentile. D27.
+export const UNRANKABLE = ['Core', 'Neck', 'Cardio', 'Activity'];
 
 let liftIdCache = null;
 function liftIds() {

@@ -345,6 +345,11 @@ const REVALIDATE_MS = 30000;
 export function clearReadCache() {
   readCache.clear();
   lastRead.clear();
+  // ⚠️ The social cache goes with it, wired HERE rather than at each call site,
+  // for the reason onChange() already gives about itself: a second thing that
+  // has to be remembered separately is a thing that gets forgotten, and the way
+  // it would fail is one account being shown the previous account's friends.
+  clearSocialCache();
 }
 
 /**
@@ -1568,7 +1573,7 @@ async function republish() {
   if (demo.active()) throw new Error('Social is off while you are in the demo account.');
   const impl = requireRemote();
   const S = await socialMod();
-  const graph = normalizeSocialGraph(await impl.readGraph());
+  const graph = await readGraphFresh(impl);
   const settings = await store.getSettings();
 
   const [sessions, benchmarks, bodyWeights] = await Promise.all([
@@ -1612,6 +1617,80 @@ function normalizeSocialGraph(raw) {
   return raw && Array.isArray(raw.connections) ? raw : { connections: [] };
 }
 
+/* ------------------------------------------------------------------ *
+ * The social read cache
+ *
+ * ⚠️ THE SAME CONTRACT AS THE COLLECTION CACHE ABOVE, for the same reason and
+ * with the same one rule: READ-ONLY PATHS ONLY. Every mutation here
+ * (setTier, remove, addConnection) is a read-modify-write of one document, so
+ * serving those reads from memory would write a stale connection list back over
+ * whatever another device changed. They call readGraphFresh() and say so.
+ *
+ * Tim, 2026-08-26, on an iPhone: *"whenever I click on friends in the home menu,
+ * it has a long delay and lag to it that's alarming."* The Friends screen was
+ * the last one in the app still paying the network on every single visit — the
+ * 2026-08-22 cache covered the local collections and stopped at the cloud edge.
+ * Opening it cost a graph read plus TWO identical invite list queries, awaited
+ * one after another before a single pixel changed.
+ * ------------------------------------------------------------------ */
+
+const socialCache = new Map();      // key -> value
+const socialReadAt = new Map();     // key -> ms
+const socialRevalidating = new Set();
+
+export function clearSocialCache() {
+  socialCache.clear();
+  socialReadAt.clear();
+}
+
+/**
+ * Cached read with a silent background refresh, exactly like readCached():
+ * nothing repaints under a thumb, the NEXT visit is the correct one, and a
+ * failed refresh is the absence of news rather than an error (D6).
+ */
+async function socialCached(key, read) {
+  if (socialCache.has(key)) {
+    if (!socialRevalidating.has(key)
+        && Date.now() - (socialReadAt.get(key) || 0) >= REVALIDATE_MS) {
+      socialRevalidating.add(key);
+      read()
+        .then((fresh) => { socialCache.set(key, fresh); socialReadAt.set(key, Date.now()); })
+        .catch(() => {})
+        .finally(() => socialRevalidating.delete(key));
+    }
+    return socialCache.get(key);
+  }
+  const value = await read();
+  socialCache.set(key, value);
+  socialReadAt.set(key, Date.now());
+  return value;
+}
+
+/** The graph as the screens read it — cached, and handed out as a copy. */
+async function readGraphCached(impl) {
+  const graph = await socialCached('graph',
+    async () => normalizeSocialGraph(await impl.readGraph()));
+  // A copy, for the reason readCached() hands out a copy: callers filter and
+  // sort these rows, and the cached object is now long-lived.
+  return { ...graph, connections: graph.connections.map((c) => ({ ...c })) };
+}
+
+/** What every mutation uses. Never cached, and it drops the cache behind it. */
+async function readGraphFresh(impl) {
+  const graph = normalizeSocialGraph(await impl.readGraph());
+  socialCache.set('graph', graph);
+  socialReadAt.set('graph', Date.now());
+  return graph;
+}
+
+/** A write invalidates what a read would otherwise keep serving. */
+function socialWrote() {
+  socialCache.delete('graph');
+  socialCache.delete('invites');
+  socialReadAt.delete('graph');
+  socialReadAt.delete('invites');
+}
+
 export const social = {
   /**
    * Can this account be social at all, and if not, exactly why.
@@ -1634,10 +1713,13 @@ export const social = {
     if (!a.user || a.user.isAnonymous) {
       return { available: false, reason: 'anonymous', user: a.user };
     }
-    const settings = await store.getSettings();
     const impl = requireRemote();
-    const graph = normalizeSocialGraph(await impl.readGraph());
-    const S = await socialMod();
+    // ⚠️ In parallel. These are three independent reads and the graph is the
+    // only one that touches the network; awaiting them in a row was costing the
+    // Friends tab a round trip it never needed.
+    const [settings, graph, S] = await Promise.all([
+      store.getSettings(), readGraphCached(impl), socialMod(),
+    ]);
     return {
       available: true,
       reason: null,
@@ -1666,20 +1748,22 @@ export const social = {
   /** Move one person between tiers — or to `none`, which shares nothing. */
   async setTier(uid, tier) {
     const impl = requireRemote();
-    const graph = normalizeSocialGraph(await impl.readGraph());
+    const graph = await readGraphFresh(impl);
     const row = graph.connections.find((c) => c.uid === uid);
     if (!row) throw new Error('You are not connected to them.');
     row.tier = tier;
     await impl.writeGraph(graph);
+    socialWrote();
     await republish();
     return row;
   },
 
   async remove(uid) {
     const impl = requireRemote();
-    const graph = normalizeSocialGraph(await impl.readGraph());
+    const graph = await readGraphFresh(impl);
     graph.connections = graph.connections.filter((c) => c.uid !== uid);
     await impl.writeGraph(graph);
+    socialWrote();
     // Republish FIRST-class: this is what actually cuts their access, because
     // the viewers list lives inside the document they were reading.
     await republish();
@@ -1689,7 +1773,7 @@ export const social = {
   async addConnection(uid, name) {
     const impl = requireRemote();
     const S = await socialMod();
-    const graph = normalizeSocialGraph(await impl.readGraph());
+    const graph = await readGraphFresh(impl);
     if (!graph.connections.some((c) => c.uid === uid)) {
       graph.connections.push({
         uid,
@@ -1698,6 +1782,7 @@ export const social = {
         since: todayISO(),
       });
       await impl.writeGraph(graph);
+      socialWrote();
       await republish();
     }
     return true;
@@ -1715,17 +1800,24 @@ export const social = {
       createdAt,
       expiresAt: new Date(Date.parse(S.inviteExpiry(createdAt))),
     });
+    socialWrote();
     return { token, link: S.inviteLink(location.href, impl.currentUid(), token) };
   },
 
   async invites() {
     const impl = requireRemote();
-    const rows = await impl.listInvites();
-    return rows.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    const rows = await socialCached('invites', async () => {
+      const list = await impl.listInvites();
+      return list.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    });
+    // A copy: the Friends screen partitions this into claimed and unclaimed.
+    return rows.map((r) => ({ ...r }));
   },
 
   async revokeInvite(token) {
-    return requireRemote().deleteInvite(token);
+    const done = await requireRemote().deleteInvite(token);
+    socialWrote();
+    return done;
   },
 
   /**
@@ -1743,6 +1835,7 @@ export const social = {
     if (!row || !row.claimedBy) throw new Error('That invite has not been used yet.');
     await this.addConnection(row.claimedBy, row.claimedName);
     await impl.deleteInvite(row.id || row.token).catch(() => {});
+    socialWrote();
     return true;
   },
 
@@ -1781,9 +1874,21 @@ export const social = {
   async friend(uid) {
     const impl = requireRemote();
     const S = await socialMod();
-    for (const tier of S.PROBE_ORDER) {
-      const doc = await impl.readShared(uid, tier);
-      if (doc) return { tier, doc };
+    // ⚠️ ALL THREE TIERS AT ONCE, not most-generous-first one at a time. A
+    // viewer is listed in exactly one tier, so the serial version spent a whole
+    // network round trip on each REFUSAL above their own — three of them for
+    // somebody on the lowest tier, which is the default everybody starts on and
+    // therefore the common case. The feed multiplies that by every friend.
+    //
+    // ⚠️ THE PRECEDENCE IS UNCHANGED, and that is the part worth checking: the
+    // most generous readable tier still wins, because PROBE_ORDER is applied to
+    // the ANSWERS rather than to the order of asking. A refused read is null
+    // (readShared maps permission-denied to null), so a denial cannot reject
+    // the batch and blank a friend who is really there.
+    const docs = await Promise.all(
+      S.PROBE_ORDER.map((tier) => impl.readShared(uid, tier).catch(() => null)));
+    for (let i = 0; i < S.PROBE_ORDER.length; i++) {
+      if (docs[i]) return { tier: S.PROBE_ORDER[i], doc: docs[i] };
     }
     return { tier: null, doc: null };
   },
@@ -1869,7 +1974,7 @@ export const social = {
    */
   async healConnectionName(uid) {
     const impl = requireRemote();
-    const graph = normalizeSocialGraph(await impl.readGraph());
+    const graph = await readGraphFresh(impl);
     const row = graph.connections.find((c) => c.uid === uid);
     if (!row) return null;
     if (row.name && row.name !== 'Friend') return row.name;
@@ -1881,6 +1986,7 @@ export const social = {
     // No republish: viewers derive from uid and tier, and the name is a
     // local label — nothing another account can read changed.
     await impl.writeGraph(graph);
+    socialWrote();
     return published;
   },
 

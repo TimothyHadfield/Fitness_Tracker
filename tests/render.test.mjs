@@ -2687,6 +2687,93 @@ ok(!data.querySelector('.rep-target'),
   await store.deleteSession(run.id);
 }
 
+
+/* ================= the Friends screen paints before the network answers =====
+ *
+ * Tim, 2026-08-26, on an iPhone: *"whenever I click on friends in the home menu,
+ * it has a long delay and lag to it that's alarming."*
+ *
+ * ⚠️ THE ROUTER AWAITS THE VIEW BEFORE IT SWAPS THE DOM (app.js render()), so
+ * anything SocialView awaits is time during which the PREVIOUS screen is still
+ * under his thumb and the tap looks ignored. The fix was to stop awaiting the
+ * fill — and the way that silently comes back is somebody adding one innocent
+ * `await` at the top of the view.
+ *
+ * So this test hands it a network that NEVER ANSWERS. If the screen still
+ * arrives, the paint does not depend on the fetch. If somebody re-awaits the
+ * fill, this hangs — which the race below turns into a failure rather than a
+ * hung suite.
+ */
+{
+  const { SocialView } = await import(BASE + 'views-social.js');
+  const { social } = await import(BASE + 'store.js');
+
+  const original = {
+    state: social.state, invites: social.invites,
+    friend: social.friend, healConnectionName: social.healConnectionName,
+  };
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me',
+    name: 'Tim', shareBodyWeight: false,
+    connections: [{ uid: 'u1', name: 'Autumn', tier: 'light', since: '2026-08-01' }],
+  });
+  // The hang: reads that are issued and never come back, which is what a dead
+  // cellular connection actually looks like from the page's side.
+  social.invites = () => new Promise(() => {});
+  social.friend = () => new Promise(() => {});
+  social.healConnectionName = () => new Promise(() => {});
+
+  const raced = await Promise.race([
+    SocialView().then((node) => ({ node })),
+    new Promise((r) => setTimeout(() => r({ timedOut: true }), 1500)),
+  ]);
+
+  ok(!raced.timedOut, 'the Friends screen renders while the network is still hanging');
+  if (!raced.timedOut) {
+    const t = raced.node.textContent.replace(/\s+/g, ' ');
+    ok(/Friends/.test(t), 'and it is the Friends screen, header and all');
+    ok(/You appear as Tim/.test(t),
+       'with what it already knows on it — the parts that needed no fetch');
+    ok(Boolean(raced.node.querySelector('.btn.primary')),
+       'and its Invite button, so the screen is usable before the list arrives');
+  }
+
+  Object.assign(social, original);
+}
+
+
+/* ================= pace, shown and never judged =========================
+ * docs/activities-plan.md §3 item 2. Division, not a model — so the only ways
+ * it can be wrong are arithmetic, and refusing to divide by nothing.
+ */
+{
+  const { pace, fmtSet } = await import(BASE + 'ui.js');
+  const DT = ['distance', 'time'];
+
+  ok(pace({ distance: 3, time: 1800 }, DT) === '10:00 /mi', '3 miles in 30 minutes is 10:00 /mi');
+  ok(pace({ distance: 1, time: 443 }, DT) === '7:23 /mi', 'and it carries the seconds properly');
+  ok(pace({ distance: 6.2, time: 3000 }, DT) === '8:04 /mi', 'a 10k at 50 minutes');
+
+  // ⚠️ The refusals. A back-dated log with one field filled in is normal, and
+  // "Infinity /mi" on somebody's calendar is the kind of thing that reads as
+  // the app being broken.
+  ok(pace({ distance: 0, time: 1800 }, DT) === '', 'no distance, no pace — never a division by zero');
+  ok(pace({ time: 1800 }, DT) === '', 'a missing distance is silent rather than NaN');
+  ok(pace({ distance: 3 }, DT) === '', 'and a missing time is too');
+  ok(pace({ distance: 3, time: 1800 }, ['weight', 'reps']) === '',
+     'a lift never gets a pace, however its numbers happen to divide');
+  ok(pace({ distance: 0.01, time: 3600 }, DT) === '',
+     'and an implausible one is withheld rather than printed as 100:00 /mi');
+
+  // It rides on the same line as the numbers it came from.
+  const line = fmtSet({ distance: 3, time: 1800 }, DT, null);
+  ok(/3\.00 mi/.test(line) && /30:00/.test(line) && /10:00 \/mi/.test(line),
+     'the day view shows distance, time and pace together');
+  // ⚠️ Rule 6: it is a string on the line, not a class that could be coloured.
+  ok(typeof line === 'string' && !/good|bad|fast|slow/i.test(line),
+     'and it passes no judgement on whether that pace was any good');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

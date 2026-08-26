@@ -12,6 +12,7 @@ import { store, auth, probeOffline, demo, todayISO } from './store.js';
 import { el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron } from './ui.js';
 import { cloudFullWarning } from './views-data.js';
 import * as units from './units.js';
+import * as crop from './image-crop.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -133,7 +134,12 @@ function avatarCard(settings, user) {
       e.target.value = '';
       if (!file) return;
       try {
-        const dataUrl = await shrinkImage(file, 256);
+        // ⚠️ The photo is never stored straight off the camera roll any more.
+        // A phone photo is a person somewhere in a rectangle, and the old
+        // centre-crop cut a square out of the middle of it and hoped — which is
+        // how you get an avatar of somebody's shoulder.
+        const dataUrl = await openAvatarCropper(file, 256);
+        if (!dataUrl) return;                      // cancelled — nothing to say
         await store.saveSettings({ avatar: dataUrl });
         toast('Photo saved');
         refresh();
@@ -165,27 +171,201 @@ function avatarCard(settings, user) {
   );
 }
 
-/** File → square-cropped, resized data URL. Throws a plain sentence. */
-function shrinkImage(file, size) {
+/** File → an <img> that has finished decoding. Throws a plain sentence. */
+function loadImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
+    const fail = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read.')); };
     img.onload = () => {
-      try {
-        const side = Math.min(img.naturalWidth, img.naturalHeight);
-        if (!side) throw new Error('That image could not be read.');
-        const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
-        const cx = (img.naturalWidth - side) / 2;
-        const cy = (img.naturalHeight - side) / 2;
-        canvas.getContext('2d').drawImage(img, cx, cy, side, side, 0, 0, size, size);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      } catch (err) { reject(err); }
-      finally { URL.revokeObjectURL(url); }
+      if (!img.naturalWidth || !img.naturalHeight) return fail();
+      // The object URL is kept alive until the sheet closes — the editor keeps
+      // showing this same element.
+      resolve({ img, release: () => URL.revokeObjectURL(url) });
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read.')); };
+    img.onerror = fail;
+    // ⚠️ An <img>, deliberately, NOT createImageBitmap: browsers apply EXIF
+    // orientation to an <img> and not to a bitmap, so a photo taken sideways
+    // would preview upright and save on its side. Preview and canvas read the
+    // same element, so they cannot disagree about which way up it is.
     img.src = url;
   });
+}
+
+/**
+ * The crop editor. Resolves with a data URL, or with null if it was cancelled.
+ *
+ * ⚠️ WHAT THE CIRCLE COVERS IS WHAT GETS SAVED — the preview is not an
+ * approximation of the result, it is the same rectangle drawn twice. The stage
+ * IS the crop square and the circle is inscribed in it, so `crop.layout()`
+ * positions the <img> and `crop.cropRect()` cuts it, both from one state.
+ */
+function openAvatarCropper(file, size) {
+  return new Promise((resolve, reject) => {
+    loadImage(file).then(({ img, release }) => {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      let { zoom, cx, cy } = crop.initialCrop(iw, ih);
+      let frame = 0;                                // stage side, measured
+
+      const photo = el('img', { class: 'crop-img', src: img.src, alt: '' });
+      const stage = el('div', { class: 'crop-stage' },
+        photo,
+        el('div', { class: 'crop-hole' }),
+      );
+
+      const zoomable = crop.canZoom(iw, ih);
+      const slider = el('input', {
+        type: 'range', min: '0', max: '1', step: '0.001', value: '0',
+        class: 'crop-zoom', 'aria-label': 'Zoom',
+        disabled: !zoomable || undefined,
+        onInput: (e) => {
+          ({ zoom, cx, cy } = crop.zoomTo(iw, ih, parseFloat(e.target.value), cx, cy));
+          paint();
+        },
+      });
+
+      function paint() {
+        if (!frame) return;
+        const box = crop.layout(iw, ih, zoom, cx, cy, frame);
+        photo.style.width = `${box.width}px`;
+        photo.style.height = `${box.height}px`;
+        photo.style.left = `${box.left}px`;
+        photo.style.top = `${box.top}px`;
+      }
+
+      function measure() {
+        const next = stage.clientWidth;
+        if (next && next !== frame) { frame = next; paint(); }
+      }
+
+      /* -------- dragging and pinching ---------------------------------- *
+       * Pointer events cover mouse, touch and pen in one path. `touch-action:
+       * none` on the stage is what stops iOS scrolling the sheet instead of
+       * moving the photo — without it the whole control feels broken on the
+       * one device it exists for.
+       * ----------------------------------------------------------------- */
+      const pointers = new Map();
+      let pinchStart = null;
+
+      const spread = () => {
+        const [a, b] = [...pointers.values()];
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      };
+
+      stage.addEventListener('pointerdown', (e) => {
+        stage.setPointerCapture(e.pointerId);
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 2) {
+          pinchStart = { dist: spread(), side: crop.sideForZoom(iw, ih, zoom) };
+        }
+      });
+
+      stage.addEventListener('pointermove', (e) => {
+        const prev = pointers.get(e.pointerId);
+        if (!prev) return;
+        const dx = e.clientX - prev.x;
+        const dy = e.clientY - prev.y;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (pointers.size >= 2 && pinchStart) {
+          const ratio = spread() / (pinchStart.dist || 1);
+          // Fingers apart → a smaller crop square → more zoom.
+          const nextZoom = crop.zoomForSide(iw, ih, pinchStart.side / (ratio || 1));
+          ({ zoom, cx, cy } = crop.zoomTo(iw, ih, nextZoom, cx, cy));
+          slider.value = String(zoom);
+        } else {
+          ({ cx, cy } = crop.panBy(iw, ih, zoom, cx, cy, dx, dy, frame));
+        }
+        paint();
+      });
+
+      const lift = (e) => {
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) pinchStart = null;
+      };
+      stage.addEventListener('pointerup', lift);
+      stage.addEventListener('pointercancel', lift);
+
+      stage.addEventListener('wheel', (e) => {
+        if (!zoomable) return;
+        e.preventDefault();
+        const next = Math.min(1, Math.max(0, zoom - e.deltaY * 0.0015));
+        ({ zoom, cx, cy } = crop.zoomTo(iw, ih, next, cx, cy));
+        slider.value = String(zoom);
+        paint();
+      }, { passive: false });
+
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        if (observer) observer.disconnect();
+        release();
+        resolve(value);
+      };
+
+      const { close } = openSheet({
+        title: 'Position your photo',
+        body: el('div', { class: 'crop-body' },
+          stage,
+          el('div', { class: 'crop-controls' },
+            icon('person', 16),
+            slider,
+            icon('person', 24),
+          ),
+          el('div', { class: 'field-help', text: zoomable
+            ? 'Drag the photo to move it, and use the slider to zoom. Whatever is inside the '
+              + 'circle is what your profile picture will be.'
+            : 'Drag the photo to move it. Whatever is inside the circle is what your profile '
+              + 'picture will be. This image is too small to zoom.' }),
+        ),
+        footer: el('div', { class: 'btn-row' },
+          el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
+          el('button', {
+            class: 'btn primary', text: 'Use photo',
+            onClick: () => {
+              let dataUrl;
+              try {
+                dataUrl = renderCrop(img, crop.cropRect(iw, ih, zoom, cx, cy), size);
+              } catch (err) {
+                close();
+                reject(err instanceof Error ? err : new Error('That image could not be saved.'));
+                return;
+              }
+              settled = true;                   // claim it before onClose fires
+              if (observer) observer.disconnect();
+              release();
+              close();
+              resolve(dataUrl);
+            },
+          }),
+        ),
+        // Covers the X, the backdrop and Escape in one place, so every way out
+        // of the sheet resolves rather than leaving the caller awaiting forever.
+        onClose: () => finish(null),
+      });
+
+      // The stage has no size until it is in the document.
+      measure();
+      const observer = typeof ResizeObserver === 'function'
+        ? new ResizeObserver(measure) : null;
+      if (observer) observer.observe(stage);
+    }).catch(reject);
+  });
+}
+
+/** The chosen square → a small JPEG data URL. */
+function renderCrop(img, rect, size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('That image could not be saved.');
+  // Resized to 256px and JPEG-compressed here rather than stored whole: a 12 MB
+  // camera photo becomes ~20 KB, and the settings document shares a 1 MiB
+  // ceiling with everything else in it.
+  ctx.drawImage(img, rect.x, rect.y, rect.side, rect.side, 0, 0, size, size);
+  return canvas.toDataURL('image/jpeg', 0.82);
 }
 
 /** Everything personal that used to live in Settings: profile, data, delete. */

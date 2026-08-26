@@ -3494,5 +3494,153 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok((await st.getGuestSessions()).length === 0, 'clearAll clears guest sessions too');
 }
 
+
+/* ---------- the profile-photo cropper (js/image-crop.js) ----------
+ *
+ * Tim, 2026-08-26: the old centre-crop cut a square out of the middle of a
+ * phone photo and hoped, so a face that was not dead centre became an avatar of
+ * somebody's shoulder. What is asserted here is the ONE invariant the editor
+ * rests on — the crop square never leaves the image — because the way that
+ * fails is a stored avatar with a blank wedge in it, which the round display
+ * renders as a broken picture rather than as a choice.
+ */
+{
+  const crop = await import('../js/image-crop.js');
+
+  const b = crop.cropBounds(3000, 4000);
+  ok(b.maxSide === 3000, 'zoomed right out, the crop is the whole SHORT edge (3000 of 3000x4000)');
+  ok(b.minSide === 750, 'zoomed right in, four times closer and no further');
+
+  // A small image must stay usable rather than having no zoom range at all.
+  ok(crop.cropBounds(200, 200).minSide === 64, 'a small photo keeps a 64px floor to zoom into');
+  ok(crop.cropBounds(50, 50).minSide === 50, 'a photo smaller than the floor cannot zoom past itself');
+  ok(crop.canZoom(3000, 4000) === true && crop.canZoom(50, 50) === false,
+     'and the editor is told which of those it is, so the slider can say so');
+
+  // ⚠️ THE INVARIANT, swept rather than sampled. Every zoom, every centre,
+  // including centres far outside the image, must produce a rect inside it.
+  let escaped = 0, swept = 0;
+  for (const [w, h] of [[3000, 4000], [4000, 3000], [640, 640], [200, 300], [51, 90]]) {
+    for (let t = 0; t <= 1.0001; t += 0.1) {
+      for (const cx of [-9999, -1, 0, w / 3, w / 2, w, w + 9999]) {
+        for (const cy of [-9999, 0, h / 2, h, h + 9999]) {
+          const r = crop.cropRect(w, h, t, cx, cy);
+          swept++;
+          if (r.x < 0 || r.y < 0 || r.x + r.side > w || r.y + r.side > h || r.side < 1) escaped++;
+        }
+      }
+    }
+  }
+  ok(swept > 1000 && escaped === 0,
+     `the crop square never leaves the image (${swept} combinations, ${escaped} escapes)`);
+
+  // The sign. Dragging the picture RIGHT shows more of its LEFT, so the crop
+  // centre moves left — get this backwards and the photo runs away from the
+  // finger, which is the whole feel of the control.
+  const mid = crop.panBy(1000, 1000, 0.5, 500, 500, 40, 0, 300);
+  ok(mid.cx < 500, 'dragging the photo right moves the crop centre LEFT');
+  ok(crop.panBy(1000, 1000, 0.5, 500, 500, 0, 40, 300).cy < 500, 'and the same downward');
+
+  // Dragging is in SOURCE pixels, so the same swipe moves the same amount of
+  // picture whatever size the phone rendered the stage at.
+  const small = crop.panBy(2000, 2000, 0, 1000, 1000, 30, 0, 300);
+  const large = crop.panBy(2000, 2000, 0, 1000, 1000, 60, 0, 600);
+  ok(near(small.cx, large.cx, 1e-6), 'a drag is measured in the picture, not in screen pixels');
+
+  // Zooming out at the edge slides back in rather than refusing to move.
+  const corner = crop.zoomTo(1000, 1000, 1, 100, 100);
+  const out = crop.zoomTo(1000, 1000, 0, corner.cx, corner.cy);
+  ok(out.cx === 500 && out.cy === 500, 'zooming out from a corner re-centres rather than jamming');
+
+  // layout() and cropRect() must describe the SAME rectangle, or the circle
+  // shows one thing and the saved file is another — the exact complaint the
+  // feature exists to fix.
+  const FRAME = 300;
+  for (const [zoom, cx, cy] of [[0, 1500, 2000], [0.5, 900, 1200], [1, 800, 3200]]) {
+    const box = crop.layout(3000, 4000, zoom, cx, cy, FRAME);
+    const rect = crop.cropRect(3000, 4000, zoom, cx, cy);
+    const srcX = (0 - box.left) / box.scale;
+    const srcY = (0 - box.top) / box.scale;
+    ok(near(srcX, rect.x, 1.5) && near(srcY, rect.y, 1.5),
+       `what the circle frames is what gets cut (zoom ${zoom})`);
+    ok(near(FRAME / box.scale, rect.side, 1.5), `and at the same size (zoom ${zoom})`);
+  }
+
+  ok(crop.initialCrop(3000, 4000).zoom === 0,
+     'a photo opens zoomed right out, showing the most of itself it can');
+  const sq = crop.cropRect(4000, 4000, 0, 2000, 2000);
+  ok(sq.side === 4000 && sq.x === 0 && sq.y === 0,
+     'a square photo zoomed out is the whole photo, so nothing is cropped away by default');
+}
+
+
+/* ---------- the Activity group (docs/activities-plan.md §3 item 1) ----------
+ *
+ * A group added for the WORDS — "Rock Climbing · Cardio" read as though the app
+ * thought a climb was a treadmill. ⚠️ The whole risk of the change is that it
+ * splits things off the one shelf the model already refused, so the refusals
+ * have to be inherited rather than re-earned. If Activity is missing from
+ * either list below, a swim starts counting as training: weekly sets against a
+ * muscle, a programme rating that moves, a percentile on a hike. That is D27
+ * failing silently, which is the only way it could fail.
+ */
+{
+  const { UNRANKABLE } = await import('../js/strength-standards.js');
+  const { weeklyVolume } = await import('../js/volume-map.js');
+  const { MUSCLE_GROUPS } = await import('../js/exercises.js');
+
+  ok(MUSCLE_GROUPS.includes('Activity'), 'Activity is a group a user can filter the library by');
+  ok(UNRANKABLE.includes('Activity'),
+     '⚠️ and it is UNRANKABLE — no published standard turns a 40-minute hike into a percentile');
+  ok(UNRANKABLE.includes('Cardio'), 'and Cardio still is too, which the split must not have moved');
+
+  const activities = BUILT_IN_EXERCISES.filter((e) => e.muscle === 'Activity');
+  ok(activities.length >= 8, `the things you go and do are on it (${activities.length})`);
+  for (const name of ['Running', 'Swimming', 'Rock Climbing', 'Hiking', 'Walking']) {
+    ok(activities.some((e) => e.name === name), `  ${name} is an Activity, not a muscle group`);
+  }
+  // The line between the two shelves is WHERE you do it, so the gym machines
+  // must have stayed put — moving them would change what a treadmill interval
+  // inside a real workout counts as.
+  ok(byName('Treadmill Run').muscle === 'Cardio', 'a treadmill is still Cardio — it is training');
+  ok(byName('Rowing Machine').muscle === 'Cardio', 'and so is the rower');
+
+  // ⚠️ THE ONE THAT MATTERS. Driven through the real function rather than read
+  // off the NO_VOLUME set, because the set being right is not the same claim as
+  // the volume model consulting it.
+  const exMap = new Map(BUILT_IN_EXERCISES.map((e) => [e.id, e]));
+  const sum = (m) => [...m.values()].reduce((a, v) => a + v, 0);
+  const swimId = byName('Swimming').id;
+  const climbId = byName('Rock Climbing').id;
+  const total = sum(weeklyVolume([{
+    name: 'Sunday', exercises: [{ exerciseId: swimId, sets: 3 }, { exerciseId: climbId, sets: 3 }],
+  }], exMap, 1));
+  ok(total === 0, '⚠️ six sets of swimming and climbing produce ZERO weekly volume on every muscle');
+
+  // ⚠️ VACUITY GUARD. The zero above proves nothing unless the identical call
+  // shape counts a real lift — and the first version of this test got the
+  // signature wrong, totalled zero for the bench press too, and would have
+  // shipped as a pass. That is the whole reason this line exists.
+  const liftedTotal = sum(weeklyVolume([{
+    name: 'Sunday', exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 3 }],
+  }], exMap, 1));
+  ok(liftedTotal > 0,
+     `and the same call counts three sets of bench (${liftedTotal.toFixed(1)}), so the zero is a result`);
+
+  // ⚠️ REP NORMALISATION MUST NEVER REACH AN ACTIVITY — activities-plan §3
+  // item 3. It holds today because canNormalize() demands both a weight and a
+  // reps field and a distance/time exercise has neither, so this is a
+  // by-construction guarantee rather than a check somewhere. Pinned anyway:
+  // the way it would break is somebody relaxing that condition for a reason
+  // that has nothing to do with running, and a mile does not have a one-rep max.
+  for (const name of ['Running', 'Swimming', 'Rock Climbing', 'Hiking']) {
+    const ex = byName(name);
+    ok(canNormalize(ex, { bodyWeight: 180 }) === false,
+       `  ${name} is never converted to an equivalent load`);
+  }
+  ok(canNormalize(byName('Barbell Bench Press'), {}) === true,
+     'while an ordinary lift still is, so the four above are a result and not a broken call');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

@@ -41,6 +41,7 @@ const SHELL = [
   './js/body-map.js',
   './js/e1rm.js',
   './js/exercises.js',
+  './js/image-crop.js',
   './js/firebase-backend.js',
   './js/firebase-config.js',
   './js/store.js',

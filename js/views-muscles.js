@@ -315,7 +315,9 @@ function confidenceLine(m) {
 
 function summary(muscles) {
   const ranked = [...muscles.values()].filter((m) => m.level);
-  const unranked = UNRANKABLE.filter((u) => u !== 'Cardio');
+  // Cardio and Activity are library shelves, not muscles — listing them as
+  // "not ranked" beside Core and Neck would imply the map is missing them.
+  const unranked = UNRANKABLE.filter((u) => u !== 'Cardio' && u !== 'Activity');
   const strongest = ranked.slice().sort((a, b) => b.percentile - a.percentile)[0];
   const weakest = ranked.slice().sort((a, b) => a.percentile - b.percentile)[0];
 

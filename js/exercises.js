@@ -295,32 +295,40 @@ const RAW = [
   ['Tire Flip', 'Full Body', 'Other', 'r'],
 
   // ---------- CARDIO ----------
-  ['Running', 'Cardio', 'Other', 'dt'],
+  // Conditioning done IN a gym, as part of a training session.
   ['Treadmill Run', 'Cardio', 'Machine', 'dt'],
   ['Treadmill Walk', 'Cardio', 'Machine', 'dt'],
   ['Incline Treadmill Walk', 'Cardio', 'Machine', 'dt'],
-  ['Outdoor Cycling', 'Cardio', 'Other', 'dt'],
   ['Stationary Bike', 'Cardio', 'Machine', 'dt'],
   ['Assault Bike', 'Cardio', 'Machine', 'dt'],
   ['Rowing Machine', 'Cardio', 'Machine', 'dt'],
   ['Elliptical', 'Cardio', 'Machine', 'dt'],
   ['Stair Climber', 'Cardio', 'Machine', 'dt'],
-  ['Swimming', 'Cardio', 'Other', 'dt'],
-  // Added 2026-08-26 with the Record activity chooser: the non-lifting
-  // activities Tim named. Filed under Cardio because that is this library's
-  // "recorded, never rated" group — the honest slot until a dedicated
-  // Activity group exists (docs/activities-plan.md §4). Climbing is
-  // time-only: nobody logs a distance up a wall.
-  ['Walking', 'Cardio', 'Other', 'dt'],
-  ['Rock Climbing', 'Cardio', 'Other', 't'],
-  ['Bouldering', 'Cardio', 'Other', 't'],
-  ['Jump Rope', 'Cardio', 'Other', 't'],
   ['Ski Erg', 'Cardio', 'Machine', 'dt'],
-  ['Hiking', 'Cardio', 'Other', 'dt'],
-  ['Stairs', 'Cardio', 'Other', 't'],
+  ['Jump Rope', 'Cardio', 'Other', 't'],
   ['Sprint Intervals', 'Cardio', 'Other', 't'],
   ['Shadow Boxing', 'Cardio', 'Other', 't'],
   ['Jumping Jacks', 'Cardio', 'Bodyweight', 'r'],
+
+  // ---------- ACTIVITY ----------
+  // ⚠️ A GROUP, NOT A MUSCLE, and it exists for the WORDS rather than the
+  // model — docs/activities-plan.md §3 item 1. These shipped under Cardio on
+  // 2026-08-26 because Cardio was the library's only "recorded, never rated"
+  // shelf, and "Rock Climbing · Cardio" reads as though the app thinks a climb
+  // is a treadmill. Splitting them changes no arithmetic anywhere: Activity is
+  // added to UNRANKABLE and to NO_VOLUME in the same commit, so it inherits
+  // every refusal Cardio already had (D27 — recorded first-class, modelled not
+  // at all). The line between the two shelves is where you do it: a treadmill
+  // is training, a hike is a thing you went and did.
+  // Climbing is time-only: nobody logs a distance up a wall.
+  ['Running', 'Activity', 'Other', 'dt'],
+  ['Outdoor Cycling', 'Activity', 'Other', 'dt'],
+  ['Swimming', 'Activity', 'Other', 'dt'],
+  ['Walking', 'Activity', 'Other', 'dt'],
+  ['Hiking', 'Activity', 'Other', 'dt'],
+  ['Rock Climbing', 'Activity', 'Other', 't'],
+  ['Bouldering', 'Activity', 'Other', 't'],
+  ['Stairs', 'Activity', 'Other', 't'],
 
   // ---------- NECK ----------
   ['Neck Curl', 'Neck', 'Other', 'wr'],
@@ -330,7 +338,7 @@ const RAW = [
 
 export const MUSCLE_GROUPS = [
   'Chest', 'Back', 'Shoulders', 'Traps', 'Biceps', 'Triceps', 'Forearms',
-  'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Core', 'Full Body', 'Cardio', 'Neck',
+  'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Core', 'Full Body', 'Cardio', 'Activity', 'Neck',
 ];
 
 export const EQUIPMENT = [

@@ -168,7 +168,10 @@ export const VOLUME_MUSCLES = [
 export const SCORED_MUSCLES = VOLUME_MUSCLES.filter((m) => m !== 'Core');
 
 /** Exercises here produce no resistance-training volume for any muscle. */
-const NO_VOLUME = new Set(['Cardio']);
+// ⚠️ Activity is here for the same reason Cardio is, and missing it would be
+// the whole D27 line failing quietly: a swim would start counting as weekly
+// sets against a muscle and moving somebody's programme rating.
+const NO_VOLUME = new Set(['Cardio', 'Activity']);
 
 /**
  * name pattern -> extra muscles beyond the library's own `muscle` field.

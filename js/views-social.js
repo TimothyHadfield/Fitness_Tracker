@@ -147,19 +147,32 @@ export async function SocialView() {
     }),
   });
 
-  await fillSocial(body, state);
+  // ⚠️ NOT AWAITED — the screen goes up now and fills in when the network
+  // answers. Tim, 2026-08-26, on an iPhone: *"whenever I click on friends in
+  // the home menu, it has a long delay and lag to it that's alarming."* The
+  // router awaits the view before it swaps the DOM, so every millisecond spent
+  // here was a tap that visibly did nothing — the PREVIOUS screen stayed under
+  // his thumb. This is the shape profileButton() and fillFeed() already use.
+  fillSocial(body, state).catch(() => {
+    setChildren(body, emptyState('Could not load your friends',
+      'You are signed in, but the list could not be fetched just now. It will be here when the '
+      + 'connection is back.'));
+  });
   return screen;
 }
 
 async function fillSocial(body, state) {
   const parts = [];
 
-  // Somebody used my link and is waiting to be let in. This is at the top
-  // because it is the only thing on the screen that is waiting on the user.
-  let claims = [];
+  // ⚠️ ONE read, partitioned — this was TWO identical list queries, awaited one
+  // after the other, for the claimed half and the unclaimed half of the same
+  // collection. On cellular that is a whole round trip spent asking a question
+  // already answered.
+  let invites = [];
   try {
-    claims = (await social.invites()).filter((i) => i.claimedBy);
+    invites = await social.invites();
   } catch (_) { /* invites are a nicety; the friends list is the screen */ }
+  const claims = invites.filter((i) => i.claimedBy);
 
   if (claims.length) {
     parts.push(el('h2', { class: 'section-head', text: 'Waiting for you' }));
@@ -218,10 +231,7 @@ async function fillSocial(body, state) {
   // Links that have been sent and not yet used. Shown so a link can be taken
   // back — an invite is a capability, and a capability you cannot revoke is a
   // worse thing than one you never made.
-  let open = [];
-  try {
-    open = (await social.invites()).filter((i) => !i.claimedBy);
-  } catch (_) {}
+  const open = invites.filter((i) => !i.claimedBy);
   if (open.length) {
     parts.push(el('h2', { class: 'section-head', text: 'Invite links you have sent' }));
     for (const i of open) {

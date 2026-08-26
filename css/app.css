@@ -348,7 +348,17 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 }
 .avatar-btn:active { background: var(--raised-hi); }
 .avatar-btn svg { width: 19px; height: 19px; }
+/* ⚠️ ABSOLUTE, INSET 0 — NOT an auto-sized grid item, and this is a bug fix
+   rather than a tidy-up. `.avatar-btn` is `place-items: center`, which sizes its
+   item to its CONTENT; the content is the photo, whose own `width: 100%` then
+   resolves against a parent that is being sized from it. That is a cyclic
+   percentage, and an engine is free to break the cycle by falling back to the
+   image's INTRINSIC size — 256px. Blink resolves it to 34px and WebKit was
+   reported rendering it huge on an iPhone, which is exactly the shape of that
+   disagreement. Pinning the glyph to the button's own box makes the containing
+   block definite, so there is no cycle left for either engine to resolve. */
 .avatar-glyph {
+  position: absolute; inset: 0;
   display: grid; place-items: center;
   font-size: 14.5px; font-weight: 700; line-height: 1;
 }
@@ -770,17 +780,59 @@ select.input {
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 /* The chosen profile photo, in the account button and on the Account screen.
-   The button clips it round via overflow; the card face is its own circle. */
-.avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+   ⚠️ EVERY ONE OF THESE IS ABSOLUTELY POSITIONED AGAINST A FIXED-SIZE PARENT,
+   and none of them may be sized by the picture. A profile photo is the one
+   image in this app whose intrinsic size (256px) is far larger than its box, so
+   it is the one place where "the image decides" is a visible catastrophe rather
+   than a small reflow. `inset: 0` against a parent with real pixel dimensions
+   cannot be resolved any other way by any engine. */
+.avatar-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; max-width: 100%; max-height: 100%;
+  object-fit: cover; border-radius: 50%; display: block;
+}
 .avatar-card { display: flex; align-items: flex-start; gap: 14px; }
 .avatar-face {
+  position: relative;
   flex: none; width: 64px; height: 64px; border-radius: 50%;
   background: var(--raised); color: var(--ink-soft);
   display: grid; place-items: center; overflow: hidden;
 }
-.avatar-face img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-face img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; max-width: 100%; max-height: 100%;
+  object-fit: cover;
+}
 .avatar-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
 .avatar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Positioning a photo inside the circle (js/image-crop.js).
+   ⚠️ The stage IS the crop square and the circle is inscribed in it, so what
+   the ring encloses is exactly what gets saved. The scrim and the ring are
+   deliberately NOT themed: they sit on top of somebody's photograph rather
+   than on a surface, so they answer to the picture and not to the room —
+   the same argument the body poster's tokens make. */
+.crop-body { display: flex; flex-direction: column; gap: 12px; }
+.crop-stage {
+  position: relative; overflow: hidden;
+  width: 100%; max-width: 300px; aspect-ratio: 1; margin: 0 auto;
+  border-radius: 10px; background: #000;
+  touch-action: none;                 /* or iOS scrolls the sheet instead */
+  /* Prefixed too — this control exists for an iPhone, and dragging a photo on
+     an unprefixed-only rule selects the sheet's text on older iOS Safari. */
+  cursor: grab; -webkit-user-select: none; user-select: none;
+}
+.crop-stage:active { cursor: grabbing; }
+.crop-img { position: absolute; max-width: none; display: block; pointer-events: none; }
+.crop-hole {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+.crop-controls { display: flex; align-items: center; gap: 10px; color: var(--ink-faint); }
+.crop-controls svg { flex: none; }
+.crop-zoom { flex: 1; min-width: 0; accent-color: var(--accent); height: 44px; }
+.crop-zoom:disabled { opacity: 0.4; }
 
 /* Settings' colour picker: each chip carries its palette's accent as a dot,
    so the choice is visible before it is made. The dot keeps a hairline ring
@@ -1618,7 +1670,8 @@ a.seg {
 
    The rule is suppressed either side of the selection, which is where the
    painted pill already does the separating — the same reason iOS's own control
-   drops it there. Rule 2 still holds: this is a hairline, not a border box. */
+   drops it there. Rule 2 still holds: this is a hairline, not a border box.
+
    ⚠️ Drawn at left:0, INSIDE the box, not in the 2px gap at left:-2px: the
    ellipsis backstop above needs `overflow: hidden`, which would clip anything
    hanging outside. 2px off the true midpoint is invisible on a 1px rule; a
@@ -2984,3 +3037,11 @@ a.row { text-decoration: none; }
 .comment-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .comment-who { font-size: 12px; font-weight: 700; }
 .comment-text { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; overflow-wrap: anywhere; white-space: pre-line; }
+
+/* The little kind mark on a feed card's title — a dumbbell for a lifting
+   session, a route for an activity. It sits INSIDE the h2 so it shares the
+   title's baseline and inherits its colour; sized in ems so it tracks the
+   title if that ever changes size. Decorative: the title beside it already
+   says what this is, which is why it carries no label of its own. */
+.feed-kind { display: inline-flex; vertical-align: -0.12em; margin-right: 7px; color: var(--ink-faint); }
+.feed-kind svg { width: 1em; height: 1em; }

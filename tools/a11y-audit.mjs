@@ -243,7 +243,27 @@ const ROUTES = [
        return Boolean(m); })()`],
   ['#/goals', 'Goals'], ['#/social', 'Social'], ['#/settings', 'Settings'],
   ['#/account', 'Account'], ['#/profile', 'Profile'],
+  // Added 2026-08-26: the quick activity log shipped with the Record chooser
+  // and had never been measured — a whole screen of steppers and a date field.
+  ['#/activity/Running', 'Activity log'],
 ];
+
+/* ⚠️ THE PALETTE, ADDED 2026-08-26 — and the reason is a known coverage hole
+ * rather than a new feature. Four palettes shipped on 2026-08-26 and this audit
+ * had only ever run on the default one, so teal, indigo and ember have never had
+ * a painted pixel measured. tests/a11y.test.mjs sweeps all four at TOKEN level,
+ * which is not the same claim: it cannot see a scoped literal, and two of those
+ * had already been found by hand.
+ *
+ * Set through the ATTRIBUTE for the same reason the theme is — the demo backend
+ * reseeds on every reload, so a palette written through settings is thrown away
+ * by the next navigate. Gold is bare :root and sets NO attribute, which is the
+ * shipped design, so PALETTE=gold removes it rather than setting it. */
+const PALETTE = process.env.PALETTE || 'gold';
+
+const applyPalette = () => evaluate(PALETTE === 'gold'
+  ? `document.documentElement.removeAttribute('data-palette')`
+  : `document.documentElement.setAttribute('data-palette', ${JSON.stringify(PALETTE)})`);
 
 const report = {};
 
@@ -264,6 +284,7 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     // run of this audit reported dark-theme numbers under both labels. The CSS
     // is driven by :root[data-theme], exactly as app.js drives it.
     await evaluate(`document.documentElement.setAttribute('data-theme','${dark ? 'dark' : 'light'}')`);
+    await applyPalette();
     await sleep(300);
 
     for (const [hash, name, after] of ROUTES) {
@@ -275,6 +296,7 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
         await sleep(700);
       }
       await evaluate(`document.documentElement.setAttribute('data-theme','${dark ? 'dark' : 'light'}')`);
+      await applyPalette();
       await sleep(150);
       try {
         const r = await evaluate(AUDIT);
@@ -287,7 +309,7 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
 }
 
 writeFileSync(process.env.OUT || 'a11y-raw.json', JSON.stringify(report, null, 1));
-console.log('routes audited:', Object.keys(report).length);
+console.log(`routes audited (${PALETTE}):`, Object.keys(report).length);
 
 chrome.kill();
 server.kill();

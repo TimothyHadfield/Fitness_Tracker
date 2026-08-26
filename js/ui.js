@@ -162,6 +162,10 @@ const PATHS = {
   // with something different, it does not reload the same one.
   swap: 'M4 8.5h15M15.5 5l3.5 3.5-3.5 3.5M20 15.5H5M8.5 12 5 15.5 8.5 19',
   flag: 'M5 21V4h13l-2.5 4L18 12H5',
+  // A route rather than a runner: this one glyph stands for every activity —
+  // a swim, a climb, a cycle — and a sport-specific mark would be wrong for
+  // five of the six things it labels.
+  activity: 'M3 17.5c3 0 3-11 6-11s3 11 6 11 3-11 6-11',
   // A map pin — the location label on a session. Stroked ring for the centre,
   // same trick as `target`, so it needs no fill exception.
   pin: 'M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21zM14.2 10.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0',
@@ -445,7 +449,36 @@ export function fmtSet(set, fields, loadType) {
   if (fields.includes('reps') && set.reps != null) parts.push(`× ${trimNum(set.reps)}`);
   if (fields.includes('time') && set.time != null) parts.push(fmtTime(set.time));
   if (fields.includes('distance') && set.distance != null) parts.push(`${Number(set.distance).toFixed(2)} mi`);
+  const p = pace(set, fields);
+  if (p) parts.push(p);
   return parts.join('  ') || '—';
+}
+
+/**
+ * Minutes per mile, for anything recording both a distance and a time.
+ *
+ * ⚠️ DERIVED FROM WHAT WAS RECORDED, AND NEVER JUDGED — docs/activities-plan.md
+ * §3 item 2, and Rule 6. It is division, not a model, so it says nothing the
+ * two numbers beside it did not already say; and it is printed in the same ink
+ * as the rest of the line, never coloured, because a recovery run is not a
+ * worse run and this app has no way to know which one today was.
+ *
+ * Silent unless both numbers are really there and really positive — a
+ * back-dated log with a distance and no time would otherwise read "Infinity".
+ */
+export function pace(set, fields) {
+  if (!fields.includes('distance') || !fields.includes('time')) return '';
+  const miles = Number(set.distance);
+  const seconds = Number(set.time);
+  if (!(miles > 0) || !(seconds > 0)) return '';
+  const perMile = seconds / miles;
+  // Past about an hour a mile this stops describing anything anybody would
+  // call a pace — a stroll with a long stop in it, or a mistyped distance.
+  if (perMile > 3600) return '';
+  const mins = Math.floor(perMile / 60);
+  const secs = Math.round(perMile % 60);
+  const carried = secs === 60 ? { m: mins + 1, s: 0 } : { m: mins, s: secs };
+  return `${carried.m}:${String(carried.s).padStart(2, '0')} /mi`;
 }
 
 export function fmtDateLong(iso) {

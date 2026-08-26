@@ -4,7 +4,14 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-26, prepared for a chat reset. **2026-08-26 was the biggest build day
+**Last updated:** 2026-08-27. ⚠️ **READ THE 2026-08-27 SECTION FIRST** — the profile photo is now
+CROPPED BY THE USER (drag and zoom inside a circle), the Friends tab's iPhone lag is fixed (it was
+three serialised cloud round trips before a single pixel moved), a CSS comment had been silently
+eating the segment-divider rule, activities got their own group, and the full browser audit has now
+run on ALL FOUR palettes — 240 combinations, zero failures. ⚠️ **One thing needs Tim's eyes**: the
+profile-photo-too-big fix is reasoned, because headless Chrome never reproduced the bug.
+
+**2026-08-26, prepared for a chat reset.** **2026-08-26 was the biggest build day
 this project has had — NINE dated sections below, all deployed the same day**, every one on Tim's
 explicit instruction:
 
@@ -23,12 +30,12 @@ explicit instruction:
   **`docs/airpods-plan.md`** (research done, NOTHING deployed, his instruction — stem presses
   buildable, head-motion impossible on web).
 
-**Tests: 2,683 across eleven suites** (data-layer 1250, render 497, social 134, a11y 85), plus
+**Tests: 2,738 across eleven suites** (data-layer 1291, render 511, social 134, a11y 85), plus
 66 rules assertions in the emulator and 12 in sw-update. Tim also **pre-authorised sub-agents**
-(saved to memory). ⚠️ **Two things the reset must carry:** the friend-name heal and everything
-from the second wave are **jsdom-tested but not yet screenshotted or field-confirmed** — a CDP
-visual pass and Tim's own phone are the outstanding verifications; and the full browser AUDIT has
-still only ever run on the Gold palette.
+(saved to memory). ⚠️ **Both of those carried into 2026-08-27 and are now half-closed**: the CDP visual pass RAN (the
+chooser, activity log and Account screen are screenshotted and overflow-free) and the full audit
+ran on all four palettes. **Still outstanding on Tim's own phone**: the friend-name heal, a real
+reaction round trip, and the profile-photo fix.
 
 The day before (2026-08-25) the app was restructured, and most of what a
 2026-08-24 reader knew about its shape is now wrong. Three batches landed after the second gym
@@ -118,6 +125,11 @@ opens on **the next workout in your rotation** — it reads your last session an
 after it in that programme, saying what it read. ⚠️ **Kudos and comment do not work yet**
 and say so when pressed (0l); **there is no location anywhere** (0m).
 
+⚠️ **THE FRIENDS TAB NO LONGER WAITS ON THE NETWORK TO PAINT** (2026-08-27, Tim's iPhone report). It
+returns its shell immediately and fills in after, the cloud graph and invite reads are cached like
+every other read, the invite list is fetched once rather than twice, and a friend's three tiers are
+probed in parallel rather than one refusal at a time. See that day's section.
+
 **Sets have TYPES**: supersets, tri-sets and giant sets (walked round by round, with the rest timer
 holding off until the end of a round), plus drop sets and myo-reps (mini-sets nested inside one set,
 which stays one hard set). D23.
@@ -187,6 +199,163 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-27 — ⚠️ THE PHOTO CROPPER, TWO IPHONE BUGS, ACTIVITIES PHASE 2, AND THE PALETTE AUDIT
+
+Tim asked for the fully-specified items to be finished, then sent two live phone reports and two
+research questions mid-build. Everything below shipped except the research, which is plan-only.
+
+### 1. ⚠️ THE PROFILE PHOTO IS POSITIONED BY THE USER NOW
+
+*"Sometimes the user's face isn't centered and large in the middle… display the image the user
+imported with a circle in the middle showing what their profile icon is actually going to look
+like. The user can move this to any part of the image and also zoom it in or out."* Built exactly
+that: a **"Position your photo" sheet** — a square stage with an inscribed circle, the outside
+dimmed, drag to move, a slider plus pinch and wheel to zoom, then Cancel / Use photo.
+
+⚠️ **THE CIRCLE IS NOT A PREVIEW OF THE RESULT, IT IS THE SAME RECTANGLE DRAWN TWICE.**
+`js/image-crop.js` is a new **pure module** — the crop is a square of side `s` centred at
+`(cx, cy)` in SOURCE pixels, and both `layout()` (which places the `<img>`) and `cropRect()` (which
+cuts the canvas) derive from that one state. An assertion checks they describe the same rectangle
+at three zooms; if they ever disagree, the thing Tim complained about comes straight back in a new
+form.
+
+⚠️ **THE ONE INVARIANT: THE CROP SQUARE NEVER LEAVES THE IMAGE**, so no avatar can be saved with a
+blank wedge in it — which the round display would render as a broken picture rather than as a
+choice. Swept over **1,925 combinations** of size, zoom and centre, including centres far outside
+the image: zero escapes. **Mutation-checked properly**: it survives removing either guard alone —
+they are deliberate defence in depth — and fails 1,843 of 1,925 with both gone, so it is a
+property and not a vacuous pass. Verified in a real browser too: at every zoom the image still
+covers all four sides of the circle.
+
+**Everything else is unchanged**: still resized to 256px JPEG (~4 KB measured), still
+`settings.avatar`, still local-only and NOT published to friends. The old blind centre-crop is
+gone. ⚠️ **An `<img>` is used rather than `createImageBitmap`, deliberately** — browsers apply EXIF
+orientation to an `<img>` and not to a bitmap, so a sideways phone photo would otherwise preview
+upright and save on its side.
+
+### 2. ⚠️ "IT TAKES UP THE MAJORITY OF THE UPPER LEFT OF THE SCREEN" — a cyclic percentage
+
+Tim, on his iPhone: the profile photo rendered enormous and uncropped, with no circle. **Chrome at
+390px does not reproduce it** — measured 34×34 and circular — so this is a WebKit-only
+disagreement and the diagnosis is reasoned rather than observed. But there was a real latent fault
+to find: `.avatar-glyph` had **no dimensions of its own**, and `.avatar-btn` is
+`place-items: center`, which sizes its item to its CONTENT. The content is the photo, whose own
+`width: 100%` then resolves against a parent being sized from it — **a cyclic percentage, which an
+engine may legally break by falling back to the image's intrinsic size: 256px.** Blink picks 34,
+and "extremely large" is exactly what picking 256 looks like.
+
+Fixed by making the containing block definite: the glyph and both avatar images are now
+`position: absolute; inset: 0` against a fixed-size parent, which no engine can resolve any other
+way. ⚠️ **UNVERIFIED ON HIS PHONE** — headless Chrome never showed the bug, so it cannot show the
+fix either. This one needs Tim to look.
+
+### 3. ⚠️ A CSS COMMENT WAS NEVER CLOSED, AND IT WAS EATING A RULE
+
+Found while reading the stylesheet for the above. `css/app.css` had **217 comment opens against
+218 closes**: one block closed early and its second paragraph ran on as raw CSS, ending in a stray
+close. The parser consumed all of it as a selector — and swallowed the **`.seg + .seg::after`
+rule** with it. So the hairline between unselected segments, measured and argued for on
+2026-08-21 (without it "Graph | Bar Chart Muscles" reads as two choices, the second called "Bar
+Chart Muscles"), **has never rendered.** Confirmed in the browser and **mutation-checked**: with
+the stray close restored, `content` computes to `none`.
+
+### 4. ⚠️ THE FRIENDS TAB'S LAG — three round trips before a single pixel moved
+
+*"Whenever I click on friends in the home menu, it has a long delay and lag to it that's
+alarming."* Diagnosed by reading the path rather than guessing. Four faults, all fixed:
+
+- **The router `await`s the view before it swaps the DOM**, so everything `SocialView` awaited was
+  time with the PREVIOUS screen under his thumb. It now returns the shell immediately and fills in
+  after — the shape `fillFeed()` and `profileButton()` already used. ⚠️ **Pinned by a render test
+  that hands it a network which NEVER ANSWERS**; if somebody re-adds the `await`, the screen never
+  arrives and the test fails. Mutation-checked.
+- **`social.invites()` was called TWICE** — once for the claimed half, once for the unclaimed half
+  of the same collection, awaited one after the other. One read now, partitioned.
+- **`social.friend()` probed the three tiers SERIALLY**, paying a full round trip for each refusal
+  above the viewer's own — three of them for somebody on the lowest tier, which is the default
+  everybody starts on, multiplied by every friend in the feed. Now one parallel batch.
+  ⚠️ **Precedence is unchanged**: `PROBE_ORDER` is applied to the answers instead of to the order
+  of asking, and a refusal is `null` rather than a rejection, so it cannot blank a real friend.
+- **The graph and invite reads are cached** with the same 30-second silent-revalidate discipline
+  the collection cache has used since 2026-08-22, and the same contract: **read-only paths only.**
+  Every mutation calls `readGraphFresh()` and drops the cache after writing. Cloud reads were the
+  last thing in the app still paying the network on every visit. ⚠️ Clearing is wired **inside
+  `clearReadCache()`** rather than at each call site, so an identity change cannot show one account
+  the previous account's friends.
+
+### 5. Activities Phase 2, items 1–4 (`docs/activities-plan.md` §3)
+
+- **An `Activity` group**, split out of Cardio — "Rock Climbing · Cardio" read as though the app
+  thought a climb was a treadmill. The line is where you do it: a treadmill is training, a hike is
+  a thing you went and did. ⚠️ **Added to `UNRANKABLE` and `NO_VOLUME` in the same commit**, so it
+  inherits every refusal Cardio had. Asserted through the real `weeklyVolume()`: six sets of
+  swimming and climbing produce **zero** volume on every muscle — **with a vacuity guard that
+  caught the first version of that test being meaningless**, because the signature was wrong and
+  it totalled zero for the bench press too.
+- **Pace, shown and never judged** — minutes per mile on any set carrying both distance and time,
+  in the same ink as the numbers it came from (Rule 6: a recovery run is not a worse run). Silent
+  when either number is missing or the result is implausible, so no calendar ever reads
+  "Infinity /mi".
+- **Rep normalisation can never reach an activity** — it already could not (`canNormalize()`
+  demands both weight and reps), so this is a by-construction guarantee, now pinned so that
+  relaxing that condition for some unrelated reason cannot give a mile a one-rep max.
+- **The feed card names the kind** — a dumbbell for a lifting session, a route glyph for an
+  activity, recovered on the client by name because the projection carries no group. It also
+  stopped printing **"Running" directly under "Running"**, which is what an activity card did.
+
+### 6. ⚠️ THE FULL BROWSER AUDIT HAS NOW RUN ON ALL FOUR PALETTES
+
+The standing known limit since 2026-08-26 — *"the full audit has only ever run on Gold"* — is
+closed. `tools/a11y-audit.mjs` takes a `PALETTE` env var now (set through the attribute, for the
+same reason the theme is: the demo backend reseeds on every reload, so a palette written through
+settings is thrown away by the next navigate). **The activity log joined the route list too**, a
+whole screen that shipped unaudited.
+
+```
+              combos  text nodes  below 4.5:1  overflow  median
+  gold          60       5,874         0          0       9.41
+  teal          60       5,874         0          0       9.41
+  indigo        60       5,874         0          0       9.41
+  ember         60       5,874         0          0       9.24
+```
+
+**240 route/width/theme/palette combinations, 23,496 text nodes, zero failures.**
+
+### 7. Screenshots — the queued visual pass
+
+Driven over CDP at 390px: the Record chooser, the activity log, the Account screen, the Home feed,
+Friends, and Data · Muscles — **no horizontal overflow on any of them** — plus the crop editor
+opened with a real 900×1600 `File` through a real `DataTransfer`, dragged (60px, 1:1 with the
+finger), zoomed (+210px, still covering all four sides), saved (256×256, 4 KB, decodes), and the
+result measured on the account button at 34×34 with a 50% radius. Eyeballed.
+
+⚠️ **One probe was wrong twice before it was right**, which is worth keeping: it first reported
+"no photo input on the Account screen" (it was in the demo, whose Account screen is a different
+screen entirely) and then reported the drag as doing nothing (it measured after a zoom that had
+rescaled everything). Neither was a bug in the app. **Probe honestly** — §0.6 already says this
+about bounding-box centres, and it keeps being true.
+
+### 8. Two research answers, nothing built
+
+- **`docs/airpods-plan.md` §2b — would head motion work as an App Store app? YES.**
+  `CMHeadphoneMotionManager` is a real public API on AirPods Pro / Max / 3rd gen / Beats Fit Pro
+  (⚠️ not AirPods 2nd gen). ⚠️ **But a WKWebView wrapper does not get it** — it needs a native
+  Swift bridge, a $99/year account, and review, where **guideline 4.2 rejects repackaged
+  websites**. Head motion alone is not a good enough reason to build a native app; HealthKit might
+  be.
+- **`docs/integrations-plan.md` — new.** Pulling data from Strava, Cronometer, Apple Fitness,
+  MacroFactor and the wearables. ⚠️ **The blocker is not "website vs app", it is the missing
+  server**: Strava's token exchange needs a client secret and supports neither PKCE nor the
+  implicit flow, and a native app is just as public a client. ⚠️ **And Strava's 2026 agreement
+  forbids showing one user's Strava data to another user — so an imported run may not appear in a
+  friend's feed.** The recommendation is **file import first**, which needs no secret, no server,
+  no Blaze plan and no partner approval, and works today as a website. ⚠️ **Importing food
+  collides with D1/D26** and must go to Tim as a narrowing rather than be resolved quietly.
+
+**Tests: data-layer 1250 → 1291, render 497 → 511.** All eleven suites green.
 
 ---
 
@@ -2485,11 +2654,12 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
 | **9b** | **0l — kudos and comments** | ✅ **BUILT AND DEPLOYED 2026-08-26** — create-only reaction docs under the owner, viewer-of-any-tier may write, no update path, 66 rules assertions. See that day's second-pass section. The same rules pattern is the template 0e's friend-accept half and 0j need |
 | **9c** | **0m — location on feed cards** | ✅ **BUILT AND DEPLOYED 2026-08-26** — a hand-typed label (never GPS), carried forward between sessions, published at mid+ beside `startedAt`. The privacy decision is that nothing more precise than what the owner typed can exist to leak. See the third-pass section |
-| **10** | **0k — the colour direction** | ✅ **CLOSED 2026-08-26 — Tim picked ALL THREE.** Settings → Colour: Gold/Teal/Indigo/Ember, each with a designed light theme, swept by the a11y suite (22 → 85), CDP-verified. See the eighth-pass section. Remaining: the full browser audit has only run on Gold |
+| **10** | **0k — the colour direction** | ✅ **FULLY CLOSED 2026-08-27.** Tim picked all three; Settings → Colour: Gold/Teal/Indigo/Ember, each with a designed light theme, swept by the a11y suite (22 → 85). ⚠️ **The last caveat is gone**: the full browser audit has now run on all four palettes — 240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
-| **12** | **activities, Phase 2** | ⚠️ **OPEN** — `docs/activities-plan.md` §3: an Activity group label, pace shown-not-judged, activity charts check, feed activity glyphs, activity PRs (needs design). Phase 1 (the chooser + quick log) shipped 2026-08-26 |
+| **12** | **activities, Phase 2** | ⚠️ **ITEMS 1–4 SHIPPED 2026-08-27** — the Activity group (unrankable, no volume, both asserted), pace shown-not-judged, the rep-normalisation guarantee pinned, and the feed's kind glyph. **Still open: item 5, activity PRs** (needs distance-bucketing designed first) and **item 6, per-activity extras** — which `docs/activities-plan.md` says to ASK TIM about: which activities his circle actually logs, since climbing grades are the least standardised thing in the list |
+| **12b** | **importing from other apps** | ⚠️ **RESEARCHED 2026-08-27, nothing built** — `docs/integrations-plan.md`. Strava / Cronometer / Apple Health / MacroFactor / wearables. **The blocker is the missing SERVER, not being a website**: Strava needs a client secret and offers no PKCE. **File import works today** and is the recommendation. ⚠️ Two things need Tim: whether to turn on Firebase Blaze for live sync, and whether importing food narrows D1/D26 |
 | **13** | **AirPods stem-press controls** | ⚠️ **WAITING ON TIM'S GO** — `docs/airpods-plan.md`. Buildable via MediaSession; costs Now Playing (no simultaneous Spotify) so opt-in only. §4 is the build order, starting with a half-day device spike. **Nothing deployed, on his instruction** |
-| **14** | **the outstanding verification pass** | ⚠️ **OPEN** — a CDP screenshot round over the 2026-08-26 second wave (chooser, activity log, account screen), the full browser audit on the three new palettes (it has only ever run on Gold), and two field checks on Tim's phone: the friend-name heal, and a real reaction round-trip with Autumn's account |
+| **14** | **the outstanding verification pass** | ⚠️ **MOSTLY CLOSED 2026-08-27** — the CDP round ran (chooser, activity log, Account, feed, Friends, Muscles: no overflow anywhere) and the audit ran on all four palettes. **Still open, and all three need Tim's own phone**: the friend-name heal, a real reaction round trip with Autumn's account, and ⚠️ **the profile-photo-too-big fix, which headless Chrome could never reproduce and therefore cannot confirm** |
 
 **Closed 2026-08-24 and kept below for the reasoning:** 0a (both blockers), 0d (exercise swap),
 0g (within-session fatigue), 0b(d) (restore from backup).
@@ -2876,7 +3046,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2683 assertions across eleven suites** (recounted 2026-08-26 end of day: data-layer 1250, render 497, social 134, a11y 85), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2738 assertions across eleven suites** (recounted 2026-08-27: data-layer 1291, render 511, social 134, a11y 85), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -2887,7 +3057,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Goals tests** | `node tests/goals.test.mjs` — 232 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier. ⚠️ Since 2026-08-24 it also **plays an assist machine forward through forty obeyed sessions** and asserts it never once proposes more assistance. That section replaced two assertions that were green while the bug was live, because they read the SOURCE for a guard rather than driving the function with the exercise that reaches it |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
-| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **56** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
+| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **60** screen/width/theme combinations, and since 2026-08-27 takes a `PALETTE` env var (gold/teal/indigo/ember) so all four can be swept: **240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow**. Set through the ATTRIBUTE, because the demo backend reseeds on every reload. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 430 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
@@ -3090,6 +3260,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
 | `docs/firebase-setup.md` | Firebase state, and what is still unverified. **Corrected 2026-08-17** — it had claimed for a day that Google sign-in was not enabled, while this file carried a note saying that claim was wrong. The source is fixed; the note is gone |
 | `docs/activities-plan.md` | **Non-lifting activities**, written 2026-08-26. §1 is D27 (recorded, never modelled — the D2 narrowing); Phase 1 (the Record chooser + quick log) is BUILT; §3 is Phase 2; §4 is what is deliberately not planned (no GPS routes, no fitness modelling) |
+| `docs/integrations-plan.md` | **Pulling data from other fitness/diet apps — RESEARCH ONLY, written 2026-08-27 on Tim's ask.** ⚠️ **§2 is the part to read**: the blocker is not "website vs App Store app", it is that OAuth's token exchange needs a client secret and a static site cannot keep one — and a native app is just as public a client. §3.1 records that **Strava's 2026 agreement forbids showing one user's Strava data to another user**, which lands directly on the Home feed. §5 recommends file import first, which needs nothing from anybody |
 | `docs/airpods-plan.md` | **AirPods remote control — PLAN ONLY, nothing deployed, on Tim's instruction.** §1: head-motion is impossible for a web app, stem presses are buildable via MediaSession. §2 the design + priced costs (occupies Now Playing → opt-in only); §3 the dead-end table; §4 the build order if he says go, starting with an on-device spike |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
@@ -3159,8 +3330,8 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, local→cloud merge, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
 | Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so, and offers **Continue in this window instead** — but ⚠️ **only where that redirect can actually finish**, which this configuration is not, so here it names **email** instead. ✅ **Works on a real iPhone in the installed home-screen app** (2026-08-22), which is the path this file spent months calling the riskiest untested one; the popup is what runs there, and the belief that an installed iOS app blocks popups was simply wrong |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
-| Settings | Dark/light, **Colour** (Gold/Teal/Indigo/Ember since 2026-08-26), **lbs/kg**, More details, Goals link. ⚠️ **Profile, backup/restore and delete-all MOVED to the Account screen 2026-08-26** (Tim's ask); one pointer row remains |
-| Account | ⚠️ **The person, since 2026-08-26**: profile photo (client-resized to ~20 KB, `settings.avatar`, worn by the top-left button, NOT published to friends), profile row, backup/restore + cloud warning, delete-all, sign in/out — in every account state. **Back goes Home**, not Settings |
+| Settings | Dark/light, **Colour** (Gold/Teal/Indigo/Ember since 2026-08-26, all four fully audited 2026-08-27), **lbs/kg**, More details, Goals link. ⚠️ **Profile, backup/restore and delete-all MOVED to the Account screen 2026-08-26** (Tim's ask); one pointer row remains |
+| Account | ⚠️ **The person, since 2026-08-26**: profile photo — ⚠️ **POSITIONED BY THE USER since 2026-08-27**, a square stage with the circle inscribed in it, drag to move and a slider/pinch/wheel to zoom, and what the circle frames is literally what gets cut (`js/image-crop.js`); client-resized to a 256px JPEG (~4 KB measured), `settings.avatar`, worn by the top-left button, NOT published to friends, profile row, backup/restore + cloud warning, delete-all, sign in/out — in every account state. **Back goes Home**, not Settings |
 
 **Stepper increments:** reps ±1 · weight **±5 lbs or ±2.5 kg** · time ±10 sec · distance ±0.1 mi.
 Press-and-hold repeats.
@@ -3477,6 +3648,11 @@ Fitness_Tracker/
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
 │   ├── body-map.js             composes the fill paths + the ink masks
+│   ├── image-crop.js           POSITIONING A PHOTO IN A CIRCLE — pure maths, no
+│   │                           DOM. The crop is a square in SOURCE pixels, so the
+│   │                           result does not depend on the phone it was cropped
+│   │                           on. One invariant: the square never leaves the
+│   │                           image, or an avatar saves with a blank wedge
 │   ├── exercises.js            272-exercise library + load-type rules, and the
 │   │                           BODY-WEIGHT FRACTION table. ⚠️ `assist: true` on an
 │   │                           entry INVERTS the sign of the logged weight
