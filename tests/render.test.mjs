@@ -2374,6 +2374,66 @@ ok(!data.querySelector('.rep-target'),
   ok(localStorage.getItem(DRAFT) === null, 'the draft is cleared after a multi-person save');
 }
 
+/* ================= location on a session (0m) =================
+   A typed label, carried forward from the last session, saved on the row,
+   and never anything the app read from a sensor. */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { todayISO } = await import(BASE + 'store.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const w = await store.saveWorkout({
+    name: 'Located day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+
+  // A prior session that carries a location — the newest row, so the runner's
+  // carry-forward reads it.
+  await store.saveSession({
+    workoutId: w.id, workoutName: 'Located day', date: todayISO(),
+    startedAt: new Date().toISOString(), location: 'The garage',
+    entries: [{ exerciseId: byName('Barbell Bench Press').id, exerciseName: 'Barbell Bench Press',
+      sets: [{ weight: 100, reps: 5 }] }],
+  });
+
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const chip = s.querySelector('.session-loc');
+  ok(Boolean(chip), 'the runner offers a location');
+  ok(/The garage/.test(chip.textContent),
+     'and it carries forward from the last session — one gym costs zero taps forever');
+  const draft = JSON.parse(localStorage.getItem(DRAFT));
+  ok(draft && draft.location === 'The garage', 'the carried label is on the draft');
+
+  const wv = s.querySelector('.step-value');
+  wv.value = '105';
+  wv.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle();
+
+  const rows = (await store.getSessions()).filter((x) => x.workoutId === w.id);
+  const saved = rows.find((x) => x.entries[0].sets[0].weight === 105);
+  ok(saved && saved.location === 'The garage', 'finishing saves the location on the session row');
+
+  // And an emptied label is ABSENT on the next save, not an empty string.
+  localStorage.removeItem(DRAFT);
+  const s2 = await mount(SessionView(w.id));
+  const draft2 = JSON.parse(localStorage.getItem(DRAFT));
+  draft2.location = '';
+  localStorage.setItem(DRAFT, JSON.stringify(draft2));
+  const s3 = await mount(SessionView(w.id));
+  const wv3 = s3.querySelector('.step-value');
+  wv3.value = '110';
+  wv3.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...s3.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle();
+  const saved2 = (await store.getSessions()).find((x) => x.workoutId === w.id
+    && x.entries[0].sets[0].weight === 110);
+  ok(saved2 && !('location' in saved2), 'a cleared location saves NO key — absent, never ""');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

@@ -162,6 +162,9 @@ const PATHS = {
   // with something different, it does not reload the same one.
   swap: 'M4 8.5h15M15.5 5l3.5 3.5-3.5 3.5M20 15.5H5M8.5 12 5 15.5 8.5 19',
   flag: 'M5 21V4h13l-2.5 4L18 12H5',
+  // A map pin — the location label on a session. Stroked ring for the centre,
+  // same trick as `target`, so it needs no fill exception.
+  pin: 'M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21zM14.2 10.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0',
   person: 'M12 12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0',
   // Two people, the second half-behind the first. Deliberately not a speech
   // bubble or a heart: this section is people, not messages or approval.

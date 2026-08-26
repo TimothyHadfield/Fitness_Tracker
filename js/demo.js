@@ -648,8 +648,8 @@ function daysApart(fromISO, toISO) {
  * ------------------------------------------------------------------ */
 
 const DEMO_FRIENDS = [
-  { uid: 'demo-friend-1', name: 'Marcus Webb', tier: 'mid' },
-  { uid: 'demo-friend-2', name: 'Priya Raman', tier: 'mid' },
+  { uid: 'demo-friend-1', name: 'Marcus Webb', tier: 'mid', location: 'Ironworks Gym' },
+  { uid: 'demo-friend-2', name: 'Priya Raman', tier: 'mid', location: 'Home garage' },
   // No entries are published for this one, whatever the generator picks.
   { uid: 'demo-friend-3', name: 'Sam Okafor', tier: 'light' },
 ];
@@ -707,6 +707,10 @@ export function buildDemoFeed(today) {
       if (f.tier !== 'light') {
         act.startedAt = `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`;
         act.entries = exercises.map((n) => ({ exerciseId: null, name: n, sets: [] }));
+        // Location rides the same gate as startedAt (0m — a typed label,
+        // published at mid and above). Only SOME sessions carry one, because
+        // that is the live shape: it is optional and people forget it.
+        if (rand() > 0.4) act.location = f.location;
       }
 
       out.push({ uid: f.uid, name: f.name, tier: f.tier, act });

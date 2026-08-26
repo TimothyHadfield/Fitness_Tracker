@@ -226,6 +226,7 @@ export async function SessionView(workoutId) {
     if (!Array.isArray(state.others)) state.others = [];
     if (!Array.isArray(state.guestNames)) state.guestNames = [];
     if (state.forName === undefined) state.forName = null;
+    if (typeof state.location !== 'string') state.location = '';
   } else {
     state = {
       workoutId: workout.id,
@@ -266,6 +267,25 @@ export async function SessionView(workoutId) {
     // falls back to "one more rep" rather than guessing a body weight.
     const latestWeight = await store.latestBodyWeight().catch(() => null);
     const bodyWeight = latestWeight ? latestWeight.weight : null;
+
+    /* ---- location (Open work 0m) ----
+     * A HAND-TYPED label, never GPS — the privacy decision is that nothing
+     * more precise than what the owner wrote can exist to leak. Carried
+     * forward from the most recent session so training at one gym costs
+     * zero taps forever; clearing it for this session is one tap. Published
+     * at the "My workouts" tier and above only — see projectSession() in
+     * social.js for the schedule argument.
+     *
+     * ⚠️ "Most recent" needs the startedAt tie-break (same as the feed's
+     * ordering): getSessions() sorts on the DATE alone, so two sessions today
+     * come back in storage order and the carry-forward would read whichever
+     * happened to be first. A session with no location deliberately carries
+     * "no location" forward — clearing it is a choice, and an older label
+     * resurrecting itself would overrule it. */
+    const newest = sessions.slice().sort((a, b) =>
+      b.date.localeCompare(a.date)
+      || String(b.startedAt || '').localeCompare(String(a.startedAt || '')))[0];
+    state.location = (newest && typeof newest.location === 'string') ? newest.location : '';
 
     state.entries = entriesFor(sessions, bodyWeight, state.date);
     // ⚠️ Kept on the DRAFT, not looked up again at render time, and the reason is
@@ -1142,6 +1162,9 @@ export async function SessionView(workoutId) {
           startedAt: state.startedAt,
           finishedAt: new Date().toISOString(),
           isBenchmark: Boolean(state.isBenchmark),
+          // Absent rather than '' when there is none — one case for every
+          // reader, the same contract startedAt set in the projection.
+          ...(state.location ? { location: state.location } : {}),
           entries: cleaned,
         });
       }
@@ -1333,6 +1356,48 @@ export async function SessionView(workoutId) {
   }
   renderDate();
 
+  /* ---- location (0m): a typed label, remembered, one tap to change ---- */
+  const locationBtn = el('button', { class: 'session-loc' });
+  function renderLocation() {
+    setChildren(locationBtn, icon('pin', 12),
+      el('span', { class: 'session-loc-name', text: state.location || 'Add location' }));
+    locationBtn.classList.toggle('is-empty', !state.location);
+    locationBtn.setAttribute('aria-label', state.location
+      ? `Location: ${state.location}. Change it` : 'Add a location for this workout');
+  }
+  renderLocation();
+  locationBtn.addEventListener('click', () => {
+    const input = el('input', {
+      class: 'input', type: 'text', value: state.location,
+      placeholder: 'Gold’s Gym, home, the park…',
+      'aria-label': 'Where this workout happened', maxlength: '80', autocomplete: 'off',
+    });
+    const apply = (v) => {
+      state.location = String(v || '').trim().slice(0, 80);
+      saveDraft(state);
+      renderLocation();
+      close();
+    };
+    const { close } = openSheet({
+      title: 'Where was this?',
+      body: el('div', {},
+        el('p', { class: 'field-help', style: 'margin-top:0', text:
+          'Whatever you type here is the whole location — the app never reads GPS. '
+          + 'Friends you share full workouts with see it on your card; '
+          + 'people who only see that you trained do not. '
+          + 'It carries over to your next workout until you change it.' }),
+        el('div', { class: 'field' }, el('label', { text: 'Location' }), input),
+      ),
+      footer: el('div', { class: 'btn-row' },
+        state.location
+          ? el('button', { class: 'btn ghost', text: 'Remove', onClick: () => apply('') })
+          : el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
+        el('button', { class: 'btn primary', text: 'Save', onClick: () => apply(input.value) }),
+      ),
+    });
+    input.focus();
+  });
+
   renderAll();
 
   return el('div', { class: 'screen no-nav' },
@@ -1345,6 +1410,7 @@ export async function SessionView(workoutId) {
           el('span', { class: 'session-sub-dot', text: '·' }),
           dateInput,
           dateNote,
+          locationBtn,
         ),
       ),
     ),

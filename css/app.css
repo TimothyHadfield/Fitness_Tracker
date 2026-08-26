@@ -773,6 +773,20 @@ select.input {
   text-transform: uppercase; letter-spacing: .06em;
 }
 
+/* ── Location (0m): a typed label in the session header ────────────────────
+   Same quiet dashed-underline voice as the date beside it — both are session
+   facts you can change. Capped so a long gym name cannot push the date off a
+   360px header; .session-sub wraps if they still cannot share a line. */
+.session-loc {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11.5px; color: var(--ink-soft);
+  border-bottom: 1px dashed var(--rule); padding: 0 0 1px;
+  min-width: 0; max-width: 15ch;
+}
+.session-loc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-loc.is-empty { color: var(--ink-faint); }
+.session-loc svg { flex: none; }
+
 /* Technical detail behind a disclosure, so a raw error string is diagnosable
    without being the first thing a user reads. */
 .tech-detail { margin-top: 4px; }

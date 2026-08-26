@@ -317,6 +317,27 @@ export function projectSession(session, tier) {
     out.startedAt = new Date(startedMs).toISOString();
   }
 
+  // ── LOCATION, AND WHY IT SITS BESIDE startedAt AND NOT AT LIGHT ────────────
+  //
+  // Open work 0m. Tim asked for Strava's "{date} at {time} · {place}" line.
+  //
+  // ⚠️ IT IS A HAND-TYPED LABEL, NEVER A COORDINATE, and that is the privacy
+  // decision 0m said had to be taken first. The app has no geolocation: the
+  // owner types "Gold's Gym" (or nothing) and chooses their own granularity,
+  // so nothing more precise than what they wrote can ever leak. Publishing GPS
+  // and reverse-geocoding it would have handed coordinates to a third party to
+  // render a string the owner could just have typed.
+  //
+  // ⚠️ MID AND ABOVE, for a STRONGER version of startedAt's argument: sixty
+  // start times describe a schedule; sixty start times WITH A PLACE describe
+  // where a person reliably is and when. Light is the default tier and exists
+  // to say the minimum. Same fail-closed shape too — missing is missing, no
+  // key rather than null, and assertTierClean's key allow-list at light means
+  // this field showing up there is a test failure, not a quiet widening.
+  if (typeof session.location === 'string' && session.location.trim()) {
+    out.location = session.location.trim().slice(0, 80);
+  }
+
   out.entries = (Array.isArray(session.entries) ? session.entries : []).map((entry) => {
     const e = {
       exerciseId: typeof entry.exerciseId === 'string' ? entry.exerciseId : null,

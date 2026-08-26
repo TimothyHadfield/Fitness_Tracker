@@ -5178,3 +5178,12 @@ own kudos reads as a state, a comments sheet holds the thread, and a quiet "On y
 above the feed shows what landed on yours — the receiving half, without which kudos would be
 write-only. Demo refuses with a sentence. Rules tests 46→66 (run in the emulator as four different
 callers), social tests 106→121, rules deployed, all suites green, pushed.
+
+Third piece: LOCATION ON FEED CARDS (0m closed). The privacy decision: a hand-typed label, never
+GPS — the owner chooses the granularity, so nothing more precise than what they wrote can leak.
+A quiet pin chip beside the date in the runner, carried forward from the last session (one gym =
+zero taps forever), editable on the edit-record screen, published at the "My workouts" tier and
+above only — sixty times-and-places describe where a person reliably is, so the lowest tier stays
+the minimum. Demo friends carry locations on some cards. A render test caught the carry-forward
+reading the wrong same-day session (getSessions sorts on date alone; the startedAt tie-break fixed
+it). Social tests 121→128, render 443→448, all green, pushed.

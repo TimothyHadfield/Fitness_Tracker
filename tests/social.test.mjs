@@ -487,6 +487,27 @@ ok(inviteExpiry(stamp('2026-08-17T00:00:00.000Z')) === '2026-08-24T00:00:00.000Z
    'inviteExpiry reads a Timestamp too, so the fallback cannot be the odd one out');
 ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expiry');
 
+/* ---------- location (0m): a typed label, mid and above ---------- */
+{
+  const s = {
+    id: 's9', date: '2026-08-20', workoutName: 'Push',
+    startedAt: '2026-08-20T18:00:00Z', location: '  Gold’s Gym  ', entries: [],
+  };
+  ok(!('location' in projectSession(s, LIGHT)),
+     '⚠️ location is NOT published at light — sixty times-and-places describe where a person reliably is');
+  ok(projectSession(s, MID).location === 'Gold’s Gym',
+     'at mid the label is published, trimmed');
+  ok('location' in projectSession(s, FULL), 'and at full');
+  ok(!('location' in projectSession({ ...s, location: '   ' }, MID)),
+     'a blank label publishes NO key — absent, never empty (one case for the view)');
+  ok(!('location' in projectSession({ ...s, location: 42 }, MID)),
+     'a non-string label is dropped, not coerced');
+  const nos = { ...s }; delete nos.location;
+  ok(!('location' in projectSession(nos, MID)), 'missing is missing');
+  ok(projectSession({ ...s, location: 'x'.repeat(300) }, MID).location.length === 80,
+     'capped at 80 characters at the builder, matching the input cap');
+}
+
 /* ---------- reactions: kudos + comments (0l) ---------- */
 {
   const {

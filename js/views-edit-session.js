@@ -64,6 +64,13 @@ export async function EditSessionView(sessionId) {
     onChange: (e) => { draft.date = e.target.value || originalDate; },
   });
 
+  const locationInput = el('input', {
+    class: 'input', type: 'text', value: draft.location || '', maxlength: '80',
+    placeholder: 'Nowhere recorded',
+    'aria-label': 'Where this workout happened',
+    onInput: (e) => { draft.location = e.target.value; },
+  });
+
   const benchToggle = el('button', {
     class: 'chip', 'aria-pressed': String(Boolean(draft.isBenchmark)),
     text: draft.isBenchmark ? 'Counts as benchmarks' : 'Normal workout',
@@ -208,11 +215,16 @@ export async function EditSessionView(sessionId) {
       return;
     }
 
-    await store.saveSession({
+    const row = {
       ...draft,
       workoutName: (draft.workoutName || '').trim() || 'Workout',
       entries,
-    });
+    };
+    // Absent rather than '' when cleared — the same one-case contract the
+    // runner and the projection keep for this key.
+    const loc = String(row.location || '').trim().slice(0, 80);
+    if (loc) row.location = loc; else delete row.location;
+    await store.saveSession(row);
     toast('Record updated');
     go('#/day/' + draft.date);
   }
@@ -241,6 +253,13 @@ export async function EditSessionView(sessionId) {
         dateInput,
         el('div', { class: 'field-help', text:
           'Moving this changes which day it appears on, and where it sits in your graphs.' }),
+      ),
+      el('div', { class: 'field' },
+        el('label', { text: 'Location' }),
+        locationInput,
+        el('div', { class: 'field-help', text:
+          'Optional, and whatever you type is the whole location — the app never reads GPS. '
+          + 'Shown to friends who can see your full workouts.' }),
       ),
       el('div', { class: 'field' },
         el('label', { text: 'Kind' }),
