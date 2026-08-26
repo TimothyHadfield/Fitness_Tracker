@@ -55,9 +55,27 @@ const NAV = [
   { hash: '#/record',   label: 'Record',   icon: 'plus',     match: ['record', 'start', 'benchmark', 'session'], primary: true },
   // Route stays #/graphs; only the label changed. Renaming the hash would
   // break nothing visible and churn the router for no user-facing gain.
-  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs', 'calendar', 'day', 'edit'] },
-  { hash: '#/goals',    label: 'Goals',    icon: 'target',   match: ['goals', 'goal'] },
+  // ⚠️ CALENDAR LEFT DATA AND TOOK GOALS' SLOT — Tim, 2026-08-25: *"I want to
+  // remove the Goals section and replace it with the Calendar details. This
+  // means moving all the stuff in the data section that has to do with Calendar
+  // out and creating its own section."*
+  //
+  // This reverses the 2026-08-22 merge, which folded Calendar into Data on the
+  // argument that both are the past, one drawn as squares and one as lines.
+  // That argument was about what the two screens ARE; his is about how often he
+  // opens them, and he is the one using it in a gym. Frequency wins.
+  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs'] },
+  { hash: '#/calendar', label: 'Calendar', icon: 'calendar', match: ['calendar', 'day', 'edit'] },
 ];
+
+// ⚠️ GOALS IS OFF THE TAB BAR, NOT DELETED, and the distinction matters. The
+// feature is built, tested (232 assertions) and reachable: `#/goals` still
+// resolves, Settings links to it, and every hash anybody bookmarked still
+// works. This is the same call the eighth pass of 2026-08-22 made about
+// `#/start` and `#/benchmark` — a tab bar being redesigned must not 404 a URL.
+//
+// ⚠️ A ROUTE WITH NO WAY IN IS DELETED IN EVERY SENSE THAT MATTERS, which is why
+// the Settings link went in at the same time as this line came out.
 
 // Routes that take over the whole screen (no bottom nav).
 // `friend` and `invite` are here but `social` is NOT: Social is a tab, and the
@@ -65,7 +83,10 @@ const NAV = [
 // ⚠️ `record` is NOT here — it is a tab now, and a tab that hides the bar it
 // lives in cannot be tapped twice. `start` stays: it is the old deep link and
 // still opens the picker as a pushed screen with a back button.
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal'];
+// ⚠️ `goals` joined this list on 2026-08-25 when it stopped being a tab. A
+// screen with no tab of its own is reached FROM somewhere, so it needs a back
+// button, which is what being fullscreen gives it — the same shape as `start`.
+const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal', 'goals'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');

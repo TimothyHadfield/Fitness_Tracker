@@ -661,6 +661,45 @@ ok(!fb.isPopupFailure({ code: 'auth/wrong-password' }), 'unrelated errors do not
 ok(fb.isAlreadyLinked({ code: 'auth/credential-already-in-use' }), 'already-linked detected');
 ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect preference');
 
+/* ---------- ⚠️ GOALS IS OFF THE TAB BAR, NOT DELETED ---------- *
+ *
+ * Tim, 2026-08-25: *"I want to remove the Goals section and replace it with the
+ * Calendar details."* Goals is a built, tested feature (232 assertions) and the
+ * instruction is about the bottom bar, not about the code — so the tab goes and
+ * the route stays.
+ *
+ * ⚠️ AND A ROUTE WITH NO WAY IN IS DELETED IN EVERY SENSE THAT MATTERS TO A
+ * USER, which is the half a "we kept the route" claim usually forgets. All
+ * three halves are asserted together, because any one of them alone is
+ * satisfiable while the feature is unreachable.
+ *
+ * ⚠️ ASSERTED ON THE SOURCE, for the reason firebase-backend.js's redirect
+ * guard is: `app.js` is the boot script, exports nothing, and starts a router
+ * against a real DOM on import. A structural assertion is worth more than none,
+ * and what must not quietly come back is an unreachable screen.
+ */
+{
+  const { readFileSync } = await import('node:fs');
+  const appSrc = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const navBlock = appSrc.slice(appSrc.indexOf('const NAV = ['), appSrc.indexOf('];', appSrc.indexOf('const NAV = [')));
+
+  ok(/hash: '#\/calendar'/.test(navBlock), 'Calendar has a nav tab of its own');
+  ok(!/hash: '#\/goals'/.test(navBlock), 'and Goals no longer has one');
+  ok((navBlock.match(/hash: '#\//g) || []).length === 5,
+     'still five tabs — the bar did not grow, Calendar took the slot Goals left');
+
+  // Half two: the route still resolves.
+  ok(/case 'goals':/.test(appSrc), '⚠️ but #/goals STILL RESOLVES — a bookmarked hash must not start 404ing');
+  // Half three: something on screen still points at it.
+  const settingsSrc = readFileSync(new URL('../js/views-data.js', import.meta.url), 'utf8');
+  ok(/href: '#\/goals'/.test(settingsSrc),
+     '⚠️ and something LINKS to it — a route nobody can reach is deleted in every sense that matters');
+  // And it can be got out of again.
+  const goalsSrc = readFileSync(new URL('../js/views-goals.js', import.meta.url), 'utf8');
+  ok((goalsSrc.match(/back: \(\) => go\('#\/settings'\)/g) || []).length === 3,
+     'all three Goals screens have a way back, since none of them has a tab any more');
+}
+
 /* ---------- ⚠️ how full the cloud is — Open work 0b(c) ---------- *
  *
  * The edge-case review found that nothing warns as the 1 MiB per-document cap

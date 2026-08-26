@@ -41,7 +41,15 @@ const SESSION = {
   workoutId: 'w-1',
   workoutName: 'Push',
   date: '2026-08-15',
+  // The four instants a real row carries (views-session.js, demo.js). Only
+  // `startedAt` is ever published, and only at mid — the other three are here
+  // so the "whitelist, not a delete list" assertion below has something to
+  // prove. Deliberately DIFFERENT values, so a builder copying the wrong one
+  // shows up as a wrong number rather than a passing test.
+  startedOn: '2026-08-15',
   startedAt: '2026-08-15T09:00:00.000Z',
+  finishedAt: '2026-08-15T10:14:00.000Z',
+  createdAt: '2026-08-15T10:14:02.000Z',
   isBenchmark: false,
   entries: [
     {
@@ -65,6 +73,12 @@ const SESSION = {
   ],
 };
 
+// ⚠️ s-2 and s-3 have NO `startedAt`, and that is the fixture doing a job
+// rather than being lazy: `startedAt` was added to the session row part-way
+// through the project, so every workout Tim logged before it exists without
+// one, and a feed that renders "Invalid Date" over half of somebody's history
+// is worse than a feed with no times in it. The mixed list is what a real
+// account looks like.
 const SESSIONS = [
   SESSION,
   { id: 's-2', workoutName: 'Legs', date: '2026-08-17', entries: [
@@ -163,6 +177,15 @@ ok(light.activity[0].date === '2026-08-17' && light.activity[2].date === '2026-0
 ok(light.activity.every((a) => a.name && typeof a.name === 'string'), 'and names each workout');
 ok(light.activity.every((a) => a.entries === undefined),
    'light never looks inside the workout at all');
+ok(light.activity.every((a) => a.startedAt === undefined),
+   'light says WHICH DAY somebody trained and never what time — a time of day is a routine, '
+   + 'and light is the tier every new connection starts on');
+ok(JSON.stringify(light).indexOf('T09:00') === -1,
+   'and the start time does not survive at light as text either');
+// ⚠️ The three assertions above are absences, so pin the fields light DOES
+// carry — otherwise a builder that published nothing at all would pass them.
+ok(light.activity.every((a) => Object.keys(a).sort().join() === 'date,id,name'),
+   'a light session is exactly id, date and name — nothing more, and not less');
 ok(light.benchmarks === undefined && light.strength === undefined && light.bodyWeight === undefined,
    'light carries no benchmarks, no muscle map, no body weight');
 
@@ -193,10 +216,71 @@ ok(mid.benchmarks === undefined && mid.strength === undefined && mid.bodyWeight 
    'mid carries nothing from the analysis collections — that is the whole mid/full cut');
 
 // Data minimisation: the private row has fields the projection has no business
-// carrying, and a whitelist is what keeps them out.
-ok(midSession.workoutId === undefined && midSession.startedAt === undefined
-   && midSession.isBenchmark === undefined,
+// carrying, and a whitelist is what keeps them out. ⚠️ `startedAt` used to be
+// the example here and now IS published at mid, so the example moved to the
+// three instants beside it rather than being deleted — the invariant is the
+// point, not the field that happened to demonstrate it.
+ok(midSession.workoutId === undefined && midSession.isBenchmark === undefined
+   && midSession.startedOn === undefined && midSession.finishedAt === undefined
+   && midSession.createdAt === undefined,
    'internal session fields are not published — the builder is a whitelist, not a delete list');
+ok(JSON.stringify(mid).indexOf('10:14') === -1,
+   'and in particular the FINISH time is not shared: publishing both hands over how long '
+   + 'somebody was out of the house, which is a different fact from when they started');
+
+/* ------------------------------------------------------------------ *
+ * The start time — what the feed puts at the top of a card
+ * ------------------------------------------------------------------ */
+
+ok(midSession.startedAt === '2026-08-15T09:00:00.000Z',
+   'mid publishes when the session started, so a feed card can say a time and not just a day');
+ok(Number.isFinite(Date.parse(midSession.startedAt)),
+   'and publishes it as an instant a Date can be built from — the view formats, it does not repair');
+
+const legs = mid.activity.find((a) => a.name === 'Legs');
+ok(legs.startedAt === undefined,
+   'a session recorded before start times existed publishes NO time rather than a made-up one');
+ok(!Object.prototype.hasOwnProperty.call(legs, 'startedAt'),
+   'the key is absent, not present-and-null — one case for the view to handle, not two');
+ok(JSON.stringify(mid).indexOf('Invalid Date') === -1 && JSON.stringify(mid).indexOf('NaN') === -1,
+   'and nothing anywhere in the document reads "Invalid Date"');
+
+// The shapes a broken or foreign instant really arrives in. Every one of these
+// must vanish rather than publish something a card would render as nonsense.
+for (const [bad, what] of [
+  [undefined, 'a session with no startedAt at all'],
+  [null, 'a null startedAt'],
+  ['', 'an empty string'],
+  ['not a date', 'an unparseable string'],
+  [{}, 'an object with nothing readable in it'],
+  [1e20, 'a number outside the range a Date can hold'],
+]) {
+  const p = projectSession({ date: '2026-08-01', workoutName: 'Push', startedAt: bad }, MID);
+  ok(p.startedAt === undefined, `${what} publishes no time — never "Invalid Date", never a guess`);
+}
+
+// ⚠️ Vacuity guard for the six above: they are all absences, and a builder that
+// never published a time would pass every one of them. This is the same call
+// with a GOOD instant, and it must produce one.
+ok(projectSession({ date: '2026-08-01', startedAt: '2026-08-01T18:40:00.000Z' }, MID).startedAt
+     === '2026-08-01T18:40:00.000Z',
+   'the same call with a real instant DOES publish it — so "absent" above is a result, not a hole');
+
+// store.js writes instants through the SDK, which reads them back as Timestamp
+// objects. That exact shape is the one bug this module has ever shipped — see
+// instantMillis() and the invite section at the foot of this file — so the time
+// goes through the same reader and comes out canonical whatever went in.
+ok(projectSession({ date: '2026-08-01', startedAt: new Date('2026-08-01T18:40:00.000Z') }, MID)
+     .startedAt === '2026-08-01T18:40:00.000Z',
+   'a Date is normalised to one canonical ISO instant, so a reader has one shape to parse');
+ok(projectSession({ date: '2026-08-01', startedAt: { seconds: 1785508800 } }, MID).startedAt
+     === new Date(1785508800000).toISOString(),
+   'and so is a Firestore Timestamp that has been through JSON');
+
+// The tier line, asserted from both sides.
+ok(projectSession(SESSION, LIGHT).startedAt === undefined
+   && projectSession(SESSION, MID).startedAt === '2026-08-15T09:00:00.000Z',
+   'the SAME session publishes a time at mid and none at light — the tier is what decides it');
 
 /* ------------------------------------------------------------------ *
  * FULL
@@ -208,6 +292,8 @@ ok(full.strength.length === 1 && full.strength[0].level === 'Intermediate', 'ful
 ok(full.strength[0].estimate === undefined,
    'but not the estimated weight behind a level — nothing renders it, so nothing needs it');
 ok(full.activity.find((a) => a.name === 'Push').entries.length === 4, 'full contains everything mid does');
+ok(full.activity.find((a) => a.name === 'Push').startedAt === '2026-08-15T09:00:00.000Z',
+   'including the start time — the documents are cumulative, so full is never missing a mid field');
 
 ok(full.bodyWeight === undefined,
    'BODY WEIGHT IS OFF EVEN AT FULL unless it was turned on separately');
@@ -270,6 +356,37 @@ ok(assertTierClean(light, LIGHT) && assertTierClean(mid, MID) && assertTierClean
 throws(() => assertTierClean({ activity: [
   { date: '2026-08-01', name: 'Push', entries: [{ name: 'Fly', sets: [{ minis: [{ weight: 30 }] }] }] },
 ]}, LIGHT), 'the guard catches a weight nested two levels down inside a mini-set');
+
+/* ------------------------------------------------------------------ *
+ * ⚠️ THE LEAK THE GUARD COULD NOT SEE UNTIL 2026-08-25
+ *
+ * Every leak assertTierClean was written against happened to be a NUMBER — a
+ * weight, a rep count — so "no numbers below a session at light" read like the
+ * whole of it. It was not. The start time is a STRING, and a string sailed
+ * through the guard untouched: the one field this change thought hardest about
+ * was the one field the safety net could not have caught. The guard now checks
+ * the KEY as well as the value, against the three names light admits.
+ * ------------------------------------------------------------------ */
+
+throws(() => assertTierClean({ activity: [
+  { id: 's-1', date: '2026-08-01', name: 'Push', startedAt: '2026-08-01T18:40:00.000Z' },
+]}, LIGHT), 'the guard catches a start time at light — a leak with no number in it anywhere');
+throws(() => assertTierClean({ activity: [
+  { id: 's-1', date: '2026-08-01', name: 'Push', notes: 'felt awful, left early' },
+]}, LIGHT), 'and catches a field nobody has invented yet — the guard fails closed, not open');
+// The vacuity guard for both: the identical documents MINUS the extra field
+// must pass, or the two above prove only that the guard rejects everything.
+ok(assertTierClean({ activity: [{ id: 's-1', date: '2026-08-01', name: 'Push' }] }, LIGHT),
+   'while id, date and name together are clean — light is not simply rejecting whatever it sees');
+ok(assertTierClean({ activity: [
+  { id: 's-1', date: '2026-08-01', name: 'Push', startedAt: '2026-08-01T18:40:00.000Z' },
+]}, MID), 'and the same start time is clean at mid, which is the tier that publishes it');
+
+// And the real thing, re-asserted after the change: all three tiers, built from
+// sessions that DO carry times, still pass their own guard.
+ok(assertTierClean(light, LIGHT) && assertTierClean(mid, MID) && assertTierClean(full, FULL)
+   && assertTierClean(base(FULL, { shareBodyWeight: true }), FULL),
+   'every real projection still passes its own guard now that sessions carry a time');
 
 /* ------------------------------------------------------------------ *
  * Edge shapes

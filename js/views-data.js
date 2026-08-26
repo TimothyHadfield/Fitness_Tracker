@@ -72,16 +72,21 @@ function monthBlock(year, month, activity, today) {
       if (rec && rec.sessions.length) cls.push('has-workout');
       else if (rec && rec.benchmarks.length) cls.push('has-benchmark-only');
 
+      // ⚠️ THE INNER SPAN IS NOT DECORATION. `.cal-tag` is a flex box that
+      // centres its content so the name sits in the middle of the space it
+      // fills; the line clamp that keeps a long name to two lines needs its own
+      // block to apply to, and putting both on one element makes them fight.
+      const tag = (cls, text) =>
+        el('span', { class: 'cal-tag ' + cls, title: text }, el('span', { text }));
+
       const tags = [];
       if (rec) {
         const shown = rec.sessions.slice(0, 2);
-        for (const s of shown) {
-          tags.push(el('span', { class: 'cal-tag w', text: s.workoutName || 'Workout', title: s.workoutName }));
-        }
+        for (const s of shown) tags.push(tag('w', s.workoutName || 'Workout'));
         if (rec.sessions.length > shown.length) {
           tags.push(el('span', { class: 'cal-tag more', text: `+${rec.sessions.length - shown.length}` }));
         }
-        if (rec.benchmarks.length) tags.push(el('span', { class: 'cal-tag b', text: 'Benchmark' }));
+        if (rec.benchmarks.length) tags.push(tag('b', 'Benchmark'));
       }
 
       const label = rec
@@ -246,11 +251,11 @@ export async function CalendarView() {
 
   const screen = screenShell({
     profile: true,
-    // ⚠️ The four-way Data switch IS the header, exactly as it is on #/graphs —
-    // the two screens are one tab now and must not look like two. What used to
-    // be an <h1> reading "Calendar" is the selected segment saying it instead,
-    // which is the same word doing the same job in less room (Rule 3).
-    title: dataTabs('calendar'),
+    // ⚠️ ITS OWN TITLE AGAIN, since 2026-08-25. This carried the four-way Data
+    // switch while Calendar was a mode of that tab; it is a tab in its own right
+    // now, so borrowing another tab's control would light up a segment for a
+    // screen that is no longer in it.
+    title: 'Calendar',
     top: el('div', { class: 'cal-modes' },
       el('div', { class: 'segmented sub', role: 'tablist' }, tabs), legend, readout),
     scroll: [],
@@ -331,26 +336,31 @@ function landOnCurrentMonth(screen) {
 }
 
 /**
- * THE DATA SWITCH — four ways of looking backwards, in one control.
+ * THE DATA SWITCH — three ways of looking backwards, in one control.
  *
- * Tim's five-tab redesign (2026-08-22) folded the Calendar tab into Data. Both
- * are the past — one drawn as squares, one as lines — and the calendar was
- * already the odd tab out: every other tab answered a question and it displayed
- * a record.
+ * ⚠️ CALENDAR LEFT THIS CONTROL ON 2026-08-25 and became its own nav tab, on
+ * Tim's instruction. That reverses the 2026-08-22 merge, whose argument was that
+ * both are the past — one drawn as squares, one as lines. The argument was about
+ * what the two screens ARE; his is about how often he opens them, and he is the
+ * one using this in a gym. Frequency wins over taxonomy.
  *
- * ⚠️ THE FOUR ARE NOT THE SAME KIND OF THING, and the control deliberately hides
- * that. Calendar is its own ROUTE (`#/calendar`, so a day stays deep-linkable
- * and the years grid keeps its own state); the three chart modes are in-page
- * state on `#/graphs`. Making all four navigate would have turned a chart
- * toggle into four new URLs for no gain, and making all four in-page would have
- * meant nesting a whole screen inside another.
+ * ⚠️ AND IT TAKES THE CONTROL'S ONE ODDITY WITH IT. All three remaining entries
+ * are now the same kind of thing: in-page state on `#/graphs`. Calendar was the
+ * only one that navigated, which is why this function needed a special case and
+ * an `onChartMode` fallback for "arriving from the calendar". Both are gone.
+ *
+ * ⚠️ MUSCLES IS FIRST AND IS THE DEFAULT — Tim, 2026-08-25: *"In the Data
+ * section, the muscle group should be the first tab and the default tab for when
+ * the user opens the section."* See `graphMode`'s initial value; the order here
+ * and that value have to agree, and there is an assertion that they do.
  *
  * ⚠️ "Bars", not "Bar Chart". The 2026-08-21 phone survey measured the
- * THREE-segment version clipping this exact label to "Bar Char" at 393px. A
- * fourth segment takes another quarter of the row, so the label had to lose a
- * word rather than the row lose a segment.
+ * THREE-segment version clipping this exact label to "Bar Char" at 393px. The
+ * row is back to three segments, so the label would now fit — it is kept short
+ * anyway, because nothing is gained by the word and a fourth segment has been
+ * added to this row once already.
  */
-const DATA_TABS = [['calendar', 'Calendar'], ['trend', 'Graph'], ['compare', 'Bars'], ['muscles', 'Muscles']];
+const DATA_TABS = [['muscles', 'Muscles'], ['trend', 'Graph'], ['compare', 'Bars']];
 
 function dataTabs(active, onChartMode) {
   return el('div', { class: 'segmented', role: 'tablist' },
@@ -365,10 +375,9 @@ function dataTabs(active, onChartMode) {
         disabled: false,
         text: label,
         onClick: () => {
-          if (key === 'calendar') { go('#/calendar'); return; }
           graphMode = key;
           if (onChartMode) onChartMode();
-          else go('#/graphs');       // arriving from the calendar
+          else go('#/graphs');
         },
       })),
   );
@@ -504,7 +513,13 @@ function refresh() {
 const BODY_WEIGHT_ID = '__bodyweight';
 
 let graphChoice = { exerciseId: null, field: null };
-let graphMode = 'trend'; // 'trend' | 'compare' | 'muscles'
+// ⚠️ 'muscles', NOT 'trend' — Tim, 2026-08-25: the muscle map is the first tab
+// and the one the Data screen opens on. It is also the mode that works with the
+// least history: a single benchmark colours the map, where a line chart needs
+// two points before it can draw anything. This is module-level, so it survives
+// leaving the screen and comes back where you left it; 'muscles' is only the
+// value the session STARTS at.
+let graphMode = 'muscles'; // 'muscles' | 'trend' | 'compare'
 let compareField = null;
 // exerciseId -> rep count everything is compared at. Seeded from the most
 // frequently recorded rep count, then whatever the user steps it to.
@@ -1460,6 +1475,18 @@ export async function SettingsView() {
       ),
 
       el('div', { class: 'section-label', text: 'You' }),
+      // ⚠️ THIS LINK IS WHY REMOVING THE GOALS TAB IS NOT DELETING GOALS.
+      // 2026-08-25 took it off the bottom bar to make room for Calendar; the
+      // feature is built and tested and `#/goals` still resolves, but a route
+      // with no way in is deleted in every sense that matters to a user. This
+      // is the way in.
+      el('a', { class: 'row', href: '#/goals' },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'Goals' }),
+          el('div', { class: 'row-sub', text: 'Move a muscle up a strength level' }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      ),
       el('a', { class: 'row', href: '#/profile' },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: 'Profile' }),

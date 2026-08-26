@@ -1,6 +1,6 @@
 // Home, workout list, workout builder, exercise picker.
 
-import { store, DEFAULT_SETS, todayISO } from './store.js';
+import { store, social, DEFAULT_SETS, todayISO } from './store.js';
 import { suggestNext, describeSuggestion } from './next-workout.js';
 import {
   DROP, MYO, isNested, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
@@ -32,128 +32,264 @@ const totalSets = (w) => w.exercises.reduce((n, e) => n + e.sets, 0);
  * Home
  * ================================================================== */
 
+/**
+ * HOME — a feed of what the people you train with have been doing.
+ *
+ * ⚠️ REBUILT 2026-08-25. Tim: *"I got inspiration off of Strava, and I want it
+ * to be extremely similar to that… whenever any of your friends record a workout
+ * then it shows up at the top of your feed, with their name, the date and time,
+ * and location at the top of their box, then the title of their workout, and a
+ * list of the exercises they did. Then at the bottom it will have a thumbs up
+ * emoji on the left, a comment button in the middle, and a share button on the
+ * right."*
+ *
+ * ⚠️ EVERYTHING THAT STARTED A WORKOUT HAS LEFT THIS SCREEN — *"so we don't
+ * double dip."* The suggestion and "choose another workout" are on Record now.
+ * That answers the UX review's sharpest finding from the other side, too:
+ * *"nothing a user can see on Home ever grows."* A feed is nothing BUT growth.
+ *
+ * ⚠️ STRAVA'S ANATOMY, NOT STRAVA'S CHROME. He also said *"I don't want panels
+ * on any page"*, and Strava's feed is literally elevated cards with drop
+ * shadows. Both can be true: the ORDER and CONTENT of a card is copied exactly
+ * — name, then date/time/location, then title, then what they did, then three
+ * actions — while the separation stays this app's own hairline-and-space
+ * (Rule 2). If he wants the boxes, it is one CSS rule.
+ *
+ * ⚠️ CHRONOLOGICAL, DELIBERATELY. Strava switched its default to a personalised
+ * ranking and got a sustained backlash and a petition; it now ships "Latest
+ * Activities" as a toggle. Newest first, no ranking, nothing hidden.
+ *
+ * ⚠️ ONE ENTRY PER FRIEND PER DAY IS **NOT** COLLAPSED, and that is a decision
+ * rather than an omission — see feedEntries(). Strava is criticised for exactly
+ * this and it is a cheap win, but collapsing means deciding what the merged card
+ * is called, and two workouts in a day is a real thing that happened twice.
+ *
+ * ⚠️ NO LOCATION ANYWHERE YET, and the card says nothing rather than something
+ * vague. Tim flagged it himself — *"we might need to work on location
+ * services"* — and there is no geolocation in this app, nothing in the
+ * published projection to carry it, and a privacy decision to take before there
+ * is. Open work 0m.
+ */
 export async function HomeView() {
-  const [systems, workouts, sessions] = await Promise.all([
-    store.getSystems(), store.getWorkouts(), store.getSessions(),
-  ]);
-  const recent = sessions.slice(0, 20);
+  const body = el('div', { class: 'feed' });
 
-  // Where you are in your own rotation (docs/vision.md §1.2, first half).
-  // This is a LOOKUP, not advice: the order came out of the user's own system.
-  // It never refuses and never scolds — every other workout is still one tap
-  // away on "Choose another workout", and the caption always says what it read.
-  const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
-
-  /* ⚠️ THE FIRST RUN IS ITS OWN SCREEN, and it did not used to be.
-   *
-   * The empty account's primary button read "Create your first workout" and
-   * landed on `#/workouts`, whose two actions are "New system" and "Explore
-   * ready-made systems". So it promised a WORKOUT and delivered a SYSTEM — and
-   * a stranger had to absorb what a system is, a concept that exists for the
-   * app's benefit (D22) rather than theirs, before logging a single set. Install
-   * to first logged number was about a dozen steps, and the logging loop is the
-   * one thing apps beat spreadsheets at (D4). Verified by hand 2026-08-19,
-   * carried in the improvement plan as the cheapest high-value change available,
-   * and built 2026-08-21.
-   *
-   * ⚠️ THE FIX IS NOT TO REMOVE SYSTEMS. It is to stop making anybody read about
-   * one. Explore is the primary action, so a real programme is one tap, and it
-   * teaches what a system is BY EXAMPLE — which is D8 exactly: at the moment of
-   * use, never as a manual. Everything downstream already worked; this was the
-   * one broken link. Copy a programme in and `suggestNext()` immediately returns
-   * `isStart`, so Home's very next paint says "▶ Push · First workout in Push
-   * Pull Legs" with no further decisions asked of anybody.
-   *
-   * "Record a benchmark" is deliberately ABSENT here. It is the most jargon-
-   * heavy action in the app and it asks somebody who has never trained to record
-   * a maximum. It comes back the moment there is anything at all.
-   */
-  const firstRun = !workouts.length && !sessions.length;
-
-  const top = next
-    ? [
-        el('button', {
-          class: 'btn primary lg block',
-          onClick: () => go('#/session/' + next.workout.id),
-        }, icon('play'), next.workout.name),
-
-        el('div', { class: 'field-help', text: describeSuggestion(next) }),
-
-        // Not "Start a workout" any more — the button above already starts one,
-        // so this one has to say what is DIFFERENT about it. It points at the
-        // Record tab now, which is where every other way of logging lives.
-        el('button', { class: 'btn block', onClick: () => go('#/record') },
-          icon('list'), 'Choose another workout'),
-
-        // ⚠️ "Record a benchmark" is GONE FROM HERE, moved to the Record tab
-        // in Tim's five-tab redesign. Home keeps the one button no other screen
-        // can offer — the next workout in your own rotation — and stops being a
-        // second, quieter copy of a tab that is now the biggest target on the
-        // screen.
-      ]
-    : firstRun
-      ? [
-          el('button', {
-            class: 'btn primary lg block', onClick: () => go('#/explore'),
-          }, icon('search'), 'Pick a programme'),
-
-          // What the tap actually does, before it is taken. The word "system"
-          // is not used: it is the app's word, and the screen it leads to
-          // demonstrates the idea better than this sentence could explain it.
-          el('div', { class: 'field-help', text:
-            'Nine ready-made programmes, from Arnold’s Golden Six to Jeff Nippard’s. '
-            + 'Pick one and it is copied into your account — yours to change, and you can '
-            + 'start its first workout straight away.' }),
-
-          el('button', { class: 'btn block', onClick: () => go('#/system/new') },
-            icon('plus'), 'Build my own instead'),
-        ]
-      : [
-          // Nothing to suggest — more than one system and no history, so
-          // suggestNext() stays silent rather than guessing. The Record tab is
-          // where the choice lives.
-          el('button', {
-            class: 'btn primary lg block', onClick: () => go('#/record'),
-          }, icon('play'), 'Start a workout'),
-        ];
-
-  // A heading over an empty list is a heading over nothing. On a first run the
-  // buttons above ARE the content (Rule 3), so the space below them stays quiet
-  // rather than announcing an absence.
-  const scroll = firstRun
-    ? []
-    : [
-        el('div', { class: 'section-label', text: 'Recent activity' }),
-        recent.length
-          ? el('div', { class: 'list' }, recent.map(sessionRow))
-          : emptyState('Nothing recorded yet',
-              'Once you finish a workout or log a benchmark, it will show up here and on your calendar.'),
-      ];
-
-  return screenShell({
+  const screen = screenShell({
     profile: true,
-    title: 'Fitness Tracker',
-    top: [youFriendsTabs('you'), ...(Array.isArray(top) ? top : [top])],
-    // "Get started below" said nothing the buttons did not. On a first run the
-    // header earns its row by naming the app once — which is the one moment
-    // that is genuinely useful — and nothing else.
-    sub: workouts.length ? `${plural(workouts.length, 'workout')} saved` : null,
+    title: 'Home',
+    top: youFriendsTabs('you'),
     actions: [iconBtn('sliders', 'Settings', () => go('#/settings'))],
-    scroll,
+    scroll: body,
   });
+
+  // Fetched AFTER the shell exists, so the tab paints immediately and the feed
+  // fills in. Every friend is a separate network read; awaiting all of them
+  // before showing anything would make the Home tab the slowest in the app,
+  // which is the fault the 2026-08-22 read-cache pass was written to remove.
+  fillFeed(body).catch(() => {
+    setChildren(body, emptyState('Could not load your feed',
+      'Your connection dropped. Everything else in the app works offline — this is the one screen that cannot.'));
+  });
+
+  return screen;
 }
 
-function sessionRow(s) {
-  const count = (s.entries || []).filter((e) => (e.sets || []).length).length;
-  const sets = (s.entries || []).reduce((n, e) => n + (e.sets || []).length, 0);
-  return el('button', { class: 'row', onClick: () => go('#/day/' + s.date) },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: s.workoutName || 'Workout' }),
-      el('div', { class: 'row-sub', text: `${relativeDay(s.date)} · ${plural(count, 'exercise')} · ${plural(sets, 'set')}` }),
+/**
+ * ⚠️ THE FEED IS OTHER PEOPLE ONLY, on Tim's instruction: *"for now, we won't
+ * put any of the user's own workouts in this home section."* So an account with
+ * no friends has an empty feed no matter how much its owner trains — which
+ * means the empty state has to be a real screen and not a shrug. Strava's own
+ * answer to a thin feed is a "find friends" push, and that is what this is.
+ */
+async function fillFeed(body) {
+  let state;
+  try { state = await social.state(); } catch (_) { state = { available: false }; }
+
+  /* ⚠️ THE DEMO GETS A FEED, and it is the reason this branch exists at all.
+   *
+   * `social.state()` refuses in the demo — correctly, because `republish()`
+   * must never push invented workouts at real people. But that refusal made the
+   * single most important new screen in the app **unjudgeable in the one place
+   * built for judging screens**: the demo account exists so every screen can be
+   * looked at without logging anything, and Home would have shown an empty
+   * state there forever, including to the accessibility audit, which drives the
+   * demo.
+   *
+   * ⚠️ READING INVENTED FRIENDS IS NOT THE HAZARD. Publishing is, and publishing
+   * stays refused — this reads a generated list out of demo.js and touches no
+   * network, no storage and nobody's account.
+   */
+  if (state.reason === 'demo') {
+    const { buildDemoFeed } = await import('./demo.js');
+    setChildren(body, ...buildDemoFeed(todayISO()).map(feedCard));
+    return;
+  }
+
+  if (!state.available || !state.name) {
+    setChildren(body, emptyState('Your feed lives here',
+      'Connect with someone you train with and their workouts show up here as they log them.',
+      el('a', { class: 'btn primary', href: '#/social', text: 'Find friends' })));
+    return;
+  }
+
+  if (!state.connections.length) {
+    setChildren(body, emptyState('Nobody to follow yet',
+      'Send somebody an invite link and their workouts appear here the moment they train.',
+      el('a', { class: 'btn primary', href: '#/social', text: 'Invite a friend' })));
+    return;
+  }
+
+  // ⚠️ Promise.all, and a friend who fails is DROPPED rather than throwing.
+  // One person's document being unreadable — they downgraded me, they are
+  // mid-publish, the rules said no — must not blank the whole feed.
+  const seen = await Promise.all(state.connections.map(async (c) => {
+    try {
+      const r = await social.friend(c.uid);
+      return { conn: c, tier: r.tier, doc: r.doc };
+    } catch (_) { return null; }
+  }));
+
+  const entries = feedEntries(seen.filter(Boolean));
+
+  if (!entries.length) {
+    setChildren(body, emptyState('Nothing from anyone yet',
+      'Your friends’ workouts will appear here as they record them. What each person shares is '
+      + 'their choice, so some may only show that they trained.'));
+    return;
+  }
+
+  setChildren(body, ...entries.map(feedCard));
+}
+
+/**
+ * Flatten every friend's published activity into one list, newest first.
+ *
+ * ⚠️ SORTED ON THE DATE THE WORKOUT HAPPENED, not on when it was published.
+ * Somebody logging Tuesday's session on Thursday belongs on Tuesday — the feed
+ * is a record of training, and publishing is an implementation detail of how it
+ * got here.
+ */
+function feedEntries(seen) {
+  const out = [];
+  for (const s of seen) {
+    const acts = (s.doc && s.doc.activity) || [];
+    const name = (s.doc && s.doc.profile && s.doc.profile.name) || s.conn.name || 'Friend';
+    for (const a of acts) {
+      if (!a || !a.date) continue;
+      out.push({ uid: s.conn.uid, name, tier: s.tier, act: a });
+    }
+  }
+  // `startedAt` breaks ties within a day where it exists, so two of somebody's
+  // sessions on one date do not shuffle between renders.
+  return out.sort((x, y) =>
+    y.act.date.localeCompare(x.act.date)
+    || String(y.act.startedAt || '').localeCompare(String(x.act.startedAt || '')));
+}
+
+function feedCard(e) {
+  const a = e.act;
+
+  // ⚠️ Strava's meta line is "{date} at {time}" plus a location, and it drops
+  // the location half silently when there is none rather than leaving a hole.
+  // Same here — and there is never a location yet, so the line is currently
+  // always just the left half. Written this way so adding one is one term.
+  const when = [relativeDay(a.date), fmtClock(a.startedAt)].filter(Boolean).join(' at ');
+  const meta = [when, a.location].filter(Boolean).join(' · ');
+
+  // What they did. `entries` only exists at "my workouts" and above — at the
+  // lowest tier a friend shares that they trained and nothing else, and the
+  // card has to be honest about that rather than looking broken.
+  const names = (a.entries || [])
+    .map((x) => x && x.name)
+    .filter(Boolean);
+
+  const did = names.length
+    ? el('div', { class: 'feed-did', text: names.join(' · ') })
+    : el('div', { class: 'feed-did is-quiet', text: 'They share that they trained, not what they did.' });
+
+  return el('article', { class: 'feed-card' },
+    el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
+      el('span', { class: 'feed-avatar' }, icon('person', 19)),
+      el('span', { class: 'feed-who' },
+        el('span', { class: 'feed-name', text: e.name }),
+        el('span', { class: 'feed-meta', text: meta }),
+      ),
     ),
-    chevron(),
+    // ⚠️ The workout's name is the LARGEST text in the card, above the athlete's
+    // own name — which is Strava's hierarchy, and it is right: you scan a feed
+    // for what happened, and whose it is qualifies it.
+    el('h2', { class: 'feed-title', text: a.name || 'Workout' }),
+    did,
+    feedActions(e),
   );
 }
+
+/**
+ * ⚠️ TWO OF THESE THREE BUTTONS CANNOT WORK YET, AND THEY SAY SO WHEN PRESSED.
+ *
+ * A kudos or a comment has to be written somewhere the OTHER person can read,
+ * and this app's whole sharing model is "nobody's client may write into anybody
+ * else's data" (docs/social-plan.md §2) — the same wall joint workouts hit.
+ * They need a new rules path, which is Open work 0l.
+ *
+ * ⚠️ SO WHY RENDER THEM AT ALL? Because Tim asked to see the layout, and
+ * because a button that silently does nothing is the exact fault this project
+ * has already shipped once and fixed twice — the silent failed save, the popup
+ * that never settled. A button that tells you it is not built yet is a
+ * placeholder; a button that shrugs is a bug.
+ *
+ * Share is REAL. `navigator.share` needs no backend and no permission from
+ * anybody, so it is wired up properly, with a clipboard fallback.
+ */
+function feedActions(e) {
+  const soon = (what) => () => toast(`${what} is not connected yet — it needs a way to write to their account.`);
+
+  return el('div', { class: 'feed-actions' },
+    el('button', { class: 'feed-act', onClick: soon('Kudos') },
+      el('span', { class: 'feed-act-glyph', text: '👍' }), 'Kudos'),
+    el('button', { class: 'feed-act', onClick: soon('Commenting') },
+      el('span', { class: 'feed-act-glyph', text: '💬' }), 'Comment'),
+    el('button', { class: 'feed-act', onClick: () => shareActivity(e) },
+      el('span', { class: 'feed-act-glyph', text: '↗' }), 'Share'),
+  );
+}
+
+async function shareActivity(e) {
+  const names = (e.act.entries || []).map((x) => x && x.name).filter(Boolean);
+  const text = `${e.name} did ${e.act.name || 'a workout'} on ${e.act.date}`
+    + (names.length ? ` — ${names.join(', ')}` : '');
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+    if (navigator.clipboard) { await navigator.clipboard.writeText(text); toast('Copied'); return; }
+    toast('Sharing is not available in this browser');
+  } catch (_) {
+    // An abort is somebody changing their mind, not a failure. Reporting it as
+    // one would make cancelling a share look like the app breaking.
+  }
+}
+
+/**
+ * "6:32 PM" from an ISO timestamp, or null.
+ *
+ * ⚠️ NULL RATHER THAN A GUESS. Sessions recorded before `startedAt` existed have
+ * no time at all, and a card reading "at 12:00 AM" would be inventing one. The
+ * meta line drops the half it has nothing for.
+ */
+function fmtClock(iso) {
+  if (typeof iso !== 'string' || !iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  try {
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch (_) { return null; }
+}
+
+// ⚠️ `sessionRow()` LIVED HERE AND IS GONE, 2026-08-25. It drew Home's "Recent
+// activity" list of the user's OWN sessions, which the feed replaced on Tim's
+// *"for now, we won't put any of the user's own workouts in this home section,
+// but maybe in the future."* Deleted rather than left unreferenced, because a
+// function nothing calls is a function nobody maintains and it would rot before
+// "the future" arrived — git has it, and the Calendar tab is where your own
+// training is read now.
 
 /* ================================================================== *
  * Pick which workout to start
@@ -175,7 +311,28 @@ function sessionRow(s) {
  * somebody bookmarked must not start 404ing because a tab bar was redesigned.
  */
 export async function StartPickerView({ tab = false } = {}) {
-  const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
+  const [systems, workouts, sessions] = await Promise.all([
+    store.getSystems(), store.getWorkouts(), store.getSessions(),
+  ]);
+
+  /* ⚠️ THE SUGGESTION LIVES HERE NOW — Tim, 2026-08-25: *"all of the 'suggested
+   * workout' and 'choose another workout' stuff [moves] to the Record section,
+   * so we don't double dip."*
+   *
+   * It was Home's whole top half. Home is becoming a feed of what your friends
+   * did, and a screen cannot be both a place you read and a place you act
+   * without one of the two winning — which is the same argument that put Record
+   * in the middle of the tab bar in the first place (D4).
+   *
+   * ⚠️ AND "CHOOSE ANOTHER WORKOUT" DIES RATHER THAN MOVES. On Home it was the
+   * escape hatch from the suggestion, pointing at this screen. On this screen
+   * the full list is already the thing underneath it, so the button would point
+   * at what it is sitting on top of.
+   *
+   * This is a LOOKUP, not advice: the order came out of the user's own system.
+   * It never refuses and never scolds, and the caption always says what it read.
+   */
+  const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
 
   // GROUPED, not nested. Making someone pick a system and then a workout would
   // add a tap to the one screen that is used mid-gym, and most people have one
@@ -220,9 +377,25 @@ export async function StartPickerView({ tab = false } = {}) {
   // grey caption. The old sub-label was quieter than the workout names beneath
   // it, so even with several systems the one thing being searched for was the
   // least prominent text in the group.
+  // ⚠️ The suggestion is a BUTTON at the top of the list, not a card above it.
+  // It is one of the workouts below, promoted — so it wears the same clothes,
+  // and the sentence under it says what was read to choose it. A distinct
+  // treatment would imply it came from somewhere else.
+  const suggestion = next
+    ? [
+        el('div', { class: 'section-label', text: 'Next in your rotation' }),
+        el('button', {
+          class: 'btn primary lg block',
+          onClick: () => go('#/session/' + next.workout.id),
+        }, icon('play'), next.workout.name),
+        el('div', { class: 'field-help', text: describeSuggestion(next) }),
+      ]
+    : [];
+
   const scroll = groups.length
     ? [
-        el('div', { class: 'section-label', text: 'Start a workout' }),
+        ...suggestion,
+        el('div', { class: 'section-label', text: next ? 'Or start any workout' : 'Start a workout' }),
         ...groups.flatMap((g) => [
           el('div', { class: 'sys-head', text: g.sys.name }),
           el('div', { class: 'list' }, g.items.map(row)),

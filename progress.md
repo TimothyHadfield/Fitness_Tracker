@@ -12,7 +12,7 @@ top, newest first; the nine below them are 2026-08-22. Read the top three points
 **Open work index**, and nothing else unless you need the why.
 
 ⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green:
-**2428 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
+**2474 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
 logged warm-ups should be excluded from the volume count, and his friend's failed sign-in.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
@@ -123,6 +123,142 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-25, evening — HOME IS A FEED, GOALS LEFT THE TAB BAR, CALENDAR CAME BACK
+
+A large batch off Tim's third message of the day. Everything below shipped.
+
+### 1. HOME IS A STRAVA-STYLE FEED, AND NOTHING ON IT STARTS A WORKOUT
+
+*"I got inspiration off of Strava, and I want it to be extremely similar to that... whenever any of
+your friends record a workout then it shows up at the top of your feed, with their name, the date and
+time, and location at the top of their box, then the title of their workout, and a list of the
+exercises they did. Then at the bottom it will have a thumbs up emoji on the left, a comment button
+in the middle, and a share button on the right."*
+
+⚠️ **ALL THE WORKOUT-STARTING MOVED TO RECORD** - *"so we don't double dip."* The suggestion and
+"choose another workout" are gone from Home. **"Choose another workout" died rather than moved**: on
+Home it pointed at Record, and on Record it would point at the list it is sitting on top of.
+
+⚠️ **THIS ANSWERS THE UX REVIEW'S SHARPEST FINDING FROM THE OTHER SIDE.** *"Nothing a user can
+see on Home ever grows"* has been item 1 of Open work 0c since 2026-08-22. A feed is nothing but
+growth.
+
+⚠️ **STRAVA'S ANATOMY, NOT STRAVA'S CHROME.** He asked for Strava *and* for *"no panels on any
+page"* in the same message, and Strava's feed is literally elevated cards with drop shadows. Both are
+kept: the **order and content** of a card is copied exactly - avatar, name, date/time, title, what
+they did, three actions - while separation stays this app's hairline-and-space (Rule 2). **If he
+wants the boxes it is a background and a radius on `.feed-card` and nothing else moves.**
+
+⚠️ **CHRONOLOGICAL, DELIBERATELY.** Researched first: Strava switched its default to a
+personalised ranking, got a sustained backlash and a petition, and now ships "Latest Activities" as a
+toggle. Newest first, nothing ranked, nothing hidden. There is an assertion on the ordering.
+
+⚠️ **TWO OF THE THREE BUTTONS CANNOT WORK, AND THEY SAY SO WHEN PRESSED.** A kudos or a comment
+has to be written where the *other* person can read it, and this app's whole model is that nobody's
+client may write into anybody else's data - **the same wall joint workouts hit**. They need a new
+rules path (Open work 0l). ⚠️ **Rendered anyway, and honest about it**: a button that silently
+does nothing is the fault this project has already shipped once and fixed twice. **Share is real** -
+`navigator.share` needs no backend.
+
+⚠️ **NO LOCATION ANYWHERE, and the card says nothing rather than something vague.** Tim flagged
+it himself. There is no geolocation in the app, nothing in the projection to carry it, and a privacy
+decision to take first. Open work 0m.
+
+### 2. THE DEMO HAS FRIENDS NOW, AND THAT IS WHY THE FEED CAN BE JUDGED AT ALL
+
+`social.state()` refuses in the demo - correctly, because `republish()` must never push invented
+training at real people. **That refusal would have made the most important new screen in the app
+unjudgeable in the one account built for judging screens**, including to the accessibility audit,
+which drives the demo.
+
+⚠️ **READING INVENTED FRIENDS IS NOT THE HAZARD; PUBLISHING IS, and publishing stays refused.**
+`buildDemoFeed()` returns a deterministic fortnight from three invented people and touches no
+network, no storage and nobody's account.
+
+⚠️ **ONE OF THE THREE SHARES AT THE LOWEST TIER, on purpose** - no `entries` key and no
+`startedAt`, because that is what the real projection does. A card for that person is the one most
+likely to be built wrong and never noticed, and it has to read as complete rather than as a failed
+load. **This project has been bitten by a tidier-than-the-wire fixture exactly once before** - the
+expired-invite bug lived in that gap.
+
+### 3. `startedAt` IS PUBLISHED NOW - AT MID AND ABOVE ONLY
+
+The feed needed a time and the projection had none. Added at **MID**, not LIGHT, and the argument is
+the load-bearing part: **LIGHT is `DEFAULT_TIER`**, so adding a field there widens what every
+existing connection sees, retroactively across the whole 60-session window, on the next publish, with
+nobody asked anything. **A widening must be an act by the owner, not a consequence of a deploy.** And
+a time of day is a different kind of fact from a date - sixty of them describe a schedule.
+
+⚠️ **IT FOUND A HOLE IN `assertTierClean()` ON THE WAY.** That guard only checked for *numeric*
+leaves below a session at LIGHT - **a start time is a string and would have sailed straight
+through**, so the safety net was silent for the exact field being added. It now checks the KEY
+against an allow-list and fails closed, so any field invented later is a leak at LIGHT until somebody
+names it.
+
+`finishedAt` is deliberately NOT published: start plus finish hands over how long somebody was out of
+the house. The key is **absent** rather than null when there is no time - one case for the view, not
+three. **Mutation-checked twice**; publishing null flips 8 assertions.
+
+### 4. GOALS LEFT THE TAB BAR AND CALENDAR TOOK ITS SLOT
+
+*"I want to remove the Goals section and replace it with the Calendar details."*
+
+⚠️ **OFF THE BAR IS NOT DELETED, and all three halves are asserted together.** `#/goals` still
+resolves, Settings links to it, and all three Goals screens gained a back button. **A route with no
+way in is deleted in every sense that matters to a user** - that is the half a "we kept the route"
+claim usually forgets, so the test checks the nav array, the router case and the link in one block.
+
+This **reverses the 2026-08-22 merge** that folded Calendar into Data. That argument was about what
+the two screens *are* - both the past, one squares and one lines. His is about how often he opens
+them, and he is the one using it in a gym. **Frequency wins over taxonomy.**
+
+**It also took the Data switch's one oddity with it.** Calendar was the only entry in that control
+that navigated rather than setting in-page state, which is why the function needed a special case and
+an `onChartMode` fallback. Both gone.
+
+### 5. Muscles is the Data tab's first and default mode
+
+*"In the Data section, the muscle group should be the first tab and the default tab."* It is also the
+mode that works with the least history - one benchmark colours the map, where a line chart needs two
+points before it can draw anything.
+
+⚠️ **The audit's route list needed a new step because of it.** `#/graphs` now opens on Muscles,
+so the Graph row has to click its way there - without that the audit would have measured the muscle
+map three times and the line chart never, which is **the exact fault found on 2026-08-24**.
+
+### 6. The calendar's day cells are the workout name now
+
+*"Make the items for that day fill up that day's box entirely, besides the number, and have the name
+of the workout be as large as possible."*
+
+```
+                    before      after
+  cell               50x52      50x66
+  the name's box    ~44x20      44x46
+  type size            8px     12.09px
+```
+
+The name fills everything the number does not, wraps to two lines rather than clipping, and the
+`+2` count is the one thing that does *not* take an equal share - it is a count, not a workout.
+
+### 7. TWO REGRESSIONS, BOTH CAUGHT BY MACHINES RATHER THAN BY EYE
+
+1. **The first-run path lived on Home and the feed destroyed it.** An empty account's "Pick a
+   programme" - the 2026-08-21 work that took install-to-first-logged-set from about a dozen taps to
+   five - was Home's empty state. A render test failed on it. **The property now belongs to Record**
+   and the test moved with it. ⚠️ **A brand-new user's Home is legitimately an empty feed**, and
+   the onboarding is one tab-tap away behind the biggest button in the app.
+2. **The new "Start" pill measured 4.08:1 in the light theme** - below AA - and the a11y audit found
+   it, not a person. Same weakness the palette notes already record: `--accent` has the least
+   headroom of any light-theme token. Fixed with a darkened same-hue gold **scoped to that pill**,
+   because `--accent` is also a fill under `--accent-ink` in a dozen places and moving the token
+   would break twelve pairs to fix one.
+
+**Re-audited: 56 route/width/theme combinations, 5,782 text nodes, zero below 4.5:1, zero horizontal
+overflow, median ratio 9.41.**
 
 ---
 
@@ -1886,6 +2022,8 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. §16 sets the hard constraint |
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
+| **9b** | **0l — kudos and comments have no way to land** | ⚠️ **OPEN.** The feed renders both buttons and they say plainly that they are not connected. Writing one means a path the OTHER person's client can read — the same new-rules-path wall as 0e and 0j. Three features now queue behind it |
+| **9c** | **0m — no location on a feed card** | ⚠️ **OPEN, and Tim flagged it himself** (*"we might need to work on location services"*). Needs geolocation, a field in the projection, and a privacy decision about publishing where somebody trains. The card drops the term rather than showing anything vague |
 | **10** | **0k — the colour direction** | ⚠️ **OPEN, and Tim asked for OPTIONS rather than a decision.** *"The entire cite is just really colorless… a few buttons that are massive and orange (which is just too much sometimes)."* The legibility half shipped 2026-08-25; the palette direction is his call |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
 
@@ -2274,19 +2412,19 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2428 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2474 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
-| **Data tests** | `node tests/data-layer.test.mjs` — 1193 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
+| **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
-| **Social tests** | `node tests/social.test.mjs` — 81 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
+| **Social tests** | `node tests/social.test.mjs` — 106 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
 | **Volume tests** | `node tests/volume-map.test.mjs` — 64 assertions, **no dependencies**. Direct/indirect mapping, the published efficiency tiers, and the per-session clamp |
 | **Rating tests** | `node tests/optimal.test.mjs` — 76 assertions, **no dependencies**. The dose-response curves, and the three things the rating refuses to do |
 | **Goals tests** | `node tests/goals.test.mjs` — 232 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier. ⚠️ Since 2026-08-24 it also **plays an assist machine forward through forty obeyed sessions** and asserts it never once proposes more assistance. That section replaced two assertions that were green while the bug was live, because they read the SOURCE for a guard rather than driving the function with the exercise that reaches it |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
-| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **52** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 415 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **56** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 430 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |

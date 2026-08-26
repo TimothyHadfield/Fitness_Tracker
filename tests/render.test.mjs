@@ -87,13 +87,20 @@ for (const [name, view] of [
 // Empty account, no chartable data at all.
 let data = await mount(GraphView());
 let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
-// ⚠️ FOUR since 2026-08-22: the Calendar tab was folded into Data when the nav
-// went from six tabs to five. The count is asserted rather than just the
-// contents, because a segment silently disappearing is exactly the class of bug
-// this block was written for.
-ok(tabs.length === 4, `mode switch shows all four tabs with NO data (${JSON.stringify(tabs)})`);
+/* ⚠️ THREE since 2026-08-25: Calendar left this control and became its own nav
+   tab. The count is asserted rather than just the contents, because a segment
+   silently disappearing is exactly the class of bug this block was written for
+   — and because the count going the OTHER way would mean the calendar had
+   quietly come back into a tab it no longer belongs to. */
+ok(tabs.length === 3, `mode switch shows three tabs with NO data (${JSON.stringify(tabs)})`);
 ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
-ok(tabs.includes('Calendar'), 'and the calendar is reachable from Data, which is where it lives now');
+ok(tabs[0] === 'Muscles',
+   '⚠️ and Muscles is FIRST — it is the mode that works with the least history, where a line chart needs two points');
+ok(!tabs.includes('Calendar'),
+   '⚠️ and the calendar is NOT in here any more — it has its own tab, and two ways in would light two things at once');
+ok([...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles')
+     .getAttribute('aria-selected') === 'true',
+   '⚠️ and the Data screen OPENS on Muscles rather than on a chart');
 
 const musclesTab = [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
 ok(!musclesTab.disabled, 'Muscles tab is not disabled');
@@ -324,7 +331,7 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
-ok(data.querySelectorAll('.seg').length === 4, 'Bars mode keeps the mode switch');
+ok(data.querySelectorAll('.seg').length === 3, 'Bars mode keeps the mode switch');
 
 /* ============ neither chart mode is ever a dead end ============ */
 // Tim, 2026-08-17: a chart needs the same lift on two days, but the numbers
@@ -914,13 +921,18 @@ ok(!data.querySelector('.rep-target'),
   ok(segs().map((b) => b.textContent).join() === 'Months,Years',
      'the calendar offers Months and Years');
 
-  // The merge itself: the calendar is inside Data and says so.
+  // ⚠️ THE UNMERGE: the calendar is its own tab again (2026-08-25), so its
+  // header is its own title and NOT the Data switch. Borrowing that control
+  // would light a segment for a screen no longer inside it.
   const dataSegs = [...screen.querySelectorAll('.topbar .seg')].map((b) => b.textContent);
-  ok(dataSegs.join() === 'Calendar,Graph,Bars,Muscles',
-     `the calendar's header IS the Data switch (${dataSegs.join()})`);
-  ok([...screen.querySelectorAll('.topbar .seg')]
-       .find((b) => b.getAttribute('aria-selected') === 'true').textContent === 'Calendar',
-     'and Calendar is the segment showing as selected');
+  ok(!dataSegs.includes('Graph') && !dataSegs.includes('Bars'),
+     `the calendar no longer wears the Data switch (${dataSegs.join() || 'none'})`);
+  ok(/Calendar/.test(screen.querySelector('.topbar').textContent),
+     'and says its own name instead');
+  // The only segments left in this header are the calendar's OWN Months/Years,
+  // which live in `.segmented.sub` — the topbar itself carries none.
+  ok(dataSegs.length === 0,
+     'and carries no cross-screen segments at all, so nothing here can light up for another tab');
   ok(screen.querySelectorAll('.cal-month').length > 0 && !screen.querySelector('.yr-grid'),
      'and opens on Months, which is what it has always been');
 
@@ -1694,17 +1706,20 @@ ok(!data.querySelector('.rep-target'),
      What is pinned now is the property, not the wording: the first thing an
      empty account is offered must be one tap from a real programme, and must
      not make anybody read the word "system" to get there. */
-  let home = await mount(HomeView());
-  const firstBtn = home.querySelector('.btn.primary.lg');
-  ok(Boolean(firstBtn), 'an empty account leads with one clear action');
-  ok(!/Create your first workout/.test(home.textContent),
+  /* ⚠️ THE FIRST RUN MOVED TO RECORD ON 2026-08-25, and this test moved with
+     it. Home became a friends-only feed on Tim's instruction, so a brand-new
+     account's Home is legitimately empty — which means the property below is
+     now Record's to keep, and losing track of it would quietly undo the
+     2026-08-21 work that took install-to-first-logged-set from about a dozen
+     taps to five. What is pinned is the property, not the wording. */
+  const { StartPickerView: RecordView } = await import(BASE + 'views-workouts.js');
+  let rec = await mount(RecordView({ tab: true }));
+  const firstBtn = rec.querySelector('.btn.primary');
+  ok(Boolean(firstBtn), 'an empty account leads with one clear action, on Record');
+  ok(!/Create your first workout/.test(rec.textContent),
      'and it is NOT the old promise of a workout that delivered a system');
-  ok(!/\bsystem\b/i.test(home.textContent),
+  ok(!/system/i.test(rec.textContent),
      '⚠️ the app’s own word for its own convenience (D22) does not appear on the first screen');
-  ok(/Record a benchmark/.test(home.textContent) === false,
-     'nor does the most jargon-heavy action in the app, asked of somebody who has never trained');
-  ok(!/Recent activity/.test(home.textContent),
-     'and there is no heading standing over an empty list');
 
   // The tap has to reach Explore. Asserted by driving it, not by reading a label.
   firstBtn.click();
@@ -1714,36 +1729,110 @@ ok(!data.querySelector('.rep-target'),
   location.hash = '#/home';
   await settle();
 
+  /* ⚠️ AND HOME IS A FEED, WITH NOTHING TO START. Tim: "all of the suggested
+     workout and choose another workout stuff [moves] to the Record section, so
+     we don't double dip." A copy of either drifting back here is the exact
+     duplication he asked to remove. */
+  let home = await mount(HomeView());
+  for (let i = 0; i < 6; i++) await settle();
+  ok(Boolean(home.querySelector('.feed')), 'Home is a feed');
+  ok(!/Choose another workout|Next in your rotation/.test(home.textContent),
+     '⚠️ and carries no way to start a workout — that is Record’s job now, not a second copy of it');
+  ok(!/Recent activity/.test(home.textContent),
+     'nor the user’s own recent sessions, which is what "friends only, for now" means');
+
   const { system } = await store.addPresetSystem(presetById('preset-ppl'));
   const ws = await store.getWorkouts(system.id);
 
-  // One system, no history — start at the top of the rotation.
-  home = await mount(HomeView());
-  const primary = home.querySelector('.btn.primary.lg');
+  // One system, no history — start at the top of the rotation. On RECORD now.
+  rec = await mount(RecordView({ tab: true }));
+  const primary = rec.querySelector('.btn.primary.lg');
   ok(primary && primary.textContent.includes(ws[0].name),
      `the big button offers the first workout in the programme (${primary && primary.textContent})`);
-  ok(/First workout in Push Pull Legs/.test(home.textContent),
+  ok(/First workout in Push Pull Legs/.test(rec.textContent),
      'and says why, naming the system');
-  ok(/Choose another workout/.test(home.textContent),
-     'every other workout is still one tap away — the suggestion never traps you');
+  ok(/Or start any workout/.test(rec.textContent),
+     '⚠️ every other workout is still one tap away — the suggestion never traps you, and on this screen the full list is directly underneath it');
 
   // Record the first workout; the suggestion should move on to the second.
   await store.saveSession({
     workoutId: ws[0].id, workoutName: ws[0].name, date: todayISO(),
     entries: [{ exerciseId: ws[0].exercises[0].exerciseId, exerciseName: 'x', sets: [{ weight: 100, reps: 5 }] }],
   });
-  home = await mount(HomeView());
-  const next = home.querySelector('.btn.primary.lg');
+  rec = await mount(RecordView({ tab: true }));
+  const next = rec.querySelector('.btn.primary.lg');
   ok(next && next.textContent.includes(ws[1].name),
      `after doing ${ws[0].name} it offers ${ws[1].name} (${next && next.textContent})`);
-  ok(new RegExp(`already did ${ws[0].name} today`).test(home.textContent),
+  ok(new RegExp(`already did ${ws[0].name} today`).test(rec.textContent),
      'training today is acknowledged, not used as a reason to refuse');
-  ok(!/rest day|too much|should not/i.test(home.textContent),
+  ok(!/rest day|too much|should not/i.test(rec.textContent),
      'and it never tells you what to do — Rule 6');
 
   await store.clearAll();
 }
 
+
+/* ================= Home is a feed of other people ================= *
+ *
+ * Rebuilt 2026-08-25 on Tim's Strava reference. Driven inside the DEMO, which
+ * is the only account that has friends — `social.state()` refuses in the demo
+ * for real (publishing invented training to real people is the one thing that
+ * could do harm), so the feed reads a generated list instead. That branch
+ * exists precisely so this screen can be looked at and measured at all.
+ */
+{
+  const { demo } = await import(BASE + 'store.js');
+  const { buildDemoFeed } = await import(BASE + 'demo.js');
+  const { todayISO } = await import(BASE + 'store.js');
+
+  sessionStorage.setItem('ftrack:v1:demo', '1');
+  ok(demo.active(), 'the demo flag is on, so this is not passing vacuously');
+
+  const home = await mount(HomeView());
+  for (let i = 0; i < 8; i++) await settle();
+
+  const cards = [...home.querySelectorAll('.feed-card')];
+  ok(cards.length > 0, `the feed renders ${cards.length} cards`);
+
+  /* ⚠️ NEWEST FIRST, AND NEVER RANKED. Strava switched its default to a
+     personalised ordering and got a petition; it now ships "Latest Activities"
+     as a toggle. Ordering is the one thing a feed cannot get wrong quietly. */
+  const feed = buildDemoFeed(todayISO());
+  const dates = feed.map((e) => e.act.date);
+  ok(dates.every((d, i) => i === 0 || dates[i - 1] >= d),
+     '⚠️ strictly newest-first — no ranking, nothing hidden, nothing promoted');
+
+  const first = cards[0];
+  ok(Boolean(first.querySelector('.feed-name')), 'a card names who did it');
+  ok(Boolean(first.querySelector('.feed-title')), 'and what they did, as the card’s heading');
+  ok(Boolean(first.querySelector('.feed-actions')), 'and carries the action row');
+
+  // Order is the part Tim specified explicitly, so it is the part pinned.
+  const acts = [...first.querySelectorAll('.feed-act')].map((b) => b.textContent);
+  ok(/Kudos/.test(acts[0]) && /Comment/.test(acts[1]) && /Share/.test(acts[2]),
+     `⚠️ thumbs-up left, comment middle, share right (${acts.join(' | ')})`);
+
+  /* ⚠️ THE LOWEST SHARING TIER MUST READ AS COMPLETE, NOT BROKEN. "Just that I
+     trained" publishes no exercise list, and the demo deliberately includes one
+     such friend — a card that rendered an empty line there would look like a
+     failed load, which is the fault this assertion exists to catch. */
+  const quiet = [...home.querySelectorAll('.feed-did.is-quiet')];
+  ok(quiet.length > 0, 'a friend who shares only that they trained still gets a complete card');
+  ok(quiet.every((n) => n.textContent.trim().length > 10),
+     'and it says so in words rather than leaving the line blank');
+
+  /* ⚠️ THE ONE STRING THAT MUST NEVER APPEAR. Sessions recorded before
+     `startedAt` existed have no time, and the lowest tier never publishes one —
+     `new Date(undefined).toLocaleTimeString()` renders "Invalid Date" straight
+     into the card. The meta line drops the half it has nothing for. */
+  ok(!/Invalid Date/.test(home.textContent),
+     '⚠️ no card ever prints "Invalid Date" — a missing time removes a term, it does not invent one');
+  ok([...home.querySelectorAll('.feed-meta')].some((n) => / at /.test(n.textContent)),
+     'and a card that HAS a time shows it, so the check above is not passing by there being none');
+
+  sessionStorage.removeItem('ftrack:v1:demo');
+  await (await import(BASE + 'store.js')).auth.retry();
+}
 
 /* ================= The "% optimal" rating on Explore ================= */
 {

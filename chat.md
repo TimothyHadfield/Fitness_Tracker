@@ -5050,3 +5050,49 @@ The colour DIRECTION — his "everything is black and white" point — is left o
 because he asked for options rather than a decision.
 
 2428 green, pushed.
+
+---
+
+## 2026-08-25, evening — Home became a feed
+
+Big batch. Tim authorised subagents, so two ran: one researching Strava's feed anatomy (read-only),
+one adding a start time to the social projection (scoped to js/social.js + its tests, so it could not
+collide with the view work I was doing).
+
+**Home is a Strava-style feed of friends' workouts** and nothing on it starts a workout any more —
+that all moved to Record, on "so we don't double dip". "Choose another workout" died rather than
+moved: on Record it would point at the list it is sitting on top of. This also answers, from the
+other side, the UX review's sharpest open finding — "nothing a user can see on Home ever grows".
+
+He asked for Strava AND for "no panels on any page" in the same message, and Strava's feed is
+literally elevated cards with drop shadows. Took the anatomy and not the chrome: the order and
+content of a card is copied exactly, separation stays hairline-and-space. If he wants the boxes it is
+one background and one radius.
+
+Chronological, deliberately — the research turned up that Strava switched to a personalised ranking,
+got a petition, and now ships "Latest Activities" as a toggle.
+
+Kudos and Comment cannot work: writing one means a path the other person's client can read, which is
+the same wall joint workouts and mutual disconnect both hit. They are rendered and say so when
+pressed, because a button that silently does nothing is a fault this project has shipped once and
+fixed twice. Share is real.
+
+**The demo has friends now.** social.state() refuses in the demo, which would have made the most
+important new screen unjudgeable in the one account built for judging screens — including to the a11y
+audit, which drives the demo. Reading invented friends is not the hazard; publishing is, and that
+stays refused. One of the three shares at the lowest tier, with no entries and no startedAt, because
+that is what the wire really returns — the expired-invite bug lived in exactly that gap once already.
+
+**The projection agent found a hole I had not asked about**: assertTierClean() only checked numeric
+leaves below a session, so a string field like a start time would have sailed through the guard
+silently. It checks keys against an allow-list now and fails closed.
+
+**Goals left the tab bar and Calendar took its slot.** Off the bar is not deleted — the route
+resolves, Settings links to it, all three screens gained a back button, and the test checks all three
+halves together, because a route with no way in is deleted in every sense that matters.
+
+**Two regressions, both caught by machines.** The first-run onboarding lived on Home's empty state and
+the feed destroyed it; a render test failed and the property moved to Record with the test. And the
+new "Start" pill measured 4.08:1 in the light theme — the a11y audit found it, not me.
+
+2474 green, 56 audit combinations, zero below 4.5:1.

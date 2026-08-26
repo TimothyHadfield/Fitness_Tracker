@@ -87,7 +87,8 @@ export async function GoalsView() {
   const { profile, muscles, ready, goal } = await context();
 
   if (!ready) {
-    return screenShell({ title: 'Goals', profile: true, scroll: needsProfile(profile) });
+    return screenShell({ title: 'Goals', profile: true, back: () => go('#/settings'),
+                         scroll: needsProfile(profile) });
   }
 
   if (!goal) return noGoalScreen(muscles);
@@ -102,6 +103,10 @@ async function noGoalScreen(muscles) {
   return screenShell({
     title: 'Goals',
     profile: true,
+    // ⚠️ A BACK BUTTON, since 2026-08-25. Goals lost its nav tab to Calendar,
+    // so it is now reached FROM Settings and needs a way home — a screen with
+    // neither a tab nor a back button is a trap.
+    back: () => go('#/settings'),
     scroll: [
       muscles.size ? null : needsHistory(),
 
@@ -158,6 +163,7 @@ async function activeGoalScreen(goal, profile, muscles) {
   const screen = screenShell({
     title: 'Goals',
     profile: true,
+    back: () => go('#/settings'),
     scroll: body,
     bottom: el('button', {
       class: 'btn block', text: 'Change or end this goal',

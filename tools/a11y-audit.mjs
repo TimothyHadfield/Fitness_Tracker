@@ -217,10 +217,18 @@ const clickText = (sel, text) => `(() => {
   return Boolean(el);
 })()`;
 
+// ⚠️ RESHUFFLED 2026-08-25 with the nav. Calendar is its own tab again, Goals
+// is off the bar but still a route (and therefore still has to be audited — an
+// unaudited screen is not made accessible by being one tap further away), and
+// `#/record` joined because the workout suggestion moved onto it from Home.
+// ⚠️ The Data tab now OPENS on Muscles, so the Graph row needs its own step to
+// get there — without it this list would have audited the muscle map three
+// times and the line chart never, which is the exact fault found on 2026-08-24.
 const ROUTES = [
   ['#/', 'Home'], ['#/workouts', 'Workouts'], ['#/explore', 'Explore'],
+  ['#/record', 'Record'],
   ['#/calendar', 'Calendar'],
-  ['#/graphs', 'Data · Graph'],
+  ['#/graphs', 'Data · Graph', clickText('.seg, button, a', 'Graph')],
   ['#/graphs', 'Data · Bars', clickText('.seg, button, a', 'Bars')],
   // ⚠️ Two steps, and the second is the point: the panel only exists once a
   // muscle is SELECTED, so auditing the map without tapping one measures the

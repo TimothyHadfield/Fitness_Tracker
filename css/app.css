@@ -470,6 +470,18 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   font-size: 12px; font-weight: 750;
   letter-spacing: 0.01em;
 }
+/* ⚠️ A DARKER GOLD IN THE LIGHT THEME, and the audit is what found it. The
+   light accent (#96660F) measures **4.08:1** on --raised at 12px — below AA —
+   and it shipped that way for the few hours between this pill being built and
+   the audit next running. It is the same weakness the palette notes already
+   record: --accent is the token with the least headroom in the light theme,
+   because it has to stay recognisably gold on a pale ground.
+
+   Same hue, darkened until it clears: 4.64:1 on --raised, 5.13 on --ground.
+   ⚠️ Scoped to this pill rather than changed on the token, because --accent is
+   also a FILL under --accent-ink in a dozen places, and darkening it globally
+   would move every one of those pairs to fix one of them. */
+:root[data-theme="light"] .row-start { color: #8B5E0D; }
 .row-start svg { display: block; }
 
 /* Rows are separated by rules, not wrapped in borders. Negative margins let
@@ -1146,13 +1158,18 @@ select.input {
   text-transform: uppercase;
 }
 
+/* ⚠️ 66px, RAISED FROM 52 ON 2026-08-25. The cell has to be tall enough for a
+   workout name to be worth reading — Tim asked for the name "as large as
+   possible so it's easy to read and click on", and at 52px the tag had 8px of
+   type and about 20px of room. The calendar is a scrolling list of months, so
+   the height is paid for in scroll rather than in anything being cut off. */
 .cal-cell {
-  min-height: 52px;
+  min-height: 66px;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 2px;
+  gap: 2px;
+  padding: 3px;
   overflow: hidden;
   text-align: left;
   color: var(--ink-faint);
@@ -1190,23 +1207,58 @@ select.input {
    and it still reads as the strongest number on the grid. */
 .cal-cell.today .cal-day { color: var(--ink); font-weight: 800; }
 
-.cal-tags { display: flex; flex-direction: column; gap: 1px; min-height: 0; overflow: hidden; }
+/* ⚠️ THE TAGS FILL THE CELL — Tim, 2026-08-25: *"in the months display, make the
+   items for that day fill up that day's box entirely, besides the number, and
+   have the name of the workout be as large as possible so it's easy to read and
+   click on."*
 
-/* Named labels rather than dots. */
+   `flex: 1` on the container and on each tag is what "entirely" means: the
+   number takes its line, everything left over is split between whatever that
+   day holds. Two workouts share it, one takes all of it. */
+.cal-tags { display: flex; flex-direction: column; gap: 2px; flex: 1; min-height: 0; overflow: hidden; }
+
+/* ⚠️ NAMED LABELS RATHER THAN DOTS, AND NOW READABLE ONES. This was 8px — the
+   smallest text in the entire app, on the one surface the palette notes call
+   the worst this app puts small text on. It is fluid now: as large as the
+   column allows, floored at 9.5px so a narrow phone cannot drive it back to
+   where it was, capped at 12.5px so a tablet does not make a calendar cell
+   shout louder than the month heading above it.
+
+   ⚠️ TWO LINES, NOT ONE. "Upper A" fits a 49px column at 11px; "Chest & Back"
+   does not, and clipping the name is exactly what makes a cell unreadable at a
+   glance. Wrapping costs nothing here because the cell is now tall enough. */
 .cal-tag {
-  font-size: 8px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: clamp(10px, 3.1vw, 13.5px);
   font-weight: 750;
-  line-height: 1.2;
-  padding: 2px 2.5px;
-  border-radius: 3px;
+  line-height: 1.15;
+  padding: 1px 2px;
+  border-radius: 4px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
+  /* Two lines at most, then ellipsis. `nowrap` was here and is exactly what
+     made a long name unreadable rather than merely tight. */
+  overflow-wrap: anywhere;
+}
+.cal-tag > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 .cal-tag.w { background: var(--accent); color: var(--accent-ink); }
 .cal-tag.b { background: var(--good); color: #08130D; }
-.cal-tag.more { background: transparent; color: var(--ink-faint); padding: 0 2.5px; }
+/* "+2" is a count, not a workout, so it does not claim an equal share of the
+   cell — it sits on one line under whatever it is counting. */
+.cal-tag.more {
+  flex: none; background: transparent; color: var(--ink-faint);
+  padding: 0; font-size: 9.5px;
+}
 :root[data-theme="light"] .cal-tag.b { color: #FFFFFF; }
 
 .cal-cell.has-workout { background: var(--accent-dim); }
@@ -2695,3 +2747,66 @@ a.row { text-decoration: none; }
   .demo-bar { gap: 7px; font-size: 11.5px; }
   .demo-bar-dot { display: none; }
 }
+
+/* ==========================================================================
+   Home — the feed
+   ==========================================================================
+   ⚠️ STRAVA'S ANATOMY, THIS APP'S CHROME. Tim asked for a feed "extremely
+   similar" to Strava's and, in the same breath, for no panels on any page.
+   Strava's feed is elevated cards with drop shadows on a grey page; this one
+   keeps the order and content of a Strava card exactly — avatar and name, then
+   date/time/location, then the workout's title as the loudest thing in it, then
+   what they did, then kudos/comment/share — and separates entries with space
+   and a hairline instead of a box (Rule 2). If the boxes are wanted, it is a
+   background and a radius on .feed-card and nothing else moves. */
+.feed { display: flex; flex-direction: column; gap: 0; }
+.feed-card {
+  display: flex; flex-direction: column; gap: 7px;
+  padding: 15px 0 13px;
+}
+.feed-card + .feed-card { border-top: 1px solid var(--rule); }
+
+.feed-head { display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; }
+.feed-avatar {
+  flex: none;
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-faint);
+  display: grid; place-items: center;
+}
+.feed-who { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.feed-name { font-size: 13.5px; font-weight: 700; }
+/* The meta line is the one place a middot separates two different KINDS of
+   fact, so it stays on one line and truncates rather than wrapping into
+   something that reads like two lines of equal weight. */
+.feed-meta {
+  font-size: 12px; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ⚠️ LOUDER THAN THE NAME ABOVE IT, which is Strava's hierarchy and is right:
+   you scan a feed for what happened, and whose it is qualifies it. On Strava's
+   own web feed the title is the card's <h1> and the athlete's name is a span. */
+.feed-title { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.2; }
+
+.feed-did { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
+/* The lowest sharing tier publishes that somebody trained and nothing else. The
+   card must read as complete rather than broken, so this is a stated fact in
+   the app's caption voice, not an empty slot. */
+.feed-did.is-quiet { color: var(--ink-faint); font-style: italic; }
+
+/* Three equal thirds: thumbs-up left, comment middle, share right — the order
+   Tim specified. Equal width rather than content width, so the middle one is
+   actually in the middle. */
+.feed-actions { display: flex; gap: 4px; margin-top: 3px; }
+.feed-act {
+  flex: 1;
+  min-height: 40px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 7px;
+  color: var(--ink-soft);
+  font-size: 13px; font-weight: 650;
+}
+.feed-act:active { background: var(--raised); }
+.feed-act-glyph { font-size: 15px; line-height: 1; }

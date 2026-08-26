@@ -521,9 +521,18 @@ export async function FriendView(uid) {
 // disclosure to open, because there is nothing behind it. Pretending otherwise
 // with an arrow that reveals an empty box would be worse than saying less.
 function activityRow(a, tier) {
+  // ⚠️ THE TERNARY IS NOT OPTIONAL. `startedAt` arrived with the Home feed on
+  // 2026-08-25 and is published at MID and above only, so a light-tier row and
+  // every session recorded before the field existed have none — and
+  // `new Date(undefined).toLocaleTimeString()` renders the string "Invalid
+  // Date" straight into the card. The line simply loses its last term instead.
+  const clock = a.startedAt
+    ? ' · ' + new Date(a.startedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : '';
+
   const head = el('div', { class: 'row-main' },
     el('div', { class: 'row-title', text: a.name }),
-    el('div', { class: 'row-sub', text: `${fmtDateLong(a.date)} · ${relativeDay(a.date)}` }),
+    el('div', { class: 'row-sub', text: `${fmtDateLong(a.date)} · ${relativeDay(a.date)}${clock}` }),
   );
 
   if (!atLeast(tier, MID) || !a.entries || !a.entries.length) {

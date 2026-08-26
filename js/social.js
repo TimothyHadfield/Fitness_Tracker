@@ -86,7 +86,12 @@ export const TIER_LABEL = {
 export const TIER_DETAIL = {
   [NONE]: 'They stay connected but see nothing at all.',
   [LIGHT]: 'The day, and what the workout was called. Nothing inside it.',
-  [MID]: 'The whole session — exercises, sets, reps and weights.',
+  // ⚠️ "and the time you started" is not decoration — it is the only place the
+  // owner is told that moving somebody to this tier hands over their routine as
+  // well as their lifts. A visibility control the user cannot restate in their
+  // own words is not a control, and time-of-day is the part of mid a reasonable
+  // person would not have guessed from "my workouts". See projectSession().
+  [MID]: 'The whole session — exercises, sets, reps and weights, and the time you started.',
   [FULL]: 'The above, plus benchmarks, your muscle map and your progress.',
 };
 
@@ -244,6 +249,74 @@ export function projectSession(session, tier) {
 
   if (!atLeast(tier, MID)) return out;
 
+  // ── THE START TIME, AND WHY IT IS ON THIS SIDE OF THE MID GATE ─────────────
+  //
+  // Tim wants a Strava-shaped home feed — a friend's name, the date and the
+  // time at the top of each card — and the projection had no time in it at all,
+  // so the feed could not have shown one however the view was written.
+  //
+  // ⚠️ IT IS PUBLISHED AT MID, NOT LIGHT, AND THAT IS THE DECISION IN THIS
+  // FUNCTION — the parsing below is the easy half. Four reasons, in the order
+  // they actually decided it:
+  //
+  //   1. LIGHT IS THE DEFAULT TIER (DEFAULT_TIER above), so it is what every
+  //      connection Tim has ever made is on unless he moved them. Adding a
+  //      field to light does not ask anybody anything: the next publish widens
+  //      what every existing light viewer can see, retroactively, across the
+  //      whole 60-session activity window. A widening has to be an act by the
+  //      owner, never a consequence of a deploy. That reason alone settles it.
+  //   2. A TIME OF DAY IS A DIFFERENT KIND OF FACT FROM A DATE. "He trained on
+  //      Tuesday" is about him; "he trains at 18:40 most weekdays" is a
+  //      schedule, and a schedule says when a house is empty and where a person
+  //      reliably is. Sixty of them say it with confidence. Light exists to say
+  //      the minimum — TIER_DETAIL calls it "the day, and what the workout was
+  //      called. Nothing inside it" — and a start time is not the minimum.
+  //   3. AT MID IT COSTS NOTHING, which is the other half of the same argument.
+  //      A mid viewer already has every exercise, set, rep and weight; somebody
+  //      holding that does not learn much from also knowing it began at 18:40.
+  //      The field is therefore nearly free where it is added and not free
+  //      where it is not — so there is no version of this where light is the
+  //      better trade.
+  //   4. The feed does not need it at light anyway. views-social.js renders a
+  //      light row flat, with no disclosure to open, precisely because there is
+  //      nothing behind it. The rich card Tim described is the mid/full one.
+  //
+  // Rejected: publishing a bare 'HH:MM' clock string instead of the instant.
+  // It would have been strictly less data and it is what the card renders — but
+  // deriving it means reading the HOST TIME ZONE, and the header of this file
+  // says why that is not allowed here: a module that reaches for the
+  // environment cannot be asserted headlessly, and this one's whole value is
+  // that what a person shares can be proved with no browser and no account. So
+  // the instant is published verbatim and the conversion happens in the view.
+  // ⚠️ The honest cost of that: a viewer in another time zone sees the instant
+  // in THEIRS, so a friend abroad reads an evening session as a morning one.
+  // Fine for the people Tim actually shares with, wrong for a general audience,
+  // and the fix when it matters is to publish the owner's UTC offset alongside
+  // — not to start guessing zones in here.
+  //
+  // ⚠️ MISSING IS MISSING. Sessions recorded before startedAt existed have no
+  // instant at all, and neither does a row imported from an old backup. Those
+  // publish NO key rather than null-or-a-guess: `new Date(undefined)` is an
+  // Invalid Date whose toISOString() throws, and a builder that throws is a
+  // publish that silently never happens (see clone()). The view then has one
+  // case to handle instead of three.
+  //
+  // instantMillis() rather than Date.parse() — measured, not padding: every
+  // writer in the app today stores a plain ISO string (views-session.js writes
+  // `new Date().toISOString()` on start and again on save; demo.js the same),
+  // so the string path is the only live one. It is routed through instantMillis
+  // anyway because the one shipped bug this file has ever had was exactly this
+  // — a stored instant arriving back from the SDK as a Timestamp object, where
+  // Date.parse() is NaN — and because it makes the output canonical whatever
+  // the input shape was.
+  const startedMs = instantMillis(session.startedAt);
+  // The range guard is not decoration: Number.isFinite is happy with 1e20 and
+  // `new Date(1e20).toISOString()` throws RangeError. ±8.64e15 ms is the whole
+  // representable range of a JS Date.
+  if (Number.isFinite(startedMs) && Math.abs(startedMs) <= 8.64e15) {
+    out.startedAt = new Date(startedMs).toISOString();
+  }
+
   out.entries = (Array.isArray(session.entries) ? session.entries : []).map((entry) => {
     const e = {
       exerciseId: typeof entry.exerciseId === 'string' ? entry.exerciseId : null,
@@ -394,14 +467,21 @@ export function leaves(value, path = '') {
 }
 
 /**
+ * The complete set of fields a session may carry below MID.
+ *
+ * ⚠️ Adding a name here WIDENS what every light viewer sees. There is no other
+ * switch: this list and projectSession() are the two places that decide it.
+ */
+const LIGHT_SESSION_FIELDS = new Set(['id', 'date', 'name']);
+
+/**
  * Throw if a projection contains something its tier does not allow.
  *
  * ⚠️ This is an ABSENCE check, not a shape check, and the difference is the
  * whole point. A test that lists the fields it expects to be missing passes
  * happily the day somebody adds a new field and forgets — which is exactly how
  * this kind of leak happens in practice. So: walk the finished document and
- * fail on any numeric leaf that is not on the short list of numbers the tier is
- * allowed to contain.
+ * fail on anything that is not on the short list the tier is allowed to hold.
  *
  * `light` may hold no number from inside a workout at all. `mid` may hold the
  * session numbers and nothing from the analysis collections.
@@ -414,6 +494,25 @@ export function assertTierClean(doc, tier) {
       // A date is a string; an id is a string. A NUMBER below a session at this
       // tier can only be something that leaked out of the workout.
       if (typeof value === 'number') bad.push(`${path} = ${value}`);
+
+      // ⚠️ AND THE SAME QUESTION ASKED ABOUT THE KEY, WHICH THIS GUARD DID NOT
+      // ASK UNTIL 2026-08-25. Every leak it was written to catch happened to be
+      // a number — a weight, a rep count — so "no numbers below a session"
+      // looked like the whole of it. It is not. Adding the session's start
+      // time to light would have been a STRING, the guard would have passed it
+      // without a murmur, and the safety net the whole sharing model leans on
+      // would have been silent for the one field somebody had just thought
+      // hardest about. Found by adding that field (at mid) and asking what
+      // would have happened had it gone to light.
+      //
+      // So: the leaf's own field path, with the array index stripped, must be
+      // one of the three names light admits. This fails CLOSED — a field
+      // invented next year is a leak here until somebody names it above, which
+      // is the same discipline projectSession()'s whitelist already follows,
+      // and it subsumes the number rule rather than replacing it (both run, so
+      // a number under an allowed key is still caught).
+      const field = path.replace(/^activity\[\d+\]\.?/, '');
+      if (!LIGHT_SESSION_FIELDS.has(field)) bad.push(`${path} is not shared at ${tier}`);
     }
   }
 

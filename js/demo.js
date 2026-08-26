@@ -621,3 +621,102 @@ function daysApart(fromISO, toISO) {
   if (!a || !b) return 0;
   return Math.round((b - a) / 86400000);
 }
+
+/* ------------------------------------------------------------------ *
+ * The demo's FRIENDS — invented people, for the Home feed
+ *
+ * ⚠️ ADDED 2026-08-25 WITH THE FEED, AND THE REASON IS THE DEMO'S OWN PURPOSE.
+ * It exists so every screen can be judged without logging anything. Home became
+ * a feed of other people's workouts on the same day, and `social.state()`
+ * refuses in the demo — correctly — so Home would have shown an empty state in
+ * the one account built for looking at screens, forever, including to the
+ * accessibility audit, which drives the demo.
+ *
+ * ⚠️ THIS DOES NOT WEAKEN THE SAFETY MODEL. The hazard the demo guards against
+ * is PUBLISHING invented training to real friends, and `republish()` still
+ * refuses. Nothing here is written anywhere, read from anywhere, or sent to
+ * anybody — it is a list of objects shaped exactly like what `projectSession()`
+ * returns, so the feed renders the real shape rather than a lookalike.
+ *
+ * ⚠️ DETERMINISTIC, like everything else in this file. Same day in, same feed
+ * out — see the note on `rng()`. Never Math.random().
+ *
+ * ⚠️ ONE OF THEM SHARES AT THE LOWEST TIER, on purpose. "Just that I trained"
+ * publishes no exercise list at all, and a card for that person is the one case
+ * most likely to be built wrong and never noticed — it has to read as complete
+ * rather than as a card that failed to load.
+ * ------------------------------------------------------------------ */
+
+const DEMO_FRIENDS = [
+  { uid: 'demo-friend-1', name: 'Marcus Webb', tier: 'mid' },
+  { uid: 'demo-friend-2', name: 'Priya Raman', tier: 'mid' },
+  // No entries are published for this one, whatever the generator picks.
+  { uid: 'demo-friend-3', name: 'Sam Okafor', tier: 'light' },
+];
+
+const DEMO_FEED_WORKOUTS = [
+  ['Push', ['Barbell Bench Press', 'Overhead Press', 'Incline Dumbbell Bench Press', 'Triceps Pushdown']],
+  ['Pull', ['Deadlift', 'Pull-Up', 'Barbell Row', 'Dumbbell Curl']],
+  ['Legs', ['Back Squat', 'Romanian Deadlift', 'Leg Press', 'Standing Calf Raise']],
+  ['Upper A', ['Barbell Bench Press', 'Lat Pulldown', 'Lateral Raise', 'Hammer Curl']],
+  ['Full Body', ['Front Squat', 'Dip', 'Barbell Row', 'Plank']],
+];
+
+/**
+ * A fortnight of invented friend activity, newest first.
+ *
+ * The shape matches `projectSession()` exactly — `{ id, date, name, entries }`
+ * with `entries` only at mid tier and above — plus the `startedAt` the feed uses
+ * for its time-of-day line and to break ties within a day.
+ *
+ * @param {string} today  YYYY-MM-DD
+ */
+export function buildDemoFeed(today) {
+  const rand = rng(DEMO_SEED ^ 0x5EED);
+  const out = [];
+
+  for (let back = 0; back < 14; back++) {
+    const date = addDays(today, -back);
+    for (const f of DEMO_FRIENDS) {
+      // Roughly four sessions a week each, so the feed is busy but not solid.
+      if (rand() > 0.55) continue;
+
+      const [name, exercises] = DEMO_FEED_WORKOUTS[Math.floor(rand() * DEMO_FEED_WORKOUTS.length)];
+      const hour = 6 + Math.floor(rand() * 14);
+      const minute = Math.floor(rand() * 60);
+
+      const act = { id: `${f.uid}-${date}`, date, name };
+
+      /* ⚠️ THE LIGHT-TIER FRIEND GETS NEITHER `entries` NOR `startedAt`, and
+       * both omissions matter for the same reason: this fixture has to be the
+       * shape the NETWORK really returns, not a convenient lookalike.
+       *
+       * `projectSession()` publishes both only at MID and above — the start
+       * time because sixty of them describe a person's weekly schedule, which
+       * is a different fact from "they trained on Tuesday", and LIGHT is the
+       * tier everybody is on by default.
+       *
+       * ⚠️ AND THE KEYS ARE ABSENT RATHER THAN NULL OR EMPTY. An empty
+       * `entries` array would let a card rendering "" pass for one rendering
+       * the honest "they share that they trained" line, and a null `startedAt`
+       * would hide a card that prints "Invalid Date". This project has already
+       * been bitten once by a fixture that was tidier than the wire — the
+       * expired-invite bug lived in exactly that gap, because the old tests fed
+       * an ISO string where Firestore returns a Timestamp.
+       */
+      if (f.tier !== 'light') {
+        act.startedAt = `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`;
+        act.entries = exercises.map((n) => ({ exerciseId: null, name: n, sets: [] }));
+      }
+
+      out.push({ uid: f.uid, name: f.name, tier: f.tier, act });
+    }
+  }
+
+  return out.sort((x, y) =>
+    y.act.date.localeCompare(x.act.date)
+    // `startedAt` is absent on light-tier rows, so this coerces to '' for them
+    // rather than to the string "undefined", which would sort above every real
+    // time and float the one friend who shares least to the top of every day.
+    || String(y.act.startedAt || '').localeCompare(String(x.act.startedAt || '')));
+}
