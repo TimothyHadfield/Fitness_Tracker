@@ -2434,6 +2434,51 @@ ok(!data.querySelector('.rep-target'),
   ok(saved2 && !('location' in saved2), 'a cleared location saves NO key — absent, never ""');
 }
 
+/* ================= personal bests on the finish screen =================
+   The UX review's sharpest finding was that nothing anywhere celebrates
+   anything. The block is Rule 5-safe — recorded vs recorded — and these pin
+   the three cases that keep it honest: beaten, not beaten, nothing to beat. */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { todayISO } = await import(BASE + 'store.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const w = await store.saveWorkout({
+    name: 'Press day',
+    exercises: [{ exerciseId: byName('Overhead Press').id, sets: 1, notes: '' }],
+  });
+
+  const runWith = async (weight) => {
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    const wv = s.querySelector('.step-value');
+    wv.value = String(weight);
+    wv.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    await settle();
+    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await settle(); await settle();
+    return document.getElementById('app');
+  };
+
+  // Nothing to beat: the first time ever logging a lift is not a record.
+  const first = await runWith(100);
+  ok(!first.querySelector('.finish-prs'),
+     'the first time an exercise is ever logged is NOT called a personal best');
+
+  // Beaten: a bigger recorded number than any recorded before.
+  const beat = await runWith(105);
+  ok(Boolean(beat.querySelector('.finish-prs')), 'typing a bigger number than ever before is celebrated');
+  ok(/Overhead Press/.test(beat.querySelector('.finish-prs').textContent)
+     && /105/.test(beat.querySelector('.finish-prs').textContent)
+     && /up from 100/.test(beat.querySelector('.finish-prs').textContent),
+     'and the line says the lift, the new number and what it beat');
+
+  // Not beaten: an ordinary day stays an ordinary day.
+  const ordinary = await runWith(95);
+  ok(!ordinary.querySelector('.finish-prs'),
+     'a set below the best is not congratulated — the trophy stays meaningful');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

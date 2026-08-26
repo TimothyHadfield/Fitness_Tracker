@@ -1924,6 +1924,23 @@ a.seg {
 .finish-hero h2 { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -0.025em; }
 .finish-hero p { margin: 0; color: var(--ink-faint); font-size: 14px; }
 
+/* ── Personal bests on the finish screen (UX review item 1) ────────────────
+   Accent hairline, no box (Rule 2) — the same do-not-skim shape the preset
+   warning uses, pointed at good news for once. */
+.finish-prs {
+  display: flex; flex-direction: column; gap: 4px;
+  border-left: 2px solid var(--good);
+  padding: 2px 0 2px 12px;
+  text-align: left;
+  max-width: 100%;
+}
+.finish-prs-head {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--good); font-size: 12px; font-weight: 750;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.finish-pr { font-size: 14.5px; font-weight: 620; overflow-wrap: anywhere; }
+
 /* ==========================================================================
    Desktop
    ========================================================================== */

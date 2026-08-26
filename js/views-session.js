@@ -1096,6 +1096,57 @@ export async function SessionView(workoutId) {
     return dropOrphanGroups(entries);
   }
 
+  /**
+   * Personal bests in what was just typed (UX review item 1: *"nothing
+   * anywhere says you hit a personal best"* — the one rewarding readout the
+   * whole app lacked).
+   *
+   * ⚠️ RULE 5-SAFE BY CONSTRUCTION: it compares two RECORDED sets — the
+   * number just typed against the biggest number ever typed for that
+   * exercise, benchmarks included. No estimate, no e1RM, no model anywhere
+   * in it, so nothing inferred can masquerade as measured.
+   *
+   * ⚠️ AND ONLY WHERE THERE WAS SOMETHING TO BEAT. The first time an
+   * exercise is ever logged, every set is trivially a maximum, and
+   * celebrating it would teach that the trophy is noise. Weight wins where
+   * the exercise has one; reps only where it does not (a pull-up), because
+   * "more reps at less weight" is not a bigger number, and time and
+   * distance are left alone — the app has no opinion on which direction of
+   * a mile is better (Rule 6).
+   */
+  function personalBests(cleaned, priorSessions, priorBenchmarks) {
+    const out = [];
+    for (const e of cleaned) {
+      const field = e.sets.some((s) => Number(s.weight) > 0) ? 'weight'
+        : e.sets.some((s) => Number(s.reps) > 0) ? 'reps' : null;
+      if (!field) continue;
+
+      let prior = 0, seen = false;
+      for (const s of priorSessions) {
+        for (const pe of s.entries || []) {
+          if (pe.exerciseId !== e.exerciseId) continue;
+          for (const set of pe.sets || []) {
+            const all = [set, ...minisOf(set)];
+            for (const x of all) {
+              const v = Number(x[field]);
+              if (v > 0) { seen = true; if (v > prior) prior = v; }
+            }
+          }
+        }
+      }
+      for (const b of priorBenchmarks) {
+        if (b.exerciseId !== e.exerciseId || !b.values) continue;
+        const v = Number(b.values[field]);
+        if (v > 0) { seen = true; if (v > prior) prior = v; }
+      }
+      if (!seen) continue;
+
+      const now = Math.max(...e.sets.map((s) => Number(s[field]) || 0));
+      if (now > prior) out.push({ name: e.exerciseName, field, now, was: prior });
+    }
+    return out;
+  }
+
   async function finish() {
     // Everybody in the session — whoever is active plus everyone parked.
     const people = [
@@ -1114,6 +1165,21 @@ export async function SessionView(workoutId) {
       toast('Nothing recorded — enter at least one number');
       return;
     }
+
+    // ⚠️ Read BEFORE the save lands, so the session being saved cannot be its
+    // own history and beat itself. Both reads are served from the cache.
+    let prs = [];
+    try {
+      const [priorSessions, priorBenchmarks] = await Promise.all([
+        store.getSessions(), store.getBenchmarks(),
+      ]);
+      // On a RETRY after a mid-save failure this session is already stored,
+      // and a session must not be its own history and beat itself.
+      const ownId = state.saveIds && state.saveIds.you;
+      prs = personalBests(cleaned,
+        priorSessions.filter((s) => !ownId || s.id !== ownId),
+        priorBenchmarks.filter((b) => !ownId || b.sourceSessionId !== ownId));
+    } catch (_) { /* a PR readout must never block a save */ }
 
     /* ⚠️ THE ONE PLACE IN THIS APP WHERE A FAILURE COSTS SOMEBODY THEIR WORK.
      *
@@ -1189,7 +1255,7 @@ export async function SessionView(workoutId) {
     }
 
     clearDraft();
-    showFinished(cleaned, guests);
+    showFinished(cleaned, guests, prs);
   }
 
   // Said on the screen, not in a toast, and it stays until the save works.
@@ -1209,14 +1275,27 @@ export async function SessionView(workoutId) {
     if (typeof saveError.scrollIntoView === 'function') saveError.scrollIntoView({ block: 'nearest' });
   }
 
-  function showFinished(entries, guests = []) {
+  function showFinished(entries, guests = [], prs = []) {
     const setCount = entries.reduce((n, e) => n + e.sets.length, 0);
+    const prLine = (p) => p.field === 'weight'
+      ? `${p.name} — ${units.withUnit(p.now)}, up from ${units.withUnit(p.was)}`
+      : `${p.name} — ${p.now} reps, up from ${p.was}`;
     document.getElementById('app').replaceChildren(screenShell({
       title: 'Workout complete',
       noNav: true,
       scroll: el('div', { class: 'finish-hero' },
         el('div', { class: 'finish-check' }, icon('check')),
         el('h2', { text: 'Nice work' }),
+        // ⚠️ Personal bests lead, because they are the one thing on this
+        // screen that is not the same every time. Recorded-vs-recorded only
+        // (see personalBests) — this block may never hold an estimate.
+        prs.length
+          ? el('div', { class: 'finish-prs' },
+              el('div', { class: 'finish-prs-head' }, icon('up', 15),
+                `Personal best${prs.length === 1 ? '' : 's'}`),
+              ...prs.map((p) => el('div', { class: 'finish-pr', text: prLine(p) })),
+            )
+          : null,
         // The owner's line only describes the owner's training. When they
         // recorded nothing and coached a guest through the whole thing, saying
         // "0 sets" would read as a failed save — the guests' lines are the

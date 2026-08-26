@@ -5197,3 +5197,11 @@ squat's guess turned out exactly right. The face pull split out of the raise fam
 retires §9's 50-lb-face-pull-as-167-lb-press example the honest way. Where no standard exists the
 table now says so by name. Demo-year effect: Back −8.7%, Triceps −9.7%, Shoulders confidence
 0.53→0.79. 23 sourced ratios + 7 orderings pinned (data-layer 1208→1235). All suites green, pushed.
+
+Fifth piece: PERSONAL BESTS ON THE FINISH SCREEN. The UX review's sharpest finding — nothing
+anywhere celebrates anything — answered the Rule-5-safe way: the finish screen compares the number
+just typed against the biggest number ever recorded for that lift (benchmarks included) and leads
+with "Personal best: Overhead Press — 105 lbs, up from 100". Recorded vs recorded only, no
+estimates; weight where the lift has one, reps where it does not, time and distance left alone
+(Rule 6). First-ever lifts are not congratulated — a trophy for showing up would make the trophy
+noise. Three render tests pin beaten / not beaten / nothing-to-beat. 452 render assertions green.
