@@ -2366,8 +2366,19 @@ ok(!data.querySelector('.rep-target'),
   const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
   ok(saved && saved.entries[0].sets[0].weight === 185,
      'the owner\'s session holds the owner\'s numbers');
-  ok(saved && JSON.stringify(saved).indexOf('95') === -1,
+  /* ⚠️ ASSERTED ON THE SETS, NOT ON A SUBSTRING OF THE WHOLE SESSION.
+   * This was `JSON.stringify(saved).indexOf('95') === -1` until 2026-08-28 and
+   * it failed roughly once in ten runs for a reason that had nothing to do with
+   * guests: the serialised session carries a generated id, a `createdAt` and a
+   * `startedAt`, and "95" turns up in a millisecond field or a base-36 id often
+   * enough to be seen. A test that fails at random teaches people to re-run it,
+   * which is the habit that hides a real failure.
+   *
+   * The claim being made is about recorded VALUES, so the check is too. */
+  const ownerSets = (saved ? saved.entries : []).flatMap((e) => e.sets || []);
+  ok(ownerSets.length > 0 && ownerSets.every((set) => set.weight !== 95),
      '⚠️ and nothing of the guest\'s is in it');
+  ok(saved && saved.guestName === undefined, 'nor is it labelled as anybody else\'s');
   const gs = (await store.getGuestSessions()).filter((g) => g.workoutId === w.id);
   ok(gs.length === 1 && gs[0].guestName === 'Alex' && gs[0].entries[0].sets[0].weight === 95,
      '⚠️ the guest\'s session is saved under their name with their numbers');

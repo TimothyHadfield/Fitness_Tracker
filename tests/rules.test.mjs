@@ -66,6 +66,8 @@ const asNobody = env.unauthenticatedContext().firestore();
 
 const shared = (db, uid, tier) => doc(db, 'users', uid, 'shared', tier);
 const priv = (db, uid, name) => doc(db, 'users', uid, 'collections', name);
+// The sharded collections — one document per row. Open work 0b(c).
+const shard = (db, uid, name, id) => doc(db, 'users', uid, name, id);
 const graph = (db, uid) => doc(db, 'users', uid, 'social', 'graph');
 const invite = (db, uid, token) => doc(db, 'users', uid, 'invites', token);
 
@@ -82,6 +84,8 @@ const projection = (tier, viewers, extra = {}) => ({
 await env.withSecurityRulesDisabled(async (ctx) => {
   const db = ctx.firestore();
   await setDoc(priv(db, TIM, 'sessions'), { rows: [{ id: 's1', weight: 185 }], updatedAt: new Date() });
+  await setDoc(shard(db, TIM, 'sessions', 's1'), { row: { id: 's1', weight: 185 }, updatedAt: new Date() });
+  await setDoc(shard(db, TIM, 'guestSessions', 'g1'), { row: { id: 'g1', guestName: 'Alex' }, updatedAt: new Date() });
   await setDoc(shared(db, TIM, 'full'), projection('full', [ALEX]));
   await setDoc(shared(db, TIM, 'light'), projection('light', [SAM]));
   await setDoc(graph(db, TIM), { connections: [{ uid: ALEX, tier: 'full' }] });
@@ -115,6 +119,53 @@ await denied(getDoc(priv(asNobody, TIM, 'sessions')), 'a signed-out caller canno
 await denied(setDoc(priv(asAlex, TIM, 'sessions'), { rows: [], updatedAt: serverTimestamp() }),
   'a friend cannot write into somebody else\'s private collection');
 await allowed(getDoc(priv(asTim, TIM, 'sessions')), 'the owner reads their own private data');
+
+/* ⚠️ THE SHARDED COLLECTIONS ARE THE SAME PRIVATE DATA UNDER A NEW PATH SHAPE,
+ * AND THIS BLOCK IS THE PROOF THAT THE MIGRATION DID NOT WIDEN ANYTHING.
+ *
+ * The 1 MiB per-document cap put a ceiling at ~520 sessions, so sessions and
+ * guest sessions now live one document per row (Open work 0b(c)). One document
+ * per row is exactly the shape that made reactions and handoffs safe to expose
+ * — which makes it exactly the shape somebody could talk themselves into
+ * exposing HERE, "just the one session, to the friend it was published to".
+ * These denials are what that argument has to get past. Sharing a workout is
+ * still a derived copy under shared/{tier}; it is not, and must never become,
+ * a read permission on a real session document. */
+await denied(getDoc(shard(asAlex, TIM, 'sessions', 's1')),
+  '⚠️ a FULL-tier friend cannot read one sharded session either — sharding is not sharing');
+await denied(getDoc(shard(asSam, TIM, 'sessions', 's1')), 'nor can a light-tier friend');
+await denied(getDoc(shard(asStranger, TIM, 'sessions', 's1')), 'nor a stranger');
+await denied(getDoc(shard(asNobody, TIM, 'sessions', 's1')), 'nor a signed-out caller');
+await denied(getDocs(collection(asAlex, 'users', TIM, 'sessions')),
+  '⚠️ and a friend cannot LIST them, which would be the whole history at once');
+await denied(setDoc(shard(asAlex, TIM, 'sessions', 'forged'),
+  { row: { id: 'forged' }, updatedAt: serverTimestamp() }),
+  'a friend cannot write a session into somebody else\'s account');
+await denied(deleteDoc(shard(asAlex, TIM, 'sessions', 's1')),
+  '⚠️ and cannot DELETE one — the permission sharding had to add is owner-only');
+await denied(getDoc(shard(asAlex, TIM, 'guestSessions', 'g1')),
+  'guest sessions are private in exactly the same way');
+
+await allowed(getDoc(shard(asTim, TIM, 'sessions', 's1')), 'the owner reads their own sharded session');
+await allowed(getDocs(collection(asTim, 'users', TIM, 'sessions')), 'and lists them, which is how a read works now');
+await allowed(setDoc(shard(asTim, TIM, 'sessions', 's2'),
+  { row: { id: 's2', weight: 205 }, updatedAt: serverTimestamp() }), 'and writes one');
+await allowed(deleteDoc(shard(asTim, TIM, 'sessions', 's2')),
+  'and deletes one — a session removed is a document removed now, not a shorter list');
+
+// The shape check. Same job validPayload() does for the whole-list documents:
+// a modified client cannot use the project as free storage.
+await denied(setDoc(shard(asTim, TIM, 'sessions', 'bad1'),
+  { row: { id: 'bad1' }, updatedAt: serverTimestamp(), extra: 'nope' }),
+  'an invented field is refused at the wire');
+await denied(setDoc(shard(asTim, TIM, 'sessions', 'bad2'),
+  { row: 'not a map', updatedAt: serverTimestamp() }),
+  'and a row that is not a map is refused');
+await denied(setDoc(shard(asTim, TIM, 'sessions', 'bad3'), { row: { id: 'bad3' } }),
+  'and one with no updatedAt');
+await denied(setDoc(shard(asTim, TIM, 'invented', 'x'),
+  { row: {}, updatedAt: serverTimestamp() }),
+  '⚠️ and a subcollection the app does not shard is not a free storage bucket');
 
 console.log('\n--- Projections: only the listed viewers ---\n');
 

@@ -1345,20 +1345,31 @@ function describeAccount(state, configured) {
  * finding was that the red "not backed up" dot is on from the first paint,
  * including on an empty account with nothing to lose — a permanent warning is
  * wallpaper within a week and stops being read at the moment it becomes true.
- * This returns nothing at all below CLOUD_WARN_AT, which on Tim's few dozen
- * sessions is every day for about the next four years.
+ * This returns nothing at all below CLOUD_WARN_AT.
+ *
+ * ⚠️ SINCE THE SHARDING MIGRATION IT IS UNLIKELY TO EVER FIRE, and that is the
+ * point rather than a reason to delete it. `sessions` and `guestSessions` are
+ * one document per row now and are not measured against the 1 MiB cap at all,
+ * so the collection this warning was written for cannot reach it. What is left
+ * under the cap is the small stuff — benchmarks, weigh-ins, programmes — and
+ * the judgement that none of those grow without limit is a JUDGEMENT. This
+ * exists so that being wrong about it is visible rather than silent, on
+ * whichever collection is actually filling up, priced from that account's own
+ * rows.
  *
  * ⚠️ IT NAMES A NUMBER OF RECORDS, NOT A PERCENTAGE ALONE. "84 % full" is not
- * an instruction. "About 170 more workout records" is the same fact in the unit
- * the person actually thinks in, and it is derived from THEIR rows rather than
- * from the ~1,100-byte population average the docs carry.
+ * an instruction. "About 170 more weigh-ins" is the same fact in the unit the
+ * person actually thinks in, and it is derived from THEIR rows rather than from
+ * a population average.
  * ------------------------------------------------------------------ */
 
-// What one row of each collection is called out loud. Sessions is the only one
-// that can realistically get here, but naming the collection the check actually
-// found keeps the sentence true if that ever stops being so.
+// What one row of each collection is called out loud. The sharded collections
+// are kept in the table even though the check no longer prices them: this is a
+// naming table, and a name that costs nothing is cheaper than the bug where
+// something is re-included upstream and the sentence reads "12 more records".
 const ROW_NOUN = {
   sessions: ['workout record', 'workout records'],
+  guestSessions: ['guest workout', 'guest workouts'],
   workouts: ['workout', 'workouts'],
   benchmarks: ['benchmark', 'benchmarks'],
   bodyWeight: ['weigh-in', 'weigh-ins'],

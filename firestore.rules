@@ -55,6 +55,54 @@ service cloud.firestore {
     }
 
     // ================================================================
+    // SHARDED COLLECTIONS — one document per row, for the two that grow
+    // without limit. Open work 0b(c).
+    //
+    // ⚠️ WHAT THIS FIXES: the block above puts a whole collection in ONE
+    // document, and Firestore caps a document at 1 MiB. At the measured
+    // ~2,000 bytes a session that is about 520 sessions — two and a half
+    // years at four a week — after which saving a workout fails. Sessions
+    // and guest sessions now live one per document instead, where the only
+    // limit is the collection's, and Firestore does not cap that.
+    //
+    // ⚠️ THIS IS STILL OWNER-ONLY AND NOTHING HERE WIDENS ANYTHING. It is
+    // the same private training data under a different path shape. In
+    // particular it does NOT make per-session sharing possible: the social
+    // design publishes a derived copy precisely so that "let Alex see some
+    // of my workouts" never becomes a read permission on real sessions,
+    // and a sharded layout is not an invitation to revisit that.
+    //
+    // ⚠️ AND `delete` IS ALLOWED HERE, WHERE IT IS DENIED ABOVE. That is
+    // the one genuine permission difference and it is forced: removing a
+    // session used to be a write of a shorter list, and is now a document
+    // delete. The blast radius is one row rather than a collection, which
+    // is the direction this change moves everything.
+    //
+    // The name check is what stops a modified client using the project as
+    // free storage under an invented subcollection — the same job
+    // knownCollection() does above. It must match SHARDED_COLLECTIONS in
+    // js/firebase-backend.js.
+    // ================================================================
+
+    function validShardPayload() {
+      return request.resource.data.keys().hasOnly(['row', 'updatedAt'])
+          && request.resource.data.row is map
+          && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/sessions/{rowId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validShardPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/guestSessions/{rowId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validShardPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    // ================================================================
     // SOCIAL — docs/social-plan.md, Phase 1.
     //
     // ⚠️ READ THIS BEFORE CHANGING ANYTHING ABOVE THIS LINE.

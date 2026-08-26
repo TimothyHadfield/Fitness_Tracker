@@ -1013,6 +1013,295 @@ ok(fb.mergeRows([{ id: 'a' }], []).length === 1, 'an empty upload leaves the clo
 const once = fb.mergeRows(remoteRows, localRows);
 ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a no-op');
 
+/* ---------- ⚠️ ONE DOCUMENT PER SESSION — the sharding, Open work 0b(c) ----
+   The 1 MiB per-document cap put a ceiling at ~520 sessions. Sessions and
+   guest sessions now live one document per row. Only the pure half is
+   testable here — nothing in this project can execute a Firestore write —
+   so the diff, the snapshot and the legacy merge are driven directly.      */
+{
+  ok(fb.SHARDED_COLLECTIONS.includes('sessions') && fb.SHARDED_COLLECTIONS.includes('guestSessions'),
+     'the two collections that carry `entries` are the sharded ones');
+  ok(!fb.SHARDED_COLLECTIONS.includes('settings') && !fb.SHARDED_COLLECTIONS.includes('bodyWeight'),
+     'and the bounded ones are left whole');
+
+  const rows = [{ id: 'a', v: 1 }, { id: 'b', v: 2 }, { id: 'c', v: 3 }];
+  const snap = fb.shardSnapshot(rows);
+
+  // ⚠️ THE WHOLE POINT: saving one session writes ONE document, not the lot.
+  const edited = [{ id: 'a', v: 1 }, { id: 'b', v: 99 }, { id: 'c', v: 3 }];
+  const d1 = fb.shardDiff(snap, edited);
+  ok(d1.writes.length === 1 && d1.writes[0].id === 'b',
+     `editing one row writes one document (${d1.writes.length})`);
+  ok(d1.deletes.length === 0, 'and deletes nothing');
+
+  // Identity is not the test — the store hands back the same objects it was
+  // given, so an identity check would call everything unchanged.
+  const sameContentNewObjects = rows.map((r) => ({ ...r }));
+  ok(fb.shardDiff(snap, sameContentNewObjects).writes.length === 0,
+     '⚠️ re-saving identical content writes nothing, even as fresh objects');
+
+  const d2 = fb.shardDiff(snap, [{ id: 'a', v: 1 }, { id: 'd', v: 4 }]);
+  ok(d2.writes.length === 1 && d2.writes[0].id === 'd', 'a new row is one write');
+  ok(d2.deletes.sort().join() === 'b,c', `and the rows that went away are deleted (${d2.deletes})`);
+
+  // clearAll() is a write of [] — every document has to go.
+  ok(fb.shardDiff(snap, []).deletes.length === 3, 'clearing the collection deletes every document');
+  ok(fb.shardDiff(new Map(), rows).writes.length === 3, 'a first write creates all of them');
+
+  // A row with no id has no document name it could occupy.
+  ok(fb.shardDiff(new Map(), [{ v: 1 }]).writes.length === 0, 'a row with no id is dropped, not guessed at');
+
+  /* ---- the migration read: shard + whatever is left in the old document ---- */
+  const shardRows = [{ id: 'a', v: 1 }];
+  const legacyRows = [{ id: 'a', v: 'stale' }, { id: 'z', v: 26 }];
+  const m = fb.mergeShardAndLegacy(shardRows, legacyRows);
+  ok(m.length === 2, `legacy rows the shard has never heard of are adopted (${m.length})`);
+  ok(m.find((r) => r.id === 'a').v === 1,
+     '⚠️ but the SHARD wins a collision — a stale cached copy must not revert a newer edit');
+  ok(m.find((r) => r.id === 'z').v === 26, 'and the genuinely new row comes through');
+  ok(fb.mergeShardAndLegacy([{ id: 'a' }], []).length === 1,
+     'an EMPTIED legacy document is the migration flag, so this is the steady state');
+  ok(fb.mergeShardAndLegacy(null, null).length === 0, 'and nothing merges to nothing');
+
+  /* ---- batching, because Firestore refuses a batch over 500 ---- */
+  const many = Array.from({ length: 1201 }, (_, i) => i);
+  const chunks = fb.inBatches(many);
+  ok(chunks.length === 3, `1,201 operations split into three batches (${chunks.length})`);
+  ok(chunks.every((ch) => ch.length <= fb.BATCH_LIMIT), 'none of them over the limit');
+  ok(chunks.reduce((n, ch) => n + ch.length, 0) === 1201, 'and nothing is lost in the splitting');
+  ok(fb.inBatches([]).length === 0, 'no operations means no batches at all');
+
+}
+
+/* ================= ⚠️ THE SHARD DRIVEN AGAINST A FIRESTORE DOUBLE =========
+   js/firebase-backend.js opens by admitting its network paths have never been
+   executed — the SDK comes from a URL and the project needed a Google login.
+   That is tolerable for code whose worst failure is a save that does not
+   happen. It is NOT tolerable for the one function in this app that DELETES
+   documents holding somebody's training history, so createShardIO() takes its
+   Firestore surface as an argument and this drives the whole thing.
+
+   ⚠️ THIS IS NOT A TEST AGAINST FIRESTORE and must never be described as one.
+   The double below implements the four calls the shard uses and nothing about
+   consistency, rules, batch semantics or partial failure. What it proves is
+   that the ORDER and the ARITHMETIC are right — which is the half that loses
+   data when it is wrong.                                                    */
+{
+  // A Firestore double: paths are strings, documents are plain objects.
+  function fakeFirestore() {
+    const docs = new Map();          // 'users/u1/sessions/a' → data
+    const log = [];
+    const path = (ref) => ref.__path;
+    const fs = {
+      doc: (...args) => {
+        // Either doc(db, ...segments) or doc(collectionRef, id).
+        const head = args[0];
+        const rest = args.slice(1);
+        const base = head && head.__path ? head.__path : '';
+        return { __path: [base, ...rest].filter(Boolean).join('/') };
+      },
+      collection: (...args) => {
+        const rest = args.slice(1);
+        return { __path: rest.join('/') };
+      },
+      async getDoc(ref) {
+        const data = docs.get(path(ref));
+        log.push(['getDoc', path(ref)]);
+        return { exists: () => data !== undefined, data: () => data };
+      },
+      async getDocs(ref) {
+        const prefix = path(ref) + '/';
+        log.push(['getDocs', path(ref)]);
+        const hits = [...docs.entries()].filter(([k]) => k.startsWith(prefix));
+        return {
+          forEach(fn) {
+            for (const [k, v] of hits) fn({ id: k.slice(prefix.length), data: () => v });
+          },
+        };
+      },
+      async setDoc(ref, data) { log.push(['setDoc', path(ref)]); docs.set(path(ref), data); },
+      serverTimestamp: () => 'TS',
+      writeBatch() {
+        const ops = [];
+        return {
+          set: (ref, data) => ops.push(['set', path(ref), data]),
+          delete: (ref) => ops.push(['delete', path(ref)]),
+          async commit() {
+            log.push(['commit', ops.length]);
+            for (const [kind, p, data] of ops) {
+              if (kind === 'set') docs.set(p, data);
+              else docs.delete(p);
+            }
+          },
+        };
+      },
+    };
+    return { c: { fs, db: {} }, docs, log };
+  }
+
+  const LEGACY = 'users/u1/collections/sessions';
+  const sess = (id, w) => ({ id, date: '2026-08-01', entries: [{ exerciseId: 'x', sets: [{ weight: w, reps: 5 }] }] });
+
+  /* ---- a first read migrates, verifies, and empties ---- */
+  {
+    const { c, docs, log } = fakeFirestore();
+    docs.set(LEGACY, { rows: [sess('s1', 100), sess('s2', 200)], updatedAt: 'TS' });
+    const io = fb.createShardIO(c, 'u1');
+
+    const rows = await io.read('sessions', docs.get(LEGACY).rows);
+    ok(rows.length === 2, `both sessions come back (${rows.length})`);
+    ok(docs.has('users/u1/sessions/s1') && docs.has('users/u1/sessions/s2'),
+       'and each is now its own document');
+    ok(docs.get('users/u1/sessions/s1').row.entries[0].sets[0].weight === 100,
+       'carrying the whole row, entries and all');
+    ok(docs.get(LEGACY).rows.length === 0,
+       '⚠️ and the old whole-list document is EMPTIED — that emptiness is the migration flag');
+
+    // ⚠️ The order, which is the safety argument: the legacy write is the last
+    // thing that happens, and a getDocs (the verification re-read) comes
+    // between the batch and it.
+    const kinds = log.map((e) => e[0]);
+    const lastSet = kinds.lastIndexOf('setDoc');
+    const lastCommit = kinds.lastIndexOf('commit');
+    const verifyRead = kinds.lastIndexOf('getDocs');
+    ok(lastCommit < verifyRead && verifyRead < lastSet,
+       '⚠️ write the copy → re-read to PROVE it landed → only then empty the old one');
+
+    // A second read is the steady state: no legacy rows, no migration, no
+    // further writes to the legacy document.
+    const before = log.length;
+    const again = await io.read('sessions', []);
+    ok(again.length === 2, 'a second read returns the same two sessions');
+    ok(!log.slice(before).some((e) => e[0] === 'setDoc'),
+       'and never touches the old document again');
+  }
+
+  /* ---- ⚠️ A ROW THAT DOES NOT LAND ABORTS, AND THE OLD COPY SURVIVES ---- */
+  {
+    const { c, docs } = fakeFirestore();
+    docs.set(LEGACY, { rows: [sess('s1', 100), sess('s2', 200)], updatedAt: 'TS' });
+    // Lose one write on the way to the server, exactly as a partial batch
+    // failure would.
+    const realBatch = c.fs.writeBatch;
+    c.fs.writeBatch = () => {
+      const b = realBatch();
+      const realSet = b.set;
+      return { ...b, set: (ref, data) => { if (!ref.__path.endsWith('/s2')) realSet(ref, data); } };
+    };
+    const io = fb.createShardIO(c, 'u1');
+    const warn = console.warn; let warned = 0; console.warn = () => { warned++; };
+    const rows = await io.read('sessions', docs.get(LEGACY).rows);
+    console.warn = warn;
+
+    ok(docs.get(LEGACY).rows.length === 2,
+       '⚠️ the old copy is UNTOUCHED when verification fails — nothing is lost');
+    ok(rows.length === 2, 'and the caller still gets both sessions, from the merge');
+    ok(warned === 1, 'and it says so rather than failing quietly');
+  }
+
+  /* ---- writing: one session saved is one document written ---- */
+  {
+    const { c, docs, log } = fakeFirestore();
+    docs.set(LEGACY, { rows: [sess('s1', 100), sess('s2', 200), sess('s3', 300)], updatedAt: 'TS' });
+    const io = fb.createShardIO(c, 'u1');
+    const rows = await io.read('sessions', docs.get(LEGACY).rows);
+
+    // Edit one, exactly as store.saveSession() does: read, change a row, write
+    // the whole list back.
+    const edited = rows.map((r) => (r.id === 's2' ? sess('s2', 225) : r));
+    const before = log.length;
+    await io.write('sessions', edited);
+    const commits = log.slice(before).filter((e) => e[0] === 'commit');
+    ok(commits.length === 1 && commits[0][1] === 1,
+       `⚠️ saving one session costs ONE document write (${commits[0] && commits[0][1]}), not three`);
+    ok(docs.get('users/u1/sessions/s2').row.entries[0].sets[0].weight === 225, 'and the edit landed');
+    ok(docs.get('users/u1/sessions/s1').row.entries[0].sets[0].weight === 100, 'while the others sat still');
+
+    // Deleting a session deletes its document.
+    await io.write('sessions', edited.filter((r) => r.id !== 's1'));
+    ok(!docs.has('users/u1/sessions/s1'), 'deleting a session deletes its document');
+    ok(docs.has('users/u1/sessions/s2') && docs.has('users/u1/sessions/s3'), 'and only that one');
+
+    // clearAll() writes [].
+    await io.write('sessions', []);
+    ok([...docs.keys()].filter((k) => k.startsWith('users/u1/sessions/')).length === 0,
+       'clearing the collection removes every document');
+  }
+
+  /* ---- ⚠️ A WRITE WITH A COLD MEMO READS FIRST, OR IT DELETES NOTHING ----
+     Restoring a backup replaces every collection wholesale, and on a fresh tab
+     that write can be the first thing this code does to the collection.     */
+  {
+    const { c, docs } = fakeFirestore();
+    docs.set('users/u1/sessions/old1', { row: sess('old1', 100), updatedAt: 'TS' });
+    docs.set('users/u1/sessions/old2', { row: sess('old2', 200), updatedAt: 'TS' });
+    const io = fb.createShardIO(c, 'u1');       // never read — memo is cold
+
+    await io.write('sessions', [sess('new1', 300)]);
+    ok(!docs.has('users/u1/sessions/old1') && !docs.has('users/u1/sessions/old2'),
+       '⚠️ a cold write still clears what was there — otherwise a restore merges instead of replacing');
+    ok(docs.has('users/u1/sessions/new1'), 'and writes the new row');
+  }
+
+  /* ---- ⚠️ AN OLD CLIENT'S WRITES ARE ADOPTED ON THE NEXT READ ----
+     A client that predates sharding reads the emptied legacy document, sees no
+     history, and saves what it recorded there. This is what stops that
+     becoming data in a document nothing opens.                              */
+  {
+    const { c, docs } = fakeFirestore();
+    docs.set(LEGACY, { rows: [], updatedAt: 'TS' });
+    docs.set('users/u1/sessions/s1', { row: sess('s1', 100), updatedAt: 'TS' });
+    const io = fb.createShardIO(c, 'u1');
+
+    // The old client's write, straight into the legacy document.
+    docs.set(LEGACY, { rows: [sess('sOld', 400)], updatedAt: 'TS' });
+    const rows = await io.read('sessions', docs.get(LEGACY).rows);
+    ok(rows.length === 2 && rows.some((r) => r.id === 'sOld'),
+       `the orphaned session is picked up (${rows.length} rows)`);
+    ok(docs.has('users/u1/sessions/sOld'), 'and moved into a document of its own');
+    ok(docs.get(LEGACY).rows.length === 0, 'and the legacy document is emptied again');
+  }
+
+  /* ---- guestSessions get the same treatment, on their own path ---- */
+  {
+    const { c, docs } = fakeFirestore();
+    const io = fb.createShardIO(c, 'u1');
+    await io.write('guestSessions', [{ id: 'g1', guestName: 'Alex', entries: [] }]);
+    ok(docs.has('users/u1/guestSessions/g1'), 'a guest session shards under its own collection');
+    ok(!docs.has('users/u1/sessions/g1'), 'and never lands in the owner\'s sessions');
+  }
+
+  /* ---- ⚠️ TWO ACCOUNTS NEVER SHARE A MEMO ----
+     A memo carried across a sign-in would diff the new account's rows against
+     the previous account's, and the DELETES out of that would land on the
+     documents of whoever just signed in.                                    */
+  {
+    const { c, docs } = fakeFirestore();
+    const a = fb.createShardIO(c, 'u1');
+    await a.write('sessions', [sess('s1', 100), sess('s2', 200)]);
+
+    const b = fb.createShardIO(c, 'u2');
+    await b.write('sessions', [sess('t1', 300)]);
+    ok(docs.has('users/u1/sessions/s1') && docs.has('users/u1/sessions/s2'),
+       '⚠️ writing as a second account leaves the first account\'s documents alone');
+    ok(docs.has('users/u2/sessions/t1'), 'and writes under its own uid');
+  }
+
+  /* ---- 1,200 sessions still migrate, in batches Firestore will accept ---- */
+  {
+    const { c, docs, log } = fakeFirestore();
+    const many = Array.from({ length: 1200 }, (_, i) => sess('s' + i, 100 + i));
+    docs.set(LEGACY, { rows: many, updatedAt: 'TS' });
+    const io = fb.createShardIO(c, 'u1');
+    const rows = await io.read('sessions', many);
+    ok(rows.length === 1200, `all 1,200 migrate (${rows.length})`);
+    const commits = log.filter((e) => e[0] === 'commit');
+    ok(commits.length === 3 && commits.every((e) => e[1] <= fb.BATCH_LIMIT),
+       `in ${commits.length} batches, none over Firestore's limit of ${fb.BATCH_LIMIT}`);
+    ok(docs.get(LEGACY).rows.length === 0, 'and the old document is emptied once they are all verified');
+  }
+}
+
 /* ================= benchmark workouts ================= */
 // A workout can be marked a benchmark; every exercise it records then becomes a
 // benchmark for that day. The rows are DERIVED from the session, so the risk is

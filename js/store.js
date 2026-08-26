@@ -1126,6 +1126,20 @@ export const store = {
    * coding that makes the check silently wrong the day something else does. It
    * costs nothing to ask all eight and report the worst.
    *
+   * ⚠️ EXCEPT THE SHARDED ONES, SINCE THE MIGRATION. `sessions` and
+   * `guestSessions` are one document per row now, so they are not measured
+   * against this cap at all — a single session is ~2,000 bytes against a
+   * 1,048,576 byte document and the collection above it has no cap. Pricing
+   * them here would keep warning about a document that has been emptied, which
+   * is the exact failure mode this function was written to end: a number that
+   * has gone stale and nobody can check.
+   *
+   * ⚠️ THE OTHERS ARE STILL WATCHED, AND THAT IS THE POINT OF NOT DELETING
+   * THIS. The judgement that only two collections grow without limit is a
+   * judgement. If it is wrong — if benchmarks or bodyWeight climb faster than
+   * anyone expects — this still fires, on the collection that is actually
+   * filling up, with that account's own numbers.
+   *
    * Reads go through the cache, so after the boot warm this is free and touches
    * the network not at all. It is a read-only getter, which is the only kind the
    * cache is allowed to serve.
@@ -1142,13 +1156,15 @@ export const store = {
     // calls would be eight serialised round trips — precisely the shape of the
     // lag Tim reported on 2026-08-22, reintroduced by an optimisation's own
     // status readout.
-    const all = await Promise.all(COLLECTIONS.map((c) => readCached(c)));
+    const { SHARDED_COLLECTIONS } = await import('./firebase-backend.js');
+    const capped = COLLECTIONS.filter((c) => !SHARDED_COLLECTIONS.includes(c));
+    const all = await Promise.all(capped.map((c) => readCached(c)));
 
     let worst = null;
-    for (let i = 0; i < COLLECTIONS.length; i++) {
-      const bytes = firestoreDocBytes(COLLECTIONS[i], all[i]);
+    for (let i = 0; i < capped.length; i++) {
+      const bytes = firestoreDocBytes(capped[i], all[i]);
       if (!worst || bytes > worst.bytes) {
-        worst = { collection: COLLECTIONS[i], rows: all[i].length, bytes };
+        worst = { collection: capped[i], rows: all[i].length, bytes };
       }
     }
     if (!worst) return null;

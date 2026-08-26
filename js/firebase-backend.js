@@ -5,12 +5,18 @@
 // unit-tested; everything that touches the SDK is reviewed code, not verified
 // code. See docs/firebase-setup.md.
 //
-// Data shape in Firestore:
-//   users/{uid}/collections/{collectionName}  →  { rows: [...], updatedAt }
+// Data shape in Firestore — TWO shapes since 2026-08-28, and which one a
+// collection uses is the whole of what the sharding section at the bottom of
+// this file is about:
 //
-// One document per collection keeps reads cheap and mirrors the local backend's
-// read-whole / write-whole API exactly. Firestore caps a document at 1 MiB, and
-// `sessions` is the only collection that grows forever.
+//   users/{uid}/collections/{name}  →  { rows: [...], updatedAt }   (most)
+//   users/{uid}/sessions/{rowId}    →  { row, updatedAt }           (sharded)
+//   users/{uid}/guestSessions/{id}  →  { row, updatedAt }           (sharded)
+//
+// One document per collection kept reads cheap and mirrored the local backend's
+// read-whole / write-whole API exactly. It still does, for everything bounded.
+// But Firestore caps a document at 1 MiB, and the two collections carrying
+// `entries` grow forever.
 //
 // ⚠️ THIS COMMENT SAID "~300 bytes each, so roughly 3,000 workouts" UNTIL
 // 2026-08-24, AND THE FIGURE THAT REPLACED IT WAS ALSO WRONG. The correction
@@ -20,11 +26,25 @@
 // is ~2,000 bytes a session and a ceiling near **520 — about two and a half
 // years at four a week.**
 //
+// ⚠️ THAT CEILING IS WHAT THE SHARDING REMOVED, and the migration ran while
+// the account held a few dozen sessions rather than four hundred, precisely
+// because a migration over somebody's training history gets more dangerous the
+// longer it is left. See SHARDED_COLLECTIONS below.
+//
 // Nobody should ever have to trust this line again: `store.cloudUsage()`
 // computes it from the account's own rows and Settings warns from 80 %. That
 // exists precisely because a constant copied into prose has now gone stale
-// twice.
-// When that day comes, split this to one doc per session.
+// twice — and it now skips the sharded collections, so it will not go stale in
+// the opposite direction by warning about a document that has been emptied.
+//
+// ⚠️ THE READ COST CHANGED AND IT IS WORTH KNOWING. A sharded read is one
+// billed document read per row rather than one per collection. At 520 sessions
+// that is 520 reads to fill the cache on a cold open, against a 50,000/day free
+// allowance — about 96 cold opens a day before it bites, and the read cache
+// means a session of ordinary use is one fill plus a revalidation every 30
+// seconds. If that ever becomes the constraint, the fix is an incremental
+// revalidation (`where updatedAt > lastSeen`, plus a count to catch deletes),
+// not a return to one big document.
 //
 // Account model (chosen 2026-08-15): anonymous first, upgrade later. A visitor
 // starts logging immediately with an anonymous account, then adds email or
@@ -148,6 +168,185 @@ function docRef(c, collection) {
 }
 
 /* ------------------------------------------------------------------ *
+ * SHARDED COLLECTIONS — the network half. The pure half, and the whole
+ * argument for why any of this exists, is at the bottom of this file.
+ *
+ * A sharded collection lives at `users/{uid}/{name}/{rowId}` as
+ * `{ row, updatedAt }`, one document per row, alongside the old whole-list
+ * document at `users/{uid}/collections/{name}` which migration empties.
+ *
+ * ⚠️ EVERY DEPENDENCY IS AN ARGUMENT, AND THAT IS NOT A STYLE PREFERENCE.
+ * This file opens by admitting that its network paths have never been
+ * executed — the SDK is fetched from a URL and creating the project needed a
+ * Google login only Tim has. That was tolerable for code whose worst failure
+ * is a save that does not happen. It is NOT tolerable for the one function in
+ * this project that deletes documents holding somebody's training history.
+ *
+ * So the Firestore surface it needs (`fs`, `db`) and the account it acts on
+ * (`uid`) come in as parameters instead of being read off module state, and
+ * `tests/data-layer.test.mjs` drives the whole thing — migrate, verify, empty,
+ * diff, delete — against an in-memory double. It is still not a test against
+ * Firestore. It is the difference between reviewed code and executed code.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Read/write for the sharded collections of ONE account.
+ *
+ * @param {{fs: object, db: object}} c   the Firestore surface
+ * @param {string} uid                   whose data this is
+ */
+export function createShardIO(c, uid) {
+  // id → JSON of the row as this tab last saw it, per collection. What makes a
+  // write cost one document instead of five hundred.
+  //
+  // ⚠️ IT LIVES INSIDE THE ACCOUNT, which is the point of the factory. A memo
+  // shared across a sign-in would diff the new account's rows against the
+  // previous account's, and the DELETES that came out of that would land on
+  // documents belonging to whoever just signed in. Making it impossible to
+  // share beats remembering to clear it.
+  const memo = new Map();
+
+  const col = (name) => c.fs.collection(c.db, 'users', uid, name);
+  const legacyRef = (name) => c.fs.doc(c.db, 'users', uid, 'collections', name);
+
+  async function readShard(collection) {
+    const snap = await c.fs.getDocs(col(collection));
+    const rows = [];
+    snap.forEach((d) => {
+      const data = d.data();
+      // ⚠️ The document NAME is the row id, and it overrides whatever is in
+      // the payload. They are written together and cannot disagree — but if
+      // they ever did, the name is the one the delete path addresses, so
+      // trusting the other one would leave a row that cannot be removed.
+      if (data && data.row) rows.push({ ...data.row, id: d.id });
+    });
+    return rows;
+  }
+
+  async function commitOps(ops) {
+    for (const chunk of inBatches(ops, BATCH_LIMIT)) {
+      const batch = c.fs.writeBatch(c.db);
+      for (const op of chunk) {
+        if (op.kind === 'set') batch.set(op.ref, { row: op.row, updatedAt: c.fs.serverTimestamp() });
+        else batch.delete(op.ref);
+      }
+      await batch.commit();
+    }
+  }
+
+  /**
+   * Move a whole-list document into per-row documents, once.
+   *
+   * ⚠️ THE ORDER IS THE ENTIRE SAFETY ARGUMENT, and it is the order the
+   * handoff accept path uses for the same reason: write the new copy, PROVE it
+   * arrived, and only then let go of the old one. Emptying the legacy document
+   * first — or in the same batch — turns any failure in between into somebody's
+   * training history being gone.
+   *
+   * ⚠️ IT IS PROVED BY RE-READING, not by the writes not throwing. A batch that
+   * commits without error is a batch the server accepted; it is not yet a
+   * document you can read back.  The re-read costs one extra pass over the
+   * collection and happens once in the life of an account.
+   *
+   * If verification fails the legacy document is LEFT ALONE, the rows are
+   * still returned to the caller, and the next read tries again. A migration
+   * that cannot finish is a migration that has changed nothing.
+   */
+  async function migrate(collection, legacyRows) {
+    const existing = await readShard(collection);
+    const { writes } = shardDiff(
+      shardSnapshot(existing), mergeShardAndLegacy(existing, legacyRows));
+
+    if (writes.length) {
+      await commitOps(writes.map((row) => ({
+        kind: 'set', ref: c.fs.doc(col(collection), String(row.id)), row,
+      })));
+    }
+
+    const after = await readShard(collection);
+    const landed = new Set(after.map((r) => String(r.id)));
+    const missing = legacyRows.filter((r) => r && r.id != null && !landed.has(String(r.id)));
+    if (missing.length) {
+      console.warn(
+        `Migration of ${collection} is incomplete — ${missing.length} row(s) did not land. `
+        + 'Leaving the old copy in place; it will be retried on the next read.');
+      return mergeShardAndLegacy(after, legacyRows);
+    }
+
+    // Verified. Now, and only now, the old copy may go.
+    await c.fs.setDoc(legacyRef(collection), { rows: [], updatedAt: c.fs.serverTimestamp() });
+    return after;
+  }
+
+  return {
+    /**
+     * @param {string} collection
+     * @param {Array} legacyRows  whatever the old whole-list document holds —
+     *   the caller has already read it, so this does not read it twice.
+     */
+    async read(collection, legacyRows) {
+      // ⚠️ BOTH SOURCES, EVERY READ, FOREVER — not just until the migration
+      // has run. Checking the legacy document costs the one `getDoc` the read
+      // path was already doing, and it is what makes a client that predates
+      // sharding recoverable rather than a silent divergence: whatever it
+      // wrote gets adopted on the next read here. Stop checking and that
+      // becomes data sitting in a document nothing opens.
+      const rows = legacyRows.length
+        ? await migrate(collection, legacyRows)
+        : await readShard(collection);
+      memo.set(collection, shardSnapshot(rows));
+      return rows;
+    },
+
+    async write(collection, rows) {
+      // ⚠️ NO MEMO MEANS NO GROUND TRUTH, SO READ FIRST. Without this, a write
+      // that is the first thing this tab does to the collection — `clearAll()`,
+      // or restoring a backup — would find nothing to delete and leave every
+      // existing document in place while believing it had replaced them.
+      //
+      // In ordinary use it never fires: every mutation in store.js reads the
+      // collection immediately before writing it, deliberately bypassing the
+      // read cache, so the memo is not merely warm but was filled by THIS
+      // read-modify-write cycle.
+      if (!memo.has(collection)) {
+        memo.set(collection, shardSnapshot(await readShard(collection)));
+      }
+
+      const { writes, deletes } = shardDiff(memo.get(collection), rows);
+      const target = col(collection);
+      await commitOps([
+        ...writes.map((row) => ({ kind: 'set', ref: c.fs.doc(target, String(row.id)), row })),
+        // ⚠️ Deleting a row is a DOCUMENT DELETE here, where in a whole-list
+        // collection it was a write of a shorter list. That is a permission the
+        // rules did not previously need to grant anywhere, and firestore.rules
+        // says so at the sessions block.
+        ...deletes.map((id) => ({ kind: 'delete', ref: c.fs.doc(target, id) })),
+      ]);
+
+      // After the await, for the reason the store's own write cache gives: a
+      // commit that threw has changed nothing, and recording what we hoped to
+      // store is a lie the next diff reads back as fact.
+      memo.set(collection, shardSnapshot(rows));
+      return true;
+    },
+  };
+}
+
+// The live one, rebuilt whenever the uid changes. Never shared across accounts
+// — see the memo note in createShardIO().
+let shardIO = null;
+let shardIOUid = null;
+
+function shards(c) {
+  if (!user) throw new Error('Not signed in.');
+  if (!shardIO || shardIOUid !== user.uid) {
+    shardIO = createShardIO(c, user.uid);
+    shardIOUid = user.uid;
+  }
+  return shardIO;
+}
+
+/* ------------------------------------------------------------------ *
  * Backend API — matches LocalBackend
  * ------------------------------------------------------------------ */
 
@@ -161,11 +360,15 @@ export const FirebaseBackend = {
     // list over real cloud data.
     const snap = await c.fs.getDoc(docRef(c, collection));
     const data = snap.exists() ? snap.data() : null;
-    return data && Array.isArray(data.rows) ? data.rows : [];
+    const legacy = data && Array.isArray(data.rows) ? data.rows : [];
+
+    if (!SHARDED_COLLECTIONS.includes(collection)) return legacy;
+    return shards(c).read(collection, legacy);
   },
 
   async write(collection, rows) {
     const c = await init();
+    if (SHARDED_COLLECTIONS.includes(collection)) return shards(c).write(collection, rows);
     await c.fs.setDoc(docRef(c, collection), {
       rows,
       updatedAt: c.fs.serverTimestamp(),
@@ -700,6 +903,123 @@ export function authErrorMessage(err) {
   return err.message && !String(err.message).includes('auth/')
     ? err.message
     : 'Something went wrong. Try again.';
+}
+
+/* ------------------------------------------------------------------ *
+ * SHARDING — the pure half of "one document per session"
+ *
+ * ⚠️ WHY THIS EXISTS AT ALL. Everything else in this app stores a whole
+ * collection in ONE Firestore document, `{rows, updatedAt}`, which caps at
+ * 1 MiB. `store.cloudUsage()` prices this account's own rows against that cap
+ * and Settings warns from 80 %; the measured figure is ~2,000 bytes a session,
+ * so the ceiling is about **520 sessions — two and a half years at four a
+ * week**. Open work 0b(c).
+ *
+ * ⚠️ AND WHY NOW, WITH THE ACCOUNT NEARLY EMPTY, WHICH IS THE OPPOSITE OF
+ * WHAT THE WARNING WAS FOR. The 80 % threshold was chosen to leave six months
+ * to do this calmly. But the thing being migrated is somebody's training
+ * history, the migration gets riskier the more of it there is, and doing it at
+ * 80 % means doing it to 420 sessions under time pressure. Doing it at a few
+ * dozen is the same code against a twentieth of the data with no deadline.
+ * The runway was never the hard part.
+ *
+ * ⚠️ ONLY `sessions` AND `guestSessions` ARE SHARDED, and that is measured
+ * rather than tidy: `entries` is 88 % of the collection, and those are the two
+ * collections carrying entries. `bodyWeight` grows by one small row a day
+ * (~45 years to the cap), `benchmarks` by a handful per test session. They
+ * stay whole, and cloudUsage() keeps watching them so the warning still fires
+ * if that judgement is wrong.
+ *
+ * ⚠️ THE LOCAL AND MEMORY BACKENDS ARE NOT SHARDED AND MUST NOT BE. There is
+ * no per-key cap in localStorage worth designing around, splitting would slow
+ * it down, and — the real reason — the store's read-whole/write-whole API is
+ * unchanged by any of this, so every screen and every existing test goes on
+ * working against the same shape. The split lives entirely inside the one
+ * backend that has a 1 MiB problem.
+ * ------------------------------------------------------------------ */
+
+export const SHARDED_COLLECTIONS = ['sessions', 'guestSessions'];
+
+/** Firestore's hard cap on operations in one `writeBatch`. Not a tuning knob. */
+export const BATCH_LIMIT = 500;
+
+/**
+ * What has to change in the shard to make it hold `rows`.
+ *
+ * @param {Map<string,string>} prev  id → JSON of the row as last seen
+ * @param {Array} rows               what the collection should now contain
+ * @returns {{writes: Array, deletes: string[]}}
+ *
+ * ⚠️ THE COMPARISON IS ON SERIALISED CONTENT, not identity. The store does
+ * read-modify-write and hands back the same row objects it was given, so an
+ * identity check would call every row unchanged and persist nothing. JSON is
+ * the cheap honest test: a row whose text is identical needs no write, and
+ * skipping those is the entire point — saving one session should cost one
+ * document write, not five hundred.
+ *
+ * ⚠️ A ROW WITH NO `id` IS DROPPED RATHER THAN GUESSED AT. Every writer in
+ * store.js assigns one before saving; a row arriving without one has no
+ * document name it could go in, and inventing one would make the next write
+ * duplicate it.
+ */
+export function shardDiff(prev, rows) {
+  const writes = [];
+  const seen = new Set();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!row || row.id == null) continue;
+    const id = String(row.id);
+    seen.add(id);
+    if (prev.get(id) !== JSON.stringify(row)) writes.push(row);
+  }
+  const deletes = [];
+  for (const id of prev.keys()) if (!seen.has(id)) deletes.push(id);
+  return { writes, deletes };
+}
+
+/** id → JSON, the shape shardDiff() compares against. */
+export function shardSnapshot(rows) {
+  const out = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (row && row.id != null) out.set(String(row.id), JSON.stringify(row));
+  }
+  return out;
+}
+
+/**
+ * The rows a read should return, given what is in the shard and what is left
+ * in the old whole-collection document.
+ *
+ * ⚠️ AN EMPTY LEGACY DOCUMENT IS THE MIGRATION FLAG, and it is the flag
+ * because it needs no permission the rules do not already grant. `rows: []` is
+ * a valid payload under the existing `validPayload()`; a `migratedAt` field
+ * would have meant widening the rule that guards every collection in the app
+ * in order to record something the emptiness already says.
+ *
+ * ⚠️ THE SHARD WINS A COLLISION, AND THE COST OF THAT IS NAMED. Non-empty
+ * legacy rows after a migration mean a client that predates this code wrote
+ * there — it would read the emptied document, see no history, and save what it
+ * recorded. Adopting ids the shard has never heard of picks that work up on the
+ * next read. Letting legacy win instead would also let a STALE cached copy of
+ * an already-migrated session overwrite a newer edit, and silently reverting an
+ * edit is worse than the thing this avoids: an edit made on an old client is
+ * dropped. Both are bad; only one is invisible.
+ */
+export function mergeShardAndLegacy(shardRows, legacyRows) {
+  const out = Array.isArray(shardRows) ? shardRows.slice() : [];
+  const have = new Set(out.map((r) => (r && r.id != null ? String(r.id) : null)));
+  for (const row of Array.isArray(legacyRows) ? legacyRows : []) {
+    if (!row || row.id == null) continue;
+    if (have.has(String(row.id))) continue;
+    out.push(row);
+  }
+  return out;
+}
+
+/** Split a list of operations into batches Firestore will accept. */
+export function inBatches(items, size = BATCH_LIMIT) {
+  const out = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
 }
 
 // Merge local rows into cloud rows, keyed by id. The newer `updatedAt` wins;

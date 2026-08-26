@@ -138,11 +138,47 @@ report came from.
 
 ## Scale and cost
 
-Each collection is a single Firestore document, capped at 1 MiB. Workouts, benchmarks, and custom
-exercises will never come close.
+✅ **THE CEILING THIS SECTION IS ABOUT WAS REMOVED ON 2026-08-28 (Open work 0b(c) closed).**
+`sessions` and `guestSessions` are now **one Firestore document per row**, at
+`users/{uid}/sessions/{rowId}`, where the 1 MiB per-document cap applies to a single session
+(~2,000 bytes) rather than to all of them together. Firestore does not cap the number of documents
+in a collection, so there is no longer a session count at which saving stops working. Everything
+below the migration note is kept because the *arithmetic* is still how `store.cloudUsage()` prices
+the collections that are still whole.
 
-⚠️ **`sessions` IS THE ONE THAT RUNS OUT, AND THIS SECTION HAS NOW BEEN WRONG ABOUT WHEN TWICE, BOTH
-TIMES IN THE OPTIMISTIC DIRECTION.**
+⚠️ **THE MIGRATION RAN WHILE THE ACCOUNT WAS NEARLY EMPTY, ON PURPOSE.** The 80 % warning existed to
+leave six months to do this — but the thing being migrated is somebody's training history, it gets
+riskier the more of it there is, and 80 % means doing it to ~420 sessions under time pressure. At a
+few dozen it is the same code against a twentieth of the data with no deadline. The runway was never
+the hard part.
+
+**How it is safe:** the migration writes every row into its own document, **re-reads the collection
+to prove they landed**, and only then empties the old whole-list document — which is left completely
+untouched if any row is missing, so a migration that cannot finish has changed nothing. The read path
+keeps checking the old document forever, so anything a client that predates sharding writes there is
+adopted on the next read rather than stranded. `tests/data-layer.test.mjs` drives all of it against
+an in-memory Firestore double — the first time any network path in `js/firebase-backend.js` has been
+executed rather than reviewed — and `tests/rules.test.mjs` proves the new paths are owner-only.
+
+⚠️ **THE READ COST CHANGED.** A sharded read is one billed document read per row, not one per
+collection. At 520 sessions that is 520 reads to fill the cache on a cold open, against a 50,000/day
+free allowance — about 96 cold opens a day before it matters, with the read cache and its 30-second
+revalidation on top. If it ever becomes the constraint the fix is incremental revalidation
+(`where updatedAt > lastSeen`, plus a count to catch deletes), **not** a return to one big document.
+
+---
+
+### The ceiling as it stood, and why the number was wrong twice
+
+Kept because `store.cloudUsage()` still applies exactly this accounting to the collections that
+remain whole — benchmarks, weigh-ins, programmes, settings — and because it is the clearest record
+of how a constant nobody can check goes stale.
+
+Each remaining collection is a single Firestore document, capped at 1 MiB. Workouts, benchmarks, and
+custom exercises will never come close.
+
+⚠️ **`sessions` WAS THE ONE THAT RAN OUT, AND THIS SECTION WAS WRONG ABOUT WHEN TWICE, BOTH TIMES IN
+THE OPTIMISTIC DIRECTION.**
 
 | written | claim | why it was wrong |
 |---|---|---|
@@ -174,14 +210,15 @@ paints a warning above *Download backup* from **80 %**, naming the percentage *a
 records fit — derived from **this account's** rows, not from any constant in this file. It is silent
 below the threshold on purpose: an always-on warning is wallpaper by the time it comes true.
 
-**Still open — the fix this design always anticipated:** split `sessions` into one document per
-session. Nothing else in the design changes, but it is a **migration over live training data** and
-belongs in its own pass rather than bolted onto something else. The 80 % threshold exists to leave
-room for it: the remaining fifth of a megabyte is about 100 sessions, or six months at four a week.
+✅ **DONE 2026-08-28 — the fix this design always anticipated:** `sessions` split into one document
+per session, and `guestSessions` with it. Nothing else in the design changed. See the top of this
+section.
 
-⚠️ **Nobody is near this yet.** Tim's account holds a few dozen sessions. Recorded here so the number
-is right when somebody checks it, not because it is urgent — and the app now computes it rather than
-trusting this paragraph, which is the point of the last three rows of that table.
+⚠️ **`cloudUsage()` NO LONGER PRICES THE SHARDED COLLECTIONS**, because they no longer live under
+that cap and warning about an emptied document would be this section's own failure mode running in
+the opposite direction. It still watches everything else, so if the judgement that only those two
+grow without limit turns out to be wrong, the warning fires on whichever collection is actually
+filling up — with that account's own numbers, as before.
 
 The free Spark plan covers 50,000 reads and 20,000 writes per day. Reading a whole collection as one
 document means opening the app costs about five reads.
