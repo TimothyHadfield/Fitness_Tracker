@@ -241,18 +241,26 @@ export function chevron() {
 // import cycle.
 export function profileButton() {
   const glyph = el('span', { class: 'avatar-glyph' }, icon('person'));
+  // ⚠️ No `at-risk` at construction. The dot used to be on from the first
+  // paint of a brand-new account with nothing in it (UX review finding 5) —
+  // and a permanent warning is wallpaper within a week, unread at the moment
+  // it becomes true. It now waits for the data check below.
   const btn = el('a', {
-    class: 'avatar-btn at-risk',
+    class: 'avatar-btn',
     href: '#/account',
     'aria-label': 'Account',
     title: 'Account',
   }, glyph);
 
-  const paint = (state) => {
+  const paint = (state, hasData) => {
     const user = state && state.user;
     const secured = Boolean(user && user.secured);
     btn.classList.toggle('secured', secured);
-    btn.classList.toggle('at-risk', !secured);
+    // ⚠️ The dot means "you have something to lose and it is not backed up" —
+    // BOTH halves. An empty account has nothing at risk, and warning about it
+    // teaches people the dot is decoration. When the check itself fails the
+    // warning stays (hasData defaults true), because unknown is not safe.
+    btn.classList.toggle('at-risk', !secured && hasData);
 
     if (secured && user.email) {
       glyph.replaceChildren(document.createTextNode(user.email.trim()[0].toUpperCase()));
@@ -271,16 +279,32 @@ export function profileButton() {
       btn.setAttribute('aria-label',
         `Account — signed in as ${state.lastAccount.email}, but offline right now`);
       btn.setAttribute('title', 'Offline — recent changes have not uploaded yet');
-    } else {
+    } else if (hasData) {
       glyph.replaceChildren(icon('person'));
       btn.setAttribute('aria-label', 'Account — your data is not backed up');
       btn.setAttribute('title', 'Your data is not backed up');
+    } else {
+      glyph.replaceChildren(icon('person'));
+      btn.setAttribute('aria-label', 'Account — not signed in');
+      btn.setAttribute('title', 'Account');
     }
   };
 
   import('./store.js')
-    .then(async ({ auth }) => {
-      paint(await auth.state());
+    .then(async ({ auth, store }) => {
+      // Is there anything a lost browser profile would actually lose? Reads
+      // are served from the store's cache, so this costs nothing after boot.
+      const dataAtRisk = async () => {
+        try {
+          const [s, w, b, bw, g] = await Promise.all([
+            store.getSessions(), store.getWorkouts(), store.getBenchmarks(),
+            store.getBodyWeights(), store.getGuestSessions().catch(() => []),
+          ]);
+          return Boolean(s.length || w.length || b.length || bw.length || g.length);
+        } catch (_) { return true; }   // unknown is not safe — keep the warning
+      };
+      const repaint = async () => paint(await auth.state(), await dataAtRisk());
+      await repaint();
 
       // A new button is built on every navigation, so the subscription has to
       // die with the node it belongs to — otherwise listeners accumulate for
@@ -292,7 +316,7 @@ export function profileButton() {
       stop = auth.onChange(async () => {
         if (btn.isConnected) wasMounted = true;
         else if (wasMounted) { if (stop) stop(); return; }
-        paint(await auth.state());
+        await repaint();
       });
     })
     .catch((err) => console.error('Could not read account state', err));

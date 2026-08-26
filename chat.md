@@ -5215,3 +5215,10 @@ selects Traps (the first probe used the bbox centre and "found" it broken; that 
 spine gap between the lobes, §0.6's exact trap). Also drove the demo feed, the location chip and
 the people bar at 360 — no overflow anywhere, screenshots eyeballed. What's still under 44px is
 the art itself, which stays Tim's call.
+
+Seventh piece: THE POLISH SWEEP. Explore now explains its percentages in one line ABOVE the nine
+cards (full caveats still below); the screen is titled "Ready-made programmes" and its first
+sentence bridges the word swap — "a system is just a programme you own" — right where a stranger
+lands from "Pick a programme"; and the red not-backed-up dot finally waits for there to be
+something to lose: empty account, no dot; data plus no backup, dot; check fails, dot stays because
+unknown is not safe. Render 457→462, all green, pushed.

@@ -168,6 +168,24 @@ which drives the demo.
 
 ---
 
+## 2026-08-26, sixth pass — THE POLISH SWEEP (the UX review's leftovers)
+
+1. **Explore explains its numbers ABOVE the nine cards** — one compact line before the list (what
+   the badge means, that nothing reaches 100 %, that days/minutes are the cost); the full caveats
+   stay below. The finding was *"Explore ranks nine programmes by a number it explains nine cards
+   later."*
+2. **The programme/system word swap is bridged where it happens.** The screen is titled
+   "Ready-made programmes" now (a stranger arrives from "Pick a programme"), and its first line
+   says *"copied into your systems — a system is just a programme you own."* One sentence, at the
+   moment of use (D8), instead of a definition living on a screen the first-run path routes past.
+3. **The red "not backed up" dot waits for something to be at risk.** It was on from the first
+   paint of an empty account — a permanent warning is wallpaper within a week. The dot now means
+   BOTH halves: data exists AND it is not backed up. When the check itself fails the warning
+   stays, because unknown is not safe. Render tests pin all three (dot with data, no dot empty,
+   explainer before list). Render 457 → 462.
+
+---
+
 ## 2026-08-26, fifth pass — PERSONAL BESTS ON FINISH, AND THE BODY MAP GROWS INVISIBLE HANDS
 
 ### 1. The finish screen celebrates a recorded number beating every recorded number

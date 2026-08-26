@@ -2513,6 +2513,37 @@ ok(!data.querySelector('.rep-target'),
   ok(picked === 'Traps', 'tapping a halo picks its muscle');
 }
 
+/* ================= the polish sweep (UX review leftovers) ================= */
+{
+  // Explore explains its numbers BEFORE the nine cards, not nine cards later.
+  const { ExploreView } = await import(BASE + 'views-workouts.js');
+  const ex = await mount(ExploreView());
+  const kids = [...ex.querySelector('.pane-scroll').children];
+  const listAt = kids.findIndex((n) => n.classList.contains('list'));
+  const explainAt = kids.findIndex((n) => /stimulus the research supports/.test(n.textContent));
+  ok(explainAt >= 0 && listAt > explainAt,
+     'what the percentages mean is said ABOVE the list, before anyone compares nine of them');
+  ok(/a system is just a programme you own/.test(ex.textContent),
+     'the programme/system word swap is bridged in one sentence where the stranger is standing');
+  ok(/Nothing real reaches 100/.test(ex.textContent),
+     'and the full "what 100 % would mean" statement is still on the screen');
+
+  // The backup dot means "something to lose AND not backed up" — both halves.
+  const { HomeView } = await import(BASE + 'views-workouts.js');
+  const withData = await mount(HomeView());
+  await settle(); await settle();
+  ok(withData.querySelector('.avatar-btn.at-risk'),
+     'an unsecured account WITH training data carries the not-backed-up dot');
+
+  await store.clearAll();
+  const { clearReadCache } = await import(BASE + 'store.js');
+  clearReadCache();
+  const empty = await mount(HomeView());
+  await settle(); await settle();
+  ok(empty.querySelector('.avatar-btn') && !empty.querySelector('.avatar-btn.at-risk'),
+     '⚠️ a brand-new empty account shows NO dot — a permanent warning is wallpaper, and this one now waits for something to be at risk');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

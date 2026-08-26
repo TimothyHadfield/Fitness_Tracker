@@ -630,7 +630,7 @@ export async function WorkoutsView() {
       // the high-effort one, not buried in an empty state where someone who
       // already has a system would never find it.
       el('button', { class: 'btn block', onClick: () => go('#/explore') },
-        icon('search'), 'Explore ready-made systems'),
+        icon('search'), 'Explore ready-made programmes'),
     ],
     scroll: systems.length
       ? el('div', { class: 'list' }, systems.map((sys) => {
@@ -933,12 +933,24 @@ export async function ExploreView() {
   const ratings = await rateAllPresets(PRESET_SYSTEMS);
 
   return screenShell({
-    title: 'Ready-made systems',
+    title: 'Ready-made programmes',
     back: () => go('#/workouts'),
     scroll: [
+      // ⚠️ ONE SENTENCE AT THE MOMENT OF THE WORD SWAP (UX review: "programme"
+      // becomes "system" on the next tap, and the definition lived on a screen
+      // the first-run path routes past). A stranger arrives here from "Pick a
+      // programme"; the bridge is built where they are standing (D8).
       el('div', { class: 'field-help', text:
-        'Pick one and it is copied into your systems. From then on it is yours — rename it, '
-        + 'change the exercises, delete what you do not do.' }),
+        'Pick one and it is copied into your systems — a system is just a programme you own. '
+        + 'From then on it is yours: rename it, change the exercises, delete what you do not do.' }),
+      // ⚠️ WHAT THE NUMBERS MEAN, BEFORE THE NINE NUMBERS (UX review: "Explore
+      // ranks nine programmes by a number it explains nine cards later"). The
+      // full caveats stay below; this is the one line without which 55 % reads
+      // as a bad mark.
+      el('div', { class: 'field-help', text:
+        'Each badge: how much of the growth and strength stimulus the research supports a '
+        + 'programme delivering — nothing real reaches 100 % — plus days a week and minutes a '
+        + 'session, which are what it costs.' }),
       el('div', { class: 'list' }, PRESET_SYSTEMS.map((p) =>
         el('button', { class: 'row row-rated', onClick: () => go('#/explore/' + p.id) },
           el('div', { class: 'row-main' },
@@ -961,15 +973,13 @@ export async function ExploreView() {
           ratingBadge(ratings.get(p.id)),
           chevron(),
         ))),
-      // The rating cannot be left to speak for itself. 55 % reads as a bad mark
-      // unless the reader is told what 100 % would mean, and the one variable
-      // that most decides whether a set grows anything is one this app cannot
-      // see (D9) — so both facts go on the screen, not just in the docs.
+      // The short version now sits ABOVE the list (2026-08-26); this is the
+      // full statement — what 100 % would mean, and the assumptions. Both
+      // facts stay on the screen, not just in the docs.
       el('div', { class: 'field-help', text:
-        'The percentages are how much of the growth or strength stimulus the research supports '
-        + 'each programme delivers. Nothing real reaches 100 % — that would mean 42 hard sets per '
-        + 'muscle every week. They assume you train close to failure, and more days is not itself '
-        + 'better for growth.' }),
+        'Nothing real reaches 100 % — that would mean 42 hard sets per muscle every week. The '
+        + 'percentages assume you train close to failure, and more days is not itself better '
+        + 'for growth.' }),
       // ⚠️ These two go under the list, not only in a tooltip. A `title` is
       // invisible on a phone, and this is where a stranger is comparing nine
       // strength percentages against each other — the exact moment the number's
