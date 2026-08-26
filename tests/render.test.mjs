@@ -474,6 +474,59 @@ ok(!data.querySelector('.rep-target'),
        'tapping Finish again after the problem clears saves it, with nothing lost');
   }
 
+  /* ⚠️ CLICKING ANYWHERE ON A SET SELECTS IT — Tim, 2026-08-25.
+   *
+   * *"if the user is doing multiple sets, then clicking on the other sets is
+   * often confusing because you have to click on the 1, 2, 3, etc on the side."*
+   * The numbered square is 21x21 on a row the full width of the screen, and the
+   * weight and reps — the part you are actually reading, and the part a thumb
+   * goes to — were inert text.
+   *
+   * The behavioural assertion is the one that matters: a click on the VALUES
+   * must select. Everything else here is structure that keeps it honest.
+   */
+  {
+    localStorage.removeItem(DRAFT);
+    const multi = await store.saveWorkout({
+      name: 'Three sets',
+      exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 3, notes: '' }],
+    });
+    const screen = await mount(SessionView(multi.id));
+    const items = [...screen.querySelectorAll('.set-list .set-item')];
+    ok(items.length === 3, `three sets are listed (${items.length})`);
+    ok(items[0].classList.contains('active'), 'set 1 is the one open to begin with');
+
+    // The whole row, minus delete, is ONE control carrying the row's own name.
+    const pick = items[2].querySelector('.set-pick');
+    ok(Boolean(pick) && pick.tagName === 'BUTTON',
+       '⚠️ the row is a real BUTTON, not a div with a click handler — a div would satisfy the '
+       + 'request and silently drop the set list out of the keyboard order');
+    ok(Boolean(pick.querySelector('.set-num')) && Boolean(pick.querySelector('.set-vals')),
+       'and it holds BOTH the number and the values, so neither is a dead zone');
+    ok(/Set 3/.test(pick.getAttribute('aria-label') || ''),
+       'named for the set it is, rather than the old number labelled "Edit set 3"');
+
+    // ⚠️ THE ONE THAT FLIPS IF THIS IS EVER REVERTED: click the numbers, not the square.
+    items[2].querySelector('.set-vals').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    const after = [...screen.querySelectorAll('.set-list .set-item')];
+    ok(after[2].classList.contains('active') && !after[0].classList.contains('active'),
+       '⚠️ clicking the WEIGHT AND REPS of set 3 opens set 3 — the numbered square is no longer '
+       + 'the only live part of the row');
+
+    // Delete is a sibling, not a child. Nested it would be invalid HTML and
+    // would need a stopPropagation that works until the next control is added.
+    const del = after[1].querySelector('.set-del');
+    ok(Boolean(del) && del.parentElement.classList.contains('set-item'),
+       'delete sits BESIDE the row button rather than inside it, so it can never also select');
+    del.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(screen.querySelectorAll('.set-list .set-item').length === 2,
+       'and tapping it still deletes rather than selecting');
+
+    localStorage.removeItem(DRAFT);
+  }
+
   /* ⚠️ THE DEMO ACCOUNT MAY NOT WRITE A DRAFT TO REAL STORAGE.
      `store.js` swaps its whole backend inside the demo, but the draft never
      went through the store — it was written straight to localStorage, so
@@ -1053,6 +1106,39 @@ ok(!data.querySelector('.rep-target'),
   const start = await mount(StartPickerView());
   ok(/Push/.test(start.textContent) && /Legs/.test(start.textContent),
      'the start picker still reaches every workout');
+
+  /* ── ⚠️ RECORD MUST SAY THAT IT STARTS THINGS ─────────────────────────────
+   *
+   * Tim, after his second gym session (2026-08-25): *"it's not clear that by
+   * clicking on any of the workouts that you'll actually start a workout, it's
+   * easy to assume that you'd just look into details about it."* A chevron
+   * means "go and look at that" on every other row in the app, and this row
+   * begins a session.
+   */
+  const startRows = [...start.querySelectorAll('.list .row')];
+  ok(startRows.length > 0, `Record lists ${startRows.length} workouts to start`);
+  ok(startRows.every((r) => /Start/.test(r.textContent)),
+     '⚠️ every workout row SAYS Start — the word, not a glyph a reader has to interpret');
+  ok(startRows.every((r) => !r.querySelector('.row-chev')),
+     '⚠️ and none of them wears a chevron, which everywhere else in this app means "go and look"');
+
+  /* ── ⚠️ AND IT MUST NAME THE PROGRAMME, EVEN WITH ONLY ONE ────────────────
+   *
+   * *"make the title of the workout system more clear because that's the first
+   * thing that the user will try to find."* The 2026-08-22 build dropped the
+   * heading whenever there was a single system, on the argument that a sole
+   * heading is decoration. It is not: it is the label on the thing being
+   * looked for, and its absence is worse than its being small.
+   */
+  const heads = [...start.querySelectorAll('.sys-head')].map((n) => n.textContent);
+  const allSystems = await store.getSystems();
+  const withWorkouts = [];
+  for (const s of allSystems) if ((await store.getWorkouts(s.id)).length) withWorkouts.push(s.name);
+  ok(heads.length === withWorkouts.length && withWorkouts.every((n) => heads.includes(n)),
+     `⚠️ every system with workouts is named on Record (${heads.length} of ${withWorkouts.length})`);
+  ok(!start.querySelector('.section-label.sub'),
+     'and the name is a heading rather than the 11.5px grey caption it used to be — it was quieter '
+     + 'than the workout names underneath it, so the thing being searched for was the least visible text');
 }
 
 

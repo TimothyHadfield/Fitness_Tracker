@@ -4,13 +4,15 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-24, end of a long day — **the app was used in a real gym session for the
+**Last updated:** 2026-08-25 — Tim trained a second time and reported four more things; three
+shipped and the fourth (joint workouts) turns out never to have been built. See the top section.
+Before that, 2026-08-24, end of a long day — **the app was used in a real gym session for the
 first time, and nine passes ran off the back of it.** They are the five `2026-08-24` sections at the
 top, newest first; the nine below them are 2026-08-22. Read the top three points here, then the
 **Open work index**, and nothing else unless you need the why.
 
 ⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green:
-**2406 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
+**2419 assertions across eleven suites.** Two questions are waiting on *him*, not on you — whether
 logged warm-ups should be excluded from the volume count, and his friend's failed sign-in.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
@@ -121,6 +123,95 @@ storage**: the store swaps to an in-memory backend, so nothing in there can reac
 Firestore. Edit anything; a reload starts it over; leaving restores the real account untouched. A
 strip on every screen says so. **Social is hard-disabled in it** — `republish()` refuses — because
 publishing invented workouts to real friends is the one way this could do harm.
+
+---
+
+## 2026-08-25 — a second gym session, and ⚠️ JOINT WORKOUTS WERE NEVER BUILT
+
+**Tim trained again and came back with four things.** Three shipped. The first is not a bug report.
+
+### ⚠️ 1. "It doesn't seem like the joint workout system is working" — IT DOES NOT EXIST
+
+`grep -ri "joint\|partner\|guest\|recordFor" js/` returns **nothing**. Joint workouts are **Open work
+0e**, raised on 2026-08-24, designed but never built — the index has said "needs a plan doc before
+code" since. **Nothing is broken; the feature is absent.**
+
+⚠️ **THIS IS THE STANDING RULE MEETING ITS OWN MIRROR IMAGE.** The file has said since 2026-08-22
+*"do not read 'X is broken' as X being broken — check first"*, and that has always been about
+reports of regressions. This is the other direction: a report that a feature is faulty, where the
+honest answer is that there is no feature. **Checking first answers both, and it is one grep.**
+
+**He has now asked for it twice, and the second time from the gym.** That makes it the top item, and
+the thing to build next. ⚠️ **The half worth building FIRST is the guest case** — 0e's own note
+already says so: *"logging for a guest — a name with no account — kept in the recorder's own data…
+that is the case Tim actually hit, because his friend could not sign in at all."* It needs no
+Firestore rules change and no accept flow, and it is the case he keeps hitting.
+
+### ⚠️ 2. RECORD LOOKED LIKE A LIST OF THINGS TO READ ABOUT
+
+*"It's not clear that by clicking on any of the workouts that you'll actually start a workout, it's
+easy to assume that you'd just look into details about it or something."*
+
+⚠️ **A chevron means exactly one thing everywhere else in this app: go and look at that.** Every
+other `.row` in the product navigates to a detail screen. This row **begins a session** — the single
+most consequential tap in the app (D4) — and it was wearing the same clothes as a link to a settings
+page. The rows now carry a **"Start ▶" pill**, 61.5 × 24 px, and no chevron.
+
+⚠️ **The word, not just the triangle.** A play glyph alone could as easily mean "expand", and this is
+the screen where the cost of a misread is highest — starting a session you did not mean to start,
+mid-gym.
+
+### ⚠️ 3. THE PROGRAMME'S NAME WAS THE ONE THING NOT SHOWN
+
+*"Make the title of the workout system more clear because that's the first thing that the user will
+try to find."*
+
+⚠️ **This reverses a call made on 2026-08-22 — "a sole heading is decoration" — and he is right.**
+With one system the name was **not rendered at all**; with several it was `.section-label sub`, an
+11.5 px grey caption, which made **the thing being searched for the least prominent text in its own
+group** — quieter than the 15.5 px workout names beneath it. It is a 15 px full-ink heading now, and
+it is always shown.
+
+⚠️ **He is describing how the screen is USED, which is what settled it.** Nobody arrives at Record
+hunting for "Push"; they arrive knowing which programme they are running, find it, and take the day
+off it. Under that reading a sole heading is not decoration — it is the label on the thing you came
+for.
+
+**One thing found by looking at it**: with two systems the pane's even `gap` put the second name
+exactly halfway between the last workout of the previous group and the first of its own, so it was
+ambiguous which group it headed. Extra space above, none below — a heading belongs to what follows it.
+
+### ⚠️ 4. ONLY THE LITTLE NUMBERED SQUARE SELECTED A SET
+
+*"If the user is doing multiple sets, then clicking on the other sets is often confusing because you
+have to click on the 1, 2, 3, etc on the side."*
+
+**Measured, before and after, at 360 / 375 / 393 px:**
+
+```
+                       before      after
+  the live target      21 x 21     298 x 44      (at 360px)
+  set row height       35 px       45 px
+```
+
+⚠️ **The dead part was the part being read.** The weight and reps are what a lifter looks at and what
+a thumb goes to, and they were inert text on a row the full width of the screen.
+
+⚠️ **A REAL BUTTON, NOT A CLICK HANDLER ON THE DIV.** A `<div onClick>` satisfies the request and
+silently drops the whole set list out of the keyboard order and off the accessibility tree — the
+exact class of fault the 2026-08-20 audit found in nineteen unassociated labels. `.set-pick` carries
+the row's whole accessible name, so there is now **one named control per set** instead of a number
+labelled *"Edit set 3"* that never said what set 3 held.
+
+⚠️ **Delete is its SIBLING, not its child.** Nesting would be invalid HTML and would need a
+`stopPropagation` to keep a delete from also selecting — a guard that works until somebody adds the
+next control. Two siblings cannot have that bug.
+
+**The cost, stated:** four sets now come to 179 px against 143, so a 4-set exercise makes the pane
+scroll where it previously just fit at 360 px. The footer is pinned, so nothing actionable moved, and
+all four sets are still on screen. **Mutation-checked**: moving the values back outside the button
+flips exactly the two assertions written for it; a chevron on Record flips two; dropping the sole
+heading flips one.
 
 ---
 
@@ -1673,7 +1764,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 
 | | What | State |
 |---|---|---|
-| **1** | **0e — joint workouts** | ⚠️ **OPEN, and the biggest thing Tim has asked for.** Design decided (the friend accepts; never a direct write into their account). **Needs a plan doc before code** — it touches the sharing rules |
+| **1** | **0e — joint workouts** | ⚠️ **OPEN, ASKED FOR TWICE, and reported on 2026-08-25 as "not working" — it does not exist.** Design decided (the friend accepts; never a direct write into their account). **Build the GUEST half first**: a name with no account, kept in the recorder's own data, no rules change, and it is the case Tim keeps hitting |
 | **2** | **0h — the ratio table runs too low, which flatters** | ⚠️ **OPEN.** Four anchors corrected 2026-08-24 by 7–15 %; the errors are **not a constant**, so every remaining reasoned entry needs deriving on its own. Moves real numbers on every body map |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, and Tim has claimed the design half.** "Nothing on Home ever grows" is the sharpest unaddressed thing in the product. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
 | **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call, and now the ILLUSTRATION ONLY.** The two ordinary controls beside it went to 44 px on 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
@@ -2069,7 +2160,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2406 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2419 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1193 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -2081,7 +2172,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 22 assertions, **no dependencies**. Pins the PALETTE: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **52** screen/width/theme combinations. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 393 assertions, mounts every screen. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 406 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |

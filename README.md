@@ -64,7 +64,7 @@ node tests/data-layer.test.mjs     # 1193 assertions, no dependencies
 npm i jsdom && node tests/render.test.mjs
 ```
 
-Eleven suites, 2406 assertions. Only `render` needs anything installed. `progress.md` lists the rest,
+Eleven suites, 2419 assertions. Only `render` needs anything installed. `progress.md` lists the rest,
 including what each one is actually for — and, more usefully, what is **not** verified.
 
 ## Project layout

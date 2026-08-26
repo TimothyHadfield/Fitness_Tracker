@@ -417,16 +417,42 @@ export async function SessionView(workoutId) {
       renderPane();
     }
 
+    /* ⚠️ THE WHOLE ROW SELECTS THE SET, not just the little numbered square.
+     *
+     * Tim, after his second gym session (2026-08-25): *"if the user is doing
+     * multiple sets, then clicking on the other sets is often confusing because
+     * you have to click on the 1, 2, 3, etc on the side."* He is describing a
+     * 21×21 px target on a row 35 px tall and the full width of the screen —
+     * the numbers ARE the only live part, and everything a thumb naturally aims
+     * at (the weight and reps, which is what you are reading) did nothing.
+     *
+     * ⚠️ A BUTTON INSIDE THE ROW, NOT A CLICK HANDLER ON THE ROW ITSELF. A
+     * `<div onClick>` would satisfy the request and quietly drop the set list
+     * out of the keyboard order and off the accessibility tree — the exact
+     * class of fault the 2026-08-20 audit found in the 19 unassociated labels.
+     * `.set-pick` is a real button carrying the row's whole accessible name, so
+     * there is now ONE named control per set instead of a number labelled
+     * "Edit set 3" that never said what set 3 held.
+     *
+     * ⚠️ AND DELETE IS ITS SIBLING, NOT ITS CHILD. Nesting it would be invalid
+     * HTML and would need a stopPropagation to keep a delete from also
+     * selecting — a guard that works until somebody adds the next control. Two
+     * siblings cannot have that bug.
+     */
     function renderSets() {
       const rows = [];
       entry.sets.forEach((s, i) => {
         const isHere = i === entry.active;
         rows.push(el('div', { class: 'set-item' + (isHere && entry.activeDrop == null ? ' active' : '') },
           el('button', {
-            class: 'set-num', text: String(i + 1), 'aria-label': `Edit set ${i + 1}`,
+            class: 'set-pick',
+            'aria-label': `Set ${i + 1}: ${fmtSet(s, entry.fields, entry.loadType)}`,
+            'aria-current': isHere && entry.activeDrop == null ? 'true' : null,
             onClick: () => select(i, null),
-          }),
-          el('div', { class: 'set-vals', text: fmtSet(s, entry.fields, entry.loadType) }),
+          },
+            el('span', { class: 'set-num', text: String(i + 1) }),
+            el('span', { class: 'set-vals', text: fmtSet(s, entry.fields, entry.loadType) }),
+          ),
           entry.sets.length > 1
             ? el('button', {
                 class: 'set-del', 'aria-label': `Delete set ${i + 1}`,
@@ -447,12 +473,18 @@ export async function SessionView(workoutId) {
         // and numbering them 1, 2, 3 would teach the opposite.
         minisOf(s).forEach((d, di) => {
           rows.push(el('div', { class: 'set-item set-drop' + (isHere && entry.activeDrop === di ? ' active' : '') },
+            // Same restructure as the set row above, for the same reason: the ↳
+            // is a 22px glyph and the numbers beside it are what a thumb aims at.
             el('button', {
-              class: 'set-num drop-num', text: '↳',
-              'aria-label': `Edit ${miniLabel(entry.setType, di + 1)} of set ${i + 1}`,
+              class: 'set-pick',
+              'aria-label': `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: `
+                + fmtSet(d, entry.fields, entry.loadType),
+              'aria-current': isHere && entry.activeDrop === di ? 'true' : null,
               onClick: () => select(i, di),
-            }),
-            el('div', { class: 'set-vals', text: fmtSet(d, entry.fields, entry.loadType) }),
+            },
+              el('span', { class: 'set-num drop-num', text: '↳' }),
+              el('span', { class: 'set-vals', text: fmtSet(d, entry.fields, entry.loadType) }),
+            ),
             el('button', {
               class: 'set-del', 'aria-label': `Delete ${miniLabel(entry.setType, di + 1)}`,
               onClick: () => {

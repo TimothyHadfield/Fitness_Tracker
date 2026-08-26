@@ -179,26 +179,54 @@ export async function StartPickerView({ tab = false } = {}) {
 
   // GROUPED, not nested. Making someone pick a system and then a workout would
   // add a tap to the one screen that is used mid-gym, and most people have one
-  // system anyway. The heading is dropped when there is only one, because a
-  // sole heading is decoration.
+  // system anyway.
   const groups = systems
     .map((sys) => ({ sys, items: workouts.filter((w) => w.systemId === sys.id) }))
     .filter((g) => g.items.length);
 
+  // ⚠️ A CHEVRON USED TO SIT HERE AND IT WAS TELLING THE TRUTH ABOUT THE WRONG
+  // THING. Tim, after his second gym session (2026-08-25): *"it's not clear that
+  // by clicking on any of the workouts that you'll actually start a workout,
+  // it's easy to assume that you'd just look into details about it."* He is
+  // right, and the reason is that a chevron means exactly one thing everywhere
+  // else in this app — go and look at that. Every other `.row` in the product
+  // navigates to a detail screen; this one begins a session, which is the single
+  // most consequential tap in the app (D4), and it was wearing the same clothes.
+  //
+  // The word, not just a glyph. "Start" is unambiguous in a way a play triangle
+  // is not — a triangle could as easily mean "expand" — and this is the screen
+  // where being certain matters most, because the cost of being wrong is
+  // starting a session you did not mean to start mid-gym.
   const row = (w) => el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
     el('div', { class: 'row-main' },
       el('div', { class: 'row-title', text: w.name }),
       el('div', { class: 'row-sub', text: `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}` }),
     ),
-    chevron(),
+    el('span', { class: 'row-start' }, 'Start', icon('play', 12)),
   );
 
+  // ⚠️ THE SYSTEM NAME IS ALWAYS SHOWN NOW, INCLUDING WHEN THERE IS ONLY ONE.
+  // This reverses a call made on 2026-08-22 — "a sole heading is decoration" —
+  // on Tim's report from the gym: *"make the title of the workout system more
+  // clear because that's the first thing that the user will try to find."*
+  //
+  // He is describing how the screen is actually used. You do not arrive here
+  // hunting for "Push"; you arrive knowing which programme you are running and
+  // look for it, then take the day off it. With one system that heading was not
+  // decoration, it was the label on the thing you came for — and it was missing
+  // entirely, which is worse than small.
+  //
+  // It is a real heading rather than `.section-label sub`, which is a 11.5px
+  // grey caption. The old sub-label was quieter than the workout names beneath
+  // it, so even with several systems the one thing being searched for was the
+  // least prominent text in the group.
   const scroll = groups.length
     ? [
         el('div', { class: 'section-label', text: 'Start a workout' }),
-        ...groups.flatMap((g) => (groups.length > 1
-          ? [el('div', { class: 'section-label sub', text: g.sys.name }), el('div', { class: 'list' }, g.items.map(row))]
-          : [el('div', { class: 'list' }, g.items.map(row))])),
+        ...groups.flatMap((g) => [
+          el('div', { class: 'sys-head', text: g.sys.name }),
+          el('div', { class: 'list' }, g.items.map(row)),
+        ]),
       ]
     : [
         // ⚠️ On an empty account this screen must not be a dead end. The

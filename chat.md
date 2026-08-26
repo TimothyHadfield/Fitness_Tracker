@@ -4970,3 +4970,41 @@ Not verified against a real rejection, and the docs say so: confirming it means 
 to the live project and watching it fail.
 
 2406 green across eleven suites, four mutation checks, pushed.
+
+---
+
+## 2026-08-25 — a second gym session
+
+Four reports. Three were real and shipped; the first was not a bug.
+
+**"The joint workout system isn't working."** It does not exist. One grep across `js/` for
+joint/partner/guest/recordFor returns nothing — joint workouts are Open work 0e, designed on
+2026-08-24 and never built. Told him plainly rather than going hunting. The standing rule in
+progress.md is "do not read 'X is broken' as X being broken, check first"; this is its mirror image,
+a report that a feature is faulty where the honest answer is that there is no feature. He has now
+asked for it twice, so it is the top item — and the half to build first is the **guest** case, a
+name with no account kept in the recorder's own data, because it needs no rules change and it is the
+case he keeps hitting (his friend could not sign in).
+
+**Record looked like a list of things to read about.** A chevron means "go and look at that"
+everywhere else in the app, and this row starts a session. The rows say **Start** now, with a play
+glyph, and no chevron. The word rather than the bare triangle: a triangle could mean "expand", and
+this is the tap whose cost of being misread is highest.
+
+**The programme's name was the one thing not shown.** With one system it was not rendered at all;
+with several it was an 11.5px grey caption, quieter than the workout names beneath it. That reverses
+a call from 2026-08-22 ("a sole heading is decoration") and he is right — nobody arrives at Record
+hunting for "Push", they arrive knowing which programme they are running. It is a 15px full-ink
+heading now, always shown. Looking at it turned up that the pane's even gap put a second system's
+name exactly halfway between two groups, so it was ambiguous which one it headed; more space above,
+none below.
+
+**Only the 21x21 numbered square selected a set.** Now the whole row does — 298x44 at 360px. Built
+as a real button rather than a click handler on the div, because a div would satisfy the request and
+quietly drop the set list out of the keyboard order, which is the fault the 2026-08-20 audit found
+in nineteen labels. Delete is a sibling of that button rather than a child, so no stopPropagation is
+needed and none can be forgotten later. Cost stated: four sets are 179px against 143, so a 4-set
+exercise now makes the pane scroll where it just fit; the footer is pinned and all four sets stay on
+screen.
+
+2419 green, three mutation checks, pushed.

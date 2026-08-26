@@ -419,6 +419,47 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   color: var(--ink-soft);
 }
 
+/* ⚠️ THE PROGRAMME'S NAME ON THE RECORD SCREEN, and it is a heading rather than
+   a caption on purpose. Tim, 2026-08-25: *"make the title of the workout system
+   more clear because that's the first thing that the user will try to find."*
+   It used to be `.section-label sub` — 11.5px grey — which made the one thing
+   being searched for quieter than the 15.5px workout names underneath it, and
+   with a single system it was not rendered at all. Full ink, because a heading
+   in --ink-faint is what caused that inversion. */
+/* ⚠️ It must hug the list BELOW it, not float between two. The pane lays its
+   children out on one even `gap`, which put a second programme's name exactly
+   halfway between the last workout of the previous one and the first of its
+   own — so with two systems on screen it was ambiguous which group it headed.
+   Extra space above, none below; a heading belongs to what follows it. */
+.sys-head {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 8px;
+  margin-bottom: -4px;
+}
+.pane-scroll > .section-label + .sys-head { margin-top: 0; }
+
+/* ⚠️ "Start", not a chevron. Everywhere else in this app a chevron means go and
+   look at that; on the Record screen the same row BEGINS A SESSION, and Tim
+   read it as a detail link after a gym session. A word rather than a bare
+   triangle: this is the tap whose cost of being misread is highest.
+
+   Not a filled button — it is not a second control, it is what the row does.
+   Accent ink and the app's pill shape (Rule 2: no border box) say "this acts"
+   without adding a target inside a target. */
+.row-start {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 4px 9px 4px 10px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--accent);
+  font-size: 12px; font-weight: 750;
+  letter-spacing: 0.01em;
+}
+.row-start svg { display: block; }
+
 /* Rows are separated by rules, not wrapped in borders. Negative margins let
    the hairline run the full width while text stays aligned to the gutter. */
 .list {
@@ -937,13 +978,37 @@ select.input {
 .add-set svg { display: block; }
 .add-set:active { transform: scale(.96); }
 
-.set-item { display: flex; align-items: center; gap: 9px; padding: 7px 2px; font-size: 14px; }
+.set-item { display: flex; align-items: center; gap: 9px; padding: 0 2px; font-size: 14px; }
 .set-item.active .set-vals { color: var(--ink); font-weight: 600; }
+
+/* ⚠️ THE ROW IS THE TARGET. Everything except delete lives inside this button,
+   because until 2026-08-25 only the 21px numbered square selected a set and the
+   weight-and-reps beside it — which is what a thumb aims at, since it is what
+   you are reading — did nothing. Tim reported it from the gym.
+
+   The vertical padding moved OFF `.set-item` and onto this, so the button fills
+   the row's full height rather than sitting in a padded box that is dead to the
+   touch. 44px, the same target the rest of the app is held to. */
+.set-pick {
+  flex: 1;
+  min-width: 0;
+  display: flex; align-items: center; gap: 9px;
+  min-height: 44px;
+  padding: 4px 0;
+  text-align: left;
+  color: inherit;
+  font-size: inherit;
+}
+.set-pick:active { opacity: .65; }
 
 /* A drop hangs under its set, indented, and is NOT numbered — one drop set is
    one hard set (progress.md §6), and numbering the drops 2, 3, 4 would teach
    the reader the opposite of the rule the data model is built on. */
 .set-drop { padding-left: 22px; }
+/* A drop is a continuation, not a set, so it does not claim a full 44px row of
+   its own — it would make a three-drop set taller than the exercise above it.
+   The whole row is still live, which is the part Tim asked for. */
+.set-drop .set-pick { min-height: 36px; }
 .set-drop .set-vals { font-size: 13px; }
 .set-list > .set-drop { border-top: 0; }
 .drop-num {
