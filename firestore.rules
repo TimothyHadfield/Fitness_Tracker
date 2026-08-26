@@ -247,6 +247,144 @@ service cloud.firestore {
                         && resource.data.from == request.auth.uid);
     }
 
+    // ================================================================
+    // HANDOFFS — a session one friend recorded FOR another, offered for
+    // them to accept. Open work 0e, the friend half.
+    //
+    // ⚠️ TIM'S DECISION, AND THE REASON THE WHOLE FEATURE HAS THIS SHAPE:
+    // *"the data is saved to each user's specific account"* — but by THEM
+    // accepting it, never by a direct write into their training. A direct
+    // write would need permission on users/{them}/collections/sessions,
+    // and that one document holds every session they have ever recorded,
+    // so a single bad write replaces a training history. There is no
+    // narrower permission to grant: Firestore grants per document.
+    //
+    // So this is the reactions pattern again, and it is acceptable for
+    // exactly the same reasons: ONE DOCUMENT PER OFFER, create-only,
+    // shape-checked, in a subtree nothing else reads. ⚠️ The recipient's
+    // own data is never touched by the sender at all — the worst possible
+    // write is one unwanted offer sitting in a list, which they delete.
+    // Accepting is the RECIPIENT'S OWN CLIENT writing to its own account
+    // under the owner-only rules above, entirely unchanged.
+    //
+    // Who may offer: someone the recipient has published a tier to. That
+    // is the same "we are actually connected" test reactions use, and it
+    // means a stranger cannot put anything in anybody's list.
+    // ================================================================
+
+    // ⚠️ EVERY FIELD IS CHECKED TO EXIST BEFORE IT IS READ, for the reason
+    // claimingUnclaimedInvite() spells out above: rules propagate errors out of
+    // an && even when an earlier operand is already false, so reading a field
+    // that might be missing turns a clean "denied" into an "evaluation error",
+    // and an erroring rule behaves according to operand ORDER.
+    //
+    // ⚠️ AND THE GUARDS DO NOT MAKE THE DIAGNOSTIC GO AWAY — stated because the
+    // obvious next move is to keep adding guards until it does. The emulator
+    // still logs an evaluation error on these denials AFTER the guards, and so
+    // does the reactions block above (L233/L243), which shipped that way on
+    // 2026-08-26. The remaining source is the `get()` inside viewerOfAnyTier()
+    // on documents that do not exist, not a missing field check. **Every denial
+    // is still a denial** — that is what tests/rules.test.mjs asserts and what
+    // matters — but do not read a clean run as the goal here, and do not
+    // reorder these conditions expecting the log to change.
+    function validHandoff() {
+      return request.resource.data.keys().hasOnly(
+               ['from', 'fromName', 'at', 'session'])
+          && 'from' in request.resource.data
+          && 'fromName' in request.resource.data
+          && 'at' in request.resource.data
+          && 'session' in request.resource.data
+          // Proven, not trusted — the same line that stops a forged reaction.
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.fromName is string
+          && request.resource.data.fromName.size() <= 60
+          && request.resource.data.at is timestamp
+          && request.resource.data.session is map
+          // A session, not a payload of arbitrary size. The cap is on the
+          // shape rather than on bytes because rules cannot measure bytes,
+          // and an offer is one workout — if it needs more keys than this
+          // it is not a workout.
+          && request.resource.data.session.keys().hasOnly(
+               ['id', 'date', 'workoutId', 'workoutName', 'startedAt', 'finishedAt',
+                'location', 'isBenchmark', 'entries'])
+          && 'date' in request.resource.data.session
+          && 'entries' in request.resource.data.session
+          && request.resource.data.session.date is string
+          && request.resource.data.session.date.size() <= 30
+          && request.resource.data.session.entries is list
+          && request.resource.data.session.entries.size() <= 40;
+    }
+
+    match /users/{userId}/handoffs/{handoffId} {
+      // Owner-only reading. Unlike reactions there is nothing here for a
+      // viewer to see — an offer is addressed to one person.
+      allow get, list: if isOwner(userId);
+
+      allow create: if viewerOfAnyTier(userId) && validHandoff();
+
+      // No update path at all, for the reason the reactions block gives:
+      // every mutation a rule does not have is one that cannot be got wrong.
+      // Changing an offer means retracting it and sending another.
+      allow update: if false;
+
+      // The recipient deletes on accept or decline; the sender can retract
+      // one they should not have sent. Field-guarded before its fields are
+      // read, like every other rule here.
+      allow delete: if isOwner(userId)
+                    || (signedIn()
+                        && resource != null
+                        && 'from' in resource.data
+                        && resource.data.from == request.auth.uid);
+    }
+
+    // ================================================================
+    // DISCONNECTS — "I have left, take me off your list." Open work 0j.
+    //
+    // ⚠️ WHAT THIS FIXES: social.remove() edits only the leaver's OWN
+    // graph, so the other person's published copy still listed them in
+    // `viewers` and they could go on reading that person's training after
+    // pressing Disconnect. The sheet was corrected on 2026-08-24 to stop
+    // promising otherwise, which was not the same as fixing it.
+    //
+    // ⚠️ AND WHY IT IS A TOMBSTONE RATHER THAN AN EDIT. The obvious fix is
+    // for the leaver to remove themselves from the other person's viewers
+    // list — and that means write permission on users/{them}/shared/{tier},
+    // which is the document holding their whole published projection. One
+    // bad write there destroys what every one of their friends can see. So
+    // the leaver instead drops a note that they have gone, and the OWNER'S
+    // client acts on it, republishing without them.
+    //
+    // ⚠️ THE HONEST LIMIT, WHICH THE SHEET MUST STATE: this is EVENTUAL.
+    // Until the other person's app next opens and processes the note, the
+    // leaver is still in their viewers list. What is immediate is the
+    // leaver's own side. Anything stronger needs a server, which this app
+    // does not have (docs/integrations-plan.md §2 makes the same point
+    // from the other direction).
+    // ================================================================
+
+    match /users/{userId}/disconnects/{leaverId} {
+      // The owner reads them to act on them. Nobody else needs to.
+      allow get, list: if isOwner(userId);
+
+      // ⚠️ THE DOCUMENT ID *IS* THE CALLER'S UID, and that is the whole
+      // access control: you may announce your OWN departure and nobody
+      // else's. Without it, anybody connected could evict anybody else.
+      // It also makes the write idempotent — pressing Disconnect twice
+      // writes the same document.
+      // Fields checked to exist before they are read — see validHandoff().
+      allow create, update: if signedIn()
+                            && leaverId == request.auth.uid
+                            && request.resource.data.keys().hasOnly(['from', 'at'])
+                            && 'from' in request.resource.data
+                            && 'at' in request.resource.data
+                            && request.resource.data.from == request.auth.uid
+                            && request.resource.data.at is timestamp;
+
+      // The owner deletes it once acted on; the leaver can withdraw it if
+      // they reconnect before it was processed.
+      allow delete: if isOwner(userId) || leaverId == request.auth.uid;
+    }
+
     match /users/{userId}/invites/{token} {
       // ⚠️ get YES, list NO, and that distinction is the whole security model
       // here. Anyone signed in can redeem a link they were GIVEN — they must be

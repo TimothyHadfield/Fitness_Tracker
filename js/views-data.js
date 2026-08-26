@@ -1,7 +1,7 @@
 // Calendar, day detail, graphs, settings.
 
 import {
-  store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
+  store, auth, social, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
   normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL, currentBests,
   CLOUD_WARN_AT,
 } from './store.js';
@@ -10,7 +10,7 @@ import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
 } from './e1rm.js';
 import {
-  setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, miniStepper, chevron,
+  setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
@@ -387,6 +387,50 @@ function dataTabs(active, onChartMode) {
  * Day detail
  * ================================================================== */
 
+/**
+ * "Send this to <name>" for a guest record — Open work 0e's friend half.
+ *
+ * ⚠️ IT ASKS WHO, rather than guessing from the guest's name. A guest name is
+ * free text typed mid-workout ("Alex", "alex", "my brother"), and matching that
+ * against a friends list would eventually put somebody's training in the wrong
+ * account. Picking from the real list is one tap and cannot be wrong.
+ */
+function handoffRow(guest, date) {
+  return el('button', {
+    class: 'btn small block', text: `Send this to ${guest.guestName}`,
+    onClick: async () => {
+      let state;
+      try { state = await social.state(); } catch (_) { state = { available: false }; }
+      if (!state.available || !state.connections.length) {
+        toast('Connect with them on the Friends tab first.');
+        return;
+      }
+      const sheet = openSheet({
+        title: 'Send this to whom?',
+        body: el('div', { class: 'list' },
+          el('div', { class: 'field-help', text:
+            `They will be offered “${guest.workoutName || 'Workout'}” from ${fmtDateLong(date)} `
+            + 'and can add it to their own training. ⚠️ Nothing is written into their account '
+            + 'unless they accept it, and your copy stays here either way.' }),
+          ...state.connections.map((c) => el('button', {
+            class: 'row', style: 'width:100%;text-align:left',
+            onClick: async (e) => {
+              const btn = e.currentTarget;
+              btn.disabled = true;
+              try {
+                await social.offerSession(c.uid, guest, guest.guestName);
+                toast(`Sent to ${c.name || 'them'}.`);
+                sheet.close();
+              } catch (err) { btn.disabled = false; toast(err.message); }
+            },
+          }, el('div', { class: 'row-main' },
+             el('div', { class: 'row-title', text: c.name || 'Friend' })))),
+        ),
+      });
+    },
+  });
+}
+
 export async function DayView(date) {
   const [activity, exMap, guestRows] = await Promise.all([
     activityByDate(), store.getExerciseMap(),
@@ -491,6 +535,18 @@ export async function DayView(date) {
           })),
         ),
         ...entryNodes(g),
+        /* ⚠️ HANDING IT OVER — Open work 0e's friend half, built 2026-08-27.
+         *
+         * The guest half stores this under the recorder's account because the
+         * person had no account to put it on. The moment they DO — Tim's friend
+         * who could not sign in, now signed in and connected — this row is the
+         * bridge: offer it to them and their own client writes it into their own
+         * training on accept.
+         *
+         * ⚠️ It OFFERS rather than sends, which was Tim's own call. They see
+         * what was logged in their name before it lands, and nothing is ever
+         * written into anybody's history by somebody else's client. */
+        handoffRow(g, date),
       ));
     }
   }

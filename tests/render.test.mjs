@@ -2823,6 +2823,114 @@ ok(!data.querySelector('.rep-target'),
      'and it passes no judgement on whether that pace was any good');
 }
 
+
+/* ================= handoffs and mutual disconnect (0e friend half, 0j) =====
+ *
+ * ⚠️ WHAT CAN AND CANNOT BE TESTED HERE. The permissions live in
+ * firestore.rules and are tested against the real engine in rules.test.mjs —
+ * that is where "a stranger cannot offer a workout" is proved. What jsdom can
+ * prove is the half the rules cannot: that nothing is written into the
+ * recipient's training until they tap Add, that declining writes nothing at
+ * all, and that the screen says which of the two happened.
+ */
+{
+  const { SocialView, FriendView } = await import(BASE + 'views-social.js');
+  const { social, store } = await import(BASE + 'store.js');
+
+  const original = {
+    state: social.state, invites: social.invites, handoffs: social.handoffs,
+    friend: social.friend, healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    acceptHandoff: social.acceptHandoff, declineHandoff: social.declineHandoff,
+    remove: social.remove, setTier: social.setTier,
+  };
+  const restore = () => Object.assign(social, original);
+
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me',
+    name: 'Tim', shareBodyWeight: false,
+    connections: [{ uid: 'u1', name: 'Autumn', tier: 'light', since: '2026-08-01' }],
+  });
+  social.invites = async () => [];
+  social.friend = async () => ({ tier: 'light', doc: null });
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.handoffs = async () => [{
+    id: 'h_g1', from: 'u1', fromName: 'Autumn',
+    session: {
+      date: '2026-08-26', workoutName: 'Push',
+      entries: [{ exerciseName: 'Bench Press', sets: [{ weight: 135, reps: 8 }] }],
+    },
+  }];
+
+  let accepted = 0;
+  let declined = 0;
+  social.acceptHandoff = async () => { accepted++; return {}; };
+  social.declineHandoff = async () => { declined++; return true; };
+
+  const before = (await store.getSessions()).length;
+  const soc = await mount(SocialView());
+  await settle(); await settle();
+  const t = soc.textContent.replace(/\s+/g, ' ');
+
+  ok(/Recorded for you/.test(t), 'a workout somebody logged for you appears on Friends');
+  ok(/Autumn logged this for you/.test(t), 'and it names who logged it — whose word you are taking');
+  ok(/Bench Press/.test(t), 'and what is in it, before you decide');
+  ok((await store.getSessions()).length === before,
+     '⚠️ and NOTHING is in your training yet — an offer is an offer until you accept it');
+
+  const addBtn = [...soc.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add');
+  ok(Boolean(addBtn), 'there is an Add button');
+  addBtn.click();
+  await settle(); await settle();
+  ok(accepted === 1, 'tapping Add accepts it through the store, which writes to YOUR OWN account');
+
+  const soc2 = await mount(SocialView());
+  await settle(); await settle();
+  const noBtn = [...soc2.querySelectorAll('button')].find((b) => b.textContent.trim() === 'No');
+  ok(Boolean(noBtn), 'and a way to turn it down');
+  noBtn.click();
+  await settle(); await settle();
+  ok(declined === 1 && (await store.getSessions()).length === before,
+     '⚠️ declining writes nothing at all — not to your training, not anywhere');
+
+  /* ---- somebody disconnected FROM me ---- */
+  social.handoffs = async () => [];
+  social.processDisconnects = async () => 2;
+  const soc3 = await mount(SocialView());
+  await settle(); await settle();
+  ok(/2 people disconnected from you/.test(soc3.textContent.replace(/\s+/g, ' ')),
+     'somebody leaving is SAID, not silent — a name vanishing off the list reads as lost data');
+
+  /* ---- the disconnect sheet, which has been wrong before ---- */
+  social.processDisconnects = async () => 0;
+  let toldFlag = true;
+  social.remove = async () => ({ removed: true, told: toldFlag });
+  social.setTier = async () => ({});
+  social.friend = async () => ({ tier: 'light', doc: { profile: { name: 'Autumn' }, activity: [] } });
+
+  const friend = await mount(FriendView('u1'));
+  await settle(); await settle();
+  const disconnect = [...friend.querySelectorAll('button')]
+    .find((b) => b.textContent.trim() === 'Disconnect');
+  ok(Boolean(disconnect), 'a friend page offers Disconnect');
+  disconnect.click();
+  await settle();
+  const sheet = document.querySelector('.sheet');
+  const sheetText = sheet ? sheet.textContent.replace(/\s+/g, ' ') : '';
+  ok(/no longer be able to see anything of yours/.test(sheetText),
+     'the sheet says what it does to your side');
+  ok(/They are told/.test(sheetText),
+     '⚠️ and that they are TOLD — the half that makes it mutual (0j, built 2026-08-27)');
+  ok(/Until then/.test(sheetText),
+     '⚠️ and that it is EVENTUAL rather than instant, because their document is theirs to rewrite');
+  ok(!/only cuts YOUR side/.test(sheetText),
+     'the old one-sided wording is gone, because it is no longer true');
+  document.querySelector('.sheet-backdrop')?.remove();
+
+  restore();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

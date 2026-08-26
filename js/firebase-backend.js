@@ -267,6 +267,67 @@ export const FirebaseBackend = {
     return true;
   },
 
+  /* --- handoffs: a session recorded FOR somebody, offered for them to accept.
+   * Open work 0e's friend half. Same permission-denied-is-an-empty-list rule
+   * as reactions: not being able to read somebody's list is the normal answer
+   * for anybody who is not them, never an error to put on a screen. --- */
+
+  async listHandoffs(ownerUid) {
+    const c = await init();
+    try {
+      const snap = await c.fs.getDocs(c.fs.collection(c.db, 'users', ownerUid, 'handoffs'));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      if (err && err.code === 'permission-denied') return [];
+      throw err;
+    }
+  },
+
+  async writeHandoff(ownerUid, id, data) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', ownerUid, 'handoffs', id),
+      { ...data, at: c.fs.serverTimestamp() });
+    return true;
+  },
+
+  async deleteHandoff(ownerUid, id) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', ownerUid, 'handoffs', id));
+    return true;
+  },
+
+  /* --- disconnects: "I have left, take me off your list" (Open work 0j) --- */
+
+  async listDisconnects(ownerUid) {
+    const c = await init();
+    try {
+      const snap = await c.fs.getDocs(c.fs.collection(c.db, 'users', ownerUid, 'disconnects'));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      if (err && err.code === 'permission-denied') return [];
+      throw err;
+    }
+  },
+
+  // ⚠️ The document id is the LEAVER'S uid, which the rules check against the
+  // caller. That is what makes this "I am leaving" and not "evict them".
+  async announceDisconnect(ownerUid) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', ownerUid, 'disconnects', user.uid),
+      { from: user.uid, at: c.fs.serverTimestamp() });
+    return true;
+  },
+
+  async clearDisconnect(ownerUid, leaverUid) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', ownerUid, 'disconnects', leaverUid));
+    return true;
+  },
+
   /* --- invites --- */
 
   async createInvite(token, data) {

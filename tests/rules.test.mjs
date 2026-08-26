@@ -288,6 +288,115 @@ await allowed(deleteDoc(reaction(asAlex, TIM, 'k_sess-1_' + ALEX)),
 await allowed(deleteDoc(reaction(asTim, TIM, 'c_sess-1_' + ALEX + '_n1')),
   'the owner can moderate a comment off their own workout');
 
+
+console.log('\n--- Handoffs: a session recorded FOR somebody (Open work 0e) ---\n');
+
+const handoff = (db, owner, id) => doc(db, 'users', owner, 'handoffs', id);
+const handoffDoc = (from, over) => ({
+  from,
+  fromName: 'Alex',
+  at: serverTimestamp(),
+  session: {
+    date: '2026-08-27',
+    workoutName: 'Push',
+    entries: [{ exerciseName: 'Bench Press', sets: [{ weight: 135, reps: 8 }] }],
+  },
+  ...over,
+});
+
+// ⚠️ THE DENIALS FIRST, and the load-bearing one is the stranger: this path
+// lets one signed-in person write under ANOTHER person's uid, which is the
+// thing the rest of this file exists to forbid. It is acceptable only because
+// it is one document per offer, create-only, and the recipient's own training
+// is never touched — so the test that matters is that an unconnected person
+// cannot put anything in anybody's list at all.
+await denied(setDoc(handoff(asStranger, TIM, 'h_x1'), handoffDoc(STRANGER)),
+  'a stranger cannot offer a workout to somebody who has not published to them');
+await denied(setDoc(handoff(asAlex, TIM, 'h_x2'), handoffDoc(TIM)),
+  'the `from` field is proven, so an offer cannot be forged in somebody else\'s name');
+await denied(setDoc(handoff(asAlex, TIM, 'h_x3'), { ...handoffDoc(ALEX), extra: 1 }),
+  'an invented field is refused');
+await denied(setDoc(handoff(asAlex, TIM, 'h_x4'), { ...handoffDoc(ALEX), session: 'not a map' }),
+  'a session that is not a map is refused');
+await denied(setDoc(handoff(asAlex, TIM, 'h_x5'),
+  handoffDoc(ALEX, { session: { date: '2026-08-27', entries: [], sneaky: true } })),
+  'a session carrying a key the app does not write is refused');
+await denied(setDoc(handoff(asAlex, TIM, 'h_x6'),
+  handoffDoc(ALEX, { session: { date: '2026-08-27', workoutName: 'X',
+    entries: new Array(41).fill({ exerciseName: 'e', sets: [] }) } })),
+  'a 41-exercise session is refused — an offer is one workout, not a payload');
+
+// The happy path, and then the shape of the whole feature.
+await allowed(setDoc(handoff(asAlex, TIM, 'h_s1'), handoffDoc(ALEX)),
+  'a connected friend CAN offer Tim the session they recorded for him');
+await allowed(setDoc(handoff(asSam, TIM, 'h_s2'), { ...handoffDoc(SAM), fromName: 'Sam' }),
+  'and so can a light-tier friend — being able to see him is what qualifies you');
+
+// ⚠️ NO UPDATE PATH. Same argument as reactions: every mutation a rule does
+// not have is a mutation that cannot be got wrong.
+await denied(updateDoc(handoff(asAlex, TIM, 'h_s1'), { fromName: 'Someone else' }),
+  'the sender cannot edit an offer in place');
+await denied(updateDoc(handoff(asTim, TIM, 'h_s1'), { fromName: 'Someone else' }),
+  'and neither can the recipient — retract and resend instead');
+
+// Reading is the recipient's alone. Unlike a reaction there is nothing here
+// for a third party to see: an offer is addressed to one person.
+await allowed(getDocs(collection(asTim, 'users', TIM, 'handoffs')),
+  'the recipient lists what has been offered to them');
+await denied(getDocs(collection(asAlex, 'users', TIM, 'handoffs')),
+  '⚠️ even the SENDER cannot list Tim\'s offers — they would see what everyone else sent him');
+await denied(getDocs(collection(asStranger, 'users', TIM, 'handoffs')),
+  'and a stranger certainly cannot');
+
+// Deleting: the recipient acts on it, the sender can take it back.
+await denied(deleteDoc(handoff(asSam, TIM, 'h_s1')),
+  'one friend cannot delete another friend\'s offer');
+await allowed(deleteDoc(handoff(asAlex, TIM, 'h_s1')),
+  'the sender can retract an offer they should not have sent');
+await allowed(deleteDoc(handoff(asTim, TIM, 'h_s2')),
+  'and the recipient can decline one');
+
+console.log('\n--- Disconnects: "I have left, take me off your list" (Open work 0j) ---\n');
+
+const disc = (db, owner, leaver) => doc(db, 'users', owner, 'disconnects', leaver);
+const discDoc = (from) => ({ from, at: serverTimestamp() });
+
+// ⚠️ THE DOCUMENT ID IS THE CALLER'S UID, AND THAT IS THE WHOLE ACCESS
+// CONTROL. Without it, anybody connected could evict anybody else from
+// somebody's friends list — which is a far worse power than the one this
+// path exists to grant.
+await denied(setDoc(disc(asAlex, TIM, SAM), discDoc(SAM)),
+  '⚠️ Alex cannot announce SAM\'s departure — you may only ever leave for yourself');
+await denied(setDoc(disc(asAlex, TIM, ALEX), discDoc(SAM)),
+  'and the `from` field must match the caller too, so neither half can be forged alone');
+await denied(setDoc(disc(asAlex, TIM, ALEX), { from: ALEX, at: serverTimestamp(), note: 'x' }),
+  'an invented field is refused');
+
+await allowed(setDoc(disc(asAlex, TIM, ALEX), discDoc(ALEX)),
+  'Alex can tell Tim that Alex has gone');
+await allowed(setDoc(disc(asAlex, TIM, ALEX), discDoc(ALEX)),
+  'and doing it twice writes the same document — pressing Disconnect twice is harmless');
+
+// ⚠️ A stranger CAN leave a note, and that is deliberate rather than an
+// oversight: the note carries no information and grants nothing. Refusing it
+// would mean checking the graph, which is owner-only — so the check would have
+// to be a get() on every write, to prevent somebody announcing a departure
+// from a relationship that does not exist. A no-op note is the cheaper
+// outcome; the owner's client only ever removes somebody already in its graph.
+await allowed(setDoc(disc(asStranger, TIM, STRANGER), discDoc(STRANGER)),
+  'a stranger may leave a note, which does nothing — the client only removes people it has');
+
+// Reading is the owner's alone: this list is who has walked away from them.
+await allowed(getDocs(collection(asTim, 'users', TIM, 'disconnects')),
+  'the owner reads the notes so their client can act on them');
+await denied(getDocs(collection(asAlex, 'users', TIM, 'disconnects')),
+  'nobody else can read who has disconnected from Tim');
+
+await denied(deleteDoc(disc(asSam, TIM, ALEX)),
+  'and one person cannot delete another\'s note');
+await allowed(deleteDoc(disc(asAlex, TIM, ALEX)),
+  'the leaver can withdraw their own note if they reconnect');
+
 console.log('\n--- Nothing else in the database exists ---\n');
 
 await denied(setDoc(doc(asTim, 'users', TIM, 'collections', 'invented'), { rows: [], updatedAt: serverTimestamp() }),

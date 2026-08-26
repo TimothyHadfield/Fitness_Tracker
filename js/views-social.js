@@ -168,11 +168,71 @@ async function fillSocial(body, state) {
   // after the other, for the claimed half and the unclaimed half of the same
   // collection. On cellular that is a whole round trip spent asking a question
   // already answered.
-  let invites = [];
-  try {
-    invites = await social.invites();
-  } catch (_) { /* invites are a nicety; the friends list is the screen */ }
+  // ⚠️ IN PARALLEL, and none of them may take the screen down. Each is a
+  // separate cloud read and each one is optional — the friends list is the
+  // screen, and a failed invite fetch must not blank it.
+  const [invites, offers, departed] = await Promise.all([
+    social.invites().catch(() => []),
+    social.handoffs().catch(() => []),
+    // ⚠️ ACTING ON DEPARTURES HAPPENS HERE, on the screen where somebody would
+    // notice the result, rather than on a timer. Open work 0j: this is the half
+    // that makes a disconnect mutual — the other person left a note, and this
+    // is my client removing them and republishing without them. A background
+    // job that republishes is a background job that can surprise you.
+    social.processDisconnects().catch(() => 0),
+  ]);
   const claims = invites.filter((i) => i.claimedBy);
+
+  if (departed > 0) {
+    // Said once, plainly. Somebody disappearing off the list with no
+    // explanation is the kind of thing that reads as the app losing data.
+    parts.push(el('p', { class: 'note', text: departed === 1
+      ? 'Somebody disconnected from you, so they have been removed from your friends list.'
+      : `${departed} people disconnected from you and have been removed from your friends list.` }));
+  }
+
+  /* ⚠️ WORKOUTS SOMEBODY RECORDED FOR ME — Open work 0e's friend half.
+   *
+   * Tim's decision is the whole shape: the other person ACCEPTS it. Nothing
+   * has been written into my training yet; this is an offer sitting in a
+   * subtree of my account, and until I tap Add my sessions are untouched. That
+   * is also why the sender's name is on it — I should know whose word I am
+   * taking before I take it. */
+  if (offers.length) {
+    parts.push(el('h2', { class: 'section-head', text: 'Recorded for you' }));
+    for (const o of offers) {
+      const s = o.session || {};
+      const what = [s.workoutName || 'Workout', relativeDay(s.date)].filter(Boolean).join(' · ');
+      const exercises = (s.entries || []).map((x) => x && x.exerciseName).filter(Boolean);
+      parts.push(el('div', { class: 'row' },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: what }),
+          el('div', { class: 'row-sub', text:
+            `${o.fromName || 'A friend'} logged this for you`
+            + (exercises.length ? ` — ${exercises.slice(0, 4).join(', ')}` : '') }),
+        ),
+        el('button', {
+          class: 'btn small primary', text: 'Add',
+          onClick: async (e) => {
+            e.target.disabled = true;
+            try {
+              await social.acceptHandoff(o.id);
+              toast('Added to your training.');
+              refresh();
+            } catch (err) { e.target.disabled = false; toast(err.message); }
+          },
+        }),
+        el('button', {
+          class: 'btn small ghost', text: 'No',
+          onClick: async (e) => {
+            e.target.disabled = true;
+            try { await social.declineHandoff(o.id); toast('Turned down.'); refresh(); }
+            catch (err) { e.target.disabled = false; toast(err.message); }
+          },
+        }),
+      ));
+    }
+  }
 
   if (claims.length) {
     parts.push(el('h2', { class: 'section-head', text: 'Waiting for you' }));
@@ -530,12 +590,20 @@ export async function FriendView(uid) {
         // actually happens until the other half exists.
         message: `${conn.name || 'They'} will no longer be able to see anything of yours, and they `
           + 'drop off your friends list. It cannot un-see anything they have already looked at.\n\n'
-          + 'This only cuts YOUR side. Until they disconnect too, or change what they share, '
+          + 'They are told, so their app will drop you too the next time they open it. Until then '
           + 'their training may still be readable by this account.',
         confirmLabel: 'Disconnect',
         onConfirm: async () => {
-          try { await social.remove(uid); toast('Disconnected.'); location.hash = '#/social'; }
-          catch (err) { toast(err.message); }
+          try {
+            const r = await social.remove(uid);
+            // ⚠️ Say which of the two actually happened. "Disconnected" over a
+            // note that never reached them would be this sheet's promise going
+            // unkept silently — the exact fault it has already had once.
+            toast(r && r.told === false
+              ? 'Disconnected on your side — we could not reach them to tell them.'
+              : 'Disconnected.');
+            location.hash = '#/social';
+          } catch (err) { toast(err.message); }
         },
       }),
     }),

@@ -5405,3 +5405,37 @@ that it needs a card on file and there is no hard spending cap — only budget a
 reason to leave it off until live sync is actually wanted, not the money.
 
 2,799 assertions, all eleven suites green.
+
+────────────────────────────────────────────────────────────────────────────
+2026-08-27, third pass — joint workouts closed, disconnect finally mutual
+
+Items 3 and 4 from the list. Both needed a new rules path and both reused the kudos pattern, which
+is why they were quick.
+
+JOINT WORKOUTS (0e) — the friend-accept half. The guest half already kept a session under the
+recorder's account for someone with no account; now that they have one, it can be handed over. One
+create-only document per offer under the recipient, they see "Recorded for you" on Friends with who
+sent it and what's in it, and tap Add or No. Tim's decision was that the other person accepts it
+rather than it being written straight in — and there was never an alternative, because a direct
+write needs permission on their sessions document and that one document holds their whole training
+history. Accepting is THEIR app writing to THEIR account under rules that didn't change at all.
+
+MUTUAL DISCONNECT (0j) — it used to cut only your side, so after pressing Disconnect you could
+still read their training. Now the leaver drops a note under the other person's account and their
+app removes you and republishes. The document id IS the caller's uid, so you can only ever
+announce your own departure — otherwise anyone connected could evict anyone else. It's EVENTUAL
+though, and the sheet says so: nothing happens on their side until their app next opens, because
+their published document is theirs and I can't edit myself out of it. Anything better needs a
+server.
+
+Rules tests 66 → 92, all against the real engine. The denials are the point: a stranger can't offer
+a workout to someone who hasn't published to them, an offer can't be forged in someone else's name,
+there's no update path at all, even the sender can't list the recipient's offers, and Alex can't
+announce Sam's departure.
+
+One thing recorded rather than fixed: the emulator logs "evaluation errors" on several denials even
+after every field is guarded — and so does the reactions block that shipped before it. It's the
+get() inside the viewer check on documents that don't exist. Every denial is still a denial; I've
+noted in the rules file not to chase a quiet log, because it won't go quiet.
+
+Rules deployed. 2,813 assertions plus 92 in the emulator, all green.

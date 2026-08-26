@@ -1810,6 +1810,27 @@ export const social = {
     return row;
   },
 
+  /**
+   * Disconnect from somebody — ⚠️ NOW MUTUAL, as of 2026-08-27 (Open work 0j).
+   *
+   * Two halves, and they are not the same KIND of thing, which is why the
+   * sheet has to describe both:
+   *
+   * 1. **My side, immediately.** They come out of my graph and I republish, so
+   *    they lose access to my training on the next read. This half has always
+   *    worked.
+   * 2. **Their side, eventually.** I cannot take myself out of the `viewers`
+   *    list inside THEIR published document — that is the document holding
+   *    everything all their friends can see, and write permission on it is the
+   *    one thing this whole design exists to avoid granting. So I leave a note
+   *    under their uid saying I have gone, and their client acts on it the next
+   *    time it runs. Until then I am still in their viewers list.
+   *
+   * ⚠️ THE SECOND HALF IS BEST-EFFORT AND MUST NOT BLOCK THE FIRST. If the
+   * note cannot be written — they deleted their account, the rules refused,
+   * there is no signal — disconnecting must still work. A failure to tell
+   * somebody you left is not a reason to stay connected to them.
+   */
   async remove(uid) {
     const impl = requireRemote();
     const graph = await readGraphFresh(impl);
@@ -1819,7 +1840,46 @@ export const social = {
     // Republish FIRST-class: this is what actually cuts their access, because
     // the viewers list lives inside the document they were reading.
     await republish();
-    return true;
+    let told = false;
+    try {
+      await impl.announceDisconnect(uid);
+      told = true;
+    } catch (_) { /* best effort — see above */ }
+    return { removed: true, told };
+  },
+
+  /**
+   * Act on the notes other people left saying they have disconnected.
+   *
+   * ⚠️ Called on the Friends screen rather than on a timer, because that is
+   * where somebody would notice the result, and because a background job that
+   * republishes is a background job that can surprise you. Republishing is what
+   * actually removes them from `viewers`; the note is only the message.
+   *
+   * ⚠️ The note is deleted only AFTER the republish succeeds. Deleting first
+   * would lose the instruction if the republish then failed, and the leaver
+   * would stay in the viewers list with nothing left to say so.
+   */
+  async processDisconnects() {
+    const impl = requireRemote();
+    let notes = [];
+    try { notes = await impl.listDisconnects(impl.currentUid()); } catch (_) { return 0; }
+    if (!notes.length) return 0;
+
+    const graph = await readGraphFresh(impl);
+    const leaving = new Set(notes.map((n) => n.id).filter(Boolean));
+    const before = graph.connections.length;
+    graph.connections = graph.connections.filter((c) => !leaving.has(c.uid));
+
+    if (graph.connections.length !== before) {
+      await impl.writeGraph(graph);
+      socialWrote();
+      await republish();
+    }
+    for (const note of notes) {
+      await impl.clearDisconnect(impl.currentUid(), note.id).catch(() => {});
+    }
+    return before - graph.connections.length;
   },
 
   async addConnection(uid, name) {
@@ -2042,9 +2102,111 @@ export const social = {
     return published;
   },
 
+  /* --- handoffs: giving a friend the session you recorded for them ---
+   *
+   * Open work 0e's friend half. ⚠️ TIM'S DECISION IS THE SHAPE: *"the data is
+   * saved to each user's specific account"* — by THEM accepting it. A direct
+   * write would need permission on their `sessions` document, which holds
+   * every session they have ever recorded, and there is no narrower grant to
+   * make. So the recorder OFFERS and the recipient's own client accepts, which
+   * also means they see what was logged in their name before it lands.
+   */
+
+  /**
+   * Offer a guest session to the friend it was recorded for.
+   *
+   * ⚠️ The id is DETERMINISTIC on the guest session, so offering twice is one
+   * offer rather than two. The same argument the kudos id makes, and it matters
+   * more here: a duplicated offer accepted twice is a duplicated workout.
+   */
+  async offerSession(uid, session, guestName) {
+    const impl = requireRemote();
+    const settings = await store.getSettings();
+    const clean = {
+      // Only the keys the rules allow, and only the ones a session needs. The
+      // guest row's own id is deliberately NOT reused — see acceptHandoff().
+      date: session.date,
+      workoutName: String(session.workoutName || guestName || 'Workout').slice(0, 80),
+      entries: Array.isArray(session.entries) ? session.entries : [],
+    };
+    if (session.workoutId) clean.workoutId = session.workoutId;
+    if (session.startedAt) clean.startedAt = session.startedAt;
+    if (session.finishedAt) clean.finishedAt = session.finishedAt;
+    if (session.location) clean.location = session.location;
+
+    await impl.writeHandoff(uid, `h_${session.id}`, {
+      from: impl.currentUid(),
+      fromName: String(settings.displayName || '').slice(0, 60),
+      session: clean,
+    });
+    return true;
+  },
+
+  /** What has been offered to me, newest first. */
+  async handoffs() {
+    const impl = requireRemote();
+    const rows = await impl.listHandoffs(impl.currentUid());
+    return rows.sort((a, b) => instantOf(b.at) - instantOf(a.at));
+  },
+
+  /**
+   * Accept one: write it into MY OWN sessions, then clear the offer.
+   *
+   * ⚠️ THIS IS THE RECIPIENT'S OWN CLIENT WRITING TO THEIR OWN ACCOUNT, under
+   * the owner-only rules that have not changed. Nothing about accepting needs a
+   * foreign permission — which is the entire reason the feature has this shape.
+   *
+   * ⚠️ A FRESH ID, not the sender's. The sender's id belongs to a row in THEIR
+   * guestSessions, and reusing it would tie two people's records together by a
+   * key neither of them controls — so deleting one would look like it should
+   * affect the other. The offer is a message, not a shared object.
+   *
+   * ⚠️ And the offer is deleted only after the session is safely saved. The
+   * other order loses somebody's training if the save fails.
+   */
+  async acceptHandoff(id) {
+    const impl = requireRemote();
+    const rows = await impl.listHandoffs(impl.currentUid());
+    const row = rows.find((r) => r.id === id);
+    if (!row || !row.session) throw new Error('That workout is no longer here.');
+
+    const saved = await store.saveSession({
+      ...row.session,
+      id: uid('s'),
+      acceptedFrom: row.from || null,
+    });
+    await impl.deleteHandoff(impl.currentUid(), id).catch(() => {});
+    // It is my training now, so my friends should see it like any other.
+    await republish().catch(() => {});
+    return saved;
+  },
+
+  /** Turn one down. Nothing is written to my training. */
+  async declineHandoff(id) {
+    const impl = requireRemote();
+    await impl.deleteHandoff(impl.currentUid(), id);
+    return true;
+  },
+
+  /** Take back one I sent, before they act on it. */
+  async retractHandoff(uid, sessionId) {
+    const impl = requireRemote();
+    await impl.deleteHandoff(uid, `h_${sessionId}`);
+    return true;
+  },
+
   /** Force every projection to be rebuilt — after logging a workout, say. */
   async publish() { return republish(); },
 };
+
+/** A Firestore Timestamp, a Date or an ISO string -> milliseconds. */
+function instantOf(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (typeof value.seconds === 'number') return value.seconds * 1000;
+  const t = Date.parse(value);
+  return Number.isFinite(t) ? t : 0;
+}
 
 /* ------------------------------------------------------------------ *
  * Derived data used by the graph + calendar

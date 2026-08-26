@@ -34,8 +34,8 @@ explicit instruction:
   **`docs/airpods-plan.md`** (research done, NOTHING deployed, his instruction — stem presses
   buildable, head-motion impossible on web).
 
-**Tests: 2,799 across eleven suites** (data-layer 1348, render 520, social 134, a11y 85), plus
-66 rules assertions in the emulator and 12 in sw-update. Tim also **pre-authorised sub-agents**
+**Tests: 2,813 across eleven suites** (data-layer 1343, render 534, social 134, a11y 85), plus
+92 rules assertions in the emulator and 12 in sw-update. Tim also **pre-authorised sub-agents**
 (saved to memory). ⚠️ **Both of those carried into 2026-08-27 and are now half-closed**: the CDP visual pass RAN (the
 chooser, activity log and Account screen are screenshotted and overflow-free) and the full audit
 ran on all four palettes. **Still outstanding on Tim's own phone**: the friend-name heal, a real
@@ -203,6 +203,109 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-27, third pass — ⚠️ JOINT WORKOUTS CLOSE, AND DISCONNECT IS MUTUAL AT LAST (0e, 0j)
+
+Items 3 and 4 off Tim's list. Both needed a new Firestore rules path, and both got the one the
+kudos work established on 2026-08-26 — which is exactly why they were cheap this time.
+
+### 1. ⚠️ 0e IS CLOSED — a session recorded for a friend can now be handed to them
+
+The guest half shipped 2026-08-26 (a name with no account, kept on the recorder's phone). This is
+the other half, and **Tim's own decision is the whole shape: the other person ACCEPTS it.**
+
+⚠️ **WHY THERE WAS NEVER AN ALTERNATIVE.** A direct write needs permission on
+`users/{them}/collections/sessions` — and that ONE DOCUMENT holds every session they have ever
+recorded. There is no narrower grant, because Firestore grants per document. So a "just write it
+into their account" version of this feature is a version where a bug in my client can replace your
+training history.
+
+**What shipped**: `users/{recipient}/handoffs/{id}` — one create-only document per offer,
+shape-checked at the wire, in a subtree nothing else reads. The recipient sees **"Recorded for
+you"** on Friends with the sender's name and the exercises, and **Add** or **No**.
+
+- ⚠️ **ACCEPTING IS THE RECIPIENT'S OWN CLIENT WRITING TO ITS OWN ACCOUNT**, under the owner-only
+  rules that have not changed by a character. Nothing about this feature widens the private data.
+- ⚠️ **A fresh id on accept, not the sender's.** The sender's id belongs to a row in THEIR
+  `guestSessions`, and reusing it would tie two people's records together by a key neither
+  controls — deleting one would look like it should affect the other. **An offer is a message,
+  not a shared object.**
+- **The offer is deleted only after the session is safely saved**, and the session is republished
+  so their friends see it like any other. The other order loses somebody's training if the save
+  fails.
+- **Sending asks WHO from the real friends list** rather than matching the guest's name. A guest
+  name is free text typed mid-workout ("Alex", "alex", "my brother"), and name-matching would
+  eventually put somebody's training in the wrong account.
+- **Deterministic id per guest session**, so offering twice is one offer. A duplicated offer
+  accepted twice is a duplicated workout.
+
+### 2. ⚠️ 0j IS CLOSED — disconnect is mutual, and the sheet finally describes what happens
+
+`social.remove()` edited only the leaver's own graph, so the other person's published copy still
+listed them in `viewers` and **they could go on reading that person's training after pressing
+Disconnect.** The sheet was corrected on 2026-08-24 to stop promising otherwise, which was not the
+same as fixing it.
+
+⚠️ **A TOMBSTONE, NOT AN EDIT, AND THAT IS THE DESIGN.** The obvious fix is for the leaver to
+remove themselves from the other person's `viewers` list — which means write permission on
+`users/{them}/shared/{tier}`, the document holding everything all their friends can see. One bad
+write there destroys the lot. So the leaver drops a note at
+`users/{them}/disconnects/{leaverUid}` and **the owner's client acts on it**, republishing without
+them.
+
+⚠️ **THE DOCUMENT ID IS THE CALLER'S OWN UID, and that is the entire access control**: you may
+announce your own departure and nobody else's. Without it, anybody connected could evict anybody
+else from somebody's friends list — a far worse power than the one this path exists to grant. It
+also makes it idempotent: pressing Disconnect twice writes the same document.
+
+⚠️ **AND IT IS EVENTUAL, WHICH THE SHEET NOW SAYS.** Nothing happens on their side until their app
+next opens. *"They are told, so their app will drop you too the next time they open it. Until then
+their training may still be readable by this account."* Claiming "cut in both directions,
+instantly" would be the same class of lie as the sentence this sheet originally shipped with, just
+a smaller one. **Anything stronger needs a server, which this app does not have.**
+
+**Processed on the Friends screen**, not on a timer — that is where somebody would notice the
+result, and a background job that republishes is a background job that can surprise you.
+**Somebody leaving is said out loud** (*"2 people disconnected from you…"*), because a name
+vanishing off a list with no explanation reads as the app losing data. And the note is deleted only
+**after** the republish succeeds, or a failed republish would lose the instruction and leave the
+leaver in the viewers list with nothing left to say so.
+
+⚠️ **Telling them is BEST-EFFORT and must never block the disconnect.** If the note cannot be
+written — they deleted their account, no signal — disconnecting still works, and **the toast says
+which of the two happened** rather than reporting success over a promise that went unkept.
+
+### 3. Tested as somebody who is not you — `tests/rules.test.mjs` 66 → 92
+
+The only tests in this project that can prove a permission. The denials are the point:
+
+- a stranger cannot offer a workout to somebody who has not published to them;
+- `from` is proven, so an offer cannot be forged in another person's name;
+- an invented field, a non-map session, a session carrying a key the app never writes, and a
+  41-exercise payload are all refused **at the wire**;
+- **there is no update path at all** — not for the sender, not for the recipient;
+- ⚠️ **even the SENDER cannot list the recipient's offers**, which would show them what everybody
+  else had sent;
+- **Alex cannot announce Sam's departure** — the id/caller check — and the `from` field must match
+  too, so neither half can be forged alone.
+
+⚠️ **ONE THING RECORDED RATHER THAN FIXED.** The emulator logs *evaluation errors* on several of
+these denials even after every field is existence-checked, and **so does the reactions block that
+shipped on 2026-08-26** (L233/L243). The remaining source is the `get()` inside `viewerOfAnyTier()`
+on documents that do not exist, not a missing guard. Every denial is still a denial — that is what
+the tests assert and what matters — but the rules file now says so, because the obvious next move
+is to keep adding guards until the log goes quiet and it never will.
+
+⚠️ **A stranger CAN leave a disconnect note, and that is priced rather than overlooked.** Refusing
+it would mean checking the graph, which is owner-only, so the check would have to be a billed
+`get()` on every write to prevent a message that grants nothing and carries no information. The
+owner's client only ever removes somebody already in its graph, so the note is a no-op. **Cheaper
+to allow a no-op than to pay a read on every write to forbid one.**
+
+**Rules deployed.** Tests: rules 66 → 92, render 520 → 534. **2,813 across eleven suites, all
+green**, plus 92 in the emulator and 12 in sw-update.
 
 ---
 
@@ -2803,16 +2906,16 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 
 | | What | State |
 |---|---|---|
-| **1** | **0e — joint workouts** | ⚠️ **THE GUEST HALF IS BUILT AND DEPLOYED, 2026-08-26** — people chips in the runner, per-person suggestions, own collection, day-view section; see that day's section. **Still open: the friend-accept half** (publish a session to a real friend's account for them to accept) — same new-rules-path wall as 0l, and 0l is being built first |
+| **1** | **0e — joint workouts** | ✅ **CLOSED 2026-08-27.** The GUEST half shipped 2026-08-26 (people chips in the runner, per-person suggestions, its own collection, a day-view section). The FRIEND-ACCEPT half shipped 2026-08-27: `users/{recipient}/handoffs/{id}`, one create-only document per offer, the recipient sees "Recorded for you" on Friends and taps Add — and ⚠️ **accepting is THEIR client writing to THEIR own account** under owner-only rules that did not change by a character. 26 new rules assertions |
 | **2** | **0h — the ratio table** | ✅ **NEARLY CLOSED 2026-08-27.** 28 lifts swept 2026-08-26, then the raise family and the incline dumbbell press derived 2026-08-27 — lateral raise 0.30→0.53, front raise 0.30→0.54, rear delt fly 0.30→0.56, incline DB bench 0.70→0.80. ⚠️ **The raises had been flattering by ~80 %** (a 40 lb lateral raise read as a 267 lb press). Machine triceps extension is now labelled *no published standard* — the note claiming one exists was wrong. **Genuinely open, and small**: decline dumbbell bench, the Seated/Arnold offsets, spider curl |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, but its headline item CLOSED on 2026-08-25**: *"nothing a user can see on Home ever grows"* was answered by making Home a feed, which is nothing but growth. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
 | **4** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED 2026-08-26** — invisible hit halos grow every muscle ~10px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44px lands on the illustration itself and stays Tim's call |
-| **5** | **0j — mutual disconnect** | ⚠️ **OPEN.** The sheet stopped promising it on 2026-08-24; the feature is still one-sided. Needs a new rules path |
+| **5** | **0j — mutual disconnect** | ✅ **CLOSED 2026-08-27.** A tombstone at `users/{them}/disconnects/{leaverUid}` — ⚠️ **the document id IS the caller's uid**, so you may only ever leave for yourself and nobody can evict anybody else — and the owner's client acts on it and republishes without them. ⚠️ **EVENTUAL, not instant**, and the sheet says so: their published document is theirs, so nothing changes on their side until their app next opens. Anything stronger needs a server |
 | **6** | **0b(c) — the cloud ceiling, which is ~520 sessions and not ~950** | ✅ **The warning half is BUILT** (Settings, from 80 %, computed from the account's own rows). ⚠️ **The ceiling was corrected a second time the same day** — the morning's figure measured JSON, and Firestore charges 1.66× that. **Still open: the document-per-session split**, a migration over live data. Nobody is near it |
 | **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. §16 sets the hard constraint |
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
-| **9b** | **0l — kudos and comments** | ✅ **BUILT AND DEPLOYED 2026-08-26** — create-only reaction docs under the owner, viewer-of-any-tier may write, no update path, 66 rules assertions. See that day's second-pass section. The same rules pattern is the template 0e's friend-accept half and 0j need |
+| **9b** | **0l — kudos and comments** | ✅ **BUILT AND DEPLOYED 2026-08-26** — create-only reaction docs under the owner, viewer-of-any-tier may write, no update path. ⚠️ **The pattern it established is what made 0e and 0j cheap on 2026-08-27** — both reused it. See that day's second-pass section. The same rules pattern is the template 0e's friend-accept half and 0j need |
 | **9c** | **0m — location on feed cards** | ✅ **BUILT AND DEPLOYED 2026-08-26** — a hand-typed label (never GPS), carried forward between sessions, published at mid+ beside `startedAt`. The privacy decision is that nothing more precise than what the owner typed can exist to leak. See the third-pass section |
 | **10** | **0k — the colour direction** | ✅ **FULLY CLOSED 2026-08-27.** Tim picked all three; Settings → Colour: Gold/Teal/Indigo/Ember, each with a designed light theme, swept by the a11y suite (22 → 85). ⚠️ **The last caveat is gone**: the full browser audit has now run on all four palettes — 240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
@@ -3206,7 +3309,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2799 assertions across eleven suites** (recounted 2026-08-27 second pass: data-layer 1348, render 520, social 134, a11y 85), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2813 assertions across eleven suites** (recounted 2026-08-27 third pass: data-layer 1343, render 534, social 134, a11y 85), plus 12 in  and 92 in  (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -3220,7 +3323,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **60** screen/width/theme combinations, and since 2026-08-27 takes a `PALETTE` env var (gold/teal/indigo/ember) so all four can be swept: **240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow**. Set through the ATTRIBUTE, because the demo backend reseeds on every reload. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 430 assertions, mounts every screen. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
-| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 46 assertions, who may READ your data. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
+| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 92 assertions, who may READ your data — and since 2026-08-27 who may OFFER you a workout and who may announce a disconnection. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
