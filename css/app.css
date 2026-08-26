@@ -823,6 +823,21 @@ select.input {
 .rest-bar.is-done .rest-reset { color: var(--good); }
 .rest-bar.is-done .rest-label { color: var(--good); font-weight: 700; }
 
+/* ── People — who the steppers record for (guests, Open work 0e) ──────────
+   One chip per person, above the progress bar. The add control keeps its
+   words while the session is solo — the feature has to be findable the day
+   a friend turns up — and collapses to a quiet + once names exist. The
+   chips reuse .chip, so the pill, the 44px invisible hit target and the
+   aria-pressed accent state are the ones every other chip already has. */
+.people-bar {
+  flex: none; display: flex; gap: 6px; align-items: center;
+  padding: 8px var(--pad) 0;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.people-bar::-webkit-scrollbar { display: none; }
+.person-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
+.person-add { background: none; color: var(--ink-soft); }
+
 .session-progress { flex: none; display: flex; gap: 3px; padding: 7px var(--pad) 0; }
 .session-progress span { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); }
 .session-progress span.done { background: var(--good); }

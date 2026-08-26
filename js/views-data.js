@@ -388,15 +388,59 @@ function dataTabs(active, onChartMode) {
  * ================================================================== */
 
 export async function DayView(date) {
-  const [activity, exMap] = await Promise.all([activityByDate(), store.getExerciseMap()]);
+  const [activity, exMap, guestRows] = await Promise.all([
+    activityByDate(), store.getExerciseMap(),
+    // Older stores have no guest collection; an empty list is the right read.
+    store.getGuestSessions().catch(() => []),
+  ]);
   const rec = activity.get(date) || { sessions: [], benchmarks: [] };
+  const guestSessions = guestRows.filter((g) => g.date === date);
 
   const scroll = [];
 
-  if (!rec.sessions.length && !rec.benchmarks.length) {
+  if (!rec.sessions.length && !rec.benchmarks.length && !guestSessions.length) {
     scroll.push(emptyState('Nothing recorded on this day',
       'Days fill in automatically when you finish a workout or log a benchmark.'));
   }
+
+  // The set-by-set body of one session, shared by the owner's records and the
+  // guests' — what was done reads identically whoever did it.
+  const entryNodes = (s) => s.entries.map((e, ei) => {
+    const ex = exMap.get(e.exerciseId);
+    const fields = ex ? ex.fields : ['weight', 'reps'];
+    const loadType = ex ? ex.loadType : null;
+    // A superset was performed as one unit, so the record has to say so —
+    // otherwise the day reads as two ordinary exercises that happened to be
+    // next to each other, which is not what was done.
+    const prev = s.entries[ei - 1];
+    const opensGroup = e.group != null && (!prev || prev.group !== e.group);
+    return el('div', { class: 'detail-ex' + (e.group == null ? '' : ' in-group') },
+      opensGroup
+        ? el('div', { class: 'detail-group-label', text:
+            groupLabel(s.entries.filter((o) => o.group === e.group).length) })
+        : null,
+      el('div', { class: 'detail-ex-head' },
+        el('span', { class: 'detail-ex-name', text: e.exerciseName }),
+        loadType ? loadBadge(loadType) : null,
+      ),
+      el('div', { class: 'detail-sets' },
+        // A set and its drops are ONE run, so a wrap can never leave a drop
+        // sitting next to the wrong set number.
+        ...e.sets.map((set, i) => el('div', { class: 'detail-set-run' },
+          el('div', { class: 'detail-set' },
+            el('b', { text: `Set ${i + 1}` }),
+            el('span', { text: fmtSet(set, fields, loadType) }),
+          ),
+          // Mini-sets follow their set and are never given a set number
+          // of their own — one drop set or myo-rep is one hard set (§6).
+          ...minisOf(set).map((d) => el('div', { class: 'detail-set is-drop' },
+            el('b', { text: '↳ ' + miniLabel(e.setType).toLowerCase() }),
+            el('span', { text: fmtSet(d, fields, loadType) }),
+          )),
+        )),
+      ),
+    );
+  });
 
   for (const s of rec.sessions) {
     const setCount = s.entries.reduce((n, e) => n + e.sets.length, 0);
@@ -418,43 +462,37 @@ export async function DayView(date) {
           onConfirm: async () => { await store.deleteSession(s.id); toast('Record deleted'); refresh(); },
         })),
       ),
-      ...s.entries.map((e, ei) => {
-        const ex = exMap.get(e.exerciseId);
-        const fields = ex ? ex.fields : ['weight', 'reps'];
-        const loadType = ex ? ex.loadType : null;
-        // A superset was performed as one unit, so the record has to say so —
-        // otherwise the day reads as two ordinary exercises that happened to be
-        // next to each other, which is not what was done.
-        const prev = s.entries[ei - 1];
-        const opensGroup = e.group != null && (!prev || prev.group !== e.group);
-        return el('div', { class: 'detail-ex' + (e.group == null ? '' : ' in-group') },
-          opensGroup
-            ? el('div', { class: 'detail-group-label', text:
-                groupLabel(s.entries.filter((o) => o.group === e.group).length) })
-            : null,
-          el('div', { class: 'detail-ex-head' },
-            el('span', { class: 'detail-ex-name', text: e.exerciseName }),
-            loadType ? loadBadge(loadType) : null,
-          ),
-          el('div', { class: 'detail-sets' },
-            // A set and its drops are ONE run, so a wrap can never leave a drop
-            // sitting next to the wrong set number.
-            ...e.sets.map((set, i) => el('div', { class: 'detail-set-run' },
-              el('div', { class: 'detail-set' },
-                el('b', { text: `Set ${i + 1}` }),
-                el('span', { text: fmtSet(set, fields, loadType) }),
-              ),
-              // Mini-sets follow their set and are never given a set number
-              // of their own — one drop set or myo-rep is one hard set (§6).
-              ...minisOf(set).map((d) => el('div', { class: 'detail-set is-drop' },
-                el('b', { text: '↳ ' + miniLabel(e.setType).toLowerCase() }),
-                el('span', { text: fmtSet(d, fields, loadType) }),
-              )),
-            )),
-          ),
-        );
-      }),
+      ...entryNodes(s),
     ));
+  }
+
+  /* Sessions recorded FOR A GUEST — somebody trained with, on this phone,
+   * with no account of their own (Open work 0e). Kept apart from the owner's
+   * records because they are apart: nothing in them touches the owner's
+   * graphs, muscle map or volume, and the label has to make that visible
+   * rather than leave a stranger's squat looking like the owner's. No edit —
+   * a guest record is a favour held for somebody, not training to maintain;
+   * delete covers the mistyped ones. */
+  if (guestSessions.length) {
+    scroll.push(el('div', { class: 'section-label', text: 'Recorded for others' }));
+    for (const g of guestSessions) {
+      const setCount = g.entries.reduce((n, e) => n + e.sets.length, 0);
+      scroll.push(el('div', { class: 'card' },
+        el('div', { class: 'day-head' },
+          el('div', { style: 'flex:1;min-width:0' },
+            el('div', { class: 'day-title', text: `${g.guestName} — ${g.workoutName || 'Workout'}` }),
+            el('div', { class: 'row-sub', text:
+              `Their session, kept on your account · ${g.entries.length} exercise${g.entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` }),
+          ),
+          iconBtn('trash', `Delete ${g.guestName}'s record`, () => confirmSheet({
+            title: 'Delete this record?',
+            message: `${g.guestName}’s “${g.workoutName}” from ${fmtDateLong(date)} will be permanently removed. It is the only copy — they have no account it could live on.`,
+            onConfirm: async () => { await store.deleteGuestSession(g.id); toast('Record deleted'); refresh(); },
+          })),
+        ),
+        ...entryNodes(g),
+      ));
+    }
   }
 
   // Benchmarks derived from a benchmark WORKOUT are already shown, set by set,

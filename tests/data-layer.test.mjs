@@ -3288,5 +3288,78 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   localStorage.getItem = realGet;
 }
 
+/* ==================================================================
+ * GUEST SESSIONS — a name with no account (Open work 0e, guest half)
+ *
+ * The load-bearing property is SEPARATION: a guest's training is stored in
+ * its own collection, so nothing that reads `sessions` — the muscle map, the
+ * charts, volume, the social projection — can ever count it as the owner's.
+ * These tests pin the separation from both sides, because a one-way check
+ * would pass if both reads were accidentally pointed at the same rows.
+ * ================================================================== */
+{
+  const { store: st, clearReadCache } = await import('../js/store.js');
+  await st.clearAll();
+  clearReadCache();
+
+  const guestRow = await st.saveGuestSession({
+    guestName: 'Alex',
+    workoutId: 'w1', workoutName: 'Push',
+    date: '2026-08-20',
+    entries: [{ exerciseId: 'bench', exerciseName: 'Barbell Bench Press',
+      sets: [{ weight: 95, reps: 8 }] }],
+  });
+  ok(Boolean(guestRow.id), 'a guest session gets an id');
+
+  await st.saveSession({
+    workoutId: 'w1', workoutName: 'Push', date: '2026-08-21',
+    entries: [{ exerciseId: 'bench', exerciseName: 'Barbell Bench Press',
+      sets: [{ weight: 185, reps: 5 }] }],
+  });
+
+  const mine = await st.getSessions();
+  const theirs = await st.getGuestSessions();
+  ok(mine.length === 1 && mine[0].entries[0].sets[0].weight === 185,
+     '⚠️ the owner\'s sessions do not contain the guest\'s training');
+  ok(theirs.length === 1 && theirs[0].guestName === 'Alex' && theirs[0].entries[0].sets[0].weight === 95,
+     '⚠️ the guest\'s session is readable, under their name, with their numbers');
+
+  // Newest first, same contract as getSessions.
+  await st.saveGuestSession({ guestName: 'Alex', workoutId: 'w1', workoutName: 'Push',
+    date: '2026-08-22', entries: [] });
+  const sorted = await st.getGuestSessions();
+  ok(sorted[0].date === '2026-08-22' && sorted[1].date === '2026-08-20',
+     'guest sessions come back newest first');
+
+  // Passing the id back is an UPSERT, not an insert — this is what makes
+  // tapping Finish twice after a mid-save failure safe rather than doubling.
+  await st.saveGuestSession({ ...guestRow, workoutName: 'Push (edited)' });
+  ok((await st.getGuestSessions()).length === 2,
+     '⚠️ re-saving with the same id updates in place rather than duplicating');
+
+  await st.deleteGuestSession(guestRow.id);
+  ok((await st.getGuestSessions()).length === 1
+     && (await st.getSessions()).length === 1,
+     'deleting a guest session leaves the owner\'s sessions alone');
+
+  // A backup carries guests, and restore gatekeeps them like sessions: the
+  // getter sorts on the date, so a dateless row would crash every read.
+  const dump = await st.exportAll();
+  ok(Array.isArray(dump.guestSessions) && dump.guestSessions.length === 1,
+     'a backup carries guest sessions');
+  let refused = null;
+  // The row carries an id so the generic id gate cannot be the one that
+  // fires — this pins the DATE gate specifically, the field whose absence
+  // crashes getGuestSessions()'s sort.
+  try { st.inspectBackup({ guestSessions: [{ id: 'g-1', guestName: 'Alex' }] }); }
+  catch (e) { refused = e.message; }
+  ok(Boolean(refused) && /date/.test(refused),
+     `a guest row with no date is refused before anything is written (${refused})`);
+
+  await st.clearAll();
+  clearReadCache();
+  ok((await st.getGuestSessions()).length === 0, 'clearAll clears guest sessions too');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

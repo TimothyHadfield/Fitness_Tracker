@@ -5139,3 +5139,33 @@ start time the mid tier began publishing today.
 Every claim in the new header was verified against the code rather than from memory — the nav array,
 the Data segments, the default mode, the feed's existence, the Goals route and its link, and that
 More details defaults off. 2474 green, pushed.
+
+---
+
+## 2026-08-26 — Tim confirms the full backlog; guest workouts ship
+
+Tim asked for a fresh read of what deployed most needs improving. Plan presented: ratio table,
+PRs on the finish screen, body-map tap targets, polish sweep — with joint workouts, kudos/comments,
+location and colour options listed as out of scope ("new features, not improvements"). Tim's reply:
+add them all — "I wanted them deployed in the last session, and I'm confident I want them" — and
+start coding.
+
+First piece built and deployed: THE GUEST HALF OF JOINT WORKOUTS (the case he hit twice in the
+gym — his friend could not sign in). A people bar in the session runner: You / guest chips / "Add a
+person". A guest is a name with no account; their sets save to a new `guestSessions` collection on
+the recorder's own account. Switching chips switches the whole per-person state — entries, history,
+progression suggestion, walk position, body weight — so two people on the same bar never share a
+prescription. Day view shows "Recorded for others" with the full set-by-set body and delete.
+
+The design calls worth remembering: a separate collection rather than a flag on sessions (a
+forgotten filter would count a guest's training as the owner's and publish it to friends — a
+collection nothing else reads cannot be mis-counted); finish() minting its save ids once on the
+draft, because multi-row saves made the old "failed = nothing landed" retry unsafe; and the owner
+saving nothing when they only coached.
+
+Firestore rules updated and deployed (knownCollection carries guestSessions; the store↔rules
+agreement test pins the pair). Backups carry guests; restore gatekeeps a dateless guest row.
+data-layer 1199→1208, render 430→443, all eleven suites green. Pushed.
+
+Still queued from the confirmed plan: kudos/comments rules path, location on feed cards, the ratio
+table, PRs on finish, body-map targets, polish sweep, colour options.

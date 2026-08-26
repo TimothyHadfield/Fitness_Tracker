@@ -17,7 +17,7 @@ const NS = 'ftrack:v1:';
 
 // ⚠️ Adding a collection here also requires adding it to knownCollection() in
 // firestore.rules and redeploying, or every cloud write to it is denied.
-const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals'];
+const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals', 'guestSessions'];
 
 /* ------------------------------------------------------------------ *
  * Local backend
@@ -890,6 +890,45 @@ export const store = {
     await dropSessionBenchmarks(id);
   },
 
+  /* --- guest sessions ---
+   *
+   * A GUEST is a name with no account — Tim's friend who could not sign in.
+   * The recorder's phone runs the workout for both of them, and the guest's
+   * half is saved HERE, in the recorder's own data (Open work 0e, guest half).
+   *
+   * ⚠️ A SEPARATE COLLECTION, not a flag on `sessions`, and that is the
+   * load-bearing choice. Everything that reads sessions — the muscle map, the
+   * charts, weekly volume, the published social projection, progression —
+   * would need a filter it could forget, and one forgotten filter counts a
+   * guest's training as the owner's, publishes it to the owner's friends, and
+   * moves the owner's suggestions. A collection nothing else reads cannot be
+   * mis-counted by code that has never heard of it.
+   *
+   * Rows are session-shaped plus `guestName`, so historyFor() and the day
+   * view can read them with the machinery sessions already have. No
+   * isBenchmark and no derived benchmarks: a benchmark is a claim filed into
+   * the OWNER's history, and none of this is the owner's training.
+   */
+
+  async getGuestSessions() {
+    const rows = await readCached('guestSessions');
+    return rows.sort((a, b) => b.date.localeCompare(a.date));
+  },
+
+  async saveGuestSession(session) {
+    const rows = await backend.read('guestSessions');
+    const row = { ...session };
+    if (!row.id) row.id = uid('g');
+    if (!row.createdAt) row.createdAt = new Date().toISOString();
+    await backend.write('guestSessions', upsert(rows, row));
+    return row;
+  },
+
+  async deleteGuestSession(id) {
+    const rows = await backend.read('guestSessions');
+    await backend.write('guestSessions', rows.filter((r) => r.id !== id));
+  },
+
   /* --- benchmarks --- */
 
   /**
@@ -1119,6 +1158,9 @@ export const store = {
     // would lock people out of their own data over nothing.
     const REQUIRED = {
       sessions: (r) => (isDate(r.date) ? null : 'a session with no usable date'),
+      // Same exposure as sessions: getGuestSessions() sorts on the date, so a
+      // dateless row would crash the read for every screen that asks.
+      guestSessions: (r) => (isDate(r.date) ? null : 'a guest record with no usable date'),
       benchmarks: (r) => (isDate(r.date) ? null : 'a benchmark with no usable date'),
       bodyWeight: (r) => (isDate(r.date) && typeof r.weight === 'number' && r.weight > 0
         ? null : 'a weigh-in with no usable date or weight'),
@@ -1156,8 +1198,8 @@ export const store = {
     // ⚠️ EVERY COLLECTION IS REPLACED, INCLUDING THE ONES THE FILE DOES NOT
     // CARRY, and that is a deliberate change from the merge this used to do.
     //
-    // A backup is a SNAPSHOT of a whole account — exportAll() writes all eight
-    // collections — so "restore" means "put me back in that state". The old
+    // A backup is a SNAPSHOT of a whole account — exportAll() writes every
+    // collection — so "restore" means "put me back in that state". The old
     // merge left collections the file did not mention untouched, and the result
     // was a class of bug the rest of this codebase already knows by name: a
     // foreign key is only valid while the rest of that set still exists.

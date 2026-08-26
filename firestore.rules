@@ -30,7 +30,7 @@ service cloud.firestore {
     // there and not here has every cloud write DENIED while localStorage keeps
     // working — invisible until someone signs in.
     function knownCollection(name) {
-      return name in ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals'];
+      return name in ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals', 'guestSessions'];
     }
 
     // Shape check. The app writes one document per collection, holding the

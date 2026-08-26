@@ -2303,6 +2303,77 @@ ok(!data.querySelector('.rep-target'),
      'two fields get two DISTINCT ids — generated, not a constant');
 }
 
+/* ================= guests in the session runner (Open work 0e) =================
+   Tim, from the gym, twice: record a friend's sets on your phone. The guest is
+   a name with no account, their sets live in their own collection, and the
+   load-bearing assertions are the SEPARATIONS — the guest's numbers never
+   appear under You, and never land in the owner's sessions. */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const w = await store.saveWorkout({
+    name: 'Buddy bench day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+
+  const bar = s.querySelector('.people-bar');
+  ok(Boolean(bar), 'the runner says who it is recording for');
+  const chips = () => [...s.querySelectorAll('.person-chip')];
+  ok(chips().some((b) => b.textContent.trim() === 'You'), 'You are the first person');
+  const addBtn = chips().find((b) => /Add a person/.test(b.textContent));
+  ok(Boolean(addBtn), 'adding a person is offered in words while the session is solo');
+
+  // Add Alex through the sheet.
+  addBtn.click(); await settle();
+  const sheet = document.querySelector('.sheet');
+  ok(Boolean(sheet), 'add-a-person opens a sheet');
+  ok(/no account|need an account/i.test(sheet.textContent),
+     'the sheet says a guest needs no account and where their sets are kept');
+  sheet.querySelector('input').value = 'Alex';
+  [...sheet.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+  await settle(); await settle();
+
+  const alexChip = chips().find((b) => b.textContent.trim() === 'Alex');
+  ok(Boolean(alexChip), 'the guest appears as a chip');
+  ok(alexChip && alexChip.getAttribute('aria-pressed') === 'true',
+     'adding a guest switches straight to recording for them');
+
+  // Record 95 lbs for Alex.
+  const gWeight = s.querySelector('.step-value');
+  gWeight.value = '95';
+  gWeight.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+
+  // Switch back to You — the guest's number must not follow.
+  chips().find((b) => b.textContent.trim() === 'You').click();
+  await settle();
+  ok(Number(s.querySelector('.step-value').value) !== 95,
+     '⚠️ switching back to You does not show the guest\'s numbers');
+
+  // Record the owner's own set and finish.
+  const oWeight = s.querySelector('.step-value');
+  oWeight.value = '185';
+  oWeight.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle();
+
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  ok(saved && saved.entries[0].sets[0].weight === 185,
+     'the owner\'s session holds the owner\'s numbers');
+  ok(saved && JSON.stringify(saved).indexOf('95') === -1,
+     '⚠️ and nothing of the guest\'s is in it');
+  const gs = (await store.getGuestSessions()).filter((g) => g.workoutId === w.id);
+  ok(gs.length === 1 && gs[0].guestName === 'Alex' && gs[0].entries[0].sets[0].weight === 95,
+     '⚠️ the guest\'s session is saved under their name with their numbers');
+  ok(/Also recorded for Alex/.test(document.getElementById('app').textContent),
+     'the finish screen says the guest\'s half was saved too');
+  ok(localStorage.getItem(DRAFT) === null, 'the draft is cleared after a multi-person save');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

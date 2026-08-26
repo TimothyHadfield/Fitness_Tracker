@@ -4,8 +4,14 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-25, end of a very long day. **The app was restructured, and most of what a
-2026-08-24 reader knew about its shape is now wrong.** Three batches landed after the second gym
+**Last updated:** 2026-08-26. **Tim authorised the whole backlog in one message** — joint workouts,
+kudos/comments, location and colour options are now *wanted, confirmed* work, alongside the
+improvement plan (ratio table, PRs on finish, body-map targets, polish sweep). **The first piece
+shipped: GUEST WORKOUTS** — record a friend's sets on your phone, no account needed, kept in a
+separate `guestSessions` collection that nothing else can mis-count (see the 2026-08-26 section).
+
+The day before (2026-08-25) the app was restructured, and most of what a
+2026-08-24 reader knew about its shape is now wrong. Three batches landed after the second gym
 session, all on Tim's instructions:
 
 1. Record says **Start** and names the programme; a whole set row selects itself.
@@ -159,6 +165,68 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-26 — ⚠️ GUEST WORKOUTS ARE BUILT — the half of 0e Tim kept hitting
+
+Tim reaffirmed the whole remaining backlog in one message — *"I wanted them deployed in the last
+session, and I'm confident I want them"* — so joint workouts, kudos/comments, location and the
+colour options are all authorised work now, alongside the improvement plan (ratios, PRs on finish,
+body-map targets, polish). **This is the first piece: the GUEST half of joint workouts.**
+
+### What shipped
+
+**A people bar in the session runner** — chips above the progress dots: **You**, one per guest, and
+**"+ Add a person"** (which keeps its words while solo, so the feature is findable the day a friend
+turns up). Adding somebody opens a sheet that says the load-bearing sentence — *no account needed;
+their sets are kept on your account, under their name, and never mix with your training* — and
+switches straight to recording for them.
+
+⚠️ **SWITCHING NAMES SWITCHES THE WHOLE SUGGESTION**, which 0e's design note called the
+load-bearing requirement. Each person carries their own entries, own history, own progression
+suggestion, own walk position and own body weight (null for a guest — the assist readout stays
+silent and progression degrades to rep-only for bodyweight moves, correct by construction). A
+guest's second session arrives pre-filled from their own first, via the same `historyFor()`
+precedence the owner gets. The exercise swap reads the active person's history too.
+
+⚠️ **A SEPARATE COLLECTION (`guestSessions`), NOT A FLAG ON `sessions`, and that is the safety
+argument.** Everything that reads sessions — the muscle map, charts, volume, the published social
+projection, progression — would need a filter it could forget, and one forgotten filter counts a
+guest's squat as the owner's and publishes it to the owner's friends. A collection nothing else
+reads cannot be mis-counted by code that has never heard of it. Tested from both sides, because a
+one-way check passes if both reads point at the same rows. **Rules updated and deployed** —
+`knownCollection()` carries it, the store↔rules agreement test pins the pair.
+
+⚠️ **FINISH IS IDEMPOTENT NOW, AND HAD TO BECOME SO.** One save used to mean "failed = nothing
+landed", so a bare retry was safe. It is now up to N saves (owner + each guest), and a failure
+between them meant Finish gets tapped again over rows that already landed — with no id, each would
+insert a second time. Ids are minted ONCE, on the draft, before any save, so the retry is an upsert
+of the same rows. There is an assertion that re-saving with the same id updates rather than
+duplicates.
+
+**The owner saves only when they recorded something** — a coach who ran the whole session for a
+guest and lifted nothing gets no empty session on their calendar; the finish screen says
+*"nothing recorded for you"* plus one line per guest. Guests get no benchmarks and are never
+published. **The day view grew a "Recorded for others" section** — guest name in the title,
+*"Their session, kept on your account"* under it, full set-by-set body via the same renderer as the
+owner's records, delete only (the confirm says it is the only copy). No edit: a guest record is a
+favour held for somebody, not training to maintain.
+
+**Backups carry guests** (exportAll iterates COLLECTIONS), restore gatekeeps a dateless guest row
+the same way sessions are gatekept (the getter sorts on date, so one would crash every read).
+
+**Tests: data-layer 1199 → 1208, render 430 → 443.** All eleven suites green. The old-shape draft
+(no `others`/`guestNames`) is normalised on resume, so a draft written before this deploy survives
+it.
+
+### What is deliberately NOT in it
+
+- **The friend-accept half of 0e** — publishing a session to a real friend's account for them to
+  accept. Next on the list is the kudos/comment rules path, which is the same wall.
+- **Handover when a guest joins** — the data is stored cleanly under a name to enable it later.
+- **A guest day on the calendar grid** — a day where ONLY a guest trained does not colour the
+  owner's calendar, because it is not the owner's training. The record is on the day view.
 
 ---
 
@@ -2049,7 +2117,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 
 | | What | State |
 |---|---|---|
-| **1** | **0e — joint workouts** | ⚠️ **OPEN, ASKED FOR TWICE, and reported on 2026-08-25 as "not working" — it does not exist.** Design decided (the friend accepts; never a direct write into their account). **Build the GUEST half first**: a name with no account, kept in the recorder's own data, no rules change, and it is the case Tim keeps hitting |
+| **1** | **0e — joint workouts** | ⚠️ **THE GUEST HALF IS BUILT AND DEPLOYED, 2026-08-26** — people chips in the runner, per-person suggestions, own collection, day-view section; see that day's section. **Still open: the friend-accept half** (publish a session to a real friend's account for them to accept) — same new-rules-path wall as 0l, and 0l is being built first |
 | **2** | **0h — the ratio table runs too low, which flatters** | ⚠️ **OPEN.** Four anchors corrected 2026-08-24 by 7–15 %; the errors are **not a constant**, so every remaining reasoned entry needs deriving on its own. Moves real numbers on every body map |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, but its headline item CLOSED on 2026-08-25**: *"nothing a user can see on Home ever grows"* was answered by making Home a feed, which is nothing but growth. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
 | **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call, and now the ILLUSTRATION ONLY.** The two ordinary controls beside it went to 44 px on 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
@@ -3236,7 +3304,8 @@ Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
 ⚠️ **Adding a collection to `COLLECTIONS` also requires adding it to `knownCollection()` in
 `firestore.rules` and redeploying**, or every cloud write to it is denied while localStorage keeps
 working — invisible until someone signs in. **Since 2026-08-19 a test compares the two lists** and
-fails if they disagree, so only the *redeploy* is still on you. `goals` is in both and is deployed.
+fails if they disagree, so only the *redeploy* is still on you. `goals` and `guestSessions` are in
+both and are deployed.
 
 ⚠️ **Adding a `js/` module also requires adding it to the precache list in `sw.js`.** There is a test
 that fails if you don't (`sw.js precache is missing: …`), which is how `js/social.js` was caught the

@@ -1,11 +1,11 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, todayISO, demo } from './store.js';
+import { store, todayISO, demo, uid } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  fmtSet, confirmSheet, fmtDateLong,
+  fmtSet, confirmSheet, fmtDateLong, openSheet,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
 import {
@@ -145,40 +145,21 @@ export async function SessionView(workoutId) {
 
   let state;
 
-  if (existingDraft) {
-    state = existingDraft;
-  } else {
-    state = {
-      workoutId: workout.id,
-      workoutName: workout.name,
-      // The day this is recorded FOR. Defaults to today and is editable, for
-      // the workout you did yesterday and forgot to log.
-      date: todayISO(),
-      // The day it was STARTED. Never edited — it is what decides whether a
-      // draft is still today's.
-      startedOn: todayISO(),
-      startedAt: new Date().toISOString(),
-      // Copied from the template at the moment the session starts, not read
-      // back from it later: re-flagging a workout months from now must not
-      // retroactively turn old sessions into benchmarks.
-      isBenchmark: Boolean(workout.isBenchmark),
-      index: 0,
-      entries: [],
-    };
-
-    // Read once for the whole workout rather than per exercise. The runner used
-    // store.lastSetsFor(), which reads every session each time it is called;
-    // progression needs the last TWO sessions of each lift, and historyFor()
-    // applies exactly the same precedence — this workout's own history first,
-    // the exercise anywhere else only if there is none.
-    const sessions = await store.getSessions();
+  /**
+   * Everything one PERSON's copy of this workout needs: their sets, their
+   * history, their suggestions. Factored out of session start so a GUEST can
+   * be handed the identical machinery over their own history — switching
+   * names has to switch the whole suggestion, not just where the number is
+   * saved, or two lifters on the same bar get the same prescription (0e).
+   *
+   * `sessions` is whoever-this-is's own history — the owner's real sessions,
+   * or the guest rows recorded under their name. `bodyWeight` likewise: null
+   * for a guest, because nobody has weighed them, and progression already
+   * degrades honestly (rep-only for bodyweight moves, no assist readout).
+   */
+  function entriesFor(sessions, bodyWeight, forDate) {
     const step = units.fromDisplay(units.weightStep());
-    // For pull-ups, dips and push-ups the lifter IS most of the load, so the
-    // 2–10 % band means nothing without this. Absent is fine — progression
-    // falls back to "one more rep" rather than guessing a body weight.
-    const latestWeight = await store.latestBodyWeight().catch(() => null);
-    const bodyWeight = latestWeight ? latestWeight.weight : null;
-
+    const out = [];
     for (const { item, ex } of planned) {
       const history = historyFor(sessions, { exerciseId: ex.id, workoutId: workout.id });
       const last = history[0] || null;
@@ -206,13 +187,13 @@ export async function SessionView(workoutId) {
         history,
         exercise: ex,
         step,
-        daysSinceLast: lastDay ? daysBetweenDays(lastDay, state.date) : null,
+        daysSinceLast: lastDay ? daysBetweenDays(lastDay, forDate) : null,
         bodyWeight,
         fmt: units.withUnit,
       });
       const sets = applySuggestion(lastSets, suggestion);
 
-      state.entries.push({
+      out.push({
         lastSets,
         suggestion,
         exerciseId: ex.id,
@@ -234,6 +215,59 @@ export async function SessionView(workoutId) {
         lastSummary: last && last.length ? fmtSet(last[0], ex.fields, ex.loadType) : null,
       });
     }
+    return out;
+  }
+
+  if (existingDraft) {
+    state = existingDraft;
+    // Drafts written before guests existed have neither key. Normalising here
+    // rather than branching everywhere is what keeps the rest of this file
+    // ignorant of when its draft was written.
+    if (!Array.isArray(state.others)) state.others = [];
+    if (!Array.isArray(state.guestNames)) state.guestNames = [];
+    if (state.forName === undefined) state.forName = null;
+  } else {
+    state = {
+      workoutId: workout.id,
+      workoutName: workout.name,
+      // The day this is recorded FOR. Defaults to today and is editable, for
+      // the workout you did yesterday and forgot to log.
+      date: todayISO(),
+      // The day it was STARTED. Never edited — it is what decides whether a
+      // draft is still today's.
+      startedOn: todayISO(),
+      startedAt: new Date().toISOString(),
+      // Copied from the template at the moment the session starts, not read
+      // back from it later: re-flagging a workout months from now must not
+      // retroactively turn old sessions into benchmarks.
+      isBenchmark: Boolean(workout.isBenchmark),
+      index: 0,
+      entries: [],
+      /* ---- guests (Open work 0e, the guest half) ----
+       * `forName` is WHO the steppers currently record for: null is the
+       * owner, a string is a guest. `guestNames` is the stable roster, in
+       * the order people were added. `others` parks the full per-person
+       * state (entries, walk position, body weight) of everyone NOT active,
+       * so switching is a pointer swap and nothing in the walk, the rest
+       * timer or the steppers has to know more than one person exists. */
+      forName: null,
+      guestNames: [],
+      others: [],
+    };
+
+    // Read once for the whole workout rather than per exercise. The runner used
+    // store.lastSetsFor(), which reads every session each time it is called;
+    // progression needs the last TWO sessions of each lift, and historyFor()
+    // applies exactly the same precedence — this workout's own history first,
+    // the exercise anywhere else only if there is none.
+    const sessions = await store.getSessions();
+    // For pull-ups, dips and push-ups the lifter IS most of the load, so the
+    // 2–10 % band means nothing without this. Absent is fine — progression
+    // falls back to "one more rep" rather than guessing a body weight.
+    const latestWeight = await store.latestBodyWeight().catch(() => null);
+    const bodyWeight = latestWeight ? latestWeight.weight : null;
+
+    state.entries = entriesFor(sessions, bodyWeight, state.date);
     // ⚠️ Kept on the DRAFT, not looked up again at render time, and the reason is
     // the same one bodyWeightOn() exists for: this is what the lifter weighed on
     // the day of the session. A weigh-in logged tomorrow must not retroactively
@@ -254,6 +288,124 @@ export async function SessionView(workoutId) {
   // the button that failed are in the same glance. Hidden until it is needed,
   // and it is the only thing in this view that persists an error.
   const saveError = el('div', { class: 'save-error', role: 'alert', hidden: true });
+
+  /* ---- people: the owner plus any guests (Open work 0e, guest half) ----
+   *
+   * Tim, 2026-08-24: "one person can record both measurements for both people
+   * on one phone … 2+ names at the top that the user could click on to switch
+   * between which user they are recording the data to." His friend could not
+   * sign in at all, so the first half built is the GUEST: a name with no
+   * account, kept in the recorder's own data (store.guestSessions), no rules
+   * widened, nothing written into anybody else's account.
+   */
+
+  const peopleBar = el('div', { class: 'people-bar' });
+
+  // The active person's history, for the exercise swap. A guest's swap must
+  // read the guest's own past sessions, or the swapped-in exercise arrives
+  // wearing the OWNER's numbers — the exact cross-prescription 0e forbids.
+  async function sessionsForActive() {
+    if (state.forName == null) return store.getSessions();
+    const all = await store.getGuestSessions();
+    const key = state.forName.trim().toLowerCase();
+    return all.filter((g) => String(g.guestName || '').trim().toLowerCase() === key);
+  }
+
+  function switchTo(name) {
+    if (name === state.forName) return;
+    const at = state.others.findIndex((o) => o.name === name);
+    if (at < 0) return;
+    const incoming = state.others.splice(at, 1)[0];
+    // Park the whole per-person state, not just the entries — the walk
+    // position and the body weight are each person's own.
+    state.others.push({
+      name: state.forName,
+      entries: state.entries,
+      index: state.index,
+      bodyWeight: state.bodyWeight,
+    });
+    state.forName = incoming.name;
+    state.entries = incoming.entries;
+    state.index = incoming.index || 0;
+    state.bodyWeight = incoming.bodyWeight == null ? null : incoming.bodyWeight;
+    saveDraft(state);
+    renderAll();
+  }
+
+  async function addGuest(rawName) {
+    const name = String(rawName || '').trim();
+    if (!name) { toast('Give them a name first'); return false; }
+    if (name.length > 40) { toast('That name is too long'); return false; }
+    const taken = ['you', 'me', ...state.guestNames.map((n) => n.toLowerCase())];
+    if (taken.includes(name.toLowerCase())) { toast(`${name} is already in this workout`); return false; }
+
+    // The guest's own history, so their second session arrives with their own
+    // numbers and their own suggestion — not blank, and never the owner's.
+    const all = await store.getGuestSessions().catch(() => []);
+    const key = name.toLowerCase();
+    const theirs = all.filter((g) => String(g.guestName || '').trim().toLowerCase() === key);
+
+    state.guestNames.push(name);
+    state.others.push({
+      name,
+      entries: entriesFor(theirs, null, state.date),
+      index: 0,
+      bodyWeight: null,
+    });
+    saveDraft(state);
+    // Adding somebody is followed by logging their first set, so the switch
+    // is part of the add rather than a second tap.
+    switchTo(name);
+    return true;
+  }
+
+  function openAddGuest() {
+    const input = el('input', {
+      class: 'input', type: 'text', placeholder: 'Their name',
+      'aria-label': 'Guest name', maxlength: '40', autocomplete: 'off',
+    });
+    const { close } = openSheet({
+      title: 'Add a person',
+      body: el('div', {},
+        el('p', { class: 'field-help', style: 'margin-top:0', text:
+          'Record this workout for somebody training with you. They do not '
+          + 'need an account — their sets are kept on your account, under '
+          + 'their name, and never mix with your own training or your stats.' }),
+        el('div', { class: 'field' }, el('label', { text: 'Name' }), input),
+      ),
+      footer: el('div', { class: 'btn-row' },
+        el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
+        el('button', { class: 'btn primary', text: 'Add', onClick: async () => {
+          if (await addGuest(input.value)) close();
+        } }),
+      ),
+    });
+    input.focus();
+  }
+
+  function renderPeople() {
+    const solo = !state.guestNames.length;
+    // `.chip` supplies the pill, the 44px invisible hit target and the
+    // aria-pressed accent state — the same control the rest chip uses.
+    setChildren(peopleBar,
+      el('button', {
+        class: 'chip person-chip',
+        'aria-pressed': state.forName == null ? 'true' : 'false',
+        onClick: () => switchTo(null),
+      }, 'You'),
+      ...state.guestNames.map((n) =>
+        el('button', {
+          class: 'chip person-chip',
+          'aria-pressed': state.forName === n ? 'true' : 'false',
+          onClick: () => switchTo(n),
+        }, n)),
+      el('button', {
+        class: 'chip person-chip person-add',
+        'aria-label': 'Add a person to record for',
+        onClick: openAddGuest,
+      }, icon('plus', 13), solo ? 'Add a person' : ''),
+    );
+  }
 
   /**
    * The walk.
@@ -772,6 +924,7 @@ export async function SessionView(workoutId) {
     // before renderPane did the clamping — so the bar drew every dot as done
     // with no current step until something else forced a redraw.
     currentStep();
+    renderPeople();
     renderProgress();
     renderPane();
     renderFooter();
@@ -789,7 +942,8 @@ export async function SessionView(workoutId) {
    * again mid-workout costs nothing on the wire.
    */
   async function readingFor(ex) {
-    const sessions = await store.getSessions();
+    // The ACTIVE person's history — a guest's swap reads the guest's own past.
+    const sessions = await sessionsForActive();
     const history = historyFor(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
     const last = history[0] || null;
     const lastDay = lastSessionDate(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
@@ -889,8 +1043,11 @@ export async function SessionView(workoutId) {
     toast(`Swapped to ${newEx.name}`);
   }
 
-  async function finish() {
-    const entries = state.entries
+  // One person's entries, reduced to what was actually recorded. Factored so
+  // finish() can run it once per person — the owner and every guest get the
+  // identical drop-empties / keep-minis / orphan-group treatment.
+  function cleanedEntriesOf(rawEntries) {
+    const entries = rawEntries
       .map((e) => ({
         exerciseId: e.exerciseId,
         exerciseName: e.exerciseName,
@@ -916,9 +1073,24 @@ export async function SessionView(workoutId) {
     // Dropping the empty entries can leave one half of a superset behind still
     // claiming to be in one, and the day view would bracket it alone and call
     // it a Superset — a false claim about what was actually done.
-    const cleaned = dropOrphanGroups(entries);
+    return dropOrphanGroups(entries);
+  }
 
-    if (!entries.length) {
+  async function finish() {
+    // Everybody in the session — whoever is active plus everyone parked.
+    const people = [
+      { name: state.forName, entries: state.entries },
+      ...state.others.map((o) => ({ name: o.name, entries: o.entries })),
+    ];
+    const owner = people.find((p) => p.name == null) || { entries: [] };
+    const guests = people
+      .filter((p) => p.name != null)
+      .map((p) => ({ name: p.name, cleaned: cleanedEntriesOf(p.entries) }))
+      .filter((p) => p.cleaned.length);
+
+    const cleaned = cleanedEntriesOf(owner.entries);
+
+    if (!cleaned.length && !guests.length) {
       toast('Nothing recorded — enter at least one number');
       return;
     }
@@ -942,23 +1114,59 @@ export async function SessionView(workoutId) {
      * sign-in screen's is: 2.4 seconds is indistinguishable from nothing
      * happening, which is exactly how the original was reported from a phone.
      */
+    /* ⚠️ IDS ARE MINTED ONCE, ON THE DRAFT, BEFORE ANY SAVE. This used to be
+     * one save, where "failed = nothing landed" made a bare retry safe. It is
+     * now up to N saves, and a failure between them means Finish gets tapped
+     * again over rows that already landed — with no id, every one of those
+     * would be inserted a second time. A stable id makes the retry an upsert
+     * of the same row, so tapping Finish twice cannot double anybody's
+     * training. */
+    if (!state.saveIds) state.saveIds = {};
+    if (cleaned.length && !state.saveIds.you) state.saveIds.you = uid('s');
+    for (const g of guests) {
+      if (!state.saveIds['g:' + g.name]) state.saveIds['g:' + g.name] = uid('g');
+    }
+    saveDraft(state);
+
     try {
-      await store.saveSession({
-        workoutId: state.workoutId,
-        workoutName: state.workoutName,
-        date: state.date,
-        startedAt: state.startedAt,
-        finishedAt: new Date().toISOString(),
-        isBenchmark: Boolean(state.isBenchmark),
-        entries: cleaned,
-      });
+      // The owner saves ONLY when they recorded something. A coach who ran the
+      // whole session for a guest and lifted nothing has no session of their
+      // own — saving an empty one would put a workout on their calendar and
+      // their volume that never happened.
+      if (cleaned.length) {
+        await store.saveSession({
+          id: state.saveIds.you,
+          workoutId: state.workoutId,
+          workoutName: state.workoutName,
+          date: state.date,
+          startedAt: state.startedAt,
+          finishedAt: new Date().toISOString(),
+          isBenchmark: Boolean(state.isBenchmark),
+          entries: cleaned,
+        });
+      }
+      // Each guest's half goes to its own collection under their name —
+      // never into `sessions`, never a benchmark, never published (see the
+      // guest-sessions note in store.js for why the separation is structural).
+      for (const g of guests) {
+        await store.saveGuestSession({
+          id: state.saveIds['g:' + g.name],
+          guestName: g.name,
+          workoutId: state.workoutId,
+          workoutName: state.workoutName,
+          date: state.date,
+          startedAt: state.startedAt,
+          finishedAt: new Date().toISOString(),
+          entries: g.cleaned,
+        });
+      }
     } catch (err) {
       saveFailed(err);
       return;
     }
 
     clearDraft();
-    showFinished(cleaned);
+    showFinished(cleaned, guests);
   }
 
   // Said on the screen, not in a toast, and it stays until the save works.
@@ -978,7 +1186,7 @@ export async function SessionView(workoutId) {
     if (typeof saveError.scrollIntoView === 'function') saveError.scrollIntoView({ block: 'nearest' });
   }
 
-  function showFinished(entries) {
+  function showFinished(entries, guests = []) {
     const setCount = entries.reduce((n, e) => n + e.sets.length, 0);
     document.getElementById('app').replaceChildren(screenShell({
       title: 'Workout complete',
@@ -986,7 +1194,17 @@ export async function SessionView(workoutId) {
       scroll: el('div', { class: 'finish-hero' },
         el('div', { class: 'finish-check' }, icon('check')),
         el('h2', { text: 'Nice work' }),
-        el('p', { text: `${state.workoutName} · ${entries.length} exercise${entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` }),
+        // The owner's line only describes the owner's training. When they
+        // recorded nothing and coached a guest through the whole thing, saying
+        // "0 sets" would read as a failed save — the guests' lines are the
+        // record of what happened.
+        entries.length
+          ? el('p', { text: `${state.workoutName} · ${entries.length} exercise${entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` })
+          : el('p', { text: `${state.workoutName} — nothing recorded for you` }),
+        ...guests.map((g) => {
+          const gs = g.cleaned.reduce((n, e) => n + e.sets.length, 0);
+          return el('p', { text: `Also recorded for ${g.name} — ${g.cleaned.length} exercise${g.cleaned.length === 1 ? '' : 's'} · ${gs} set${gs === 1 ? '' : 's'}` });
+        }),
         el('p', { text: `Saved to ${fmtDateLong(state.date)}` }),
       ),
       bottom: [
@@ -1130,6 +1348,7 @@ export async function SessionView(workoutId) {
         ),
       ),
     ),
+    peopleBar,
     progress,
     pane,
     restBar,
