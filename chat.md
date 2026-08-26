@@ -5169,3 +5169,12 @@ data-layer 1199→1208, render 430→443, all eleven suites green. Pushed.
 
 Still queued from the confirmed plan: kudos/comments rules path, location on feed cards, the ratio
 table, PRs on finish, body-map targets, polish sweep, colour options.
+
+Second piece the same day: KUDOS AND COMMENTS WORK (0l closed). New rules path — a reaction is one
+create-only document at users/{owner}/reactions/{id}; a viewer of any published tier may write one,
+`from` is proven to be the caller, no update path exists at all, sender and owner can delete. One
+kudos per person by construction (deterministic doc id). The feed buttons show live counts, your
+own kudos reads as a state, a comments sheet holds the thread, and a quiet "On your workouts" strip
+above the feed shows what landed on yours — the receiving half, without which kudos would be
+write-only. Demo refuses with a sentence. Rules tests 46→66 (run in the emulator as four different
+callers), social tests 106→121, rules deployed, all suites green, pushed.

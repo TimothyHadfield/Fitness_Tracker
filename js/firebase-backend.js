@@ -233,6 +233,40 @@ export const FirebaseBackend = {
     }
   },
 
+  /* --- reactions: kudos + comments on published workouts --- */
+
+  // Everything reacted onto ownerUid's workouts. permission-denied is the
+  // normal answer for somebody who is not a viewer, same as readShared — an
+  // empty list, never a console error.
+  async listReactions(ownerUid) {
+    const c = await init();
+    try {
+      const snap = await c.fs.getDocs(c.fs.collection(c.db, 'users', ownerUid, 'reactions'));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      if (err && err.code === 'permission-denied') return [];
+      throw err;
+    }
+  },
+
+  // ⚠️ setDoc with a DETERMINISTIC id, and that is the idempotency story:
+  // giving kudos twice is the same document twice, not two kudos. `at` is
+  // stamped here so the caller cannot forget it — the rules require it.
+  async writeReaction(ownerUid, id, data) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', ownerUid, 'reactions', id),
+      { ...data, at: c.fs.serverTimestamp() });
+    return true;
+  },
+
+  async deleteReaction(ownerUid, id) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', ownerUid, 'reactions', id));
+    return true;
+  },
+
   /* --- invites --- */
 
   async createInvite(token, data) {

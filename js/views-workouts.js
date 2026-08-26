@@ -120,7 +120,7 @@ async function fillFeed(body) {
    */
   if (state.reason === 'demo') {
     const { buildDemoFeed } = await import('./demo.js');
-    setChildren(body, ...buildDemoFeed(todayISO()).map(feedCard));
+    setChildren(body, ...buildDemoFeed(todayISO()).map((e) => feedCard({ ...e, demo: true })));
     return;
   }
 
@@ -157,7 +157,75 @@ async function fillFeed(body) {
     return;
   }
 
-  setChildren(body, ...entries.map(feedCard));
+  /* ---- reactions (Open work 0l, now wired) ----
+   *
+   * One list read per friend, in parallel, failures dropped the same way an
+   * unreadable friend is — a missing count must never blank the feed. Names
+   * for comment authors resolve through MY graph first (I named my friends),
+   * then the name the sender published with, then 'Someone': a
+   * friend-of-a-friend's comment is real and should not render as broken. */
+  const names = new Map(state.connections.map((c) => [c.uid, c.name]));
+  names.set(state.uid, 'You');
+  const uids = [...new Set(entries.map((e) => e.uid))];
+  const reactionMaps = new Map();
+  await Promise.all(uids.map(async (uid) => {
+    try { reactionMaps.set(uid, await social.reactionsFor(uid)); }
+    catch (_) { reactionMaps.set(uid, new Map()); }
+  }));
+
+  const withRx = entries.map((e) => {
+    const perSession = reactionMaps.get(e.uid) || new Map();
+    const slot = (e.act.id && perSession.get(e.act.id))
+      || { kudos: [], myKudosId: null, comments: [] };
+    return { ...e, rx: { slot, myUid: state.uid, names } };
+  });
+
+  // What landed on MY workouts — the receiving half. Without it a kudos
+  // would be write-only and the feature would be pointless for the person it
+  // exists to encourage.
+  const mineBlock = await reactionsOnMine(state, names).catch(() => null);
+
+  setChildren(body, ...(mineBlock ? [mineBlock] : []), ...withRx.map(feedCard));
+}
+
+/**
+ * A quiet strip above the feed: who reacted to YOUR recent workouts.
+ * One line per session, newest session first, capped at three — a readout,
+ * not a notification system.
+ */
+async function reactionsOnMine(state, names) {
+  const mine = await social.reactionsFor(state.uid);
+  if (!mine.size) return null;
+  const sessions = await store.getSessions();
+  const byId = new Map(sessions.map((s) => [s.id, s]));
+
+  const rows = [];
+  for (const [sid, slot] of mine) {
+    const s = byId.get(sid);
+    if (!s) continue;                    // reaction to something since deleted
+    if (!slot.kudos.length && !slot.comments.length) continue;
+    rows.push({ s, slot });
+  }
+  if (!rows.length) return null;
+  rows.sort((a, b) => b.s.date.localeCompare(a.s.date));
+
+  const who = (uid) => names.get(uid) || 'Someone';
+  return el('div', { class: 'feed-mine' },
+    el('div', { class: 'section-label', text: 'On your workouts' }),
+    ...rows.slice(0, 3).map(({ s, slot }) => {
+      const bits = [];
+      if (slot.kudos.length) {
+        bits.push(`👍 ${slot.kudos.map(who).join(', ')}`);
+      }
+      for (const c of slot.comments.slice(-2)) {
+        bits.push(`💬 ${c.fromName || who(c.from)}: “${c.text.length > 60 ? c.text.slice(0, 57) + '…' : c.text}”`);
+      }
+      return el('div', { class: 'feed-mine-row' },
+        el('span', { class: 'feed-mine-what', text: `${s.workoutName || 'Workout'} · ${relativeDay(s.date)}` }),
+        el('span', { class: 'feed-mine-who', text: bits.join('   ') }),
+      );
+    }),
+  );
 }
 
 /**
@@ -224,33 +292,137 @@ function feedCard(e) {
 }
 
 /**
- * ⚠️ TWO OF THESE THREE BUTTONS CANNOT WORK YET, AND THEY SAY SO WHEN PRESSED.
+ * ⚠️ KUDOS AND COMMENTS ARE REAL NOW (0l, closed 2026-08-26). A reaction is
+ * one create-only document at users/{owner}/reactions/{id}; the rules let a
+ * viewer of any published tier write one, prove `from` is the caller, and
+ * allow no update path at all. See the reactions block in firestore.rules and
+ * the header of the reactions section in js/social.js for why this narrow
+ * foreign write is acceptable where widening a collection never was.
  *
- * A kudos or a comment has to be written somewhere the OTHER person can read,
- * and this app's whole sharing model is "nobody's client may write into anybody
- * else's data" (docs/social-plan.md §2) — the same wall joint workouts hit.
- * They need a new rules path, which is Open work 0l.
+ * The demo renders the same buttons and refuses with a sentence when pressed —
+ * publishing invented reactions at real people is the same hazard as
+ * publishing invented workouts, and reading is fine while writing is not.
  *
- * ⚠️ SO WHY RENDER THEM AT ALL? Because Tim asked to see the layout, and
- * because a button that silently does nothing is the exact fault this project
- * has already shipped once and fixed twice — the silent failed save, the popup
- * that never settled. A button that tells you it is not built yet is a
- * placeholder; a button that shrugs is a bug.
- *
- * Share is REAL. `navigator.share` needs no backend and no permission from
- * anybody, so it is wired up properly, with a clipboard fallback.
+ * Share needs no backend: `navigator.share`, clipboard fallback.
  */
 function feedActions(e) {
-  const soon = (what) => () => toast(`${what} is not connected yet — it needs a way to write to their account.`);
+  const row = el('div', { class: 'feed-actions' });
+  const rx = e.rx || null;
+  const slot = rx ? rx.slot : { kudos: [], myKudosId: null, comments: [] };
 
-  return el('div', { class: 'feed-actions' },
-    el('button', { class: 'feed-act', onClick: soon('Kudos') },
-      el('span', { class: 'feed-act-glyph', text: '👍' }), 'Kudos'),
-    el('button', { class: 'feed-act', onClick: soon('Commenting') },
-      el('span', { class: 'feed-act-glyph', text: '💬' }), 'Comment'),
-    el('button', { class: 'feed-act', onClick: () => shareActivity(e) },
-      el('span', { class: 'feed-act-glyph', text: '↗' }), 'Share'),
-  );
+  const refuse = () => toast(e.demo
+    ? 'The demo account cannot react to real people.'
+    : 'Reactions need a signed-in account.');
+  // Sessions published before the projection carried ids have nothing stable
+  // to react TO. Old cards, increasingly rare — but a silent no-op is the
+  // fault this project keeps refusing to ship, so it says why.
+  const noAnchor = () => toast('This workout was shared before reactions existed — it cannot take one.');
+
+  let busy = false;
+  async function onKudos() {
+    if (!rx) { refuse(); return; }
+    if (!e.act.id) { noAnchor(); return; }
+    if (busy) return;
+    busy = true;
+    try {
+      const given = await social.toggleKudos(e.uid, e.act.id, Boolean(slot.myKudosId));
+      if (given) {
+        slot.myKudosId = 'mine';
+        if (!slot.kudos.includes(rx.myUid)) slot.kudos.push(rx.myUid);
+      } else {
+        slot.myKudosId = null;
+        slot.kudos = slot.kudos.filter((u) => u !== rx.myUid);
+      }
+      paint();
+    } catch (err) {
+      toast((err && err.message) || 'Could not send that.');
+    } finally { busy = false; }
+  }
+
+  function onComment() {
+    if (!rx) { refuse(); return; }
+    if (!e.act.id) { noAnchor(); return; }
+    openCommentsSheet(e, rx, paint);
+  }
+
+  function paint() {
+    const mine = Boolean(slot.myKudosId);
+    setChildren(row,
+      el('button', {
+        class: 'feed-act' + (mine ? ' is-mine' : ''),
+        'aria-pressed': mine ? 'true' : 'false',
+        onClick: onKudos,
+      },
+        el('span', { class: 'feed-act-glyph', text: '👍' }),
+        'Kudos' + (slot.kudos.length ? ` · ${slot.kudos.length}` : '')),
+      el('button', { class: 'feed-act', onClick: onComment },
+        el('span', { class: 'feed-act-glyph', text: '💬' }),
+        'Comment' + (slot.comments.length ? ` · ${slot.comments.length}` : '')),
+      el('button', { class: 'feed-act', onClick: () => shareActivity(e) },
+        el('span', { class: 'feed-act-glyph', text: '↗' }), 'Share'),
+    );
+  }
+  paint();
+  return row;
+}
+
+/**
+ * The comment thread on one feed card. Reads downward, oldest first; your own
+ * comments carry a delete. The thread lives on the workout owner's account,
+ * so everyone who can see the card sees the same conversation.
+ */
+function openCommentsSheet(e, rx, onChanged) {
+  const slot = rx.slot;
+  const list = el('div', { class: 'comment-list' });
+  const input = el('textarea', {
+    class: 'input', rows: '2', placeholder: `Say something about ${e.name}’s workout`,
+    'aria-label': 'Your comment', maxlength: '500',
+  });
+
+  const who = (c) => (rx.names.get(c.from)) || c.fromName || 'Someone';
+
+  function paintList() {
+    setChildren(list,
+      ...(slot.comments.length
+        ? slot.comments.map((c) => el('div', { class: 'comment-row' },
+            el('div', { class: 'comment-main' },
+              el('span', { class: 'comment-who', text: who(c) }),
+              el('span', { class: 'comment-text', text: c.text }),
+            ),
+            c.mine && c.id ? iconBtn('trash', 'Delete your comment', async () => {
+              try {
+                await social.removeReaction(e.uid, c.id);
+                slot.comments = slot.comments.filter((x) => x !== c);
+                paintList(); onChanged();
+              } catch (err) { toast((err && err.message) || 'Could not delete that.'); }
+            }) : null,
+          ))
+        : [el('p', { class: 'field-help', style: 'margin:0', text:
+            'No comments yet — yours would be the first.' })]),
+    );
+  }
+  paintList();
+
+  const send = el('button', { class: 'btn primary', text: 'Send', onClick: async () => {
+    try {
+      send.disabled = true;
+      const r = await social.addComment(e.uid, e.act.id, input.value);
+      slot.comments.push({
+        id: r.id, from: rx.myUid, fromName: '', text: r.text,
+        at: Date.now(), mine: true,
+      });
+      input.value = '';
+      paintList(); onChanged();
+    } catch (err) {
+      toast((err && err.message) || 'Could not send that.');
+    } finally { send.disabled = false; }
+  } });
+
+  openSheet({
+    title: `${e.act.name || 'Workout'} — comments`,
+    body: el('div', { class: 'comment-sheet' }, list, input),
+    footer: el('div', { class: 'btn-row' }, send),
+  });
 }
 
 async function shareActivity(e) {

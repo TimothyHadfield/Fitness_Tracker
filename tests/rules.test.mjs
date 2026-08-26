@@ -214,6 +214,80 @@ await denied(updateDoc(invite(asStranger, TIM, 'second-token'),
 await denied(updateDoc(invite(asStranger, TIM, 'second-token'), { claimedBy: ALEX }),
   'and cannot claim an invite on somebody else\'s behalf');
 
+console.log('\n--- Reactions: the one narrow foreign write (0l) ---\n');
+
+// The reactions path is the FIRST place a non-owner may create anything under
+// another person's uid, so the denials here are the most important in this
+// file: every one of them is a way the exception could have been wider than
+// designed.
+
+// Re-seed the projections: the revocation tests above rewrote shared/full
+// with an empty viewers list, and a reactions test that ran against that
+// state would be testing "a revoked viewer cannot react" three times while
+// believing it tested the happy path.
+await env.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  await setDoc(shared(db, TIM, 'full'), projection('full', [ALEX]));
+  await setDoc(shared(db, TIM, 'light'), projection('light', [SAM]));
+});
+
+const reaction = (db, owner, id) => doc(db, 'users', owner, 'reactions', id);
+const kudosDoc = (from, sessionId = 'sess-1') => ({
+  kind: 'kudos', sessionId, from, fromName: 'Somebody', text: '', at: serverTimestamp(),
+});
+const commentDoc = (from, text = 'nice one', sessionId = 'sess-1') => ({
+  kind: 'comment', sessionId, from, fromName: 'Somebody', text, at: serverTimestamp(),
+});
+
+// Viewers at ANY tier may react — seeing the card is what qualifies you.
+await allowed(setDoc(reaction(asAlex, TIM, 'k_sess-1_' + ALEX), kudosDoc(ALEX)),
+  'a full-tier viewer can give kudos');
+await allowed(setDoc(reaction(asSam, TIM, 'k_sess-1_' + SAM), kudosDoc(SAM)),
+  'a light-tier viewer can too — they see the card, so they can react to it');
+await allowed(setDoc(reaction(asAlex, TIM, 'c_sess-1_' + ALEX + '_n1'), commentDoc(ALEX)),
+  'a viewer can comment');
+
+await denied(setDoc(reaction(asStranger, TIM, 'k_sess-1_' + STRANGER), kudosDoc(STRANGER)),
+  'a stranger cannot react — no published tier lists them');
+await denied(setDoc(reaction(asNobody, TIM, 'k_sess-1_anon'), kudosDoc('anon')),
+  'a signed-out caller cannot react');
+await denied(setDoc(reaction(asAlex, TIM, 'k_forged'), kudosDoc(SAM)),
+  '⚠️ `from` must be the caller — a reaction cannot be forged in somebody else\'s name');
+await denied(setDoc(reaction(asAlex, TIM, 'x_extra'), { ...kudosDoc(ALEX), extra: 1 }),
+  'an invented field is refused — the shape is a whitelist');
+await denied(setDoc(reaction(asAlex, TIM, 'x_kind'), { ...kudosDoc(ALEX), kind: 'sticker' }),
+  'an invented kind is refused');
+await denied(setDoc(reaction(asAlex, TIM, 'x_talky'), { ...kudosDoc(ALEX), text: 'hello' }),
+  'a kudos carrying words is refused — that shape is a comment');
+await denied(setDoc(reaction(asAlex, TIM, 'x_mute'), commentDoc(ALEX, '')),
+  'a comment with no words is refused — that shape is a kudos');
+await denied(setDoc(reaction(asAlex, TIM, 'x_long'), commentDoc(ALEX, 'x'.repeat(501))),
+  'a 501-character comment is refused at the wire, not just in the client');
+await denied(setDoc(reaction(asAlex, TIM, 'x_nosess'), { ...kudosDoc(ALEX), sessionId: '' }),
+  'a reaction must name the session it is about');
+
+// No update path AT ALL — editing is delete-and-repost.
+await denied(updateDoc(reaction(asAlex, TIM, 'c_sess-1_' + ALEX + '_n1'), { text: 'edited' }),
+  'the sender cannot edit a comment in place');
+await denied(updateDoc(reaction(asTim, TIM, 'c_sess-1_' + ALEX + '_n1'), { text: 'edited' }),
+  'and neither can the owner — there is no update path at all');
+
+// Reading: owner and viewers, nobody else.
+await allowed(getDoc(reaction(asTim, TIM, 'k_sess-1_' + ALEX)),
+  'the owner reads what landed on their workouts');
+await allowed(getDocs(collection(asSam, 'users', TIM, 'reactions')),
+  'a viewer lists the reactions, so the feed can show counts');
+await denied(getDocs(collection(asStranger, 'users', TIM, 'reactions')),
+  'a stranger cannot read anybody\'s reactions');
+
+// Deleting: the sender takes back their own; the owner moderates anything.
+await denied(deleteDoc(reaction(asSam, TIM, 'k_sess-1_' + ALEX)),
+  'one viewer cannot delete another\'s reaction');
+await allowed(deleteDoc(reaction(asAlex, TIM, 'k_sess-1_' + ALEX)),
+  'the sender can take their own kudos back');
+await allowed(deleteDoc(reaction(asTim, TIM, 'c_sess-1_' + ALEX + '_n1')),
+  'the owner can moderate a comment off their own workout');
+
 console.log('\n--- Nothing else in the database exists ---\n');
 
 await denied(setDoc(doc(asTim, 'users', TIM, 'collections', 'invented'), { rows: [], updatedAt: serverTimestamp() }),

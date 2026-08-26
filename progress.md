@@ -168,6 +168,52 @@ which drives the demo.
 
 ---
 
+## 2026-08-26, second pass — ⚠️ KUDOS AND COMMENTS ARE REAL (0l closed)
+
+The feed's two apologising buttons now work. **The wall this needed through was the app's oldest
+one** — nobody's client writes into anybody else's data — and the resolution is a narrow exception
+rather than a retreat:
+
+⚠️ **A REACTION IS ONE CREATE-ONLY DOCUMENT AT `users/{owner}/reactions/{id}`.** What made a
+foreign write unacceptable everywhere else is that one document holds a whole collection, so a
+single bad write replaces a training history. A reaction is one document per reaction, in a subtree
+nothing else reads, shape-checked by the rules, **with NO update path at all** — editing is
+delete-and-repost, a kudos toggle is create/delete of a deterministic id. The worst possible write
+is one spurious kudos, and the owner can delete it.
+
+- **Who may react: a viewer of ANY published tier** — seeing the card is what qualifies you, and a
+  light-tier viewer sees the card. `from` is proven equal to the caller's uid by the rules, so a
+  reaction cannot be forged. Kudos must carry no words, comments must carry some, 500-char cap
+  enforced at the wire as well as in the client.
+- **One kudos per person BY CONSTRUCTION**: the doc id is `k_{sessionId}_{uid}`, so giving it
+  twice overwrites and taking it back deletes a known id. The projection already published a
+  session `id` at every tier, which is the anchor; cards shared before ids existed say so when
+  pressed rather than silently failing.
+- **The receiving half exists too**: a quiet "On your workouts" strip above the feed — who gave
+  kudos and the last couple of comments, one line per session, capped at three. Without it a kudos
+  would be write-only and pointless for the person it exists to encourage.
+- **Comments sheet**: thread per card, oldest first, delete on your own; author names resolve
+  through YOUR graph first, then the sender's published name — a friend-of-a-friend's comment
+  renders with a name, not as broken.
+- **The demo refuses with a sentence** — publishing invented reactions at real people is the same
+  hazard as publishing invented workouts. Reading stays fine.
+
+⚠️ **TESTED AS SOMEBODY WHO IS NOT YOU, because that is the only way a permission can be tested.**
+`tests/rules.test.mjs` 46 → **66**: a stranger denied, a signed-out caller denied, a forged `from`
+denied, an invented field/kind denied, the wordless comment and the wordy kudos denied, both update
+paths denied, cross-viewer delete denied; the happy paths allowed. **A trap found on the way:** the
+first run reused projections an earlier revocation test had emptied, so three "happy path" tests
+were actually re-testing revocation — the block re-seeds its own state. `tests/social.test.mjs`
+106 → **121** pins the pure half (deterministic ids, comment hygiene, hostile-input grouping).
+**Rules deployed.**
+
+**Known limitations, stated:** reactions to sessions that scroll out of the 60-session published
+window stop rendering but their documents remain (small, slow accumulation — a later tidy);
+owner-side moderation has rules support but no UI yet; there is no notification — the strip is a
+readout you see when you open Home.
+
+---
+
 ## 2026-08-26 — ⚠️ GUEST WORKOUTS ARE BUILT — the half of 0e Tim kept hitting
 
 Tim reaffirmed the whole remaining backlog in one message — *"I wanted them deployed in the last
@@ -2126,7 +2172,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **7** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report. Tim asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. §16 sets the hard constraint |
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
-| **9b** | **0l — kudos and comments have no way to land** | ⚠️ **OPEN.** The feed renders both buttons and they say plainly that they are not connected. Writing one means a path the OTHER person's client can read — the same new-rules-path wall as 0e and 0j. Three features now queue behind it |
+| **9b** | **0l — kudos and comments** | ✅ **BUILT AND DEPLOYED 2026-08-26** — create-only reaction docs under the owner, viewer-of-any-tier may write, no update path, 66 rules assertions. See that day's second-pass section. The same rules pattern is the template 0e's friend-accept half and 0j need |
 | **9c** | **0m — no location on a feed card** | ⚠️ **OPEN, and Tim flagged it himself** (*"we might need to work on location services"*). Needs geolocation, a field in the projection, and a privacy decision about publishing where somebody trains. The card drops the term rather than showing anything vague |
 | **10** | **0k — the colour direction** | ⚠️ **OPEN, and Tim asked for OPTIONS rather than a decision.** *"The entire cite is just really colorless… a few buttons that are massive and orange (which is just too much sometimes)."* The legibility half shipped 2026-08-25; the palette direction is his call |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |

@@ -487,5 +487,56 @@ ok(inviteExpiry(stamp('2026-08-17T00:00:00.000Z')) === '2026-08-24T00:00:00.000Z
    'inviteExpiry reads a Timestamp too, so the fallback cannot be the odd one out');
 ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expiry');
 
+/* ---------- reactions: kudos + comments (0l) ---------- */
+{
+  const {
+    KUDOS, COMMENT, MAX_COMMENT_LENGTH,
+    kudosId, commentId, cleanCommentText, groupReactions,
+  } = await import('../js/social.js');
+
+  // Deterministic ids are the idempotency story: giving kudos twice is the
+  // same document twice, never two kudos.
+  ok(kudosId('s1', 'uidA') === kudosId('s1', 'uidA'), 'a kudos id is deterministic');
+  ok(kudosId('s1', 'uidA') !== kudosId('s1', 'uidB'), 'and per person');
+  ok(commentId('s1', 'uidA', 'n1') !== commentId('s1', 'uidA', 'n2'),
+     'comments stack — the nonce keeps their ids apart');
+
+  ok(cleanCommentText('  nice one  ') === 'nice one', 'comment text is trimmed');
+  throws(() => cleanCommentText('   '), 'an empty comment is refused with a sentence');
+  throws(() => cleanCommentText('x'.repeat(MAX_COMMENT_LENGTH + 1)),
+     'an over-long comment is refused');
+  ok(cleanCommentText('x'.repeat(MAX_COMMENT_LENGTH)).length === MAX_COMMENT_LENGTH,
+     'exactly the cap is allowed');
+
+  const rows = [
+    { id: 'k1', kind: KUDOS, sessionId: 's1', from: 'alice' },
+    { id: 'k2', kind: KUDOS, sessionId: 's1', from: 'me' },
+    // A hostile client stacking a second kudos doc from the same person —
+    // grouped, they still count once.
+    { id: 'k3', kind: KUDOS, sessionId: 's1', from: 'alice' },
+    { id: 'c2', kind: COMMENT, sessionId: 's1', from: 'alice', fromName: 'Alice', text: 'later', at: '2026-08-02T10:00:00Z' },
+    { id: 'c1', kind: COMMENT, sessionId: 's1', from: 'me', fromName: '', text: 'first', at: '2026-08-01T10:00:00Z' },
+    // Garbage another client could write: dropped, never trusted to crash.
+    { id: 'x1', kind: 'sticker', sessionId: 's1', from: 'alice' },
+    { id: 'x2', kind: COMMENT, sessionId: 's1', from: 'alice', text: '   ' },
+    { id: 'x3', kind: KUDOS, from: 'alice' },
+    { id: 'x4', kind: KUDOS, sessionId: 's1' },
+    null, 'string', 42,
+  ];
+  const grouped = groupReactions(rows, 'me');
+  const s1 = grouped.get('s1');
+  ok(Boolean(s1), 'reactions group under their session');
+  ok(s1.kudos.length === 2, `stacked kudos from one person count once (${s1.kudos.length})`);
+  ok(Boolean(s1.myKudosId), 'my own kudos is recognised so the button can show its state');
+  ok(s1.comments.length === 2, `blank and malformed comments are dropped (${s1.comments.length})`);
+  ok(s1.comments[0].text === 'first' && s1.comments[1].text === 'later',
+     'comments read oldest first — a conversation runs downward');
+  ok(s1.comments[0].mine === true && s1.comments[1].mine === false,
+     'my comments are marked mine, so only they offer a delete');
+  ok(groupReactions(rows, null).get('s1').myKudosId === null,
+     'with no viewer uid nothing claims to be mine');
+  ok(groupReactions('garbage', 'me').size === 0, 'a non-list input groups to nothing');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

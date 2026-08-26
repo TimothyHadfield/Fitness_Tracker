@@ -1785,6 +1785,70 @@ export const social = {
     return { tier: null, doc: null };
   },
 
+  /* --- reactions: kudos + comments (Open work 0l) --- */
+
+  /**
+   * Everything reacted onto one person's workouts, grouped per session.
+   * Works for a friend's uid (the feed's counts) and for your own (what
+   * landed on YOUR workouts — the receiving half, without which kudos would
+   * be write-only and pointless).
+   */
+  async reactionsFor(ownerUid) {
+    if (demo.active()) return new Map();
+    const impl = requireRemote();
+    const S = await socialMod();
+    const rows = await impl.listReactions(ownerUid);
+    return S.groupReactions(rows, impl.currentUid());
+  },
+
+  /** Toggle my kudos on a friend's session. Returns true if it is now given. */
+  async toggleKudos(ownerUid, sessionId, hasIt) {
+    if (demo.active()) throw new Error('The demo account cannot react to real people.');
+    const impl = requireRemote();
+    const S = await socialMod();
+    const me = impl.currentUid();
+    if (!me) throw new Error('Not signed in.');
+    const id = S.kudosId(sessionId, me);
+    if (hasIt) {
+      await impl.deleteReaction(ownerUid, id);
+      return false;
+    }
+    const settings = await store.getSettings();
+    await impl.writeReaction(ownerUid, id, {
+      kind: S.KUDOS,
+      sessionId,
+      from: me,
+      fromName: String(settings.displayName || '').slice(0, 60),
+      text: '',
+    });
+    return true;
+  },
+
+  async addComment(ownerUid, sessionId, text) {
+    if (demo.active()) throw new Error('The demo account cannot react to real people.');
+    const impl = requireRemote();
+    const S = await socialMod();
+    const me = impl.currentUid();
+    if (!me) throw new Error('Not signed in.');
+    const clean = S.cleanCommentText(text);
+    const settings = await store.getSettings();
+    const id = S.commentId(sessionId, me, Date.now().toString(36));
+    await impl.writeReaction(ownerUid, id, {
+      kind: S.COMMENT,
+      sessionId,
+      from: me,
+      fromName: String(settings.displayName || '').slice(0, 60),
+      text: clean,
+    });
+    return { id, text: clean };
+  },
+
+  /** Sender takes back their own; owner moderates their workouts' thread. */
+  async removeReaction(ownerUid, reactionId) {
+    if (demo.active()) throw new Error('The demo account cannot react to real people.');
+    return requireRemote().deleteReaction(ownerUid, reactionId);
+  },
+
   /** Force every projection to be rebuilt — after logging a workout, say. */
   async publish() { return republish(); },
 };

@@ -660,3 +660,101 @@ export function inviteState(invite, nowISO) {
   if (!Number.isFinite(expires) || !Number.isFinite(now)) return 'invalid';
   return expires <= now ? 'expired' : 'open';
 }
+
+/* ------------------------------------------------------------------ *
+ * Reactions — kudos and comments on a friend's published workouts
+ * ------------------------------------------------------------------ *
+ *
+ * Open work 0l. The feed's kudos and comment buttons rendered from day one
+ * and said plainly they were not connected, because a reaction has to be
+ * written where the OTHER person can read it — and this app's model is that
+ * nobody's client writes into anybody else's data.
+ *
+ * ⚠️ THE RESOLUTION IS A NARROW EXCEPTION, NOT A RETREAT FROM THE MODEL. A
+ * reaction lives at users/{owner}/reactions/{id} — under the owner of the
+ * workout it reacts to — and the rules allow a VIEWER of any published tier
+ * to CREATE one there. What made a foreign write unacceptable everywhere
+ * else is that one document holds a whole collection, so a single bad write
+ * replaces someone's training history. A reaction is one document per
+ * reaction, create-only (no update path at all), shape-checked by the rules,
+ * and lives in a subtree nothing else reads. The blast radius of the worst
+ * possible write is one spurious kudos, which the owner can delete.
+ *
+ * These helpers are pure: id construction and grouping, assertable headlessly.
+ * The I/O lives in firebase-backend.js; the policy lives in firestore.rules.
+ */
+
+export const KUDOS = 'kudos';
+export const COMMENT = 'comment';
+export const MAX_COMMENT_LENGTH = 500;
+
+/**
+ * One kudos per person per session, BY CONSTRUCTION: the document id is
+ * deterministic, so giving kudos twice overwrites the first rather than
+ * stacking, and taking it back is deleting a known id rather than searching.
+ */
+export function kudosId(sessionId, fromUid) {
+  return `k_${sessionId}_${fromUid}`;
+}
+
+/** Comments stack, so their id carries a caller-supplied uniqueness suffix. */
+export function commentId(sessionId, fromUid, nonce) {
+  return `c_${sessionId}_${fromUid}_${nonce}`;
+}
+
+/**
+ * What a comment is allowed to say. Returns the cleaned text, or throws the
+ * sentence the screen should show. The rules enforce the same bounds on the
+ * wire — two independent gates, same as the projection.
+ */
+export function cleanCommentText(text) {
+  const t = String(text == null ? '' : text).trim();
+  if (!t) throw new Error('Write something first.');
+  if (t.length > MAX_COMMENT_LENGTH) {
+    throw new Error(`Keep it under ${MAX_COMMENT_LENGTH} characters.`);
+  }
+  return t;
+}
+
+/**
+ * Raw reaction rows → per-session view state.
+ *
+ * Tolerant of garbage on purpose: these documents are the one place another
+ * client writes, so a malformed row (wrong kind, missing sessionId) is
+ * DROPPED rather than trusted to crash the feed. Comments come back oldest
+ * first — a conversation reads downward.
+ */
+export function groupReactions(rows, myUid) {
+  const bySession = new Map();
+  const slot = (sid) => {
+    if (!bySession.has(sid)) {
+      bySession.set(sid, { kudos: [], myKudosId: null, comments: [] });
+    }
+    return bySession.get(sid);
+  };
+  for (const r of Array.isArray(rows) ? rows : []) {
+    if (!r || typeof r !== 'object') continue;
+    if (typeof r.sessionId !== 'string' || !r.sessionId) continue;
+    if (typeof r.from !== 'string' || !r.from) continue;
+    if (r.kind === KUDOS) {
+      const s = slot(r.sessionId);
+      // One kudos per person even if a hostile client stacked several docs.
+      if (!s.kudos.includes(r.from)) s.kudos.push(r.from);
+      if (myUid && r.from === myUid) s.myKudosId = r.id || kudosId(r.sessionId, myUid);
+    } else if (r.kind === COMMENT) {
+      if (typeof r.text !== 'string' || !r.text.trim()) continue;
+      slot(r.sessionId).comments.push({
+        id: r.id || null,
+        from: r.from,
+        fromName: typeof r.fromName === 'string' ? r.fromName : '',
+        text: r.text,
+        at: instantMillis(r.at),
+        mine: Boolean(myUid && r.from === myUid),
+      });
+    }
+  }
+  for (const s of bySession.values()) {
+    s.comments.sort((a, b) => (a.at || 0) - (b.at || 0));
+  }
+  return bySession;
+}

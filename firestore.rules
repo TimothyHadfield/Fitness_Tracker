@@ -165,6 +165,88 @@ service cloud.firestore {
                   .affectedKeys().hasOnly(['claimedBy', 'claimedName', 'claimedAt']);
     }
 
+    // ================================================================
+    // REACTIONS — kudos and comments on a friend's published workouts.
+    //
+    // ⚠️ THE ONE PLACE A SIGNED-IN STRANGER MAY WRITE UNDER ANOTHER
+    // PERSON'S UID, and why that is acceptable HERE and nowhere above:
+    // the private data ban exists because one document holds a whole
+    // collection, so a single bad write replaces a training history. A
+    // reaction is ONE DOCUMENT PER REACTION, create-only (update is
+    // denied outright), shape-checked below, in a subtree nothing else
+    // reads. The worst possible write is one spurious kudos, and the
+    // owner can delete it.
+    //
+    // Who may react: anyone the owner has published ANY tier to. A
+    // light-tier viewer sees the workout card in their feed, so they can
+    // kudos it — reacting requires exactly the relationship that showed
+    // you the thing you are reacting to.
+    // ================================================================
+
+    // ⚠️ exists() BEFORE get(), for the same reason claimingUnclaimedInvite
+    // checks fields before reading them: an erroring rule is a denial today
+    // and a trap for the next person to reorder it. Repeated accesses to the
+    // same document count once against the ten-get limit, so this is at most
+    // three billed reads on the miss path.
+    function viewerOfTier(userId, tier) {
+      return exists(/databases/$(database)/documents/users/$(userId)/shared/$(tier))
+          && get(/databases/$(database)/documents/users/$(userId)/shared/$(tier)).data.viewers is list
+          && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)/shared/$(tier)).data.viewers;
+    }
+
+    function viewerOfAnyTier(userId) {
+      return signedIn()
+             && (viewerOfTier(userId, 'light')
+              || viewerOfTier(userId, 'mid')
+              || viewerOfTier(userId, 'full'));
+    }
+
+    function validReaction() {
+      return request.resource.data.keys().hasOnly(
+               ['kind', 'sessionId', 'from', 'fromName', 'text', 'at'])
+          // `from` is PROVEN, not trusted: it must equal the caller's own
+          // uid, so a reaction can never be forged in somebody else's name.
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.kind in ['kudos', 'comment']
+          && request.resource.data.sessionId is string
+          && request.resource.data.sessionId.size() >= 1
+          && request.resource.data.sessionId.size() <= 80
+          && request.resource.data.fromName is string
+          && request.resource.data.fromName.size() <= 60
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 500
+          // A kudos carries no words; a comment must carry some. Two kinds,
+          // one shape, and this pair of lines is what keeps them honest.
+          && (request.resource.data.kind == 'comment' || request.resource.data.text.size() == 0)
+          && (request.resource.data.kind == 'kudos' || request.resource.data.text.size() >= 1)
+          && request.resource.data.at is timestamp;
+    }
+
+    match /users/{userId}/reactions/{reactionId} {
+      // The owner reads what landed on their workouts; viewers read so the
+      // feed can show counts and threads. list is allowed for viewers —
+      // unlike shared/{tier}, there is nothing here a viewer was not meant
+      // to see: every document is a reaction to something published to them
+      // or to somebody at a laxer tier.
+      allow get, list: if isOwner(userId) || viewerOfAnyTier(userId);
+
+      allow create: if viewerOfAnyTier(userId) && validReaction();
+
+      // No update path AT ALL. Editing is delete-and-repost; a kudos toggle
+      // is create/delete of a deterministic id. Every mutation a rule does
+      // not have is a mutation that cannot be got wrong.
+      allow update: if false;
+
+      // The sender can take back their own; the owner can moderate anything
+      // on their workouts. Field-guarded like the invite rules: resource is
+      // checked before its fields are read.
+      allow delete: if isOwner(userId)
+                    || (signedIn()
+                        && resource != null
+                        && 'from' in resource.data
+                        && resource.data.from == request.auth.uid);
+    }
+
     match /users/{userId}/invites/{token} {
       // ⚠️ get YES, list NO, and that distinction is the whole security model
       // here. Anyone signed in can redeem a link they were GIVEN — they must be
