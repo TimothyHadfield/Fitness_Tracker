@@ -230,6 +230,9 @@ const ROUTES = [
   ['#/calendar', 'Calendar'],
   ['#/graphs', 'Data · Graph', clickText('.seg, button, a', 'Graph')],
   ['#/graphs', 'Data · Bars', clickText('.seg, button, a', 'Bars')],
+  // Added 2026-08-28 with the Research tab — a whole pane of chart text,
+  // legend chips and a data table that would otherwise never be measured.
+  ['#/graphs', 'Data · Research', clickText('.seg, button, a', 'Research')],
   // ⚠️ Two steps, and the second is the point: the panel only exists once a
   // muscle is SELECTED, so auditing the map without tapping one measures the
   // figure and none of the words beside it.

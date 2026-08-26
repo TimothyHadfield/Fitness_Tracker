@@ -87,12 +87,15 @@ for (const [name, view] of [
 // Empty account, no chartable data at all.
 let data = await mount(GraphView());
 let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
-/* ⚠️ THREE since 2026-08-25: Calendar left this control and became its own nav
-   tab. The count is asserted rather than just the contents, because a segment
-   silently disappearing is exactly the class of bug this block was written for
-   — and because the count going the OTHER way would mean the calendar had
-   quietly come back into a tab it no longer belongs to. */
-ok(tabs.length === 3, `mode switch shows three tabs with NO data (${JSON.stringify(tabs)})`);
+/* ⚠️ FOUR since 2026-08-28: Research joined (Tim's ask). Three from 2026-08-25,
+   when Calendar left this control and became its own nav tab. The count is
+   asserted rather than just the contents, because a segment silently
+   disappearing is exactly the class of bug this block was written for — and a
+   FIFTH appearing should force the 360px clipping measurement this row has
+   needed twice already. */
+ok(tabs.length === 4, `mode switch shows four tabs with NO data (${JSON.stringify(tabs)})`);
+ok(tabs.includes('Research'),
+   'Research is reachable on an empty account — published data needs no history');
 ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
 ok(tabs[0] === 'Muscles',
    '⚠️ and Muscles is FIRST — it is the mode that works with the least history, where a line chart needs two points');
@@ -331,7 +334,50 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
-ok(data.querySelectorAll('.seg').length === 3, 'Bars mode keeps the mode switch');
+ok(data.querySelectorAll('.seg').length === 4, 'Bars mode keeps the mode switch (four segments since Research)');
+
+/* ================= the Research mode (2026-08-28) ================= */
+// Tim: "I want to add a 'Research' tab in the data section… a graph that
+// shows how average strength increases or decreases depending on age for
+// each muscle group." js/research-data.js carries the sourcing argument.
+{
+  [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Research').click();
+  await settle(); await settle();
+
+  ok(/How strength changes with age/.test(data.textContent), 'Research opens on the age chart');
+  ok(Boolean(data.querySelector('.research-chart')), 'and the chart is drawn');
+  // ⚠️ Eight lines + the app's grading reference — see research-data.js for
+  // why eleven would have been three invented curves.
+  ok(data.querySelectorAll('.research-chart path').length === 9,
+     `eight measured series plus the dashed grading reference (${data.querySelectorAll('.research-chart path').length})`);
+  const keys = [...data.querySelectorAll('.research-key')].map((b) => b.textContent.trim());
+  ok(keys.length === 9 && keys.includes('Quads') && keys.includes('Forearms'),
+     'every line has a labelled legend chip, so identity is never colour-alone');
+  ok(/Chest, Back and Traps/.test(data.textContent),
+     '⚠️ the groups with NO published curve are named as missing, not drawn anyway');
+  ok(/not a one-rep max/.test(data.textContent),
+     'and the screen says what the measurement actually is');
+  const doi = data.querySelector('.research-notes a');
+  ok(doi && /doi\.org/.test(doi.href), 'the study is linked, not just name-dropped');
+
+  // The table view — the relief the light-mode contrast WARN obligates.
+  const rows = data.querySelectorAll('.research-table tbody tr');
+  ok(rows.length === 8, `the table carries all eight groups (${rows.length})`);
+  ok(rows[0].querySelectorAll('td').length === 6, 'six measured age groups per row');
+
+  // Tap a legend chip → that series is isolated, tap again → back. The
+  // legend REBUILDS on every draw, so the chip is re-found after each tap —
+  // holding the old node would read a detached button's stale state.
+  const quadsChip = () => [...data.querySelectorAll('.research-key')].find((b) => b.textContent.trim() === 'Quads');
+  quadsChip().click(); await settle();
+  ok(quadsChip().getAttribute('aria-pressed') === 'true', 'tapping a muscle follows its line');
+  ok([...data.querySelectorAll('.research-chart g')].some((g) => g.getAttribute('opacity') === '0.18'),
+     'and the other lines step back rather than vanish');
+  quadsChip().click(); await settle();
+  ok(quadsChip().getAttribute('aria-pressed') === 'false', 'tapping again releases it');
+}
+[...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
+await settle();
 
 /* ============ neither chart mode is ever a dead end ============ */
 // Tim, 2026-08-17: a chart needs the same lift on two days, but the numbers

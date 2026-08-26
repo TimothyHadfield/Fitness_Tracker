@@ -43,6 +43,7 @@ const SHELL = [
   './js/exercises.js',
   './js/image-crop.js',
   './js/import-file.js',
+  './js/research-data.js',
   './js/views-import.js',
   './js/firebase-backend.js',
   './js/firebase-config.js',

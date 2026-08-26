@@ -3045,3 +3045,63 @@ a.row { text-decoration: none; }
    says what this is, which is why it carries no label of its own. */
 .feed-kind { display: inline-flex; vertical-align: -0.12em; margin-right: 7px; color: var(--ink-faint); }
 .feed-kind svg { width: 1em; height: 1em; }
+
+/* ================================================================== *
+ * Research tab (2026-08-28)
+ *
+ * ⚠️ THE EIGHT SERIES COLOURS ARE NOT THE LEVEL PALETTE, on purpose. The
+ * level colours mean RANK everywhere else in the app; borrowing them for
+ * line IDENTITY would teach that Quads-coloured means Elite-coloured.
+ * These are the dataviz reference categorical hues, machine-validated
+ * 2026-08-28 against this app's dark surfaces (all four palettes, ≥3:1,
+ * adjacent CVD ΔE ≥ 8.4) and white (three hues under 3:1 there — which
+ * is what the labelled legend chips and the table view are for). The
+ * dark set is the same hues re-stepped for dark, not a second palette.
+ * ================================================================== */
+:root {
+  --rs-1: #3987e5; --rs-2: #d95926; --rs-3: #199e70; --rs-4: #c98500;
+  --rs-5: #d55181; --rs-6: #008300; --rs-7: #9085e9; --rs-8: #e66767;
+}
+:root[data-theme="light"] {
+  --rs-1: #2a78d6; --rs-2: #eb6834; --rs-3: #1baf7a; --rs-4: #eda100;
+  --rs-5: #e87ba4; --rs-6: #008300; --rs-7: #4a3aa7; --rs-8: #e34948;
+}
+
+.research-pane { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
+.research-title { font-size: 17px; margin: 2px 0 0; }
+.research-sub { margin-top: -4px; }
+
+.research-chart-host { width: 100%; }
+.research-chart { display: block; touch-action: manipulation; }
+.research-chart .chart-grid { stroke: var(--rule); stroke-width: 1; }
+.research-chart .chart-tick { fill: var(--ink-faint); font-size: 10px; font-family: var(--mono); }
+.research-chart .research-ref { stroke: var(--ink-faint); opacity: .8; }
+.research-chart .research-guide { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 2 3; }
+.research-chart .research-line-label { font-size: 11px; font-weight: 600; }
+
+.research-readout { min-height: 20px; font-size: 12.5px; line-height: 1.45; }
+.research-readout-hint { color: var(--ink-faint); }
+
+.research-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.research-key { display: inline-flex; align-items: center; gap: 6px; }
+/* Identity is never colour-alone: every chip carries the muscle's name, and
+   the pressed state is a border change, not a repaint of the series hue. */
+.research-key[aria-pressed="true"] { border-color: var(--ink); }
+.research-key-ref { pointer-events: none; opacity: .8; }
+.rs-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.rs-dot-ref {
+  background: none; border-radius: 0; height: 0;
+  border-top: 2px dashed var(--ink-faint); width: 14px;
+}
+
+.research-table summary { cursor: pointer; font-size: 13px; color: var(--ink-soft); padding: 4px 0; }
+.research-scroll { overflow-x: auto; }
+.research-table table { border-collapse: collapse; font-size: 12px; font-family: var(--mono); }
+.research-table th, .research-table td { padding: 4px 8px; text-align: right; white-space: nowrap; }
+.research-table thead th { color: var(--ink-faint); font-weight: 500; border-bottom: 1px solid var(--rule); }
+.research-table tbody th { text-align: left; font-family: var(--sans); font-weight: 600; }
+
+.research-notes { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); }
+.research-notes p { margin: 0; }
+.research-notes b { color: var(--ink); }
+.research-notes a { color: var(--accent); }

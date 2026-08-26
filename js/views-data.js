@@ -14,6 +14,8 @@ import {
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
+import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
+import { ageCoefficient } from './strength-standards.js';
 import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import { yearsToShow, buildYear, daysLabel, DOW_LABELS } from './year-grid.js';
 import * as units from './units.js';
@@ -360,7 +362,11 @@ function landOnCurrentMonth(screen) {
  * anyway, because nothing is gained by the word and a fourth segment has been
  * added to this row once already.
  */
-const DATA_TABS = [['muscles', 'Muscles'], ['trend', 'Graph'], ['compare', 'Bars']];
+// ⚠️ Four segments again (Research joined 2026-08-28, Tim's ask). The clipping
+// this comment used to warn about was "Bar Chart" at 393px on a THREE-segment
+// row; the labels are all short now and the row was driven at 360px with all
+// four after the change — no clipping. If a fifth ever arrives, measure first.
+const DATA_TABS = [['muscles', 'Muscles'], ['trend', 'Graph'], ['compare', 'Bars'], ['research', 'Research']];
 
 function dataTabs(active, onChartMode) {
   return el('div', { class: 'segmented', role: 'tablist' },
@@ -953,6 +959,7 @@ export async function GraphView() {
     host.classList.toggle('is-muscles', graphMode === 'muscles');
     if (graphMode === 'muscles') await muscleGroupsPane(host, top);
     else if (graphMode === 'compare') renderCompare();
+    else if (graphMode === 'research') await renderResearchPane(host, top);
     else await renderTrend();
   }
 
@@ -1618,4 +1625,241 @@ export async function SettingsView() {
         'Fitness Tracker · ' + accountLine.sub.toLowerCase()),
     ],
   });
+}
+
+/* ================================================================== *
+ * Research — where the numbers come from (2026-08-28, Tim's ask)
+ *
+ * "I'm really curious about where some of our information is coming from and
+ * how the site does its calculations, as well as displaying just useful
+ * research on these topics." First exhibit: how average strength moves with
+ * age, per muscle group — js/research-data.js carries the data and the full
+ * sourcing argument (including why this is NOT drawn from Strength Level:
+ * their by-age tables are one shared model wearing eleven names).
+ *
+ * ⚠️ EIGHT LINES, NOT ELEVEN, AND THE SCREEN SAYS WHY. Chest, Back and Traps
+ * have no published per-group age curve — the study behind this chart has no
+ * pressing, rowing or shrugging movement. Drawing them anyway would be
+ * inventing data on the one screen that exists to show sources.
+ * ================================================================== */
+
+// Fixed slot order — identity follows the muscle, never the rank or filter
+// state. These are the dataviz reference palette's eight categorical hues,
+// validated (scripts run 2026-08-28) against this app's dark surfaces of all
+// four palettes and the white light surface: CVD ΔE ≥ 8.4 adjacent, ≥ 3:1
+// contrast on dark. Three hues sit under 3:1 on WHITE, which is why the table
+// view and the labelled legend exist rather than being nice-to-haves.
+const RESEARCH_SLOTS = ['Quads', 'Hamstrings', 'Glutes', 'Calves', 'Shoulders', 'Biceps', 'Triceps', 'Forearms'];
+
+function researchChart({ series, ref, W, H, isolated, focusBand, onBandTap }) {
+  const padL = 38, padR = 10, padT = 10, padB = 24;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const ages = series[0].points.map((p) => p.age);
+  const aMin = ages[0], aMax = ages[ages.length - 1];
+  const vMin = 55, vMax = 100;
+
+  const x = (a) => padL + ((a - aMin) / (aMax - aMin)) * iw;
+  const y = (v) => padT + ih - ((v - vMin) / (vMax - vMin)) * ih;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('class', 'chart research-chart');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label',
+    'Average strength by age as a percentage of each muscle group’s strongest age group');
+
+  const mk = (tag, attrs, cls) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (cls) n.setAttribute('class', cls);
+    svg.append(n);
+    return n;
+  };
+
+  // Grid: horizontal only, recessive. Direct % labels on the axis.
+  for (let v = 60; v <= 100; v += 10) {
+    mk('line', { x1: padL, y1: y(v), x2: W - padR, y2: y(v) }, 'chart-grid');
+    mk('text', { x: padL - 5, y: y(v) + 3.5, 'text-anchor': 'end' }, 'chart-tick').textContent = `${v}%`;
+  }
+  for (const a of ages) {
+    mk('text', { x: x(a), y: H - 6, 'text-anchor': 'middle' }, 'chart-tick').textContent = String(a);
+  }
+
+  // The app's own grading curve — a REFERENCE, not a series: dashed, ink-
+  // coloured, under the data lines.
+  if (ref && ref.length) {
+    mk('path', {
+      d: ref.map((p, i) => `${i ? 'L' : 'M'}${x(p.age).toFixed(1)},${y(Math.max(vMin, p.pct)).toFixed(1)}`).join(' '),
+      fill: 'none', 'stroke-dasharray': '5 4', 'stroke-width': 1.5,
+    }, 'research-ref');
+  }
+
+  // Focused band guide, under the lines.
+  if (focusBand != null) {
+    mk('line', { x1: x(ages[focusBand]), y1: padT, x2: x(ages[focusBand]), y2: padT + ih }, 'research-guide');
+  }
+
+  series.forEach((s, si) => {
+    const dim = isolated && isolated !== s.muscle;
+    const g = mk('g', { opacity: dim ? 0.18 : 1 });
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', s.points.map((p, i) => `${i ? 'L' : 'M'}${x(p.age).toFixed(1)},${y(p.pct).toFixed(1)}`).join(' '));
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', `var(--rs-${si + 1})`);
+    path.setAttribute('stroke-width', 2);
+    path.setAttribute('stroke-linejoin', 'round');
+    g.append(path);
+    for (const p of s.points) {
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('cx', x(p.age)); dot.setAttribute('cy', y(p.pct));
+      dot.setAttribute('r', focusBand != null && ages[focusBand] === p.age ? 4 : 2.75);
+      dot.setAttribute('fill', `var(--rs-${si + 1})`);
+      // A 2px surface ring so overlapping markers separate (marks-and-anatomy).
+      dot.setAttribute('stroke', 'var(--surface)');
+      dot.setAttribute('stroke-width', 1.5);
+      g.append(dot);
+    }
+    // Direct label at line end when isolated — with eight series the legend
+    // carries identity; a label per line would be sixteen colliding words.
+    if (isolated === s.muscle) {
+      const last = s.points[s.points.length - 1];
+      mk('text', { x: x(last.age) - 6, y: y(last.pct) - 8, 'text-anchor': 'end', fill: `var(--rs-${si + 1})` },
+        'research-line-label').textContent = s.muscle;
+    }
+  });
+
+  // Tap targets per age band — full column height, far bigger than the marks.
+  ages.forEach((a, i) => {
+    const half = iw / (ages.length - 1) / 2;
+    const r = mk('rect', {
+      x: Math.max(padL, x(a) - half), y: padT,
+      width: half * 2, height: ih, fill: 'transparent',
+    });
+    r.style.cursor = 'pointer';
+    r.addEventListener('click', () => onBandTap(i));
+  });
+
+  return svg;
+}
+
+async function renderResearchPane(host, top) {
+  setChildren(top);
+  const profile = await store.getProfile();
+  const gender = profile.gender === 'female' ? 'female' : 'male';
+  const series = ageStrengthSeries(gender);
+  const ages = series[0].points.map((p) => p.age);
+  const ref = appGradingCurve(ageCoefficient, ages[0], ages[ages.length - 1]);
+
+  // Fixed slot order regardless of object iteration details.
+  series.sort((a, b) => RESEARCH_SLOTS.indexOf(a.muscle) - RESEARCH_SLOTS.indexOf(b.muscle));
+
+  const state = { isolated: null, focusBand: null };
+
+  const chartHost = el('div', { class: 'research-chart-host' });
+  const readout = el('div', { class: 'research-readout', role: 'status' });
+  const legend = el('div', { class: 'research-legend' });
+
+  function drawChart() {
+    const W = Math.max(300, Math.min(chartHost.clientWidth || 358, 720));
+    setChildren(chartHost, researchChart({
+      series, ref, W, H: 250,
+      isolated: state.isolated, focusBand: state.focusBand,
+      onBandTap: (i) => { state.focusBand = state.focusBand === i ? null : i; drawChart(); },
+    }));
+    renderReadout();
+    renderLegend();
+  }
+
+  function renderReadout() {
+    if (state.focusBand == null) {
+      setChildren(readout, el('span', { class: 'research-readout-hint',
+        text: 'Tap the chart to read one age group; tap a muscle below to follow one line.' }));
+      return;
+    }
+    const i = state.focusBand;
+    const shown = state.isolated ? series.filter((s) => s.muscle === state.isolated) : series;
+    setChildren(readout,
+      el('b', { text: `Around age ${ages[i]}: ` }),
+      el('span', {
+        text: shown
+          .map((s) => `${s.muscle} ${s.points[i].pct}%`)
+          .join(' · '),
+      }));
+  }
+
+  function renderLegend() {
+    setChildren(legend,
+      ...series.map((s, si) => el('button', {
+        class: 'chip research-key',
+        'aria-pressed': String(state.isolated === s.muscle),
+        onClick: () => { state.isolated = state.isolated === s.muscle ? null : s.muscle; drawChart(); },
+      },
+        el('span', { class: 'rs-dot', style: `background:var(--rs-${si + 1})` }),
+        s.muscle,
+      )),
+      el('span', { class: 'chip research-key research-key-ref' },
+        el('span', { class: 'rs-dot rs-dot-ref' }),
+        'App’s grading curve'),
+    );
+  }
+
+  // The full numbers, for anyone the lines are too thin or too pale for —
+  // and the relief the light-mode contrast WARN obligates.
+  const table = el('details', { class: 'research-table' },
+    el('summary', { text: 'Show as a table' }),
+    el('div', { class: 'research-scroll' },
+      el('table', {},
+        el('thead', {}, el('tr', {},
+          el('th', { text: 'Muscle group' }),
+          ...ages.map((a) => el('th', { text: `~${a}` })))),
+        el('tbody', {}, ...series.map((s) => el('tr', {},
+          el('th', { text: s.muscle }),
+          ...s.points.map((p) => el('td', { text: `${p.pct}%` }))))),
+      )),
+    el('div', { class: 'field-help', text:
+      '100% is that muscle group’s strongest age group. Column headings are the average age '
+      + 'of the people measured in each group.' }),
+  );
+
+  setChildren(host,
+    el('div', { class: 'research-pane' },
+      el('h2', { class: 'research-title', text: 'How strength changes with age' }),
+      el('div', { class: 'field-help research-sub', text:
+        `Average ${gender === 'female' ? 'women’s' : 'men’s'} strength by age, each muscle group as a % of its own strongest `
+        + 'age group — measured, not modelled, which is why the lines differ and why the axis '
+        + `stops where the people do (${ages[0]} to ${ages[ages.length - 1]}).` }),
+      chartHost,
+      readout,
+      legend,
+      table,
+      el('div', { class: 'research-notes' },
+        el('p', {}, el('b', { text: 'What this is. ' }),
+          `${AGE_SOURCE.n[gender]} healthy non-athletic ${gender === 'female' ? 'women' : 'men'} aged 15–83, every major `
+          + 'muscle group measured on the same dynamometer. Each point is one age group’s measured '
+          + 'average (peak turning force at the joint, not a one-rep max), plotted at that group’s '
+          + 'average age. Groups of different people, not the same people ageing — so treat the '
+          + 'shapes as the finding, not any single percent. ',
+          el('a', { href: AGE_SOURCE.url, target: '_blank', rel: 'noopener', text: 'Harbo, Brincks & Andersen (2012)' }), '.'),
+        el('p', {}, el('b', { text: `Why ${NOT_COVERED.join(', ').replace(/, ([^,]+)$/, ' and $1')} are missing. ` }),
+          'No study measures pressing, rowing or shrugging strength across ages in a general '
+          + 'population. This tab shows sources — inventing three curves to complete the set would '
+          + 'be the opposite of its job.'),
+        el('p', {}, el('b', { text: 'The dashed line ' }),
+          'is what this app assumes: one combined age curve for every lift, from powerlifting’s '
+          + 'published age-grading tables (McCulloch and Foster coefficients), used to place your '
+          + 'lifts against people your own age. One curve for all muscles is a simplification — '
+          + 'this chart is what the measured groups actually did.'),
+        el('p', {}, el('b', { text: 'Where the app’s other numbers come from. ' }),
+          'Strength standards and lift-to-lift ratios: Strength Level’s published standards, '
+          + 'derived at a fixed body weight. Estimated one-rep max: Marzagão’s 2026 formula. '
+          + 'Muscle ratings: your recorded sets, converted through those ratios — every screen '
+          + 'that shows a rating names the set it came from.')),
+    ));
+
+  drawChart();
+  // Redraw once laid out — clientWidth is 0 until the pane is in the document.
+  requestAnimationFrame(drawChart);
 }

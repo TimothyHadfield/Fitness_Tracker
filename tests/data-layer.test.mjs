@@ -4265,5 +4265,45 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await st.clearAll();
 }
 
+/* ================= research data (the Research tab, 2026-08-28) ============
+   js/research-data.js — Harbo 2012's measured means, normalised. The numbers
+   here are transcribed from a published table, so what a test can catch is
+   the ARITHMETIC (normalisation, ranges) and the honesty properties (peak is
+   100, nothing extrapolated past the measured bands, no invented groups). */
+{
+  const rd = await import('../js/research-data.js');
+  const { ageCoefficient } = await import('../js/strength-standards.js');
+
+  for (const g of ['male', 'female']) {
+    const series = rd.ageStrengthSeries(g);
+    ok(series.length === 8, `${g}: eight muscle groups, no more — Chest/Back/Traps are refused, not faked`);
+    ok(series.every((s) => Math.max(...s.points.map((p) => p.pct)) === 100),
+       `${g}: every group's strongest band reads exactly 100%`);
+    ok(series.every((s) => s.points.length === 6), `${g}: six measured bands per group`);
+    const ages = series[0].points.map((p) => p.age);
+    ok(ages[0] === rd.AGE_BANDS[g][0] && ages[5] === rd.AGE_BANDS[g][5],
+       `${g}: the x range is the measured band means (${ages[0]}–${ages[5]}), not the study's extreme individuals`);
+  }
+  ok(rd.NOT_COVERED.join() === 'Chest,Back,Traps', 'the refused groups are exactly the unmeasured ones');
+
+  // Spot-checks against the paper's Table 5 (male): Quads 146 Nm at ~74 over
+  // a 215 peak; Shoulders peak in the SECOND band (67 at ~34), which is the
+  // kind of shape one shared curve cannot produce and is why this source.
+  const male = rd.ageStrengthSeries('male');
+  const quads = male.find((s) => s.muscle === 'Quads');
+  ok(near(quads.points[5].pct, 67.9, 0.1), `oldest Quads band is 146/215 = 67.9% (${quads.points[5].pct})`);
+  const sh = male.find((s) => s.muscle === 'Shoulders');
+  ok(sh.points[1].pct === 100 && sh.points[0].pct < 100,
+     '⚠️ Shoulders peak in the 30s band, not the 20s — a per-group shape, the whole point of the chart');
+
+  // The app's grading curve: flat 100 through the 23–40 plateau, lower after.
+  const ref = rd.appGradingCurve(ageCoefficient, 24, 74);
+  ok(ref.length === 51, 'one reference point per year of the measured range');
+  ok(ref.find((p) => p.age === 30).pct === 100 && ref.find((p) => p.age === 24).pct === 100,
+     'the plateau reads 100%');
+  ok(ref.find((p) => p.age === 74).pct < ref.find((p) => p.age === 55).pct,
+     'and it declines with age after it');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);
