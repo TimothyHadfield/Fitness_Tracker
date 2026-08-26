@@ -5351,3 +5351,14 @@ anybody; live sync needs Firebase Blaze turned on; importing food would narrow D
 call.
 
 2,738 assertions across eleven suites, all green.
+
+RATIO SWEEP REMAINDER (same session): derived the raise family and the incline dumbbell press.
+Lateral raise 0.30->0.53, front raise 0.30->0.54, rear delt fly 0.30->0.56, incline DB bench
+0.70->0.80. The raises had been flattering by ~80 % — a 40 lb-per-hand lateral raise was
+converting to a 267 lb overhead press. It reads 151 now. The three raise medians agree within
+0.03, so the family shape was right and only the number was wrong. q does NOT rise on the raises
+(they drift 2-4x across the levels, so there's no constant to find) but DOES rise on the incline
+press (1.1x, flattest in the table). Also found a wrong note: Machine Triceps Extension claimed
+Strength Level publish a standard for it — they don't, they publish a machine pushdown, which is a
+different exercise. Labelled honestly now. Still open and small: decline DB bench, Seated/Arnold
+offsets, spider curl.

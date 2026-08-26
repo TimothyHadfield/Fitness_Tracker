@@ -169,13 +169,26 @@ const RATIOS = {
     // dumbbell pressers and overstates weak ones, which is why `q` does not rise
     // now that the number is sourced.
     //
-    // ⚠️ INCLINE AND DECLINE ARE NOT MEASURED — they are the old REASONED
-    // offsets carried across the corrected anchor (x 0.81/0.72), so the family
-    // keeps the shape somebody chose for it while resting on a number that is
-    // now real. Decline HAD to move: at 0.76 it would have sat below the
-    // corrected flat press, saying a decline dumbbell press is harder to load
-    // than a flat one, which is backwards. Both stay open in 0h.
-    [/Incline Dumbbell Bench Press/, 0.70, 0.55],
+    /* ⚠️ INCLINE IS MEASURED NOW (2026-08-27). SL incline dumbbell press
+     * 49/66/88/113/139 per dumbbell, doubled, over bench 127/169/220/277/339 →
+     * 0.772/0.781/0.800/0.816/0.820, median 0.800, against a carried 0.70 —
+     * so it had been flattering incline pressers by about 14 %.
+     *
+     * ⚠️ THIS IS THE FLAT SIDE OF THE DRIFT RULE AND q GOES UP. The five ratios
+     * span 0.772 to 0.820 — a 1.1x sweep, the flattest thing in this whole
+     * table. Where the per-level ratios are nearly identical the ratio really
+     * is a population constant, so a single number costs a lifter almost
+     * nothing and deserves to be believed: 0.55 → 0.72, just under the flat
+     * press's own 0.65... and above it, because a flatter source is a better
+     * source. It also lands just below the flat press's 0.81, which is the
+     * ordering an incline has to keep.
+     *
+     * ⚠️ DECLINE IS STILL NOT MEASURED — the old reasoned offset carried across
+     * the corrected anchor. It sits ABOVE the flat press on purpose (a decline
+     * genuinely moves more load); at the original 0.76 it sat below, claiming a
+     * decline is harder to load than a flat one, which is backwards. Open in 0h.
+     */
+    [/Incline Dumbbell Bench Press/, 0.80, 0.72],
     [/Decline Dumbbell Bench Press/, 0.86, 0.50],
     [/Dumbbell Bench Press/, 0.81, 0.65],
     [/Incline Machine Press/, 0.82, 0.45],
@@ -460,12 +473,36 @@ const RATIOS = {
     // having to impose from outside. Rope-and-stack leverage varies, hence
     // the cable-grade q.
     [/Face Pull/, 0.75, 0.35],
-    // Raises and rear-delt work load a fraction of a press and vary hugely with
-    // technique. They are admitted because they are real shoulder work, at a
-    // quality that stops them ever outvoting a press. Still reasoned — SL do
-    // publish lateral-raise standards, so a later pass can derive this line;
-    // the 2026-08-26 sweep stopped at the entries 0h named.
-    [/Raise|Fly|Pec Deck/, 0.30, 0.25],
+    /* ⚠️ THE RAISE FAMILY IS SOURCED NOW (2026-08-27), AND 0.30 WAS FLATTERING
+     * EVERY RAISE BY ABOUT 80 %. Same technique as the rest of the sweep — SL's
+     * per-dumbbell figures at a 180 lb male, doubled, over this muscle's key
+     * lift (OHP 75/104/140/181/226), median of the five:
+     *
+     *   lateral raise  12/22/37/55/76  -> 0.32 0.42 0.53 0.61 0.67  median 0.53
+     *   front raise    10/22/38/60/86  -> 0.27 0.42 0.54 0.66 0.76  median 0.54
+     *   rear delt fly   8/20/39/64/94  -> 0.21 0.38 0.56 0.71 0.83  median 0.56
+     *
+     * ⚠️ THE THREE MEDIANS AGREE TO WITHIN 0.03, which is the useful finding:
+     * one number for the family was the right SHAPE all along and only the
+     * value was wrong. They are split anyway, because they are now three
+     * measurements rather than one guess.
+     *
+     * ⚠️ AND q DOES NOT RISE, DESPITE THE SOURCING — the 2026-08-26 rule about
+     * drift, arriving in its sharpest form yet. These ratios sweep 2.1x, 2.9x
+     * and 3.9x across the five levels, so there is no population constant here
+     * to find: a beginner's raise is a fifth of their press and an elite's is
+     * five sixths. A fixed ratio compresses everybody toward the middle, and
+     * the rear delt fly drifts most, so it keeps the lowest q of the three.
+     * The median is the best single answer available and is still a bad one,
+     * which is exactly what a low q is for.
+     */
+    [/Lateral Raise/, 0.53, 0.25],
+    [/Front Raise/, 0.54, 0.25],
+    [/Rear Delt Fly|Reverse Pec Deck/, 0.56, 0.22],
+    // Cable and machine versions carry the derived number for the movement
+    // they copy — the leverage is not the dumbbell's and nothing is published
+    // for them, so they are labelled rather than separately claimed.
+    [/Y-Raise|Raise|Fly|Pec Deck/, 0.54, 0.20],
   ],
   Biceps: [ // key: Barbell Curl
     [/^Barbell Curl$/, 1.00, 1.00],
@@ -561,8 +598,13 @@ const RATIOS = {
     // close-grip bench → 0.27/0.37/0.47/0.55/0.62, median 0.47 (was 0.45).
     [/Overhead Cable Extension/, 0.47, 0.35],
     [/Overhead Dumbbell Extension/, 0.40, 0.35],
-    // Reasoned — not derived in the 2026-08-26 sweep; SL publish a machine
-    // extension standard a later pass can use.
+    // ⚠️ REASONED, NO PUBLISHED STANDARD — checked 2026-08-27 and the note that
+    // used to sit here was WRONG. It said "SL publish a machine extension
+    // standard a later pass can use"; they do not. They publish a machine
+    // tricep PUSHDOWN, which is a different movement from a seated machine
+    // extension and already has its own entry. This is now in the same class as
+    // Machine Row and the shrug variants: labelled rather than left looking
+    // derivable, so nobody spends another pass looking for it.
     [/Machine Triceps Extension/, 0.60, 0.35],
     [/Kickback/, 0.20, 0.20],
   ],

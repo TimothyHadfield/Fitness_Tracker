@@ -306,6 +306,43 @@ alarming."* Diagnosed by reading the path rather than guessing. Four faults, all
   activity, recovered on the client by name because the projection carries no group. It also
   stopped printing **"Running" directly under "Running"**, which is what an activity card did.
 
+### 5b. ⚠️ THE RAISE FAMILY WAS FLATTERING BY 80 % — 0h's remainder, mostly closed
+
+Four more entries derived by the established technique (SL per-dumbbell figures at a 180 lb male,
+doubled, over the muscle's key lift, median of the five levels):
+
+```
+                     was    now    SL per-dumbbell figures      drift    q
+  Lateral Raise      0.30   0.53   12/22/37/55/76               2.1x    0.25 (held)
+  Front Raise        0.30   0.54   10/22/38/60/86               2.9x    0.25 (held)
+  Rear Delt Fly      0.30   0.56    8/20/39/64/94               3.9x    0.22 (down)
+  Incline DB Bench   0.70   0.80   49/66/88/113/139             1.1x    0.72 (UP)
+```
+
+⚠️ **THIS IS THE FACE PULL AGAIN, AND BIGGER.** A 40 lb-per-hand lateral raise was converting to a
+**267 lb overhead press** — comfortably elite, off a movement most people do for high reps at the
+end of a session. It now converts to 151. Rear delt fly 200 → 107 lb. Incline dumbbell press
+229 → 200 lb.
+
+⚠️ **THE THREE RAISE MEDIANS AGREE TO WITHIN 0.03**, which says the one-number-for-the-family shape
+was right all along and only the value was wrong. They are split into three lines anyway, because
+they are three measurements now rather than one guess.
+
+⚠️ **AND THE DRIFT RULE SHOWED BOTH ITS FACES IN ONE PASS.** The raises sweep 2–4× across the five
+levels — a beginner's raise is a fifth of their press, an elite's is five sixths — so **there is no
+population constant to find and `q` does not rise despite the sourcing**; the median is the best
+single answer available and is still a bad one, which is exactly what a low `q` is for. The incline
+dumbbell press is the opposite, and the flattest ratio in the whole table (**1.1×**), so it is the
+one entry whose **`q` goes UP**, 0.55 → 0.72.
+
+⚠️ **One note in the file was WRONG and is corrected.** `Machine Triceps Extension` carried
+*"SL publish a machine extension standard a later pass can use"*. **They do not** — they publish a
+machine tricep *pushdown*, which is a different movement and already has its own entry. It is now
+labelled "reasoned, no published standard" like Machine Row and the shrugs, so nobody spends
+another pass hunting for it. **Still genuinely open in 0h**: decline dumbbell bench, the
+Seated/Arnold shoulder offsets carried across their anchor, and spider curl (SL's is a barbell and
+the library's is a dumbbell — nothing honest to divide).
+
 ### 6. ⚠️ THE FULL BROWSER AUDIT HAS NOW RUN ON ALL FOUR PALETTES
 
 The standing known limit since 2026-08-26 — *"the full audit has only ever run on Gold"* — is
@@ -2644,7 +2681,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | | What | State |
 |---|---|---|
 | **1** | **0e — joint workouts** | ⚠️ **THE GUEST HALF IS BUILT AND DEPLOYED, 2026-08-26** — people chips in the runner, per-person suggestions, own collection, day-view section; see that day's section. **Still open: the friend-accept half** (publish a session to a real friend's account for them to accept) — same new-rules-path wall as 0l, and 0l is being built first |
-| **2** | **0h — the ratio table** | ✅ **SUBSTANTIALLY CLOSED 2026-08-26** — 28 lifts derived from published standards in one sweep, 23 pinned as assertions; see the fourth-pass section. **Small remainder stays open**: lateral raises, machine triceps extension, the carried dumbbell-bench/shoulder offsets, spider curl (source/library equipment mismatch) |
+| **2** | **0h — the ratio table** | ✅ **NEARLY CLOSED 2026-08-27.** 28 lifts swept 2026-08-26, then the raise family and the incline dumbbell press derived 2026-08-27 — lateral raise 0.30→0.53, front raise 0.30→0.54, rear delt fly 0.30→0.56, incline DB bench 0.70→0.80. ⚠️ **The raises had been flattering by ~80 %** (a 40 lb lateral raise read as a 267 lb press). Machine triceps extension is now labelled *no published standard* — the note claiming one exists was wrong. **Genuinely open, and small**: decline dumbbell bench, the Seated/Arnold offsets, spider curl |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, but its headline item CLOSED on 2026-08-25**: *"nothing a user can see on Home ever grows"* was answered by making Home a feed, which is nothing but growth. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
 | **4** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED 2026-08-26** — invisible hit halos grow every muscle ~10px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44px lands on the illustration itself and stays Tim's call |
 | **5** | **0j — mutual disconnect** | ⚠️ **OPEN.** The sheet stopped promising it on 2026-08-24; the feature is still one-sided. Needs a new rules path |

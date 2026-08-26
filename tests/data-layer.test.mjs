@@ -1729,6 +1729,11 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     };
     const pinned = [
       ['Pec Deck', 'Chest', 0.90],            // was 0.55 — the sweep's worst flatter
+      // 2026-08-27: SL incline dumbbell press 49/66/88/113/139 doubled over
+      // bench 127/169/220/277/339 → 0.772-0.820, median 0.800. Was a carried
+      // 0.70. ⚠️ The flattest ratio in the table (1.1x across five levels),
+      // which is why this is the one entry whose q went UP.
+      ['Incline Dumbbell Bench Press', 'Chest', 0.80],
       ['Close-Grip Bench Press', 'Chest', 0.95],
       ['Machine Chest Press', 'Chest', 0.91],
       ['Lat Pulldown', 'Back', 0.95],
@@ -1760,6 +1765,10 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     // Orderings the corrections must not have broken — each pair is a claim
     // about the world, not about the table.
     const lt = (a, am, b, bm, msg) => ok(ratioOf(a, am) < ratioOf(b, bm), msg);
+    const qualityOf = (name, muscle) => {
+      const hit = me.contributionsFor(byName(name)).find((x) => x.muscle === muscle && x.kind === 'direct');
+      return hit ? hit.quality : null;
+    };
     lt('Deadlift', 'Back', 'Sumo Deadlift', 'Back',
        'sumo moves more weight than conventional for the same person');
     lt('Sumo Deadlift', 'Back', 'Rack Pull', 'Back',
@@ -1772,8 +1781,24 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'one leg moves less than two');
     lt('Face Pull', 'Shoulders', 'Overhead Press', 'Shoulders',
        'a face pull is still lighter work than a press');
-    ok(ratioOf('Lateral Raise', 'Shoulders') === 0.30,
-       'the raise family stays at its reasoned 0.30 — the sweep split face pull out, not raises');
+    // ⚠️ THE RAISE FAMILY IS SOURCED SINCE 2026-08-27 and 0.30 was flattering
+    // every raise by about 80 %. SL per-dumbbell figures at a 180 lb male,
+    // doubled, over OHP 75/104/140/181/226 — the same technique as the rest of
+    // the sweep. A revert of any of these three flips its own line.
+    ok(ratioOf('Lateral Raise', 'Shoulders') === 0.53,
+       'lateral raise 0.53 — SL 12/22/37/55/76 doubled over OHP, median of five');
+    ok(ratioOf('Front Raise', 'Shoulders') === 0.54,
+       'front raise 0.54 — SL 10/22/38/60/86');
+    ok(ratioOf('Rear Delt Fly', 'Shoulders') === 0.56,
+       'rear delt fly 0.56 — SL 8/20/39/64/94');
+    // ⚠️ The ordering that has to survive: a raise is still a fraction of a
+    // press, which is what stops 40 lb of lateral raise reading as a big press.
+    lt('Lateral Raise', 'Shoulders', 'Overhead Press', 'Shoulders',
+       'and a raise is still much lighter work than the press it converts to');
+    // ⚠️ q does NOT rise on any of them despite the sourcing, because the five
+    // per-level ratios sweep 2-4x — there is no population constant to find.
+    ok(qualityOf('Rear Delt Fly', 'Shoulders') <= qualityOf('Lateral Raise', 'Shoulders'),
+       'the rear delt fly drifts most across the levels, so it is trusted least');
   }
 
   // Coverage, stated as a number so a regression is loud rather than subtle.
