@@ -5439,3 +5439,28 @@ get() inside the viewer check on documents that don't exist. Every denial is sti
 noted in the rules file not to chase a quiet log, because it won't go quiet.
 
 Rules deployed. 2,813 assertions plus 92 in the emulator, all green.
+
+════════════════════════════════════════════════════════════════════════════
+PREPARED FOR A CHAT RESET — 2026-08-27
+
+Where things stand. The app is live and working; nothing is blocking. 2,813 assertions across
+eleven suites plus 92 rules assertions in the emulator, all green. Rules deployed. Four commits
+pushed today.
+
+What Tim asked for today and got: the profile photo cropper (and then the ability to re-edit a
+saved one), his two iPhone bugs fixed, activities Phase 2 items 1-4, the palette audit finally run
+on all four palettes, the ratio table's raise family corrected, file import built, Firebase Blaze
+priced, and the last two open social items (joint workouts and mutual disconnect) closed.
+
+What he's waiting on / parked: AirPods stem presses and food import — both "wait" at his
+instruction. Warm-ups in the volume count is still his call. His friend's sign-in he's
+investigating himself. And docs/activities-plan.md wants to know which activities his circle
+actually logs before per-activity extras get built.
+
+The honest gaps, which progress.md's "NOT verified" section spells out: file import has never seen
+a real export file from any of those services, the handoff and disconnect paths have never run
+between two real accounts, and the profile-photo fix was reasoned rather than observed (his phone
+confirms it works, which isn't the same as confirming why).
+
+progress.md is the file to read. Its index was rebuilt today so open work sits at the top and
+closed work is collected at the bottom — more than half of it is closed now.
