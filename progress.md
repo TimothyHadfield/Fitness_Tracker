@@ -10,10 +10,10 @@ half), kudos + comments with a new tested rules path (0l), location on feed card
 label (0m), the ratio sweep — 28 lifts derived from published standards (0h substantially
 closed), personal bests on the finish screen, invisible body-map hit halos (0i's cheap half),
 and the polish sweep (Explore explainer, word-swap bridge, the backup dot waits for data). The
-eighth — **the colour direction — is built as three options and WAITS ON TIM'S PICK**:
-https://claude.ai/code/artifact/ca7bfddd-28e8-463b-a06a-9339931ba64d. Tests now **2,564 across
-eleven suites** (data-layer 1235, render 462, social 128), plus 66 rules assertions in the
-emulator. He also pre-authorised sub-agents.
+eighth closed too: **Tim picked ALL THREE colour options, so Settings now has a Colour choice**
+(Gold · Teal · Indigo · Ember, each with a designed light theme — eighth-pass section). Tests now
+**2,635 across eleven suites** (data-layer 1235, render 470, social 128, a11y 85), plus 66 rules
+assertions in the emulator. He also pre-authorised sub-agents.
 
 The day before (2026-08-25) the app was restructured, and most of what a
 2026-08-24 reader knew about its shape is now wrong. Three batches landed after the second gym
@@ -173,7 +173,50 @@ which drives the demo.
 
 ---
 
-## 2026-08-26, seventh pass — ⚠️ THE COLOUR OPTIONS ARE BUILT AND WAITING ON TIM (0k)
+## 2026-08-26, eighth pass — ⚠️ TIM PICKED ALL THREE: COLOUR IS A SETTING NOW (0k closed)
+
+*"I like all three color themes (teal, indigo, and ember), so lets allow the user to choose which
+'Theme' in settings."* Built and deployed the same day:
+
+**Settings → Colour: Gold · Teal · Indigo · Ember**, each chip carrying its accent as a dot so the
+choice is visible before it is made. Applied instantly like the theme toggle, stored as
+`settings.palette`, and **an unrecognised stored value degrades to Gold** — the same fail-safe
+shape as social's tier normalisation, asserted.
+
+⚠️ **THE DEFAULT SETS NO ATTRIBUTE, and that is the design**: Gold is bare `:root`, so an account
+that never touches the setting renders byte-identically to before, scoped fixes included. A
+palette is `data-palette` on `<html>`, set by boot and by the picker.
+
+⚠️ **EVERY PALETTE HAS A DESIGNED LIGHT THEME, not an inversion** — the dark candidates from the
+options page plus new light counterparts (teal #0E7264 on #EFF4F2, indigo #4451C8 on #F0F1F7,
+ember's gold darkened to #8A5D0C because #96660F measures 4.39 on the warmer ground — below AA).
+⚠️ **Every token a palette touches appears in BOTH its blocks**, because the dark-palette and
+plain-light selectors tie on specificity and a token in one block but not the other would resolve
+by source order — a bug visible in only one theme. There is an assertion that the key sets match.
+
+⚠️ **`tests/a11y.test.mjs` SWEEPS ALL FOUR PALETTES IN BOTH THEMES — 22 → 85 assertions**: the
+text scale on every surface, the hierarchy order and separation, dark/light weight parity, the
+accent pairs, plus the Start pill's scoped light fix once per palette against that palette's own
+`--raised`. The body-poster tokens are deliberately untouched — the figure is a printed poster and
+does not tint with the room.
+
+✅ **Driven in a real browser over CDP**: each pick changes the computed `--accent` instantly and
+persists; Teal + Light resolves the combined block (#0E7264 / #EFF4F2); Gold clears the attribute;
+a reload re-applies the stored choice. Teal-light Settings screenshotted and eyeballed. **The demo
+carries the palette in** like units and theme — a demo that flips somebody's colours reads as the
+app breaking. `docs/colour-options/` is deleted — the palettes live in `css/app.css` now; the
+options page (artifact) stays as the record, marked decided.
+
+⚠️ **Known limit, stated**: the full browser AUDIT (56 combos) has only ever run on the default
+palette. The token-level suite covers all four everywhere, and the two scoped literals that could
+clash were found and fixed (`.row-start`, `.cal-tag.b`) — but nothing has measured every painted
+pixel under teal/indigo/ember. Worth one audit pass if a palette-specific glitch is ever reported.
+
+Render 462 → 470. All suites green.
+
+---
+
+## 2026-08-26, seventh pass — ⚠️ THE COLOUR OPTIONS WERE BUILT AND PUBLISHED FOR TIM'S PICK (0k)
 
 Tim asked for options, not a decision, and now has them: **three whole-app dark-theme directions,
 implemented as real token overrides, applied to the real app and screenshotted at 360px** — no
@@ -2341,7 +2384,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
 | **9b** | **0l — kudos and comments** | ✅ **BUILT AND DEPLOYED 2026-08-26** — create-only reaction docs under the owner, viewer-of-any-tier may write, no update path, 66 rules assertions. See that day's second-pass section. The same rules pattern is the template 0e's friend-accept half and 0j need |
 | **9c** | **0m — location on feed cards** | ✅ **BUILT AND DEPLOYED 2026-08-26** — a hand-typed label (never GPS), carried forward between sessions, published at mid+ beside `startedAt`. The privacy decision is that nothing more precise than what the owner typed can exist to leak. See the third-pass section |
-| **10** | **0k — the colour direction** | ⚠️ **OPTIONS BUILT 2026-08-26, WAITING ON TIM'S PICK** — teal / indigo / ember, real app screenshots, AA-checked, published (link in the seventh-pass section); candidates in `docs/colour-options/`. The app is untouched until he names one |
+| **10** | **0k — the colour direction** | ✅ **CLOSED 2026-08-26 — Tim picked ALL THREE.** Settings → Colour: Gold/Teal/Indigo/Ember, each with a designed light theme, swept by the a11y suite (22 → 85), CDP-verified. See the eighth-pass section. Remaining: the full browser audit has only run on Gold |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
 
 **Closed 2026-08-24 and kept below for the reasoning:** 0a (both blockers), 0d (exercise swap),
@@ -2729,7 +2772,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2564 assertions across eleven suites** (recounted 2026-08-26), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2635 assertions across eleven suites** (recounted 2026-08-26), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |

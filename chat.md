@@ -5235,3 +5235,16 @@ standing permission.
 
 End of day: seven of the eight authorised pieces shipped and deployed, the eighth waits on his
 taste. 2,564 assertions across eleven suites, plus 66 rules assertions in the emulator, all green.
+
+Tim's pick came back: ALL THREE. Built the same hour — Settings gained a "Colour" row (Gold ·
+Teal · Indigo · Ember), each chip wearing its accent as a dot. Gold is bare :root (an untouched
+account renders exactly as before); a palette is data-palette on <html>, applied instantly and
+re-applied by boot. Each palette got a DESIGNED light theme, not an inversion — ember's gold had
+to darken to clear AA on its warmer ground — and every token a palette touches is defined in both
+its blocks, because the dark-palette and plain-light selectors tie on specificity and source order
+must never decide a colour. The a11y suite now sweeps all four palettes in both themes (22→85
+assertions); the two gold-assuming literals (.row-start, .cal-tag.b) were found and handled; the
+demo carries the palette in like units and theme. Verified over CDP with real clicks: computed
+--accent changes per pick, teal+light composes, gold clears, reload re-applies. Render 462→470,
+2,635 assertions green, docs/colour-options deleted (superseded), artifact page marked decided.
+Pushed.

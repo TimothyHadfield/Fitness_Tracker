@@ -1427,6 +1427,26 @@ export async function SettingsView() {
     e.target.setAttribute('aria-pressed', 'true');
   }
 
+  // The colour direction — Tim liked all three options, so all three shipped
+  // as a choice (2026-08-26). Applied instantly, like the theme; 'gold' is
+  // the original and clears the attribute so bare :root rules apply.
+  function setPalette(palette, e) {
+    if (palette === 'gold') document.documentElement.removeAttribute('data-palette');
+    else document.documentElement.setAttribute('data-palette', palette);
+    store.saveSettings({ palette });
+    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    e.target.setAttribute('aria-pressed', 'true');
+  }
+
+  const PALETTES = [
+    ['gold', 'Gold', '#D99A3E'],
+    ['teal', 'Teal', '#3BC0AB'],
+    ['indigo', 'Indigo', '#93A5FF'],
+    ['ember', 'Ember', '#C98A2E'],
+  ];
+  const currentPalette = ['teal', 'indigo', 'ember'].includes(settings.palette)
+    ? settings.palette : 'gold';
+
   // Changing this shows or hides a readout. It touches no stored number and no
   // rating: the levels are computed from percentiles either way.
   function setMoreDetails(on, e) {
@@ -1457,6 +1477,23 @@ export async function SettingsView() {
           el('button', { class: 'chip', 'aria-pressed': String(settings.theme === 'light'), text: 'Light', onClick: (e) => setTheme('light', e) }),
         ),
         el('div', { class: 'field-help', text: 'Dark is easier to read under gym lighting.' }),
+      ),
+
+      el('div', { class: 'field' },
+        el('label', { text: 'Colour' }),
+        el('div', { class: 'chips' },
+          ...PALETTES.map(([key, name, swatch]) =>
+            el('button', {
+              class: 'chip palette-chip',
+              'aria-pressed': String(currentPalette === key),
+              onClick: (e) => setPalette(key, e),
+            },
+              el('span', { class: 'palette-dot', style: `background:${swatch}` }),
+              name)),
+        ),
+        el('div', { class: 'field-help', text:
+          'Gold is the original. Teal and Indigo cool the whole app down; Ember keeps the gold '
+          + 'and warms everything around it. Works with both Dark and Light.' }),
       ),
 
       el('div', { class: 'field' },

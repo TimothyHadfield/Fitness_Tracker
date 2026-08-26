@@ -284,8 +284,10 @@ export function unresolvedDemoExercises() {
  *                             kg to lbs
  * @param {string} opts.theme  same reasoning — a demo that flips you to dark
  *                             mode reads as a bug
+ * @param {string} opts.palette same reasoning again — the colour choice
+ *                             (2026-08-26) follows the person into the demo
  */
-export function buildDemoData({ today, units = 'lbs', theme = 'dark' } = {}) {
+export function buildDemoData({ today, units = 'lbs', theme = 'dark', palette = 'gold' } = {}) {
   const byName = exerciseIndex();
   const random = rng(DEMO_SEED);
 
@@ -486,6 +488,7 @@ export function buildDemoData({ today, units = 'lbs', theme = 'dark' } = {}) {
     // app breaking rather than as a demo starting.
     units,
     theme,
+    palette,
     gender: 'male',
     birthYear,
   };

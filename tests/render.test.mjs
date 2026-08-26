@@ -2544,6 +2544,42 @@ ok(!data.querySelector('.rep-target'),
      '⚠️ a brand-new empty account shows NO dot — a permanent warning is wallpaper, and this one now waits for something to be at risk');
 }
 
+/* ================= the colour palette setting (0k, Tim's pick) =================
+   All three colourway options shipped as a Settings choice. Both directions
+   are asserted — a one-way test passes just as well against a hard-coded
+   attribute — and an unrecognised stored value degrades to the default. */
+{
+  const { SettingsView } = await import(BASE + 'views-data.js');
+  const html = document.documentElement;
+
+  const s1 = await mount(SettingsView());
+  const chips = () => [...s1.querySelectorAll('.palette-chip')];
+  ok(chips().length === 4, 'four colour choices: Gold, Teal, Indigo, Ember');
+  ok(chips().every((c) => c.querySelector('.palette-dot')),
+     'each chip shows its accent before it is chosen');
+  const pressed = () => chips().find((c) => c.getAttribute('aria-pressed') === 'true');
+  ok(pressed() && /Gold/.test(pressed().textContent), 'the original gold is the default');
+
+  chips().find((c) => /Teal/.test(c.textContent)).click();
+  await settle();
+  ok(html.getAttribute('data-palette') === 'teal', 'picking Teal recolours the app instantly');
+  ok((await store.getSettings()).palette === 'teal', 'and the choice is saved');
+
+  chips().find((c) => /Gold/.test(c.textContent)).click();
+  await settle();
+  ok(!html.hasAttribute('data-palette'),
+     '⚠️ picking Gold CLEARS the attribute — the default is bare :root, exactly what an untouched account renders');
+  ok((await store.getSettings()).palette === 'gold', 'and that is saved too');
+
+  // A stored value from the future (or a corrupted one) must not paint an
+  // undefined palette — same fail-safe shape as social's tier normalisation.
+  await store.saveSettings({ palette: 'neon' });
+  const s2 = await mount(SettingsView());
+  const p2 = [...s2.querySelectorAll('.palette-chip')].find((c) => c.getAttribute('aria-pressed') === 'true');
+  ok(p2 && /Gold/.test(p2.textContent), 'an unrecognised stored palette degrades to Gold, never to nothing');
+  await store.saveSettings({ palette: 'gold' });
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

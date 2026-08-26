@@ -111,6 +111,81 @@ for (const t of TEXT) {
      `--${t} reads at the same weight in both themes (${d} dark vs ${l} light)`);
 }
 
+/* ---------- the colour palettes (Tim's pick of all three, 2026-08-26) ---------- */
+
+// Each palette is bare :root plus its dark block, or bare :root plus the
+// light block plus its light block — exactly how the cascade composes them.
+// Every palette runs the SAME checks the default has always had. A palette
+// that ships without appearing here is a palette nobody is watching.
+{
+  const paletteBlock = (name, light) => block(new RegExp(
+    `:root\\[data-palette="${name}"\\]${light ? '\\[data-theme="light"\\]' : ''}\\s*\\{([\\s\\S]*?)\\n\\}`));
+
+  const PALETTES = ['teal', 'indigo', 'ember'];
+  const combos = [];
+  for (const p of PALETTES) {
+    const pd = paletteBlock(p, false);
+    const pl = paletteBlock(p, true);
+    ok(Object.keys(pd).length > 0 && Object.keys(pl).length > 0,
+       `the ${p} palette defines both a dark and a light block`);
+    // ⚠️ The dark-palette and plain-light selectors TIE on specificity, so any
+    // token in one block and not the other resolves by source order — a bug
+    // that only shows in one theme. Equal key sets make order irrelevant.
+    const kd = Object.keys(pd).sort().join(); const kl = Object.keys(pl).sort().join();
+    ok(kd === kl,
+       `${p}: its dark and light blocks touch the SAME tokens, so cascade order can never decide a colour`);
+    combos.push([`${p} dark`, { ...dark, ...pd }], [`${p} light`, { ...dark, ...lightOnly, ...pl }]);
+  }
+
+  for (const [name, pal] of combos) {
+    // The text scale on every surface.
+    for (const t of TEXT) {
+      let worst = Infinity, worstOn = '';
+      for (const s of SURFACES) {
+        const r = contrast(pal[t], pal[s]);
+        if (r < worst) { worst = r; worstOn = s; }
+      }
+      ok(worst >= AA, `${name}: --${t} clears AA on every surface — worst ${worst}:1 on --${worstOn}`);
+    }
+    // The hierarchy stays a scale.
+    const [a, b, c] = TEXT.map((t) => contrast(pal[t], pal.ground));
+    ok(a > b && b > c && a - b >= 1.2 && b - c >= 1.2,
+       `${name}: the three text levels stay strictly ordered and visibly separated (${a} > ${b} > ${c})`);
+    // The accent pairs that decide whether buttons and links are readable.
+    ok(contrast(pal.accent, pal.ground) >= AA && contrast(pal.accent, pal.surface) >= AA,
+       `${name}: --accent is legal as text on ground and surface (${contrast(pal.accent, pal.ground)}, ${contrast(pal.accent, pal.surface)})`);
+    ok(contrast(pal['accent-ink'], pal.accent) >= AA,
+       `${name}: --accent-ink reads on a filled accent button (${contrast(pal['accent-ink'], pal.accent)})`);
+    ok(contrast(pal.good, pal.ground) >= AA && contrast(pal.danger, pal.ground) >= AA,
+       `${name}: --good and --danger both read on the ground`);
+  }
+
+  // The dark/light weight parity, per palette — a caption must not read as an
+  // aside in one theme and as body text in the other.
+  for (const p of PALETTES) {
+    const d = { ...dark, ...paletteBlock(p, false) };
+    const l = { ...dark, ...lightOnly, ...paletteBlock(p, true) };
+    for (const t of TEXT) {
+      const dd = contrast(d[t], d.ground); const ll = contrast(l[t], l.ground);
+      ok(Math.abs(dd - ll) <= 1.2,
+         `${p}: --${t} reads at the same weight in both themes (${dd} dark vs ${ll} light)`);
+    }
+  }
+
+  // The Start pill's scoped light fix, once per palette: small bold text on
+  // that palette's own light --raised, the worst surface it sits on.
+  const pill = {
+    teal: '#0C6357', indigo: '#3A46B4', ember: '#7E550B',
+  };
+  for (const [p, hex] of Object.entries(pill)) {
+    ok(new RegExp(`:root\\[data-theme="light"\\]\\[data-palette="${p}"\\] \\.row-start`).test(CSS),
+       `${p}: the light Start pill has its own scoped colour, like the default's #8B5E0D`);
+    const raised = paletteBlock(p, true).raised;
+    ok(contrast(hex, raised) >= AA,
+       `${p}: and it clears AA on that palette's own light --raised (${contrast(hex, raised)}:1 on ${raised})`);
+  }
+}
+
 /* ---------- the accent is not asked to carry text it cannot ---------- */
 
 // ⚠️ The last AA failure the audit found was the calendar's TODAY number, which

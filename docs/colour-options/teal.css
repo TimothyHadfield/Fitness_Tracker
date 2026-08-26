@@ -1,8 +1,0 @@
-/* Option 1 — Teal. Cool accent, calmer than the gold; surfaces take a faint
-   sea tint so colour lives in the field, not only in buttons. */
-:root, :root:not([data-theme="light"]) {
-  --ground: #0D1414; --surface: #141B1A; --raised: #1D2725; --raised-hi: #263230;
-  --rule: #24312D; --rule-soft: #1B2622;
-  --accent: #3BC0AB; --accent-ink: #062019; --accent-dim: #123129;
-  --good: #55BC86; --good-dim: #14291F;
-}

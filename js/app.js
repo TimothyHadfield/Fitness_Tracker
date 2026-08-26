@@ -287,6 +287,15 @@ function trackKeyboard() {
   trackKeyboard();
   const settings = await store.getSettings();
   document.documentElement.setAttribute('data-theme', settings.theme === 'light' ? 'light' : 'dark');
+  // The colour palette (Tim's pick of all three options, 2026-08-26). The
+  // attribute is only SET for a non-default choice: the default palette is
+  // bare :root, and an unrecognised stored value degrades to it — the same
+  // fail-safe shape social's tier normalisation uses.
+  if (['teal', 'indigo', 'ember'].includes(settings.palette)) {
+    document.documentElement.setAttribute('data-palette', settings.palette);
+  } else {
+    document.documentElement.removeAttribute('data-palette');
+  }
   // Seeded once, here, because the stepper and the set formatter are synchronous
   // and are called mid-render — they cannot await the store for the unit.
   setUnits(settings.units);

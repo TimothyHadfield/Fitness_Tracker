@@ -94,6 +94,9 @@ const MemoryBackend = {
       today: todayISO(),
       units: current.units === 'kg' ? 'kg' : 'lbs',
       theme: current.theme === 'light' ? 'light' : 'dark',
+      // Same reasoning as units and theme: a demo that flips somebody's
+      // colour palette reads as the app breaking, not as a demo starting.
+      palette: ['teal', 'indigo', 'ember'].includes(current.palette) ? current.palette : 'gold',
     });
     for (const c of COLLECTIONS) this.rows.set(c, data[c] ? structuredClone(data[c]) : []);
     })();

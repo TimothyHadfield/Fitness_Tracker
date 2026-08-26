@@ -130,6 +130,74 @@
   color-scheme: light;
 }
 
+/* ==========================================================================
+   COLOUR PALETTES — Tim's pick, 2026-08-26: all three options from the
+   colourways page ship as a Settings choice ("Colour"), alongside the
+   original gold. The default palette is the two blocks above, untouched;
+   boot sets data-palette on <html> ONLY for a non-default choice, so the
+   default keeps its scoped light-theme fixes (.row-start's darkened gold)
+   and an account that never touches the setting renders exactly as before.
+
+   ⚠️ EVERY TOKEN A PALETTE TOUCHES APPEARS IN BOTH ITS BLOCKS (dark and
+   light). The dark-palette and plain-light selectors tie on specificity
+   (0,2,0), so a token defined in one and not the other would resolve by
+   source order — a bug that only shows in one theme. Defining the full set
+   twice makes order irrelevant.
+
+   ⚠️ ALL VALUES ARE CONTRAST-CHECKED IN tests/a11y.test.mjs, which sweeps
+   every palette in both themes through the same token-level checks the
+   default has always had — text scale on every surface, the hierarchy, the
+   theme parity, the accent pairs. The body-poster tokens are deliberately
+   NOT overridden: the figure is a printed poster and does not tint with
+   the room (see the --body-paper note above).
+   ========================================================================== */
+
+/* ── Teal — cool sea-green accent, faintly tinted field ─────────────────── */
+:root[data-palette="teal"] {
+  --ground: #0D1414; --surface: #141B1A; --raised: #1D2725; --raised-hi: #263230;
+  --rule: #24312D; --rule-soft: #1B2622;
+  --accent: #3BC0AB; --accent-ink: #062019; --accent-dim: #123129;
+  --good: #55BC86; --good-dim: #14291F;
+}
+:root[data-palette="teal"][data-theme="light"] {
+  --ground: #EFF4F2; --surface: #FFFFFF; --raised: #E1EAE6; --raised-hi: #D4E0DB;
+  --rule: #D1DAD5; --rule-soft: #E0E7E3;
+  --accent: #0E7264; --accent-ink: #FFFFFF; --accent-dim: #D6EAE4;
+  --good: #2A7551; --good-dim: #DCEBE2;
+}
+
+/* ── Indigo — night-sky field, periwinkle accent ────────────────────────── */
+:root[data-palette="indigo"] {
+  --ground: #0F1219; --surface: #151A26; --raised: #1E2432; --raised-hi: #272E3F;
+  --rule: #262E3F; --rule-soft: #1C2331;
+  --accent: #93A5FF; --accent-ink: #10142E; --accent-dim: #202741;
+  --good: #57BB8A; --good-dim: #142A20;
+}
+:root[data-palette="indigo"][data-theme="light"] {
+  --ground: #F0F1F7; --surface: #FFFFFF; --raised: #E2E5F1; --raised-hi: #D5D9EA;
+  --rule: #D3D6E4; --rule-soft: #E3E5F0;
+  --accent: #4451C8; --accent-ink: #FFFFFF; --accent-dim: #DEE2F8;
+  --good: #2A7551; --good-dim: #DCEBE2;
+}
+
+/* ── Ember — the gold kept, the whole field warmed around it ────────────── */
+:root[data-palette="ember"] {
+  --ground: #141110; --surface: #1B1715; --raised: #262019; --raised-hi: #302921;
+  --rule: #2C251D; --rule-soft: #221C16;
+  --ink: #F0ECE5; --ink-soft: #CFC7BA; --ink-faint: #B3AA9B;
+  --accent: #D99A3E; --accent-ink: #1A1206; --accent-dim: #33270F;
+  --good: #63B573; --good-dim: #1C2A18;
+}
+:root[data-palette="ember"][data-theme="light"] {
+  --ground: #F4F0E7; --surface: #FFFDF8; --raised: #EAE3D4; --raised-hi: #DED6C3;
+  --rule: #DBD4C2; --rule-soft: #E8E2D3;
+  --ink: #1B1814; --ink-soft: #37342D; --ink-faint: #4A463D;
+  /* Darker than the default light gold (#96660F measures 4.39 on this warmer
+     ground — below AA). #8A5D0C clears 5.06 on ground and 5.75 under white. */
+  --accent: #8A5D0C; --accent-ink: #FFFFFF; --accent-dim: #F0E4CB;
+  --good: #2A7551; --good-dim: #DFEADC;
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body {
@@ -482,6 +550,13 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    also a FILL under --accent-ink in a dozen places, and darkening it globally
    would move every one of those pairs to fix one of them. */
 :root[data-theme="light"] .row-start { color: #8B5E0D; }
+/* The same scoped fix, once per palette: the pill is small bold text on
+   --raised, the worst surface either accent sits on, so each palette gets an
+   accent darkened a step for exactly this spot. Checked in tests/a11y.test.mjs
+   against that palette's own light --raised. */
+:root[data-theme="light"][data-palette="teal"] .row-start { color: #0C6357; }
+:root[data-theme="light"][data-palette="indigo"] .row-start { color: #3A46B4; }
+:root[data-theme="light"][data-palette="ember"] .row-start { color: #7E550B; }
 .row-start svg { display: block; }
 
 /* Rows are separated by rules, not wrapped in borders. Negative margins let
@@ -692,6 +767,15 @@ select.input {
   white-space: nowrap;
 }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* Settings' colour picker: each chip carries its palette's accent as a dot,
+   so the choice is visible before it is made. The dot keeps a hairline ring
+   so the gold dot never vanishes into the pressed gold chip behind it. */
+.palette-chip { display: inline-flex; align-items: center; gap: 6px; }
+.palette-dot {
+  width: 12px; height: 12px; border-radius: 50%; flex: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
 
 /* ==========================================================================
    Stepper — the core in-gym control.
