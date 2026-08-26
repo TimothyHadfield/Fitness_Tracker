@@ -9,3 +9,5 @@ node_modules/
 # Local reference/working images — not part of the app
 *.jpg
 *.jpeg
+package.json
+package-lock.json
