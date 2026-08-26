@@ -5222,3 +5222,16 @@ sentence bridges the word swap — "a system is just a programme you own" — ri
 lands from "Pick a programme"; and the red not-backed-up dot finally waits for there to be
 something to lose: empty account, no dot; data plus no backup, dot; check fails, dot stays because
 unknown is not safe. Render 457→462, all green, pushed.
+
+Eighth piece: COLOUR OPTIONS BUILT, TIM'S PICK PENDING (0k). Three whole-app directions — teal,
+indigo, ember — implemented as real token overrides, applied to the actual app and screenshotted
+at 360px, contrast-measured (all clear AA with room), and published as a comparison page:
+https://claude.ai/code/artifact/ca7bfddd-28e8-463b-a06a-9339931ba64d. Candidate CSS parked in
+docs/colour-options/ with the fold-in checklist. The app's stylesheet is untouched until he says
+"teal", "indigo", "ember", or "keep today".
+
+Mid-session Tim also said to feel free to use as many sub-agents as I'd like — saved to memory as
+standing permission.
+
+End of day: seven of the eight authorised pieces shipped and deployed, the eighth waits on his
+taste. 2,564 assertions across eleven suites, plus 66 rules assertions in the emulator, all green.

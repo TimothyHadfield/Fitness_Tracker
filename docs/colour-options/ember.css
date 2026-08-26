@@ -1,0 +1,9 @@
+/* Option 3 — Ember, quieter. Keeps the gold identity but warms the whole
+   field so the colour stops living only in massive buttons. */
+:root, :root:not([data-theme="light"]) {
+  --ground: #141110; --surface: #1B1715; --raised: #262019; --raised-hi: #302921;
+  --rule: #2C251D; --rule-soft: #221C16;
+  --ink: #F0ECE5; --ink-soft: #CFC7BA; --ink-faint: #B3AA9B;
+  --accent: #D99A3E; --accent-ink: #1A1206; --accent-dim: #33270F;
+  --good: #63B573; --good-dim: #1C2A18;
+}

@@ -4,11 +4,16 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-26. **Tim authorised the whole backlog in one message** — joint workouts,
-kudos/comments, location and colour options are now *wanted, confirmed* work, alongside the
-improvement plan (ratio table, PRs on finish, body-map targets, polish sweep). **The first piece
-shipped: GUEST WORKOUTS** — record a friend's sets on your phone, no account needed, kept in a
-separate `guestSessions` collection that nothing else can mis-count (see the 2026-08-26 section).
+**Last updated:** 2026-08-26, end of day. **Tim authorised the whole backlog in one message and
+SEVEN PIECES SHIPPED THE SAME DAY** (seven dated sections below): guest workouts (0e's guest
+half), kudos + comments with a new tested rules path (0l), location on feed cards as a typed
+label (0m), the ratio sweep — 28 lifts derived from published standards (0h substantially
+closed), personal bests on the finish screen, invisible body-map hit halos (0i's cheap half),
+and the polish sweep (Explore explainer, word-swap bridge, the backup dot waits for data). The
+eighth — **the colour direction — is built as three options and WAITS ON TIM'S PICK**:
+https://claude.ai/code/artifact/ca7bfddd-28e8-463b-a06a-9339931ba64d. Tests now **2,564 across
+eleven suites** (data-layer 1235, render 462, social 128), plus 66 rules assertions in the
+emulator. He also pre-authorised sub-agents.
 
 The day before (2026-08-25) the app was restructured, and most of what a
 2026-08-24 reader knew about its shape is now wrong. Three batches landed after the second gym
@@ -165,6 +170,29 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-26, seventh pass — ⚠️ THE COLOUR OPTIONS ARE BUILT AND WAITING ON TIM (0k)
+
+Tim asked for options, not a decision, and now has them: **three whole-app dark-theme directions,
+implemented as real token overrides, applied to the real app and screenshotted at 360px** — no
+mock-ups — published at
+**https://claude.ai/code/artifact/ca7bfddd-28e8-463b-a06a-9339931ba64d**:
+
+1. **Teal** — cool sea-green accent, the whole field takes a faint tint (accent on ground 8.3:1).
+2. **Indigo** — night-sky field, periwinkle accent, echoes the level key's blue–purple end (8.1:1).
+3. **Ember** — keeps the gold, warms the entire neutral field around it (7.7:1).
+
+Every option cleared AA on the four deciding pairs before it made the page (measured in the CDP
+run, printed on each card). The candidate CSS lives in `docs/colour-options/` with a README
+naming the fold-in job for whichever he picks: both themes, level-key recheck against the new
+ground, full audit, then delete the folder. **The app's stylesheet is untouched until he says a
+word — "teal", "indigo", "ember", or "keep today".**
+
+⚠️ **Also this session: Tim pre-authorised sub-agents** — *"feel free to add as many sub-agents
+as you'd like."* The 2026-08-19 seven-agent failure still teaches "plan for file conflicts", but
+parallelism itself no longer needs asking. Saved to memory.
 
 ---
 
@@ -2313,7 +2341,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4 |
 | **9b** | **0l — kudos and comments** | ✅ **BUILT AND DEPLOYED 2026-08-26** — create-only reaction docs under the owner, viewer-of-any-tier may write, no update path, 66 rules assertions. See that day's second-pass section. The same rules pattern is the template 0e's friend-accept half and 0j need |
 | **9c** | **0m — location on feed cards** | ✅ **BUILT AND DEPLOYED 2026-08-26** — a hand-typed label (never GPS), carried forward between sessions, published at mid+ beside `startedAt`. The privacy decision is that nothing more precise than what the owner typed can exist to leak. See the third-pass section |
-| **10** | **0k — the colour direction** | ⚠️ **OPEN, and Tim asked for OPTIONS rather than a decision.** *"The entire cite is just really colorless… a few buttons that are massive and orange (which is just too much sometimes)."* The legibility half shipped 2026-08-25; the palette direction is his call |
+| **10** | **0k — the colour direction** | ⚠️ **OPTIONS BUILT 2026-08-26, WAITING ON TIM'S PICK** — teal / indigo / ember, real app screenshots, AA-checked, published (link in the seventh-pass section); candidates in `docs/colour-options/`. The app is untouched until he names one |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
 
 **Closed 2026-08-24 and kept below for the reasoning:** 0a (both blockers), 0d (exercise swap),
@@ -2701,7 +2729,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2474 assertions across eleven suites**, plus 12 in `sw-update`. Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ **Recounted 2026-08-24** by counting PASS/FAIL lines — several rows below had drifted from their real figures by more than that day's additions, so treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2564 assertions across eleven suites** (recounted 2026-08-26), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |

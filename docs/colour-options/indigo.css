@@ -1,0 +1,7 @@
+/* Option 2 — Indigo. Echoes the level key's blue–purple end; night-sky field. */
+:root, :root:not([data-theme="light"]) {
+  --ground: #0F1219; --surface: #151A26; --raised: #1E2432; --raised-hi: #272E3F;
+  --rule: #262E3F; --rule-soft: #1C2331;
+  --accent: #93A5FF; --accent-ink: #10142E; --accent-dim: #202741;
+  --good: #57BB8A; --good-dim: #142A20;
+}
