@@ -207,6 +207,18 @@ and not an effect size, so a score penalty would have to be invented.
 ⚠️ **That is the same wall, and this plan hits it from the other side.** The finding is strong enough
 to justify *ordering* and *discounting*; it is not strong enough to justify *arithmetic*.
 
+⚠️ **GOING AND LOOKING FOR THE NUMBER IS PINNED — 2026-08-28.** `progress.md` items 3 and 4 are both
+blocked on it, so "one sourced number unblocks two items" makes it look like the highest-leverage
+research question in the project. It is not, and this section is why: the literature reports **reps
+at a fixed load**, not 1RM decrement, so converting is a second inference on the first; two of the
+four terms are not recorded; and it is **the only mechanism on the table that makes a number BIGGER
+than what was observed**, which Rule 5 exists to forbid. **The realistic output of the search is a
+written "no".**
+
+That is still worth an hour one day — a written "no" closes two items that currently sit open
+implying a maybe — but it **builds nothing**, and it should not be offered as the next thing to do.
+See the PINNED table in `progress.md`.
+
 ---
 
 ## 5. The plan, in three tiers

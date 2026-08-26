@@ -453,7 +453,7 @@ which is exactly the sort of claim this project should be willing to state and d
 | Phase | What | Risk |
 |---|---|---|
 | ~~**0**~~ | ~~`strength-estimate.js` — pure maths, plus the simulator and its tests. No UI, nothing user-visible.~~ **DONE 2026-08-19.** `js/strength-estimate.js` · `tools/strength-sim.mjs` · `tools/strength-fit.mjs` · `tests/strength-estimate.test.mjs` (72 assertions, mutation-checked) | None. Nothing shipped |
-| **1** | Extend `weightRepObservations` to carry set index and exercise index (needed for §3.1 and §3.2) | Low, additive. **⚠️ Bigger than it reads** — see below |
+| **1** | Extend `weightRepObservations` to carry set index and exercise index (needed for §3.1 and §3.2) | Low, additive — **and low is the right reading.** ⚠️ **The "bigger than it reads" note below was WRONG and is corrected 2026-08-28**: both indices are array positions in data already stored |
 | **2** | Wire the estimator into the **body map** — band-aware levels, hysteresis, source named | Medium — changes what a colour means. **§6.1's measurement changes the design**: the band fits inside one level only 8.5 % of the time, so the hedged reading is the normal case |
 | **3** | The **setting**, and the estimate line + band on the graph | Medium |
 | **4** | Cross-exercise evidence, if the backtest justifies it | High — may be dropped |
@@ -464,11 +464,24 @@ simulator tells us whether the rest is worth building before any of it is user-v
 
 > **What Phase 0 changed about the phases after it.**
 >
-> **Phase 1 is the real blocker and it is not one line.** `js/strength-estimate.js` takes per-set
-> `setIndex` and `exerciseIndex`, and nothing in `store.js` carries them today. Without them the
-> warm-up gate cannot run — and the warm-up gate is not a refinement: the naive alternative reads
-> **27.4 % RMSE against 4.63 %**. Everything measured here is conditional on Phase 1 landing
-> properly.
+> **~~Phase 1 is the real blocker and it is not one line.~~** ⚠️ **CORRECTED 2026-08-28 — THIS
+> PARAGRAPH IS WRONG, AND IT MISLED A SESSION INTO RECOMMENDING WORK AS URGENT.**
+>
+> It said `setIndex` and `exerciseIndex` are "not carried by `store.js` today", which is true of the
+> **observation objects** `weightRepObservations()` builds and false of the **stored data**. A
+> session's `entries` array is stored in the order the workout was performed — `muscleStrength()`
+> depends on exactly that for its fatigue discount — and `sets` within an entry likewise. **Both
+> indices are array positions, derivable at any time, from sessions already on disk.**
+>
+> ⚠️ **NOTHING IS LOST BY WAITING, which is the opposite of what this implied.** Read the way it was
+> written, it says the data must be captured now or every session recorded before Phase 1 is useless
+> to the estimator forever. That is the reasoning a 2026-08-28 session gave Tim for putting this
+> above everything else on the list, and it was wrong — a plan document read in place of the code.
+>
+> What remains true: the estimator **does** need those indices, the warm-up gate is not a refinement
+> (the naive alternative reads **27.4 % RMSE against 4.63 %**), and everything measured here is
+> conditional on Phase 1 landing properly. It is simply small, additive, and inert until Phase 2 —
+> **and Phase 2 has open questions for Tim**, which is what actually gates this feature.
 >
 > **Phase 2 gained a hard prerequisite.** The plausibility screen (§15.3) has to run *before* the
 > estimate reaches a screen, and it needs a per-exercise standing estimate to screen against, which

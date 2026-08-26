@@ -59,9 +59,16 @@ wonders why their map is grey deserves the answer before they ask.
    not touch them) and add a pace mode if cheap.
 4. **The feed card names the activity kind** (a small glyph or word) so a run reads as a run at a
    glance. The projection already carries the name; this is presentation.
-5. **Activity PRs on the finish path.** The quick log bypasses `personalBests()`. Longest run /
-   fastest 5k-ish comparisons are recorded-vs-recorded and Rule-5-safe, but "fastest" needs
-   distance-bucketing to be honest — design before building.
+5. ⚠️ **PINNED 2026-08-28 — do not offer this as the next thing to do.** *Activity PRs on the
+   finish path.* The quick log bypasses `personalBests()`. Longest run / fastest 5k-ish comparisons
+   are recorded-vs-recorded and Rule-5-safe, but "fastest" needs distance-bucketing to be honest.
+   **The reason it is pinned is that the bucketing is the problem, not a prerequisite to it**: where
+   the bucket edges go *is* a judgement about what counts as comparable, and getting it wrong
+   celebrates a PR that is not one. That is modelling, and §1 of this plan narrows D2 to
+   **recorded first-class, modelled not at all** (D27). Nobody has asked for it and Strava does it
+   properly for the people who care. ⚠️ **The fair counterargument, recorded so it does not have to
+   be rediscovered**: lifts get a PR screen and runs do not, which reads as inconsistent. Judged not
+   enough. `progress.md` Open work, the PINNED table.
 6. **Per-activity extras** (climbing grades, laps, elevation): each needs a field the model
    ignores, a `fields` extension, and a reason. Grades are the most asked-for by climbers and the
    least standardised (V-scale vs French). Do not guess; ask Tim which activities his circle logs.

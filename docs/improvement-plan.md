@@ -21,7 +21,7 @@ their briefs are recorded here so nobody has to re-derive them.
 |---|---|---|
 | **Adversarial code review** | Bugs in code written 2026-08-19 — much of it written fast by parallel agents. Top target `js/progression.js`, because it is the only part of this app that can cause physical harm | ✅ **RAN 2026-08-20 — progression only. FOUND A REAL BUG**, below. `strength-estimate.js` and the body-weight work still not attacked |
 | **Human behaviour / UX** | The app judged as a product for strangers. Jargon leaks, first-run path, what brings anyone back | Not run — one finding recovered by hand, §1.1 |
-| **Competitive** | Whether the differentiation still holds in Aug 2026; what rivals do better; what users complain about now | Not run |
+| **Competitive** | Whether the differentiation still holds in Aug 2026; what rivals do better; what users complain about now | ⚠️ **PINNED 2026-08-28 — not run, and deliberately not queued** (see below) |
 | **Cross-screen consistency** | Two screens disagreeing about the same fact | ✅ **RAN 2026-08-20 — found one**, below. Two §3 hypotheses checked and CLOSED |
 | **Accessibility / mobile reality** | Touch targets, contrast, keyboard, screen readers, text scaling. **Never audited once** | ✅ **RAN 2026-08-20 — contrast, touch targets and accessible names. FAILED ON ALL THREE**, below. Keyboard, screen readers and text scaling still NOT checked |
 | **Edge cases / data integrity** | Deletion, timezones, scale, absurd values, backup restore, a suspected FOURTH single-flight bug | ✅ **RAN 2026-08-22 — found a DST day-index bug (fixed) and eight more**, four of them serious and still open: progression ratcheting reps with no terminal state, a silent save failure at the end of a workout, a ~950-session Firestore ceiling against a documented 3,000, and an unvalidated backup restore. See `progress.md`, 2026-08-22 third pass. The suspected fourth single-flight bug was checked earlier and is CLOSED |
@@ -31,6 +31,21 @@ their briefs are recorded here so nobody has to re-derive them.
 and it did what it was scoped to do: it converted the largest built feature in the project from
 "reviewed code" to "verified", and it found two things no amount of reading had. **Edge cases ran
 the same day.** **Two still open**: human behaviour / UX, and competitive.
+
+⚠️ **THE COMPETITIVE REVIEW IS PINNED — 2026-08-28. Do not offer it as the next thing to do.** It is
+the odd one out of the seven and always was: **the six that ran inspected the APP and found
+defects** — a progression that destroyed its own rep range, a percentage printed with no caveat, the
+first accessibility failure, a DST day-index bug, a Goals screen telling somebody meeting their
+target that they were short. **This one inspects the MARKET and produces opinions.**
+`docs/competitive-teardown.html` already covers part of that ground.
+
+⚠️ **The specific hazard is its output, not its cost.** The most likely deliverable is a list of
+things other apps do — which is precisely the input that would push this app toward inventing
+numbers, the one thing it is good at refusing (Rule 5, D14, the "no on-track verdict" line on
+Goals). And Tim drives the design directly now: he has reversed this file's judgement three times
+and been right every time, because his argument was about how a screen is used. **A market survey
+does not improve on that.** Run it if he asks for it by name. See the PINNED table in
+`progress.md`.
 
 ⚠️ **ON RUNNING THESE AS AGENTS — the old warning here was too broad.** The 2026-08-19 attempt
 launched seven at once and a usage limit killed every one before a single finding came back, and

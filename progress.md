@@ -4,8 +4,39 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-27, prepared for a chat reset. **Three passes ran that day**, all on
-Tim's instructions, and they are the three dated sections directly below.
+**Last updated:** 2026-08-28.
+
+⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` to the
+newest carries the git date **2026-08-26**, including everything headed 2026-08-25, -26, -27 and
+-28. The headings keep the sequence because that is what a reader navigates by; do not treat any of
+them as a real date, and do not compute an interval from them.
+
+**2026-08-28 — ⚠️ THE CLOUD CEILING IS GONE, 0h CLOSED, AND A BUG NOBODY WAS LOOKING FOR.**
+
+Tim asked which open items needed no instruction from him, was told six, asked which were *actually*
+good, then said to build the good ones and **pin the rest**.
+
+- ✅ **0b(c) CLOSED — sessions are one document each.** The 1 MiB per-document cap put a ceiling near
+  **520 sessions**; there is no longer a count at which saving fails. ⚠️ **Migrated at a few dozen
+  sessions ON PURPOSE** — the 80 % warning promised six months, but a migration over a training
+  history gets riskier the more of it there is. Write → **re-read to prove it landed** → only then
+  empty the old copy. **Rules 92 → 108, deployed.**
+- ⚠️ **AND THE NETWORK CODE IN `firebase-backend.js` HAS NOW BEEN EXECUTED** — for the first time
+  since that file was written — against an in-memory Firestore double. It is a double, not Firestore.
+- ✅ **0h CLOSED.** Three ratios derived, spider curl closed as not derivable. ⚠️ **The finding is
+  where the errors were: the entries somebody had ARGUED FOR in a comment, two of which inverted the
+  ordering the argument existed to protect. A test was defending one of them.**
+- ⚠️ **A LIVE BUG, found by reading rather than by any test**: one session can hold the same exercise
+  **twice** (swap away, swap back), and four readers stopped at the first match. The chart, the modal
+  rep count and the pre-fill were reading the sets you gave up on.
+- ⚠️ **ONE OF THE SIX WAS WITHDRAWN AFTER BEING RECOMMENDED** — the estimator's `setIndex` work. It
+  was pitched as urgent because the data "cannot be retrofitted"; the data is array order and is
+  already on disk. **The recommendation came from misreading a plan document rather than the code.**
+- ⚠️ **FOUR ITEMS ARE PINNED, AND THAT IS A STANDING INSTRUCTION** — activity PRs, the Strava feed
+  exclusion, the competitive review, the effect-size research. See the **PINNED** table in Open work.
+  **Do not offer them as the next thing to do.**
+
+**The three passes on 2026-08-27**, all on Tim's instructions, are the dated sections below that.
 
 **Pass 1 — the phone reports and the queued verification.**
 
@@ -44,9 +75,14 @@ Tim's instructions, and they are the three dated sections directly below.
 - ✅ **0j CLOSED** — **disconnect is mutual**. ⚠️ **Eventual, not instant**, and the sheet says so.
 - **Rules tests 66 → 92**, against the real engine. Rules deployed.
 
-**Tests: 2,813 across eleven suites** (data-layer 1343, render 534, social 134, a11y 85), plus
-**92 rules assertions in the emulator** and 12 in `sw-update`. Sub-agents are pre-authorised
-(saved to memory).
+**Tests: 2,874 across eleven suites** (data-layer 1403, render 535, goals 232, bodyweight 170,
+social 134, a11y 85), plus **108 rules assertions in the emulator** and 12 in `sw-update`. Sub-agents are pre-authorised (saved to memory).
+
+⚠️ **A TEST WAS FAILING ABOUT ONCE IN TEN RUNS AND IT WAS THE TEST'S FAULT** — `render` checked that
+a guest's numbers stayed out of the owner's session by grepping the whole serialised session for the
+substring `95`, which a millisecond timestamp or a base-36 id hits often enough to be seen. Fixed
+2026-08-28. **A test that fails at random teaches people to re-run it, which is the habit that hides
+a real failure.**
 
 ⚠️ **STILL UNVERIFIED IN THE FIELD, and it is a short list now**: the friend-name heal, and a real
 kudos/comment round trip with Autumn's account. Everything else his phone has settled.
@@ -206,7 +242,9 @@ worst defect this model has had, and §9 is the write-up.
 now discounted for **work already done on that muscle earlier in the same session** — fatigue used to
 *promote* a bad reading, because a rep count cannot tell a heavy set from a tired one. And four
 **per-side dumbbell ratios were 7–15 % too generous**; the errors are not a constant, so the rest of
-that table is still suspect (Open work 0h).
+that table was still suspect (Open work 0h). ✅ **0h CLOSED 2026-08-28** — the sweep
+finished, and the last three corrections were entries somebody had **reasoned about** rather than
+left unchecked. Two of them inverted an ordering. See that day's section.
 
 ⚠️ **THE LEVEL COLOURS ARE TIM'S OWN SINCE 2026-08-25** — Material red / orange / green / cyan
 / blue / purple / pink, sampled from a screenshot he sent, with the cyan the one step this app had to
@@ -242,6 +280,144 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-28 — ⚠️ THE CLOUD CEILING IS GONE (0b(c)), 0h CLOSES, AND A BUG NOBODY WAS LOOKING FOR
+
+Tim asked which open items needed no instruction from him, was told six, asked which of those were
+*actually* good, and then said to do the good ones and pin the rest. **Three were judged genuinely
+good and all three shipped.** One of the six was withdrawn on inspection — see item 5 — and three
+were pinned.
+
+⚠️ **A NOTE ON THE DATES IN THIS FILE, since it is the kind of thing this file cares about.** Every
+commit from `e1a7afd` to this one carries the git date **2026-08-26**, including everything labelled
+2026-08-25, 2026-08-26 and 2026-08-27 above. **The day headings are SESSIONS, not calendar days**,
+and they have run ahead of the clock for a while. This heading keeps the sequence because that is
+what a reader navigates by, but do not treat any date above as a real one.
+
+### 1. ⚠️ 0b(c) IS CLOSED — one document per session, migrated while the account is nearly empty
+
+Every collection lived in **one** Firestore document capped at 1 MiB. At the measured ~2,000 bytes a
+session that is a ceiling near **520 sessions — two and a half years at four a week**, after which
+saving a workout fails. `sessions` and `guestSessions` now live at `users/{uid}/sessions/{rowId}`,
+one document per row, where the cap applies to a single session and **Firestore does not cap the
+collection above it**.
+
+⚠️ **THE 80 % WARNING SAID THERE WAS TIME, AND THAT WAS THE ARGUMENT FOR GOING NOW RATHER THAN
+LATER.** The threshold was chosen to leave six months — but the thing being migrated is somebody's
+training history, it gets riskier the more of it there is, and 80 % means doing it to ~420 sessions
+under time pressure. At a few dozen it is the same code against a twentieth of the data with no
+deadline. **The runway was never the hard part.**
+
+**What makes it safe**, in the order it happens:
+
+- Write every row into its own document, **re-read the collection to prove they landed**, and only
+  then empty the old whole-list document. ⚠️ **A row that did not arrive aborts before the old copy
+  is touched** — a migration that cannot finish has changed nothing, and the next read retries.
+- ⚠️ **THE EMPTIED LEGACY DOCUMENT IS THE MIGRATION FLAG.** A `migratedAt` field would have meant
+  widening `validPayload()`, the rule guarding every collection in the app, to record something the
+  emptiness already says.
+- The read path **checks that document forever**, so anything a client predating this writes there
+  is adopted on the next read instead of stranded. ⚠️ **The shard wins a collision**, and the price
+  is named: an edit made on an old client can be dropped. Letting legacy win would let a stale
+  cached copy silently revert a newer edit. Both are bad; only one is invisible.
+- A write with a cold memo **reads first**, or restoring a backup would merge instead of replace.
+
+⚠️ **THE NETWORK CODE IN `firebase-backend.js` HAS BEEN EXECUTED FOR THE FIRST TIME.** That file has
+opened since it was written by admitting its network paths were reviewed and never run — tolerable
+for a save that might not happen, **not** tolerable for the one function in this app that deletes
+documents holding training data. `createShardIO()` takes its Firestore surface and uid as arguments,
+so the tests drive migrate → verify → empty → diff → delete, an aborted migration, a cold write, an
+old client's orphaned rows, two accounts never sharing a memo, and 1,200 rows in three batches.
+⚠️ **It is a double, not Firestore**, and proves the order and the arithmetic — which is the half
+that loses data when it is wrong.
+
+**Rules**: `users/{uid}/sessions/{id}` and `guestSessions`, owner-only, shape-checked. ⚠️ **`delete`
+is allowed where it is denied for the whole-list documents** — the one genuine permission this adds,
+because removing a session is a document delete now rather than a shorter list. **Rules tests 92 →
+108**, and the new ones exist to prove **sharding did not become sharing**: one document per row is
+exactly the shape that made reactions and handoffs safe to expose, so it is exactly the shape
+somebody could talk themselves into exposing here. **Deployed.**
+
+`cloudUsage()` no longer prices the sharded collections — it would go on warning about a document
+that has been emptied, which is that function's own failure mode running backwards. **It still
+watches everything else**, so if the judgement that only those two grow without limit is wrong, the
+warning fires on whichever collection is actually filling up.
+
+### 2. ⚠️ 0h IS CLOSED — and the reasoned entries turned out to be the worst ones
+
+The last four names. Three derived by the technique the sweep has used throughout:
+
+| | was | now | from |
+|---|---|---|---|
+| Decline dumbbell bench | 0.86 | **0.76** | (36,57,84,117,153)×2 / bench 127…339 |
+| Seated dumbbell press | 0.98 | **1.08** | (40,56,76,98,122)×2 / OHP 75…226 |
+| Arnold press | 0.90 | **0.77** | (23,37,54,75,98)×2 / OHP 75…226 |
+
+**Spider curl is closed as NOT DERIVABLE** rather than left open: SL's table is for the barbell
+version and this library's lift is a dumbbell one. Labelled, with a note not to re-open it without a
+new source.
+
+⚠️ **THE FINDING IS NOT THE SIZES, IT IS WHERE THE ERRORS WERE.** Every earlier finding in this
+sweep was a guess nobody had checked. **These three were all ARGUED FOR in comments, and two
+inverted the very ordering the argument was trying to protect:**
+
+- **Decline** was raised above flat on *"a decline genuinely moves more load"*. True of a barbell —
+  Decline Barbell is 1.03 against a flat 1.00, and that still holds — and **false of dumbbells**,
+  because what caps a heavy decline dumbbell press is getting the bells into position. The
+  measurement lands on **0.76, the number that was there before somebody reasoned it upward.**
+- **Seated shoulder press** sat *below* standing, which says a back support makes you weaker.
+
+⚠️ **AND A TEST WAS DEFENDING THE ARGUMENT.** `data-layer` asserted *"decline still allows MORE than
+flat"* — pinning a mechanism rather than a measurement, and it would have failed any correct
+re-derivation. **A confident mechanism in a comment reads exactly like evidence. Where an entry
+carries an argument and no numbers, check the argument first.**
+
+Both re-derived control entries reproduced their existing anchors exactly (0.809 vs 0.81, 1.014 vs
+1.01), which is what validates the source rather than the conclusion.
+
+### 3. ⚠️ A BUG NOBODY WAS LOOKING FOR — the same exercise twice in one session
+
+Found while reading the code for something else, and **it is the kind this project keeps producing:
+quiet, reachable, and invisible to 2,800 assertions.**
+
+Four readers did `entries.find(e => e.exerciseId === id)` and stopped at the first hit. The workout
+**editor** refuses a duplicate exercise, which is why that looked safe — but the **runner** does not,
+because the exercise swap splits:
+
+> swap Leg Press → Hack Squat with two sets logged, then swap back when the machine frees up
+> → `[Leg Press (2 sets), Hack Squat (n), Leg Press (rest)]`
+
+which is an ordinary thing to do in a busy gym and exactly the improvisation Swap was built for.
+**The second entry was invisible**, and it read the wrong half: the chart's best set for the day,
+the modal rep count and the pre-fill for next time all took the **first** entry, which after a
+swap-back is the sets you gave up on.
+
+Fixed in `weightRepObservations`, `seriesForExercise`, `lastSetsFor` and `progression.scanSessions`
+— the last two now take the **last** entry that logged sets, because *"what did you do last time"*
+means the one you finished. ⚠️ **`muscleStrength()` was never affected**, because it already walks
+every entry in order for the fatigue discount, and there is now a test pinning that.
+
+### 4. A test that failed about once in ten runs, for no reason
+
+`render.test.mjs` proved a guest's numbers stayed out of the owner's session by grepping the whole
+serialised session for the substring `95`. A millisecond timestamp or a base-36 id contains "95"
+often enough to be seen. Asserted on the recorded sets instead. ⚠️ **A test that fails at random
+teaches people to re-run it, which is the habit that hides a real failure.**
+
+### 5. ⚠️ ONE OF THE SIX WAS WITHDRAWN, AND THE REASON MATTERS MORE THAN THE ITEM
+
+The estimator's Phase 1 groundwork was recommended to Tim as **the most urgent of the six**, on the
+argument that `setIndex`/`exerciseIndex` are data you cannot retrofit — every session recorded
+before they exist is lost to the estimator forever.
+
+**That was wrong.** `docs/strength-estimate-plan.md` says *"nothing in `store.js` carries them"*,
+which is true of the **observation objects** and not of the **stored data**: `entries` is stored in
+performed order and `sets` within an entry likewise, so both indices are array positions and are
+derivable at any time from sessions already on disk. Nothing is lost by waiting, the item is inert
+plumbing nothing consumes until Phase 2, and **Phase 2 has open questions for Tim.** So it was not
+built. ⚠️ **The recommendation was made on a misread of a plan document rather than of the code.**
 
 ---
 
@@ -2937,7 +3113,9 @@ A directed multi-agent session. **Read this before the Open work list, because i
 
 ### ⚠️ THE INDEX. Read this first; the lettered sections below are in the order they were WRITTEN
 
-**Rebuilt 2026-08-27**, when more than half of it became closed work.
+**Rebuilt 2026-08-28.** More than half is closed work, and **everything left that needs nothing from
+Tim has been deliberately PINNED rather than queued** — see the pinned table and read its rule
+before suggesting anything from it.
 
 **Nothing is blocking. Tim can use the app and is on a current build (0a, closed).**
 
@@ -2953,20 +3131,35 @@ than left at the top where they were written.
 |---|---|---|
 | **1** | **the field checks — needs Tim's phone, not yours** | ⚠️ Two things, both cheap for him and impossible for you: the **friend-name heal** (does Autumn's name fix itself on his next Friends visit) and a **real kudos/comment round trip** with her account. ⚠️ **And two whole features have never met real data**: file import has never parsed an actual export from any service, and the handoff/disconnect paths have never run between two real accounts |
 | **2** | **0c — the UX list** | ⚠️ **OPEN, and it is judgement rather than bugs.** Its headline item closed on 2026-08-25 (Home is a feed, which is nothing but growth) and the "hard sets" half was answered on 2026-08-24 by *saying* what is counted. **What is left is one question for Tim**: should logged warm-ups be excluded from the volume count? His call, because the obvious fix would also throw away genuine back-off work |
-| **3** | **activities, Phase 2 — items 5 and 6** | Items 1–4 shipped 2026-08-27. **Item 5, activity PRs**, needs distance-bucketing designed before it is built. **Item 6 says to ASK TIM** which activities his circle actually logs — climbing grades are the least standardised thing in the list. `docs/activities-plan.md` §3 |
-| **4** | **0h — the ratio table's remainder** | ✅ Nearly closed. **Genuinely open and small**: decline dumbbell bench, the carried Seated/Arnold shoulder offsets, and spider curl (SL's is a barbell, the library's is a dumbbell — nothing honest to divide) |
+| **3** | **activities, Phase 2 — item 6** | Items 1–4 shipped 2026-08-27. **Item 6 says to ASK TIM** which activities his circle actually logs — climbing grades are the least standardised thing in the list. `docs/activities-plan.md` §3. ⚠️ **Item 5, activity PRs, is PINNED (P1)**, not open |
 | **5** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED.** Invisible hit halos grow every muscle ~10 px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44 px lands on **Tim's illustration**, so it stays his call |
 | **6** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report; he asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
-| **7** | **0b(c) — the document-per-session split** | The warning half is built (Settings, from 80 %, computed from the account's own rows). **Still open: the migration**, over live training data. ⚠️ Nobody is near it — the 80 % threshold is chosen to leave about six months to do it calmly |
-| **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. ⚠️ **Bigger than it looks and it has questions for Tim** — §16 sets the hard constraint (the band fits inside one level only 8.5 % of the time), Phase 1 needs `setIndex`/`exerciseIndex` that the store does not carry, and §14 asks whether the estimator may draw on all evidence at once (narrowing D14) |
-| **9** | **items 3 and 4 — exercise order, and a report of what you recorded** | Both blocked on the same missing effect size. `docs/fatigue-plan.md` §4. **One sourced number would unblock both**, which makes that research question worth more than either item |
-| **10** | **live sync from other apps** | File import (Phase 1) shipped 2026-08-27. **Phase 2 is live Strava sync**, and it needs a server — a Firebase Cloud Function to hold the client secret. ⚠️ **Blaze is free in practice** (~1,500 invocations a month against a 2M allowance) **but needs a card and has no hard spending cap**, so it is Tim's call. ⚠️ **And build the feed exclusion FIRST**: Strava's 2026 terms forbid showing one user's Strava data to another user. `docs/integrations-plan.md` |
-| **11** | **the competitive review** | Last of the seven briefed on 2026-08-19. Inspects the market rather than the app |
+| **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. ⚠️ **It has questions for Tim** — §16 sets the hard constraint (the band fits inside one level only 8.5 % of the time), and §14 asks whether the estimator may draw on all evidence at once (narrowing D14). ⚠️ **The plan's claim that Phase 1 is blocked on data the store does not carry is WRONG** — see the 2026-08-28 section, item 5. `setIndex` and `exerciseIndex` are array positions in data already on disk, derivable at any time. Phase 1 is small; what gates the feature is Phase 2, and Phase 2 needs him |
+
+### ⚠️ PINNED — real work, deliberately NOT queued. Do not offer these as "the next thing to do"
+
+**Tim's instruction, 2026-08-28**, after being given this list and asked which items were genuinely
+worth doing: *"do everything you think is an actually good change, then pin the rest for later
+(don't bring them up as the 'next thing to do' later though)."*
+
+⚠️ **THIS IS A STANDING INSTRUCTION AND IT SURVIVES A CHAT RESET.** These are not blocked, not
+forgotten and not bad ideas — each was assessed and judged **not worth doing yet**, with the
+reasoning recorded here so it does not have to be re-derived. **A fresh session must not surface
+them as a suggestion, a recommendation, or a "while I'm in here".** Build them if Tim asks for them
+by name. Otherwise leave them alone.
+
+| | What | Why it is pinned rather than queued |
+|---|---|---|
+| **P1** | **activity PRs** (activities Phase 2, item 5) | ⚠️ **It crosses a line the project drew on purpose.** D27 says activities are recorded first-class and **modelled not at all**, and "fastest 5k-ish" is modelling — the distance-bucketing decision *is* a judgement about what counts as comparable, and getting it wrong celebrates a PR that is not one. Nobody has asked for it, and Strava does it properly for the people who care. The fair counterargument is that lifts get a PR screen and runs do not, which reads as inconsistent. Not enough |
+| **P2** | **the Strava feed exclusion** | Correctly sequenced *inside* item 10, not ahead of it. Building a restriction for a feature that may never exist is dead code enforcing the terms of a service the app does not talk to. ⚠️ **Ready is not the same as worth it** |
+| **P3** | **the competitive review** | The odd one of the seven briefed on 2026-08-19: the six that ran inspected the **app** and found defects; this one inspects the **market** and produces opinions. `docs/competitive-teardown.html` already covers some of that ground. ⚠️ **Its likely output is a list of things other apps do — the exact input that would push this app toward inventing numbers, the one thing it is good at refusing.** Tim drives the design now and has been right every time |
+| **P4** | **the effect-size research** (items 3 and 4) | Cheap, and it **closes** rather than builds. `docs/fatigue-plan.md` §4 already argues the literature reports reps-at-fixed-load rather than 1RM decrement, and that using it would break Rule 5 — it is the only mechanism on the table that makes a number BIGGER than what was observed. The realistic output is a written "no". Worth an hour **only** to stop items 3 and 4 sitting open implying a maybe |
 
 ### Parked at Tim's instruction — do not start these
 
 | | What | State |
 |---|---|---|
+| **10** | **live sync from other apps** | File import (Phase 1) shipped 2026-08-27. **Phase 2 is live Strava sync**, and it needs a server — a Cloud Function to hold the client secret. ⚠️ **Blaze is free in practice** (~1,500 invocations a month against a 2M allowance) **but needs a card and has no hard spending cap**, so it is **Tim's call and nothing starts without it.** Build P2 first if he says go. `docs/integrations-plan.md` |
 | **12** | **AirPods stem-press controls** | ⚠️ **"Wait" — Tim, 2026-08-27.** Buildable via MediaSession; costs Now Playing (no simultaneous Spotify), so opt-in only. `docs/airpods-plan.md` §4 is the build order if he says go, starting with a half-day device spike. **Head motion needs a native app** (§2b) |
 | **13** | **importing food** | ⚠️ **"Wait" — Tim, 2026-08-27.** It collides with D1/D26 and needs a **narrowing decision from him**, not a quiet fix. The honest version is probably a daily protein total to answer the Goals screen's own protein line, and never a food or a meal |
 
@@ -2974,6 +3167,8 @@ than left at the top where they were written.
 
 | | What | Closed |
 |---|---|---|
+| **0b(c)** | **the cloud ceiling** | ✅ **2026-08-28.** One document per session and per guest session at `users/{uid}/sessions/{rowId}`. **There is no longer a session count at which saving stops working.** Migrate → **re-read to verify** → only then empty the old document; an aborted migration changes nothing. Rules 92 → 108, deployed. ⚠️ **The read cost changed** — one billed read per row, ~520 on a cold open at the old ceiling against 50,000/day |
+| **0h** | **the ratio table** | ✅ **2026-08-28.** Decline dumbbell bench 0.86 → **0.76**, seated dumbbell press 0.98 → **1.08**, Arnold 0.90 → **0.77**; spider curl closed as **not derivable** and labelled. ⚠️ **The finding: the worst entries were the ones somebody had REASONED about**, and two inverted the ordering the argument was trying to protect |
 | **0e** | **joint workouts** | ✅ **2026-08-27.** Guest half 2026-08-26; friend-accept half 2026-08-27 — `handoffs/`, one create-only doc per offer, the recipient taps Add and **their own client** writes it to **their own account** under unchanged owner-only rules |
 | **0j** | **mutual disconnect** | ✅ **2026-08-27.** A tombstone at `disconnects/{leaverUid}` — ⚠️ **the id IS the caller's uid**, so you may only ever leave for yourself. ⚠️ **Eventual, not instant**, and the sheet says so |
 | **0k** | **the colour direction** | ✅ **2026-08-27.** Tim picked all three; Gold/Teal/Indigo/Ember in Settings, each with a designed light theme. The last caveat is gone — the full browser audit has run on all four (240 combinations, zero failures) |
@@ -3194,18 +3389,28 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      silent below it and silent on any backend that is not Firestore.
      ✅ The "fails silently" half was already half-closed: a rejected cloud write surfaces on screen,
      because `finish()` has caught `saveSession()` since 2026-08-22 whichever backend threw.
-     ⚠️ **Still open: the split to a document per session**, a migration over live training data
-     that stays its own job. Nobody is near it — Tim's account holds a few dozen sessions, and the
-     80 % threshold is chosen to leave about six months to do the migration calmly.
-     ⚠️ **Never verified against a real rejection**, and must not be described as if it were.
+     ✅ **DONE 2026-08-28 — the split to a document per session**, and to a document per guest
+     session with it. ⚠️ **The argument for deferring it was the thing that turned out to be
+     backwards**: this said "nobody is near it, the 80 % threshold leaves about six months to do
+     the migration calmly", which is true about the runway and wrong about the risk. A migration
+     over a training history gets more dangerous the more history there is, so the calm moment was
+     at a few dozen sessions rather than at four hundred. See the 2026-08-28 section.
+     ⚠️ **Never verified against a real rejection**, and must not be described as if it were —
+     which is now moot for sessions and still true of every collection still under the cap.
    - ~~**(d) Restore from backup validates almost nothing, MERGES rather than replaces, and has no
      confirmation**~~ ✅ **FIXED 2026-08-24.** Every row is checked before any row is written, so
      there is no half-restore; `{foo:1}` is refused rather than toasting success over nothing; every
      collection is replaced including the ones the file does not carry, which is what kills the dead
      `systemId`; and it has a confirmation that names what is in the file.
 
-0h. **⚠️ THE RATIO TABLE'S REASONED ENTRIES RUN TOO LOW, WHICH FLATTERS. Four anchors corrected
-   2026-08-24; the rest of the table is still unchecked.** Done: `Dumbbell Row` 0.85 → 0.98,
+0h. ~~**⚠️ THE RATIO TABLE'S REASONED ENTRIES RUN TOO LOW, WHICH FLATTERS.**~~ ✅ **CLOSED
+   2026-08-28.** The sweep ran to the end; the last four names are in that day's section, and
+   spider curl is closed as **not derivable** rather than left open. ⚠️ **The reasoning below is
+   history and one line of it turned out to be wrong** — "decline sits above flat" is true of a
+   barbell and false of dumbbells. Kept for the method, not the conclusions.
+
+   **⚠️ Four anchors corrected 2026-08-24; the rest of the table is still unchecked** *(as it stood
+   then)*. Done: `Dumbbell Row` 0.85 → 0.98,
    `Dumbbell Bench Press` 0.72 → 0.81, `Dumbbell Shoulder Press` 0.88 → 1.01, `Dumbbell Curl`
    0.88 → 0.94, each derived from published standards at a 180 lb male. Four neighbours were carried
    across their corrected anchor and are **still reasoned, not measured**: Incline and Decline

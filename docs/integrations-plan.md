@@ -175,6 +175,12 @@ activities. Real work, and it buys "it just appears" over "export and drag a fil
 month". ⚠️ **Build the feed exclusion first**, or the first sync breaks Strava's terms on the
 screen Tim most recently asked for.
 
+⚠️ **AND THE FEED EXCLUSION IS PINNED UNTIL HE SAYS GO — 2026-08-28.** It needs nothing from
+anybody and could be built today, which is exactly the trap: a restriction on a feature that may
+never exist is dead code enforcing the terms of a service the app does not talk to. **It is
+sequenced first INSIDE this phase, not ahead of it.** Ready is not the same as worth it.
+`progress.md` Open work, the PINNED table.
+
 **Phase 3 — a native companion app, only if Apple Health is the actual goal.** It is the only way
 in, it reaches many sources at once, and it is a different project with a yearly fee and a review
 queue rather than a feature.
