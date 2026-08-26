@@ -168,6 +168,53 @@ which drives the demo.
 
 ---
 
+## 2026-08-26, fourth pass — ⚠️ THE RATIO SWEEP (0h substantially closed)
+
+**28 lifts fetched from Strength Level's published 180 lb male standards in one day**, every
+remaining reasoned entry with a published standard derived by the established technique — one
+population, both lifts, divide, take the median of the five levels. The findings:
+
+⚠️ **THE ERRORS STILL RAN MOSTLY ONE WAY — TOO LOW, WHICH FLATTERS.** The worst: **Pec Deck
+0.55 → 0.90** (inflating every pec-deck user's chest ~60 %), **Concentration Curl 0.62 → 0.92**,
+**Good Morning 0.60 → 0.95**, **Sumo Deadlift 1.52 → 1.97**, **Upright Row 0.70 → 0.94**, the whole
+deadlift-as-back family 13–30 % flattering, Preacher Curl 0.82 → 0.96, Leg Extension 0.60 → 0.78,
+Pushdown 0.55 → 0.61, Lat Pulldown 0.90 → 0.95.
+
+⚠️ **BUT NOT ALL — THREE RAN THE OTHER WAY**, and a sweep that assumed the direction would have
+"fixed" them backwards: **Leg Press 2.00 → 1.73**, **Hip Thrust 1.15 → 0.96** and **Dumbbell Shrug
+0.95 → 0.70** had been *under*-crediting those lifters. And one was **exactly right already**: Hack
+Squat's reasoned 1.15 came out at a sourced median of… 1.15.
+
+⚠️ **THE FACE PULL IS SPLIT OUT OF THE RAISE FAMILY AT 0.75** (was 0.30). §9's poster child — a
+50 lb face pull converting to 167 lb of press — now converts to 67, which is the sane answer the
+winsoriser and the credibility sort had been imposing from outside.
+
+⚠️ **`q` MOVED BY DRIFT, NOT BY SOURCING.** Where the five per-level ratios are nearly flat
+(Seated Cable Row 0.98–0.99, Seated Calf 0.65–0.67, Rack Pull 2.07–2.11, Lat Pulldown) the ratio
+really is a population constant and q ROSE. Where they drift hugely (machines, cables, Zottman
+0.45–1.00) q stayed low or dropped despite the sourced median — a fixed ratio still compresses
+everybody toward the middle.
+
+⚠️ **WHERE NO STANDARD EXISTS THE TABLE NOW SAYS SO**: Machine Row, Machine/Dumbbell Preacher,
+Machine Hip Thrust, Glute Bridge (SL publish reps, not 1RM), Cable/Machine/Trap-Bar Shrug —
+labelled "reasoned, no published standard" or carried across a corrected anchor with the label.
+**Cable Fly stays reasoned for an unusual reason**: SL publish standards but never say whether the
+number is one stack or both, and the two readings differ 2× — a source that cannot answer the
+per-side question is not a source for a per-side lift.
+
+**Measured effect on the demo year** (old table → new): Back 229 → 209 lb (−8.7 %), Triceps
+186 → 168 (−9.7 %), Traps 262 → 234, Shoulders 150 → 143 with confidence **0.53 → 0.79** — the
+face-pull disagreement gone — Hamstrings conf 0.81 → 0.90, Chest/Glutes/Biceps unchanged.
+Confidences mostly rose while estimates fell: better-calibrated inputs agree better, the same
+signature as the dumbbell-row fix.
+
+**23 sourced ratios and 7 orderings are pinned as assertions** (data-layer 1208 → 1235) — a revert
+of any entry flips its line. **Still reasoned and known**: lateral raises, machine triceps
+extension, the incline/decline dumbbell benches, Arnold/seated shoulder presses, spider curl (SL's
+is barbell, the library's is dumbbell — nothing honest to divide). 0h shrinks to that remainder.
+
+---
+
 ## 2026-08-26, third pass — ⚠️ LOCATION ON FEED CARDS (0m closed)
 
 The feed card's meta line was written ready — `[when, a.location]` — and now the term exists.
@@ -2196,7 +2243,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | | What | State |
 |---|---|---|
 | **1** | **0e — joint workouts** | ⚠️ **THE GUEST HALF IS BUILT AND DEPLOYED, 2026-08-26** — people chips in the runner, per-person suggestions, own collection, day-view section; see that day's section. **Still open: the friend-accept half** (publish a session to a real friend's account for them to accept) — same new-rules-path wall as 0l, and 0l is being built first |
-| **2** | **0h — the ratio table runs too low, which flatters** | ⚠️ **OPEN.** Four anchors corrected 2026-08-24 by 7–15 %; the errors are **not a constant**, so every remaining reasoned entry needs deriving on its own. Moves real numbers on every body map |
+| **2** | **0h — the ratio table** | ✅ **SUBSTANTIALLY CLOSED 2026-08-26** — 28 lifts derived from published standards in one sweep, 23 pinned as assertions; see the fourth-pass section. **Small remainder stays open**: lateral raises, machine triceps extension, the carried dumbbell-bench/shoulder offsets, spider curl (source/library equipment mismatch) |
 | **3** | **0c — the UX list** | ⚠️ **OPEN, but its headline item CLOSED on 2026-08-25**: *"nothing a user can see on Home ever grows"* was answered by making Home a feed, which is nothing but growth. The "hard sets" half was answered on 2026-08-24 by *saying* what is counted; whether to exclude warm-ups is **Tim's call and unanswered** |
 | **4** | **0i — the body map's touch targets** | ⚠️ **OPEN, Tim's call, and now the ILLUSTRATION ONLY.** The two ordinary controls beside it went to 44 px on 2026-08-24. Traps 42×11 at 360px, and the figure is the only way to select a muscle |
 | **5** | **0j — mutual disconnect** | ⚠️ **OPEN.** The sheet stopped promising it on 2026-08-24; the feature is still one-sided. Needs a new rules path |

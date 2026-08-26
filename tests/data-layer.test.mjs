@@ -1717,6 +1717,65 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(hit && hit.ratio > 0 && hit.quality > 0, `${name} converts to the ${muscle} standard`);
   }
 
+  // ---- the 2026-08-26 ratio sweep (0h) ----
+  // Every pinned number below was DERIVED from Strength Level's published
+  // 180 lb male standards (the derivation is a comment on each entry in
+  // muscle-evidence.js). Reverting any entry to its old reasoned value flips
+  // its line here — that is the point: these stopped being opinions.
+  {
+    const ratioOf = (name, muscle) => {
+      const hit = me.contributionsFor(byName(name)).find((x) => x.muscle === muscle && x.kind === 'direct');
+      return hit ? hit.ratio : null;
+    };
+    const pinned = [
+      ['Pec Deck', 'Chest', 0.90],            // was 0.55 — the sweep's worst flatter
+      ['Close-Grip Bench Press', 'Chest', 0.95],
+      ['Machine Chest Press', 'Chest', 0.91],
+      ['Lat Pulldown', 'Back', 0.95],
+      ['Seated Cable Row', 'Back', 0.98],
+      ['Deadlift', 'Back', 1.76],
+      ['Sumo Deadlift', 'Back', 1.97],
+      ['Rack Pull', 'Back', 2.10],
+      ['Good Morning', 'Back', 0.95],
+      ['Leg Press', 'Quads', 1.73],           // ran the OTHER way — was under-crediting
+      ['Leg Extension', 'Quads', 0.78],
+      ['Lying Leg Curl', 'Hamstrings', 0.53],
+      ['Hip Thrust', 'Glutes', 0.96],         // the other way too
+      ['Machine Shoulder Press', 'Shoulders', 1.23],
+      ['Upright Row', 'Shoulders', 0.94],
+      ['Face Pull', 'Shoulders', 0.75],       // split out of the 0.30 raise family
+      ['Hammer Curl', 'Biceps', 1.04],
+      ['Concentration Curl', 'Biceps', 0.92], // was 0.62 — the family's biggest flatter
+      ['Preacher Curl', 'Biceps', 0.96],
+      ['Cable Curl', 'Biceps', 1.11],
+      ['Triceps Pushdown', 'Triceps', 0.61],
+      ['Dumbbell Shrug', 'Traps', 0.70],      // the third counter-direction entry
+      ['Seated Calf Raise', 'Calves', 0.66],
+    ];
+    for (const [name, muscle, want] of pinned) {
+      const got = ratioOf(name, muscle);
+      ok(got === want, `${name} → ${muscle} is the sourced ${want} (${got})`);
+    }
+
+    // Orderings the corrections must not have broken — each pair is a claim
+    // about the world, not about the table.
+    const lt = (a, am, b, bm, msg) => ok(ratioOf(a, am) < ratioOf(b, bm), msg);
+    lt('Deadlift', 'Back', 'Sumo Deadlift', 'Back',
+       'sumo moves more weight than conventional for the same person');
+    lt('Sumo Deadlift', 'Back', 'Rack Pull', 'Back',
+       'and a part-range rack pull more than either');
+    lt('Dumbbell Curl', 'Biceps', 'Hammer Curl', 'Biceps',
+       'a neutral grip is stronger than a supinated one — now by measurement');
+    lt('Seated Calf Raise', 'Calves', 'Standing Calf Raise', 'Calves',
+       'a bent knee takes gastrocnemius out, so the seated load is lower');
+    lt('Single-Leg Extension', 'Quads', 'Leg Extension', 'Quads',
+       'one leg moves less than two');
+    lt('Face Pull', 'Shoulders', 'Overhead Press', 'Shoulders',
+       'a face pull is still lighter work than a press');
+    ok(ratioOf('Lateral Raise', 'Shoulders') === 0.30,
+       'the raise family stays at its reasoned 0.30 — the sweep split face pull out, not raises');
+  }
+
   // Coverage, stated as a number so a regression is loud rather than subtle.
   const weighted = BUILT_IN_EXERCISES.filter((e) => e.fields.includes('weight'));
   const contributing = weighted.filter((e) => me.contributionsFor(e).length);

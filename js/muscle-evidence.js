@@ -107,15 +107,46 @@ export function rankBlockedReason(exercise, opts) {
 // Rules are ordered and FIRST MATCH WINS, so specific patterns must precede
 // general ones — "Chest-Supported Dumbbell Row" before "Dumbbell Row", and
 // "Cross-Body Hammer Curl" before "Hammer Curl".
+//
+// ⚠️ THE 2026-08-26 SWEEP (Open work 0h, closing pass). Every remaining
+// reasoned entry with a published Strength Level standard was derived by the
+// established technique — one population, both lifts, a 180 lb male, divide,
+// take the median of the five levels — 28 lifts fetched in one day. Three
+// findings worth keeping:
+//
+//   1. THE ERRORS STILL RUN MOSTLY ONE WAY — TOO LOW, WHICH FLATTERS (the
+//      estimate divides by the ratio). The worst: Pec Deck 0.55 → 0.90,
+//      Concentration Curl 0.62 → 0.92, Good Morning 0.60 → 0.95, Sumo
+//      Deadlift 1.52 → 1.97, Upright Row 0.70 → 0.94, Preacher Curl
+//      0.82 → 0.96. But NOT all: Leg Press 2.00 → 1.73, Hip Thrust
+//      1.15 → 0.96 and Dumbbell Shrug 0.95 → 0.70 ran the other way and had
+//      been UNDER-crediting those lifters. A sweep that assumed the direction
+//      would have "fixed" those three backwards.
+//   2. AND THEY ARE STILL NOT A CONSTANT — 0 % (Hack Squat, confirmed exactly)
+//      to ~60 % (Pec Deck). No blanket factor could have fixed this table,
+//      which is why each entry carries its own derivation.
+//   3. WHERE NO STANDARD EXISTS, THE ENTRY NOW SAYS SO — "reasoned, no
+//      published standard" or "carried across a corrected anchor" — so the
+//      next sweep can see at a glance what is measured and what is not.
+//
+// Where a derivation's five ratios drift widely across levels, `q` went DOWN
+// or stayed low even though the median is now sourced — a fixed ratio still
+// compresses everybody toward the middle. Where the drift is nearly flat
+// (Seated Cable Row 0.98–0.99, Seated Calf 0.65–0.67, Rack Pull 2.07–2.11),
+// `q` went UP, because there the single number really is the population.
 const RATIOS = {
   Chest: [ // key: Barbell Bench Press
     [/^Barbell Bench Press$/, 1.00, 1.00],
-    [/^Close-Grip Bench Press$/, 0.88, 0.80],
+    // 2026-08-26 sweep: Strength Level close-grip 124/163/208/260/314 over
+    // bench 127/169/220/277/339 → 0.98/0.96/0.95/0.94/0.93, median 0.95.
+    // Was a reasoned 0.88 — the grip costs about half what was assumed.
+    [/^Close-Grip Bench Press$/, 0.95, 0.80],
     [/^Incline Barbell Bench Press$/, 0.85, 0.80],
-    // Both handicaps at once: 0.88 for the grip × 0.85 for the incline ≈ 0.75.
+    // Both handicaps at once: 0.95 for the grip × 0.85 for the incline ≈ 0.81.
     // Quality below either parent because that product is reasoned rather than
-    // measured — no standards are published for the combined lift.
-    [/^Close-Grip Incline Bench Press$/, 0.75, 0.65],
+    // measured — no standards are published for the combined lift. Recomputed
+    // 2026-08-26 when the grip anchor moved.
+    [/^Close-Grip Incline Bench Press$/, 0.81, 0.65],
     [/^Decline Barbell Bench Press$/, 1.03, 0.75],
     [/^Floor Press$/, 0.92, 0.70],
     [/Smith Machine Bench Press/, 1.00, 0.50],
@@ -148,7 +179,11 @@ const RATIOS = {
     [/Decline Dumbbell Bench Press/, 0.86, 0.50],
     [/Dumbbell Bench Press/, 0.81, 0.65],
     [/Incline Machine Press/, 0.82, 0.45],
-    [/Machine Chest Press/, 0.95, 0.45],
+    // 2026-08-26 sweep: SL machine chest press 88/137/200/274/356 over bench
+    // → 0.69/0.81/0.91/0.99/1.05, median 0.91. The drift is machine gearing
+    // across brands, which is exactly what a low q prices — it goes DOWN a
+    // step now that the spread has been seen rather than guessed at.
+    [/Machine Chest Press/, 0.91, 0.35],
     // ── Bodyweight pressing ──────────────────────────────────────────────
     // These are the only entries in this file whose `ratio` is above 1.00 for a
     // reason worth stating: the load is your own body, which is far heavier
@@ -184,7 +219,17 @@ const RATIOS = {
     // the 15-rep ceiling estimates 213 against roughly 154 (1.38).
     [/^Push-Up$/, 1.35, 0.35],
     [/Dumbbell Pullover/, 0.35, 0.35],
-    [/Pec Deck/, 0.55, 0.35],
+    // ⚠️ 0.55 UNTIL 2026-08-26, AND IT WAS THE WORST ERROR THE SWEEP FOUND —
+    // inflating every pec-deck user's chest by ~60 %. SL machine chest fly
+    // (pec deck) 96/142/199/266/339 over bench → 0.76/0.84/0.90/0.96/1.00,
+    // median 0.90: the machine's lever arm means the stack number runs nearly
+    // as high as a bench press, not half of one.
+    [/Pec Deck/, 0.90, 0.35],
+    // ⚠️ REASONED, AND STUCK THAT WAY FOR AN UNUSUAL REASON: SL publish cable
+    // fly standards (19/44/82/131/189) but never say whether the number is
+    // one stack or both, and the two readings give 0.37 or 0.75 — a source
+    // that cannot answer the per-side question is not a source for a per-side
+    // lift. Checked 2026-08-26, left reasoned.
     [/Cable Fly|Cable Crossover|Low-to-High|High-to-Low/, 0.40, 0.30],
     [/Fly/, 0.30, 0.30],
     [/Svend Press/, 0.12, 0.20],
@@ -223,10 +268,19 @@ const RATIOS = {
     // chest-supported row removes the torso english, so less weight moves and a
     // lower ratio is correct — 0.80 still sits below this, as it must.
     [/Dumbbell Row/, 0.98, 0.60],
+    // Reasoned — SL publish NO machine-row standard (checked 2026-08-26), so
+    // the guess stays and is labelled rather than dressed as a measurement.
     [/Machine Row|Hammer Strength Row/, 1.00, 0.45],
-    [/Seated Cable Row|Wide-Grip Seated Row/, 1.00, 0.50],
-    [/Single-Arm Lat Pulldown/, 0.80, 0.40],
-    [/Lat Pulldown|Pulldown/, 0.90, 0.50],
+    // 2026-08-26 sweep: SL seated cable row 106/146/195/251/312 over barbell
+    // row 108/149/198/255/315 → 0.98 at EVERY level (drift 0.98–0.99, the
+    // flattest in the file). q rises: here the single number really is the
+    // population.
+    [/Seated Cable Row|Wide-Grip Seated Row/, 0.98, 0.60],
+    // Carried across the corrected pulldown anchor (× 0.95/0.90), not measured.
+    [/Single-Arm Lat Pulldown/, 0.84, 0.40],
+    // 2026-08-26 sweep: SL lat pulldown 106/143/189/241/296 over barbell row
+    // → 0.98/0.96/0.95/0.95/0.94, median 0.95. Nearly flat, so q rises a step.
+    [/Lat Pulldown|Pulldown/, 0.95, 0.55],
     [/Cable Pullover/, 0.45, 0.30],
     // ── Bodyweight pulling ───────────────────────────────────────────────
     // Same derivation as the dip above, off Strength Level's pull-up standards
@@ -264,12 +318,30 @@ const RATIOS = {
     // back work, but they are pulls, not rows — hence the wide conversions and
     // the low quality. Deadlift itself is ALSO the key lift for Glutes, which
     // the key-lift rule in contributionsFor() handles separately.
-    [/^Rack Pull$/, 1.85, 0.35],
-    [/^Trap Bar Deadlift$/, 1.60, 0.40],
-    [/^Sumo Deadlift$/, 1.52, 0.40],
-    [/^Deficit Deadlift$/, 1.40, 0.40],
-    [/^Deadlift$/, 1.56, 0.45],
-    [/Good Morning/, 0.60, 0.35],
+    //
+    // ⚠️ ALL FIVE DERIVED 2026-08-26 (were reasoned), over the same barbell
+    // row denominators the pull-up entry uses. Every one was TOO LOW —
+    // flattering deadlifters' back ratings by 13–30 %:
+    //   Deadlift 201/268/348/438/535 → 1.86/1.80/1.76/1.72/1.70, median 1.76
+    //   Sumo     230/303/390/488/592 → 2.13/2.03/1.97/1.91/1.88, median 1.97
+    //   Trap bar 223/291/372/464/560 → 2.06/1.95/1.88/1.82/1.78, median 1.88
+    //   Deficit  216/281/358/444/535 → 2.00/1.89/1.81/1.74/1.70, median 1.81
+    //   Rack pull 224/310/415/535/664 → 2.07/2.08/2.10/2.10/2.11, median 2.10
+    // Rack pull's drift is nearly flat, so its q rises a step; the rest keep
+    // theirs — the drift is real and a fixed ratio still compresses.
+    // The family now orders sensibly on its own: rack pull (part range) >
+    // sumo > trap bar > deficit ≈ conventional, all above 1.
+    [/^Rack Pull$/, 2.10, 0.40],
+    [/^Trap Bar Deadlift$/, 1.88, 0.40],
+    [/^Sumo Deadlift$/, 1.97, 0.40],
+    [/^Deficit Deadlift$/, 1.81, 0.40],
+    [/^Deadlift$/, 1.76, 0.45],
+    // 2026-08-26: SL good morning 68/119/189/274/370 over barbell row →
+    // 0.63/0.80/0.95/1.07/1.17, median 0.95. Was 0.60 — a 37 % flatter. The
+    // drift is the widest of the barbell entries (novices barely load it,
+    // strong lifters treat it as a real pull), so q goes DOWN a step even
+    // though the median is now sourced.
+    [/Good Morning/, 0.95, 0.30],
     [/Reverse Hyperextension/, 0.55, 0.25],
   ],
   Quads: [ // key: Back Squat
@@ -282,13 +354,25 @@ const RATIOS = {
     [/^Safety Bar Squat$/, 0.95, 0.65],
     [/^Zercher Squat$/, 0.72, 0.50],
     [/Smith Machine Squat/, 1.05, 0.45],
+    // 2026-08-26 sweep: SL hack squat 143/230/342/477/626 over squat
+    // 169/228/298/377/462 → 0.85/1.01/1.15/1.27/1.35 — median 1.15, EXACTLY
+    // the reasoned number. Kept, now sourced; the huge drift (novices hack
+    // less than they squat, strong lifters far more) is why q stays low.
     [/Hack Squat/, 1.15, 0.40],
     [/Pendulum Squat/, 1.05, 0.35],
     [/Belt Squat/, 1.10, 0.35],
     [/Single-Leg Press/, 1.30, 0.30],
-    [/Leg Press/, 2.00, 0.35],
+    // 2026-08-26 sweep, and one of the three that ran the OTHER way: SL sled
+    // leg press 246/366/516/692/884 over squat → 1.46/1.61/1.73/1.84/1.91,
+    // median 1.73. The reasoned 2.00 was UNDER-crediting every leg press by
+    // ~15 %. Drift stays wide (sled angle and brand), q unchanged.
+    [/Leg Press/, 1.73, 0.35],
+    // Reasoned — no published single-leg standard (checked 2026-08-26). Still
+    // ordered below the bilateral entry, which is all the guess claims.
     [/Single-Leg Extension/, 0.55, 0.25],
-    [/Leg Extension/, 0.60, 0.30],
+    // 2026-08-26 sweep: SL leg extension 107/162/231/313/402 over squat →
+    // 0.63/0.71/0.78/0.83/0.87, median 0.78. Was 0.60 — flattering by ~23 %.
+    [/Leg Extension/, 0.78, 0.30],
     [/Goblet Squat/, 0.35, 0.40],
     [/Bulgarian Split Squat|Split Squat/, 0.50, 0.40],
     [/Lunge/, 0.45, 0.35],
@@ -297,17 +381,37 @@ const RATIOS = {
   Hamstrings: [ // key: Romanian Deadlift
     [/^Romanian Deadlift$/, 1.00, 1.00],
     [/^Stiff-Leg Deadlift$/, 0.98, 0.80],
-    [/Dumbbell Romanian Deadlift/, 0.75, 0.60],
+    // 2026-08-26 sweep: SL dumbbell RDL per dumbbell 43/67/98/136/177,
+    // doubled, over RDL 147/207/280/364/455 → 0.59/0.65/0.70/0.75/0.78,
+    // median 0.70. The reasoned 0.75 was slightly UNDER-crediting.
+    [/Dumbbell Romanian Deadlift/, 0.70, 0.60],
     [/Single-Leg Romanian Deadlift/, 0.45, 0.35],
-    [/Leg Curl/, 0.45, 0.35],
+    // 2026-08-26 sweep: SL lying leg curl 68/103/148/201/259 over RDL →
+    // 0.46/0.50/0.53/0.55/0.57, median 0.53. Was 0.45 — flattering ~18 %.
+    // One number covers the seated/lying/standing family; SL's seated table
+    // was not separately derived.
+    [/Leg Curl/, 0.53, 0.35],
     [/Cable Pull-Through/, 0.45, 0.30],
     [/Kettlebell Swing/, 0.35, 0.25],
   ],
   Glutes: [ // key: Deadlift
     [/^Deadlift$/, 1.00, 1.00],
-    [/Machine Hip Thrust/, 1.20, 0.35],
-    [/Hip Thrust/, 1.15, 0.50],
-    [/Glute Bridge/, 1.00, 0.40],
+    // Carried across the corrected hip-thrust anchor (× 0.96/1.15), not
+    // measured — SL publish no machine hip thrust standard (checked
+    // 2026-08-26).
+    [/Machine Hip Thrust/, 1.00, 0.35],
+    // 2026-08-26 sweep, the second entry that ran the OTHER way: SL hip
+    // thrust 129/218/335/478/639 over deadlift 201/268/348/438/535 →
+    // 0.64/0.81/0.96/1.09/1.19, median 0.96. The reasoned 1.15 was
+    // UNDER-crediting hip thrusters by ~17 % at the median. The drift is the
+    // widest of any barbell lift in the file — novices thrust far less than
+    // they pull, strong lifters far more — so q goes DOWN a step even though
+    // the median is now sourced.
+    [/Hip Thrust/, 0.96, 0.40],
+    // Carried across the corrected hip-thrust anchor (× 0.96/1.15). SL's
+    // glute bridge page publishes REP standards, not 1RM — checked
+    // 2026-08-26, not derivable.
+    [/Glute Bridge/, 0.83, 0.40],
     [/Sumo Squat/, 0.45, 0.30],
     [/Kickback/, 0.18, 0.20],
     [/Hip Abduction Machine|Hip Adduction Machine/, 0.35, 0.15],
@@ -319,7 +423,12 @@ const RATIOS = {
     [/^Behind-the-Neck Press$/, 0.90, 0.55],
     [/^Z Press$/, 0.85, 0.50],
     [/Smith Machine Overhead Press/, 1.05, 0.45],
-    [/Machine Shoulder Press/, 1.10, 0.45],
+    // 2026-08-26 sweep: SL machine shoulder press 67/112/172/244/325 over
+    // OHP 75/104/140/181/226 → 0.89/1.08/1.23/1.35/1.44, median 1.23. Was
+    // 1.10, flattering ~12 % — and the drift is the widest of any machine
+    // here (gearing plus a seat that removes the stabilising work novices
+    // fail on), so q drops a step.
+    [/Machine Shoulder Press/, 1.23, 0.35],
     // ⚠️ Same sweep, and the largest error found in it — 15 %. Strength Level's
     // dumbbell shoulder press, per dumbbell and doubled, against their barbell
     // shoulder press at a 180 lb male:
@@ -340,29 +449,69 @@ const RATIOS = {
     [/Dumbbell Shoulder Press/, 1.01, 0.60],
     [/Arnold Press/, 0.90, 0.45],
     [/Landmine Press/, 0.60, 0.35],
-    [/Upright Row/, 0.70, 0.35],
+    // 2026-08-26 sweep: SL upright row 53/87/132/187/248 over OHP →
+    // 0.71/0.84/0.94/1.03/1.10, median 0.94. Was 0.70 — flattering ~26 %.
+    [/Upright Row/, 0.94, 0.35],
+    // ⚠️ SPLIT OUT OF THE RAISE FAMILY 2026-08-26, because it turned out to be
+    // measurable: SL face pull 35/64/105/155/211 over OHP →
+    // 0.47/0.62/0.75/0.86/0.93, median 0.75 — not 0.30. The §9 poster child
+    // (a 50 lb face pull converting to 167 lb of press) now converts to 67,
+    // which is the sane answer the winsoriser and the credibility sort were
+    // having to impose from outside. Rope-and-stack leverage varies, hence
+    // the cable-grade q.
+    [/Face Pull/, 0.75, 0.35],
     // Raises and rear-delt work load a fraction of a press and vary hugely with
     // technique. They are admitted because they are real shoulder work, at a
-    // quality that stops them ever outvoting a press.
-    [/Raise|Fly|Face Pull|Pec Deck/, 0.30, 0.25],
+    // quality that stops them ever outvoting a press. Still reasoned — SL do
+    // publish lateral-raise standards, so a later pass can derive this line;
+    // the 2026-08-26 sweep stopped at the entries 0h named.
+    [/Raise|Fly|Pec Deck/, 0.30, 0.25],
   ],
   Biceps: [ // key: Barbell Curl
     [/^Barbell Curl$/, 1.00, 1.00],
     [/^EZ-Bar Curl$/, 1.02, 0.80],
     [/^Drag Curl$/, 0.85, 0.55],
     [/^21s$/, 0.55, 0.35],
-    [/Machine Preacher Curl/, 0.90, 0.40],
-    [/Dumbbell Preacher Curl/, 0.72, 0.45],
-    [/Preacher Curl/, 0.82, 0.60],
-    [/Cross-Body Hammer Curl/, 0.92, 0.45],
-    [/Cable Rope Hammer Curl/, 0.95, 0.45],
-    [/Hammer Curl/, 0.98, 0.55],
-    [/Incline Dumbbell Curl/, 0.72, 0.45],
-    [/Concentration Curl/, 0.62, 0.40],
+    // ⚠️ THE DUMBBELL BICEPS FAMILY, DERIVED 2026-08-26 (0h's top-named gap).
+    // Same technique throughout: SL per-dumbbell numbers doubled, over their
+    // barbell curl 49/73/104/140/180 at a 180 lb male. Every derived entry
+    // was TOO LOW — the whole family was flattering, worst of all the
+    // concentration curl at ~48 %.
+    //
+    // Machine and dumbbell preacher have NO published standard (checked) and
+    // are carried across the corrected barbell-preacher anchor (× 0.96/0.82),
+    // keeping the shape somebody chose while resting on a sourced number.
+    [/Machine Preacher Curl/, 1.05, 0.40],
+    [/Dumbbell Preacher Curl/, 0.84, 0.45],
+    // SL preacher curl (barbell) 46/70/100/136/175 → 0.94/0.96/0.96/0.97/0.97,
+    // median 0.96 — nearly flat, was a reasoned 0.82.
+    [/Preacher Curl/, 0.96, 0.60],
+    // Carried across the corrected hammer anchor (× 1.04/0.98), not measured.
+    [/Cross-Body Hammer Curl/, 0.98, 0.45],
+    [/Cable Rope Hammer Curl/, 1.01, 0.45],
+    // SL hammer curl 24/37/54/73/95 ×2 → 0.98/1.01/1.04/1.04/1.06, median
+    // 1.04. The neutral grip really is the strongest curl, now by measurement.
+    [/Hammer Curl/, 1.04, 0.55],
+    // SL 22/32/44/58/74 ×2 → 0.90/0.88/0.85/0.83/0.82, median 0.85 (was 0.72).
+    // The only curl whose drift runs DOWNWARD with strength.
+    [/Incline Dumbbell Curl/, 0.85, 0.45],
+    // SL 20/33/48/67/88 ×2 → 0.82/0.90/0.92/0.96/0.98, median 0.92 (was 0.62
+    // — the family's biggest flatter).
+    [/Concentration Curl/, 0.92, 0.40],
+    // Reasoned, and stuck: SL's spider curl standards are for the BARBELL
+    // version (29/50/78/111/149) and this library's Spider Curl is a dumbbell
+    // lift, so there is nothing honest to divide. Checked 2026-08-26.
     [/Spider Curl/, 0.70, 0.40],
-    [/Zottman Curl/, 0.72, 0.35],
-    [/Bayesian Cable Curl/, 0.80, 0.35],
-    [/Cable Curl/, 0.95, 0.45],
+    // SL 11/23/41/64/90 ×2 → 0.45/0.63/0.79/0.91/1.00, median 0.79 (was
+    // 0.72). The widest drift of any dumbbell lift in the file — the rotation
+    // gates novices hard — so q drops a step despite the sourced median.
+    [/Zottman Curl/, 0.79, 0.30],
+    // Carried across the corrected cable-curl anchor (× 1.11/0.95).
+    [/Bayesian Cable Curl/, 0.93, 0.35],
+    // SL cable curl 44/75/115/164/218 → 0.90/1.03/1.11/1.17/1.21, median
+    // 1.11 (was 0.95). Stack-and-pulley leverage varies by machine, so the
+    // cable-grade q drops a step rather than rising with the source.
+    [/Cable Curl/, 1.11, 0.40],
     // ⚠️ Same sweep, and the SMALLEST error in it — 7 %, which is worth noting
     // as much as the largest: the reasoned numbers were not uniformly wrong by a
     // fixed amount, so no blanket correction factor would have fixed the table.
@@ -395,19 +544,40 @@ const RATIOS = {
     // triceps lift. The library treats them as two exercises; the source does
     // not.
     [/^Triceps Dip$/, 1.43, 0.35],
-    [/Dumbbell Skull Crusher/, 0.42, 0.40],
-    [/Skull Crusher/, 0.50, 0.50],
+    // Carried across the corrected skull-crusher anchor (× 0.47/0.50), not
+    // measured — SL's lying-extension standard does not separate equipment.
+    [/Dumbbell Skull Crusher/, 0.39, 0.40],
+    // 2026-08-26 sweep: SL lying tricep extension 45/69/98/132/170 over
+    // close-grip bench 124/163/208/260/314 → 0.36/0.42/0.47/0.51/0.54,
+    // median 0.47. The reasoned 0.50 was nearly right.
+    [/Skull Crusher/, 0.47, 0.50],
     [/Tate Press/, 0.35, 0.30],
-    [/Pushdown/, 0.55, 0.45],
-    [/Overhead Cable Extension/, 0.45, 0.35],
+    // 2026-08-26 sweep: SL tricep pushdown 49/82/126/179/238 over close-grip
+    // bench → 0.40/0.50/0.61/0.69/0.76, median 0.61 (was 0.55). The drift is
+    // the cable story again — novices barely load a stack, strong lifters
+    // ride its leverage — so q drops a step.
+    [/Pushdown/, 0.61, 0.40],
+    // 2026-08-26 sweep: SL cable overhead extension 33/60/97/142/194 over
+    // close-grip bench → 0.27/0.37/0.47/0.55/0.62, median 0.47 (was 0.45).
+    [/Overhead Cable Extension/, 0.47, 0.35],
     [/Overhead Dumbbell Extension/, 0.40, 0.35],
+    // Reasoned — not derived in the 2026-08-26 sweep; SL publish a machine
+    // extension standard a later pass can use.
     [/Machine Triceps Extension/, 0.60, 0.35],
     [/Kickback/, 0.20, 0.20],
   ],
   Traps: [ // key: Barbell Shrug
     [/^Barbell Shrug$/, 1.00, 1.00],
+    // Reasoned — no published trap-bar shrug standard (checked 2026-08-26).
     [/^Trap Bar Shrug$/, 1.05, 0.75],
-    [/Dumbbell Shrug/, 0.95, 0.60],
+    // 2026-08-26 sweep, the third entry that ran the OTHER way: SL dumbbell
+    // shrug per dumbbell 38/64/99/141/188, doubled, over barbell shrug
+    // 121/192/284/394/515 → 0.63/0.67/0.70/0.72/0.73, median 0.70. The
+    // reasoned 0.95 was UNDER-crediting dumbbell shrugs by ~26 % — grip, not
+    // traps, is what caps a dumbbell shrug, and the reasoned number assumed
+    // the two moved together.
+    [/Dumbbell Shrug/, 0.70, 0.60],
+    // Both reasoned — no published standard for either (checked 2026-08-26).
     [/Cable Shrug/, 0.90, 0.50],
     [/Machine Shrug/, 1.00, 0.45],
     [/Carry/, 0.75, 0.25],
@@ -418,7 +588,12 @@ const RATIOS = {
     // takes gastrocnemius out and leaves soleus, so the load is far lower for
     // the same person. Treating them as the same lift would read as a big loss
     // of calf strength the week someone switches machines.
-    [/^Seated Calf Raise$/, 0.62, 0.55],
+    //
+    // 2026-08-26 sweep: SL seated 71/129/209/308/420 over machine standing
+    // 110/198/317/463/629 → 0.65/0.65/0.66/0.67/0.67, median 0.66 — the
+    // second-flattest derivation in the file, so q RISES a step: this ratio
+    // really is a population constant.
+    [/^Seated Calf Raise$/, 0.66, 0.65],
     [/Smith Machine Calf Raise/, 1.00, 0.45],
     [/Leg Press Calf Raise/, 1.35, 0.35],
     [/Donkey Calf Raise/, 1.05, 0.35],

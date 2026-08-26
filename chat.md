@@ -5187,3 +5187,13 @@ above only — sixty times-and-places describe where a person reliably is, so th
 the minimum. Demo friends carry locations on some cards. A render test caught the carry-forward
 reading the wrong same-day session (getSessions sorts on date alone; the startedAt tie-break fixed
 it). Social tests 121→128, render 443→448, all green, pushed.
+
+Fourth piece: THE RATIO SWEEP (0h substantially closed). 28 lifts pulled from Strength Level's
+published 180 lb male standards, every remaining reasoned entry with a source derived the
+established way. Mostly the errors flattered again — pec deck 0.55→0.90 was the worst (~60%
+inflation), concentration curl 0.62→0.92, good morning 0.60→0.95, the deadlift family 13–30% — but
+three ran the OTHER way (leg press, hip thrust, dumbbell shrug had been under-crediting) and hack
+squat's guess turned out exactly right. The face pull split out of the raise family at 0.75, which
+retires §9's 50-lb-face-pull-as-167-lb-press example the honest way. Where no standard exists the
+table now says so by name. Demo-year effect: Back −8.7%, Triceps −9.7%, Shoulders confidence
+0.53→0.79. 23 sourced ratios + 7 orderings pinned (data-layer 1208→1235). All suites green, pushed.
