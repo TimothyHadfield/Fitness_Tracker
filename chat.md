@@ -5096,3 +5096,46 @@ the feed destroyed it; a render test failed and the property moved to Record wit
 new "Start" pill measured 4.08:1 in the light theme — the a11y audit found it, not me.
 
 2474 green, 56 audit combinations, zero below 4.5:1.
+
+---
+
+## 2026-08-25, close of session — prepared for a chat reset
+
+Tim asked for the md files to be prepared for a reset. The app was restructured three times today, so
+this was a staleness sweep rather than a summary — the failure this file exists to prevent is a fresh
+session acting on something that stopped being true a few hours ago, and today produced more of that
+than any previous day.
+
+**Twenty-one stale claims found and corrected in progress.md**, each replacement asserted to match
+exactly once so a silent no-op was impossible. The dangerous ones were all in the block a fresh
+session reads first:
+
+- **"Do not redesign Home unasked."** That instruction had been point 1 of "three things a fresh
+  session must know" since 2026-08-22, and Home was rebuilt as a feed today on Tim's own detailed
+  instruction. A fresh session would have read a prohibition over the thing it had just been asked to
+  do. What replaced it is more useful: he sends screenshots and specific instructions, and he has now
+  twice reversed a call this file argued for and been right both times — because his argument was
+  about how a screen is USED and this file's was about what the screen IS.
+- **"Five nav tabs: Home, Workouts, RECORD, Data, Goals"** — it ends in Calendar now, and Goals is off
+  the bar entirely.
+- **"Home opens on the next workout in your rotation"** — that is Record's job; Home starts nothing.
+- The Calendar row still said it was the first segment of Data; the Data row still listed four
+  segments starting with Calendar; Goals was still "the far-right tab".
+- The architecture tree's test counts had drifted badly — 1103/153/73/88 against real figures of
+  1199/170/106/232 — and "22 JS modules" is 32.
+
+Added a banner at the top saying outright that the nav, Home and the muscle colours all changed on
+the 25th, and that any sentence below about the old shape is history rather than the app. That is
+cheaper than trusting a reader to notice the contradiction.
+
+Historical dated sections keep their original wording, per the convention set at the last reset:
+rewriting what a past run measured would hide the fault rather than record it. The Calendar row was
+the one place that needed a strike-through instead, because it is current-state and was left
+self-contradictory by a half-edit.
+
+README picked up the feed and the Record change; docs/social-plan.md's tier table now mentions the
+start time the mid tier began publishing today.
+
+Every claim in the new header was verified against the code rather than from memory — the nav array,
+the Data segments, the default mode, the feed's existence, the Goals route and its link, and that
+More details defaults off. 2474 green, pushed.

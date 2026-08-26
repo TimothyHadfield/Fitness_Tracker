@@ -127,7 +127,7 @@ details, benchmarks/data), mid (only workout details) and light (only workout ti
 | Tier | Contents | The one-line version |
 |---|---|---|
 | `light` | Display name, that they trained, the date, the workout name. Nothing inside the workout. | *"I trained. Push, Tuesday."* |
-| `mid` | The above, plus the whole session — exercises, sets, reps, weights, set types. | *"Here is what I did."* |
+| `mid` | The above, plus the whole session — exercises, sets, reps, weights, set types, **and the time it started** (2026-08-25). | *"Here is what I did."* |
 | `full` | The above, plus benchmarks, the strength/muscle map, and progress over time. | *"Here is how strong I am."* |
 
 **Default for a new connection is `light`.** Not `mid`, and not "whatever you set last time".

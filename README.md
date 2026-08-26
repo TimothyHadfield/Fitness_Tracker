@@ -23,11 +23,14 @@ on more than one device.
   big +/− buttons sized for one thumb. **272 exercises** built in across 15 muscle groups, plus your
   own when yours isn't listed. Supersets, tri-sets, giant sets, drop sets and myo-reps, with a rest
   timer that knows the difference.
-- **Home opens on the next workout in your rotation** — it reads your last session, offers the one
-  after it, and says what it read.
+- **Record opens on the next workout in your rotation** — it reads your last session, offers the
+  one after it, and says what it read. Every other workout is one tap below it.
+- **Home is a feed** — what the people you train with have been doing: their name, when, the
+  workout, and the exercises they did.
 - **Body map** — every muscle rated from *every* exercise that trains it, coloured by where you rank
   among a comparison group **you choose**, and faded in proportion to how much evidence there
-  actually is. Tap one for the number, the level, and the set it came from.
+  actually is. Tap one for the number, the level, and the set it came from. You get a **ranking**, not
+  a percentile, unless you turn on *More details*.
 - **Goals** — one muscle, one strength level, twelve weeks. It states what that costs and what your
   logged training is delivering against it.
 - **Calendar and graphs** — every workout and benchmark on the day you did it, month by month or as
