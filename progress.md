@@ -4,7 +4,11 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-27. ⚠️ **READ THE 2026-08-27 SECTION FIRST** — the profile photo is now
+**Last updated:** 2026-08-27 (second pass). ⚠️ **READ BOTH 2026-08-27 SECTIONS FIRST** — the
+second one adds FILE IMPORT (bring in a Strava/MacroFactor/Cronometer/spreadsheet export; nothing
+live, nothing needing a server) and lets a saved profile photo be REPOSITIONED. ✅ **The
+profile-photo-too-big fix is CONFIRMED on Tim's phone**, which was the last outstanding field
+check from the first pass. The first pass: — the profile photo is now
 CROPPED BY THE USER (drag and zoom inside a circle), the Friends tab's iPhone lag is fixed (it was
 three serialised cloud round trips before a single pixel moved), a CSS comment had been silently
 eating the segment-divider rule, activities got their own group, and the full browser audit has now
@@ -30,7 +34,7 @@ explicit instruction:
   **`docs/airpods-plan.md`** (research done, NOTHING deployed, his instruction — stem presses
   buildable, head-motion impossible on web).
 
-**Tests: 2,738 across eleven suites** (data-layer 1291, render 511, social 134, a11y 85), plus
+**Tests: 2,799 across eleven suites** (data-layer 1348, render 520, social 134, a11y 85), plus
 66 rules assertions in the emulator and 12 in sw-update. Tim also **pre-authorised sub-agents**
 (saved to memory). ⚠️ **Both of those carried into 2026-08-27 and are now half-closed**: the CDP visual pass RAN (the
 chooser, activity log and Account screen are screenshotted and overflow-free) and the full audit
@@ -199,6 +203,125 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-27, second pass — ⚠️ FILE IMPORT IS BUILT, AND THE PHOTO CAN BE REPOSITIONED
+
+Tim, after reading the integrations research: *"Profile picture is fixed on phone. Make a feature
+where you can edit the profile picture though (resize, move the center circle). Do the file import
+feature. How much would the firebase paid tier cost? Do 3-4 as well. Wait for the AirPods/food
+feature."*
+
+✅ **THE PROFILE-PHOTO FIX IS CONFIRMED ON HIS PHONE.** The cyclic-percentage diagnosis was
+reasoned rather than observed — headless Chrome never reproduced the bug — and his device has now
+settled it. That closes the last field check from the first pass.
+
+### 1. Editing a photo already saved
+
+⚠️ **EDITING THE STORED AVATAR WOULD HAVE BEEN EDITING A RUIN.** The saved `avatar` is a 256px
+square that has already thrown everything outside the circle away: you could zoom further in and
+never back out, and it would soften every time it was touched. So a **re-editable source** is kept
+at **768px** — three times the output, which is exactly `image-crop`'s maximum zoom, so even the
+tightest re-crop does no upscaling. Stored as `settings.avatarSource`, with `settings.avatarCrop`
+holding `{zoom, cx, cy}`.
+
+- **Edit reopens where it was left**, not in the middle of the photo. Somebody nudging a face two
+  pixels should not have to find it again first.
+- **All three are written in one `saveSettings`**, so a crop can never end up pointing at a
+  different photo than the source it was cut from. A restored crop is also **clamped against the
+  real image** before it is used, so a stale number degrades to a sane default rather than a
+  broken editor.
+- **Remove clears all three.** Leaving the source behind would let a later Edit reopen a photo the
+  account no longer has.
+- **A photo saved before this shipped has no source**, and Edit falls back to the avatar itself —
+  still useful for recentring within the square, just unable to zoom back out.
+- Cost, measured: **9 KB** for the source on a synthetic image against ~4–6 KB for the avatar. The
+  768px cap and 0.78 quality are what bound it, not that one measurement; a real photograph will
+  be some tens of KB.
+
+⚠️ **A REAL BUG CAME OUT OF DRIVING IT.** `setPointerCapture` was the FIRST statement in the
+`pointerdown` handler — and it throws `NotFoundError` whenever the id is not an active pointer, so
+it threw **before the pointer was ever recorded**, `pointermove` found nothing, and the photo would
+not move at all. Capture only buys events that stray outside the stage mid-drag; **tracking is the
+mechanism**. Reordered, and the capture is now allowed to fail. After the fix a 15px drag moves the
+crop centre by exactly the predicted 12.7 source pixels.
+
+### 2. ⚠️ FILE IMPORT — Phase 1 of `docs/integrations-plan.md`, and it needed nothing from anybody
+
+`js/import-file.js` (pure) + `js/views-import.js` + `#/import`, reached from the Account screen.
+Reading a file the user exported needs no OAuth, no client secret, no server, no Blaze plan and no
+partner approval, and it breaks nobody's terms — which is why it went first.
+
+**An imported activity is EXACTLY what the quick log writes**: one entry, one set, **no
+`workoutId`**. So the calendar, the feed, backups and the cloud ceiling all see it through
+machinery that already existed, and the muscle map, ratings, volume and progression never see it
+at all. **D27 unchanged and unweakened — this adds a door, not a model.** Weigh-ins join the body
+weight series, in pounds like everything else.
+
+⚠️ **THREE THINGS ARE REFUSED RATHER THAN GUESSED, and all three would have been wrong silently
+and permanently:**
+
+1. **The date order.** `03/04/2026` is 3 April to most of the world and 4 March in the US, and
+   nothing in the cell says which. The **whole column is checked first** — one date with a number
+   above 12 settles it for every row — and only a column with no evidence in it asks the user. A
+   guess would put every imported session on the wrong day forever and nothing on screen would
+   ever look wrong.
+2. **The weight unit.** A column that does not name its unit imports **nothing** and asks. 75 kg
+   read as 75 lb records somebody at a third of their real weight and re-rates every pull-up they
+   have ever logged.
+3. **The distance unit** — ⚠️ **and this one was a REAL BUG, caught by driving a Strava-shaped
+   file through the screen rather than by reading the code.** A bare `Distance` header used to
+   fall back to miles, and **Strava exports kilometres**: a 5.02 km run came in as a 5.02 mile run,
+   61 % long. The weight hazard had been thought about and priced; the identical distance hazard
+   had not. *That is how a class of bug survives being "handled" — one instance gets the
+   reasoning and its twin gets a default.*
+
+⚠️ **RE-IMPORTING THE SAME EXPORT IS SAFE, and that is the feature rather than a nicety.** Somebody
+exporting monthly will hand over overlapping files forever. Every row carries a **deterministic id
+derived from its own content** (`importId()`, double FNV-1a), so the second import is an upsert of
+the same rows. `store.importRows()` writes the whole batch in **one** read-modify-write — a loop
+over `saveSession()` would have been 200 full reads and writes of a near-megabyte document with
+200 chances to be interrupted half-way. **Weigh-ins merge by DAY**, because this store has always
+kept one per day and an import must not be the thing that breaks that rule.
+
+**The confirmation says what will actually happen** — counted against what is already stored, so
+"Import 3 records" is three, not the file's row count. It names what will be skipped and why, and
+flags rows that fall on a day already holding something with the same name rather than dropping
+them, because whether that is a duplicate is the user's call.
+
+✅ **Driven end to end in a real browser at 390px** with a Strava-shaped CSV (named-month dates,
+quoted names containing commas, elapsed *and* moving time): columns detected correctly, **moving
+time preferred over elapsed**, 5.02 km → 3.12 mi once the unit was answered, the empty rest-day row
+skipped, three sessions written with no `workoutId`, **the same file dropped again reports
+"nothing new to bring in" and leaves three sessions**, and an ambiguous-date file asks. No
+horizontal overflow.
+
+⚠️ **NOTHING HERE HAS EVER SEEN A REAL EXPORT FILE.** The column names come from published
+documentation, not from a file this project has parsed. That is exactly why nothing guesses: every
+importer detects by name, hands back what it found, and the screen makes the user confirm a
+preview before a row is written. **A tolerant reader plus a confirmation is honest; a hard-coded
+schema calling itself "the Strava importer" would not be.**
+
+⚠️ **Also caught by driving it**: `location.hash = '#/import'` while already on `#/import` fires no
+event, so **"Choose a different file" was a dead button**, as was the one after a finished import.
+Both bounce through `#/blank` now.
+
+### 3. Firebase Blaze, priced
+
+Tim asked. **It would be free in practice, and the real cost is the card on file rather than the
+bill.** Blaze's monthly no-cost allowance is **2M Cloud Function invocations, 400K GB-seconds,
+200K CPU-seconds and 5 GB egress**, plus Firestore's 50K reads / 20K writes / 20K deletes a day and
+1 GiB stored. A Strava token exchange runs once per connection plus a refresh every few hours per
+active user: **ten users is on the order of 1,500 invocations a month against a 2,000,000
+allowance.** New accounts also get $300 of credit.
+
+⚠️ **What Blaze actually costs is a payment method and the absence of a hard cap.** Google offers
+budget *alerts*, not a spending limit; the documented way to truly stop spend is a function that
+disables billing when a budget is hit, which is a workaround rather than a switch. That is the
+honest reason to leave it off until live sync is genuinely wanted — not the money.
+
+**Tests: data-layer 1291 → 1348, render 511 → 520. 2,799 across eleven suites, all green.**
 
 ---
 
@@ -2694,7 +2817,7 @@ a reference somebody follows. This index is the reading order instead. **Rebuilt
 | **10** | **0k — the colour direction** | ✅ **FULLY CLOSED 2026-08-27.** Tim picked all three; Settings → Colour: Gold/Teal/Indigo/Ember, each with a designed light theme, swept by the a11y suite (22 → 85). ⚠️ **The last caveat is gone**: the full browser audit has now run on all four palettes — 240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow |
 | **11** | **the competitive review** | Last of the seven. Inspects the market rather than the app |
 | **12** | **activities, Phase 2** | ⚠️ **ITEMS 1–4 SHIPPED 2026-08-27** — the Activity group (unrankable, no volume, both asserted), pace shown-not-judged, the rep-normalisation guarantee pinned, and the feed's kind glyph. **Still open: item 5, activity PRs** (needs distance-bucketing designed first) and **item 6, per-activity extras** — which `docs/activities-plan.md` says to ASK TIM about: which activities his circle actually logs, since climbing grades are the least standardised thing in the list |
-| **12b** | **importing from other apps** | ⚠️ **RESEARCHED 2026-08-27, nothing built** — `docs/integrations-plan.md`. Strava / Cronometer / Apple Health / MacroFactor / wearables. **The blocker is the missing SERVER, not being a website**: Strava needs a client secret and offers no PKCE. **File import works today** and is the recommendation. ⚠️ Two things need Tim: whether to turn on Firebase Blaze for live sync, and whether importing food narrows D1/D26 |
+| **12b** | **importing from other apps** | ✅ **PHASE 1 BUILT 2026-08-27** — , reached from Account. CSV in, activities and weigh-ins out, deterministic ids so a re-import upserts. Date order, weight unit and distance unit are all REFUSED rather than guessed. ⚠️ **Still open: live sync**, which needs Firebase Blaze (free in practice — ~1,500 invocations a month against a 2M allowance — but it needs a card and there is no hard spending cap), and ⚠️ **importing food, which collides with D1/D26 and is Tim's call**. Original research — — `docs/integrations-plan.md`. Strava / Cronometer / Apple Health / MacroFactor / wearables. **The blocker is the missing SERVER, not being a website**: Strava needs a client secret and offers no PKCE. **File import works today** and is the recommendation. ⚠️ Two things need Tim: whether to turn on Firebase Blaze for live sync, and whether importing food narrows D1/D26 |
 | **13** | **AirPods stem-press controls** | ⚠️ **WAITING ON TIM'S GO** — `docs/airpods-plan.md`. Buildable via MediaSession; costs Now Playing (no simultaneous Spotify) so opt-in only. §4 is the build order, starting with a half-day device spike. **Nothing deployed, on his instruction** |
 | **14** | **the outstanding verification pass** | ⚠️ **MOSTLY CLOSED 2026-08-27** — the CDP round ran (chooser, activity log, Account, feed, Friends, Muscles: no overflow anywhere) and the audit ran on all four palettes. **Still open, and all three need Tim's own phone**: the friend-name heal, a real reaction round trip with Autumn's account, and ⚠️ **the profile-photo-too-big fix, which headless Chrome could never reproduce and therefore cannot confirm** |
 
@@ -3083,7 +3206,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **2738 assertions across eleven suites** (recounted 2026-08-27: data-layer 1291, render 511, social 134, a11y 85), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **2799 assertions across eleven suites** (recounted 2026-08-27 second pass: data-layer 1348, render 520, social 134, a11y 85), plus 12 in `sw-update` and 66 in `rules` (emulator). Only `render` needs `npm i jsdom`; the rest need nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1199 assertions, **no dependencies**. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 170 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -3368,7 +3491,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so, and offers **Continue in this window instead** — but ⚠️ **only where that redirect can actually finish**, which this configuration is not, so here it names **email** instead. ✅ **Works on a real iPhone in the installed home-screen app** (2026-08-22), which is the path this file spent months calling the riskiest untested one; the popup is what runs there, and the belief that an installed iOS app blocks popups was simply wrong |
 | Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
 | Settings | Dark/light, **Colour** (Gold/Teal/Indigo/Ember since 2026-08-26, all four fully audited 2026-08-27), **lbs/kg**, More details, Goals link. ⚠️ **Profile, backup/restore and delete-all MOVED to the Account screen 2026-08-26** (Tim's ask); one pointer row remains |
-| Account | ⚠️ **The person, since 2026-08-26**: profile photo — ⚠️ **POSITIONED BY THE USER since 2026-08-27**, a square stage with the circle inscribed in it, drag to move and a slider/pinch/wheel to zoom, and what the circle frames is literally what gets cut (`js/image-crop.js`); client-resized to a 256px JPEG (~4 KB measured), `settings.avatar`, worn by the top-left button, NOT published to friends, profile row, backup/restore + cloud warning, delete-all, sign in/out — in every account state. **Back goes Home**, not Settings |
+| Account | ⚠️ **The person, since 2026-08-26**: profile photo — ⚠️ **POSITIONED AND RE-EDITABLE since 2026-08-27** (Edit reopens the cropper where it was left, on a 768px source kept for exactly that), a square stage with the circle inscribed in it, drag to move and a slider/pinch/wheel to zoom, and what the circle frames is literally what gets cut (`js/image-crop.js`); client-resized to a 256px JPEG (~4 KB measured), `settings.avatar`, worn by the top-left button, NOT published to friends, profile row, backup/restore + cloud warning, delete-all, sign in/out — in every account state. **Back goes Home**, not Settings |
 
 **Stepper increments:** reps ±1 · weight **±5 lbs or ±2.5 kg** · time ±10 sec · distance ±0.1 mi.
 Press-and-hold repeats.
@@ -3685,6 +3808,13 @@ Fitness_Tracker/
 │   │                           converts only at the edges, so switching is lossless
 │   ├── body-art.js             GENERATED traced muscle paths — do not hand-edit
 │   ├── body-map.js             composes the fill paths + the ink masks
+│   ├── import-file.js          READING A FILE FROM ANOTHER APP — pure. CSV,
+│   │                           column detection, and the three things it
+│   │                           REFUSES to guess: the date order, the weight
+│   │                           unit and the distance unit. Deterministic ids,
+│   │                           so re-importing an overlapping export upserts
+│   ├── views-import.js         the import screen (#/import) — read, plan,
+│   │                           SAY what will happen, then write
 │   ├── image-crop.js           POSITIONING A PHOTO IN A CIRCLE — pure maths, no
 │   │                           DOM. The crop is a square in SOURCE pixels, so the
 │   │                           result does not depend on the phone it was cropped
@@ -3874,7 +4004,12 @@ Goal        id, muscle, liftName, targetLevel, targetLevelName, targetPercentile
                picker says so.
             ── One row has status 'active' at a time; store.setGoal() ends any
                other. Old goals are kept, never deleted.
-Settings    id, units, theme, gender, birthYear  ← birth year, NEVER age
+Settings    id, units, theme, gender, birthYear,  ← birth year, NEVER age
+            avatar, avatarSource, avatarCrop{zoom,cx,cy}
+            ── the FACE everything paints (256px), the re-editable SOURCE it
+               was cut from (768px), and where the circle was. Written together
+               so a crop can never point at a different photo than its source.
+               All three cleared by Remove.
 ```
 
 `normalizeWorkout()` in `store.js` migrates the old `exerciseIds[]` shape on read — keep it.

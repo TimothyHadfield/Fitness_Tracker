@@ -3667,5 +3667,164 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'while an ordinary lift still is, so the four above are a result and not a broken call');
 }
 
+
+/* ---------- importing a file from another app (js/import-file.js) ----------
+ *
+ * docs/integrations-plan.md Phase 1. ⚠️ NOTHING HERE HAS EVER SEEN A REAL
+ * EXPORT FILE from Strava, MacroFactor or anyone else — the column names come
+ * from published documentation. So what is asserted is not "we parse Strava
+ * correctly", which would be a claim this project cannot back. It is the three
+ * things that would corrupt somebody's history SILENTLY if they were wrong:
+ * the date order, the weight unit, and whether importing twice duplicates.
+ */
+{
+  const imp = await import('../js/import-file.js');
+
+  /* --- CSV, the boring part that breaks everything downstream --- */
+  const csv = imp.parseCSV('a,b,c\ntwo,"two, with comma",3\n4,"say ""hi""",6\n');
+  ok(csv.length === 3, 'a header and two rows');
+  ok(csv[1][1] === 'two, with comma',
+     '⚠️ a comma INSIDE quotes is one field — splitting on "," shifts every column after it');
+  ok(csv[2][1] === 'say "hi"', 'and an escaped quote comes back as one quote');
+  ok(imp.parseCSV('﻿date,x\n2026-01-01,1\n')[0][0] === 'date',
+     'a leading BOM is stripped — Excel writes one and it corrupts the first header');
+  ok(imp.parseCSV('a,b\r\n1,2\r\n').length === 2, 'CRLF line endings read the same as LF');
+
+  /* --- finding the columns --- */
+  const cols = imp.detectColumns(['Activity Date', 'Activity Name', 'Distance', 'Moving Time', 'Elapsed Time']);
+  ok(cols.date === 'Activity Date' && cols.name === 'Activity Name', 'headers are matched by name');
+  ok(cols.duration === 'Moving Time',
+     '⚠️ moving time wins over elapsed time — they are different numbers and a pace needs the first');
+  ok(imp.detectColumns(['DATE', 'weight_kg']).date === 'DATE',
+     'matching ignores case and punctuation');
+
+  /* --- ⚠️ THE DATE ORDER. This is the one that would be wrong silently. --- */
+  ok(imp.readDate('2026-08-26') === '2026-08-26', 'ISO is read as ISO');
+  ok(imp.readDate('2026-08-26T10:17:33Z') === '2026-08-26', 'and an ISO timestamp keeps its day');
+  ok(imp.readDate('Aug 26, 2026, 10:17:33 AM') === '2026-08-26', 'a named month cannot be ambiguous');
+  ok(imp.readDate('26 Aug 2026') === '2026-08-26', 'in either order');
+  ok(imp.readDate('26/08/2026') === '2026-08-26',
+     '26/08 can only be day-first, because there is no 26th month, so it resolves without asking');
+  ok(imp.readDate('08/26/2026') === '2026-08-26', 'and 08/26 can only be month-first');
+  // The one that matters: both numbers under 13, so the cell cannot say.
+  ok(imp.readDate('03/04/2026').ambiguous === true,
+     '⚠️ 03/04/2026 REFUSES to resolve itself — it is 3 April or 4 March and nothing says which');
+  ok(imp.readDate('03/04/2026', 'dmy') === '2026-04-03', 'told day-first, it is 3 April');
+  ok(imp.readDate('03/04/2026', 'mdy') === '2026-03-04', 'told month-first, it is 4 March');
+
+  // A whole column can usually settle it, and must say so honestly when it cannot.
+  ok(imp.dateOrderOf(['03/04/2026', '26/08/2026']) === 'dmy',
+     'one unambiguous cell settles the order for the whole column');
+  ok(imp.dateOrderOf(['03/04/2026', '08/26/2026']) === 'mdy', 'and the other way');
+  ok(imp.dateOrderOf(['03/04/2026', '05/06/2026']) === 'ambiguous',
+     '⚠️ a column with no evidence in it reports ambiguous rather than picking one');
+  ok(imp.dateOrderOf(['2026-01-01']) === 'none', 'and ISO dates need no ruling at all');
+
+  /* --- durations and distances --- */
+  ok(imp.readDuration('1:23:45') === 5025, 'h:mm:ss');
+  ok(imp.readDuration('23:45') === 1425, 'mm:ss');
+  ok(imp.readDuration('1800') === 1800, 'a bare number is seconds');
+  ok(imp.readDuration('30', 'minutes') === 1800, 'unless the header said minutes');
+  ok(Math.abs(imp.toMiles(5, 'km') - 3.106855) < 0.001, '5 km is 3.11 miles');
+  ok(Math.abs(imp.toMiles(5000, 'm') - 3.106855) < 0.001, 'and 5000 m is the same distance');
+  ok(imp.distanceUnitOf('Distance (km)') === 'km' && imp.distanceUnitOf('distance_mi') === 'mi',
+     'the unit is read from the column header');
+
+  /* --- ⚠️ THE WEIGHT UNIT, which is the other silent corruption --- */
+  const wcols = { date: 'date', weight: 'weight' };
+  const wrecs = [{ date: '2026-08-01', weight: '75' }];
+  const noUnit = imp.readWeights(wrecs, wcols, {});
+  ok(noUnit.needsUnit === true && noUnit.rows.length === 0,
+     '⚠️ a weight column with no unit in its name imports NOTHING and asks — 75 kg read as 75 lb '
+     + 'would record somebody at a third of their real weight');
+  const asKg = imp.readWeights(wrecs, wcols, { weightUnit: 'kg' });
+  ok(Math.abs(asKg.rows[0].weight - 165.35) < 0.02, 'told kg, 75 becomes 165.3 lbs');
+  const asLb = imp.readWeights(wrecs, wcols, { weightUnit: 'lb' });
+  ok(asLb.rows[0].weight === 75, 'told lbs, 75 stays 75 — everything is stored in pounds');
+  ok(imp.readWeights([{ date: '2026-08-01', weight: '7' }], wcols, { weightUnit: 'lb' })
+     .problems.implausible === 1,
+     'a 7 lb body weight is refused rather than rewriting every pull-up on that day');
+
+  /* --- ⚠️ RE-IMPORTING THE SAME FILE MUST NOT DOUBLE ANYTHING --- */
+  const acols = { date: 'Date', name: 'Name', distance: 'Distance', duration: 'Time' };
+  const arecs = [
+    { Date: '2026-08-01', Name: 'Morning Run', Distance: '3.1', Time: '28:00' },
+    { Date: '2026-08-03', Name: 'Swim', Distance: '', Time: '35:00' },
+    { Date: '2026-08-04', Name: 'Nothing', Distance: '', Time: '' },
+  ];
+  // ⚠️ A bare "Distance" header does not say its unit, so nothing is read until
+  // the caller says which. Strava exports kilometres; reading them as miles
+  // makes every run 61 % long, silently. Caught by driving a Strava-shaped file
+  // through the screen, not by reading the code.
+  const noUnit2 = imp.readActivities(arecs, acols, {});
+  ok(noUnit2.needsDistanceUnit === true && noUnit2.rows.length === 0,
+     '⚠️ an unlabelled distance column imports NOTHING and asks, exactly like weight does');
+  ok(imp.readActivities(arecs, { ...acols, distance: 'Distance (km)' }, {}).rows.length === 2,
+     'while a header that names its unit needs no question');
+  const asKm = imp.readActivities(arecs, acols, { distanceUnit: 'km' });
+  ok(Math.abs(asKm.rows[0].entries[0].sets[0].distance - 1.93) < 0.02,
+     'and 3.1 km comes in as 1.93 miles, not 3.1');
+  const first = imp.readActivities(arecs, acols, { distanceUnit: 'mi' });
+  ok(first.rows.length === 2, 'two readable activities');
+  ok(first.problems.empty === 1, 'and a row recording neither a distance nor a time is skipped');
+  const again = imp.readActivities(arecs, acols, { distanceUnit: 'mi' });
+  ok(first.rows[0].id === again.rows[0].id,
+     '⚠️ the SAME row produces the SAME id every time — this is what makes a re-import an upsert');
+  ok(first.rows[0].id !== first.rows[1].id, 'and two different rows do not collide');
+
+  const keyOf = (r) => `${r.date}|${(r.workoutName || '').toLowerCase()}`;
+  const plan = imp.planImport(first.rows,
+    [{ id: first.rows[0].id, date: '2026-08-01', workoutName: 'Morning Run' }], keyOf);
+  ok(plan.fresh.length === 1 && plan.repeat === 1,
+     'importing the same export twice adds only what is new');
+  ok(imp.planImport(first.rows, [], keyOf).fresh.length === 2,
+     'and a first import brings everything in');
+
+  // Something logged by hand on the same day is FLAGGED, not silently dropped —
+  // whether it is the same session is the user's call, not the parser's.
+  const collide = imp.planImport(first.rows,
+    [{ id: 'typed-by-hand', date: '2026-08-01', workoutName: 'morning run' }], keyOf);
+  ok(collide.collides === 1 && collide.fresh.length === 2,
+     'a same-day same-name record already there is counted and reported, not dropped');
+
+  /* --- an imported activity is exactly what the quick log writes (D27) --- */
+  const row = first.rows[0];
+  ok(!row.workoutId,
+     '⚠️ an imported activity has NO workoutId, so the rotation suggestion skips it');
+  ok(row.entries.length === 1 && row.entries[0].sets.length === 1,
+     'one entry, one set — the shape every existing screen already reads');
+  ok(row.entries[0].sets[0].time === 1680 && row.entries[0].sets[0].distance === 3.1,
+     'carrying the time and distance that were in the file');
+
+  /* --- the batch write, which is the other half of "import twice is safe" --- */
+  const { store: ist, clearReadCache: iclear } = await import('../js/store.js');
+  await ist.clearAll();
+  iclear();
+  const r1 = await ist.importRows('sessions', first.rows);
+  ok(r1.added === 2 && r1.replaced === 0, 'a first import adds both activities');
+  const r2 = await ist.importRows('sessions', again.rows);
+  ok(r2.added === 0 && r2.replaced === 2,
+     '⚠️ and importing the identical file again REPLACES rather than adding — no doubled training');
+  iclear();
+  ok((await ist.getSessions()).length === 2, 'so the account still holds two sessions, not four');
+
+  // Weigh-ins merge by DAY, because this store has always kept one per day.
+  const w1 = await ist.importRows('bodyWeight', [
+    { id: 'imp_bw_a', date: '2026-08-01', weight: 180 },
+    { id: 'imp_bw_b', date: '2026-08-02', weight: 181 },
+  ]);
+  ok(w1.added === 2, 'two weigh-ins on two days');
+  const w2 = await ist.importRows('bodyWeight', [{ id: 'imp_bw_c', date: '2026-08-01', weight: 179 }]);
+  ok(w2.replaced === 1 && w2.added === 0,
+     '⚠️ a second reading on a day already recorded REPLACES it — one weigh-in per day, as always');
+  iclear();
+  const bws = await ist.getBodyWeights();
+  ok(bws.length === 2, 'so there are still two days');
+  ok(bws.find((b) => b.date === '2026-08-01').id === 'imp_bw_a',
+     'and the original row keeps its id, so nothing pointing at it is orphaned');
+  await ist.clearAll();
+  iclear();
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

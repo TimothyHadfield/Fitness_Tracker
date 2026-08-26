@@ -5362,3 +5362,46 @@ press (1.1x, flattest in the table). Also found a wrong note: Machine Triceps Ex
 Strength Level publish a standard for it — they don't, they publish a machine pushdown, which is a
 different exercise. Labelled honestly now. Still open and small: decline DB bench, Seated/Arnold
 offsets, spider curl.
+
+────────────────────────────────────────────────────────────────────────────
+2026-08-27, second pass — photo editing, file import, Blaze priced
+
+Tim confirmed the profile picture is fixed on his phone (that was the last field check
+outstanding), then asked for four things: edit an existing photo, build file import, price the
+Firebase paid tier, and do items 3-4 from the next-steps list. AirPods and food import are on hold
+at his instruction.
+
+EDIT AN EXISTING PHOTO. The saved avatar is a 256px square with everything outside the circle
+already thrown away, so editing THAT would only ever let you zoom further in. A re-editable source
+is now kept at 768px — three times the output, which is exactly the cropper's max zoom, so
+re-cropping never upscales. Edit reopens where you left it. Remove clears the face, the source and
+the crop together.
+
+Found by driving it: setPointerCapture was the first line of the pointerdown handler and it throws
+when the pointer id isn't active — which threw before the pointer was recorded, so dragging did
+nothing at all. Capture is an optimisation, tracking is the mechanism. Reordered.
+
+FILE IMPORT — the Phase 1 from the research doc. #/import, off the Account screen. Drop in a CSV
+from Strava, MacroFactor, Cronometer, Apple Health or your own spreadsheet. Activities become
+sessions with no workoutId (same shape as the quick log, so the calendar and feed see them and the
+muscle map never does); weigh-ins join the body-weight series.
+
+Three things it refuses to guess, because all three would be wrong silently and forever:
+- 03/04/2026 is 3 April or 4 March. The whole column is checked first (one date above the 12th
+  settles it) and only a genuinely ambiguous column asks.
+- A weight column with no unit in its name imports nothing. 75 kg read as 75 lb records somebody
+  at a third of their weight.
+- A distance column likewise — AND THIS ONE WAS A REAL BUG. It used to fall back to miles, and
+  Strava exports kilometres, so a 5.02 km run came in as 5.02 miles. The weight hazard had been
+  thought about; its identical twin had not.
+
+Re-importing the same file is safe — every row gets a deterministic id from its own content, so an
+overlapping monthly export upserts instead of doubling training. Verified in a browser: same file
+twice, still three sessions, "nothing new to bring in".
+
+FIREBASE BLAZE, PRICED. Effectively free: the allowance is 2 million function calls a month and
+ten users on Strava sync would be about 1,500. Plus $300 credit for new accounts. The real cost is
+that it needs a card on file and there is no hard spending cap — only budget alerts. That's the
+reason to leave it off until live sync is actually wanted, not the money.
+
+2,799 assertions, all eleven suites green.

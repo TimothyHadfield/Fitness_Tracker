@@ -113,10 +113,36 @@ async function run(button, label, fn) {
  * account is in.
  * ------------------------------------------------------------------ */
 
+/* The size the finished avatar is stored at. Everything that displays a face
+ * paints it at 64px or less, so 256 covers a 3x phone screen with room over. */
+const AVATAR_PX = 256;
+
+/* ⚠️ THE RE-EDITABLE COPY, and why it is worth its bytes.
+ *
+ * Tim, 2026-08-27: "make a feature where you can edit the profile picture
+ * though (resize, move the center circle)." Editing the STORED avatar would be
+ * editing a 256px square that has already had everything outside the circle
+ * thrown away — you could zoom further in and never back out, and the picture
+ * would soften every time it was touched. So the source is kept, once, at a
+ * size chosen to make re-cropping lossless in practice: 768 is three times the
+ * output, which is exactly the module's maximum zoom, so even at the tightest
+ * crop there is no upscaling.
+ *
+ * ⚠️ It is NOT free and the budget is real — the settings document shares a
+ * 1 MiB ceiling with everything else in it and cloudUsage() charges every byte.
+ * What bounds it is the 768px cap and the 0.78 quality, not any one
+ * measurement: a synthetic test image came out at 9 KB, and a real photograph
+ * with detail in it will be some tens of KB. Either way it is a small fraction
+ * of the document, and it is re-encoded ONCE on pick rather than on every edit.
+ * Missing is fine: a photo saved before this shipped has no source, and Edit
+ * falls back to the avatar, which still lets it be recentred within itself.
+ */
+const AVATAR_SOURCE_PX = 768;
+
 /**
  * The profile photo. Stored as a small data URL in settings (`avatar`):
  * resized to 256px and JPEG-compressed CLIENT-SIDE before it is stored, so a
- * 12 MB camera photo becomes ~20 KB — the settings document has a 1 MiB
+ * 12 MB camera photo becomes ~4 KB — the settings document has a 1 MiB
  * ceiling shared with everything else, and cloudUsage() charges every byte.
  * Local-only for now: the avatar is NOT published into the social projection,
  * so friends do not see it — publishing a face is a widening that gets its
@@ -126,6 +152,19 @@ function avatarCard(settings, user) {
   const hasPhoto = typeof settings.avatar === 'string' && settings.avatar.startsWith('data:image/');
   const face = el('span', { class: 'avatar-face' },
     hasPhoto ? el('img', { src: settings.avatar, alt: '' }) : icon('person', 30));
+
+  // Save all three together: the face everything paints, the source it was cut
+  // from, and where the circle was. Written in ONE saveSettings so a re-edit
+  // can never leave the crop pointing at a different photo than the source.
+  async function keep(result) {
+    await store.saveSettings({
+      avatar: result.dataUrl,
+      avatarSource: result.source,
+      avatarCrop: result.crop,
+    });
+    toast('Photo saved');
+    refresh();
+  }
 
   const fileInput = el('input', {
     type: 'file', accept: 'image/*', style: 'display:none',
@@ -138,16 +177,34 @@ function avatarCard(settings, user) {
         // A phone photo is a person somewhere in a rectangle, and the old
         // centre-crop cut a square out of the middle of it and hoped — which is
         // how you get an avatar of somebody's shoulder.
-        const dataUrl = await openAvatarCropper(file, 256);
-        if (!dataUrl) return;                      // cancelled — nothing to say
-        await store.saveSettings({ avatar: dataUrl });
-        toast('Photo saved');
-        refresh();
+        const result = await openAvatarCropper({ file }, AVATAR_PX);
+        if (!result) return;                       // cancelled — nothing to say
+        await keep(result);
       } catch (err) {
         toast((err && err.message) || 'That image could not be read.');
       }
     },
   });
+
+  async function editExisting() {
+    // The source if there is one, the avatar itself if this photo predates it.
+    const src = typeof settings.avatarSource === 'string'
+      && settings.avatarSource.startsWith('data:image/')
+      ? settings.avatarSource : settings.avatar;
+    try {
+      const result = await openAvatarCropper({
+        src,
+        // ⚠️ Reopen where they left it, not at the default. Somebody nudging a
+        // face two pixels left should not have to find it again first — and a
+        // crop restored onto the same source is exactly the picture they saved.
+        crop: settings.avatarSource ? settings.avatarCrop : null,
+      }, AVATAR_PX);
+      if (!result) return;
+      await keep(result);
+    } catch (err) {
+      toast((err && err.message) || 'That image could not be read.');
+    }
+  }
 
   const name = (user && user.email) || settings.displayName || '';
   return el('div', { class: 'card avatar-card' },
@@ -155,33 +212,63 @@ function avatarCard(settings, user) {
     el('div', { class: 'avatar-main' },
       name ? el('div', { class: 'row-title', text: name }) : null,
       el('div', { class: 'avatar-actions' },
+        // ⚠️ Edit is FIRST and Change is the secondary one once a photo exists.
+        // Repositioning the photo you already chose is the common errand; going
+        // back to the camera roll is the rare one.
+        hasPhoto ? el('button', {
+          class: 'btn small', text: 'Edit', onClick: editExisting,
+        }) : null,
         el('button', {
-          class: 'btn small', text: hasPhoto ? 'Change photo' : 'Add a photo',
+          class: hasPhoto ? 'btn small ghost' : 'btn small',
+          text: hasPhoto ? 'Change photo' : 'Add a photo',
           onClick: () => fileInput.click(),
         }),
         hasPhoto ? el('button', {
           class: 'btn small ghost', text: 'Remove',
-          onClick: async () => { await store.saveSettings({ avatar: '' }); toast('Photo removed'); refresh(); },
+          onClick: async () => {
+            // Clear all three, or a later "Edit" reopens a source with no face
+            // in front of it.
+            await store.saveSettings({ avatar: '', avatarSource: '', avatarCrop: null });
+            toast('Photo removed');
+            refresh();
+          },
         }) : null,
       ),
-      el('div', { class: 'field-help', text:
-        'Shown on your account button. Only on this account — friends do not see it.' }),
+      el('div', { class: 'field-help', text: hasPhoto
+        ? 'Shown on your account button. Edit to move or resize the circle. '
+          + 'Only on this account — friends do not see it.'
+        : 'Shown on your account button. Only on this account — friends do not see it.' }),
     ),
     fileInput,
   );
 }
 
-/** File → an <img> that has finished decoding. Throws a plain sentence. */
-function loadImage(file) {
+/**
+ * A File or a stored data URL → an <img> that has finished decoding, plus the
+ * data URL the editor should keep as the re-editable source.
+ *
+ * A picked file is shrunk to AVATAR_SOURCE_PX first; a stored source is already
+ * that size and is used as it stands, so re-editing the same photo five times
+ * re-encodes it once rather than five times.
+ */
+function loadImage({ file, src }) {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
+    const url = file ? URL.createObjectURL(file) : src;
     const img = new Image();
-    const fail = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read.')); };
+    const done = () => { if (file) URL.revokeObjectURL(url); };
+    const fail = () => { done(); reject(new Error('That image could not be read.')); };
     img.onload = () => {
       if (!img.naturalWidth || !img.naturalHeight) return fail();
-      // The object URL is kept alive until the sheet closes — the editor keeps
-      // showing this same element.
-      resolve({ img, release: () => URL.revokeObjectURL(url) });
+      if (!file) return resolve({ img, source: src, release: () => {} });
+      // Shrink once, here, and hand the editor the SAME image it will later cut
+      // from — so what the circle framed is what the source holds.
+      let source;
+      try { source = downscale(img, AVATAR_SOURCE_PX); }
+      catch (err) { done(); return reject(err); }
+      const small = new Image();
+      small.onload = () => { done(); resolve({ img: small, source, release: () => {} }); };
+      small.onerror = fail;
+      small.src = source;
     };
     img.onerror = fail;
     // ⚠️ An <img>, deliberately, NOT createImageBitmap: browsers apply EXIF
@@ -193,6 +280,25 @@ function loadImage(file) {
 }
 
 /**
+ * Whole image → a data URL no bigger than `cap` on its long edge. Aspect ratio
+ * is kept: this is a resize, not a crop, because the crop is the user's job.
+ * An image already inside the cap is re-encoded rather than passed through,
+ * which is what turns a 12 MB camera JPEG into tens of kilobytes.
+ */
+function downscale(img, cap) {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const scale = Math.min(1, cap / Math.max(w, h));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(w * scale));
+  canvas.height = Math.max(1, Math.round(h * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('That image could not be read.');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.78);
+}
+
+/**
  * The crop editor. Resolves with a data URL, or with null if it was cancelled.
  *
  * ⚠️ WHAT THE CIRCLE COVERS IS WHAT GETS SAVED — the preview is not an
@@ -200,12 +306,20 @@ function loadImage(file) {
  * IS the crop square and the circle is inscribed in it, so `crop.layout()`
  * positions the <img> and `crop.cropRect()` cuts it, both from one state.
  */
-function openAvatarCropper(file, size) {
+function openAvatarCropper(input, size) {
   return new Promise((resolve, reject) => {
-    loadImage(file).then(({ img, release }) => {
+    loadImage(input).then(({ img, source, release }) => {
       const iw = img.naturalWidth;
       const ih = img.naturalHeight;
-      let { zoom, cx, cy } = crop.initialCrop(iw, ih);
+      // ⚠️ A saved crop is restored only after being CLAMPED against this
+      // image's real dimensions. A stored number could belong to a different
+      // photo (settings restored from a backup, an interrupted save), and the
+      // module's own clamp turns that from a broken editor into a sane default.
+      const saved = input && input.crop;
+      const start = saved && Number.isFinite(saved.cx) && Number.isFinite(saved.cy)
+        ? crop.zoomTo(iw, ih, saved.zoom, saved.cx, saved.cy)
+        : crop.initialCrop(iw, ih);
+      let { zoom, cx, cy } = start;
       let frame = 0;                                // stage side, measured
 
       const photo = el('img', { class: 'crop-img', src: img.src, alt: '' });
@@ -216,7 +330,7 @@ function openAvatarCropper(file, size) {
 
       const zoomable = crop.canZoom(iw, ih);
       const slider = el('input', {
-        type: 'range', min: '0', max: '1', step: '0.001', value: '0',
+        type: 'range', min: '0', max: '1', step: '0.001', value: String(zoom),
         class: 'crop-zoom', 'aria-label': 'Zoom',
         disabled: !zoomable || undefined,
         onInput: (e) => {
@@ -254,8 +368,16 @@ function openAvatarCropper(file, size) {
       };
 
       stage.addEventListener('pointerdown', (e) => {
-        stage.setPointerCapture(e.pointerId);
+        // ⚠️ CAPTURE IS AN OPTIMISATION, NOT THE MECHANISM, and it must not be
+        // able to take the drag down with it. setPointerCapture throws
+        // NotFoundError whenever the id is not an active pointer — and because
+        // it was the FIRST statement, that threw before the pointer was ever
+        // recorded, so pointermove found nothing and the photo would not move
+        // at all. Capture only buys us events that stray outside the stage
+        // mid-drag; tracking is what actually moves the picture, so it goes
+        // first and the capture is allowed to fail.
         pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        try { stage.setPointerCapture(e.pointerId); } catch (_) { /* drag still works */ }
         if (pointers.size === 2) {
           pinchStart = { dist: spread(), side: crop.sideForZoom(iw, ih, zoom) };
         }
@@ -337,7 +459,10 @@ function openAvatarCropper(file, size) {
               if (observer) observer.disconnect();
               release();
               close();
-              resolve(dataUrl);
+              // The crop travels with the picture. Without it, Edit would
+              // reopen in the middle of the photo and throw away the framing
+              // the person just chose.
+              resolve({ dataUrl, source, crop: { zoom, cx, cy } });
             },
           }),
         ),
@@ -458,6 +583,21 @@ async function personalSections({ mode }) {
       el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
       el('button', { class: 'btn ghost block', text: 'Restore from backup', onClick: () => fileInput.click() }),
       fileInput,
+    ),
+
+    /* ⚠️ A SEPARATE CARD FROM BACKUP/RESTORE, deliberately. Restore REPLACES
+     * this account with a snapshot of itself; import ADDS somebody else's
+     * export to what is already here. They read as neighbours and they are
+     * opposites, and one of them cannot be undone — putting the second inside
+     * the first card is how somebody taps the wrong one. */
+    el('div', { class: 'card' },
+      el('div', { class: 'section-label', text: 'Bring in data from another app' }),
+      el('div', { class: 'field-help' },
+        'Export your data from Strava, Apple Health, MacroFactor, Cronometer or a spreadsheet, '
+        + 'then bring the file in here. Nothing is sent anywhere — the file is read on this device.'),
+      el('button', {
+        class: 'btn ghost block', text: 'Import from a file', onClick: () => go('#/import'),
+      }),
     ),
 
     el('button', {

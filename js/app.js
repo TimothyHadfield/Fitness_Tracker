@@ -9,6 +9,7 @@ import {
 import { SessionView, BenchmarkView, ActivityLogView } from './views-session.js';
 import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
 import { AccountView, SignInView } from './views-account.js';
+import { ImportView } from './views-import.js';
 import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
 import { SocialView, FriendView, InviteView } from './views-social.js';
@@ -86,7 +87,7 @@ const NAV = [
 // ⚠️ `goals` joined this list on 2026-08-25 when it stopped being a tab. A
 // screen with no tab of its own is reached FROM somewhere, so it needs a back
 // button, which is what being fullscreen gives it — the same shape as `start`.
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal', 'goals'];
+const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal', 'goals', 'import'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -139,6 +140,7 @@ async function resolve(route) {
     case 'graphs':    return GraphView();
     case 'settings':  return SettingsView();
     case 'account':   return AccountView();
+    case 'import':    return ImportView();
     case 'signin':    return SignInView();
     case 'profile':   return ProfileView();
     case 'social':    return SocialView();

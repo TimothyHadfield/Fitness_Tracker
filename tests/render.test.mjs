@@ -2594,6 +2594,55 @@ ok(!data.querySelector('.rep-target'),
   const acct = await mount(AccountView());
   ok(/Add a photo|Change photo/.test(text(acct)), 'the Account screen offers a profile photo');
   ok(acct.querySelector('.avatar-face'), 'with a visible face slot');
+
+  /* ⚠️ EDITING AN EXISTING PHOTO (Tim, 2026-08-27: "make a feature where you
+   * can edit the profile picture though — resize, move the center circle").
+   * The controls a photo does and does not carry are the testable half; the
+   * canvas work is covered by image-crop's own sweep and by the CDP pass. */
+  {
+    const { store } = await import(BASE + 'store.js');
+    const before = await store.getSettings();
+
+    // No photo: nothing to edit, and offering it would be a dead button.
+    await store.saveSettings({ avatar: '', avatarSource: '', avatarCrop: null });
+    const empty = await mount(AccountView());
+    const emptyBtns = [...empty.querySelectorAll('button')].map((b) => b.textContent.trim());
+    ok(emptyBtns.includes('Add a photo'), 'with no photo the button reads "Add a photo"');
+    ok(!emptyBtns.includes('Edit'), 'and there is no Edit button, because there is nothing to edit');
+    ok(!emptyBtns.includes('Remove'), 'nor a Remove');
+
+    // With one: Edit, Change, Remove — and Edit comes FIRST, because moving the
+    // photo you already picked is the common errand.
+    await store.saveSettings({
+      avatar: 'data:image/jpeg;base64,AAAA',
+      avatarSource: 'data:image/jpeg;base64,BBBB',
+      avatarCrop: { zoom: 0.4, cx: 100, cy: 120 },
+    });
+    const withPhoto = await mount(AccountView());
+    const btns = [...withPhoto.querySelectorAll('button')].map((b) => b.textContent.trim());
+    ok(btns.includes('Edit'), 'with a photo saved there is an Edit button');
+    ok(btns.includes('Change photo'), 'alongside Change photo');
+    ok(btns.includes('Remove'), 'and Remove');
+    ok(btns.indexOf('Edit') < btns.indexOf('Change photo'),
+       'and Edit comes before Change photo — repositioning is the common errand');
+    ok(/Edit to move or resize the circle/.test(text(withPhoto)),
+       'and the help text says what Edit is for');
+
+    // ⚠️ REMOVE MUST CLEAR ALL THREE. Leaving the source behind would let a
+    // later Edit reopen a photo the account no longer has.
+    const removeBtn = [...withPhoto.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === 'Remove');
+    removeBtn.click();
+    await settle(); await settle();
+    const cleared = await store.getSettings();
+    ok(!cleared.avatar && !cleared.avatarSource && !cleared.avatarCrop,
+       'Remove clears the face, the source and the crop together');
+
+    await store.saveSettings({
+      avatar: before.avatar || '', avatarSource: before.avatarSource || '',
+      avatarCrop: before.avatarCrop || null,
+    });
+  }
   ok(/Your details/.test(text(acct)), 'the profile row lives on Account now');
   ok(/Download backup/.test(text(acct)) && /Restore from backup/.test(text(acct)),
      'and so do backup and restore');

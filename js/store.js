@@ -1264,6 +1264,58 @@ export const store = {
     await backend.write('bodyWeight', rows.filter((r) => r.id !== id));
   },
 
+  /* --- importing a file from another app (js/import-file.js) --- */
+
+  /**
+   * Write a whole batch in ONE read-modify-write.
+   *
+   * ⚠️ NOT A LOOP OVER saveSession(), and the reason is not tidiness. Every
+   * single-row mutation in this store reads the whole collection, changes one
+   * row and writes the whole collection back — so importing 200 activities
+   * through them would be 200 full reads and 200 full writes of a document
+   * that can be most of a megabyte, with 200 chances to be interrupted
+   * half-way. One read, one merge, one write is also the only version that is
+   * atomic from the reader's point of view.
+   *
+   * ⚠️ THE MERGE KEY DIFFERS BY COLLECTION AND HAS TO. Sessions upsert by the
+   * deterministic import id, so re-importing an overlapping export updates the
+   * same rows instead of duplicating a month of training. Weigh-ins upsert by
+   * DATE, because this store has always kept one per day (a second reading on
+   * a Tuesday replaces the first rather than making the trend jagged) and an
+   * import must not be the one thing that breaks that rule.
+   */
+  async importRows(collection, rows) {
+    if (!COLLECTIONS.includes(collection)) {
+      throw new Error(`Cannot import into ${collection}.`);
+    }
+    const incoming = Array.isArray(rows) ? rows.filter(Boolean) : [];
+    if (!incoming.length) return { added: 0, replaced: 0 };
+
+    const existing = await backend.read(collection);
+    const byDate = collection === 'bodyWeight';
+    const keyOf = (r) => (byDate ? r.date : r.id);
+
+    const index = new Map(existing.map((r) => [keyOf(r), r]));
+    let added = 0;
+    let replaced = 0;
+    for (const row of incoming) {
+      const key = keyOf(row);
+      if (key === undefined || key === null || key === '') continue;
+      const prior = index.get(key);
+      if (prior) {
+        replaced++;
+        // Keep the row's original identity and creation time. An import that
+        // renumbered an existing weigh-in would orphan anything pointing at it.
+        index.set(key, { ...prior, ...row, id: prior.id, createdAt: prior.createdAt || row.createdAt });
+      } else {
+        added++;
+        index.set(key, { ...row, createdAt: row.createdAt || new Date().toISOString() });
+      }
+    }
+    await backend.write(collection, [...index.values()]);
+    return { added, replaced };
+  },
+
   async latestBodyWeight() {
     const rows = await this.getBodyWeights();
     return rows.length ? rows[rows.length - 1] : null;
