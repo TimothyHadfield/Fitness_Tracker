@@ -1772,8 +1772,35 @@ ok(!data.querySelector('.rep-target'),
     const swapBtn = () => Array.from(s.querySelectorAll('.swap-btn'))[0];
     ok(Boolean(swapBtn()), 'every exercise offers a swap');
 
+    /* ⚠️ SWAP OPENS ON A SHORTLIST SINCE 2026-08-30 (Tim's ask), and the full
+     * library is one tap under it. `showAll()` is what every step below uses to
+     * reach the old picker — which is also the assertion that the escape hatch
+     * exists, made every single time rather than once. A shortlist you cannot
+     * get out of would be worse than no shortlist. */
+    const showAll = () => {
+      const btn = [...document.querySelectorAll('.sheet button')]
+        .find((b) => /^Show all \d+ exercises$/.test((b.textContent || '').trim()));
+      if (btn) btn.click();
+      return Boolean(btn);
+    };
+
     /* --- nothing logged yet: replace in place --- */
     swapBtn().click();
+    await settle();
+    {
+      const sheet = document.querySelector('.sheet');
+      ok(/Swap Leg Press/.test(sheet.textContent),
+         '⚠️ the swap sheet names the exercise being swapped OUT');
+      ok(/Same movement, different equipment/.test(sheet.textContent),
+         'and says these are the same movement rather than merely the same muscle');
+      const rows = [...sheet.querySelectorAll('.search-results .row')];
+      ok(rows.length === 5, `five alternatives, not 275 (${rows.length})`);
+      // ⚠️ The equipment spread is the feature. Ranked on score alone this was
+      // five barbell squats — every one correct and every one the same answer.
+      const kinds = new Set(rows.map((r) => (r.textContent.match(/· (\w+)/) || [])[1]));
+      ok(kinds.size >= 3, `and they span ${kinds.size} kinds of equipment`);
+    }
+    ok(showAll(), '⚠️ and the full library is one tap underneath');
     await settle();
     // The picker caps its list at 150 rows, so anything further down the library
     // has to be searched for — which is what a person does anyway.
@@ -1798,6 +1825,27 @@ ok(!data.querySelector('.rep-target'),
     ok(!/machine by the window/.test(s.textContent),
        'the note belonged to the exercise that was replaced, so it does not follow');
 
+    /* ⚠️ AND A SHORTLIST ROW SWAPS DIRECTLY — the whole point of the feature is
+     * that the common case is ONE tap. Asserted by clicking a row rather than
+     * by reading the list, because a sheet that renders five plausible names
+     * and does nothing when they are pressed is exactly the failure this
+     * project has shipped before (the five inert back buttons, 2026-08-29). */
+    swapBtn().click();
+    await settle();
+    {
+      const sheet = document.querySelector('.sheet');
+      const row = sheet.querySelector('.search-results .row');
+      const picked = (row.querySelector('.row-title') || {}).textContent;
+      row.click();
+      await settle(); await settle();
+      ok(new RegExp(picked).test(s.querySelector('.session-ex-name').textContent),
+         `⚠️ tapping an alternative swaps straight to it (${picked}) — no second screen`);
+      ok(!document.querySelector('.sheet'), 'and the sheet closes, because swapping is a single act');
+      // Put Hack Squat back so the assertions below read as they did before.
+      swapBtn().click(); await settle(); showAll(); await settle();
+      pick('Hack Squat'); await settle(); await settle();
+    }
+
     /* --- ⚠️ sets already logged: SPLIT, keeping what was done --- */
     type(s.querySelectorAll('.step-value')[0], 200);
     await settle();
@@ -1805,7 +1853,9 @@ ok(!data.querySelector('.rep-target'),
     await settle();
     swapBtn().click();
     await settle();
-    ok(pick('Goblet Squat'), 'and the picker opens again with work already logged');
+    ok(showAll(), 'the shortlist opens again with work already logged');
+    await settle();
+    ok(pick('Goblet Squat'), 'and the full picker is still reachable from it');
     await settle(); await settle();
     ok(/Goblet Squat/.test(s.querySelector('.session-head').textContent),
        'the swapped-in exercise is what you land on');
@@ -1902,6 +1952,53 @@ ok(!data.querySelector('.rep-target'),
        '⚠️ and the SAVED WORKOUT still has all three exercises — removal is for this session only');
     const draft = JSON.parse(localStorage.getItem(DRAFT));
     ok(draft.entries.length === 1, 'while the draft carries the removals, so a resume does too');
+  }
+  localStorage.removeItem(DRAFT);
+
+  /* 🚨 THE SWAP LEAD ONLY PROMISES WHAT THE LIST DELIVERS (2026-08-30).
+   *
+   * Caught by a SCREENSHOT, not by an assertion: the lead read "Same movement,
+   * different equipment" unconditionally, and a Deadlift offers four barbell
+   * deadlifts under it — every row a correct alternative, and the sentence
+   * above them false. Some families are single-equipment by nature. A caption
+   * that overclaims on those teaches a reader to stop believing it on the ones
+   * where it is true, which is Design Rule 5's general form. */
+  {
+    const dw = await store.saveWorkout({
+      name: 'Single-equipment family day',
+      exercises: [
+        { exerciseId: byName('Deadlift').id, sets: 1, notes: '' },
+        { exerciseId: byName('Leg Press').id, sets: 1, notes: '' },
+      ],
+    });
+    localStorage.removeItem(DRAFT);
+    const ds = await mount(SessionView(dw.id));
+    ds.querySelectorAll('.swap-btn')[0].click();
+    await settle();
+    const sheet = document.querySelector('.sheet');
+    const kinds = new Set([...sheet.querySelectorAll('.search-results .row-sub')]
+      .map((n) => n.textContent.split('·')[1].trim()));
+    ok(kinds.size === 1 && kinds.has('Barbell'),
+       `the deadlift family really is barbell-only, which is what makes this the right case (${[...kinds]})`);
+    ok(!/different equipment/.test(sheet.textContent),
+       '🚨 so the lead does NOT promise different equipment');
+    ok(/Other ways to do this movement/.test(sheet.textContent),
+       'it says what is actually true instead');
+    sheet.closest('.sheet-backdrop').remove();
+
+    // And the mixed case still makes the promise, so the guard is not just
+    // "never say it" — a leg press genuinely offers four kinds of equipment.
+    ds.querySelectorAll('.swap-btn')[0].click();   // still exercise 1; walk on
+    document.querySelector('.sheet-backdrop').remove();
+    btn(ds, /Next exercise|Straight into|Round/).click();
+    await settle();
+    ds.querySelectorAll('.swap-btn')[0].click();
+    await settle();
+    const mixed = document.querySelector('.sheet');
+    ok(/Swap Leg Press/.test(mixed.textContent), 'on to the leg press');
+    ok(/different equipment/.test(mixed.textContent),
+       'and there the promise IS made, because there the list keeps it');
+    mixed.closest('.sheet-backdrop').remove();
   }
   localStorage.removeItem(DRAFT);
 
@@ -2666,6 +2763,124 @@ ok(!data.querySelector('.rep-target'),
      'and his session is filed under the identity\'s ID, not matched on the free text of his name');
 }
 
+/* ============ taking somebody back OUT of the workout (2026-08-30) ============
+ *
+ * Tim: *"allow the user to also remove one of the people they're recording data
+ * with in case it was just a test, or an accident, or something happened."*
+ *
+ * The two paths are the point, and they are `removeExercise`'s shape: an
+ * accidental add has nothing recorded and goes quietly; a person with sets
+ * behind them gets a confirm that says the count out loud. One tap must not be
+ * able to destroy work somebody actually did.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const w = await store.saveWorkout({
+    name: 'Remove-a-person day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const chips = () => [...s.querySelectorAll('.person-chip')];
+
+  const addGuest = async (name) => {
+    // ⚠️ By CLASS, not by its words: the add chip keeps the label "Add a person"
+    // only while the session is solo, and drops to a bare + once somebody is on
+    // the bar. A text matcher works for the first guest and silently fails for
+    // the second, which is exactly the shape of bug that hides in a test helper.
+    s.querySelector('.person-add').click();
+    await settle(); await settle();
+    [...document.querySelector('.sheet').querySelectorAll('button')]
+      .find((b) => /Someone new/.test(b.textContent)).click();
+    await settle();
+    const inner = [...document.querySelectorAll('.sheet')].pop();
+    inner.querySelector('input').value = name;
+    [...inner.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+    await settle(); await settle();
+  };
+
+  await addGuest('Testy');
+  ok(chips().some((b) => b.textContent.trim() === 'Testy'), 'a person can be added');
+
+  /* ⚠️ THE ✕ IS ONLY ON THE PERSON YOU ARE ALREADY RECORDING FOR, and that is
+   * the safety design rather than a layout economy: a destructive control is
+   * never sitting next to a chip somebody is aiming at to SWITCH.
+   *
+   * ⚠️ ASSERTED WITH TWO GUESTS ON THE BAR, because with one it is true however
+   * the code is written — the first version of this check passed against a
+   * mutation that put a ✕ on every chip, which is a test that proves nothing. */
+  const dels = () => [...s.querySelectorAll('.person-del')];
+  await addGuest('Bystander');
+  ok(chips().filter((b) => /Testy|Bystander/.test(b.textContent)).length === 2, 'two guests on the bar');
+  ok(dels().length === 1, 'exactly one remove control with two people on the bar');
+  ok(/Remove Bystander/.test(dels()[0].getAttribute('aria-label')),
+     '⚠️ and it is on the ACTIVE person, named — a screen reader is never offered a bare ✕');
+  // Back to Testy: the control follows the person being recorded for.
+  chips().find((b) => b.textContent.trim() === 'Testy').click();
+  await settle();
+  ok(dels().length === 1 && /Remove Testy/.test(dels()[0].getAttribute('aria-label')),
+     'switching moves the remove control with it');
+  // Take the bystander back out through the same path, so the bar is left as
+  // the assertions below expect.
+  chips().find((b) => b.textContent.trim() === 'Bystander').click();
+  await settle();
+  dels()[0].click();
+  await settle(); await settle();
+  ok(!chips().some((b) => b.textContent.trim() === 'Bystander'), 'and removes the right one');
+  chips().find((b) => b.textContent.trim() === 'Testy').click();
+  await settle();
+
+  // Nothing recorded: goes quietly, which is the accident Tim leads with.
+  dels()[0].click();
+  await settle(); await settle();
+  ok(!chips().some((b) => b.textContent.trim() === 'Testy'),
+     '⚠️ an accidental add with nothing recorded is removed on one tap — no confirm to read');
+  ok(chips().find((b) => b.textContent.trim() === 'You').getAttribute('aria-pressed') === 'true',
+     'and the screen falls back to You rather than pointing at somebody who has left');
+  ok(!document.querySelector('.sheet'), 'no confirm sheet was raised for it');
+
+  // With a set recorded: confirm, and it says the count.
+  await addGuest('Sam');
+  const sw = s.querySelector('.step-value');
+  sw.value = '95';
+  sw.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  dels()[0].click();
+  await settle();
+  const confirm = document.querySelector('.sheet');
+  ok(Boolean(confirm) && /Remove Sam/.test(confirm.textContent),
+     '⚠️ a person with recorded sets gets a confirm instead');
+  ok(/1 set recorded for them will be deleted/.test(confirm.textContent),
+     'and it says the count out loud rather than "are you sure?"');
+  ok(/stay on your list of people/.test(confirm.textContent),
+     '⚠️ and that their saved identity is NOT deleted — that is a different act with its own control');
+  ok(chips().some((b) => b.textContent.trim() === 'Sam'),
+     'and nothing has happened yet');
+  [...confirm.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Remove').click();
+  await settle(); await settle();
+  ok(!chips().some((b) => b.textContent.trim() === 'Sam'), 'confirming removes them');
+
+  // ⚠️ AND THE DRAFT FOLLOWS, or backgrounding the app brings them back.
+  const draft = JSON.parse(localStorage.getItem(DRAFT) || '{}');
+  ok(Array.isArray(draft.guestNames) && !draft.guestNames.includes('Sam'),
+     '⚠️ the draft no longer holds them — otherwise a resume would resurrect somebody');
+  ok(!draft.others || !draft.others.some((o) => o.name === 'Sam'),
+     'nor their parked sets');
+
+  // Finishing writes nothing for the person who was removed.
+  const ow = s.querySelector('.step-value');
+  ow.value = '185';
+  ow.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle();
+  const rows = (await store.getGuestSessions()).filter((g) => g.workoutId === w.id);
+  ok(rows.length === 0,
+     '🚨 and finishing saves NOTHING for either removed person — the sets were only ever in the draft');
+}
+
 /* ============ recording for a FRIEND, and sending it to their account ============
  *
  * Tim, 2026-08-29: *"my main want for this feature was so that one person could
@@ -2794,6 +3009,39 @@ ok(!data.querySelector('.rep-target'),
      'and it names the way to retry, in the same line — otherwise it reads as work lost');
   ok(localStorage.getItem(DRAFT) === null,
      '⚠️ and the draft is still cleared: the SAVE worked, and only the send did not');
+
+  /* ⚠️ REMOVING A FRIEND SAYS THE OTHER HALF (2026-08-30). Their session was
+   * going to be offered to their own account at Finish, and after this it is
+   * not — a consequence outside this phone, so it does not get to be implied. */
+  {
+    const w4 = await store.saveWorkout({
+      name: 'Friend removal day',
+      exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s4 = await mount(SessionView(w4.id));
+    [...s4.querySelectorAll('.person-chip')].find((b) => /Add a person/.test(b.textContent)).click();
+    await settle(); await settle();
+    [...document.querySelector('.sheet').querySelectorAll('button')]
+      .find((b) => /Autumn/.test(b.textContent)).click();
+    await settle(); await settle();
+    const fv = s4.querySelector('.step-value');
+    fv.value = '130';
+    fv.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    await settle();
+    s4.querySelector('.person-del').click();
+    await settle();
+    const sheet4 = document.querySelector('.sheet');
+    ok(Boolean(sheet4) && /no longer be sent to them/.test(sheet4.textContent),
+       '⚠️ removing a FRIEND says their workout will no longer reach their account');
+    ok(!/stay on your list of people/.test(sheet4.textContent),
+       'and does not claim a saved identity that a friend never had');
+    [...sheet4.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Cancel').click();
+    await settle();
+    ok([...s4.querySelectorAll('.person-chip')].some((b) => /Autumn/.test(b.textContent)),
+       'cancelling leaves them in the workout');
+    localStorage.removeItem(DRAFT);
+  }
 
   restore();
   localStorage.removeItem(DRAFT);

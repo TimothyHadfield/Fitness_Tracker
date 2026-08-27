@@ -4420,5 +4420,123 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ the topic says the app cannot see how heavy the plan was — §6.13.3 on screen');
 }
 
+/* ================= movement families (2026-08-30) =======================
+   Tim: "categorize similar exercises together, and when the user clicks on
+   'swap' it will show them a few alternative exercises that will achieve the
+   same or similar result."
+
+   ⚠️ THE LOAD-BEARING ONE IS RESOLUTION. The table names exercises as strings,
+   which is what makes it readable and what makes it able to rot: rename an
+   exercise in the library and a family member silently points at nothing, and
+   the only symptom is a slightly shorter list nobody counts. Same class of
+   fault as `preset-systems.js` referencing exercises by name, and the same
+   fix — assert every one resolves, to EXACTLY one exercise. */
+{
+  const ef = await import('../js/exercise-families.js');
+  const { FAMILIES, familyOf, alternativesFor, allMembers } = ef;
+  const LIB = BUILT_IN_EXERCISES;
+  const matches = (m, ex) => {
+    const bar = m.indexOf('|');
+    return bar < 0 ? ex.name === m
+      : (ex.name === m.slice(0, bar) && ex.muscle === m.slice(bar + 1));
+  };
+
+  ok(FAMILIES.length >= 30, `${FAMILIES.length} movement families`);
+  ok(new Set(FAMILIES.map((f) => f.id)).size === FAMILIES.length, 'family ids are unique');
+  ok(FAMILIES.every((f) => f.label && f.members.length >= 2),
+     'every family has a label and at least two members — a family of one is not a family');
+
+  let unresolved = 0;
+  for (const f of FAMILIES) {
+    for (const m of f.members) {
+      const hits = LIB.filter((e) => matches(m, e));
+      if (hits.length !== 1) { unresolved++; console.log(`   ↳ ${f.id}: "${m}" → ${hits.length} hits`); }
+    }
+  }
+  ok(unresolved === 0, `all ${allMembers().length} family members resolve to exactly one exercise`);
+
+  // ⚠️ ONE FAMILY PER EXERCISE. Without this, "alternatives" quietly becomes
+  // "anything sharing a word", and the first row of the swap sheet stops being
+  // a judgement anybody made.
+  const multi = LIB.filter((e) => FAMILIES.filter((f) => f.members.some((m) => matches(m, e))).length > 1);
+  ok(multi.length === 0, `no exercise is in two families (${multi.map((e) => e.name).join(', ') || 'none'})`);
+
+  const covered = LIB.filter((e) => familyOf(e));
+  ok(covered.length >= LIB.length - 8,
+     `${covered.length} of ${LIB.length} exercises have a family`);
+
+  /* 🚨 THE FOUR WITHOUT ONE ARE A DECISION, NOT A GAP, and this pins it. Hip
+     Adduction is the OPPOSITE movement to Hip Abduction on a machine that
+     looks the same; suggesting one for the other would be the most misleading
+     row this feature could produce. Same for Neck Curl against Neck Extension
+     and Tibialis Raise against the calf raises. If somebody "completes" the
+     table later, this fails and they read the comment. */
+  for (const name of ['Hip Adduction Machine', 'Tibialis Raise', 'Neck Curl']) {
+    const ex = byName(name);
+    ok(ex && !familyOf(ex),
+       `⚠️ ${name} has NO family on purpose — it is the opposite movement to its lookalike`);
+  }
+  {
+    const ab = byName('Hip Abduction Machine');
+    const alts = alternativesFor(ab, LIB).items.map((i) => i.exercise.name);
+    ok(!alts.includes('Hip Adduction Machine'),
+       '🚨 and abduction never offers adduction as an alternative');
+  }
+
+  // The suggestions themselves.
+  {
+    const bench = byName('Barbell Bench Press');
+    const r = alternativesFor(bench, LIB);
+    ok(r.reason === 'family' && /pressing/i.test(r.familyLabel), 'a bench press knows its movement');
+    ok(r.items.length === 5, `five alternatives by default (${r.items.length})`);
+    ok(!r.items.some((i) => i.exercise.id === bench.id), 'and never itself');
+    const names = r.items.map((i) => i.exercise.name);
+    ok(names.includes('Dumbbell Bench Press') && names.includes('Machine Chest Press'),
+       `the dumbbell and machine versions are offered (${names.join(', ')})`);
+  }
+  {
+    // ⚠️ THE EQUIPMENT SPREAD, which is the whole feature. Ranked on score
+    // alone a leg press offered five barbell squats — all correct, all the
+    // same answer — while the hack squat and goblet squat sat below the cut.
+    const lp = byName('Leg Press');
+    const kinds = new Set(alternativesFor(lp, LIB).items.map((i) => i.exercise.equipment));
+    ok(kinds.size >= 4, `a leg press offers ${kinds.size} different kinds of equipment`);
+    const pull = new Set(alternativesFor(byName('Lat Pulldown'), LIB).items.map((i) => i.exercise.equipment));
+    ok(pull.size >= 3, `a lat pulldown offers ${pull.size} different kinds of equipment`);
+  }
+  {
+    // No family → same muscle group, and the caller is told which it got, so
+    // the screen can say "same movement" or "other Glutes exercises" honestly.
+    const r = alternativesFor(byName('Neck Curl'), LIB);
+    ok(r.reason === 'muscle' && r.familyLabel === null, 'a family-less exercise falls back to its muscle group');
+    ok(r.items.every((i) => i.exercise.muscle === 'Neck'), 'and the fallback stays inside that group');
+  }
+  {
+    // Already in today's session: MARKED, never hidden. Swapping away and back
+    // is the case the runner's split path exists for.
+    const bench = byName('Barbell Bench Press');
+    const db = byName('Dumbbell Bench Press');
+    const r = alternativesFor(bench, LIB, { inSession: [db.id] });
+    const row = r.items.find((i) => i.exercise.id === db.id);
+    ok(Boolean(row), 'an exercise already in the session is still offered');
+    ok(row && row.inSession === true, 'and it is flagged so the user can see it');
+  }
+  {
+    // Deterministic: same inputs, same order, every time. Nothing here may use
+    // Math.random(), for the reason demo.js states about its own year.
+    const a = alternativesFor(byName('Lateral Raise'), LIB).items.map((i) => i.exercise.id);
+    const b = alternativesFor(byName('Lateral Raise'), LIB).items.map((i) => i.exercise.id);
+    ok(a.join() === b.join(), 'the order is deterministic');
+  }
+  {
+    // A custom exercise has no family by construction — the table is written
+    // against the built-in library. It must degrade to the muscle fallback
+    // rather than throw or come back empty.
+    const custom = makeCustomExercise({ name: 'My Weird Press', muscle: 'Chest', equipment: 'Other' });
+    const r = alternativesFor(custom, [...LIB, custom]);
+    ok(r.reason === 'muscle' && r.items.length > 0, 'a custom exercise still gets suggestions');
+  }
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

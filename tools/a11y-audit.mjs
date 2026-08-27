@@ -316,6 +316,29 @@ const ROUTES = [
      if (!document.querySelector('.set-list')) {
        throw new Error('a11y: the Session runner step never reached the runner');
      }`],
+  /* ⚠️ THE SWAP SHEET — added 2026-08-30 with the shortlist. A sheet is only
+   * ever on screen after an interaction, so nothing in this list had measured
+   * one: not the exercise picker, not the visibility sheet, not this. Sheets
+   * carry rows, sub-lines and a full-width button over a dimmed backdrop, which
+   * is a different set of painted colours from the screen underneath.
+   *
+   * Asserts it landed, like the runner step above it. */
+  ['#/record', 'Session runner · swap sheet',
+    `${clickText('.row-start, button, a', 'Weightlifting')};
+     await new Promise((r) => setTimeout(r, 800));
+     (() => { const b = document.querySelector('.btn.primary.lg.block')
+       || document.querySelector('.pane-scroll .row');
+       if (b) b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(b); })();
+     await new Promise((r) => setTimeout(r, 900));
+     (() => { const s = [...document.querySelectorAll('.swap-btn')]
+       .find((n) => /Swap/.test(n.textContent));
+       if (s) s.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(s); })();
+     await new Promise((r) => setTimeout(r, 700));
+     if (!document.querySelector('.sheet .swap-lead')) {
+       throw new Error('a11y: the swap-sheet step never opened the sheet');
+     }`],
 ];
 
 /* ⚠️ THE PALETTE, ADDED 2026-08-26 — and the reason is a known coverage hole

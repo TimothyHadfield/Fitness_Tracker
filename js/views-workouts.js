@@ -9,6 +9,7 @@ import {
 import {
   MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
 } from './exercises.js';
+import { alternativesFor } from './exercise-families.js';
 
 /** The library's Activity shelf, by lowercased name — see feedCard(). */
 const ACTIVITY_NAMES = new Set(
@@ -1714,6 +1715,81 @@ export async function WorkoutBuilderView(param) {
     bottom: el('button', {
       class: 'btn primary block', text: isNew ? 'Create workout' : 'Save changes', onClick: save,
     }),
+  });
+}
+
+/* ================================================================== *
+ * Swap sheet — a few alternatives first, the whole library one tap down
+ *
+ * Tim, 2026-08-30: "when the user clicks on 'swap' it will show them a few
+ * alternative exercises that will achieve the same or similar result…
+ * Underneath this list of alternative exercises, put a button that brings them
+ * to the full list of exercises we currently have displayed under swap."
+ *
+ * ⚠️ THE FULL LIST IS NOT REPLACED, IT IS DEMOTED. Swapping is done mid-set,
+ * one-handed, usually because a machine is taken — and the old sheet answered
+ * that with a search box over 275 exercises and sixteen filter chips. Five rows
+ * answer it in one tap. But a shortlist that cannot be escaped is worse than no
+ * shortlist: the button underneath goes to exactly the sheet that was there
+ * before, unchanged.
+ *
+ * ⚠️ AND IT SAYS WHICH KIND OF LIST IT IS. `alternativesFor` returns
+ * `reason: 'family'` when these are the same movement and `'muscle'` when the
+ * exercise has no family and these merely train the same thing. Those are
+ * different promises; showing both under one heading would make the weaker one
+ * borrow the stronger one's credibility, which is Design Rule 5's general form.
+ * ================================================================== */
+export async function openSwapPicker({ exMap, current, inSession = [], onPick }) {
+  const all = exMap ? [...exMap.values()] : await store.getExercises();
+  const { reason, familyLabel, items } = alternativesFor(current, all, { inSession });
+
+  const pick = (ex) => { close(); onPick(ex); };
+
+  const rows = items.map(({ exercise: ex, inSession: dup }) => el('button', {
+    class: 'row',
+    onClick: () => pick(ex),
+  },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: ex.name }),
+      el('div', { class: 'row-sub' },
+        `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}`
+        // ⚠️ MARKED, NEVER HIDDEN. Swapping to something already in today's
+        // session is a real move — swap away when the machine is taken, swap
+        // back when it frees up, which is the case the runner's split path
+        // exists for. Filtering it out would silently remove the right answer.
+        + (dup ? ' · already in this workout' : '')),
+    ),
+    ex.loadType ? loadBadge(ex.loadType) : null,
+    chevron(),
+  ));
+
+  /* ⚠️ THE LEAD ONLY PROMISES WHAT THE LIST ACTUALLY DELIVERS. It read "Same
+   * movement, different equipment" unconditionally until a screenshot caught a
+   * deadlift offering four barbell deadlifts under it — every one a correct
+   * alternative, and the sentence above them false. Some families are
+   * single-equipment by nature (the deadlifts, the Olympic lifts), and a
+   * caption that overclaims on those teaches the reader to stop believing the
+   * ones where it is true. Design Rule 5's general form. */
+  const spreadsEquipment = items.some((i) => i.exercise.equipment !== current.equipment);
+  const body = [
+    el('div', { class: 'field-help swap-lead', text: reason === 'family'
+      ? (spreadsEquipment ? 'Same movement, different equipment' : 'Other ways to do this movement')
+        + (familyLabel ? ` — ${familyLabel.toLowerCase()}.` : '.')
+      : `Nothing in the library does the same movement, so these are other ${current.muscle} exercises.` }),
+    rows.length ? el('div', { class: 'search-results' }, ...rows) : null,
+    // Underneath the alternatives, exactly as asked. `.block` so it reads as
+    // the way onward rather than as a sixth alternative.
+    el('button', {
+      class: 'btn block swap-all', onClick: () => {
+        close();
+        openExercisePicker({ exMap, title: 'Swap this exercise', closeOnPick: true, onPick });
+      },
+    }, `Show all ${all.length} exercises`),
+  ];
+
+  const { close } = openSheet({
+    title: current ? `Swap ${current.name}` : 'Swap this exercise',
+    body,
   });
 }
 

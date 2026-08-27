@@ -7,7 +7,7 @@ import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong, openSheet,
 } from './ui.js';
-import { openExercisePicker } from './views-workouts.js';
+import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
   DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
 } from './set-types.js';
@@ -818,6 +818,66 @@ export async function SessionView(workoutId) {
     })();
   }
 
+  /**
+   * Take somebody back out of this workout.
+   *
+   * Tim, 2026-08-30: *"allow the user to also remove one of the people they're
+   * recording data with in case it was just a test, or an accident, or
+   * something happened."*
+   *
+   * ⚠️ NOTHING IS ON DISK YET, and that is what makes this clean. A guest's
+   * sets live in the draft until `finish()` writes them, so removing somebody
+   * mid-session deletes a plan, not a record — there is no stored row to
+   * orphan and nothing to undo on the server. The one thing that IS already on
+   * disk is the saved identity (`store.people`, written the moment a name is
+   * typed), and this deliberately does not touch it: removing somebody from
+   * today's workout is not the same act as deleting them from your list, which
+   * has its own control in the add-person sheet. Same argument D22 makes about
+   * deleting a system.
+   *
+   * ⚠️ CONFIRM ONLY WHERE THERE IS SOMETHING TO LOSE — the shape `removeExercise`
+   * already uses. Pre-filled numbers are a plan; a set they actually did is a
+   * record, and one tap must not be able to destroy one. An accidental add,
+   * which is the case Tim names first, has nothing recorded and goes quietly.
+   *
+   * ⚠️ AND A FRIEND'S CONFIRM SAYS THE OTHER HALF: their session was going to
+   * be offered to their own account at Finish, and after this it is not. That
+   * is a consequence outside this phone, so it does not get to be implied.
+   */
+  function removePerson(name) {
+    const at = state.guestNames.indexOf(name);
+    if (at < 0) return;
+    const meta = metaFor(name) || {};
+
+    const parked = state.others.find((o) => o.name === name);
+    const theirEntries = state.forName === name ? state.entries : (parked ? parked.entries : []);
+    const recorded = (theirEntries || []).reduce(
+      (n, e) => n + e.sets.filter((s) => setIsRecorded(s, e.fields)).length, 0);
+
+    const doRemove = () => {
+      // Off their chip first if they are the one being recorded for, so the
+      // screen is never pointing at somebody who is no longer in the workout.
+      if (state.forName === name) switchTo(null);
+      state.guestNames.splice(state.guestNames.indexOf(name), 1);
+      state.others = state.others.filter((o) => o.name !== name);
+      if (state.personMeta) delete state.personMeta[name];
+      saveDraft(state);
+      renderAll();
+      toast(`${name} removed from this workout`);
+    };
+
+    if (!recorded) { doRemove(); return; }
+    confirmSheet({
+      title: `Remove ${name}?`,
+      message: `${recorded} set${recorded === 1 ? '' : 's'} recorded for them will be deleted.`
+        + (meta.uid
+          ? `\n\n${name} has an account, and this workout will no longer be sent to them at the end.`
+          : '\nThey stay on your list of people — this only takes them out of today.'),
+      confirmLabel: 'Remove',
+      onConfirm: doRemove,
+    });
+  }
+
   function renderPeople() {
     const solo = !state.guestNames.length;
     // `.chip` supplies the pill, the 44px invisible hit target and the
@@ -835,12 +895,32 @@ export async function SessionView(workoutId) {
         // to know which of those they are typing into BEFORE they finish rather
         // than on the summary screen.
         const meta = metaFor(n) || {};
-        return el('button', {
-          class: 'chip person-chip' + (meta.uid ? ' is-account' : ''),
-          'aria-pressed': state.forName === n ? 'true' : 'false',
+        const active = state.forName === n;
+        const chip = el('button', {
+          class: 'chip person-chip' + (meta.uid ? ' is-account' : '') + (active ? ' has-del' : ''),
+          'aria-pressed': active ? 'true' : 'false',
           title: meta.uid ? `${n} has an account — this is sent to them at the end` : null,
           onClick: () => switchTo(n),
         }, meta.uid ? icon('person', 12) : null, n);
+        if (!active) return chip;
+        /* ⚠️ THE REMOVE ✕ EXISTS ONLY ON THE PERSON YOU ARE ALREADY RECORDING
+         * FOR, and that is the safety design rather than a layout economy.
+         * It means a destructive control is never adjacent to the chip you are
+         * aiming at to SWITCH — a mis-tap on a crowded bar would otherwise
+         * delete somebody's session instead of opening it. Getting to it costs
+         * the tap you would take anyway (switch to them, look at what they have
+         * done), and in the case Tim leads with — an accidental add — the app
+         * has just switched to them for you, so the ✕ is already there.
+         *
+         * A SIBLING of the chip, never a child: a button inside a button is
+         * invalid HTML and would need a stopPropagation that works until the
+         * next control is added. `.set-del` learned this on the set row. */
+        return el('span', { class: 'person-wrap' }, chip, el('button', {
+          class: 'person-del',
+          'aria-label': `Remove ${n} from this workout`,
+          title: `Remove ${n} from this workout`,
+          onClick: () => removePerson(n),
+        }, icon('x', 13)));
       }),
       el('button', {
         class: 'chip person-chip person-add',
@@ -1352,15 +1432,24 @@ export async function SessionView(workoutId) {
           // is a thing you do occasionally when a machine is taken; it must be
           // findable without competing with the steppers, which are what this
           // screen is for (D4). Same reasoning as the suggestion's undo link.
+          // ⚠️ OPENS ON A SHORTLIST SINCE 2026-08-30 (Tim's ask), with the full
+          // 275-exercise picker one tap under it. `ex` can be undefined for a
+          // session recorded against an exercise this account no longer has, so
+          // the swap falls back to the old sheet rather than to a broken one.
           el('button', {
             class: 'swap-btn',
             title: 'Use a different exercise for this session',
-            onClick: () => openExercisePicker({
+            onClick: () => (ex ? openSwapPicker({
+              exMap,
+              current: ex,
+              inSession: state.entries.map((e) => e.exerciseId),
+              onPick: (picked) => swapExercise(step.entryIndex, picked),
+            }) : openExercisePicker({
               exMap,
               title: 'Swap this exercise',
               closeOnPick: true,
               onPick: (picked) => swapExercise(step.entryIndex, picked),
-            }),
+            })),
           }, icon('swap', 15), 'Swap'),
           // Swap's sibling (2026-08-28): drop the exercise from today entirely.
           // Same quietness, same contract — the saved workout is never touched.

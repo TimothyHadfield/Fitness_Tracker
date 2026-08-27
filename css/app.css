@@ -1033,6 +1033,27 @@ select.input {
 .person-chip.is-account svg { color: var(--accent); opacity: .85; }
 .person-chip[aria-pressed="true"].is-account svg { color: inherit; opacity: 1; }
 
+/* ⚠️ REMOVE-A-PERSON (2026-08-30) — only ever on the chip you are already
+   recording for, so a destructive control is never sitting next to the chip
+   somebody is aiming at to SWITCH. The wrapper exists because the ✕ has to be
+   a SIBLING of the chip rather than a child: a button inside a button is
+   invalid HTML and would need a stopPropagation that holds until the next
+   control is added. `.set-del` learned exactly this on the set row.
+
+   Deliberately smaller than 44px — the same call `.set-del` makes, and for the
+   same reason: this is the one control on the bar that should not be easy to
+   hit by accident. It is reachable, labelled, and two taps from anywhere. */
+.person-wrap { display: inline-flex; align-items: center; flex: none; }
+.person-wrap .person-chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.person-del {
+  display: flex; align-items: center; padding: 0 7px;
+  align-self: stretch;
+  border: 1px solid var(--accent); border-left: none;
+  border-radius: 0 999px 999px 0;
+  background: var(--accent); color: var(--accent-ink);
+}
+.person-del svg { width: 13px; height: 13px; display: block; }
+
 /* ⚠️ "Sent" is GOOD-coloured and a failure is warn-coloured, but neither is
    colour ALONE: both spell out what happened and the failed one names the way
    to retry. Rule 5's general form — never let a cue be the only carrier. */
@@ -2001,6 +2022,15 @@ a.seg {
 
 .search-results { display: flex; flex-direction: column; flex: 1; min-height: 120px; overflow-y: auto; }
 .search-results > * + * { border-top: 1px solid var(--rule-soft); }
+
+/* ⚠️ THE SWAP SHORTLIST (2026-08-30). Five rows and a way onward, so the sheet
+   is short enough not to want its own scroller — `.search-results` is written
+   for the 275-row picker and claims `flex: 1` with a 120px floor, which inside
+   a five-row sheet reserves height nothing is using. Here it sizes to content
+   and the SHEET scrolls if it ever has to. */
+.swap-lead { margin-bottom: 2px; }
+.sheet .swap-lead + .search-results { flex: none; min-height: 0; overflow: visible; }
+.swap-all { margin-top: 12px; }
 
 .toast {
   position: fixed;

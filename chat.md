@@ -5781,3 +5781,56 @@ up over the next six sessions.
 **Not verified: nobody has read it on a phone.** It is measured and screenshotted at 360 and 390 in
 both themes, and nine of the eleven rows fit one screen at 360. Whether it is pleasant to scan under
 a thumb is Tim's call.
+
+---
+
+## 2026-08-30, second pass — swap suggests alternatives, and a person can leave a workout
+
+**Tim, two asks:** *"During a workout, allow the user to also remove one of the people they're
+recording data with in case it was just a test, or an accident, or something happened."* And:
+*"categorize similar exercises together, and when the user clicks on 'swap' it will show them a few
+alternative exercises that will achieve the same or similar result… Underneath this list of
+alternative exercises, put a button that brings them to the full list."*
+
+**Swap now opens on five alternatives.** A new module groups the library into **43 movement
+families** covering 271 of 275 exercises — a family is a *movement*, not a muscle, because
+`exercises.js` already answers "what does this train" and nothing answered "what could I do
+instead". Tap one and it swaps straight away; "Show all 275 exercises" sits underneath and opens the
+sheet that was there before, unchanged.
+
+**Three things about how it was built that are worth knowing:**
+
+- **The families are hand-written, not derived from names.** Stripping "Dumbbell" or "Machine" off a
+  name and grouping the rest would have looked clever and been wrong quietly: a Dumbbell Pullover is
+  not a pullover press, Close-Grip Bench Press is a triceps builder wearing a chest exercise's name,
+  and "Cable Kickback" is two different exercises in the library — one for triceps, one for glutes.
+  A test resolves all 271 memberships to exactly one exercise each.
+- **Four exercises deliberately have no family, and a test pins that.** Hip Adduction is the opposite
+  movement to Hip Abduction on a machine that looks identical; same for Neck Curl against Neck
+  Extension. Offering one for the other would be the most misleading thing this feature could do.
+  Those fall back to "other exercises for this muscle", which the sheet labels differently.
+- **The list spreads across equipment.** Ranked naively, a leg press offered five barbell squats —
+  every one correct, all the same answer. It now covers barbell, dumbbell, machine and bodyweight,
+  which is what "the rack is taken" actually needs.
+
+**And a wording bug a screenshot caught that no test would have.** The sheet said "Same movement,
+different equipment" every time — and a Deadlift offers four barbell deadlifts under it. Correct
+rows, false caption. Single-equipment families now say "Other ways to do this movement".
+
+**Removing a person from a workout.** The ✕ appears only on the chip of the person you are currently
+recording for, so a destructive control is never sitting next to one somebody is aiming at to switch
+between people — and in the accident Tim names, the app has just switched to them anyway. Nothing
+recorded, it goes quietly; sets recorded, a confirm that says the count. Removing a *friend* also
+says their workout will no longer be sent to their account, which is a consequence outside the
+phone. Their saved name stays on the list — that is a different act with its own control.
+
+**One probe fault worth recording.** Driving the people bar in a browser, two sheets stayed open
+after adding somebody — at 390px in one run and 360px in the next, which is a race rather than a
+width. It turned out to be the draft resuming between test iterations: the second run re-entered a
+session that already held "Jordan", so adding him again was correctly refused and the sheet
+correctly stayed open. Not an app bug.
+
+**Tests: 3,433 across twelve suites** (data-layer 1728 → 1750, render 653 → 686). The first version
+of the "exactly one ✕" test was vacuous — with a single guest it passed against a mutation that put
+a ✕ on every chip — so it drives two people now. The audit gained the swap sheet, which is the first
+sheet in this app it has ever measured: 76 combinations, 7,566 text nodes, zero failures.
