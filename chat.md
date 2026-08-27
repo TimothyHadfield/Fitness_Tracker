@@ -5675,3 +5675,43 @@ buttons on the new social screens. The finish-screen test caught it because it c
 rather than reading an href.
 
 Render 628 -> 641. Audit clean over 68 routes.
+
+---
+
+# Prepared for a chat reset — 2026-08-29
+
+**Read `progress.md` top to bottom. This file only answers "what did we actually say about X".**
+
+Four passes ran this session, all on Tim's instructions:
+
+1. **The set list became the screen.** The runner was showing the same numbers twice — a big
+   detached stepper block headed SET 1 OF 4, and set 1 again in the list below it. The controls now
+   live inside whichever set is open. The digits and ± targets did not shrink; that was the
+   constraint. Also found: the session runner had never been in the accessibility audit at all.
+
+2. **Recording for a friend now reaches their account.** The guest feature and the handoff feature
+   both existed and had never touched — sending was something you went to the calendar to do, after
+   the fact. Pick a friend at the start and Finish sends it. Their suggestion is read from what they
+   already share with you and is never merged with what you recorded for them, because a doubled
+   session is what makes progression propose more weight.
+
+3. **QR codes, name search, friend requests.** Tim was told the trade first: QR and requests are
+   free, name search is not. He said "less than 5 users so just do the name search to keep it easy
+   for now and then we can work on making a different version eventually." So a public directory
+   exists and the decision it reverses is written down rather than quietly dropped. The rules test
+   asserts the enumeration as an ALLOW on purpose — that is the line that flips when the handle
+   version lands.
+
+4. **Four smaller asks**: a never-done exercise opens at 10 reps and a weight derived from the
+   lifter's own recorded lifts (never an invented "beginner" number, and marked so an untouched
+   prefill is never saved); a typed location becomes the default from then on; the finish screen
+   shows the workout and has a back arrow; and five inert back buttons were found and fixed.
+
+**What Tim should do next, in order:** confirm his calendar still shows Pull and Legs; spend ten
+minutes with Autumn actually using search → request → accept → record-for-a-friend, because none of
+that has ever been done by two real people; and say whether the blue box round the profile picture
+is still there (a real bug was found and fixed in that exact spot, but a *blue* one was never
+reproduced, so a screenshot would settle it).
+
+**Standing instructions that survive this reset**: the PINNED list and the DECLINED rest-timer list
+in `progress.md`. Do not offer either as the next thing to do.
