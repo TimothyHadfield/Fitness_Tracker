@@ -404,7 +404,23 @@ function dataTabs(active, onChartMode) {
 function handoffRow(guest, date) {
   return el('button', {
     class: 'btn small block', text: `Send this to ${guest.guestName}`,
-    onClick: async () => {
+    onClick: async (ev) => {
+      /* ⚠️ A RECORD THAT ALREADY KNOWS WHOSE IT IS DOES NOT ASK AGAIN.
+       * Since 2026-08-29 a session recorded for a FRIEND carries their uid, so
+       * the chooser below would be asking a question the row has already
+       * answered — and offering the chance to send somebody's training to the
+       * wrong person. The chooser stays for rows recorded for a guest, where
+       * there genuinely is nothing to go on but a typed name. */
+      if (guest.forUid) {
+        const btn = ev.currentTarget;
+        btn.disabled = true;
+        try {
+          await social.offerSession(guest.forUid, guest, guest.guestName);
+          toast(`Sent to ${guest.guestName}.`);
+        } catch (err) { toast(err.message); }
+        btn.disabled = false;
+        return;
+      }
       let state;
       try { state = await social.state(); } catch (_) { state = { available: false }; }
       if (!state.available || !state.connections.length) {

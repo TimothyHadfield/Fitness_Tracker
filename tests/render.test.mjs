@@ -2536,14 +2536,27 @@ ok(!data.querySelector('.rep-target'),
   const addBtn = chips().find((b) => /Add a person/.test(b.textContent));
   ok(Boolean(addBtn), 'adding a person is offered in words while the session is solo');
 
-  // Add Alex through the sheet.
-  addBtn.click(); await settle();
+  /* Add Alex through the sheet.
+   *
+   * ⚠️ TWO STEPS SINCE 2026-08-29, and the extra one is the point of the
+   * change: the sheet now leads with the people who already have accounts, and
+   * inventing a name is the deliberate second choice rather than the only one.
+   * `openSheet` stacks, so the inner sheet is the LAST `.sheet` in the DOM. */
+  addBtn.click(); await settle(); await settle();
   const sheet = document.querySelector('.sheet');
   ok(Boolean(sheet), 'add-a-person opens a sheet');
-  ok(/no account|need an account/i.test(sheet.textContent),
+  ok(/Your friends/i.test(sheet.textContent),
+     '⚠️ and it leads with FRIENDS — the people who have accounts, which is what Tim '
+     + 'wanted this feature for');
+  const newBtn = [...sheet.querySelectorAll('button')]
+    .find((b) => /Someone new/.test(b.textContent));
+  ok(Boolean(newBtn), 'with inventing a name offered below them, for somebody with no account');
+  newBtn.click(); await settle();
+  const inner = [...document.querySelectorAll('.sheet')].pop();
+  ok(/no account/i.test(inner.textContent),
      'the sheet says a guest needs no account and where their sets are kept');
-  sheet.querySelector('input').value = 'Alex';
-  [...sheet.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+  inner.querySelector('input').value = 'Alex';
+  [...inner.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
   await settle(); await settle();
 
   const alexChip = chips().find((b) => b.textContent.trim() === 'Alex');
@@ -2593,6 +2606,151 @@ ok(!data.querySelector('.rep-target'),
   ok(/Also recorded for Alex/.test(document.getElementById('app').textContent),
      'the finish screen says the guest\'s half was saved too');
   ok(localStorage.getItem(DRAFT) === null, 'the draft is cleared after a multi-person save');
+
+  /* ⚠️ AND THE IDENTITY PERSISTS. Tim, 2026-08-29: *"if you do create a new
+   * person to your account, save them as an identity so you don't have to
+   * recreate the same person over and over again each time you add them to a
+   * workout."* Saved at the moment the name is typed, not at Finish — so an
+   * abandoned session still costs the typing only once. */
+  const roster = await store.getPeople();
+  ok(roster.some((p) => p.name === 'Alex'),
+     '⚠️ Alex is saved to the roster, so next time he is one tap rather than typed again');
+  const alexRow = roster.find((p) => p.name === 'Alex');
+  ok(gs[0].personId === alexRow.id,
+     'and his session is filed under the identity\'s ID, not matched on the free text of his name');
+}
+
+/* ============ recording for a FRIEND, and sending it to their account ============
+ *
+ * Tim, 2026-08-29: *"my main want for this feature was so that one person could
+ * record the details for two+ people that do have accounts… look up one of your
+ * current friends and add them… then, once you're finished with the workout it
+ * will send the workout to that user's account where they can accept it."*
+ *
+ * The load-bearing assertions are the two SEPARATIONS plus the send: their sets
+ * never reach the owner's own training, the offer carries their uid, and — the
+ * one that matters most — a FAILED send never costs the recording.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { social } = await import(BASE + 'store.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const original = { state: social.state, friend: social.friend, offerSession: social.offerSession };
+  const restore = () => Object.assign(social, original);
+
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me',
+    name: 'Tim', shareBodyWeight: false,
+    connections: [{ uid: 'u-autumn', name: 'Autumn', tier: 'mid', since: '2026-08-01' }],
+  });
+  // What she shares: a real session of her own, at the tier that carries sets.
+  social.friend = async () => ({ tier: 'mid', doc: { activity: [{
+    id: 'her-1', date: '2026-08-20', name: 'Push',
+    entries: [{ exerciseId: byName('Barbell Bench Press').id, name: 'Barbell Bench Press',
+                sets: [{ weight: 115, reps: 8 }] }],
+  }] } });
+  const offers = [];
+  social.offerSession = async (uid, session, name) => { offers.push({ uid, session, name }); return true; };
+
+  const w2 = await store.saveWorkout({
+    name: 'Friend bench day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s2 = await mount(SessionView(w2.id));
+
+  const chips2 = () => [...s2.querySelectorAll('.person-chip')];
+  chips2().find((b) => /Add a person/.test(b.textContent)).click();
+  await settle(); await settle();
+  const sheet2 = document.querySelector('.sheet');
+  const autumnBtn = [...sheet2.querySelectorAll('button')].find((b) => /Autumn/.test(b.textContent));
+  ok(Boolean(autumnBtn), '⚠️ a friend can be picked straight off the list — no name to invent');
+  ok(/sent to them when you finish/i.test(sheet2.textContent),
+     'and the row says what picking them will do, before it is done');
+  autumnBtn.click();
+  await settle(); await settle();
+
+  const autumnChip = chips2().find((b) => /Autumn/.test(b.textContent));
+  ok(Boolean(autumnChip) && autumnChip.getAttribute('aria-pressed') === 'true',
+     'picking them adds them and switches to recording for them');
+  ok(autumnChip.classList.contains('is-account'),
+     '⚠️ their chip is marked as an account, because a friend\'s sets are going somewhere '
+     + 'a guest\'s are not — and that is worth knowing BEFORE you finish');
+
+  /* ⚠️ THE SUGGESTION IS BUILT FROM HER OWN TRAINING, not from the owner's and
+   * not from nothing. This is the "switching names has to switch the whole
+   * suggestion" rule (0e) reaching the case it was written for. */
+  ok(/Last time/.test(s2.textContent) && /115/.test(s2.textContent),
+     '⚠️ the screen prefills from HER shared training — 115, which is hers, not the owner\'s');
+  ok(/training they share with you/i.test(s2.textContent),
+     'and it says where that came from, so a blank one would be explainable rather than broken');
+
+  const fw = s2.querySelector('.step-value');
+  fw.value = '120';
+  fw.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+
+  chips2().find((b) => b.textContent.trim() === 'You').click();
+  await settle();
+  const ow = s2.querySelector('.step-value');
+  ow.value = '185';
+  ow.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...s2.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle(); await settle();
+
+  ok(offers.length === 1 && offers[0].uid === 'u-autumn',
+     '⚠️ finishing OFFERS her half to her account, addressed by uid rather than by her name');
+  ok(offers[0].session.entries[0].sets[0].weight === 120,
+     'and what is offered is what she lifted');
+  const mine = (await store.getSessions()).find((x) => x.workoutId === w2.id);
+  const mySets = (mine ? mine.entries : []).flatMap((e) => e.sets || []);
+  ok(mySets.length && mySets.every((set) => set.weight !== 120),
+     '⚠️ while none of hers is in the owner\'s own session');
+  const herRow = (await store.getGuestSessions()).find((g) => g.workoutId === w2.id);
+  ok(herRow && herRow.forUid === 'u-autumn',
+     'the recorder keeps their own copy, stamped with whose it was');
+  ok(/Sent to Autumn/.test(document.getElementById('app').textContent),
+     'and the finish screen says it was sent, and that she adds it herself');
+
+  /* ⚠️ THE ONE THAT MATTERS MOST: A FAILED SEND MUST NOT COST THE RECORDING.
+   * The offer is a network write to somebody else's account and no signal in a
+   * gym is the normal case. Telling somebody their workout was not saved, when
+   * it was, would be the worse of the two lies. */
+  social.offerSession = async () => { throw new Error('offline'); };
+  const w3 = await store.saveWorkout({
+    name: 'Friend bench day two',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s3 = await mount(SessionView(w3.id));
+  [...s3.querySelectorAll('.person-chip')].find((b) => /Add a person/.test(b.textContent)).click();
+  await settle(); await settle();
+  [...document.querySelector('.sheet').querySelectorAll('button')]
+    .find((b) => /Autumn/.test(b.textContent)).click();
+  await settle(); await settle();
+  const fw3 = s3.querySelector('.step-value');
+  fw3.value = '125';
+  fw3.dispatchEvent(new window.Event('blur', { bubbles: false }));
+  await settle();
+  [...s3.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle(); await settle();
+
+  const failRow = (await store.getGuestSessions()).find((g) => g.workoutId === w3.id);
+  ok(Boolean(failRow) && failRow.entries[0].sets[0].weight === 125,
+     '⚠️ the send failed and her workout is STILL SAVED on this phone — a failed offer costs '
+     + 'a tap on the calendar, never somebody\'s training');
+  const finText = document.getElementById('app').textContent;
+  ok(/Not sent/.test(finText),
+     'the finish screen says so plainly rather than reporting success it did not have');
+  ok(/Send this to Autumn/.test(finText),
+     'and it names the way to retry, in the same line — otherwise it reads as work lost');
+  ok(localStorage.getItem(DRAFT) === null,
+     '⚠️ and the draft is still cleared: the SAVE worked, and only the send did not');
+
+  restore();
+  localStorage.removeItem(DRAFT);
 }
 
 /* ================= location on a session (0m) =================

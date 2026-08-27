@@ -1,6 +1,6 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, todayISO, demo, uid } from './store.js';
+import { store, social, todayISO, demo, uid } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
@@ -227,6 +227,11 @@ export async function SessionView(workoutId) {
     if (!Array.isArray(state.guestNames)) state.guestNames = [];
     if (state.forName === undefined) state.forName = null;
     if (typeof state.location !== 'string') state.location = '';
+    // Drafts written before 2026-08-29 have no personMeta, which is exactly
+    // right for them: every name in one is an invented guest with no account,
+    // and an empty meta is what that means. A workout in progress across the
+    // deploy therefore keeps working and simply sends nothing.
+    if (!state.personMeta || typeof state.personMeta !== 'object') state.personMeta = {};
   } else {
     state = {
       workoutId: workout.id,
@@ -254,6 +259,12 @@ export async function SessionView(workoutId) {
       forName: null,
       guestNames: [],
       others: [],
+      /* Who each name in `guestNames` actually IS — `{ uid }` for a friend
+       * whose account this gets offered to at Finish, `{ personId }` for a
+       * saved identity with no account, `{}` for a name typed and not saved.
+       * Keyed by name because addPerson() refuses duplicates within a session;
+       * the keys that reach disk are personId and uid. */
+      personMeta: {},
     };
 
     // Read once for the whole workout rather than per exercise. The runner used
@@ -309,26 +320,125 @@ export async function SessionView(workoutId) {
   // and it is the only thing in this view that persists an error.
   const saveError = el('div', { class: 'save-error', role: 'alert', hidden: true });
 
-  /* ---- people: the owner plus any guests (Open work 0e, guest half) ----
+  /* ---- people: the owner plus anyone training with them (Open work 0e) ----
    *
    * Tim, 2026-08-24: "one person can record both measurements for both people
    * on one phone … 2+ names at the top that the user could click on to switch
    * between which user they are recording the data to." His friend could not
-   * sign in at all, so the first half built is the GUEST: a name with no
-   * account, kept in the recorder's own data (store.guestSessions), no rules
-   * widened, nothing written into anybody else's account.
+   * sign in at all, so the first half built was the GUEST: a name with no
+   * account, kept in the recorder's own data (store.guestSessions).
+   *
+   * ⚠️ 2026-08-29 — TIM'S ACTUAL WANT, and it is the other half: *"my main want
+   * for this feature was so that one person could record the details for two+
+   * people that do have accounts… look up one of your current friends and add
+   * them to your workout instead of inventing someone new. Then, once you're
+   * finished with the workout it will send the workout to that user's account
+   * where they can accept it."*
+   *
+   * So a person in this session is now one of three things, and `personMeta`
+   * carries which:
+   *
+   *   • the OWNER            — `forName === null`
+   *   • a SAVED PERSON       — `{ personId }`, an invented identity that
+   *                            persists between workouts (store.people)
+   *   • a FRIEND             — `{ uid }`, a real account. Their half is
+   *                            OFFERED to them at Finish (store.offerSession),
+   *                            which they accept on their own device.
+   *
+   * ⚠️ `personMeta` IS KEYED BY NAME, and that is safe only because addPerson()
+   * refuses a duplicate name within a session — every other place in this
+   * project that keys on a typed name carries a warning about it, so this one
+   * says why it is allowed: the keyspace is one workout, not the whole account.
+   * The persistent keys are `personId` and `uid`, and those are what reach disk.
    */
 
   const peopleBar = el('div', { class: 'people-bar' });
+
+  const metaFor = (name) => (name == null ? null : (state.personMeta || {})[name] || {});
+
+  /**
+   * The guest rows on THIS account that belong to one person.
+   *
+   * ⚠️ Matched by id where there is one and by NAME only as a fallback, because
+   * every row written before 2026-08-29 has a name and nothing else. Name
+   * matching is what this project warns about everywhere else ("Alex", "alex",
+   * "my brother") — it is kept here as a migration path for rows already on
+   * disk, never as the primary key.
+   */
+  function guestRowsFor(all, name) {
+    const meta = metaFor(name) || {};
+    if (meta.uid) return all.filter((g) => g.forUid === meta.uid);
+    const key = String(name || '').trim().toLowerCase();
+    return all.filter((g) => (meta.personId && g.personId === meta.personId)
+      || (!g.personId && !g.forUid
+          && String(g.guestName || '').trim().toLowerCase() === key));
+  }
+
+  /**
+   * A friend's own training, read from what they have SHARED WITH THIS ACCOUNT.
+   *
+   * ⚠️ Nothing private is reached. This is the same published projection the
+   * Friends tab renders, under the same rules — so what comes back is bounded
+   * by the tier THEY chose, and at the default tier ("just that I trained") it
+   * carries no sets at all and this returns null.
+   *
+   * ⚠️ AND IT IS NEVER MERGED WITH THE ROWS I RECORDED FOR THEM. A session I
+   * recorded and they accepted exists on both sides with DIFFERENT ids (accept
+   * mints a fresh one), so a merge would show the same workout twice — and
+   * progression reads the last two sessions of a lift, so a doubled session is
+   * "you did that weight twice in a row", which is the input that makes it
+   * propose MORE WEIGHT. That is the one thing in this app that can hurt
+   * somebody. One source, and their own account wins.
+   */
+  async function sharedSessionsFor(uid) {
+    if (!uid) return null;
+    let doc = null;
+    try { ({ doc } = await social.friend(uid)); } catch (_) { return null; }
+    const rows = (doc && Array.isArray(doc.activity) ? doc.activity : [])
+      .filter((a) => a && Array.isArray(a.entries))
+      .map((a) => ({
+        id: a.id,
+        date: a.date,
+        workoutName: a.name,
+        startedAt: a.startedAt,
+        // ⚠️ NO workoutId — the projection does not publish one, so
+        // scanSessions() falls through to "this exercise anywhere", which is
+        // the correct answer rather than a degraded one: their bench press is
+        // their bench press whichever of their programmes it was in.
+        entries: (a.entries || []).map((e) => ({
+          exerciseId: e.exerciseId,
+          exerciseName: e.name,
+          group: e.group == null ? null : e.group,
+          setType: e.setType || null,
+          sets: Array.isArray(e.sets) ? e.sets : [],
+        })),
+      }));
+    return rows.length ? rows : null;
+  }
+
+  /**
+   * One person's history, and WHERE IT CAME FROM — the caller puts that on the
+   * screen, because "no suggestion" for a reason you cannot see reads as broken.
+   */
+  async function historyForPerson(name) {
+    const meta = metaFor(name) || {};
+    if (meta.uid) {
+      const shared = await sharedSessionsFor(meta.uid);
+      if (shared) return { sessions: shared, source: 'theirs' };
+      const all = await store.getGuestSessions().catch(() => []);
+      return { sessions: guestRowsFor(all, name), source: 'mine-only' };
+    }
+    const all = await store.getGuestSessions().catch(() => []);
+    return { sessions: guestRowsFor(all, name), source: 'mine' };
+  }
 
   // The active person's history, for the exercise swap. A guest's swap must
   // read the guest's own past sessions, or the swapped-in exercise arrives
   // wearing the OWNER's numbers — the exact cross-prescription 0e forbids.
   async function sessionsForActive() {
     if (state.forName == null) return store.getSessions();
-    const all = await store.getGuestSessions();
-    const key = state.forName.trim().toLowerCase();
-    return all.filter((g) => String(g.guestName || '').trim().toLowerCase() === key);
+    const { sessions } = await historyForPerson(state.forName);
+    return sessions;
   }
 
   function switchTo(name) {
@@ -343,35 +453,51 @@ export async function SessionView(workoutId) {
       entries: state.entries,
       index: state.index,
       bodyWeight: state.bodyWeight,
+      historySource: state.historySource || null,
     });
     state.forName = incoming.name;
     state.entries = incoming.entries;
     state.index = incoming.index || 0;
     state.bodyWeight = incoming.bodyWeight == null ? null : incoming.bodyWeight;
+    // Parked with the rest of the per-person state, because it is per person:
+    // it is the answer to "where did this suggestion come from", and that
+    // answer is different for the owner, a friend and a name on this phone.
+    state.historySource = incoming.historySource || null;
     saveDraft(state);
     renderAll();
   }
 
-  async function addGuest(rawName) {
+  /**
+   * Put somebody in this workout.
+   *
+   * `meta` is `{ uid }` for a friend, `{ personId }` for a saved identity, or
+   * empty for a name that has not been saved yet.
+   */
+  async function addPerson(rawName, meta = {}) {
     const name = String(rawName || '').trim();
     if (!name) { toast('Give them a name first'); return false; }
     if (name.length > 40) { toast('That name is too long'); return false; }
     const taken = ['you', 'me', ...state.guestNames.map((n) => n.toLowerCase())];
     if (taken.includes(name.toLowerCase())) { toast(`${name} is already in this workout`); return false; }
 
-    // The guest's own history, so their second session arrives with their own
-    // numbers and their own suggestion — not blank, and never the owner's.
-    const all = await store.getGuestSessions().catch(() => []);
-    const key = name.toLowerCase();
-    const theirs = all.filter((g) => String(g.guestName || '').trim().toLowerCase() === key);
+    if (!state.personMeta) state.personMeta = {};
+    state.personMeta[name] = {
+      ...(meta.uid ? { uid: meta.uid } : {}),
+      ...(meta.personId ? { personId: meta.personId } : {}),
+    };
 
+    // Their own history, so their second session arrives with their own numbers
+    // and their own suggestion — not blank, and never the owner's.
+    const { sessions, source } = await historyForPerson(name);
     state.guestNames.push(name);
     state.others.push({
       name,
-      entries: entriesFor(theirs, null, state.date),
+      entries: entriesFor(sessions, null, state.date),
       index: 0,
       bodyWeight: null,
+      historySource: source,
     });
+
     saveDraft(state);
     // Adding somebody is followed by logging their first set, so the switch
     // is part of the add rather than a second tap.
@@ -379,28 +505,146 @@ export async function SessionView(workoutId) {
     return true;
   }
 
-  function openAddGuest() {
-    const input = el('input', {
-      class: 'input', type: 'text', placeholder: 'Their name',
-      'aria-label': 'Guest name', maxlength: '40', autocomplete: 'off',
-    });
-    const { close } = openSheet({
-      title: 'Add a person',
-      body: el('div', {},
-        el('p', { class: 'field-help', style: 'margin-top:0', text:
-          'Record this workout for somebody training with you. They do not '
-          + 'need an account — their sets are kept on your account, under '
-          + 'their name, and never mix with your own training or your stats.' }),
-        el('div', { class: 'field' }, el('label', { text: 'Name' }), input),
-      ),
-      footer: el('div', { class: 'btn-row' },
-        el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
-        el('button', { class: 'btn primary', text: 'Add', onClick: async () => {
-          if (await addGuest(input.value)) close();
-        } }),
-      ),
-    });
-    input.focus();
+  /**
+   * ⚠️ THE PICKER LEADS WITH FRIENDS, and that is Tim's whole point: the common
+   * case is two people who both have accounts, and inventing a name for
+   * somebody who already has one is exactly the mistake this screen used to
+   * force. Typing a name is still there, one tap down, for the training partner
+   * who has no account — which is the case the guest half was built for.
+   *
+   * ⚠️ THE TWO LISTS COME FROM DIFFERENT PLACES ON PURPOSE. Friends are read
+   * live off the friends list every time; saved people come off this account.
+   * Copying a friend into the saved roster would be copying a name that goes
+   * stale the day they rename themselves — and their uid already identifies
+   * them better than any label could.
+   */
+  function openAddPerson() {
+    const already = new Set(state.guestNames.map((n) => n.toLowerCase()));
+    const body = el('div', { class: 'list' });
+    const { close } = openSheet({ title: 'Who is training with you?', body });
+
+    const nameRow = (label, sub, onPick, extra) => el('div', { class: 'person-pick' },
+      el('button', {
+        class: 'row', style: 'flex:1;min-width:0;text-align:left',
+        onClick: async (e) => {
+          e.currentTarget.disabled = true;
+          if (await onPick()) close(); else e.currentTarget.disabled = false;
+        },
+      }, el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: label }),
+        // ⚠️ `.wrap`, because `.row-sub` is nowrap-with-an-ellipsis and this
+        // line is the one that says what the tap will DO. Measured at 360px
+        // without it: "their workout is sent to them at the e…" — the half
+        // that matters, cut. Exactly the fault found on the visibility sheet
+        // on 2026-08-18 ("…your muscle map and your pr…").
+        sub ? el('div', { class: 'row-sub wrap', text: sub }) : null)),
+      extra || null,
+    );
+
+    function typeANameSheet() {
+      const input = el('input', {
+        class: 'input', type: 'text', placeholder: 'Their name',
+        'aria-label': 'Their name', maxlength: '40', autocomplete: 'off',
+      });
+      const sheet = openSheet({
+        title: 'Someone new',
+        body: el('div', {},
+          el('p', { class: 'field-help', style: 'margin-top:0', text:
+            'For somebody with no account. Their sets are kept here, on your '
+            + 'account, under their name — never mixed into your own training '
+            + 'or your stats. They are saved to your list, so next time they '
+            + 'are one tap.' }),
+          el('div', { class: 'field' }, el('label', { text: 'Name' }), input),
+        ),
+        footer: el('div', { class: 'btn-row' },
+          el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => sheet.close() }),
+          el('button', { class: 'btn primary', text: 'Add', onClick: async () => {
+            const name = String(input.value || '').trim();
+            if (!name) { toast('Give them a name first'); return; }
+            // ⚠️ SAVED BEFORE THEY ARE ADDED, so the identity exists even if
+            // this session is abandoned — "I typed their name once" is the
+            // whole of what Tim asked to stop happening twice. A failure to
+            // save the identity must NOT stop the workout: they still join,
+            // just unsaved.
+            let personId = null;
+            try {
+              // savePerson() is idempotent by name, so re-typing somebody who
+              // is already on the list returns THEIR identity rather than a
+              // second one — the dedupe is in the store, where the next caller
+              // gets it for free.
+              personId = (await store.savePerson({ name })).id;
+            } catch (_) { /* the roster is a convenience; the workout is not */ }
+            if (await addPerson(name, personId ? { personId } : {})) { sheet.close(); close(); }
+          } }),
+        ),
+      });
+      input.focus();
+    }
+
+    // Painted immediately with what needs no network, then filled in — the
+    // shape views-social.js uses, and for the same reason: a sheet that waits
+    // on the cloud before showing anything is a sheet that feels broken in a
+    // gym basement.
+    setChildren(body,
+      el('div', { class: 'field-help', style: 'margin-top:0', text: 'Loading…' }));
+
+    (async () => {
+      // ⚠️ NOT named `social` — that is the imported module, and destructuring
+      // over it shadows the import for the whole scope, putting the very call
+      // on the line above into the temporal dead zone. Caught by the tests.
+      const [people, net] = await Promise.all([
+        store.getPeople().catch(() => []),
+        social.state().catch(() => ({ available: false, connections: [] })),
+      ]);
+      const friends = (net.available ? net.connections || [] : [])
+        .filter((c) => c.uid && !already.has(String(c.name || '').trim().toLowerCase()));
+      const saved = people.filter((p) => !already.has(p.name.trim().toLowerCase()));
+
+      const rows = [];
+
+      rows.push(el('div', { class: 'section-label', text: 'Your friends' }));
+      if (friends.length) {
+        rows.push(...friends.map((c) => nameRow(
+          c.name || 'Friend',
+          'Has an account — their workout is sent to them when you finish',
+          () => addPerson(c.name || 'Friend', { uid: c.uid }),
+        )));
+      } else {
+        rows.push(el('div', { class: 'field-help', text: social.available
+          ? 'Nobody yet. Connect on the Friends tab and they show up here.'
+          : 'Sign in and connect with somebody on the Friends tab to record for them.' }));
+      }
+
+      if (saved.length) {
+        rows.push(el('div', { class: 'section-label', text: 'People you record for' }));
+        rows.push(...saved.map((p) => nameRow(p.name, 'No account — kept on your phone',
+          () => addPerson(p.name, { personId: p.id }),
+          // Delete is a SIBLING of the row button, never a child — the same
+          // rule the set list follows, for the same two reasons: nesting is
+          // invalid HTML, and a stopPropagation guard works until somebody
+          // adds the next control.
+          el('button', {
+            class: 'set-del', 'aria-label': `Remove ${p.name} from your list`,
+            onClick: () => confirmSheet({
+              title: `Remove ${p.name}?`,
+              message: 'This only takes them off this list. Every workout you '
+                + 'recorded for them stays on your calendar exactly as it is.',
+              confirmLabel: 'Remove',
+              onConfirm: async () => {
+                await store.deletePerson(p.id);
+                toast(`${p.name} removed from your list`);
+                close();
+              },
+            }),
+          }, icon('trash')))));
+      }
+
+      rows.push(el('button', {
+        class: 'btn block', style: 'margin-top:10px', onClick: typeANameSheet,
+      }, icon('plus', 15), 'Someone new'));
+
+      setChildren(body, ...rows);
+    })();
   }
 
   function renderPeople() {
@@ -413,16 +657,24 @@ export async function SessionView(workoutId) {
         'aria-pressed': state.forName == null ? 'true' : 'false',
         onClick: () => switchTo(null),
       }, 'You'),
-      ...state.guestNames.map((n) =>
-        el('button', {
-          class: 'chip person-chip',
+      ...state.guestNames.map((n) => {
+        // ⚠️ A FRIEND'S CHIP SAYS SO, because the two are not the same promise.
+        // A guest's sets stop here; a friend's are going to be offered to their
+        // account at Finish, and somebody switching between two names deserves
+        // to know which of those they are typing into BEFORE they finish rather
+        // than on the summary screen.
+        const meta = metaFor(n) || {};
+        return el('button', {
+          class: 'chip person-chip' + (meta.uid ? ' is-account' : ''),
           'aria-pressed': state.forName === n ? 'true' : 'false',
+          title: meta.uid ? `${n} has an account — this is sent to them at the end` : null,
           onClick: () => switchTo(n),
-        }, n)),
+        }, meta.uid ? icon('person', 12) : null, n);
+      }),
       el('button', {
         class: 'chip person-chip person-add',
         'aria-label': 'Add a person to record for',
-        onClick: openAddGuest,
+        onClick: openAddPerson,
       }, icon('plus', 13), solo ? 'Add a person' : ''),
     );
   }
@@ -939,6 +1191,20 @@ export async function SessionView(workoutId) {
         entry.swappedFrom
           ? el('div', { class: 'session-ex-meta', text: `Swapped in for ${entry.swappedFrom} — today only.` })
           : null,
+        /* ⚠️ WHOSE NUMBERS THESE ARE, AND WHERE THEY CAME FROM (2026-08-29).
+         * Recording for somebody else, the suggestion on this screen is about
+         * THEM — and the three sources are not equally good. Saying which one
+         * is in use is what stops "First time logging this" reading as a bug
+         * for a friend who has trained for years but shares only the day and
+         * the workout's name with you. D8: say it where it is being acted on. */
+        state.forName == null ? null : el('div', { class: 'for-note' },
+          el('b', { text: `Recording for ${state.forName}` }),
+          state.historySource === 'theirs'
+            ? ' · suggestions read from the training they share with you.'
+            : state.historySource === 'mine-only'
+              ? ' · they have not shared their training with you, so this starts '
+                + 'from what you record for them here. Their workout still goes to them at the end.'
+              : ' · kept on your phone, never mixed into your own training.'),
       ),
 
       entry.notes
@@ -1323,7 +1589,7 @@ export async function SessionView(workoutId) {
     const owner = people.find((p) => p.name == null) || { entries: [] };
     const guests = people
       .filter((p) => p.name != null)
-      .map((p) => ({ name: p.name, cleaned: cleanedEntriesOf(p.entries) }))
+      .map((p) => ({ name: p.name, meta: metaFor(p.name) || {}, cleaned: cleanedEntriesOf(p.entries) }))
       .filter((p) => p.cleaned.length);
 
     const cleaned = cleanedEntriesOf(owner.entries);
@@ -1405,9 +1671,12 @@ export async function SessionView(workoutId) {
       // never into `sessions`, never a benchmark, never published (see the
       // guest-sessions note in store.js for why the separation is structural).
       for (const g of guests) {
-        await store.saveGuestSession({
+        g.row = await store.saveGuestSession({
           id: state.saveIds['g:' + g.name],
           guestName: g.name,
+          // Who this really was, so a later read does not have to match a name.
+          ...(g.meta.personId ? { personId: g.meta.personId } : {}),
+          ...(g.meta.uid ? { forUid: g.meta.uid } : {}),
           workoutId: state.workoutId,
           workoutName: state.workoutName,
           date: state.date,
@@ -1420,6 +1689,40 @@ export async function SessionView(workoutId) {
       saveFailed(err);
       return;
     }
+
+    /* ⚠️ SENDING HAPPENS AFTER EVERYTHING IS SAFELY SAVED, AND IT MAY NEVER
+     * BLOCK THE FINISH. Tim, 2026-08-29: *"once you're finished with the
+     * workout it will send the workout to that user's account where they can
+     * accept it."*
+     *
+     * The offer is a network write to somebody else's account, so it is the
+     * most likely thing on this screen to fail — no signal in a gym basement is
+     * the normal case, not the exception. The guest row is already on disk by
+     * the time this runs, which means a failed send costs a tap on the calendar
+     * ("Send this to …" has existed since 2026-08-27) and never a lost workout.
+     * ⚠️ So this is deliberately NOT inside the try that calls saveFailed():
+     * telling somebody their workout was not saved, when it was, would be the
+     * worse lie of the two.
+     *
+     * The id is deterministic on the guest row, so sending twice is one offer —
+     * which is what makes the manual re-send safe after a failure here.
+     */
+    for (const g of guests) {
+      if (!g.meta.uid || !g.row) continue;
+      try {
+        await social.offerSession(g.meta.uid, g.row, g.name);
+        g.sent = true;
+      } catch (err) {
+        g.sent = false;
+        g.sendError = (err && err.message) || 'Could not send it just now.';
+      }
+    }
+
+    // The roster is a convenience and its failure is not worth a word on
+    // screen — but stamping it is what puts the people you actually train with
+    // at the top of the picker next time.
+    store.touchPeople(guests.map((g) => g.meta.personId).filter(Boolean))
+      .catch(() => {});
 
     clearDraft();
     showFinished(cleaned, guests, prs);
@@ -1470,9 +1773,24 @@ export async function SessionView(workoutId) {
         entries.length
           ? el('p', { text: `${state.workoutName} · ${entries.length} exercise${entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` })
           : el('p', { text: `${state.workoutName} — nothing recorded for you` }),
+        /* ⚠️ EACH PERSON'S LINE SAYS WHERE THEIR WORKOUT WENT, because the two
+         * destinations are genuinely different promises and the difference is
+         * invisible otherwise. A saved person's sets stop on this phone. A
+         * friend's have been OFFERED to their account and are not theirs until
+         * they tap Add — saying "sent" without saying "to accept" would have
+         * the recorder believe it landed. And a FAILED send has to name the way
+         * out, in the same line, or it reads as work lost. */
         ...guests.map((g) => {
           const gs = g.cleaned.reduce((n, e) => n + e.sets.length, 0);
-          return el('p', { text: `Also recorded for ${g.name} — ${g.cleaned.length} exercise${g.cleaned.length === 1 ? '' : 's'} · ${gs} set${gs === 1 ? '' : 's'}` });
+          const head = `Also recorded for ${g.name} — ${g.cleaned.length} exercise${g.cleaned.length === 1 ? '' : 's'} · ${gs} set${gs === 1 ? '' : 's'}`;
+          if (!g.meta || !g.meta.uid) return el('p', { text: head });
+          return el('p', {}, head,
+            g.sent
+              ? el('span', { class: 'sent-note' }, ' · ',
+                  el('b', { text: `Sent to ${g.name}` }), ' to add to their own training.')
+              : el('span', { class: 'is-warn' }, ' · ',
+                  el('b', { text: 'Not sent.' }),
+                  ` ${g.sendError || ''} Their sets are safe here — open this day on the calendar and tap “Send this to ${g.name}”.`));
         }),
         el('p', { text: `Saved to ${fmtDateLong(state.date)}` }),
       ),

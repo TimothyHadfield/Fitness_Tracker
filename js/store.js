@@ -17,7 +17,7 @@ const NS = 'ftrack:v1:';
 
 // ⚠️ Adding a collection here also requires adding it to knownCollection() in
 // firestore.rules and redeploying, or every cloud write to it is denied.
-const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals', 'guestSessions'];
+const COLLECTIONS = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings', 'bodyWeight', 'systems', 'goals', 'guestSessions', 'people'];
 
 /* ------------------------------------------------------------------ *
  * Local backend
@@ -1102,6 +1102,94 @@ export const store = {
   async deleteGuestSession(id) {
     const rows = await backend.read('guestSessions');
     await backend.write('guestSessions', rows.filter((r) => r.id !== id));
+  },
+
+  /* --- people: the roster you record for ---
+   *
+   * Tim, 2026-08-29: *"if you do create a new person to your account, save them
+   * as an identity so you don't have to recreate the same person over and over
+   * again each time you add them to a workout."*
+   *
+   * ⚠️ THIS HOLDS INVENTED PEOPLE ONLY — the training partner with no account.
+   * A FRIEND is never copied in here: they come live off the friends list every
+   * time, because a saved copy of somebody's name is a copy that goes stale the
+   * day they rename themselves, and their uid already identifies them perfectly.
+   * Two sources in the picker is the honest shape; one source with a stale half
+   * is not.
+   *
+   * ⚠️ AN IDENTITY IS NOT A RECORD OF TRAINING. Deleting a person deletes the
+   * name off the roster and NOTHING else — every session recorded for them stays
+   * in `guestSessions` and on the calendar, because it is a record of work that
+   * was really done and does not become untrue when the label is thrown away.
+   * Same argument D22 makes about deleting a system.
+   *
+   * Person  id, name, createdAt, lastUsedAt
+   */
+
+  /** Most recently recorded-for first, so the picker's top row is the likely one. */
+  async getPeople() {
+    const rows = await readCached('people');
+    return rows.slice().sort((a, b) =>
+      String(b.lastUsedAt || b.createdAt || '').localeCompare(String(a.lastUsedAt || a.createdAt || '')));
+  },
+
+  /**
+   * ⚠️ IDEMPOTENT BY NAME when no id is given — adding "Alex" twice returns the
+   * SAME identity rather than a second one.
+   *
+   * The guard lives here rather than at the call site on purpose. A
+   * check-then-create in the view fixes today's caller and nothing about the
+   * next one, and the failure it prevents is not loud: two "Alex" rows in the
+   * picker, each holding half his training, with no way to tell them apart.
+   * The same argument associateLabels() makes about guarding at call sites.
+   *
+   * Renaming is still possible — pass the id, and the name goes wherever you
+   * put it.
+   */
+  async savePerson(person) {
+    const rows = await backend.read('people');
+    const row = { ...person };
+    row.name = String(row.name || '').trim().slice(0, 40);
+    if (!row.name) throw new Error('Give them a name first.');
+    if (!row.id) {
+      const key = row.name.toLowerCase();
+      const existing = rows.find((r) => String(r.name || '').trim().toLowerCase() === key);
+      if (existing) return existing;
+      row.id = uid('p');
+    }
+    if (!row.createdAt) row.createdAt = new Date().toISOString();
+    await backend.write('people', upsert(rows, row));
+    return row;
+  },
+
+  /**
+   * Stamp everybody who was in a session, in ONE read-modify-write.
+   *
+   * ⚠️ One write, not one per person, and that is not tidiness: finish() calls
+   * this with everybody in the workout, and a loop over savePerson() would be N
+   * full reads and writes of the collection with N chances to be interrupted
+   * half-way. The same argument importRows() makes.
+   */
+  async touchPeople(ids, at) {
+    const want = new Set((Array.isArray(ids) ? ids : []).filter(Boolean));
+    if (!want.size) return 0;
+    const rows = await backend.read('people');
+    const stamp = at || new Date().toISOString();
+    let hit = 0;
+    const next = rows.map((r) => {
+      if (!want.has(r.id)) return r;
+      hit++;
+      return { ...r, lastUsedAt: stamp };
+    });
+    if (!hit) return 0;
+    await backend.write('people', next);
+    return hit;
+  },
+
+  /** Forget the name. Never the training — see the note above. */
+  async deletePerson(id) {
+    const rows = await backend.read('people');
+    await backend.write('people', rows.filter((r) => r.id !== id));
   },
 
   /* --- benchmarks --- */

@@ -1002,6 +1002,27 @@ select.input {
 .person-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
 .person-add { background: none; color: var(--ink-soft); }
 
+/* ⚠️ A FRIEND'S CHIP IS MARKED, and it is not decoration (2026-08-29). A saved
+   person's sets stop on this phone; a friend's are offered to their account at
+   Finish. Those are different promises, and somebody switching between two
+   names is entitled to know which one they are typing into before they finish
+   rather than on the summary screen. A glyph, not a colour — the chip's colour
+   already carries which person is ACTIVE, and a second meaning on the same
+   channel is how a scale stops being readable. */
+.person-chip.is-account svg { color: var(--accent); opacity: .85; }
+.person-chip[aria-pressed="true"].is-account svg { color: inherit; opacity: 1; }
+
+/* ⚠️ "Sent" is GOOD-coloured and a failure is warn-coloured, but neither is
+   colour ALONE: both spell out what happened and the failed one names the way
+   to retry. Rule 5's general form — never let a cue be the only carrier. */
+.sent-note { color: var(--good); }
+
+/* One row of the "who is training with you?" picker: the person, plus a
+   sibling remove button for a saved identity. NOT `.pick-row`, which is the
+   visibility picker and paints every svg inside it accent at 20px. */
+.person-pick { display: flex; align-items: center; gap: 6px; }
+.person-pick > .row { flex: 1; min-width: 0; }
+
 .session-progress { flex: none; display: flex; gap: 3px; padding: 7px var(--pad) 0; }
 .session-progress span { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); }
 .session-progress span.done { background: var(--good); }
@@ -3146,3 +3167,13 @@ a.row { text-decoration: none; }
 .research-notes p { margin: 0; }
 .research-notes b { color: var(--ink); }
 .research-notes a { color: var(--accent); }
+
+/* Who this screen is currently recording for, and where their suggestion came
+   from. Quiet — it is context for the numbers, not a control. */
+.for-note {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.for-note b { color: var(--ink); font-weight: 650; }

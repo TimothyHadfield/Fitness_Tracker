@@ -4,9 +4,18 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-29. **One pass has run this session** and it is the 2026-08-29 section at
-the top of the list below. Everything under it is the previous session's **seven passes**, all dated
-2026-08-28. Read them in file order (newest first). The one-paragraph version of each:
+**Last updated:** 2026-08-29. **Two passes have run this session** — the two 2026-08-29 sections at
+the top of the list below. Everything under them is the previous session's **seven passes**, all
+dated 2026-08-28. Read them in file order (newest first). The one-paragraph version of each:
+
+🆕 **0a. RECORDING FOR A FRIEND SENDS IT TO THEIR ACCOUNT (2026-08-29, second pass).** Tim: the guest
+feature's *"main want… was so that one person could record the details for two+ people that do have
+accounts."* The picker now leads with your real friends; picking one carries their **uid**, their
+suggestion is read from **the training they already share with you** (never merged with what you
+recorded for them — a doubled session is what makes progression propose more weight), and **Finish
+offers their half to their account** for them to accept. 🚨 **The send sits OUTSIDE the save's
+error path** — a failed offer must never report "not saved" over a workout that was. Invented people
+are now **saved identities**, deduped by name in the store.
 
 🆕 **0. THE WORKOUT SCREEN WAS REFORMATTED ON TIM'S INSTRUCTION (2026-08-29).** The runner was showing
 the same numbers twice — a detached block of big steppers headed `SET 1 OF 4`, and set 1 again in the
@@ -111,7 +120,7 @@ last exercise is refused.
 - ✅ **0j CLOSED** — **disconnect is mutual**. ⚠️ **Eventual, not instant**, and the sheet says so.
 - **Rules tests 66 → 92**, against the real engine. Rules deployed.
 
-**Tests: 2,953 across eleven suites** (data-layer 1437, render **574**, goals 232, bodyweight 170,
+**Tests: 2,972 across eleven suites** (data-layer 1437, render **593**, goals 232, bodyweight 170,
 social 140, a11y 85), plus **117 rules assertions in the emulator** and 12 in `sw-update`.
 Sub-agents are pre-authorised (saved to memory).
 
@@ -332,6 +341,74 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-29, second pass — ⚠️ RECORD FOR A FRIEND, AND IT GOES TO THEIR ACCOUNT
+
+Tim: *"I love how it is right now where you can have set people have their own identity on your own
+account, however my main want for this feature was so that one person could record the details for
+two+ people that do have accounts… look up one of your current friends and add them to your workout
+instead of inventing someone new. Then, once you're finished with the workout it will send the
+workout to that user's account where they can accept it… Also if you do create a new person to your
+account, save them as an identity so you don't have to recreate the same person over and over."*
+
+**Both halves of 0e finally meet.** The guest half (a name with no account, 2026-08-26) and the
+handoff half (offer → they accept, 2026-08-27) existed but never touched: the handoff was a thing you
+went to the **calendar** to do, one record at a time, after the fact. Now picking a friend at the
+start of the workout is what wires them together, and Finish does the sending.
+
+- **The picker leads with FRIENDS.** "Who is training with you?" lists your real connections first,
+  then people you record for, then *Someone new*. Picking a friend carries their **uid**, so nothing
+  is ever matched on a typed name.
+- ⚠️ **THE TWO LISTS COME FROM DIFFERENT PLACES ON PURPOSE.** Friends are read live off the friends
+  list every time; only invented people are saved to this account. Copying a friend into the saved
+  roster would be copying a **name that goes stale the day they rename themselves** — and their uid
+  already identifies them better than any label.
+- ⚠️ **A FRIEND'S SUGGESTION COMES FROM THEIR OWN TRAINING** — read from the projection they already
+  publish to you, under rules that did not change, bounded by the tier **they** chose. At the default
+  tier ("just that I trained") it carries no sets and the screen **says so** rather than reading as
+  broken. Confirmed in a browser: Autumn's 115 × 8 prefills with her own progression reasoning.
+- 🚨 **AND IT IS NEVER MERGED WITH WHAT I RECORDED FOR THEM.** A session I recorded and they accepted
+  exists on both sides with **different ids** (accept mints a fresh one), so a merge shows the same
+  workout twice — and progression reads the last two sessions of a lift, so a doubled session is
+  *"you did that weight twice in a row"*, which is the input that makes it **propose more weight**.
+  That is the one thing in this app that can cause physical harm. **One source, and their own
+  account wins.**
+- ⚠️ **SENDING HAPPENS AFTER THE SAVE AND MAY NEVER BLOCK IT.** The offer is a network write to
+  somebody else's account and no signal in a gym basement is the normal case, not the exception. The
+  guest row is on disk before it runs, so it sits **outside** the try that reports "not saved":
+  telling somebody their workout was lost when it was not is the worse of the two lies. A failure
+  names the way out in the same line, and the offer id is deterministic so the manual re-send is one
+  offer rather than two. **A render test drives a throwing `offerSession` and asserts the workout is
+  still saved and the draft still cleared.**
+- **Saved identities**: typing a name saves it **at the moment it is typed**, not at Finish, so an
+  abandoned session still costs the typing only once. `savePerson()` is **idempotent by name** — the
+  dedupe is in the store, not at the call site, because the failure it prevents is quiet (two "Alex"
+  rows each holding half his training). ⚠️ **Deleting an identity deletes the NAME and nothing else**
+  — every session recorded for them stays, the same argument D22 makes about deleting a system.
+- **A friend's chip is marked** with a glyph (not a colour — the chip's colour already carries which
+  person is active). Their sets are going somewhere a guest's are not, and that is worth knowing
+  before you finish rather than on the summary screen.
+- The calendar's *"Send this to …"* **no longer asks who** when the row already carries a uid — it
+  was offering the chance to send somebody's training to the wrong person.
+
+**New collection `people`** (id, name, createdAt, lastUsedAt), added to `COLLECTIONS`,
+`knownCollection()` and deployed. Guest rows gained `personId` and `forUid`.
+
+⚠️ **KNOWN GAP, stated rather than hidden: a guest cannot be LINKED to an account later.** Record for
+"Alex" three times, then Alex joins and you connect — his old rows stay under the invented identity
+and his new ones go to his account. Nobody has asked for the merge; it needs a UI and a decision
+about what happens to sessions he never accepted.
+
+⚠️ **Caught by driving it at 360px**: the friend row's subtitle clipped to *"their workout is sent to
+them at the e…"* — the half that says what the tap does. `.row-sub` is nowrap-with-an-ellipsis;
+`.wrap` plus shorter copy fixes it. **Exactly the fault found on the visibility sheet on 2026-08-18**
+(*"…your muscle map and your pr…"*), on a different screen, two weeks later.
+
+**Tests: render 574 → 593**, rules re-run green. Both new load-bearing assertions mutation-checked,
+each flipping only itself: move the offer inside the save's try → the three failed-send assertions
+fail alone; ignore the friend's shared training → the two prefill assertions fail alone.
 
 ---
 
@@ -3515,7 +3592,7 @@ by name. Otherwise leave them alone.
 |---|---|---|
 | **0b(c)** | **the cloud ceiling** | ✅ **2026-08-28.** One document per session and per guest session at `users/{uid}/sessions/{rowId}`. **There is no longer a session count at which saving stops working.** Migrate → **re-read to verify** → only then empty the old document; an aborted migration changes nothing. Rules 92 → 108, deployed. ⚠️ **The read cost changed** — one billed read per row, ~520 on a cold open at the old ceiling against 50,000/day |
 | **0h** | **the ratio table** | ✅ **2026-08-28.** Decline dumbbell bench 0.86 → **0.76**, seated dumbbell press 0.98 → **1.08**, Arnold 0.90 → **0.77**; spider curl closed as **not derivable** and labelled. ⚠️ **The finding: the worst entries were the ones somebody had REASONED about**, and two inverted the ordering the argument was trying to protect |
-| **0e** | **joint workouts** | ✅ **2026-08-27.** Guest half 2026-08-26; friend-accept half 2026-08-27 — `handoffs/`, one create-only doc per offer, the recipient taps Add and **their own client** writes it to **their own account** under unchanged owner-only rules |
+| **0e** | **joint workouts** | ✅ **2026-08-27, and FULLY JOINED UP 2026-08-29.** Guest half 2026-08-26; friend-accept half 2026-08-27 — `handoffs/`, one create-only doc per offer, the recipient taps Add and **their own client** writes it to **their own account** under unchanged owner-only rules. ⚠️ **Until 2026-08-29 the two halves never touched**: sending was a thing you went to the CALENDAR to do, after the fact, one record at a time. Now you pick a **friend** at the start of the workout and **Finish sends it**. Their suggestion is read from what they already share with you, never merged with what you recorded for them |
 | **0j** | **mutual disconnect** | ✅ **2026-08-27.** A tombstone at `disconnects/{leaverUid}` — ⚠️ **the id IS the caller's uid**, so you may only ever leave for yourself. ⚠️ **Eventual, not instant**, and the sheet says so |
 | **0k** | **the colour direction** | ✅ **2026-08-27.** Tim picked all three; Gold/Teal/Indigo/Ember in Settings, each with a designed light theme. The last caveat is gone — the full browser audit has run on all four (240 combinations, zero failures) |
 | **0l** | **kudos and comments** | ✅ **2026-08-26.** Create-only reaction docs under the owner, viewer-of-any-tier may write, no update path. ⚠️ **The pattern it established is what made 0e and 0j cheap** — both reused it |
@@ -4190,7 +4267,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **272 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
-| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
+| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. ⚠️ **RECORDS FOR OTHER PEOPLE since 2026-08-29 in two different ways, and the difference is on screen**: pick a **friend** and their half is offered to **their own account** at Finish (their suggestion read from the training they share with you); pick or type a **saved person** and their sets stay here, under their name, never mixed into your own. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
@@ -4571,8 +4648,16 @@ Fitness_Tracker/
 │   │                           workout list plus the benchmark action),
 │   │                           SYSTEMS list, one system, workout builder,
 │   │                           Explore ready-made systems, exercise picker
-│   ├── views-session.js        session runner, benchmark form. ⚠️ THE SET LIST
-│   │                           IS THE SCREEN since 2026-08-29 — the ± controls
+│   ├── views-session.js        session runner, benchmark form. ⚠️ RECORDS FOR
+│   │                           OTHER PEOPLE two ways since 2026-08-29 — a
+│   │                           FRIEND (uid, their half OFFERED to their own
+│   │                           account at Finish, suggestion read from what
+│   │                           they share with you) or a SAVED PERSON (no
+│   │                           account, sets kept here). ⚠️ The two histories
+│   │                           are NEVER merged: a doubled session is what
+│   │                           makes progression propose more weight.
+│   │                           ⚠️ THE SET LIST IS THE SCREEN since 2026-08-29
+│   │                           — the ± controls
 │   │                           sit INSIDE whichever set is open, exactly one
 │   │                           always is, and a nudge repaints the row IN PLACE
 │   │                           because rebuilding the list would destroy the
@@ -4730,6 +4815,13 @@ Workout     id, name, systemId, isBenchmark, order?,
                no meaningful order. getWorkouts() sorts ordered first, then by
                name — so a copied split keeps its shape and your own additions
                land at the end of it rather than in the middle.
+GuestSession  session-shaped, plus guestName, and since 2026-08-29
+            personId?   ← a saved identity (no account)
+            forUid?     ← a FRIEND's account. Their half is OFFERED to them at
+                          Finish and is theirs only once they accept it.
+            ── Read by id where there is one and by NAME only as a fallback,
+               for rows written before those fields existed.
+
 Session     id, workoutId, workoutName, date, startedAt, finishedAt, isBenchmark,
             location?,        ← typed label (0m), absent when none; never GPS
             ── an ACTIVITY session (2026-08-26) is this same shape with NO
@@ -4758,6 +4850,19 @@ Goal        id, muscle, liftName, targetLevel, targetLevelName, targetPercentile
                picker says so.
             ── One row has status 'active' at a time; store.setGoal() ends any
                other. Old goals are kept, never deleted.
+Person      id, name, createdAt, lastUsedAt
+            ── the roster you RECORD FOR (2026-08-29). ⚠️ INVENTED PEOPLE ONLY:
+               a friend is never copied in here, because a saved copy of
+               somebody's name goes stale the day they rename themselves and
+               their uid identifies them better than any label. Friends come
+               live off the friends list every time.
+            ── ⚠️ Deleting one deletes the NAME and nothing else. Every session
+               recorded for them stays — same argument D22 makes about systems.
+            ── savePerson() is IDEMPOTENT BY NAME when given no id, so "Alex"
+               twice is one identity. The dedupe is in the store rather than at
+               the call site: two "Alex" rows each holding half his training is
+               a quiet failure, and the next caller would not think to guard it.
+
 Settings    id, units, theme, gender, birthYear,  ← birth year, NEVER age
             avatar, avatarSource, avatarCrop{zoom,cx,cy}
             ── the FACE everything paints (256px), the re-editable SOURCE it

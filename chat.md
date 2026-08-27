@@ -5558,3 +5558,45 @@ it landed and a failed step is printed rather than swallowed. Re-run: 68 combina
 nodes, zero contrast failures, zero overflow, zero unnamed controls.
 
 Render tests 564 → 574, both new assertions mutation-checked. All eleven suites green. Pushed.
+
+## 2026-08-29, second pass — record for a friend, and it goes to their account
+
+**Tim:** "I love how it is right now where you can have set people have their own identity on your own
+account, however my main want for this feature was so that one person could record the details for
+two+ people that do have accounts… look up one of your current friends and add them to your workout
+instead of inventing someone new. Then, once you're finished with the workout it will send the
+workout to that user's account where they can accept it… Also if you do create a new person to your
+account, save them as an identity so you don't have to recreate the same person over and over."
+
+**Both halves of this feature already existed and had never met.** The guest (a name with no account)
+shipped 2026-08-26; the handoff (offer → they accept) shipped 2026-08-27 — but sending was something
+you went to the *calendar* to do, after the fact, one record at a time. Picking a friend at the start
+of the workout is what joins them, and Finish does the sending.
+
+- "Who is training with you?" leads with your real friends, then people you record for, then Someone
+  new. A friend carries their uid, so nothing is matched on a typed name.
+- The two lists come from different places on purpose. Friends are read live off the friends list;
+  only invented people are saved here. Copying a friend into the saved roster would be copying a name
+  that goes stale the day they rename themselves.
+- A friend's suggestion is read from the training they already share with you — same projection the
+  Friends tab renders, same rules, bounded by the tier they chose. At the default tier it carries no
+  sets and the screen says so rather than reading as broken.
+- **The sharpest decision: their shared training is never merged with what I recorded for them.** A
+  session I recorded and they accepted exists on both sides with different ids, so a merge shows the
+  same workout twice — and progression reads the last two sessions of a lift, so a doubled session is
+  "you did that weight twice in a row", which is the input that makes it propose more weight. One
+  source, and their own account wins.
+- **The send sits outside the save's error path.** A failed offer must never report "not saved" over
+  a workout that was saved. A test drives a throwing offerSession and asserts the workout is still on
+  disk and the draft still cleared.
+- Saved identities are written the moment the name is typed, and savePerson() dedupes by name in the
+  store rather than at the call site. Deleting an identity deletes the name and nothing else.
+
+Known gap, stated: a guest cannot be linked to an account later. Record for "Alex" three times, then
+Alex joins — his old rows stay under the invented identity. Nobody has asked for the merge.
+
+Caught by driving it at 360px: the friend row's subtitle clipped to "their workout is sent to them at
+the e…" — the half that says what the tap does. Same fault as the visibility sheet on 2026-08-18, on
+a different screen, two weeks later.
+
+Render tests 574 → 593, rules re-run green, both new assertions mutation-checked.
