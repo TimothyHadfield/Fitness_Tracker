@@ -281,22 +281,46 @@ export async function SessionView(workoutId) {
 
     /* ---- location (Open work 0m) ----
      * A HAND-TYPED label, never GPS — the privacy decision is that nothing
-     * more precise than what the owner wrote can exist to leak. Carried
-     * forward from the most recent session so training at one gym costs
-     * zero taps forever; clearing it for this session is one tap. Published
-     * at the "My workouts" tier and above only — see projectSession() in
+     * more precise than what the owner wrote can exist to leak. Published at
+     * the "My workouts" tier and above only — see projectSession() in
      * social.js for the schedule argument.
      *
-     * ⚠️ "Most recent" needs the startedAt tie-break (same as the feed's
-     * ordering): getSessions() sorts on the DATE alone, so two sessions today
-     * come back in storage order and the carry-forward would read whichever
-     * happened to be first. A session with no location deliberately carries
-     * "no location" forward — clearing it is a choice, and an older label
-     * resurrecting itself would overrule it. */
-    const newest = sessions.slice().sort((a, b) =>
-      b.date.localeCompare(a.date)
-      || String(b.startedAt || '').localeCompare(String(a.startedAt || '')))[0];
-    state.location = (newest && typeof newest.location === 'string') ? newest.location : '';
+     * ⚠️ IT IS A REMEMBERED DEFAULT SINCE 2026-08-29, NOT A CARRY-FORWARD
+     * FROM THE LAST SESSION. Tim: *"If the user ever sets a location for that
+     * workout, have that be the default and auto-filled in location for every
+     * workout they fill in after that."*
+     *
+     * The old rule read the most recent session and copied whatever it had,
+     * INCLUDING nothing — so one workout logged without a label (a session
+     * back-dated, a quick activity, a day you were in a hurry) silently reset
+     * the default to blank and the next three workouts had to be typed again.
+     * A default that any single omission erases is not a default.
+     *
+     * ⚠️ SO CLEARING IT FOR ONE SESSION NO LONGER CLEARS IT FOREVER, which is
+     * the deliberate reversal: the old note said "clearing it is a choice, and
+     * an older label resurrecting itself would overrule it". That reasoning
+     * was about the last SESSION being the source of truth. The source of
+     * truth is now a setting the user changes by typing a different gym, so a
+     * blank today is a blank today and nothing more. Changing gyms costs one
+     * edit and sticks from then on, which is the same one tap it always was.
+     *
+     * The old session scan survives as a ONE-TIME migration for accounts that
+     * have a location on disk but have not yet written the setting — without
+     * it, everybody who already trains somewhere would find the field empty
+     * on the first workout after this shipped. */
+    if (typeof settings.defaultLocation === 'string') {
+      state.location = settings.defaultLocation;
+    } else {
+      // ⚠️ The most recent session with a location IN IT — not simply the most
+      // recent session, which is the bug being fixed. The startedAt tie-break
+      // is the feed's ordering: getSessions() sorts on the DATE alone, so two
+      // sessions on one day come back in storage order.
+      const withLoc = sessions
+        .filter((s) => typeof s.location === 'string' && s.location.trim())
+        .sort((a, b) => b.date.localeCompare(a.date)
+          || String(b.startedAt || '').localeCompare(String(a.startedAt || '')))[0];
+      state.location = withLoc ? withLoc.location : '';
+    }
 
     state.entries = entriesFor(sessions, bodyWeight, state.date);
     // ⚠️ Kept on the DRAFT, not looked up again at render time, and the reason is
@@ -1957,6 +1981,22 @@ export async function SessionView(workoutId) {
       state.location = String(v || '').trim().slice(0, 80);
       saveDraft(state);
       renderLocation();
+      /* ⚠️ TYPING A GYM SETS THE DEFAULT FOR EVERY WORKOUT AFTER THIS ONE, and
+       * it happens HERE rather than at Finish — Tim's instruction is *"if the
+       * user ever sets a location"*, and somebody who types their gym and then
+       * abandons the session has still told the app where they train.
+       *
+       * ⚠️ REMOVING IT DOES NOT CLEAR THE DEFAULT. Blank is "not this one",
+       * which is why the old carry-forward-from-the-last-session rule was the
+       * thing being fixed: one unlabelled workout wiped the default and the
+       * next three had to be typed again. Changing gyms is what changes it.
+       *
+       * Fire-and-forget: a settings write that fails must not cost somebody the
+       * label on the session they are recording, which is already in the draft.
+       */
+      if (state.location) {
+        store.saveSettings({ defaultLocation: state.location }).catch(() => {});
+      }
       close();
     };
     const { close } = openSheet({
@@ -1966,7 +2006,9 @@ export async function SessionView(workoutId) {
           'Whatever you type here is the whole location — the app never reads GPS. '
           + 'Friends you share full workouts with see it on your card; '
           + 'people who only see that you trained do not. '
-          + 'It carries over to your next workout until you change it.' }),
+          + 'It becomes the default for every workout after this one, until you '
+          + 'type a different one. Removing it leaves this workout without a '
+          + 'location and keeps the default.' }),
         el('div', { class: 'field' }, el('label', { text: 'Location' }), input),
       ),
       footer: el('div', { class: 'btn-row' },

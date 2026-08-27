@@ -2811,6 +2811,31 @@ ok(!data.querySelector('.rep-target'),
   const saved2 = (await store.getSessions()).find((x) => x.workoutId === w.id
     && x.entries[0].sets[0].weight === 110);
   ok(saved2 && !('location' in saved2), 'a cleared location saves NO key — absent, never ""');
+
+  /* ⚠️ AND THE DEFAULT SURVIVES A WORKOUT LOGGED WITHOUT ONE (2026-08-29).
+   *
+   * Tim: *"if the user ever sets a location for that workout, have that be the
+   * default and auto-filled in location for every workout they fill in after
+   * that."* The old rule copied the most recent session's location INCLUDING
+   * nothing, so the blank session just saved above would have reset the
+   * default to empty and the next three workouts would have to be typed again.
+   * A default that any single omission erases is not a default. */
+  localStorage.removeItem(DRAFT);
+  const s4 = await mount(SessionView(w.id));
+  ok(/The garage/.test(s4.querySelector('.session-loc').textContent),
+     '⚠️ the next workout still opens at The garage, even though the one before it was '
+     + 'saved with no location at all — blank is "not this one", never "forget where I train"');
+
+  // Typing a different gym is what moves it, and it moves immediately rather
+  // than at Finish: somebody who types it and abandons the session has still
+  // told the app where they train.
+  const st = await import(BASE + 'store.js');
+  await st.store.saveSettings({ defaultLocation: 'Iron Works' });
+  localStorage.removeItem(DRAFT);
+  const s5 = await mount(SessionView(w.id));
+  ok(/Iron Works/.test(s5.querySelector('.session-loc').textContent),
+     'and changing it is one edit that sticks from then on');
+  await st.store.saveSettings({ defaultLocation: '' });
 }
 
 /* ================= personal bests on the finish screen =================
