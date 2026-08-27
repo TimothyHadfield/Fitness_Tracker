@@ -517,7 +517,34 @@ export async function SessionView(workoutId) {
     );
   }
 
-  function renderPane() {
+  /**
+   * ⚠️ THE SET LIST IS THE SCREEN NOW, AND THE STEPPERS LIVE INSIDE THE OPEN SET.
+   *
+   * Tim, 2026-08-28: *"there should be no large current selected set details
+   * display, and instead the list of sets should be large and share the space in
+   * the middle, and then when you select one, it makes it larger and you can add
+   * or subtract the weight amount or number of reps after it is open."*
+   *
+   * The screen used to say the same numbers twice — a detached block of big
+   * steppers headed "SET 1 OF 4", and then set 1 again in the list underneath
+   * it, both live, both editing the same object. The link between them was the
+   * heading and the accent square, which is a thing you work out rather than a
+   * thing you see. Now there is one set of numbers per set, in the row that IS
+   * that set, and the row you are on is the one that carries the controls.
+   *
+   * ⚠️ THE DIGITS AND THE ± TARGETS DID NOT SHRINK, and that is deliberate: the
+   * 2026-08-28 usability drive listed "the runner's huge stepper digits" among
+   * the things not to break chasing anything else. The same `.steppers` grid
+   * moves into the open row unchanged; what is saved is the ~200px the detached
+   * block and its heading were spending to show a copy of row one.
+   *
+   * ⚠️ AND EXACTLY ONE SET IS ALWAYS OPEN. Tapping the open row does not close
+   * it. `entry.active` has always been what the steppers point at, so a
+   * collapsed-to-nothing state would be a state with no way to log a number.
+   */
+  function renderPane(opts) {
+    const keepScroll = Boolean(opts && opts.keepScroll);
+    const wasAt = pane.scrollTop;
     const step = currentStep();
     if (!step) return;
     const entry = state.entries[step.entryIndex];
@@ -586,7 +613,10 @@ export async function SessionView(workoutId) {
       entry.active = i;
       entry.activeDrop = dropIndex;
       saveDraft(state);
-      renderPane();
+      // ⚠️ KEEP THE SCROLL. The controls are inside the list now, so a render
+      // that jumped back to the top would throw away the position of the row
+      // somebody just tapped — set 4 of a long exercise would open off-screen.
+      renderPane({ keepScroll: true });
     }
 
     /* ⚠️ THE WHOLE ROW SELECTS THE SET, not just the little numbered square.
@@ -611,20 +641,51 @@ export async function SessionView(workoutId) {
      * selecting — a guard that works until somebody adds the next control. Two
      * siblings cannot have that bug.
      */
+    /* Every row's live value span, so a nudge can repaint the numbers WITHOUT
+     * rebuilding the list.
+     *
+     * ⚠️ THIS IS LOAD-BEARING NOW THAT THE STEPPERS ARE INSIDE THE LIST. The
+     * old code re-rendered the whole list on every `onChange`, which was free
+     * while the steppers sat outside it — and would now tear down the very
+     * input somebody is typing into, blurring it after the first digit. Rows
+     * are only ever added or removed through `renderAll()`, so an in-place
+     * text update is both the safe move and the cheap one. */
+    const liveRows = [];
+    function syncSetValues() {
+      for (const r of liveRows) {
+        const t = r.read();
+        r.vals.textContent = t;
+        r.pick.setAttribute('aria-label', r.name(t));
+      }
+    }
+
     function renderSets() {
       const rows = [];
+      liveRows.length = 0;
       entry.sets.forEach((s, i) => {
         const isHere = i === entry.active;
-        rows.push(el('div', { class: 'set-item' + (isHere && entry.activeDrop == null ? ' active' : '') },
-          el('button', {
-            class: 'set-pick',
-            'aria-label': `Set ${i + 1}: ${fmtSet(s, entry.fields, entry.loadType)}`,
-            'aria-current': isHere && entry.activeDrop == null ? 'true' : null,
-            onClick: () => select(i, null),
-          },
-            el('span', { class: 'set-num', text: String(i + 1) }),
-            el('span', { class: 'set-vals', text: fmtSet(s, entry.fields, entry.loadType) }),
-          ),
+        const open = isHere && entry.activeDrop == null;
+        const text = fmtSet(s, entry.fields, entry.loadType);
+        const vals = el('span', { class: 'set-vals', text });
+        const pick = el('button', {
+          class: 'set-pick',
+          'aria-label': `Set ${i + 1}: ${text}`,
+          'aria-current': open ? 'true' : null,
+          // The row is a disclosure now — it opens the controls for that set
+          // rather than re-pointing a block elsewhere on the screen.
+          'aria-expanded': open ? 'true' : 'false',
+          onClick: () => select(i, null),
+        },
+          el('span', { class: 'set-num', text: String(i + 1) }),
+          vals,
+        );
+        liveRows.push({
+          vals, pick,
+          read: () => fmtSet(s, entry.fields, entry.loadType),
+          name: (t) => `Set ${i + 1}: ${t}`,
+        });
+        rows.push(el('div', { class: 'set-item' + (open ? ' active' : '') },
+          pick,
           entry.sets.length > 1
             ? el('button', {
                 class: 'set-del', 'aria-label': `Delete set ${i + 1}`,
@@ -638,25 +699,35 @@ export async function SessionView(workoutId) {
               }, icon('trash'))
             : null,
         ));
+        if (open) rows.push(editor);
 
         // Drops hang UNDER their set and are indented, because that is what they
         // are — the same set continued at a lower weight. They are deliberately
         // not numbered as sets: one drop set is one hard set (progress.md §6),
         // and numbering them 1, 2, 3 would teach the opposite.
         minisOf(s).forEach((d, di) => {
-          rows.push(el('div', { class: 'set-item set-drop' + (isHere && entry.activeDrop === di ? ' active' : '') },
-            // Same restructure as the set row above, for the same reason: the ↳
-            // is a 22px glyph and the numbers beside it are what a thumb aims at.
-            el('button', {
-              class: 'set-pick',
-              'aria-label': `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: `
-                + fmtSet(d, entry.fields, entry.loadType),
-              'aria-current': isHere && entry.activeDrop === di ? 'true' : null,
-              onClick: () => select(i, di),
-            },
-              el('span', { class: 'set-num drop-num', text: '↳' }),
-              el('span', { class: 'set-vals', text: fmtSet(d, entry.fields, entry.loadType) }),
-            ),
+          const dOpen = isHere && entry.activeDrop === di;
+          const dText = fmtSet(d, entry.fields, entry.loadType);
+          const dVals = el('span', { class: 'set-vals', text: dText });
+          // Same restructure as the set row above, for the same reason: the ↳
+          // is a 22px glyph and the numbers beside it are what a thumb aims at.
+          const dPick = el('button', {
+            class: 'set-pick',
+            'aria-label': `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: ${dText}`,
+            'aria-current': dOpen ? 'true' : null,
+            'aria-expanded': dOpen ? 'true' : 'false',
+            onClick: () => select(i, di),
+          },
+            el('span', { class: 'set-num drop-num', text: '↳' }),
+            dVals,
+          );
+          liveRows.push({
+            vals: dVals, pick: dPick,
+            read: () => fmtSet(d, entry.fields, entry.loadType),
+            name: (t) => `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: ${t}`,
+          });
+          rows.push(el('div', { class: 'set-item set-drop' + (dOpen ? ' active' : '') },
+            dPick,
             el('button', {
               class: 'set-del', 'aria-label': `Delete ${miniLabel(entry.setType, di + 1)}`,
               onClick: () => {
@@ -664,15 +735,15 @@ export async function SessionView(workoutId) {
                 if (!s.minis.length) delete s.minis;
                 entry.activeDrop = null;
                 saveDraft(state);
-                renderPane();
+                renderPane({ keepScroll: true });
               },
             }, icon('trash')),
           ));
+          if (dOpen) rows.push(editor);
         });
       });
       setChildren(setList, ...rows);
     }
-    renderSets();
 
     // ⚠️ AN ASSIST MACHINE'S NUMBER IS THE ONE NUMBER IN THIS APP THAT MEANS THE
     // OPPOSITE OF WHAT IT LOOKS LIKE. 70 in the box is 70 pounds of HELP, so the
@@ -735,7 +806,9 @@ export async function SessionView(workoutId) {
           target[f] = v;
           saveDraft(state);
           renderAssist();
-          renderSets();
+          // In place — see `syncSetValues`. Rebuilding the list would now
+          // destroy the stepper that raised this.
+          syncSetValues();
           // Recording a number IS finishing a set, so that is when rest starts.
           // No extra button to remember to press mid-workout.
           //
@@ -753,6 +826,59 @@ export async function SessionView(workoutId) {
 
     const miniCount = minis.length;
     const wantsMinis = nested ? entry.plannedMinis : 0;
+
+    /* THE OPEN SET'S CONTROLS. Built once per render and pushed into the list
+     * under whichever row is active — a set row, or one of its drops. Keeping
+     * it one node rather than one per row is what lets a drop's editor be the
+     * same object as its parent set's, and keeps `renderAssist()` pointed at a
+     * line that is actually on screen. */
+    const editor = el('div', { class: 'set-open' },
+      // ⚠️ NO "SET 3 OF 4" HEADING ON A PLAIN SET. The row directly above these
+      // controls is that set, with its number in an accent square — a caption
+      // repeating it is a second answer to a question the layout has already
+      // answered, and it cost a line in the middle of the screen. A DROP is the
+      // one case where it earns its place: the row shows "↳" and nothing says
+      // which drop it is, or which set it hangs off.
+      entry.activeDrop == null ? null : el('div', { class: 'set-open-label',
+        text: `Set ${entry.active + 1} · ${miniLabel(entry.setType, entry.activeDrop + 1).toLowerCase()}` }),
+      el('div', { class: 'steppers' }, steppers),
+      assistLine,
+
+      // A nested set says what to do next in the one place you are looking, and
+      // the button IS the instruction rather than the name of a technique.
+      // "Strip the weight" and "Rest 10–15 seconds" are things you can act on;
+      // "Add drop" and "Add myo-rep" assume you already know what those are,
+      // which is the assumption D8 exists to refuse.
+      nested
+        ? el('div', { class: 'drop-row' },
+            el('button', {
+              class: 'btn block drop-add',
+              onClick: () => {
+                if (!Array.isArray(activeSet.minis)) activeSet.minis = [];
+                // A myo-rep match set is the SAME weight after a short rest, so
+                // carrying the numbers forward is right. A drop is lighter and
+                // the app cannot know by how much, so it carries them forward
+                // too and waits to be corrected — a guessed weight would be
+                // worse than an obvious one.
+                const from = minis.length ? minis[minis.length - 1] : activeSet;
+                activeSet.minis.push(pickFields(from, entry.fields));
+                entry.activeDrop = activeSet.minis.length - 1;
+                saveDraft(state);
+                renderPane({ keepScroll: true });
+              },
+            }, icon(entry.setType === MYO ? 'plus' : 'down', 16),
+              entry.setType === MYO
+                ? (miniCount ? 'Another mini-set' : 'Rest 10–15 seconds — add a mini-set')
+                : (miniCount ? 'Drop again' : 'Strip the weight — add a drop')),
+            el('div', { class: 'field-help', text: miniCount >= wantsMinis && wantsMinis
+              ? `${miniCount} ${miniLabel(entry.setType).toLowerCase()}${miniCount === 1 ? '' : 's'} recorded — this counts as one hard set.`
+              : `Planned: ${wantsMinis} ${miniLabel(entry.setType).toLowerCase()}${wantsMinis === 1 ? '' : 's'} after each set. `
+                + 'The whole thing counts as one hard set.' }),
+          )
+        : null,
+    );
+
+    renderSets();
 
     setChildren(pane,
       // The superset banner is the first thing on the screen, above the
@@ -873,45 +999,6 @@ export async function SessionView(workoutId) {
             ))
         : null,
 
-      el('div', { class: 'section-label', text: entry.activeDrop == null
-        ? `Set ${entry.active + 1} of ${entry.sets.length}`
-        : `Set ${entry.active + 1} · ${miniLabel(entry.setType, entry.activeDrop + 1).toLowerCase()}` }),
-      el('div', { class: 'steppers' }, steppers),
-      assistLine,
-
-      // A nested set says what to do next in the one place you are looking, and
-      // the button IS the instruction rather than the name of a technique.
-      // "Strip the weight" and "Rest 10–15 seconds" are things you can act on;
-      // "Add drop" and "Add myo-rep" assume you already know what those are,
-      // which is the assumption D8 exists to refuse.
-      nested
-        ? el('div', { class: 'drop-row' },
-            el('button', {
-              class: 'btn block drop-add',
-              onClick: () => {
-                if (!Array.isArray(activeSet.minis)) activeSet.minis = [];
-                // A myo-rep match set is the SAME weight after a short rest, so
-                // carrying the numbers forward is right. A drop is lighter and
-                // the app cannot know by how much, so it carries them forward
-                // too and waits to be corrected — a guessed weight would be
-                // worse than an obvious one.
-                const from = minis.length ? minis[minis.length - 1] : activeSet;
-                activeSet.minis.push(pickFields(from, entry.fields));
-                entry.activeDrop = activeSet.minis.length - 1;
-                saveDraft(state);
-                renderPane();
-              },
-            }, icon(entry.setType === MYO ? 'plus' : 'down', 16),
-              entry.setType === MYO
-                ? (miniCount ? 'Another mini-set' : 'Rest 10–15 seconds — add a mini-set')
-                : (miniCount ? 'Drop again' : 'Strip the weight — add a drop')),
-            el('div', { class: 'field-help', text: miniCount >= wantsMinis && wantsMinis
-              ? `${miniCount} ${miniLabel(entry.setType).toLowerCase()}${miniCount === 1 ? '' : 's'} recorded — this counts as one hard set.`
-              : `Planned: ${wantsMinis} ${miniLabel(entry.setType).toLowerCase()}${wantsMinis === 1 ? '' : 's'} after each set. `
-                + 'The whole thing counts as one hard set.' }),
-          )
-        : null,
-
       // The add button rides on the "Sets" heading rather than sitting under the
       // list. Full-width and below, it was as loud as the sets themselves and it
       // sat directly on top of them once the list outgrew the pane.
@@ -943,7 +1030,25 @@ export async function SessionView(workoutId) {
       setList,
     );
 
-    pane.scrollTop = 0;
+    // Landing on a new exercise starts at the top; opening a set does not.
+    if (!keepScroll) { pane.scrollTop = 0; return; }
+    pane.scrollTop = wasAt;
+
+    /* ⚠️ AND THEN MAKE SURE THE THING THAT JUST OPENED IS ON SCREEN. The
+     * controls used to be at a fixed place near the top of the pane; they now
+     * sit wherever their set does, so opening set 6 of 6 can put the ± buttons
+     * below the fold of the row somebody tapped. Scroll the minimum that fixes
+     * it, never more — a jump to centre would move a list that was already fine.
+     * jsdom reports every rect as zero, so this is inert there and the browser
+     * pass is what checks it. */
+    if (typeof editor.getBoundingClientRect !== 'function') return;
+    const er = editor.getBoundingClientRect();
+    const pr = pane.getBoundingClientRect();
+    if (!er.height || !pr.height) return;
+    if (er.bottom > pr.bottom) {
+      pane.scrollTop += Math.min(er.bottom - pr.bottom + 8, Math.max(0, er.top - pr.top));
+    }
+    else if (er.top < pr.top) pane.scrollTop -= pr.top - er.top + 8;
   }
 
   function renderAll() {

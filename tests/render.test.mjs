@@ -641,6 +641,74 @@ ok(!data.querySelector('.rep-target'),
     localStorage.removeItem(DRAFT);
   }
 
+  /* ⚠️ THE CONTROLS LIVE INSIDE THE OPEN SET (2026-08-28).
+   *
+   * Tim: *"there should be no large current selected set details display, and
+   * instead the list of sets should be large … when you select one, it makes it
+   * larger and you can add or subtract the weight amount or number of reps."*
+   *
+   * Before this the screen showed the same numbers twice — a detached block of
+   * steppers headed "SET 1 OF 4", and set 1 again in the list under it, both
+   * live, both editing the same object. These assertions are about WHERE the
+   * steppers are, because that is the whole of the change and nothing else in
+   * the suite would notice them moving back.
+   */
+  {
+    localStorage.removeItem(DRAFT);
+    const acc = await store.saveWorkout({
+      name: 'Accordion',
+      exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 4, notes: '' }],
+    });
+    const screen = await mount(SessionView(acc.id));
+
+    // ⚠️ THE ONE THAT FLIPS ON A REVERT. A detached block would be a `.steppers`
+    // that is not inside the list.
+    const all = [...screen.querySelectorAll('.steppers')];
+    ok(all.length === 1, `exactly one set is open, so exactly one set of controls (${all.length})`);
+    ok(Boolean(all[0].closest('.set-list')),
+       '⚠️ the steppers are INSIDE the set list, not in a block of their own above it');
+
+    const rows = () => [...screen.querySelectorAll('.set-list .set-item')];
+    const openAfter = () => {
+      const ed = screen.querySelector('.set-open');
+      return rows().indexOf(ed.previousElementSibling);
+    };
+    ok(rows().length === 4, 'four sets are listed');
+    ok(openAfter() === 0, 'and the controls sit directly under set 1, which is the one open');
+
+    // Opening another set MOVES the controls to it rather than re-pointing a
+    // block somewhere else on the screen.
+    rows()[2].querySelector('.set-vals').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(openAfter() === 2, '⚠️ opening set 3 moves the controls under SET 3 — one set of numbers per set');
+    ok(screen.querySelectorAll('.steppers').length === 1, 'and there is still only one of them');
+    ok(rows()[2].querySelector('.set-pick').getAttribute('aria-expanded') === 'true'
+       && rows()[0].querySelector('.set-pick').getAttribute('aria-expanded') === 'false',
+       'the row is a disclosure, and says so — a screen reader is told which set is open');
+
+    /* ⚠️ A NUDGE MUST NOT REBUILD THE LIST, and this is the assertion that keeps
+     * it that way. The old code re-rendered every row on every `onChange`, which
+     * was free while the steppers sat outside the list — and would now tear down
+     * the input somebody is typing into, blurring it after one digit. Holding
+     * the row NODE across the change is what proves it was updated in place. */
+    const before = rows()[2];
+    const input = screen.querySelector('.step-value');
+    input.value = '225';
+    input.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    await settle();
+    ok(rows()[2] === before,
+       '⚠️ logging a number updates set 3 IN PLACE — the row is the same node, so the stepper '
+       + 'that raised the change was never destroyed under the user\'s finger');
+    ok(/225/.test(before.textContent), 'and the row now reads the number that was just typed');
+
+    // The heading that used to sit above the detached block is gone: the accent
+    // square on the row above the controls already says which set they are for.
+    ok(!/SET 3 OF 4/i.test(screen.textContent),
+       'no "Set 3 of 4" caption — the row directly above the controls IS set 3');
+
+    localStorage.removeItem(DRAFT);
+  }
+
   /* ⚠️ THE DEMO ACCOUNT MAY NOT WRITE A DRAFT TO REAL STORAGE.
      `store.js` swaps its whole backend inside the demo, but the draft never
      went through the store — it was written straight to localStorage, so

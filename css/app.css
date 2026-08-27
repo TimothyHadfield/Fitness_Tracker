@@ -1187,7 +1187,14 @@ select.input {
 .add-set svg { display: block; }
 .add-set:active { transform: scale(.96); }
 
-.set-item { display: flex; align-items: center; gap: 9px; padding: 0 2px; font-size: 14px; }
+/* ⚠️ THE SET LIST IS THE CONTENT OF THIS SCREEN, NOT AN INDEX OF IT (2026-08-28).
+   Tim: *"the list of sets should be large and share the space in the middle, and
+   then when you select one, it makes it larger."* Until then the same numbers
+   were on screen twice — a detached block of big steppers headed "SET 1 OF 4",
+   and set 1 again in a 14px list under it — so the list read as a summary of a
+   control that lived somewhere else. It IS the control now, and the type is
+   sized to be read at arm's length rather than scanned. */
+.set-item { display: flex; align-items: center; gap: 9px; padding: 0 2px; font-size: 15.5px; }
 .set-item.active .set-vals { color: var(--ink); font-weight: 600; }
 
 /* ⚠️ THE ROW IS THE TARGET. Everything except delete lives inside this button,
@@ -1197,12 +1204,13 @@ select.input {
 
    The vertical padding moved OFF `.set-item` and onto this, so the button fills
    the row's full height rather than sitting in a padded box that is dead to the
-   touch. 44px, the same target the rest of the app is held to. */
+   touch. Comfortably past the 44px the rest of the app is held to — the list is
+   the screen's content now, and these are the rows a thumb hunts for mid-set. */
 .set-pick {
   flex: 1;
   min-width: 0;
   display: flex; align-items: center; gap: 9px;
-  min-height: 44px;
+  min-height: 50px;
   padding: 4px 0;
   text-align: left;
   color: inherit;
@@ -1229,12 +1237,12 @@ select.input {
 .drop-row { display: flex; flex-direction: column; gap: 5px; }
 .drop-add { justify-content: center; gap: 7px; }
 .set-num {
-  width: 21px; height: 21px;
+  width: 25px; height: 25px;
   flex: none;
   display: grid; place-items: center;
-  border-radius: 5px;
+  border-radius: 6px;
   background: var(--raised);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--ink-faint);
 }
@@ -1242,6 +1250,39 @@ select.input {
 .set-vals { flex: 1; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
 .set-del { color: var(--ink-faint); padding: 3px; display: flex; }
 .set-del svg { width: 15px; height: 15px; display: block; }
+
+/* ⚠️ THE OPEN SET'S CONTROLS, INSIDE THE LIST. It is a sibling of its row rather
+   than a child, because `.set-del` has to stay a sibling of `.set-pick` (nesting
+   it would be invalid HTML and would need a stopPropagation that works until the
+   next control is added) — and a row that is a plain flex line cannot also be a
+   column holding a panel.
+
+   ⚠️ NO BOX, NO TINT (Rule 2). What says "this one is open" is what already said
+   it — the accent number square and full-ink values — plus the presence of the
+   controls themselves. A card drawn round the pair would be the nested bordered
+   box the whole stylesheet refuses.
+
+   ⚠️ AND NO HAIRLINE ABOVE IT. `.set-list > * + *` rules between rows; a rule
+   between a set and its own controls would cut the one thing that has to read as
+   attached. The row BELOW keeps its rule, which is what closes the panel off. */
+.set-open {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 2px 0 14px;
+}
+.set-list > .set-open { border-top: 0; }
+.set-open-label {
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* ⚠️ A DROP'S CONTROLS ARE NOT INDENTED, and that was tried first. Indenting the
+   panel to line up with the ↳ row pushed the steppers 22px off every other grid
+   on the screen and wrapped the "counts as one hard set" line an extra time at
+   360px, for a relationship the `SET 1 · DROP 1` label already states in words —
+   which is the one job that label was kept for. The indent belongs on the ROW,
+   which is where the nesting is being shown. */
 
 .session-footer {
   flex: none;

@@ -4,9 +4,18 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-28, prepared for a chat reset. **Seven passes ran this session**, all on
-Tim's instructions, and they are the seven dated 2026-08-28 sections below — read them in file
-order (newest first). The one-paragraph version of each:
+**Last updated:** 2026-08-29. **One pass has run this session** and it is the 2026-08-29 section at
+the top of the list below. Everything under it is the previous session's **seven passes**, all dated
+2026-08-28. Read them in file order (newest first). The one-paragraph version of each:
+
+🆕 **0. THE WORKOUT SCREEN WAS REFORMATTED ON TIM'S INSTRUCTION (2026-08-29).** The runner was showing
+the same numbers twice — a detached block of big steppers headed `SET 1 OF 4`, and set 1 again in the
+list under it. **The steppers now live INSIDE the open set**: the list is the content of the screen,
+the row you are on carries the controls, and tapping another set moves them to it. ⚠️ **The digits
+and the ± targets did not shrink** (30px / 46×52, measured) — that was the constraint, because the
+usability drive named them among the things not to break. ⚠️ **And the session runner had never been
+in the accessibility audit at all**; it is now, and the first version of that step silently audited
+the picker instead — the `#/data` fault of 2026-08-24 through a different door.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries the git date **2026-08-26**, including everything headed -27 and -28. Headings keep the
@@ -102,7 +111,7 @@ last exercise is refused.
 - ✅ **0j CLOSED** — **disconnect is mutual**. ⚠️ **Eventual, not instant**, and the sheet says so.
 - **Rules tests 66 → 92**, against the real engine. Rules deployed.
 
-**Tests: 2,943 across eleven suites** (data-layer 1437, render 564, goals 232, bodyweight 170,
+**Tests: 2,953 across eleven suites** (data-layer 1437, render **574**, goals 232, bodyweight 170,
 social 140, a11y 85), plus **117 rules assertions in the emulator** and 12 in `sw-update`.
 Sub-agents are pre-authorised (saved to memory).
 
@@ -323,6 +332,76 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-29 — ⚠️ THE SET LIST IS THE SCREEN NOW, AND THE STEPPERS LIVE INSIDE THE OPEN SET
+
+Tim: *"During the workout right now it shows the current selected set's measurements really big in the
+middle and the full list of the sets below it, including the one it's on now… there should be no
+large current selected set details display, and instead the list of sets should be large and share
+the space in the middle, and then when you select one, it makes it larger and you can add or subtract
+the weight amount or number of reps after it is open."*
+
+**He is right, and the reason is sharper than "it takes up room": the screen was showing the same
+numbers twice.** A detached block of big steppers headed `SET 1 OF 4`, and then set 1 AGAIN in a 14px
+list underneath it — both live, both editing the same object, and the only thing linking them was the
+heading and an accent square. That is a relationship you work out, not one you see. There is one set
+of numbers per set now, in the row that IS that set, and the row you are on carries the controls.
+
+- ⚠️ **THE DIGITS AND THE ± TARGETS DID NOT SHRINK — measured, not assumed.** The 2026-08-28
+  usability drive named "the runner's huge stepper digits" among the things not to break chasing
+  anything else. The same `.steppers` grid moves into the open row untouched: **30px digits, 46×52
+  step buttons, identical at 360 and 390.** What was saved is the ~200px the detached block and its
+  heading spent showing a copy of row one. **A 4-set exercise now fits on one screen with room under
+  it; before, set 4 sat on the bottom edge.**
+- **The rows grew** — 44px → **50px**, 14px → 15.5px — because the list is the content of this screen
+  now rather than an index of it.
+- ⚠️ **EXACTLY ONE SET IS ALWAYS OPEN, and tapping the open row does not close it.** `entry.active`
+  has always been what the steppers point at, so a collapsed-to-nothing state would be a state with
+  no way to log a number.
+- ⚠️ **A NUDGE UPDATES THE ROW IN PLACE — this is the one that would have shipped as a bug.** The old
+  `onChange` re-rendered the whole list, which was free while the steppers sat outside it and would
+  now **tear down the input somebody is typing into, blurring it after one digit.** `syncSetValues()`
+  repaints the text and leaves the nodes alone. Driven in a browser: after a `+` press the focus is
+  still on the stepper and the row reads the new number. A render assertion holds the row NODE across
+  the change, and **mutation-checked** — putting `renderSets()` back flips exactly it.
+- ⚠️ **AND THE SCROLL IS KEPT.** The controls used to be at a fixed place near the top; they now sit
+  wherever their set does. Opening a set restores the scroll position and then moves the **minimum**
+  that brings the controls fully on screen. Driven with a **9-set** exercise from a cold scroll
+  position: the last set's controls land fully visible.
+- **A drop set finally reads like what it is** — set 1, its drop indented under it, the drop's own
+  controls under that. The old layout could not show that at all, because the drop's controls were
+  detached at the top. ⚠️ **The drop's PANEL is not indented, and that was tried first:** it pushed
+  the steppers 22px off every other grid and wrapped the "counts as one hard set" line an extra time
+  at 360px, for a relationship the `SET 1 · DROP 1` label already states in words. **Inside a
+  superset the set number is the round**, so the list now literally shows the rounds.
+- **`SET 3 OF 4` is gone from a plain set.** The row directly above the controls is that set, with its
+  number in an accent square — a caption repeating it was a second answer to a question the layout had
+  already answered. **Kept for a drop**, where the row shows `↳` and nothing else says which drop it is.
+
+### ⚠️ AND THE SESSION RUNNER HAD NEVER BEEN IN THE ACCESSIBILITY AUDIT
+
+Found while looking for somewhere to measure this. **The one screen the app exists for** — every
+stepper, every set row, the rest bar, the Next/Finish pair — had no static route (a session needs a
+workout id), and the audit's route list simply never reached it. It is in now, reached the way a
+person reaches it: Record → Weightlifting → the next workout.
+
+⚠️ **The first version of that step silently audited the WRONG SCREEN** — it matched `/^Start/`
+against the chooser's rows, whose text begins with the workout's name, so four route-instances were
+filed under "Session runner" while sitting on the picker. **That is the `#/data` fault of 2026-08-24
+arriving through a different door**, and it is why the step now **asserts it landed** (`.set-list`
+must exist) and why a failed step is **printed instead of swallowed**. A step that cannot prove it
+arrived is a coverage claim nobody checked.
+
+**Re-run: 68 route/width/theme combinations, 6,478 text nodes — zero below 4.5:1, zero horizontal
+overflow, zero unnamed controls.** In the runner: `.set-pick` 298×50 at 360px and 328×50 at 390px,
+`.step-btn` 46×52. Everything this change touched got bigger. ⚠️ **`.set-del` is still 21×21** —
+unchanged by this work, and deliberately the one control on the row that should not be easy to hit.
+
+**Tests: render 564 → 574.** Both new load-bearing assertions mutation-checked, each flipping only
+itself: pin the editor to set 1 → "opening set 3 moves the controls" fails alone; restore
+`renderSets()` in `onChange` → the in-place pair fails alone.
 
 ---
 
@@ -3855,8 +3934,8 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Goals tests** | `node tests/goals.test.mjs` — 232 assertions, **no dependencies**. The requirements model, progression, and **the three things Goals refuses to do**: read the calendar to decide what it asks of you, emit a verdict, and let a clock make anything heavier. ⚠️ Since 2026-08-24 it also **plays an assist machine forward through forty obeyed sessions** and asserts it never once proposes more assistance. That section replaced two assertions that were green while the bug was live, because they read the SOURCE for a guard rather than driving the function with the exercise that reaches it |
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 85 assertions, **no dependencies**. Pins **all four PALETTES**: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
-| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **60** screen/width/theme combinations, and since 2026-08-27 takes a `PALETTE` env var (gold/teal/indigo/ember) so all four can be swept: **240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow**. Set through the ATTRIBUTE, because the demo backend reseeds on every reload. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 534 assertions, mounts every screen. ⚠️ Since 2026-08-27 it pins three things a browser could not: that the **Friends screen renders while the network is still hanging** (it is handed a read that never resolves — re-adding the `await` fails it), that **a workout offered by a friend writes NOTHING into your training until you tap Add**, and that the disconnect sheet says both that they are told and that it is eventual. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **68** screen/width/theme combinations, and since 2026-08-27 takes a `PALETTE` env var (gold/teal/indigo/ember) so all four can be swept: **240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow** (gold re-run 2026-08-29 over 68 × 6,478 nodes, same result). ⚠️ **THE SESSION RUNNER JOINED IT ON 2026-08-29 and had never been measured before that** — the one screen the app exists for, skipped because a session needs a workout id and the route list only held static hashes. It is reached by driving Record → Weightlifting → the next workout, and **the step asserts it landed** (`.set-list` must exist): the first version matched `/^Start/` against the chooser's rows, whose text begins with the workout NAME, and silently filed four route-instances of the picker under the runner's name. A failed step is now **printed rather than swallowed**, for the same reason. Set through the ATTRIBUTE, because the demo backend reseeds on every reload. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
+| **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 574 assertions, mounts every screen. ⚠️ **Since 2026-08-29 it pins WHERE THE STEPPERS ARE**: exactly one `.steppers` on the screen, inside `.set-list`, directly under the open row — and opening set 3 MOVES it there. Plus the one that would otherwise have shipped as a bug: a nudge must update the row **in place**, asserted by holding the row NODE across the change, because a rebuild would destroy the input being typed into. Both mutation-checked, each flipping only itself. ⚠️ Since 2026-08-27 it pins three things a browser could not: that the **Friends screen renders while the network is still hanging** (it is handed a read that never resolves — re-adding the `await` fails it), that **a workout offered by a friend writes NOTHING into your training until you tap Add**, and that the disconnect sheet says both that they are told and that it is eventual. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 92 assertions, who may READ your data — and since 2026-08-27 who may OFFER you a workout and who may announce a disconnection. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
@@ -4111,7 +4190,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **272 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
 | Custom exercises | User-created; choose tracked fields and how weight is counted |
-| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
+| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
@@ -4492,8 +4571,14 @@ Fitness_Tracker/
 │   │                           workout list plus the benchmark action),
 │   │                           SYSTEMS list, one system, workout builder,
 │   │                           Explore ready-made systems, exercise picker
-│   ├── views-session.js        session runner, benchmark form. Swap an exercise
-│   │                           mid-workout (splits if sets are logged), fills
+│   ├── views-session.js        session runner, benchmark form. ⚠️ THE SET LIST
+│   │                           IS THE SCREEN since 2026-08-29 — the ± controls
+│   │                           sit INSIDE whichever set is open, exactly one
+│   │                           always is, and a nudge repaints the row IN PLACE
+│   │                           because rebuilding the list would destroy the
+│   │                           input being typed into. Swap an exercise
+│   │                           mid-workout (splits if sets are logged), remove
+│   │                           one for today, fills
 │   │                           set 2 from set 1 the first time, and shows what
 │   │                           an assist machine really leaves on you
 │   ├── views-data.js           calendar (its OWN tab again since 2026-08-25),

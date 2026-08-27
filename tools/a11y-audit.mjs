@@ -249,6 +249,33 @@ const ROUTES = [
   // Added 2026-08-26: the quick activity log shipped with the Record chooser
   // and had never been measured — a whole screen of steppers and a date field.
   ['#/activity/Running', 'Activity log'],
+  /* ⚠️ THE SESSION RUNNER — added 2026-08-28, and it is the biggest hole this
+   * list has had. It is the screen the app EXISTS for, the one place somebody
+   * uses one-handed with a bar in the other, and until now the only screen with
+   * no route of its own was simply never measured: every stepper, every set
+   * row, the rest bar and the Next/Finish pair. Found while moving the steppers
+   * into the set list, which is exactly the kind of change whose targets you
+   * want measured rather than reasoned about.
+   *
+   * It has no static route (a session needs a workout id), so it is reached the
+   * way a person reaches it: Record → Weightlifting → the next workout.
+   *
+   * ⚠️ ASSERTS IT ARRIVED. The first version of this step matched `/^Start/`
+   * against the chooser's rows, whose text begins with the workout's NAME, so
+   * it silently audited the picker under the runner's name — the identical
+   * fault this list carried for two days with `#/data`. A step that cannot
+   * prove it landed is worse than no step. */
+  ['#/record', 'Session runner',
+    `${clickText('.row-start, button, a', 'Weightlifting')};
+     await new Promise((r) => setTimeout(r, 800));
+     (() => { const b = document.querySelector('.btn.primary.lg.block')
+       || document.querySelector('.pane-scroll .row');
+       if (b) b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(b); })();
+     await new Promise((r) => setTimeout(r, 900));
+     if (!document.querySelector('.set-list')) {
+       throw new Error('a11y: the Session runner step never reached the runner');
+     }`],
 ];
 
 /* ⚠️ THE PALETTE, ADDED 2026-08-26 — and the reason is a known coverage hole
@@ -295,7 +322,14 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
       if (after) {
         // Wrapped in an async IIFE so a step can await its own settling — the
         // muscle panel needs the map painted before a muscle can be tapped.
-        try { await evaluate(`(async () => { ${after} })()`); } catch { /* step is best-effort */ }
+        // ⚠️ A FAILED STEP IS SAID OUT LOUD. It used to be swallowed entirely,
+        // which is how a route can end up audited under the wrong name — the
+        // `#/data` fault of 2026-08-24, arriving through a different door. A
+        // step may still be best-effort (the muscle panel needs paint that may
+        // not have landed), but a silent one is a coverage claim nobody checked.
+        try { await evaluate(`(async () => { ${after} })()`); } catch (e) {
+          console.error(`  ⚠️ step failed for ${name} @ ${width}px ${theme}: ${String(e).slice(0, 200)}`);
+        }
         await sleep(700);
       }
       await evaluate(`document.documentElement.setAttribute('data-theme','${dark ? 'dark' : 'light'}')`);

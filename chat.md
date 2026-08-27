@@ -5515,3 +5515,46 @@ real Chrome), noted in progress.md rather than hidden.
 
 progress.md is the file to read, top to bottom of the 2026-08-28 sections. The PINNED table and
 the DECLINED rest-timer list are standing instructions that survive this reset.
+
+---
+
+## 2026-08-29 — the workout screen, reformatted on Tim's instruction
+
+**Tim:** "During the workout right now it shows the current selected set's measurements really big in
+the middle and the full list of the sets below it, including the one it's on now. I'm curious if
+having it formatted differently would be an improvement. I'm thinking that there should be no large
+current selected set details display, and instead the list of sets should be large and share the
+space in the middle, and then when you select one, it makes it larger and you can add or subtract
+the weight amount or number of reps after it is open."
+
+**Done, and he was right for a sharper reason than space.** The screen was showing the same numbers
+twice — a detached block of steppers headed `SET 1 OF 4`, and set 1 again in the list underneath,
+both live, both editing the same object. The only thing tying them together was the heading and an
+accent square, which is a relationship you work out rather than see. Now: one set of numbers per set,
+in the row that IS that set; the row you are on carries the ± controls; tapping another set moves
+them to it. Exactly one is always open, because `entry.active` has always been what the steppers
+point at and a closed-everything state would have no way to log a number.
+
+The constraint was keeping the big digits — the usability drive last session named them among the
+things not to break. They did not move: 30px digits, 46×52 step buttons, identical at 360 and 390.
+What went was the ~200px the detached block spent showing a copy of row one, so a four-set exercise
+now fits on one screen with room under it instead of sitting on the bottom edge. The rows themselves
+grew, 44px → 50px.
+
+Two things that would have shipped as bugs and were caught by driving it:
+
+- The old `onChange` re-rendered the whole set list on every nudge. That was free while the steppers
+  sat outside the list and would now have torn down the input being typed into, blurring it after one
+  digit. Repaints in place instead; a render test holds the row NODE across the change.
+- The controls used to be at a fixed place near the top. Opening a set now keeps the scroll and moves
+  the minimum that brings the controls on screen — checked with a nine-set exercise from a cold
+  scroll position.
+
+Also found: **the session runner had never been in the accessibility audit** — the one screen the app
+exists for, skipped for four weeks because a session needs a workout id and the route list only held
+static hashes. It is in now, and the first version of the step silently audited the picker instead
+(it matched `/^Start/` against rows whose text begins with the workout's name), so the step asserts
+it landed and a failed step is printed rather than swallowed. Re-run: 68 combinations, 6,478 text
+nodes, zero contrast failures, zero overflow, zero unnamed controls.
+
+Render tests 564 → 574, both new assertions mutation-checked. All eleven suites green. Pushed.
