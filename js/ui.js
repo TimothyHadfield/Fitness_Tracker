@@ -1,6 +1,7 @@
 // Shared UI primitives: DOM builder, icons, sheets, toasts, steppers, formatters.
 
 import { FIELD_META } from './exercises.js';
+import { imageFor } from './exercise-images.js';
 import * as units from './units.js';
 
 /* ------------------------------------------------------------------ *
@@ -351,6 +352,103 @@ export function toast(message) {
   document.body.append(t);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.remove(), 2400);
+}
+
+/* ------------------------------------------------------------------ *
+ * Exercise pictures (2026-08-30, Tim's ask)
+ *
+ * "the picture should be shown wherever an exercise is named, right next to
+ * the name… if the user clicks on the name of the exercise, it will pull up
+ * the picture that takes up the screen and then the user can click an x in the
+ * corner that will close the picture."
+ *
+ * `js/exercise-images.js` owns WHICH picture; this owns how it is shown.
+ *
+ * ⚠️ THERE IS NO ART IN THE REPOSITORY YET — the style Tim wants is a paid
+ * stock library and buying it is his call. So the whole path below has one
+ * governing rule: **no picture is an ordinary state, not a missing file.**
+ * `exerciseLabel()` with nothing to show returns the plain name it would have
+ * rendered anyway — no placeholder square, no broken-image icon, no gap. A
+ * screen with no pictures looks exactly as it did before this shipped, which
+ * is what makes it safe to ship the feature ahead of the art.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Full-screen picture with an ✕ in the corner.
+ *
+ * ⚠️ THE PICTURE SITS ON WHITE IN BOTH THEMES, hard-coded, never a token.
+ * These illustrations are drawn on white; painted onto a dark surface they
+ * would be a glaring white rectangle with a ragged edge where the artwork
+ * stops. The card is the same decision the QR code made on 2026-08-29 — an
+ * asset that carries its own background does not get to inherit the theme.
+ */
+export function openImageViewer({ src, name }) {
+  const close = () => {
+    backdrop.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+
+  const img = el('img', { class: 'exview-img', src, alt: `${name} — how the exercise looks` });
+
+  const backdrop = el('div', {
+    class: 'exview', role: 'dialog', 'aria-modal': 'true', 'aria-label': name,
+    // Tapping the dark space closes it, like every sheet in the app. The ✕ is
+    // what the screen TELLS you to press; this is the shortcut people try.
+    onClick: (e) => { if (e.target === backdrop) close(); },
+  },
+    iconBtn('x', 'Close picture', close, 'icon-btn exview-close'),
+    el('div', { class: 'exview-card' }, img),
+    el('div', { class: 'exview-name', text: name }),
+  );
+
+  document.body.append(backdrop);
+  document.addEventListener('keydown', onKey);
+  return { close };
+}
+
+/**
+ * An exercise's name with its picture beside it, where there is one.
+ *
+ * @param exercise  the library object — needed for the id, because two
+ *                  exercises share the name "Cable Kickback" and only the id
+ *                  separates them.
+ * @param name      what to print. Defaults to the exercise's own name; a
+ *                  recorded session carries its own `exerciseName`, which is
+ *                  what was called at the time and may differ.
+ * @param tag       the element for the name — 'span' inside a row, 'h2' where
+ *                  it is the screen's heading.
+ * @param className goes on the name element, so existing styling is kept.
+ * @param inControl ⚠️ TRUE WHERE THIS SITS INSIDE A BUTTON OR LINK ALREADY.
+ *                  A button inside a button is invalid HTML and needs a
+ *                  stopPropagation that holds until somebody adds the next
+ *                  control — `.set-del` and the people bar's ✕ both learned
+ *                  that. So inside a row the thumbnail is NOT a control: the
+ *                  row keeps its own job, and the picture is reached from the
+ *                  screens where the name is not already a control.
+ */
+export function exerciseLabel({
+  exercise, name, tag = 'span', className = '', inControl = false, thumbClass = '',
+} = {}) {
+  const label = name || (exercise && exercise.name) || '';
+  const src = imageFor(exercise);
+  const nameNode = el(tag, { class: className, text: label });
+  if (!src) return nameNode;
+
+  const thumb = el('img', {
+    class: `ex-thumb ${thumbClass}`.trim(), src, alt: '', loading: 'lazy', decoding: 'async',
+  });
+
+  if (inControl) {
+    return el('span', { class: 'ex-label' }, thumb, nameNode);
+  }
+  // Not inside a control: the whole thing is the button, which is what Tim
+  // asked for — "if the user clicks on the name of the exercise".
+  return el('button', {
+    class: 'ex-label ex-label-btn',
+    'aria-label': `Show a picture of ${label}`,
+    onClick: () => openImageViewer({ src, name: label }),
+  }, thumb, nameNode);
 }
 
 /* ------------------------------------------------------------------ *

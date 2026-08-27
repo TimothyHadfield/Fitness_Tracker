@@ -5834,3 +5834,62 @@ correctly stayed open. Not an app bug.
 of the "exactly one ✕" test was vacuous — with a single guest it passed against a mutation that put
 a ✕ on every chip — so it drives two people now. The audit gained the swap sheet, which is the first
 sheet in this app it has ever measured: 76 combinations, 7,566 text nodes, zero failures.
+
+---
+
+## 2026-08-30, third pass — exercise pictures, built ahead of the art
+
+**Tim:** *"I want to have a way to display pictures of the exercises so the user knows what it looks
+like in the app, no matter where it is displayed… if the user clicks on the name of the exercise, it
+will pull up the picture that takes up the screen and then the user can click an x in the corner
+that will close the picture."* He sent two reference images and asked to be shown what I found
+before anything was used.
+
+**What the images are.** They are Gym Visual's — a paid stock library of 6,698 exercise
+illustrations, male and female, in exactly that style. That is why every fitness site looks the
+same; they all buy from there. They cannot be taken from the sites that re-host them: the largest
+public dataset that does says in its own licence file *"obtain your own license there before reusing
+the media."*
+
+**The price is small and the licence is clean for us:** under $0.75 an illustration in bulk (~$200
+for all 275 of our exercises, ~$30 for the 40 most-used), commercial app and website use permitted,
+no attribution, no royalties, perpetual. One clause worth an email first — it forbids "making
+available on a website for download", and a web app serves image files at URLs.
+
+**The free alternative doesn't match.** Everkinetic is the only open set covering a whole library
+(289 exercises, CC BY-SA) and it is black-and-white line art with no muscle highlighting. Tim saw a
+sample and didn't take it.
+
+**This is the second time this project has hit a licensing wall on somebody else's anatomy art** —
+the body map is hand-drawn because the image Tim originally found was a watermarked Dreamstime
+asset.
+
+**Tim chose: build it now, images later.** So the whole feature ships and the art is a purchase
+whenever he wants it. Drop files into `img/exercises/` named for the exercise, run one command, and
+they appear everywhere.
+
+**The assertion that matters is about absence.** With no pictures bought, nothing renders a
+thumbnail and no name becomes a button — every screen is exactly what it was before this shipped.
+No placeholder, no broken-image box, no reserved gap. That is the only thing that makes shipping
+ahead of the art safe, and it is mutation-checked: make it draw an empty square instead and exactly
+that assertion fails.
+
+**Where the pictures appear:** the session runner's heading, the finish screen, a workout's exercise
+list, a ready-made system's list, the calendar day, the edit form, the exercise picker and the swap
+shortlist. Tapping the name opens the picture full-screen with an ✕ in the corner; Escape closes it
+too.
+
+**Three decisions worth knowing:**
+
+- **Pictures are keyed by exercise ID, never by name.** "Cable Kickback" exists twice in the library
+  — once for triceps, once for glutes — so a name-keyed lookup would eventually paint the wrong
+  picture and nobody would report it.
+- **Inside a row the thumbnail is not a button.** A button inside a button is invalid HTML; the row
+  keeps being the only control on the row.
+- **The manifest is generated, not hand-kept.** A list of filenames maintained by hand drifts from
+  the directory silently — a name typed wrong shows no picture, and no picture is this feature's
+  normal state. A test compares the two, and the generator refuses a badly-named file rather than
+  skipping it.
+
+**Proved with a stand-in I drew** (not shipped): thumbnail 38×38, the viewer full width, the ✕
+hit-tested at 44px, the name 17.4:1 on the dim ground. Tests: 3,465 across twelve suites.

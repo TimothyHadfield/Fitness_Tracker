@@ -14,6 +14,18 @@ import { alternativesFor } from './exercise-families.js';
 /** The library's Activity shelf, by lowercased name — see feedCard(). */
 const ACTIVITY_NAMES = new Set(
   BUILT_IN_EXERCISES.filter((e) => e.muscle === 'Activity').map((e) => e.name.toLowerCase()));
+
+/* A built-in exercise by NAME, for the ready-made-system screens — those list
+ * their exercises by name (`preset-systems.js` references them that way on
+ * purpose, and a test asserts every one resolves), so there is no id to look up.
+ *
+ * ⚠️ Returns the FIRST match, and the one ambiguous name in the library is
+ * "Cable Kickback" (Triceps and Glutes). No preset system uses it; if one ever
+ * does, this picks the triceps one and the picture would be wrong. Worth
+ * knowing rather than worth solving today — the exercise-image manifest is
+ * keyed by id everywhere it can be. */
+const byExerciseName = (name) =>
+  BUILT_IN_EXERCISES.find((e) => e.name === name) || null;
 // ⚠️ Statically imported, unlike the rest of the rating, and on purpose. These
 // are the CAVEATS that travel with the numbers — what the strength score cannot
 // see, and that "half a set" is a modelling choice — plus the exercise-order
@@ -27,7 +39,7 @@ import {
 import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
-  emptyState, relativeDay, miniStepper, loadBadge, trimNum, youFriendsTabs,
+  emptyState, relativeDay, miniStepper, loadBadge, trimNum, youFriendsTabs, exerciseLabel,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -1178,7 +1190,8 @@ export async function ExploreDetailView(id) {
         el('div', { class: 'list' }, w.exercises.map((e) =>
           el('div', { class: 'row static' },
             el('div', { class: 'row-main' },
-              el('div', { class: 'row-title', text: e.name }),
+              exerciseLabel({ exercise: byExerciseName(e.name), name: e.name,
+                tag: 'div', className: 'row-title' }),
               e.notes ? el('div', { class: 'row-sub', text: e.notes }) : null,
             ),
             el('div', { class: 'row-meta mono', text: plural(e.sets, 'set') }),
@@ -1399,7 +1412,8 @@ async function WorkoutDetailView(id) {
     const ex = exMap.get(item.exerciseId);
     return el('div', { class: 'row static' },
       el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: ex ? ex.name : 'Unknown exercise' }),
+        exerciseLabel({ exercise: ex, name: ex ? ex.name : 'Unknown exercise',
+          tag: 'div', className: 'row-title' }),
         el('div', { class: 'row-sub wrap', text:
           [ex ? ex.muscle : null, ex ? ex.equipment : null,
            // setTypeLabel() already carries the count, and it says "Straight
@@ -1750,7 +1764,7 @@ export async function openSwapPicker({ exMap, current, inSession = [], onPick })
     onClick: () => pick(ex),
   },
     el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: ex.name }),
+      exerciseLabel({ exercise: ex, tag: 'div', className: 'row-title', inControl: true }),
       el('div', { class: 'row-sub' },
         `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}`
         // ⚠️ MARKED, NEVER HIDDEN. Swapping to something already in today's
@@ -1858,7 +1872,7 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
         btn.querySelector('.row-chev').replaceChildren(icon('check'));
       } },
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: ex.name }),
+          exerciseLabel({ exercise: ex, tag: 'div', className: 'row-title', inControl: true }),
           el('div', { class: 'row-sub' },
             `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}`,
           ),

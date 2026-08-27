@@ -46,6 +46,7 @@ const SHELL = [
   './js/research-data.js',
   './js/research-topics.js',
   './js/exercise-families.js',
+  './js/exercise-images.js',
   './js/views-import.js',
   './js/firebase-backend.js',
   './js/firebase-config.js',
@@ -75,6 +76,15 @@ const SHELL = [
   './js/views-profile.js',
   './js/views-session.js',
   './js/views-workouts.js',
+  /* ⚠️ EXERCISE PICTURES GO BELOW, AND THEY ARE GENERATED — run
+   * `node tools/build-exercise-images.mjs` after dropping files into
+   * img/exercises/. Never hand-edit between the markers.
+   *
+   * They are precached for the same reason everything else here is: D6 says
+   * the app works with no network, and a picture fetched on demand is a
+   * picture that is missing in a gym basement. Empty until Tim buys the art. */
+  // BEGIN EXERCISE IMAGES
+  // END EXERCISE IMAGES
 ];
 
 self.addEventListener('install', (e) => {

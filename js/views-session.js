@@ -5,7 +5,7 @@ import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  fmtSet, confirmSheet, fmtDateLong, openSheet,
+  fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel,
 } from './ui.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
@@ -1427,7 +1427,12 @@ export async function SessionView(workoutId) {
       // so it isn't repeated here.
       el('div', { class: 'session-head' },
         el('div', { class: 'session-head-row' },
-          el('h2', { class: 'session-ex-name', text: entry.exerciseName }),
+          // ⚠️ The picture, where there is one — and the whole name is the
+          // button that opens it full screen (Tim, 2026-08-30). This heading
+          // is not inside a control, so it may BE one; the rows elsewhere
+          // cannot, which is why exerciseLabel takes `inControl`.
+          exerciseLabel({ exercise: ex, name: entry.exerciseName,
+            tag: 'h2', className: 'session-ex-name' }),
           // ⚠️ QUIET, and beside the name rather than under the numbers. Swapping
           // is a thing you do occasionally when a machine is taken; it must be
           // findable without competing with the steppers, which are what this
@@ -2133,7 +2138,8 @@ export async function SessionView(workoutId) {
         entries.length
           ? el('div', { class: 'finish-record' },
               ...entries.map((e) => el('div', { class: 'finish-ex' },
-                el('div', { class: 'finish-ex-name', text: e.exerciseName }),
+                exerciseLabel({ exercise: exMap.get(e.exerciseId), name: e.exerciseName,
+                  tag: 'div', className: 'finish-ex-name' }),
                 el('div', { class: 'finish-ex-sets' },
                   ...e.sets.map((set, i) => el('span', { class: 'finish-set' },
                     fmtSet(set, e.fields || ['weight', 'reps'], e.loadType || null)

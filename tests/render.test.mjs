@@ -2763,6 +2763,133 @@ ok(!data.querySelector('.rep-target'),
      'and his session is filed under the identity\'s ID, not matched on the free text of his name');
 }
 
+/* ================= exercise pictures (2026-08-30) =================
+ *
+ * Tim: *"the picture should be shown wherever an exercise is named, right next
+ * to the name… if the user clicks on the name of the exercise, it will pull up
+ * the picture that takes up the screen and then the user can click an x in the
+ * corner that will close the picture."*
+ *
+ * 🚨 THE FIRST ASSERTION IS THE ONE THAT MATTERS, and it is about ABSENCE.
+ * There is no art in the repository — the style Tim wants is a paid stock
+ * library and buying it is his call — so the feature had to ship ahead of the
+ * pictures. That is only safe if a screen with no picture looks EXACTLY as it
+ * did before: no placeholder, no broken-image box, no reserved gap. If that
+ * ever stops being true, every screen in the app grows an empty square.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { MANIFEST } = await import(BASE + 'exercise-images.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const bench = byName('Barbell Bench Press');
+
+  const w = await store.saveWorkout({
+    name: 'Picture day',
+    exercises: [{ exerciseId: bench.id, sets: 1, notes: '' }],
+  });
+
+  // ---- with no art, which is the shipped state ----
+  localStorage.removeItem(DRAFT);
+  {
+    const s = await mount(SessionView(w.id));
+    ok(s.querySelectorAll('.ex-thumb').length === 0,
+       '🚨 with no pictures bought, nothing renders a thumbnail');
+    ok(s.querySelectorAll('.ex-label-btn').length === 0,
+       'and no name becomes a button — the screen is byte-for-byte what it was');
+    const head = s.querySelector('.session-ex-name');
+    ok(head && head.tagName === 'H2' && head.textContent === 'Barbell Bench Press',
+       'the heading is still a plain heading with the plain name');
+  }
+
+  // ---- now give that one exercise a picture ----
+  MANIFEST[bench.id] = 'webp';
+  try {
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    const thumb = s.querySelector('.session-ex-name')
+      ? s.querySelector('.ex-label .ex-thumb') : null;
+    ok(Boolean(thumb), 'once bought, the picture appears beside the name');
+    ok(thumb && /img\/exercises\/barbell-bench-press--chest\.webp$/.test(thumb.getAttribute('src')),
+       '⚠️ addressed by the exercise ID, not its name — two exercises share the name '
+       + '"Cable Kickback" and only the id separates them');
+    ok(thumb && thumb.getAttribute('alt') === '',
+       'the thumbnail is decorative — its name is right beside it, so announcing it twice is noise');
+
+    /* ⚠️ THE NAME IS THE BUTTON, which is what Tim asked for. Asserted by
+     * CLICKING rather than by reading a class: a label that looks tappable and
+     * does nothing is the exact fault this project shipped five times over in
+     * one pass on 2026-08-29. */
+    const label = s.querySelector('.ex-label-btn');
+    ok(Boolean(label) && label.tagName === 'BUTTON', 'and the name is a real button');
+    ok(/Show a picture of Barbell Bench Press/.test(label.getAttribute('aria-label') || ''),
+       'named for a screen reader rather than left as a bare image');
+    label.click();
+    await settle();
+
+    const viewer = document.querySelector('.exview');
+    ok(Boolean(viewer), '⚠️ tapping it opens the full-screen picture');
+    ok(viewer && viewer.getAttribute('role') === 'dialog'
+       && viewer.getAttribute('aria-modal') === 'true', 'as a modal dialog');
+    const big = viewer && viewer.querySelector('.exview-img');
+    ok(big && big.getAttribute('src') === thumb.getAttribute('src'),
+       'showing the same picture, at size');
+    ok(big && /Barbell Bench Press/.test(big.getAttribute('alt') || ''),
+       '⚠️ and THIS one carries the name in its alt — it is the content of the screen now, '
+       + 'not a decoration beside a label');
+    ok(/Barbell Bench Press/.test(viewer.textContent),
+       'with the name on screen, so the picture is never context-free');
+
+    const x = viewer.querySelector('.exview-close');
+    ok(Boolean(x) && /Close/.test(x.getAttribute('aria-label') || ''),
+       'and an ✕ in the corner, which is what Tim asked for');
+    x.click();
+    await settle();
+    ok(!document.querySelector('.exview'), 'the ✕ closes it');
+
+    // Escape too — the app's sheets all honour it and a modal that traps you is worse
+    // than no modal.
+    s.querySelector('.ex-label-btn').click();
+    await settle();
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }));
+    await settle();
+    ok(!document.querySelector('.exview'), 'and so does Escape');
+
+    /* 🚨 INSIDE A ROW THE THUMBNAIL IS NOT A CONTROL. A button inside a button
+     * is invalid HTML and needs a stopPropagation that holds until somebody
+     * adds the next control — `.set-del` and the people bar's ✕ both learned
+     * that the hard way. The row keeps its own job. */
+    s.querySelectorAll('.swap-btn')[0].click();
+    await settle();
+    const sheet = document.querySelector('.sheet');
+    const rowThumb = sheet.querySelector('.search-results .ex-thumb');
+    if (rowThumb) {
+      ok(!rowThumb.closest('.ex-label-btn'),
+         '🚨 a thumbnail inside a row is never itself a button');
+      ok(rowThumb.closest('button.row'), 'the row is still the only control on the row');
+    } else {
+      ok(true, 'no shortlist row happens to have a picture, which is fine');
+    }
+    sheet.closest('.sheet-backdrop').remove();
+
+    // Everywhere else it is named: the calendar day, the edit form, the picker.
+    const { DayView } = await import(BASE + 'views-data.js');
+    const { todayISO: today } = await import(BASE + 'store.js');
+    await store.saveSession({
+      workoutId: w.id, workoutName: 'Picture day', date: today(),
+      entries: [{ exerciseId: bench.id, exerciseName: 'Barbell Bench Press',
+                  sets: [{ weight: 185, reps: 5 }] }],
+    });
+    const day = await mount(DayView(today()));
+    ok(day.querySelector('.detail-ex-name'), 'the calendar day still names the exercise');
+    ok(day.querySelector('.ex-thumb'),
+       '⚠️ and shows its picture there too — Tim asked for "wherever an exercise is named"');
+  } finally {
+    delete MANIFEST[bench.id];
+    localStorage.removeItem(DRAFT);
+  }
+}
+
 /* ============ taking somebody back OUT of the workout (2026-08-30) ============
  *
  * Tim: *"allow the user to also remove one of the people they're recording data

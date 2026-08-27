@@ -17,7 +17,7 @@ import { LOAD_LABEL } from './exercises.js';
 import { minisOf, miniLabel, dropOrphanGroups } from './set-types.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  confirmSheet, fmtDateLong,
+  confirmSheet, fmtDateLong, exerciseLabel,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
 
@@ -143,7 +143,8 @@ export async function EditSessionView(sessionId) {
       return el('div', { class: 'card edit-ex' },
         el('div', { class: 'day-head' },
           el('div', { style: 'flex:1;min-width:0' },
-            el('div', { class: 'detail-ex-name', text: entry.exerciseName }),
+            exerciseLabel({ exercise: exMap.get(entry.exerciseId), name: entry.exerciseName,
+              tag: 'div', className: 'detail-ex-name' }),
             entry.group != null || entry.setType
               ? el('div', { class: 'row-sub', text: [
                   entry.group != null ? 'part of a superset' : null,

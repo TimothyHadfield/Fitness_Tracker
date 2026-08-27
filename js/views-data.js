@@ -11,7 +11,7 @@ import {
 } from './e1rm.js';
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
-  fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge,
+  fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge, exerciseLabel,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
@@ -487,7 +487,8 @@ export async function DayView(date) {
             groupLabel(s.entries.filter((o) => o.group === e.group).length) })
         : null,
       el('div', { class: 'detail-ex-head' },
-        el('span', { class: 'detail-ex-name', text: e.exerciseName }),
+        exerciseLabel({ exercise: exMap.get(e.exerciseId), name: e.exerciseName,
+          tag: 'span', className: 'detail-ex-name' }),
         loadType ? loadBadge(loadType) : null,
       ),
       el('div', { class: 'detail-sets' },
@@ -589,7 +590,8 @@ export async function DayView(date) {
         el('div', { class: 'day-head' },
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'detail-ex-head' },
-              el('span', { class: 'detail-ex-name', text: b.exerciseName }),
+              exerciseLabel({ exercise: exMap.get(b.exerciseId), name: b.exerciseName,
+                tag: 'span', className: 'detail-ex-name' }),
               loadType ? loadBadge(loadType) : null,
             ),
             el('div', { class: 'row-sub mono', text: fmtSet(b.values || {}, fields, loadType) }),

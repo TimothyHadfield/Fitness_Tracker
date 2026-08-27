@@ -2023,6 +2023,76 @@ a.seg {
 .search-results { display: flex; flex-direction: column; flex: 1; min-height: 120px; overflow-y: auto; }
 .search-results > * + * { border-top: 1px solid var(--rule-soft); }
 
+/* ================================================================== *
+ * Exercise pictures (2026-08-30)
+ *
+ * ⚠️ THE PICTURE ALWAYS SITS ON WHITE, in both themes, hard-coded and never a
+ * token. These illustrations are drawn on a white ground; painted straight
+ * onto a dark surface they read as a glaring rectangle with a ragged edge
+ * where the artwork stops. Same decision the QR code made on 2026-08-29 — an
+ * asset that carries its own background does not get to inherit the theme.
+ *
+ * ⚠️ AND NOTHING HERE RESERVES SPACE. There is no art in the repo yet, and
+ * `exerciseLabel()` returns the bare name when there is none — so every rule
+ * below applies to an element that simply is not rendered. A screen with no
+ * pictures must look exactly as it did before this shipped.
+ * ================================================================== */
+.ex-label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.ex-label-btn {
+  /* A button, because outside a row the NAME is what Tim asked to be tappable.
+     Styled to nothing so it keeps reading as the heading or label it replaced. */
+  background: none; border: 0; padding: 0; margin: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.ex-thumb {
+  flex: none; width: 34px; height: 34px; border-radius: 6px;
+  /* ⚠️ CONTAIN, not cover. These illustrations are usually two frames side by
+     side, and a square crop of one takes the GAP BETWEEN THEM and throws away
+     the outer half of each figure. Contained it is small — which Tim already
+     accepted ("obviously the full pictures would be too small to see"), and is
+     why tapping enlarges it. A thumbnail's job here is to identify, and a
+     cropped one identifies the wrong thing. */
+  object-fit: contain; object-position: center;
+  background: #fff; border: 1px solid var(--rule);
+}
+.session-ex-name .ex-thumb, .ex-label-btn > .ex-thumb { width: 38px; height: 38px; }
+
+/* The sub-line lines up under the name rather than under the picture. Written
+   with :has() so it is purely additive — where :has() is unsupported the row
+   looks exactly as it did before pictures existed, which is the same failure
+   mode the whole feature is built around. */
+.row-main:has(.ex-thumb) .row-sub { padding-left: 42px; }
+
+/* The viewer. Fixed, above everything, its own ✕ in the corner. */
+.exview {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: calc(env(safe-area-inset-top) + 52px) 16px calc(env(safe-area-inset-bottom) + 20px);
+  background: rgba(0, 0, 0, .82);
+}
+.exview-close {
+  position: absolute; top: calc(env(safe-area-inset-top) + 8px); right: 10px;
+  background: var(--raised); color: var(--ink);
+}
+/* ⚠️ IT TAKES UP THE SCREEN, which is what Tim asked for and is not what the
+   first version did: sized to the artwork's own pixels, a 600px-wide
+   illustration rendered 346px wide in the middle of a black screen — a
+   thumbnail with more ceremony. The card claims the width and the picture
+   scales UP into it; `contain` keeps it undistorted, so a tall illustration
+   ends up shorter than the card rather than stretched. */
+.exview-card {
+  background: #fff; border-radius: 10px; padding: 8px;
+  width: 100%; flex: 0 1 auto; min-height: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.exview-img {
+  width: 100%; height: 100%; max-height: 100%;
+  object-fit: contain; display: block;
+}
+/* ⚠️ On the dim ground, not on a token surface — this line sits over the
+   backdrop and its contrast is against that, in both themes. */
+.exview-name { color: #fff; font-size: 14px; font-weight: 600; text-align: center; }
+
 /* ⚠️ THE SWAP SHORTLIST (2026-08-30). Five rows and a way onward, so the sheet
    is short enough not to want its own scroller — `.search-results` is written
    for the 275-row picker and claims `flex: 1` with a 120px floor, which inside

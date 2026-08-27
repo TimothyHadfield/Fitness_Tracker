@@ -1687,8 +1687,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 
   const shipped = [];
   const walk = (dir, prefix) => {
-    for (const f of fsMod.readdirSync(pathMod.join(up, dir))) {
-      shipped.push(prefix + f);
+    for (const f of fsMod.readdirSync(pathMod.join(up, dir), { withFileTypes: true })) {
+      // ⚠️ Files only. `img/exercises/` arrived on 2026-08-30 as a DIRECTORY,
+      // and a directory is not an asset — listing it here asked sw.js to
+      // precache a folder. Its contents are precached by their own generated
+      // block, which the exercise-picture section further down asserts.
+      if (!f.isFile()) continue;
+      shipped.push(prefix + f.name);
     }
   };
   walk('js', 'js/');
@@ -4536,6 +4541,76 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const r = alternativesFor(custom, [...LIB, custom]);
     ok(r.reason === 'muscle' && r.items.length > 0, 'a custom exercise still gets suggestions');
   }
+}
+
+/* ================= exercise pictures (2026-08-30) =======================
+   Tim asked for a picture beside every exercise name. The ART is a purchase he
+   has not made yet — the style he wants is a paid stock library — so the
+   feature shipped ahead of it and these assertions guard the seam.
+
+   ⚠️ THE MANIFEST IS GENERATED FROM THE DIRECTORY, and the whole reason to
+   check it here is that the drift is SILENT: a filename typed wrong shows no
+   picture, and "no picture" is the normal state of this feature, so nothing
+   looks wrong. A forgotten `node tools/build-exercise-images.mjs` must fail
+   loudly instead. */
+{
+  const { readdirSync, existsSync, readFileSync } = await import('node:fs');
+  const ei = await import('../js/exercise-images.js');
+  const { MANIFEST, IMAGE_DIR, imageFor, imageForId, hasImages, manifestPaths } = ei;
+  const dir = new URL('../img/exercises/', import.meta.url);
+
+  const ids = Object.keys(MANIFEST);
+  const libIds = new Set(BUILT_IN_EXERCISES.map((e) => e.id));
+  const strays = ids.filter((id) => !libIds.has(id));
+  ok(strays.length === 0,
+     `every picture is named for a real exercise id (${strays.join(', ') || 'none stray'})`);
+
+  // ⚠️ Against the DIRECTORY, so a rebuild that was not run fails here.
+  if (existsSync(dir)) {
+    const onDisk = readdirSync(dir)
+      .filter((f) => !f.startsWith('.') && f !== 'README.md');
+    const expected = new Set(ids.map((id) => `${id}.${MANIFEST[id]}`));
+    const missing = onDisk.filter((f) => !expected.has(f));
+    ok(missing.length === 0,
+       `⚠️ the manifest matches img/exercises/ (${missing.length ? `run tools/build-exercise-images.mjs — unlisted: ${missing.join(', ')}` : 'in step'})`);
+    ok(ids.every((id) => onDisk.includes(`${id}.${MANIFEST[id]}`)),
+       'and every manifest entry is a file that actually exists');
+  }
+
+  // 🚨 D6: a picture the worker was never told about is a picture that is
+  // missing in a gym basement. The generator writes both lists; this proves it.
+  const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+  ok(sw.includes('// BEGIN EXERCISE IMAGES') && sw.includes('// END EXERCISE IMAGES'),
+     'sw.js carries the generated block the tool writes into');
+  const unprecached = manifestPaths().filter((p) => !sw.includes(`./${p}`));
+  ok(unprecached.length === 0,
+     `🚨 every picture is precached for offline (${unprecached.join(', ') || 'all of them'})`);
+
+  // The resolver itself, which has to be right before there is any art at all.
+  const bench = byName('Barbell Bench Press');
+  ok(imageFor(null) === null && imageFor({}) === null, 'no exercise, no picture — and no throw');
+  ok(imageForId('not-a-real-id') === null, 'and an unknown id resolves to nothing');
+  ok(hasImages() === (ids.length > 0), 'hasImages() reflects the manifest');
+  // Drive the "there is art" branch without inventing a file.
+  MANIFEST[bench.id] = 'webp';
+  try {
+    ok(imageFor(bench) === `${IMAGE_DIR}${bench.id}.webp`,
+       'a bought picture resolves to img/exercises/<id>.<ext>');
+    ok(imageFor(bench) === imageForId(bench.id), 'by object and by id agree');
+    /* ⚠️ KEYED BY ID, NOT BY NAME, and this is the assertion that pins why.
+       "Cable Kickback" exists TWICE in the library — once for Triceps, once
+       for Glutes — so a name-keyed manifest would eventually paint a triceps
+       picture over a glute exercise and nobody would ever report it. */
+    const kicks = BUILT_IN_EXERCISES.filter((e) => e.name === 'Cable Kickback');
+    ok(kicks.length === 2, 'the library really does hold two "Cable Kickback"s');
+    MANIFEST[kicks[0].id] = 'webp';
+    ok(imageFor(kicks[0]) !== null && imageFor(kicks[1]) === null,
+       '🚨 giving one of them a picture does not give the other one');
+    delete MANIFEST[kicks[0].id];
+  } finally {
+    delete MANIFEST[bench.id];
+  }
+  ok(Object.keys(MANIFEST).length === ids.length, 'and the manifest is left as it was found');
 }
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
