@@ -4,60 +4,66 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-28, fifth pass.
+**Last updated:** 2026-08-28, prepared for a chat reset. **Seven passes ran this session**, all on
+Tim's instructions, and they are the seven dated 2026-08-28 sections below — read them in file
+order (newest first). The one-paragraph version of each:
 
-🚨 **THE FOURTH PASS WAS AN EMERGENCY AND ITS SECTION IS REQUIRED READING.** The sharding
-migration's "emptied = migrated" flag blanked Tim's calendar (his phone, on the old cached build,
-reads only the legacy document). **His two recorded sessions were never gone from the server and
-are restored** — but PITR is off, so the stale-cache scenario cannot be disproved, and ⚠️ **if he
-says more than Pull 08-24 + Legs 08-25 ever existed in the cloud, believe him and start at his
-phone's localStorage.** The redesign: the shard path **cannot address the legacy document at all**
-(a frozen backup floor now), mass deletes are **refused** without a declared wholesale flag, and
-every account keeps a **7-day rolling cloud backup** plus **immutable pre-wipe snapshots** that
-ABORT the wipe if they fail. Rules 117, deployed.
+⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
+carries the git date **2026-08-26**, including everything headed -27 and -28. Headings keep the
+sequence a reader navigates by; never compute an interval from them.
 
-**Fifth pass: Data → Research** (Tim's ask) — strength-vs-age per muscle group from Harbo 2012's
-measured bands, eight honest lines, ⚠️ **Chest/Back/Traps named as unmeasured rather than drawn**,
-after finding that Strength Level's by-age tables are one shared curve wearing eleven names.
+🚨 **1. THE EMERGENCY (fourth pass — required reading).** Tim: *"something you did erased the
+workout sessions I recorded."* The sharding migration's "emptied = migrated" flag blanked the
+legacy sessions document; his phone — on the old cached build, which reads ONLY that document —
+showed an empty calendar. **His two sessions (Pull 08-24, Legs 08-25) were never gone from the
+server and are restored.** PITR is off, so a stale-cache loss cannot be DISproved: ⚠️ **if Tim ever
+says more sessions existed, believe him and start at his phone's localStorage.** The redesign: the
+shard path **cannot address the legacy document at all** (it is a frozen backup floor now), mass
+deletes are **refused** without a declared wholesale flag, pre-wipe snapshots **abort the wipe if
+they fail**, and every account keeps a **7-day rolling cloud backup**. *A flag that destroys
+information is not a flag.*
 
-**Second pass — the usability drive**: the gym loop walked in a real browser at iPhone metrics for
-the first time. ⚠️ **THE REST TIMER IS OFF BY DEFAULT NOW**, behind Settings → Rest timer (Tim:
-*"it just doesn't help… it's a sub-feature"*), and **its improvement list is DECLINED — do not
-resurface it**. Four findings stand and wait on his pick, the biggest two being **no wake lock**
-(the screen sleeps mid-workout) and **prefill counts as recorded** (Finish saves sets you never
-did). That day's second-pass section has the list.
+⚠️ **2. AUTUMN'S "LOST" DATA WAS A FROZEN PROJECTION (sixth pass).** Her account was never touched
+— her published muscle map was an EMPTY PRE-TRAINING SNAPSHOT, because **nothing ever republished
+after recording a workout** (publish was wired to social actions only). Now publish follows the
+data (debounced, fire-and-forget) and a **boot heal** republishes stale projections — hers fixes
+itself the next time she opens the app, and until she does, Tim still sees the empty map:
+**expected, not a recurrence.** All five accounts got immutable owner-side snapshots the same day.
+⚠️ **PITR (7-day server history, the strongest guarantee) needs the Blaze card — if Tim ever says
+yes to Blaze, enable PITR first.**
 
-⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` to the
-newest carries the git date **2026-08-26**, including everything headed 2026-08-25, -26, -27 and
--28. The headings keep the sequence because that is what a reader navigates by; do not treat any of
-them as a real date, and do not compute an interval from them.
+**3. What Tim picked from the "needs no instruction" list (first pass)**: ✅ **0b(c) closed** — one
+document per session, no more ceiling at ~520 sessions, migrated deliberately early; ✅ **0h
+closed** — the last ratios derived, and the worst entries were the ones somebody had REASONED about
+(two inverted the very ordering the argument protected, and a test was defending one); a live
+duplicate-exercise read bug fixed (swap away + back made four readers read the abandoned sets).
+⚠️ One recommendation was **withdrawn as wrong** — the estimator's `setIndex` "urgency" came from
+misreading a plan doc; the data is array order, already on disk.
 
-**2026-08-28 — ⚠️ THE CLOUD CEILING IS GONE, 0h CLOSED, AND A BUG NOBODY WAS LOOKING FOR.**
+⚠️ **4. FOUR ITEMS ARE PINNED AND ONE LIST IS DECLINED — STANDING INSTRUCTIONS THAT SURVIVE THIS
+RESET.** Pinned (do not offer as the next thing to do): activity PRs, the Strava feed exclusion,
+the competitive review, the effect-size research — the **PINNED** table in Open work carries the
+reasoning. Declined outright (do not resurface at all): every improvement to the **rest timer**,
+which is now **OFF by default** behind Settings → Rest timer (second pass; Tim: *"it just doesn't
+help… it's a sub-feature"*).
 
-Tim asked which open items needed no instruction from him, was told six, asked which were *actually*
-good, then said to build the good ones and **pin the rest**.
+**5. The usability drive (second pass)** walked the whole gym loop in a real browser at iPhone
+metrics for the first time. **Four findings stand, reported and waiting on Tim's pick**: **no wake
+lock** (the screen sleeps mid-workout — the single biggest hands-free lever), **prefill counts as
+recorded** (Finish silently saves sets never performed, into ratings and the feed), the Record
+chooser's extra daily tap, and "28" in the Run log's time field parsing as 28 seconds.
 
-- ✅ **0b(c) CLOSED — sessions are one document each.** The 1 MiB per-document cap put a ceiling near
-  **520 sessions**; there is no longer a count at which saving fails. ⚠️ **Migrated at a few dozen
-  sessions ON PURPOSE** — the 80 % warning promised six months, but a migration over a training
-  history gets riskier the more of it there is. Write → **re-read to prove it landed** → only then
-  empty the old copy. **Rules 92 → 108, deployed.**
-- ⚠️ **AND THE NETWORK CODE IN `firebase-backend.js` HAS NOW BEEN EXECUTED** — for the first time
-  since that file was written — against an in-memory Firestore double. It is a double, not Firestore.
-- ✅ **0h CLOSED.** Three ratios derived, spider curl closed as not derivable. ⚠️ **The finding is
-  where the errors were: the entries somebody had ARGUED FOR in a comment, two of which inverted the
-  ordering the argument existed to protect. A test was defending one of them.**
-- ⚠️ **A LIVE BUG, found by reading rather than by any test**: one session can hold the same exercise
-  **twice** (swap away, swap back), and four readers stopped at the first match. The chart, the modal
-  rep count and the pre-fill were reading the sets you gave up on.
-- ⚠️ **ONE OF THE SIX WAS WITHDRAWN AFTER BEING RECOMMENDED** — the estimator's `setIndex` work. It
-  was pitched as urgent because the data "cannot be retrofitted"; the data is array order and is
-  already on disk. **The recommendation came from misreading a plan document rather than the code.**
-- ⚠️ **FOUR ITEMS ARE PINNED, AND THAT IS A STANDING INSTRUCTION** — activity PRs, the Strava feed
-  exclusion, the competitive review, the effect-size research. See the **PINNED** table in Open work.
-  **Do not offer them as the next thing to do.**
+**6. Data → Research shipped (fifth pass)** — strength-vs-age per muscle group from Harbo 2012's
+measured age bands: eight honest lines, x-axis clipped to the measured ages (24–74 men),
+⚠️ **Chest/Back/Traps named as unmeasured rather than invented**, after finding that Strength
+Level's by-age tables are ONE shared curve wearing eleven names. `js/research-data.js` carries the
+data and the sourcing argument.
 
-**The three passes on 2026-08-27**, all on Tim's instructions, are the dated sections below that.
+**7. Remove-an-exercise shipped beside Swap (seventh pass)** — today only, the saved workout never
+touched; recorded sets get a confirm that says the count; a group of one stops being a group; the
+last exercise is refused.
+
+**The three passes headed 2026-08-27** are summarised next; their dated sections follow below.
 
 **Pass 1 — the phone reports and the queued verification.**
 
@@ -96,8 +102,14 @@ good, then said to build the good ones and **pin the rest**.
 - ✅ **0j CLOSED** — **disconnect is mutual**. ⚠️ **Eventual, not instant**, and the sheet says so.
 - **Rules tests 66 → 92**, against the real engine. Rules deployed.
 
-**Tests: 2,874 across eleven suites** (data-layer 1403, render 535, goals 232, bodyweight 170,
-social 134, a11y 85), plus **108 rules assertions in the emulator** and 12 in `sw-update`. Sub-agents are pre-authorised (saved to memory).
+**Tests: 2,943 across eleven suites** (data-layer 1437, render 564, goals 232, bodyweight 170,
+social 140, a11y 85), plus **117 rules assertions in the emulator** and 12 in `sw-update`.
+Sub-agents are pre-authorised (saved to memory).
+
+⚠️ **KNOWN FLAKE, NOTED RATHER THAN HIDDEN**: `tests/sw-update.test.mjs` drives real headless
+Chrome with fixed sleep windows and can miss them when the whole suite loads the machine (2 fails
+in 6 under load, 0 in 10 idle). Pre-existing; its windows deserve a condition-poll someday. A
+different flake (the guest "95" substring grep in render) was diagnosed and FIXED this session.
 
 ⚠️ **A TEST WAS FAILING ABOUT ONCE IN TEN RUNS AND IT WAS THE TEST'S FAULT** — `render` checked that
 a guest's numbers stayed out of the owner's session by grepping the whole serialised session for the
@@ -105,8 +117,11 @@ substring `95`, which a millisecond timestamp or a base-36 id hits often enough 
 2026-08-28. **A test that fails at random teaches people to re-run it, which is the habit that hides
 a real failure.**
 
-⚠️ **STILL UNVERIFIED IN THE FIELD, and it is a short list now**: the friend-name heal, and a real
-kudos/comment round trip with Autumn's account. Everything else his phone has settled.
+⚠️ **STILL UNVERIFIED IN THE FIELD**: ⚠️ **FIRST — Tim confirming his calendar shows Pull + Legs
+again after the restore** (if it does not on a fresh open, that is an emergency report). Then:
+Autumn opening the app on a current build (her frozen projection heals itself and her muscle map
+appears to Tim — until then he still sees the empty one, which is EXPECTED), the friend-name heal,
+and a real kudos/comment round trip with her account.
 
 ⚠️ **AND THE TWO NEWEST FEATURES HAVE NEVER MET REAL DATA.** File import has never parsed an actual
 export from any of those services — the column names come from published documentation, which is
@@ -144,17 +159,24 @@ history, not the app. Read the top of this file, then the **Open work index**.
 
 ⚠️ **NOTHING IS BLOCKING.** Tim can use the app, he is on a current build, and the tests are green.
 
-**What waits on TIM rather than on you** — five things, and none of them blocks anything else:
+**What waits on TIM rather than on you** — and item 0 is the only urgent one:
 
-1. Whether logged **warm-ups** should be excluded from the volume count (0c). His call because the
+0. 🚨 **CONFIRM THE RESTORE**: does his calendar show Pull (08-24) and Legs (08-25) on a fresh
+   open? **And does he believe more sessions than those two ever existed in the cloud?** If yes to
+   the second, recovery starts at his phone's localStorage (Account → upload from this device).
+1. **The four usability findings** await his pick (second-pass section): wake lock,
+   prefill-counts-as-recorded at Finish, the Record chooser tap, the "28"-parses-as-seconds nit.
+   Recommended order if he just says "go": wake lock, then Finish honesty.
+2. Whether logged **warm-ups** should be excluded from the volume count (0c). His call because the
    obvious fix would also throw away genuine back-off sets.
-2. His friend's **failed sign-in** (0f) — he asked to investigate it himself.
-3. **AirPods stem-press controls** — go/no-go. `docs/airpods-plan.md` §4. ⚠️ **He said "wait" on
-   2026-08-27**, so this is parked rather than pending.
-4. **Importing food** — collides with D1/D26 and needs a narrowing decision, not a quiet fix.
-   ⚠️ **Also parked on 2026-08-27** at his instruction.
-5. **Which activities his circle actually logs** — climbing grades are the least standardised
-   thing in the list, and `docs/activities-plan.md` §3 item 6 says to ask rather than guess.
+3. His friend's **failed sign-in** (0f) — he asked to investigate it himself.
+4. **Blaze — a card on file, effectively $0** — now buys something concrete: ⚠️ **enabling PITR
+   (7-day server-side history) is the first thing to do with it**, then live Strava sync stays
+   possible later.
+5. **AirPods stem-press controls** — ⚠️ parked at his instruction ("wait", 2026-08-27).
+6. **Importing food** — ⚠️ parked at his instruction; needs a narrowing decision, not a quiet fix.
+7. **Which activities his circle actually logs** — `docs/activities-plan.md` §3 item 6 says to ask
+   rather than guess.
 
 ✅ **BOTH 2026-08-22 BLOCKERS CLOSED, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
 wrong URL. I can see the year view now."* So **he is on a current build and the app is usable**, and
@@ -304,59 +326,30 @@ which drives the demo.
 
 ---
 
-## 2026-08-28, fourth pass — 🚨 THE EMERGENCY: THE MIGRATION'S FLAG ERASED TIM'S CALENDAR
+## 2026-08-28, seventh pass — REMOVE AN EXERCISE, BESIDE SWAP
 
-Tim: *"Emergency. I think something you did erased the workout sessions I recorded to my account.
-My calendar is empty and my muscle group says nothing to rank yet. This can never happen. You need
-to make it extremely difficult to erase data from people's accounts and even if you do, there's
-some backup saved or something like that."*
+Tim: *"add a button by the swap button that allows the user to delete this exercise entirely. Note
+this works exactly the same as the swap button where it doesn't adjust the workout for future
+systems, just that day's recording."*
 
-### What actually happened, established by reading the live Firestore before touching anything
+**Remove** sits beside Swap in the runner: same quietness, same contract — the saved workout is
+never touched. Where it deliberately does NOT mirror Swap, and why:
 
-The sharding migration ran on his account (`0WQLOA…`) at 19:16:09 on the git-day: it moved the
-sessions the legacy document held into per-session documents, **verified every one landed, and then
-emptied the legacy document — its "migrated" flag.** His phone was still on the **previous build**
-via the service-worker cache, and old builds read ONLY that document. Empty document → empty
-calendar → *"nothing to rank yet."*
+- ⚠️ **RECORDED SETS CONFIRM FIRST, WITH THE COUNT SAID OUT LOUD.** A swap KEEPS recorded sets
+  (they were performed, so they split into the record); a removal DELETES them — that is what
+  removing means — so one tap must not be able to do it. An untouched exercise goes quietly:
+  pre-filled numbers are a plan, not a record.
+- ⚠️ **A GROUP LEFT WITH ONE MEMBER STOPS BEING A GROUP.** `stepsFor()` builds blocks by adjacency
+  and `groupLabel(1)` would happily print "Superset" over a lone exercise — telling somebody to go
+  "straight into" nothing. The survivor keeps its sets and loses only the banner.
+- **The last remaining exercise is refused** — an empty session has no screen to stand on; the ✕
+  up top is the way out.
+- Landing after a removal finds the STEP for the entry that took the slot — `state.index` walks
+  steps, not entries, the same lesson the swap's split path already taught.
 
-⚠️ **THE SESSIONS WERE NEVER GONE FROM THE SERVER.** Both recorded sessions — Pull 2026-08-24
-(6 exercises) and Legs 2026-08-25 (4) — sat safe in the shard documents the whole time. They were
-**restored into the legacy document via the Firestore REST API** (the CLI's own owner credential,
-reads first, one write, verified by read-back), so old and new builds both see them again.
-
-⚠️ **WHAT CANNOT BE RULED OUT, stated rather than hidden**: PITR is disabled on the project
-(1-hour retention, elapsed), so there is no server-side history of the emptied document. The
-migration provably moved everything the legacy read HANDED it — but a stale offline-cache read
-could have handed it less than the server held, and verification cannot see what it was never
-shown. Everything else on the account (6 workouts, 2 systems, goals, settings, the weigh-in) is
-intact, and the account's whole write pattern is consistent with exactly two sessions ever having
-been in the cloud. ⚠️ **If Tim believes more than Pull + Legs were recorded to his account, that is
-a fact only he has, and it changes where to look next: his phone's localStorage may hold pre-cloud
-rows (Account → upload from this device reads them).**
-
-### The design that replaced it — Tim's instruction is the specification
-
-1. ⚠️ **ADOPTION, NOT MIGRATION — the shard path can no longer address the legacy document at
-   all.** No ref exists in the factory; it cannot write, empty, or "tidy" it, and the test double's
-   strongest assertion is that NO setDoc is ever issued. Legacy rows are adopted into the shard
-   (idempotent upserts), reads merge both sources (shard wins), and the legacy document stays
-   forever as a **frozen backup floor** that old builds still read and write. This also closes the
-   stale-cache hole — a partial read now adopts less, instead of destroying the difference.
-2. ⚠️ **GUARDS.** A sharded write that would delete more than **2 rows** in one write is refused
-   outright — nothing committed — unless the caller declares `wholesale`. The store refuses any
-   non-wholesale write of `[]` over a collection the cache knows holds ≥ 5 rows. The legitimate
-   emptiers (Clear all, Restore, deleteSystem, benchmark rebuilds) each declare themselves with
-   the reason at the call site.
-3. ⚠️ **BACKUPS IN THE USER'S OWN ACCOUNT** (`users/{uid}/backups/*`, owner-only): a **7-day
-   rolling ring** (`rolling-{weekday}-{collection}`, refreshed at most every 20 h, prunes itself
-   by overwrite) plus **immutable `snap-*` snapshots taken BEFORE Clear all and Restore run** —
-   and ⚠️ **a failed snapshot ABORTS the wipe.** Rolling writes are never awaited on a save path.
-   The rules deny update on `snap-*` even to the owner: a pre-wipe snapshot the wipe could
-   overwrite protects nothing. **Rules tests 108 → 117, deployed.**
-
-⚠️ **THE LESSON, for the next clever flag:** the migration's verification was sound about what it
-saw; the *flag* was the fault, twice — it blinded every old client, and it turned "what I read" into
-"all there is". **A flag that destroys information is not a flag.**
+14 render assertions: the quiet removal, the orphaned-superset dissolve, the confirm and its
+count, the refusal, the saved workout keeping all three exercises, the draft carrying the
+removals. Driven and screenshotted at 360px — the name wraps and both buttons sit clean.
 
 ---
 
@@ -432,6 +425,62 @@ straight out of the data rather than being a judgement.
 
 **Tests: data-layer 1443, render 550** — normalisation, ranges, the refused groups, and the
 Shoulders-peak-in-the-30s shape that one shared curve cannot produce.
+
+---
+
+## 2026-08-28, fourth pass — 🚨 THE EMERGENCY: THE MIGRATION'S FLAG ERASED TIM'S CALENDAR
+
+Tim: *"Emergency. I think something you did erased the workout sessions I recorded to my account.
+My calendar is empty and my muscle group says nothing to rank yet. This can never happen. You need
+to make it extremely difficult to erase data from people's accounts and even if you do, there's
+some backup saved or something like that."*
+
+### What actually happened, established by reading the live Firestore before touching anything
+
+The sharding migration ran on his account (`0WQLOA…`) at 19:16:09 on the git-day: it moved the
+sessions the legacy document held into per-session documents, **verified every one landed, and then
+emptied the legacy document — its "migrated" flag.** His phone was still on the **previous build**
+via the service-worker cache, and old builds read ONLY that document. Empty document → empty
+calendar → *"nothing to rank yet."*
+
+⚠️ **THE SESSIONS WERE NEVER GONE FROM THE SERVER.** Both recorded sessions — Pull 2026-08-24
+(6 exercises) and Legs 2026-08-25 (4) — sat safe in the shard documents the whole time. They were
+**restored into the legacy document via the Firestore REST API** (the CLI's own owner credential,
+reads first, one write, verified by read-back), so old and new builds both see them again.
+
+⚠️ **WHAT CANNOT BE RULED OUT, stated rather than hidden**: PITR is disabled on the project
+(1-hour retention, elapsed), so there is no server-side history of the emptied document. The
+migration provably moved everything the legacy read HANDED it — but a stale offline-cache read
+could have handed it less than the server held, and verification cannot see what it was never
+shown. Everything else on the account (6 workouts, 2 systems, goals, settings, the weigh-in) is
+intact, and the account's whole write pattern is consistent with exactly two sessions ever having
+been in the cloud. ⚠️ **If Tim believes more than Pull + Legs were recorded to his account, that is
+a fact only he has, and it changes where to look next: his phone's localStorage may hold pre-cloud
+rows (Account → upload from this device reads them).**
+
+### The design that replaced it — Tim's instruction is the specification
+
+1. ⚠️ **ADOPTION, NOT MIGRATION — the shard path can no longer address the legacy document at
+   all.** No ref exists in the factory; it cannot write, empty, or "tidy" it, and the test double's
+   strongest assertion is that NO setDoc is ever issued. Legacy rows are adopted into the shard
+   (idempotent upserts), reads merge both sources (shard wins), and the legacy document stays
+   forever as a **frozen backup floor** that old builds still read and write. This also closes the
+   stale-cache hole — a partial read now adopts less, instead of destroying the difference.
+2. ⚠️ **GUARDS.** A sharded write that would delete more than **2 rows** in one write is refused
+   outright — nothing committed — unless the caller declares `wholesale`. The store refuses any
+   non-wholesale write of `[]` over a collection the cache knows holds ≥ 5 rows. The legitimate
+   emptiers (Clear all, Restore, deleteSystem, benchmark rebuilds) each declare themselves with
+   the reason at the call site.
+3. ⚠️ **BACKUPS IN THE USER'S OWN ACCOUNT** (`users/{uid}/backups/*`, owner-only): a **7-day
+   rolling ring** (`rolling-{weekday}-{collection}`, refreshed at most every 20 h, prunes itself
+   by overwrite) plus **immutable `snap-*` snapshots taken BEFORE Clear all and Restore run** —
+   and ⚠️ **a failed snapshot ABORTS the wipe.** Rolling writes are never awaited on a save path.
+   The rules deny update on `snap-*` even to the owner: a pre-wipe snapshot the wipe could
+   overwrite protects nothing. **Rules tests 108 → 117, deployed.**
+
+⚠️ **THE LESSON, for the next clever flag:** the migration's verification was sound about what it
+saw; the *flag* was the fault, twice — it blinded every old client, and it turned "what I read" into
+"all there is". **A flag that destroys information is not a flag.**
 
 ---
 

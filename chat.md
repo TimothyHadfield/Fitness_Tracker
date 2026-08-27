@@ -5464,3 +5464,54 @@ confirms it works, which isn't the same as confirming why).
 
 progress.md is the file to read. Its index was rebuilt today so open work sits at the top and
 closed work is collected at the bottom — more than half of it is closed now.
+
+════════════════════════════════════════════════════════════════════════════
+PREPARED FOR A CHAT RESET — 2026-08-28 (session day; every git date says 08-26)
+
+The biggest session this project has had, and the scariest. Seven passes, all on Tim's
+instructions, ending with an emergency handled and closed.
+
+What happened, in order:
+
+1. Tim asked which open items needed no instruction, then which were genuinely good, then said to
+   do the good ones and PIN the rest ("don't bring them up as the 'next thing to do' later"). Three
+   shipped: the duplicate-exercise read bug, one-document-per-session (the cloud ceiling removed),
+   and the ratio sweep finished (0h closed — the reasoned entries were the worst ones). Four items
+   pinned with reasoning recorded. One recommendation was withdrawn as wrong (the estimator's
+   setIndex "urgency" — the data was always derivable).
+
+2. A usability drive of the gym loop at iPhone metrics — first time in a real browser. Tim's
+   response to the rest-timer findings: he doesn't love the timer, it's a sub-feature — OFF by
+   default behind a setting now, improvement list DECLINED (don't resurface). Four findings stand
+   waiting on his pick: wake lock, prefill-counts-as-recorded at Finish, the Record chooser tap,
+   "28" parsing as seconds in the Run log.
+
+3. THE EMERGENCY. "I think something you did erased the workout sessions I recorded." True cause:
+   the migration emptied the legacy sessions document as its migrated-flag; his phone, on the old
+   cached build, reads only that document. His two sessions were safe in the shard docs and were
+   restored via REST. PITR is off, so the stale-cache scenario can't be disproved — if he ever says
+   more than Pull 08-24 + Legs 08-25 existed, believe him and check his phone's localStorage. The
+   rework: the shard path cannot address the legacy document at all any more, mass deletes are
+   refused without a declared wholesale flag, a failed pre-wipe snapshot aborts the wipe, and every
+   account keeps a 7-day rolling cloud backup. "A flag that destroys information is not a flag."
+
+4. The Research tab (Data · Research): strength-vs-age per muscle group from Harbo 2012's measured
+   age bands — eight honest lines, Chest/Back/Traps named as unmeasured rather than invented,
+   after finding Strength Level's by-age tables are one curve wearing eleven names.
+
+5. Autumn's "lost" data: never lost, never touched. Her published muscle map was an empty
+   pre-training snapshot because NOTHING republished after recording a workout — publish was wired
+   to social actions only. Fixed both ways: publish follows the data now, and a boot heal
+   republishes stale projections (hers fixes itself next time she opens the app). All five
+   accounts got immutable server-side snapshots the same day. PITR needs the Blaze card — first
+   thing to buy with it if Tim ever says yes.
+
+6. Remove-an-exercise beside Swap: today only, saved workout untouched, recorded sets confirm
+   with a count, a group of one stops being a group, the last exercise is refused.
+
+2,943 assertions across eleven suites + 12 sw-update + 117 rules in the emulator, all green.
+Rules deployed twice. Everything pushed. sw-update has a load-sensitivity flake (fixed sleeps vs
+real Chrome), noted in progress.md rather than hidden.
+
+progress.md is the file to read, top to bottom of the 2026-08-28 sections. The PINNED table and
+the DECLINED rest-timer list are standing instructions that survive this reset.
