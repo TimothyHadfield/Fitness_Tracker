@@ -12,7 +12,7 @@ import { AccountView, SignInView } from './views-account.js';
 import { ImportView } from './views-import.js';
 import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
-import { SocialView, FriendView, InviteView } from './views-social.js';
+import { SocialView, FriendView, InviteView, FindView, AddView } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { setUnits } from './units.js';
 
@@ -48,7 +48,7 @@ import { setUnits } from './units.js';
  * still inside it — is how a merge starts feeling like a dead end.
  */
 const NAV = [
-  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home', 'social', 'friend', 'invite'] },
+  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home', 'social', 'friend', 'invite', 'find', 'add'] },
   { hash: '#/workouts', label: 'Workouts', icon: 'dumbbell', match: ['workouts', 'system', 'workout', 'explore'] },
   // ⚠️ The hash is #/record and the view is the old start picker with the
   // benchmark action folded in. Both #/start and #/benchmark still resolve, so
@@ -87,7 +87,7 @@ const NAV = [
 // ⚠️ `goals` joined this list on 2026-08-25 when it stopped being a tab. A
 // screen with no tab of its own is reached FROM somewhere, so it needs a back
 // button, which is what being fullscreen gives it — the same shape as `start`.
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'goal', 'goals', 'import'];
+const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -153,6 +153,9 @@ async function resolve(route) {
     // #/invite/<ownerUid>/<token> — the whole param is passed through, because
     // parse() joins the rest back together and the token is the second half.
     case 'invite':    return InviteView(route.param);
+    // Finding somebody: by name, or by landing on their code (2026-08-29).
+    case 'find':      return FindView();
+    case 'add':       return AddView(decodeURIComponent(route.param || ''));
     default:          return HomeView();
   }
 }

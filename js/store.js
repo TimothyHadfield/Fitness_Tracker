@@ -1841,7 +1841,16 @@ export const auth = {
   async changePassword(currentPassword, newPassword) {
     return requireRemote().changePassword(currentPassword, newPassword);
   },
-  async deleteAccount(currentPassword) { return requireRemote().deleteAccount(currentPassword); },
+  // ⚠️ The directory row goes FIRST, and it is the one piece of this account
+  // that lives outside users/{uid} — so deleting the account without it would
+  // leave the name and uid of a person who no longer exists in a collection the
+  // whole signed-in world can list. Best-effort: a failure here must not stop
+  // somebody deleting their account.
+  async deleteAccount(currentPassword) {
+    const impl = requireRemote();
+    await impl.removeDirectory().catch(() => {});
+    return impl.deleteAccount(currentPassword);
+  },
 
   // Anything still sitting in this browser's local storage — data logged before
   // the cloud was switched on, or while it was unreachable.
@@ -2038,8 +2047,14 @@ async function readGraphCached(impl) {
   const graph = await socialCached('graph',
     async () => normalizeSocialGraph(await impl.readGraph()));
   // A copy, for the reason readCached() hands out a copy: callers filter and
-  // sort these rows, and the cached object is now long-lived.
-  return { ...graph, connections: graph.connections.map((c) => ({ ...c })) };
+  // sort these rows, and the cached object is now long-lived. ⚠️ `pending` is
+  // copied too — processAcceptedRequests() filters it, and filtering the cached
+  // array in place would leave the next reader short a pending request.
+  return {
+    ...graph,
+    connections: graph.connections.map((c) => ({ ...c })),
+    pending: (graph.pending || []).map((p) => ({ ...p })),
+  };
 }
 
 /** What every mutation uses. Never cached, and it drops the cache behind it. */
@@ -2104,6 +2119,10 @@ export const social = {
     await store.saveSettings({ displayName: clean });
     // The name is inside every projection, so changing it has to rewrite them.
     await republish().catch((err) => console.warn('Could not republish after rename.', err));
+    // ⚠️ And the directory row, or somebody who renamed themselves stays
+    // findable under the old name forever. Fire-and-forget: being findable is a
+    // nicety and must never be the reason a rename fails.
+    this.syncDirectory().catch(() => {});
     return clean;
   },
 
@@ -2287,6 +2306,234 @@ export const social = {
     // mutual from my side immediately rather than waiting on their next visit.
     await this.addConnection(ownerUid, ownerName || 'Friend');
     return true;
+  },
+
+  /* --- finding people, and asking to connect (2026-08-29) ---
+   *
+   * 🚨 The directory reverses a decision this project made deliberately. The
+   * whole argument, and Tim's instruction, are in the "Finding people by name"
+   * header of js/social.js and above the `directory` block in firestore.rules.
+   * Read one of them before changing anything here.
+   */
+
+  /**
+   * Am I findable? Opt-OUT, defaulting to on.
+   *
+   * ⚠️ It is a courtesy, not a protection, and the rules say so: a client can
+   * always write its own directory row, so this cannot be enforced server-side.
+   * Describing it as a privacy control would be the same class of overclaim the
+   * disconnect sheet shipped with in 2026-08-24.
+   */
+  async listed() {
+    const settings = await store.getSettings();
+    return settings.listedInDirectory !== false;
+  },
+
+  async setListed(on) {
+    const impl = requireRemote();
+    await store.saveSettings({ listedInDirectory: Boolean(on) });
+    if (on) {
+      const settings = await store.getSettings();
+      if (settings.displayName) await impl.writeDirectory(settings.displayName);
+    } else {
+      await impl.removeDirectory();
+    }
+    return Boolean(on);
+  },
+
+  /**
+   * Put my name in the directory, or take it out.
+   *
+   * ⚠️ FIRE-AND-FORGET AT EVERY CALL SITE. Being findable is a nicety; failing
+   * to write a directory row must never stop somebody renaming themselves or
+   * signing in. Same discipline as schedulePublish().
+   */
+  async syncDirectory() {
+    if (demo.active()) return false;
+    const impl = requireRemote();
+    const settings = await store.getSettings();
+    if (settings.listedInDirectory === false || !settings.displayName) {
+      await impl.removeDirectory();
+      return false;
+    }
+    await impl.writeDirectory(settings.displayName);
+    return true;
+  },
+
+  /**
+   * People whose name matches, minus everybody already connected or asked.
+   *
+   * ⚠️ Each row is annotated rather than filtered out, because "you are already
+   * friends" and "no such person" are completely different answers and a search
+   * that silently drops the person you were looking for is the worse of the
+   * two. `state` is one of: 'none' | 'connected' | 'asked'.
+   */
+  async searchPeople(query) {
+    const impl = requireRemote();
+    const S = await socialMod();
+    if (!S.searchKey(query)) return [];
+    const [rows, graph] = await Promise.all([
+      socialCached('directory', () => impl.searchDirectory()),
+      readGraphCached(impl),
+    ]);
+    const g = S.normalizeGraph(graph);
+    const connected = new Set(g.connections.map((c) => c.uid));
+    const asked = new Set(g.pending.map((p) => p.uid));
+    return S.rankMatches(rows, query).map((r) => ({
+      uid: r.uid,
+      name: r.name,
+      state: connected.has(r.uid) ? 'connected' : asked.has(r.uid) ? 'asked' : 'none',
+    }));
+  },
+
+  /** One person by uid — what a QR code or a shared link lands on. */
+  async personByUid(uid) {
+    const impl = requireRemote();
+    const S = await socialMod();
+    const [rows, graph] = await Promise.all([
+      socialCached('directory', () => impl.searchDirectory()),
+      readGraphCached(impl),
+    ]);
+    const row = (rows || []).find((r) => r.uid === uid);
+    if (!row) return null;
+    const g = S.normalizeGraph(graph);
+    return {
+      uid: row.uid,
+      name: row.name,
+      state: g.connections.some((c) => c.uid === uid) ? 'connected'
+        : g.pending.some((p) => p.uid === uid) ? 'asked' : 'none',
+    };
+  },
+
+  /**
+   * Ask somebody to connect.
+   *
+   * ⚠️ MY GRAPH IS NOT WIDENED HERE — they go on `pending`, not `connections`.
+   * Adding them outright would put them in my `viewers` list, which is me
+   * publishing my training to somebody who has not agreed to anything, and it
+   * would show them on my friends list as a friend before they were one. A
+   * request is a message; the friendship starts when they say yes.
+   */
+  async sendRequest(uid, name) {
+    if (demo.active()) throw new Error('The demo account cannot add real people.');
+    const impl = requireRemote();
+    const S = await socialMod();
+    const settings = await store.getSettings();
+    if (!settings.displayName) throw new Error('Choose your display name first.');
+    if (uid === impl.currentUid()) throw new Error('That is you.');
+
+    const graph = await readGraphFresh(impl);
+    const g = S.normalizeGraph(graph);
+    if (g.connections.some((c) => c.uid === uid)) throw new Error('You are already connected.');
+
+    await impl.sendRequest(uid, settings.displayName);
+    if (!g.pending.some((p) => p.uid === uid)) {
+      g.pending.push({ uid, name: String(name || '').slice(0, 60), at: todayISO() });
+    }
+    await impl.writeGraph(g);
+    socialWrote();
+    return true;
+  },
+
+  /** Take back one I sent, before they answer it. */
+  async withdrawRequest(uid) {
+    const impl = requireRemote();
+    const S = await socialMod();
+    // Their copy first: dropping it from my list while it still sits in their
+    // account is the state where they can accept something I think I cancelled.
+    await impl.deleteRequest(uid, impl.currentUid());
+    const g = S.normalizeGraph(await readGraphFresh(impl));
+    g.pending = g.pending.filter((p) => p.uid !== uid);
+    await impl.writeGraph(g);
+    socialWrote();
+    return true;
+  },
+
+  /** Who has asked to connect with me. */
+  async requests() {
+    if (demo.active()) return [];
+    const impl = requireRemote();
+    const S = await socialMod();
+    const rows = await impl.listRequests(impl.currentUid());
+    return rows.map((r) => S.readableRequest(r)).filter(Boolean);
+  },
+
+  /**
+   * Say yes.
+   *
+   * ⚠️ THIS NEEDS NO WRITE INTO THEIR ACCOUNT, and that is the nicest property
+   * of the design. Adding them to my graph republishes with them in `viewers`,
+   * which makes my shared document readable to them under the rule that has
+   * existed since 2026-08-18 — so their client learns they were accepted by an
+   * existing read succeeding. No "accepted" flag, no reverse tombstone, no new
+   * permission. ⚠️ It is EVENTUAL on their side, like mutual disconnect, and
+   * the screen says so.
+   *
+   * The request is deleted only AFTER the connection is written, for the same
+   * reason the handoff is: the other order loses the offer if the write fails.
+   */
+  async acceptRequest(uid, name) {
+    const impl = requireRemote();
+    await this.addConnection(uid, name);
+    await impl.deleteRequest(impl.currentUid(), uid).catch(() => {});
+    socialWrote();
+    return true;
+  },
+
+  /** Say no. Nothing is written to my graph, and they are not told. */
+  async declineRequest(uid) {
+    const impl = requireRemote();
+    await impl.deleteRequest(impl.currentUid(), uid);
+    socialWrote();
+    return true;
+  },
+
+  /**
+   * Turn any of my accepted requests into connections.
+   *
+   * ⚠️ THE PROBE *IS* THE NOTIFICATION. For each person I have asked, try to
+   * read what they share. A refusal means they have not accepted (or have
+   * declined, which is indistinguishable and deliberately so — nobody is told
+   * they were turned down). A document coming back means I am in their viewers
+   * list, which only their own accept could have put me in.
+   *
+   * ⚠️ ONLY PEOPLE I ASKED ARE PROBED, and that is the access control: nothing
+   * anybody else writes anywhere can add them to my friends list. Run on the
+   * Friends screen rather than on a timer, for the same reason disconnects are
+   * — that is where somebody would notice the result, and a background job that
+   * republishes is a background job that can surprise you.
+   */
+  async processAcceptedRequests() {
+    if (demo.active()) return 0;
+    const impl = requireRemote();
+    const S = await socialMod();
+    const g = S.normalizeGraph(await readGraphCached(impl));
+    if (!g.pending.length) return 0;
+
+    const answers = await Promise.all(g.pending.map((p) =>
+      this.friend(p.uid).then((r) => (r && r.doc ? p : null)).catch(() => null)));
+    const accepted = answers.filter(Boolean);
+    if (!accepted.length) return 0;
+
+    // One read-modify-write for the lot: this runs on a screen paint, and N
+    // separate graph writes is N chances to clobber each other.
+    const fresh = S.normalizeGraph(await readGraphFresh(impl));
+    for (const p of accepted) {
+      if (fresh.connections.some((c) => c.uid === p.uid)) continue;
+      fresh.connections.push({
+        uid: p.uid,
+        // Their published name beats the one I typed when I searched.
+        name: String(p.name || '').slice(0, 60),
+        tier: S.DEFAULT_TIER,
+        since: todayISO(),
+      });
+    }
+    const done = new Set(accepted.map((p) => p.uid));
+    fresh.pending = fresh.pending.filter((p) => !done.has(p.uid));
+    await impl.writeGraph(fresh);
+    socialWrote();
+    await republish().catch(() => {});
+    return accepted.length;
   },
 
   /* --- reading a friend --- */

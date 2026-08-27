@@ -3333,6 +3333,197 @@ ok(!data.querySelector('.rep-target'),
   restore();
 }
 
+
+/* ============ finding people: search, requests, and the code (2026-08-29) ============
+ *
+ * 🚨 The search half reverses a decision this project made on purpose. The
+ * argument is in js/social.js's "Finding people by name" header and above the
+ * `directory` block in firestore.rules; Tim took the trade knowingly with fewer
+ * than five users on the site. These assertions are about the SCREENS — that a
+ * request is an ask rather than a connection, and that the code is a code.
+ */
+{
+  const { SocialView, FindView, AddView } = await import(BASE + 'views-social.js');
+  const { social } = await import(BASE + 'store.js');
+
+  const original = {
+    state: social.state, invites: social.invites, handoffs: social.handoffs,
+    friend: social.friend, healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    processAcceptedRequests: social.processAcceptedRequests,
+    requests: social.requests, searchPeople: social.searchPeople,
+    personByUid: social.personByUid, sendRequest: social.sendRequest,
+    acceptRequest: social.acceptRequest, declineRequest: social.declineRequest,
+    withdrawRequest: social.withdrawRequest,
+  };
+  const restore = () => Object.assign(social, original);
+
+  const DIR = [
+    { uid: 'u-sami', name: 'Samira Okonkwo' },
+    { uid: 'u-sam', name: 'Sam Whitfield-Brookes' },
+    { uid: 'u-jo', name: 'Jo Sampson' },
+  ];
+  let asked = [];
+  let accepted = null;
+  let declined = null;
+  let joinedCount = 0;
+
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim H',
+    shareBodyWeight: false,
+    connections: [{ uid: 'u-jo', name: 'Jo Sampson', tier: 'light', since: '2026-08-01' }],
+  });
+  social.invites = async () => [];
+  social.handoffs = async () => [];
+  social.friend = async () => ({ tier: 'light', doc: null });
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.processAcceptedRequests = async () => joinedCount;
+  social.requests = async () => [{ uid: 'u-sami', name: 'Samira Okonkwo' }];
+  social.searchPeople = async (q) => {
+    const { rankMatches } = await import(BASE + 'social.js');
+    return rankMatches(DIR, q).map((r) => ({
+      uid: r.uid, name: r.name,
+      state: r.uid === 'u-jo' ? 'connected' : (asked.includes(r.uid) ? 'asked' : 'none'),
+    }));
+  };
+  social.personByUid = async (uid) => {
+    const r = DIR.find((x) => x.uid === uid);
+    return r ? { uid: r.uid, name: r.name, state: 'none' } : null;
+  };
+  social.sendRequest = async (uid) => { asked.push(uid); return true; };
+  social.withdrawRequest = async (uid) => { asked = asked.filter((x) => x !== uid); return true; };
+  social.acceptRequest = async (uid) => { accepted = uid; return true; };
+  social.declineRequest = async (uid) => { declined = uid; return true; };
+
+  /* ---- somebody asked to connect ---- */
+  {
+    const s = await mount(SocialView());
+    await settle(); await settle();
+    ok(/Asked to connect/i.test(s.textContent),
+       'an incoming request gets its own heading, separate from "Waiting for you"');
+    ok(/Samira Okonkwo/.test(s.textContent), 'and names who asked');
+    ok(/just that I trained/i.test(s.textContent),
+       '⚠️ and says what accepting would actually give them — a request is a decision, not a '
+       + 'notification to dismiss');
+
+    const row = [...s.querySelectorAll('.row')].find((r) => /Samira/.test(r.textContent));
+    const no = [...row.querySelectorAll('button')].find((b) => b.textContent.trim() === 'No');
+    ok(Boolean(no), '⚠️ No is offered beside Add, as an equal choice — this was unsolicited');
+    no.click(); await settle();
+    ok(declined === 'u-sami', 'declining goes through the store');
+    ok(accepted === null,
+       '⚠️ and declining connects NOBODY — the one thing that must never happen by accident');
+  }
+
+  /* ---- accepting one ---- */
+  {
+    accepted = null;
+    const s = await mount(SocialView());
+    await settle(); await settle();
+    const row = [...s.querySelectorAll('.row')].find((r) => /Samira/.test(r.textContent));
+    [...row.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+    await settle();
+    ok(accepted === 'u-sami', 'Add connects them');
+  }
+
+  /* ⚠️ AND WHEN SOMEBODY ACCEPTS MINE, IT IS SAID OUT LOUD. A name appearing
+   * on the friends list with no explanation is as confusing as one vanishing —
+   * the same reason a disconnect is announced. This is good news that would
+   * otherwise go completely unnoticed, because acceptance is learned by a
+   * silent background probe rather than by any message. */
+  {
+    joinedCount = 2;
+    const s = await mount(SocialView());
+    await settle(); await settle();
+    ok(/2 people accepted your requests/.test(s.textContent),
+       '⚠️ requests that were accepted are announced — acceptance arrives with no message '
+       + 'of its own, so the screen is the only place it can be said');
+    joinedCount = 0;
+  }
+
+  /* ---- searching ---- */
+  {
+    asked = [];
+    const s = await mount(FindView());
+    await settle();
+    ok(/Search by name/i.test(s.textContent), 'the Add-a-friend screen leads with search');
+    const input = s.querySelector('input[type="search"]');
+    ok(Boolean(input), 'and it is a real search field');
+
+    input.value = 'sam';
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+    await settle(); await settle();
+
+    const titles = [...s.querySelectorAll('.row-title')].map((n) => n.textContent);
+    ok(titles.length === 3, `"sam" finds three of the three (${titles.join(', ')})`);
+    ok(titles[0] === 'Samira Okonkwo',
+       '⚠️ ranked: the shortest whole-name prefix leads, so the likeliest person is the top row');
+    ok(titles[2] === 'Jo Sampson', 'and a surname match sorts last — it is a weaker signal');
+
+    const joRow = [...s.querySelectorAll('.row')].find((r) => /Jo Sampson/.test(r.textContent));
+    ok(/Friends/.test(joRow.textContent) && !joRow.querySelector('button'),
+       '⚠️ somebody already connected is SHOWN and flagged, not filtered out — "you are already '
+       + 'friends" and "no such person" are different answers, and dropping them silently is '
+       + 'the worse one');
+
+    const samiRow = [...s.querySelectorAll('.row')].find((r) => /Samira/.test(r.textContent));
+    samiRow.querySelector('button').click();
+    await settle(); await settle();
+    ok(asked.includes('u-sami'), 'Add sends a request');
+    const after = [...s.querySelectorAll('.row')].find((r) => /Samira/.test(r.textContent));
+    ok(/Asked/.test(after.textContent),
+       '⚠️ and the row flips to "Asked" rather than "Friends" — asking is not connecting, and a '
+       + 'screen that said otherwise would be claiming a connection the other person has not made');
+  }
+
+  /* ---- the code, and where it lands ---- */
+  {
+    const s = await mount(FindView());
+    await settle();
+    [...s.querySelectorAll('button')].find((b) => /Show my code/.test(b.textContent)).click();
+    await settle();
+    const sheet = [...document.querySelectorAll('.sheet')].pop();
+    const svg = sheet.querySelector('.qr-card svg');
+    ok(Boolean(svg), 'a code renders as an SVG, drawn in the app rather than fetched');
+    ok(sheet.querySelector('.qr-card rect').getAttribute('fill') === '#fff'
+       && sheet.querySelector('.qr-card path').getAttribute('fill') === '#000',
+       '⚠️ black on white, hard-coded, never a theme token — plenty of Android scanners fail on '
+       + 'an inverted code, and a code that fails on somebody else\'s phone fails at the one '
+       + 'moment it exists for');
+    const vb = (svg.getAttribute('viewBox') || '').split(' ').map(Number);
+    ok(vb[2] === vb[3] && vb[2] > 8,
+       '⚠️ and the quiet zone is INSIDE the viewBox — four modules a side, so putting the code on '
+       + 'a coloured card cannot eat the margin the spec requires');
+    ok(/never expires/.test(sheet.textContent),
+       'the sheet says the code is permanent, which is what makes it different from an invite link');
+    [...sheet.querySelectorAll('button')].forEach((b) => { if (/close/i.test(b.getAttribute('aria-label') || '')) b.click(); });
+  }
+
+  {
+    const s = await mount(AddView('u-sam'));
+    await settle(); await settle();
+    ok(/Sam Whitfield-Brookes/.test(s.textContent),
+       'landing on somebody\'s code shows WHO it is');
+    ok(/Nothing of yours is shared until they do/.test(s.textContent),
+       'and that nothing is shared until they accept');
+    const ask = [...s.querySelectorAll('button')].find((b) => /Ask to connect/.test(b.textContent));
+    ok(Boolean(ask),
+       '⚠️ it ASKS rather than connecting on arrival — a code can be scanned by accident or '
+       + 'forwarded by anybody, so the holder is not necessarily who it was meant for');
+  }
+
+  {
+    const s = await mount(AddView('u-nobody'));
+    await settle(); await settle();
+    ok(/did not match anybody/i.test(s.textContent),
+       'a code for somebody who is no longer findable says so, rather than showing a blank row');
+  }
+
+  restore();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

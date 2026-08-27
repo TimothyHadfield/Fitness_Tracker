@@ -220,7 +220,28 @@ body {
 
 button, input, select, textarea { font-family: inherit; font-size: 16px; color: inherit; }
 button { cursor: pointer; border: 0; background: none; padding: 0; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px; }
+/* ⚠️ NO `border-radius` HERE, AND THAT IS A BUG FIX (2026-08-29).
+ *
+ * Tim, on a laptop: *"the profile picture in the upper left-hand corner has a
+ * blue box around the circle making it look a little weird… This isn't an
+ * error on the iPhone."*
+ *
+ * This rule used to carry `border-radius: 3px`, which sets the radius on the
+ * ELEMENT rather than on the ring — so focusing any round control **squared it
+ * off**: the circular avatar became a 3px-radius box, and the pill-shaped
+ * chips, `.add-set`, `.row-start` and the rest with it. It only shows on a
+ * pointer/keyboard device because a tap does not raise `:focus-visible`, which
+ * is exactly why the iPhone was fine and the laptop was not.
+ *
+ * It was there to give a square control's ring soft corners, and it is not
+ * needed for that: every current browser draws an outline following the
+ * element's OWN border-radius. Dropping it means each control keeps its shape
+ * and the ring follows it — round stays round, square gets a square ring.
+ *
+ * ⚠️ The ring itself stays. Removing focus indication to fix its shape would
+ * trade a cosmetic complaint for the accessibility failure this project
+ * already had once, in 2026-08-20. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
@@ -3177,3 +3198,39 @@ a.row { text-decoration: none; }
   margin-top: 2px;
 }
 .for-note b { color: var(--ink); font-weight: 650; }
+
+/* ⚠️ A QR CODE PAINTS ITS OWN WHITE GROUND, in both themes (2026-08-29). A
+   light-on-dark code is legal and recent iPhones decode one, but plenty of
+   Android scanners and third-party apps do not — and a code that fails on
+   somebody else's phone fails at the one moment it exists for. So this is the
+   one bright rectangle in dark mode, on purpose.
+
+   ~240px rendered: at version 5 that is 45 modules across including the quiet
+   zone, so ~5.3 CSS px a module — comfortably above the resolving floor for a
+   camera 15-30cm away, which is where a phone held up to another phone sits. */
+.qr-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto 12px;
+}
+.qr-card svg { display: block; width: 240px; height: 240px; max-width: 100%; }
+/* Named on the card so somebody holding it up can see it is the right person
+   before the other phone is pointed at it. Black on the card's own white,
+   never a theme token — the card is not part of the theme. */
+.qr-name { color: #111; font-size: 14px; font-weight: 650; }
+
+/* "Friends" beside somebody already connected, in a search result. Not a
+   button: there is nothing to do, and a disabled button reads as broken. */
+.row-flag {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-faint);
+  padding: 0 4px;
+}

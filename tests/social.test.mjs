@@ -605,5 +605,95 @@ ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expi
      'and no session list at all is handled, not thrown on');
 }
 
+
+/* ================= finding people by name (2026-08-29) =================
+   🚨 The directory reverses a decision this project made on purpose — the
+   argument is in js/social.js's "Finding people by name" header and above the
+   `directory` block in firestore.rules. These assertions are about the MATCHING,
+   which is pure and is where a bad result would actually come from. */
+{
+  const { searchKey, matchesSearch, rankMatches, readableRequest, profileLink } =
+    await import('../js/social.js');
+
+  ok(searchKey('  Tim   Hadfield ') === 'tim hadfield',
+     'the search key trims, lower-cases and collapses runs of whitespace');
+  ok(searchKey(null) === '', 'and nothing in is nothing out, never a throw');
+
+  const anna = { uid: 'u1', name: 'Anna Smith', nameLower: 'anna smith' };
+  ok(matchesSearch(anna, 'an'), 'a prefix of the whole name matches');
+  ok(matchesSearch(anna, 'sm'),
+     '⚠️ and a prefix of ANY WORD matches — a Firestore prefix query could not do this, '
+     + 'so somebody typing a surname would never have found her');
+  ok(matchesSearch(anna, 'ANNA smith'), 'case and spacing do not matter');
+  ok(!matchesSearch(anna, 'nn'),
+     '⚠️ but never a substring INSIDE a word — "nn" finding "Anna" is how a list of '
+     + 'strangers starts looking like a list of matches');
+  ok(!matchesSearch(anna, '   '), 'and whitespace matches nobody rather than everybody');
+  ok(!matchesSearch(null, 'a') && !matchesSearch({}, 'a'),
+     'a row with no name is not a match — the directory is written by other people');
+
+  const rows = [
+    { uid: 'u1', name: 'Samantha Fitzgerald', nameLower: 'samantha fitzgerald' },
+    { uid: 'u2', name: 'Sam', nameLower: 'sam' },
+    { uid: 'u3', name: 'Jo Sampson', nameLower: 'jo sampson' },
+    { uid: 'u4', name: 'Tim', nameLower: 'tim' },
+  ];
+  const ranked = rankMatches(rows, 'sam');
+  ok(ranked.length === 3, `Tim is not a match for "sam" (${ranked.length} matched)`);
+  ok(ranked[0].uid === 'u2',
+     '⚠️ the shortest whole-name match leads — "Sam" above "Samantha Fitzgerald", because a '
+     + 'shorter name containing the query is closer to it');
+  ok(ranked[1].uid === 'u1' && ranked[2].uid === 'u3',
+     'then the longer name-prefix, then the word-prefix — a surname match is a weaker signal');
+  ok(rankMatches(rows, '').length === 0,
+     'an empty query matches nobody — never "here is everybody", which is what the '
+     + 'permission behind this would happily return');
+
+  // A request row is written by somebody else and is about to go on a screen.
+  ok(readableRequest({ from: 'u9', name: '  Autumn  ' }).name === 'Autumn',
+     'a request is trimmed before it is rendered');
+  ok(readableRequest({ id: 'u9', name: 'Autumn' }).uid === 'u9',
+     'the document id stands in for `from`, because the rules pin them to each other anyway');
+  ok(readableRequest({ from: 'u9' }) === null && readableRequest({ name: 'A' }) === null,
+     'a half-formed request is dropped rather than rendered as a nameless row');
+  ok(readableRequest(null) === null && readableRequest('nope') === null,
+     'and so is anything that is not an object');
+  ok(readableRequest({ from: 'u9', name: 'x'.repeat(200) }).name.length === 60,
+     'a 200-character name is cut to 60 — the rules cap it too, and neither trusts the other');
+
+  ok(profileLink('https://example.com/app/#/social', 'abc') === 'https://example.com/app/#/add/abc',
+     '⚠️ a profile link points at the ACCOUNT and never expires — an invite link is a one-time '
+     + 'capability, and a QR of one goes stale in a pocket');
+}
+
+/* ================= the graph's `pending` list (2026-08-29) =================
+   Who I have ASKED, which is not who I am connected to and must never be
+   confused with it. It exists so my client knows whose shared document is worth
+   probing — the probe succeeding IS how acceptance is learned, and probing only
+   people I asked is what stops anybody adding themselves to my friends list. */
+{
+  const { normalizeGraph } = await import('../js/social.js');
+
+  const g = normalizeGraph({
+    connections: [{ uid: 'a', name: 'Ann', tier: 'mid' }],
+    pending: [
+      { uid: 'b', name: 'Bob', at: '2026-08-29' },
+      { uid: 'b', name: 'Bob again' },
+      { uid: 'a', name: 'Ann' },
+      { uid: '', name: 'nobody' },
+      null,
+    ],
+  });
+  ok(g.pending.length === 1 && g.pending[0].uid === 'b',
+     'pending de-duplicates and drops rows with no uid');
+  ok(!g.pending.some((p) => p.uid === 'a'),
+     '⚠️ somebody already CONNECTED is never also pending — a half-finished accept has to '
+     + 'resolve toward the connection, or they show up twice on one screen');
+  ok(normalizeGraph({ connections: [] }).pending.length === 0,
+     'a graph written before this existed reads as no pending requests, not as a crash');
+  ok(Array.isArray(normalizeGraph(null).pending),
+     'and so does no graph at all');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

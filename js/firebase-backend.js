@@ -607,6 +607,94 @@ export const FirebaseBackend = {
     return true;
   },
 
+  /* --- friend requests: "add me", which they accept (2026-08-29) ---
+   *
+   * Same permission-denied-is-an-empty-list rule as reactions and handoffs:
+   * not being able to read somebody's requests is the normal answer for
+   * anybody who is not them, never an error to put on a screen. */
+
+  async listRequests(ownerUid) {
+    const c = await init();
+    try {
+      const snap = await c.fs.getDocs(c.fs.collection(c.db, 'users', ownerUid, 'requests'));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      if (err && err.code === 'permission-denied') return [];
+      throw err;
+    }
+  },
+
+  // ⚠️ The document id is the SENDER'S uid, which the rules check against the
+  // caller. That is what makes this "add me" and not "add them" — and it makes
+  // asking twice write the same document rather than two rows for one person.
+  async sendRequest(toUid, name) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', toUid, 'requests', user.uid),
+      { from: user.uid, name: String(name || '').slice(0, 60), at: c.fs.serverTimestamp() });
+    return true;
+  },
+
+  async deleteRequest(ownerUid, fromUid) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', ownerUid, 'requests', fromUid));
+    return true;
+  },
+
+  /* --- the public directory (2026-08-29) ---
+   *
+   * 🚨 The one collection in this app that anybody signed in can LIST. The
+   * whole argument is above the `directory` block in firestore.rules and in
+   * the "Finding people by name" header of js/social.js — read one of them
+   * before touching this. */
+
+  async writeDirectory(name) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    const clean = String(name || '').trim().slice(0, 60);
+    if (!clean) throw new Error('Choose a display name first.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'directory', user.uid), {
+      uid: user.uid,
+      name: clean,
+      // Stored lower-cased so the client can match without downcasing every
+      // row on every keystroke. The matching itself is in social.js.
+      nameLower: clean.toLowerCase().replace(/\s+/g, ' '),
+      updatedAt: c.fs.serverTimestamp(),
+    });
+    return true;
+  },
+
+  async removeDirectory() {
+    const c = await init();
+    if (!user) return false;
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'directory', user.uid)).catch(() => {});
+    return true;
+  },
+
+  /**
+   * ⚠️ THE WHOLE COLLECTION, CAPPED, MATCHED IN THE CLIENT.
+   *
+   * A prefix query would look tighter and would not be: `list` is `list`, and
+   * the rules cannot restrict a `where` clause, so the permission this needs is
+   * the same permission a full scan needs. Given that, fetching a page and
+   * matching in social.js is strictly better at finding the right person — a
+   * Firestore prefix only matches the START of the whole string, so a surname
+   * would never match.
+   *
+   * The cap is a BILLING guard rather than a privacy one, and calling it that
+   * matters: it bounds what one search costs, not what an attacker can reach.
+   */
+  async searchDirectory(max = 300) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    const snap = await c.fs.getDocs(
+      c.fs.query(c.fs.collection(c.db, 'directory'), c.fs.limit(max)));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      // Never offer yourself as somebody to add.
+      .filter((r) => r.uid !== user.uid);
+  },
+
   /* --- accounts --- */
 
   currentUser() { return describeUser(user); },

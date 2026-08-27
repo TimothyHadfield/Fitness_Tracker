@@ -55,6 +55,7 @@ const SHELL = [
   './js/next-workout.js',
   './js/set-types.js',
   './js/optimal.js',
+  './js/qr.js',
   './js/social.js',
   './js/goals.js',
   './js/progression.js',

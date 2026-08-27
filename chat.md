@@ -5600,3 +5600,41 @@ the e…" — the half that says what the tap does. Same fault as the visibility
 a different screen, two weeks later.
 
 Render tests 574 → 593, rules re-run green, both new assertions mutation-checked.
+
+## 2026-08-29, third pass — QR codes, name search, friend requests
+
+**Tim:** "I want each user to have their own QR code where they can show another person… Additionally,
+you can just search users on the site in the friends section and if there is a user with that name
+they can send a friend request to that person, and then that person can accept it."
+
+He was told the trade first — QR and friend requests are free, name search is not — and answered:
+"Right now the website has less than 5 users so just do the name search to keep it easy for now and
+then we can work on making a different version eventually."
+
+**So the directory exists, and the decision it reverses is recorded rather than quietly dropped.**
+js/social.js has said since day one that there is no user directory because a searchable list is an
+enumeration surface. That is no longer true of the app. The objection was not answered — Firestore
+rules cannot constrain a query's where clause, so the `list` that name search needs IS enumeration —
+it was accepted with its price named. What bounds it is the document: a uid and a display name, shape
+checked so it can never grow an email field. The rules test asserts the enumeration as an ALLOW on
+purpose; when the handle version is built, that is the line that flips to a denial.
+
+Shipped: search on a new Add-a-friend screen, matched in the client (a Firestore prefix would never
+find "Anna Smith" from "smith") and ranked shortest-match-first; friend requests in their own
+collection modelled on disconnects, with the document id as the access control; and a permanent QR
+code encoding #/add/<uid> rather than a one-time invite link that would go stale in a pocket.
+
+The nicest part: accepting a request needs no new permission at all. Adding somebody to your graph
+republishes with them in `viewers`, which makes your shared document readable to them under a rule
+from 2026-08-18 — so the asker learns they were accepted by an existing read succeeding. No flag, no
+reverse write. Eventual on their side, and the screen says so.
+
+Verified the QR the strongest way available: screenshotted the app's own rendered SVG over CDP and
+decoded the PNG with jsQR — an 88-character link, version 6, byte-for-byte. That tests the encoder,
+the path building, the CSS sizing and the theme, not just the matrix.
+
+Also: Settings → Findable by name (opt-out, on by default), described as a courtesy rather than a
+protection because the rules cannot enforce it.
+
+Render 595 → 619, social +25, new qr suite 33, rules 117 → 147 and deployed. Audit clean over 68
+routes. Two mutations, each flipping only itself.

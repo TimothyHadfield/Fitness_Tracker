@@ -479,6 +479,114 @@ await denied(deleteDoc(disc(asSam, TIM, ALEX)),
 await allowed(deleteDoc(disc(asAlex, TIM, ALEX)),
   'the leaver can withdraw their own note if they reconnect');
 
+
+console.log('\n--- Friend requests: "add me", which they accept (2026-08-29) ---\n');
+
+const req = (db, owner, from) => doc(db, 'users', owner, 'requests', from);
+const reqDoc = (from, name = 'Alex') => ({ from, name, at: serverTimestamp() });
+
+// ⚠️ THE DOCUMENT ID IS THE CALLER'S UID — the disconnects argument verbatim.
+// Without it anybody could file a request appearing to come from anyone, which
+// is a message in somebody else's name.
+await denied(setDoc(req(asAlex, TIM, SAM), reqDoc(SAM)),
+  '⚠️ Alex cannot ask in SAM\'s name — the document id pins the request to its sender');
+await denied(setDoc(req(asAlex, TIM, ALEX), reqDoc(SAM)),
+  'and `from` must match the caller too, so neither half can be forged alone');
+await denied(setDoc(req(asAlex, TIM, ALEX), { from: ALEX, at: serverTimestamp() }),
+  'a request with no name is refused — a nameless row on somebody\'s screen is not a request');
+await denied(setDoc(req(asAlex, TIM, ALEX), { from: ALEX, name: '', at: serverTimestamp() }),
+  'nor is an empty one');
+await denied(setDoc(req(asAlex, TIM, ALEX), { from: ALEX, name: 'x'.repeat(61), at: serverTimestamp() }),
+  'a name past 60 characters is refused at the wire, not trimmed on the screen');
+await denied(setDoc(req(asAlex, TIM, ALEX), { from: ALEX, name: 'Alex', at: serverTimestamp(), msg: 'hi' }),
+  '⚠️ and an invented field is refused — a request is not a message channel');
+
+await allowed(setDoc(req(asAlex, TIM, ALEX), reqDoc(ALEX)),
+  'Alex can ask Tim to connect');
+await allowed(setDoc(req(asAlex, TIM, ALEX), reqDoc(ALEX)),
+  'and asking twice writes the same document — one request per person, by construction');
+
+/* ⚠️ OWNER-ONLY READ, WHICH IS WHERE THIS DIFFERS FROM INVITES. An invite
+ * allows `get` to anyone signed in because a link has to be readable to be
+ * redeemed. A request is something somebody asked OF you, and nobody else has
+ * any business knowing who asked whom. That difference is the whole reason
+ * requests are not stored inside `invites`. */
+await allowed(getDocs(collection(asTim, 'users', TIM, 'requests')),
+  'Tim reads the requests made of him');
+await denied(getDocs(collection(asAlex, 'users', TIM, 'requests')),
+  '⚠️ nobody else can list who has asked Tim — not even somebody who asked him themselves');
+await denied(getDoc(req(asSam, TIM, ALEX)),
+  'and Sam cannot read whether Alex asked Tim');
+
+await denied(deleteDoc(req(asSam, TIM, ALEX)),
+  'one person cannot withdraw another\'s request');
+await allowed(deleteDoc(req(asAlex, TIM, ALEX)),
+  'the asker can take their own back before it is answered');
+await allowed(setDoc(req(asAlex, TIM, ALEX), reqDoc(ALEX)), 're-asked, for the next check');
+await allowed(deleteDoc(req(asTim, TIM, ALEX)),
+  'and the owner deletes it on accept or decline');
+
+/* ⚠️ A STRANGER CAN ASK, and that is the feature rather than a hole: a
+ * directory exists precisely so people who are not yet connected can find each
+ * other. What a request grants is nothing — it is a row in a subtree only the
+ * recipient reads, and it becomes a connection only when they act on it. */
+await allowed(setDoc(req(asStranger, TIM, STRANGER), reqDoc(STRANGER, 'A stranger')),
+  'somebody Tim has never met may ask — which is what "find me by name" means');
+await allowed(deleteDoc(req(asTim, TIM, STRANGER)), 'and Tim can refuse it');
+
+console.log('\n--- 🚨 The public directory: the one place `list` is granted ---\n');
+
+/* 🚨 READ firestore.rules ABOVE THE `directory` BLOCK BEFORE CHANGING THESE.
+ * This collection reverses a decision this project made on purpose, on Tim's
+ * instruction of 2026-08-29 with the price named. These assertions do not
+ * pretend it is safe — they pin the shape of what was accepted: your own row
+ * and nobody else's, four fields and no more, and no email anywhere near it. */
+
+const dirDoc = (uid, name) => ({
+  uid, name, nameLower: name.toLowerCase(), updatedAt: serverTimestamp(),
+});
+
+await denied(setDoc(doc(asAlex, 'directory', TIM), dirDoc(TIM, 'Tim')),
+  '⚠️ Alex cannot write TIM\'s directory row — the id is the access control, as everywhere else');
+await denied(setDoc(doc(asAlex, 'directory', ALEX), dirDoc(TIM, 'Alex')),
+  'and the `uid` field must match the caller too');
+await denied(setDoc(doc(asAlex, 'directory', ALEX),
+  { ...dirDoc(ALEX, 'Alex'), email: 'alex@example.com' }),
+  '🚨 AN EMAIL CANNOT BE PUT IN THE DIRECTORY. The shape check is what stops the one '
+  + 'collection everybody can list from growing the one field it must never hold');
+await denied(setDoc(doc(asAlex, 'directory', ALEX), { ...dirDoc(ALEX, 'Alex'), bench: 225 }),
+  'nor anything about anybody\'s training');
+await denied(setDoc(doc(asAlex, 'directory', ALEX), dirDoc(ALEX, '')),
+  'an empty name is refused — a nameless row is un-searchable and un-renderable');
+await denied(setDoc(doc(asAlex, 'directory', ALEX), dirDoc(ALEX, 'x'.repeat(61))),
+  'and one past 60 characters is too');
+
+await allowed(setDoc(doc(asAlex, 'directory', ALEX), dirDoc(ALEX, 'Alex')),
+  'Alex lists himself');
+await allowed(setDoc(doc(asTim, 'directory', TIM), dirDoc(TIM, 'Tim H')),
+  'and Tim lists himself');
+
+/* ⚠️ THIS IS THE ASSERTION THAT RECORDS THE COST. It is written as an ALLOW on
+ * purpose: a stranger listing the whole directory is exactly what was traded
+ * away, and a test suite that only pinned the good news would be describing a
+ * feature this project does not have. If somebody ever builds the handle
+ * version — get-yes / list-no, nothing enumerable — this line is the one that
+ * has to flip to a denial, and it should. */
+await allowed(getDocs(collection(asStranger, 'directory')),
+  '🚨 ANY SIGNED-IN ACCOUNT CAN LIST THE WHOLE DIRECTORY. Firestore rules cannot constrain '
+  + 'a query\'s `where`, so the `list` that name search needs IS enumeration. This is the '
+  + 'trade Tim took knowingly; the handle design is what un-takes it');
+await allowed(getDoc(doc(asStranger, 'directory', TIM)),
+  'and can read one row directly');
+
+await denied(deleteDoc(doc(asAlex, 'directory', TIM)),
+  'but nobody can delete somebody else out of the directory');
+await allowed(deleteDoc(doc(asAlex, 'directory', ALEX)),
+  'while turning listing off, or deleting your account, removes your own row');
+
+await denied(getDocs(collection(asNobody, 'directory')),
+  '⚠️ and signing in is still required — the directory is not open to the whole internet');
+
 console.log('\n--- Nothing else in the database exists ---\n');
 
 await denied(setDoc(doc(asTim, 'users', TIM, 'collections', 'invented'), { rows: [], updatedAt: serverTimestamp() }),

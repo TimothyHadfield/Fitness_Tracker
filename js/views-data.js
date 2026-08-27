@@ -1491,6 +1491,25 @@ export async function SettingsView() {
     toast(on ? 'Rest timer on' : 'Rest timer off');
   }
 
+  /* Whether other people can find you by typing your name (2026-08-29).
+   *
+   * ⚠️ IT IS A COURTESY, NOT A PROTECTION, and the help text has to say so.
+   * The rules cannot enforce it — a client can always write its own directory
+   * row — so calling it a privacy control would be the same class of overclaim
+   * the disconnect sheet shipped with in 2026-08-24. What it genuinely does is
+   * take your row out, which is what search reads.
+   *
+   * Defaults ON by absence, unlike the rest timer, and for the opposite
+   * reason: with fewer than five accounts on the site, a directory nobody is
+   * in is a search that never finds anybody. */
+  function setListed(on, e) {
+    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    e.target.setAttribute('aria-pressed', 'true');
+    social.setListed(on)
+      .then(() => toast(on ? 'People can find you by name' : 'You are no longer findable'))
+      .catch((err) => toast(err.message));
+  }
+
   // Changing units re-labels the app; it does NOT touch a single stored number.
   // Everything is kept in pounds, so switching back and forth is lossless.
   function setUnits(u, e) {
@@ -1611,6 +1630,30 @@ export async function SettingsView() {
         el('div', { class: 'field-help', text:
           'On shows a rest clock at the bottom of the workout screen. It starts when you '
           + 'log a set, and you can give it a target to count against.' }),
+      ),
+
+      /* ⚠️ FINDABLE BY NAME — the opt-out for the directory added 2026-08-29.
+       * The whole argument for the directory existing at all is above the
+       * `directory` block in firestore.rules; this is the one control a person
+       * has over it, and the help text is deliberately blunt about what it is
+       * and is not. */
+      el('div', { class: 'field' },
+        el('label', { text: 'Findable by name' }),
+        el('div', { class: 'chips' },
+          el('button', {
+            class: 'chip', 'aria-pressed': String(settings.listedInDirectory === false),
+            text: 'Off', onClick: (e) => setListed(false, e),
+          }),
+          el('button', {
+            class: 'chip', 'aria-pressed': String(settings.listedInDirectory !== false),
+            text: 'On', onClick: (e) => setListed(true, e),
+          }),
+        ),
+        el('div', { class: 'field-help', text:
+          'On lets somebody who knows your name search for you and send a request — which '
+          + 'you still have to accept. Off takes your name out of that search; your code '
+          + 'and invite links keep working. Only your display name is ever listed, never '
+          + 'your email or anything about your training.' }),
       ),
 
       el('div', { class: 'section-label', text: 'You' }),

@@ -153,7 +153,35 @@ export function normalizeGraph(graph) {
       since: typeof c.since === 'string' ? c.since : null,
     });
   }
-  return { connections };
+  /* ⚠️ `pending` IS PART OF THE GRAPH SINCE 2026-08-29 — who I have ASKED to
+   * connect, which is not the same as who I am connected to and must never be
+   * confused with it.
+   *
+   * It exists because acceptance needs no write into my account: when they
+   * accept, they add me to their graph and republish, which makes their shared
+   * document readable to me under the rule that has existed since 2026-08-18.
+   * So my client learns I was accepted by an EXISTING read succeeding — and
+   * this list is what tells it whose reads are worth attempting. Without it,
+   * "probe everyone" would be the alternative, and there is no list of everyone.
+   *
+   * ⚠️ It also closes the obvious hole in a reverse-tombstone design: because
+   * my client only ever acts on people *I* asked, nobody can get themselves
+   * added to my friends list by writing something into my account. */
+  const pending = [];
+  const pseen = new Set();
+  for (const p of Array.isArray(g.pending) ? g.pending : []) {
+    if (!p || typeof p.uid !== 'string' || !p.uid || pseen.has(p.uid)) continue;
+    // Somebody who is already a connection is not pending, whatever the stored
+    // list says — a half-finished accept must resolve toward the connection.
+    if (seen.has(p.uid)) continue;
+    pseen.add(p.uid);
+    pending.push({
+      uid: p.uid,
+      name: typeof p.name === 'string' ? p.name : '',
+      at: typeof p.at === 'string' ? p.at : null,
+    });
+  }
+  return { connections, pending };
 }
 
 /** What one person is allowed to see. Anyone not connected sees nothing. */
@@ -826,4 +854,122 @@ export function needsRepublish({ sessions, publishedAt }) {
     if (Number.isFinite(made) && made > pub) return true;
   }
   return false;
+}
+
+/* ------------------------------------------------------------------ *
+ * Finding people by name — 🚨 THE PART THAT REVERSES A LOCKED DECISION
+ *
+ * ⚠️ READ THE INVITES HEADER ABOVE FIRST. It says, and said from the day this
+ * file was written: *"There is no user directory in v1 and this is why. A
+ * searchable list of accounts is an enumeration surface that has to be right
+ * the first time; an invite link is a capability you hand to one person."*
+ *
+ * ⚠️ THAT SENTENCE IS NO LONGER TRUE OF THE APP, and it is left standing above
+ * on purpose — it is the reasoning somebody will need if they ever want the
+ * property back. What changed is Tim's instruction on 2026-08-29, given the
+ * argument in full: *"Right now the website has less than 5 users so just do
+ * the name search to keep it easy for now and then we can work on making a
+ * different version eventually."*
+ *
+ * ⚠️ THE OBJECTION WAS NOT ANSWERED. It was accepted with its price named, and
+ * the price is in firestore.rules above the `directory` block: Firestore rules
+ * cannot constrain a query's `where` clause, so granting the `list` that name
+ * search needs grants paginated enumeration of every row. There is no version
+ * of free-text name search that does not. The narrowed design that keeps the
+ * old invariant — exact lookup of a HANDLE, get-yes / list-no, nothing
+ * enumerable — is what "a different version eventually" means, and
+ * docs/social-plan.md §3.4 already blesses that shape.
+ *
+ * ⚠️ SO THE DIRECTORY ROW HOLDS THE MINIMUM THAT MAKES SEARCH WORK and nothing
+ * else: a uid and a name the person chose to publish. Never an email (§3.5),
+ * never a photo, never anything about their training. If a field is ever added
+ * here, it is added to a document the whole signed-in world can enumerate.
+ *
+ * Pure, like the rest of this file: the matching is testable with no network.
+ * ------------------------------------------------------------------ */
+
+/** What gets stored for matching. Lower-case, collapsed whitespace, trimmed. */
+export function searchKey(name) {
+  return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/**
+ * Does this directory row match what was typed?
+ *
+ * ⚠️ MATCHED IN THE CLIENT, NOT IN THE QUERY, and that is not laziness. A
+ * Firestore prefix query (`orderBy(nameLower).startAt(q).endAt(q + '\uf8ff')`)
+ * only matches the START of the whole string, so searching "smith" would never
+ * find "Anna Smith" — the one thing a person typing a surname expects. Since
+ * the `list` permission that any such query needs already hands over every row
+ * (see above), fetching the page and matching here costs nothing extra in
+ * exposure and is strictly better at finding the right person.
+ *
+ * Matches a prefix of the whole name OR of any word in it, so "an" finds
+ * "Anna Smith" and "sm" finds it too. Never a substring match inside a word:
+ * "nn" finding "Anna" is the kind of result that makes a list of strangers
+ * look like a list of matches.
+ */
+export function matchesSearch(row, query) {
+  const q = searchKey(query);
+  if (!q) return false;
+  const name = searchKey(row && (row.nameLower || row.name));
+  if (!name) return false;
+  if (name.startsWith(q)) return true;
+  return name.split(' ').some((word) => word.startsWith(q));
+}
+
+/**
+ * Rank matches so the most likely person is first.
+ *
+ * Whole-name prefix beats word prefix beats everything else, then shorter
+ * names first — "Sam" ranks above "Samantha Fitzgerald" for the query "sam",
+ * because a shorter name containing the query is a closer match to it.
+ */
+export function rankMatches(rows, query) {
+  const q = searchKey(query);
+  return (rows || [])
+    .filter((r) => matchesSearch(r, q))
+    .map((r) => {
+      const name = searchKey(r.nameLower || r.name);
+      return { row: r, score: name.startsWith(q) ? 0 : 1, len: name.length };
+    })
+    .sort((a, b) => a.score - b.score
+      || a.len - b.len
+      || searchKey(a.row.name).localeCompare(searchKey(b.row.name)))
+    .map((x) => x.row);
+}
+
+/**
+ * ⚠️ A REQUEST IS ONLY EVER SHOWN TO ITS RECIPIENT, and this is what the
+ * recipient's client renders. `from` is proven at the wire by the rules (the
+ * document id IS the sender's uid and `from` must match it), so this does not
+ * re-check identity — it checks SHAPE, because a row is still free text
+ * somebody else wrote and it is about to be put on a screen.
+ */
+export function readableRequest(row) {
+  if (!row || typeof row !== 'object') return null;
+  const from = typeof row.from === 'string' ? row.from : (typeof row.id === 'string' ? row.id : '');
+  const name = typeof row.name === 'string' ? row.name.trim().slice(0, 60) : '';
+  if (!from || !name) return null;
+  return { uid: from, name };
+}
+
+/**
+ * A permanent link to one person's profile — what a QR code carries.
+ *
+ * ⚠️ NOT AN INVITE LINK, and the difference is the whole point of it. An
+ * invite is a one-time capability that expires in 7 days, so a QR of one goes
+ * stale in a pocket and has to be regenerated every time. Tim asked for *"each
+ * user to have their own QR code where they can show another person"* — their
+ * own, singular, permanent. So this addresses the ACCOUNT, and what the other
+ * person does with it is send a request the owner has to accept.
+ *
+ * ⚠️ A uid in a link is not a secret. It identifies an account; reaching
+ * anything under it still requires the rules to say yes, and the only thing
+ * this route enables is a request — which is exactly what the directory
+ * already enables by name.
+ */
+export function profileLink(baseUrl, uid) {
+  const base = String(baseUrl || '').split('#')[0];
+  return `${base}#/add/${encodeURIComponent(uid)}`;
 }

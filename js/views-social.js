@@ -30,8 +30,9 @@ import {
 } from './ui.js';
 import {
   TIERS, TIER_LABEL, TIER_DETAIL, NONE, LIGHT, MID, FULL,
-  atLeast, parseInviteRoute,
+  atLeast, parseInviteRoute, profileLink,
 } from './social.js';
+import { encodeQR } from './qr.js';
 
 /* ------------------------------------------------------------------ *
  * Shared bits
@@ -141,10 +142,13 @@ export async function SocialView() {
     top: youFriendsTabs('friends'),
     actions: [iconBtn('edit', 'Change your display name', () => renameSheet(state.name))],
     scroll: body,
+    // ⚠️ "Add a friend", not "Invite a friend" — there are three ways in now
+    // (search, code, link) and naming the button after one of them would hide
+    // the other two behind a word that does not describe them.
     bottom: el('button', {
-      class: 'btn primary block', text: 'Invite a friend',
-      onClick: () => inviteSheet(),
-    }),
+      class: 'btn primary block',
+      onClick: () => { location.hash = '#/find'; },
+    }, icon('plus', 16), 'Add a friend'),
   });
 
   // ⚠️ NOT AWAITED — the screen goes up now and fills in when the network
@@ -171,7 +175,7 @@ async function fillSocial(body, state) {
   // ⚠️ IN PARALLEL, and none of them may take the screen down. Each is a
   // separate cloud read and each one is optional — the friends list is the
   // screen, and a failed invite fetch must not blank it.
-  const [invites, offers, departed] = await Promise.all([
+  const [invites, offers, departed, requests, joined] = await Promise.all([
     social.invites().catch(() => []),
     social.handoffs().catch(() => []),
     // ⚠️ ACTING ON DEPARTURES HAPPENS HERE, on the screen where somebody would
@@ -180,8 +184,30 @@ async function fillSocial(body, state) {
     // is my client removing them and republishing without them. A background
     // job that republishes is a background job that can surprise you.
     social.processDisconnects().catch(() => 0),
+    // Who has asked to connect with me (2026-08-29).
+    social.requests().catch(() => []),
+    /* ⚠️ AND THE OTHER SIDE OF THAT: turning MY accepted requests into
+     * connections. It runs here for exactly the reason processDisconnects()
+     * does — this is the screen where somebody would notice the result.
+     *
+     * ⚠️ The probe IS the notification. Accepting needs no write into the
+     * asker's account: adding them to your graph republishes with them in
+     * `viewers`, which makes your shared document readable to them under a
+     * rule that has existed since 2026-08-18. So this asks "can I read them
+     * yet?" of everybody I asked, and a yes can only have come from their
+     * accept. Nobody I did not ask is ever probed. */
+    social.processAcceptedRequests().catch(() => 0),
   ]);
   const claims = invites.filter((i) => i.claimedBy);
+
+  if (joined > 0) {
+    // ⚠️ Said, for the same reason a departure is: a name APPEARING on the list
+    // with no explanation is as confusing as one vanishing, and this one is
+    // good news that would otherwise go unnoticed entirely.
+    parts.push(el('p', { class: 'note', text: joined === 1
+      ? 'Somebody accepted your request — they are on your friends list now.'
+      : `${joined} people accepted your requests and are on your friends list now.` }));
+  }
 
   if (departed > 0) {
     // Said once, plainly. Somebody disappearing off the list with no
@@ -234,6 +260,48 @@ async function fillSocial(body, state) {
     }
   }
 
+  /* ⚠️ SOMEBODY ASKED TO CONNECT (2026-08-29). Distinct from "Waiting for
+   * you" below, which is somebody who used a link I HANDED THEM — I already
+   * agreed to that connection when I made the link. This is unsolicited, so it
+   * leads with the plain question and offers No as an equal choice.
+   *
+   * ⚠️ Declining is SILENT. They are not told, and there is nothing on this
+   * screen offering to tell them — "X turned you down" is a message this app
+   * has no reason to be able to send. */
+  if (requests.length) {
+    parts.push(el('h2', { class: 'section-head', text: 'Asked to connect' }));
+    for (const r of requests) {
+      parts.push(el('div', { class: 'row' },
+        el('div', { class: 'row-icon' }, icon('person')),
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: r.name }),
+          el('div', { class: 'row-sub wrap', text:
+            'They want to connect. If you add them they start on "just that I trained" '
+            + 'until you change it.' }),
+        ),
+        el('button', {
+          class: 'btn small primary', text: 'Add',
+          onClick: async (e) => {
+            e.target.disabled = true;
+            try {
+              await social.acceptRequest(r.uid, r.name);
+              toast(`${r.name} is on your friends list.`);
+              refresh();
+            } catch (err) { e.target.disabled = false; toast(err.message); }
+          },
+        }),
+        el('button', {
+          class: 'btn small ghost', text: 'No',
+          onClick: async (e) => {
+            e.target.disabled = true;
+            try { await social.declineRequest(r.uid); toast('Turned down.'); refresh(); }
+            catch (err) { e.target.disabled = false; toast(err.message); }
+          },
+        }),
+      ));
+    }
+  }
+
   if (claims.length) {
     parts.push(el('h2', { class: 'section-head', text: 'Waiting for you' }));
     for (const c of claims) {
@@ -261,8 +329,8 @@ async function fillSocial(body, state) {
 
   if (!state.connections.length) {
     parts.push(el('p', { class: 'note', text:
-      'Nobody yet. Send somebody an invite link and they will appear here. New friends start on '
-      + '"just that I trained" until you change it.' }));
+      'Nobody yet. Search for them by name, show them your code, or send an invite link — '
+      + 'whichever is easier. New friends start on "just that I trained" until you change it.' }));
   } else {
     for (const c of state.connections) {
       const title = el('div', { class: 'row-title', text: c.name || 'Friend' });
@@ -683,4 +751,274 @@ async function friendBody(strength) {
   }
   const wrap = el('div', { class: 'friend-body' }, bodySvg(levels, null, () => {}));
   return wrap;
+}
+
+/* ================================================================== *
+ * Finding people — search, your own code, and invite links
+ *
+ * 🚨 THE SEARCH HALF REVERSES A DECISION THIS PROJECT MADE ON PURPOSE, and the
+ * argument is written out in full in the "Finding people by name" header of
+ * js/social.js and above the `directory` block in firestore.rules. Read one of
+ * them before touching this screen. The short version: name search needs
+ * Firestore's `list`, `list` cannot be narrowed by a rule, and Tim took that
+ * trade knowingly on 2026-08-29 with fewer than five users on the site.
+ * ================================================================== */
+
+/**
+ * A QR code as an SVG.
+ *
+ * ⚠️ BLACK ON WHITE, ALWAYS, whatever theme the app is in. A light-on-dark
+ * code is legal — the 1:1:3:1:1 finder ratio survives inversion and recent
+ * iPhones handle it — but plenty of Android scanners and third-party apps do
+ * not, and a code that fails on somebody else's phone fails at the one moment
+ * it exists for. So the card paints its own white ground rather than inheriting
+ * the surface, and that is why it is the one bright rectangle in dark mode.
+ *
+ * ⚠️ THE QUIET ZONE IS PART OF THE CODE, not padding around it. Four modules on
+ * every side, inside the SVG's own viewBox — relying on the page background for
+ * it breaks the moment somebody puts this on a coloured card.
+ */
+function qrNode(text, px = 240) {
+  const { size, modules } = encodeQR(text);
+  const QUIET = 4;
+  const total = size + QUIET * 2;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${total} ${total}`);
+  svg.setAttribute('width', String(px));
+  svg.setAttribute('height', String(px));
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Your QR code. Point a phone camera at it.');
+  svg.setAttribute('shape-rendering', 'crispEdges');
+
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('width', String(total));
+  bg.setAttribute('height', String(total));
+  bg.setAttribute('fill', '#fff');
+  svg.appendChild(bg);
+
+  // One path for every dark module rather than one rect each: a version-6
+  // symbol is 41x41, and 1,681 elements is a lot of DOM for a picture.
+  let d = '';
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (modules[y][x]) d += `M${x + QUIET} ${y + QUIET}h1v1h-1z`;
+    }
+  }
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', '#000');
+  svg.appendChild(path);
+  return svg;
+}
+
+/** Your own code — the thing you hold up for somebody to scan. */
+function myCodeSheet(uid, name) {
+  let card;
+  try {
+    card = el('div', { class: 'qr-card' },
+      qrNode(profileLink(location.href, uid)),
+      el('div', { class: 'qr-name', text: name || 'You' }),
+    );
+  } catch (err) {
+    // An encoder that cannot encode has to say so, rather than render a blank
+    // white square somebody then holds up at a camera for a minute.
+    card = el('p', { class: 'note is-warn', text: 'Could not draw your code just now.' });
+  }
+  openSheet({
+    title: 'Your code',
+    body: el('div', {},
+      card,
+      el('p', { class: 'field-help', text:
+        'Point their phone camera at this — no app needed, it opens straight to your '
+        + 'profile. They send you a request and you decide whether to add them. '
+        + 'The code is yours permanently; it never expires.' }),
+    ),
+  });
+}
+
+export async function FindView() {
+  let state;
+  try {
+    state = await social.state();
+  } catch (_) { state = { available: false, reason: 'offline' }; }
+
+  if (!state.available) {
+    return screenShell({ title: 'Add a friend', back: '#/social', scroll: unavailable(state.reason) });
+  }
+  if (!state.name) return nameSetupScreen();
+
+  const results = el('div', { class: 'list' });
+  const input = el('input', {
+    class: 'input', type: 'search', placeholder: 'Their name',
+    'aria-label': 'Search for somebody by name', autocomplete: 'off', maxlength: '60',
+  });
+
+  const empty = () => setChildren(results, el('p', { class: 'field-help', text:
+    'Type a name to look for somebody. You can only find people who are findable — '
+    + 'everybody is by default, and it can be turned off in Settings.' }));
+  empty();
+
+  /* ⚠️ DEBOUNCED, AND A STALE ANSWER IS DISCARDED. Two keystrokes can be in
+   * flight at once and answer out of order, and the older answer landing second
+   * would replace the right list with the wrong one — a bug that only shows on
+   * a slow connection, which is the one this app is built for. */
+  let seq = 0;
+  let timer = null;
+  async function run(query) {
+    const mine = ++seq;
+    if (!query.trim()) { empty(); return; }
+    let rows = [];
+    try { rows = await social.searchPeople(query); } catch (_) { rows = null; }
+    if (mine !== seq) return;
+    if (rows === null) {
+      setChildren(results, el('p', { class: 'note', text:
+        'Could not search just now. It will work when the connection is back.' }));
+      return;
+    }
+    if (!rows.length) {
+      setChildren(results, el('p', { class: 'note', text:
+        `Nobody called “${query.trim()}”. The name has to match how they typed theirs — `
+        + 'or show them your code instead.' }));
+      return;
+    }
+    setChildren(results, ...rows.map((r) => personRow(r, () => run(input.value))));
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => run(input.value), 220);
+  });
+
+  return screenShell({
+    title: 'Add a friend',
+    back: '#/social',
+    scroll: el('div', {},
+      el('div', { class: 'field' }, el('label', { text: 'Search by name' }), input),
+      results,
+      el('h2', { class: 'section-head', text: 'Other ways' }),
+      el('button', { class: 'btn block', onClick: () => myCodeSheet(state.uid, state.name) },
+        icon('target', 16), 'Show my code'),
+      el('button', { class: 'btn block', style: 'margin-top:8px', onClick: () => inviteSheet() },
+        icon('link', 16), 'Send an invite link'),
+      el('p', { class: 'field-help', text:
+        'A code is yours permanently and anyone can scan it. An invite link works once and '
+        + 'expires after 7 days, which is the one to use if you are sending it somewhere you '
+        + 'would rather it did not sit forever.' }),
+    ),
+  });
+}
+
+/**
+ * One person in a result list, with the right control for where they stand.
+ *
+ * ⚠️ ALREADY-CONNECTED AND ALREADY-ASKED ARE SHOWN, NOT FILTERED OUT. "You are
+ * already friends" and "no such person" are completely different answers, and a
+ * search that silently drops the person you were looking for is much the worse
+ * of the two.
+ */
+function personRow(person, after) {
+  const control = person.state === 'connected'
+    ? el('span', { class: 'row-flag', text: 'Friends' })
+    : person.state === 'asked'
+      ? el('button', {
+          class: 'btn small ghost', text: 'Asked',
+          title: 'Take back your request',
+          onClick: async (e) => {
+            e.target.disabled = true;
+            try { await social.withdrawRequest(person.uid); toast('Request taken back.'); }
+            catch (err) { toast(err.message); }
+            e.target.disabled = false;
+            if (after) after();
+          },
+        })
+      : el('button', {
+          class: 'btn small primary', text: 'Add',
+          onClick: async (e) => {
+            e.target.disabled = true;
+            try {
+              await social.sendRequest(person.uid, person.name);
+              toast(`Asked ${person.name}. They decide whether to add you.`);
+            } catch (err) { toast(err.message); }
+            e.target.disabled = false;
+            if (after) after();
+          },
+        });
+
+  return el('div', { class: 'row' },
+    el('div', { class: 'row-icon' }, icon('person')),
+    el('div', { class: 'row-main' }, el('div', { class: 'row-title', text: person.name })),
+    control,
+  );
+}
+
+/**
+ * `#/add/<uid>` — where a scanned code lands.
+ *
+ * ⚠️ IT SHOWS WHO IT IS AND THEN ASKS, rather than connecting on arrival. A
+ * code can be scanned by accident or forwarded by anybody, so the person
+ * holding it is not necessarily the person it was meant for — the same reason
+ * `acceptClaim` is deliberately two steps.
+ */
+export async function AddView(uid) {
+  let state;
+  try {
+    state = await social.state();
+  } catch (_) { state = { available: false, reason: 'offline' }; }
+
+  if (!state.available) {
+    return screenShell({ title: 'Add a friend', back: '#/social', scroll: unavailable(state.reason) });
+  }
+  if (!state.name) return nameSetupScreen();
+
+  if (uid === state.uid) {
+    return screenShell({
+      title: 'Your code', back: '#/social',
+      scroll: emptyState('That is your own code',
+        'Somebody else scanning it lands on your profile and can ask to connect.'),
+    });
+  }
+
+  const body = el('div', { class: 'list' });
+  const screen = screenShell({ title: 'Add a friend', back: '#/social', scroll: body });
+
+  social.personByUid(uid).then((person) => {
+    if (!person) {
+      setChildren(body, emptyState('That code did not match anybody',
+        'They may have turned off being findable, or deleted their account. Ask them for an '
+        + 'invite link instead.'));
+      return;
+    }
+    setChildren(body,
+      el('div', { class: 'row static' },
+        el('div', { class: 'row-icon' }, icon('person')),
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: person.name }),
+          el('div', { class: 'row-sub wrap', text: person.state === 'connected'
+            ? 'You are already connected.'
+            : person.state === 'asked'
+              ? 'You have already asked. They decide whether to add you.'
+              : 'They get a request and decide whether to add you. Nothing of yours is '
+                + 'shared until they do.' }),
+        ),
+      ),
+      person.state === 'none'
+        ? el('button', {
+            class: 'btn primary block', style: 'margin-top:12px',
+            onClick: async (e) => {
+              e.target.disabled = true;
+              try {
+                await social.sendRequest(person.uid, person.name);
+                toast(`Asked ${person.name}.`);
+                location.hash = '#/social';
+              } catch (err) { e.target.disabled = false; toast(err.message); }
+            },
+          }, 'Ask to connect')
+        : el('a', { class: 'btn block', style: 'margin-top:12px', href: '#/social' }, 'Back to friends'),
+    );
+  }).catch(() => {
+    setChildren(body, emptyState('Could not look them up',
+      'You are signed in, but the lookup failed just now. Try again when the connection is back.'));
+  });
+
+  return screen;
 }

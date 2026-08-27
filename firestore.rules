@@ -478,5 +478,124 @@ service cloud.firestore {
       allow update: if isOwner(userId) || claimingUnclaimedInvite();
       allow delete: if isOwner(userId);
     }
+
+    // ================================================================
+    // FRIEND REQUESTS — "add me", which they accept. 2026-08-29.
+    //
+    // Modelled on disconnects above, deliberately, and NOT put inside
+    // `invites`: that collection allows `get` to anyone signed in (a link
+    // must be readable to be redeemed), so a request living there would let
+    // anybody holding two uids read whether A had asked B. An invite is a
+    // capability I ISSUED; a request is something somebody asked OF me.
+    // Two meanings in one collection is how the read rule ends up wrong.
+    //
+    // ⚠️ ACCEPTANCE NEEDS NO RULE AT ALL, and that is the nicest part of
+    // this design. When the owner accepts, they add the requester to their
+    // own graph and republish — which puts the requester in `viewers` and
+    // therefore makes users/{owner}/shared/{tier} readable to them, under
+    // the isPublishedViewer() rule that has existed since 2026-08-18. So
+    // the requester learns they were accepted by their EXISTING read
+    // succeeding, and nobody has to write into anybody's account to say so.
+    // No "accepted" flag, no reverse tombstone, no new permission.
+    // ================================================================
+
+    match /users/{userId}/requests/{fromUid} {
+      // ⚠️ OWNER-ONLY READ, unlike invites. Nobody but the person being
+      // asked may see who asked them, or what name they gave.
+      allow get, list: if isOwner(userId);
+
+      // ⚠️ THE DOCUMENT ID *IS* THE CALLER'S UID — the disconnects argument
+      // verbatim: you may ask in your OWN name and nobody else's. Without
+      // it, anybody could file a request appearing to come from anyone.
+      // It also makes it idempotent: asking twice writes the same document,
+      // so a retry cannot produce two rows for one person.
+      //
+      // `from` is checked against the caller too, so neither half can be
+      // forged alone — the same belt-and-braces the handoff rule uses.
+      allow create, update: if signedIn()
+                            && fromUid == request.auth.uid
+                            && request.resource.data.keys().hasOnly(['from', 'name', 'at'])
+                            && 'from' in request.resource.data
+                            && 'name' in request.resource.data
+                            && 'at' in request.resource.data
+                            && request.resource.data.from == request.auth.uid
+                            && request.resource.data.name is string
+                            && request.resource.data.name.size() > 0
+                            && request.resource.data.name.size() <= 60
+                            && request.resource.data.at is timestamp;
+
+      // The owner deletes it on accept or decline; the requester can take it
+      // back before it is answered.
+      allow delete: if isOwner(userId) || fromUid == request.auth.uid;
+    }
+
+    // ================================================================
+    // 🚨 THE PUBLIC DIRECTORY — and it is the ONE place in this file that
+    // grants `list`. Read this before touching it.
+    //
+    // ⚠️ IT REVERSES A DECISION THIS PROJECT MADE ON PURPOSE. Every version
+    // of this file before 2026-08-29 said, above the invites block: "There is
+    // no user directory in v1, deliberately: a searchable list of accounts is
+    // an enumeration surface that has to be right first time, and an invite
+    // link is a capability handed to one person instead."
+    //
+    // ⚠️ AND THE OBJECTION IS NOT ANSWERED — IT IS ACCEPTED, WITH ITS PRICE
+    // NAMED. Firestore rules cannot constrain a query's `where` clause:
+    // `request.query` exposes only limit, offset and orderBy. There is no way
+    // to write "you may query this collection only by exact name". Granting
+    // `list` at all grants PAGINATED ENUMERATION OF EVERY ROW. So this
+    // document deliberately holds the minimum that makes search work — a uid
+    // and a display name the user chose to publish — and nothing else. No
+    // email, ever (docs/social-plan.md §3.5), no photo, no training.
+    //
+    // ⚠️ WHAT AN ATTACKER GAINS: the complete list of display names paired
+    // with uids. A uid was previously learnable only from a link somebody
+    // handed you. What that unlocks is bounded — every private path is still
+    // isOwner, every projection is still isPublishedViewer, and a denied read
+    // is indistinguishable from a missing document — but it does mean the
+    // `disconnects` and `requests` writes above, whose residual safety was
+    // partly uid unguessability, can now be aimed at any account. Both are
+    // shape-checked, id-pinned to the caller, and no-ops on the receiving
+    // client if they name somebody not in the graph.
+    //
+    // ⚠️ TIM DECIDED THIS, 2026-08-29, told the above: *"Right now the website
+    // has less than 5 users so just do the name search to keep it easy for
+    // now and then we can work on making a different version eventually."*
+    // The narrowed version that keeps the old invariant is a HANDLE directory
+    // with get-yes / list-no — exact lookup by a handle you chose, no `list`
+    // anywhere, so nothing is enumerable. docs/social-plan.md §3.4 already
+    // blesses that shape. It is the thing to build when "eventually" arrives,
+    // and this block should be deleted the day it does.
+    //
+    // ⚠️ LISTING IS OPT-OUT IN THE APP (Settings → Findable by name). The
+    // rules cannot enforce that — a client can always write its own row —
+    // which is exactly why it is a client-side courtesy and is described as
+    // one rather than as a protection.
+    // ================================================================
+
+    match /directory/{uid} {
+      // The whole point, and the whole cost. See above.
+      allow get, list: if signedIn();
+
+      // ⚠️ Your own row and nobody else's — the id is the access control, the
+      // same shape as requests and disconnects. Shape-checked so the document
+      // cannot grow fields nobody audited: a directory row that can carry
+      // arbitrary keys is a directory row somebody puts an email in.
+      allow create, update: if signedIn()
+                            && uid == request.auth.uid
+                            && request.resource.data.keys().hasOnly(['uid', 'name', 'nameLower', 'updatedAt'])
+                            && request.resource.data.uid == request.auth.uid
+                            && request.resource.data.name is string
+                            && request.resource.data.name.size() > 0
+                            && request.resource.data.name.size() <= 60
+                            && request.resource.data.nameLower is string
+                            && request.resource.data.nameLower.size() <= 60
+                            && request.resource.data.updatedAt is timestamp;
+
+      // Turning listing off, and deleting an account, both remove the row.
+      allow delete: if signedIn() && uid == request.auth.uid;
+    }
+
   }
+
 }

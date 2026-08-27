@@ -4,9 +4,19 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-29. **Two passes have run this session** — the two 2026-08-29 sections at
-the top of the list below. Everything under them is the previous session's **seven passes**, all
+**Last updated:** 2026-08-29. **Three passes have run this session** — the three 2026-08-29
+sections at the top of the list below. Everything under them is the previous session's **seven passes**, all
 dated 2026-08-28. Read them in file order (newest first). The one-paragraph version of each:
+
+🚨 **0. A USER DIRECTORY EXISTS NOW (2026-08-29, third pass) — and it REVERSES the "no user
+directory, so nothing can be enumerated" decision this project made on purpose.** Tim asked for QR
+codes, name search and friend requests; he was told name search cannot be narrowed by a Firestore
+rule (granting `list` grants enumeration of every row) and answered *"less than 5 users… just do the
+name search to keep it easy for now."* ⚠️ **The objection was accepted, not answered**, the directory
+row is shape-checked so it can never hold an email, and **the rules test asserts the enumeration as
+an `allow`** so nobody mistakes it for safe. The narrowed replacement — a handle at get-yes/list-no —
+is written up in that section and in `docs/social-plan.md` §3.4. **QR codes and friend requests cost
+nothing and are pure gain**; accepting a request needs no new permission at all.
 
 🆕 **0a. RECORDING FOR A FRIEND SENDS IT TO THEIR ACCOUNT (2026-08-29, second pass).** Tim: the guest
 feature's *"main want… was so that one person could record the details for two+ people that do have
@@ -120,8 +130,8 @@ last exercise is refused.
 - ✅ **0j CLOSED** — **disconnect is mutual**. ⚠️ **Eventual, not instant**, and the sheet says so.
 - **Rules tests 66 → 92**, against the real engine. Rules deployed.
 
-**Tests: 2,972 across eleven suites** (data-layer 1437, render **593**, goals 232, bodyweight 170,
-social 140, a11y 85), plus **117 rules assertions in the emulator** and 12 in `sw-update`.
+**Tests: 3,030 across TWELVE suites** (data-layer 1437, render **619**, goals 232, bodyweight 170,
+social 165, a11y 85, **qr 33**), plus **147 rules assertions in the emulator** and 12 in `sw-update`.
 Sub-agents are pre-authorised (saved to memory).
 
 ⚠️ **KNOWN FLAKE, NOTED RATHER THAN HIDDEN**: `tests/sw-update.test.mjs` drives real headless
@@ -341,6 +351,96 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-29, third pass — 🚨 A USER DIRECTORY EXISTS NOW, AND IT REVERSES A LOCKED DECISION
+
+Tim: *"I want each user to have their own QR code where they can show another person and it will
+automatically share that user's profile where that person can add them as a friend. Additionally,
+you can just search users on the site in the friends section and if there is a user with that name
+they can send a friend request to that person, and then that person can accept it."*
+
+He was told the trade before it was built — QR and friend requests are free, name search is not —
+and answered: *"Right now the website has less than 5 users so just do the name search to keep it
+easy for now and then we can work on making a different version eventually."*
+
+### 🚨 THE PART A FRESH SESSION MUST NOT MISREAD
+
+`js/social.js` has said since the day it was written: *"There is no user directory in v1 and this is
+why. A searchable list of accounts is an enumeration surface that has to be right the first time; an
+invite link is a capability you hand to one person."* **That sentence is no longer true of the app.**
+It is left standing in the file on purpose — it is the reasoning somebody needs to get the property
+back.
+
+⚠️ **THE OBJECTION WAS NOT ANSWERED. IT WAS ACCEPTED, WITH ITS PRICE NAMED.** Firestore rules cannot
+constrain a query's `where` clause — `request.query` exposes only limit, offset and orderBy — so the
+`list` permission that name search requires **grants paginated enumeration of every row**. There is
+no version of free-text name search that does not. What bounds the damage is the document: a uid and
+a display name the person chose to publish, **shape-checked in the rules so it cannot grow the one
+field it must never hold**, and a rules test asserts that an email is refused.
+
+⚠️ **THE RULES TEST FOR THIS IS WRITTEN AS AN `allow`, DELIBERATELY** — "any signed-in account can
+list the whole directory" is asserted as true, because a suite that only pinned the good news would
+describe a feature this app does not have. **When the handle version is built, that line is the one
+that flips to a denial.**
+
+⚠️ **THE NARROWED VERSION, for when "eventually" arrives**: `handles/{handle}` → uid, `get` yes and
+`list` **no** — exact lookup of a handle you chose, nothing enumerable, a leaked handle costing one
+lookup. `docs/social-plan.md` §3.4 already blesses that shape. Delete the `directory` block the day
+it lands.
+
+### What shipped
+
+- **Search by name**, on a new **Add a friend** screen (`#/find`). ⚠️ **Matched in the CLIENT, not in
+  the query**: a Firestore prefix only matches the start of the whole string, so "smith" would never
+  find "Anna Smith" — and since `list` already hands over every row, matching here costs nothing
+  extra in exposure and is strictly better at finding the right person. Prefix of the whole name or
+  of any word; **never a substring inside a word**, because "nn" finding "Anna" is how a list of
+  strangers starts looking like a list of matches. Ranked shortest-whole-name-prefix first.
+- ⚠️ **Somebody already connected is SHOWN AND FLAGGED, not filtered out.** "You are already friends"
+  and "no such person" are different answers and dropping them silently is the worse one.
+- **Friend requests** at `users/{uid}/requests/{fromUid}` — modelled on `disconnects`, deliberately
+  **not** put inside `invites`, which allows `get` to anyone signed in because a link must be
+  readable to be redeemed. An invite is a capability I ISSUED; a request is something asked OF me,
+  and two meanings in one collection is how a read rule ends up wrong. **The document id IS the
+  caller's uid**, so you may ask in your own name and nobody else's, and asking twice writes the same
+  document.
+- 🚨 **ACCEPTING NEEDS NO NEW PERMISSION AT ALL, and it is the nicest thing in this pass.** Accepting
+  adds them to my graph and republishes, which puts them in `viewers` and makes my shared document
+  readable to them **under the rule that has existed since 2026-08-18**. So the asker learns they
+  were accepted by an **existing read succeeding**. No "accepted" flag, no reverse tombstone, no
+  write into anybody's account. ⚠️ **Eventual on their side**, like mutual disconnect, and the
+  Friends screen says so when it happens.
+- ⚠️ **`graph.pending` is what makes that safe**: only people **I** asked are ever probed, so nothing
+  anybody writes anywhere can add themselves to my friends list.
+- **A QR code, permanent** — `js/qr.js`, a dependency-free byte-mode encoder, versions 1–6, all 8
+  masks scored. ⚠️ **It encodes `#/add/<uid>`, NOT an invite link**: an invite is a one-time
+  capability that expires in 7 days, so a QR of one goes stale in a pocket. Tim asked for *"their
+  own"* code — singular, permanent. Scanning is the other person's **camera app**; there is no
+  scanner to build.
+- ⚠️ **The code is BLACK ON WHITE in both themes, hard-coded, never a token.** An inverted code is
+  legal and recent iPhones decode one; plenty of Android scanners do not, and a code that fails on
+  somebody else's phone fails at the one moment it exists for. A render assertion pins the two fills.
+- **Settings → Findable by name**, opt-out, defaults on. ⚠️ **Described as a courtesy, not a
+  protection, because the rules cannot enforce it** — a client can always write its own row. Calling
+  it a privacy control would be the same class of overclaim the disconnect sheet shipped with.
+
+### Verified
+
+- ✅ **THE RENDERED QR DECODES FROM ACTUAL PIXELS.** The app's own SVG was screenshotted over CDP at
+  240 px and the PNG handed to `jsQR`: an 88-character profile link, version 6, decoded byte-for-byte.
+  That tests the whole chain — encoder, path building, CSS sizing, theme — not just the matrix.
+- **33 QR assertions**, including ZXing's published Reed-Solomon vectors and a round-trip decode of
+  60 varied payloads. ⚠️ **The suite does NOT assert which mask any payload gets**: ZXing, Nayuki and
+  the ISO text disagree on penalty-rule-3 details, so a correct implementation can legitimately pick
+  a different mask. Scoring produced 6 different masks across those payloads, which a hard-coded mask
+  could not.
+- **Rules 117 → 147 assertions**, run and deployed.
+
+**Tests: render 595 → 619, social +25, qr +33.** Two mutations, each flipping only itself: a
+theme-coloured QR flips the black-on-white assertion; treating "asked" as connected flips the
+row-state assertion.
 
 ---
 
@@ -4014,7 +4114,8 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **68** screen/width/theme combinations, and since 2026-08-27 takes a `PALETTE` env var (gold/teal/indigo/ember) so all four can be swept: **240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow** (gold re-run 2026-08-29 over 68 × 6,478 nodes, same result). ⚠️ **THE SESSION RUNNER JOINED IT ON 2026-08-29 and had never been measured before that** — the one screen the app exists for, skipped because a session needs a workout id and the route list only held static hashes. It is reached by driving Record → Weightlifting → the next workout, and **the step asserts it landed** (`.set-list` must exist): the first version matched `/^Start/` against the chooser's rows, whose text begins with the workout NAME, and silently filed four route-instances of the picker under the runner's name. A failed step is now **printed rather than swallowed**, for the same reason. Set through the ATTRIBUTE, because the demo backend reseeds on every reload. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
 | **Render tests** | `npm i jsdom` then `node tests/render.test.mjs` — 574 assertions, mounts every screen. ⚠️ **Since 2026-08-29 it pins WHERE THE STEPPERS ARE**: exactly one `.steppers` on the screen, inside `.set-list`, directly under the open row — and opening set 3 MOVES it there. Plus the one that would otherwise have shipped as a bug: a nudge must update the row **in place**, asserted by holding the row NODE across the change, because a rebuild would destroy the input being typed into. Both mutation-checked, each flipping only itself. ⚠️ Since 2026-08-27 it pins three things a browser could not: that the **Friends screen renders while the network is still hanging** (it is handed a read that never resolves — re-adding the `await` fails it), that **a workout offered by a friend writes NOTHING into your training until you tap Add**, and that the disconnect sheet says both that they are told and that it is eventual. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
-| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 92 assertions, who may READ your data — and since 2026-08-27 who may OFFER you a workout and who may announce a disconnection. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
+| **QR tests** | `node tests/qr.test.mjs` — 33 assertions. Needs `npm i --no-save jsqr` for the strongest layer: the encoder's output is rendered to pixels and **decoded by an independent implementation**, which validates format-info, masking, placement, interleaving and ECC in one assertion. Also carries ZXing's published Reed-Solomon vectors. ⚠️ **It does NOT assert which mask a payload gets** — ZXing, Nayuki and the ISO text disagree on penalty-rule-3 details, so a correct implementation can legitimately pick a different one |
+| **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 147 assertions, who may READ your data — and since 2026-08-27 who may OFFER you a workout and who may announce a disconnection. ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
@@ -4595,7 +4696,17 @@ Fitness_Tracker/
 │   │                           would push hardest on somebody coming back from
 │   │                           a lay-off), and emitting an on-track verdict
 │   │                           (gated on the estimator)
+│   ├── qr.js                   A QR CODE, drawn in the app — pure. Byte mode,
+│   │                           versions 1-6, all 8 masks SCORED (a hard-coded
+│   │                           mask can create a false finder pattern, and the
+│   │                           data bits change with every payload). Encodes
+│   │                           #/add/<uid>, which is permanent, never a
+│   │                           one-time invite link that goes stale in a pocket
 │   ├── social.js               VISIBILITY TIERS + the projection builder — pure.
+│   │                           🚨 ALSO THE USER DIRECTORY since 2026-08-29, and
+│   │                           its header says why that reverses the "nothing
+│   │                           can be enumerated" decision rather than narrowing
+│   │                           it. Read it before touching search.
 │   │                           Wired to views-social.js since 2026-08-18, and
 │   │                           ✅ two real accounts ran the whole round trip
 │   │                           against the live project on 2026-08-22.
