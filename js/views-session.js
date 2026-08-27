@@ -797,6 +797,13 @@ export async function SessionView(workoutId) {
               onPick: (picked) => swapExercise(step.entryIndex, picked),
             }),
           }, icon('swap', 15), 'Swap'),
+          // Swap's sibling (2026-08-28): drop the exercise from today entirely.
+          // Same quietness, same contract — the saved workout is never touched.
+          el('button', {
+            class: 'swap-btn',
+            title: 'Remove this exercise from today’s session',
+            onClick: () => removeExercise(step.entryIndex),
+          }, icon('trash', 15), 'Remove'),
         ),
         el('div', { class: 'session-ex-meta' },
           `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
@@ -1061,6 +1068,61 @@ export async function SessionView(workoutId) {
     saveDraft(state);
     renderAll();
     toast(`Swapped to ${newEx.name}`);
+  }
+
+  /**
+   * Remove the exercise at `index` from TODAY'S SESSION ONLY — Swap's sibling
+   * (Tim, 2026-08-28: "delete this exercise entirely… works exactly the same
+   * as the swap button where it doesn't adjust the workout for future
+   * systems, just that day's recording"). The saved workout is never touched,
+   * for the same reason Swap never touches it.
+   *
+   * ⚠️ WHERE IT DIFFERS FROM SWAP, AND WHY: a swap with sets already logged
+   * SPLITS, because those sets were performed and belong in the record. A
+   * removal deletes them — that is what removing means — so recorded sets get
+   * a CONFIRM that says the count out loud, while an untouched exercise goes
+   * quietly (pre-filled numbers are a plan, not a record). One tap must not
+   * be able to destroy performed work; this app has had that lesson this week.
+   *
+   * ⚠️ A GROUP LEFT WITH ONE MEMBER STOPS BEING A GROUP. stepsFor() builds
+   * blocks by adjacency and groupLabel(1) would happily print "Superset" over
+   * a single exercise — telling somebody to go "straight into" nothing. The
+   * survivor keeps its sets and loses only the banner.
+   */
+  function removeExercise(index) {
+    const entry = state.entries[index];
+    if (!entry) return;
+    if (state.entries.length <= 1) {
+      toast('This is the only exercise — use the ✕ up top to leave the workout instead.');
+      return;
+    }
+
+    const doRemove = () => {
+      state.entries.splice(index, 1);
+      const counts = new Map();
+      for (const e of state.entries) {
+        if (e.group != null) counts.set(e.group, (counts.get(e.group) || 0) + 1);
+      }
+      for (const e of state.entries) {
+        if (e.group != null && counts.get(e.group) < 2) e.group = null;
+      }
+      // Land on the exercise that now occupies this slot (or the new last one)
+      // — state.index walks STEPS, not entries, for the reason the swap's
+      // split path spells out. goToStep() clamps, saves and renders.
+      const at = steps().findIndex((s) => s.entryIndex === Math.min(index, state.entries.length - 1));
+      goToStep(at >= 0 ? at : 0);
+      toast(`Removed ${entry.exerciseName} — today only`);
+    };
+
+    const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields)).length;
+    if (!recorded) { doRemove(); return; }
+    confirmSheet({
+      title: `Remove ${entry.exerciseName}?`,
+      message: `${recorded} recorded set${recorded === 1 ? '' : 's'} will be deleted with it. `
+        + 'Your saved workout is not changed — this only removes it from today.',
+      confirmLabel: 'Remove',
+      onConfirm: doRemove,
+    });
   }
 
   // One person's entries, reduced to what was actually recorded. Factored so

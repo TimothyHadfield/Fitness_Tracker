@@ -1724,6 +1724,73 @@ ok(!data.querySelector('.rep-target'),
   }
   localStorage.removeItem(DRAFT);
 
+  /* ---- removing an exercise mid-workout (Swap's sibling, 2026-08-28) ---- *
+   *
+   * Tim: "delete this exercise entirely… works exactly the same as the swap
+   * button where it doesn't adjust the workout for future systems, just that
+   * day's recording."
+   *
+   * ⚠️ THE ONE PLACE IT MUST NOT MIRROR SWAP: recorded sets. A swap KEEPS
+   * them (they were performed); a removal deletes them, so it has to say the
+   * count out loud and ask — one tap must not destroy performed work. */
+  {
+    const w = await store.saveWorkout({
+      name: 'Remove day',
+      exercises: [
+        { exerciseId: byName('Triceps Pushdown').id, sets: 2, notes: '', group: 0 },
+        { exerciseId: byName('Overhead Cable Extension').id, sets: 2, notes: '', group: 0 },
+        { exerciseId: byName('Lateral Raise').id, sets: 2, notes: '' },
+      ],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    const removeBtn = () => [...s.querySelectorAll('.swap-btn')].find((b) => /Remove/.test(b.textContent));
+    ok(Boolean(removeBtn()), 'every exercise offers Remove beside Swap');
+    ok(/Superset/.test(s.textContent), 'the workout opens inside a superset');
+
+    /* --- nothing logged: goes quietly, and the orphaned group dissolves --- */
+    removeBtn().click();
+    await settle();
+    ok(!document.querySelector('.sheet'),
+       'an untouched exercise asks nothing — pre-filled numbers are a plan, not a record');
+    ok(!/Triceps Pushdown/.test(s.textContent), 'the exercise is gone from today');
+    ok(!/Superset/.test(s.textContent),
+       '⚠️ and its partner is no longer called a Superset — a group of one is not a group');
+    ok(/Overhead Cable Extension/.test(s.querySelector('.session-ex-name').textContent),
+       'you land on the exercise that took its slot');
+
+    /* --- sets recorded: a confirm that says the count --- */
+    type(s.querySelector('.step-value'), 60);
+    await settle();
+    removeBtn().click();
+    await settle();
+    const sheet = document.querySelector('.sheet');
+    ok(Boolean(sheet), '⚠️ with a recorded set, removing ASKS first');
+    ok(/1 recorded set/.test(sheet.textContent), 'and says how many sets die with it');
+    ok(/not changed|only removes it from today/.test(sheet.textContent),
+       'and that the saved workout is untouched');
+    [...sheet.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Remove').click();
+    await settle();
+    ok(!/Overhead Cable Extension/.test(s.querySelector('.session-head').textContent),
+       'confirming removes it, recorded set and all');
+
+    /* --- the last exercise is refused --- */
+    ok(/Lateral Raise/.test(s.querySelector('.session-ex-name').textContent), 'one exercise remains');
+    removeBtn().click();
+    await settle();
+    ok(/Lateral Raise/.test(s.querySelector('.session-ex-name').textContent),
+       '⚠️ the ONLY exercise cannot be removed — an empty session has no screen to stand on');
+
+    /* --- today only: the saved workout still has all three --- */
+    const plan = await store.getWorkout(w.id);
+    ok(plan.exercises.length === 3,
+       '⚠️ and the SAVED WORKOUT still has all three exercises — removal is for this session only');
+    const draft = JSON.parse(localStorage.getItem(DRAFT));
+    ok(draft.entries.length === 1, 'while the draft carries the removals, so a resume does too');
+  }
+  localStorage.removeItem(DRAFT);
+
   /* ---- an assist machine says what you are really lifting ---- *
    *
    * ⚠️ The box says 70 and the lifter is moving 110. Tim asked for the real
