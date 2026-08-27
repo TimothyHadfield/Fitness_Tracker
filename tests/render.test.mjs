@@ -3524,6 +3524,86 @@ ok(!data.querySelector('.rep-target'),
   restore();
 }
 
+
+/* ============ the finish screen: one action, and a way back (2026-08-29) ============
+ *
+ * Tim, two asks in one message: *"keep the back button in case they wanted to
+ * quickly change something or accidentally clicked on the finish workout
+ * button"*, and *"instead of having 2 buttons: 'view workout' and 'back to
+ * home', just display this workout and then keep the back to home."*
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const w = await store.saveWorkout({
+    name: 'Finish screen day',
+    exercises: [
+      { exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '' },
+      { exerciseId: byName('Barbell Curl').id, sets: 1, notes: '' },
+    ],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  type(s.querySelectorAll('.step-value')[0], 185);
+  await settle();
+  type(s.querySelectorAll('.step-value')[1], 5);
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Next exercise/.test(b.textContent)).click();
+  await settle();
+  type(s.querySelectorAll('.step-value')[0], 60);
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle(); await settle();
+
+  const app = document.getElementById('app');
+  ok(/Nice work/.test(app.textContent), 'the finish screen is up');
+
+  /* ⚠️ ONE ACTION. Two primary-looking buttons where there is one thing to do
+   * next is a choice the screen was inventing for itself. */
+  const actions = [...app.querySelectorAll('.btn.block')];
+  ok(actions.length === 1 && /Back to home/.test(actions[0].textContent),
+     `⚠️ one action, and it is Back to home (${actions.map((b) => b.textContent.trim()).join(', ')})`);
+  ok(!/View this workout/.test(app.textContent),
+     '⚠️ "View this workout" is gone — it led to a screen describing what this screen had '
+     + 'already summarised in one line');
+
+  /* ...because the workout is ON this screen instead. */
+  const rec = app.querySelector('.finish-record');
+  ok(Boolean(rec), 'the workout is displayed here rather than behind a tap');
+  const names = [...rec.querySelectorAll('.finish-ex-name')].map((n) => n.textContent);
+  ok(names.length === 2 && /Bench/.test(names[0]) && /Curl/.test(names[1]),
+     `every exercise recorded is listed, in the order it was done (${names.join(', ')})`);
+  ok(/185/.test(rec.textContent) && /60/.test(rec.textContent),
+     'with the real numbers, so it is a receipt rather than a count');
+  ok(rec.querySelectorAll('.finish-set').length === 2,
+     '⚠️ and only the sets that were RECORDED — the second bench set was never touched, and a '
+     + 'receipt listing a set nobody did is the same lie the save path refuses to tell '
+     + `(${rec.querySelectorAll('.finish-set').length} shown)`);
+
+  /* ⚠️ AND A WAY BACK OFF IT. It goes to the EDIT FORM, not into the runner:
+   * the session is already saved by the time this screen exists, so "undo the
+   * finish" would mean deleting a stored session on the one screen somebody
+   * just tapped by accident. */
+  const back = app.querySelector('[aria-label="Back"]');
+  ok(Boolean(back),
+     '⚠️ there is a back button — an accidental tap on Finish must not be a one-way door');
+  /* ⚠️ CLICKED, not read off an href. `screenShell` passes `back` to iconBtn as
+   * an onClick, and el() silently ignores a non-function `onX` — so a string
+   * renders a back button that does nothing. Asserting on the attribute would
+   * have passed over exactly that bug; clicking it is what caught it. */
+  back.click();
+  await settle();
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  ok(saved && location.hash === `#/edit/${saved.id}`,
+     `⚠️ and it opens THIS session's record for editing (${location.hash}) — every part of what `
+     + 'was recorded is changeable there, which is what "quickly change something" needs');
+
+  localStorage.removeItem(DRAFT);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

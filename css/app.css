@@ -3234,3 +3234,28 @@ a.row { text-decoration: none; }
   color: var(--ink-faint);
   padding: 0 4px;
 }
+
+/* What was just recorded, on the finish screen (2026-08-29). It replaced a
+   "View this workout" button that led to a screen describing what the screen
+   you were on had already summarised in one line — and left two primary-looking
+   actions where there is only one thing to do next. Quiet: this is a receipt,
+   not a control. */
+.finish-record {
+  margin-top: 16px;
+  text-align: left;
+  width: 100%;
+  border-top: 1px solid var(--rule-soft);
+}
+.finish-ex { padding: 9px 0; border-bottom: 1px solid var(--rule-soft); }
+.finish-ex:last-child { border-bottom: 0; }
+.finish-ex-name { font-size: 14.5px; font-weight: 650; color: var(--ink); }
+.finish-ex-sets {
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+}

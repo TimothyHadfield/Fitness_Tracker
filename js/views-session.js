@@ -1774,8 +1774,32 @@ export async function SessionView(workoutId) {
     const prLine = (p) => p.field === 'weight'
       ? `${p.name} — ${units.withUnit(p.now)}, up from ${units.withUnit(p.was)}`
       : `${p.name} — ${p.now} reps, up from ${p.was}`;
+    /* ⚠️ THERE IS A WAY BACK OFF THIS SCREEN (2026-08-29).
+     *
+     * Tim: *"if a user clicks 'finish this workout' at the end of their last
+     * rep, keep the back button in case they wanted to quickly change something
+     * or accidentally clicked on the finish workout button."*
+     *
+     * ⚠️ IT GOES TO THE EDIT FORM, NOT BACK INTO THE RUNNER, and that is the
+     * safe half of the answer rather than a shortcut. The session is already
+     * saved by the time this screen exists — that is the whole point of the
+     * order finish() writes in — so "undo the finish" would mean deleting a
+     * stored session and rebuilding a draft from it, which is a delete on the
+     * one screen somebody just tapped by accident. The edit form changes every
+     * part of what was recorded (its day, its name, its exercises, every set)
+     * and is already built and tested, so the accidental tap costs one more tap
+     * and nothing else.
+     *
+     * ⚠️ Only when there IS an owner session to edit. A coach who ran the whole
+     * thing for somebody else has no session of their own, and a back button
+     * pointing at nothing is worse than no back button. */
+    const ownId = state.saveIds && state.saveIds.you;
     document.getElementById('app').replaceChildren(screenShell({
       title: 'Workout complete',
+      // ⚠️ A FUNCTION, not a hash. `screenShell` hands `back` straight to
+      // iconBtn as its onClick, and el() silently ignores a non-function `onX`
+      // — so a string here renders a back button that does nothing at all.
+      back: entries.length && ownId ? () => go(`#/edit/${ownId}`) : null,
       noNav: true,
       scroll: el('div', { class: 'finish-hero' },
         el('div', { class: 'finish-check' }, icon('check')),
@@ -1817,11 +1841,33 @@ export async function SessionView(workoutId) {
                   ` ${g.sendError || ''} Their sets are safe here — open this day on the calendar and tap “Send this to ${g.name}”.`));
         }),
         el('p', { text: `Saved to ${fmtDateLong(state.date)}` }),
+
+        /* ⚠️ THE WORKOUT IS ON THIS SCREEN NOW, not behind a button (2026-08-29).
+         *
+         * Tim: *"instead of having 2 buttons: 'view workout' and 'back to home',
+         * just display this workout and then keep the back to home setting when
+         * they're done."*
+         *
+         * "View this workout" was a tap that led to a screen showing what the
+         * screen you were already on had just described in one line — and it
+         * left the finish screen with two primary-looking actions where there
+         * is only one thing to do next. Showing the sets here answers the
+         * question the button existed for, and the one button left is the one
+         * that ends the session. */
+        entries.length
+          ? el('div', { class: 'finish-record' },
+              ...entries.map((e) => el('div', { class: 'finish-ex' },
+                el('div', { class: 'finish-ex-name', text: e.exerciseName }),
+                el('div', { class: 'finish-ex-sets' },
+                  ...e.sets.map((set, i) => el('span', { class: 'finish-set' },
+                    fmtSet(set, e.fields || ['weight', 'reps'], e.loadType || null)
+                    + (i < e.sets.length - 1 ? ' ·' : ''))),
+                ),
+              )),
+            )
+          : null,
       ),
-      bottom: [
-        el('button', { class: 'btn primary block', text: 'View this workout', onClick: () => go('#/day/' + state.date) }),
-        el('button', { class: 'btn block', text: 'Back to home', onClick: () => go('#/home') }),
-      ],
+      bottom: el('button', { class: 'btn primary block', text: 'Back to home', onClick: () => go('#/home') }),
     }));
   }
 

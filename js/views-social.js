@@ -843,7 +843,7 @@ export async function FindView() {
   } catch (_) { state = { available: false, reason: 'offline' }; }
 
   if (!state.available) {
-    return screenShell({ title: 'Add a friend', back: '#/social', scroll: unavailable(state.reason) });
+    return screenShell({ title: 'Add a friend', back: () => { location.hash = '#/social'; }, scroll: unavailable(state.reason) });
   }
   if (!state.name) return nameSetupScreen();
 
@@ -891,7 +891,7 @@ export async function FindView() {
 
   return screenShell({
     title: 'Add a friend',
-    back: '#/social',
+    back: () => { location.hash = '#/social'; },
     scroll: el('div', {},
       el('div', { class: 'field' }, el('label', { text: 'Search by name' }), input),
       results,
@@ -966,20 +966,20 @@ export async function AddView(uid) {
   } catch (_) { state = { available: false, reason: 'offline' }; }
 
   if (!state.available) {
-    return screenShell({ title: 'Add a friend', back: '#/social', scroll: unavailable(state.reason) });
+    return screenShell({ title: 'Add a friend', back: () => { location.hash = '#/social'; }, scroll: unavailable(state.reason) });
   }
   if (!state.name) return nameSetupScreen();
 
   if (uid === state.uid) {
     return screenShell({
-      title: 'Your code', back: '#/social',
+      title: 'Your code', back: () => { location.hash = '#/social'; },
       scroll: emptyState('That is your own code',
         'Somebody else scanning it lands on your profile and can ask to connect.'),
     });
   }
 
   const body = el('div', { class: 'list' });
-  const screen = screenShell({ title: 'Add a friend', back: '#/social', scroll: body });
+  const screen = screenShell({ title: 'Add a friend', back: () => { location.hash = '#/social'; }, scroll: body });
 
   social.personByUid(uid).then((person) => {
     if (!person) {
