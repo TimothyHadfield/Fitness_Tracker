@@ -375,6 +375,52 @@ ok(data.querySelectorAll('.seg').length === 4, 'Bars mode keeps the mode switch 
      'and the other lines step back rather than vanish');
   quadsChip().click(); await settle();
   ok(quadsChip().getAttribute('aria-pressed') === 'false', 'tapping again releases it');
+
+  /* ---- the basics topics (2026-08-30, Tim's ask) ----
+     "collect information to educate users on the basics of weightlifting…
+     before we put anything on here, we need to be confident."
+     The CONTENT is asserted in data-layer.test.mjs (sources, word budgets,
+     the three claims that would be worst to get backwards). These pin the
+     things only a mounted DOM can see. */
+  const { TOPICS } = await import('../js/research-topics.js');
+  const topics = [...data.querySelectorAll('.rt-topic')];
+  ok(topics.length === TOPICS.length,
+     `every topic is on the screen (${topics.length} of ${TOPICS.length})`);
+
+  // ⚠️ COLLAPSED ON ARRIVAL. Eleven topics open at once is the wall this
+  // content exists not to be, and Tim's own second constraint. If somebody
+  // makes them open by default the Research pane silently becomes ~2,000
+  // words of prose above the chart.
+  ok(topics.every((d) => !d.open), 'they arrive collapsed — the pane stays scannable');
+  ok(topics.every((d) => d.tagName === 'DETAILS' && d.querySelector('summary')),
+     '⚠️ a real <details>/<summary>, so it is keyboard and screen-reader native');
+
+  // ⚠️ DRIVEN, NOT READ. Open one and require the answer, a caveat and a
+  // live link — the failure this catches is a summary that expands to
+  // nothing, which reads as a broken feature and passes any "the text is in
+  // textContent" check because a closed <details> still holds its children.
+  const first = topics[0];
+  first.open = true;
+  ok(/overlap far more than people think/.test(first.textContent),
+     'opening one shows its answer');
+  ok(Boolean(first.querySelector('.rt-caveat')), 'and the limit it states about itself');
+  const src = first.querySelector('.rt-src a');
+  ok(src && /^https:\/\//.test(src.href), 'and its sources are links, not name-drops');
+  first.open = false;
+
+  // The confidence label is a WORD on every topic, never a colour. Design
+  // Rule 5's general form — the 2026-08-25 audit is why the level names on
+  // the muscle map stopped being painted in the level's own colour.
+  const pills = [...data.querySelectorAll('.rt-conf')];
+  ok(pills.length === TOPICS.length, 'every topic wears a confidence label');
+  ok(pills.every((p) => /evidence/i.test(p.textContent)),
+     '⚠️ and it says the word — greyscale, colour-blind and screenshot safe');
+
+  // Tim's questions, on the screen, in his words.
+  for (const phrase of ['Free weights vs machines', 'Warming up and stretching',
+                        'Time of day', 'Common misconceptions']) {
+    ok(data.textContent.includes(phrase), `the screen asks it out loud: ${phrase}`);
+  }
 }
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();

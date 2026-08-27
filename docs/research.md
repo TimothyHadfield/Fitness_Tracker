@@ -19,6 +19,7 @@ Each finding carries its evidence base, so it's clear which claims are solid and
 | Unverified / open | [§9](#9-unverified-claims-and-open-questions) |
 | Strength standards & percentiles | [§11](#11-strength-standards-and-percentile-ranking) |
 | Progression & load increments | [§12](#12-progression--how-much-to-add-and-when-) |
+| **The basics, for the Research tab** | [§13](#13-the-basics-for-the-research-tab--) |
 | Full source list | [§10](#10-sources) |
 
 **Status legend** — 🟢 solid, multiple independent sources · 🟡 single good source · 🔴 thin or
@@ -1448,3 +1449,215 @@ document uses. Treat anything above the 97th percentile as unreliable.
 and widely republished; OpenPowerlifting is openly licensed and allows computing percentiles
 directly. The stock anatomy image Tim referenced is a watermarked Dreamstime asset
 (ID 142535635, © Vectorville) and cannot be used — the body must be hand-authored SVG.
+
+---
+
+## 13. The basics, for the Research tab 🟢 / 🟡
+
+*Pulled 2026-08-30. Driver: Tim — "collect information to educate users on the basics of
+weightlifting and some of the stuff science has confidently determined through studies and
+research… Remember that a lot of information can be completely false or missrepresented, so before
+we put anything on here, we need to be confident."*
+
+**Six of his questions were already answered in this file** and needed no new sources: hypertrophy
+vs strength (§6.13 load, §6.3 frequency, §6.16 order), sets and reps (§6.1–§6.5, §6.12), reps in
+reserve (§3, §6.7, §6.16), rest between sets (§6.14), range of motion (§6.15), progression (§12),
+protein (§6.9, §6.18.1), sleep (§6.10, §6.18.2) and individual variability (§6.11, §6.18.3).
+**Five needed a pull**, below.
+
+⚠️ **WHAT SHIPPED IS `js/research-topics.js`**, and its header carries the rules it was written
+under. The one worth repeating here: **every claim on that screen names a source, every source is
+defined once, and every topic states its own limit.** A topic with nothing to admit is a topic
+nobody checked.
+
+### 13.1 Free weights vs machines 🟢 — no winner, and the difference is the TEST
+
+**Haugen ME, Vårvik FT, Larsen S, Haugen AS, van den Tillaar R, Bjørnsen T. "Effect of free-weight
+vs. machine-based strength training on maximal strength, hypertrophy and jump performance — a
+systematic review and meta-analysis." *BMC Sports Sci Med Rehabil* 2023;15:103.**
+doi:10.1186/s13102-023-00713-4 · 13 studies, 1,016 participants (789 men, 219 women), ≥ 6 weeks.
+
+| Direct comparison | SMD [95 % CI] | *p* |
+|---|---|---|
+| Dynamic strength | 0.084 [−0.106, 0.273] | 0.387 |
+| Isometric strength | −0.079 [−0.432, 0.273] | 0.660 |
+| Countermovement jump | −0.209 [−0.597, 0.179] | 0.290 |
+| **Hypertrophy** | **−0.055 [−0.397, 0.287]** | **0.751** |
+
+**And the finding that is not a null:** tested on free weights, free-weight training wins
+(−0.210 [−0.391, −0.029], *p* = 0.023); tested on machines, machine training trends the other way
+(0.291 [−0.017, 0.600], *p* = 0.064). Authors: *"strength changes are specific to the training
+modality, and the choice between free-weights and machines are down to individual preferences and
+goals."*
+
+**Corroborated by ACSM 2026 (§6.16):** strength was not affected by machines versus free-weight
+training. Two independent syntheses → 🟢.
+
+⚠️ **Limitation the authors state:** *"a lack of studies in this area, especially within the realm
+of muscle hypertrophy"* — only 5 of the 13 measured size — plus inadequate adjustment for range of
+motion, intensity, volume and frequency.
+
+### 13.2 Injury risk in lifting 🟡 — low, and nobody has compared the two kinds of equipment
+
+**Keogh JWL, Winwood PW. "The Epidemiology of Injuries Across the Weight-Training Sports."
+*Sports Med* 2017;47(3):479–501.** doi:10.1007/s40279-016-0575-0 · 20 studies.
+
+- **Bodybuilding has the lowest rates: 0.24–1 injury per 1,000 h** (0.12–0.7 per lifter per year) —
+  the closest thing in the literature to an ordinary gym-goer. Strongman 4.5–6.1, Highland Games 7.5.
+- Most-injured sites: **shoulder, lower back, knee, elbow, wrist/hand**. Strains, tendinitis, sprains.
+- Authors: the weight-training sports *"appear to have relatively low rates of injury compared with
+  common team sports."*
+
+⚠️ **Graded 🟡 and it must not be quoted as 🟢.** Only **5 of 20** studies scored ≥ 75 % on risk of
+bias, only 4 were prospective, and these are competitive athletes recalling injuries — not tracked
+recreational lifters. The inciting-event percentages in that paper (fatigue, technical error) are
+self-reported and the authors question their validity; **do not put them on screen.**
+
+🚨 **AND THE THING THE SCREEN HAD TO SAY: nothing here compares injury rates between machines and
+free weights.** "Machines are safer" is a reasonable guess with no study behind it, and the topic
+says so rather than repeating it or silently omitting it.
+
+### 13.3 Warm-up and stretching 🟢 on the null, 🟡 on the positive
+
+Three sources, and the sharpest result is a null.
+
+**Lauersen JB, Bertelsen DM, Andersen LB. "The effectiveness of exercise interventions to prevent
+sports injuries: a systematic review and meta-analysis of randomised controlled trials." *Br J
+Sports Med* 2014;48(11):871–877.** doi:10.1136/bjsports-2013-092538 · 25 trials, 26,610
+participants, 3,464 injuries.
+
+| Intervention | Acute injuries RR [95 % CI] | Overuse RR [95 % CI] |
+|---|---|---|
+| Strength training | **0.56 [0.35, 0.89]** | **0.62 [0.41, 0.93]** |
+| Proprioception | 0.72 [0.52, 0.99] | 0.50 [0.26, 0.95] |
+| **Stretching** | **0.99 [0.93, 1.05]** | 1.08 [0.88, 1.33] |
+| Multi-exercise | 0.67 [0.55, 0.81] | 0.75 [0.62, 0.92] |
+
+⚠️ **0.99 with a CI of [0.93, 1.05] is not "unclear", it is a precise null** — and it is the most
+useful sentence on that topic, because "stretch so you don't get hurt" is the single most repeated
+piece of gym advice there is. The same table says the training itself cuts injuries by ~44 %.
+⚠️ **Scope: these are SPORTS injuries in athletes, not gym injuries in lifters.** Nobody has run
+this trial on a gym population, and the topic says so.
+
+**Warneke K, Lohmann LH. "Revisiting the stretch-induced force deficit: A systematic review with
+multilevel meta-analysis of acute effects." *J Sport Health Sci* 2024;13(6):805–819.**
+doi:10.1016/j.jshs.2024.05.002 · 83 studies, 2,012 participants, 400+ effect sizes.
+
+- Overall static-stretch force deficit **−0.21 [−0.39, −0.02]**.
+- **< 60 s per bout: −0.13 [−0.32, 0.07], *p* = 0.20 — no measurable cost.**
+- **≥ 60 s per bout: −0.84 [−1.32, −0.37], *p* = 0.004 — a large one.**
+- Athletic performance (jump, sprint, throw): **no impairment**, 0.13, *p* = 0.20.
+
+⚠️ **This CORRECTS the folk version in both directions.** "Never stretch before lifting" is not what
+this says — the deficit is a long-hold, isolated-strength-test effect. Authors: their results
+*"do not support previous recommendations to exclude static stretching from warm-up routines."*
+
+**Fradkin AJ, Zazryn TR, Smoliga JM. "Effects of warming-up on physical performance: a systematic
+review with meta-analysis." *J Strength Cond Res* 2010;24(1):140–148.**
+doi:10.1519/JSC.0b013e3181c643a0 · 32 studies (quality 6.5–9, mean 7.6 of 10).
+
+- Performance improved in **79 %** of the criteria examined, worsened in **17 %**, unchanged in 3 %.
+- ⚠️ **That is a VOTE COUNT, not a pooled effect size**, which is why this half is 🟡 and why the
+  screen says "79 % of the measures taken" rather than "warming up makes you 79 % better".
+- Stretching-only warm-ups were excluded by design, so it is about *active* warm-up.
+
+⚠️ **"What should a warm-up look like" has no good answer and the topic says so.** Searched
+2026-08-30: the specific-warm-up literature is small and disagrees (higher-load ramp-up sets beat
+lower-load in some trials, no difference in others). **Nothing on that screen prescribes a
+protocol** beyond "get warm, then ramp the exercise itself", which is the shared middle of all of
+them. ⚠️ **And no evidence anywhere says a warm-up increases hypertrophy or strength gains** — Tim
+asked exactly that question and the honest answer is that it is a performance-on-the-day effect.
+
+### 13.4 Time of day 🟢 — no difference, with one real caveat
+
+**Bruggisser F, Knaier R, Roth R, Wang W, Qian J, Scheer FAJL, et al. "Best Time of Day for Strength
+and Endurance Training to Improve Health and Performance? A Systematic Review with Meta-analysis."
+*Sports Med Open* 2023;9:34.** doi:10.1186/s40798-023-00577-5 · 26 articles (22 unique studies, 713
+participants); 7 studies / 191 participants pooled.
+
+- **Neither for nor against any time of day** for strength or health outcomes.
+- **Congruent vs incongruent training/testing time**: strength SMD 0.22 [−0.15, 0.59] (n.s.);
+  jump height 0.71 [0.00, 1.42] (significant). Authors: *"evidence for larger effects when there is
+  congruency between training and testing times."*
+
+**Grgic J, Lazinica B, Garofolini A, Schoenfeld BJ, Saner NJ, Mikulic P. "The effects of time of
+day-specific resistance training on adaptations in skeletal muscle hypertrophy and muscle
+strength." *Chronobiol Int* 2019;36(4):449–460.** doi:10.1080/07420528.2019.1567524 — strength is
+higher in the evening at baseline; **morning training raises morning strength to evening levels**;
+gains are similar between groups regardless of when strength is assessed. Only 5 studies measured
+size.
+
+⚠️ **Limitations, both stated on screen:** 191 people in the pooled analysis, **98 % male**, mostly
+young, with evening chronotypes and older adults underrepresented; moderate-to-high risk of bias,
+23 % using gold-standard measures.
+
+### 13.5 Failure, and the misconception pulls 🟡–🟢
+
+**Refalo MC, Helms ER, Trexler ET, Hamilton DL, Fyfe JJ. "Influence of Resistance Training
+Proximity-to-Failure on Skeletal Muscle Hypertrophy: A Systematic Review with Meta-analysis."
+*Sports Med* 2023;53(3):649–665.** doi:10.1007/s40279-022-01784-y · 15 studies.
+
+- All set-failure definitions pooled: **ES 0.19 [0.00, 0.37]**, *p* = 0.045 — trivial.
+- **Momentary muscular failure vs non-failure: 0.12 [−0.13, 0.37], *p* = 0.343.**
+- Authors: *"there is no evidence to support that resistance training performed to momentary
+  muscular failure is superior to non-failure resistance training for muscle hypertrophy."*
+
+⚠️ **READ WITH §6.7, NOT INSTEAD OF IT.** Robinson et al. found hypertrophy *does* increase as sets
+are taken closer to failure. The two are compatible and the app states both: **the last reps must be
+hard, and the final one need not be impossible.** Dropping either half produces advice that is wrong
+in a different direction, which is why the data-layer test pins the sentence.
+
+**Steele J, Endres A, Fisher J, Gentil P, Giessing J. "Ability to predict repetitions to momentary
+failure is not perfectly accurate, though improves with resistance training experience." *PeerJ*
+2017;5:e4105.** doi:10.7717/peerj.4105 · 141 participants — people **under-predict** their reps to
+failure, and less experienced lifters more so. Already in §3; linked from the screen now.
+
+**Damas F, Libardi CA, Ugrinowitsch C. "The development of skeletal muscle hypertrophy through
+resistance training: the role of muscle damage and muscle protein synthesis." *Eur J Appl Physiol*
+2018;118(3):485–500.** doi:10.1007/s00421-017-3792-9 — *"RT protocols that do not promote
+significant muscle damage still induce similar muscle hypertrophy and strength gains… muscle damage
+is not the process that mediates or potentiates RT-induced hypertrophy."*
+⚠️ **An invited review, not a meta-analysis — 🟡**, and the topic's caveat names it as the least
+settled item in the misconceptions list.
+
+**Ramírez-Campillo R, Andrade DC, Clemente FM, Afonso J, Pérez-Castilla A, Gentil P. "A proposed
+model to test the hypothesis of exercise-induced localized fat reduction (spot reduction), including
+a systematic review with meta-analysis." *Hum Mov* 2022;23(3):1–14.** doi:10.5114/hm.2022.110373 ·
+13 studies, 1,158 participants, 37 comparisons. **Pooled ES −0.03 [−0.10, 0.05], p = 0.508**,
+I² = 24.3 %, Egger's test p = 0.133. A tight, low-heterogeneity, unbiased null — the cleanest single
+result in this whole pull. 🟢
+
+**Roberts BM, Nuckols G, Krieger JW. "Sex Differences in Resistance Training: A Systematic Review
+and Meta-Analysis." *J Strength Cond Res* 2020;34(5):1448–1460.**
+doi:10.1519/JSC.0000000000003521 — hypertrophy **ES 0.07 ± 0.06, p = 0.31, I² = 0** (no
+difference); **upper-body strength favoured females, ES −0.60 ± 0.16, p = 0.002** (I² = 72.1, so
+heterogeneous). ⚠️ **Relative gains, not absolute** — the screen says "relative" for that reason.
+
+**Schoenfeld BJ, Aragon AA, Krieger JW. "The effect of protein timing on muscle strength and
+hypertrophy: a meta-analysis." *J Int Soc Sports Nutr* 2013;10:53.** doi:10.1186/1550-2783-10-53 —
+23 studies; **20 of them did not match total daily protein between groups**, and total intake
+explained essentially all of the apparent timing effect. 🟡, and the app states it as "no clear
+separate effect once the daily total is adequate" rather than "timing does nothing".
+
+⚠️ **D26 is not breached by the protein misconception.** It permits recommending a cited range and
+forbids tracking food. Nothing on that screen asks what anybody ate.
+
+### 13.6 What did NOT go on the screen, and why
+
+Kept here so nobody re-pulls it hoping for a different answer.
+
+- **"Machines are safer than free weights."** No study compares them. Stated as untested rather
+  than omitted, because omitting it leaves the reader holding the folklore.
+- **Any specific warm-up protocol.** §13.3 — the literature is small, disagrees, and the effects
+  are trivial.
+- **Stretching for hypertrophy** (the long-duration stretching literature). Small, largely one
+  laboratory, contested, and on a screen like this it would read as an instruction. 🔴 for this use.
+- **The fatigue cost of training to failure.** Plausible and widely repeated; this pull found no
+  synthesis quantifying it. The screen says failure has **no measured benefit**, which is what is
+  supported, and stops there.
+- **"Muscle turns to fat."** Easy to say and impossible to cite, because nobody has run the study.
+  Left out rather than asserted from first principles.
+- **Type I / type II fibre-specific load responses** (Varovic 2026, §6.13.1) — still 🔴.
+- **Injury-rate figures for powerlifting and weightlifting specifically.** In the Keogh review but
+  not extracted here: bodybuilding is the relevant comparison for this app's users, and quoting a
+  competitive powerlifter's rate at a gym-goer would be the same category error as §13.2's warning.

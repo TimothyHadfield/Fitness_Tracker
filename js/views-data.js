@@ -15,6 +15,7 @@ import {
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
+import { TOPICS, CONFIDENCE, topicSources } from './research-topics.js';
 import { ageCoefficient } from './strength-standards.js';
 import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import { yearsToShow, buildYear, daysLabel, DOW_LABELS } from './year-grid.js';
@@ -1804,6 +1805,87 @@ function researchChart({ series, ref, W, H, isolated, focusBand, onBandTap }) {
   return svg;
 }
 
+/* ── THE BASICS (2026-08-30, Tim's ask) ───────────────────────────────────────
+ *
+ * "collect information to educate users on the basics of weightlifting and some
+ * of the stuff science has confidently determined… before we put anything on
+ * here, we need to be confident."
+ *
+ * `js/research-topics.js` holds the content, the sources and the rules it was
+ * written under. This function only draws it — which is the point of the split:
+ * the claims are testable without a DOM, and the word budgets are asserted in
+ * `tests/data-layer.test.mjs`.
+ *
+ * ⚠️ COLLAPSED BY DEFAULT, AND THAT IS THE READABILITY DECISION. Eleven topics
+ * open at once is a wall, and Tim's second constraint was that this stays
+ * readable. A `<details>` is also the one disclosure widget that is keyboard
+ * and screen-reader native without a line of code — the app has already shipped
+ * a hand-rolled control that dropped off the accessibility tree once
+ * (the set row, 2026-08-25).
+ *
+ * ⚠️ THE CONFIDENCE PILL CARRIES NO COLOUR. It says the word — "Strong
+ * evidence" — and a `limited` one is drawn with a DASHED border, so the
+ * strongest and the weakest claims on the page are separable in greyscale, in
+ * a screenshot and to a colour-blind reader. Design Rule 5's general form, and
+ * the specific fault the 2026-08-25 audit found when level names were painted
+ * in the level's own colour (2.83:1 on a light ground).
+ */
+function confidencePill(level) {
+  const c = CONFIDENCE[level] || CONFIDENCE.limited;
+  return el('span', {
+    class: `rt-conf rt-conf-${level}`,
+    title: c.note,
+  }, c.label);
+}
+
+function sourceLine(topic) {
+  const srcs = topicSources(topic);
+  return el('div', { class: 'rt-src' },
+    el('b', { text: srcs.length === 1 ? 'Source: ' : 'Sources: ' }),
+    ...srcs.flatMap((s, i) => [
+      i ? ' · ' : null,
+      // A source with no verified link is named rather than linked — a wrong
+      // link on screen is worse than no link.
+      s.url
+        ? el('a', { href: s.url, target: '_blank', rel: 'noopener', text: s.label })
+        : el('span', { text: s.label }),
+      s.n ? el('span', { class: 'rt-src-n', text: ` (${s.n})` }) : null,
+    ]),
+  );
+}
+
+function topicBlock(topic) {
+  return el('details', { class: 'rt-topic', dataset: { topic: topic.id } },
+    el('summary', { class: 'rt-summary' },
+      el('span', { class: 'rt-q', text: topic.question }),
+      confidencePill(topic.confidence),
+    ),
+    el('div', { class: 'rt-body' },
+      el('div', { class: 'rt-lead', text: topic.lead }),
+      el('p', { class: 'rt-answer', text: topic.answer }),
+      el('ul', { class: 'rt-points' },
+        ...topic.points.map((p) => el('li', {},
+          p.myth ? el('b', { class: 'rt-myth', text: `${p.myth} ` }) : null,
+          p.text)),
+      ),
+      el('p', { class: 'rt-caveat' },
+        el('b', { text: 'The limit. ' }), topic.caveat),
+      sourceLine(topic),
+    ),
+  );
+}
+
+function basicsSection() {
+  return el('div', { class: 'rt-section' },
+    el('h2', { class: 'research-title', text: 'The basics, and how sure anyone is' }),
+    el('div', { class: 'field-help research-sub', text:
+      'Answers to the questions people actually ask, limited to what the research supports. '
+      + 'Every topic says how much to believe it and links what it came from — and every one '
+      + 'names its own weak spot, because a finding with nothing to admit usually has not been checked.' }),
+    el('div', { class: 'rt-list' }, ...TOPICS.map(topicBlock)),
+  );
+}
+
 async function renderResearchPane(host, top) {
   setChildren(top);
   const profile = await store.getProfile();
@@ -1885,6 +1967,10 @@ async function renderResearchPane(host, top) {
 
   setChildren(host,
     el('div', { class: 'research-pane' },
+      // The basics lead, because they answer questions somebody arrived with.
+      // The age chart is the exhibit underneath them.
+      basicsSection(),
+      el('div', { class: 'rt-rule' }),
       el('h2', { class: 'research-title', text: 'How strength changes with age' }),
       el('div', { class: 'field-help research-sub', text:
         `Average ${gender === 'female' ? 'women’s' : 'men’s'} strength by age, each muscle group as a % of its own strongest `

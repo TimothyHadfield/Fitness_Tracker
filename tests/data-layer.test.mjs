@@ -4326,5 +4326,99 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ boot heals stale projections — the repair for accounts that trained before this wiring existed');
 }
 
+/* ================= the research topics (2026-08-30) =====================
+   Tim: "before we put anything on here, we need to be confident… it's also
+   important for this to be readable and understandable for the user, so make
+   sure it doesn't get too wordy."
+
+   ⚠️ BOTH HALVES OF THAT ARE ASSERTED HERE, and the second half is the one
+   no other assertion can catch. Every check anybody would naturally write on
+   this content checks something is PRESENT — a source, a caveat, a
+   confidence — and none of them can see prose piling back up over the next
+   six sessions. The word budgets are the muscle panel's 40-word cap applied
+   to a screen that will be edited far more often than that one. */
+{
+  const rt = await import('../js/research-topics.js');
+  const { TOPICS, SOURCES, CONFIDENCE, CONFIDENCE_ORDER, citedSourceKeys,
+    topicSources, topicWordCount } = rt;
+
+  ok(TOPICS.length >= 8, `${TOPICS.length} topics`);
+  ok(new Set(TOPICS.map((t) => t.id)).size === TOPICS.length, 'topic ids are unique');
+
+  // Tim's brief, item by item — each of his questions has a home.
+  for (const id of ['growth-vs-strength', 'free-weights-vs-machines', 'warmup-and-stretching',
+                    'time-of-day', 'misconceptions', 'failure-and-rir', 'sets-and-reps']) {
+    ok(TOPICS.some((t) => t.id === id), `Tim asked for it and it is here: ${id}`);
+  }
+
+  for (const t of TOPICS) {
+    ok(CONFIDENCE_ORDER.includes(t.confidence),
+       `${t.id}: confidence is one of the three declared levels`);
+    ok(Boolean(t.question && t.lead && t.answer), `${t.id}: has a question, a lead and an answer`);
+    // ⚠️ EVERY topic admits a limit. A topic with nothing to admit is a topic
+    // nobody checked — and this app's whole credibility is not overclaiming.
+    ok(Boolean(t.caveat) && t.caveat.length > 40, `${t.id}: states its own limit`);
+    ok(t.points.length >= 3, `${t.id}: at least three specifics`);
+    // ⚠️ AND EVERY CLAIM CARRIES A SOURCE. This is the assertion that stops
+    // somebody adding a plausible sentence they read somewhere.
+    for (const [i, p] of t.points.entries()) {
+      ok(Array.isArray(p.sources) && p.sources.length > 0,
+         `${t.id}: point ${i + 1} cites something`);
+      ok((p.sources || []).every((k) => SOURCES[k]),
+         `${t.id}: point ${i + 1} cites a source that is actually defined`);
+    }
+  }
+
+  // Word budgets. Answers get two sentences, a whole topic gets a screen.
+  for (const t of TOPICS) {
+    const answerWords = t.answer.trim().split(/\s+/).length;
+    ok(answerWords <= 45, `${t.id}: the answer is ${answerWords} words (cap 45)`);
+    const total = topicWordCount(t);
+    ok(total <= 260, `${t.id}: ${total} words in total (cap 260)`);
+    for (const [i, p] of t.points.entries()) {
+      const w = `${p.myth || ''} ${p.text}`.trim().split(/\s+/).length;
+      ok(w <= 48, `${t.id}: point ${i + 1} is ${w} words (cap 48)`);
+    }
+  }
+
+  // Sources: defined once, cited by key, and every URL is a real https link.
+  for (const [k, s] of Object.entries(SOURCES)) {
+    ok(Boolean(s.label), `source ${k} has a label`);
+    ok(!s.url || /^https:\/\/\S+$/.test(s.url), `source ${k}'s link is a plain https URL`);
+    // `n` is what the study covered. "13 studies, 1,016 people" and "one trial
+    // of 12 undergraduates" read identically once both are called "research".
+    ok(Boolean(s.n), `source ${k} says what it actually covered`);
+  }
+  const cited = citedSourceKeys();
+  ok(cited.length >= 15, `${cited.length} distinct sources cited`);
+  const unused = Object.keys(SOURCES).filter((k) => !cited.includes(k));
+  ok(unused.length === 0, `no source is defined and left uncited (${unused.join(', ') || 'none'})`);
+  ok(Object.values(SOURCES).filter((s) => s.url).length === Object.keys(SOURCES).length,
+     'every source resolved to a link that was opened during the pull');
+
+  // topicSources dedupes and preserves first-use order — the source line under
+  // a topic must not print the ACSM stand four times.
+  const g = TOPICS.find((t) => t.id === 'growth-vs-strength');
+  const gs = topicSources(g);
+  ok(new Set(gs.map((s) => s.key)).size === gs.length, 'a topic lists each source once');
+  ok(gs[0].key === 'lopez2021', 'and in the order the topic first uses them');
+
+  /* ⚠️ THE THREE CLAIMS THAT WOULD BE WORST TO GET BACKWARDS, pinned as text.
+     Each is a place where the popular version of the finding is the OPPOSITE
+     of the finding, so a well-meaning edit is exactly how they would flip. */
+  const text = (id) => {
+    const t = TOPICS.find((x) => x.id === id);
+    return `${t.answer} ${t.points.map((p) => p.text).join(' ')} ${t.caveat}`.toLowerCase();
+  };
+  ok(/does not reduce injury risk/.test(text('warmup-and-stretching')),
+     '⚠️ stretching is stated NOT to prevent injury — the null result is the finding');
+  ok(/closer to failure do grow more/.test(text('failure-and-rir')),
+     '⚠️ "not to failure" is not stated as permission to stop early');
+  ok(/no time of day/.test(text('time-of-day')) || /neither for nor against/.test(text('time-of-day')),
+     '⚠️ time of day is stated as no difference, not as an optimum');
+  ok(/cannot check/.test(text('growth-vs-strength')),
+     '⚠️ the topic says the app cannot see how heavy the plan was — §6.13.3 on screen');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

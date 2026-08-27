@@ -3189,6 +3189,65 @@ a.row { text-decoration: none; }
 .research-notes b { color: var(--ink); }
 .research-notes a { color: var(--accent); }
 
+/* ================================================================== *
+ * The basics — the education topics (2026-08-30, Tim's ask)
+ *
+ * Rule 2 applies: no boxes. Topics are separated by a hairline and by
+ * space, not by nested cards — eleven bordered panels would be exactly
+ * the wall this content is trying not to be.
+ *
+ * ⚠️ THE CONFIDENCE PILL IS COLOURLESS ON PURPOSE. It carries the word
+ * ("Strong evidence"), and `limited` is drawn with a DASHED border, so
+ * the strongest and weakest claims on the page separate in greyscale,
+ * under any colour blindness, and in a screenshot. Painting them in
+ * --good / --danger is the fault the 2026-08-25 audit found when level
+ * names wore the level's own colour and measured 2.83:1 on white.
+ * ================================================================== */
+.rt-section { display: flex; flex-direction: column; gap: 10px; }
+.rt-list { display: flex; flex-direction: column; }
+.rt-rule { height: 1px; background: var(--rule); margin: 6px 0 2px; }
+
+.rt-topic { border-top: 1px solid var(--rule-soft); }
+.rt-topic:last-child { border-bottom: 1px solid var(--rule-soft); }
+
+.rt-summary {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  /* 44px of target on a control somebody taps eleven times looking for the
+     one they want — the 2026-08-20 audit's floor, met by padding rather
+     than by a min-height so a wrapped question grows instead of clipping. */
+  padding: 13px 2px; cursor: pointer; list-style: none;
+}
+.rt-summary::-webkit-details-marker { display: none; }
+.rt-q { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.rt-topic[open] .rt-q { color: var(--accent); }
+
+.rt-conf {
+  /* margin-left:auto so that when a long question pushes the pill onto its own
+     line at 360px it right-aligns under the question rather than sitting under
+     the first word looking like part of the sentence. */
+  flex: none; margin-left: auto; font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  padding: 3px 7px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid var(--rule); color: var(--ink-soft);
+}
+.rt-conf-strong { border-color: var(--ink-soft); color: var(--ink); }
+.rt-conf-limited { border-style: dashed; }
+
+.rt-body {
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 0 2px 15px; font-size: 13px; line-height: 1.55; color: var(--ink-soft);
+}
+.rt-lead { font-size: 12.5px; color: var(--ink-faint); margin-top: -4px; }
+.rt-answer { margin: 0; font-size: 13.5px; color: var(--ink); }
+.rt-points { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+.rt-points li { margin: 0; }
+.rt-myth { color: var(--ink); }
+.rt-caveat { margin: 0; font-size: 12.5px; }
+.rt-caveat b { color: var(--ink); }
+.rt-src { font-size: 11.5px; line-height: 1.5; color: var(--ink-faint); }
+.rt-src b { color: var(--ink-soft); }
+.rt-src a { color: var(--accent); }
+.rt-src-n { color: var(--ink-faint); }
+
 /* Who this screen is currently recording for, and where their suggestion came
    from. Quiet — it is context for the numbers, not a control. */
 .for-note {

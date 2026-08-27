@@ -5715,3 +5715,69 @@ reproduced, so a screenshot would settle it).
 
 **Standing instructions that survive this reset**: the PINNED list and the DECLINED rest-timer list
 in `progress.md`. Do not offer either as the next thing to do.
+
+---
+
+## 2026-08-30 — the Research tab teaches the basics
+
+**Tim:** *"In the research section within data, I want to collect information to educate users on
+the basics of weightlifting and some of the stuff science has confidently determined through studies
+and research. Remember that a lot of information can be completely false or missrepresented, so
+before we put anything on here, we need to be confident."* He listed seven questions — hypertrophy
+vs strength, free weights vs machines, warm-up and stretching, time of day, common misconceptions,
+reps in reserve and going to failure, and sets/reps per workout and per week — and added two
+constraints: *"it's also important for this to be readable and understandable for the user, so make
+sure it doesn't get too wordy"*, and *"if there might be a conclusion that isn't super solid, don't
+add it, or if you do, state your confidence."*
+
+**Built: eleven topics under Data → Research**, above the age chart that was already there. Each is
+a collapsed row you tap open; each carries a confidence label in words (Strong / Good / Limited),
+a two-sentence answer, three or four specifics with their numbers, and — always — a line saying what
+that topic's own weak spot is.
+
+**Where the answers came from.** Six of his questions were already researched and graded in
+`docs/research.md` from earlier passes: load and rep range, weekly volume, training frequency,
+exercise order, rest intervals, progression, protein, sleep and individual variability. **Five
+needed new research**, and they are now §13 of that file with their grades and their limitations:
+free weights vs machines, injury risk, warm-up and stretching, time of day, and training to failure.
+**27 sources in total, every one opened rather than cited from memory.**
+
+**Three answers are worth knowing because the popular version is the opposite of the finding:**
+
+- **Stretching does not reduce injury risk.** Nine randomised trials, risk ratio 0.99 with a
+  confidence interval of 0.93–1.05 — that is a precise null, not a shrug. What *does* cut injuries
+  is strength training itself, by about 44%. (Scope stated on screen: sports injuries in athletes,
+  not gym injuries in lifters. Nobody has run that trial.)
+- **"You don't have to go to failure" is not permission to stop early.** Going to failure has no
+  measured advantage over stopping a couple of reps short — *and* growth still rises as sets get
+  closer to failure. Both halves, or the advice is wrong in a different direction.
+- **No time of day is better for gains.** You are a little stronger later in the day; it does not
+  change what you build. The one real finding is that you perform best at the hour you normally
+  train, which matters if you are testing a max.
+
+**What was deliberately left off, and why** — because "don't add it if it isn't solid" cuts both
+ways: any specific warm-up protocol (the studies disagree and the differences are trivial),
+stretching for muscle growth, the fatigue cost of training to failure (repeated everywhere, no
+synthesis quantifies it), and "muscle turns to fat" (easy to say, impossible to cite). **"Machines
+are safer than free weights" is on the screen as an untested assumption rather than omitted**, since
+leaving it out would leave a reader holding the folklore.
+
+**One thing the app now admits to users:** the growth-vs-strength topic says outright that the app
+can see what you recorded, not how heavy you planned to go — so any strength figure it shows assumes
+the work was heavy and cannot check that. That has been true and unsaid since the rating shipped.
+
+**Two bugs in the accessibility audit tool, found by measuring this:** a closed disclosure still
+reports a box for its hidden contents in this Chrome, so the audit had been claiming to measure text
+that was not on the screen; and `summary` matched nothing in its control selector, so every
+disclosure control in the app had gone unmeasured for touch target and accessible name. Both fixed,
+then re-run: 72 screen/width/theme combinations, 7,378 text nodes, zero contrast failures, zero
+overflow, zero unnamed controls.
+
+**Tests: 3,378 across twelve suites** (data-layer 1437 → 1728, render 641 → 653). The word budgets
+are asserted — 45 words for an answer, 260 for a topic — because every other check anybody would
+write about educational text checks that it is *present*, and none of them can see prose piling back
+up over the next six sessions.
+
+**Not verified: nobody has read it on a phone.** It is measured and screenshotted at 360 and 390 in
+both themes, and nine of the eleven rows fit one screen at 360. Whether it is pleasant to scan under
+a thumb is Tim's call.

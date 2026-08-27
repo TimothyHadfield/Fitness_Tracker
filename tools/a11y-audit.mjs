@@ -115,14 +115,34 @@ const AUDIT = `(() => {
     return (a + 0.05) / (b + 0.05);
   };
 
+  /* ⚠️ A CLOSED <details> STILL REPORTS A BOX FOR ITS CONTENTS in this Chrome —
+     it hides them with content-visibility rather than display:none, so
+     getBoundingClientRect() on a paragraph nobody can see comes back 332x620.
+     Found 2026-08-30 while adding the research topics: the closed pane and the
+     opened one measured an identical 328 text nodes, which is this audit
+     quietly claiming to have measured text that was not on the screen.
+     It was never a false PASS — the colours are the ones that get painted when
+     it opens — but it is a false COVERAGE claim, and this file has been bitten
+     by one of those before (the #/data route, 2026-08-24). The research
+     table has been counted this way since the Research tab shipped.
+     (No backticks in here: this whole block is a template literal.) */
+  const inClosedDetails = (el) => {
+    const d = el.closest('details:not([open])');
+    return Boolean(d) && !el.closest('summary');
+  };
+
   const visible = (el) => {
     const r = el.getBoundingClientRect();
     const s = getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'
-      && Number(s.opacity) > 0.01;
+      && Number(s.opacity) > 0.01 && !inClosedDetails(el);
   };
 
-  const SEL = 'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
+  // ⚠️ The summary element joined 2026-08-30. It is natively focusable and clickable and
+  // carries no tabindex, so it matched nothing here — every disclosure control
+  // in the app has been unmeasured for touch target and accessible name since
+  // the first one shipped.
+  const SEL = 'button, a[href], input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])';
   const targets = [];
   for (const el of document.querySelectorAll(SEL)) {
     if (!visible(el)) continue;
@@ -233,6 +253,26 @@ const ROUTES = [
   // Added 2026-08-28 with the Research tab — a whole pane of chart text,
   // legend chips and a data table that would otherwise never be measured.
   ['#/graphs', 'Data · Research', clickText('.seg, button, a', 'Research')],
+  /* ⚠️ AND THE TOPICS OPENED — added 2026-08-30 with them. Every topic is a
+   * collapsed <details>, so the row above measures eleven summaries and NOT
+   * ONE WORD of the content: the answers, the bullets, the caveats and the
+   * source links would all have been filed under "Research audited" while
+   * sitting closed in the DOM. That is the `#/data` fault in miniature —
+   * a coverage claim about text nobody rendered.
+   *
+   * Asserts it landed, for the same reason the runner step does: if the
+   * topics ever stop being <details>, this must fail loudly rather than
+   * quietly go back to measuring headings. */
+  ['#/graphs', 'Data · Research topics',
+    `${clickText('.seg, button, a', 'Research')};
+     await new Promise((r) => setTimeout(r, 500));
+     (() => { const d = document.querySelectorAll('.rt-topic');
+       d.forEach((n) => { n.open = true; });
+       return d.length; })();
+     await new Promise((r) => setTimeout(r, 200));
+     if (!document.querySelector('.rt-topic[open] .rt-src a')) {
+       throw new Error('a11y: the Research topics step never opened a topic');
+     }`],
   // ⚠️ Two steps, and the second is the point: the panel only exists once a
   // muscle is SELECTED, so auditing the map without tapping one measures the
   // figure and none of the words beside it.
