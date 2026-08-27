@@ -4,10 +4,9 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-30, prepared for a chat reset. **Four passes ran this session** and they
-are the four dated 2026-08-30 sections below, newest first. ⚠️ **THE FOURTH ONE IS UNFINISHED AND
-NEEDS TIM** — six app-icon candidates are drawn and none is chosen. The 2026-08-29 sections under
-them were the previous session.
+**Last updated:** 2026-08-31. **Four passes ran the previous session** and they are the four dated
+2026-08-30 sections below, newest first. ⚠️ **THE FOURTH ONE — THE APP ICON — IS CLOSED AND MUST NOT
+BE REOPENED** (see below). The 2026-08-29 sections under them were the session before that.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
@@ -17,10 +16,11 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ## THIS SESSION (2026-08-30) IN FOUR LINES, newest first
 
-⏸️ **A. AN APP ICON IS HALF PICKED AND IT IS THE ONLY LOOSE END.** Six candidates are drawn and
-rendered in `docs/icon-options/`; the question that would have chosen one was interrupted. **Ask.**
-🚨 **And say the finding that came with it: his home screen has probably been showing a screenshot,
-not the icon** — `apple-touch-icon` points at an SVG and iOS requires a PNG.
+🛑 **A. THE APP ICON IS OFF THE PROJECT. DO NOT OFFER IT, DO NOT DRAW MORE.** Tim, 2026-08-31: *"I
+don't really like any of the icons right now. I think it was a mistake for you to work on them. I'm
+going to improve it later myself. Forget that section of the project."* The six candidates and
+`docs/icon-options/` are **deleted** (recoverable at commit `fb72f8d` if he ever asks). `icon.svg`
+was never touched and stays as it is. **The artwork is his to do.**
 
 🆕 **B. EXERCISE PICTURES ARE BUILT AND THE ART IS A PURCHASE HE HAS NOT MADE.** A thumbnail beside
 every exercise name, tap for full screen. 🚨 **The load-bearing assertion is about ABSENCE** — with
@@ -40,43 +40,34 @@ the popular version is the opposite of the finding** — stretching does not red
 
 ---
 
-## 2026-08-30, fourth pass — ⏸️ SIX APP-ICON CANDIDATES, AND TIM HAS NOT PICKED ONE
+## 2026-08-30, fourth pass — 🛑 THE APP ICON, CLOSED BY TIM ON 2026-08-31
 
-Tim: *"I want to replace the main cite logo with a different design. Could you generate me a couple
-sweet options and I'll choose one. This is the logo that appears when you add the website to your
-Home Screen, and when we eventually make it an app will appear."*
+He asked for icon options on 2026-08-30 (*"replace the main cite logo… generate me a couple sweet
+options and I'll choose one"*). Six were drawn. **He did not want any of them**, and closed the whole
+thing the next session: *"I don't really like any of the icons right now. I think it was a mistake
+for you to work on them. I'm going to improve it later myself. Forget that section of the project."*
 
-🚨 **NOTHING SHIPPED. `icon.svg` IS UNTOUCHED.** Six candidates were drawn, rendered and shown to
-him; the question that would have chosen one was **interrupted before he answered**. ⚠️ **A fresh
-session must ASK which one rather than assume**, and must not quietly ship a favourite.
+🛑 **SO IT IS OFF THE PROJECT. Do not draw more, do not offer it as work, do not ask which of the six
+after all.** `docs/icon-options/` is **deleted** — the six SVGs, the contact sheet and the renderer
+are in commit `fb72f8d` if he ever changes his mind, and nothing else needs to know they existed.
+**`icon.svg` was never touched and stays exactly as it is.** The artwork is his.
 
-**Everything is in `docs/icon-options/`** — the six SVGs, the contact sheet he was shown, the
-renderer, and a README with the fold-in steps. Same shape as `docs/colour-options/` on 2026-08-26,
-which is the precedent for keeping unpicked design work in the repo rather than in a temp folder
-that a reset destroys.
+⚠️ **THE LESSON, WHICH IS THE ONLY REASON THIS SECTION STILL EXISTS**: this was the one piece of work
+this project has done that Tim called a mistake to have started. It was **taste**, not engineering —
+six aesthetic candidates generated ahead of any way to tell a good one from a bad one, and no test,
+measurement or argument could settle it because the answer lives in his eye. **When the deliverable
+is a matter of taste, the design work is his and the build work is yours.** Contrast the colour
+options of 2026-08-26, which he did pick from — the difference is that those were about legibility,
+which is measurable.
 
-**The six**: **A** barbell on dark · **B** barbell on gold · **C** a figure pressing overhead ·
-**D** a plate with the bar through it (**the recommendation** — strongest silhouette, least like
-every other gym app) · **E** three ascending bars · **F** the plate inverted on gold.
-
-🚨 **AND A REAL BUG CAME OUT OF IT: THE ICON HAS PROBABLY NEVER APPEARED ON HIS HOME SCREEN.**
-`index.html` points `apple-touch-icon` at `icon.svg`, and **iOS has never supported SVG there — it
-requires a PNG.** With no usable icon iOS falls back to a screenshot of the page. So the thing Tim
-asked to replace may never have been on screen at all, and whichever design wins has to ship as
-**PNG at 180 and 512** beside the SVG. ⚠️ **Checked against Apple's guidance and Lighthouse's own
-`apple-touch-icon` audit, NOT against his phone** — one look at his home screen settles it, and if
-the barbell IS there then something about this is wrong.
-
-⚠️ **ALL SIX FIT ANDROID'S MASKABLE SAFE ZONE, MEASURED RATHER THAN EYEBALLED** — no painted point
-sits more than **204px from the centre** of the 512 canvas, which is the inner-80% circle a launcher
-may crop to. `manifest.webmanifest` declares `"purpose": "any maskable"` on a single file, so the
-constraint is real: C and E had to be inset by 24 % and 15 %, and the plate's bar pulled in 8px each
-side. **Re-check it if the artwork is edited.**
-
-⚠️ **THE FIRST SIX DRAFTS WERE WORSE AND ARE NOT KEPT**, but the reason they failed is worth one
-line: the artwork was too small in the tile, a ring-with-nubs read as a camera aperture rather than
-a weight plate, and a bare diagonal line read as nothing at all. **The only size that matters is the
-one on a phone** — the contact sheet shows every candidate at 60px and 32px for exactly that reason.
+⚠️ **ONE TECHNICAL FINDING SURVIVED THE CLOSURE AND IS DELIBERATELY NOT BEING ACTED ON.**
+`index.html` points `apple-touch-icon` at `icon.svg`, and iOS has never supported SVG there — it
+requires a PNG, and falls back to a screenshot of the page without one. **Recorded, not fixed**: it
+belongs to the icon he is going to do himself, so it is his to land with the artwork rather than a
+loose end to raise. Checked against Apple's guidance and Lighthouse's own audit, never against his
+phone. **If he ever hands over new artwork, ship it as PNG at 180 and 512 beside the SVG, and check
+Android's maskable safe zone — `manifest.webmanifest` declares `"purpose": "any maskable"` on a
+single file, so no painted point may sit more than 204px from the centre of the 512 canvas.**
 
 ---
 
@@ -356,6 +347,8 @@ the rest for later (don't bring them up as the 'next thing to do' later though).
 
 **DECLINED outright (do not resurface at all)**: every improvement to the **rest timer**, which is
 **OFF by default** behind Settings → Rest timer. Tim: *"it just doesn't help… it's a sub-feature."*
+**And the APP ICON / logo artwork**, closed 2026-08-31 — *"I'm going to improve it later myself.
+Forget that section of the project."* 🛑 **Not a pin, not a park: he has taken the job back.**
 
 **PARKED at his instruction**: AirPods controls, importing food, live Strava sync (needs Blaze).
 
@@ -475,11 +468,9 @@ history, not the app. Read the top of this file, then the **Open work index**.
 
 **What waits on TIM rather than on you** — and item 0 is the only urgent one:
 
-0a. ⏸️ **PICK AN APP ICON — the one job that is HALF DONE.** Six candidates are drawn, rendered and
-   sitting in `docs/icon-options/` with a contact sheet; the question was interrupted before he
-   answered. **Ask which of A–F, then fold it in per that README.** ⚠️ **And tell him the finding
-   that came with it**: his home screen has probably been showing a screenshot rather than the
-   icon, because `apple-touch-icon` points at an SVG and iOS needs a PNG.
+0a. 🛑 **THE APP ICON IS NOT ON THIS LIST ANY MORE.** Tim closed it on 2026-08-31 — *"a mistake for
+   you to work on them… I'm going to improve it later myself."* The candidates are deleted and
+   `icon.svg` is untouched. **Do not raise it.**
 0b. ⏸️ **BUY EXERCISE PICTURES, OR DON'T.** The feature shipped on 2026-08-30 and the art is a
    purchase — Gym Visual, ~$0.75 an illustration in bulk. `img/exercises/README.md` is the how-to
    and the licensing. **Nothing is broken while he decides**: with no pictures the app looks exactly
@@ -4742,7 +4733,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/activities-plan.md` | **Non-lifting activities**, written 2026-08-26. §1 is D27 (recorded, never modelled — the D2 narrowing); Phase 1 (the Record chooser + quick log) is BUILT, and §3's **items 1–4 shipped 2026-08-27** (the Activity group, pace, the normalisation guarantee, the feed glyph). ⚠️ **Item 5 needs design** (activity PRs need distance-bucketing) and **item 6 says to ASK TIM** which activities his circle logs; §4 is what is deliberately not planned (no GPS routes, no fitness modelling) |
 | `docs/integrations-plan.md` | **Pulling data from other fitness/diet apps — RESEARCH ONLY, written 2026-08-27 on Tim's ask.** ⚠️ **§2 is the part to read**: the blocker is not "website vs App Store app", it is that OAuth's token exchange needs a client secret and a static site cannot keep one — and a native app is just as public a client. §3.1 records that **Strava's 2026 agreement forbids showing one user's Strava data to another user**, which lands directly on the Home feed. §5 recommends file import first, which needs nothing from anybody |
 | `docs/airpods-plan.md` | **AirPods remote control — PLAN ONLY, nothing deployed, on Tim's instruction.** §1: head-motion is impossible for a web app, stem presses are buildable via MediaSession. §2 the design + priced costs (occupies Now Playing → opt-in only); §3 the dead-end table; §4 the build order if he says go, starting with an on-device spike |
-| `docs/icon-options/` | ⏸️ **SIX APP-ICON CANDIDATES AND NOBODY HAS PICKED ONE** (2026-08-30). The six SVGs, the contact sheet Tim was shown, the renderer, and a README with the fold-in steps. 🚨 Its other half is a real bug: `apple-touch-icon` points at an SVG and iOS needs a PNG, so the current icon has probably never been on a home screen. Delete the folder when one is chosen |
+| `docs/icon-options/` | 🛑 **DELETED 2026-08-31, and it is not coming back on your initiative.** Tim rejected all six candidates and took the icon back: *"a mistake for you to work on them… I'm going to improve it later myself."* Recoverable at commit `fb72f8d`. `icon.svg` is untouched |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
 ---

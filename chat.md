@@ -5926,3 +5926,24 @@ launcher may crop to. Two of them had to be scaled down to meet it.
 **The first six drafts were worse and were thrown away.** Worth one line on why: the artwork was too
 small in the tile, a ring-with-nubs read as a camera aperture rather than a weight plate, and a bare
 diagonal line read as nothing at all.
+
+---
+
+## 2026-08-31 — the icon work is closed, and Tim is doing it himself
+
+**Tim:** *"I don't really like any of the icons right now. I think it was a mistake for you to work
+on them. I'm going to improve it later myself. Forget that section of the project."*
+
+So it is closed. `docs/icon-options/` is deleted — the six SVGs, the contact sheet and the renderer
+are still in commit `fb72f8d` if he ever wants them, and `icon.svg` was never touched, so the app is
+exactly as it was. It is not pinned and it is not parked: he has taken the job back, and a future
+session should not offer to draw more or ask which of the six after all.
+
+**Worth keeping the reason, because it is the first time he has called a piece of work a mistake to
+have started.** It was taste, not engineering — six aesthetic candidates generated ahead of any way
+to tell a good one from a bad one, and nothing measurable could settle which was right. The colour
+options he *did* pick from, back in 2026-08-26, were about legibility. That is the line.
+
+**One technical finding is being left alone deliberately.** `apple-touch-icon` still points at an SVG
+and iOS needs a PNG, so his home screen is probably showing a screenshot. It is recorded in
+`progress.md` rather than fixed, because it belongs to the icon he is going to do himself.
