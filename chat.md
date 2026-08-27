@@ -5893,3 +5893,36 @@ too.
 
 **Proved with a stand-in I drew** (not shipped): thumbnail 38×38, the viewer full width, the ✕
 hit-tested at 44px, the name 17.4:1 on the dim ground. Tests: 3,465 across twelve suites.
+
+---
+
+## 2026-08-30, fourth pass — six app-icon options, and one not yet chosen
+
+**Tim:** *"I want to replace the main cite logo with a different design. Could you generate me a
+couple sweet options and I'll choose one. This is the logo that appears when you add the website to
+your Home Screen, and when we eventually make it an app will appear."*
+
+**Six candidates drawn and shown to him**, each rendered large, at real home-screen size, and tiny —
+because the only size that matters is the one on a phone, and a logo that only works at 512px is a
+logo nobody will ever see working. They are: a barbell on dark, the same on gold, a figure pressing
+overhead, a plate with the bar running through it, three ascending bars, and the plate on gold. The
+recommendation was the plate: the strongest silhouette of the six and the least like every other gym
+app.
+
+**Nothing was chosen — the question was interrupted, so nothing shipped.** Everything is in
+`docs/icon-options/` with the contact sheet and the fold-in steps, the same way the colour options
+were kept in 2026-08-26 rather than lost in a temp folder.
+
+**A real bug came out of it.** The icon Tim asked to replace has probably never appeared on his home
+screen at all: `apple-touch-icon` points at an SVG, and iOS has never supported SVG there — it needs
+a PNG. Without one, iOS uses a screenshot of the page instead. So whichever design wins has to ship
+as PNG at 180 and 512 beside the SVG, and that will be the first time the icon actually shows up.
+Checked against Apple's guidance rather than against his phone, so one look would settle it.
+
+**One thing measured rather than eyeballed:** all six fit Android's maskable safe zone — no painted
+point sits more than 204px from the centre of the 512 canvas, which is the inner-80% circle a
+launcher may crop to. Two of them had to be scaled down to meet it.
+
+**The first six drafts were worse and were thrown away.** Worth one line on why: the artwork was too
+small in the tile, a ring-with-nubs read as a camera aperture rather than a weight plate, and a bare
+diagonal line read as nothing at all.

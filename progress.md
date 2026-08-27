@@ -4,12 +4,79 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-30. The newest work is the **2026-08-30** section immediately below; the
-four 2026-08-29 sections under it were the previous session, in file order (newest first).
+**Last updated:** 2026-08-30, prepared for a chat reset. **Four passes ran this session** and they
+are the four dated 2026-08-30 sections below, newest first. ⚠️ **THE FOURTH ONE IS UNFINISHED AND
+NEEDS TIM** — six app-icon candidates are drawn and none is chosen. The 2026-08-29 sections under
+them were the previous session.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
 keep the sequence a reader navigates by; never compute an interval from them.
+
+---
+
+## THIS SESSION (2026-08-30) IN FOUR LINES, newest first
+
+⏸️ **A. AN APP ICON IS HALF PICKED AND IT IS THE ONLY LOOSE END.** Six candidates are drawn and
+rendered in `docs/icon-options/`; the question that would have chosen one was interrupted. **Ask.**
+🚨 **And say the finding that came with it: his home screen has probably been showing a screenshot,
+not the icon** — `apple-touch-icon` points at an SVG and iOS requires a PNG.
+
+🆕 **B. EXERCISE PICTURES ARE BUILT AND THE ART IS A PURCHASE HE HAS NOT MADE.** A thumbnail beside
+every exercise name, tap for full screen. 🚨 **The load-bearing assertion is about ABSENCE** — with
+nothing bought, no thumbnail renders and no name becomes a button, so every screen is what it was.
+The style he wants is Gym Visual's, a paid library; `img/exercises/README.md` is the how-to.
+
+🆕 **C. SWAP OPENS ON FIVE ALTERNATIVES, AND A PERSON CAN LEAVE A WORKOUT.** 43 hand-written
+movement families over 271 of 275 exercises, spread across equipment, with the full picker one tap
+under. 🚨 **Four exercises have NO family on purpose** — adduction is the *opposite* of abduction on
+a machine that looks the same. And the ✕ that removes somebody exists **only on the person you are
+already recording for**, so it is never next to a chip you are aiming at to switch.
+
+🆕 **D. DATA → RESEARCH TEACHES THE BASICS.** Eleven topics, each with a confidence label in words
+and its own stated weak spot, 27 sources. ⚠️ **Three answers are pinned as text assertions because
+the popular version is the opposite of the finding** — stretching does not reduce injury risk,
+"not to failure" is not permission to stop early, and no time of day is better.
+
+---
+
+## 2026-08-30, fourth pass — ⏸️ SIX APP-ICON CANDIDATES, AND TIM HAS NOT PICKED ONE
+
+Tim: *"I want to replace the main cite logo with a different design. Could you generate me a couple
+sweet options and I'll choose one. This is the logo that appears when you add the website to your
+Home Screen, and when we eventually make it an app will appear."*
+
+🚨 **NOTHING SHIPPED. `icon.svg` IS UNTOUCHED.** Six candidates were drawn, rendered and shown to
+him; the question that would have chosen one was **interrupted before he answered**. ⚠️ **A fresh
+session must ASK which one rather than assume**, and must not quietly ship a favourite.
+
+**Everything is in `docs/icon-options/`** — the six SVGs, the contact sheet he was shown, the
+renderer, and a README with the fold-in steps. Same shape as `docs/colour-options/` on 2026-08-26,
+which is the precedent for keeping unpicked design work in the repo rather than in a temp folder
+that a reset destroys.
+
+**The six**: **A** barbell on dark · **B** barbell on gold · **C** a figure pressing overhead ·
+**D** a plate with the bar through it (**the recommendation** — strongest silhouette, least like
+every other gym app) · **E** three ascending bars · **F** the plate inverted on gold.
+
+🚨 **AND A REAL BUG CAME OUT OF IT: THE ICON HAS PROBABLY NEVER APPEARED ON HIS HOME SCREEN.**
+`index.html` points `apple-touch-icon` at `icon.svg`, and **iOS has never supported SVG there — it
+requires a PNG.** With no usable icon iOS falls back to a screenshot of the page. So the thing Tim
+asked to replace may never have been on screen at all, and whichever design wins has to ship as
+**PNG at 180 and 512** beside the SVG. ⚠️ **Checked against Apple's guidance and Lighthouse's own
+`apple-touch-icon` audit, NOT against his phone** — one look at his home screen settles it, and if
+the barbell IS there then something about this is wrong.
+
+⚠️ **ALL SIX FIT ANDROID'S MASKABLE SAFE ZONE, MEASURED RATHER THAN EYEBALLED** — no painted point
+sits more than **204px from the centre** of the 512 canvas, which is the inner-80% circle a launcher
+may crop to. `manifest.webmanifest` declares `"purpose": "any maskable"` on a single file, so the
+constraint is real: C and E had to be inset by 24 % and 15 %, and the plate's bar pulled in 8px each
+side. **Re-check it if the artwork is edited.**
+
+⚠️ **THE FIRST SIX DRAFTS WERE WORSE AND ARE NOT KEPT**, but the reason they failed is worth one
+line: the artwork was too small in the tile, a ring-with-nubs read as a camera aperture rather than
+a weight plate, and a bare diagonal line read as nothing at all. **The only size that matters is the
+one on a phone** — the contact sheet shows every candidate at 60px and 32px for exactly that reason.
 
 ---
 
@@ -151,7 +218,7 @@ with a single guest it passed against a mutation that put a ✕ on every chip. I
 
 ---
 
-## THIS SESSION (2026-08-30) — DATA → RESEARCH TEACHES THE BASICS NOW
+## 2026-08-30 — DATA → RESEARCH TEACHES THE BASICS NOW
 
 Tim: *"I want to collect information to educate users on the basics of weightlifting and some of the
 stuff science has confidently determined… a lot of information can be completely false or
@@ -408,6 +475,15 @@ history, not the app. Read the top of this file, then the **Open work index**.
 
 **What waits on TIM rather than on you** — and item 0 is the only urgent one:
 
+0a. ⏸️ **PICK AN APP ICON — the one job that is HALF DONE.** Six candidates are drawn, rendered and
+   sitting in `docs/icon-options/` with a contact sheet; the question was interrupted before he
+   answered. **Ask which of A–F, then fold it in per that README.** ⚠️ **And tell him the finding
+   that came with it**: his home screen has probably been showing a screenshot rather than the
+   icon, because `apple-touch-icon` points at an SVG and iOS needs a PNG.
+0b. ⏸️ **BUY EXERCISE PICTURES, OR DON'T.** The feature shipped on 2026-08-30 and the art is a
+   purchase — Gym Visual, ~$0.75 an illustration in bulk. `img/exercises/README.md` is the how-to
+   and the licensing. **Nothing is broken while he decides**: with no pictures the app looks exactly
+   as it did before.
 0. 🚨 **CONFIRM THE RESTORE**: does his calendar show Pull (08-24) and Legs (08-25) on a fresh
    open? **And does he believe more sessions than those two ever existed in the cloud?** If yes to
    the second, recovery starts at his phone's localStorage (Account → upload from this device).
@@ -4666,6 +4742,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/activities-plan.md` | **Non-lifting activities**, written 2026-08-26. §1 is D27 (recorded, never modelled — the D2 narrowing); Phase 1 (the Record chooser + quick log) is BUILT, and §3's **items 1–4 shipped 2026-08-27** (the Activity group, pace, the normalisation guarantee, the feed glyph). ⚠️ **Item 5 needs design** (activity PRs need distance-bucketing) and **item 6 says to ASK TIM** which activities his circle logs; §4 is what is deliberately not planned (no GPS routes, no fitness modelling) |
 | `docs/integrations-plan.md` | **Pulling data from other fitness/diet apps — RESEARCH ONLY, written 2026-08-27 on Tim's ask.** ⚠️ **§2 is the part to read**: the blocker is not "website vs App Store app", it is that OAuth's token exchange needs a client secret and a static site cannot keep one — and a native app is just as public a client. §3.1 records that **Strava's 2026 agreement forbids showing one user's Strava data to another user**, which lands directly on the Home feed. §5 recommends file import first, which needs nothing from anybody |
 | `docs/airpods-plan.md` | **AirPods remote control — PLAN ONLY, nothing deployed, on Tim's instruction.** §1: head-motion is impossible for a web app, stem presses are buildable via MediaSession. §2 the design + priced costs (occupies Now Playing → opt-in only); §3 the dead-end table; §4 the build order if he says go, starting with an on-device spike |
+| `docs/icon-options/` | ⏸️ **SIX APP-ICON CANDIDATES AND NOBODY HAS PICKED ONE** (2026-08-30). The six SVGs, the contact sheet Tim was shown, the renderer, and a README with the fold-in steps. 🚨 Its other half is a real bug: `apple-touch-icon` points at an SVG and iOS needs a PNG, so the current icon has probably never been on a home screen. Delete the folder when one is chosen |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
 
 ---
