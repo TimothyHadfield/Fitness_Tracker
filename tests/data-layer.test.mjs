@@ -4305,5 +4305,26 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'and it declines with age after it');
 }
 
+/* ================= publish follows the data (2026-08-28) =================
+   Source-pinned because schedulePublish and the boot heal need the remote
+   backend, which no test here can stand up. The pure brain (needsRepublish)
+   is fully tested in social.test.mjs; these pin the WIRING — the half whose
+   absence let Autumn's published muscle map freeze at connection time. */
+{
+  const { readFileSync } = await import('node:fs');
+  const st = readFileSync(new URL('../js/store.js', import.meta.url), 'utf8');
+  for (const fn of ['saveSession', 'deleteSession', 'saveBenchmark', 'deleteBenchmark',
+                    'logBodyWeight', 'deleteBodyWeight', 'importRows']) {
+    const body = st.slice(st.indexOf(`async ${fn}(`), st.indexOf(`async ${fn}(`) + 2200);
+    ok(body.includes('schedulePublish()'),
+       `${fn} schedules a publish — friends' copies follow the data now`);
+  }
+  ok(!st.slice(st.indexOf('async saveGuestSession(')).slice(0, 700).includes('schedulePublish'),
+     "and saveGuestSession does NOT — a guest's training is never published as the owner's");
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  ok(app.includes('social.healStalePublish()'),
+     '⚠️ boot heals stale projections — the repair for accounts that trained before this wiring existed');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

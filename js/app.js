@@ -1,6 +1,6 @@
 // Router + boot.
 
-import { store, demo, warmReadCache } from './store.js';
+import { store, demo, warmReadCache, social } from './store.js';
 import { el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -316,6 +316,11 @@ function trackKeyboard() {
   // of one per collection per tab. Nothing waits for it and it cannot fail
   // loudly: this screen already works without it.
   warmReadCache();
+  // ⚠️ Repair stale published copies — the "Autumn's muscle map froze at the
+  // moment she connected" bug. Reads a few documents, writes only when what
+  // is published is older than what is recorded. Never awaited, cannot fail
+  // loudly; see social.healStalePublish().
+  social.healStalePublish().catch(() => {});
 })();
 
 // Registered AFTER the first render, and never awaited. D6 says a gym with no

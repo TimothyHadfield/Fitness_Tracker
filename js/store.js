@@ -1052,6 +1052,9 @@ export const store = {
     // so editing the date, changing a set or clearing the flag can never leave a
     // stale benchmark behind pointing at a day the workout is no longer on.
     await syncSessionBenchmarks(row);
+    // Friends' copies follow the data — see schedulePublish() for the Autumn
+    // incident that made this line exist.
+    schedulePublish();
     return row;
   },
 
@@ -1059,6 +1062,7 @@ export const store = {
     const rows = await backend.read('sessions');
     await backend.write('sessions', rows.filter((r) => r.id !== id));
     await dropSessionBenchmarks(id);
+    schedulePublish();
   },
 
   /* --- guest sessions ---
@@ -1117,12 +1121,14 @@ export const store = {
     if (!row.id) row.id = uid('b');
     if (!row.createdAt) row.createdAt = new Date().toISOString();
     await backend.write('benchmarks', upsert(rows, row));
+    schedulePublish();
     return row;
   },
 
   async deleteBenchmark(id) {
     const rows = await backend.read('benchmarks');
     await backend.write('benchmarks', rows.filter((r) => r.id !== id));
+    schedulePublish();
   },
 
   /* --- prefill: what did they do last time for this exercise? --- */
@@ -1440,12 +1446,15 @@ export const store = {
       ? { ...existing, weight: w, updatedAt: new Date().toISOString() }
       : { id: uid('bw'), date: day, weight: w, createdAt: new Date().toISOString() };
     await backend.write('bodyWeight', upsert(rows, row));
+    // Body weight is published when sharing allows it — same rule as sessions.
+    schedulePublish();
     return row;
   },
 
   async deleteBodyWeight(id) {
     const rows = await backend.read('bodyWeight');
     await backend.write('bodyWeight', rows.filter((r) => r.id !== id));
+    schedulePublish();
   },
 
   /* --- importing a file from another app (js/import-file.js) --- */
@@ -1497,6 +1506,8 @@ export const store = {
       }
     }
     await backend.write(collection, [...index.values()]);
+    // 200 imported activities are 200 things friends should see; one publish.
+    schedulePublish();
     return { added, replaced };
   },
 
@@ -1798,6 +1809,33 @@ export const auth = {
  * ------------------------------------------------------------------ */
 
 async function socialMod() { return import('./social.js'); }
+
+/* ⚠️ PUBLISH FOLLOWS THE DATA NOW, NOT JUST THE GRAPH — 2026-08-28.
+ *
+ * republish() was called by every social mutator and by nothing that records
+ * training. social.publish() even shipped with the comment "after logging a
+ * workout, say" — and nothing ever called it. So every published copy froze
+ * at its owner's last SOCIAL action: Autumn connected with Tim, recorded a
+ * session three hours later, and her published muscle map stayed the empty
+ * pre-training snapshot from the moment of connection. Tim reported it as
+ * her data being lost. Nothing was lost; nothing was ever re-shared.
+ *
+ * schedulePublish() is called after every mutation of published data. It is
+ * DEBOUNCED (finishing a workout saves owner + benchmarks + guests in a
+ * burst), FIRE-AND-FORGET (a failed publish must never fail a save), and
+ * INERT off the cloud (no remote backend — tests, local mode — means nothing
+ * is published to stale). The demo cannot reach it: republish() throws its
+ * own refusal, which the catch below swallows.
+ */
+let publishTimer = null;
+function schedulePublish() {
+  if (!remoteImpl) return;
+  if (publishTimer) return;
+  publishTimer = setTimeout(() => {
+    publishTimer = null;
+    republish().catch(() => {});
+  }, 2500);
+}
 
 // Every tier gets rewritten on every publish, including the ones with nobody in
 // them — an empty tier is DELETED rather than left behind. Leaving a stale
@@ -2386,6 +2424,42 @@ export const social = {
 
   /** Force every projection to be rebuilt — after logging a workout, say. */
   async publish() { return republish(); },
+
+  /**
+   * ⚠️ THE BOOT HEAL — republish if what this account has PUBLISHED is older
+   * than what it has RECORDED. schedulePublish() keeps projections fresh from
+   * now on; this repairs every account that recorded training BEFORE that
+   * wiring existed (Autumn's published muscle map was a frozen pre-training
+   * snapshot for exactly this reason), and any future publish that failed
+   * mid-flight. Self-throttling by nature: when nothing is stale it reads and
+   * writes nothing.
+   *
+   * Fire-and-forget from boot. Returns false rather than throwing everywhere
+   * — local mode, demo, offline, no connections — because a heal is an
+   * opportunistic repair, not a feature anything waits on.
+   */
+  async healStalePublish() {
+    try {
+      if (demo.active()) return false;
+      const impl = requireRemote();
+      const graph = await readGraphFresh(impl);
+      if (!graph.connections.length) return false;
+
+      const S = await socialMod();
+      let newest = null;
+      for (const tier of S.TIERS) {
+        const d = await impl.readShared(impl.currentUid(), tier).catch(() => null);
+        if (d && typeof d.publishedAt === 'string'
+            && (!newest || Date.parse(d.publishedAt) > Date.parse(newest))) {
+          newest = d.publishedAt;
+        }
+      }
+      const sessions = await store.getSessions();
+      if (!S.needsRepublish({ sessions, publishedAt: newest })) return false;
+      await republish();
+      return true;
+    } catch (_) { return false; }
+  },
 };
 
 /** A Firestore Timestamp, a Date or an ISO string -> milliseconds. */

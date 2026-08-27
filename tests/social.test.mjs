@@ -581,5 +581,29 @@ ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expi
   ok(groupReactions('garbage', 'me').size === 0, 'a non-list input groups to nothing');
 }
 
+/* ================= stale publish detection (2026-08-28) =================
+   The brain of the boot heal. Why it exists: republish() was wired to social
+   mutations only, so Autumn's published muscle map froze as an empty
+   pre-training snapshot the moment she connected — and Tim reported it as
+   data loss. needsRepublish() answers "is what this account has PUBLISHED
+   older than what it has RECORDED", and the heal republishes when it is. */
+{
+  const { needsRepublish } = await import('../js/social.js');
+  const sess = (createdAt) => ({ id: 's', createdAt });
+
+  ok(needsRepublish({ sessions: [sess('2026-08-26T04:09:00Z')], publishedAt: '2026-08-25T21:25:20Z' }),
+     '⚠️ the Autumn case: a session recorded after the last publish means republish');
+  ok(!needsRepublish({ sessions: [sess('2026-08-25T20:00:00Z')], publishedAt: '2026-08-25T21:25:20Z' }),
+     'a publish newer than every session means nothing to do');
+  ok(needsRepublish({ sessions: [], publishedAt: null }),
+     'never published at all is as stale as stale gets — the caller has already checked connections exist');
+  ok(needsRepublish({ sessions: [sess('2026-08-26T00:00:00Z')], publishedAt: 'garbage' }),
+     'an unreadable publishedAt is treated as never-published, not as fresh');
+  ok(!needsRepublish({ sessions: [{ id: 'x' }], publishedAt: '2026-08-25T21:25:20Z' }),
+     'a session with no createdAt cannot vote — better one stale edge than a republish loop');
+  ok(!needsRepublish({ sessions: null, publishedAt: '2026-08-25T21:25:20Z' }),
+     'and no session list at all is handled, not thrown on');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

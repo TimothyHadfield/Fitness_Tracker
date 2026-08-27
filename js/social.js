@@ -799,3 +799,31 @@ export function groupReactions(rows, myUid) {
   }
   return bySession;
 }
+
+/* ── STALE PUBLISH DETECTION (2026-08-28) ────────────────────────────────────
+ *
+ * ⚠️ WHY THIS EXISTS: republish() was wired to every SOCIAL mutation and to
+ * nothing else — social.publish() even carried the comment "after logging a
+ * workout, say", and no workout ever called it. So every published copy froze
+ * at its owner's last social action: Autumn connected with Tim, trained three
+ * hours later, and her published muscle map stayed the empty pre-training
+ * snapshot forever. Tim read that as her data being lost. It was not lost; it
+ * was never re-shared.
+ *
+ * The fix is two-sided in store.js — publish after data mutations, and heal on
+ * boot — and this is the boot half's brain, pure so it can be tested: is what
+ * this account has PUBLISHED older than what it has RECORDED?
+ *
+ * ⚠️ `publishedAt` is the newest across the owner's existing tier documents,
+ * or null when none exists. Null with connections present means "never
+ * published at all", which is exactly as stale as stale gets.
+ */
+export function needsRepublish({ sessions, publishedAt }) {
+  const pub = publishedAt ? Date.parse(publishedAt) : NaN;
+  if (!Number.isFinite(pub)) return true;
+  for (const s of sessions || []) {
+    const made = Date.parse(s && s.createdAt ? s.createdAt : '');
+    if (Number.isFinite(made) && made > pub) return true;
+  }
+  return false;
+}
