@@ -1,6 +1,6 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, social, todayISO, demo, uid } from './store.js';
+import { store, social, muscleStrength, todayISO, demo, uid } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
@@ -108,6 +108,42 @@ export async function SessionView(workoutId) {
     });
   }
 
+  /**
+   * The starting point for an exercise with no history at all.
+   *
+   * ⚠️ TIM ASKED FOR A BEGINNER WEIGHT AND WHAT THIS DOES IS NARROWER, ON
+   * PURPOSE. His words, 2026-08-29: *"instead of setting the weight and rep
+   * number to 0, put the amount to a beginner amount of weight and an average
+   * number of reps (maybe 10). Add a note that this is their first recording
+   * and they should change it."*
+   *
+   * ⚠️ THE REPS ARE FREE AND THE WEIGHT IS NOT, and the difference is what
+   * this app is for. 10 reps is not a claim about a person — it is where the
+   * app's own model already starts, `repRangeFor()` defaults to the 8-12 band
+   * the position stand names for novices, and 10 is the only round number
+   * strictly inside it (8 and 12 sit ON a band boundary, so a lifter would
+   * start at the top of a range and be handed a load increase two obedient
+   * sessions later). A WEIGHT is a claim about a person, and the only sources
+   * for one are: an invented constant, or the 5th percentile of people who
+   * lift and log — which is not a fact about somebody who has never lifted,
+   * needs a body weight a new user has not given, and rests on the number
+   * `strength-standards.js` calls the weakest in the file.
+   *
+   * ⚠️ SO A WEIGHT IS DERIVED WHERE IT CAN BE AND LEFT ALONE WHERE IT CANNOT.
+   * Somebody who has trained here has a rated muscle, and `muscle-evidence.js`
+   * already converts between exercises in the other direction every time the
+   * body map is drawn — running it backwards is arithmetic on their own
+   * recorded sets, not a guess. Gated at the two thresholds that already mean
+   * "not good enough to speak" elsewhere in the app: ratio quality below 0.45
+   * (which excludes most machines, correctly) and confidence below the Fair
+   * band. Below either, the field stays empty and the note says why.
+   *
+   * ⚠️ AND ANYTHING PUT HERE IS MARKED `prefilled`, because a set carrying a
+   * number is a set `finish()` SAVES — the "prefilled counts as recorded"
+   * defect of 2026-08-28, which survives today only because a never-done
+   * exercise prefills zero. Filling it in without the flag would delete the
+   * one safe case and record a workout nobody did.
+   */
   function blankSet(fields) {
     const s = {};
     for (const f of fields) s[f] = 0;
@@ -126,9 +162,74 @@ export async function SessionView(workoutId) {
   // exercise actually been done yet?
   const hasNumbers = (s, fields) => fields.some((f) => Number(s[f]) > 0);
   const setIsRecorded = (s, fields) =>
-    hasNumbers(s, fields) || minisOf(s).some((d) => hasNumbers(d, fields));
+    // ⚠️ A SET STILL MARKED `prefilled` IS NOT RECORDED, whatever numbers are
+    // in it. Everything else in this app treats "has a number" as "was
+    // performed", which is true of a number somebody typed and false of one
+    // the app worked out for them. See DEFAULT_REPS and startingSet().
+    !s.prefilled
+    && (hasNumbers(s, fields) || minisOf(s).some((d) => hasNumbers(d, fields)));
+
+  /* 10 reps: the app's OWN default, not a guess. `repRangeFor()` in
+   * progression.js falls back to the 8-12 band for an unknown rep count, and 10
+   * is the only round number strictly inside it — 8 and 12 each sit on a band
+   * boundary, which `repRangeFor` resolves downwards, so starting there would
+   * put a brand-new lifter at the top of a range and hand them a load increase
+   * two obedient sessions later. */
+  const DEFAULT_REPS = 10;
 
   const settings = await store.getSettings();
+
+  /**
+   * A believable opening weight for each planned exercise, worked out from what
+   * this account has ALREADY recorded on other lifts.
+   *
+   * ⚠️ THIS IS THE BODY MAP'S OWN ARITHMETIC RUN BACKWARDS, not a new model.
+   * `muscleStrength()` converts every recorded set into an estimate of a
+   * muscle's key lift by dividing by a published ratio; this multiplies back
+   * out. Nothing about the person is invented — the input is their own sets.
+   *
+   * ⚠️ TWO GATES, both of them thresholds that already mean "not good enough to
+   * speak" elsewhere in this app:
+   *   • ratio quality ≥ FALLBACK_MIN_QUALITY (0.45). That deliberately excludes
+   *     most machines, whose ratios sit at 0.35-0.45 precisely because a leg
+   *     press depends on leverage the app knows nothing about.
+   *   • confidence ≥ 0.35, the bottom of the Fair band. A muscle rated off one
+   *     high-rep set has no business prescribing an opening weight.
+   * Below either, no weight is offered and the screen says the field is theirs
+   * to fill in.
+   *
+   * ⚠️ DIRECT contributions only, never a fallback. A fallback is one muscle
+   * standing in for another and is the weakest reading in the table.
+   *
+   * Fire-and-forget: every failure yields an empty map and the runner opens on
+   * reps alone, which is exactly what it did before this existed.
+   */
+  const derivedWeights = new Map();
+  try {
+    const [{ muscles }, ev, e1] = await Promise.all([
+      muscleStrength(),
+      import('./muscle-evidence.js'),
+      import('./e1rm.js'),
+    ]);
+    const bw = await store.latestBodyWeight().catch(() => null);
+    for (const { ex } of planned) {
+      if (!Array.isArray(ex.fields) || !ex.fields.includes('weight')) continue;
+      const contribs = ev.contributionsFor(ex, { bodyWeight: bw ? bw.weight : undefined });
+      const best = contribs
+        .filter((c) => c.kind === 'direct' && c.quality >= ev.FALLBACK_MIN_QUALITY)
+        .sort((a, b) => b.quality - a.quality)[0];
+      if (!best) continue;
+      const rating = muscles.get(best.muscle);
+      if (!rating || !(rating.estimate > 0) || !(rating.confidence >= 0.35)) continue;
+      // `ratio` is this exercise's load as a fraction of the muscle's key lift,
+      // and it is in TOTAL load — so a per-side entry halves on the way out.
+      const oneRepTotal = rating.estimate * best.ratio;
+      const forTen = e1.weightForReps(oneRepTotal, DEFAULT_REPS);
+      if (!(forTen > 0)) continue;
+      const shown = ex.loadType === 'per_side' ? forTen / 2 : forTen;
+      derivedWeights.set(ex.id, { weight: shown, from: best.muscle });
+    }
+  } catch (_) { /* no estimate is a quieter screen, never an error */ }
 
   // A draft only resumes on the same day. Yesterday's abandoned session should not
   // silently reappear and get saved with today's date.
@@ -163,10 +264,13 @@ export async function SessionView(workoutId) {
     for (const { item, ex } of planned) {
       const history = historyFor(sessions, { exerciseId: ex.id, workoutId: workout.id });
       const last = history[0] || null;
+      // Never done before: start somewhere usable instead of at zero, and mark
+      // it so nothing about it can be mistaken for a record.
+      const opening = (last && last.length) ? null : startingSet(ex, step);
       // Build exactly the number of sets the workout plans for. Where history
       // runs out, repeat the last recorded set rather than dropping to zero.
       const lastSets = Array.from({ length: item.sets }, (_, i) => {
-        if (!last || !last.length) return blankSet(ex.fields);
+        if (!last || !last.length) return opening ? { ...opening.set } : blankSet(ex.fields);
         return pickFields(last[Math.min(i, last.length - 1)], ex.fields);
       });
 
@@ -192,6 +296,14 @@ export async function SessionView(workoutId) {
         fmt: units.withUnit,
       });
       const sets = applySuggestion(lastSets, suggestion);
+      /* ⚠️ RE-STAMPED AFTER applySuggestion, NOT BEFORE. That function returns
+       * NEW set objects, so a flag put on `lastSets` is dropped on the way
+       * through — and the flag going missing is the difference between "this is
+       * a starting point" and a workout nobody did being written to disk. Found
+       * by the test, which had the reps opening at 11 rather than 10: with no
+       * history the progression rule still had an opinion about the numbers the
+       * app had just filled in. */
+      if (opening && opening.how) for (const s of sets) s.prefilled = true;
 
       out.push({
         lastSets,
@@ -213,9 +325,44 @@ export async function SessionView(workoutId) {
         activeDrop: null,
         hadHistory: Boolean(last && last.length),
         lastSummary: last && last.length ? fmtSet(last[0], ex.fields, ex.loadType) : null,
+        // How the opening numbers were arrived at, so the note can say it.
+        // 'derived' | 'reps' | null — see startingSet().
+        opening: opening ? opening.how : null,
+        openingFrom: opening ? opening.from : null,
       });
     }
     return out;
+  }
+
+  /**
+   * The opening numbers for an exercise nobody here has ever done.
+   *
+   * Returns a set object carrying `prefilled: true`, plus two non-stored hints
+   * about where the numbers came from. Never throws — every failure to derive
+   * is a quieter answer, not an error.
+   */
+  function startingSet(ex, step) {
+    const set = blankSet(ex.fields);
+    let how = null;
+    let from = null;
+
+    // Reps first, because they cost nothing to be right about.
+    if (ex.fields.includes('reps')) { set.reps = DEFAULT_REPS; how = 'reps'; }
+
+    const derived = derivedWeights.get(ex.id);
+    if (derived && derived.weight > 0 && ex.fields.includes('weight')) {
+      // Down to a real increment, never up: the smallest plate in the room is
+      // the resolution this number can honestly claim, and rounding up hands
+      // somebody more than the estimate said.
+      const stepped = step > 0 ? Math.floor(derived.weight / step) * step : derived.weight;
+      if (stepped > 0) { set.weight = stepped; how = 'derived'; from = derived.from; }
+    }
+    // ⚠️ Only marked when something was actually put in. A set left at zeros is
+    // the state this app has always had, and flagging it would change what
+    // `setIsRecorded` says about an exercise nobody touched — which the swap
+    // and remove paths both read.
+    if (how) set.prefilled = true;
+    return { set, how, from };
   }
 
   if (existingDraft) {
@@ -867,18 +1014,28 @@ export async function SessionView(workoutId) {
     function fillOnOpen(i) {
       if (entry.hadHistory || i <= 0 || i >= entry.sets.length) return;
       const s = entry.sets[i];
-      if (entry.fields.some((f) => Number(s[f]) > 0)) return;
+      // ⚠️ A SET STILL MARKED `prefilled` COUNTS AS EMPTY HERE (2026-08-29).
+      // Since a never-done exercise opens at 10 reps rather than at zeros, the
+      // old "does it have any number in it" test said every set was already
+      // filled and this stopped running at all — so set 2 of a first-ever
+      // exercise no longer inherited the weight just typed into set 1. Empty
+      // has always meant "nobody has put anything here", and a number the app
+      // worked out is not somebody putting something there.
+      if (!s.prefilled && entry.fields.some((f) => Number(s[f]) > 0)) return;
       if (minisOf(s).length) return;
       // The nearest set above with anything in it — not strictly i-1, so
-      // skipping a set does not hand the next one a row of zeros.
+      // skipping a set does not hand the next one a row of zeros. Same rule:
+      // a set nobody has touched is not a source worth copying.
       for (let j = i - 1; j >= 0; j--) {
         const src = entry.sets[j];
-        if (entry.fields.some((f) => Number(src[f]) > 0)) {
+        if (!src.prefilled && entry.fields.some((f) => Number(src[f]) > 0)) {
           // Fields only. A drop hangs off the set it was stripped from and the
           // app has never claimed to know how much lighter it is, so copying
           // one into a set nobody has reached yet would be a guess arriving
           // before the question.
           entry.sets[i] = { ...s, ...pickFields(src, entry.fields) };
+          // Filled from a set somebody really did, so it is no longer a guess.
+          delete entry.sets[i].prefilled;
           return;
         }
       }
@@ -1080,6 +1237,12 @@ export async function SessionView(workoutId) {
           : null,
         onChange: (v) => {
           target[f] = v;
+          // ⚠️ TOUCHING A NUMBER IS WHAT MAKES THE SET REAL. Until then it holds
+          // what the app worked out, and `setIsRecorded` refuses to count it —
+          // which is what stops a derived opening weight being saved as a set
+          // somebody never did. One nudge, one keystroke, and it is theirs.
+          delete target.prefilled;
+          delete activeSet.prefilled;
           saveDraft(state);
           renderAssist();
           // In place — see `syncSetValues`. Rebuilding the list would now
@@ -1235,11 +1398,30 @@ export async function SessionView(workoutId) {
         ? el('div', { class: 'note-card' }, el('b', { text: 'Note' }), el('span', { text: entry.notes }))
         : null,
 
+      /* ⚠️ THE FIRST-TIME NOTE DOES NOT WEAR THE GREEN CHECK, and that is Rule 5
+       * rather than styling. `.prefill-note`'s check is `--good` and sits beside
+       * "Last time: 135 lbs", which is a MEASUREMENT. A worked-out opening
+       * weight is an inference, and the rule's general form is that an inference
+       * must be visually separable from a recording by a cue that is not colour
+       * alone. So the derived case borrows `.suggest-note` — the app's existing
+       * "this is a proposal" treatment — and says out loud that the number was
+       * worked out rather than measured. */
       entry.hadHistory
         ? el('div', { class: 'prefill-note' }, icon('check', 16),
             el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
-        : el('div', { class: 'prefill-note' },
-            el('span', { text: 'First time logging this — your numbers will be remembered.' })),
+        : entry.opening === 'derived'
+          ? el('div', { class: 'suggest-note' }, icon('up', 15),
+              el('div', { class: 'suggest-body' },
+                el('div', { class: 'suggest-head', text: 'First time logging this — a starting point, not a measurement' }),
+                el('div', { class: 'suggest-why', text:
+                  `Worked out from what you have already lifted for ${String(entry.openingFrom || 'this muscle').toLowerCase()}, at ${DEFAULT_REPS} reps. `
+                  + 'Change it to whatever you can actually lift — nothing is recorded until you do, '
+                  + 'and your real numbers are what it uses from then on.' }),
+              ))
+          : el('div', { class: 'prefill-note' },
+              el('span', {}, 'First time logging this — ',
+                el('b', { text: entry.opening === 'reps' ? `type what you can lift at about ${DEFAULT_REPS} reps` : 'type what you did' }),
+                '. It will be remembered.')),
 
       // ⚠️ THE SUGGESTION SAYS WHY, IN ONE LINE, AT THE MOMENT OF USE (D8).
       // "+5 lbs" with no reason is an instruction from nowhere; "top of the
@@ -1533,7 +1715,11 @@ export async function SessionView(workoutId) {
         ...(e.group == null ? {} : { group: e.group }),
         ...(e.setType ? { setType: e.setType } : {}),
         sets: e.sets
-          .filter((s) => hasNumbers(s, e.fields) || minisOf(s).some((d) => hasNumbers(d, e.fields)))
+          // ⚠️ `setIsRecorded`, not `hasNumbers`, since 2026-08-29 — the two
+          // differ on exactly one case and it is the one that matters: a set
+          // still carrying the opening numbers the app DERIVED, which nobody
+          // has touched. Numbers in it, and not a record of anything.
+          .filter((s) => setIsRecorded(s, e.fields))
           .map((s) => {
             const kept = minisOf(s).filter((d) => hasNumbers(d, e.fields));
             const out = { ...s };
@@ -1541,7 +1727,8 @@ export async function SessionView(workoutId) {
             // drop set with no drops", which is a different claim from "this
             // was a straight set".
             if (kept.length) out.minis = kept; else delete out.minis;
-            delete out.drops;   // legacy key, never written any more
+            delete out.drops;      // legacy key, never written any more
+            delete out.prefilled;  // a runtime flag; storage never sees it
             return out;
           }),
       }))

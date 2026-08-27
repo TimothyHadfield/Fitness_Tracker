@@ -5638,3 +5638,40 @@ protection because the rules cannot enforce it.
 
 Render 595 → 619, social +25, new qr suite 33, rules 117 → 147 and deployed. Audit clean over 68
 routes. Two mutations, each flipping only itself.
+
+## 2026-08-29, fourth pass — a new lift opens somewhere usable
+
+**Tim:** "If a user has added a new exercise that they've never done before, instead of setting the
+weight and rep number to 0, put the amount to a beginner amount of weight and an average number of
+reps (maybe 10). Add a note that this is their first recording and they should change it."
+
+**Built, narrower than asked, and the reason is a correctness blocker.** finish() saves any set with
+a number in it — there is no "touched" flag, the only thing separating a plan from a record is
+whether the number is zero. So the still-open "prefilled counts as recorded" finding bites every
+exercise WITH history, and the one place it could not bite was a never-done exercise, precisely
+because it prefilled zero. Filling that in naively would have deleted the last safe case.
+
+So the opening numbers are marked `prefilled` and the save path refuses to count them. One nudge or
+keystroke clears it. Tap Finish having touched nothing and nothing is recorded — two assertions pin
+that, including the derived weight, which is the number that would otherwise be most convincing.
+
+Reps open at 10, which is the app's own number: repRangeFor falls back to the 8-12 band and 10 is the
+only round number strictly inside it (8 and 12 sit on a boundary, so starting there would hand a
+brand-new lifter a load increase two sessions later).
+
+The weight is DERIVED, not invented. A "beginner amount" has only two sources and both are claims
+about a person the app has never met. What it can do honestly is run the body map's arithmetic
+backwards — muscleStrength divides recorded sets by a published ratio, so multiplying back out gives
+this lift's likely load from their own sets. Gated at quality >= 0.45 and confidence >= Fair, direct
+contributions only. Needs a complete profile, so a genuinely brand-new user gets reps and an empty
+weight — which is the honest answer and what the note then says.
+
+Two bugs found by writing the tests: store.muscleStrength() does not exist (it is a module export,
+and the call sat inside a catch whose job is to degrade quietly, so the whole feature silently did
+nothing); and applySuggestion returns new objects, so the flag was being dropped on the way through.
+
+Also: screenShell({back}) takes a FUNCTION, and the string hashes I had used made five inert back
+buttons on the new social screens. The finish-screen test caught it because it clicks the button
+rather than reading an href.
+
+Render 628 -> 641. Audit clean over 68 routes.

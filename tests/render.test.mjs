@@ -3604,6 +3604,137 @@ ok(!data.querySelector('.rep-target'),
   localStorage.removeItem(DRAFT);
 }
 
+
+/* ============ an exercise you have never done (2026-08-29) ============
+ *
+ * Tim: *"If a user has added a new exercise that they've never done before,
+ * instead of setting the weight and rep number to 0, put the amount to a
+ * beginner amount of weight and an average number of reps (maybe 10). Add a
+ * note that this is their first recording and they should change it."*
+ *
+ * ⚠️ THE SAFETY ASSERTION IS THE POINT OF THIS BLOCK. `finish()` saves any set
+ * with a number in it, so filling one in without a guard would record a workout
+ * nobody did — and until this shipped, a never-done exercise prefilling ZERO
+ * was the one case that could not happen.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  /* ---- no history anywhere: reps only, and NOTHING is recorded ---- */
+  {
+    const w = await store.saveWorkout({
+      name: 'Brand new lift',
+      exercises: [{ exerciseId: byName('Drag Curl').id, sets: 2, notes: '' }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    ok(/First time logging this/.test(s.textContent),
+       'a lift with no history says so');
+    const reps = Number(s.querySelectorAll('.step-value')[1].value);
+    ok(reps === 10,
+       `⚠️ reps open at 10, not 0 (${reps}) — and 10 is the app's OWN default: repRangeFor() `
+       + 'falls back to the 8-12 band, and 10 is the only round number strictly inside it');
+
+    const draft = JSON.parse(localStorage.getItem(DRAFT));
+    ok(draft.entries[0].sets.every((set) => set.prefilled === true),
+       '⚠️ and every opening set is MARKED, because a set carrying a number is a set finish() '
+       + 'would otherwise save');
+
+    // Walk straight to Finish without touching anything — the exact path that
+    // would record a workout nobody did.
+    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await settle(); await settle();
+    ok(/Nothing recorded/i.test(document.getElementById('app').textContent)
+       || !(await store.getSessions()).some((x) => x.workoutId === w.id),
+       '🚨 TAPPING FINISH WITHOUT TOUCHING A NUMBER RECORDS NOTHING. The reps the app filled in '
+       + 'are a starting point, not a claim that ten of them happened');
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- touch it, and it becomes real ---- */
+  {
+    const w = await store.saveWorkout({
+      name: 'Brand new lift two',
+      exercises: [{ exerciseId: byName('Concentration Curl').id, sets: 1, notes: '' }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    const wt = s.querySelectorAll('.step-value')[0];
+    wt.value = '45';
+    wt.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    await settle();
+
+    const draft = JSON.parse(localStorage.getItem(DRAFT));
+    ok(draft.entries[0].sets[0].prefilled === undefined,
+       '⚠️ one keystroke clears the flag — touching a number is what makes the set theirs');
+
+    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await settle(); await settle();
+    const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+    ok(saved && saved.entries[0].sets[0].weight === 45,
+       'and now it saves, at what they typed');
+    ok(saved && saved.entries[0].sets[0].reps === 10,
+       '⚠️ carrying the reps they left alone — they were on screen, they were accepted, and '
+       + 'the set as a whole is now a record');
+    ok(saved && !('prefilled' in saved.entries[0].sets[0]),
+       'and the runtime flag never reaches storage');
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- a WEIGHT is derived from what they have already lifted ---- */
+  {
+    /* ⚠️ A COMPLETE PROFILE IS A REAL GATE ON THIS, not test scaffolding.
+     * `muscleStrength()` returns `ready: false` without gender, birth year and
+     * a body weight — the same reason the body map is grey for that account —
+     * so no weight can be derived either, and the screen falls back to the
+     * reps-only note. That is the honest behaviour rather than a gap. */
+    await store.saveSettings({ gender: 'male', birthYear: 1998 });
+    await store.logBodyWeight(180, '2026-08-01');
+
+    // A real bench press history, so Chest is rated well enough to speak.
+    const bench = byName('Barbell Bench Press').id;
+    for (const d of ['2026-08-10', '2026-08-14', '2026-08-18']) {
+      await store.saveSession({
+        workoutName: 'Push', date: d, startedAt: `${d}T10:00:00.000Z`,
+        entries: [{ exerciseId: bench, exerciseName: 'Barbell Bench Press',
+          sets: [{ weight: 185, reps: 5 }, { weight: 185, reps: 5 }] }],
+      });
+    }
+    // Now a chest lift they have never done.
+    const w = await store.saveWorkout({
+      name: 'New chest lift',
+      exercises: [{ exerciseId: byName('Close-Grip Bench Press').id, sets: 1, notes: '' }],
+    });
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+
+    const opened = Number(s.querySelectorAll('.step-value')[0].value);
+    ok(opened > 0,
+       `⚠️ the weight opens at a real number (${opened}) — derived from their own bench press by `
+       + 'the same published ratio the body map uses, run backwards. Not a beginner constant, '
+       + 'and not the 5th percentile of people who lift, which is not a fact about this person');
+    ok(opened < 185,
+       `and it is BELOW their flat bench (${opened} vs 185), which is what a close-grip press should be`);
+
+    ok(/a starting point, not a measurement/i.test(s.textContent),
+       '⚠️ and the screen says the number was worked out rather than measured — Rule 5, which is '
+       + 'the whole reason this app is allowed to put a number here at all');
+    ok(!s.querySelector('.prefill-note'),
+       '⚠️ it does NOT wear the green check that means "last time" — that cue belongs to a '
+       + 'recorded measurement, and an inference borrowing it is exactly what Rule 5 forbids');
+
+    // Untouched, it still records nothing.
+    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await settle(); await settle();
+    ok(!(await store.getSessions()).some((x) => x.workoutId === w.id),
+       '🚨 and a DERIVED WEIGHT untouched is still not a record — the guard covers the number '
+       + 'that would otherwise be most convincing');
+    localStorage.removeItem(DRAFT);
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

@@ -4,7 +4,7 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-29. **Three passes have run this session** — the three 2026-08-29
+**Last updated:** 2026-08-29. **Four passes have run this session** — the four 2026-08-29
 sections at the top of the list below. Everything under them is the previous session's **seven passes**, all
 dated 2026-08-28. Read them in file order (newest first). The one-paragraph version of each:
 
@@ -130,7 +130,7 @@ last exercise is refused.
 - ✅ **0j CLOSED** — **disconnect is mutual**. ⚠️ **Eventual, not instant**, and the sheet says so.
 - **Rules tests 66 → 92**, against the real engine. Rules deployed.
 
-**Tests: 3,030 across TWELVE suites** (data-layer 1437, render **619**, goals 232, bodyweight 170,
+**Tests: 3,052 across TWELVE suites** (data-layer 1437, render **641**, goals 232, bodyweight 170,
 social 165, a11y 85, **qr 33**), plus **147 rules assertions in the emulator** and 12 in `sw-update`.
 Sub-agents are pre-authorised (saved to memory).
 
@@ -351,6 +351,85 @@ because pushing invented workouts at real friends is the one way this could do h
 reading an invented feed is not the hazard, publishing is. Without them the Home feed would have been
 unjudgeable in the one account built for judging screens — including to the accessibility audit,
 which drives the demo.
+
+---
+
+## 2026-08-29, fourth pass — A NEW LIFT OPENS SOMEWHERE USABLE, AND THE FINISH SCREEN GREW A WAY BACK
+
+Four small asks from Tim in one run. Two are in the commits above (the location
+default, the finish screen); the two written up here are the ones with an argument in them.
+
+### 1. ⚠️ A NEVER-DONE EXERCISE — AND WHY THIS IS NARROWER THAN WHAT HE ASKED FOR
+
+Tim: *"If a user has added a new exercise that they've never done before, instead of setting the
+weight and rep number to 0, put the amount to a beginner amount of weight and an average number of
+reps (maybe 10). Add a note that this is their first recording and they should change it."*
+
+🚨 **THE BLOCKER THAT SHAPED IT: `finish()` SAVES ANY SET WITH A NUMBER IN IT.** There is no
+"touched" flag anywhere in this app — the only thing separating a plan from a record is *whether the
+number is zero*. So the 2026-08-28 finding **"prefilled counts as recorded"** — which is still open
+— bites every exercise **with** history, and the one place it could not bite was a never-done
+exercise, **precisely because it prefilled zero.** Filling that in naively would have deleted the
+last safe case.
+
+⚠️ **SO THE OPENING NUMBERS ARE MARKED `prefilled`, AND `setIsRecorded` REFUSES TO COUNT THEM.**
+One nudge or keystroke clears the flag and the set is theirs. **Tap Finish having touched nothing and
+nothing is recorded**, which two assertions pin — including the derived weight, the number that
+would otherwise be the most convincing. ⚠️ **The flag is set ONLY on these opening numbers**: the
+history-based prefill behaves exactly as it did, because resolving a finding Tim has not picked from
+is not this task's business.
+
+**Reps open at 10, and 10 is the app's own number rather than a guess.** `repRangeFor()` falls back
+to the 8–12 band the position stand names for novices, and **10 is the only round number strictly
+inside it** — 8 and 12 each sit ON a band boundary, which `repRangeFor` resolves downwards, so
+starting at either would put a brand-new lifter at the top of a range and hand them a load increase
+two obedient sessions later.
+
+⚠️ **THE WEIGHT IS DERIVED, NOT INVENTED — AND WHERE IT CANNOT BE DERIVED IT IS LEFT ALONE.** A
+"beginner amount" has only two possible sources and both are claims about a person the app has never
+met: an invented constant, or the 5th percentile of **people who lift and log**, which needs a body
+weight a new user has not given and rests on the number `strength-standards.js` itself calls the
+weakest in the file. What the app *can* do honestly is run the body map's own arithmetic backwards —
+`muscleStrength()` divides every recorded set by a published ratio, so multiplying back out gives
+this lift's likely load from **their own sets**. Gated at the two thresholds that already mean "not
+good enough to speak" here: ratio quality ≥ 0.45 (which correctly excludes most machines) and
+confidence ≥ the Fair band, direct contributions only.
+
+⚠️ **AND IT NEEDS A COMPLETE PROFILE**, because `muscleStrength()` returns `ready: false` without
+gender, birth year and a body weight — the same reason the body map is grey for that account. **So a
+genuinely brand-new user gets reps and an empty weight field**, which is the honest answer and what
+the note then says.
+
+⚠️ **THE NOTE DOES NOT WEAR THE GREEN CHECK.** `.prefill-note`'s check is `--good` and sits beside
+"Last time: 135 lbs", which is a **measurement**. A worked-out weight is an inference, and Rule 5's
+general form is that the two must be separable by a cue that is not colour alone — so the derived
+case borrows `.suggest-note`, the app's existing "this is a proposal" treatment, and says the number
+was worked out rather than measured.
+
+⚠️ **`fillOnOpen` HAD TO LEARN THE SAME RULE.** It refuses to fill a set that "already has numbers",
+and a first-ever exercise now opens at 10 reps — so set 2 stopped inheriting the weight just typed
+into set 1. A set still marked `prefilled` counts as empty there, because empty has always meant
+"nobody has put anything here".
+
+### 2. Two bugs found by writing the tests, not by review
+
+- ⚠️ **`store.muscleStrength()` DOES NOT EXIST** — it is a module-level export, not a method. The
+  call was inside a `try` whose whole job is to degrade quietly, so **the derivation silently did
+  nothing and the screen looked exactly like the honest no-history case.** A catch-all that hides a
+  typo is a catch-all that hides a feature.
+- ⚠️ **`applySuggestion` RETURNS NEW OBJECTS**, so a flag set on `lastSets` was dropped on the way
+  through — and a missing flag is the difference between a starting point and a workout nobody did
+  written to disk. Caught because the test read 11 reps rather than 10.
+
+### 3. `screenShell({ back })` TAKES A FUNCTION, AND FIVE BACK BUTTONS DID NOTHING
+
+Found by the finish-screen test. `back` is handed straight to `iconBtn` as its onClick, and `el()`
+silently ignores a non-function `onX` — so the string hashes used on the new Add-a-friend and
+Add-by-code screens rendered back buttons that were completely inert. ⚠️ **The assertion CLICKS the
+button rather than reading an href**, which is the only version that would have caught it.
+
+**Tests: render 628 → 641.** Two mutations, both flipping the safety assertions: removing the
+`prefilled` guard from `setIsRecorded`, and letting the save path filter on `hasNumbers` again.
 
 ---
 
