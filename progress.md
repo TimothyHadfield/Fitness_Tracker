@@ -360,6 +360,46 @@ saw; the *flag* was the fault, twice — it blinded every old client, and it tur
 
 ---
 
+## 2026-08-28, sixth pass — ⚠️ AUTUMN'S "LOST" DATA WAS A FROZEN PROJECTION, AND PUBLISH FOLLOWS THE DATA NOW
+
+Tim: *"my friend Autumn also recorded some stuff… I used to be able to see her muscle map and now I
+can't… Make sure all data from any user can never be lost."*
+
+**Read-only against the live project first, before touching anything: ⚠️ AUTUMN'S DATA IS FULLY
+INTACT AND WAS NEVER TOUCHED.** Her account was never migrated (zero shard docs; her legacy
+sessions doc still holds her session), her workouts/system/weigh-in/settings are all present, the
+mutual full-tier connection stands, and her projection still lists Tim as a viewer.
+
+⚠️ **WHAT HE COULD NOT SEE WAS NEVER DATA — her published `strength` array is EMPTY**, because her
+projection was published at 21:25 on 08-25, **three hours before she recorded her session**, and
+nothing ever republished it. **The bug: `republish()` was wired to every SOCIAL mutation and to
+nothing that records training** — `social.publish()` even shipped commented *"after logging a
+workout, say"*, and nothing called it. Every user's shared copy (feed cards AND muscle map) froze
+at their last social action, forever.
+
+- **`schedulePublish()`** — debounced 2.5 s, fire-and-forget, inert off the cloud — wired into
+  saveSession, deleteSession, both benchmark writes, both body-weight writes, and importRows.
+  ⚠️ **Guest sessions deliberately unwired**, and a test pins that: a guest's training is never
+  published as the owner's.
+- **`social.healStalePublish()`** on boot: republishes when what the account has **published** is
+  older than what it has **recorded** (`needsRepublish()` in social.js, pure, tested — the Autumn
+  timeline is its first assertion). ⚠️ **This is what fixes her frozen map — the next time she
+  opens the app, with no action from her.** Until then Tim still sees the empty map; that is
+  expected, not a recurrence.
+
+**"Never lost, for ANY user", done server-side the same day**: an immutable `snap-*` backup of
+every collection of **all five accounts**, written with the owner credential into each account's
+own `users/{uid}/backups` subtree (Tim 8 docs incl. shard sessions, Autumn 5, the other three
+covered). The client-side guards and rolling backups apply to each account as its device picks up
+the current build.
+
+⚠️ **PITR — the strongest guarantee there is (7-day server-side history) — REQUIRES BILLING.** The
+enable call was made and refused with "requires billing". It is the Blaze decision Tim already
+owns, at effectively zero cost for a database this size. **If he ever says yes to Blaze, enabling
+PITR is the first thing to do with it.**
+
+---
+
 ## 2026-08-28, fifth pass — THE RESEARCH TAB (Data · Research)
 
 Tim: *"I'm really curious about where some of our information is coming from and how the site does
