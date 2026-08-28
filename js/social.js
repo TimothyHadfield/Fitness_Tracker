@@ -128,6 +128,53 @@ export const MAX_ACTIVITY = 60;
 export const MAX_BENCHMARKS = 200;
 
 /* ------------------------------------------------------------------ *
+ * The profile photo (2026-08-31)
+ *
+ * Tim: *"when you put a profile picture into your account, your friends can't
+ * see the profile picture… its just the default blank humanoid, not the picture
+ * that they actually added."* True, and it was deliberate until now —
+ * views-account.js said so in as many words: *"Local-only for now: the avatar is
+ * NOT published into the social projection… publishing a face is a widening that
+ * gets its own decision, not a side effect of this feature."* This is that
+ * decision, made by the person whose face it is.
+ *
+ * ⚠️ IT SITS BESIDE THE NAME, AT EVERY TIER, and that is the argument for where
+ * it goes: `profile` is IDENTITY, and the tiers cut TRAINING. Somebody on "just
+ * that I trained" already sees the name you chose — a picture is the same kind
+ * of fact about the same person, and splitting them would mean a friend seeing
+ * your workouts but not your face, which is not a distinction anybody asked for.
+ * Nothing here changes who may READ the document: that is the viewers list and
+ * firestore.rules, untouched.
+ *
+ * 🚨 AND THIS IS A TRUST BOUNDARY IN BOTH DIRECTIONS. Going out, it is one of
+ * this app's few big strings and the document has a 1 MiB ceiling shared with 60
+ * activity entries. Coming in, it is a string another account wrote that this
+ * app is about to put in an `src`. So it is validated as a base64 data URL of a
+ * RASTER image and nothing else — never `image/svg+xml`, which is a document
+ * that can carry script rather than a picture, and never a remote URL, which
+ * would let somebody else's document make this device fetch a URL of their
+ * choosing and log the request. Both ends call `safeAvatar`.
+ * ------------------------------------------------------------------ */
+
+/**
+ * ⚠️ ~90 KB of image. The photo is written at 256px and quality 0.78, which is
+ * tens of KB for a real photograph — this is a ceiling for something that has
+ * gone wrong, not a target. Over it, the projection carries NO avatar rather
+ * than a document that might stop publishing: a friend seeing the default face
+ * is a disappointment, and a friend whose page silently stopped updating is a
+ * bug nobody can diagnose (which is what the caps above exist to prevent).
+ */
+export const MAX_AVATAR_CHARS = 120000;
+
+const AVATAR_URL = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+/** The string if it is a picture this app is willing to publish or paint, else null. */
+export function safeAvatar(value) {
+  if (typeof value !== 'string' || value.length > MAX_AVATAR_CHARS) return null;
+  return AVATAR_URL.test(value) ? value : null;
+}
+
+/* ------------------------------------------------------------------ *
  * The connection graph — owner-private
  *
  * Lives at users/{uid}/social/graph and is readable by NOBODY but the owner.
@@ -439,7 +486,7 @@ function projectSet(set) {
  * @param {object}   o
  * @param {string}   o.tier          light | mid | full
  * @param {string[]} o.viewers       uids allowed to read this document
- * @param {object}   o.profile       { name }  — NEVER the email address
+ * @param {object}   o.profile       { name, avatar } — NEVER the email address
  * @param {object[]} o.sessions      private session rows
  * @param {object[]} o.benchmarks    private benchmark rows      (full only)
  * @param {object[]} o.strength      muscle ratings              (full only)
@@ -466,7 +513,14 @@ export function buildProjection({
     // The shared identity is a name the user typed. Never the email address,
     // which is the only other identifier the app holds for a person and is
     // exactly the thing not to broadcast (docs/social-plan.md §3.5).
-    profile: { name: typeof profile.name === 'string' ? profile.name.trim().slice(0, 60) : '' },
+    profile: {
+      name: typeof profile.name === 'string' ? profile.name.trim().slice(0, 60) : '',
+      // Absent rather than null when there is no photo, or when the one on this
+      // account is not something this app will publish — `profile.avatar` being
+      // missing is what every reader already handles, and it is the state most
+      // accounts are in.
+      ...(safeAvatar(profile.avatar) ? { avatar: safeAvatar(profile.avatar) } : {}),
+    },
     publishedAt: typeof publishedAt === 'string' ? publishedAt : null,
     activity: [],
   };

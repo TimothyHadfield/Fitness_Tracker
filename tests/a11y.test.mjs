@@ -213,5 +213,18 @@ ok(!/\.icon-btn::after,\s*\.avatar-btn::after/.test(CSS),
    '⚠️ and NOT with ::after, which .avatar-btn.at-risk already owns for the backup dot');
 ok(/\.avatar-btn\.at-risk::after/.test(CSS), 'and that dot is still there');
 
+/* ⚠️ AND THE SAME TRICK ON THE SESSION'S ACTION PILLS (2026-08-31). Tim asked
+   for Swap and Remove to "stand out just like the +add set button", which is a
+   32px-tall pill — 12px short of the target the rest of this app is held to. A
+   request about how loud a control LOOKS is not permission to shrink what a
+   thumb has to hit, so they paint at 32 and hit at 44 the way the icon buttons
+   have since the first audit. This is the assertion that notices if a later
+   edit "simplifies" the pseudo-element away. */
+ok(/\.pill-action::before[^{]*\{[\s\S]*?height:\s*44px/.test(CSS),
+   'the session\'s Swap / Remove / Exercises pills paint at 32px and hit at 44px');
+ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(--raised\)/.test(CSS),
+   '⚠️ and they wear .add-set\'s own shape — raised pill, fully rounded — which is what '
+   + '"stand out just like the +add set button" asked for');
+
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');
 process.exit(fails ? 1 : 0);

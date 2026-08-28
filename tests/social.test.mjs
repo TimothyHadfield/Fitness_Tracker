@@ -17,7 +17,7 @@ const {
   tierRank, isTier, atLeast, DEFAULT_TIER,
   normalizeGraph, tierForViewer, viewersForTier,
   projectSession, buildProjection, assertTierClean, leaves,
-  MAX_VIEWERS, MAX_ACTIVITY,
+  MAX_VIEWERS, MAX_ACTIVITY, MAX_AVATAR_CHARS,
   newInviteToken, inviteExpiry, inviteState, INVITE_TTL_DAYS,
 } = await import('../js/social.js');
 
@@ -317,6 +317,52 @@ ok(withEmail.profile.email === undefined && withEmail.profile.uid === undefined,
    'the email address can never reach a projection, even when handed straight to it');
 ok(JSON.stringify(withEmail).indexOf('example.com') === -1, 'and does not survive as text either');
 ok(withEmail.profile.name === 'Tim', 'the display name is what is shared');
+
+/* ---- the profile photo (2026-08-31) ----
+ *
+ * Tim: *"your friends can't see the profile picture… its just the default blank
+ * humanoid, not the picture that they actually added."* It is published with
+ * the name now, at every tier, because `profile` is IDENTITY and the tiers cut
+ * TRAINING — somebody who can see your name can see your face.
+ *
+ * 🚨 THE REFUSALS ARE THE POINT OF THIS BLOCK. The same string is read back off
+ * somebody else's document and put into an `src` by ui.js personFace(), so the
+ * one function decides both directions and both are asserted here.
+ */
+{
+  const FACE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAA==';
+  const withFace = (avatar, tier = LIGHT) => buildProjection({
+    tier, viewers: ['alex'], profile: { name: 'Tim', avatar },
+    sessions: [], publishedAt: '2026-08-31T12:00:00.000Z',
+  });
+
+  ok(withFace(FACE).profile.avatar === FACE,
+     'a photo is published beside the name at the LOWEST tier — a friend who sees only that you '
+     + 'trained still sees who you are');
+  ok(withFace(FACE, FULL).profile.avatar === FACE, 'and at the highest');
+  ok(withFace(undefined).profile.avatar === undefined,
+     '⚠️ and it is ABSENT rather than null on an account with no photo, which is most of them — '
+     + 'every reader already treats a missing avatar as "draw the glyph"');
+  ok(withFace('').profile.avatar === undefined, 'an empty string is no photo, not a broken one');
+
+  ok(withFace('data:image/svg+xml;base64,PHN2Zy8+').profile.avatar === undefined,
+     '🚨 AN SVG IS REFUSED. It is a document that can carry script rather than a picture, and the '
+     + 'far end of this is an <img src> on somebody else\'s phone');
+  ok(withFace('https://example.com/me.jpg').profile.avatar === undefined,
+     '🚨 and a REMOTE URL is refused — it would make every viewer\'s device fetch a URL of the '
+     + 'publisher\'s choosing, which tells them who looked and from where');
+  ok(withFace('javascript:alert(1)').profile.avatar === undefined, 'and a javascript: URL, obviously');
+  ok(withFace(`data:image/jpeg;base64,${'A'.repeat(MAX_AVATAR_CHARS)}`).profile.avatar === undefined,
+     `⚠️ and anything past ${MAX_AVATAR_CHARS} characters is dropped rather than published — the `
+     + 'document has a 1 MiB ceiling it shares with 60 sessions, and a projection that quietly '
+     + 'outgrows it stops publishing, which presents as "my friend\'s page stopped updating"');
+  ok(withFace({ toString: () => FACE }).profile.avatar === undefined,
+     'and a non-string is not coaxed into one');
+
+  // The absence guard has to stay happy with it, or publishing breaks at light.
+  ok(assertTierClean(withFace(FACE), LIGHT) === true,
+     'and the tier guard passes a light projection carrying a face — identity is not training');
+}
 
 /* ------------------------------------------------------------------ *
  * Caps

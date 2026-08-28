@@ -1141,6 +1141,40 @@ select.input {
 }
 .swap-btn svg { flex: none; }
 .swap-btn:active { background: var(--raised); }
+
+/* ⚠️ SWAP AND REMOVE ARE LOUD NOW, WHICH REVERSES THE RULE DIRECTLY ABOVE.
+   Tim, 2026-08-31: *"Make the swap and remove boxes in a workout stand out just
+   like the +add set button."* The quiet treatment was argued from D4 — these are
+   occasional, the steppers are what the screen is for — and his answer is that
+   he could not find them in a gym. `.add-set`'s exact shape: raised pill, 999px,
+   12.5px/650. They also left the name's line; three pills beside a heading left
+   about 110px for "Chest-Supported Dumbbell Row" at 360px.
+
+   ⚠️ THE HIT AREA STAYS 44px WHILE THE PAINT IS 32, by the ::before every icon
+   button has used since the 2026-08-20 audit. Matching the add button is a
+   request about how loud they look, not permission to ship a 32px target on the
+   one screen that is always used one-handed. */
+.session-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pill-action {
+  position: relative;
+  min-height: 32px;
+  padding: 0 12px 0 9px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.pill-action::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 44px;
+  min-width: 44px;
+  transform: translate(-50%, -50%);
+}
+.pill-action:active { transform: scale(.96); background: var(--raised-hi); }
 .session-load { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-faint); }
 
 .note-card {
@@ -1333,6 +1367,91 @@ select.input {
   padding: 2px 0 14px;
 }
 .set-list > .set-open { border-top: 0; }
+
+/* ⚠️ THE OPEN ROW IS THE CONTROLS — IT DOES NOT SIT ABOVE THEM (2026-08-31).
+   Tim: *"I would rather make the set itself change so that it morphs into the
+   weight and reps adjustment box… this way it doesn't have 2 places for the
+   same thing."* The panel was a SIBLING of its row until now, which meant the
+   row went on printing "135 lbs × 10" three inches above a stepper reading 135
+   and a stepper reading 10 — the same duplication the 2026-08-28 restructure
+   removed between the detached stepper block and the list, one level down.
+
+   The row becomes a column: number and delete on the head line, steppers under
+   it, and `.set-vals` is simply not rendered while it is open. The head line is
+   what closes it, so `.set-del` stays exactly where it was — a sibling of
+   `.set-pick`, never its child, for the two reasons the set list has always
+   given. */
+.set-item.is-open { flex-direction: column; align-items: stretch; gap: 0; }
+.set-open-head { display: flex; align-items: center; gap: 9px; min-height: 44px; }
+.set-open-head .set-pick { min-height: 44px; }
+.set-drop.is-open .set-open-head, .set-drop.is-open .set-pick { min-height: 38px; }
+/* The one affordance that says a tap will close this, now that there is no
+   prose anywhere on the screen to say it. */
+.set-open-caret { display: flex; color: var(--ink-faint); }
+.set-open-caret svg { display: block; }
+
+/* ── Today's exercises: reorder, add, remove (2026-08-31) ──────────────────
+   Rows separated by hairlines, never boxed (Rule 2) — the same treatment
+   `.list` gives every other list in the app, and `.move-btns` is the builder's
+   own pair of arrows, unchanged. */
+.workout-sheet { display: flex; flex-direction: column; gap: 11px; }
+.reorder-list { display: flex; flex-direction: column; margin-inline: calc(var(--pad) * -1); }
+.reorder-list > * { padding-inline: var(--pad); }
+.reorder-list > * + * { border-top: 1px solid var(--rule-soft); }
+.reorder-row { display: flex; align-items: center; gap: 8px; padding-block: 8px; background: var(--ground); }
+.reorder-row .row-main { flex: 1; min-width: 0; }
+.reorder-row .row-title { font-size: 15px; }
+/* Which one you are standing on. An accent hairline down the left, the same
+   mark the builder uses for a block — not a tinted row, which would read as
+   selected-for-an-action rather than as where you are. */
+.reorder-row.is-current { box-shadow: inset 2px 0 0 var(--accent); }
+/* ⚠️ 30px OF PAINT, 44px OF HIT — and the audit is what found it, not a comment.
+   The first version was 30×40 and the browser measured it failing the 44px
+   corner test on all 20 samples: a thumb aimed at the handle was landing on the
+   row beside it. It is the leftmost control with nothing but a label to its
+   right, so the pseudo-element can grow past the paint without stealing from
+   anything. Same ::before the icon buttons have used since 2026-08-20. */
+.grip {
+  position: relative;
+  flex: none;
+  width: 30px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--ink-faint);
+  border-radius: 6px;
+  cursor: grab;
+  /* ⚠️ WITHOUT THIS THE SHEET SCROLLS INSTEAD OF THE ROW MOVING. A touch that
+     the browser has claimed for scrolling never delivers another pointermove to
+     the handle, so the drag dies on the first pixel — on a phone, which is the
+     only place this control is used with a finger. */
+  touch-action: none;
+}
+.grip::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
+.grip:active { background: var(--raised); cursor: grabbing; }
+.grip svg { display: block; }
+
+/* ⚠️ THE ARROWS ARE 40×24 HERE, WIDER AND TALLER THAN THE BUILDER'S 28×21, AND
+   THEY STILL DO NOT REACH 44. That is a stated trade rather than an oversight:
+   two stacked targets cannot both be 44px tall inside one 56px row, and the row
+   also has to carry the handle, the name and the delete. 24px is the WCAG 2.2 AA
+   minimum in both directions, which they now clear with room; the comfortable
+   path on a phone is the drag, and the arrows are what a keyboard and a screen
+   reader get — where a 44px thumb box is not the measure that matters. */
+.reorder-row .move-btns button { width: 40px; height: 24px; }
+.reorder-row .move-btns svg { width: 15px; height: 15px; }
+/* Lifted off the list while it is in the air, so the row being moved is the one
+   thing that is obviously not in its place yet. */
+.reorder-row.is-dragging {
+  background: var(--raised);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
+  position: relative; z-index: 1;
+}
 .set-open-label {
   font-size: 10.5px;
   font-weight: 750;
@@ -2857,6 +2976,29 @@ a.seg {
 
 .row-icon { display: flex; color: var(--ink-faint); }
 .row-icon svg { width: 20px; height: 20px; }
+
+/* ── A friend's own face (2026-08-31) ──────────────────────────────────────
+   Tim: friends were only ever seeing "the default blank humanoid". The photo
+   is published with the name now, and `personFace()` paints it wherever a
+   person is named. One rule, so the circle is the same object on a feed card,
+   a friend row and their page.
+
+   ⚠️ `object-fit: cover` on a SQUARE box, because the stored photo is already
+   a square crop the owner positioned themselves (image-crop.js) — `contain`
+   would letterbox somebody's face inside their own circle. */
+.face-img {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  /* These photographs carry their own light. On a dark surface an unfilled
+     transparent corner would read as a notch out of the circle. */
+  background: #fff;
+}
+.row-icon .face-img { width: 26px; height: 26px; }
+.friend-face { display: flex; align-items: center; gap: 11px; padding-block: 4px; }
+.friend-face .face-img { width: 54px; height: 54px; flex: none; }
+.friend-face .row-title { font-size: 17px; }
 
 /* Most rows in this app are buttons; a friend row is a real link, so you can
    open somebody in a new tab. That means undoing the underline the browser

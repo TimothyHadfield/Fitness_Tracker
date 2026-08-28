@@ -4,9 +4,9 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-31. **Four passes ran the previous session** and they are the four dated
-2026-08-30 sections below, newest first. ⚠️ **THE FOURTH ONE — THE APP ICON — IS CLOSED AND MUST NOT
-BE REOPENED** (see below). The 2026-08-29 sections under them were the session before that.
+**Last updated:** 2026-08-31. **This session is the 2026-08-31 section directly below.** The four
+2026-08-30 sections under it were the previous one. ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE
+REOPENED** (2026-08-30, fourth pass).
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
@@ -14,7 +14,201 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ---
 
-## THIS SESSION (2026-08-30) IN FOUR LINES, newest first
+## THIS SESSION (2026-08-31) IN FIVE LINES
+
+🆕 **A. THE WHOLE WORKOUT IS ONE TAP AWAY, AND IT CAN BE REARRANGED.** A third pill — **Exercises** —
+beside Swap and Remove opens today's list: **drag a row to reorder, add one, remove one.** 🚨 **The
+recorded sets move because nothing is copied** — an entry IS its sets, so a reorder is a reorder of
+the array, and a test drives two moves and an add and then reads the SAVED session to prove the 185
+is still under the exercise it was typed on. ⚠️ **The walk is re-pointed by entry OBJECT, never by
+index**, or shuffling the list under somebody moves them to a different exercise mid-set.
+
+🆕 **B. A SET ROW MORPHS INTO ITS OWN CONTROLS.** Tim: *"it doesn't have 2 places for the same
+thing."* The steppers were a SIBLING of the row, so `255 lbs × 7` sat three inches above a stepper
+reading 255. 🚨 **The value text is simply not rendered while a row is open** — that is the
+assertion, and it fails the moment anybody puts it back. Tapping the open row, or any dead space,
+closes it: **the runner can now show no controls at all**, which it never could.
+
+🆕 **C. THE TWO WORDY BLOCKS ARE GONE.** *"Suggested: …"*, the first-time note and the
+derived-weight note all came off. 🚨 **WHAT WENT IS THE PROSE, NOT THE ARITHMETIC** — the suggestion
+is still applied and a never-done lift still opens at 10 reps and a derived weight, still
+`prefilled` so `finish()` refuses to record it. ⚠️ **With nothing on screen saying the number was
+worked out, that flag is the only thing keeping this honest** (see the risk noted below).
+
+🆕 **D. SWAP AND REMOVE STAND OUT, WHICH REVERSES A DECISION THIS FILE ARGUED FOR.** They were quiet
+on a D4 argument; Tim could not find them in a gym. `.add-set`'s pill shape, **32px of paint and
+44px of hit**, and they moved off the name's line because three pills beside a heading left ~110px
+for a long exercise name.
+
+🆕 **E. FRIENDS SEE YOUR FACE NOW.** Tim reported the profile photo never reaching them — true, and
+deliberate until now (`views-account.js` said so in as many words). It rides beside the name in
+**every tier**, because `profile` is identity and the tiers cut training. 🚨 **`safeAvatar()` is a
+trust boundary in both directions**: base64 raster only, never an SVG, never a remote URL, capped at
+~90 KB. Adding or removing a photo **republishes**, or "Remove" would be a lie about somebody's face.
+
+---
+
+## 2026-08-31 — REARRANGE THE WORKOUT, MORPH THE SET ROW, AND PUBLISH THE FACE
+
+### A. Today's exercises: reorder, add, remove
+
+Tim: *"you can remove a exercise or swap an exercise, but you can't add an exercise or rearrange
+exercises for a different order… put a view full workout button somewhere… and you can add an
+exercise, remove one, or drag an exercise to another position… If any information has already been
+recorded for any of the exercises, keep the information tied to that exercise, but also allow it to
+be moved."*
+
+- 🚨 **THE RECORDED SETS MOVE BECAUSE NOTHING IS COPIED, and that is the whole design.** An entry IS
+  its sets — `state.entries[i].sets` is the only place a number lives until `finish()` writes it — so
+  reordering is a reorder of the array itself and the data cannot come apart from its exercise. The
+  shape that would let them drift is a separate order array indexed into the entries. **Proved
+  against the SAVED SESSION** after two reorders, an add and a cancelled delete, not against the
+  screen.
+- ⚠️ **THE WALK IS RE-POINTED BY OBJECT IDENTITY, NEVER BY INDEX.** `state.index` walks STEPS, and
+  the entry it pointed at has just moved. **Mutation-checked, and the first version of the test did
+  not catch it**: moving the exercise you are standing on lands correctly either way, because the
+  slot it arrives in is the slot you would have guessed. The test now moves an exercise BEHIND you,
+  which shifts your position with nothing on your row changing — index-based re-pointing follows the
+  wrong exercise and the assertion fails alone.
+- ⚠️ **A REORDER CAN BREAK A SUPERSET, because a superset is adjacency.** Every reshuffle re-derives
+  every `group` through `normalizeGroups`, or two members carrying one id with something between
+  them would claim a block nobody performed.
+- **An added exercise goes on the END**, which is the opposite of the swap's rule and for the same
+  reason: `muscleStrength()` reads entry order as how much work a muscle had already taken, and an
+  add really did happen after everything. It arrives with `group: null`, so it can never silently
+  make a two-exercise block into a three-exercise one. A duplicate is refused — one exercise id
+  twice in a session is the shape that produced the 2026-08-28 duplicate-read bug.
+- ⚠️ **THE DRAG IS POINTER EVENTS AND THE ARROWS ARE NOT A CONSOLATION PRIZE.** HTML5 drag-and-drop
+  does not exist on a touch screen, so that version would have worked on Tim's laptop and done
+  nothing on the phone this app is for. And a drag cannot be performed by a keyboard at all, so ▲▼
+  is the only version some people get — it is also what the tests drive, because jsdom reports every
+  rectangle as zero. 🚨 **The drag itself was verified with a REAL POINTER over CDP**: row 1 dragged
+  to position 3, its 4 recorded sets with it, the runner still on it and now reading *Exercise 3 of
+  5*.
+- ⚠️ **THE DOM IS THE DRAFT AND THE STATE IS ONLY TOUCHED ON RELEASE**, so a drag that is abandoned
+  — the app backgrounded, the pointer cancelled — cannot leave half a reorder in the session.
+
+### B. The set row morphs
+
+Tim: *"when you click on a set, it ADDs a big box underneath it… I would rather make the set itself
+change so that it morphs into the weight and reps adjustment box, and then when you click off it it
+goes back to being normal. this way it doesn't have 2 places for the same thing."*
+
+- 🚨 **THE VALUE TEXT IS NOT RENDERED ON AN OPEN ROW AT ALL.** That is the load-bearing assertion
+  rather than the layout: `255 lbs × 7` above a stepper reading 255 and one reading 7 is the same
+  fact twice, both live — the exact duplication the 2026-08-28 restructure removed between the
+  detached stepper block and the list, arriving back one level down. Mutation-checked.
+- ⚠️ **THE RUNNER CAN NOW SHOW NO CONTROLS AT ALL, which it never could.** The old note in this file
+  said a collapsed-to-nothing state would be "a state with no way to log a number"; the way back is
+  the row itself, and `entry.active` is not cleared, so reopening lands on the same set.
+- ⚠️ **"CLICK OFF IT" IS A PANE LISTENER THAT EXEMPTS EVERY CONTROL.** It runs after the button that
+  was actually pressed, on the same event — without the exemption **Add set** opened the new set and
+  this closed it again. Mutation-checked; nothing but a screenshot would have shown it otherwise.
+- **Old drafts need no migration**: `editing !== false` means open, which is the state this screen
+  has always arrived in.
+
+### C. The wordy blocks came off
+
+Tim: *"Remove the 'Suggested: …' description at the top of the workout, as well as the 'First time
+logging this…', '10 reps…' feature right now. It's very wordy and I think we can improve it later."*
+
+Three blocks went: the progression's headline-and-why with its *"use last time's numbers instead"*
+toggle, the derived-weight note and the first-time note.
+
+- 🚨 **WHAT WAS REMOVED IS THE EXPLANATION, NOT THE ARITHMETIC.** The suggestion is still computed
+  and still laid over the numbers; a never-done exercise still opens at 10 reps and a derived
+  weight, still flagged `prefilled` so `finish()` refuses to record a set nobody touched.
+- ⚠️ **AND HERE IS THE COST, STATED PLAINLY: the app can no longer SAY the opening weight was worked
+  out rather than measured.** That sentence was Rule 5 doing its job. What is left is the guarantee
+  underneath it — the flag — which is why the tests that pin it were kept and strengthened rather
+  than deleted with the prose. **If Tim wants the weight to stop being derived as well, that is one
+  line in `startingSet()`.**
+- ⚠️ **"Last time: 255 lbs × 7" STAYS.** Six words, a measurement rather than an inference, and the
+  only thing left on the screen that says where the numbers in front of you came from.
+- **The undo toggle went with the note.** Nothing else offered a way back to last time's numbers;
+  every stepper still overrides them.
+
+### D. Swap and Remove are loud now
+
+Tim: *"Make the swap and remove boxes in a workout stand out just like the +add set button."*
+
+⚠️ **THIS REVERSES AN ARGUMENT THIS FILE MADE.** They were deliberately quiet — transparent,
+`--ink-soft`, beside the name — on the D4 reasoning that swapping is occasional and must not compete
+with the steppers. His answer is that a control you cannot find is worse than one you can, and he is
+the one using this in a gym.
+
+⚠️ **32px OF PAINT, 44px OF HIT**, via the `::before` the icon buttons have used since the first
+audit. Matching `.add-set` is a request about how loud they look, not permission to ship a 32px
+target on the screen most used one-handed. **And they left the name's line** — three pills beside a
+heading leaves about 110px for "Chest-Supported Dumbbell Row" at 360px.
+
+### E. 🚨 A friend's profile photo — a decision, not a bug fix
+
+Tim: *"when you put a profile picture into your account, your friends can't see the profile
+picture… its just the default blank humanoid, not the picture that they actually added."*
+
+⚠️ **HE IS RIGHT, AND IT WAS DELIBERATE.** `views-account.js` said so in as many words:
+*"Local-only for now: the avatar is NOT published into the social projection… publishing a face is a
+widening that gets its own decision, not a side effect of this feature."* **This is that decision,
+made by the person whose face it is.**
+
+- **It rides beside the name at EVERY tier**, because `profile` is IDENTITY and the tiers cut
+  TRAINING. Somebody on *"just that I trained"* already sees the name you chose. **Nothing about who
+  may read the document changed** — that is the viewers list and firestore.rules, untouched, and
+  `validProjection()` already allowed a `profile` key so the rules needed no edit.
+- 🚨 **`safeAvatar()` IS A TRUST BOUNDARY IN BOTH DIRECTIONS and one function decides both.** Going
+  out it is one of this app's few big strings against a 1 MiB document ceiling shared with 60
+  activity entries; coming in it is a string another account wrote that this app puts in an `src`.
+  **Base64 raster only — never `image/svg+xml`** (a document that can carry script) **and never a
+  remote URL** (which would tell somebody else's server who looked at their face and from where).
+  Capped at 120,000 characters ≈ 90 KB; over that the projection carries no avatar rather than a
+  document that silently stops publishing.
+- ⚠️ **THE CAP IS NOT THEORETICAL** — the probe proved it by accident: a 200 KB repo asset was
+  refused and the glyph drew instead, which is exactly the intended behaviour.
+- **Adding or removing a photo republishes.** Without it the change would reach friends only when
+  something else did — the fault that froze Autumn's published muscle map at a pre-training
+  snapshot. 🚨 **"Remove" that leaves your face on somebody else's feed is a worse version of it**,
+  so the removal path republishes too and a test pins it.
+- ⚠️ **AND THE SENTENCE ON THE ACCOUNT SCREEN CHANGED WITH THE BEHAVIOUR.** It read *"Only on this
+  account — friends do not see it"*, which was true and is now false. A stale reassurance about who
+  can see somebody's face is the worst wrong text this app could carry.
+- **Three places paint it**: the feed card, the friends list and the friend's own page. The list
+  fills in **after** the rows paint — their photo costs a read per friend and that is the screen Tim
+  once reported as *"a long delay and lag to it that's alarming"*.
+
+### Two smaller things found on the way
+
+- 🚨 **`social.available` DOES NOT EXIST, and two places read it.** It is a field of what
+  `social.state()` RESOLVES TO, not a property of the module — so it was `undefined` for everybody.
+  In the runner's people sheet that meant **a signed-in person with no friends yet was told to sign
+  in**; it now reads `net.available`, which is the answer already in hand two lines above. The new
+  republish call had the same guard written into it and would have silently never run. **Found by
+  writing the expression a second time and checking it.**
+- ⚠️ **The exercises sheet's first drag handle failed the audit's 44px hit test on all 20 samples**
+  (30×40 of paint, nothing around it). It has the `::before` now and hits 44 everywhere. **The
+  arrows are 40×24 and do NOT reach 44 — a stated trade**: two stacked targets cannot both be 44px
+  tall in one 56px row that also carries a handle, a name and a delete. 24px is the WCAG 2.2 AA
+  minimum in both directions, the drag is the comfortable path, and the arrows are what a keyboard
+  and a screen reader get, where a thumb box is not the measure that matters.
+
+**Audit: 80 route/width/theme combinations, 7,814 text nodes, zero below 4.5:1, zero horizontal
+overflow, zero unnamed controls.** The exercises sheet is a new audit route — a sheet is only ever on
+screen after an interaction, and it asserts it landed.
+
+**Tests: 3,523 across twelve suites** — render 705 → **751**, social 162 → **172**, a11y 85 → **87**.
+Five mutations, each flipping only its own assertions: re-point by index → the "still on the Zercher
+squat" assertion alone; render the values on an open row → the two morph assertions; drop the
+click-off control exemption → the Add-set one; skip the republish on Remove → that one.
+
+⚠️ **NOT VERIFIED: none of this has been touched on a real phone.** The drag is proved with a
+synthetic pointer in headless Chrome, which is not a finger on glass — **whether a row follows your
+thumb pleasantly is Tim's call**, and so is whether the set row morphing feels right mid-set. 🚨 **And
+the face has never crossed between two real accounts**: it is proved in the projection builder, in
+jsdom and as painted pixels, which is a different claim from "Autumn opened the app and saw Tim".
+
+---
+
+## 2026-08-30 IN FOUR LINES, newest first
 
 🛑 **A. THE APP ICON IS OFF THE PROJECT. DO NOT OFFER IT, DO NOT DRAW MORE.** Tim, 2026-08-31: *"I
 don't really like any of the icons right now. I think it was a mistake for you to work on them. I'm
@@ -385,8 +579,8 @@ lag (three serialised round trips before a pixel moved) · a **CSS comment that 
 eating a rule that had never rendered · **file import** (`#/import`) · **0e** and **0j** closed ·
 Blaze priced (effectively free; the cost is a card on file and no hard cap).
 
-**Tests: 3,465 across TWELVE suites**, recounted 2026-08-30 — data-layer **1763**, render **705**,
-goals 232, bodyweight 170, social 162, a11y 85, optimal 76, strength-estimate 72, volume-map 64,
+**Tests: 3,523 across TWELVE suites**, recounted 2026-08-31 — data-layer **1763**, render **751**,
+goals 232, bodyweight 170, social 172, a11y 87, optimal 76, strength-estimate 72, volume-map 64,
 demo 58, year-grid 45, qr 33 — plus **147 rules assertions in the emulator** and 12 in
 `sw-update`. ⚠️ Treat any number here as a recount rather than a running tally.
 Sub-agents are pre-authorised (saved to memory).
@@ -408,8 +602,9 @@ appears to Tim — until then he still sees the empty one, which is EXPECTED), t
 and a real kudos/comment round trip with her account.
 
 ⚠️ **AND EVERYTHING SOCIAL BUILT SINCE 2026-08-27 HAS NEVER RUN BETWEEN TWO REAL ACCOUNTS.** That
-now covers a lot: the handoff and disconnect paths, and — added 2026-08-29 — **name search, friend
-requests, and recording a workout for a friend and having it arrive in their account.** All of it is
+now covers a lot: the handoff and disconnect paths, **name search, friend requests, and recording a
+workout for a friend** (2026-08-29), and — added 2026-08-31 — **the profile photo reaching a
+friend's feed and their friends list.** All of it is
 proved against the real rules engine and in jsdom, which is a different claim from "two people did
 it". ⚠️ **The QR code is the exception and is better verified than the rest**: the app's own rendered
 SVG was screenshotted and decoded from pixels by an independent decoder. **What no test can settle

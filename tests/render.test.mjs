@@ -715,18 +715,20 @@ ok(!data.querySelector('.rep-target'),
        '⚠️ the steppers are INSIDE the set list, not in a block of their own above it');
 
     const rows = () => [...screen.querySelectorAll('.set-list .set-item')];
-    const openAfter = () => {
-      const ed = screen.querySelector('.set-open');
-      return rows().indexOf(ed.previousElementSibling);
-    };
+    /* ⚠️ `.closest`, NOT `previousElementSibling` — CHANGED 2026-08-31 WITH THE
+     * SHAPE IT MEASURES. The controls were a SIBLING of their row until Tim
+     * asked for the row itself to morph into them; the row is now their parent.
+     * The assertion is the same one either way: exactly one row carries the
+     * controls, and it is the row that is open. */
+    const openAt = () => rows().indexOf(screen.querySelector('.set-open').closest('.set-item'));
     ok(rows().length === 4, 'four sets are listed');
-    ok(openAfter() === 0, 'and the controls sit directly under set 1, which is the one open');
+    ok(openAt() === 0, 'and the controls are INSIDE set 1, which is the one open');
 
     // Opening another set MOVES the controls to it rather than re-pointing a
     // block somewhere else on the screen.
     rows()[2].querySelector('.set-vals').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await settle();
-    ok(openAfter() === 2, '⚠️ opening set 3 moves the controls under SET 3 — one set of numbers per set');
+    ok(openAt() === 2, '⚠️ opening set 3 moves the controls into SET 3 — one set of numbers per set');
     ok(screen.querySelectorAll('.steppers').length === 1, 'and there is still only one of them');
     ok(rows()[2].querySelector('.set-pick').getAttribute('aria-expanded') === 'true'
        && rows()[0].querySelector('.set-pick').getAttribute('aria-expanded') === 'false',
@@ -745,7 +747,46 @@ ok(!data.querySelector('.rep-target'),
     ok(rows()[2] === before,
        '⚠️ logging a number updates set 3 IN PLACE — the row is the same node, so the stepper '
        + 'that raised the change was never destroyed under the user\'s finger');
-    ok(/225/.test(before.textContent), 'and the row now reads the number that was just typed');
+    ok(before.querySelector('.step-value').value === '225',
+       'and the number is in the row that was typed into');
+
+    /* ⚠️ THE MORPH, AND THE ONE ASSERTION THAT FAILS IF THE PANEL EVER GOES BACK
+     * TO BEING A SIBLING (2026-08-31). Tim: *"I would rather make the set itself
+     * change so that it morphs into the weight and reps adjustment box… this way
+     * it doesn't have 2 places for the same thing."* The open row must not ALSO
+     * print `225 lbs × 10` above the stepper that holds 225. */
+    ok(!before.querySelector('.set-vals'),
+       '🚨 the open row does NOT also print its values as text — the steppers are the only '
+       + 'place those numbers appear, which is the whole of what was asked for');
+    ok(rows().filter((r) => r.querySelector('.set-vals')).length === 3,
+       'and every CLOSED row still reads as a line of numbers');
+
+    // "…and then when you click off it it goes back to being normal."
+    rows()[2].querySelector('.set-pick').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(!screen.querySelector('.set-open'),
+       '⚠️ tapping the open row CLOSES it — the runner can now show no controls at all, which '
+       + 'it never could before, and that is Tim\'s "click off it and it goes back to normal"');
+    ok(/225/.test(rows()[2].textContent),
+       'and the row it collapses back to is showing what was typed into it');
+
+    // Reopening puts them back on the same set: closing is about the screen,
+    // not about losing your place in the exercise.
+    rows()[2].querySelector('.set-pick').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(openAt() === 2, 'and reopening lands on the same set, not back at set 1');
+
+    /* ⚠️ A TAP ON A CONTROL IS NOT A TAP OFF THE SET. The click-off listener runs
+     * on the pane, AFTER the button that was actually pressed — so without its
+     * "any control is exempt" guard, Add set would open the new set and this
+     * would close it again on the same event. Nothing but a screenshot would
+     * have shown that. */
+    [...screen.querySelectorAll('button')].find((b) => /Add set/.test(b.textContent))
+      .dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(rows().length === 5 && Boolean(screen.querySelector('.set-open')),
+       '⚠️ adding a set leaves the new set OPEN — the click-off handler does not fire on a '
+       + 'tap that landed on a control');
 
     // The heading that used to sit above the detached block is gone: the accent
     // square on the row above the controls already says which set they are for.
@@ -1718,8 +1759,9 @@ ok(!data.querySelector('.rep-target'),
     localStorage.removeItem(DRAFT);
     const s = await mount(SessionView(w.id));
 
-    ok(/First time logging this/.test(s.textContent),
-       'a lift with no history says so, which is the only case this fills');
+    ok(!s.querySelector('.prefill-note'),
+       '⚠️ a lift with no history shows NO "last time" line, which is the only case this fills '
+       + '(the sentence that used to say so came off on 2026-08-31 at Tim\'s request)');
 
     const setBtn = (n) => Array.from(s.querySelectorAll('.set-num'))
       .find((b) => b.textContent === String(n));
@@ -4051,8 +4093,17 @@ ok(!data.querySelector('.rep-target'),
     localStorage.removeItem(DRAFT);
     const s = await mount(SessionView(w.id));
 
-    ok(/First time logging this/.test(s.textContent),
-       'a lift with no history says so');
+    /* ⚠️ THE NOTE IS GONE AND THE GUARD IS NOT — 2026-08-31. Tim: *"Remove the
+     * 'Suggested: …' description at the top of the workout, as well as the
+     * 'First time logging this…', '10 reps…' feature right now. It's very wordy
+     * and I think we can improve it later."* What came off is the PROSE. The
+     * opening numbers, the `prefilled` flag and finish()'s refusal to record an
+     * untouched set are all still here, and are what the rest of this block
+     * checks — because with nothing on screen to say the number was worked out,
+     * the flag is the only thing keeping the app honest about it. */
+    ok(!/First time logging this|starting point, not a measurement/.test(s.textContent),
+       '🚨 no first-time paragraph anywhere on the screen');
+    ok(!/Suggested:/.test(s.textContent), 'and no "Suggested:" block either');
     const reps = Number(s.querySelectorAll('.step-value')[1].value);
     ok(reps === 10,
        `⚠️ reps open at 10, not 0 (${reps}) — and 10 is the app's OWN default: repRangeFor() `
@@ -4139,12 +4190,11 @@ ok(!data.querySelector('.rep-target'),
     ok(opened < 185,
        `and it is BELOW their flat bench (${opened} vs 185), which is what a close-grip press should be`);
 
-    ok(/a starting point, not a measurement/i.test(s.textContent),
-       '⚠️ and the screen says the number was worked out rather than measured — Rule 5, which is '
-       + 'the whole reason this app is allowed to put a number here at all');
     ok(!s.querySelector('.prefill-note'),
-       '⚠️ it does NOT wear the green check that means "last time" — that cue belongs to a '
-       + 'recorded measurement, and an inference borrowing it is exactly what Rule 5 forbids');
+       '⚠️ and it does NOT wear the green check that means "last time" — that cue belongs to a '
+       + 'recorded measurement, and an inference borrowing it is exactly what Rule 5 forbids. '
+       + 'The sentence that used to spell that out came off on 2026-08-31; the flag below is '
+       + 'what carries the guarantee now');
 
     // Untouched, it still records nothing.
     [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
@@ -4154,6 +4204,341 @@ ok(!data.querySelector('.rep-target'),
        + 'that would otherwise be most convincing');
     localStorage.removeItem(DRAFT);
   }
+}
+
+/* ============ today's exercises: reorder, add, remove (2026-08-31) ============
+ *
+ * Tim: *"you can remove a exercise or swap an exercise, but you can't add an
+ * exercise or rearrange exercises for a different order… put a view full workout
+ * button somewhere… and you can add an exercise, remove one, or drag an exercise
+ * to another position… If any information has already been recorded for any of
+ * the exercises, keep the information tied to that exercise, but also allow it
+ * to be moved."*
+ *
+ * ⚠️ THE LOAD-BEARING ONE IS THE LAST CLAUSE, and it is checked against the
+ * SAVED SESSION rather than against the screen: a reorder that looks right and
+ * writes somebody's squat sets under their curl is worse than one that visibly
+ * does nothing.
+ *
+ * ⚠️ THE ARROWS ARE WHAT THESE DRIVE, and that is not a shortcut. jsdom reports
+ * every rectangle as zero, so a pointer drag here would measure nothing at all —
+ * it would be a test that passes because it stopped looking. The arrows and the
+ * drag commit through the same moveEntry / applyOrder pair; what is left
+ * unproven by machine is the finger, and progress.md says so.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
+  const sheetRows = () => [...document.querySelectorAll('.sheet .reorder-row')];
+  const sheetNames = () => sheetRows().map((r) => r.querySelector('.row-title').textContent.trim());
+  const arrow = (i, dir) => sheetRows()[i].querySelectorAll('.move-btns button')[dir === 'up' ? 0 : 1];
+  const order = () => sheetNames().join(' > ');
+
+  /* ⚠️ THREE LIFTS NOTHING ELSE IN THIS FILE HAS TOUCHED, and that is not
+   * fussiness: an exercise with history opens with every set pre-filled from
+   * last time, and a pre-filled set from a real session counts as performed.
+   * Reusing the bench press here would have made "1 set recorded" read 2, and
+   * the assertion would have been describing the fixture rather than the
+   * feature. */
+  killSheets();
+  const w = await store.saveWorkout({
+    name: 'Order day',
+    exercises: [
+      { exerciseId: byName('Zercher Squat').id, sets: 2, notes: '' },
+      { exerciseId: byName('Landmine Press').id, sets: 2, notes: '' },
+      { exerciseId: byName('Spider Curl').id, sets: 2, notes: '' },
+    ],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+
+  /* ---- the three actions, and the shape Tim asked them to wear ---- */
+  const pills = [...s.querySelectorAll('.session-actions .pill-action')];
+  ok(pills.length === 3, `three actions on the exercise: Swap, Remove and the list (${pills.length})`);
+  ok(/Swap/.test(pills[0].textContent) && /Remove/.test(pills[1].textContent),
+     'Swap and Remove are still the first two, in the order they have always been');
+  ok(/Exercises/.test(pills[2].textContent),
+     '⚠️ and the way into the whole workout sits beside them, which is where Tim asked for it');
+  ok(pills.every((p) => p.classList.contains('pill-action')),
+     '⚠️ all three carry .pill-action — the class the stylesheet gives .add-set\'s shape, which '
+     + 'is what "make them stand out just like the +add set button" asked for. jsdom paints '
+     + 'nothing, so tests/a11y.test.mjs pins the rule itself');
+
+  /* ---- record something, so the reorder has data to move ---- */
+  type(s.querySelectorAll('.step-value')[0], 185);
+  await settle();
+  type(s.querySelectorAll('.step-value')[1], 5);
+  await settle();
+
+  pills[2].click();
+  await settle();
+  ok(order() === 'Zercher Squat > Landmine Press > Spider Curl',
+     `the sheet lists today's exercises in order (${order()})`);
+  ok(/1 set recorded/.test(sheetRows()[0].textContent),
+     'and says what has been recorded against each — the thing a reorder must not lose');
+  ok(sheetRows()[0].classList.contains('is-current'),
+     'and marks the one you are standing on');
+  ok(arrow(0, 'up').disabled && arrow(2, 'down').disabled,
+     '⚠️ the arrows at the ends are disabled rather than absent — a control that silently does '
+     + 'nothing is the fault the five inert back buttons taught this project');
+  ok(sheetRows().every((r) => (r.querySelector('.grip').getAttribute('aria-label') || '').includes('arrows')),
+     '⚠️ and the drag handle NAMES the arrows beside it, because a drag has no keyboard '
+     + 'equivalent and a handle that only says "reorder" is a promise it cannot keep to '
+     + 'somebody who is not using a finger');
+
+  /* ---- move the exercise you are ON, with a set already recorded ---- */
+  arrow(0, 'down').click();
+  await settle();
+  ok(order() === 'Landmine Press > Zercher Squat > Spider Curl',
+     `the Zercher squat moved down one (${order()})`);
+  ok(/1 set recorded/.test(sheetRows()[1].textContent) && /Nothing recorded/.test(sheetRows()[0].textContent),
+     '🚨 AND THE RECORDED SET MOVED WITH IT — the row that now holds the training is the Zercher '
+     + 'squat in its new place, not whatever slid into slot one');
+  ok(/Zercher Squat/.test(s.querySelector('.session-ex-name').textContent),
+     '⚠️ and the runner is still on the exercise you were doing. state.index walks STEPS, so the '
+     + 'walk is re-pointed by the entry OBJECT — re-using the old number would land on whatever '
+     + 'took its slot, which on a reorder is precisely the exercise you are not doing');
+  ok(/Exercise 2 of 3/.test(s.querySelector('.session-head').textContent),
+     'and the position line says it is second now');
+
+  /* ⚠️ NOW MOVE AN EXERCISE YOU ARE NOT ON, WHICH IS THE CASE THAT SEPARATES
+   * "re-point by object" from "re-point by index". Moving the exercise you are
+   * standing on lands correctly either way — the slot it arrives in is the slot
+   * you would have guessed. Shuffling one BEHIND you shifts your own position
+   * without anything on your row changing, and an index-based re-point silently
+   * follows the exercise somebody else moved. */
+  arrow(2, 'up').click();
+  await settle();
+  ok(order() === 'Landmine Press > Spider Curl > Zercher Squat',
+     `the curl moved up past the squat (${order()})`);
+  ok(/Zercher Squat/.test(s.querySelector('.session-ex-name').textContent)
+     && /Exercise 3 of 3/.test(s.querySelector('.session-head').textContent),
+     '🚨 and you are STILL on the Zercher squat, now third — reordering the list under somebody '
+     + 'must never move them to a different exercise mid-set');
+  arrow(1, 'down').click();          // put it back for the rest of this block
+  await settle();
+  ok(order() === 'Landmine Press > Zercher Squat > Spider Curl', 'and it moves back');
+
+  /* ---- add one ---- */
+  [...document.querySelectorAll('.sheet button')].find((b) => /Add an exercise/.test(b.textContent)).click();
+  await settle();
+  {
+    const box = document.querySelector('input[type="search"]');
+    box.value = 'Zottman Curl';
+    box.dispatchEvent(new window.Event('input', { bubbles: true }));
+    const row = [...document.querySelectorAll('.search-results .row')]
+      .find((b) => /^Zottman Curl/.test((b.textContent || '').trim()));
+    ok(Boolean(row), 'the add button opens the full exercise picker');
+    row.click();
+    await settle(); await settle();
+  }
+  ok(sheetNames().length === 4 && sheetNames()[3] === 'Zottman Curl',
+     `⚠️ an added exercise goes on the END (${order()}) — a swap inserts in place because those `
+     + 'sets were performed there, but an add really did happen after everything, and '
+     + 'muscleStrength() reads entry order as how much work a muscle had already taken');
+  ok(/added today/.test(sheetRows()[3].textContent), 'and the sheet says it is today only');
+  ok(/Zercher Squat/.test(s.querySelector('.session-ex-name').textContent),
+     '⚠️ and adding does not move you off the exercise you are mid-way through');
+  ok(/Exercise 2 of 4/.test(s.querySelector('.session-head').textContent),
+     'while the count behind you goes up');
+
+  /* ---- a duplicate is refused, for the reason the builder refuses it ---- */
+  [...document.querySelectorAll('.sheet button')].find((b) => /Add an exercise/.test(b.textContent)).click();
+  await settle();
+  {
+    const box = document.querySelector('input[type="search"]');
+    box.value = 'Landmine Press';
+    box.dispatchEvent(new window.Event('input', { bubbles: true }));
+    const row = [...document.querySelectorAll('.search-results .row')]
+      .find((b) => /^Landmine Press/.test((b.textContent || '').trim()));
+    row.click();
+    await settle(); await settle();
+  }
+  ok(sheetNames().length === 4,
+     '⚠️ adding something already in today\'s session is refused — two entries with one exercise '
+     + 'id is the shape that produced the duplicate-exercise read bug of 2026-08-28');
+
+  /* ---- remove one, from the sheet, with nothing recorded on it ---- */
+  const removeBtn = (i) => [...sheetRows()[i].querySelectorAll('button')]
+    .find((b) => /^Remove /.test(b.getAttribute('aria-label') || ''));
+  removeBtn(3).click();
+  await settle();
+  ok(order() === 'Landmine Press > Zercher Squat > Spider Curl',
+     `an untouched exercise goes quietly (${order()})`);
+
+  /* ---- and one WITH sets recorded asks first ---- */
+  removeBtn(1).click();
+  await settle();
+  ok(/1 recorded set will be deleted/.test(document.body.textContent),
+     '🚨 removing an exercise that has been trained CONFIRMS, and says the count — the same '
+     + 'contract the Remove button on the exercise itself has had since 2026-08-28');
+  [...document.querySelectorAll('.sheet .btn.ghost')].pop().click();   // Cancel
+  await settle();
+  ok(sheetNames().length === 3, 'and cancelling leaves the workout exactly as it was');
+
+  /* ---- the saved session is the proof ---- */
+  killSheets();
+  const finishBtn = () => [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent));
+  for (let i = 0; i < 12 && !finishBtn(); i++) {
+    const next = [...s.querySelectorAll('button')].find((b) => /Next exercise|Straight into|Round/.test(b.textContent));
+    if (!next) break;
+    next.click();
+    await settle();
+  }
+  finishBtn().click();
+  await settle(); await settle();
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  ok(Boolean(saved), 'the reordered session saves');
+  ok(saved && saved.entries.length === 1 && saved.entries[0].exerciseName === 'Zercher Squat',
+     '⚠️ and only the exercise anybody actually trained is in it — the empty ones drop at save, '
+     + 'exactly as they did before this feature existed');
+  ok(saved && saved.entries[0].sets.length === 1 && saved.entries[0].sets[0].weight === 185,
+     '🚨 and the 185 is written under the ZERCHER SQUAT after a reorder, an add and a cancelled '
+     + 'delete. This is the assertion Tim\'s "keep the information tied to that exercise" comes '
+     + 'down to');
+  localStorage.removeItem(DRAFT);
+  killSheets();
+}
+
+/* ============ a friend's face, everywhere they appear (2026-08-31) ============
+ *
+ * Tim: *"when you put a profile picture into your account, your friends can't
+ * see the profile picture… For example when they see your friend profile, or
+ * when you post a workout and it goes on their feed, the profile picture is
+ * shown, but its just the default blank humanoid, not the picture that they
+ * actually added."*
+ *
+ * 🚨 THE ASSERTION THAT MATTERS MOST IS THE REFUSAL, and it is in
+ * tests/social.test.mjs: an avatar is a string another account wrote, and this
+ * app puts it in an `src`. Here the question is only whether the three screens
+ * paint it.
+ */
+{
+  const { HomeView } = await import(BASE + 'views-workouts.js');
+  const { SocialView, FriendView } = await import(BASE + 'views-social.js');
+  const { social, todayISO } = await import(BASE + 'store.js');
+  sessionStorage.removeItem('ftrack:v1:demo');   // the feed has its own demo branch
+
+  // A real 1×1 JPEG, base64 — small enough to sit in a test file and a genuine
+  // `data:image/jpeg;base64,…`, which is exactly what safeAvatar() admits.
+  const FACE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEB'
+    + 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB/9sAQwEBAQEBAQEBAQEBAQEBAQEB'
+    + 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB/8AAEQgAAQABAwEiAAIRAQMR'
+    + 'Af/EABUAAQEAAAAAAAAAAAAAAAAAAAAI/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABUBAQEAAAAAAAAAAAAAAAAA'
+    + 'AAAG/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AKp//2Q==';
+
+  const original = {
+    state: social.state, invites: social.invites, handoffs: social.handoffs,
+    friend: social.friend, healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    processAcceptedRequests: social.processAcceptedRequests,
+    requests: social.requests,
+  };
+  const restore = () => Object.assign(social, original);
+
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me',
+    name: 'Tim', shareBodyWeight: false,
+    connections: [{ uid: 'u1', name: 'Autumn', tier: 'mid', since: '2026-08-01' }],
+  });
+  social.invites = async () => [];
+  social.handoffs = async () => [];
+  social.requests = async () => [];
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.processAcceptedRequests = async () => 0;
+
+  const withFace = (avatar) => async () => ({
+    tier: 'mid',
+    doc: {
+      profile: avatar ? { name: 'Autumn', avatar } : { name: 'Autumn' },
+      activity: [{ id: 'a1', date: todayISO(), name: 'Pull', startedAt: `${todayISO()}T09:00:00.000Z`,
+        entries: [{ exerciseId: 'x', name: 'Lat Pulldown', sets: [{ weight: 90, reps: 8 }] }] }],
+    },
+  });
+
+  /* ---- the feed card: the screen Tim named ---- */
+  social.friend = withFace(null);
+  let home = await mount(HomeView());
+  for (let i = 0; i < 8; i++) await settle();
+  ok(Boolean(home.querySelector('.feed-avatar svg')) && !home.querySelector('.feed-avatar .face-img'),
+     'a friend with no photo keeps the person glyph, which is what every account looks like today');
+
+  social.friend = withFace(FACE);
+  home = await mount(HomeView());
+  for (let i = 0; i < 8; i++) await settle();
+  const face = home.querySelector('.feed-avatar .face-img');
+  ok(Boolean(face), '🚨 and a friend WITH a photo has their own face on their workout in the feed');
+  ok(face && face.getAttribute('src') === FACE, 'and it is the picture they published, unaltered');
+  ok(face && face.getAttribute('alt') === '',
+     '⚠️ with an EMPTY alt — their name is in the same card, and describing the picture would '
+     + 'make a screen reader say the person twice');
+
+  /* ---- the friends list ---- */
+  const soc = await mount(SocialView());
+  for (let i = 0; i < 8; i++) await settle();
+  ok(Boolean(soc.querySelector('.row-icon .face-img')),
+     '⚠️ the friends list shows it too — filled in AFTER the row paints, because their photo '
+     + 'costs a read per friend and this is the screen Tim once reported as laggy');
+
+  /* ---- their own page ---- */
+  const fr = await mount(FriendView('u1'));
+  for (let i = 0; i < 8; i++) await settle();
+  ok(Boolean(fr.querySelector('.friend-face .face-img')), 'and their page leads with it');
+
+  social.friend = withFace(null);
+  const bare = await mount(FriendView('u1'));
+  for (let i = 0; i < 8; i++) await settle();
+  ok(!bare.querySelector('.friend-face'),
+     '⚠️ while a friend with no photo gets NO empty circle — the title bar already says whose '
+     + 'page this is, so a glyph here would be an ornament on most accounts');
+
+  /* ---- taking it down has to take it down from where people are looking ---- *
+   *
+   * ⚠️ THIS IS THE HALF THAT WOULD ROT SILENTLY. A photo added or removed only
+   * reaches friends when something republishes, and until 2026-08-31 the only
+   * things that did were the social mutators and a finished workout — the fault
+   * that froze Autumn's published muscle map at a pre-training snapshot and got
+   * reported as her data being lost. "Remove" that leaves your face on somebody
+   * else's feed is a worse version of it, because it is a promise about a
+   * picture of you. */
+  {
+    const { AccountView } = await import(BASE + 'views-account.js');
+    const { store } = await import(BASE + 'store.js');
+    const realPublish = social.publish;
+    let published = 0;
+    social.publish = async () => { published++; return true; };
+
+    await store.saveSettings({ avatar: FACE, avatarSource: FACE, avatarCrop: null });
+    const acct = await mount(AccountView());
+    await settle();
+    ok(Boolean(acct.querySelector('.avatar-face img')), 'the account screen shows the photo you saved');
+    ok(/friends you are connected to/.test(acct.textContent),
+       '⚠️ and SAYS friends can see it. The line read "Only on this account — friends do not see '
+       + 'it", which was true until today; a stale reassurance about who can see your face is the '
+       + 'worst wrong sentence this app could carry');
+
+    [...acct.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Remove').click();
+    await settle(); await settle();
+    const after = await store.getSettings();
+    ok(!after.avatar, 'Remove clears the photo');
+    ok(published === 1,
+       '🚨 and REPUBLISHES, so it comes off your friends\' screens too rather than only off yours');
+
+    social.publish = realPublish;
+  }
+
+  /* ---- and the one that is not a picture at all ---- */
+  social.friend = withFace('data:image/svg+xml;base64,PHN2Zy8+');
+  const nasty = await mount(FriendView('u1'));
+  for (let i = 0; i < 8; i++) await settle();
+  ok(!nasty.querySelector('.face-img'),
+     '🚨 AN SVG IS NOT PAINTED. It is a document that can carry script rather than a picture, '
+     + 'and this string was written by somebody else\'s account');
+
+  restore();
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

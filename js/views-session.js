@@ -1,6 +1,6 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, social, muscleStrength, todayISO, demo, uid } from './store.js';
+import { store, social, muscleStrength, todayISO, demo, uid, DEFAULT_SETS } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
@@ -10,6 +10,7 @@ import {
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
   DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
+  normalizeGroups,
 } from './set-types.js';
 import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
@@ -781,7 +782,13 @@ export async function SessionView(workoutId) {
           () => addPerson(c.name || 'Friend', { uid: c.uid }),
         )));
       } else {
-        rows.push(el('div', { class: 'field-help', text: social.available
+        /* ⚠️ `net.available`, NOT `social.available` — fixed 2026-08-31. The
+         * module has no `available` property; it is a field of what `state()`
+         * resolves to, and `net` two lines up IS that answer. So this read
+         * `undefined` for everybody and a signed-in person with no friends yet
+         * was told to sign in. Found while writing the same expression somewhere
+         * else and checking it. */
+        rows.push(el('div', { class: 'field-help', text: net.available
           ? 'Nobody yet. Connect on the Friends tab and they show up here.'
           : 'Sign in and connect with somebody on the Friends tab to record for them.' }));
       }
@@ -1125,10 +1132,27 @@ export async function SessionView(workoutId) {
       if (dropIndex == null) fillOnOpen(i);
       entry.active = i;
       entry.activeDrop = dropIndex;
+      entry.editing = true;
       saveDraft(state);
       // ⚠️ KEEP THE SCROLL. The controls are inside the list now, so a render
       // that jumped back to the top would throw away the position of the row
       // somebody just tapped — set 4 of a long exercise would open off-screen.
+      renderPane({ keepScroll: true });
+    }
+
+    /**
+     * Shut the open set, leaving it selected.
+     *
+     * ⚠️ `entry.active` IS NOT CLEARED, and that is the difference between this
+     * and a list with nothing chosen. The set stays the one the steppers point
+     * at the moment it is reopened — closing is about what is on screen, not
+     * about losing your place. Tapping the row again, or any dead space on the
+     * screen, is what runs this.
+     */
+    function collapse() {
+      entry.editing = false;
+      entry.activeDrop = null;
+      saveDraft(state);
       renderPane({ keepScroll: true });
     }
 
@@ -1172,87 +1196,118 @@ export async function SessionView(workoutId) {
       }
     }
 
+    /* ⚠️ THE ROW BECOMES THE CONTROLS. IT DOES NOT GROW A SECOND ONE.
+     *
+     * Tim, 2026-08-31: *"when you click on a set, it ADDs a big box underneath
+     * it that shows the weight and reps that you can change, however, I would
+     * rather make the set itself change so that it morphs into the weight and
+     * reps adjustment box, and then when you click off it it goes back to being
+     * normal. this way it doesn't have 2 places for the same thing."*
+     *
+     * 🚨 SO THE VALUE TEXT IS NOT RENDERED ON AN OPEN ROW AT ALL, and that is
+     * the load-bearing part rather than the layout. `135 lbs × 10` above a
+     * stepper reading 135 and a stepper reading 10 is the same fact twice,
+     * three inches apart, both live — which is the exact duplication the
+     * 2026-08-28 restructure removed between the detached stepper block and the
+     * list, arriving back one level down. The steppers ARE the row's numbers
+     * now; there is one place to read them and one place to change them.
+     *
+     * ⚠️ THE SET NUMBER SURVIVES INTO THE OPEN STATE and the delete stays its
+     * sibling, so the row keeps its identity while it is open and `.set-del`
+     * keeps the position it has had since it was pulled out of `.set-pick`.
+     */
+    function setRow({ open, className, num, label, onOpen, onDelete, delLabel, valueText }) {
+      if (!open) {
+        const vals = el('span', { class: 'set-vals', text: valueText() });
+        const pick = el('button', {
+          class: 'set-pick',
+          'aria-label': label(valueText()),
+          'aria-expanded': 'false',
+          onClick: onOpen,
+        }, num(), vals);
+        const row = el('div', { class: className },
+          pick,
+          onDelete ? el('button', { class: 'set-del', 'aria-label': delLabel, onClick: onDelete }, icon('trash')) : null,
+        );
+        return { row, live: { vals, pick, read: valueText, name: label } };
+      }
+
+      const row = el('div', { class: `${className} active is-open` },
+        el('div', { class: 'set-open-head' },
+          // Tapping the open row closes it, which is the other half of "click
+          // off it and it goes back to normal" — the half that works when the
+          // screen is full of controls and there is no dead space to tap.
+          el('button', {
+            class: 'set-pick',
+            'aria-label': `${label(valueText())}. Close`,
+            'aria-current': 'true',
+            'aria-expanded': 'true',
+            onClick: collapse,
+          }, num(), el('span', { class: 'set-open-caret' }, icon('up', 15))),
+          onDelete ? el('button', { class: 'set-del', 'aria-label': delLabel, onClick: onDelete }, icon('trash')) : null,
+        ),
+        editor,
+      );
+      return { row, live: null };
+    }
+
     function renderSets() {
       const rows = [];
       liveRows.length = 0;
+      // Closed by a tap on the open row or on the screen behind it. Undefined —
+      // every draft written before 2026-08-31, and every entry the runner has
+      // just built — means open, which is the state this screen has always
+      // arrived in.
+      const editing = entry.editing !== false;
+
       entry.sets.forEach((s, i) => {
         const isHere = i === entry.active;
-        const open = isHere && entry.activeDrop == null;
-        const text = fmtSet(s, entry.fields, entry.loadType);
-        const vals = el('span', { class: 'set-vals', text });
-        const pick = el('button', {
-          class: 'set-pick',
-          'aria-label': `Set ${i + 1}: ${text}`,
-          'aria-current': open ? 'true' : null,
-          // The row is a disclosure now — it opens the controls for that set
-          // rather than re-pointing a block elsewhere on the screen.
-          'aria-expanded': open ? 'true' : 'false',
-          onClick: () => select(i, null),
-        },
-          el('span', { class: 'set-num', text: String(i + 1) }),
-          vals,
-        );
-        liveRows.push({
-          vals, pick,
-          read: () => fmtSet(s, entry.fields, entry.loadType),
-          name: (t) => `Set ${i + 1}: ${t}`,
+        const open = isHere && entry.activeDrop == null && editing;
+        const { row, live } = setRow({
+          open,
+          className: 'set-item',
+          num: () => el('span', { class: 'set-num', text: String(i + 1) }),
+          label: (t) => `Set ${i + 1}: ${t}`,
+          valueText: () => fmtSet(s, entry.fields, entry.loadType),
+          onOpen: () => select(i, null),
+          delLabel: `Delete set ${i + 1}`,
+          onDelete: entry.sets.length > 1 ? () => {
+            entry.sets.splice(i, 1);
+            entry.active = Math.min(entry.active, entry.sets.length - 1);
+            entry.activeDrop = null;
+            saveDraft(state);
+            renderAll();
+          } : null,
         });
-        rows.push(el('div', { class: 'set-item' + (open ? ' active' : '') },
-          pick,
-          entry.sets.length > 1
-            ? el('button', {
-                class: 'set-del', 'aria-label': `Delete set ${i + 1}`,
-                onClick: () => {
-                  entry.sets.splice(i, 1);
-                  entry.active = Math.min(entry.active, entry.sets.length - 1);
-                  entry.activeDrop = null;
-                  saveDraft(state);
-                  renderAll();
-                },
-              }, icon('trash'))
-            : null,
-        ));
-        if (open) rows.push(editor);
+        if (live) liveRows.push(live);
+        rows.push(row);
 
         // Drops hang UNDER their set and are indented, because that is what they
         // are — the same set continued at a lower weight. They are deliberately
         // not numbered as sets: one drop set is one hard set (progress.md §6),
         // and numbering them 1, 2, 3 would teach the opposite.
         minisOf(s).forEach((d, di) => {
-          const dOpen = isHere && entry.activeDrop === di;
-          const dText = fmtSet(d, entry.fields, entry.loadType);
-          const dVals = el('span', { class: 'set-vals', text: dText });
-          // Same restructure as the set row above, for the same reason: the ↳
-          // is a 22px glyph and the numbers beside it are what a thumb aims at.
-          const dPick = el('button', {
-            class: 'set-pick',
-            'aria-label': `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: ${dText}`,
-            'aria-current': dOpen ? 'true' : null,
-            'aria-expanded': dOpen ? 'true' : 'false',
-            onClick: () => select(i, di),
-          },
-            el('span', { class: 'set-num drop-num', text: '↳' }),
-            dVals,
-          );
-          liveRows.push({
-            vals: dVals, pick: dPick,
-            read: () => fmtSet(d, entry.fields, entry.loadType),
-            name: (t) => `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: ${t}`,
+          const dOpen = isHere && entry.activeDrop === di && editing;
+          const { row: dRow, live: dLive } = setRow({
+            open: dOpen,
+            className: 'set-item set-drop',
+            // Same restructure as the set row above, for the same reason: the ↳
+            // is a 22px glyph and the numbers beside it are what a thumb aims at.
+            num: () => el('span', { class: 'set-num drop-num', text: '↳' }),
+            label: (t) => `${miniLabel(entry.setType, di + 1)} of set ${i + 1}: ${t}`,
+            valueText: () => fmtSet(d, entry.fields, entry.loadType),
+            onOpen: () => select(i, di),
+            delLabel: `Delete ${miniLabel(entry.setType, di + 1)}`,
+            onDelete: () => {
+              s.minis.splice(di, 1);
+              if (!s.minis.length) delete s.minis;
+              entry.activeDrop = null;
+              saveDraft(state);
+              renderPane({ keepScroll: true });
+            },
           });
-          rows.push(el('div', { class: 'set-item set-drop' + (dOpen ? ' active' : '') },
-            dPick,
-            el('button', {
-              class: 'set-del', 'aria-label': `Delete ${miniLabel(entry.setType, di + 1)}`,
-              onClick: () => {
-                s.minis.splice(di, 1);
-                if (!s.minis.length) delete s.minis;
-                entry.activeDrop = null;
-                saveDraft(state);
-                renderPane({ keepScroll: true });
-              },
-            }, icon('trash')),
-          ));
-          if (dOpen) rows.push(editor);
+          if (dLive) liveRows.push(dLive);
+          rows.push(dRow);
         });
       });
       setChildren(setList, ...rows);
@@ -1433,16 +1488,36 @@ export async function SessionView(workoutId) {
           // cannot, which is why exerciseLabel takes `inControl`.
           exerciseLabel({ exercise: ex, name: entry.exerciseName,
             tag: 'h2', className: 'session-ex-name' }),
-          // ⚠️ QUIET, and beside the name rather than under the numbers. Swapping
-          // is a thing you do occasionally when a machine is taken; it must be
-          // findable without competing with the steppers, which are what this
-          // screen is for (D4). Same reasoning as the suggestion's undo link.
+        ),
+        el('div', { class: 'session-ex-meta' },
+          `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
+        ),
+
+        /* ⚠️ THESE THREE ARE LOUD NOW, AND THAT REVERSES A DECISION THIS FILE
+         * ARGUED FOR. Tim, 2026-08-31: *"Make the swap and remove boxes in a
+         * workout stand out just like the +add set button."* They were
+         * deliberately quiet — transparent, `--ink-soft`, sitting beside the
+         * name — on the reasoning that swapping is occasional and must not
+         * compete with the steppers (D4). His answer is that a control you
+         * cannot find is worse than one you can, and he is the one using this
+         * in a gym. They wear `.pill-action`, which is `.add-set`'s shape.
+         *
+         * ⚠️ AND THEY MOVED OFF THE NAME'S LINE, which the quiet version could
+         * afford and this one cannot: three pills beside a heading leaves about
+         * 110px for "Chest-Supported Dumbbell Row" at 360px. The name gets its
+         * own line back and the actions get a row.
+         *
+         * ⚠️ 44px OF TOUCH FROM 32px OF INK, via the ::before the icon buttons
+         * have used since the first audit. Matching `.add-set` is a request
+         * about how loud they look; it is not permission to ship a 32px target
+         * on the screen most used one-handed. */
+        el('div', { class: 'session-actions' },
           // ⚠️ OPENS ON A SHORTLIST SINCE 2026-08-30 (Tim's ask), with the full
           // 275-exercise picker one tap under it. `ex` can be undefined for a
           // session recorded against an exercise this account no longer has, so
           // the swap falls back to the old sheet rather than to a broken one.
           el('button', {
-            class: 'swap-btn',
+            class: 'swap-btn pill-action',
             title: 'Use a different exercise for this session',
             onClick: () => (ex ? openSwapPicker({
               exMap,
@@ -1457,15 +1532,18 @@ export async function SessionView(workoutId) {
             })),
           }, icon('swap', 15), 'Swap'),
           // Swap's sibling (2026-08-28): drop the exercise from today entirely.
-          // Same quietness, same contract — the saved workout is never touched.
+          // Same contract — the saved workout is never touched.
           el('button', {
-            class: 'swap-btn',
+            class: 'swap-btn pill-action',
             title: 'Remove this exercise from today’s session',
             onClick: () => removeExercise(step.entryIndex),
           }, icon('trash', 15), 'Remove'),
-        ),
-        el('div', { class: 'session-ex-meta' },
-          `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
+          // The whole of today, one tap from every exercise (Tim, 2026-08-31).
+          el('button', {
+            class: 'swap-btn pill-action',
+            title: 'See every exercise in today’s workout — reorder, add or remove',
+            onClick: () => openWorkoutSheet(),
+          }, icon('list', 15), 'Exercises'),
         ),
         // Says which of the two things a swap just did, because they are
         // different and only one of them left a record behind.
@@ -1492,77 +1570,30 @@ export async function SessionView(workoutId) {
         ? el('div', { class: 'note-card' }, el('b', { text: 'Note' }), el('span', { text: entry.notes }))
         : null,
 
-      /* ⚠️ THE FIRST-TIME NOTE DOES NOT WEAR THE GREEN CHECK, and that is Rule 5
-       * rather than styling. `.prefill-note`'s check is `--good` and sits beside
-       * "Last time: 135 lbs", which is a MEASUREMENT. A worked-out opening
-       * weight is an inference, and the rule's general form is that an inference
-       * must be visually separable from a recording by a cue that is not colour
-       * alone. So the derived case borrows `.suggest-note` — the app's existing
-       * "this is a proposal" treatment — and says out loud that the number was
-       * worked out rather than measured. */
+      /* ⚠️ ONE LINE OF PROSE ON THIS SCREEN, AND IT IS A MEASUREMENT.
+       *
+       * Tim, 2026-08-31: *"Remove the 'Suggested: …' description at the top of
+       * the workout, as well as the 'First time logging this…', '10 reps…'
+       * feature right now. It's very wordy and I think we can improve it
+       * later."* Three blocks came off: the progression's headline-and-why with
+       * its "use last time's numbers instead" toggle, the derived-weight note,
+       * and the first-time note.
+       *
+       * 🚨 WHAT WAS REMOVED IS THE EXPLANATION, NOT THE ARITHMETIC. The
+       * suggestion is still computed and still laid over the numbers, and a
+       * never-done exercise still opens at a derived weight and 10 reps, still
+       * flagged `prefilled` so `finish()` refuses to record a set nobody
+       * touched. That flag is what keeps this honest with the prose gone: the
+       * app can no longer SAY the opening number was worked out rather than
+       * measured, so it must stay unable to save one as though it were.
+       *
+       * ⚠️ AND "LAST TIME" STAYS, deliberately. It is six words, it is a
+       * recording rather than an inference, and it is the one thing on the
+       * screen that says where the numbers in front of you came from. Removing
+       * it with the rest would have left the sets looking self-evident. */
       entry.hadHistory
         ? el('div', { class: 'prefill-note' }, icon('check', 16),
             el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
-        : entry.opening === 'derived'
-          ? el('div', { class: 'suggest-note' }, icon('up', 15),
-              el('div', { class: 'suggest-body' },
-                el('div', { class: 'suggest-head', text: 'First time logging this — a starting point, not a measurement' }),
-                el('div', { class: 'suggest-why', text:
-                  `Worked out from what you have already lifted for ${String(entry.openingFrom || 'this muscle').toLowerCase()}, at ${DEFAULT_REPS} reps. `
-                  + 'Change it to whatever you can actually lift — nothing is recorded until you do, '
-                  + 'and your real numbers are what it uses from then on.' }),
-              ))
-          : el('div', { class: 'prefill-note' },
-              el('span', {}, 'First time logging this — ',
-                el('b', { text: entry.opening === 'reps' ? `type what you can lift at about ${DEFAULT_REPS} reps` : 'type what you did' }),
-                '. It will be remembered.')),
-
-      // ⚠️ THE SUGGESTION SAYS WHY, IN ONE LINE, AT THE MOMENT OF USE (D8).
-      // "+5 lbs" with no reason is an instruction from nowhere; "top of the
-      // range twice in a row, so the smallest step inside 2–10 %" is the rule
-      // being taught while it is being used, which is the only place this app
-      // teaches anything.
-      //
-      // And it is a PROPOSAL. The numbers are pre-filled and every stepper
-      // overrides them, plus there is a one-tap way back to last time's — see
-      // docs/goals-plan.md §8.2 rule 5 and js/progression.js's header.
-      //
-      // ⚠️ A lay-off note is DELIBERATELY QUIETER than a suggestion, and it
-      // carries no toggle. Nothing was proposed, so there is nothing to undo —
-      // an "instead" link beside numbers that already are last time's would be
-      // offering a choice that does not exist. The visual weight matches how
-      // much is being asked, which here is nothing.
-      entry.suggestion
-        ? el('div', { class: 'suggest-note' + (entry.suggestion.kind === 'layoff' ? ' is-hold' : '') },
-            icon(entry.suggestion.kind === 'load' ? 'up'
-              : entry.suggestion.kind === 'layoff' ? 'check' : 'plus', 15),
-            el('div', { class: 'suggest-body' },
-              el('div', { class: 'suggest-head', text: entry.suggestion.kind === 'layoff'
-                ? 'No step up this time'
-                : entry.usingLast
-                  ? `Suggested was ${entry.suggestion.headline}`
-                  : `Suggested: ${entry.suggestion.headline}` }),
-              el('div', { class: 'suggest-why', text: entry.suggestion.why }),
-              entry.suggestion.kind === 'layoff' ? null : el('button', {
-                class: 'suggest-toggle',
-                text: entry.usingLast ? 'Use the suggestion' : 'Use last time’s numbers instead',
-                onClick: () => {
-                  entry.usingLast = !entry.usingLast;
-                  // ⚠️ Edited IN PLACE, not rebuilt from the original list. A
-                  // set added or deleted mid-session would otherwise vanish the
-                  // moment somebody tapped this, and any drop already recorded
-                  // with it. Only the numbers move; the shape of the list does
-                  // not.
-                  entry.sets = entry.usingLast
-                    ? entry.sets.map((s, i) => (i < entry.lastSets.length
-                        ? { ...s, ...entry.lastSets[i] } : s))
-                    : applySuggestion(entry.sets, entry.suggestion);
-                  entry.activeDrop = null;
-                  saveDraft(state);
-                  renderAll();
-                },
-              }),
-            ))
         : null,
 
       // The add button rides on the "Sets" heading rather than sitting under the
@@ -1626,7 +1657,36 @@ export async function SessionView(workoutId) {
     renderProgress();
     renderPane();
     renderFooter();
+    // ⚠️ The exercises sheet is a view of `state.entries` like any other, so it
+    // repaints with everything else rather than at each of the four call sites
+    // that can change the list underneath it. Null unless it is open.
+    if (refreshWorkoutSheet) refreshWorkoutSheet();
   }
+
+  /* "…and then when you click off it it goes back to being normal" — the other
+   * half of Tim's morph, and the reason it is a listener on the PANE rather
+   * than on the document: a tap anywhere in the workout that was not aimed at
+   * something closes the open set, and a tap on the sheet, the people bar or
+   * the footer is aimed at something.
+   *
+   * ⚠️ ANY CONTROL IS EXEMPT, not just the set list. Without that, "Add set"
+   * would open the new set on its own click and this would close it again on
+   * the way up — the handler runs after the button's, on the same event. The
+   * test for that is the one that would not have been written by hand: add a
+   * set, and assert the steppers are on screen.
+   */
+  pane.addEventListener('click', (e) => {
+    const t = e.target;
+    if (!t || typeof t.closest !== 'function') return;
+    if (t.closest('.set-list, button, a, input, select, textarea, label')) return;
+    const step = currentStep();
+    const entry = step ? state.entries[step.entryIndex] : null;
+    if (!entry || entry.editing === false) return;
+    entry.editing = false;
+    entry.activeDrop = null;
+    saveDraft(state);
+    renderPane({ keepScroll: true });
+  });
 
   /**
    * Everything the runner needs to know about an exercise it is about to show:
@@ -1683,35 +1743,63 @@ export async function SessionView(workoutId) {
    * muscle had already taken when each exercise started. An exercise dropped at
    * the end of the list would be scored as though it came after everything.
    */
-  async function swapExercise(index, newEx) {
-    const entry = state.entries[index];
-    if (!entry || !newEx) return;
+  /**
+   * A brand-new entry for `newEx`, ready to be dropped into `state.entries`.
+   *
+   * ⚠️ FACTORED OUT OF THE SWAP ON 2026-08-31 so ADDING an exercise mid-session
+   * builds the identical thing. An exercise that arrives by a different door
+   * must not arrive with a different shape — the swap's entry already carries
+   * the history read, the suggestion and the `lastSets` fallback, and an added
+   * exercise that skipped any of them would be the one entry on the screen with
+   * no numbers and no explanation for it.
+   *
+   * `shape` is what the entry inherits from its surroundings: the sets it plans
+   * for, and (on a swap) the group it is replacing somebody in. An ADDED
+   * exercise inherits nothing — it is not in anybody's superset — which is why
+   * every field of it is optional here.
+   */
+  async function entryFromExercise(newEx, shape = {}) {
     const { last, suggestion } = await readingFor(newEx);
+    const plannedSets = Number(shape.plannedSets) > 0 ? Number(shape.plannedSets) : DEFAULT_SETS;
 
-    const lastSets = Array.from({ length: entry.plannedSets || 1 }, (_, i) => {
+    const lastSets = Array.from({ length: plannedSets }, (_, i) => {
       if (!last || !last.length) return blankSet(newEx.fields);
       return pickFields(last[Math.min(i, last.length - 1)], newEx.fields);
     });
 
-    const fresh = {
+    return {
       lastSets,
       suggestion,
       exerciseId: newEx.id,
       exerciseName: newEx.name,
       fields: newEx.fields,
       loadType: newEx.loadType,
-      notes: '',                 // the note belonged to the exercise being replaced
-      plannedSets: entry.plannedSets,
-      group: entry.group,
-      setType: entry.setType,
-      plannedMinis: entry.plannedMinis,
+      notes: '',                 // a note belongs to the exercise it was written on
+      plannedSets,
+      group: shape.group == null ? null : shape.group,
+      setType: shape.setType || null,
+      plannedMinis: shape.plannedMinis || 0,
       sets: applySuggestion(lastSets, suggestion),
       active: 0,
       activeDrop: null,
       hadHistory: Boolean(last && last.length),
       lastSummary: last && last.length ? fmtSet(last[0], newEx.fields, newEx.loadType) : null,
-      swappedFrom: entry.exerciseName,
+      ...(shape.swappedFrom ? { swappedFrom: shape.swappedFrom } : {}),
+      ...(shape.addedToday ? { addedToday: true } : {}),
     };
+  }
+
+  async function swapExercise(index, newEx) {
+    const entry = state.entries[index];
+    if (!entry || !newEx) return;
+
+    const fresh = await entryFromExercise(newEx, {
+      plannedSets: entry.plannedSets,
+      group: entry.group,
+      setType: entry.setType,
+      plannedMinis: entry.plannedMinis,
+      swappedFrom: entry.exerciseName,
+    });
 
     const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields));
     if (recorded.length) {
@@ -1794,6 +1882,279 @@ export async function SessionView(workoutId) {
       confirmLabel: 'Remove',
       onConfirm: doRemove,
     });
+  }
+
+  /* ================================================================== *
+   * TODAY'S EXERCISES — reorder, add, remove (Tim, 2026-08-31)
+   *
+   * *"you can remove a exercise or swap an exercise, but you can't add an
+   * exercise or rearrange exercises for a different order… put a view full
+   * workout button somewhere… and you can add an exercise, remove one, or drag
+   * an exercise to another position… If any information has already been
+   * recorded for any of the exercises, keep the information tied to that
+   * exercise, but also allow it to be moved."*
+   *
+   * ⚠️ THE RECORDED SETS MOVE BECAUSE NOTHING IS COPIED. An entry IS its sets —
+   * `state.entries[i].sets` is the only place a number lives until finish()
+   * writes it — so reordering is a reorder of the array itself and the data
+   * cannot come apart from the exercise it was typed on. The alternative shape,
+   * a separate order array indexed into the entries, is what would let the two
+   * drift; a test drives a reorder with sets recorded on two exercises and
+   * checks the saved session, because "it moved with it" is the whole ask.
+   *
+   * ⚠️ AND IT IS TODAY ONLY, like Swap and Remove beside it. The saved workout
+   * is not touched — same contract, stated in the sheet, for the same reason
+   * (2026-08-24): improvising today must not silently reshape the programme.
+   * ================================================================== */
+
+  /* Set while the sheet is open, so every mutation path repaints it without
+   * threading a callback through removeExercise(), the picker and the drag. */
+  let refreshWorkoutSheet = null;
+
+  /** The entry the walk is on right now — captured BEFORE a reshuffle. */
+  function entryHere() {
+    const step = currentStep();
+    return step ? state.entries[step.entryIndex] : null;
+  }
+
+  /**
+   * Put the walk back on `entry` after the list has been reshuffled.
+   *
+   * ⚠️ BY OBJECT IDENTITY, NEVER BY INDEX. `state.index` walks STEPS and the
+   * entry it pointed at has just moved — re-using the old number would land on
+   * whatever slid into that slot, which on a reorder is precisely the exercise
+   * you were not doing. Same trap the swap's split path documents.
+   */
+  function repointOn(entry, fallbackIndex = 0) {
+    const at = entry ? state.entries.indexOf(entry) : -1;
+    const idx = at >= 0 ? at : Math.max(0, Math.min(fallbackIndex, state.entries.length - 1));
+    const to = steps().findIndex((s) => s.entryIndex === idx);
+    goToStep(to >= 0 ? to : 0);
+  }
+
+  /**
+   * Re-derive every entry's `group` from where it now sits.
+   *
+   * ⚠️ A SUPERSET IS ADJACENCY, and a reorder is the one thing that can break
+   * it — normalizeGroups' own header names this case. Dragging the second half
+   * of a superset to the bottom of the list leaves two members carrying the
+   * same id and nothing between them that makes it true; the runner's walk
+   * would still be renumbering copies while the entries on disk claimed a block
+   * that was not performed. Cheap, and run on every reshuffle.
+   */
+  function normalizeEntryGroups() {
+    const fixed = normalizeGroups(state.entries.map((e) => ({ group: e.group })));
+    state.entries.forEach((e, i) => { e.group = fixed[i].group == null ? null : fixed[i].group; });
+  }
+
+  /** Move the entry at `from` to sit at `to`. Returns whether anything moved. */
+  function moveEntry(from, to) {
+    const n = state.entries.length;
+    if (from === to || from < 0 || to < 0 || from >= n || to >= n) return false;
+    const here = entryHere();
+    const [moved] = state.entries.splice(from, 1);
+    state.entries.splice(to, 0, moved);
+    normalizeEntryGroups();
+    repointOn(here, to);
+    return true;
+  }
+
+  /** Apply a whole new order, given as old indices in their new sequence. */
+  function applyOrder(order) {
+    const next = order.map((k) => state.entries[k]).filter(Boolean);
+    if (next.length !== state.entries.length) return false;
+    if (order.every((k, i) => k === i)) return false;
+    const here = entryHere();
+    state.entries = next;
+    normalizeEntryGroups();
+    repointOn(here, 0);
+    return true;
+  }
+
+  /**
+   * Add an exercise to today's session.
+   *
+   * ⚠️ APPENDED, and that is the opposite of the swap's rule for a reason. A
+   * swap inserts directly after the exercise it replaced because
+   * `muscleStrength()` reads entry order as "how much work this muscle had
+   * already taken" — an exercise dropped at the end would be scored as though
+   * it came after everything. Here it DID come after everything: you are adding
+   * it now, mid-workout, so the end of the list is the truth. Drag it if it is
+   * not.
+   *
+   * ⚠️ NEVER INTO A SUPERSET. It arrives with `group: null`, so an add cannot
+   * silently make a two-exercise block into a three-exercise one and change
+   * what the banner tells somebody to do with their next thirty seconds.
+   */
+  async function addExerciseToday(newEx) {
+    if (!newEx) return false;
+    // Refused for the same reason the builder refuses it: two entries with one
+    // exercise id in a single session is the shape that produced the duplicate
+    // -exercise read bug of 2026-08-28.
+    if (state.entries.some((e) => e.exerciseId === newEx.id)) {
+      toast(`${newEx.name} is already in this workout`);
+      return false;
+    }
+    const here = entryHere();
+    state.entries.push(await entryFromExercise(newEx, { addedToday: true }));
+    normalizeEntryGroups();
+    repointOn(here, state.entries.length - 1);
+    toast(`Added ${newEx.name} — today only`);
+    return true;
+  }
+
+  /**
+   * The sheet itself.
+   *
+   * ⚠️ THE DRAG IS POINTER EVENTS, NOT HTML5 DRAG-AND-DROP, which does not exist
+   * on a touch screen — `dragstart` never fires for a finger, so the whole
+   * feature would have worked on Tim's laptop and done nothing on the phone
+   * this app is for.
+   *
+   * ⚠️ AND THE ARROWS ARE NOT A CONSOLATION PRIZE. A drag cannot be performed by
+   * a keyboard or a screen reader at all, so ▲▼ is the only version of this
+   * control some people ever get — it is also the version the tests drive,
+   * because jsdom reports every rectangle as zero and a pointer drag there
+   * measures nothing. The builder has carried the same pair since it shipped.
+   */
+  function openWorkoutSheet() {
+    const list = el('div', { class: 'reorder-list' });
+    const body = el('div', { class: 'workout-sheet' });
+
+    const { close } = openSheet({
+      title: 'Today’s exercises',
+      body,
+      onClose: () => { refreshWorkoutSheet = null; },
+    });
+
+    /* ---- the drag ---- */
+    function startDrag(ev, rowNode) {
+      if (ev.button != null && ev.button !== 0) return;
+      // Stops the sheet scrolling under the finger that is moving a row.
+      if (ev.preventDefault) ev.preventDefault();
+      const handle = ev.currentTarget;
+      // Without capture the pointer leaves the 28px handle on the first move
+      // and the drag dies one row later. It throws in jsdom; the drag is a
+      // browser path and the arrows are what runs there.
+      try { handle.setPointerCapture(ev.pointerId); } catch (_) { /* still drags */ }
+      rowNode.classList.add('is-dragging');
+
+      const move = (e) => {
+        const y = e.clientY;
+        for (const other of list.querySelectorAll('.reorder-row')) {
+          if (other === rowNode) continue;
+          const r = other.getBoundingClientRect();
+          if (!r.height) continue;
+          const mid = r.top + r.height / 2;
+          const isBelow = Boolean(rowNode.compareDocumentPosition(other)
+            & (typeof Node !== 'undefined' ? Node.DOCUMENT_POSITION_FOLLOWING : 4));
+          // Past the MIDPOINT of a neighbour, never its edge: swapping on first
+          // contact makes a row flicker between two places while the finger
+          // sits still on the boundary.
+          if (isBelow && y > mid) { list.insertBefore(other, rowNode); break; }
+          if (!isBelow && y < mid) { list.insertBefore(rowNode, other); break; }
+        }
+      };
+      const end = () => {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', end);
+        handle.removeEventListener('pointercancel', end);
+        rowNode.classList.remove('is-dragging');
+        // ⚠️ The DOM is the draft of the new order and nothing else — the state
+        // is only touched here, once, on release. A drag that is abandoned
+        // (the app is backgrounded, the pointer is cancelled) therefore cannot
+        // leave half a reorder in the session.
+        const order = [...list.querySelectorAll('.reorder-row')].map((r) => Number(r.dataset.index));
+        if (!applyOrder(order)) render();
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', end);
+      handle.addEventListener('pointercancel', end);
+    }
+
+    function render() {
+      const step = currentStep();
+      const hereIndex = step ? step.entryIndex : -1;
+
+      const rows = state.entries.map((entry, i) => {
+        const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields)).length;
+        const bits = [];
+        if (i === hereIndex) bits.push('On this one now');
+        bits.push(recorded
+          ? `${recorded} set${recorded === 1 ? '' : 's'} recorded`
+          : 'Nothing recorded yet');
+        if (entry.group != null) bits.push('superset');
+        if (entry.swappedFrom) bits.push(`swapped in for ${entry.swappedFrom}`);
+        else if (entry.addedToday) bits.push('added today');
+
+        const row = el('div', {
+          class: 'reorder-row' + (i === hereIndex ? ' is-current' : ''),
+          dataset: { index: String(i) },
+        },
+          el('button', {
+            class: 'grip',
+            // A drag has no keyboard equivalent, so the handle says what the
+            // arrows beside it are FOR rather than pretending to be reachable.
+            'aria-label': `Drag to move ${entry.exerciseName}. Or use the arrows`,
+            title: 'Drag to move',
+            onPointerdown: (ev) => startDrag(ev, row),
+          }, icon('grip', 17)),
+          el('div', { class: 'row-main' },
+            // `inControl` even though this row is not a button: four controls
+            // already live on it, and a fifth that only opens a picture would
+            // be the loudest thing in a list about ORDER. The picture is one
+            // tap away on the exercise itself.
+            exerciseLabel({
+              exercise: exMap.get(entry.exerciseId), name: entry.exerciseName,
+              tag: 'div', className: 'row-title', inControl: true,
+            }),
+            el('div', { class: 'row-sub wrap', text: bits.join(' · ') }),
+          ),
+          el('div', { class: 'move-btns' },
+            el('button', {
+              type: 'button', 'aria-label': `Move ${entry.exerciseName} up`,
+              disabled: i === 0, onClick: () => moveEntry(i, i - 1),
+            }, icon('up')),
+            el('button', {
+              type: 'button', 'aria-label': `Move ${entry.exerciseName} down`,
+              disabled: i === state.entries.length - 1, onClick: () => moveEntry(i, i + 1),
+            }, icon('down')),
+          ),
+          el('button', {
+            class: 'icon-btn',
+            'aria-label': `Remove ${entry.exerciseName} from today`,
+            title: 'Remove from today',
+            onClick: () => removeExercise(i),
+          }, icon('trash')),
+        );
+        return row;
+      });
+
+      setChildren(list, ...rows);
+      setChildren(body,
+        // ⚠️ ONE LINE. The first version was four, explaining the handle, the
+        // arrows, that recorded sets travel and that the template is untouched
+        // — all true, and all readable off the rows themselves. Tim's note on
+        // the runner the same day was *"It's very wordy"*, and a sheet you open
+        // mid-set is the last place to spend a paragraph.
+        el('div', { class: 'field-help', style: 'margin-top:0', text:
+          'Drag to reorder. Today only — your saved workout is not changed.' }),
+        list,
+        el('button', {
+          class: 'btn block',
+          onClick: () => openExercisePicker({
+            exMap,
+            title: 'Add to today',
+            closeOnPick: true,
+            onPick: (picked) => { addExerciseToday(picked); },
+          }),
+        }, icon('plus', 16), 'Add an exercise'),
+      );
+    }
+
+    refreshWorkoutSheet = render;
+    render();
+    return { close };
   }
 
   // One person's entries, reduced to what was actually recorded. Factored so

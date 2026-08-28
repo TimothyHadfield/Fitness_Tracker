@@ -40,6 +40,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, youFriendsTabs, exerciseLabel,
+  personFace,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -265,9 +266,13 @@ function feedEntries(seen) {
   for (const s of seen) {
     const acts = (s.doc && s.doc.activity) || [];
     const name = (s.doc && s.doc.profile && s.doc.profile.name) || s.conn.name || 'Friend';
+    // Their photo comes from the same published document their name does, so a
+    // friend on an old build — or one who has never added a photo — simply has
+    // no `avatar` here and the card draws the glyph it always drew.
+    const avatar = (s.doc && s.doc.profile && s.doc.profile.avatar) || null;
     for (const a of acts) {
       if (!a || !a.date) continue;
-      out.push({ uid: s.conn.uid, name, tier: s.tier, act: a });
+      out.push({ uid: s.conn.uid, name, avatar, tier: s.tier, act: a });
     }
   }
   // `startedAt` breaks ties within a day where it exists, so two of somebody's
@@ -319,7 +324,7 @@ function feedCard(e) {
 
   return el('article', { class: 'feed-card' },
     el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
-      el('span', { class: 'feed-avatar' }, icon('person', 19)),
+      el('span', { class: 'feed-avatar' }, personFace(e.avatar, 19)),
       el('span', { class: 'feed-who' },
         el('span', { class: 'feed-name', text: e.name }),
         el('span', { class: 'feed-meta', text: meta }),

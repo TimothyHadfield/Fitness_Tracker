@@ -26,7 +26,7 @@
 import { store, auth, social } from './store.js';
 import {
   el, icon, iconBtn, screenShell, emptyState, openSheet, confirmSheet, toast,
-  fmtDateLong, relativeDay, chevron, setChildren, fmtSet, youFriendsTabs,
+  fmtDateLong, relativeDay, chevron, setChildren, fmtSet, youFriendsTabs, personFace,
 } from './ui.js';
 import {
   TIERS, TIER_LABEL, TIER_DETAIL, NONE, LIGHT, MID, FULL,
@@ -334,8 +334,23 @@ async function fillSocial(body, state) {
   } else {
     for (const c of state.connections) {
       const title = el('div', { class: 'row-title', text: c.name || 'Friend' });
+      /* ⚠️ THE FACE IS FILLED IN AFTER THE ROW IS PAINTED, never awaited before
+       * it. Their photo lives in the document THEY published, so it costs a read
+       * per friend — and this is the screen Tim reported in 2026-08-26 as having
+       * "a long delay and lag to it that's alarming", which was three serialised
+       * round trips before a pixel moved. The list paints from the graph
+       * immediately, as it does now; the pictures arrive when they arrive, and a
+       * friend who cannot be read keeps the glyph. Same shape as
+       * healConnectionName below, which had the same problem to solve. */
+      const faceSlot = el('div', { class: 'row-icon' }, icon('person'));
+      social.friend(c.uid)
+        .then(({ doc }) => {
+          const avatar = doc && doc.profile ? doc.profile.avatar : null;
+          if (avatar && faceSlot.isConnected) setChildren(faceSlot, personFace(avatar));
+        })
+        .catch(() => {});
       parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(c.uid)}` },
-        el('div', { class: 'row-icon' }, icon('person')),
+        faceSlot,
         el('div', { class: 'row-main' },
           title,
           el('div', { class: 'row-sub', text: `They can see: ${TIER_LABEL[c.tier] || TIER_LABEL[LIGHT]}` }),
@@ -588,6 +603,18 @@ export async function FriendView(uid) {
   });
 
   const parts = [];
+
+  /* ⚠️ THEIR FACE, ONCE, AT THE TOP — and only where there is one (2026-08-31).
+   * The screen already says the name in the title bar, so a circle with the
+   * person glyph in it would be an empty ornament on every account that has not
+   * added a photo, which is most of them. With a photo it is the one thing on
+   * this screen that says whose page this is at a glance. */
+  if (seen.doc && seen.doc.profile && seen.doc.profile.avatar) {
+    parts.push(el('div', { class: 'friend-face' },
+      personFace(seen.doc.profile.avatar, 40),
+      el('div', { class: 'row-title', text: name }),
+    ));
+  }
 
   // What I share with them, always first and always visible — the thing a
   // person most wants to check on this screen is not what their friend shared,

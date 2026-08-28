@@ -5947,3 +5947,57 @@ options he *did* pick from, back in 2026-08-26, were about legibility. That is t
 **One technical finding is being left alone deliberately.** `apple-touch-icon` still points at an SVG
 and iOS needs a PNG, so his home screen is probably showing a screenshot. It is recorded in
 `progress.md` rather than fixed, because it belongs to the icon he is going to do himself.
+
+---
+
+## 2026-08-31 — rearranging a workout, a set row that morphs, and a face on the feed
+
+**Tim, four asks in one message:** a way to see the full workout mid-session and *"add an exercise,
+remove one, or drag an exercise to another position"*, keeping anything already recorded tied to its
+exercise; remove the *"Suggested: …"* and *"First time logging this…"* blocks (*"It's very wordy"*);
+make a set row *"morph into the weight and reps adjustment box"* instead of growing a second one
+underneath; and make Swap and Remove *"stand out just like the +add set button"*.
+
+**A third pill — Exercises — opens today's list.** Drag a row by its handle, or use the arrows; add
+one from the full picker; remove one, with the same confirm the Remove button already had when sets
+exist. The recorded sets move because nothing is copied: an entry *is* its sets, so reordering the
+list is reordering the array, and the proof is the saved session rather than the screen — after two
+moves and an add, the 185 is still filed under the exercise it was typed on.
+
+Two things there were nearly wrong. The walk is re-pointed by the entry object, not its index —
+otherwise shuffling the list under somebody moves them onto a different exercise mid-set, which the
+first version of the test could not see, because moving the exercise you are standing on lands
+correctly either way. And a superset is adjacency, so every reshuffle re-derives the groups.
+
+The drag is pointer events. HTML5 drag-and-drop does not fire for a finger, so that version would
+have worked on a laptop and done nothing on a phone. It was driven with a real pointer in a browser
+to check: row one dragged to position three, its four recorded sets with it, the runner still on it.
+
+**The set row is the controls now.** It used to print `255 lbs × 7` three inches above a stepper
+reading 255 — the same duplication that was removed in August between the detached stepper block and
+the list, back one level down. The values are simply not drawn while a row is open, and tapping the
+row, or any dead space, closes it. The runner can show no controls at all now, which it never could.
+
+**The wordy blocks are gone, and what went is the prose.** The suggestion still moves the numbers; a
+lift you have never done still opens at ten reps and a worked-out weight, still flagged so that
+finishing without touching it records nothing. The honest cost: the app can no longer say the
+opening weight was worked out rather than measured. Only "Last time: 255 lbs × 7" survives — six
+words, and a measurement rather than a guess.
+
+**Then, mid-session, a second report:** *"when you put a profile picture into your account, your
+friends can't see the profile picture… its just the default blank humanoid."* True, and deliberate —
+the code said so in as many words, that publishing a face was a widening deserving its own decision.
+This is that decision. The photo now rides beside the name in every sharing tier, appears on the
+feed card, the friends list and a friend's page, and adding or removing one republishes, so
+"Remove" takes it off other people's screens and not just yours. Coming back in it is treated as
+what it is — a string somebody else wrote that ends up in an `src` — so only base64 raster images
+are painted: never an SVG, never a remote URL, and nothing over about 90 KB.
+
+**Two things fell out of the work.** `social.available` does not exist — it is a field of what
+`social.state()` resolves to — and two places read it, so a signed-in person with no friends was
+being told to sign in. And the accessibility audit caught the new drag handle failing the 44px
+touch test on every sample; it has a grown hit area now, while the arrows sit at 40×24, which clears
+the WCAG minimum and is a stated trade rather than an oversight.
+
+**Nothing here has been used on a real phone yet**, and the face has never crossed between two real
+accounts.

@@ -2,6 +2,7 @@
 
 import { FIELD_META } from './exercises.js';
 import { imageFor } from './exercise-images.js';
+import { safeAvatar } from './social.js';
 import * as units from './units.js';
 
 /* ------------------------------------------------------------------ *
@@ -158,6 +159,11 @@ const PATHS = {
   link: 'M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 1 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 1 0 5.66 5.66l1-1',
   'link-off': 'M9.5 14.5 7 17a3.5 3.5 0 0 1-5-5l2.5-2.5M14.5 9.5 17 7a3.5 3.5 0 0 1 5 5l-2.5 2.5M3 3l18 18',
   edit: 'M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z',
+  // A drag handle. Two full-width rules rather than the six-dot grip: at 15px
+  // the dots need a fill exception (a zero-length stroke is a dot in Chrome and
+  // nothing in some others), and two lines is the convention every list-reorder
+  // control on a phone already uses.
+  grip: 'M5 9h14M5 15h14',
   // Two arrows passing in opposite directions — one thing out, another in.
   // Deliberately not a circular "refresh": swapping an exercise replaces it
   // with something different, it does not reload the same one.
@@ -224,6 +230,31 @@ export function youFriendsTabs(active) {
         'aria-selected': String(key === active),
       }, label)),
   );
+}
+
+/**
+ * Somebody's face — theirs if they have published one, the person glyph if not.
+ *
+ * Tim, 2026-08-31: *"when you post a workout and it goes on their feed, the
+ * profile picture is shown, but its just the default blank humanoid, not the
+ * picture that they actually added."* Every place a friend appears calls this,
+ * so a photo arriving or being taken down happens everywhere at once.
+ *
+ * 🚨 `safeAvatar` IS THE GATE AND IT IS NOT OPTIONAL. The string is written by
+ * another account, and this puts it in an `src`: it must be a base64 raster data
+ * URL, never an SVG (a document that can carry script) and never a remote URL (a
+ * beacon that would tell somebody else's server when this device rendered their
+ * face, and from where). Anything else falls back to the glyph, which is also
+ * what a friend on an old build looks like.
+ *
+ * ⚠️ `alt` IS EMPTY ON PURPOSE. The name is always beside it in the same row, so
+ * describing the picture would make a screen reader say the person twice.
+ */
+export function personFace(avatar, size = 20) {
+  const src = safeAvatar(avatar);
+  return src
+    ? el('img', { class: 'face-img', src, alt: '', loading: 'lazy', decoding: 'async' })
+    : icon('person', size);
 }
 
 export function chevron() {

@@ -8,7 +8,7 @@
 // An anonymous account lives in one browser and nothing recovers it — clearing
 // site data destroys it permanently. That is stated plainly rather than buried.
 
-import { store, auth, probeOffline, demo, todayISO } from './store.js';
+import { store, auth, probeOffline, demo, todayISO, social } from './store.js';
 import { el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron } from './ui.js';
 import { cloudFullWarning } from './views-data.js';
 import * as units from './units.js';
@@ -144,9 +144,15 @@ const AVATAR_SOURCE_PX = 768;
  * resized to 256px and JPEG-compressed CLIENT-SIDE before it is stored, so a
  * 12 MB camera photo becomes ~4 KB — the settings document has a 1 MiB
  * ceiling shared with everything else, and cloudUsage() charges every byte.
- * Local-only for now: the avatar is NOT published into the social projection,
- * so friends do not see it — publishing a face is a widening that gets its
- * own decision, not a side effect of this feature.
+ *
+ * ⚠️ IT IS PUBLISHED TO FRIENDS SINCE 2026-08-31, WHICH REVERSES WHAT THIS
+ * COMMENT SAID. It read: *"Local-only for now: the avatar is NOT published into
+ * the social projection, so friends do not see it — publishing a face is a
+ * widening that gets its own decision, not a side effect of this feature."*
+ * That was right, and Tim has now made the decision — he reported friends
+ * seeing "the default blank humanoid" as a bug. It rides beside the name in
+ * every tier of the projection (js/social.js, the profile-photo header) and
+ * reaches exactly the people who could already read that document.
  */
 function avatarCard(settings, user) {
   const hasPhoto = typeof settings.avatar === 'string' && settings.avatar.startsWith('data:image/');
@@ -163,7 +169,31 @@ function avatarCard(settings, user) {
       avatarCrop: result.crop,
     });
     toast('Photo saved');
+    shareFace();
     refresh();
+  }
+
+  /**
+   * Push the change out to friends.
+   *
+   * ⚠️ THE PHOTO IS INSIDE EVERY PROJECTION SINCE 2026-08-31, so changing it has
+   * to rewrite them — exactly the reason `social.setName` republishes, and the
+   * failure mode is the one Tim reported about Autumn's muscle map: a published
+   * copy that froze at its owner's last social action while the screen said
+   * something else. Fire-and-forget by design — the photo is saved either way,
+   * and a person with no account, no network or the demo has nothing to publish.
+   * A workout finished later would carry it anyway; this is what makes it
+   * immediate.
+   */
+  function shareFace() {
+    // ⚠️ NO `if (social.available)` GUARD, and that is not laziness: `available`
+    // is a field of what `social.state()` RESOLVES TO, not a property of the
+    // module — `social.available` is `undefined` for everybody, so a guard on it
+    // would have quietly meant this never ran. (The same mistake was sitting in
+    // views-session.js's people sheet and is fixed there too.) republish()
+    // refuses on its own for the demo, for local mode and with no cloud, which
+    // is the check that actually knows the answer.
+    social.publish().catch(() => {});
   }
 
   const fileInput = el('input', {
@@ -230,14 +260,24 @@ function avatarCard(settings, user) {
             // in front of it.
             await store.saveSettings({ avatar: '', avatarSource: '', avatarCrop: null });
             toast('Photo removed');
+            // ⚠️ REMOVING REPUBLISHES TOO, and this is the half that matters:
+            // taking a picture down has to take it down from where other people
+            // are looking at it, or "Remove" is a lie about somebody's face.
+            shareFace();
             refresh();
           },
         }) : null,
       ),
+      /* ⚠️ THE SENTENCE CHANGED WITH THE BEHAVIOUR, 2026-08-31. It read *"Only
+       * on this account — friends do not see it"*, which was true and is now
+       * false, and a stale reassurance about who can see somebody's face is the
+       * worst kind of wrong text this app could carry. Friends means the people
+       * on your friends list and nobody else: the photo goes into the same
+       * published document they already read, under the same rule. */
       el('div', { class: 'field-help', text: hasPhoto
-        ? 'Shown on your account button. Edit to move or resize the circle. '
-          + 'Only on this account — friends do not see it.'
-        : 'Shown on your account button. Only on this account — friends do not see it.' }),
+        ? 'Shown on your account button, and to the friends you are connected to — '
+          + 'on your workouts in their feed and on your page. Edit to move or resize the circle.'
+        : 'Shown on your account button, and to the friends you are connected to.' }),
     ),
     fileInput,
   );

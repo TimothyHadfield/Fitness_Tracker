@@ -1979,7 +1979,12 @@ async function republish() {
     const doc = S.buildProjection({
       tier,
       viewers,
-      profile: { name: settings.displayName || '' },
+      // ⚠️ The photo rides with the name, and social.js decides whether it is
+      // publishable at all — this passes the stored value through rather than
+      // testing it here, so there is exactly one rule about what a published
+      // face may be (2026-08-31, Tim's report that friends only ever saw the
+      // blank humanoid).
+      profile: { name: settings.displayName || '', avatar: settings.avatar },
       sessions, benchmarks, strength, bodyWeights,
       shareBodyWeight: Boolean(settings.shareBodyWeight),
       publishedAt,

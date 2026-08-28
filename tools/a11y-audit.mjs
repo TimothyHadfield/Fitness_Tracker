@@ -339,6 +339,27 @@ const ROUTES = [
      if (!document.querySelector('.sheet .swap-lead')) {
        throw new Error('a11y: the swap-sheet step never opened the sheet');
      }`],
+  /* ⚠️ THE EXERCISES SHEET — added 2026-08-31 with reorder / add / remove. It is
+   * four controls per row, one of which (the drag handle) is the only control in
+   * the app a keyboard cannot reach at all, and the arrows beside it are 28×21
+   * of paint. Exactly the numbers a browser has to measure rather than a comment
+   * claim. Reached the way a person reaches it, and asserts it landed. */
+  ['#/record', 'Session runner · exercises sheet',
+    `${clickText('.row-start, button, a', 'Weightlifting')};
+     await new Promise((r) => setTimeout(r, 800));
+     (() => { const b = document.querySelector('.btn.primary.lg.block')
+       || document.querySelector('.pane-scroll .row');
+       if (b) b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(b); })();
+     await new Promise((r) => setTimeout(r, 900));
+     (() => { const s = [...document.querySelectorAll('.swap-btn')]
+       .find((n) => /Exercises/.test(n.textContent));
+       if (s) s.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(s); })();
+     await new Promise((r) => setTimeout(r, 700));
+     if (!document.querySelector('.sheet .reorder-row')) {
+       throw new Error('a11y: the exercises-sheet step never opened the sheet');
+     }`],
 ];
 
 /* ⚠️ THE PALETTE, ADDED 2026-08-26 — and the reason is a known coverage hole
