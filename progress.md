@@ -14,7 +14,7 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ---
 
-## THIS SESSION (2026-08-31) IN FIVE LINES
+## THIS SESSION (2026-08-31) IN SIX LINES
 
 🆕 **A. THE WHOLE WORKOUT IS ONE TAP AWAY, AND IT CAN BE REARRANGED.** A third pill — **Exercises** —
 beside Swap and Remove opens today's list: **drag a row to reorder, add one, remove one.** 🚨 **The
@@ -45,6 +45,12 @@ deliberate until now (`views-account.js` said so in as many words). It rides bes
 **every tier**, because `profile` is identity and the tiers cut training. 🚨 **`safeAvatar()` is a
 trust boundary in both directions**: base64 raster only, never an SVG, never a remote URL, capped at
 ~90 KB. Adding or removing a photo **republishes**, or "Remove" would be a lie about somebody's face.
+
+🆕 **F. THE MUSCLE MAP'S BIG NUMBER SAYS WHAT IT IS.** Tim asked what the weight meant, and the
+honest answer was that the screen never said: it is an **estimated 1-rep max on that muscle's key
+lift**, which every exercise is converted into. One line under it now says so, naming the lift. 🚨
+**"Estimated" is half of it** — the line below names a real recorded set, and an inference next to a
+measurement with nothing to tell them apart is what Rule 5 exists to stop.
 
 ---
 
@@ -175,6 +181,37 @@ made by the person whose face it is.**
 - **Three places paint it**: the feed card, the friends list and the friend's own page. The list
   fills in **after** the rows paint — their photo costs a read per friend and that is the screen Tim
   once reported as *"a long delay and lag to it that's alarming"*.
+
+### F. 🚨 The muscle map's big number now says what it is
+
+Tim: *"it shows a weight and a bar and '____ for _____'. Problem is, I have no idea what that weight
+means. Is it for a specific exercise, or the one it's basing its decision off of?"*
+
+**Neither — and that it took a question to find out is the finding.** The number is an **estimated
+one-rep max on that muscle's KEY LIFT** (Chest → Barbell Bench Press, Triceps → Close-Grip Bench
+Press, and so on through `MUSCLE_LIFTS`), which every contributing exercise is converted into by a
+published ratio. **That is the whole basis of the screen and it had never been named on it.** One
+line under the weight now says so: *"Estimated 1-rep max in Barbell Bench Press."*
+
+- ⚠️ **THE WORD "ESTIMATED" IS HALF THE POINT, and the test asserts both halves.** The line directly
+  beneath it names a REAL recorded set — *"from Barbell Bench Press 220×3, Jul 17"* — and naming the
+  lift without saying the number is inferred would put a measurement and an inference in consecutive
+  lines with nothing to tell them apart. Rule 5.
+- **Measured rather than assumed to fit**: the longest key-lift name there is renders **332×17 at
+  360px**, one line, no overflow, and the caption measures **8.5:1** in both themes. The panel's
+  40-word cap still holds at **31 words**.
+- ⚠️ **The estimate appears in exactly one place**, which is why this is one edit: the Bars view
+  shows per-exercise `~max` (already labelled an estimate) and a friend's published map carries
+  levels and percentiles, never the weight.
+
+**And the answer to the second half of his question, recorded because nothing on the screen says it
+either**: the rating is **not** the heaviest set ever. Sets over 15 reps are refused; each admissible
+set becomes an e1RM, divided by its ratio to the key lift; direct evidence beats compounds; one value
+per exercise per day, then one per exercise; each scored by ratio quality × reps × recency (120-day
+half-life) × within-session fatigue × 1.25 for a benchmark; **the top three by CREDIBILITY rather
+than by size**; winsorised to ±25 % of their weighted median and averaged. Each input is a best
+showing, so it is an upper-envelope estimator — but the answer is a blend of three, deliberately hard
+for one flattering number to move.
 
 ### Two smaller things found on the way
 

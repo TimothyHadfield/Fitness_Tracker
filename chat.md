@@ -6001,3 +6001,19 @@ the WCAG minimum and is a stated trade rather than an oversight.
 
 **Nothing here has been used on a real phone yet**, and the face has never crossed between two real
 accounts.
+
+**Then a question about the muscle map:** *"it shows a weight and a bar… I have no idea what that
+weight means. Is it for a specific exercise, or the one it's basing its decision off of?"* Neither.
+It is an estimated one-rep max on that muscle's key lift — Chest is measured in bench press, Triceps
+in close-grip bench, Quads in back squat — and every exercise that trains the muscle is converted
+into that lift by a published ratio. The screen had never said so, which is why he had to ask. There
+is a line under the number now: *"Estimated 1-rep max in Barbell Bench Press."* The word "estimated"
+is doing as much work as the lift's name, because the line directly below it names a real recorded
+set, and putting an inference next to a measurement with nothing to tell them apart is the one thing
+this app is not allowed to do.
+
+He also asked whether the rating is just the heaviest set ever. It is not: sets over 15 reps are
+thrown out, each remaining set is converted to an estimated max and divided by its ratio to the key
+lift, direct evidence beats compounds, each exercise gets one seat, and the top three by
+*credibility* — not by size — are clipped to within 25 % of their median and averaged. Each input is
+a best showing, so it leans high on purpose; what it will not do is let one flattering set decide.

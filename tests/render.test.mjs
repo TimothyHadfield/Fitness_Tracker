@@ -266,6 +266,16 @@ const panelText = panel.textContent.replace(/\s+/g, ' ');
 ok(/Chest/.test(panelText), 'it names the muscle');
 ok(/Intermediate/.test(panelText), 'and the level it has reached');
 ok(/\d+ lbs\b/.test(panelText), 'and the estimate, which is the number the screen exists for');
+/* 🚨 AND WHAT THAT NUMBER IS — Tim, 2026-08-31: *"I have no idea what that weight
+ * means. Is it for a specific exercise, or the one it's basing its decision off
+ * of?"* Neither: it is an estimated one-rep max on the muscle's KEY LIFT, which
+ * every contributing exercise was converted into. The screen has never said so.
+ *
+ * ⚠️ BOTH HALVES ARE ASSERTED. Naming the lift without the word "estimated"
+ * would put it a line above "from Barbell Bench Press 220×3" — a real recorded
+ * set — with nothing to tell the reader which of the two was measured. */
+ok(/Estimated 1-rep max in Barbell Bench Press/.test(panelText),
+   '🚨 and it SAYS what the weight is: an estimated 1-rep max in the muscle\'s key lift, named');
 /* ⚠️ NO PERCENTILE BY DEFAULT — Tim, 2026-08-25: "showing the percentile is a
  * little harsh for some people." What must stay true is that hiding it hides a
  * READOUT and not the reasoning: the level above is still computed from that

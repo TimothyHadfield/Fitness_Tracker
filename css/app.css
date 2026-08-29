@@ -2835,6 +2835,17 @@ a.seg {
 }
 .muscle-pct { font-size: 13.5px; color: var(--ink-soft); font-weight: 600; }
 
+/* What the big number IS (2026-08-31). Pulled up against it rather than sitting
+   in the card's normal rhythm, because it is a CAPTION on that number and not
+   another fact about the muscle — at the card's 7px gap it read as a third
+   line of equal standing. */
+.muscle-est-note {
+  margin-top: -5px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  line-height: 1.35;
+}
+
 /* One quiet line. Used for where the number came from and how well corroborated
    it is — both of which are Rule 5 obligations and neither of which is worth a
    sentence. */

@@ -443,6 +443,26 @@ function detail(m, muscle, profile, blocked, moreDetails) {
         : null,
     ),
 
+    /* ⚠️ WHAT THE BIG NUMBER IS. Tim, 2026-08-31: *"I have no idea what that
+     * weight means. Is it for a specific exercise, or the one it's basing its
+     * decision off of?"* — and the honest answer is neither of those: it is an
+     * estimated one-rep max on the muscle's KEY LIFT, which every contributing
+     * exercise was converted into. It is the whole basis of the screen and it
+     * has never been named on it.
+     *
+     * ⚠️ IT SAYS "ESTIMATED" IN THE SAME BREATH AS THE LIFT, which is Rule 5
+     * rather than padding: the line directly under it names a real recorded set,
+     * and without the word "estimated" here the two would read as the same kind
+     * of fact. The 220×3 was measured; the 239 was worked out from it.
+     *
+     * `m.lift` is `keyLiftFor(muscle)` and is never null on this branch — a
+     * muscle with no key lift has no published standards, so it cannot be rated
+     * and cannot reach here. Guarded anyway, because "estimated 1-rep max in
+     * undefined" is the kind of sentence that ships. */
+    el('div', { class: 'muscle-est-note', text: m.lift && m.lift.name
+      ? `Estimated 1-rep max in ${m.lift.name}`
+      : 'Estimated 1-rep max' }),
+
     // The near goal, and the only target worth a row of its own.
     m.next
       ? el('div', { class: 'to-next' },
