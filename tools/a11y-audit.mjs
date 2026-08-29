@@ -131,11 +131,27 @@ const AUDIT = `(() => {
     return Boolean(d) && !el.closest('summary');
   };
 
+  /* ⚠️ THE SAME FAULT ONE COLLAPSIBLE LATER — 2026-09-01, and it was measured
+     rather than guessed at. A closed volume row is a grid track of zero height,
+     so the WRAPPER measures 0 — but its contents keep their own boxes (clipping
+     is not layout), and this audit counted 173 text nodes inside twelve rows
+     nobody had opened. Never a false PASS, since those colours are the ones
+     painted when the row does open; always a false COVERAGE claim, which is the
+     thing this file has now been caught by three times (#/data, the closed
+     <details>, this).
+     ⚠️ THE GENERAL RULE FOR WHOEVER ADDS THE NEXT ONE: an element inside a
+     container that is collapsed to nothing has not been measured, whatever its
+     own rectangle says. Anything animating open and shut needs a line here. */
+  const inCollapsedRow = (el) => {
+    const w = el.closest('.vol-detail-wrap');
+    return Boolean(w) && !w.classList.contains('is-open');
+  };
+
   const visible = (el) => {
     const r = el.getBoundingClientRect();
     const s = getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'
-      && Number(s.opacity) > 0.01 && !inClosedDetails(el);
+      && Number(s.opacity) > 0.01 && !inClosedDetails(el) && !inCollapsedRow(el);
   };
 
   // ⚠️ The summary element joined 2026-08-30. It is natively focusable and clickable and

@@ -57,6 +57,23 @@
   --bar-h: 54px;
   --safe-b: env(safe-area-inset-bottom, 0px);
 
+  /* MOTION — 2026-09-01. The full argument is in the Motion section at the
+     bottom of this file; these are the four numbers everything uses.
+     ⚠️ THEY ARE SHORT ON PURPOSE. Tim asked for movement and then asked twice
+     for it not to get in the way: *"keep it quick… I don't want it to be
+     something that is distracting or slow."* Nothing in this app animates for
+     longer than a quarter of a second. */
+  --t-fast: 100ms;   /* a press answering back */
+  --t:      170ms;   /* the default — fades, slides, expansions */
+  --t-slow: 240ms;   /* a whole surface: a sheet, a full-screen picture */
+  /* Decelerate: something ARRIVING. Enters at speed, settles gently. */
+  --ease-out:  cubic-bezier(.2, 0, 0, 1);
+  /* Accelerate: something LEAVING. Eases off, then goes. */
+  --ease-in:   cubic-bezier(.4, 0, 1, 1);
+  /* Both ends: something MOVING from one place to another while you watch it.
+     This is the one that reads as a real object — it has to start and stop. */
+  --ease-both: cubic-bezier(.4, 0, .2, 1);
+
   color-scheme: dark;
 }
 
@@ -2102,17 +2119,16 @@ a.seg {
    change, so a bottom sheet with a search box in it puts its own results — and
    its Done button — underneath the keyboard it just raised. The exercise picker
    is the worst case in the app: 272 exercises, and 3 of them visible. */
-.sheet-backdrop {
+.sheet-backdrop,
+.sheet-backdrop-x {
   position: fixed; inset: 0 0 var(--kb, 0px) 0; z-index: 60;
   background: rgba(0,0,0,.55);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: fade .15s ease;
 }
-@keyframes fade { from { opacity: 0 } }
-
-.sheet {
+.sheet,
+.sheet-x {
   background: var(--ground);
   width: 100%;
   max-width: 620px;
@@ -2122,11 +2138,8 @@ a.seg {
   border-radius: 16px 16px 0 0;
   display: flex;
   flex-direction: column;
-  animation: rise .2s cubic-bezier(.2,.8,.3,1);
   padding-bottom: var(--safe-b);
 }
-@keyframes rise { from { transform: translateY(18px); opacity: .5 } }
-
 .sheet-head {
   padding: 12px var(--pad);
   border-bottom: 1px solid var(--rule);
@@ -2183,7 +2196,8 @@ a.seg {
 .row-main:has(.ex-thumb) .row-sub { padding-left: 42px; }
 
 /* The viewer. Fixed, above everything, its own ✕ in the corner. */
-.exview {
+.exview,
+.exview-x {
   position: fixed; inset: 0; z-index: 60;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 12px; padding: calc(env(safe-area-inset-top) + 52px) 16px calc(env(safe-area-inset-bottom) + 20px);
@@ -2218,10 +2232,12 @@ a.seg {
    a five-row sheet reserves height nothing is using. Here it sizes to content
    and the SHEET scrolls if it ever has to. */
 .swap-lead { margin-bottom: 2px; }
-.sheet .swap-lead + .search-results { flex: none; min-height: 0; overflow: visible; }
+.sheet .swap-lead + .search-results,
+.sheet-x .swap-lead + .search-results { flex: none; min-height: 0; overflow: visible; }
 .swap-all { margin-top: 12px; }
 
-.toast {
+.toast,
+.toast-x {
   position: fixed;
   left: 50%;
   bottom: calc(var(--bar-h) + var(--safe-b) + 14px);
@@ -2234,7 +2250,6 @@ a.seg {
   font-size: 14px;
   font-weight: 620;
   box-shadow: 0 6px 22px rgba(0,0,0,.45);
-  animation: rise .18s ease;
   max-width: calc(100vw - 28px);
   text-align: center;
 }
@@ -2470,7 +2485,7 @@ a.seg {
   .cal-day { font-size: 12.5px; }
   .cal-tag { font-size: 10.5px; padding: 2.5px 4px; }
 
-  .sheet-backdrop { align-items: center; }
+  .sheet-backdrop, .sheet-backdrop-x { align-items: center; }
   .sheet { border-radius: 14px; max-height: min(82dvh, 100%); }
 
   .session-footer { justify-content: center; padding-bottom: 12px; }
@@ -2515,6 +2530,158 @@ a.seg {
 @media (min-width: 1200px) {
   .pane-top > *, .pane-scroll > *, .pane-bottom > * { max-width: 940px; }
 }
+
+/* ==========================================================================
+   MOTION — 2026-09-01, Tim's ask
+   ==========================================================================
+
+   *"When you click on something, I want it to have some sort of visible motion
+   between the movement rather than just an instant change or teleportation…
+   if these movements have some sort of realistic acceleration in how they
+   start and stop that would be cool as well. Make sure to keep it quick
+   though… Only use it when it's appropriate as well."*
+
+   Four rules came out of that, and they are what everything below obeys:
+
+   1. MOTION SHOWS A RELATIONSHIP, NEVER DECORATION. A thing that moves is
+      telling you where it came from or where it went — the sheet came from the
+      bottom edge, the selected segment slid from the one you were on, the row
+      you opened pushed the rest down. If a movement does not answer "what
+      just happened", it does not go in.
+   2. NOTHING ANIMATES ON THE LOGGING PATH except a press answering back. The
+      set list, the steppers and the rest timer are used one-handed with a bar
+      in the other hand, and 170ms of politeness between tapping + and seeing
+      the number is 170ms of standing there. That is what "only when
+      appropriate" means in a gym app, and it is the one place this file spends
+      no time at all.
+   3. IT ACCELERATES AND IT DECELERATES. Linear motion is what reads as
+      computery. Things arriving decelerate (--ease-out), things leaving
+      accelerate away (--ease-in), and things moving from one place to another
+      while you watch do both (--ease-both) — that last one is the only one
+      that really looks like an object with weight.
+   4. ONLY transform AND opacity WHERE THERE IS A CHOICE. Those two are handed
+      to the compositor and cost no layout. The exceptions are deliberate and
+      small: the volume bars animate `width` once when a screen is built, and
+      an expanding row animates `grid-template-rows`, which is the only honest
+      way to make the content below it slide rather than jump.
+
+   ⚠️ AND ALL OF IT IS OFF UNDER prefers-reduced-motion, which is not a
+   courtesy — vestibular disorders make sliding panels genuinely unpleasant,
+   and this is a fitness app, so somebody using it may well be moving already.
+   The block at the end of this section is the switch, and it is a blanket:
+   anything added below it is covered without being remembered. */
+
+/* ---- a screen arrives ------------------------------------------------- */
+/* ⚠️ 6px AND A FADE, not a slide across. A horizontal push implies a stack —
+   "you went forward, back is that way" — and this router has no idea which
+   direction you went: `#/home` can be reached by tapping Home, by a back
+   gesture or by a redirect after saving. A movement that says something false
+   about where you are is worse than no movement. A short rise says only "this
+   is new", which is all that is known. */
+.screen { animation: screen-in var(--t) var(--ease-out); }
+@keyframes screen-in { from { opacity: 0; transform: translateY(6px) } }
+
+/* ---- a surface leaves -------------------------------------------------- */
+/* ⚠️ THE CLASS IS RENAMED ON THE WAY OUT — `.sheet` becomes `.sheet-x` — and
+   that is a deliberate contract rather than a trick. A closing sheet must stop
+   being a sheet the instant it is asked to close: it stops matching
+   `document.querySelector('.sheet')`, so nothing in the app or in a test can
+   find, focus or assert against a panel that is on its way off the screen. The
+   alternative (an `.is-closing` class) leaves a real `.sheet` in the DOM for a
+   quarter of a second, which is exactly the sort of ghost that produces a test
+   that passes for the wrong reason. The layout rules carry both names; only
+   the animation differs. */
+.sheet-backdrop { animation: fade-in var(--t) var(--ease-out); }
+.sheet-backdrop-x { animation: fade-out var(--t) var(--ease-in) forwards; pointer-events: none; }
+.sheet { animation: sheet-in var(--t-slow) var(--ease-out); }
+.sheet-x { animation: sheet-out var(--t) var(--ease-in) forwards; }
+.exview { animation: fade-in var(--t) var(--ease-out); }
+.exview-x { animation: fade-out var(--t) var(--ease-in) forwards; pointer-events: none; }
+@keyframes fade-in  { from { opacity: 0 } }
+@keyframes fade-out { to { opacity: 0 } }
+@keyframes sheet-in { from { transform: translateY(22px) } }
+@keyframes sheet-out { to { transform: translateY(20px); opacity: 0 } }
+
+/* ⚠️ THE TOAST HAD ITS OWN TRANSFORM AND THE ENTRY ANIMATION WAS EATING IT.
+   `.toast` is centred with `translateX(-50%)`, and it borrowed the shared
+   `rise` keyframe — whose `from` sets `transform: translateY(18px)` and so
+   drops the centring for the length of the animation. It has been popping in
+   half its own width to the right and sliding back ever since it was written.
+   Its keyframes carry both parts now. */
+.toast { animation: toast-in var(--t) var(--ease-out); }
+.toast-x { animation: toast-out var(--t) var(--ease-in) forwards; pointer-events: none; }
+@keyframes toast-in  { from { transform: translateX(-50%) translateY(14px); opacity: 0 } }
+@keyframes toast-out { to   { transform: translateX(-50%) translateY(8px);  opacity: 0 } }
+
+/* ---- the segmented control's pill slides ------------------------------ */
+/* 🚨 THIS IS THE ONE TIM DESCRIBED. Tapping "Bars" used to repaint the pill
+   under your finger and unpaint the old one — two instant changes with nothing
+   joining them. Now one pill travels, and because it is the same object moving
+   it also says which way you went along the row.
+   ⚠️ It is drawn by JS (`wireSegmented`), and the painted-pill fallback below
+   is what the control looks like if that never runs — no script, an old engine,
+   a jsdom test. `.has-ind` is the class the JS adds, so the fallback is the
+   default and the enhancement is opt-in. */
+.segmented { position: relative; }
+.seg { z-index: 1; transition: color var(--t) var(--ease-out); }
+.seg-ind {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  z-index: 0;
+  border-radius: 7px;
+  background: var(--ground);
+  transition: transform var(--t) var(--ease-both), width var(--t) var(--ease-both);
+  pointer-events: none;
+}
+/* The first placement must not slide in from the left edge on every render. */
+.seg-ind.no-anim { transition: none; }
+.segmented.has-ind .seg[aria-selected="true"] { background: none; }
+
+/* The hairline between unselected segments fades with the pill rather than
+   blinking — `display: none` cannot transition, and this rule is only ever a
+   separator, so opacity is the honest property for it anyway. */
+.seg + .seg::after { opacity: 1; transition: opacity var(--t) var(--ease-out); }
+.seg[aria-selected="true"]::after,
+.seg[aria-selected="true"] + .seg::after { display: block; opacity: 0; }
+
+/* ---- a press answers back --------------------------------------------- */
+/* The only motion allowed on the logging path (rule 2 above), and it is 100ms.
+   The background fades instead of blinking; the box gives a little. */
+.row, .chip, .seg, .vol-row, .navbar a {
+  transition: background-color var(--t-fast) linear, color var(--t-fast) linear,
+              transform var(--t-fast) var(--ease-out);
+}
+.row:active, .chip:active, .vol-row:active { transform: scale(.99); }
+.chip:active { transform: scale(.96); }
+
+/* ---- a row opens ------------------------------------------------------- */
+/* ⚠️ grid-template-rows: 0fr -> 1fr IS THE POINT, and a plain fade would have
+   missed it. Fading the detail in still teleports every row BELOW it down the
+   screen, which is the exact thing Tim described. Animating the track height
+   makes the list slide open and shut around it.
+   Where `fr` interpolation is unsupported it snaps — which is precisely the
+   behaviour this replaced, so the floor is today's app. */
+/* ⚠️ minmax(0, 0fr) AND NOT A BARE 0fr, which is the trap in this technique and
+   is invisible unless you measure it. A bare `0fr` track is `minmax(auto, 0fr)`,
+   so its automatic MINIMUM is the item's min-content height — and the closed row
+   measured 14px in Chrome, exactly the detail's own top and bottom padding,
+   which would have left twelve slivers of dead space down the list. `overflow:
+   hidden` and `min-height: 0` on the item do not help; padding still counts. */
+.vol-detail-wrap {
+  display: grid;
+  grid-template-rows: minmax(0, 0fr);
+  transition: grid-template-rows var(--t) var(--ease-both), opacity var(--t) var(--ease-out);
+  opacity: 0;
+}
+.vol-detail-wrap > * { overflow: hidden; min-height: 0; }
+.vol-detail-wrap.is-open { grid-template-rows: minmax(0, 1fr); opacity: 1; }
+
+/* ---- a bar grows to its number ---------------------------------------- */
+/* Only when the screen is built or its window changes — the number really did
+   just change, and the growth is what says by how much. It does NOT replay
+   when a row is opened, because nothing about the data moved. */
+.vol-fill { animation: vol-grow var(--t-slow) var(--ease-out); }
+@keyframes vol-grow { from { width: 0 } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

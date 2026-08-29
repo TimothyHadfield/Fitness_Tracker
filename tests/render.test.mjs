@@ -548,17 +548,25 @@ for (const mode of ['Graph', 'Bars']) {
      derived number nobody can audit is one they either over-trust or stop
      believing. Tapping names the exercises behind it.
 
-     ⚠️ THE ROW IS RE-FOUND AFTER THE TAP. Opening one redraws the whole list, so
-     the node held here is detached and its aria-expanded is frozen at what it
-     was — the same trap the research legend's chips carry a note about. */
+     ⚠️ EVERY DETAIL IS IN THE DOM AND CLOSED, since the motion pass — a row
+     that builds its detail on tap can only appear instantly, and every row below
+     it jumps. So "is it open" is `.vol-detail-wrap.is-open` and NOT "does a
+     .vol-detail exist", which would now pass without anybody tapping anything.
+     Both directions are asserted, because a one-way test would not notice a
+     row that never closes again. */
+  ok(!data.querySelector('.vol-detail-wrap.is-open'),
+     'every muscle arrives closed');
   const openName = rows.find((r) => !/Nothing logged/.test(r.textContent))
     .querySelector('.vol-name').textContent;
-  rows.find((r) => r.querySelector('.vol-name').textContent === openName).click();
+  const rowFor = (name) => [...data.querySelectorAll('.vol-row')]
+    .find((r) => r.querySelector('.vol-name').textContent === name);
+  rowFor(openName).click();
   await settle();
-  const opened = [...data.querySelectorAll('.vol-row')]
-    .find((r) => r.querySelector('.vol-name').textContent === openName);
+  const opened = rowFor(openName);
   ok(opened.getAttribute('aria-expanded') === 'true', 'tapping a muscle opens it');
-  const detail = data.querySelector('.vol-detail');
+  ok(data.querySelectorAll('.vol-detail-wrap.is-open').length === 1,
+     'exactly one at a time — opening one closes the last');
+  const detail = opened.parentElement.querySelector('.vol-detail-wrap.is-open .vol-detail');
   ok(Boolean(detail), 'and the detail is there');
   ok(detail.querySelectorAll('.vol-contrib-row').length > 0,
      '🚨 naming the exercises the sets came from, so the total can be checked against real sessions');
@@ -584,6 +592,12 @@ for (const mode of ['Graph', 'Bars']) {
   ok(/a week/.test(detail.querySelector('.vol-contrib-head').textContent),
      'and the heading says which unit they are in');
 
+  rowFor(openName).click();
+  await settle();
+  ok(!data.querySelector('.vol-detail-wrap.is-open')
+    && rowFor(openName).getAttribute('aria-expanded') === 'false',
+     'and tapping it again closes it');
+
   // ⚠️ THE CAVEATS TRAVEL WITH THE NUMBERS. Every one of these is a thing the
   // count is doing that a reader would otherwise have to guess at.
   const pane = data.querySelector('.vol-pane').textContent;
@@ -604,6 +618,42 @@ for (const mode of ['Graph', 'Bars']) {
   ok([...data.querySelectorAll('.chip')].find((c) => c.textContent === '12 weeks')
        .getAttribute('aria-pressed') === 'true', 'the window is switchable');
   ok(data.querySelectorAll('.vol-row').length === 12, 'and the list redraws over the longer window');
+}
+
+/* ================= the sliding segment pill (2026-09-01) =================
+ * Tim: *"When you click on something, I want it to have some sort of visible
+ * motion between the movement rather than just an instant change."*
+ *
+ * ⚠️ WHAT A DOM WITH NO LAYOUT CAN AND CANNOT SAY. Every box here measures zero,
+ * so nothing in this block asserts that the pill MOVED — that is checked in a
+ * real browser (the motion probe: transform 2px → 223px, interpolating, with a
+ * running transition on transform and width). What jsdom can prove is the part
+ * that would silently rot: that the control gets wired at all, that it is wired
+ * exactly once, and that it follows `aria-selected` rather than a click handler
+ * — which is what lets four view files build these without knowing about it. */
+{
+  const bar = data.querySelector('.segmented');
+  ok(Boolean(bar) && bar.classList.contains('has-ind'),
+     'the mode switch is wired for a sliding pill');
+  ok(data.querySelectorAll('.seg-ind').length === 1,
+     'exactly one indicator — wiring the same control twice would stack them');
+  const ind = bar.querySelector('.seg-ind');
+  ok(ind.getAttribute('aria-hidden') === 'true',
+     'and it is hidden from a screen reader — the segment already says which one is chosen');
+
+  /* ⚠️ FOLLOWS THE ATTRIBUTE, NOT THE TAP. Five of these controls are built in
+     four files and one rebuilds its own buttons; watching `aria-selected` is
+     what makes them all work without any of them knowing. Proved by moving the
+     attribute by hand, with nothing clicked. */
+  for (const s of bar.querySelectorAll('.seg')) s.setAttribute('aria-selected', 'false');
+  await settle();
+  ok(ind.style.opacity === '0',
+     '⚠️ nothing selected hides the pill rather than parking it on the first segment and lying');
+  bar.querySelectorAll('.seg')[2].setAttribute('aria-selected', 'true');
+  await settle();
+  ok(ind.style.opacity === '1', 'and it comes back when something is selected again');
+  bar.querySelectorAll('.seg')[2].setAttribute('aria-selected', 'false');
+  bar.querySelectorAll('.seg')[0].setAttribute('aria-selected', 'true');
 }
 
 /* ================= body-weight trend ================= */

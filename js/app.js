@@ -1,7 +1,9 @@
 // Router + boot.
 
 import { store, demo, warmReadCache, social } from './store.js';
-import { el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas } from './ui.js';
+import {
+  el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
+} from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
   WorkoutRouteView, ExploreView, ExploreDetailView,
@@ -215,6 +217,13 @@ async function render() {
     // and autoGrowTextareas().
     associateLabels(screen);
     autoGrowTextareas(screen);
+    // ⚠️ AND THE SLIDING PILL, for the same reason again — five segmented
+    // controls are built in four different view files, and one hook here beats
+    // four of them remembering. The control works without it (app.css keeps the
+    // painted fallback); this only upgrades the change from a repaint to a
+    // movement. Must run AFTER the screen is in the document, because it
+    // measures the selected segment.
+    wireSegmented(screen);
   } catch (err) {
     console.error(err);
     clear(app);

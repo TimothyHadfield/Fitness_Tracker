@@ -376,13 +376,142 @@ export function profileButton() {
  * Toast
  * ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ *
+ * Leaving the screen — 2026-09-01, the motion pass
+ *
+ * Tim: *"When you click on something, I want it to have some sort of visible
+ * motion… rather than just an instant change or teleportation."* Arriving was
+ * already animated in a couple of places; LEAVING never was, anywhere, because
+ * a node that is removed is simply gone and CSS gets no say in it.
+ *
+ * 🚨 THE CLASS IS RENAMED RATHER THAN ADDED TO, and this is the load-bearing
+ * decision. `.sheet` becomes `.sheet-x` the instant it is asked to close, so a
+ * closing panel STOPS MATCHING `document.querySelector('.sheet')` immediately:
+ * nothing in the app, and no test, can find, focus or assert against a surface
+ * that is on its way off the screen. The obvious alternative — an `.is-closing`
+ * class — leaves a real `.sheet` in the DOM for a quarter of a second, and a
+ * ghost that still answers to its own name is exactly how a test comes to pass
+ * for the wrong reason. app.css carries both names on the layout rules and only
+ * the animation differs.
+ *
+ * ⚠️ IT IS IDEMPOTENT AND IT ALWAYS FINISHES. Pressing Cancel twice, or Escape
+ * during the animation, must not stack two removals; and if the animation never
+ * runs at all — reduced motion, jsdom, an engine that does not know the
+ * keyframes — the timer still removes the node. Nothing here waits on an event
+ * that might not fire.
+ * ------------------------------------------------------------------ */
+const LEAVE_MS = 240;
+
+/**
+ * ⚠️ CAN ANYTHING ACTUALLY ANIMATE HERE? Two places where the answer is no, and
+ * in both of them the node must go IMMEDIATELY rather than linger for a quarter
+ * of a second doing nothing:
+ *
+ *   - `prefers-reduced-motion`. The stylesheet already cuts every duration to
+ *     nothing, so waiting out an animation that is not running is pure delay.
+ *   - jsdom, where `Element.animate` does not exist. This is not only tidiness:
+ *     🚨 THE RENAME ABOVE ONLY HIDES THE CONTAINER, NOT WHAT IS INSIDE IT. A
+ *     closing sheet stops matching `.sheet`, but its rows still match
+ *     `.search-results .row` for as long as it is painted — and that is a real
+ *     bug this cost, not a theory: the swap test picked an exercise out of a
+ *     sheet that had already been dismissed, and the picker underneath it was
+ *     left open. In a browser `pointer-events: none` makes that unreachable to a
+ *     finger; in a test harness there are no fingers, only selectors.
+ */
+const canAnimate = () => typeof document !== 'undefined'
+  && typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function'
+  && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+export function leave(node, ms = LEAVE_MS) {
+  if (!node || !node.isConnected || node.dataset.leaving) return;
+  if (!canAnimate()) { node.remove(); return; }
+  node.dataset.leaving = '1';
+  node.className = String(node.className).split(/\s+/).filter(Boolean)
+    .map((c) => `${c}-x`).join(' ');
+  // Belt and braces: the class change stops it being addressable, this stops it
+  // being touchable in the frames it is still painted for.
+  node.setAttribute('aria-hidden', 'true');
+  node.style.pointerEvents = 'none';
+  setTimeout(() => node.remove(), ms);
+}
+
 let toastTimer = null;
 export function toast(message) {
-  document.querySelectorAll('.toast').forEach((t) => t.remove());
+  // ⚠️ The one already on screen LEAVES rather than vanishing under the new
+  // one — two toasts in a row is a queue, and a queue that teleports reads as
+  // a flicker.
+  document.querySelectorAll('.toast').forEach((t) => leave(t, 200));
   const t = el('div', { class: 'toast', role: 'status', text: message });
   document.body.append(t);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.remove(), 2400);
+  toastTimer = setTimeout(() => leave(t, 200), 2400);
+}
+
+/* ------------------------------------------------------------------ *
+ * The segmented control's pill slides — 2026-09-01
+ *
+ * 🚨 THIS IS THE MOVEMENT TIM DESCRIBED, in the control he uses most. Tapping
+ * "Bars" painted a pill under your finger and unpainted the one you left: two
+ * instant changes with nothing joining them. One pill travels now, which also
+ * says which way along the row you just went.
+ *
+ * ⚠️ PROGRESSIVE, NOT REQUIRED. The painted `.seg[aria-selected]` background is
+ * still in the stylesheet and is what the control looks like if this never runs
+ * — no script, an old engine, a jsdom test. `.has-ind` is added by this
+ * function and is the only thing that switches the fallback off, so the
+ * enhancement can never leave the control with no selection visible at all.
+ *
+ * ⚠️ IT IS DRIVEN BY A MutationObserver ON aria-selected rather than by the
+ * click handlers, because there are five of these controls built in four files
+ * and one of them (Months / Years) re-renders its own buttons. Watching the
+ * attribute that already means "this one is chosen" costs those files nothing
+ * and cannot fall out of step with them.
+ * ------------------------------------------------------------------ */
+export function wireSegmented(root) {
+  if (!root || !root.querySelectorAll) return;
+  for (const bar of root.querySelectorAll('.segmented')) {
+    if (bar.dataset.ind) continue;
+    const segs = [...bar.children].filter((n) => n.classList && n.classList.contains('seg'));
+    if (segs.length < 2) continue;
+    bar.dataset.ind = '1';
+
+    const ind = el('span', { class: 'seg-ind', 'aria-hidden': 'true' });
+    bar.prepend(ind);
+    bar.classList.add('has-ind');
+
+    const place = () => {
+      const on = segs.find((s) => s.getAttribute('aria-selected') === 'true');
+      // Nothing selected is a real state on some of these — the pill hides
+      // rather than parking on the first segment and lying about it.
+      ind.style.opacity = on ? '1' : '0';
+      if (!on) return;
+      ind.style.width = `${on.offsetWidth}px`;
+      ind.style.height = `${on.offsetHeight}px`;
+      ind.style.transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`;
+    };
+
+    // ⚠️ The FIRST placement must not slide. Without this every screen would
+    // open with the pill flying in from the left edge, which is decoration
+    // rather than a relationship — the rule the whole motion section is under.
+    ind.classList.add('no-anim');
+    place();
+    requestAnimationFrame(() => {
+      place();
+      requestAnimationFrame(() => ind.classList.remove('no-anim'));
+    });
+
+    // ⚠️ OFF `window`, NOT THE BARE GLOBAL. In a browser they are the same
+    // object; under jsdom the DOM globals are assigned onto globalThis one by
+    // one and MutationObserver is not among them, so `typeof MutationObserver`
+    // is "undefined" and this quietly did nothing — the pill wired itself, never
+    // moved, and every assertion about it passed except the one that watched.
+    const MO = (typeof window !== 'undefined' && window.MutationObserver) || null;
+    if (MO) {
+      new MO(place).observe(bar, {
+        subtree: true, attributes: true, attributeFilter: ['aria-selected'],
+      });
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -415,7 +544,7 @@ export function toast(message) {
  */
 export function openImageViewer({ src, name }) {
   const close = () => {
-    backdrop.remove();
+    leave(backdrop);
     document.removeEventListener('keydown', onKey);
   };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
@@ -488,7 +617,12 @@ export function exerciseLabel({
 
 export function openSheet({ title, body, footer, onClose }) {
   const close = () => {
-    backdrop.remove();
+    // ⚠️ BOTH halves leave, and they leave differently: the sheet drops back
+    // towards the edge it came from, the dark behind it fades. One movement
+    // undoing itself, rather than a panel blinking out of existence. See
+    // `leave()` for why the class is renamed rather than added to.
+    leave(sheet);
+    leave(backdrop);
     document.removeEventListener('keydown', onKey);
     if (onClose) onClose();
   };
@@ -794,7 +928,7 @@ export function screenShell({ title, sub, back, actions, top, scroll, bottom, bo
         sub ? el('div', { class: 'topbar-sub', text: sub }) : null,
       );
 
-  return el('div', { class: 'screen' + (noNav ? ' no-nav' : '') },
+  const screen = el('div', { class: 'screen' + (noNav ? ' no-nav' : '') },
     el('header', { class: 'topbar' },
       // Left slot: back where there is somewhere to go back to, otherwise the
       // profile button. Never both — two things competing for the top-left
@@ -807,4 +941,12 @@ export function screenShell({ title, sub, back, actions, top, scroll, bottom, bo
     el('div', { class: 'pane-scroll' }, scroll || body),
     bottom ? el('div', { class: 'pane-bottom' }, bottom) : null,
   );
+  // ⚠️ Here AND in app.js, and the repeat is deliberate: `wireSegmented` is
+  // idempotent (it marks the control it has done), this catches every screen
+  // however it is mounted — including the ones a test mounts directly — and the
+  // router's call catches anything that never came through this function. The
+  // measurements are taken again on the next frame, by which time whichever of
+  // the two ran first has put the screen in the document.
+  wireSegmented(screen);
+  return screen;
 }

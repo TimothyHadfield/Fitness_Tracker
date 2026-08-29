@@ -42,7 +42,14 @@ so outright**; the only threshold drawn is the 4-sets-a-week minimum the source 
 muscle and it names the exercises behind the number, in the SAME UNIT — which the first version got
 wrong.**
 
-🆕 **B. THE APP MOVES NOW.** *(written up below — the motion pass)*
+🆕 **B. THE APP MOVES NOW, AND IT IS A SYSTEM RATHER THAN A PILE OF TRANSITIONS.** Tim: *"when you
+click on something, I want it to have some sort of visible motion between the movement rather than
+just an instant change or teleportation… realistic acceleration in how they start and stop… keep it
+quick… only use it when it's appropriate."* Four durations, three easings, **Design Rule 7**, and a
+blanket `prefers-reduced-motion` switch. 🚨 **NOTHING ON THE LOGGING PATH ANIMATES except a press
+answering back** — that is what "appropriate" means in a gym app. ⚠️ **Verified in a real browser
+through `getAnimations()`, not by screenshot**: jsdom cannot run a transition, and a 170ms movement
+is one frame of luck in a picture.
 
 ---
 
@@ -115,6 +122,109 @@ contributors left in window units → the on-screen sum; dropping the warm-up ad
 ⚠️ **NOT VERIFIED: nothing here has been on Tim's phone**, at his instruction this session. It is
 proved in jsdom, in the data layer against fixed dates, and as painted pixels at 360 and 393px in
 both themes.
+
+---
+
+## 2026-09-01, second pass — THE APP MOVES
+
+Tim: *"I want to work on some 'animation' or smooth transitions throughout the [site]. When you click
+on something, I want it to have some sort of visible motion between the movement rather than just an
+instant change or teleportation. Additionally, if these movements have some sort of realistic
+acceleration in how they start and stop that would be cool as well. Make sure to keep it quick
+though, I don't want it to be something that is distracting or slow for the user to deal with. Only
+use it when it's appropriate as well."*
+
+**Four constraints in one paragraph, and they are the specification.** Motion, easing at both ends,
+quick, and selective. What shipped is a system rather than a scattering of transitions:
+**`--t-fast: 100ms` / `--t: 170ms` / `--t-slow: 240ms`** and three easings — decelerate for things
+arriving, accelerate for things leaving, both ends for a thing moving from A to B while you watch it.
+**That third one is the "realistic" one**; it is the only one that reads as an object with weight.
+
+🚨 **DESIGN RULE 7 IS THE DURABLE VERSION OF THIS AND IT IS IN §5.** Motion states a relationship —
+where something came from, where it went, what pushed what — and anything that does not answer "what
+just happened" is decoration and does not ship.
+
+**What moves, and why each one earns it:**
+
+- **A screen arrives** with a 6px rise and a fade. ⚠️ **NOT a horizontal slide, and the reason is
+  honesty rather than taste**: a sideways push claims a stack — *you went forward, back is that way*
+  — and this router cannot know which way you went, because `#/home` is reached by tapping Home, by a
+  back gesture and by a redirect after saving. A movement that says something false about where you
+  are is worse than no movement.
+- **A sheet leaves.** Arriving was animated already; **leaving never was, anywhere in the app**,
+  because a removed node is simply gone and CSS gets no say. 🚨 **THE CLASS IS RENAMED ON THE WAY
+  OUT** — `.sheet` becomes `.sheet-x` — so a closing panel **stops matching `.sheet` the instant it
+  is asked to close** and nothing can find, focus or assert against a surface on its way off. The
+  layout rules carry both names and only the animation differs.
+- 🚨 **AND THAT RENAME IS NOT ENOUGH ON ITS OWN, WHICH COST AN HOUR AND IS THE FINDING OF THE PASS.**
+  It hides the container, not what is inside it: a dismissed sheet's **rows still match
+  `.search-results .row`** for as long as it is painted, and the swap test duly picked an exercise out
+  of a sheet that had already been closed, leaving the picker underneath it open. In a browser
+  `pointer-events: none` makes that unreachable to a finger; **in a test harness there are no fingers,
+  only selectors.** So `leave()` removes the node outright wherever nothing can animate — under
+  `prefers-reduced-motion`, and in jsdom, which has no `Element.animate`. The tests measure exactly
+  what they measured before, and the app animates.
+- 🚨 **THE SEGMENTED PILL SLIDES, AND IT IS THE ONE TIM DESCRIBED.** Tapping "Bars" painted a pill
+  under your finger and unpainted the one you left — two instant changes with nothing joining them.
+  One pill travels now. ⚠️ **It is driven by a `MutationObserver` on `aria-selected`, not by the click
+  handlers**, because five of these controls are built in four files and one rebuilds its own buttons;
+  watching the attribute that already means "chosen" costs those files nothing. ⚠️ **And the painted
+  pill is still in the stylesheet as the floor** — `.has-ind` is added by the JS and is the only thing
+  that switches it off, so the control can never end up with no visible selection and never with two.
+- **A volume row opens by animating `grid-template-rows`**, which is the only honest way to make the
+  rows below it *slide* rather than jump. ⚠️ **This forced a better structure**: every detail is now
+  built collapsed rather than created on tap, because a node inserted already-open has nothing to
+  transition from.
+- **The volume bars grow to their number** when the screen is built or its window changes — the number
+  really did just change, and the growth is what says by how much. Not on a row tap, where nothing
+  moved.
+- **A press answers back** in 100ms on rows, chips and segments: the background fades instead of
+  blinking and the box gives slightly.
+
+⚠️ **AND THE PART THAT IS ABOUT RESTRAINT: NOTHING ON THE LOGGING PATH ANIMATES.** The set list, the
+steppers and the rest timer are used one-handed with a bar in the other, and 170ms between tapping +
+and seeing the number is 170ms of standing there. That is what *"only when it's appropriate"* means
+in an app for a gym, and it is the one place this pass spent no time at all.
+
+⚠️ **`prefers-reduced-motion` IS A BLANKET AND IT IS NOW TESTED.** Sliding panels are genuinely
+unpleasant with a vestibular disorder, and this is an app somebody may be using while already moving.
+`tests/a11y.test.mjs` pins that the block exists, that it kills **both** animations and transitions
+with `!important`, and that it covers `*` — the browser audit can never catch its removal, because it
+never sets the media query. The same block also asserts **no duration exceeds 250ms**, which is
+"keep it quick" turned into a number that fails.
+
+**Three bugs came out of building it, and two were invisible:**
+
+- ⚠️ **THE TOAST HAS BEEN POPPING IN OFF-CENTRE SINCE IT WAS WRITTEN.** It is centred with
+  `translateX(-50%)` and borrowed a shared `rise` keyframe whose `from` sets `transform:
+  translateY(18px)` — which drops the centring for the length of the animation. It has its own
+  keyframes now, carrying both parts.
+- ⚠️ **`minmax(0, 0fr)`, NOT A BARE `0fr`.** A bare `0fr` track is `minmax(auto, 0fr)`, so its
+  automatic minimum is the item's min-content height: the closed row measured **14px** in Chrome —
+  exactly the detail's own padding — which would have left twelve slivers of dead space down the
+  list. `overflow: hidden` and `min-height: 0` on the item do not help.
+- 🚨 **THE AUDIT WAS COUNTING TEXT NOBODY COULD SEE, FOR THE THIRD TIME.** A collapsed row's wrapper
+  measures 0, but its contents keep their own boxes — clipping is not layout — so 173 text nodes
+  inside twelve unopened rows were being counted as measured (8,330 → 9,634 and back). Never a false
+  PASS; always a false **coverage** claim, which is the `#/data` fault and the closed-`<details>`
+  fault arriving a third time. `tools/a11y-audit.mjs` now excludes them and **the general rule is
+  written beside it for whoever adds the next collapsible.**
+
+⚠️ **HOW THIS WAS VERIFIED, BECAUSE IT IS NOT THE USUAL WAY.** jsdom cannot run a transition and has
+no `Element.animate`, and a screenshot of a 170ms movement is one frame of luck. So the motion is
+proved in a real browser over CDP through **`getAnimations()`** — which reports what the engine is
+actually running on an element: 14 checks, all passing. The pill was watched interpolating
+**2px → 79px → 223px**; the closed row measures **0px** and opens to **233px** with a running
+`grid-template-rows` transition; a closed sheet is a `.sheet-x` playing `sheet-out`, is **not** a
+`.sheet`, has `pointer-events: none`, and is gone afterwards.
+
+**Audit: 88 combinations, 8,330 text nodes, zero below 4.5:1, zero overflow, zero unnamed controls**
+— the same node count as before the pass, which is what the coverage fix was for. **Tests: render
+777 → 785, a11y 87 → 97.**
+
+⚠️ **NOT VERIFIED: none of this has been felt on a phone.** Whether 170ms is the right amount of
+politeness for a thumb is Tim's call, and headless Chrome cannot answer it. **The numbers are in one
+place if he wants them changed** — `--t-fast` / `--t` / `--t-slow` at the top of `css/app.css`.
 
 ---
 
@@ -5507,7 +5617,10 @@ Fitness_Tracker/
 ├── tools/strength-fit.mjs      re-runs every sweep the estimator's constants
 │                               came from, so a later session can re-derive
 │                               rather than trust
-├── css/app.css                 ALL styling. Mobile-first; desktop in one media query
+├── css/app.css                 ALL styling. Mobile-first; desktop in one media query.
+│                               ⚠️ The MOTION section near the end owns every
+│                               duration and easing in the app (Rule 7) — change
+│                               --t-fast / --t / --t-slow there, never inline
 ├── js/
 │   ├── app.js                  hash router + boot
 │   ├── store.js                data layer — async, backend-agnostic. Holds
@@ -5979,6 +6092,36 @@ faster mile is better, a longer plank is better) and **body weight is neutral to
 goal for one user and losing it for the next, and nothing has ever asked which. `summaryStats()`
 takes a `judged` flag for exactly this. The training goal that D10 will introduce is what would
 eventually earn the app an opinion here.
+
+### Rule 7 — motion states a relationship, or it does not ship
+
+Added 2026-09-01 on Tim's ask for *"visible motion… rather than just an instant change or
+teleportation"*, with three constraints attached to it: realistic acceleration, quick, and only where
+appropriate. The rule those four collapse into:
+
+**A thing that moves is telling you where it came from, where it went, or what pushed it.** The sheet
+came from the bottom edge. The pill slid from the segment you were on. The row you opened pushed the
+rest down. **If a movement does not answer "what just happened", it is decoration and it does not go
+in** — which is also the whole of "only when appropriate".
+
+- **Quick is a number, and it is tested.** `--t-fast: 100ms` (a press answering back), `--t: 170ms`
+  (the default), `--t-slow: 240ms` (a whole surface). Nothing may exceed 250ms; `tests/a11y.test.mjs`
+  fails if one does.
+- **Accelerate and decelerate.** Linear is what reads as computery. `--ease-out` for arriving,
+  `--ease-in` for leaving, `--ease-both` for a thing crossing the screen while you watch — the last
+  is the one that looks like an object with weight.
+- ⚠️ **NOTHING ON THE LOGGING PATH, except a press answering back.** The set list, the steppers and
+  the rest timer are used one-handed with a bar in the other. 170ms between tapping + and seeing the
+  number is 170ms of standing in a gym.
+- **`transform` and `opacity` where there is a choice** — they cost no layout. The two deliberate
+  exceptions are a bar's `width` when a screen is built and `grid-template-rows` on something opening,
+  which is the only honest way to make the content below it slide rather than jump.
+- ⚠️ **`prefers-reduced-motion` turns all of it off, as a blanket over `*`.** Not a courtesy: sliding
+  panels are genuinely unpleasant with a vestibular disorder, and this app is used by people who are
+  moving. The browser audit can never catch its removal, so a test pins it.
+- ⚠️ **A movement must not claim something the app does not know.** A screen arrives with a rise
+  rather than a sideways push, because a horizontal slide asserts a direction of travel this router
+  cannot know.
 
 ### Colour — validate, never eyeball
 

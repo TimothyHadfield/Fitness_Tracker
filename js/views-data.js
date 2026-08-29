@@ -1753,7 +1753,7 @@ function volRow(m, scale, perWeek, weeks, open, onToggle) {
   const btn = el('button', {
     class: 'vol-row' + (none ? ' is-none' : ''),
     'aria-expanded': String(open),
-    onClick: onToggle,
+    onClick: () => onToggle(btn, wrap),
   },
     el('span', { class: 'vol-head' },
       el('span', { class: 'vol-name', text: m.muscle }),
@@ -1773,7 +1773,18 @@ function volRow(m, scale, perWeek, weeks, open, onToggle) {
     el('span', { class: 'vol-sub', text: sub }),
   );
 
-  return el('div', { class: 'vol-item' }, btn, open ? volDetail(m, perWeek, weeks) : null);
+  /* ⚠️ THE DETAIL IS ALWAYS BUILT AND THE ROW ONLY OPENS IT, which is a change
+   * the motion pass forced and is better anyway. A row that renders its detail
+   * on tap can only appear instantly — a node inserted with its open state
+   * already on it has nothing to transition FROM — and every row below it jumps
+   * down the screen, which is exactly the teleporting Tim asked to be rid of.
+   * Built collapsed, the grid track animates and the list slides open around it.
+   * Cost is twelve short lists of text nodes that measure zero and are excluded
+   * from the accessibility audit by their own zero height. */
+  const wrap = el('div', { class: 'vol-detail-wrap' + (open ? ' is-open' : '') },
+    volDetail(m, perWeek, weeks));
+
+  return el('div', { class: 'vol-item' }, btn, wrap);
 }
 
 /**
@@ -1858,14 +1869,25 @@ async function renderVolumePane(host, top) {
   // draw four sets as a full-width bar.
   const scale = Math.max(20, Math.ceil(biggest / 4) * 4);
 
+  /* ⚠️ THE LIST IS BUILT ONCE AND OPENING A ROW ONLY MOVES CLASSES. Rebuilding
+   * it on every tap was the first version and it cannot animate: the replacement
+   * node arrives already open, with nothing to move from. It also threw away the
+   * bar-growth animation on every tap, which then read as the numbers changing
+   * when nothing had. */
   const list = el('div', { class: 'vol-list' });
-  function draw() {
-    setChildren(list, ...data.muscles.map((m) => volRow(
-      m, scale, perWeek, data.weeks, volOpen === m.muscle,
-      () => { volOpen = volOpen === m.muscle ? null : m.muscle; draw(); },
-    )));
-  }
-  draw();
+  const toggle = (muscle) => (btn, wrap) => {
+    const opening = volOpen !== muscle;
+    for (const w of list.querySelectorAll('.vol-detail-wrap.is-open')) w.classList.remove('is-open');
+    for (const b of list.querySelectorAll('.vol-row[aria-expanded="true"]')) b.setAttribute('aria-expanded', 'false');
+    volOpen = opening ? muscle : null;
+    if (opening) {
+      wrap.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  };
+  setChildren(list, ...data.muscles.map((m) => volRow(
+    m, scale, perWeek, data.weeks, volOpen === m.muscle, toggle(m.muscle),
+  )));
 
   const span = `${data.spanDays} ${data.spanDays === 1 ? 'day' : 'days'}`;
   const sess = `${data.sessions} ${data.sessions === 1 ? 'session' : 'sessions'}`;

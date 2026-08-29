@@ -6129,3 +6129,57 @@ Everything is proved in the test suite and in a real browser at phone widths, bo
 route/width/theme combinations audited, 8,330 pieces of text, nothing under the contrast floor,
 nothing overflowing, no unnamed controls. Nothing has been on his phone — his instruction this
 session.
+
+---
+
+## 2026-09-01, second pass — the app moves now
+
+Tim, mid-session: *"I want to work on some 'animation' or smooth transitions throughout the [site].
+When you click on something, I want it to have some sort of visible motion between the movement
+rather than just an instant change or teleportation. Additionally, if these movements have some sort
+of realistic acceleration in how they start and stop that would be cool as well. Make sure to keep it
+quick though, I don't want it to be something that is distracting or slow for the user to deal with.
+Only use it when it's appropriate as well."*
+
+Four constraints in one paragraph, and they were the whole specification.
+
+What shipped is a system rather than a handful of transitions: three durations (100ms for a press
+answering back, 170ms for most things, 240ms for a whole surface like a sheet) and three easings —
+one for things arriving, one for things leaving, and one for something crossing the screen while you
+watch it. That last one is the "realistic" part; it is the only one that reads as an object with
+weight rather than a value being changed.
+
+**What moves.** A screen rises slightly as it arrives. A sheet drops back towards the edge it came
+from instead of blinking out. The pill in the Data tab's switch *slides* from the segment you were on
+to the one you tapped — that is the one you described, and it was previously two instant repaints
+with nothing joining them. A volume row opens by sliding the whole list around it rather than
+snapping. The volume bars grow to their number when the screen is built. Buttons, chips and rows give
+slightly under a press.
+
+**What deliberately does not move: anything on the logging path.** The set list, the steppers and the
+rest timer are what you use one-handed with a bar in the other, and 170ms between tapping + and
+seeing the number is 170ms of standing in a gym. That is what "only when it's appropriate" turned
+into. It is also all switched off for anyone whose phone is set to reduce motion, which is a real
+accessibility setting rather than a nicety — sliding panels are unpleasant with a vestibular
+disorder, and this is an app people use while moving.
+
+**Three bugs fell out of building it**, two of which nobody could have seen:
+
+The toast has been popping in half its own width off-centre since it was written — it borrowed a
+shared animation that overwrote its own centring for the duration.
+
+A closed row was leaving 14 pixels of dead space per muscle, from a CSS grid subtlety where a "zero"
+track still reserves the content's own padding.
+
+And the accessibility audit was counting 173 pieces of text inside rows nobody had opened, because a
+collapsed container measures zero but its contents keep their own boxes. That never made anything
+falsely pass — the colours are the same when the row opens — but it made the coverage claim wrong,
+which is the third time this project has been caught by that exact shape.
+
+**How it was verified**, since it is not the usual way: a test harness cannot run an animation, and a
+screenshot of a 170ms movement is one frame of luck. So it was driven in a real browser and asked
+what animations were actually running on each element at the moment it should be moving — 14 checks,
+all passing. The pill was caught mid-slide at 79px on its way from 2 to 223.
+
+What nobody can tell you from here is whether 170ms *feels* right under a thumb. All three numbers
+live in one place at the top of the stylesheet if you want them faster or slower.

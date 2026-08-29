@@ -226,5 +226,48 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
    '⚠️ and they wear .add-set\'s own shape — raised pill, fully rounded — which is what '
    + '"stand out just like the +add set button" asked for');
 
+/* ================================================================== *
+ * MOTION — 2026-09-01
+ *
+ * ⚠️ THE REDUCED-MOTION SWITCH IS AN ACCESSIBILITY GUARANTEE, NOT A NICETY, and
+ * it is exactly the kind of blanket rule that survives being deleted for weeks
+ * before anybody notices. Vestibular disorders make sliding panels genuinely
+ * unpleasant, and this is an app somebody may be using while already moving.
+ * The browser audit cannot catch its removal either — it never sets the media
+ * query — so this is the only thing standing over it.
+ * ================================================================== */
+{
+  const rm = CSS.match(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}/);
+  ok(Boolean(rm), 'the reduced-motion block is still there');
+  ok(Boolean(rm) && /animation-duration:\s*\.?0*1?ms\s*!important/.test(rm[0])
+    && /transition-duration:\s*\.?0*1?ms\s*!important/.test(rm[0]),
+     '⚠️ and it kills BOTH animations and transitions, with !important — either one left alive '
+     + 'is a screen that still moves for somebody who asked it not to');
+  ok(Boolean(rm) && /\*,\s*\*::before,\s*\*::after/.test(rm[0]),
+     'and it is a blanket over every element, so motion added later is covered without being remembered');
+
+  // ⚠️ "Keep it quick" is a number, so it is checkable. Tim asked twice.
+  const durations = [...CSS.matchAll(/--t(?:-fast|-slow)?:\s*(\d+)ms/g)].map((m) => Number(m[1]));
+  ok(durations.length === 3, `three motion durations are defined (${durations.join(', ')}ms)`);
+  ok(durations.every((d) => d <= 250),
+     `⚠️ and none of them is over a quarter of a second (${Math.max(...durations)}ms) — "keep it quick, `
+     + 'I don\'t want it to be distracting or slow"');
+
+  /* 🚨 THE SLIDING PILL IS AN ENHANCEMENT AND THE PAINTED ONE IS THE FLOOR. The
+     indicator is drawn by JS; if that never runs — an old engine, a thrown
+     module, a test harness — this rule is the only thing telling anybody which
+     segment they are on. Deleting it would leave the Data tab with no visible
+     selection at all in exactly the situations nobody tests. */
+  ok(/\.seg\[aria-selected="true"\]\s*\{[^}]*background:\s*var\(--ground\)/.test(CSS),
+     '🚨 the segmented control still paints its own selected pill without JS');
+  ok(/\.segmented\.has-ind\s+\.seg\[aria-selected="true"\]\s*\{[^}]*background:\s*none/.test(CSS),
+     'and only stops when the sliding indicator has actually been wired, so there is never neither and never both');
+
+  // A sheet on its way out is renamed rather than deleted, so the layout rules
+  // have to answer to both names or it would collapse mid-exit.
+  ok(/\.sheet,\s*\n\.sheet-x \{/.test(CSS) && /\.sheet-backdrop,\s*\n\.sheet-backdrop-x \{/.test(CSS),
+     'a closing sheet still looks like a sheet — the layout rules carry both names');
+}
+
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');
 process.exit(fails ? 1 : 0);
