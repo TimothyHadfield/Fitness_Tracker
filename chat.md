@@ -6048,3 +6048,18 @@ Walking the whole library through the rating code also turned up six exercises t
 silently unrated for months — they matched no conversion rule, contributed nothing and said nothing
 about it. Four have ratios now, two have explanations, and a test makes that state impossible to
 ship again.
+
+**Last question of the session, and it is still open:** *"There are ab exercises already in the
+library, but when people record workouts for those exercises, the ab muscle group in the display
+still shows no recordings. Why is this?"*
+
+The panel is honest and the colour is not. Core and Neck can never be ranked — nobody publishes 1RM
+standards for a plank, and most core work is time or bodyweight anyway — and tapping the abs says
+exactly that. But unrankable muscles are painted grey, and the only grey entry in the legend is "No
+data", so somebody who trains abs three times a week sees the same colour as somebody who has never
+done a sit-up. The work IS counted; it shows up in weekly volume and on the Bars view.
+
+Two fixes were offered — give unrankable muscles their own mark and legend line, and/or have the
+panel say what it HAS counted ("you've logged 14 sets of core work in the last two weeks") — and he
+has not picked one yet. It is the only thing in the app right now that says something false to a
+reader, which is why it is at the top of progress.md rather than in the pile.

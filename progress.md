@@ -4,9 +4,21 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-31. **This session is the 2026-08-31 section directly below.** The four
-2026-08-30 sections under it were the previous one. ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE
-REOPENED** (2026-08-30, fourth pass).
+**Last updated:** 2026-08-31, prepared for a chat reset. **This session is the 2026-08-31 section
+directly below — eight pieces of work, A to H.** The four 2026-08-30 sections under it were the
+previous session. ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
+
+⏸️ **ONE THING IS OFFERED AND NOT BUILT, AND IT IS THE ONLY LOOSE END.** Tim: *"There are ab
+exercises already in the library, but when people record workouts for those exercises, the ab muscle
+group in the display still shows no recordings. Why is this?"* **The panel is honest and the COLOUR
+is not** — Core and Neck are permanently unrankable (no published standards exist), and the panel
+says exactly that when you tap them, but the body map paints them **grey**, and the only grey entry
+in the legend is **"No data."** So somebody who trains abs three times a week sees the same colour as
+somebody who has never done a sit-up. His abs work IS counted — weekly volume and the Bars view both
+have it. **Two fixes were offered and he has not answered**: give unrankable muscles their own mark
+and legend entry, and/or have the panel say what HAS been logged ("no published standards, so it
+can't be ranked — you have logged 14 sets of core work in the last two weeks"). **Ask; do not
+assume.**
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
@@ -46,20 +58,20 @@ deliberate until now (`views-account.js` said so in as many words). It rides bes
 trust boundary in both directions**: base64 raster only, never an SVG, never a remote URL, capped at
 ~90 KB. Adding or removing a photo **republishes**, or "Remove" would be a lie about somebody's face.
 
-🚨 **G. A CUSTOM EXERCISE NO LONGER SETS A STRENGTH LEVEL, AND THE LIBRARY IS 275 → 318.** A custom
-"Dip Machine" at 60×10 rated a beginner's triceps **Advanced**, off a ratio guessed from the
-equipment dropdown. The guess is gone; customs are still logged, charted and counted in volume.
-**Both dip machines are in the library now**, the assisted one with the flag that makes more stack a
-*lighter* set. ⚠️ **Six library exercises were silently unrated** and a test now forbids that state.
-
-🆕 **H. THE MUSCLE PANEL NAMES ALL THREE CONTRIBUTORS**, not just the leader — a number built from
-three exercises was looking like a number built from one.
-
 🆕 **F. THE MUSCLE MAP'S BIG NUMBER SAYS WHAT IT IS.** Tim asked what the weight meant, and the
 honest answer was that the screen never said: it is an **estimated 1-rep max on that muscle's key
 lift**, which every exercise is converted into. One line under it now says so, naming the lift. 🚨
 **"Estimated" is half of it** — the line below names a real recorded set, and an inference next to a
 measurement with nothing to tell them apart is what Rule 5 exists to stop.
+
+🆕 **G. THE MUSCLE PANEL NAMES ALL THREE CONTRIBUTORS**, not just the leader — a number built from
+three exercises was looking like a number built from one.
+
+🚨 **H. A CUSTOM EXERCISE NO LONGER SETS A STRENGTH LEVEL, AND THE LIBRARY IS 275 → 318.** A custom
+"Dip Machine" at 60×10 rated a beginner's triceps **Advanced**, off a ratio guessed from the
+equipment dropdown. The guess is gone; customs are still logged, charted and counted in volume.
+**Both dip machines are in the library now**, the assisted one with the flag that makes more stack a
+*lighter* set. ⚠️ **Six library exercises were silently unrated** and a test now forbids that state.
 
 ---
 
@@ -191,7 +203,7 @@ made by the person whose face it is.**
   fills in **after** the rows paint — their photo costs a read per friend and that is the screen Tim
   once reported as *"a long delay and lag to it that's alarming"*.
 
-### F. 🚨 The muscle map's big number now says what it is
+### F. The muscle map's big number now says what it is
 
 Tim: *"it shows a weight and a bar and '____ for _____'. Problem is, I have no idea what that weight
 means. Is it for a specific exercise, or the one it's basing its decision off of?"*
@@ -222,7 +234,17 @@ than by size**; winsorised to ±25 % of their weighted median and averaged. Each
 showing, so it is an upper-envelope estimator — but the answer is a blend of three, deliberately hard
 for one flattering number to move.
 
-### G. 🚨 A CUSTOM EXERCISE NO LONGER SETS A STRENGTH LEVEL, and the library grew by 43
+### G. All three contributors are named on the muscle panel
+
+Tim: *"you mentioned how the muscle group estimate is based off your top three recordings based on
+credibility, but when you click on a muscle it only shows one recording. Could you instead show all
+3?"* It showed `contributors[0]` and nothing else, so a number built from three exercises looked like
+a number built from one. It now reads *"from … and … and …"* in the credibility order they are
+weighted in. ⚠️ **The test drives THREE DIFFERENT exercises on three days**, because `rateMuscle()`
+gives each exercise one seat — three sessions of one lift would have produced one line and passed for
+the wrong reason.
+
+### H. 🚨 A CUSTOM EXERCISE NO LONGER SETS A STRENGTH LEVEL, and the library grew by 43
 
 Tim's friend went looking for a dip machine, could not find one, made a **custom exercise**, filed it
 under Triceps and logged **60 lbs × 10**. The app rated her **triceps Advanced, Low confidence**,
@@ -279,16 +301,6 @@ the same mistake one level up.
   dumbbell shrug's 0.70. Each has its own rule ABOVE the family's, and each ordering is asserted.
 - ⚠️ **Two Full Body additions broke the volume map and its own test caught them within a minute** —
   anything on that shelf matching no rule falls back to "Full Body", which is not a muscle.
-
-### H. All three contributors are named on the muscle panel
-
-Tim: *"you mentioned how the muscle group estimate is based off your top three recordings based on
-credibility, but when you click on a muscle it only shows one recording. Could you instead show all
-3?"* It showed `contributors[0]` and nothing else, so a number built from three exercises looked like
-a number built from one. It now reads *"from … and … and …"* in the credibility order they are
-weighted in. ⚠️ **The test drives THREE DIFFERENT exercises on three days**, because `rateMuscle()`
-gives each exercise one seat — three sessions of one lift would have produced one line and passed for
-the wrong reason.
 
 ### Two smaller things found on the way
 
@@ -390,7 +402,7 @@ what I found before anything was used.
 worked muscles in red, two frames — is theirs; 6,698 illustrations, male and female. It is why every
 fitness site looks the same. **It cannot be lifted from the sites that re-host it**: the largest
 public dataset that does says in its own licence file *"obtain your own license there before reusing
-the media."* Bulk price is under **$0.75 an illustration** (~$200 for all 275 of ours, ~$30 for the
+the media."* Bulk price is under **$0.75 an illustration** (~$240 for all 318 of ours, ~$30 for the
 40 most-used) and the licence permits commercial app and website use with no attribution and no
 royalties. ⚠️ **One clause to settle by email before buying**: it forbids *"making available on a
 website for download"*, and a PWA serves image files at URLs. Aimed at wallpaper sites, but theirs
@@ -658,6 +670,15 @@ the rest for later (don't bring them up as the 'next thing to do' later though).
 **And the APP ICON / logo artwork**, closed 2026-08-31 — *"I'm going to improve it later myself.
 Forget that section of the project."* 🛑 **Not a pin, not a park: he has taken the job back.**
 
+🔁 **A RECURRING JOB HE ASKED FOR, 2026-08-31 — FOLD CUSTOM EXERCISES INTO THE LIBRARY.** *"Then,
+periodically we could look into the custom exercises and add them to the library."* Custom exercises
+no longer set a strength level, so every one somebody makes is a **gap in the library with a name
+attached** — the best list of what is missing that this project will ever get. ⚠️ **The data is on
+each account** (`customExercises`) and there is no way to read somebody else's, so this runs by
+ASKING Tim what he and his circle have created, not by querying anything. The recipe is in the
+2026-08-31 section: add the row, give it a ratio **only** where a real near-relative exists, put it
+in a movement family, and let the tests catch the rest.
+
 **PARKED at his instruction**: AirPods controls, importing food, live Strava sync (needs Blaze).
 
 ---
@@ -728,6 +749,19 @@ is a real phone camera pointed at a real screen.**
 names come from published documentation, which is precisely why every step is a preview the user
 confirms.
 
+⚠️ **AND NOTHING FROM 2026-08-31 HAS BEEN TOUCHED ON A REAL PHONE.** Specifically:
+- **The drag** is proved with a synthetic pointer in headless Chrome — a row was dragged two places
+  and its recorded sets went with it — which is not a finger on glass. Whether a row follows a thumb
+  pleasantly is Tim's call, and so is whether the set row morphing feels right mid-set.
+- **The set row can now be closed to nothing**, which the runner has never been able to do. If that
+  reads as "the controls disappeared" rather than "the row went back to normal", it is a report.
+- **The 43 new exercises** are asserted against the rating code, not against a person using them. The
+  ratios carried from near-relatives (every "carried, not measured" comment in `muscle-evidence.js`)
+  are the weakest part of that work and are labelled as such.
+- 🚨 **The two new ASSISTED entries invert the sign of a logged number.** Assisted Dip and Assisted
+  Chin-Up mean more weight on the stack is a LIGHTER set. The arithmetic is tested; what nobody has
+  done is log one at the gym and check the number on the screen matches the machine.
+
 ⚠️ **AND THE RESEARCH TOPICS (2026-08-30) HAVE NEVER BEEN READ ON A PHONE.** They are measured in
 headless Chrome at 360 and 390 in both themes, screenshotted and eyeballed — eleven collapsed rows,
 nine of which fit one screen at 360px. Whether that list is pleasant to scan under a thumb, and
@@ -784,6 +818,15 @@ history, not the app. Read the top of this file, then the **Open work index**.
    purchase — Gym Visual, ~$0.75 an illustration in bulk. `img/exercises/README.md` is the how-to
    and the licensing. **Nothing is broken while he decides**: with no pictures the app looks exactly
    as it did before.
+0c. ⏸️ **THE GREY ABS — TWO FIXES OFFERED, NEITHER PICKED (2026-08-31).** He asked why a muscle group
+   he trains shows "no recordings". The panel says the right thing on tap; the COLOUR does not, and
+   the legend's only grey entry is "No data". Offered: (i) unrankable muscles get their own mark and
+   legend line, (ii) the panel names the volume it HAS counted. The details are in the header of this
+   file. ⚠️ **This is the only thing in the app right now that says something false to a reader**,
+   which is why it sits above the older items rather than at the bottom.
+0d. 🔁 **WHICH CUSTOM EXERCISES HAVE HE AND HIS CIRCLE MADE?** His own instruction, 2026-08-31, and
+   it can only be answered by asking him — nothing here can read another account's customs. Every
+   answer is a library gap with a name on it.
 0. 🚨 **CONFIRM THE RESTORE**: does his calendar show Pull (08-24) and Legs (08-25) on a fresh
    open? **And does he believe more sessions than those two ever existed in the cloud?** If yes to
    the second, recovery starts at his phone's localStorage (Account → upload from this device).
@@ -5086,9 +5129,9 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Record** (nav) | ⚠️ **A CATEGORY CHOOSER since 2026-08-26** — Weightlifting (first, biggest, carries the next-in-rotation name, leads to the full recorder at `#/start`) plus Run / Walk-or-hike / Swim / Cycle / Climb / Something else, each a quick activity log saving a real session (D27: recorded, never modelled). The lifting picker’s rows each show **`~N min`** — the median of that workout’s own recorded durations, sets × 3 min before any exist, rounded to 5. ⚠️ **The suggestion is LEAST-RECENTLY-DONE since 2026-08-26** (`js/next-workout.js`) — the old next-in-list rule read alphabetical order on self-built systems and told Tim to repeat Monday’s Pull; never-done counts as longest-waiting, rotation order survives as the tie-break, and the caption says what was read. Still a LOOKUP, never advice; silent when it would have to guess; skips sessions whose workout was deleted **and** activity sessions (no workoutId). **§1.2’s other half — suggesting weights and reps — still waits on the estimator** |
 | **Set types** | **Supersets, tri-sets, giant sets, drop sets and myo-reps** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise opens a sheet naming all three set types *and explaining what each one is* (D8 — "myo-reps" is jargon), with a mini-set count under whichever is picked; and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. A nested set's button IS the instruction — "Strip the weight — add a drop" or "Rest 10–15 seconds — add a mini-set" — not the name of a technique. **Drop sets and myo-reps are the same nesting shape**, differing only in what changes between mini-sets, and are stored under `minis` |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
-| Exercise library | **272 exercises**, searchable, filterable by muscle group (15 groups incl. Full Body and Cardio; **13 are real muscles**) |
-| Custom exercises | User-created; choose tracked fields and how weight is counted |
-| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. ⚠️ **RECORDS FOR OTHER PEOPLE since 2026-08-29 in two different ways, and the difference is on screen**: pick a **friend** and their half is offered to **their own account** at Finish (their suggestion read from the training they share with you); pick or type a **saved person** and their sets stay here, under their name, never mixed into your own. ⚠️ **Anybody can be taken back OUT since 2026-08-30** (Tim: *"in case it was just a test, or an accident"*) — a ✕ that exists **only on the person you are already recording for**, so a destructive control is never next to a chip you are aiming at to switch. Quiet with nothing recorded, a confirm naming the count if there is; a friend's confirm says their workout will no longer reach their account; the saved identity is never deleted. ⚠️ **Swap opens on FIVE ALTERNATIVES since 2026-08-30** (`js/exercise-families.js`), with the full 275-exercise picker one tap underneath. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
+| Exercise library | **318 exercises** (275 until 2026-08-31), searchable, filterable by muscle group (16 groups incl. Full Body, Cardio and Activity; **13 are real muscles**). ⚠️ **A new row needs three things or it is inert**: the tuple here, a ratio rule in `muscle-evidence.js`, and a movement family in `exercise-families.js`. Tests assert all three |
+| Custom exercises | User-created; choose tracked fields and how weight is counted. 🚨 **THEY DO NOT SET A STRENGTH LEVEL since 2026-08-31** — the conversion used to be guessed from the equipment dropdown, and one 60×10 set on a made-up "Dip Machine" rated a beginner's triceps Advanced. They are still logged, charted and counted in weekly volume, the create form says so before you make one, and the muscle panel says so if you go looking. **Tim's plan is to fold the good ones into the library periodically** |
+| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. ⚠️ **RECORDS FOR OTHER PEOPLE since 2026-08-29 in two different ways, and the difference is on screen**: pick a **friend** and their half is offered to **their own account** at Finish (their suggestion read from the training they share with you); pick or type a **saved person** and their sets stay here, under their name, never mixed into your own. ⚠️ **Anybody can be taken back OUT since 2026-08-30** (Tim: *"in case it was just a test, or an accident"*) — a ✕ that exists **only on the person you are already recording for**, so a destructive control is never next to a chip you are aiming at to switch. Quiet with nothing recorded, a confirm naming the count if there is; a friend's confirm says their workout will no longer reach their account; the saved identity is never deleted. ⚠️ **Swap opens on FIVE ALTERNATIVES since 2026-08-30** (`js/exercise-families.js`), with the full 318-exercise picker one tap underneath. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
@@ -5467,7 +5510,7 @@ Fitness_Tracker/
 │   │                           ID because two exercises share a NAME
 │   ├── exercise-families.js    WHICH EXERCISES CAN STAND IN FOR EACH OTHER
 │   │                           — pure. 43 movement PATTERNS (not muscles) over
-│   │                           271 of 275 exercises, hand-written because a
+│   │                           314 of 318 exercises, hand-written because a
 │   │                           name-derived version is wrong quietly. ⚠️ Four
 │   │                           exercises have NO family on purpose: adduction
 │   │                           is the OPPOSITE of abduction on a machine that
@@ -5496,10 +5539,14 @@ Fitness_Tracker/
 │   │                           result does not depend on the phone it was cropped
 │   │                           on. One invariant: the square never leaves the
 │   │                           image, or an avatar saves with a blank wedge
-│   ├── exercises.js            272-exercise library + load-type rules, and the
+│   ├── exercises.js            318-exercise library + load-type rules, and the
 │   │                           BODY-WEIGHT FRACTION table. ⚠️ `assist: true` on an
 │   │                           entry INVERTS the sign of the logged weight
-│   │                           everywhere (Assisted Pull-Up, 2026-08-24)
+│   │                           everywhere — Assisted Pull-Up (2026-08-24) plus
+│   │                           Assisted Dip and Assisted Chin-Up (2026-08-31).
+│   │                           ⚠️ A NEW ROW NEEDS A RATIO in muscle-evidence.js
+│   │                           and a FAMILY in exercise-families.js or it is
+│   │                           inert; both are asserted
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
 │   ├── views-workouts.js       home, the RECORD tab (StartPickerView — the
 │   │                           workout list plus the benchmark action),
