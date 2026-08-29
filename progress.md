@@ -14,7 +14,7 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ---
 
-## THIS SESSION (2026-08-31) IN SIX LINES
+## THIS SESSION (2026-08-31) IN EIGHT LINES
 
 🆕 **A. THE WHOLE WORKOUT IS ONE TAP AWAY, AND IT CAN BE REARRANGED.** A third pill — **Exercises** —
 beside Swap and Remove opens today's list: **drag a row to reorder, add one, remove one.** 🚨 **The
@@ -45,6 +45,15 @@ deliberate until now (`views-account.js` said so in as many words). It rides bes
 **every tier**, because `profile` is identity and the tiers cut training. 🚨 **`safeAvatar()` is a
 trust boundary in both directions**: base64 raster only, never an SVG, never a remote URL, capped at
 ~90 KB. Adding or removing a photo **republishes**, or "Remove" would be a lie about somebody's face.
+
+🚨 **G. A CUSTOM EXERCISE NO LONGER SETS A STRENGTH LEVEL, AND THE LIBRARY IS 275 → 318.** A custom
+"Dip Machine" at 60×10 rated a beginner's triceps **Advanced**, off a ratio guessed from the
+equipment dropdown. The guess is gone; customs are still logged, charted and counted in volume.
+**Both dip machines are in the library now**, the assisted one with the flag that makes more stack a
+*lighter* set. ⚠️ **Six library exercises were silently unrated** and a test now forbids that state.
+
+🆕 **H. THE MUSCLE PANEL NAMES ALL THREE CONTRIBUTORS**, not just the leader — a number built from
+three exercises was looking like a number built from one.
 
 🆕 **F. THE MUSCLE MAP'S BIG NUMBER SAYS WHAT IT IS.** Tim asked what the weight meant, and the
 honest answer was that the screen never said: it is an **estimated 1-rep max on that muscle's key
@@ -212,6 +221,74 @@ half-life) × within-session fatigue × 1.25 for a benchmark; **the top three by
 than by size**; winsorised to ±25 % of their weighted median and averaged. Each input is a best
 showing, so it is an upper-envelope estimator — but the answer is a blend of three, deliberately hard
 for one flattering number to move.
+
+### G. 🚨 A CUSTOM EXERCISE NO LONGER SETS A STRENGTH LEVEL, and the library grew by 43
+
+Tim's friend went looking for a dip machine, could not find one, made a **custom exercise**, filed it
+under Triceps and logged **60 lbs × 10**. The app rated her **triceps Advanced, Low confidence**,
+beside a column of Beginners. He asked how a custom exercise could possibly know what it trains.
+
+**It did not know. She told it** — the create form's muscle dropdown — and the conversion was
+**guessed from the equipment dropdown**: Barbell 0.90, Machine 0.80, Cable 0.65, Dumbbell 0.70,
+Kettlebell 0.60, at a fixed quality of 0.20. Her numbers, run through the real code:
+
+```
+60 × 10       →  e1RM 90.9 lbs on that machine
+90.9 ÷ 0.80   →  113.6 lbs of "close-grip bench press"      ← the guess
+113.6 vs the female median of 85  →  82nd percentile  →  ADVANCED
+```
+
+- 🚨 **THE LOW QUALITY ONLY PROTECTS A MUSCLE THAT HAS OTHER EVIDENCE.** 0.20 stops a custom
+  outvoting a known lift; she had no other triceps lift, so it was the only voice in the room and led
+  outright. That is the hole in the original reasoning, and it is not fixable by lowering the number.
+- ⚠️ **AND "MACHINE" IS NOT A MEASUREMENT.** No dropdown can tell an *assisted* dip machine — where
+  the 60 lbs is HELP, and she pressed her body weight minus 60 — from a plate-loaded one.
+- ⚠️ **THE SAME ARGUMENT `bodyWeightFractionFor()` HAS ALWAYS MADE.** That function refuses to guess
+  a body-weight fraction for a custom exercise from its equipment, *"which is exactly what this table
+  refuses to do"* — while this file guessed a strength ratio from the same dropdown. Only one of
+  those two positions could be right.
+
+Tim: *"expand the library of exercises instead of trying to calculate the input of a custom exercise.
+Still allow the user to create a custom lift, but don't let it contribute to the score."*
+
+- **A custom exercise is still first-class everywhere else** — logged, charted, counted in weekly
+  volume and on the volume map. What it cannot do is set a level, and the creator sheet says so
+  BEFORE it is created rather than leaving it to be discovered on the muscle map.
+- 🚨 **THE REFUSAL IS THE FIRST LINE OF `buildContributions()`**, not a branch on the muscle rule —
+  otherwise a custom exercise named "Barbell Bench Press" still matched the key-lift path, which
+  awards **ratio 1.00 at quality 1.00**, the strongest evidence this app holds. Asserted.
+
+**And the library went 275 → 318.** Every addition either converts to its muscle's key lift or says
+why it cannot; the rule for this pass was **carry an anchor where a genuine near-relative exists,
+and leave it unrated where the leverage is unknowable** — because a labelled guess on a machine is
+the same mistake one level up.
+
+- 🚨 **THE TWO DIP MACHINES ARE NOT THE SAME THING, and that is the headline.** **Assisted Dip** (and
+  **Assisted Chin-Up**) joined `BODY_WEIGHT_FRACTION` with `assist: true`, so more on the stack is a
+  **lighter** set — proved by a test that walks 20 lbs to 100 and asserts the resistance falls. The
+  file's own comment said adding one was *"a one-line job"*, and it was. **Machine Dip** — the
+  seated stack — gets **no ratio at all**: its leverage is unpublished and varies by brand.
+- 🚨 **SIX LIBRARY EXERCISES WERE SILENTLY UNRATED**, found by walking all 275 through
+  `contributionsFor()` rather than by anybody noticing: Larsen Press, Cable Press Around, Kroc Row,
+  Cross-Body Cable Triceps Extension, Wrist Roller and Banded Hip Abduction matched no rule,
+  contributed nothing, and said nothing. Four have ratios now and two have explanations, and **a
+  test asserts no rankable library exercise can ever again do neither.**
+- ⚠️ **THE ORDERING TRAPS THIS PASS CAUGHT.** *Seated Leg Press* would have fallen into the 45°
+  sled's 1.73 and been over-rated by ~57 %; *Machine Fly* would have taken the generic `/Fly/`
+  0.30 instead of the pec deck's 0.90; *Incline Dumbbell Shrug* would have taken the standing
+  dumbbell shrug's 0.70. Each has its own rule ABOVE the family's, and each ordering is asserted.
+- ⚠️ **Two Full Body additions broke the volume map and its own test caught them within a minute** —
+  anything on that shelf matching no rule falls back to "Full Body", which is not a muscle.
+
+### H. All three contributors are named on the muscle panel
+
+Tim: *"you mentioned how the muscle group estimate is based off your top three recordings based on
+credibility, but when you click on a muscle it only shows one recording. Could you instead show all
+3?"* It showed `contributors[0]` and nothing else, so a number built from three exercises looked like
+a number built from one. It now reads *"from … and … and …"* in the credibility order they are
+weighted in. ⚠️ **The test drives THREE DIFFERENT exercises on three days**, because `rateMuscle()`
+gives each exercise one seat — three sessions of one lift would have produced one line and passed for
+the wrong reason.
 
 ### Two smaller things found on the way
 
@@ -616,8 +693,8 @@ lag (three serialised round trips before a pixel moved) · a **CSS comment that 
 eating a rule that had never rendered · **file import** (`#/import`) · **0e** and **0j** closed ·
 Blaze priced (effectively free; the cost is a card on file and no hard cap).
 
-**Tests: 3,523 across TWELVE suites**, recounted 2026-08-31 — data-layer **1763**, render **751**,
-goals 232, bodyweight 170, social 172, a11y 87, optimal 76, strength-estimate 72, volume-map 64,
+**Tests: 3,553 across TWELVE suites**, recounted 2026-08-31 — data-layer **1783**, render **756**,
+goals 232, bodyweight **175**, social 172, a11y 87, optimal 76, strength-estimate 72, volume-map 64,
 demo 58, year-grid 45, qr 33 — plus **147 rules assertions in the emulator** and 12 in
 `sw-update`. ⚠️ Treat any number here as a recount rather than a running tally.
 Sub-agents are pre-authorised (saved to memory).

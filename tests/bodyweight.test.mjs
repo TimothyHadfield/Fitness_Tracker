@@ -202,9 +202,25 @@ ok(BODY_WEIGHT_FRACTION['Assisted Pull-Up'].q < BODY_WEIGHT_FRACTION['Push-Up'].
 ok(BODY_WEIGHT_FRACTION['Assisted Pull-Up'].fraction === BODY_WEIGHT_FRACTION['Pull-Up'].fraction,
    'while its FRACTION is a pull-up\'s exactly — you hang from your hands either way');
 // The flag is opt-in, not a default somebody could invert by accident.
+/* ⚠️ THREE OF THEM SINCE 2026-08-31, AND THE LIST IS STILL PINNED. The
+ * assertion used to read "and it is the ONLY assisted entry today — adding a
+ * second is a deliberate line, not a side effect", and that is exactly what
+ * happened: Tim's friend could not find a dip machine, so Assisted Dip and
+ * Assisted Chin-Up were added on purpose. What must not happen is a FOURTH
+ * arriving as a side effect of something else, so the list is named rather than
+ * counted. Every one of them carries the same fraction and the same q for the
+ * same reason — you hang from your hands, and what is unknown is the linkage
+ * between the stack number and the pounds it takes off you. */
 ok(Object.entries(BODY_WEIGHT_FRACTION)
-     .filter(([, s]) => s.assist).map(([n]) => n).join() === 'Assisted Pull-Up',
-   'and it is the ONLY assisted entry today — adding a second is a deliberate line, not a side effect');
+     .filter(([, s]) => s.assist).map(([n]) => n).sort().join(', ')
+     === 'Assisted Chin-Up, Assisted Dip, Assisted Pull-Up',
+   'the assisted entries are exactly the three machine movements, named — a fourth is a '
+   + 'deliberate line, not a side effect');
+ok(['Assisted Chin-Up', 'Assisted Dip'].every((n) =>
+     BODY_WEIGHT_FRACTION[n].q === BODY_WEIGHT_FRACTION['Assisted Pull-Up'].q
+     && BODY_WEIGHT_FRACTION[n].fraction === BODY_WEIGHT_FRACTION['Assisted Pull-Up'].fraction),
+   '⚠️ and the two added later carry the SAME fraction and q as the first — the unknown is the '
+   + 'machine, which is identical, not the movement');
 ok(bodyWeightFractionFor(ex('Pull-Up')).assist === false,
    '⚠️ an ordinary pull-up reports assist FALSE rather than undefined — the sign is always stated');
 

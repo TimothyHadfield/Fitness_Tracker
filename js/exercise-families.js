@@ -56,7 +56,7 @@ export const FAMILIES = [
     label: 'Flat pressing',
     members: ['Barbell Bench Press', 'Dumbbell Bench Press', 'Machine Chest Press',
       'Smith Machine Bench Press', 'Floor Press', 'Larsen Press', 'Push-Up',
-      'Wide-Grip Push-Up', 'Incline Push-Up'],
+      'Wide-Grip Push-Up', 'Incline Push-Up', 'Dumbbell Squeeze Press'],
   },
   {
     // ⚠️ Decline Push-Up lives here and it is not a typo: feet ELEVATED puts the
@@ -66,24 +66,30 @@ export const FAMILIES = [
     id: 'press-incline',
     label: 'Incline pressing',
     members: ['Incline Barbell Bench Press', 'Incline Dumbbell Bench Press',
-      'Incline Machine Press', 'Close-Grip Incline Bench Press', 'Decline Push-Up'],
+      'Incline Machine Press', 'Close-Grip Incline Bench Press', 'Decline Push-Up',
+      'Smith Machine Incline Bench Press'],
   },
   {
     id: 'press-decline',
     label: 'Decline pressing',
-    members: ['Decline Barbell Bench Press', 'Decline Dumbbell Bench Press', 'Chest Dip'],
+    members: ['Decline Barbell Bench Press', 'Decline Dumbbell Bench Press', 'Chest Dip',
+      // The two dip machines, added 2026-08-31. Somebody who cannot do a dip
+      // wants the assisted one, and somebody whose gym has no dip station
+      // wants the seated machine — which is exactly what this list is for.
+      'Assisted Dip', 'Machine Dip'],
   },
   {
     id: 'chest-fly',
     label: 'Chest flyes',
     members: ['Dumbbell Fly', 'Incline Dumbbell Fly', 'Pec Deck', 'Cable Fly',
       'Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Bent-Over Cable Fly',
-      'Cable Crossover', 'Cable Press Around', 'Svend Press'],
+      'Cable Crossover', 'Cable Press Around', 'Svend Press', 'Machine Fly'],
   },
   {
     id: 'pullover',
     label: 'Pullovers',
-    members: ['Dumbbell Pullover', 'Cable Pullover', 'Straight-Arm Pulldown'],
+    members: ['Dumbbell Pullover', 'Cable Pullover', 'Straight-Arm Pulldown',
+      'Machine Pullover'],
   },
   {
     id: 'press-overhead',
@@ -100,7 +106,8 @@ export const FAMILIES = [
     label: 'Vertical pulling',
     members: ['Pull-Up', 'Chin-Up', 'Neutral-Grip Pull-Up', 'Wide-Grip Pull-Up',
       'Assisted Pull-Up', 'Lat Pulldown', 'Wide-Grip Lat Pulldown',
-      'Close-Grip Lat Pulldown', 'Reverse-Grip Lat Pulldown', 'Single-Arm Lat Pulldown'],
+      'Close-Grip Lat Pulldown', 'Reverse-Grip Lat Pulldown', 'Single-Arm Lat Pulldown',
+      'Assisted Chin-Up'],
   },
   {
     id: 'row',
@@ -108,7 +115,8 @@ export const FAMILIES = [
     members: ['Barbell Row', 'Pendlay Row', 'Yates Row', 'T-Bar Row',
       'Chest-Supported Row', 'Seal Row', 'Dumbbell Row', 'Chest-Supported Dumbbell Row',
       'Meadows Row', 'Kroc Row', 'Seated Cable Row', 'Wide-Grip Seated Row',
-      'Machine Row', 'Hammer Strength Row', 'Inverted Row'],
+      'Machine Row', 'Hammer Strength Row', 'Inverted Row', 'Smith Machine Row',
+      'Landmine Row', 'Single-Arm Cable Row'],
   },
   {
     id: 'deadlift',
@@ -125,7 +133,7 @@ export const FAMILIES = [
     label: 'Hip hinges',
     members: ['Romanian Deadlift', 'Dumbbell Romanian Deadlift', 'Stiff-Leg Deadlift',
       'Single-Leg Romanian Deadlift', 'Good Morning', 'Cable Pull-Through',
-      'Kettlebell Swing'],
+      'Kettlebell Swing', 'Deficit Romanian Deadlift'],
   },
   {
     id: 'back-extension',
@@ -139,28 +147,30 @@ export const FAMILIES = [
     label: 'Lateral raises',
     members: ['Lateral Raise', 'Cable Lateral Raise', 'Machine Lateral Raise',
       'Leaning Lateral Raise', 'Cross-Body Cable Y-Raise', 'Upright Row',
-      'Cable Upright Row'],
+      'Cable Upright Row', 'Seated Lateral Raise', 'Dumbbell Upright Row'],
   },
   {
     id: 'front-raise',
     label: 'Front raises',
-    members: ['Front Raise', 'Plate Front Raise', 'Cable Front Raise'],
+    members: ['Front Raise', 'Plate Front Raise', 'Cable Front Raise', 'Barbell Front Raise'],
   },
   {
     id: 'rear-delt',
     label: 'Rear delt work',
-    members: ['Rear Delt Fly', 'Reverse Pec Deck', 'Cable Rear Delt Fly', 'Face Pull'],
+    members: ['Rear Delt Fly', 'Reverse Pec Deck', 'Cable Rear Delt Fly', 'Face Pull',
+      'Machine Rear Delt Fly'],
   },
   {
     id: 'shrug',
     label: 'Shrugs',
     members: ['Barbell Shrug', 'Dumbbell Shrug', 'Trap Bar Shrug', 'Cable Shrug',
-      'Machine Shrug'],
+      'Machine Shrug', 'Smith Machine Shrug', 'Behind-the-Back Barbell Shrug',
+      'Snatch-Grip Barbell Shrug', 'Incline Dumbbell Shrug'],
   },
   {
     id: 'carry',
     label: 'Loaded carries',
-    members: ['Farmer Carry', 'Overhead Carry', 'Suitcase Carry'],
+    members: ['Farmer Carry', 'Overhead Carry', 'Suitcase Carry', 'Trap Bar Carry'],
   },
 
   // ---------- arms ----------
@@ -168,7 +178,7 @@ export const FAMILIES = [
     id: 'curl',
     label: 'Curls',
     members: ['Barbell Curl', 'EZ-Bar Curl', 'Dumbbell Curl', 'Alternating Dumbbell Curl',
-      'Cable Curl', 'Drag Curl', '21s'],
+      'Cable Curl', 'Drag Curl', '21s', 'Machine Curl', 'Seated Dumbbell Curl'],
   },
   {
     // The brachialis / forearm-biased curls. Reverse Curl and Cable Reverse
@@ -176,7 +186,7 @@ export const FAMILIES = [
     id: 'curl-neutral',
     label: 'Hammer and reverse curls',
     members: ['Hammer Curl', 'Cross-Body Hammer Curl', 'Cable Rope Hammer Curl',
-      'Zottman Curl', 'Reverse Curl', 'Cable Reverse Curl'],
+      'Zottman Curl', 'Reverse Curl', 'Cable Reverse Curl', 'EZ-Bar Reverse Curl'],
   },
   {
     id: 'curl-supported',
@@ -189,14 +199,14 @@ export const FAMILIES = [
     label: 'Triceps pushdowns',
     members: ['Triceps Pushdown', 'Rope Pushdown', 'V-Bar Pushdown',
       'Reverse-Grip Pushdown', 'Machine Triceps Extension', 'Triceps Kickback',
-      'Cable Kickback|Triceps'],
+      'Cable Kickback|Triceps', 'Single-Arm Cable Pushdown'],
   },
   {
     id: 'triceps-extension',
     label: 'Overhead triceps extensions',
     members: ['Overhead Cable Extension', 'Overhead Dumbbell Extension',
       'Cross-Body Cable Triceps Extension', 'Skull Crusher', 'Dumbbell Skull Crusher',
-      'Tate Press'],
+      'Tate Press', 'Rope Overhead Extension', 'EZ-Bar Skull Crusher'],
   },
   {
     // Triceps-dominant PRESSING, which is a different job from an extension —
@@ -210,12 +220,12 @@ export const FAMILIES = [
     id: 'wrist-curl',
     label: 'Wrist work',
     members: ['Wrist Curl', 'Reverse Wrist Curl', 'Behind-the-Back Wrist Curl',
-      'Wrist Roller'],
+      'Wrist Roller', 'Dumbbell Wrist Curl'],
   },
   {
     id: 'grip-hold',
     label: 'Grip holds',
-    members: ['Plate Pinch Hold', 'Dead Hang'],
+    members: ['Plate Pinch Hold', 'Dead Hang', 'Barbell Hold'],
   },
 
   // ---------- legs ----------
@@ -229,13 +239,14 @@ export const FAMILIES = [
       'Box Squat', 'Pause Squat', 'Safety Bar Squat', 'Zercher Squat',
       'Smith Machine Squat', 'Hack Squat', 'Pendulum Squat', 'Belt Squat',
       'Leg Press', 'Single-Leg Press', 'Goblet Squat', 'Bodyweight Squat',
-      'Sumo Squat'],
+      'Sumo Squat', 'Seated Leg Press', 'Landmine Squat'],
   },
   {
     id: 'lunge',
     label: 'Lunges and split squats',
     members: ['Bulgarian Split Squat', 'Split Squat', 'Walking Lunge', 'Reverse Lunge',
-      'Forward Lunge', 'Curtsy Lunge', 'Step-Up', 'Cossack Squat'],
+      'Forward Lunge', 'Curtsy Lunge', 'Step-Up', 'Cossack Squat',
+      'Barbell Bulgarian Split Squat', 'Barbell Lunge'],
   },
   {
     id: 'leg-extension',
@@ -246,13 +257,13 @@ export const FAMILIES = [
     id: 'leg-curl',
     label: 'Leg curls',
     members: ['Lying Leg Curl', 'Seated Leg Curl', 'Standing Leg Curl',
-      'Nordic Hamstring Curl', 'Glute-Ham Raise', 'Slider Leg Curl'],
+      'Nordic Hamstring Curl', 'Glute-Ham Raise', 'Slider Leg Curl', 'Cable Leg Curl'],
   },
   {
     id: 'hip-thrust',
     label: 'Hip thrusts and bridges',
     members: ['Hip Thrust', 'Single-Leg Hip Thrust', 'Glute Bridge', 'Machine Hip Thrust',
-      'Frog Pump'],
+      'Frog Pump', 'B-Stance Hip Thrust', 'Smith Machine Hip Thrust'],
   },
   {
     id: 'glute-kickback',
@@ -275,7 +286,7 @@ export const FAMILIES = [
     label: 'Calf raises',
     members: ['Standing Calf Raise', 'Seated Calf Raise', 'Leg Press Calf Raise',
       'Smith Machine Calf Raise', 'Dumbbell Calf Raise', 'Single-Leg Calf Raise',
-      'Donkey Calf Raise'],
+      'Donkey Calf Raise', 'Seated Dumbbell Calf Raise', 'Barbell Calf Raise'],
   },
 
   // ---------- core ----------
@@ -283,7 +294,7 @@ export const FAMILIES = [
     id: 'core-hold',
     label: 'Core holds',
     members: ['Plank', 'Side Plank', 'RKC Plank', 'Hollow Body Hold', 'Copenhagen Plank',
-      'Dead Bug', 'Bird Dog', 'Ab Wheel Rollout'],
+      'Dead Bug', 'Bird Dog', 'Ab Wheel Rollout', 'L-Sit', 'Dragon Flag'],
   },
   {
     id: 'core-crunch',
@@ -321,14 +332,14 @@ export const FAMILIES = [
     label: 'Conditioning',
     members: ['Burpee', 'Battle Ropes', 'Medicine Ball Slam', 'Tire Flip', 'Sled Push',
       'Sled Drag', 'Barbell Complex', 'Mountain Climber', 'Jumping Jacks',
-      'Jump Rope', 'Sprint Intervals', 'Shadow Boxing'],
+      'Jump Rope', 'Sprint Intervals', 'Shadow Boxing', 'Wall Ball', 'Devil’s Press'],
   },
   {
     id: 'cardio-steady',
     label: 'Steady cardio',
     members: ['Treadmill Run', 'Running', 'Stationary Bike', 'Assault Bike',
       'Outdoor Cycling', 'Rowing Machine', 'Elliptical', 'Stair Climber', 'Ski Erg',
-      'Swimming'],
+      'Swimming', 'Versa Climber', 'Arc Trainer'],
   },
   {
     id: 'cardio-walk',

@@ -475,13 +475,30 @@ function detail(m, muscle, profile, blocked, moreDetails) {
 
     el('div', { class: 'muscle-meta', text: confidenceLine(m) }),
 
-    // Rule 5: never let an inference look like a measurement. The estimate above
-    // is converted; this names the set it was converted FROM, which is what lets
-    // somebody tell "195 lb bench" from "195 lb inferred off a dumbbell press".
-    el('div', { class: 'muscle-meta', text:
-      `from ${m.best.exerciseName} ${units.fmtWeight(m.best.weight)}`
-      + (m.best.loadType === 'per_side' ? '/side' : '')
-      + `×${m.best.reps}, ${fmtDateShort(m.best.date)}` }),
+    /* Rule 5: never let an inference look like a measurement. These name the
+     * sets the estimate was converted FROM, which is what lets somebody tell
+     * "195 lb bench" from "195 lb inferred off a dumbbell press".
+     *
+     * ⚠️ ALL THREE SINCE 2026-08-31, NOT JUST THE LEADER. Tim: *"you mentioned
+     * how the muscle group estimate is based off your top three recordings based
+     * on credibility, but when you click on a muscle it only shows one
+     * recording. Could you instead show all 3?"* The panel had been naming
+     * `m.best` — which is `contributors[0]` — and saying nothing about the other
+     * two, so a number built from three exercises looked like a number built
+     * from one. Showing the working is the whole reason this line exists; a
+     * third of the working is not the working.
+     *
+     * ⚠️ IN CREDIBILITY ORDER, WHICH IS THE ORDER THEY ARE WEIGHTED IN, and the
+     * first one leads for a reason the reader can now see: `rateMuscle` sorts on
+     * `evidenceWeight`, not on which set was heaviest. "and" rather than a
+     * bullet, so the three read as one sentence about one number. */
+    el('div', { class: 'muscle-sources' },
+      (m.contributors && m.contributors.length ? m.contributors : [m.best]).map((c, i) =>
+        el('div', { class: 'muscle-meta', text:
+          `${i === 0 ? 'from' : 'and'} ${c.exerciseName} ${units.fmtWeight(c.weight)}`
+          + (c.loadType === 'per_side' ? '/side' : '')
+          + `×${c.reps}, ${fmtDateShort(c.date)}` })),
+    ),
 
     m.basis === 'fallback'
       ? el('div', { class: 'muscle-warn', text:

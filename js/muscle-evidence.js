@@ -75,6 +75,17 @@ export function setLoad(exercise, weight, opts) {
  */
 export function rankBlockedReason(exercise, opts) {
   if (!exercise || !exercise.name) return null;
+
+  /* ⚠️ THE CUSTOM CASE COMES FIRST, and the ordering is load-bearing: a custom
+   * exercise created with equipment "Bodyweight" would otherwise fall into the
+   * branch below and be told its body-weight fraction has never been measured,
+   * which is true of every exercise nobody has measured and is not the reason
+   * THIS one is not counted. Say the reason that can be acted on. */
+  if (exercise.isCustom) {
+    return 'it is your own exercise, so there is no published way to compare it '
+      + 'with a barbell — it still counts toward your volume';
+  }
+
   const spec = bodyWeightFractionFor(exercise);
   if (spec) {
     if (!Array.isArray(exercise.fields) || !exercise.fields.includes('reps')) return null;
@@ -88,7 +99,33 @@ export function rankBlockedReason(exercise, opts) {
     return 'how much of your body weight this one carries has never been measured, '
       + 'so it can’t be compared with a barbell';
   }
-  return null;
+
+  /* 🚨 AND THE SILENT CASE, CLOSED 2026-08-31. A LIBRARY exercise that matches no
+   * ratio rule contributes nothing and, until now, said nothing — six of them
+   * were sitting in the library like that (Larsen Press, Cable Press Around,
+   * Kroc Row, Cross-Body Cable Triceps Extension, Wrist Roller, Banded Hip
+   * Abduction), found by walking the whole library through contributionsFor()
+   * rather than by anybody noticing. A set that vanishes without a word is the
+   * exact fault the blocked list was built to end. */
+  /* ⚠️ A BAND IS NOT A WEIGHT, and it was the last silent one left after the
+   * 2026-08-31 sweep (Banded Hip Abduction, which logs reps and no load at all).
+   * The generic message below would have said "nobody has published a
+   * conversion", which invites somebody to go looking for one — the real
+   * obstacle is that a band's resistance depends on how far it is stretched and
+   * on the band, and neither is recorded or recordable here. */
+  if (exercise.equipment === 'Band') {
+    return 'a band’s resistance depends on how far it is stretched, so it cannot be '
+      + 'compared with a weight';
+  }
+
+  if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return null;
+  // ⚠️ ASKED OF THE REAL FUNCTION, not re-derived from the rules table. The first
+  // version of this branch returned the message for EVERY weighted exercise and
+  // told the barbell row it could not be converted — caught immediately by
+  // "an ordinary lift is never blocked". contributionsFor() is the one place
+  // that knows, and it cannot call back into here, so there is no recursion.
+  if (contributionsFor(exercise, opts).length) return null;
+  return 'nobody has published a way to convert this one into a barbell lift yet';
 }
 
 /* ------------------------------------------------------------------ *
@@ -237,7 +274,16 @@ const RATIOS = {
      */
     [/Incline Dumbbell Bench Press/, 0.80, 0.72],
     [/Decline Dumbbell Bench Press/, 0.76, 0.55],
+    /* ⚠️ CARRIED, NOT MEASURED (2026-08-31, the library sweep). Nobody publishes
+     * a squeeze-press standard. Two dumbbells pressed hard together the whole
+     * way up cost real load — the pecs are fighting the adduction as well as the
+     * press — so it sits a step under the flat dumbbell press's 0.81 rather than
+     * beside it, and q is low because the discount is judgement. */
+    [/Dumbbell Squeeze Press/, 0.65, 0.30],
     [/Dumbbell Bench Press/, 0.81, 0.65],
+    // Carried across the Incline Barbell anchor (0.85) with the Smith discount
+    // the flat version already takes. Not separately sourced.
+    [/Smith Machine Incline Bench Press/, 0.85, 0.40],
     [/Incline Machine Press/, 0.82, 0.45],
     // 2026-08-26 sweep: SL machine chest press 88/137/200/274/356 over bench
     // → 0.69/0.81/0.91/0.99/1.05, median 0.91. The drift is machine gearing
@@ -268,7 +314,15 @@ const RATIOS = {
     // strong lifters and overstates weak ones. That is the safe direction for
     // the failure this rating most has to avoid — nobody gets rated Elite for
     // dips they could always do — but it is a known bias, not a solved problem.
-    [/^Chest Dip$/, 1.35, 0.45],
+    /* ⚠️ THE ASSISTED DIP RIDES WITH THE FREE ONE, exactly as Assisted Pull-Up
+     * rides with the pull-ups in Back below. It is the same movement at a
+     * lighter load: `assist: true` has already turned the stack number into
+     * "body weight minus help" by the time this ratio is applied, so what
+     * arrives here is a dip's total resistance either way. The extra
+     * uncertainty about the machine's linkage is priced in the BODY_WEIGHT
+     * FRACTION's own q (0.65 against the free hang's 0.95), which is where the
+     * unknown actually lives. */
+    [/^(Chest Dip|Assisted Dip)$/, 1.35, 0.45],
     // Push-up resistance is FIXED at 0.75 x body weight, so unlike a barbell it
     // cannot be loaded — the rep count carries all of the information. Above 15
     // reps the set stops being evidence of a maximum at all (D5), and Strength
@@ -284,15 +338,32 @@ const RATIOS = {
     // (pec deck) 96/142/199/266/339 over bench → 0.76/0.84/0.90/0.96/1.00,
     // median 0.90: the machine's lever arm means the stack number runs nearly
     // as high as a bench press, not half of one.
-    [/Pec Deck/, 0.90, 0.35],
+    // ⚠️ "Machine Fly" is the same machine under the other name in common use,
+    // and it must be caught HERE rather than by the generic /Fly/ three lines
+    // down — that one is 0.30, a third of this, and would have under-rated every
+    // pec-deck user who happened to log it under the machine's other name.
+    [/Pec Deck|Machine Fly/, 0.90, 0.35],
     // ⚠️ REASONED, AND STUCK THAT WAY FOR AN UNUSUAL REASON: SL publish cable
     // fly standards (19/44/82/131/189) but never say whether the number is
     // one stack or both, and the two readings give 0.37 or 0.75 — a source
     // that cannot answer the per-side question is not a source for a per-side
     // lift. Checked 2026-08-26, left reasoned.
     [/Cable Fly|Cable Crossover|Low-to-High|High-to-Low/, 0.40, 0.30],
+    // ⚠️ TWO OF THE SIX SILENT ONES, CLOSED 2026-08-31. Walking the whole
+    // library through contributionsFor() found six exercises that matched no
+    // rule, contributed nothing and said nothing about it. These two are the
+    // Chest pair. A press-around is a fly that finishes as a press, so it takes
+    // the cable-fly number with a lower q; a Larsen press is a bench press with
+    // the legs off the floor, which costs the leg drive and nothing else.
+    [/Cable Press Around/, 0.40, 0.25],
+    [/Larsen Press/, 0.90, 0.40],
     [/Fly/, 0.30, 0.30],
     [/Svend Press/, 0.12, 0.20],
+    // No ratio for MACHINE DIP on purpose — see the exercise's own note in
+    // exercises.js. A seated dip machine's leverage is unpublished and varies by
+    // brand, and a guess here is exactly what the custom-exercise change of the
+    // same day removed. It is logged, charted and counted in volume; the muscle
+    // panel says why it does not rank.
   ],
   Back: [ // key: Barbell Row
     [/^Barbell Row$/, 1.00, 1.00],
@@ -303,6 +374,13 @@ const RATIOS = {
     [/Chest-Supported Dumbbell Row/, 0.80, 0.55],
     [/Chest-Supported Row/, 0.95, 0.45],
     [/Meadows Row/, 0.55, 0.45],
+    // Carried across the T-Bar anchor (1.05): a landmine row is a T-bar row
+    // without the pad and without the machine, so it moves a little less.
+    [/Landmine Row/, 1.00, 0.40],
+    // One of the six silent ones (2026-08-31). A Kroc row is a dumbbell row done
+    // heavy and loose for high reps — the same lift with body english, so it
+    // takes the dumbbell row's own sourced 0.98 with q dropped for the looseness.
+    [/Kroc Row/, 0.98, 0.35],
     // ⚠️ 0.85 UNTIL 2026-08-24, AND IT WAS FLATTERING EVERY DUMBBELL ROW BY ~15 %.
     // Tim asked whether his lats were really as weak as the app said; this was
     // the other half of the answer, and it ran the other way from the fatigue
@@ -330,6 +408,9 @@ const RATIOS = {
     [/Dumbbell Row/, 0.98, 0.60],
     // Reasoned — SL publish NO machine-row standard (checked 2026-08-26), so
     // the guess stays and is labelled rather than dressed as a measurement.
+    // ⚠️ "Smith Machine Row" is caught by this rule and that is the right
+    // answer, not an accident of the regex: a Smith row is a barbell row on a
+    // fixed bar, which is what the 1.00 says.
     [/Machine Row|Hammer Strength Row/, 1.00, 0.45],
     // 2026-08-26 sweep: SL seated cable row 106/146/195/251/312 over barbell
     // row 108/149/198/255/315 → 0.98 at EVERY level (drift 0.98–0.99, the
@@ -338,6 +419,13 @@ const RATIOS = {
     [/Seated Cable Row|Wide-Grip Seated Row/, 0.98, 0.60],
     // Carried across the corrected pulldown anchor (× 0.95/0.90), not measured.
     [/Single-Arm Lat Pulldown/, 0.84, 0.40],
+    // Same treatment for the one-arm row, carried across the seated cable row's
+    // sourced 0.98 by the same 0.86 the pulldown pair implies. It is logged per
+    // side and doubled, so the comparison is like for like.
+    [/Single-Arm Cable Row/, 0.84, 0.35],
+    // Carried across Cable Pullover, which is the same movement on a different
+    // machine and is itself reasoned rather than sourced.
+    [/Machine Pullover/, 0.45, 0.25],
     // 2026-08-26 sweep: SL lat pulldown 106/143/189/241/296 over barbell row
     // → 0.98/0.96/0.95/0.95/0.94, median 0.95. Nearly flat, so q rises a step.
     [/Lat Pulldown|Pulldown/, 0.95, 0.55],
@@ -373,7 +461,7 @@ const RATIOS = {
     // 110 itself, and that is priced once, in the fraction table's `q`, rather
     // than twice. Added 2026-08-24; without it the exercise had a fraction and
     // still rated nothing, because this regex is anchored.
-    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up|Assisted Pull-Up)$/, 1.28, 0.45],
+    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up|Assisted Pull-Up|Assisted Chin-Up)$/, 1.28, 0.45],
     // Deadlift family. These are tagged Back in the library and are genuinely
     // back work, but they are pulls, not rows — hence the wide conversions and
     // the low quality. Deadlift itself is ALSO the key lift for Glutes, which
@@ -426,6 +514,14 @@ const RATIOS = {
     // leg press 246/366/516/692/884 over squat → 1.46/1.61/1.73/1.84/1.91,
     // median 1.73. The reasoned 2.00 was UNDER-crediting every leg press by
     // ~15 %. Drift stays wide (sled angle and brand), q unchanged.
+    /* ⚠️ BEFORE /Leg Press/, AND THE ORDERING IS THE WHOLE POINT (2026-08-31).
+     * The 1.73 above is the 45° SLED, where you also push your own body up the
+     * rails; the horizontal seated machine moves you nowhere and the stack is
+     * the whole story, so the same number on the pin means a much smaller lift.
+     * Reasoned from that mechanism, not published — anyone finding a horizontal
+     * leg press standard should replace this rather than trust it. Falling into
+     * the sled's rule would have over-rated every seated leg press by ~57 %. */
+    [/Seated Leg Press/, 1.10, 0.25],
     [/Leg Press/, 1.73, 0.35],
     // Reasoned — no published single-leg standard (checked 2026-08-26). Still
     // ordered below the bilateral entry, which is all the guess claims.
@@ -434,6 +530,14 @@ const RATIOS = {
     // 0.63/0.71/0.78/0.83/0.87, median 0.78. Was 0.60 — flattering by ~23 %.
     [/Leg Extension/, 0.78, 0.30],
     [/Goblet Squat/, 0.35, 0.40],
+    // One end of a bar in a corner, held at the chest — a goblet squat with a
+    // longer lever and a little more load. Carried, not published.
+    [/Landmine Squat/, 0.40, 0.25],
+    // ⚠️ The barbell versions added 2026-08-31 fall into these two family rules
+    // deliberately. The ratios were set for the dumbbell versions, and a barbell
+    // split squat or lunge is the same movement with the load on the back — what
+    // changes is how much you can hold, not the fraction of a squat it
+    // represents, and the load is what gets logged either way.
     [/Bulgarian Split Squat|Split Squat/, 0.50, 0.40],
     [/Lunge/, 0.45, 0.35],
     [/Step-Up/, 0.45, 0.30],
@@ -445,6 +549,11 @@ const RATIOS = {
     // doubled, over RDL 147/207/280/364/455 → 0.59/0.65/0.70/0.75/0.78,
     // median 0.70. The reasoned 0.75 was slightly UNDER-crediting.
     [/Dumbbell Romanian Deadlift/, 0.70, 0.60],
+    // Standing on a plate or a block: more range, a little less weight. Carried
+    // off the RDL anchor by the same reasoning the deficit deadlift uses in
+    // Back (1.81 against a 1.76 conventional pull, in the other direction
+    // because that one is a floor pull).
+    [/Deficit Romanian Deadlift/, 0.95, 0.35],
     [/Single-Leg Romanian Deadlift/, 0.45, 0.35],
     // 2026-08-26 sweep: SL lying leg curl 68/103/148/201/259 over RDL →
     // 0.46/0.50/0.53/0.55/0.57, median 0.53. Was 0.45 — flattering ~18 %.
@@ -599,6 +708,10 @@ const RATIOS = {
     // are carried across the corrected barbell-preacher anchor (× 0.96/0.82),
     // keeping the shape somebody chose while resting on a sourced number.
     [/Machine Preacher Curl/, 1.05, 0.40],
+    // ⚠️ AFTER the preacher entry above, which is more specific. A seated curl
+    // machine without the pad is carried across it at a small discount; nothing
+    // is published for either.
+    [/Machine Curl/, 1.00, 0.35],
     [/Dumbbell Preacher Curl/, 0.84, 0.45],
     // SL preacher curl (barbell) 46/70/100/136/175 → 0.94/0.96/0.96/0.97/0.97,
     // median 0.96 — nearly flat, was a reasoned 0.82.
@@ -680,10 +793,22 @@ const RATIOS = {
     // bench → 0.40/0.50/0.61/0.69/0.76, median 0.61 (was 0.55). The drift is
     // the cable story again — novices barely load a stack, strong lifters
     // ride its leverage — so q drops a step.
+    // ⚠️ BEFORE the family rule below, and only to lower `q`. The ratio is the
+    // same 0.61 — the set is logged per side and doubled, so one arm at 30
+    // arrives as the 60 a two-arm pushdown would — but one arm at a time is a
+    // different enough animal from the population that was measured to be worth
+    // believing a step less.
+    [/Single-Arm Cable Pushdown/, 0.61, 0.30],
     [/Pushdown/, 0.61, 0.40],
     // 2026-08-26 sweep: SL cable overhead extension 33/60/97/142/194 over
     // close-grip bench → 0.27/0.37/0.47/0.55/0.62, median 0.47 (was 0.45).
-    [/Overhead Cable Extension/, 0.47, 0.35],
+    // ⚠️ "Rope Overhead Extension" joined the same rule on 2026-08-31 — it is
+    // the same movement under the name half the gym uses, and without it the
+    // exercise would have matched nothing at all.
+    [/Overhead Cable Extension|Rope Overhead Extension/, 0.47, 0.35],
+    // One of the six silent ones (2026-08-31), carried across the entry above:
+    // same cable, same extension, one arm across the body.
+    [/Cross-Body Cable Triceps Extension/, 0.47, 0.25],
     [/Overhead Dumbbell Extension/, 0.40, 0.35],
     // ⚠️ REASONED, NO PUBLISHED STANDARD — checked 2026-08-27 and the note that
     // used to sit here was WRONG. It said "SL publish a machine extension
@@ -705,10 +830,26 @@ const RATIOS = {
     // reasoned 0.95 was UNDER-crediting dumbbell shrugs by ~26 % — grip, not
     // traps, is what caps a dumbbell shrug, and the reasoned number assumed
     // the two moved together.
+    //
+    // ── added 2026-08-31 with the library sweep. All carried off the barbell
+    //    shrug; Strength Level publish no shrug variants beyond the two above.
+    // Behind the back the bar rests against the glutes over a shorter range.
+    [/Behind-the-Back Barbell Shrug/, 0.90, 0.35],
+    // A snatch grip is wider and starts lower, for the same reason it is weaker
+    // on a deadlift.
+    [/Snatch-Grip Barbell Shrug/, 0.85, 0.35],
+    // ⚠️ BEFORE /Dumbbell Shrug/, and it has to be. Chest on an incline bench
+    // takes away every bit of standing leverage, so this moves far less weight
+    // than a standing shrug — the family's 0.70 would have over-rated it by
+    // about 40 %. Same ordering discipline the biceps preacher entries follow.
+    [/Incline Dumbbell Shrug/, 0.50, 0.30],
     [/Dumbbell Shrug/, 0.70, 0.60],
     // Both reasoned — no published standard for either (checked 2026-08-26).
     [/Cable Shrug/, 0.90, 0.50],
+    // "Smith Machine Shrug" is caught here on purpose: a fixed bar shrug is a
+    // barbell shrug, which is what the 1.00 says.
     [/Machine Shrug/, 1.00, 0.45],
+    // Every carry, including the trap-bar one added 2026-08-31.
     [/Carry/, 0.75, 0.25],
   ],
   Calves: [ // key: Standing Calf Raise
@@ -724,12 +865,19 @@ const RATIOS = {
     // really is a population constant.
     [/^Seated Calf Raise$/, 0.66, 0.65],
     [/Smith Machine Calf Raise/, 1.00, 0.45],
+    // A bar on the back over a block: the same load path as the Smith version
+    // with the balance to manage yourself, so a small discount. Carried.
+    [/Barbell Calf Raise/, 0.95, 0.35],
     [/Leg Press Calf Raise/, 1.35, 0.35],
     [/Donkey Calf Raise/, 1.05, 0.35],
     [/Dumbbell Calf Raise/, 0.55, 0.35],
   ],
   Forearms: [ // key: Wrist Curl
     [/^Wrist Curl$/, 1.00, 1.00],
+    // Two dumbbells, logged per side and doubled, so the total is the same load
+    // the barbell version carries — 1.00 is the claim that neither hand helps
+    // the other, which is true of a wrist curl in a way it is not of a press.
+    [/Dumbbell Wrist Curl/, 1.00, 0.40],
     [/Behind-the-Back Wrist Curl/, 1.05, 0.55],
     [/Reverse Wrist Curl/, 0.55, 0.50],
     [/Cable Reverse Curl/, 0.78, 0.35],
@@ -738,11 +886,46 @@ const RATIOS = {
   ],
 };
 
-// A user-created exercise has no rule and no way to acquire one. It is admitted
-// so a custom name is not silently ignored, at a quality low enough that it can
-// never outweigh a known lift, and with a conversion guessed from equipment.
-const CUSTOM_RATIO = { Barbell: 0.90, Machine: 0.80, Cable: 0.65, Dumbbell: 0.70, Kettlebell: 0.60 };
-const CUSTOM_QUALITY = 0.20;
+/* 🚨 A CUSTOM EXERCISE NO LONGER RATES ANYTHING — 2026-08-31, AND THIS REVERSES
+ * WHAT THIS FILE DID.
+ *
+ * It used to admit one, at quality 0.20, with the conversion GUESSED FROM THE
+ * EQUIPMENT DROPDOWN: Barbell 0.90, Machine 0.80, Cable 0.65, Dumbbell 0.70,
+ * Kettlebell 0.60. The stated reason was that a custom name should not be
+ * silently ignored, and that the low quality stopped it outweighing a known
+ * lift.
+ *
+ * ⚠️ WHAT THAT MISSED: the low quality only protects a muscle that has other
+ * evidence. Tim's friend could not find a dip machine in the library, made a
+ * custom one, filed it under Triceps and logged 60 lbs × 10. Nothing else in her
+ * account trains triceps, so the guess was the only voice in the room and it led
+ * outright. The arithmetic, run on her real numbers:
+ *
+ *     60 × 10        → e1RM 90.9 lbs on that machine
+ *     90.9 ÷ 0.80    → 113.6 lbs "close-grip bench press"    ← the guess
+ *     113.6 vs the female median of 85 → 82nd percentile → ADVANCED
+ *
+ * beside a column of Beginners. The number is not a bug in the code; it is the
+ * guess doing exactly what it said it would. **"Machine" is not a measurement.**
+ * It cannot tell an assisted dip machine (where the 60 lbs is HELP, and she
+ * pressed her body weight minus 60) from a plate-loaded one, and no dropdown
+ * ever could.
+ *
+ * ⚠️ THE SAME ARGUMENT `bodyWeightFractionFor()` HAS ALWAYS MADE, applied one
+ * level up. That function refuses to guess a body-weight fraction for a custom
+ * exercise from its equipment — *"guessing one from its equipment is exactly
+ * what this table refuses to do"* — while this file went ahead and guessed a
+ * strength ratio from the same dropdown. Only one of those two positions can be
+ * right.
+ *
+ * Tim, 2026-08-31: *"expand the library of exercises instead of trying to
+ * calculate the input of a custom exercise. Still allow the user to create a
+ * custom lift, but don't let it contribute to the score."*
+ *
+ * ⚠️ SO A CUSTOM EXERCISE IS STILL A FIRST-CLASS EXERCISE EVERYWHERE ELSE — it
+ * is logged, charted, counted in weekly volume and coloured on the volume map.
+ * What it cannot do is set a strength LEVEL, and `rankBlockedReason()` says so
+ * on the muscle panel rather than leaving the sets looking uncounted.
 
 /* ------------------------------------------------------------------ *
  * Fallback: what a big lift says about the muscles it also works
@@ -864,6 +1047,13 @@ export function contributionsFor(exercise, opts) {
 // ordinary weighted lift, less for a bodyweight one whose fraction or whose
 // body weight is imperfectly known.
 function buildContributions(exercise, qualityScale) {
+  // 🚨 THE REFUSAL, AND IT IS AT THE TOP FOR A REASON. Putting it on the muscle
+  // branch alone would leave `keyLiftMuscle(exercise.name)` below still matching
+  // a custom exercise somebody happened to name "Barbell Bench Press" — and that
+  // path awards ratio 1.00 at quality 1.00, which is the strongest evidence this
+  // app can hold. One line, before anything can match.
+  if (exercise.isCustom) return [];
+
   const out = [];
   const seen = new Set();
   const add = (muscle, ratio, quality, kind, via) => {
@@ -883,11 +1073,7 @@ function buildContributions(exercise, qualityScale) {
 
   // 2. The muscle the library files it under.
   const rule = matchRule(exercise.muscle, exercise.name);
-  if (rule) {
-    add(exercise.muscle, rule.ratio, rule.quality, 'direct');
-  } else if (exercise.isCustom && MUSCLE_LIFTS[exercise.muscle]) {
-    add(exercise.muscle, CUSTOM_RATIO[exercise.equipment] || 0.75, CUSTOM_QUALITY, 'direct');
-  }
+  if (rule) add(exercise.muscle, rule.ratio, rule.quality, 'direct');
 
   // 3. Everything this lift can stand in for. Chained off the DIRECT reading it
   //    already produced, so the conversion is (this exercise → its own key

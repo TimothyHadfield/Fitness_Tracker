@@ -6017,3 +6017,34 @@ thrown out, each remaining set is converted to an estimated max and divided by i
 lift, direct evidence beats compounds, each exercise gets one seat, and the top three by
 *credibility* — not by size — are clipped to within 25 % of their median and averaged. Each input is
 a best showing, so it leans high on purpose; what it will not do is let one flattering set decide.
+
+Which led to the next one: *"when you click on a muscle it only shows one recording. Could you
+instead show all 3?"* Fair — the panel was naming the leader and saying nothing about the other two,
+so a number built from three exercises looked like a number built from one. It reads "from … and …
+and …" now, in the credibility order they are actually weighted in.
+
+**And then the custom-exercise question, which turned out to be the real one.** His friend could not
+find a dip machine, made a custom exercise, filed it under Triceps and did 60 lbs for 10. The app
+told her her triceps were Advanced while everything else said Beginner.
+
+The app never knew what her exercise trained — she told it, on the create form — and the conversion
+was guessed from the equipment dropdown: "Machine" meant "assume 80 % of a close-grip bench". Her
+60 × 10 became an estimated 91 lbs on the machine, divided by that 0.80, and came out as a 114 lb
+close-grip bench against a female median of 85. Eighty-second percentile. Advanced.
+
+The low quality the guess carried was supposed to stop exactly this, and it only works when a muscle
+has other evidence to be outvoted by. She had none. And "Machine" cannot tell an assisted dip machine
+— where the 60 lbs is help, and she pressed her bodyweight minus 60 — from a plate-loaded one.
+
+Tim's call: *"expand the library of exercises instead of trying to calculate the input of a custom
+exercise. Still allow the user to create a custom lift, but don't let it contribute to the score."*
+So custom exercises are logged, charted and counted in weekly volume, and they no longer set a
+strength level — the create form says so before you make one. The library went from 275 exercises to
+318, including both dip machines: the assisted one, where more weight on the stack now correctly
+reads as a *lighter* set, and the seated machine, which gets no conversion at all because nobody has
+published one and guessing is what we just removed.
+
+Walking the whole library through the rating code also turned up six exercises that had been
+silently unrated for months — they matched no conversion rule, contributed nothing and said nothing
+about it. Four have ratios now, two have explanations, and a test makes that state impossible to
+ship again.

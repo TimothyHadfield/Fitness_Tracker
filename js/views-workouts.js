@@ -1961,6 +1961,18 @@ export function openCustomExerciseSheet(onPick) {
       el('div', { class: 'field' }, el('label', { text: 'Name' }), name),
       el('div', { class: 'field' }, el('label', { text: 'Muscle group' }), muscle),
       el('div', { class: 'field' }, el('label', { text: 'Equipment' }), equip),
+      /* ⚠️ SAID BEFORE IT IS CREATED, not discovered afterwards on the muscle
+       * map. Until 2026-08-31 a custom exercise DID set a strength level, off a
+       * ratio guessed from the equipment dropdown above — one 60 lb × 10 set on
+       * a made-up "Dip Machine" rated a beginner's triceps Advanced. It no
+       * longer does, and this is the sentence that stops the absence reading as
+       * a bug when somebody later wonders why their custom lift moved nothing.
+       * js/muscle-evidence.js's CUSTOM_RATIO header has the whole argument. */
+      el('div', { class: 'field-help', text:
+        'Custom exercises are logged, charted and counted in your weekly volume — '
+        + 'but they do not set a strength level, because there is no published way '
+        + 'to compare a movement the app has never seen with a barbell. Tell Tim and '
+        + 'it can be added to the library properly.' }),
       el('div', { class: 'field' },
         el('label', { text: 'What do you want to track?' }),
         fieldChips,

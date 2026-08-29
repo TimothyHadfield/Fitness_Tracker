@@ -2585,6 +2585,124 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   }
 }
 
+/* ================= a custom exercise cannot set a level (2026-08-31) =========
+ *
+ * Tim's friend could not find a dip machine, made a custom exercise, filed it
+ * under Triceps and logged 60 lbs × 10. The app rated her triceps ADVANCED, off
+ * a ratio guessed from the equipment dropdown, beside a column of Beginners.
+ *
+ * Tim: *"expand the library of exercises instead of trying to calculate the
+ * input of a custom exercise. Still allow the user to create a custom lift, but
+ * don't let it contribute to the score."*
+ *
+ * 🚨 THE ARITHMETIC IS REPRODUCED HERE rather than described, because the number
+ * is the whole argument: 90.9 e1RM ÷ a guessed 0.80 = 113.6 lbs of "close-grip
+ * bench press" against a female median of 85.
+ */
+{
+  const me3 = await import('../js/muscle-evidence.js');
+  const { makeCustomExercise } = await import('../js/exercises.js');
+  const custom = makeCustomExercise({ name: 'Dip Machine', muscle: 'Triceps', equipment: 'Machine' });
+
+  ok(me3.contributionsFor(custom).length === 0,
+     '🚨 a custom exercise contributes NOTHING to any muscle rating — the equipment dropdown is '
+     + 'not a measurement, and "Machine" cannot tell an assisted dip machine from a plate-loaded one');
+
+  // ⚠️ AND IT CANNOT BE TALKED INTO ONE BY ITS NAME EITHER. The refusal is at
+  // the top of buildContributions() precisely so the key-lift branch — which
+  // awards ratio 1.00 at quality 1.00, the strongest evidence the app holds —
+  // cannot match a custom exercise somebody named after a real lift.
+  const impostor = makeCustomExercise({ name: 'Barbell Bench Press', muscle: 'Chest', equipment: 'Barbell' });
+  ok(me3.contributionsFor(impostor).length === 0,
+     '🚨 not even one NAMED after a key lift — that path is ratio 1.00 at quality 1.00');
+
+  ok(/your own exercise/.test(me3.rankBlockedReason(custom) || ''),
+     '⚠️ and the panel SAYS why rather than letting the sets vanish — "nothing recorded" over work '
+     + 'somebody did is the fault the blocked list exists to end');
+  ok(/volume/.test(me3.rankBlockedReason(custom) || ''),
+     'and says what it still counts toward, because it is not being ignored');
+
+  /* 🚨 NO LIBRARY EXERCISE IS SILENT. This is the assertion that found the
+   * original six — Larsen Press, Cable Press Around, Kroc Row, Cross-Body Cable
+   * Triceps Extension, Wrist Roller and Banded Hip Abduction all matched no
+   * ratio rule, contributed nothing, and said nothing about it. Four now have
+   * ratios and two have explanations. Any exercise added later either converts
+   * or says why not; it can no longer do neither. */
+  const { MUSCLE_LIFTS: LIFTS } = await import('../js/strength-standards.js');
+  const silent = BUILT_IN_EXERCISES.filter((e) => {
+    if (!LIFTS[e.muscle]) return false;                     // Core, Cardio: never rated
+    if (me3.contributionsFor(e, { bodyWeight: 180, bodyWeightQuality: 1 }).length) return false;
+    return !me3.rankBlockedReason(e, { bodyWeight: 180 });
+  }).map((e) => e.name);
+  ok(silent.length === 0,
+     silent.length
+       ? `🚨 these contribute nothing AND explain nothing: ${silent.join(', ')}`
+       : 'every rankable library exercise either converts to its key lift or says why it cannot');
+}
+
+/* ================= the library expansion (2026-08-31) =================
+ *
+ * Tim: *"Could you look into all the potential exercises you might've missed and
+ * add them to the library?"* — prompted by the dip machine his friend went
+ * looking for and did not find.
+ */
+{
+  const me4 = await import('../js/muscle-evidence.js');
+  const { BODY_WEIGHT_FRACTION } = await import('../js/exercises.js');
+  const { totalResistance } = await import('../js/e1rm.js');
+  const ratioOf = (name, muscle) => {
+    const c = me4.contributionsFor(byName(name), { bodyWeight: 180, bodyWeightQuality: 1 })
+      .find((x) => x.muscle === muscle);
+    return c ? c.ratio : null;
+  };
+
+  ok(BUILT_IN_EXERCISES.length >= 315,
+     `${BUILT_IN_EXERCISES.length} exercises in the library, up from 275`);
+
+  /* ---- the two dip machines, which are NOT the same thing ---- */
+  ok(Boolean(byName('Assisted Dip')) && Boolean(byName('Machine Dip')),
+     'both dip machines exist now — the assisted one and the seated stack');
+  const dip = byName('Assisted Dip');
+  const light = totalResistance(dip, 20, 180);
+  const heavy = totalResistance(dip, 100, 180);
+  ok(light && heavy && heavy.load < light.load,
+     `🚨 MORE ON THE STACK IS A LIGHTER SET on the assisted dip (${light.load} → ${heavy.load} lbs) — `
+     + 'the assist flag inverts the sign, which is the whole reason it needed a table entry rather '
+     + 'than a library row');
+  ok(near(ratioOf('Assisted Dip', 'Chest'), 1.35),
+     'and it converts at the free dip\'s own ratio, because by then the help is already subtracted');
+  ok(me4.contributionsFor(byName('Machine Dip')).length === 0
+     && /published/.test(me4.rankBlockedReason(byName('Machine Dip')) || ''),
+     '⚠️ while the SEATED machine gets no ratio at all and says so — its leverage is unpublished, '
+     + 'and guessing one is exactly what the custom-exercise change removed the same day');
+
+  /* ---- the orderings that would silently invert if a rule moved ---- */
+  ok(ratioOf('Seated Leg Press', 'Quads') < ratioOf('Leg Press', 'Quads'),
+     '🚨 a horizontal leg press converts BELOW the 45° sled — falling into the sled\'s rule would '
+     + 'have over-rated every seated leg press by about 57 %');
+  ok(ratioOf('Incline Dumbbell Shrug', 'Traps') < ratioOf('Dumbbell Shrug', 'Traps'),
+     'an incline shrug below a standing one — no standing leverage, far less weight');
+  ok(near(ratioOf('Machine Fly', 'Chest'), ratioOf('Pec Deck', 'Chest')),
+     '⚠️ "Machine Fly" converts as a pec deck (0.90) and not as the generic fly (0.30) — it is the '
+     + 'same machine under the other name in use');
+  ok(ratioOf('Dumbbell Squeeze Press', 'Chest') < ratioOf('Dumbbell Bench Press', 'Chest'),
+     'a squeeze press below a flat press, because the adduction costs load');
+
+  /* ---- the six that used to be silent ---- */
+  for (const [n, m] of [['Larsen Press', 'Chest'], ['Cable Press Around', 'Chest'],
+                        ['Kroc Row', 'Back'], ['Cross-Body Cable Triceps Extension', 'Triceps']]) {
+    ok(ratioOf(n, m) > 0, `${n} converts now (${ratioOf(n, m)}) — it matched no rule at all before`);
+  }
+  ok(/band/.test(me4.rankBlockedReason(byName('Banded Hip Abduction')) || ''),
+     '⚠️ and a BAND says the honest thing — its resistance depends on the stretch, which is not a '
+     + 'conversion anybody could publish');
+
+  /* ---- and the assisted family is complete ---- */
+  ok(['Assisted Pull-Up', 'Assisted Chin-Up', 'Assisted Dip']
+       .every((n) => BODY_WEIGHT_FRACTION[n] && BODY_WEIGHT_FRACTION[n].assist === true),
+     'all three assist-machine movements carry the flag on the table entry, never on a name regex');
+}
+
 /* ================= within-session fatigue ================= *
  *
  * ⚠️ TIM'S SESSION, 2026-08-24, and the defect it exposed. He did assisted

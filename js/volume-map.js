@@ -260,6 +260,14 @@ const RULES = [
   { muscle: 'Full Body', when: /sled drag/i, only: [], also: ['Quads', 'Glutes', 'Hamstrings'] },
   { muscle: 'Full Body', when: /tire flip/i, only: [], also: ['Quads', 'Glutes', 'Back', 'Chest'] },
   { muscle: 'Full Body', when: /burpee/i, only: [], also: ['Chest', 'Quads'] },
+  /* ⚠️ ADDED WITH THE TWO NEW FULL-BODY LIFTS, 2026-08-31, AND THE TEST IS WHY.
+   * Anything on the Full Body shelf that matches no rule here falls back to its
+   * own muscle group — which is not a muscle at all — and the volume map's own
+   * "every contribution names a real muscle group" assertion caught both of
+   * them within a minute of the library edit. A shelf is not a muscle, and a
+   * new entry on it needs a line here or it counts toward nothing. */
+  { muscle: 'Full Body', when: /devil.s press/i, only: [], also: ['Shoulders', 'Chest', 'Quads', 'Back'] },
+  { muscle: 'Full Body', when: /wall ball/i, only: [], also: ['Quads', 'Glutes', 'Shoulders'] },
   { muscle: 'Full Body', when: /jump/i, only: [], also: ['Quads', 'Glutes', 'Calves'] },
   { muscle: 'Full Body', when: /complex/i, only: [], also: ['Quads', 'Glutes', 'Back', 'Shoulders'] },
 ];

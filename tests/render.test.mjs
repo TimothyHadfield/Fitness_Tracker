@@ -286,6 +286,10 @@ ok(/confidence/i.test(panelText),
    '⚠️ and how much to believe it — shortened to a word, never dropped');
 ok(/from .+\d+×\d+/.test(panelText),
    '⚠️ and the set it was converted FROM (Rule 5: an inference must not look like a measurement)');
+// One benchmark in this fixture, so one source line — the multi-source case is
+// driven with three real chest lifts further down.
+ok(panel.querySelectorAll('.muscle-sources > *').length === 1,
+   'a rating built from one exercise names one set');
 ok(Boolean(data.querySelector('.to-next-fill')), 'progress bar toward the next level renders');
 const selectedNow = data.querySelectorAll('.body-region.is-selected');
 ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length} regions)`);
@@ -327,6 +331,36 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
   const off = await openMuscles();
   ok(!/\d+%/.test(off.querySelector('.lv-key').textContent),
      'and turning it off hides them again — the switch works in both directions');
+
+  /* 🚨 ALL THREE CONTRIBUTORS, NOT JUST THE LEADER (2026-08-31). Tim: *"you
+   * mentioned how the muscle group estimate is based off your top three
+   * recordings based on credibility, but when you click on a muscle it only
+   * shows one recording. Could you instead show all 3?"* The panel named
+   * `contributors[0]` and said nothing about the rest, so a number built from
+   * three exercises looked like a number built from one.
+   *
+   * ⚠️ THREE DIFFERENT EXERCISES, on three different days. rateMuscle() gives
+   * each exercise ONE seat and each exercise-day one value, so three sessions of
+   * the same lift would produce a single source line and this test would pass
+   * for the wrong reason — which is the exact bug the "three exercises, not
+   * three sets" fix in muscle-evidence.js was about. */
+  for (const [i, name] of ['Barbell Bench Press', 'Incline Dumbbell Bench Press', 'Machine Chest Press'].entries()) {
+    await store.saveSession({
+      workoutName: 'Push', date: `2026-08-1${i + 1}`, startedAt: `2026-08-1${i + 1}T10:00:00.000Z`,
+      entries: [{ exerciseId: byName(name).id, exerciseName: name,
+        sets: [{ weight: 150 - i * 20, reps: 5 }] }],
+    });
+  }
+  const many = await openMuscles();
+  const sources = [...many.querySelectorAll('.muscle-sources > *')].map((n) => n.textContent);
+  ok(sources.length === 3,
+     `🚨 all three contributing sets are named (${sources.length}) — the estimate is a blend of `
+     + 'three exercises and the panel now shows the whole of the working');
+  ok(/^from /.test(sources[0]) && sources.slice(1).every((s) => /^and /.test(s)),
+     'reading as one sentence: "from … and … and …", in the credibility order they are weighted in');
+  ok(new Set(sources.map((s) => s.replace(/^(from|and) /, '').split(/\s\d/)[0])).size === 3,
+     '⚠️ and they are three DIFFERENT exercises — one seat each, which is what makes a corroborated '
+     + 'reading different from the same lift counted three times');
 }
 
 /* ============ the side-panel layout hook ============ */

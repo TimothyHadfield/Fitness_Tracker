@@ -47,6 +47,26 @@ const RAW = [
   ['Wide-Grip Push-Up', 'Chest', 'Bodyweight', 'r'],
   ['Svend Press', 'Chest', 'Plate', 'wr'],
   ['Smith Machine Bench Press', 'Chest', 'Machine', 'wr'],
+  ['Smith Machine Incline Bench Press', 'Chest', 'Machine', 'wr'],
+  // Two dumbbells pressed together the whole way up — much less weight than a
+  // flat press for the same effort, which its ratio has to say.
+  ['Dumbbell Squeeze Press', 'Chest', 'Dumbbell', 'wr'],
+  // The same machine a pec deck is; both names are in use and neither is wrong.
+  ['Machine Fly', 'Chest', 'Machine', 'wr'],
+  /* ⚠️ THE TWO DIP MACHINES, ADDED 2026-08-31, AND THEY ARE NOT THE SAME THING.
+   * Tim's friend went looking for "dip machine", found nothing, and made a
+   * custom exercise — which is the whole reason for this pass.
+   *
+   *   Assisted Dip — the kneel-on-the-pad counterweight machine. The number you
+   *     log is HELP, and `assist: true` in BODY_WEIGHT_FRACTION inverts it, so
+   *     more on the stack is a lighter set. Exactly the Assisted Pull-Up path.
+   *   Machine Dip — seated, pushing a handle against a stack. The number is
+   *     resistance, and how much of it reaches the triceps depends on the
+   *     machine's leverage, which nobody has published. It gets NO ratio and
+   *     the muscle panel says why.
+   */
+  ['Assisted Dip', 'Chest', 'Machine', 'wr'],
+  ['Machine Dip', 'Chest', 'Machine', 'wr'],
 
   // ---------- BACK ----------
   ['Deadlift', 'Back', 'Barbell', 'wr'],
@@ -70,6 +90,9 @@ const RAW = [
   ['Neutral-Grip Pull-Up', 'Back', 'Bodyweight', 'wr'],
   ['Wide-Grip Pull-Up', 'Back', 'Bodyweight', 'wr'],
   ['Assisted Pull-Up', 'Back', 'Machine', 'wr'],
+  // The same machine, underhand. It was missing while the overhand one was
+  // here, which is the kind of gap only a person standing at the machine finds.
+  ['Assisted Chin-Up', 'Back', 'Machine', 'wr'],
   ['Lat Pulldown', 'Back', 'Cable', 'wr'],
   ['Wide-Grip Lat Pulldown', 'Back', 'Cable', 'wr'],
   ['Close-Grip Lat Pulldown', 'Back', 'Cable', 'wr'],
@@ -81,6 +104,12 @@ const RAW = [
   ['Cable Pullover', 'Back', 'Cable', 'wr'],
   ['Machine Row', 'Back', 'Machine', 'wr'],
   ['Hammer Strength Row', 'Back', 'Machine', 'wr'],
+  ['Smith Machine Row', 'Back', 'Machine', 'wr'],
+  // One end of a barbell in a corner or a landmine sleeve. A T-bar row without
+  // the pad and without the machine.
+  ['Landmine Row', 'Back', 'Barbell', 'wr'],
+  ['Single-Arm Cable Row', 'Back', 'Cable', 'wr'],
+  ['Machine Pullover', 'Back', 'Machine', 'wr'],
   ['Inverted Row', 'Back', 'Bodyweight', 'r'],
   ['Good Morning', 'Back', 'Barbell', 'wr'],
   ['Back Extension', 'Back', 'Bodyweight', 'wr'],
@@ -98,18 +127,22 @@ const RAW = [
   ['Machine Shoulder Press', 'Shoulders', 'Machine', 'wr'],
   ['Smith Machine Overhead Press', 'Shoulders', 'Machine', 'wr'],
   ['Lateral Raise', 'Shoulders', 'Dumbbell', 'wr'],
+  ['Seated Lateral Raise', 'Shoulders', 'Dumbbell', 'wr'],
   ['Cable Lateral Raise', 'Shoulders', 'Cable', 'wr'],
   ['Cross-Body Cable Y-Raise', 'Shoulders', 'Cable', 'wr'],
   ['Machine Lateral Raise', 'Shoulders', 'Machine', 'wr'],
   ['Leaning Lateral Raise', 'Shoulders', 'Dumbbell', 'wr'],
   ['Front Raise', 'Shoulders', 'Dumbbell', 'wr'],
+  ['Barbell Front Raise', 'Shoulders', 'Barbell', 'wr'],
   ['Plate Front Raise', 'Shoulders', 'Plate', 'wr'],
   ['Cable Front Raise', 'Shoulders', 'Cable', 'wr'],
   ['Rear Delt Fly', 'Shoulders', 'Dumbbell', 'wr'],
   ['Reverse Pec Deck', 'Shoulders', 'Machine', 'wr'],
+  ['Machine Rear Delt Fly', 'Shoulders', 'Machine', 'wr'],
   ['Cable Rear Delt Fly', 'Shoulders', 'Cable', 'wr'],
   ['Face Pull', 'Shoulders', 'Cable', 'wr'],
   ['Upright Row', 'Shoulders', 'Barbell', 'wr'],
+  ['Dumbbell Upright Row', 'Shoulders', 'Dumbbell', 'wr'],
   ['Cable Upright Row', 'Shoulders', 'Cable', 'wr'],
   ['Landmine Press', 'Shoulders', 'Barbell', 'wr'],
   ['Z Press', 'Shoulders', 'Barbell', 'wr'],
@@ -118,11 +151,19 @@ const RAW = [
 
   // ---------- TRAPS ----------
   ['Barbell Shrug', 'Traps', 'Barbell', 'wr'],
+  ['Behind-the-Back Barbell Shrug', 'Traps', 'Barbell', 'wr'],
+  ['Snatch-Grip Barbell Shrug', 'Traps', 'Barbell', 'wr'],
   ['Dumbbell Shrug', 'Traps', 'Dumbbell', 'wr'],
+  // Chest on an incline bench, arms hanging — the traps do the work with none
+  // of the standing leverage, so it moves far less weight than a standing shrug
+  // and gets its own ratio rather than the dumbbell family's.
+  ['Incline Dumbbell Shrug', 'Traps', 'Dumbbell', 'wr'],
   ['Trap Bar Shrug', 'Traps', 'Barbell', 'wr'],
   ['Cable Shrug', 'Traps', 'Cable', 'wr'],
   ['Machine Shrug', 'Traps', 'Machine', 'wr'],
+  ['Smith Machine Shrug', 'Traps', 'Machine', 'wr'],
   ['Farmer Carry', 'Traps', 'Dumbbell', 'wt'],
+  ['Trap Bar Carry', 'Traps', 'Barbell', 'wt'],
   ['Overhead Carry', 'Traps', 'Dumbbell', 'wt'],
 
   // ---------- BICEPS ----------
@@ -136,6 +177,8 @@ const RAW = [
   ['Preacher Curl', 'Biceps', 'Barbell', 'wr'],
   ['Dumbbell Preacher Curl', 'Biceps', 'Dumbbell', 'wr'],
   ['Machine Preacher Curl', 'Biceps', 'Machine', 'wr'],
+  ['Machine Curl', 'Biceps', 'Machine', 'wr'],
+  ['Seated Dumbbell Curl', 'Biceps', 'Dumbbell', 'wr'],
   ['Concentration Curl', 'Biceps', 'Dumbbell', 'wr'],
   ['Cable Curl', 'Biceps', 'Cable', 'wr'],
   ['Cable Rope Hammer Curl', 'Biceps', 'Cable', 'wr'],
@@ -150,10 +193,13 @@ const RAW = [
   ['Rope Pushdown', 'Triceps', 'Cable', 'wr'],
   ['V-Bar Pushdown', 'Triceps', 'Cable', 'wr'],
   ['Reverse-Grip Pushdown', 'Triceps', 'Cable', 'wr'],
+  ['Single-Arm Cable Pushdown', 'Triceps', 'Cable', 'wr'],
   ['Overhead Cable Extension', 'Triceps', 'Cable', 'wr'],
+  ['Rope Overhead Extension', 'Triceps', 'Cable', 'wr'],
   ['Cross-Body Cable Triceps Extension', 'Triceps', 'Cable', 'wr'],
   ['Overhead Dumbbell Extension', 'Triceps', 'Dumbbell', 'wr'],
   ['Skull Crusher', 'Triceps', 'Barbell', 'wr'],
+  ['EZ-Bar Skull Crusher', 'Triceps', 'Barbell', 'wr'],
   ['Dumbbell Skull Crusher', 'Triceps', 'Dumbbell', 'wr'],
   ['JM Press', 'Triceps', 'Barbell', 'wr'],
   ['Triceps Dip', 'Triceps', 'Bodyweight', 'wr'],
@@ -166,11 +212,16 @@ const RAW = [
 
   // ---------- FOREARMS ----------
   ['Wrist Curl', 'Forearms', 'Barbell', 'wr'],
+  ['Dumbbell Wrist Curl', 'Forearms', 'Dumbbell', 'wr'],
   ['Reverse Wrist Curl', 'Forearms', 'Barbell', 'wr'],
   ['Reverse Curl', 'Forearms', 'Barbell', 'wr'],
+  ['EZ-Bar Reverse Curl', 'Forearms', 'Barbell', 'wr'],
   ['Cable Reverse Curl', 'Forearms', 'Cable', 'wr'],
   ['Behind-the-Back Wrist Curl', 'Forearms', 'Barbell', 'wr'],
   ['Plate Pinch Hold', 'Forearms', 'Plate', 'wt'],
+  // A loaded bar held at the sides for time. Grip work, and deliberately given
+  // no ratio: how long you can hold a bar is not a wrist curl.
+  ['Barbell Hold', 'Forearms', 'Barbell', 'wt'],
   ['Dead Hang', 'Forearms', 'Bodyweight', 't'],
   ['Wrist Roller', 'Forearms', 'Other', 'wt'],
 
@@ -187,13 +238,20 @@ const RAW = [
   ['Hack Squat', 'Quads', 'Machine', 'wr'],
   ['Pendulum Squat', 'Quads', 'Machine', 'wr'],
   ['Leg Press', 'Quads', 'Machine', 'wr'],
+  // ⚠️ The horizontal machine, and it gets its OWN ratio rather than the 45°
+  // press's 1.73 — you push your own body backwards on a 45, and on this one
+  // you do not, so the same stack number means a very different lift.
+  ['Seated Leg Press', 'Quads', 'Machine', 'wr'],
   ['Single-Leg Press', 'Quads', 'Machine', 'wr'],
   ['Leg Extension', 'Quads', 'Machine', 'wr'],
   ['Single-Leg Extension', 'Quads', 'Machine', 'wr'],
   ['Goblet Squat', 'Quads', 'Dumbbell', 'wr'],
+  ['Landmine Squat', 'Quads', 'Barbell', 'wr'],
   ['Bulgarian Split Squat', 'Quads', 'Dumbbell', 'wr'],
+  ['Barbell Bulgarian Split Squat', 'Quads', 'Barbell', 'wr'],
   ['Split Squat', 'Quads', 'Dumbbell', 'wr'],
   ['Walking Lunge', 'Quads', 'Dumbbell', 'wr'],
+  ['Barbell Lunge', 'Quads', 'Barbell', 'wr'],
   ['Reverse Lunge', 'Quads', 'Dumbbell', 'wr'],
   ['Forward Lunge', 'Quads', 'Dumbbell', 'wr'],
   ['Curtsy Lunge', 'Quads', 'Dumbbell', 'wr'],
@@ -206,11 +264,13 @@ const RAW = [
   // ---------- HAMSTRINGS ----------
   ['Romanian Deadlift', 'Hamstrings', 'Barbell', 'wr'],
   ['Dumbbell Romanian Deadlift', 'Hamstrings', 'Dumbbell', 'wr'],
+  ['Deficit Romanian Deadlift', 'Hamstrings', 'Barbell', 'wr'],
   ['Stiff-Leg Deadlift', 'Hamstrings', 'Barbell', 'wr'],
   ['Single-Leg Romanian Deadlift', 'Hamstrings', 'Dumbbell', 'wr'],
   ['Lying Leg Curl', 'Hamstrings', 'Machine', 'wr'],
   ['Seated Leg Curl', 'Hamstrings', 'Machine', 'wr'],
   ['Standing Leg Curl', 'Hamstrings', 'Machine', 'wr'],
+  ['Cable Leg Curl', 'Hamstrings', 'Cable', 'wr'],
   ['Nordic Hamstring Curl', 'Hamstrings', 'Bodyweight', 'r'],
   ['Glute-Ham Raise', 'Hamstrings', 'Bodyweight', 'wr'],
   ['Cable Pull-Through', 'Hamstrings', 'Cable', 'wr'],
@@ -220,8 +280,10 @@ const RAW = [
   // ---------- GLUTES ----------
   ['Hip Thrust', 'Glutes', 'Barbell', 'wr'],
   ['Single-Leg Hip Thrust', 'Glutes', 'Bodyweight', 'wr'],
+  ['B-Stance Hip Thrust', 'Glutes', 'Barbell', 'wr'],
   ['Glute Bridge', 'Glutes', 'Barbell', 'wr'],
   ['Machine Hip Thrust', 'Glutes', 'Machine', 'wr'],
+  ['Smith Machine Hip Thrust', 'Glutes', 'Machine', 'wr'],
   ['Cable Kickback', 'Glutes', 'Cable', 'wr'],
   ['Machine Glute Kickback', 'Glutes', 'Machine', 'wr'],
   ['Hip Abduction Machine', 'Glutes', 'Machine', 'wr'],
@@ -237,6 +299,8 @@ const RAW = [
   ['Leg Press Calf Raise', 'Calves', 'Machine', 'wr'],
   ['Smith Machine Calf Raise', 'Calves', 'Machine', 'wr'],
   ['Dumbbell Calf Raise', 'Calves', 'Dumbbell', 'wr'],
+  ['Seated Dumbbell Calf Raise', 'Calves', 'Dumbbell', 'wr'],
+  ['Barbell Calf Raise', 'Calves', 'Barbell', 'wr'],
   ['Single-Leg Calf Raise', 'Calves', 'Bodyweight', 'wr'],
   ['Donkey Calf Raise', 'Calves', 'Machine', 'wr'],
   ['Tibialis Raise', 'Calves', 'Bodyweight', 'r'],
@@ -246,6 +310,8 @@ const RAW = [
   ['Side Plank', 'Core', 'Bodyweight', 't'],
   ['RKC Plank', 'Core', 'Bodyweight', 't'],
   ['Hollow Body Hold', 'Core', 'Bodyweight', 't'],
+  ['L-Sit', 'Core', 'Bodyweight', 't'],
+  ['Dragon Flag', 'Core', 'Bodyweight', 'r'],
   ['Dead Bug', 'Core', 'Bodyweight', 'r'],
   ['Bird Dog', 'Core', 'Bodyweight', 'r'],
   ['Crunch', 'Core', 'Bodyweight', 'r'],
@@ -289,6 +355,8 @@ const RAW = [
   ['Turkish Get-Up', 'Full Body', 'Kettlebell', 'wr'],
   ['Kettlebell Snatch', 'Full Body', 'Kettlebell', 'wr'],
   ['Medicine Ball Slam', 'Full Body', 'Other', 'wr'],
+  ['Wall Ball', 'Full Body', 'Other', 'wr'],
+  ['Devil’s Press', 'Full Body', 'Dumbbell', 'wr'],
   ['Sled Push', 'Full Body', 'Other', 'wt'],
   ['Sled Drag', 'Full Body', 'Other', 'wt'],
   ['Battle Ropes', 'Full Body', 'Other', 't'],
@@ -305,6 +373,8 @@ const RAW = [
   ['Elliptical', 'Cardio', 'Machine', 'dt'],
   ['Stair Climber', 'Cardio', 'Machine', 'dt'],
   ['Ski Erg', 'Cardio', 'Machine', 'dt'],
+  ['Versa Climber', 'Cardio', 'Machine', 'dt'],
+  ['Arc Trainer', 'Cardio', 'Machine', 'dt'],
   ['Jump Rope', 'Cardio', 'Other', 't'],
   ['Sprint Intervals', 'Cardio', 'Other', 't'],
   ['Shadow Boxing', 'Cardio', 'Other', 't'],
@@ -381,6 +451,12 @@ const FORCE_TOTAL = new Set([
   'Goblet Squat', 'Dumbbell Pullover', 'Kettlebell Swing', 'Svend Press',
   'Russian Twist', 'Medicine Ball Slam', 'Single-Leg Press', 'Single-Leg Extension',
   'Sumo Squat', 'Single-Leg Calf Raise', 'Single-Leg Hip Thrust', 'Wrist Roller',
+  // ⚠️ Added 2026-08-31 and it is the ONE new name that needed forcing. A
+  // B-stance hip thrust is a barbell (already total), a devil's press and a
+  // squeeze press are both TWO dumbbells (per side is right), and a wall ball
+  // is 'Other' (total by default). A single-leg press was already here for this
+  // reason: one carriage, one number.
+  'B-Stance Hip Thrust',
 ]);
 
 /* ------------------------------------------------------------------ *
@@ -563,6 +639,19 @@ export const BODY_WEIGHT_FRACTION = {
   // and that push is the subtracted term, not a change in what carries you.
   // The exclusion note above this table is the full argument for `q`.
   'Assisted Pull-Up':    { fraction: 1.00, q: 0.65, basis: 'statics', assist: true },
+  /* ⚠️ THE OTHER THREE ASSIST-MACHINE MOVEMENTS, ADDED 2026-08-31 — and the
+   * comment above turned out to be exactly right that it was a one-line job.
+   * Tim's friend went looking for a dip machine, found nothing in the library,
+   * and made a custom exercise that then rated her triceps Advanced off one set.
+   *
+   * Same statics as the free versions: you hang from your hands, the machine
+   * pushes on your knees, and that push is the SUBTRACTED term rather than a
+   * change in what carries you. `q` is the free hang's 0.95 dropped to 0.65 for
+   * the identical reason Assisted Pull-Up's is — the linkage between the stack
+   * number and the pounds actually taken off you is not published, and the error
+   * grows with how much help you take. */
+  'Assisted Chin-Up':    { fraction: 1.00, q: 0.65, basis: 'statics', assist: true },
+  'Assisted Dip':        { fraction: 1.00, q: 0.65, basis: 'statics', assist: true },
 };
 
 /**

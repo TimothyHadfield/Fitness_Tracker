@@ -1047,8 +1047,10 @@ const assistedFlagged = BUILT_IN_EXERCISES
   .map((e) => ({ e, r: totalResistance(e, 10, 180) }))
   .filter((x) => x.r && x.r.assist)
   .map((x) => x.e.name);
-ok(assistedFlagged.join() === 'Assisted Pull-Up',
-   '⚠️ exactly one shipped exercise is flagged assisted, so the branch below is REACHABLE');
+ok(assistedFlagged.sort().join(', ') === 'Assisted Chin-Up, Assisted Dip, Assisted Pull-Up',
+   '⚠️ three shipped exercises are flagged assisted (the dip and chin-up machines joined on '
+   + '2026-08-31), so the branch below is REACHABLE — and it is the FUNCTION that is asked, not '
+   + 'the table, because the whole lesson here was that a guard nothing reaches is not a guard');
 
 const assistTop = suggestProgression({
   history: [S(70, 12), S(70, 12)], exercise: ASSISTED, step: 5, bodyWeight: 180,
