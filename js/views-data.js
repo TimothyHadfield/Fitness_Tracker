@@ -3,8 +3,11 @@
 import {
   store, auth, social, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
   normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL, currentBests,
-  CLOUD_WARN_AT,
+  CLOUD_WARN_AT, weeklyVolumeByMuscle,
 } from './store.js';
+import {
+  hypertrophyTier, strengthTier, INDIRECT_NOTE_WEEKLY, SESSION_CEILING,
+} from './volume-map.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
@@ -363,11 +366,19 @@ function landOnCurrentMonth(screen) {
  * anyway, because nothing is gained by the word and a fourth segment has been
  * added to this row once already.
  */
-// ⚠️ Four segments again (Research joined 2026-08-28, Tim's ask). The clipping
-// this comment used to warn about was "Bar Chart" at 393px on a THREE-segment
-// row; the labels are all short now and the row was driven at 360px with all
-// four after the change — no clipping. If a fifth ever arrives, measure first.
-const DATA_TABS = [['muscles', 'Muscles'], ['trend', 'Graph'], ['compare', 'Bars'], ['research', 'Research']];
+// ⚠️ FIVE segments since 2026-08-31 (Volume joined), and the fifth was measured
+// before it shipped because this file's own note said to. Driven at 360px, both
+// themes: the row is 293px wide, the five labels render 63 + 60 + 51 + 39 + 68 =
+// 281px, `scrollWidth === clientWidth` on the row and on every segment, and the
+// four that were already there are the SAME width they were with four segments —
+// nothing was squeezed. ⚠️ THAT LEAVES 12px, so a SIXTH does not fit and this is
+// the last one that can be added without shortening a label.
+//
+// ⚠️ Volume sits SECOND, beside Muscles, because they are two readings of the
+// same body — "how strong is it" and "how much work is it getting" — and the two
+// chart modes belong together after them.
+const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Graph'],
+  ['compare', 'Bars'], ['research', 'Research']];
 
 function dataTabs(active, onChartMode) {
   return el('div', { class: 'segmented', role: 'tablist' },
@@ -977,6 +988,7 @@ export async function GraphView() {
     // at which width it actually applies.
     host.classList.toggle('is-muscles', graphMode === 'muscles');
     if (graphMode === 'muscles') await muscleGroupsPane(host, top);
+    else if (graphMode === 'volume') await renderVolumePane(host, top);
     else if (graphMode === 'compare') renderCompare();
     else if (graphMode === 'research') await renderResearchPane(host, top);
     else await renderTrend();
@@ -1687,6 +1699,213 @@ export async function SettingsView() {
         'Fitness Tracker · ' + accountLine.sub.toLowerCase()),
     ],
   });
+}
+
+/* ================================================================== *
+ * Volume — weekly sets per muscle group (2026-08-31)
+ *
+ * D3, and it has been called "the headline metric" since the first day of this
+ * project: hypertrophy responds to hard sets per muscle per week. The app has
+ * been able to compute it for a year — `weeklyVolume()` rates every programme
+ * with it — and has only ever SHOWN it for one goal muscle on a screen most
+ * people never open. This is that number, for every muscle, from what was
+ * actually recorded rather than from what was planned.
+ *
+ * ⚠️ THE TIERS ARE NOT TARGETS, AND THE SCREEN HAS TO KEEP SAYING SO. They come
+ * from Table 3 of Pelland et al. and describe what ANOTHER SET BUYS at that
+ * volume — "lower efficiency" means each extra set does less, not that you are
+ * doing too much. Rule 6: the app does not get an opinion it has not earned, and
+ * "more is better up to a point and worse after it" is not a finding this
+ * evidence supports. So nothing here is coloured good or bad, there is no target
+ * line, and the one threshold drawn is the one the source states outright —
+ * 4 sets a week, below which no detectable change is expected.
+ *
+ * ⚠️ AND IT COUNTS EVERY SET YOU LOGGED, WARM-UPS INCLUDED. That is the open UX
+ * question this project records (Open work 0c) and it is Tim's call, not this
+ * screen's: excluding light sets would also throw away back-off work, which is
+ * often the hardest set of the session. Until he decides, the screen says what
+ * it counts rather than quietly counting something else.
+ * ================================================================== */
+
+// Both survive leaving the screen, for the same reason `calMode` does: somebody
+// reading three months of volume should not be dropped back to four weeks by a
+// trip to the calendar.
+let volDays = 28;
+let volOpen = null;
+
+const VOL_WINDOWS = [[28, '4 weeks'], [56, '8 weeks'], [84, '12 weeks']];
+
+// One decimal, because half sets are the whole point of fractional counting —
+// but never a bare "12.0", which reads as false precision on a count.
+const fmtSets = (n) => (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, '');
+
+function volRow(m, scale, perWeek, weeks, open, onToggle) {
+  const value = perWeek ? m.weeklySets : m.totalSets;
+  const tier = hypertrophyTier(m.weeklySets);
+  const none = value <= 0;
+
+  const sub = none
+    ? 'Nothing logged'
+    : perWeek
+      ? `${tier.label} · ${m.daysTrained ? `${fmtSets(m.sessionsPerWeek)} days a week` : 'never trained directly'}`
+      : `${m.daysTrained} ${m.daysTrained === 1 ? 'day' : 'days'} so far`;
+
+  const btn = el('button', {
+    class: 'vol-row' + (none ? ' is-none' : ''),
+    'aria-expanded': String(open),
+    onClick: onToggle,
+  },
+    el('span', { class: 'vol-head' },
+      el('span', { class: 'vol-name', text: m.muscle }),
+      el('span', { class: 'vol-num' },
+        el('b', { text: fmtSets(value) }),
+        el('span', { class: 'vol-unit', text: perWeek ? ' / wk' : ' sets' }),
+      ),
+    ),
+    // Decorative: every number and every label above and below it is already
+    // text, so the bar adds shape rather than meaning. A screen reader that
+    // announced it would be reading the same figure twice.
+    el('span', { class: 'vol-track', 'aria-hidden': 'true' },
+      el('span', { class: 'vol-fill', style: `width:${Math.min(100, (value / scale) * 100).toFixed(2)}%` }),
+      // The one threshold the source actually states.
+      el('span', { class: 'vol-med', style: `left:${Math.min(100, (4 / scale) * 100).toFixed(2)}%` }),
+    ),
+    el('span', { class: 'vol-sub', text: sub }),
+  );
+
+  return el('div', { class: 'vol-item' }, btn, open ? volDetail(m, perWeek, weeks) : null);
+}
+
+/**
+ * What is behind one muscle's number.
+ *
+ * ⚠️ THE CONTRIBUTORS ARE THE POINT OF THIS BLOCK. A weekly set count is a
+ * derived figure built out of a fractional rule most people have never heard of,
+ * and a derived figure nobody can check is one people either believe too much or
+ * stop believing altogether. Naming the exercises and their halves makes it
+ * checkable against the sessions they came from — the same argument the muscle
+ * panel's "from … and … and …" line makes one screen over.
+ */
+function volDetail(m, perWeek, weeks) {
+  const hyp = hypertrophyTier(m.weeklySets);
+  const str = strengthTier(m.weeklySets);
+  // ⚠️ IN THE SAME UNIT AS THE NUMBER ABOVE THEM, which the first version got
+  // wrong: the row said 21.8 a week and the list under it said 24, because the
+  // store counts a window and the row divides by it. Parts that do not add up to
+  // the whole in front of them are worse than no parts at all — the whole reason
+  // this block exists is that somebody can check the figure.
+  const shown = (sets) => fmtSets(perWeek ? sets / weeks : sets);
+
+  if (!m.contributors.length) {
+    return el('div', { class: 'vol-detail' },
+      el('div', { class: 'field-help', text:
+        `Nothing in this window trained ${m.muscle}, directly or as part of another lift. `
+        + 'That is the finding rather than a gap in the app — a muscle with no work is what this '
+        + 'screen exists to make visible.' }),
+    );
+  }
+
+  return el('div', { class: 'vol-detail' },
+    perWeek
+      ? el('div', { class: 'vol-tier' },
+          el('div', { class: 'vol-tier-line' }, el('b', { text: hyp.label + '. ' }), hyp.detail),
+          el('div', { class: 'vol-tier-line' }, el('b', { text: 'For strength: ' }),
+            `${str.label.toLowerCase()}. ${str.detail}`),
+        )
+      : null,
+    el('div', { class: 'vol-contrib-head', text: perWeek
+      ? 'Where those sets come from — a week' : 'What has been logged' }),
+    el('div', { class: 'vol-contrib' },
+      ...m.contributors.map((c) => el('div', { class: 'vol-contrib-row' },
+        el('span', { class: 'vol-contrib-name', text: c.name }),
+        el('span', { class: 'vol-contrib-kind', text: c.kind === 'direct' ? 'direct' : 'half' }),
+        el('span', { class: 'vol-contrib-sets', text: shown(c.sets) }),
+      )),
+    ),
+  );
+}
+
+async function renderVolumePane(host, top) {
+  const data = await weeklyVolumeByMuscle(volDays);
+
+  const reload = () => renderVolumePane(host, top);
+  setChildren(top,
+    el('div', { class: 'control-row' },
+      el('div', { class: 'chips tight' }, VOL_WINDOWS.map(([days, label]) =>
+        el('button', {
+          class: 'chip', 'aria-pressed': String(days === volDays), text: label,
+          onClick: () => { volDays = days; volOpen = null; reload(); },
+        }))),
+    ),
+  );
+
+  if (!data) {
+    setChildren(host, emptyState(
+      'Nothing recorded in this window',
+      'Weekly sets per muscle is counted from workouts you have logged, so it fills in as you '
+      + 'train. It counts every set — including the ones you got through a compound, at half.',
+      el('a', { class: 'btn primary', href: '#/start', text: 'Record a workout' }),
+    ));
+    return;
+  }
+
+  const perWeek = data.enough;
+  const biggest = Math.max(...data.muscles.map((m) => (perWeek ? m.weeklySets : m.totalSets)), 0);
+  // ⚠️ ONE SCALE FOR EVERY ROW, and it is the whole reason the bars are worth
+  // drawing: the comparison people actually make on this screen is between their
+  // own muscles. Rounded up to a multiple of 4 so the minimum-dose tick lands on
+  // a sensible fraction of the track, and floored at 20 so a light week does not
+  // draw four sets as a full-width bar.
+  const scale = Math.max(20, Math.ceil(biggest / 4) * 4);
+
+  const list = el('div', { class: 'vol-list' });
+  function draw() {
+    setChildren(list, ...data.muscles.map((m) => volRow(
+      m, scale, perWeek, data.weeks, volOpen === m.muscle,
+      () => { volOpen = volOpen === m.muscle ? null : m.muscle; draw(); },
+    )));
+  }
+  draw();
+
+  const span = `${data.spanDays} ${data.spanDays === 1 ? 'day' : 'days'}`;
+  const sess = `${data.sessions} ${data.sessions === 1 ? 'session' : 'sessions'}`;
+
+  setChildren(host,
+    el('div', { class: 'vol-pane' },
+      el('div', { class: 'vol-intro' },
+        el('div', { class: 'vol-intro-main', text: perWeek
+          ? `Sets a week per muscle, from ${sess} over the last ${span}.`
+          : `${sess} over ${span} so far.` }),
+        el('div', { class: 'field-help', text: perWeek
+          ? 'Hard sets per muscle per week is the thing growth responds to most directly. Tap a '
+            + 'muscle to see which exercises fed it.'
+          : '⚠️ Too little history to state a rate per week — a weekly figure measured over a few '
+            + 'days is noise. These are the sets recorded so far; it turns into a weekly rate once '
+            + 'there is a fortnight to measure over.' }),
+      ),
+
+      list,
+
+      el('div', { class: 'vol-notes' },
+        el('div', { class: 'field-help', text:
+          'The bar’s tick is 4 sets a week — the point below which no detectable change is '
+          + 'expected. There is no target line above it: the labels say what another set buys at '
+          + 'that volume, not how much you ought to be doing.' }),
+        el('div', { class: 'field-help', text: INDIRECT_NOTE_WEEKLY }),
+        el('div', { class: 'field-help', text:
+          '⚠️ Every set you logged is counted, warm-ups included. The app has no way to tell a '
+          + 'warm-up from a back-off set, and throwing away the light ones would throw away real '
+          + 'work with them — so these counts run a little high for anyone who logs their warm-ups.' }),
+        el('div', { class: 'field-help', text:
+          'Core is counted honestly and is understated for everyone: squats, deadlifts, carries and '
+          + 'overhead pressing all train it hard and none of them log a set against it.' }),
+        data.clamped
+          ? el('div', { class: 'field-help', text:
+              `One session went past ${SESSION_CEILING} sets on a single muscle. Above that nobody `
+              + 'has measured anything, so nothing further was counted for that day.' })
+          : null,
+      ),
+    ));
 }
 
 /* ================================================================== *

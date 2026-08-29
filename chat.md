@@ -6063,3 +6063,69 @@ Two fixes were offered — give unrankable muscles their own mark and legend lin
 panel say what it HAS counted ("you've logged 14 sets of core work in the last two weeks") — and he
 has not picked one yet. It is the only thing in the app right now that says something false to a
 reader, which is why it is at the top of progress.md rather than in the pile.
+
+---
+
+## 2026-09-01 — weekly sets per muscle, the metric this project has always called the headline one
+
+Fresh session, caught up from progress.md. Tim: *"for now, I want to skip the abs, skip any
+verification (I'll tell you if it's not working). What next steps do you think we should work on?"*
+
+Three things were offered, all of which need nothing from him: **weekly sets per muscle** (the
+biggest missing feature — the maths has existed for a year and the number was never on a screen),
+**keeping the phone awake mid-workout**, and **stopping prefilled numbers recording as though you
+did them** when you walk past an exercise. Plus one small one: graphs still open on benchmarks when
+a lift has both sources, which is the opposite of what he asked for back in August.
+
+He picked **weekly sets per muscle**.
+
+### What it is
+
+Data → **Volume**, a fifth segment beside Muscles. One row per muscle group: sets a week, a bar, and
+what the research says that volume is worth. Twelve rows, including the ones on zero — "you have
+done no calf work for a month" is the finding, and a screen that quietly left calves out would be
+answering a different question.
+
+Tap a muscle and it opens: what another set at that volume actually buys, the same for strength
+(which flattens far earlier — past about five sets a week, more volume does not reliably add any),
+and **the list of exercises the number was built from**, each marked as counting whole or half.
+
+That last part matters more than it looks. A weekly set count is a derived figure built through a
+rule most people have never heard of — a set counts fully for the muscle an exercise trains directly
+and half for one it only helps with — and a derived number nobody can check is one people either
+over-trust or stop believing. Naming the exercises makes it auditable against the sessions it came
+from.
+
+### What it deliberately does not do
+
+**It has no target.** The bands come from a real paper and they describe what another set *buys*, not
+how much anybody ought to be doing — "lower efficiency" means each extra set does less, not that you
+are overtraining. So no bar is coloured good or bad, there is no target line, and the only threshold
+drawn is the one the source states outright: four sets a week, below which no detectable change is
+expected.
+
+**And it says it counts your warm-ups.** The app cannot tell a warm-up from a back-off set, and
+throwing away the light ones would throw away real work — often the hardest set of the session. That
+has been an open question for Tim since August; until he decides, the screen states what it counts
+rather than quietly counting something else. Core says why its own number is low for everyone, too:
+squats, deadlifts, carries and overhead pressing all hammer it and none of them log a set against it.
+
+### Two things that went wrong on the way
+
+**The row and the list under it disagreed.** The headline read "21.8 a week" and the exercises under
+it read 24, 21, 18 — because the data layer counts a window and the row divides it by the weeks. Same
+column, different quantity. Anybody checking the number would have concluded the app cannot add up.
+Found by looking at a screenshot; the test that now sums the rendered figures against the rendered
+headline was written afterwards.
+
+**And a test that was measuring nothing.** Two functions now answer "how much work is this muscle
+getting" — the Goals screen's and this one's — and they must never give different answers for the
+same muscle. There is an assertion that they agree. But its fixture logged the same three sets on
+four evenly spaced days, and an even fixture reports the same rate over *any* window inside it — so
+deliberately breaking one of the two functions passed. The fixture is uneven now, and the same
+sabotage fails.
+
+Everything is proved in the test suite and in a real browser at phone widths, both themes: 88
+route/width/theme combinations audited, 8,330 pieces of text, nothing under the contrast floor,
+nothing overflowing, no unnamed controls. Nothing has been on his phone — his instruction this
+session.

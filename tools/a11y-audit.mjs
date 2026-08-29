@@ -250,6 +250,25 @@ const ROUTES = [
   ['#/calendar', 'Calendar'],
   ['#/graphs', 'Data · Graph', clickText('.seg, button, a', 'Graph')],
   ['#/graphs', 'Data · Bars', clickText('.seg, button, a', 'Bars')],
+  /* ⚠️ VOLUME — added 2026-08-31 with the weekly-sets screen. Twelve rows of
+   * bars, numbers and tier labels, plus the caveats under them, and every row is
+   * a control. The bar is decorative and carries no meaning colour-alone, which
+   * is a claim this step is what checks. */
+  ['#/graphs', 'Data · Volume', clickText('.seg, button, a', 'Volume')],
+  /* And one muscle OPENED, for the same reason the Research topics and the
+   * muscle panel get their own rows: the contributors, the tier sentences and
+   * the direct/half marks are not in the DOM until somebody taps a row, so the
+   * step above measures none of them. Asserts it landed. */
+  ['#/graphs', 'Data · Volume open',
+    `${clickText('.seg, button, a', 'Volume')};
+     await new Promise((r) => setTimeout(r, 500));
+     (() => { const r0 = document.querySelector('.vol-row');
+       if (r0) r0.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(r0); })();
+     await new Promise((r) => setTimeout(r, 300));
+     if (!document.querySelector('.vol-detail .vol-contrib-row')) {
+       throw new Error('a11y: the Volume step never opened a muscle');
+     }`],
   // Added 2026-08-28 with the Research tab — a whole pane of chart text,
   // legend chips and a data table that would otherwise never be measured.
   ['#/graphs', 'Data · Research', clickText('.seg, button, a', 'Research')],

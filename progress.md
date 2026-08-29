@@ -4,21 +4,26 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-08-31, prepared for a chat reset. **This session is the 2026-08-31 section
-directly below — eight pieces of work, A to H.** The four 2026-08-30 sections under it were the
-previous session. ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
+**Last updated:** 2026-09-01. **This session is the 2026-09-01 section directly below — Data →
+Volume, plus the motion pass.** The 2026-08-31 section under it was the previous session (eight
+pieces, A to H). ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
 
-⏸️ **ONE THING IS OFFERED AND NOT BUILT, AND IT IS THE ONLY LOOSE END.** Tim: *"There are ab
-exercises already in the library, but when people record workouts for those exercises, the ab muscle
-group in the display still shows no recordings. Why is this?"* **The panel is honest and the COLOUR
-is not** — Core and Neck are permanently unrankable (no published standards exist), and the panel
-says exactly that when you tap them, but the body map paints them **grey**, and the only grey entry
-in the legend is **"No data."** So somebody who trains abs three times a week sees the same colour as
-somebody who has never done a sit-up. His abs work IS counted — weekly volume and the Bars view both
-have it. **Two fixes were offered and he has not answered**: give unrankable muscles their own mark
-and legend entry, and/or have the panel say what HAS been logged ("no published standards, so it
-can't be ranked — you have logged 14 sets of core work in the last two weeks"). **Ask; do not
-assume.**
+⏸️ **THE ABS QUESTION IS DEFERRED BY TIM, 2026-09-01: *"skip the abs"*.** It is not closed and not
+withdrawn — he was offered it as the standing loose end and chose other work. Do not re-raise it
+unprompted; build it if he asks. The finding, kept because it is still true: **the panel is honest
+and the COLOUR is not** — Core and Neck are permanently unrankable (no published standards exist),
+and the panel says exactly that when you tap them, but the body map paints them **grey**, and the
+only grey entry in the legend is **"No data."** So somebody who trains abs three times a week sees
+the same colour as somebody who has never done a sit-up. **His core work is counted, and as of
+2026-09-01 it is on a screen of its own** — Data → Volume shows its weekly sets with every other
+muscle, which is a partial answer to the same complaint from the other side. The two fixes offered
+and unanswered: give unrankable muscles their own mark and legend entry, and/or have the panel say
+what HAS been logged.
+
+⏸️ **AND TIM ASKED FOR NO VERIFICATION THIS SESSION: *"skip any verification (I'll tell you if it's
+not working)"*.** That is about HIS phone rather than about the machines — the tests, the audit and
+the CDP measurements all ran as usual. It means the field-check list (Open work 1) did not move and
+must not be reported as if it had.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
@@ -26,7 +31,94 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ---
 
-## THIS SESSION (2026-08-31) IN EIGHT LINES
+## THIS SESSION (2026-09-01)
+
+🆕 **A. WEEKLY SETS PER MUSCLE IS ON A SCREEN — D3, THE METRIC THIS FILE HAS CALLED THE HEADLINE ONE
+SINCE DAY ONE.** Data → **Volume**: every muscle, sets a week, from what was RECORDED. 🚨 **Two
+functions now answer "how much work is this muscle getting" and a test asserts they agree** — the
+Goals screen's and this one's — because two screens quoting different weekly counts for somebody's
+chest would be worse than either screen existing. ⚠️ **The tiers are NOT targets and the screen says
+so outright**; the only threshold drawn is the 4-sets-a-week minimum the source states. 🚨 **Tap a
+muscle and it names the exercises behind the number, in the SAME UNIT — which the first version got
+wrong.**
+
+🆕 **B. THE APP MOVES NOW.** *(written up below — the motion pass)*
+
+---
+
+## 2026-09-01 — DATA → VOLUME: WEEKLY SETS PER MUSCLE
+
+Offered three things worth doing and asked which; Tim picked **weekly sets per muscle**.
+
+**D3 has called this the headline metric since the first day of the project** — hypertrophy responds
+to hard sets per muscle per week — and the app has been able to compute it for a year.
+`weeklyVolume()` rates every programme in the library with it. What it had never done is **show you
+your own**: the number existed for **one goal muscle** on a screen most people never open. Data →
+**Volume** is that number for all twelve, counted from recorded sessions rather than from a plan.
+
+- 🚨 **ONE WINDOW HELPER, TWO CALLERS, AND THE LOAD-BEARING TEST IS THAT THEY AGREE.**
+  `trainingForMuscle()` (Goals) and the new `weeklyVolumeByMuscle()` (this screen) must return the
+  same sets-a-week for the same muscle on the same day. The window, the day index, the two-week floor
+  and the "a set with no numbers was never done" filter are now defined **once** — the second caller
+  copying them is exactly how the Goals screen's hand-written paraphrase of `INDIRECT_NOTE` quietly
+  lost the words *"not a measured fact"*.
+- ⚠️ **AND THE FIRST VERSION OF THAT TEST WAS VACUOUS.** The fixture logged 3, 3, 3, 3 sets on four
+  evenly spaced days, which reports the **same** rate over any window inside it — so a mutation
+  giving one of the two functions a different window passed unnoticed. The fixture is 4, 4, 2, 2 now,
+  and the mutation fails. **An even fixture cannot test a rate.**
+- ⚠️ **THE TIERS ARE NOT TARGETS, AND THE SCREEN HAS TO KEEP SAYING SO.** They are Pelland et al.'s
+  published efficiency bands and they describe **what another set buys** — "lower efficiency" means
+  each extra set does less, not that you are doing too much. So nothing is coloured good or bad, one
+  colour draws every bar, there is **no target line**, and the only threshold marked is the one the
+  source states outright: **4 sets a week**, below which no detectable change is expected. Rule 6 —
+  "more is better up to a point and worse after it" is not a finding this evidence supports.
+- 🚨 **TAP A MUSCLE AND IT NAMES THE EXERCISES BEHIND THE NUMBER — AND THE FIRST VERSION DID NOT ADD
+  UP.** The row read **21.8 a week** over a list reading **24, 21, 18**: the store counts a window and
+  the row divides by it, so the detail was quoting a different quantity in the same column. A
+  fractional weekly set count is derived through a rule most people have never heard of, and **a
+  derived number nobody can check is one people either over-trust or stop believing** — so the parts
+  now add up to the whole on screen, in the same unit, and a test sums the rendered figures against
+  the rendered headline. Caught by a screenshot, not by a test; the test came after.
+- ⚠️ **THE PER-SESSION CEILING IS SPREAD ACROSS THE EXERCISES THAT CAUSED IT.** `weeklyVolume()`
+  clamps a single session at 24 sets on one muscle (the top of the measured range); the contributors
+  are scaled by the same factor, or a screen naming four exercises adding to 30 above a total reading
+  24 would be unauditable. Below the ceiling — everywhere real training lives — the factor is exactly
+  1 and nothing is touched.
+- ⚠️ **UNDER A FORTNIGHT IT REFUSES TO STATE A RATE**, and this is where it deliberately parts company
+  with the Goals version. `trainingForMuscle()` returns **null** below a two-week span because it
+  feeds a sentence. A screen can do better than an empty state: it shows the **totals so far**,
+  labelled as totals, and says a weekly figure measured over a few days is noise.
+- **Every muscle is listed, including the ones on zero.** "No calf work for a month" is the finding;
+  omitting calves would answer a different question quietly. Mutation-checked.
+- ⚠️ **IT COUNTS EVERY SET YOU LOGGED, WARM-UPS INCLUDED, AND SAYS SO ON THE SCREEN.** That is Open
+  work 0c and it is still **Tim's call** — excluding light sets would also throw away back-off work,
+  which is often the hardest set of the session. Until he decides, the screen states what it counts
+  rather than quietly counting something else. Same treatment for Core, which is understated for
+  everyone because squats, deadlifts, carries and overhead work all train it and none log a set
+  against it.
+- ⚠️ **THE FIFTH SEGMENT WAS MEASURED BEFORE IT SHIPPED, because this project's own note twice said
+  to.** Driven at 360px in both themes: the row is **293px**, the five labels render
+  **63 + 60 + 51 + 39 + 68 = 281px**, `scrollWidth === clientWidth` throughout, and **the four that
+  were already there came out the same width they were with four segments** — nothing was squeezed.
+  ⚠️ **That leaves 12px: a SIXTH does not fit**, and the next one costs a label.
+
+**Audit: 88 route/width/theme combinations, 8,330 text nodes, zero below 4.5:1, zero horizontal
+overflow, zero unnamed controls.** Volume is two new audit routes — the list, and one muscle
+**opened**, because the contributors and the tier sentences are not in the DOM until somebody taps a
+row (the same reason the Research topics and the muscle panel have their own).
+
+**Tests: render 751 → 777, data-layer +6 assertions.** Five mutations, each flipping only its own:
+contributors unscaled by the clamp → the "parts add up" assertion; listing only trained muscles →
+the twelve-rows and zero-muscle ones; a divergent window in `trainingForMuscle` → the agreement one;
+contributors left in window units → the on-screen sum; dropping the warm-up admission → that one.
+
+⚠️ **NOT VERIFIED: nothing here has been on Tim's phone**, at his instruction this session. It is
+proved in jsdom, in the data layer against fixed dates, and as painted pixels at 360 and 393px in
+both themes.
+
+---
+
+## 2026-08-31 IN EIGHT LINES
 
 🆕 **A. THE WHOLE WORKOUT IS ONE TAP AWAY, AND IT CAN BE REARRANGED.** A third pill — **Exercises** —
 beside Swap and Remove opens today's list: **drag a row to reorder, add one, remove one.** 🚨 **The
@@ -5067,7 +5159,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `js/optimal.js` | Not a doc. Read it before touching the rating: the dose-response curves are **fitted to published values, with the derivation in a comment on each constant**, and the header lists the three things the rating refuses to do — reward extra training days for growth, extrapolate past the evidence, or imply precision the source lacks |
-| `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5 |
+| `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5. ⚠️ **Since 2026-09-01 it is also on a screen of its own** (Data → Volume, D3), so its efficiency tiers and its `INDIRECT_NOTE_*` sentences are read by users rather than only by the rating — and the per-screen consequence clause pattern applies: one shared statement of what the 0.5 IS, one sentence per screen saying what would change without it, **both shipped from beside the constant** |
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
@@ -5136,7 +5228,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
 | Calendar | ⚠️ **ITS OWN TAB AGAIN SINCE 2026-08-25**, reversing the 2026-08-22 merge on Tim's instruction — that argument was about what the two screens *are*, his is about how often he opens them. Its header is its own title, not the Data switch. **Month cells are filled by the workout's name** beside the day number, 8px → 12px, wrapping to two lines rather than clipping. ~~Not its own tab since 2026-08-22 — it is the first segment of DATA, and its header IS the four-way Data switch.~~ `#/calendar` has been its route throughout, so a day stays deep-linkable and nothing anybody bookmarked broke in either direction. **Two ways to read it, on a Months / Years switch below that.** **Months** is the original: continuous vertical month scroll, sticky headings, opens on the current month, active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks. **Years** (2026-08-22, Tim's ask with a reference image) draws **one tiny square per day**, one row per year, newest first, with "141 days trained" beside each — years of training on a single screen, and two years fit in the top half of a 375×667 phone. ⚠️ **It is BINARY** — coloured or not — where Months distinguishes workouts from benchmarks, because those two tokens measure ΔE 6.5 apart under protanopia and a 5.7px square has no room for the label or texture that would make a second colour legal. ⚠️ **Tapping a square SELECTS it and does not navigate**: at 5.7px a tap that navigated would open the wrong day about as often as the right one, so it fills a readout line that holds its row whether or not anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met by **equivalence** — every day is reachable at 40px in Months, one tap away. `js/year-grid.js` |
-| **Data** (nav) | **FOUR segments — Muscles · Graph · Bars · Research** (Research joined 2026-08-28), and it **opens on Muscles** — Tim's call, and it is also the mode that works with the least history, since one benchmark colours the map where a line chart needs two points. ⚠️ **Calendar left this control** and is its own tab again, which took the switch's one oddity with it: it was the only entry that navigated rather than setting in-page state. All four are now the same kind of thing — in-page state on `#/graphs`. ⚠️ **"Bar Chart" lost a word**: the 2026-08-21 survey measured the three-segment version clipping that exact label to "Bar Char" at 393px, and the fourth segment took another quarter of the row. **Graph** (measured SVG line + hover crosshair), **Bars** (paired bars), **Muscles** (body map), **Research** — which since 2026-08-30 opens on **eleven collapsed topics teaching the basics**, each carrying a confidence label in words and its own stated weak spot, over the age chart that shipped with the tab. `js/research-topics.js` holds the content and the rules it was written under; `docs/research.md` §13 holds the pull. **No chart mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
+| **Data** (nav) | **FIVE segments — Muscles · Volume · Graph · Bars · Research** (Volume joined 2026-09-01, Research 2026-08-28), and it **opens on Muscles** — Tim's call, and it is also the mode that works with the least history, since one benchmark colours the map where a line chart needs two points. ⚠️ **Calendar left this control** and is its own tab again, which took the switch's one oddity with it: it was the only entry that navigated rather than setting in-page state. All five are now the same kind of thing — in-page state on `#/graphs`. ⚠️ **"Bar Chart" lost a word**: the 2026-08-21 survey measured the three-segment version clipping that exact label to "Bar Char" at 393px. ⚠️ **The five-segment row was MEASURED at 360px before Volume shipped** — 293px of row, labels 63+60+51+39+68 = 281px, nothing clipped, the existing four unchanged in width, **12px left, so a sixth does not fit**. **Graph** (measured SVG line + hover crosshair), **Bars** (paired bars), **Muscles** (body map), **Volume** — 🚨 **D3's headline metric, weekly sets per muscle from what you RECORDED** (2026-09-01): every muscle listed including the ones on zero, sets a week against the published efficiency tiers, tap one to see which exercises fed it and whether each counted whole or half. **The tiers are not targets and it says so**; the only threshold drawn is 4 sets a week. Under a fortnight of history it shows totals and refuses to state a rate. Warm-ups are counted and admitted (Open work 0c, still Tim's call). **Research** — which since 2026-08-30 opens on **eleven collapsed topics teaching the basics**, each carrying a confidence label in words and its own stated weak spot, over the age chart that shipped with the tab. `js/research-topics.js` holds the content and the rules it was written under; `docs/research.md` §13 holds the pull. **No chart mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
@@ -5428,7 +5520,13 @@ Fitness_Tracker/
 │   │                           Firestore's published rules (32 bytes a
 │   │                           map, 8 a number, NOT JSON length) and
 │   │                           returns null on any backend that is not
-│   │                           Firestore. Settings warns from 80 %
+│   │                           Firestore. Settings warns from 80 %.
+│   │                           ⚠️ And WEEKLY SETS PER MUSCLE from recorded
+│   │                           sessions — trainingForMuscle() for one
+│   │                           muscle, weeklyVolumeByMuscle() for all of
+│   │                           them, over ONE shared window helper because
+│   │                           two screens quoting different counts for the
+│   │                           same muscle is the failure to design against
 │   ├── e1rm.js                 rep normalisation — pure maths (D11)
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
 │   ├── preset-systems.js       ready-made systems to browse and copy. Shaped so a
@@ -5923,7 +6021,7 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 |---|---|---|
 | D1 | **No diet/nutrition.** Point at Cronometer. | Free nutrition apps aren't crippled — diet tracking is present-tense, so the history paywall doesn't bite. The food database can't be replicated. |
 | D2 | **Lifting only.** | Focus. |
-| D3 | **Weekly sets per muscle group is the headline metric.** | What hypertrophy responds to (~10–20 hard sets/muscle/week). Only Alpha Progression does it. **Not built — Tier 2, and blocked on the weighted muscle mapping.** |
+| D3 | **Weekly sets per muscle group is the headline metric.** | What hypertrophy responds to (~10–20 hard sets/muscle/week). Only Alpha Progression does it. ✅ **BUILT 2026-09-01 — Data → Volume**, from recorded sessions, every muscle, against the published efficiency tiers rather than against invented target bands. The weighted mapping it was blocked on has existed in `js/volume-map.js` since 2026-08-18. ⚠️ **What is deliberately NOT built is a target**: the tiers say what another set buys, and the app does not get to tell somebody they are doing too little or too much (Rule 6). |
 | D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets win on whole-block visibility, structural freedom, permanence. Apps only win the logging loop. Take both. |
 | D5 | **e1RM must be rep-range honest.** Full confidence 2–10 reps, flag 11–15, don't normalise above 15. | Formulas degrade badly above ~10 reps. Built — and **enforced in ranking as `MAX_EVIDENCE_REPS = 15`** since 2026-08-16. It was not, and a 135×25 burnout set extrapolated to 258 lb, beat a real 205×5 top set and promoted a muscle a whole level. Benchmarks get no exemption. |
 | D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. **Built 2026-08-16** — `sw.js` precaches the whole shell. Until then this was a claim, not a feature: store.js falls back to localStorage when the *cloud* fails, but with no signal the app never BOOTED, so that fallback never ran. Verified by killing the origin server, not by emulating offline — see §0.7. |
@@ -6341,11 +6439,13 @@ re-examining it produces something better than either the old rule or a plain ov
    2026-08-19**, so it now says what a programme costs as well as how good it is. What is left is
    `docs/research.md` §6.8 — the axes still to pull (load, rest, range of motion, per-session
    volume), each of which either enters the model or becomes a stated caveat.
-8. **Tier 2 / D3 — the mapping it was blocked on now EXISTS.** `js/volume-map.js` already computes
-   fractional weekly sets per muscle for any set of workouts (`weeklyVolume()`), which is the input
-   D3's "weekly sets per muscle group vs target bands" needs. What is left for D3 is the screen and
-   the target bands — and the bands are no longer a guess either, they are the published efficiency
-   tiers in that module.
+8. ~~**Tier 2 / D3 — the mapping it was blocked on now EXISTS.**~~ ✅ **BUILT 2026-09-01 — Data →
+   Volume**, on Tim's pick from three offered. `js/volume-map.js` had computed fractional weekly sets
+   per muscle since 2026-08-18; what shipped is `store.weeklyVolumeByMuscle()` over recorded sessions
+   and the screen that draws it. ⚠️ **The "vs target bands" half of the old wording was dropped on
+   purpose** — the published efficiency tiers describe what another set BUYS, and rendering them as
+   targets would have made the app say somebody is training too little or too much, which is Rule 6
+   and is not what the source says. See that day's section.
 
 ### Open questions for Tim
 

@@ -3529,6 +3529,80 @@ export async function benchmarkComparison(minPoints = 2) {
   return { fields: Object.keys(byField), byField, incomplete };
 }
 
+/* ------------------------------------------------------------------ *
+ * Weekly volume, from what was RECORDED
+ *
+ * ⚠️ TWO SCREENS READ THIS AND THEY ARE NOT ALLOWED TO DISAGREE.
+ * `trainingForMuscle()` answers "how much work is my goal muscle getting" for
+ * the Goals screens; `weeklyVolumeByMuscle()` answers it for every muscle at
+ * once for Data → Volume. Ask both about Chest on the same day and they must
+ * return the same number, so the window, the day index, the two-week floor and
+ * the "a set with no numbers was never done" filter are defined ONCE, here,
+ * rather than copied into the second caller — which is how the Goals screen's
+ * hand-written paraphrase of INDIRECT_NOTE quietly lost a clause.
+ * ------------------------------------------------------------------ */
+
+// A stable day index.
+//
+// ⚠️ SPLIT, then Date.UTC. Two traps, and only this form clears both.
+// `new Date('2026-08-18')` reads a bare date as UTC midnight and lands a day
+// early west of Greenwich — splitting avoids that. But splitting into a LOCAL
+// Date and flooring, which is what this did until 2026-08-22, is a stable day
+// index only while the zone's UTC offset stays on one side of zero.
+// Europe/London, Dublin, Lisbon and the Canaries are UTC+0 in winter and UTC+1
+// in summer, so the index steps by 0 or 2 across each DST change: 28
+// consecutive training days over 29 March 2026 measured a 27-day span and 14.52
+// sets a week instead of 14.00. Date.UTC has no offset to move.
+function volumeDayNum(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  return y && m && d ? Math.round(Date.UTC(y, m - 1, d) / 86400000) : null;
+}
+
+/**
+ * The trailing window of recorded sessions, and how much of it holds training.
+ *
+ * ⚠️ `spanDays` is measured from the FIRST session in the window to today, not
+ * from the window's own edge — a 28-day window over an account that started
+ * training nine days ago spans nine days, and dividing by four weeks would
+ * report a quarter of the truth. `enough` is the two-week floor: a rate per week
+ * measured over four days is noise, and reporting it as a fact would be worse
+ * than saying nothing. Same rule as `observedDaysPerWeek()`.
+ */
+function volumeWindow(sessions, windowDays, today) {
+  const todayNum = volumeDayNum(today || todayISO());
+  if (todayNum === null) return null;
+
+  const inWindow = (sessions || []).filter((s) => {
+    const n = volumeDayNum(s.date);
+    return n !== null && n <= todayNum && n > todayNum - windowDays;
+  });
+  if (!inWindow.length) return null;
+
+  const first = Math.min(...inWindow.map((s) => volumeDayNum(s.date)));
+  const spanDays = todayNum - first + 1;
+  return { inWindow, spanDays, weeks: spanDays / 7, enough: spanDays >= 14, windowDays };
+}
+
+/**
+ * How many sets of one entry were really performed.
+ *
+ * A set with no numbers in it was never done. Both save paths already drop
+ * those; this guards the older rows that predate that.
+ */
+function recordedSetCount(entry) {
+  return ((entry && entry.sets) || [])
+    .filter((set) => set && Object.values(set).some((v) => Number(v) > 0)).length;
+}
+
+/** Recorded sessions in the shape `weeklyVolume()` reads a programme in. */
+function asVolumeWorkouts(sessions) {
+  return sessions.map((s) => ({
+    exercises: (s.entries || [])
+      .map((e) => ({ exerciseId: e.exerciseId, sets: recordedSetCount(e) }))
+      .filter((e) => e.sets > 0),
+  }));
+}
+
 /**
  * How much work one muscle has ACTUALLY been getting, from logged sessions.
  *
@@ -3542,54 +3616,18 @@ export async function benchmarkComparison(minPoints = 2) {
  * history containing 4 give different answers, which is precisely the gap
  * somebody asking "why am I not progressing" needs to see.
  *
- * Returns null below a two-week span, for the same reason
- * `observedDaysPerWeek()` does: a rate per week measured over four days is
- * noise, and reporting it as a fact would be worse than saying nothing.
+ * Returns null below a two-week span — see `volumeWindow()`.
  */
 export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
   const [sessions, exMap, { weeklyVolume, volumeContributions }] = await Promise.all([
     store.getSessions(), store.getExerciseMap(), import('./volume-map.js'),
   ]);
 
-  const dayNum = (iso) => {
-    const [y, m, d] = String(iso).split('-').map(Number);
-    // ⚠️ SPLIT, then Date.UTC. Two traps, and only this form clears both.
-    // `new Date('2026-08-18')` reads a bare date as UTC midnight and lands a day
-    // early west of Greenwich — splitting avoids that. But splitting into a
-    // LOCAL Date and flooring, which is what this did until 2026-08-22, is a
-    // stable day index only while the zone's UTC offset stays on one side of
-    // zero. Europe/London, Dublin, Lisbon and the Canaries are UTC+0 in winter
-    // and UTC+1 in summer, so the index steps by 0 or 2 across each DST change:
-    // 28 consecutive training days over 29 March 2026 measured a 27-day span and
-    // 14.52 sets a week instead of 14.00. Date.UTC has no offset to move.
-    return y && m && d ? Math.round(Date.UTC(y, m - 1, d) / 86400000) : null;
-  };
-  const todayNum = dayNum(today || todayISO());
-  if (todayNum === null) return null;
+  const win = volumeWindow(sessions, windowDays, today);
+  if (!win || !win.enough) return null;
+  const { inWindow, spanDays, weeks } = win;
 
-  const inWindow = sessions.filter((s) => {
-    const n = dayNum(s.date);
-    return n !== null && n <= todayNum && n > todayNum - windowDays;
-  });
-  if (!inWindow.length) return null;
-
-  const first = Math.min(...inWindow.map((s) => dayNum(s.date)));
-  const spanDays = todayNum - first + 1;
-  if (spanDays < 14) return null;
-  const weeks = spanDays / 7;
-
-  // One pseudo-workout per session, its "planned" set count being what was
-  // actually recorded. A set with no numbers in it was never done, and both save
-  // paths already drop those — this guards the older rows that predate that.
-  const asWorkouts = inWindow.map((s) => ({
-    exercises: (s.entries || []).map((e) => ({
-      exerciseId: e.exerciseId,
-      sets: (e.sets || []).filter((set) => set
-        && Object.values(set).some((v) => Number(v) > 0)).length,
-    })).filter((e) => e.sets > 0),
-  }));
-
-  const weeklySets = weeklyVolume(asWorkouts, exMap, weeks).get(muscle) || 0;
+  const weeklySets = weeklyVolume(asVolumeWorkouts(inWindow), exMap, weeks).get(muscle) || 0;
 
   // A session counts toward frequency only if it held DIRECT work for the
   // muscle — the same rule weeklyFrequency() uses. Counting indirect work would
@@ -3611,6 +3649,114 @@ export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
     sessions: inWindow.length,
     spanDays,
     windowDays,
+  };
+}
+
+/**
+ * The same question asked of EVERY muscle at once — Data → Volume.
+ *
+ * D3 has called weekly sets per muscle group the headline metric since the first
+ * day of this project, and until now the app computed it only for a goal muscle
+ * on a screen most people never open. This is that number for all of them.
+ *
+ * ⚠️ IT RETURNS A WINDOW THAT IS TOO SHORT RATHER THAN NULL, which is the one
+ * place it deliberately parts company with `trainingForMuscle()`. That function
+ * feeds a sentence ("your training is delivering N sets a week") and a rate
+ * measured over four days would make that sentence false; this one feeds a
+ * screen, and a screen can say "nine days so far, here is what is in them" —
+ * which is more use to somebody who has just started than an empty state is.
+ * `enough` is the flag, and the caller must not print a weekly rate without it.
+ *
+ * ⚠️ EVERY MUSCLE IS LISTED, INCLUDING THE ONES ON ZERO. A muscle you are not
+ * training is the finding — leaving it out would turn "you have done no calf
+ * work for a month" into a screen that simply does not mention calves.
+ *
+ * @returns {Promise<null|{
+ *   windowDays: number, spanDays: number, weeks: number, sessions: number,
+ *   enough: boolean, clamped: boolean,
+ *   muscles: {muscle: string, weeklySets: number, totalSets: number,
+ *             sessionsPerWeek: number, daysTrained: number,
+ *             contributors: {name: string, sets: number, kind: string}[]}[],
+ * }>}
+ */
+export async function weeklyVolumeByMuscle(windowDays = 28, today = null) {
+  const [sessions, exMap, { volumeContributions, VOLUME_MUSCLES, SESSION_CEILING }] =
+    await Promise.all([
+      store.getSessions(), store.getExerciseMap(), import('./volume-map.js'),
+    ]);
+
+  const win = volumeWindow(sessions, windowDays, today);
+  if (!win) return null;
+
+  const totals = new Map();
+  let clamped = false;
+
+  for (const s of win.inWindow) {
+    // Totalled per session first, because the ceiling is a per-session rule.
+    const perMuscle = new Map();
+    for (const e of s.entries || []) {
+      const sets = recordedSetCount(e);
+      if (!sets) continue;
+      const ex = exMap.get(e.exerciseId);
+      if (!ex) continue;
+      for (const c of volumeContributions(ex)) {
+        let m = perMuscle.get(c.muscle);
+        if (!m) { m = { total: 0, direct: false, ex: new Map() }; perMuscle.set(c.muscle, m); }
+        m.total += sets * c.weight;
+        if (c.kind === 'direct') m.direct = true;
+        const cur = m.ex.get(ex.id) || { name: ex.name, sets: 0, kind: c.kind };
+        cur.sets += sets * c.weight;
+        m.ex.set(ex.id, cur);
+      }
+    }
+
+    for (const [muscle, m] of perMuscle) {
+      // ⚠️ THE SAME CLAMP `weeklyVolume()` APPLIES, SPREAD ACROSS THE EXERCISES
+      // THAT CAUSED IT. Scaling each contributor by the same factor is what keeps
+      // the parts summing to the whole: a screen that names four exercises adding
+      // to 30 above a total reading 24 is a screen nobody can check, and being
+      // checkable is the entire reason the contributors are listed at all.
+      // Below the ceiling — which is everywhere any real training lives — the
+      // factor is exactly 1 and nothing is touched.
+      const scale = m.total > SESSION_CEILING ? SESSION_CEILING / m.total : 1;
+      if (scale < 1) clamped = true;
+
+      let t = totals.get(muscle);
+      if (!t) { t = { sets: 0, days: 0, ex: new Map() }; totals.set(muscle, t); }
+      t.sets += m.total * scale;
+      // A session counts toward frequency only if it held DIRECT work for the
+      // muscle — the same rule `weeklyFrequency()` uses. Counting indirect work
+      // would make every pressing day a back day because of the deadlift.
+      if (m.direct) t.days += 1;
+      for (const [id, c] of m.ex) {
+        const cur = t.ex.get(id) || { name: c.name, sets: 0, kind: c.kind };
+        cur.sets += c.sets * scale;
+        t.ex.set(id, cur);
+      }
+    }
+  }
+
+  const names = [...new Set([...VOLUME_MUSCLES, ...totals.keys()])];
+  const muscles = names.map((muscle) => {
+    const t = totals.get(muscle);
+    return {
+      muscle,
+      totalSets: t ? t.sets : 0,
+      weeklySets: t ? t.sets / win.weeks : 0,
+      sessionsPerWeek: t ? t.days / win.weeks : 0,
+      daysTrained: t ? t.days : 0,
+      contributors: t ? [...t.ex.values()].sort((a, b) => b.sets - a.sets) : [],
+    };
+  }).sort((a, b) => b.weeklySets - a.weeklySets || a.muscle.localeCompare(b.muscle));
+
+  return {
+    windowDays,
+    spanDays: win.spanDays,
+    weeks: win.weeks,
+    sessions: win.inWindow.length,
+    enough: win.enough,
+    clamped,
+    muscles,
   };
 }
 

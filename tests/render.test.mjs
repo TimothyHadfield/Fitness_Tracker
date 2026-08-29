@@ -87,13 +87,18 @@ for (const [name, view] of [
 // Empty account, no chartable data at all.
 let data = await mount(GraphView());
 let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
-/* ⚠️ FOUR since 2026-08-28: Research joined (Tim's ask). Three from 2026-08-25,
-   when Calendar left this control and became its own nav tab. The count is
-   asserted rather than just the contents, because a segment silently
-   disappearing is exactly the class of bug this block was written for — and a
-   FIFTH appearing should force the 360px clipping measurement this row has
-   needed twice already. */
-ok(tabs.length === 4, `mode switch shows four tabs with NO data (${JSON.stringify(tabs)})`);
+/* ⚠️ FIVE since 2026-08-31: Volume joined (D3's headline metric). Four from
+   2026-08-28 when Research joined; three from 2026-08-25, when Calendar left
+   this control and became its own nav tab. The count is asserted rather than
+   just the contents, because a segment silently disappearing is exactly the
+   class of bug this block was written for — and this note has twice demanded the
+   360px clipping measurement before a new segment ships. It was run for Volume,
+   over CDP in both themes: a 293px row, labels 63+60+51+39+68 = 281px, nothing
+   clipped, and the four that were already there came out the same width they
+   were with four segments. A SIXTH does not fit in the 12px left over. */
+ok(tabs.length === 5, `mode switch shows five tabs with NO data (${JSON.stringify(tabs)})`);
+ok(tabs[1] === 'Volume',
+   '⚠️ Volume sits beside Muscles — two readings of the same body, not a chart mode');
 ok(tabs.includes('Research'),
    'Research is reachable on an empty account — published data needs no history');
 ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
@@ -378,7 +383,7 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
-ok(data.querySelectorAll('.seg').length === 4, 'Bars mode keeps the mode switch (four segments since Research)');
+ok(data.querySelectorAll('.seg').length === 5, 'Bars mode keeps the mode switch (five segments since Volume)');
 
 /* ================= the Research mode (2026-08-28) ================= */
 // Tim: "I want to add a 'Research' tab in the data section… a graph that
@@ -466,6 +471,7 @@ ok(data.querySelectorAll('.seg').length === 4, 'Bars mode keeps the mode switch 
     ok(data.textContent.includes(phrase), `the screen asks it out loud: ${phrase}`);
   }
 }
+
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
 
@@ -484,6 +490,120 @@ for (const mode of ['Graph', 'Bars']) {
      `${mode}'s list shows actual numbers, not just names`);
   ok(!/Nothing to chart yet|Nothing to compare yet/.test(data.textContent),
      `${mode} no longer dead-ends on "nothing to chart"`);
+}
+
+/* ================= Volume — weekly sets per muscle (2026-08-31) =================
+ * D3's headline metric, finally on a screen. The arithmetic is pinned in
+ * data-layer.test.mjs against fixed dates; these are the things only a mounted
+ * DOM can see.
+ *
+ * ⚠️ IT RUNS AFTER THE DEAD-END BLOCK ABOVE, and that is not tidiness. This
+ * fixture logs the same lift on several days, which is exactly what makes an
+ * exercise CHARTABLE — dropping it earlier in the file replaced the
+ * current-bests fallback with a real line chart and failed a 2026-08-17
+ * assertion that had nothing to do with volume.
+ *
+ * ⚠️ THE SESSIONS ARE DATED FROM TODAY, not hard-coded. This screen reads a
+ * TRAILING WINDOW, so a fixture written as "2026-08-15" would drift out of it
+ * and this whole block would quietly start asserting against an empty state —
+ * passing for the wrong reason, which is the failure mode the vacuous "exactly
+ * one ✕" test taught this file on 2026-08-30. */
+{
+  const iso = (back) => new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
+  const squat = byName('Back Squat');
+  for (const [i, back] of [20, 17, 13, 9, 5, 1].entries()) {
+    const ex = i % 2 ? squat : bench;
+    await store.saveSession({
+      workoutName: 'V', date: iso(back), startedAt: `${iso(back)}T10:00:00.000Z`,
+      entries: [{ exerciseId: ex.id, exerciseName: ex.name,
+        sets: [{ weight: 185, reps: 8 }, { weight: 185, reps: 8 }, { weight: 185, reps: 8 }] }],
+    });
+  }
+
+  data = await mount(GraphView());
+  [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Volume').click();
+  await settle(); await settle();
+
+  const rows = [...data.querySelectorAll('.vol-row')];
+  ok(rows.length === 12, `every volume muscle gets a row (${rows.length})`);
+  ok(/ \/ wk/.test(rows[0].textContent),
+     'with three weeks of history it states a RATE — sets a week, which is the metric');
+  ok(/Chest|Quads/.test(rows[0].querySelector('.vol-name').textContent),
+     'and the most-trained muscle leads');
+
+  // ⚠️ A MUSCLE ON ZERO IS STILL A ROW. "No calf work for a month" is the
+  // finding; omitting calves would answer a different question quietly.
+  ok(rows.some((r) => /Nothing logged/.test(r.textContent)),
+     'muscles with no work are listed, on zero, and say so');
+
+  // No bar may overflow its track — the scale is shared across every row, so
+  // one runaway muscle would otherwise redraw the comparison everyone reads.
+  ok([...data.querySelectorAll('.vol-fill')].every((f) => parseFloat(f.style.width) <= 100),
+     'no bar overruns the shared scale');
+  ok(data.querySelectorAll('.vol-med').length === rows.length,
+     '⚠️ every row draws the 4-sets-a-week tick — the one threshold the source actually states');
+
+  /* ⚠️ THE CONTRIBUTORS ARE WHAT MAKE THE NUMBER CHECKABLE. A fractional weekly
+     set count is derived through a rule most people have never heard of, and a
+     derived number nobody can audit is one they either over-trust or stop
+     believing. Tapping names the exercises behind it.
+
+     ⚠️ THE ROW IS RE-FOUND AFTER THE TAP. Opening one redraws the whole list, so
+     the node held here is detached and its aria-expanded is frozen at what it
+     was — the same trap the research legend's chips carry a note about. */
+  const openName = rows.find((r) => !/Nothing logged/.test(r.textContent))
+    .querySelector('.vol-name').textContent;
+  rows.find((r) => r.querySelector('.vol-name').textContent === openName).click();
+  await settle();
+  const opened = [...data.querySelectorAll('.vol-row')]
+    .find((r) => r.querySelector('.vol-name').textContent === openName);
+  ok(opened.getAttribute('aria-expanded') === 'true', 'tapping a muscle opens it');
+  const detail = data.querySelector('.vol-detail');
+  ok(Boolean(detail), 'and the detail is there');
+  ok(detail.querySelectorAll('.vol-contrib-row').length > 0,
+     '🚨 naming the exercises the sets came from, so the total can be checked against real sessions');
+  ok(/direct|half/.test(detail.textContent),
+     'each one saying whether it counted whole or half');
+  ok(/efficiency|minimum effective dose|Below the minimum|Beyond the evidence/.test(detail.textContent),
+     'with the published tier in words, not a colour');
+  ok(/For strength/.test(detail.textContent),
+     'and the strength tier beside it, which flattens far earlier than the growth one');
+
+  /* 🚨 THE PARTS ADD UP TO THE WHOLE ON SCREEN, IN THE SAME UNIT. The first
+     version of this block failed exactly here and nothing caught it: the row read
+     "21.8 / wk" and the exercises under it listed 24, 21, 18 — the store counts a
+     WINDOW and the row divides it by the weeks, so the detail was quoting a
+     different quantity in the same column. A reader checking the number would
+     have concluded the app cannot add up. */
+  const headline = parseFloat(opened.querySelector('.vol-num').textContent);
+  const partsSum = [...detail.querySelectorAll('.vol-contrib-sets')]
+    .reduce((t, n) => t + parseFloat(n.textContent), 0);
+  ok(Math.abs(partsSum - headline) <= 0.2 * Math.max(1, detail.querySelectorAll('.vol-contrib-sets').length),
+     `🚨 the exercises listed add up to the number above them (${partsSum} vs ${headline}, `
+     + 'each rounded to a tenth) — same unit, sets a week');
+  ok(/a week/.test(detail.querySelector('.vol-contrib-head').textContent),
+     'and the heading says which unit they are in');
+
+  // ⚠️ THE CAVEATS TRAVEL WITH THE NUMBERS. Every one of these is a thing the
+  // count is doing that a reader would otherwise have to guess at.
+  const pane = data.querySelector('.vol-pane').textContent;
+  ok(/warm-ups included/.test(pane),
+     '⚠️ it admits it counts every logged set, warm-ups included — the open question, said rather '
+     + 'than silently resolved');
+  ok(/not a measured fact/.test(pane),
+     'the half-a-set rule is named as a modelling choice, in the words that ship beside the constant');
+  ok(/no target line/.test(pane),
+     '🚨 and it says outright that there is no target — the tiers describe what another set buys, '
+     + 'and an app that painted 20 sets "good" would be forming an opinion the evidence has not earned');
+  ok(/Core is counted honestly and is understated/.test(pane),
+     'Core says why its own number is low for everyone');
+
+  // The window is a control, and changing it redraws rather than dead-ends.
+  [...data.querySelectorAll('.chip')].find((c) => c.textContent === '12 weeks').click();
+  await settle(); await settle();
+  ok([...data.querySelectorAll('.chip')].find((c) => c.textContent === '12 weeks')
+       .getAttribute('aria-pressed') === 'true', 'the window is switchable');
+  ok(data.querySelectorAll('.vol-row').length === 12, 'and the list redraws over the longer window');
 }
 
 /* ================= body-weight trend ================= */

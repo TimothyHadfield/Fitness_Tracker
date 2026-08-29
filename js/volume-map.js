@@ -132,6 +132,16 @@ export const INDIRECT_NOTE_SETS = `${INDIRECT_NOTE} Counting indirect work lower
   + 'of these programmes further below what this goal asks for.';
 
 /**
+ * Data → Volume, where the reader is looking at their OWN counts rather than at
+ * a programme's. The consequence has to be said in the direction that screen
+ * reads in: these are your muscles, and the ones that would move are the ones
+ * you never train directly.
+ */
+export const INDIRECT_NOTE_WEEKLY = `${INDIRECT_NOTE} Counting it lower would pull down the `
+  + 'muscles you mostly train through compounds — biceps, triceps and traps — and barely move the '
+  + 'ones you train directly.';
+
+/**
  * The muscle groups weekly volume is totalled over.
  *
  * Excluded on purpose:

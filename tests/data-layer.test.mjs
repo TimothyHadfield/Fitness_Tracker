@@ -13,7 +13,7 @@ const {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizeWorkout, DEFAULT_SETS, benchmarkComparison,
   normalizedSeries, defaultTargetReps, weightRepObservations, ageFromBirthYear,
-  bodyWeightSeries,
+  bodyWeightSeries, trainingForMuscle, weeklyVolumeByMuscle,
 } = await import('../js/store.js');
 const {
   e1rm, weightForReps, normalizeWeight, modalReps, canNormalize,
@@ -4729,6 +4729,119 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     delete MANIFEST[bench.id];
   }
   ok(Object.keys(MANIFEST).length === ids.length, 'and the manifest is left as it was found');
+}
+
+/* ================================================================== *
+ * WEEKLY SETS PER MUSCLE — Data → Volume (2026-08-31)
+ *
+ * D3's headline metric, for every muscle at once. Runs LAST because it calls
+ * importAll(), which replaces every collection.
+ *
+ * ⚠️ THE FIRST ASSERTION IS THE LOAD-BEARING ONE: this and trainingForMuscle()
+ * must return the same number for the same muscle on the same day. Two screens
+ * quoting different weekly set counts for someone's chest would be worse than
+ * either screen not existing, and the only structural defence is that both read
+ * one window helper — which is what this pins.
+ * ================================================================== */
+{
+  const bench = byName('Barbell Bench Press');
+  const squat = byName('Back Squat');
+  const sets = (n, w) => Array.from({ length: n }, () => ({ weight: w, reps: 8 }));
+  const day = (date, ex, n, w) => ({
+    id: 's' + date, workoutId: 'w', workoutName: 'W', date,
+    entries: [{ exerciseId: ex.id, exerciseName: ex.name, sets: sets(n, w) }],
+  });
+
+  /* Four bench days and two squat days, the first on 2026-03-15 and read on
+     2026-04-11 — a span of exactly 28 days, so the weeks divide cleanly and
+     every number below is checkable by hand.
+     ⚠️ THE BENCH DAYS ARE 4, 4, 2, 2 SETS RATHER THAN 3, 3, 3, 3, and that is
+     what makes the "both screens agree" assertion below mean anything. An even
+     fixture reports the same sets-a-week over ANY window inside it, so a mutation
+     that had one of the two functions reading a different window passed
+     unnoticed — the test was measuring nothing. Front-loading the sets makes the
+     rate depend on where the window starts. */
+  await store.importAll({ sessions: [
+    day('2026-03-15', bench, 4, 185), day('2026-03-18', squat, 5, 275),
+    day('2026-03-22', bench, 4, 185), day('2026-03-29', bench, 2, 185),
+    day('2026-04-01', squat, 5, 275), day('2026-04-05', bench, 2, 185),
+  ] });
+
+  const v = await weeklyVolumeByMuscle(28, '2026-04-11');
+  const m = (name) => v.muscles.find((x) => x.muscle === name);
+
+  ok(v.spanDays === 28 && v.weeks === 4 && v.sessions === 6,
+     `six sessions over a 28-day span, four weeks (${v.spanDays}/${v.sessions})`);
+  ok(v.enough === true, 'and that is over the two-week floor, so a weekly rate may be stated');
+
+  const solo = await trainingForMuscle('Chest', 28, '2026-04-11');
+  ok(near(solo.weeklySets, m('Chest').weeklySets, 1e-9),
+     '🚨 the Goals screen and this one report the SAME sets a week for the same muscle — one '
+     + 'window helper, so they cannot drift apart');
+  ok(near(solo.sessionsPerWeek, m('Chest').sessionsPerWeek, 1e-9),
+     'and the same sessions a week, counted on direct work in both');
+
+  ok(near(m('Chest').weeklySets, 3), `12 bench sets over four weeks is 3 a week (${m('Chest').weeklySets})`);
+  ok(near(m('Quads').weeklySets, 2.5), `10 squat sets is 2.5 a week (${m('Quads').weeklySets})`);
+  /* ⚠️ THE FRACTIONAL RULE IS THE WHOLE SCREEN. A bench press is DIRECT for
+     chest and INDIRECT for triceps and the front delt (Pelland Table 1), so the
+     same 12 sets are 12 for chest and 6 for each of those. A version counting
+     any involvement as a whole set would read 12/12/12 here. */
+  ok(near(m('Triceps').weeklySets, 1.5) && near(m('Shoulders').weeklySets, 1.5),
+     `and the triceps and delts get HALF of every press — 1.5 a week (${m('Triceps').weeklySets})`);
+  ok(near(m('Glutes').weeklySets, 1.25), 'a squat is half a set for glutes, so 1.25 a week');
+
+  ok(near(m('Chest').sessionsPerWeek, 1) && m('Triceps').sessionsPerWeek === 0,
+     '⚠️ frequency counts DIRECT work only — four press days are a chest day a week and never a '
+     + 'triceps day, or every pressing session would be a back day because of the deadlift');
+
+  /* ⚠️ EVERY MUSCLE IS LISTED, INCLUDING THE UNTRAINED ONES. "You have done no
+     calf work for a month" is the finding; a screen that simply omitted calves
+     would be answering a different question. */
+  ok(v.muscles.length === 12, `all twelve volume muscles are listed (${v.muscles.length})`);
+  ok(m('Calves').weeklySets === 0 && m('Calves').contributors.length === 0,
+     'and a muscle with no work is present, on zero, rather than absent');
+
+  ok(v.muscles.map((x) => x.weeklySets).every((n, i, a) => i === 0 || a[i - 1] >= n),
+     'rows arrive sorted, most-trained first');
+
+  /* ⚠️ THE CONTRIBUTORS MUST SUM TO THE TOTAL, or the panel naming them is a
+     panel nobody can check against their own sessions. */
+  ok(v.muscles.every((row) =>
+    near(row.contributors.reduce((t, c) => t + c.sets, 0), row.totalSets, 1e-9)),
+     '🚨 every muscle\'s named exercises add up to exactly its own total');
+  ok(m('Chest').contributors[0].name === 'Barbell Bench Press'
+    && m('Chest').contributors[0].kind === 'direct'
+    && near(m('Chest').contributors[0].sets, 12),
+     'the chest total names the lift that built it: 12 direct sets of bench');
+  ok(m('Triceps').contributors[0].kind === 'indirect',
+     'and the triceps line says its sets arrived indirectly');
+
+  /* ---- under a fortnight: no rate, and it says so ---- */
+  await store.importAll({ sessions: [day('2026-04-08', bench, 4, 185), day('2026-04-10', bench, 4, 185)] });
+  const short = await weeklyVolumeByMuscle(28, '2026-04-11');
+  ok(short.enough === false && short.spanDays === 4,
+     '⚠️ four days of history is not a weekly rate, and the flag says so rather than the screen '
+     + 'printing 14 sets a week off two sessions');
+  ok(near(short.muscles.find((x) => x.muscle === 'Chest').totalSets, 8),
+     'the raw count is still there for the screen to show instead (8 sets so far)');
+  ok(await trainingForMuscle('Chest', 28, '2026-04-11') === null,
+     'while the Goals screen, which puts that number in a sentence, still gets nothing at all');
+
+  /* ---- the per-session ceiling, spread across the exercises that caused it ---- */
+  await store.importAll({ sessions: [
+    day('2026-03-15', bench, 30, 185), day('2026-04-11', bench, 1, 185),
+  ] });
+  const cl = await weeklyVolumeByMuscle(28, '2026-04-11');
+  const chest = cl.muscles.find((x) => x.muscle === 'Chest');
+  ok(cl.clamped === true, 'a 30-set chest session trips the per-session ceiling');
+  ok(near(chest.totalSets, 25),
+     `⚠️ and is credited with 24, not 30 — above the top of the measured range nothing further is `
+     + `counted (${chest.totalSets} = 24 + the single set on the second day)`);
+  ok(near(chest.contributors.reduce((t, c) => t + c.sets, 0), chest.totalSets, 1e-9),
+     '🚨 and the named exercises still add up to it — the clamp is spread across them rather than '
+     + 'left as a difference nobody can account for');
+  await store.clearAll();
 }
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
