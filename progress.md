@@ -192,8 +192,43 @@ only while all three hold:
   coloured hole in it, because here the comparison BETWEEN muscles is the point; it is 72 % on this
   figure.
 
-**Audit: 88 combinations, 8,366 text nodes, zero below 4.5:1, zero overflow, zero unnamed controls.**
+**Audit: 88 combinations, 8,374 text nodes, zero below 4.5:1, zero overflow, zero unnamed controls.**
 **Tests: render 785 → 802, a11y 97 → 105.** Two mutations, each flipping only its own.
+
+### Two follow-ups the same session, and one of them was a misreading worth keeping
+
+Tim: *"The display is really small right now. Make it as big as the main muscle group (strength)
+display."*
+
+⚠️ **AND ON A PHONE IT WAS ALREADY 44 % BIGGER THAN THAT ONE** — measured at 393px, chest 89×42
+against the Muscles tab's 62×29. **The report was still right, and measuring is what found where.**
+An SVG with a viewBox never crops: given a box of the wrong shape it SHRINKS and pads the rest. The
+container was full-width and short, which is fine on a phone and is a small body floating in a lot of
+nothing on a laptop — where the Muscles tab, laid out as a side column, draws its chest at 120×56
+against this one's 90×43. **The box carries the drawing's own aspect ratio now** (`BODY_ASPECT`, out
+of `body-map.js`), so it is exactly the picture's shape at every width — width-limited on a phone,
+height-limited on a desktop, padded on neither.
+- ⚠️ **THE LAPTOP CAP IS 71dvh RATHER THAN THE 76 THAT WOULD MATCH EXACTLY, and the difference was
+  bought on purpose**: at 76dvh the chest matches at 122×57 and **the legend lands 12px below the
+  fold**. This ramp is defensible only while its key is on screen, so the key won. 110×52 — 92 % of
+  the Muscles tab — with the legend at 829 against a fold at 860.
+
+Tim, on the window chips: *"The ranges for what's 'good' or not should be dependent on the time range
+that you're selecting… 10 sets is really good for 1 week, but bad for 12 weeks."* Then, before
+anything was built: *"Stop. I realize now It's meaning sets per week, so I don't think it needs
+changing at all."*
+
+🚨 **HE IS RIGHT THAT IT NEEDS NO CHANGE, AND THE FACT THAT IT COULD BE READ THE OTHER WAY IS THE
+FINDING.** Every number on the screen is a RATE, so the bands are the same at every window — measured
+across the demo year: Shoulders reads **22.9 / 21.6 / 20.9** sets a week at 4, 8 and 12 weeks.
+Picking a longer window measures a longer stretch; it does not ask more of you. **Scaling 4, 10 and
+20 by the window would compare somebody against a target the literature never states** — those are
+weekly doses.
+- ⚠️ **WHAT WAS ACTUALLY WRONG WAS THE KEY, which had no unit on it.** Five chips reading "10–19"
+  directly under a control offering **4 weeks / 8 weeks / 12 weeks** is a number with no unit beside
+  a control that looks like one. The legend says **SETS A WEEK** now, and the notes say outright that
+  the bands do not move with the window. **A screen that can be read two ways has already failed
+  once, whatever the arithmetic underneath it is doing.**
 
 ⚠️ **NOT VERIFIED: not on a phone, and — the one that matters for this pass — no colour-blind person
 has looked at it.** Everything above is simulation. If Tim knows somebody with a red-green

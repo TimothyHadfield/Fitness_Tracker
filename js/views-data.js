@@ -9,7 +9,7 @@ import {
   hypertrophyTier, strengthTier, INDIRECT_NOTE_WEEKLY, SESSION_CEILING,
   VOLUME_SHADES, volumeShade,
 } from './volume-map.js';
-import { bodySvg, setSelected, MAPPED_MUSCLES } from './body-map.js';
+import { bodySvg, setSelected, MAPPED_MUSCLES, BODY_ASPECT } from './body-map.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
@@ -1879,11 +1879,25 @@ function volumeFigure(data, selected, onPick) {
   });
 }
 
-function volumeLegend(selectedKey) {
+/**
+ * ⚠️ THE KEY SAYS ITS UNIT, and that sentence is here because it was missing.
+ * The bands are a RATE — sets a WEEK — and they are therefore the same bands at
+ * every window: picking 12 weeks measures a longer stretch, it does not ask more
+ * of you. The chips read "10–19" beside a control offering 4, 8 and 12 weeks,
+ * and Tim read them as totals for the window and asked (correctly, on that
+ * reading) why the ranges did not move with it. The numbers were right; the key
+ * was not saying what it was counting.
+ *
+ * ⚠️ SO THE FIX IS THE LABEL, NOT THE THRESHOLDS. 4, 10 and 20 are weekly doses
+ * out of the literature; scaling them by the window would compare somebody's
+ * training against a target the research never states.
+ */
+function volumeLegend(selectedKey, perWeek) {
   // ⚠️ Read in the direction the RAMP runs — none first, most last — while
   // VOLUME_SHADES is stored descending because that is the order its lookup
   // needs. A key printed against the scale backwards is a key nobody trusts.
   return el('div', { class: 'vol-legend', role: 'list' },
+    el('span', { class: 'vol-legend-unit', text: perWeek ? 'Sets a week' : 'Sets so far' }),
     ...[...VOLUME_SHADES].reverse().map((s) => el('span', {
       class: 'vol-chip' + (s.key === selectedKey ? ' is-on' : ''), role: 'listitem',
     },
@@ -1963,7 +1977,8 @@ async function renderVolumePane(host, top) {
 
   function drawPicked() {
     const m = volOpen ? data.muscles.find((x) => x.muscle === volOpen) : null;
-    setChildren(legendHost, volumeLegend(m ? volumeShade(perWeek ? m.weeklySets : m.totalSets).key : null));
+    setChildren(legendHost,
+      volumeLegend(m ? volumeShade(perWeek ? m.weeklySets : m.totalSets).key : null, perWeek));
     pickedWrap.classList.toggle('is-open', Boolean(m));
     hint.hidden = Boolean(m);
     hint.textContent = 'Tap a muscle on the figure — or a row below it — to see the exercises '
@@ -1992,14 +2007,17 @@ async function renderVolumePane(host, top) {
         el('div', { class: 'vol-intro-main', text: perWeek
           ? `Sets a week per muscle, from ${sess} over the last ${span}.`
           : `${sess} over ${span} so far.` }),
-        el('div', { class: 'field-help', text: perWeek
-          ? 'Hard sets per muscle per week is the thing growth responds to most directly.'
-          : '⚠️ Too little history to state a rate per week — a weekly figure measured over a few '
-            + 'days is noise. These are the sets recorded so far; it turns into a weekly rate once '
-            + 'there is a fortnight to measure over.' }),
+        // ⚠️ ONE LINE ABOVE THE FIGURE WHEN THERE IS A RATE TO STATE. The
+        // sentence that used to sit here — why weekly sets is the metric — moved
+        // to the notes at the bottom: every pixel above the drawing is a pixel
+        // off the drawing, and it was repeating what the line above it says.
+        perWeek ? null : el('div', { class: 'field-help', text:
+          '⚠️ Too little history to state a rate per week — a weekly figure measured over a few '
+          + 'days is noise. These are the sets recorded so far; it turns into a weekly rate once '
+          + 'there is a fortnight to measure over.' }),
       ),
 
-      el('div', { class: 'vol-figure' }, figure),
+      el('div', { class: 'vol-figure', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` }, figure),
       legendHost,
       hint,
       pickedWrap,
@@ -2007,6 +2025,10 @@ async function renderVolumePane(host, top) {
       list,
 
       el('div', { class: 'vol-notes' },
+        el('div', { class: 'field-help', text:
+          'Hard sets per muscle per week is the thing growth responds to most directly. ⚠️ Every '
+          + 'number here is a rate — sets a WEEK — so the bands are the same at every window: '
+          + 'picking 12 weeks measures a longer stretch, it does not ask more of you.' }),
         el('div', { class: 'field-help', text:
           'The bar’s tick is 4 sets a week — the point below which no detectable change is '
           + 'expected. There is no target line above it: the labels say what another set buys at '

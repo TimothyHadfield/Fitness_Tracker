@@ -6229,3 +6229,28 @@ point.
 What nobody can tell you from here is how it looks to someone who is actually red-green colour blind.
 Everything above is simulation. If you know somebody, ten seconds of them looking at it is worth more
 than all of my arithmetic.
+
+### Two follow-ups, straight after
+
+*"The display is really small right now. Make it as big as the main muscle group (strength)
+display."*
+
+Measured before changing anything, and the answer was interesting: on a phone the volume figure was
+already 44% **bigger** than the strength one. But the report was right — on a laptop it was much
+smaller, and the reason is that an SVG never crops. Give it a box of the wrong shape and it shrinks
+itself to fit and pads the rest, so a full-width, short container draws a small body floating in a
+lot of empty space. The box is now the shape of the drawing itself, so the picture is as big as the
+room at any width. On a laptop it now matches the strength figure to within a few percent — not
+exactly, because the last 5% would have pushed the colour key below the fold, and the key is the
+thing that makes a red-to-green scale legible at all.
+
+And on the windows: you got there first — the numbers were already sets **per week**, so the ranges
+are right at 4, 8 or 12 weeks. Measured across the demo year, shoulders reads 22.9, 21.6 and 20.9
+sets a week at the three windows; a longer window measures a longer stretch, it doesn't ask more of
+you.
+
+The fact that it could be read the other way is still a real finding, though, so one thing did
+change: the key had no unit on it. Five chips reading "10–19" sitting directly under a control that
+says "4 weeks / 8 weeks / 12 weeks" is a number with no unit next to something that looks like one.
+It says **SETS A WEEK** now, and the notes underneath say plainly that the bands don't move with the
+window. A screen that can be read two ways has already failed once, whatever the arithmetic is doing.

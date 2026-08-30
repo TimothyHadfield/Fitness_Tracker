@@ -37,6 +37,20 @@ export const MAPPED_MUSCLES = [...new Set(
   Object.values(ART).flatMap((v) => Object.keys(v.muscles)),
 )];
 
+/**
+ * The drawing's own width-to-height ratio, captions included.
+ *
+ * ⚠️ EXPORTED SO A LAYOUT CAN BE THE SHAPE OF THE PICTURE. An SVG with a viewBox
+ * fits itself inside whatever box it is given, so a box of the wrong shape does
+ * not crop the figure — it SHRINKS it and pads the rest. That is what happened
+ * to Data → Volume on a wide screen: a full-width, short container drew a small
+ * body floating in the middle of a lot of nothing, and it was reported as "the
+ * display is really small" on the same day the same figure measured LARGER than
+ * the Muscles tab's on a phone. A container carrying this ratio is always
+ * exactly the picture's shape, so the picture is always as big as the space.
+ */
+export const BODY_ASPECT = (FIGURE.w * 2 + FIGURE.gap) / (FIGURE.h + CAPTION_H);
+
 function mk(shape, attrs, cls) {
   const n = document.createElementNS(NS, shape);
   for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);

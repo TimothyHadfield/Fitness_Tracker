@@ -3598,19 +3598,46 @@ a.row { text-decoration: none; }
 
 .vol-pane { display: flex; flex-direction: column; gap: 12px; padding-bottom: 12px; }
 
-/* ⚠️ THE FIGURE IS CAPPED, and the cap is what keeps the legend on screen.
-   Left to its own aspect ratio it filled a 360×720 phone exactly, so the only
-   thing visible on arriving was a red-and-green body with no key to it — a
-   ramp this project is only allowed to ship BECAUSE the key is there. 44dvh
-   leaves the five bands under it without a scroll on the smallest screen the
-   app targets, measured at 360×720. */
+/* ⚠️ THE BOX IS THE SHAPE OF THE PICTURE, and that is the whole fix. An SVG with
+   a viewBox never crops — it shrinks to fit whatever it is given — so a
+   full-width, short container drew a small figure floating in a lot of empty
+   space on a laptop, which is exactly how Tim reported it ("the display is
+   really small") on the same day the same figure measured 10 % LARGER than the
+   Muscles tab's on a phone. `aspect-ratio` plus a max-width tied to the same cap
+   means the container is always exactly the drawing's shape: width-limited on a
+   phone, height-limited on a desktop, never padded on either.
+
+   ⚠️ 58dvh IS THE CAP AND IT IS THERE FOR THE KEY. Uncapped, the figure filled a
+   360×720 phone exactly and the screen arrived as a red-and-green body with no
+   legend in sight — on a ramp this project is only allowed to ship BECAUSE the
+   legend is there. --body-ar is set inline from js/body-map.js's BODY_ASPECT. */
 .vol-figure {
   width: 100%;
-  height: 44dvh;
-  min-height: 230px;
+  aspect-ratio: var(--body-ar, 1);
+  max-height: 58dvh;
+  max-width: calc(58dvh * var(--body-ar, 1));
+  margin-inline: auto;
   display: flex; align-items: center; justify-content: center;
 }
-.vol-figure .body-map { height: 100%; }
+.vol-figure .body-map { width: 100%; height: 100%; }
+/* ⚠️ AND IT GROWS ON A LAPTOP, because that is where it was reported small and
+   because the Muscles tab gets bigger there too. Measured at 1280×860: that tab
+   lays its figure out as a side column and draws the chest at 120×56, against
+   90×43 here under the phone cap — which is the whole of Tim's report, since on
+   a PHONE this figure already drew 44 % larger than that one.
+
+   ⚠️ 71dvh RATHER THAN THE 76 THAT WOULD MATCH EXACTLY, and the five pixels are
+   bought deliberately: at 76dvh the chest matches at 122×57 and the legend lands
+   12px BELOW the fold. This ramp is only defensible while its key is on screen,
+   so the key wins the argument. 71dvh draws the chest at 110×52 — 92 % of the
+   Muscles tab — with the legend at 829 against a fold at 860. Same 860px
+   breakpoint the side-column layout uses. */
+@media (min-width: 860px) {
+  .vol-figure {
+    max-height: 71dvh;
+    max-width: calc(71dvh * var(--body-ar, 1));
+  }
+}
 /* ⚠️ PICKING ONE MUSCLE MUST NOT ERASE THE OTHER ELEVEN. The strength map dims
    everything but the selection to 38 %, which is right there — you are reading
    one muscle's rating. Here the whole point is the comparison BETWEEN muscles,
@@ -3619,7 +3646,14 @@ a.row { text-decoration: none; }
    back. */
 .vol-figure .body-map[data-selected] .body-region:not(.is-selected) { opacity: .72; }
 
-.vol-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.vol-legend { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* ⚠️ The key states what it is counting. Without it the chips read "10–19"
+   beside a 4 / 8 / 12 weeks control, which is a number with no unit next to a
+   control that looks like one — and it was misread that way the day it shipped. */
+.vol-legend-unit {
+  font-size: 10.5px; font-weight: 750; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-faint); margin-right: 2px;
+}
 /* Named bands, not swatches — this is the secondary encoding the ramp's own
    CVD numbers oblige, so it is load-bearing and not a key that could be cut. */
 .vol-chip {
