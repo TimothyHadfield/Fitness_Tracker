@@ -269,5 +269,34 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      'a closing sheet still looks like a sheet — the layout rules carry both names');
 }
 
+/* ================================================================== *
+ * THE VOLUME RAMP — red to green, 2026-09-01
+ *
+ * 🚨 THE RISKIEST COLOUR DECISION THIS APP HAS MADE. Tim asked for red-to-green
+ * by name, and it is the worst-known pairing for colour vision deficiency —
+ * roughly 8 % of men. It is defensible only because of what `tools/volume-ramp.mjs`
+ * measures: strictly monotone lightness, holding under protanopia, deuteranopia
+ * and tritanopia, so the ORDER survives even where the hue does not.
+ *
+ * ⚠️ A HEX NUDGED BY EYE IN THE STYLESHEET WOULD SILENTLY INVALIDATE ALL OF IT
+ * — that is what this block is for. It regenerates the ramp from the same OKLCH
+ * coordinates the tool validated and requires the stylesheet to still be showing
+ * exactly those colours.
+ * ================================================================== */
+{
+  const { VOLUME_HEX } = await import('../tools/volume-ramp.mjs');
+  const { VOLUME_SHADES } = await import('../js/volume-map.js');
+
+  ok(VOLUME_HEX.length === VOLUME_SHADES.length,
+     `every band has a colour and every colour a band (${VOLUME_HEX.length})`);
+  for (const { key, hex } of VOLUME_HEX) {
+    ok(new RegExp(`--vol-${key}:\\s*${hex};`, 'i').test(CSS),
+       `--vol-${key} is still the generated ${hex}`);
+  }
+  // And the map has a fill rule for each, or a band would paint as nothing.
+  ok(VOLUME_HEX.every(({ key }) => new RegExp(`\\.body-region\\.lv-vol-${key}\\s*\\{`).test(CSS)),
+     'and each one is wired to the body map');
+}
+
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');
 process.exit(fails ? 1 : 0);

@@ -481,3 +481,44 @@ export function strengthTier(weeklySets) {
   const v = Number(weeklySets) || 0;
   return STRENGTH_TIERS.find((t) => v <= t.max) || STRENGTH_TIERS[STRENGTH_TIERS.length - 1];
 }
+
+/**
+ * The five bands the body map on Data → Volume is coloured in.
+ *
+ * Tim, 2026-09-01: *"colour them by the number of sets for that muscle group
+ * rather than strength… a range from red to green. very green is more sets,
+ * very red is no sets."*
+ *
+ * ⚠️ THE THRESHOLDS LIVE HERE, WITH THE TIERS THEY COME FROM, and the colours
+ * live in `css/app.css` — `tools/volume-ramp.mjs` imports this list and attaches
+ * an OKLCH coordinate to each key, so there is exactly one place a band can be
+ * moved and the ramp cannot end up with a colour for a band that no longer
+ * exists. None of these numbers is round on purpose: 4 is Pelland et al.'s
+ * minimum effective dose, 10 is where the best-value band ends, and 20 is the
+ * top of the range every popular recommendation quotes.
+ *
+ * ⚠️ FIVE BANDS AND NOT A CONTINUOUS GRADIENT. A gradient cannot be named in a
+ * legend, and a red-to-green scale that nobody can read the key to is exactly
+ * the failure this ramp is on probation for.
+ */
+export const VOLUME_SHADES = [
+  { key: 'high', min: 20, label: '20+' },
+  { key: 'good', min: 10, label: '10–19' },
+  { key: 'mid',  min: 4,  label: '4–9' },
+  { key: 'low',  min: 0,  label: 'Under 4' },
+  { key: 'none', min: 0,  label: 'None' },
+];
+
+/**
+ * Which band a weekly set count sits in.
+ *
+ * ⚠️ EXACTLY ZERO IS ITS OWN BAND, and it is the one distinction on this screen
+ * that has to be exact. "You have never trained this muscle" and "you trained it
+ * a little" are different findings, and a single indirect set a month is a real
+ * 0.04 rather than a zero.
+ */
+export function volumeShade(weeklySets) {
+  const v = Number(weeklySets);
+  if (!(v > 0)) return VOLUME_SHADES[VOLUME_SHADES.length - 1];
+  return VOLUME_SHADES.find((s) => v >= s.min && s.key !== 'none');
+}

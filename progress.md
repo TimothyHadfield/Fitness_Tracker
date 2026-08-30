@@ -42,6 +42,13 @@ so outright**; the only threshold drawn is the 4-sets-a-week minimum the source 
 muscle and it names the exercises behind the number, in the SAME UNIT — which the first version got
 wrong.**
 
+🆕 **C. THE VOLUME TAB IS THE BODY MAP NOW, PAINTED RED-TO-GREEN BY SETS.** Tim's ask, same figure as
+the Muscles tab, bars kept below it. 🚨 **Red-to-green is the worst pairing there is for colour
+blindness and it is legal here only because the ramp has strictly monotone lightness** — the order
+survives protanopia, deuteranopia and tritanopia in simulation — **and because the legend, the
+labels, the panel and the bar list all state the number in words.** ⚠️ **This map has no grey**: zero
+sets is a number, so every muscle says something true.
+
 🆕 **B. THE APP MOVES NOW, AND IT IS A SYSTEM RATHER THAN A PILE OF TRANSITIONS.** Tim: *"when you
 click on something, I want it to have some sort of visible motion between the movement rather than
 just an instant change or teleportation… realistic acceleration in how they start and stop… keep it
@@ -122,6 +129,75 @@ contributors left in window units → the on-screen sum; dropping the warm-up ad
 ⚠️ **NOT VERIFIED: nothing here has been on Tim's phone**, at his instruction this session. It is
 proved in jsdom, in the data layer against fixed dates, and as painted pixels at 360 and 393px in
 both themes.
+
+---
+
+## 2026-09-01, third pass — THE BODY MAP, COLOURED BY SETS
+
+Tim: *"I would love it a lot more if it just displayed the same thing, but did the exact same human
+body display with the coloured muscle groups (exact same picture), but instead coloured them by the
+number of sets for that muscle group rather than strength. For now, lets try having the muscle groups
+be colored on a range from red to green. very green is more sets, very red is no sets… Keep the bar
+display as an option to see below the human display."*
+
+**Built exactly that.** The Volume tab opens on the same figure the Muscles tab uses — same art, same
+tap targets, same halos — painted from weekly sets instead of strength, with the five-band legend
+under it, the picked muscle's working under that, and the bar list still below.
+
+🚨 **THE RAMP IS RED-TO-GREEN, WHICH IS THE WORST-KNOWN PAIRING FOR COLOUR BLINDNESS, AND IT SHIPPED
+ANYWAY — HERE IS THE ENTIRE JUSTIFICATION.** Roughly 8 % of men cannot separate those hues.
+`tools/volume-ramp.mjs` generates the five steps and measures three things, and the ramp is legal
+only while all three hold:
+
+1. **STRICTLY MONOTONE LIGHTNESS.** OKLCH L **0.36 → 0.63**, ΔL ≥ 0.05 a step, and the order still
+   runs darkest-to-lightest **under simulated protanopia, deuteranopia and tritanopia**. That is what
+   makes it a scale rather than a rainbow, and it is the construction viridis uses. **Under
+   deuteranopia the hue is gone and the order is still there.**
+2. **It reads as paint on both papers** — worst step **1.89:1** on the dark theme's `#C2C6C0` and
+   **3.28:1** on white, against the **shipped strength ramp's 1.06 and 1.84**. ⚠️ **The bar is the map
+   already on screen**, deliberately: a muscle fill is enclosed by the ink layer's own black keyline,
+   and holding a new ramp to a standard the existing one fails would be theatre.
+3. **Adjacent ΔE under deuteranopia is 4.7 — inside the floor band, survivable ONLY with secondary
+   encoding.** So the encoding is load-bearing rather than decorative: **the legend names all five
+   bands in words, every muscle's accessible label and tooltip states its number, the panel states it
+   again on tap, and the bar list carries all twelve.** Remove any of those and this ramp stops being
+   defensible.
+
+- ⚠️ **THE BANDS LIVE IN `js/volume-map.js` AND THE COLOURS IN `css/app.css`, AND NEITHER FILE OWNS
+  BOTH.** The tool imports `VOLUME_SHADES` and attaches an OKLCH coordinate to each key, so a
+  threshold cannot be moved in one place and leave a colour for a band that no longer exists.
+  **`tests/a11y.test.mjs` regenerates the five hexes and requires the stylesheet to still be showing
+  exactly those** — which is what makes "never hand-edit" more than a comment.
+- 🚨 **THIS MAP HAS NO GREY, AND THAT IS THE PART WORTH NOTICING.** The strength map paints an
+  unrankable muscle the same grey as "no data" — the abs complaint at the top of this file. **Zero
+  sets is a number**, so every muscle here is painted and says something true. It is not the fix that
+  was offered for that complaint, and it does not close it, but somebody asking "does this app know I
+  train my abs" now has a screen that answers yes.
+- ⚠️ **THE SAME DRAWING NOW CARRIES TWO MEANINGS, so everything that STATES what a colour means is
+  per-screen.** `bodySvg()` took its accessible label — *"coloured by strength level"* — as a
+  constant; on this screen that sentence would have told a screen-reader user the opposite of what is
+  on it. It is a parameter now, and a test asserts this figure says **sets** and never **strength**.
+- 🚨 **ONE SELECTION, THREE PLACES.** Tapping a muscle on the body, and tapping its row, are the same
+  act — the figure's outline, the panel and the row all read one variable. **Mutation-checked**:
+  letting the figure keep its own selection (which is what `views-muscles.js` does, where there is no
+  list to stay in step with) flips exactly the two assertions about them agreeing.
+- ⚠️ **THE ROW STOPPED EXPANDING, and that reverses something built this morning.** With the working
+  in the panel above, a row that also opened its own copy would be the same block on screen twice —
+  **the fault Tim named on the set row** (*"it doesn't have 2 places for the same thing"*) arriving on
+  a different screen. The row selects; the working has one home.
+- ⚠️ **Two things measured rather than eyeballed.** Left to its own aspect ratio the figure filled a
+  360×720 phone **exactly**, so the screen arrived as a red-and-green body with no key in sight — on
+  a ramp that is only allowed to ship *because* the key is there. It is capped at 44dvh. And the
+  strength map's **38 % dimming of everything unselected** washes this one out to pale greys with a
+  coloured hole in it, because here the comparison BETWEEN muscles is the point; it is 72 % on this
+  figure.
+
+**Audit: 88 combinations, 8,366 text nodes, zero below 4.5:1, zero overflow, zero unnamed controls.**
+**Tests: render 785 → 802, a11y 97 → 105.** Two mutations, each flipping only its own.
+
+⚠️ **NOT VERIFIED: not on a phone, and — the one that matters for this pass — no colour-blind person
+has looked at it.** Everything above is simulation. If Tim knows somebody with a red-green
+deficiency, ten seconds of them looking at the figure is worth more than the whole of section 3.
 
 ---
 
@@ -5269,6 +5345,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning |
 | `js/optimal.js` | Not a doc. Read it before touching the rating: the dose-response curves are **fitted to published values, with the derivation in a comment on each constant**, and the header lists the three things the rating refuses to do — reward extra training days for growth, extrapolate past the evidence, or imply precision the source lacks |
+| `tools/volume-ramp.mjs` | Not a doc, and dev-only. **The red-to-green ramp the Volume body map is painted in — GENERATED, and `css/app.css`'s five `--vol-*` hexes are its output.** ⚠️ **Read its header before touching a colour**: red-to-green is the worst pairing there is for colour blindness and it is defensible only through strictly monotone lightness (which the tool proves under three CVD simulations) plus the legend, labels and list that state every number in words. `tests/a11y.test.mjs` regenerates the hexes and fails if the stylesheet has drifted from them |
 | `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5. ⚠️ **Since 2026-09-01 it is also on a screen of its own** (Data → Volume, D3), so its efficiency tiers and its `INDIRECT_NOTE_*` sentences are read by users rather than only by the rating — and the per-screen consequence clause pattern applies: one shared statement of what the 0.5 IS, one sentence per screen saying what would change without it, **both shipped from beside the constant** |
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
@@ -5338,7 +5415,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
 | Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
 | Calendar | ⚠️ **ITS OWN TAB AGAIN SINCE 2026-08-25**, reversing the 2026-08-22 merge on Tim's instruction — that argument was about what the two screens *are*, his is about how often he opens them. Its header is its own title, not the Data switch. **Month cells are filled by the workout's name** beside the day number, 8px → 12px, wrapping to two lines rather than clipping. ~~Not its own tab since 2026-08-22 — it is the first segment of DATA, and its header IS the four-way Data switch.~~ `#/calendar` has been its route throughout, so a day stays deep-linkable and nothing anybody bookmarked broke in either direction. **Two ways to read it, on a Months / Years switch below that.** **Months** is the original: continuous vertical month scroll, sticky headings, opens on the current month, active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks. **Years** (2026-08-22, Tim's ask with a reference image) draws **one tiny square per day**, one row per year, newest first, with "141 days trained" beside each — years of training on a single screen, and two years fit in the top half of a 375×667 phone. ⚠️ **It is BINARY** — coloured or not — where Months distinguishes workouts from benchmarks, because those two tokens measure ΔE 6.5 apart under protanopia and a 5.7px square has no room for the label or texture that would make a second colour legal. ⚠️ **Tapping a square SELECTS it and does not navigate**: at 5.7px a tap that navigated would open the wrong day about as often as the right one, so it fills a readout line that holds its row whether or not anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met by **equivalence** — every day is reachable at 40px in Months, one tap away. `js/year-grid.js` |
-| **Data** (nav) | **FIVE segments — Muscles · Volume · Graph · Bars · Research** (Volume joined 2026-09-01, Research 2026-08-28), and it **opens on Muscles** — Tim's call, and it is also the mode that works with the least history, since one benchmark colours the map where a line chart needs two points. ⚠️ **Calendar left this control** and is its own tab again, which took the switch's one oddity with it: it was the only entry that navigated rather than setting in-page state. All five are now the same kind of thing — in-page state on `#/graphs`. ⚠️ **"Bar Chart" lost a word**: the 2026-08-21 survey measured the three-segment version clipping that exact label to "Bar Char" at 393px. ⚠️ **The five-segment row was MEASURED at 360px before Volume shipped** — 293px of row, labels 63+60+51+39+68 = 281px, nothing clipped, the existing four unchanged in width, **12px left, so a sixth does not fit**. **Graph** (measured SVG line + hover crosshair), **Bars** (paired bars), **Muscles** (body map), **Volume** — 🚨 **D3's headline metric, weekly sets per muscle from what you RECORDED** (2026-09-01): every muscle listed including the ones on zero, sets a week against the published efficiency tiers, tap one to see which exercises fed it and whether each counted whole or half. **The tiers are not targets and it says so**; the only threshold drawn is 4 sets a week. Under a fortnight of history it shows totals and refuses to state a rate. Warm-ups are counted and admitted (Open work 0c, still Tim's call). **Research** — which since 2026-08-30 opens on **eleven collapsed topics teaching the basics**, each carrying a confidence label in words and its own stated weak spot, over the age chart that shipped with the tab. `js/research-topics.js` holds the content and the rules it was written under; `docs/research.md` §13 holds the pull. **No chart mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
+| **Data** (nav) | **FIVE segments — Muscles · Volume · Graph · Bars · Research** (Volume joined 2026-09-01, Research 2026-08-28), and it **opens on Muscles** — Tim's call, and it is also the mode that works with the least history, since one benchmark colours the map where a line chart needs two points. ⚠️ **Calendar left this control** and is its own tab again, which took the switch's one oddity with it: it was the only entry that navigated rather than setting in-page state. All five are now the same kind of thing — in-page state on `#/graphs`. ⚠️ **"Bar Chart" lost a word**: the 2026-08-21 survey measured the three-segment version clipping that exact label to "Bar Char" at 393px. ⚠️ **The five-segment row was MEASURED at 360px before Volume shipped** — 293px of row, labels 63+60+51+39+68 = 281px, nothing clipped, the existing four unchanged in width, **12px left, so a sixth does not fit**. **Graph** (measured SVG line + hover crosshair), **Bars** (paired bars), **Muscles** (body map), **Volume** — 🚨 **D3's headline metric, weekly sets per muscle from what you RECORDED** (2026-09-01): **the SAME body map the Muscles tab draws, painted red-to-green by sets** (Tim's ask, same afternoon), a five-band legend under it, the picked muscle's working under that, and the bar list still below — every muscle listed including the ones on zero, sets a week against the published efficiency tiers, tap one on the body or in the list to see which exercises fed it and whether each counted whole or half. ⚠️ **The ramp is generated by `tools/volume-ramp.mjs` and a test holds the stylesheet to its hexes**; red-to-green survives colour blindness only through strictly monotone lightness plus the words in the legend and labels — read that tool's header before touching a colour. ⚠️ **No grey anywhere: zero sets is a number**, which is the one thing this map can do that the strength map cannot. **The tiers are not targets and it says so**; the only threshold drawn is 4 sets a week. Under a fortnight of history it shows totals and refuses to state a rate. Warm-ups are counted and admitted (Open work 0c, still Tim's call). **Research** — which since 2026-08-30 opens on **eleven collapsed topics teaching the basics**, each carrying a confidence label in words and its own stated weak spot, over the age chart that shipped with the tab. `js/research-topics.js` holds the content and the rules it was written under; `docs/research.md` §13 holds the pull. **No chart mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
 | Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
 | Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |

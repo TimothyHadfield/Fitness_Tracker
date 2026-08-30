@@ -7,7 +7,9 @@ import {
 } from './store.js';
 import {
   hypertrophyTier, strengthTier, INDIRECT_NOTE_WEEKLY, SESSION_CEILING,
+  VOLUME_SHADES, volumeShade,
 } from './volume-map.js';
+import { bodySvg, setSelected, MAPPED_MUSCLES } from './body-map.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
@@ -1739,6 +1741,16 @@ const VOL_WINDOWS = [[28, '4 weeks'], [56, '8 weeks'], [84, '12 weeks']];
 // but never a bare "12.0", which reads as false precision on a count.
 const fmtSets = (n) => (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, '');
 
+/**
+ * One muscle's row under the figure.
+ *
+ * ⚠️ IT SELECTS, IT NO LONGER EXPANDS — changed when the body map arrived
+ * (2026-09-01). The row used to open its own copy of the working; with the
+ * figure above it that would be the same block on screen twice, which is the
+ * fault Tim named on the set row (*"it doesn't have 2 places for the same
+ * thing"*) arriving on a different screen. The working has one home now, in the
+ * panel under the figure, and this row is one of the two ways to point at it.
+ */
 function volRow(m, scale, perWeek, weeks, open, onToggle) {
   const value = perWeek ? m.weeklySets : m.totalSets;
   const tier = hypertrophyTier(m.weeklySets);
@@ -1752,8 +1764,9 @@ function volRow(m, scale, perWeek, weeks, open, onToggle) {
 
   const btn = el('button', {
     class: 'vol-row' + (none ? ' is-none' : ''),
-    'aria-expanded': String(open),
-    onClick: () => onToggle(btn, wrap),
+    'aria-pressed': String(open),
+    dataset: { muscle: m.muscle },
+    onClick: onToggle,
   },
     el('span', { class: 'vol-head' },
       el('span', { class: 'vol-name', text: m.muscle }),
@@ -1773,18 +1786,7 @@ function volRow(m, scale, perWeek, weeks, open, onToggle) {
     el('span', { class: 'vol-sub', text: sub }),
   );
 
-  /* ⚠️ THE DETAIL IS ALWAYS BUILT AND THE ROW ONLY OPENS IT, which is a change
-   * the motion pass forced and is better anyway. A row that renders its detail
-   * on tap can only appear instantly — a node inserted with its open state
-   * already on it has nothing to transition FROM — and every row below it jumps
-   * down the screen, which is exactly the teleporting Tim asked to be rid of.
-   * Built collapsed, the grid track animates and the list slides open around it.
-   * Cost is twelve short lists of text nodes that measure zero and are excluded
-   * from the accessibility audit by their own zero height. */
-  const wrap = el('div', { class: 'vol-detail-wrap' + (open ? ' is-open' : '') },
-    volDetail(m, perWeek, weeks));
-
-  return el('div', { class: 'vol-item' }, btn, wrap);
+  return el('div', { class: 'vol-item' }, btn);
 }
 
 /**
@@ -1836,6 +1838,61 @@ function volDetail(m, perWeek, weeks) {
   );
 }
 
+/**
+ * The figure, coloured by how much work each muscle has been getting.
+ *
+ * Tim, 2026-09-01: *"the exact same human body display with the coloured muscle
+ * groups (exact same picture), but instead coloured them by the number of sets
+ * for that muscle group rather than strength."*
+ *
+ * 🚨 THE SAME `bodySvg()`, THE SAME ART, AND A DIFFERENT MEANING FOR THE COLOUR
+ * — which is the thing to be careful about. Two screens now paint the same
+ * drawing from two different scales, so everything that STATES what a colour
+ * means has to be per-screen: the figure's own accessible label, every muscle's
+ * label and title, and the legend under it. Nothing here may say "level".
+ *
+ * ⚠️ AND THIS MAP HAS NO GREY, WHICH THE STRENGTH ONE CANNOT MANAGE. Over there
+ * a muscle with no published standard can never be ranked and is painted grey
+ * beside "no data" in the legend — the complaint about abs. Here every muscle
+ * has a number, because zero sets IS a number, so every muscle is painted and
+ * the one thing this screen cannot do is fail to say something.
+ */
+function volumeFigure(data, selected, onPick) {
+  const byMuscle = new Map(data.muscles.map((m) => [m.muscle, m]));
+  const levels = new Map();
+  for (const muscle of MAPPED_MUSCLES) {
+    const m = byMuscle.get(muscle);
+    const sets = m ? (data.enough ? m.weeklySets : m.totalSets) : 0;
+    const shade = volumeShade(sets);
+    levels.set(muscle, {
+      levelKey: `vol-${shade.key}`,
+      // Read out on tap and on hover. The number is the answer; the band is how
+      // it is painted, and both are said in words because the colour cannot be
+      // trusted to carry it on its own.
+      label: `${fmtSets(sets)} ${data.enough ? 'sets a week' : 'sets so far'}`,
+    });
+  }
+  return bodySvg(levels, selected, onPick, {
+    label: data.enough
+      ? 'Muscle groups coloured by how many sets a week each one is getting'
+      : 'Muscle groups coloured by how many sets each one has had so far',
+  });
+}
+
+function volumeLegend(selectedKey) {
+  // ⚠️ Read in the direction the RAMP runs — none first, most last — while
+  // VOLUME_SHADES is stored descending because that is the order its lookup
+  // needs. A key printed against the scale backwards is a key nobody trusts.
+  return el('div', { class: 'vol-legend', role: 'list' },
+    ...[...VOLUME_SHADES].reverse().map((s) => el('span', {
+      class: 'vol-chip' + (s.key === selectedKey ? ' is-on' : ''), role: 'listitem',
+    },
+      el('i', { style: `background:var(--vol-${s.key})` }),
+      s.label,
+    )),
+  );
+}
+
 async function renderVolumePane(host, top) {
   const data = await weeklyVolumeByMuscle(volDays);
 
@@ -1875,19 +1932,56 @@ async function renderVolumePane(host, top) {
    * bar-growth animation on every tap, which then read as the numbers changing
    * when nothing had. */
   const list = el('div', { class: 'vol-list' });
-  const toggle = (muscle) => (btn, wrap) => {
-    const opening = volOpen !== muscle;
-    for (const w of list.querySelectorAll('.vol-detail-wrap.is-open')) w.classList.remove('is-open');
-    for (const b of list.querySelectorAll('.vol-row[aria-expanded="true"]')) b.setAttribute('aria-expanded', 'false');
-    volOpen = opening ? muscle : null;
-    if (opening) {
-      wrap.classList.add('is-open');
-      btn.setAttribute('aria-expanded', 'true');
+
+  /* 🚨 ONE SELECTION, THREE PLACES. Tapping a muscle on the figure and tapping
+   * its row are the same act, and they had better not be able to disagree —
+   * the figure's outline, the panel under it and the open row all read
+   * `volOpen`. The first version had the figure keep its own `selected` (which
+   * is what views-muscles.js does, where there is no list to keep in step), and
+   * a muscle could be outlined on the body while a different row sat open. */
+  const select = (muscle) => {
+    volOpen = volOpen === muscle ? null : muscle;
+    for (const b of list.querySelectorAll('.vol-row')) {
+      b.setAttribute('aria-pressed', String(b.dataset.muscle === volOpen));
     }
+    setSelected(figure, volOpen);
+    drawPicked();
   };
+
   setChildren(list, ...data.muscles.map((m) => volRow(
-    m, scale, perWeek, data.weeks, volOpen === m.muscle, toggle(m.muscle),
+    m, scale, perWeek, data.weeks, volOpen === m.muscle, () => select(m.muscle),
   )));
+
+  const figure = volumeFigure(data, volOpen, select);
+  const picked = el('div', { class: 'vol-picked' });
+  // ⚠️ The panel is inside the collapsing wrapper the motion pass built, so
+  // picking a muscle SLIDES the list down rather than jolting it. Same class,
+  // same animation, one level up from where it started this morning.
+  const pickedWrap = el('div', { class: 'vol-detail-wrap' + (volOpen ? ' is-open' : '') }, picked);
+  const hint = el('div', { class: 'field-help vol-hint' });
+  const legendHost = el('div', {});
+
+  function drawPicked() {
+    const m = volOpen ? data.muscles.find((x) => x.muscle === volOpen) : null;
+    setChildren(legendHost, volumeLegend(m ? volumeShade(perWeek ? m.weeklySets : m.totalSets).key : null));
+    pickedWrap.classList.toggle('is-open', Boolean(m));
+    hint.hidden = Boolean(m);
+    hint.textContent = 'Tap a muscle on the figure — or a row below it — to see the exercises '
+      + 'behind its number.';
+    if (!m) return;
+    const value = perWeek ? m.weeklySets : m.totalSets;
+    setChildren(picked,
+      el('div', { class: 'vol-picked-head' },
+        el('span', { class: 'vol-picked-name', text: m.muscle }),
+        el('span', { class: 'vol-picked-num' },
+          fmtSets(value),
+          el('span', { class: 'vol-unit', text: perWeek ? ' / wk' : ' sets' }),
+        ),
+      ),
+      volDetail(m, perWeek, data.weeks),
+    );
+  }
+  drawPicked();
 
   const span = `${data.spanDays} ${data.spanDays === 1 ? 'day' : 'days'}`;
   const sess = `${data.sessions} ${data.sessions === 1 ? 'session' : 'sessions'}`;
@@ -1899,12 +1993,16 @@ async function renderVolumePane(host, top) {
           ? `Sets a week per muscle, from ${sess} over the last ${span}.`
           : `${sess} over ${span} so far.` }),
         el('div', { class: 'field-help', text: perWeek
-          ? 'Hard sets per muscle per week is the thing growth responds to most directly. Tap a '
-            + 'muscle to see which exercises fed it.'
+          ? 'Hard sets per muscle per week is the thing growth responds to most directly.'
           : '⚠️ Too little history to state a rate per week — a weekly figure measured over a few '
             + 'days is noise. These are the sets recorded so far; it turns into a weekly rate once '
             + 'there is a fortnight to measure over.' }),
       ),
+
+      el('div', { class: 'vol-figure' }, figure),
+      legendHost,
+      hint,
+      pickedWrap,
 
       list,
 

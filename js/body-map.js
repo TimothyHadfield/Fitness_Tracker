@@ -64,8 +64,14 @@ function markFocus(view, d) {
  * @param {Map<string,{levelKey,label}>} levels  muscle -> level, absent = grey
  * @param {string|null} selected                 highlighted muscle
  * @param {(muscle:string)=>void} onPick
+ * @param {{label?: string}} [opts]  what the whole figure is coloured BY.
+ *   ⚠️ It has to be said, because since 2026-09-01 there are two of these on two
+ *   different screens carrying two different meanings for the same colours —
+ *   strength on Muscles, weekly sets on Volume. A figure that announced itself
+ *   as "coloured by strength level" on both would be telling a screen-reader
+ *   user the opposite of what the second screen shows.
  */
-export function bodySvg(levels, selected, onPick) {
+export function bodySvg(levels, selected, onPick, opts = {}) {
   const { w, h, gap } = FIGURE;
   const id = ++seq;
 
@@ -75,7 +81,7 @@ export function bodySvg(levels, selected, onPick) {
     viewBox: `0 0 ${w * 2 + gap} ${h + CAPTION_H}`,
     class: 'body-map',
     role: 'group',
-    'aria-label': 'Muscle groups coloured by strength level',
+    'aria-label': opts.label || 'Muscle groups coloured by strength level',
   });
   const defs = mk('defs', {});
   svg.append(defs);

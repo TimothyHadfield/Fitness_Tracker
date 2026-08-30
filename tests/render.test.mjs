@@ -543,19 +543,52 @@ for (const mode of ['Graph', 'Bars']) {
   ok(data.querySelectorAll('.vol-med').length === rows.length,
      '⚠️ every row draws the 4-sets-a-week tick — the one threshold the source actually states');
 
+  /* ================= the body map, coloured by SETS (2026-09-01) =================
+   * Tim: *"the exact same human body display with the coloured muscle groups
+   * (exact same picture), but instead coloured them by the number of sets."*
+   *
+   * 🚨 THE SAME ART CARRYING A DIFFERENT MEANING is the risk this block exists
+   * for. Two screens now paint one drawing from two scales, so what is asserted
+   * is that this one says SETS everywhere it speaks — the figure's own label and
+   * every muscle's — and that nothing on it is grey. */
+  const fig = data.querySelector('.vol-figure svg.body-map');
+  ok(Boolean(fig), 'the body map is on the Volume tab, the same figure as Muscles');
+  ok(/sets/.test(fig.getAttribute('aria-label') || '') && !/strength/.test(fig.getAttribute('aria-label') || ''),
+     `⚠️ and it announces itself as SETS, not as strength (${fig.getAttribute('aria-label')})`);
+  const painted = [...fig.querySelectorAll('.body-region')];
+  ok(painted.length >= 15 && painted.every((p) => /lv-vol-/.test(p.className.baseVal || '')),
+     `🚨 every muscle on the figure is painted from the volume ramp (${painted.length})`);
+  /* 🚨 NO GREY, ANYWHERE, and that is the difference from the strength map worth
+     pinning. Over there a muscle with no published standard can never be ranked
+     and is painted the same grey as "no data" — which is the abs complaint. Zero
+     sets is a number, so this figure always has something true to say. */
+  ok(!painted.some((p) => /lv-none/.test(p.className.baseVal || '')),
+     '🚨 and NONE of them is grey — zero sets is a number, so nothing here is unrankable');
+  ok(painted.some((p) => /lv-vol-none/.test(p.className.baseVal || '')),
+     'a muscle with no work wears the ramp\'s own bottom step instead');
+  ok(painted.every((p) => /\d/.test(p.getAttribute('aria-label') || '')),
+     '⚠️ every muscle states its number in text — the ramp is red-to-green, so nothing may be colour-alone');
+
+  const chips = [...data.querySelectorAll('.vol-chip')];
+  ok(chips.length === 5, `the legend names all five bands (${chips.length})`);
+  ok(chips.every((c) => /\w/.test(c.textContent)),
+     '🚨 in WORDS — the secondary encoding a red-to-green ramp is only legal with');
+  ok(chips[0].textContent.trim() === 'None' && chips[chips.length - 1].textContent.trim() === '20+',
+     '⚠️ and it reads in the direction the ramp runs, none first — the lookup order is the '
+     + `reverse of it, so this is the one place they are allowed to differ (${chips.map((c) => c.textContent.trim()).join(' ')})`);
+
   /* ⚠️ THE CONTRIBUTORS ARE WHAT MAKE THE NUMBER CHECKABLE. A fractional weekly
      set count is derived through a rule most people have never heard of, and a
      derived number nobody can audit is one they either over-trust or stop
-     believing. Tapping names the exercises behind it.
+     believing. Picking a muscle names the exercises behind it.
 
-     ⚠️ EVERY DETAIL IS IN THE DOM AND CLOSED, since the motion pass — a row
-     that builds its detail on tap can only appear instantly, and every row below
-     it jumps. So "is it open" is `.vol-detail-wrap.is-open` and NOT "does a
-     .vol-detail exist", which would now pass without anybody tapping anything.
-     Both directions are asserted, because a one-way test would not notice a
-     row that never closes again. */
+     ⚠️ THE WORKING HAS ONE HOME. It used to open inside the row; with the figure
+     above, that would be the same block on screen twice — the fault Tim named on
+     the set row ("it doesn't have 2 places for the same thing"). So the row
+     SELECTS and the panel under the figure is where the working lives. */
   ok(!data.querySelector('.vol-detail-wrap.is-open'),
-     'every muscle arrives closed');
+     'nothing is selected to begin with');
+  ok(!data.querySelector('.vol-hint').hidden, 'and the screen says how to pick one');
   const openName = rows.find((r) => !/Nothing logged/.test(r.textContent))
     .querySelector('.vol-name').textContent;
   const rowFor = (name) => [...data.querySelectorAll('.vol-row')]
@@ -563,11 +596,16 @@ for (const mode of ['Graph', 'Bars']) {
   rowFor(openName).click();
   await settle();
   const opened = rowFor(openName);
-  ok(opened.getAttribute('aria-expanded') === 'true', 'tapping a muscle opens it');
+  ok(opened.getAttribute('aria-pressed') === 'true', 'tapping a row selects that muscle');
   ok(data.querySelectorAll('.vol-detail-wrap.is-open').length === 1,
-     'exactly one at a time — opening one closes the last');
-  const detail = opened.parentElement.querySelector('.vol-detail-wrap.is-open .vol-detail');
+     'exactly one panel opens, under the figure');
+  ok(data.querySelector('.vol-hint').hidden, 'and the how-to-pick line gets out of the way');
+  const detail = data.querySelector('.vol-detail-wrap.is-open .vol-detail');
   ok(Boolean(detail), 'and the detail is there');
+  ok(new RegExp(openName).test(data.querySelector('.vol-picked-name').textContent),
+     'the panel names the muscle that was picked');
+  ok(fig.dataset.selected === openName,
+     '🚨 and the FIGURE outlines the same one — one selection, not two that can disagree');
   ok(detail.querySelectorAll('.vol-contrib-row').length > 0,
      '🚨 naming the exercises the sets came from, so the total can be checked against real sessions');
   ok(/direct|half/.test(detail.textContent),
@@ -583,7 +621,7 @@ for (const mode of ['Graph', 'Bars']) {
      WINDOW and the row divides it by the weeks, so the detail was quoting a
      different quantity in the same column. A reader checking the number would
      have concluded the app cannot add up. */
-  const headline = parseFloat(opened.querySelector('.vol-num').textContent);
+  const headline = parseFloat(data.querySelector('.vol-picked-num').textContent);
   const partsSum = [...detail.querySelectorAll('.vol-contrib-sets')]
     .reduce((t, n) => t + parseFloat(n.textContent), 0);
   ok(Math.abs(partsSum - headline) <= 0.2 * Math.max(1, detail.querySelectorAll('.vol-contrib-sets').length),
@@ -591,12 +629,29 @@ for (const mode of ['Graph', 'Bars']) {
      + 'each rounded to a tenth) — same unit, sets a week');
   ok(/a week/.test(detail.querySelector('.vol-contrib-head').textContent),
      'and the heading says which unit they are in');
+  ok(parseFloat(opened.querySelector('.vol-num').textContent) === headline,
+     'and the row and the panel quote the same number for the same muscle');
 
-  rowFor(openName).click();
+  /* ⚠️ THE FIGURE IS THE OTHER WAY IN, and it drives the same selection. Picking
+     a DIFFERENT muscle on the body must move the row too — two controls over one
+     piece of state is exactly where a screen starts contradicting itself. */
+  const other = painted.find((p) => (p.getAttribute('aria-label') || '').split(' —')[0] !== openName);
+  const otherName = other.getAttribute('aria-label').split(' —')[0];
+  other.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  await settle();
+  ok(fig.dataset.selected === otherName, 'tapping the body picks that muscle');
+  ok(new RegExp(otherName).test(data.querySelector('.vol-picked-name').textContent),
+     'the panel follows the body');
+  ok(rowFor(otherName).getAttribute('aria-pressed') === 'true'
+    && rowFor(openName).getAttribute('aria-pressed') === 'false',
+     '🚨 and so does the list — one selection, three places, and they cannot disagree');
+
+  rowFor(otherName).click();
   await settle();
   ok(!data.querySelector('.vol-detail-wrap.is-open')
-    && rowFor(openName).getAttribute('aria-expanded') === 'false',
-     'and tapping it again closes it');
+    && !fig.dataset.selected
+    && !data.querySelector('.vol-hint').hidden,
+     'and picking it again clears everything back');
 
   // ⚠️ THE CAVEATS TRAVEL WITH THE NUMBERS. Every one of these is a thing the
   // count is doing that a reader would otherwise have to guess at.
