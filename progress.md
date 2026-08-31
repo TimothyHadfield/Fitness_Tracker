@@ -4,9 +4,13 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-09-02 — the Hevy-shaped home feed, and Design Rule 8 (back).
+**Last updated:** 2026-09-02 — the home feed, Design Rule 8 (back), and an estimated 1RM everywhere.
 
-# ✅ START HERE: THE SOCIAL FEED IS BUILT — all eight steps of `docs/social-plan.md` §13
+# ✅ START HERE: THE SOCIAL FEED IS BUILT, AND EVERY EXERCISE NOW HAS AN ESTIMATED 1RM
+
+**Three pieces of work on 2026-09-02**, newest first: the per-exercise strength estimate (third pass
+below), Design Rule 8 — back goes to the screen you were just on (second pass), and the Hevy-shaped
+home feed (first pass, and the bulk of it).
 
 **Tim, opening the 2026-09-02 session:** *"don't implement warm ups or volume yet. Replace Volume for
 # of sets. Begin working on the home page and social aspect changes now."*
@@ -109,6 +113,87 @@ blocks in `data-layer` and `social`.
 ⚠️ **NOT VERIFIED: nothing here has been on Tim's phone, and no two real accounts have used it.**
 Proved in jsdom, in the data layer, in a real browser at 360 and 393px in both themes, and by the
 audit. The round trip between two people remains Open work item 1.
+
+---
+
+## 2026-09-02, third pass — 🚨 EVERY EXERCISE HAS AN ESTIMATED 1RM NOW, AND THE BENCHMARK SCREEN
+## PREDICTS BEFORE YOU LIFT
+
+Tim: *"if that person has an exercise that the site can estimate from another similar exercise, than
+estimate it rather than say there are no recorded excersizes… I don't have any barbell rows recorded
+and my friend does. However, I have dumbell rows, lat pulldowns, assisted pull ups… If the user has
+no exercises recorded on a certain muscle group at all, then you can say that you can't compare.
+Because of this system, a user should have an estimated 1RM on virtually every single exersize on the
+site, with varying confidence levels."*
+
+**Built, all of it.** `js/exercise-estimate.js` converts a muscle rating into any named lift;
+comparisons use it where a side has never done the exercise; and the benchmark screen now shows the
+predicted 1RM, what percentage of it the typed weight is, and roughly how many reps it allows.
+
+🚨 **IT IS NOT A NEW MODEL AND THAT IS THE WHOLE REASON IT WAS SAFE TO BUILD.** The body map already
+converts every recorded set INTO a muscle's key lift by dividing by a published ratio; this
+multiplies back out. The session runner has done exactly this since 2026-08-26 to suggest an opening
+weight for a lift you have never performed — the arithmetic shipped weeks ago and nobody had noticed
+it was also the answer to this. What is new is the packaging: a confidence, the sources, and the
+inverse rep prediction.
+
+- ⚠️ **D14 DID NOT NEED REOPENING AND D18 IS STILL TIM'S.** This mixes benchmarks with workout sets
+  because `rateMuscle()` does — and that was ruled not a breach on 2026-08-16 on grounds that apply
+  here word for word: **D14 is about charting a TREND**, two sources on one line with one point per
+  day discarding the loser, **and a single best estimate has neither problem**. D18 is a different
+  question (the estimator's chart mode) and remains unanswered.
+- 🚨 **AN ESTIMATE YOU READ IS NOT AN ESTIMATE YOU LIFT**, and the two now have different rules. The
+  runner's opening-weight suggestion keeps its hard gates — ratio quality ≥ 0.45, confidence ≥ 0.35 —
+  because it puts a number in a field somebody then walks up to a bar and attempts. The new module
+  has no quality gate at all, because it answers a question a person asked while looking at a screen,
+  and a wide answer with its width stated beats silence. Every result carries its confidence band and
+  names the exercises it came from.
+- 🚨 **A REAL DEFECT FELL OUT OF THIS: NO WEIGH-IN MEANT NO ESTIMATE FOR ANYTHING.** `muscleStrength()`
+  refuses everything until sex, age and body weight are all on record — correct for a PERCENTILE,
+  which is a claim about where you stand among other people, and wrong for a number of pounds
+  converted from your own sets. Somebody with four months of training and no weigh-in was told the
+  app had no idea what they could row. `muscleRatings()` is the same walk without the profile gate;
+  body weight still matters where the LOAD depends on it, which is a refusal about a pull-up rather
+  than about the account.
+- ⚠️ **THE REP PREDICTION IS THE NUMBER MOST LIKELY TO BE WRONG AND IT IS WORDED THAT WAY.** It
+  answers "reps to momentary failure", and `docs/research.md` §3 measured that people under-predict
+  their own reps to failure by one to five — so somebody stopping where they normally stop will do
+  fewer than it says. There is no reps-in-reserve field and never will be (D9), so the gap is
+  invisible to the app and has to be stated instead: the caption reads *"maybe 9 to failure"*, never
+  a target.
+- ⚠️ **IT STOPS AT 15 AND SAYS "15+".** Above `MAX_EVIDENCE_REPS` this app refuses to infer a maximum
+  FROM a set (D5); predicting a 30-rep set with the same curve would be that refusal held in one hand
+  and ignored in the other. It is also the ceiling `progression.js` already enforces after it walked
+  a 20 lb lateral raise to 37 reps — two screens, one refusal.
+- 🚨 **TWO GRADED SOURCES IN THIS REPO DISAGREE AND THE PICK IS RECORDED.** `research.md` §2 (Nuzzo
+  2024, 🟢) says ~9 reps at 80 % of a bench max; the Marzagão inverse the app now uses says ~7. The
+  app uses Marzagão for **consistency**, not accuracy: every e1RM here comes from that curve, so
+  predicting reps with a different one would mean a lifter who did the predicted reps produced an
+  e1RM contradicting the estimate that suggested them. Both the module and §2 now say so.
+- ⚠️ **AND §2'S TABLE HAS A TRANSCRIPTION ERROR** — it gives ~5 reps at both 95 % and 90 % 1RM, which
+  cannot both be true. Flagged in place; nothing has ever been shipped off that row.
+- ⚠️ **THE ESTIMATE FILLS EXACTLY ONE ROW OF A COMPARISON.** "Best estimated 1RM" is already an
+  inference, so a converted number is at home in it. **"Heaviest set recorded" stays blank** for a
+  side with no sets, however much the app thinks it knows — that row is a measurement, and a
+  converted number in it would be a lie however well labelled. Rule 5 applied one row at a time.
+- ⚠️ **BOTH SIDES ARE ESTIMATED OR NEITHER IS.** Estimating only mine would put my converted figure
+  against their measured one every time I happen to be the one missing the lift — a bias with a
+  direction, which is the same fault the comparison window exists to prevent. `muscleRatings()` now
+  takes rows, so a friend's published training goes through the identical arithmetic.
+- ⚠️ **`buildObservations()` WAS EXTRACTED OUT OF `store.js` TO MAKE THAT POSSIBLE** — the walk that
+  turns sessions and benchmarks into per-muscle evidence, now `js/strength-observations.js`, with
+  `today` handed in rather than read from a clock. **Proved identical byte for byte** over the demo
+  year before and after, and there is a golden table in `tests/data-layer.test.mjs` pinning eleven
+  muscles at a fixed date so it stays that way.
+
+**Tests: render 863 → 875, compare +9, a new `tests/estimate.test.mjs` (27), data-layer +10.** The
+load-bearing one is the round trip: `repsForWeight(e1rm(w, r), w)` must return `r` at every weight
+and rep count, which a wrong exponent or a wrong k both fail and almost nothing else would catch.
+
+⚠️ **NOT VERIFIED: no human has checked any of these numbers against a real attempt.** The whole
+chain rests on a curve whose absolute accuracy was never validated (`research.md` §1.3) and on ratios
+whose spread is a population's rather than a person's. That is why every figure ships with a
+confidence and a source list rather than alone.
 
 ---
 
@@ -5594,6 +5679,8 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5. ⚠️ **Since 2026-09-01 it is also on a screen of its own** (Data → Volume, D3), so its efficiency tiers and its `INDIRECT_NOTE_*` sentences are read by users rather than only by the rating — and the per-screen consequence clause pattern applies: one shared statement of what the 0.5 IS, one sentence per screen saying what would change without it, **both shipped from beside the constant** |
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
+| `js/exercise-estimate.js` | Not a doc. **What could you lift on an exercise you have never done** — the body map's arithmetic run backwards. ⚠️ **Read its header before touching it**: it explains why this is not a new model, why D14 did not need reopening, and the line it draws — *an estimate you read is not an estimate you lift*, so it has no quality gate where the runner's opening-weight suggestion has two. Also holds the rep prediction, which is capped at 15 for the same reason D5 caps evidence |
+| `js/strength-observations.js` | Not a doc. **The walk that turns sessions and benchmarks into per-muscle evidence**, extracted out of `store.js` on 2026-09-02 so a FRIEND's published training goes through the identical arithmetic. ⚠️ `today` is handed in, never read from a clock — that is what makes the golden table in `tests/data-layer.test.mjs` date-stable |
 | `js/session-stats.js` | Not a doc. **One session's own numbers, and the file to read before anyone adds a volume figure** — its header is the argument for why the feed card's middle column counts SETS: a friend's bodyweight work has no external load to total and their body weight publishes only at the top tier, so a pounds figure would read a session of pull-ups as nothing. ⚠️ **`recordedSetCount()` lives here and `store.js` imports it** — the Volume tab, the feed card and the workout screen must never disagree about whether a set was done |
 | `js/personal-bests.js` | Not a doc. **Typed records — Weight · Volume · Reps · 1RM.** ⚠️ **Read the note about Rule 5 first**: this function used to be estimate-free by construction and the 1RM kind broke that, so the rule is now honoured by LABELLING — `estimated: true`, the word on screen, and the line naming the set the model was fed. ⚠️ Mini-sets count on **both** sides; per-side doubles **volume only** |
 | `js/compare.js` | Not a doc. **You and a friend on one exercise, and it refuses to name a winner** (Rule 6) — `NO_VERDICT_HEADER` is its own sentence saying so, printed rather than paraphrased. ⚠️ **Read the windowing argument before touching it**: their sixty published sessions against your whole history flatters you every time in the same direction, so both sides are cut to the overlap |

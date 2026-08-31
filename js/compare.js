@@ -218,7 +218,10 @@ function betterOf(mine, theirs) {
  * and `better` is null wherever bigger is not genuinely better, so a caller
  * that colours by `better` cannot accidentally colour something neutral.
  */
-function metric({ key, label, unit, mine, theirs, judged = true, estimate = false, note = null, mineSet = null, theirsSet = null }) {
+function metric({
+  key, label, unit, mine, theirs, judged = true, estimate = false, note = null,
+  mineSet = null, theirsSet = null, mineConverted = false, theirsConverted = false,
+}) {
   const both = Number.isFinite(mine) && Number.isFinite(theirs);
   return {
     key,
@@ -236,6 +239,15 @@ function metric({ key, label, unit, mine, theirs, judged = true, estimate = fals
     note,
     mineSet,
     theirsSet,
+    /* ⚠️ ESTIMATED AND CONVERTED ARE DIFFERENT CLAIMS AND THE ROW CARRIES BOTH.
+     * `estimate` says the number was worked out from a set rather than lifted;
+     * `converted` says the set it was worked out from was on a DIFFERENT
+     * EXERCISE. The second is a weaker claim than the first and it applies to
+     * one side at a time, so a screen that collapsed them would tell a reader
+     * their friend's measured bench and their own converted one were the same
+     * kind of number. */
+    mineConverted: Boolean(mineConverted),
+    theirsConverted: Boolean(theirsConverted),
   };
 }
 
@@ -319,7 +331,7 @@ export const NO_VERDICT_HEADER =
  * sentence — never with a metric list full of zeros, which would say the two
  * of us both lift nothing when the truth is that we have nothing to compare.
  */
-export function compareExercise({ mine, theirs, exerciseId, exercise } = {}) {
+export function compareExercise({ mine, theirs, exerciseId, exercise, estimates } = {}) {
   const exerciseName = (exercise && exercise.name) || '';
   const loadType = (exercise && exercise.loadType) || null;
 
@@ -390,8 +402,37 @@ export function compareExercise({ mine, theirs, exerciseId, exercise } = {}) {
     theirs: { sessions: new Set(theirObs.map((o) => o.date)).size, sets: theirObs.length },
   };
 
-  /* ---- 4. no common ground, said plainly ---- */
-  if (!myObs.length || !theirObs.length) {
+  /* ---- 4. nobody has done it — but the app may still know roughly what they
+   *         WOULD do, and Tim asked for that rather than a shrug.
+   *
+   * 🚨 THE REQUEST, 2026-09-02: *"if that person has an exercise that the site
+   * can estimate from another similar exercise, then estimate it rather than
+   * say there are no recorded exercises. For example, I don't have any barbell
+   * rows recorded and my friend does. However, I have dumbell rows, lat
+   * pulldowns, assisted pull ups… If the user has no exercises recorded on a
+   * certain muscle group at all, then you can say that you can't compare."*
+   *
+   * The estimate is computed by the CALLER (`estimateOneRM` in
+   * exercise-estimate.js) and handed in, because it needs the whole muscle map
+   * and this module is pure arithmetic over two lists of sets. Both sides get
+   * the same treatment or neither does.
+   *
+   * ⚠️ IT FILLS EXACTLY ONE ROW, AND THE CHOICE IS THE WHOLE POINT. "Best
+   * estimated 1RM" is already an inference, so an estimate is at home in it.
+   * "Heaviest set recorded" is a MEASUREMENT — a row that would be a lie the
+   * moment a converted number appeared in it — so a side with no sets stays
+   * blank there however much the app thinks it knows. Rule 5, applied one row
+   * at a time rather than to the screen as a whole.
+   */
+  const estOf = (side) => {
+    const e = estimates && estimates[side];
+    return e && e.oneRM > 0 ? e : null;
+  };
+  const myEst = myObs.length ? null : estOf('mine');
+  const theirEst = theirObs.length ? null : estOf('theirs');
+
+  /* ---- 4a. no common ground, said plainly ---- */
+  if ((!myObs.length && !myEst) || (!theirObs.length && !theirEst)) {
     // Four different truths, and they are not interchangeable — "they have
     // never done this" and "they did it, but before the window we can compare
     // over" send a person to different places.
@@ -401,16 +442,25 @@ export function compareExercise({ mine, theirs, exerciseId, exercise } = {}) {
     // publish what is inside a workout"; a mid-tier session always has the
     // array, so an empty one means an empty workout, not a hidden one.
     const theirsDetailed = theirSessions.some((s) => s.detailed);
+    /* ⚠️ THE SENTENCE CHANGED WHEN THE ESTIMATE ARRIVED. "You have never
+     * recorded this" was the whole truth before; now the app has looked for a
+     * way to convert something else of yours and failed, and the honest
+     * sentence says which of the two happened. Telling somebody they have not
+     * done an exercise, when the real answer is that they have trained nothing
+     * this exercise converts from, sends them to the wrong place. */
+    const nothingConverts = ' and nothing else you have recorded converts to it';
     let reason;
     let message;
-    if (!myObs.length && !theirObs.length) {
+    if (!myObs.length && !myEst && !theirObs.length && !theirEst) {
       reason = 'neither-of-you-logged-it';
-      message = `Neither of you has recorded ${exerciseName || 'this exercise'} in ${window.label}.`;
-    } else if (!myObs.length) {
+      message = `Neither of you has recorded ${exerciseName || 'this exercise'} in ${window.label}${
+        estimates ? ', and neither of you has trained anything it converts from' : ''}.`;
+    } else if (!myObs.length && !myEst) {
       reason = myAll.length ? 'yours-is-outside-the-window' : 'you-have-not-logged-it';
       message = myAll.length
         ? `You have done ${exerciseName || 'this'}, but not within ${window.label} — the period you both have data for.`
-        : `You have never recorded ${exerciseName || 'this exercise'}, so there is nothing of yours to put beside theirs.`;
+        : `You have never recorded ${exerciseName || 'this exercise'}${estimates ? nothingConverts : ''}`
+          + ', so there is nothing of yours to put beside theirs.';
     } else if (!theirsDetailed) {
       reason = 'they-do-not-publish-the-detail';
       message = 'They share the day and the name of each workout, not what was in it, '
@@ -419,7 +469,8 @@ export function compareExercise({ mine, theirs, exerciseId, exercise } = {}) {
       reason = theirAll.length ? 'theirs-is-outside-the-window' : 'they-have-not-logged-it';
       message = theirAll.length
         ? `They have done ${exerciseName || 'this'}, but not within ${window.label} — the period you both have data for.`
-        : `They have not recorded ${exerciseName || 'this exercise'} in anything they have published.`;
+        : `They have not recorded ${exerciseName || 'this exercise'} in anything they have published`
+          + `${estimates ? ', and nothing they share converts to it' : ''}.`;
     }
     return { ...base, window, common: false, reason, message, counts };
   }
@@ -456,17 +507,34 @@ export function compareExercise({ mine, theirs, exerciseId, exercise } = {}) {
     };
     const mineBest = bestBy(myRank, score);
     const theirsBest = bestBy(theirRank, score);
-    if (mineBest || theirsBest) {
+
+    /* A side with no sets on this lift falls back to the converted estimate —
+     * and ONLY here. See the note at step 4: this row is already an inference,
+     * so an inference belongs in it; the heaviest-set row below is a
+     * measurement and stays blank rather than borrowing a number. */
+    const mineValue = mineBest ? mineBest.score : (myEst ? myEst.oneRM : null);
+    const theirsValue = theirsBest ? theirsBest.score : (theirEst ? theirEst.oneRM : null);
+    const converted = [];
+    if (!mineBest && myEst) converted.push('yours');
+    if (!theirsBest && theirEst) converted.push('theirs');
+
+    if (mineValue !== null || theirsValue !== null) {
       metrics.push(metric({
         key: 'e1rm',
         label: 'Best estimated 1RM',
         unit: 'lb',
-        mine: mineBest && mineBest.score,
-        theirs: theirsBest && theirsBest.score,
+        mine: mineValue,
+        theirs: theirsValue,
         estimate: true,
-        note: 'Worked out from a recorded set, not lifted.',
+        note: converted.length
+          ? 'Worked out from recorded sets — and where somebody has never done this lift, '
+            + 'converted from the ones they have.'
+          : 'Worked out from a recorded set, not lifted.',
         mineSet: setDetail(mineBest),
         theirsSet: setDetail(theirsBest),
+        // So the screen can mark the converted side without re-deriving which.
+        mineConverted: !mineBest && Boolean(myEst),
+        theirsConverted: !theirsBest && Boolean(theirEst),
       }));
       caveats.push({
         key: 'estimate',
@@ -474,6 +542,24 @@ export function compareExercise({ mine, theirs, exerciseId, exercise } = {}) {
           + 'actually recorded, so treat them as the same lift on a common scale rather '
           + 'than as a number either of you has hit.',
       });
+      /* ⚠️ A CONVERTED SIDE IS A SECOND INFERENCE ON TOP OF THE FIRST, and the
+       * caveat says so in those terms rather than hiding it inside the word
+       * "estimated", which the row above has already spent. Which side, and
+       * from what, so the reader can weigh it — a conversion off a close
+       * relative is worth much more than one off a machine. */
+      for (const est of [myEst, theirEst]) {
+        if (!est) continue;
+        const whose = est === myEst ? 'Your' : 'Their';
+        const from = est.from && est.from.length
+          ? `${est.from.slice(0, 3).join(', ')}`
+          : 'other lifts';
+        caveats.push({
+          key: 'converted',
+          text: `${whose} figure is converted rather than recorded — neither of these sets was `
+            + `done on this exercise. It comes from ${from}, through ${est.muscle.toLowerCase()}, `
+            + `at ${est.band.name.toLowerCase()} confidence.`,
+        });
+      }
     }
   } else if (exercise) {
     // The stated refusal. `normalizeBlockedReason()` supplies the app's own

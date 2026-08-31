@@ -304,5 +304,77 @@ const noIds = compareExercise({
 ok(metricOf(noIds, 'e1rm').theirs !== null,
   'their old rows carry no exercise id, and matching those by name beats telling me they never did it');
 
+/* ================= a lift only one of you has ever done ==================
+ *
+ * Tim, 2026-09-02: *"I don't have any barbell rows recorded and my friend does.
+ * However, I have dumbell rows, lat pulldowns, assisted pull ups, and other
+ * excersizes recorded."*
+ *
+ * The estimate is computed by the CALLER and handed in — this module never
+ * reaches for the muscle map — so these fixtures hand it one directly.
+ */
+{
+  const bar = {
+    id: 'barbell-row--back', name: 'Barbell Row', fields: ['weight', 'reps'],
+    loadType: 'total', equipment: 'Barbell', muscle: 'Back',
+  };
+  const theirRows = [{
+    date: '2026-08-20',
+    entries: [{ exerciseId: bar.id, exerciseName: bar.name, sets: [{ weight: 185, reps: 5 }] }],
+  }];
+  // I trained on the same days, but never this lift.
+  const myRows = [{
+    date: '2026-08-20',
+    entries: [{ exerciseId: 'dumbbell-row--back', exerciseName: 'Dumbbell Row', sets: [{ weight: 90, reps: 8 }] }],
+  }];
+  const est = {
+    oneRM: 200, shown: 200, confidence: 0.6, band: { key: 'good', name: 'Good' },
+    muscle: 'Back', ratio: 1, ratioQuality: 1, from: ['Dumbbell Row', 'Lat Pulldown'],
+    exerciseCount: 2, perSide: false, isKeyLift: true,
+  };
+
+  const without = compareExercise({ mine: myRows, theirs: theirRows, exerciseId: bar.id, exercise: bar });
+  ok(without.common === false && without.reason === 'you-have-not-logged-it',
+     'with no estimate the old answer stands: you have not logged it');
+
+  const withEst = compareExercise({
+    mine: myRows, theirs: theirRows, exerciseId: bar.id, exercise: bar,
+    estimates: { mine: est, theirs: null },
+  });
+  ok(withEst.common === true,
+     '🚨 handed an estimate, the comparison happens instead of a shrug — which is the whole request');
+
+  const e1 = withEst.metrics.find((m) => m.key === 'e1rm');
+  ok(e1 && e1.mine === 200, `my side is the converted figure (${e1 && e1.mine})`);
+  ok(e1.mineConverted === true && e1.theirsConverted === false,
+     '⚠️ and ONLY my side is marked converted — theirs was measured on the lift itself, and a '
+     + 'screen that marked both would say two different things were the same kind of number');
+
+  const top = withEst.metrics.find((m) => m.key === 'top-weight');
+  ok(!top || top.mine === null,
+     '🚨 THE HEAVIEST-SET ROW STAYS BLANK. That row is a MEASUREMENT — "the heaviest you have '
+     + 'actually put on the bar" — and a converted number in it would be a lie, however well '
+     + 'labelled. The estimate fills the row that was already an inference and no other');
+
+  ok(withEst.caveats.some((c) => c.key === 'converted' && /Dumbbell Row/.test(c.text)),
+     'and the caveat names what it was converted from, so the reader can weigh it');
+
+  /* ⚠️ Tim's own boundary: no evidence at all for that muscle is still a
+     refusal, and it has to stay one. */
+  // ⚠️ `myRows`, not an empty history — an account with NO sessions at all is
+  // answered two branches earlier and would pass this assertion for the wrong
+  // reason. This is somebody who trains, just not anything this lift converts
+  // from, which is the case Tim's rule is actually about.
+  const neither = compareExercise({
+    mine: myRows, theirs: theirRows, exerciseId: bar.id, exercise: bar,
+    estimates: { mine: null, theirs: null },
+  });
+  ok(neither.common === false,
+     '⚠️ "If the user has no exercises recorded on a certain muscle group at all, then you can say '
+     + 'that you can\'t compare" — the estimate is a fallback, never an invention');
+  ok(/converts to it/.test(neither.message || ''),
+     'and the sentence says the app looked for a conversion rather than that you never did the lift');
+}
+
 console.log(fails ? `\n${fails} failed` : '\nall passed');
 process.exit(fails ? 1 : 0);

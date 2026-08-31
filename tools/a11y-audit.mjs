@@ -396,6 +396,27 @@ const ROUTES = [
        throw new Error('a11y: the exercises-sheet step never opened the sheet');
      }`],
 
+  /* The benchmark screen only grows its estimate and its two captions once an
+   * exercise is chosen — before that it is an empty form, which is what this
+   * list audited for months. Reached the way a person reaches it, and it throws
+   * if the pick never landed. */
+  ['#/benchmark', 'Benchmark · with an estimate',
+    `(() => { const b = document.querySelector('.pane-top .row');
+       if (b) b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(b); })();
+     await new Promise((r) => setTimeout(r, 900));
+     (() => { const rows = [...document.querySelectorAll('.sheet .row, .sheet button')]
+       .filter((n) => /^Barbell Row/.test((n.textContent || '').trim()));
+       if (rows[0]) rows[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(rows[0]); })();
+     await new Promise((r) => setTimeout(r, 2500));
+     (() => { const w = document.querySelector('.step-value');
+       if (w) { w.value = '155'; w.dispatchEvent(new Event('blur', { bubbles: true })); } })();
+     await new Promise((r) => setTimeout(r, 600));
+     if (!document.querySelector('.bench-est-num')) {
+       throw new Error('a11y: the benchmark step never produced an estimate');
+     }`],
+
   /* ⚠️ A FRIEND'S WORKOUT — the first screen behind #/friend ever audited, and
    * it could not have been before 2026-09-02. A friend's uid is generated, so
    * there was no hash to put in this list; the feed card's own link is the way

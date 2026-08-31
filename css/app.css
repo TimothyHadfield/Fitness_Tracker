@@ -1243,6 +1243,41 @@ select.input {
 .assist-readout b { color: var(--accent); font-weight: 650; }
 .assist-readout .is-warn { color: var(--danger); font-weight: 600; }
 
+/* ── What the app thinks you can do, above the field you are filling in ─────
+   2026-09-02. Above the WEIGHT: what percentage of your estimated max this is.
+   Above the REPS: roughly how many you would get with it.
+
+   ⚠️ SAME VOICE AS `.assist-readout` DELIBERATELY, because it is the same kind
+   of thing — a quiet reading beside a number you are typing, not a warning and
+   not an instruction. Centred to sit under the field's own centred name, and
+   it holds no height when there is nothing to say, so an untouched field shows
+   a caption of empty space rather than a caption about zero.
+
+   ⚠️ It is NOT `.prefill-note`, whose green check sits beside "Last time: 135
+   lbs" — a MEASUREMENT. Every number in here is worked out, which under Rule 5
+   has to be separable by a cue that is not colour: the words do it ("estimated",
+   "maybe", "to failure"). */
+.step-est {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  line-height: 1.3;
+  text-align: center;
+  min-height: 0;
+}
+.step-est b { color: var(--accent); font-weight: 700; }
+
+/* ── The estimate above the whole benchmark form ─────────────────────────── */
+.bench-body { display: flex; flex-direction: column; gap: 14px; }
+.bench-est { display: flex; flex-direction: column; gap: 3px; }
+.bench-est-head { display: flex; align-items: baseline; gap: 8px; }
+.bench-est-num {
+  font-size: 26px; font-weight: 700; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+/* The line that names what the big number IS. The Muscles panel learned this
+   the hard way — Tim, 2026-08-31: "I have no idea what that weight means." */
+.bench-est-note { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+
 /* What to lift next, and why — js/progression.js.
    No box (Rule 2): the icon and the accent-weighted first line carry it, and
    the sentence underneath is the same faint grey every other explanation on
@@ -3350,6 +3385,27 @@ a.row { text-decoration: none; }
   font-size: 15px; font-weight: 650;
 }
 .cmp-num b { font-family: var(--sans); font-size: 12px; font-weight: 650; color: var(--ink-faint); }
+/* ⚠️ A CONVERTED FIGURE IS MARKED IN WORDS AND IN WEIGHT, NEVER IN COLOUR
+   ALONE — Rule 5's general form. The number itself softens to --ink-soft so it
+   does not read as loudly as the measured one beside it, and the word says
+   what happened for anyone who cannot see the difference. */
+.cmp-num.is-converted { color: var(--ink-soft); }
+/* ⚠️ A PILL ON THE NUMBER, NOT A LINE UNDER IT. The first version was a block
+   of small uppercase text below the figure — the same treatment `.cmp-label`
+   uses for a ROW HEADING — so "CONVERTED" read as the title of the next row
+   rather than as a note about the number above it. Borrowing `.tag`'s shape
+   attaches it to the thing it describes, and matches the "estimated" pill on
+   the row, which is the other half of the same claim. */
+.cmp-mark {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-faint);
+  font-family: var(--sans); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  white-space: nowrap;
+}
 
 /* The "% optimal" rating beside a ready-made system.
    Two numbers, never one — a programme good for growth is often not the one

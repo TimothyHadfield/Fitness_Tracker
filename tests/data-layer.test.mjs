@@ -1668,6 +1668,140 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await st.clearAll();
 }
 
+/* ========= the observation walk is a module, and is pinned to the number =========
+   `muscleStrength()` used to hold the walk that turns stored sets into evidence.
+   It now calls js/strength-observations.js, so a FRIEND's rating can be computed
+   the same way from rows this store never held. The extraction was supposed to
+   change NOTHING, and "supposed to" is not a test — so the demo account's
+   generated year is scored here and the numbers are written down.
+
+   ⚠️ `today` is passed IN, which is the whole reason this can be a golden table
+   at all. The old walk read the clock, so the same history scored differently
+   every morning and nothing about it could be pinned. If these numbers move,
+   something about how a set becomes evidence moved with them — the D5 gate, the
+   body-weight-of-the-day rule, the prior-volume term or a ratio in
+   muscle-evidence.js — and that is a decision, not a refactor.               */
+{
+  const { store: st, muscleStrength } = await import('../js/store.js');
+  const { buildDemoData } = await import('../js/demo.js');
+  const { buildObservations } = await import('../js/strength-observations.js');
+  const { rateMuscle } = await import('../js/muscle-evidence.js');
+
+  const TODAY = '2026-08-19';
+  const demo = buildDemoData({ today: TODAY, units: 'lbs', theme: 'dark', palette: 'gold' });
+  const exMap = new Map(BUILT_IN_EXERCISES.map((e) => [e.id, e]));
+  const args = {
+    sessions: demo.sessions, benchmarks: demo.benchmarks, exMap,
+    bodyWeights: demo.bodyWeight, today: TODAY,
+  };
+  const { byMuscle, blocked } = buildObservations(args);
+
+  // muscle, observations, estimate, confidence, contributors, exercises —
+  // captured from the walk as it stood inside store.js, before it moved.
+  const GOLDEN = [
+    ['Back', 720, 208.3807, 0.7798, 214, 4],
+    ['Biceps', 1095, 109.9027, 0.6448, 125, 2],
+    ['Calves', 332, 264.9498, 0.8707, 84, 2],
+    ['Chest', 465, 238.7469, 0.9063, 129, 2],
+    ['Forearms', 1095, 104.5091, 0.4832, 339, 6],
+    ['Glutes', 630, 380.5382, 0.7628, 66, 1],
+    ['Hamstrings', 882, 272.5143, 0.8855, 146, 3],
+    ['Quads', 563, 323.3257, 0.8985, 170, 4],
+    ['Shoulders', 1076, 142.6966, 0.7895, 191, 4],
+    ['Traps', 720, 238.7407, 0.5526, 214, 4],
+    ['Triceps', 1100, 168.1443, 0.4935, 125, 2],
+  ];
+  ok(byMuscle.size === GOLDEN.length,
+     `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
+  let goldenOk = true, firstBad = '';
+  for (const [muscle, count, est, conf, contributors, exercises] of GOLDEN) {
+    const obs = byMuscle.get(muscle) || [];
+    const rating = rateMuscle(obs);
+    const bad = !rating
+      || obs.length !== count
+      || !near(rating.estimate, est, 0.0001)
+      || !near(rating.confidence, conf, 0.0001)
+      || rating.contributorCount !== contributors
+      || rating.exerciseCount !== exercises;
+    if (bad && goldenOk) {
+      goldenOk = false;
+      firstBad = rating
+        ? `${muscle}: ${obs.length} obs, est ${rating.estimate.toFixed(4)}, conf `
+          + `${rating.confidence.toFixed(4)}, ${rating.contributorCount}/${rating.exerciseCount}`
+        : `${muscle}: no rating at all`;
+    }
+  }
+  ok(goldenOk,
+     `every muscle scores exactly what it scored before the walk moved out of store.js${goldenOk ? '' : ' — ' + firstBad}`);
+
+  // Vacuity guard: the table above would pass just as well over a walk that had
+  // quietly stopped reading sessions, if the numbers had been captured from one.
+  ok(byMuscle.get('Chest').some((o) => o.source === 'workout')
+     && byMuscle.get('Chest').some((o) => o.source === 'benchmark'),
+     'and both sources are genuinely in the evidence, not one of them silently gone');
+  ok(byMuscle.get('Chest').some((o) => o.priorVolume > 0),
+     'sets that came late in a session carry what the muscle had already taken');
+
+  // Pure, in the sense that matters: same rows in, same numbers out, and the
+  // clock is not one of the inputs.
+  const again = buildObservations(args);
+  ok(JSON.stringify([...again.byMuscle]) === JSON.stringify([...byMuscle]),
+     'the same history walked twice produces the identical observations');
+  const later = buildObservations({ ...args, today: '2026-09-19' });
+  ok(later.byMuscle.get('Chest')[0].ageDays - byMuscle.get('Chest')[0].ageDays === 31,
+     'and a different `today` ages it by exactly that many days — nothing reads a clock');
+
+  // The demo year blocks nothing, so the bag needs its own fixture. An inverted
+  // row is permanently unrankable — how much body weight it carries depends on
+  // bar height, which the app does not record — and must be REPORTED rather
+  // than vanishing, beside pull-ups from the same session that counted fine.
+  ok(blocked.size === 0, 'the demo year has no unrankable work to report');
+  const pullId = BUILT_IN_EXERCISES.find((e) => e.name === 'Pull-Up').id;
+  const invId = BUILT_IN_EXERCISES.find((e) => e.name === 'Inverted Row').id;
+  const fixture = buildObservations({
+    exMap, benchmarks: [], bodyWeights: [{ date: '2026-08-01', weight: 180 }], today: TODAY,
+    sessions: [{ date: '2026-08-10', entries: [
+      { exerciseId: pullId, exerciseName: 'Pull-Up', sets: [{ weight: 0, reps: 8 }, { weight: 0, reps: 7 }] },
+      { exerciseId: invId, exerciseName: 'Inverted Row', sets: [{ reps: 12 }, { reps: 12 }, { reps: 10 }] },
+    ] }],
+  });
+  const bl = fixture.blocked.get('Back');
+  ok(Boolean(bl) && bl.sets === 3 && bl.exercises.length === 1
+     && bl.exercises[0].name === 'Inverted Row' && !bl.fixable,
+     `the three inverted-row sets are reported, and as the permanent kind (${bl && bl.sets})`);
+  ok(fixture.byMuscle.get('Back').some((o) => /Pull-Up/.test(o.exerciseName)),
+     'while the pull-ups from the same session counted');
+
+  // And the store still reaches the same answer through the module. This is the
+  // join the extraction was for: `muscleStrength()` reading MY rows, and a
+  // friend's page reading THEIRS, have to be the same arithmetic. Deliberately
+  // scored at todayISO() rather than the fixed day above, because that is what
+  // the store passes and the agreement must hold on any day the suite runs.
+  await st.clearAll();
+  await st.saveSettings({ gender: 'male', birthYear: demo.settings[0].birthYear, units: 'lbs' });
+  for (const b of demo.bodyWeight) await st.logBodyWeight(b.weight, b.date);
+  for (const s of demo.sessions) await st.saveSession(s);
+  for (const b of demo.benchmarks) await st.saveBenchmark(b);
+
+  const stored = await muscleStrength();
+  const direct = buildObservations({
+    sessions: await st.getSessions(), benchmarks: await st.getBenchmarks(),
+    exMap: await st.getExerciseMap(), bodyWeights: await st.getBodyWeights(),
+    today: todayISO(),
+  });
+  let agree = stored.ready && stored.muscles.size === GOLDEN.length;
+  for (const [muscle, v] of stored.muscles) {
+    const r = rateMuscle(direct.byMuscle.get(muscle) || []);
+    if (!r || !near(r.estimate, v.estimate, 1e-9) || !near(r.confidence, v.confidence, 1e-9)
+        || r.contributorCount !== v.contributorCount || r.exerciseCount !== v.exerciseCount) {
+      agree = false;
+    }
+  }
+  ok(agree, 'muscleStrength() over the stored year equals the module run over the same rows');
+
+  await st.clearAll();
+}
+
 /* ================= the offline shell (D6) ================= */
 // sw.js hand-lists the files to precache, because there is no build step to
 // generate one. A file added and not listed is invisible until someone opens

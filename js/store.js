@@ -8,7 +8,10 @@
 // See docs/firebase-setup.md.
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
-import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps, isRankableSet } from './e1rm.js';
+// ⚠️ isRankableSet moved out with the observation walk — it now lives beside
+// the D5 gate it guards, in strength-observations.js. Nothing else here rated
+// a set.
+import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps } from './e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
 import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
@@ -2981,173 +2984,107 @@ export async function normalizedSeries(exerciseId, targetReps, source = null) {
 // model; this function's only job is to turn stored records into observations
 // and hand them over.
 //
+// The turning of records into observations now lives in
+// js/strength-observations.js, because a FRIEND's rating has to be computed the
+// same way from rows this store never held. What is left here is the part that
+// is genuinely about MY account: reading it, and dressing a rating up in the
+// percentiles and levels the screen shows.
+//
 // Returns one entry per rankable muscle group that has usable data.
+/**
+ * Muscle ratings, WITHOUT the profile gate — one estimate in pounds per muscle.
+ *
+ * 🚨 THE GATE ABOVE IS ABOUT PERCENTILES, NOT ABOUT STRENGTH, and conflating the
+ * two cost this app its whole estimate for anybody who has not stepped on a
+ * scale. `muscleStrength()` returns nothing at all when the profile is
+ * incomplete, and rightly so: placing somebody against published standards
+ * needs their sex, their age and their body weight, and a percentile without
+ * those is not a weaker claim, it is a different person's.
+ *
+ * ⚠️ BUT "ROUGHLY WHAT COULD YOU ROW" NEEDS NONE OF THEM. It is their own sets,
+ * converted by a published ratio, in pounds. Sending that through the
+ * percentile gate meant a lifter with four months of training and no weigh-in
+ * was told the app knew nothing about their back — which it plainly did.
+ *
+ * Body weight still matters where the LOAD depends on it: a pull-up with no
+ * weigh-in has an unknown resistance, and `contributionsFor()` refuses it here
+ * exactly as it does everywhere else. That is a refusal about one exercise
+ * rather than about the account.
+ *
+ * ⚠️ IT TAKES ROWS, so a FRIEND'S published training can go through the same
+ * arithmetic as your own. Called with nothing it reads your store, which is
+ * every existing caller. Called with `{ sessions, benchmarks, bodyWeights }` it
+ * rates those instead — and that is the only honest way to compare two people:
+ * a second implementation for their side would be a second opinion about what a
+ * set is worth, and the first time the two disagreed the comparison would be
+ * measuring the difference between two functions rather than between two
+ * lifters.
+ *
+ * ⚠️ The exercise LIBRARY always comes from this device, whoever the rows
+ * belong to. It is the only one we have, and an exercise the reader's library
+ * has never heard of cannot be converted by it — which is a true statement
+ * about what this app can work out, and is reported as such.
+ *
+ * @param {object} [rows] { sessions, benchmarks, bodyWeights } — theirs
+ * @returns {Promise<Map<string, object>>} muscle -> rateMuscle() result
+ */
+export async function muscleRatings(rows) {
+  const [benchmarks, sessions, exMap, bodyWeights] = rows
+    ? [rows.benchmarks || [], rows.sessions || [], await store.getExerciseMap(), rows.bodyWeights || []]
+    : await Promise.all([
+      store.getBenchmarks(), store.getSessions(), store.getExerciseMap(), store.getBodyWeights(),
+    ]);
+  const [{ rateMuscle }, { buildObservations }, { MUSCLE_LIFTS }] = await Promise.all([
+    import('./muscle-evidence.js'),
+    import('./strength-observations.js'),
+    import('./strength-standards.js'),
+  ]);
+
+  // Same walk, same rules, same `today`-passed-in discipline as the rating
+  // screen. Two callers, one definition of what a set is worth.
+  const { byMuscle } = buildObservations({
+    sessions, benchmarks, exMap, bodyWeights, today: todayISO(),
+  });
+
+  const out = new Map();
+  for (const muscle of Object.keys(MUSCLE_LIFTS)) {
+    const rating = rateMuscle(byMuscle.get(muscle) || []);
+    if (rating) out.set(muscle, rating);
+  }
+  return out;
+}
+
 export async function muscleStrength() {
   const [profile, benchmarks, sessions, exMap, bodyWeights] = await Promise.all([
     store.getProfile(), store.getBenchmarks(), store.getSessions(), store.getExerciseMap(),
     store.getBodyWeights(),
   ]);
+  // Loaded on demand, like everything else this function needs: the rating
+  // modules are a large chunk of the app and only the muscle screen asks for
+  // them. strength-observations.js joins the same list rather than becoming a
+  // static import, so pulling the walk out of here does not quietly add it to
+  // every page that touches the store.
   const [
     { MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
       levelProgress, weightForPercentile, generalPopulationPercentile },
-    { contributionsFor, setLoad, rateMuscle, confidenceBand, tintFor, raiseConfidenceHint,
-      rankBlockedReason, fatigueFactor },
-    { bodyWeightOn },
-    { volumeContributions },
+    { rateMuscle, confidenceBand, tintFor, raiseConfidenceHint },
+    { buildObservations },
   ] = await Promise.all([
     import('./strength-standards.js'),
     import('./muscle-evidence.js'),
-    import('./e1rm.js'),
-    import('./volume-map.js'),
+    import('./strength-observations.js'),
   ]);
 
   const out = new Map();
   if (profile.missing.length) return { profile, muscles: out, ready: false };
 
-  // ⚠️ Contributions are per exercise AND PER BODY WEIGHT, not per exercise
-  // alone. A pull-up done at 200 lb is a different load from the same pull-up at
-  // 170, so caching on exerciseId only would score a whole training history at
-  // whatever weight happened to be looked up first. The cache key carries both,
-  // rounded to the pound because that is the resolution weigh-ins are entered at
-  // and an unrounded float would defeat the cache entirely.
-  const contribCache = new Map();
-  const contribFor = (exerciseId, bw) => {
-    const key = `${exerciseId}@${bw ? Math.round(bw.weight) + ':' + bw.quality : 'none'}`;
-    if (contribCache.has(key)) return contribCache.get(key);
-    const ex = exMap.get(exerciseId);
-    const c = ex
-      ? contributionsFor(ex, bw ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality } : undefined)
-      : [];
-    contribCache.set(key, c);
-    return c;
-  };
-
-  // What the lifter weighed on a given day, resolved once per DATE rather than
-  // once per set — a session with eight sets asks the same question eight times.
-  const bwCache = new Map();
-  const bodyWeightFor = (date) => {
-    if (!bwCache.has(date)) bwCache.set(date, bodyWeightOn(bodyWeights, date));
-    return bwCache.get(date);
-  };
-
-  const today = new Date(todayISO() + 'T00:00:00');
-  const ageOf = (date) => {
-    const d = new Date(String(date) + 'T00:00:00');
-    if (Number.isNaN(d.getTime())) return 0;
-    return Math.max(0, Math.round((today - d) / 86400000));
-  };
-
-  // muscle -> observations, each already converted to that muscle's KEY LIFT.
-  const byMuscle = new Map();
-  // muscle -> exerciseName -> { name, sets, reason, fixable }. Work the user
-  // really did that the rating had to throw away, kept so the panel can say so.
-  const blockedByMuscle = new Map();
-
-  const record = (exerciseId, exerciseName, weight, reps, date, isBenchmark, priorByMuscle) => {
-    // D5: a maximum is not inferred from a set above 15 reps. Without this the
-    // formula extrapolates a 135x25 burnout set to 258 lb, which beats a real
-    // 205x5 top set and moves the muscle a whole level on the back of the least
-    // informative set of the week. A benchmark gets no exemption — a 25-rep
-    // benchmark is no more evidence of a max than a 25-rep set is.
-    if (!isRankableSet(reps)) return;
-    // ⚠️ The body weight of THE DAY OF THE SET, never today's. Somebody who has
-    // lost twenty pounds must not have last year's pull-ups re-scored at this
-    // year's weight — that would quietly rewrite history every time they
-    // stepped on the scales.
-    const bw = bodyWeightFor(date);
-    const contributions = contribFor(exerciseId, bw);
-    if (!contributions.length) {
-      // WHY a muscle is grey, when the answer is something the user can act on.
-      // Before this, logging thirty sets of pull-ups and being told "nothing
-      // recorded for this muscle yet" was true of the rating and a lie about
-      // the training. The distinction rankBlockedReason() draws is the one that
-      // matters: "log a weigh-in" is actionable, "nobody has measured this
-      // exercise" is not, and only the first is worth putting a button under.
-      const ex0 = exMap.get(exerciseId);
-      const why = ex0 && MUSCLE_LIFTS[ex0.muscle]
-        ? rankBlockedReason(ex0, bw ? { bodyWeight: bw.weight } : undefined)
-        : null;
-      if (why) {
-        if (!blockedByMuscle.has(ex0.muscle)) blockedByMuscle.set(ex0.muscle, new Map());
-        const bag = blockedByMuscle.get(ex0.muscle);
-        const name = exerciseName || ex0.name;
-        const prev = bag.get(name) || { name, sets: 0, reason: why, fixable: /weigh-in/.test(why) };
-        prev.sets += 1;
-        bag.set(name, prev);
-      }
-      return;
-    }
-
-    const ex = exMap.get(exerciseId);
-    // Ratios are in TOTAL load. A dumbbell row entered as 80 is 160 on the body,
-    // and comparing the 80 against a barbell row would make every dumbbell
-    // lifter look weak. setLoad() routes a bodyweight or assisted movement
-    // through the body-weight arithmetic and everything else straight through.
-    const load = setLoad(ex, weight, bw ? { bodyWeight: bw.weight } : undefined);
-    if (load === null) return;
-    const raw = e1rm(load, reps);
-    if (raw === null) return;
-
-    for (const c of contributions) {
-      if (!byMuscle.has(c.muscle)) byMuscle.set(c.muscle, []);
-      // ⚠️ How much work this muscle had ALREADY TAKEN when this exercise
-      // started, which is the term rateMuscle() needs to tell a heavy set from
-      // a tired one. Absent for a benchmark, and rightly so: a benchmark is its
-      // own session and has nothing in front of it.
-      const priorVolume = (priorByMuscle && priorByMuscle.get(c.muscle)) || 0;
-      byMuscle.get(c.muscle).push({
-        estimate: raw / c.ratio,
-        rawE1rm: raw,
-        quality: c.quality,
-        kind: c.kind,
-        via: c.via,
-        ratio: c.ratio,
-        reps: Math.round(Number(reps)),
-        weight: Number(weight),
-        loadType: ex ? ex.loadType : 'total',
-        date,
-        ageDays: ageOf(date),
-        isBenchmark: Boolean(isBenchmark),
-        exerciseId,
-        exerciseName: exerciseName || (ex ? ex.name : exerciseId),
-        source: isBenchmark ? 'benchmark' : 'workout',
-        priorVolume,
-        fatigueFactor: fatigueFactor(priorVolume),
-      });
-    }
-  };
-
-  for (const b of benchmarks) {
-    const v = b.values || {};
-    record(b.exerciseId, b.exerciseName, v.weight, v.reps, b.date, true);
-  }
-  for (const s of sessions) {
-    // ⚠️ WALKED IN ORDER, and the order is the whole point. `entries` is stored
-    // in the order the workout was performed, so everything before the current
-    // entry is work this lifter had already done when they reached it.
-    //
-    // ⚠️ Counted with volume-map.js's own weights rather than a second opinion —
-    // direct 1.0, indirect 0.5. That module exists to answer "how much work
-    // landed on this muscle", which is exactly the question here, and a private
-    // tally would be a third muscle table to keep in sync with the other two.
-    const priorByMuscle = new Map();
-    for (const entry of s.entries || []) {
-      const sets = entry.sets || [];
-      for (const set of sets) {
-        record(entry.exerciseId, entry.exerciseName, set.weight, set.reps, s.date,
-          Boolean(s.isBenchmark), priorByMuscle);
-      }
-      // ⚠️ AFTER this exercise's own sets are recorded, never before. An
-      // exercise does not fatigue itself: its first set is as fresh as the
-      // lifter was when they walked up to it, and charging it for its own
-      // volume would discount every first exercise in every session.
-      const ex = exMap.get(entry.exerciseId);
-      if (!ex) continue;
-      for (const c of volumeContributions(ex)) {
-        priorByMuscle.set(c.muscle, (priorByMuscle.get(c.muscle) || 0) + sets.length * c.weight);
-      }
-    }
-  }
+  // The walk itself is js/strength-observations.js — same function, same rules,
+  // whether the rows came from my store or from a friend's published feed.
+  // `today` is handed in rather than read there, so the ages this rating leans
+  // on are the ones this call decided.
+  const { byMuscle, blocked } = buildObservations({
+    sessions, benchmarks, exMap, bodyWeights, today: todayISO(),
+  });
 
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
     const rating = rateMuscle(byMuscle.get(muscle) || []);
@@ -3202,24 +3139,6 @@ export async function muscleStrength() {
       // most trustworthy at low reps, so anything derived from a high-rep set
       // is flagged rather than presented as equally solid.
       confident: top.reps <= 5,
-    });
-  }
-
-  // Blocked work is reported for EVERY rankable muscle, not only the grey ones.
-  // A muscle can be rated off a barbell row and still be throwing away every
-  // pull-up the user has done, and that is worth saying in exactly the same
-  // words — the alternative is a panel that quietly under-reports its own
-  // evidence and looks complete while doing it.
-  const blocked = new Map();
-  for (const [muscle, bag] of blockedByMuscle) {
-    const list = [...bag.values()].sort((a, b) => b.sets - a.sets);
-    blocked.set(muscle, {
-      exercises: list,
-      sets: list.reduce((n, e) => n + e.sets, 0),
-      // Is there something the user can DO about it? Only a missing weigh-in
-      // is fixable; "nobody has measured this exercise" is not, and offering a
-      // button for it would be a false promise.
-      fixable: list.some((e) => e.fixable),
     });
   }
 

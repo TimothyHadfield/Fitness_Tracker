@@ -234,11 +234,26 @@ did not clearly moderate it at all.
 
 | %1RM | Mean reps (general) | Bench press | Leg press |
 |---|---|---|---|
-| 95 % | ~5 | | |
+| 95 % | ~5 ⚠️ | | |
 | 90 % | ~5 | | |
 | 80 % | ~9 | ~9 | ~13 |
 | 70 % | ~15 | ~14 | ~19 |
 | 60 % | ~20+ | | |
+
+⚠️ **THE 95 % AND 90 % ROWS BOTH SAY ~5 AND THEY CANNOT BOTH BE RIGHT** — flagged 2026-09-02 while
+building the rep prediction. A heavier relative load must allow fewer reps, so one of those two
+figures is a transcription slip in this file rather than a finding. **Nothing has been shipped off
+the 95 % row and nothing should be until somebody re-reads PMC10933212.** The rest of the table is
+consistent and is what the comparison below is drawn against.
+
+⚠️ **AND THIS TABLE IS NOT WHAT THE APP COMPUTES.** `repsForWeight()` in `js/e1rm.js` inverts the
+**Marzagão** curve (§1.3, graded 🟡), and the two disagree: at 80 % of a bench-press-weight max it
+gives about **7** reps where this table says **~9**. Marzagão is used anyway, and the reason is
+consistency rather than a belief that it is more accurate — every e1RM in this app comes from that
+curve, so predicting reps from a different one would mean a lifter who performed the predicted reps
+produced an e1RM contradicting the estimate that suggested them. **An app disagreeing with itself is
+worse than an app agreeing with the smaller of two literatures.** The argument is written out beside
+the function; if this table is ever preferred, that comment is what has to change with it.
 
 Same relative load, ~40 % more reps on the leg press. The authors published **separate loading
 tables** for bench press and leg press because the curves differ that much; everything else uses the

@@ -6459,3 +6459,53 @@ workout you have just finished.
 
 Checked in a real browser: home → tap a post → the workout → back → home, with the feed intact.
 
+
+---
+
+## 2026-09-02, third pass — the app now guesses what you can lift, on everything
+
+**You:** *"with comparisons between people, if that person has a excersize that the cite can estimate
+from another similar excersize, than estimate it rather than say there are no recorded excersizes…
+a user should have an estimated 1RM on virtually every single exersize on the site, with varying
+confidence levels… when they put in a weight for their benchmark, put a number above the reps that
+estimate how many they can do. Additionally, put a % above the weight that says what % of the
+estimated 1RM the cite thinks they can lift."*
+
+All of it is built.
+
+**Comparisons.** Open a friend's workout, tap a lift you have never done, and instead of "you have
+never recorded this" you now get a converted figure — worked out from the lifts you *have* done,
+marked CONVERTED beside the number, with a line saying which exercises it came from and how much it
+is worth believing. Your friend's side gets the same treatment when it is theirs that is missing.
+If neither of you has trained anything that converts to it, it still says so — that was your rule and
+it holds.
+
+**One thing it deliberately does not do:** the "heaviest set recorded" row stays blank for whoever
+has not done the lift. That row is a measurement — the heaviest weight actually on the bar — and a
+worked-out number in it would be a lie however carefully it was labelled. The estimate only fills the
+row that was already an estimate.
+
+**The benchmark screen.** Pick an exercise and it shows what it thinks your one-rep max is, in the
+same breath as the word "estimated", the exercises it was worked out from, and how confident it is.
+Type a weight and two captions appear: **74% of your estimated max** above the weight, and **maybe 9
+to failure** above the reps.
+
+**Worth knowing about that rep number.** It means reps to *momentary failure*, and the research says
+people under-guess their own by one to five — so somebody stopping where they normally stop will do
+fewer than it says. It is worded as a guess for that reason, and it stops at "15+" rather than
+predicting a 30-rep set, because the app already refuses to draw conclusions from sets that long.
+
+**Two things fell out of this that were wrong before.**
+
+The app was refusing to estimate anything at all for anyone who had not entered a weigh-in. That gate
+exists so it does not put you on a percentile against other people without knowing your age, sex and
+weight — which is right — but it was also blocking a plain "roughly what could you row", which needs
+none of them. Someone with months of training and no weigh-in was being told the app knew nothing
+about their back. Fixed.
+
+And the research file has a table with what looks like a transcription error in it — it says the same
+number of reps at 95% and at 90% of a max, which cannot both be true. Flagged in place; nothing had
+ever been built off that row.
+
+**Not verified:** nobody has checked any of these predictions against an actual attempt. Every number
+carries its confidence and its sources for that reason.

@@ -1,6 +1,6 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, social, muscleStrength, todayISO, demo, uid, DEFAULT_SETS } from './store.js';
+import { store, social, muscleStrength, muscleRatings, todayISO, demo, uid, DEFAULT_SETS } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
@@ -16,6 +16,7 @@ import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
 } from './progression.js';
 import { personalBests, PB_LABEL } from './personal-bests.js';
+import { estimateOneRM, percentOfMax, repPrediction } from './exercise-estimate.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -3020,7 +3021,36 @@ export async function BenchmarkView() {
   );
 
   const stepWrap = el('div', { class: 'steppers' });
+  const estLine = el('div', { class: 'bench-est' });
   const submitBtn = el('button', { class: 'btn primary block', text: 'Save benchmark', disabled: true, onClick: submit });
+
+  /* ⚠️ STARTED HERE AND NOT AWAITED, which is the difference between a screen
+   * that opens and one that waits. `muscleStrength()` walks the whole training
+   * history — the same work the Muscles tab does — and this screen's first job
+   * is to let somebody pick an exercise, which needs none of it. It is read
+   * once rather than per exercise, because re-walking a year every time
+   * somebody changes their mind about which lift to test would be absurd.
+   *
+   * It is also allowed to fail. A brand-new account has no profile and no
+   * history, and this screen worked without an estimate for months. */
+  let muscles = null;
+  let bodyWeight = null;
+  /* ⚠️ `muscleRatings()`, NOT `muscleStrength()`. The latter gates everything
+   * behind a complete profile because it places you against published standards
+   * — and this screen wants pounds, not a percentile. Gating a weight estimate
+   * on a weigh-in told anybody who had not used a scale that the app knew
+   * nothing about their back, which it plainly did. */
+  const ratingsReady = Promise.all([
+    muscleRatings(), store.latestBodyWeight().catch(() => null),
+  ]).then(([rated, bw]) => {
+    muscles = rated;
+    bodyWeight = bw ? bw.weight : null;
+  }).catch(() => { /* no estimate is a quieter screen, never an error */ });
+
+  // What the app thinks this lift is worth, before a single number is typed.
+  let est = null;
+  // Set by renderSteppers(), so the estimate landing late can repaint them.
+  let repaintCaptions = () => {};
 
   function pickExercise() {
     openExercisePicker({
@@ -3033,24 +3063,132 @@ export async function BenchmarkView() {
         exBtn.querySelector('.row-title').textContent = ex.name;
         exBtn.querySelector('.row-sub').textContent =
           `${ex.muscle} · ${ex.equipment}${ex.loadType ? ' · weight ' + LOAD_LABEL[ex.loadType] : ''}`;
+        est = muscles ? estimateOneRM(ex, muscles, bodyWeight) : null;
+        renderEstimate();
         renderSteppers();
         submitBtn.disabled = false;
         document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
+        /* The history walk usually finishes long before anybody has picked an
+         * exercise, and on a big account it may not. Either way the estimate
+         * appears when it is ready rather than being missing for good — and
+         * `state.exercise` is re-read rather than closed over, so choosing a
+         * different lift while it was still working cannot paint the old one's
+         * estimate over the new one's. */
+        ratingsReady.then(() => {
+          if (!muscles || !state.exercise || state.exercise.id !== ex.id) return;
+          est = estimateOneRM(state.exercise, muscles, bodyWeight);
+          renderEstimate();
+          repaintCaptions();
+        });
         return true;
       },
     });
   }
 
-  function renderSteppers() {
-    setChildren(stepWrap,
-      ...state.exercise.fields.map((f) =>
-        stepper({
-          field: f,
-          value: 0,
-          suffix: f === 'weight' && state.exercise.loadType ? LOAD_LABEL[state.exercise.loadType] : null,
-          onChange: (v) => { state.values[f] = v; },
-        }).node),
+  /* 🚨 WHAT THIS SCREEN NOW SAYS BEFORE YOU LIFT, AND WHY IT IS ALLOWED TO.
+   *
+   * Tim, 2026-09-02: *"when the user records a benchmark, there should be some
+   * sort of display showing the predicted 1RM for that exercise… when they put
+   * in a weight for their benchmark, put a number above the reps that estimates
+   * how many they can do. Additionally, put a % above the weight that says what
+   * % of the estimated 1RM the site thinks they can lift."*
+   *
+   * ⚠️ EVERY ONE OF THESE THREE NUMBERS IS AN INFERENCE AND EVERY ONE SAYS SO IN
+   * WORDS — Rule 5's general form is that an inference must never look like a
+   * measurement and the cue may not be colour alone. The estimate names the
+   * exercises it was converted from, so somebody can see it came from their own
+   * dumbbell rows rather than out of the air.
+   *
+   * ⚠️ AND THE REP NUMBER IS THE ONE MOST LIKELY TO BE WRONG, so it is worded as
+   * a guess rather than a target. It answers "reps to momentary failure", and
+   * research.md §3 measured that people under-predict their own reps to failure
+   * by one to five — so somebody stopping where they normally stop will do fewer
+   * than this says. The app has no reps-in-reserve field and never will (D9), so
+   * that gap is invisible to it and has to be stated instead.
+   */
+  function renderEstimate() {
+    if (!est) {
+      // ⚠️ Three different silences and they are not the same sentence. Nothing
+      // picked yet; the history has been read and this lift cannot be reached
+      // from it; or the read has not finished. Saying "nothing converts to it"
+      // while still working would be a claim the app has not checked.
+      setChildren(estLine,
+        el('div', { class: 'field-help', text:
+          !state.exercise ? 'Pick an exercise.'
+            : muscles ? 'No estimate for this one yet — nothing you have recorded converts to it.'
+              : 'Working out what you might lift…' }));
+      return;
+    }
+    const from = est.from.length
+      ? `your ${est.from.slice(0, 3).join(', ')}`
+      : 'your recorded training';
+    setChildren(estLine,
+      el('div', { class: 'bench-est-head' },
+        el('span', { class: 'bench-est-num mono', text: units.withUnit(Math.round(est.shown)) }),
+        el('span', { class: 'tag', text: 'estimated' }),
+      ),
+      el('div', { class: 'bench-est-note', text:
+        `Estimated 1-rep max${est.perSide ? ' per side' : ''} · ${est.band.name.toLowerCase()} confidence` }),
+      el('div', { class: 'field-help', text:
+        est.isKeyLift
+          ? `Worked out from ${from} — nothing here was measured on this lift at a single rep.`
+          : `Worked out ${from}, converted through ${est.muscle.toLowerCase()}. `
+            + 'A conversion between exercises is an estimate on top of an estimate, which is what '
+            + 'the confidence above is about.' }),
     );
+  }
+
+  function renderSteppers() {
+    const fields = state.exercise.fields;
+    // ⚠️ The captions are re-rendered from INSIDE onChange, so they need to
+    // outlive the render — a node created per keystroke would be replaced
+    // underneath the reader mid-typing.
+    const caps = {};
+
+    const nodes = fields.map((f) => {
+      const s = stepper({
+        field: f,
+        value: 0,
+        suffix: f === 'weight' && state.exercise.loadType ? LOAD_LABEL[state.exercise.loadType] : null,
+        onChange: (v) => { state.values[f] = v; renderCaptions(); },
+      });
+      if (f === 'weight' || f === 'reps') {
+        caps[f] = el('div', { class: 'step-est' });
+        // Between the field's name and its big number, so it reads as a note
+        // about the number rather than as another number.
+        s.node.insertBefore(caps[f], s.node.querySelector('.stepper-controls'));
+      }
+      return s.node;
+    });
+
+    function renderCaptions() {
+      // ⚠️ NO ARITHMETIC ON NOTHING. This screen opens at 0, and "0 % of your
+      // estimated max" is the same mistake the assist readout's own comment
+      // warns about: a number computed off an empty field looks like a reading.
+      const w = Number(state.values.weight) || 0;
+      const oneRM = est ? est.oneRM : 0;
+      const totalW = state.exercise.loadType === 'per_side' ? w * 2 : w;
+
+      if (caps.weight) {
+        const pct = oneRM > 0 && totalW > 0 ? percentOfMax(oneRM, totalW) : null;
+        setChildren(caps.weight, pct === null
+          ? ''
+          : el('span', {}, el('b', { text: `${Math.round(pct)}%` }), ' of your estimated max'));
+      }
+      if (caps.reps) {
+        const p = oneRM > 0 && totalW > 0 ? repPrediction(oneRM, totalW) : null;
+        setChildren(caps.reps, !p
+          ? ''
+          : p.over
+            ? el('span', { text: 'at or above what we think your max is' })
+            : el('span', {},
+                'maybe ', el('b', { text: `${p.reps}${p.atLeast ? '+' : ''}` }), ' to failure'));
+      }
+    }
+
+    repaintCaptions = renderCaptions;
+    setChildren(stepWrap, ...nodes);
+    renderCaptions();
   }
 
   async function submit() {
@@ -3076,7 +3214,10 @@ export async function BenchmarkView() {
       el('div', { class: 'field' }, el('label', { text: 'Date' }), dateInput),
       el('div', { class: 'field' }, el('label', { text: 'Exercise' }), exBtn),
     ],
-    scroll: stepWrap,
+    // ⚠️ The estimate is ABOVE the steppers, not below them. It is the thing you
+    // read before deciding what to load, and a note under the numbers would be
+    // read after the decision it exists to inform — if at all.
+    scroll: el('div', { class: 'bench-body' }, estLine, stepWrap),
     bottom: submitBtn,
   });
 }

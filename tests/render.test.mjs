@@ -5158,6 +5158,121 @@ ok(!data.querySelector('.rep-target'),
   window.removeEventListener('hashchange', onHash);
 }
 
+/* ================= the benchmark screen predicts before you lift ==========
+ *
+ * Tim, 2026-09-02: *"when the user records a benchmark, there should be some
+ * sort of display showing the predicted 1RM for that exercise… put a number
+ * above the reps that estimate how many they can do… put a % above the weight
+ * that says what % of the estimated 1RM the cite thinks they can lift."*
+ *
+ * 🚨 THE FIXTURE IS TIM'S OWN EXAMPLE. It records dumbbell rows and lat
+ * pulldowns and NEVER a barbell row — then asks the screen about the barbell
+ * row. If the estimate came from the exercise itself this would show nothing.
+ *
+ * ⚠️ NOT DRIVEN IN THE DEMO, and the reason is worth writing down: the demo
+ * flag swaps the store's BACKEND, and that swap happens on boot. Setting the
+ * flag partway through a test file leaves `store.getSessions()` reading the
+ * local rows it always was, so `muscleStrength()` sees an empty history and the
+ * screen correctly shows nothing. The first version of this block did exactly
+ * that and failed for a reason that had nothing to do with the feature.
+ */
+{
+  const { store } = await import(BASE + 'store.js');
+  const { BenchmarkView } = await import(BASE + 'views-session.js');
+  const { clearReadCache } = await import(BASE + 'store.js');
+
+  const dbRow = byName('Dumbbell Row');
+  const pulldown = byName('Lat Pulldown');
+  const session = (date, ex, weight, reps) => ({
+    id: `bx-${date}-${ex.id}`, date, workoutName: 'Pull',
+    entries: [{ exerciseId: ex.id, exerciseName: ex.name, sets: [{ weight, reps }] }],
+  });
+  await store.importAll({
+    sessions: [
+      session('2026-08-10', dbRow, 90, 6), session('2026-08-17', dbRow, 95, 6),
+      session('2026-08-12', pulldown, 160, 8), session('2026-08-19', pulldown, 170, 8),
+    ],
+  });
+  clearReadCache('seeded rows directly through importAll');
+
+  /* 🚨 NO PROFILE AND NO WEIGH-IN IS SET HERE, DELIBERATELY, and `importAll`
+   * has just cleared any left by an earlier block. This screen used to read
+   * `muscleStrength()`, which refuses everything until sex, age and a body
+   * weight are on record — so a lifter with months of training and no weigh-in
+   * was told the app had no idea what they could row, which was false. The
+   * estimate is pounds converted from their own sets and needs none of those;
+   * only a percentile does. If this block ever starts needing a profile again,
+   * that is the regression. */
+
+  const bench = await mount(BenchmarkView());
+  for (let i = 0; i < 8; i++) await settle();
+
+  ok(!bench.querySelector('.bench-est-num'),
+     'nothing is claimed before an exercise is chosen');
+
+  // Open the picker and take a lift this account HAS trained.
+  bench.querySelector('.pane-top .row').click();
+  for (let i = 0; i < 8; i++) await settle();
+  const pick = [...document.querySelectorAll('.sheet .row, .sheet button')]
+    .find((n) => /^Barbell Row/.test(n.textContent.trim()));
+  ok(Boolean(pick), 'the exercise picker opens');
+  pick.click();
+  /* ⚠️ POLLED, NOT SLEPT ON. The screen paints immediately and fills the
+     estimate in when the history walk finishes — that is the whole point of it
+     not being awaited — so a fixed number of ticks is a race that passes on a
+     fast machine and fails on a slow one. Bounded, so a broken estimate still
+     fails rather than hanging. */
+  for (let i = 0; i < 120 && !bench.querySelector('.bench-est-num'); i++) await settle();
+
+  const num = bench.querySelector('.bench-est-num');
+  if (!num) {
+    const { muscleStrength } = await import(BASE + 'store.js');
+    const r = await muscleStrength();
+    console.log('DEBUG ready=', r.ready, 'muscles=', r.muscles.size,
+      'missing=', JSON.stringify(r.profile && r.profile.missing),
+      'sessions=', (await store.getSessions()).length,
+      'estText=', JSON.stringify(bench.querySelector('.bench-est').textContent));
+  }
+  ok(Boolean(num) && /\d/.test(num.textContent),
+     `an estimated 1-rep max appears for the chosen lift (${num && num.textContent})`);
+  const est = bench.textContent.replace(/\s+/g, ' ');
+  /* 🚨 Rule 5: an inference must never look like a measurement, and the cue may
+     not be colour alone. Every number this screen adds is worked out, so the
+     word has to be on the screen. */
+  ok(/ESTIMATED|estimated/.test(est), 'and says the word "estimated" in text, not in a shade');
+  ok(/confidence/.test(est), 'with how much it is worth believing');
+  ok(/Worked out from your /.test(est),
+     '⚠️ and names the exercises it came from — an estimate whose source is not on screen is '
+     + 'indistinguishable from a number the app made up');
+  ok(!/from from/.test(est), 'and reads as English (this line shipped doubled once)');
+
+  /* ---- the two live captions ---- */
+  const caps = [...bench.querySelectorAll('.step-est')];
+  ok(caps.length === 2, `both fields carry a caption slot (${caps.length})`);
+  ok(caps.every((c) => c.textContent.trim() === ''),
+     '⚠️ and they are EMPTY at zero — "0 % of your estimated max" is arithmetic on an untouched '
+     + 'field, which reads as a reading');
+
+  const weightInput = bench.querySelectorAll('.step-value')[0];
+  weightInput.value = '155';
+  weightInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  for (let i = 0; i < 8; i++) await settle();
+
+  const capText = caps.map((c) => c.textContent.trim());
+  ok(/%\s*of your estimated max/.test(capText[0]),
+     `the weight says what share of the estimate it is (${capText[0]})`);
+  ok(/to failure/.test(capText[1]),
+     `and the reps say roughly how many it allows (${capText[1]})`);
+  /* ⚠️ "to failure" is not decoration. research.md §3 measured that people
+     under-predict their own reps to failure by one to five, and this app has no
+     reps-in-reserve field (D9) — so the number is systematically higher than
+     what somebody stopping where they normally stop will do. Saying which kind
+     of rep count it is, is the whole difference between a guide and a lie. */
+  ok(/maybe/.test(capText[1]), 'worded as a guess rather than as a target');
+
+  await store.clearAll();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

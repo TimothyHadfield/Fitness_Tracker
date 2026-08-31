@@ -1205,6 +1205,54 @@ function workoutEntries(entries, exMap, ctx) {
  * flatters me every single time, in the same direction. The module cuts both
  * sides to the overlap and names the window; this sheet prints that name.
  */
+/**
+ * An estimated 1RM for each of us on one lift, for the sides that have never
+ * done it. `null` on a side means "leave that side alone" — either because it
+ * has real sets, which `compare.js` prefers, or because nothing converts.
+ *
+ * ⚠️ THEIR SESSIONS ARE RESHAPED, NOT REINTERPRETED. A projected entry names
+ * the exercise with `name`; every module downstream of here reads
+ * `exerciseName`, because that is what a stored session carries. Renaming the
+ * key at the boundary is one line; teaching four modules about a second shape
+ * would be four places to get it wrong.
+ */
+async function friendEstimates(ex, theirActivity, theirDoc) {
+  try {
+    const [{ muscleRatings, store: s }, { estimateOneRM }] = await Promise.all([
+      import('./store.js'), import('./exercise-estimate.js'),
+    ]);
+
+    const theirSessions = (theirActivity || []).map((a) => ({
+      date: a.date,
+      entries: (a.entries || []).map((e) => ({
+        exerciseId: e.exerciseId, exerciseName: e.name, sets: e.sets || [],
+      })),
+    }));
+    const theirBenchmarks = ((theirDoc && theirDoc.benchmarks) || []).map((b) => ({
+      date: b.date, exerciseId: b.exerciseId, exerciseName: b.name, values: b.values,
+    }));
+    const theirWeights = (theirDoc && theirDoc.bodyWeight) || [];
+
+    const [mineRatings, theirRatings, myWeight] = await Promise.all([
+      muscleRatings(),
+      muscleRatings({
+        sessions: theirSessions, benchmarks: theirBenchmarks, bodyWeights: theirWeights,
+      }),
+      s.latestBodyWeight().catch(() => null),
+    ]);
+
+    const theirLatest = theirWeights.length ? theirWeights[theirWeights.length - 1].weight : null;
+    return {
+      mine: estimateOneRM(ex, mineRatings, myWeight ? myWeight.weight : null),
+      theirs: estimateOneRM(ex, theirRatings, theirLatest),
+    };
+  } catch (_) {
+    // No estimate is the state this screen was in until today, and it is a
+    // perfectly good one. It must never be the reason the sheet fails to open.
+    return null;
+  }
+}
+
 async function compareSheet(entry, exMap, ctx) {
   const ex = exMap.get(entry.exerciseId);
   if (!ex) return;
@@ -1229,7 +1277,25 @@ async function compareSheet(entry, exMap, ctx) {
           .filter((x) => x.uid === ctx.uid).map((x) => x.act)
       : ((seen && seen.doc && seen.doc.activity) || []);
 
-    const r = compareExercise({ mine, theirs, exerciseId: entry.exerciseId, exercise: ex });
+    /* 🚨 IF NEITHER OF US HAS DONE THIS LIFT, THE APP MAY STILL KNOW ROUGHLY
+     * WHAT WE WOULD DO — Tim, 2026-09-02: *"if that person has an exercise that
+     * the site can estimate from another similar exercise, than estimate it
+     * rather than say there are no recorded excersizes."*
+     *
+     * ⚠️ BOTH SIDES GO THROUGH THE SAME FUNCTION, and that is not politeness —
+     * it is the same argument the window makes. Estimating only my side would
+     * put a converted number of mine against a measured one of theirs on every
+     * comparison where I happen to be the one missing the lift, which is a bias
+     * with a direction. `muscleRatings()` takes rows for exactly this.
+     *
+     * ⚠️ THEIR BODY WEIGHT AND BENCHMARKS PUBLISH ONLY AT THE TOP TIER and are
+     * simply absent otherwise, so a bodyweight lift of theirs stays unrateable
+     * — a refusal about one exercise, not a failure of the screen. */
+    const estimates = await friendEstimates(ex, theirs, seen && seen.doc);
+
+    const r = compareExercise({
+      mine, theirs, exerciseId: entry.exerciseId, exercise: ex, estimates,
+    });
 
     const rows = r.common
       ? r.metrics.map((m) => el('div', { class: 'cmp-row' },
@@ -1239,11 +1305,21 @@ async function compareSheet(entry, exMap, ctx) {
             // cue may not be colour alone. So it says the word.
             m.estimate ? el('span', { class: 'tag', text: 'estimated' }) : null,
           ),
+          /* ⚠️ MARKED PER SIDE, NOT PER ROW. "Estimated" above the row says both
+           * numbers were worked out from sets rather than lifted; "converted"
+           * beside ONE of them says that side's sets were on a different
+           * exercise entirely. They are different strengths of claim, and a
+           * reader comparing their own converted figure against their friend's
+           * measured one has to be able to see which is which. */
           el('div', { class: 'cmp-pair' },
-            el('span', { class: 'cmp-num' }, el('b', { text: 'You ' }),
-              m.mine == null ? '—' : `${trimNumber(m.mine)}${m.unit ? ` ${m.unit}` : ''}`),
-            el('span', { class: 'cmp-num' }, el('b', { text: `${ctx.who} ` }),
-              m.theirs == null ? '—' : `${trimNumber(m.theirs)}${m.unit ? ` ${m.unit}` : ''}`),
+            el('span', { class: 'cmp-num' + (m.mineConverted ? ' is-converted' : '') },
+              el('b', { text: 'You ' }),
+              m.mine == null ? '—' : `${trimNumber(m.mine)}${m.unit ? ` ${m.unit}` : ''}`,
+              m.mineConverted ? el('span', { class: 'cmp-mark', text: 'converted' }) : null),
+            el('span', { class: 'cmp-num' + (m.theirsConverted ? ' is-converted' : '') },
+              el('b', { text: `${ctx.who} ` }),
+              m.theirs == null ? '—' : `${trimNumber(m.theirs)}${m.unit ? ` ${m.unit}` : ''}`,
+              m.theirsConverted ? el('span', { class: 'cmp-mark', text: 'converted' }) : null),
           ),
           m.note ? el('div', { class: 'note ws-fine', text: m.note }) : null,
         ))

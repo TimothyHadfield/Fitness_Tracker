@@ -70,6 +70,59 @@ export function weightForReps(target, reps) {
   return (lo + hi) / 2;
 }
 
+/**
+ * The OTHER inverse: how many reps `weight` allows, given a one-rep max.
+ *
+ * ⚠️ THIS ONE IS CLOSED FORM AND `weightForReps` IS NOT, and the asymmetry is
+ * not an oversight in either. Going to a weight, k depends on the unknown, so
+ * there is no closed form and it bisects. Going to a rep count, the weight is
+ * given, so k(w) is a constant and r falls straight out:
+ *
+ *     1RM = w · (1 + (r−1)^α / k(w))     ⇒     r = 1 + [ k(w) · (1RM/w − 1) ]^(1/α)
+ *
+ * Returns `null` at or above the one-rep max, because there is no rep count
+ * there — that is what a maximum means — and a caller printing "0 reps" would
+ * be saying something different and wrong.
+ *
+ * ── 🚨 TWO THINGS A CALLER MUST NOT FORGET ────────────────────────────────
+ *
+ * 1. **THIS ANSWERS "REPS TO MOMENTARY FAILURE", WHICH IS NOT WHAT PEOPLE DO.**
+ *    docs/research.md §3, graded 🟢: asked to predict their own reps to failure,
+ *    141 lifters under-guessed — experienced ones by 1–2, less experienced by
+ *    4–5 — and even believing you are at failure you typically have reps left.
+ *    The app has no reps-in-reserve field and never will (D9), so this number
+ *    is systematically HIGHER than the reps somebody will actually stop at.
+ *    Present it as a rough guide, never as a target or a prescription.
+ *
+ * 2. **IT IS THE MARZAGAO CURVE, AND THE REPO HOLDS A SECOND CURVE THAT
+ *    DISAGREES.** docs/research.md §2 (Nuzzo et al. 2024, graded 🟢 — 952
+ *    tests, 7,289 people) publishes a reps-at-%1RM table saying ~9 reps at 80 %
+ *    on the bench and ~13 on the leg press. This function says ~7 at 80 % on a
+ *    bench-press-weight load. **They disagree by about two reps and nothing
+ *    reconciles them.**
+ *
+ *    Marzagao is used anyway, and the reason is internal consistency rather
+ *    than a belief that it is more accurate: every e1RM in this app comes from
+ *    that curve, so predicting reps with a different one would mean somebody
+ *    who performed the predicted reps produced an e1RM contradicting the
+ *    estimate that suggested them. An app disagreeing with itself is worse than
+ *    an app agreeing with the smaller of two literatures. Nuzzo's table is also
+ *    sparse — only the 80 % and 70 % rows carry per-exercise figures at all,
+ *    and it covers no rows, presses or isolation work (§2, "coverage gap").
+ *
+ * ⚠️ Weight is in POUNDS, like everything else here — `e1rm()` divides by
+ * LB_PER_KG internally, so its "any unit" comment is wrong and this one is not.
+ */
+export function repsForWeight(target, weight) {
+  const t = Number(target);
+  const w = Number(weight);
+  if (!(t > 0) || !(w > 0)) return null;
+  if (w >= t) return null;
+  const inner = kFactor(w / LB_PER_KG) * (t / w - 1);
+  if (!(inner > 0)) return null;
+  return 1 + Math.pow(inner, 1 / ALPHA);
+}
+
 // Same lift expressed at a different rep count.
 export function normalizeWeight(weight, fromReps, toReps) {
   if (Number(fromReps) === Number(toReps)) {
