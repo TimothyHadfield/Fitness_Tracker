@@ -974,6 +974,10 @@ select.input {
 .session-loc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-loc.is-empty { color: var(--ink-faint); }
 .session-loc svg { flex: none; }
+/* A description is a sentence, not a gym name, so it gets more of the sub-line
+   than 15ch — enough to recognise what you wrote without pushing the date off a
+   360px header. The full text is on the chip's own label either way. */
+.session-note { max-width: 24ch; }
 
 /* Technical detail behind a disclosure, so a raw error string is diagnosable
    without being the first thing a user reads. */
@@ -3224,8 +3228,128 @@ a.row { text-decoration: none; }
 .act-name { flex: 1; min-width: 0; }
 .act-sets { color: var(--ink-soft); font-family: var(--mono); font-size: 12px; text-align: right; }
 
+/* The way in, at the bottom of an opened row — the same session, on its own
+   screen. Quiet, because the row above it has already answered the question
+   most people opened it with. */
+.act-open {
+  display: inline-block; margin: 6px 0 0 30px;
+  font-size: 12.5px; font-weight: 650; color: var(--accent); text-decoration: none;
+}
+
 .friend-body { margin: 6px 0 4px; }
 .friend-body .body-map { width: 100%; height: auto; }
+
+/* ==========================================================================
+   A friend's workout, on its own screen  (#/friend/<uid>/<sessionId>)
+   ==========================================================================
+   Hevy's workout detail (docs/social-plan.md §12.15) in this app's chrome: the
+   same reading order — who, when, what it was called, what they said, the
+   numbers, the split, the sets — with hairlines and space where theirs has
+   boxes and zebra stripes (Rule 2). Their set rows alternate two near-identical
+   greys; a rule between rows does the same job and is the pattern every other
+   set list in this app already uses. */
+.ws { display: flex; flex-direction: column; gap: 12px; }
+.ws-who { display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; }
+/* The workout's name is the loudest thing on the screen, as on the card. */
+.ws-title { margin: 0; font-size: 23px; font-weight: 750; line-height: 1.15; }
+.ws-note {
+  margin: -4px 0 0; font-size: 14.5px; color: var(--ink-soft); line-height: 1.5;
+  overflow-wrap: anywhere; white-space: pre-line;
+}
+.ws-where { margin: -4px 0 0; font-size: 12.5px; color: var(--ink-faint); }
+/* Wider gaps than the card's: this screen has the room, and the numbers are
+   what somebody stopped to look at. */
+.ws-stats { gap: 4px 28px; }
+
+/* ── The muscle split ─────────────────────────────────────────────────────
+   ⚠️ ONE COLOUR, and the number is printed beside every bar. This is a share
+   of one session, not a rank, so a ramp would be inventing an ordering that
+   says good and bad where the app has no opinion (Rule 6). */
+.ws-split { display: flex; flex-direction: column; gap: 7px; }
+.split-row { display: flex; flex-direction: column; gap: 3px; }
+.split-head { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.split-name { color: var(--ink); font-weight: 620; }
+.split-pct { color: var(--ink-soft); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.split-track { height: 7px; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.split-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+/* ⚠️ Fine print stays --ink-soft rather than dropping to --ink-faint. The
+   accessibility audit measured --ink-faint below 4.5:1 on every surface at
+   text sizes under 18.66px, and this is 11.5px. Small is allowed; unreadable
+   is not. */
+.ws-fine { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--ink-soft); }
+
+/* ── The set tables ───────────────────────────────────────────────────── */
+.ws-ex { padding: 10px 0; border-bottom: 1px solid var(--rule-soft); }
+.ws-ex:last-child { border-bottom: 0; }
+.ws-ex.in-group { border-left: 2px solid var(--rule); padding-left: 10px; }
+.ws-ex-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; }
+.ws-ex-name { font-size: 15px; font-weight: 650; }
+.ws-sets { display: flex; flex-direction: column; margin-top: 5px; }
+.ws-set { display: flex; gap: 14px; padding: 4px 0; font-size: 13.5px; }
+.ws-set-n {
+  flex: none; width: 34px;
+  font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-faint);
+}
+.ws-set-v { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+/* The column heads, in the same caption voice as a stat label. */
+.ws-set.is-head { border-bottom: 1px solid var(--rule-soft); padding-bottom: 3px; }
+.ws-set.is-head .ws-set-n,
+.ws-set.is-head .ws-set-v {
+  font-family: var(--sans);
+  font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* A drop or a mini-set hangs UNDER the set it came off, indented and quieter —
+   it is part of that set, not another one (D23). */
+.ws-set.is-mini { padding-top: 0; }
+.ws-set.is-mini .ws-set-n { padding-left: 12px; }
+.ws-set.is-mini .ws-set-v { color: var(--ink-soft); font-size: 12.5px; }
+
+/* An exercise name that opens a comparison. Hevy paints these blue; this app
+   has no blue and does not need one — the accent it already uses for "this is
+   the interactive thing" says the same, and a dotted underline says it again
+   without colour, which is the rule everywhere else here. 44px of height comes
+   from the padding, not from a bigger type size. */
+.ws-ex-name.as-link {
+  color: var(--accent);
+  border-bottom: 1px dashed currentColor;
+  padding: 6px 0;
+  text-align: left;
+}
+.ws-ex-name.as-link:active { opacity: .7; }
+
+/* Bests set in this workout. The same left keyline the finish screen's own
+   personal bests use, so the two read as the same kind of thing. */
+.ws-prs { display: flex; flex-direction: column; gap: 8px; }
+.ws-pr {
+  display: flex; flex-direction: column; gap: 2px;
+  border-left: 2px solid var(--good); padding: 2px 0 2px 12px;
+}
+.ws-pr-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+.ws-pr-name { font-size: 14px; font-weight: 650; }
+.ws-pr-line { font-size: 13px; color: var(--ink-soft); }
+
+/* What you can do with somebody else's workout, after you have read it. */
+.ws-do { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.ws-copy-list { display: flex; flex-direction: column; gap: 3px; }
+
+/* ── You and them, on one exercise ────────────────────────────────────────
+   ⚠️ NO WINNER MARK ANYWHERE IN HERE. Two numbers side by side, the same
+   weight, in the same ink. Rule 6: the app does not get an opinion about who
+   trains better off one exercise, so nothing is coloured good or bad. */
+.cmp { display: flex; flex-direction: column; gap: 12px; }
+.cmp-row { display: flex; flex-direction: column; gap: 3px; }
+.cmp-label {
+  display: flex; align-items: baseline; gap: 7px;
+  font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cmp-pair { display: flex; gap: 18px; flex-wrap: wrap; }
+.cmp-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 15px; font-weight: 650;
+}
+.cmp-num b { font-family: var(--sans); font-size: 12px; font-weight: 650; color: var(--ink-faint); }
 
 /* The "% optimal" rating beside a ready-made system.
    Two numbers, never one — a programme good for growth is often not the one
@@ -3504,6 +3628,63 @@ a.row { text-decoration: none; }
    you scan a feed for what happened, and whose it is qualifies it. On Strava's
    own web feed the title is the card's <h1> and the athlete's name is a span. */
 .feed-title { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.2; }
+
+/* The tappable half of a card: title, description, numbers, exercises. It is a
+   link because it goes somewhere (the workout), and it inherits everything —
+   the underline and the link colour would turn four different kinds of text
+   into one. The head above it is a separate link to the person. */
+.feed-open {
+  display: flex; flex-direction: column; gap: 7px;
+  color: inherit; text-decoration: none;
+  border-radius: var(--r);
+}
+/* ⚠️ THE PRESS IS THE ONLY THING THAT MOVES HERE. A feed is scrolled with a
+   thumb and a card that animates on arrival fights the scroll (Rule 7). */
+.feed-open:active { background: var(--raised); }
+.feed-open.is-flat:active { background: none; }
+
+/* Their own words about the session, under the title and above the numbers —
+   what the person said, then what the app counted. */
+.feed-note {
+  margin: 0;
+  font-size: 13.5px; color: var(--ink-soft); line-height: 1.45;
+  overflow-wrap: anywhere; white-space: pre-line;
+}
+
+/* ── The stat row ──────────────────────────────────────────────────────────
+   Small uppercase label above, bold value below, in columns. Hevy's shape,
+   this app's type — and NO dividers between the columns, which is where their
+   version and Rule 2 part company. `gap` alone reads as three things because
+   the labels are already a different weight and colour from the values.
+
+   Columns are content-width rather than equal thirds: with two or three cells
+   an even split leaves "Sets 24" floating in the middle of a third of the
+   card, and the eye has to travel to find the next number. */
+.feed-stats { display: flex; flex-wrap: wrap; gap: 3px 22px; }
+.feed-stat { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.feed-stat-label {
+  font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.feed-stat-value {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 15.5px; font-weight: 650; letter-spacing: -.03em;
+}
+
+/* ── One row per exercise, set count first ────────────────────────────────
+   The count leads because it is the part that varies and the part being
+   compared; the name is what it applies to. Mono on the count keeps the names
+   on a straight left edge without a table. */
+.feed-exs { display: flex; flex-direction: column; gap: 2px; }
+.feed-ex { display: flex; gap: 8px; font-size: 13.5px; line-height: 1.45; min-width: 0; }
+.feed-ex-sets {
+  flex: none; min-width: 52px;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 12.5px; color: var(--ink-faint);
+  align-self: center;
+}
+.feed-ex-name { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-ex.is-quiet { color: var(--ink-faint); font-size: 12.5px; }
 
 .feed-did { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
 /* The lowest sharing tier publishes that somebody trained and nothing else. The

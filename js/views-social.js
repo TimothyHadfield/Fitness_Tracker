@@ -33,6 +33,8 @@ import {
   atLeast, parseInviteRoute, profileLink,
 } from './social.js';
 import { encodeQR } from './qr.js';
+import { sessionStats, recordedSetCount } from './session-stats.js';
+import { minisOf, miniLabel, groupLabel } from './set-types.js';
 
 /* ------------------------------------------------------------------ *
  * Shared bits
@@ -661,7 +663,7 @@ export async function FriendView(uid) {
     if (!acts.length) {
       parts.push(el('p', { class: 'note', text: 'Nothing recorded yet.' }));
     } else {
-      for (const a of acts) parts.push(activityRow(a, seen.tier));
+      for (const a of acts) parts.push(activityRow(a, seen.tier, uid));
     }
   }
 
@@ -708,10 +710,571 @@ export async function FriendView(uid) {
   return screen;
 }
 
+/* ------------------------------------------------------------------ *
+ * One workout  —  #/friend/<uid>/<sessionId>
+ *
+ * docs/social-plan.md §13 steps 3 and 4, and §12.15 is the screen it is modelled
+ * on — Hevy's workout detail, seen at last through four photographs Tim took of
+ * his own phone.
+ *
+ * ⚠️ IT IS ADDRESSED THROUGH THE FRIEND ROUTE ON PURPOSE. There is no per-session
+ * read in this app and there cannot be one: a friend publishes ONE document per
+ * tier holding up to sixty sessions, and Firestore grants per document. So this
+ * screen reads the same document the friend's page reads and finds the session
+ * inside it by id. That also means it costs exactly what opening their page
+ * costs, and is served from the same 30-second read cache.
+ *
+ * What it does NOT do is invent an owner-side twin: your own sessions already
+ * have a detail screen at #/day/<date>, and giving them a second one would put
+ * two screens in the app that must agree about the same workout forever.
+ * ------------------------------------------------------------------ */
+
+export async function FriendSessionView(uid, sessionId) {
+  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
+
+  let state;
+  try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
+
+  /* ⚠️ THE DEMO OPENS THESE TOO, for the same reason Home's feed has a demo
+   * branch: the demo account is where every screen in this app is looked at,
+   * measured and audited, and a card that opens "not available here" would make
+   * the newest screen in the product the one nobody can see. Reading an invented
+   * friend is not the hazard — publishing to a real one is, and that stays
+   * refused. Nothing here touches the network, storage, or anybody's account. */
+  let demoEntry = null;
+  if (state.reason === 'demo') {
+    const { buildDemoFeed } = await import('./demo.js');
+    const { todayISO } = await import('./store.js');
+    demoEntry = buildDemoFeed(todayISO()).find((x) => x.uid === uid && x.act && x.act.id === sessionId)
+      || null;
+  } else if (!state.available) {
+    return screenShell({ title: 'Workout', back, noNav: true, scroll: unavailable(state.reason) });
+  }
+
+  const conn = demoEntry
+    ? { uid, name: demoEntry.name, tier: demoEntry.tier }
+    : (state.connections || []).find((c) => c.uid === uid);
+  if (!conn) {
+    return screenShell({ title: 'Workout', back, noNav: true,
+      scroll: emptyState('Not connected', 'You are not connected to them any more.') });
+  }
+
+  let seen = { tier: null, doc: null };
+  if (demoEntry) {
+    seen = { tier: demoEntry.tier, doc: { profile: { name: demoEntry.name } } };
+  } else {
+    try { seen = await social.friend(uid); } catch (_) {}
+  }
+
+  const name = (seen.doc && seen.doc.profile && seen.doc.profile.name) || conn.name || 'Friend';
+  const acts = demoEntry ? [demoEntry.act] : ((seen.doc && seen.doc.activity) || []);
+  const a = acts.find((x) => x && x.id === sessionId) || null;
+
+  /* ⚠️ GONE IS A NORMAL OUTCOME HERE, not an error. The published window is the
+   * last sixty sessions, so a workout somebody opened from an old feed card can
+   * have rolled off the end of it — and a friend who narrowed what they share
+   * makes the same thing happen faster. Either way the honest answer names the
+   * reason rather than showing a spinner that never stops. */
+  if (!a) {
+    return screenShell({ title: 'Workout', back, noNav: true,
+      scroll: emptyState('That workout is not here',
+        `${name} shares their most recent workouts, and this one is no longer among them — either `
+        + 'it has scrolled off the end of what they publish, or they have changed what they share '
+        + 'with you.') });
+  }
+
+  const body = el('div', { class: 'ws' });
+  const screen = screenShell({ title: 'Workout', back, noNav: true, scroll: body });
+
+  const [exMap, stats] = [
+    await store.getExerciseMap().catch(() => new Map()),
+    sessionStats(a.entries),
+  ];
+
+  /* ⚠️ AN ABSOLUTE DATE HERE AND A RELATIVE ONE ON THE CARD. "6 hours ago" is
+   * right while you are scanning; "Wednesday, 26 August 2026 at 1:23 pm" is
+   * right once you have stopped to look at one thing. Hevy does exactly this
+   * and it is worth copying (§12.16). */
+  const clock = a.startedAt
+    ? ' at ' + new Date(a.startedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : '';
+
+  const parts = [];
+
+  parts.push(el('a', { class: 'ws-who', href: `#/friend/${encodeURIComponent(uid)}` },
+    el('span', { class: 'feed-avatar' },
+      personFace(seen.doc && seen.doc.profile ? seen.doc.profile.avatar : null, 19)),
+    el('span', { class: 'feed-who' },
+      el('span', { class: 'feed-name', text: name }),
+      el('span', { class: 'feed-meta', text: `${fmtDateLong(a.date)}${clock}` }),
+    ),
+  ));
+
+  parts.push(el('h1', { class: 'ws-title', text: a.name || 'Workout' }));
+  if (typeof a.note === 'string' && a.note) {
+    parts.push(el('p', { class: 'ws-note', text: a.note }));
+  }
+
+  // Time · Sets · Exercises. ⚠️ NOT volume — js/session-stats.js has the whole
+  // argument, and the short of it is that a friend's bodyweight work has no
+  // external load to total and their body weight is not ours to have.
+  const cells = [
+    ['Time', a.minutes ? fmtDuration(a.minutes) : null],
+    ['Sets', stats.sets || null],
+    ['Exercises', stats.exercises || null],
+  ].filter((c) => c[1] != null);
+  if (cells.length) {
+    parts.push(el('div', { class: 'feed-stats ws-stats' },
+      ...cells.map(([label, value]) => el('div', { class: 'feed-stat' },
+        el('div', { class: 'feed-stat-label', text: label }),
+        el('div', { class: 'feed-stat-value', text: String(value) }),
+      ))));
+  }
+
+  if (a.location) parts.push(el('p', { class: 'ws-where', text: a.location }));
+
+  /* The same kudos/comment/share row the card carries, from the same function.
+   * ⚠️ Reactions anchor on the session id and a session published before ids
+   * existed has none — `feedActions` already answers that with a sentence
+   * rather than a dead tap, which is why it is imported rather than copied. */
+  let rx = null;
+  if (!demoEntry && a.id) {
+    try {
+      const grouped = await social.reactionsFor(uid);
+      rx = {
+        slot: grouped.get(a.id) || { kudos: [], myKudosId: null, comments: [] },
+        myUid: state.uid,
+        names: new Map([[state.uid, 'You'], [uid, name]]),
+      };
+    } catch (_) { /* unreadable reactions must not take the screen down with them */ }
+  }
+  const { feedActions } = await import('./views-workouts.js');
+  parts.push(feedActions({ uid, name, act: a, rx, demo: Boolean(demoEntry) }));
+
+  if (!atLeast(seen.tier, MID) || !a.entries || !a.entries.length) {
+    parts.push(el('p', { class: 'note', text:
+      `${name} shares that they trained, not what they did. There is nothing more to show here.` }));
+    setChildren(body, ...parts);
+    return screen;
+  }
+
+  const records = await friendRecords(a, acts, exMap);
+  if (records) parts.push(records);
+
+  const split = await muscleSplit(a.entries, exMap);
+  if (split) parts.push(split);
+
+  parts.push(el('h2', { class: 'section-head', text: 'Workout' }));
+  parts.push(...workoutEntries(a.entries, exMap, { uid, who: name, demo: Boolean(demoEntry) }));
+
+  /* What you can do with somebody else's workout — copy the plan, or send a
+   * picture of it. ⚠️ Both are at the BOTTOM, after the workout itself: the
+   * reason to open this screen is to read what they did, and a row of buttons
+   * above that would make the app's suggestions louder than their training. */
+  parts.push(el('div', { class: 'ws-do' },
+    el('button', {
+      class: 'btn block', text: 'Save as my workout',
+      onClick: () => saveAsRoutineSheet(a, exMap, name),
+    }),
+    el('button', {
+      class: 'btn ghost block', text: 'Share a picture',
+      onClick: () => shareWorkoutPicture(a, name, stats),
+    }),
+  ));
+
+  setChildren(body, ...parts);
+  return screen;
+}
+
+/* Copy their workout into one of mine — social-plan §13 step 7.
+ *
+ * ⚠️ IT SHOWS WHAT IT IS ABOUT TO DO BEFORE IT DOES IT, and that is the whole
+ * design of this sheet. Their session is a RECORD and my workout is a PLAN, so
+ * the set counts carry and the weights cannot — and an exercise my library has
+ * never heard of cannot be carried at all, because a workout addresses
+ * exercises by id and the runner would find nothing under it. Saving silently
+ * and shrinking somebody's routine on the way is the failure this app keeps
+ * refusing to ship; naming it costs one sheet.
+ */
+async function saveAsRoutineSheet(a, exMap, from) {
+  const { routineFromSession } = await import('./routine-from-session.js');
+  const { workout, dropped, warnings } = routineFromSession(a, exMap, { from });
+
+  if (!workout.exercises.length) {
+    toast('None of these exercises are in your library, so there is nothing to copy.');
+    return;
+  }
+
+  const systems = await store.getSystems().catch(() => []);
+  // One system is the common case and picking from a list of one is a tax.
+  const picker = systems.length > 1
+    ? el('select', { class: 'input', 'aria-label': 'Add to' },
+        ...systems.map((s) => el('option', { value: s.id, text: s.name })))
+    : null;
+
+  const { close } = openSheet({
+    title: 'Save as my workout',
+    body: el('div', { class: 'form' },
+      el('p', { class: 'note', text:
+        `"${workout.name}" — ${workout.exercises.length} exercise`
+        + `${workout.exercises.length === 1 ? '' : 's'}, with their set counts.` }),
+      el('div', { class: 'ws-copy-list' },
+        ...workout.exercises.map((x) => el('div', { class: 'feed-ex' },
+          el('span', { class: 'feed-ex-sets', text: `${x.sets} set${x.sets === 1 ? '' : 's'}` }),
+          el('span', { class: 'feed-ex-name', text:
+            (exMap.get(x.exerciseId) || {}).name || 'Exercise' }),
+        ))),
+      ...warnings.map((w) => el('p', { class: 'note ws-fine', text: w })),
+      dropped.length
+        ? el('p', { class: 'note ws-fine', text:
+            `Not copied, because ${dropped.length === 1 ? 'it is' : 'they are'} not in your `
+            + `library: ${dropped.map((d) => d.name).join(', ')}.` })
+        : null,
+      picker ? el('div', { class: 'field' }, el('label', { text: 'Add to' }), picker) : null,
+    ),
+    footer: el('button', { class: 'btn primary block', text: 'Save', onClick: async () => {
+      try {
+        // A brand-new account can have no system at all, and a workout has
+        // nowhere to live without one.
+        const systemId = picker ? picker.value
+          : (systems[0] ? systems[0].id : (await store.saveSystem({ name: 'My workouts' })).id);
+        const saved = await store.saveWorkout({ ...workout, systemId });
+        close();
+        toast('Saved. Weights are yours to set.');
+        location.hash = `#/workout/${encodeURIComponent(saved.id)}`;
+      } catch (err) { toast((err && err.message) || 'Could not save that.'); }
+    } }),
+  });
+}
+
+/* A picture of the workout — social-plan §13 step 8.
+ *
+ * ⚠️ NO WEIGHTS ON IT, and the module enforces that rather than trusting this
+ * caller: an image leaves the app for a feed nobody here controls, and their
+ * numbers are theirs. Sets and time are the honest figures, which is the same
+ * call Tim made for the feed card. */
+async function shareWorkoutPicture(a, who, stats) {
+  try {
+    const { shareWorkoutImage } = await import('./share-image.js');
+    const r = await shareWorkoutImage({
+      title: a.name || 'Workout', who, date: a.date, minutes: a.minutes || null,
+      sets: stats.sets, note: a.note || null, location: a.location || null,
+      exercises: stats.byExercise.map((x) => ({ name: x.name, sets: x.sets })),
+    });
+    // ⚠️ NO `height` PASSED, on purpose. The card sizes itself to its contents
+    // between 1080 and 1350 — a caller guessing at it here is a second opinion
+    // about layout living outside the module that does the layout, and the
+    // first version of this line was exactly that.
+    // A share sheet that was dismissed is not an error and says nothing.
+    if (r && r.downloaded) toast('Saved to your files.');
+  } catch (err) {
+    toast((err && err.message) || 'Could not make that picture.');
+  }
+}
+
+/** "1h 4min" — the same shape the feed card uses. */
+function fmtDuration(mins) {
+  const n = Math.round(Number(mins) || 0);
+  if (n <= 0) return null;
+  if (n < 60) return `${n} min`;
+  const h = Math.floor(n / 60);
+  const m = n % 60;
+  return m ? `${h}h ${m}min` : `${h}h`;
+}
+
+/* Records set in this workout — social-plan §13 step 5.
+ *
+ * 🚨 "A BEST IN WHAT THEY HAVE SHARED", AND THE SCREEN SAYS EXACTLY THAT.
+ * We hold their last sixty published sessions, not their life. Calling one of
+ * these a personal record would be a claim about training we have never seen
+ * and which they may never have shared — Rule 5's general form, from the
+ * direction of scope rather than of inference. On your OWN finish screen there
+ * is no such limit, because there the app really does have all of it, and that
+ * screen says nothing about windows for the same reason.
+ *
+ * ⚠️ AND THEIR BENCHMARKS ARE NOT IN IT even at the top tier, deliberately: a
+ * benchmark is a deliberate test taken fresh and a mid-workout set is not
+ * (Rule 4). Your own finish screen compares against both because it has the
+ * whole picture and can tell them apart; here, mixing a published benchmark
+ * into a window of workout sets would make a record appear or vanish depending
+ * on which tier somebody put you on.
+ */
+async function friendRecords(a, acts, exMap) {
+  if (!a.entries || !a.entries.length) return null;
+  const { personalBests, PB_LABEL } = await import('./personal-bests.js');
+  const { withUnit } = await import('./units.js');
+
+  // `personalBests` reads the store's own key names; the projection renames
+  // exerciseName to name. Translate rather than teaching the pure module about
+  // a second shape.
+  const asEntries = (entries) => (entries || []).map((e) => ({
+    exerciseId: e.exerciseId, exerciseName: e.name, sets: e.sets || [],
+  }));
+
+  // Everything of theirs that we hold from BEFORE this one. Same-day sessions
+  // are ordered by `startedAt` where it exists, and where it does not the id
+  // breaks the tie — an arbitrary but stable order, which is all that is needed
+  // to stop a session being compared against itself.
+  const key = (x) => `${x.date}|${x.startedAt || ''}|${x.id || ''}`;
+  const here = key(a);
+  const prior = acts.filter((x) => x && key(x) < here).map((x) => ({ entries: asEntries(x.entries) }));
+  if (!prior.length) return null;
+
+  const prs = personalBests(asEntries(a.entries), prior, [], exMap);
+  if (!prs.length) return null;
+
+  const line = (p) => {
+    if (p.kind === 'reps') return `${p.now} reps, up from ${p.was}`;
+    if (p.kind === 'volume') {
+      return `${withUnit(p.now)} in one set${p.perSide ? ' (both sides)' : ''}`
+        + `, up from ${withUnit(p.was)}`;
+    }
+    if (p.kind === 'e1rm') {
+      return `${withUnit(Math.round(p.now))} from ${withUnit(p.weight)} × ${p.reps}`
+        + `, up from ${withUnit(Math.round(p.was))}`;
+    }
+    return `${withUnit(p.now)}, up from ${withUnit(p.was)}`;
+  };
+
+  return el('div', { class: 'ws-prs' },
+    el('h2', { class: 'section-head', text: 'Bests in this workout' }),
+    ...prs.map((p) => el('div', { class: 'ws-pr' },
+      el('div', { class: 'ws-pr-head' },
+        el('span', { class: 'ws-pr-name', text: p.name }),
+        el('span', { class: 'tag', text: PB_LABEL[p.kind] || p.kind }),
+        // Rule 5 again, in words rather than in colour: an estimate must never
+        // look like a measurement.
+        p.estimated ? el('span', { class: 'tag', text: 'estimated' }) : null,
+      ),
+      el('div', { class: 'ws-pr-line', text: line(p) }),
+    )),
+    el('p', { class: 'note ws-fine', text:
+      'Measured against the workouts they share with you, not against everything they have ever '
+      + 'done — so this is their best here, which may not be their best.' }),
+  );
+}
+
+/* The per-session muscle split — social-plan §13 step 4.
+ *
+ * 🚨 A SHARE, NEVER AN ABSOLUTE, and the reason is worth keeping beside the
+ * code: "52 % of this workout was chest" is a complete statement about the
+ * thing on screen, while "12.4 sets" only means something measured against a
+ * week. Per session: share. Per week: absolute. Getting that backwards would
+ * put a weekly band on one workout, which is the mistake this app spent a whole
+ * screen avoiding on the Volume tab.
+ *
+ * ⚠️ BARS RATHER THAN THE BODY FIGURE, deliberately. The figure is painted in a
+ * red-to-green ramp whose entire justification is the legend and the numbers
+ * printed beside it (tools/volume-ramp.mjs); a small figure dropped onto a
+ * workout screen would strip exactly the secondary encoding that makes that
+ * ramp legal for the 8 % of men who cannot separate those hues.
+ */
+async function muscleSplit(entries, exMap) {
+  const { volumeContributions, INDIRECT_NOTE_SESSION } = await import('./volume-map.js');
+
+  const totals = new Map();
+  let counted = 0;
+  let unknown = 0;
+
+  for (const entry of entries || []) {
+    const sets = recordedSetCount(entry);
+    if (!sets) continue;
+    const ex = entry.exerciseId ? exMap.get(entry.exerciseId) : null;
+    if (!ex) { unknown++; continue; }
+    for (const c of volumeContributions(ex)) {
+      totals.set(c.muscle, (totals.get(c.muscle) || 0) + sets * c.weight);
+      counted += sets * c.weight;
+    }
+  }
+
+  if (!counted) return null;
+
+  const rows = [...totals.entries()]
+    .map(([muscle, value]) => ({ muscle, pct: (value / counted) * 100 }))
+    .sort((x, y) => y.pct - x.pct);
+
+  return el('div', { class: 'ws-split' },
+    el('h2', { class: 'section-head', text: 'Muscle split' }),
+    ...rows.map((r) => el('div', { class: 'split-row' },
+      el('div', { class: 'split-head' },
+        el('span', { class: 'split-name', text: r.muscle }),
+        el('span', { class: 'split-pct', text: `${Math.round(r.pct)}%` }),
+      ),
+      el('div', { class: 'split-track' },
+        el('div', { class: 'split-fill', style: `width:${r.pct.toFixed(1)}%` })),
+    )),
+    // ⚠️ The share is of what could be COUNTED, and when something could not be
+    // it says so rather than quietly renormalising over the rest.
+    unknown
+      ? el('p', { class: 'note ws-fine', text:
+          `${unknown} exercise${unknown === 1 ? ' is' : 's are'} not in your library, so `
+          + `${unknown === 1 ? 'it is' : 'they are'} left out of this split.` })
+      : null,
+    // ⚠️ FINE PRINT, NOT A PARAGRAPH. It has to be here — a fractional set count
+    // is a modelling choice and this app states them where they are used — but
+    // set at body size it was six lines of caveat sitting between the split and
+    // the workout, louder than either. Small and quiet still says it.
+    el('p', { class: 'note ws-fine', text: INDIRECT_NOTE_SESSION }),
+  );
+}
+
+/* The set tables — §12.15's layout, in this app's type.
+ *
+ * ⚠️ THE HEADER ADAPTS TO THE EXERCISE, which is the detail worth copying:
+ * "SET | WEIGHT & REPS" for a bench press, "SET | REPS" for a dip, "SET | TIME"
+ * for a plank. `fields` already knows, so this is free — and printing a weight
+ * column against a plank would be a column of dashes pretending to be data.
+ */
+/* ⚠️ `fmtSet` WRITES REPS AS "× 12" because everywhere else in this app they
+ * follow a weight — "185 lbs × 12". In a table with its own REPS column the
+ * multiplication sign is left over from a number that is not there, so it comes
+ * off. The rule is local to this screen on purpose: `fmtSet` is right for every
+ * other caller, and changing it would move a symbol on six screens to tidy one. */
+function setText(set, fields, loadType) {
+  const t = fmtSet(set, fields, loadType);
+  return fields.includes('weight') ? t : t.replace(/^×\s*/, '');
+}
+
+function workoutEntries(entries, exMap, ctx) {
+  const out = [];
+  entries.forEach((entry, i) => {
+    const prev = entries[i - 1];
+    const opensGroup = entry.group != null && (!prev || prev.group !== entry.group);
+    const { fields, loadType, known } = shapeOf(entry, exMap);
+
+    const heads = fields
+      .map((f) => (f === 'weight' ? 'Weight' : f === 'reps' ? 'Reps' : f === 'time' ? 'Time' : 'Distance'))
+      .join(' & ');
+
+    /* ⚠️ THE NAME IS ONLY A BUTTON WHERE THERE IS SOMETHING BEHIND IT. Hevy
+     * paints every exercise name blue and every one of them opens; ours can
+     * only compare on an exercise this library knows, because a comparison
+     * needs a rep-normalising model and that needs the exercise. A blue name
+     * that does nothing is worse than a plain one. */
+    const nameNode = known && ctx
+      ? el('button', { class: 'ws-ex-name as-link', text: entry.name,
+          onClick: () => compareSheet(entry, exMap, ctx) })
+      : el('span', { class: 'ws-ex-name', text: entry.name });
+
+    out.push(el('div', { class: 'ws-ex' + (entry.group == null ? '' : ' in-group') },
+      opensGroup
+        ? el('div', { class: 'detail-group-label', text:
+            groupLabel(entries.filter((o) => o.group === entry.group).length) })
+        : null,
+      el('div', { class: 'ws-ex-head' },
+        nameNode,
+        entry.setType
+          ? el('span', { class: 'tag', text: entry.setType === 'drop' ? 'drop set' : 'myo-reps' })
+          : null,
+        // ⚠️ Said once, quietly, where it is true — the split above has already
+        // explained what it costs. Silence would be the app pretending it knows
+        // an exercise it has never heard of.
+        known ? null : el('span', { class: 'tag', text: 'not in your library' }),
+      ),
+      el('div', { class: 'ws-sets' },
+        el('div', { class: 'ws-set is-head' },
+          el('span', { class: 'ws-set-n', text: 'Set' }),
+          el('span', { class: 'ws-set-v', text: heads }),
+        ),
+        ...(entry.sets || []).map((set, si) => el('div', { class: 'ws-set-run' },
+          el('div', { class: 'ws-set' },
+            el('span', { class: 'ws-set-n', text: String(si + 1) }),
+            el('span', { class: 'ws-set-v', text: setText(set, fields, loadType) }),
+          ),
+          ...minisOf(set).map((mini, mi) => el('div', { class: 'ws-set is-mini' },
+            el('span', { class: 'ws-set-n', text: '↳' }),
+            el('span', { class: 'ws-set-v', text:
+              `${miniLabel(entry.setType, mi + 1)} — ${setText(mini, fields, loadType)}` }),
+          )),
+        )),
+      ),
+    ));
+  });
+  return out;
+}
+
+/* You and them on one exercise — social-plan §13 step 6.
+ *
+ * 🚨 NO WINNER. Hevy prints a yellow STRONGER rosette beside whoever leads;
+ * declaring a winner off one exercise is Rule 6 exactly, and `compare.js`
+ * refuses to produce an overall verdict at all — `NO_VERDICT_HEADER` is the
+ * module's own sentence saying so, printed here rather than paraphrased.
+ *
+ * ⚠️ AND THE COMPARISON IS WINDOWED. Their published history is their last
+ * sixty sessions and mine is my whole life, so an unwindowed comparison
+ * flatters me every single time, in the same direction. The module cuts both
+ * sides to the overlap and names the window; this sheet prints that name.
+ */
+async function compareSheet(entry, exMap, ctx) {
+  const ex = exMap.get(entry.exerciseId);
+  if (!ex) return;
+
+  const sheet = openSheet({
+    title: ex.name,
+    body: el('p', { class: 'note', text: 'Working it out…' }),
+  });
+
+  try {
+    const [{ compareExercise, NO_VERDICT_HEADER }, mine, seen] = await Promise.all([
+      import('./compare.js'),
+      // The demo's own year is real data from this app's point of view, so a
+      // comparison inside the demo is a real comparison against invented
+      // training — which is exactly what the demo is for.
+      store.getSessions().catch(() => []),
+      ctx.demo ? Promise.resolve(null) : social.friend(ctx.uid).catch(() => null),
+    ]);
+
+    const theirs = ctx.demo
+      ? (await import('./demo.js')).buildDemoFeed((await import('./store.js')).todayISO())
+          .filter((x) => x.uid === ctx.uid).map((x) => x.act)
+      : ((seen && seen.doc && seen.doc.activity) || []);
+
+    const r = compareExercise({ mine, theirs, exerciseId: entry.exerciseId, exercise: ex });
+
+    const rows = r.common
+      ? r.metrics.map((m) => el('div', { class: 'cmp-row' },
+          el('div', { class: 'cmp-label' },
+            m.label,
+            // Rule 5: an inference must never look like a measurement, and the
+            // cue may not be colour alone. So it says the word.
+            m.estimate ? el('span', { class: 'tag', text: 'estimated' }) : null,
+          ),
+          el('div', { class: 'cmp-pair' },
+            el('span', { class: 'cmp-num' }, el('b', { text: 'You ' }),
+              m.mine == null ? '—' : `${trimNumber(m.mine)}${m.unit ? ` ${m.unit}` : ''}`),
+            el('span', { class: 'cmp-num' }, el('b', { text: `${ctx.who} ` }),
+              m.theirs == null ? '—' : `${trimNumber(m.theirs)}${m.unit ? ` ${m.unit}` : ''}`),
+          ),
+          m.note ? el('div', { class: 'note ws-fine', text: m.note }) : null,
+        ))
+      : [el('p', { class: 'note', text: r.message || 'Nothing to compare on this one yet.' })];
+
+    setChildren(sheet.sheet.querySelector('.sheet-body'),
+      el('div', { class: 'cmp' },
+        ...rows,
+        // ⚠️ The window is NOT restated here. `compare.js` already emits it as
+        // a caveat, in more detail and with the dates — and two sentences about
+        // the same rule, written in two places, is how one of them goes stale.
+        ...(r.caveats || []).map((c) => el('p', { class: 'note ws-fine', text: c.text })),
+        el('p', { class: 'note ws-fine', text: r.header || NO_VERDICT_HEADER }),
+      ));
+  } catch (err) {
+    setChildren(sheet.sheet.querySelector('.sheet-body'),
+      el('p', { class: 'note', text: (err && err.message) || 'Could not work that out.' }));
+  }
+}
+
+/** An integer where it is one, two decimals where it is not. */
+function trimNumber(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '—';
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
 // One workout. At `light` this is the whole thing — a date and a name, and no
 // disclosure to open, because there is nothing behind it. Pretending otherwise
 // with an arrow that reveals an empty box would be worse than saying less.
-function activityRow(a, tier) {
+function activityRow(a, tier, uid) {
   // ⚠️ THE TERNARY IS NOT OPTIONAL. `startedAt` arrived with the Home feed on
   // 2026-08-25 and is published at MID and above only, so a light-tier row and
   // every session recorded before the field existed have none — and
@@ -733,8 +1296,19 @@ function activityRow(a, tier) {
   const detail = el('div', { class: 'act-detail', hidden: true });
   let built = false;
 
-  const toggle = el('button', { class: 'row as-button', onClick: () => {
-    if (!built) { setChildren(detail, ...a.entries.map(entryLine)); built = true; }
+  const toggle = el('button', { class: 'row as-button', onClick: async () => {
+    if (!built) {
+      built = true;
+      // The library is only wanted once somebody opens a row, and it is served
+      // from the store's read cache after the first time.
+      const exMap = await store.getExerciseMap().catch(() => new Map());
+      setChildren(detail, ...a.entries.map((e) => entryLine(e, exMap)),
+        a.id
+          ? el('a', { class: 'act-open', href:
+              `#/friend/${encodeURIComponent(uid)}/${encodeURIComponent(a.id)}`,
+              text: 'Open this workout' })
+          : null);
+    }
     detail.hidden = !detail.hidden;
   } },
     head,
@@ -745,14 +1319,40 @@ function activityRow(a, tier) {
   return el('div', { class: 'act' }, toggle, detail);
 }
 
-function entryLine(entry) {
+/* ⚠️ WHAT FIELDS DID THEY RECORD? A projected entry carries no `fields` and no
+ * `loadType` — those belong to the exercise, and the exercise belongs to the
+ * library. Their `exerciseId` is published, so the reader looks it up in THEIR
+ * OWN library first, which is right for every built-in lift.
+ *
+ * When that fails — a friend's custom exercise, or one added to the library
+ * after they published — the shape is recovered from the sets themselves. That
+ * is not a guess: a set holds exactly the fields it recorded, so reading the
+ * keys off it is reading what happened. Falling back to ['weight','reps']
+ * instead would print "— × 12" against a plank.
+ */
+function shapeOf(entry, exMap) {
+  const ex = exMap && entry.exerciseId ? exMap.get(entry.exerciseId) : null;
+  if (ex) return { fields: ex.fields, loadType: ex.loadType || null, known: true };
+
+  const seen = new Set();
+  for (const s of entry.sets || []) {
+    for (const k of Object.keys(s || {})) if (k !== 'minis' && k !== 'drops') seen.add(k);
+  }
+  const order = ['weight', 'reps', 'time', 'distance'].filter((f) => seen.has(f));
+  return { fields: order.length ? order : ['weight', 'reps'], loadType: null, known: false };
+}
+
+function entryLine(entry, exMap) {
+  const { fields, loadType } = shapeOf(entry, exMap);
+  /* ⚠️ `fmtSet` RATHER THAN THE RAW NUMBER, corrected 2026-09-02. This line
+   * used to print `s.weight` straight out of the projection, which publishes
+   * canonical POUNDS — so a friend's 100 kg squat read as "100" to a lifter
+   * whose whole app is in kilos. `fmtSet` puts it through the reader's own
+   * units, which is what every other set in this app already goes through. */
   const sets = (entry.sets || []).map((s) => {
-    const bits = [];
-    if (s.weight != null) bits.push(`${s.weight}`);
-    if (s.reps != null) bits.push(`× ${s.reps}`);
     const mini = Array.isArray(s.minis) && s.minis.length ? ` +${s.minis.length}` : '';
-    return bits.join(' ') + mini;
-  }).filter(Boolean);
+    return fmtSet(s, fields, loadType) + mini;
+  }).filter((t) => t && t !== '—');
 
   return el('div', { class: 'act-line' },
     el('div', { class: 'act-name', text: entry.name },

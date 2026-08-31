@@ -71,6 +71,19 @@ export async function EditSessionView(sessionId) {
     onInput: (e) => { draft.location = e.target.value; },
   });
 
+  /* The session's description (social-plan §13 Step 2) — written in the runner
+   * during the workout, fixable here afterwards. A textarea because it holds up
+   * to 280 characters and a one-line box scrolls sideways over what you wrote.
+   * ⚠️ `draft.note`, NOT `entry.notes` — that one is the per-exercise coaching
+   * note and is edited on the workout, not on the record of doing it. */
+  const noteInput = el('textarea', {
+    class: 'input', rows: '3', maxlength: '280',
+    placeholder: 'Nothing written',
+    'aria-label': 'How this workout went',
+    onInput: (e) => { draft.note = e.target.value; },
+  });
+  noteInput.value = draft.note || '';
+
   const benchToggle = el('button', {
     class: 'chip', 'aria-pressed': String(Boolean(draft.isBenchmark)),
     text: draft.isBenchmark ? 'Counts as benchmarks' : 'Normal workout',
@@ -225,6 +238,9 @@ export async function EditSessionView(sessionId) {
     // runner and the projection keep for this key.
     const loc = String(row.location || '').trim().slice(0, 80);
     if (loc) row.location = loc; else delete row.location;
+    // The description keeps the same contract, at the cap the runner types to.
+    const note = String(row.note || '').trim().slice(0, 280);
+    if (note) row.note = note; else delete row.note;
     await store.saveSession(row);
     toast('Record updated');
     go('#/day/' + draft.date);
@@ -260,7 +276,14 @@ export async function EditSessionView(sessionId) {
         locationInput,
         el('div', { class: 'field-help', text:
           'Optional, and whatever you type is the whole location — the app never reads GPS. '
-          + 'Shown to friends who can see your full workouts.' }),
+          + 'Shown to friends you share your workouts with.' }),
+      ),
+      el('div', { class: 'field' },
+        el('label', { text: 'Description' }),
+        noteInput,
+        el('div', { class: 'field-help', text:
+          'Optional — a line about how this workout went. '
+          + 'Shown to friends you share your workouts with.' }),
       ),
       el('div', { class: 'field' },
         el('label', { text: 'Kind' }),

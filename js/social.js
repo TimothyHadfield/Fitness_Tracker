@@ -433,6 +433,32 @@ export function projectSession(session, tier) {
     out.location = session.location.trim().slice(0, 80);
   }
 
+  // ── THE DESCRIPTION, AND WHY IT IS ON THE MID SIDE OF THE GATE TOO ────────
+  //
+  // social-plan.md §13 Step 2. One line the owner typed during the workout —
+  // "how did it go" — shown under the title on the feed card.
+  //
+  // ⚠️ MID AND ABOVE, and the argument is shorter than startedAt's because it
+  // is not a privacy trade at all: light publishes NOTHING FROM INSIDE THE
+  // WORKOUT ("the day, and what the workout was called"), and a sentence about
+  // how the workout went is by definition inside it. It could say a PR was hit,
+  // that a shoulder gave out, who was there. There is no version of light that
+  // carries it.
+  //
+  // ⚠️ NOT `entry.notes`. That is the per-exercise coaching note on a workout
+  // template and it has never been published by this function; this is the
+  // session-level `note`, and the two keys are kept distinct everywhere.
+  //
+  // Same fail-closed shape as location, deliberately identical line for line:
+  // string-typed only, so a number or an object is dropped rather than coerced
+  // into text nobody wrote; trimmed; capped; and ABSENT when blank, so the view
+  // has one case rather than three. The 280 matches the runner's input cap —
+  // enforced again here because a row can also arrive from an import or a
+  // restored backup, neither of which went past that textarea.
+  if (typeof session.note === 'string' && session.note.trim()) {
+    out.note = session.note.trim().slice(0, 280);
+  }
+
   out.entries = (Array.isArray(session.entries) ? session.entries : []).map((entry) => {
     const e = {
       exerciseId: typeof entry.exerciseId === 'string' ? entry.exerciseId : null,

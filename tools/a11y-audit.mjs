@@ -395,6 +395,36 @@ const ROUTES = [
      if (!document.querySelector('.sheet .reorder-row')) {
        throw new Error('a11y: the exercises-sheet step never opened the sheet');
      }`],
+
+  /* ⚠️ A FRIEND'S WORKOUT — the first screen behind #/friend ever audited, and
+   * it could not have been before 2026-09-02. A friend's uid is generated, so
+   * there was no hash to put in this list; the feed card's own link is the way
+   * in, so this reaches it the way a person does. Everything on it is new — a
+   * stat row, percentage bars, set tables, typed bests — and none of it had
+   * been read for contrast or for an accessible name. */
+  ['#/home', 'A friend\'s workout',
+    `(() => { const a = document.querySelector('a.feed-open');
+       if (a) location.hash = a.getAttribute('href').slice(1);
+       return Boolean(a); })();
+     await new Promise((r) => setTimeout(r, 1200));
+     if (!document.querySelector('.ws-sets')) {
+       throw new Error('a11y: the feed card never opened a workout');
+     }`],
+
+  // And the comparison over it, which is a sheet and therefore invisible to the
+  // row above — the same reason the swap and exercises sheets have their own.
+  ['#/home', 'A friend\'s workout · compare',
+    `(() => { const a = document.querySelector('a.feed-open');
+       if (a) location.hash = a.getAttribute('href').slice(1);
+       return Boolean(a); })();
+     await new Promise((r) => setTimeout(r, 1200));
+     (() => { const l = document.querySelector('.ws-ex-name.as-link');
+       if (l) l.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(l); })();
+     await new Promise((r) => setTimeout(r, 1200));
+     if (!document.querySelector('.sheet .cmp')) {
+       throw new Error('a11y: the compare step never opened the sheet');
+     }`],
 ];
 
 /* ⚠️ THE PALETTE, ADDED 2026-08-26 — and the reason is a known coverage hole

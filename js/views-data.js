@@ -532,6 +532,14 @@ export async function DayView(date) {
             s.workoutName || 'Workout',
             s.isBenchmark ? el('span', { class: 'bench-badge', text: 'benchmark' }) : null,
           ),
+          /* The description typed during the workout (social-plan §13 Step 2).
+           * Under the title and above the counts, which is where it sits on
+           * the feed card too — it is what the session WAS, and the counts are
+           * what it contained. Read-only here; the pencil beside it is the way
+           * to change it, the same as every other fact on this card.
+           * `.wrap` because a sentence that ellipsises at one line is a
+           * sentence you cannot read, and this one is up to 280 characters. */
+          s.note ? el('div', { class: 'row-sub wrap', text: s.note }) : null,
           el('div', { class: 'row-sub', text: `${s.entries.length} exercise${s.entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` }),
         ),
         // Edit before delete: correcting a record is the common intent, and

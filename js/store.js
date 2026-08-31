@@ -10,6 +10,7 @@
 import { BUILT_IN_EXERCISES } from './exercises.js';
 import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps, isRankableSet } from './e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
+import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 
 const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
@@ -3583,16 +3584,16 @@ function volumeWindow(sessions, windowDays, today) {
   return { inWindow, spanDays, weeks: spanDays / 7, enough: spanDays >= 14, windowDays };
 }
 
-/**
- * How many sets of one entry were really performed.
+/*
+ * How many sets of one entry were really performed — `recordedSetCount()`,
+ * imported from `session-stats.js` at the top of this file.
  *
- * A set with no numbers in it was never done. Both save paths already drop
- * those; this guards the older rows that predate that.
+ * ⚠️ IT USED TO BE DEFINED HERE, and it moved on 2026-09-02 for the reason the
+ * comment block above gives about the window: the feed card and the workout
+ * detail screen count a session's sets too, and two copies of "was this set
+ * really done" is two answers the day the rule changes — which is exactly what
+ * typing warm-ups would do to it. One definition, three callers.
  */
-function recordedSetCount(entry) {
-  return ((entry && entry.sets) || [])
-    .filter((set) => set && Object.values(set).some((v) => Number(v) > 0)).length;
-}
 
 /** Recorded sessions in the shape `weeklyVolume()` reads a programme in. */
 function asVolumeWorkouts(sessions) {

@@ -15,6 +15,7 @@ import {
 import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
 } from './progression.js';
+import { personalBests, PB_LABEL } from './personal-bests.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -375,6 +376,10 @@ export async function SessionView(workoutId) {
     if (!Array.isArray(state.guestNames)) state.guestNames = [];
     if (state.forName === undefined) state.forName = null;
     if (typeof state.location !== 'string') state.location = '';
+    // Same reason as location: a draft written before the description existed
+    // has no key at all, and an `undefined` reaching the textarea would render
+    // the string "undefined" into somebody's resumed workout.
+    if (typeof state.note !== 'string') state.note = '';
     // Drafts written before 2026-08-29 have no personMeta, which is exactly
     // right for them: every name in one is an invented guest with no account,
     // and an empty meta is what that means. A workout in progress across the
@@ -395,6 +400,16 @@ export async function SessionView(workoutId) {
       // back from it later: re-flagging a workout months from now must not
       // retroactively turn old sessions into benchmarks.
       isBenchmark: Boolean(workout.isBenchmark),
+      /* ---- description (social-plan §13 Step 2) ----
+       * One line about how it went, typed during the workout and saved with it.
+       * ⚠️ DELIBERATELY NOT CARRIED FORWARD the way `location` is. Where you
+       * train is the same most weeks; how a session went never is, and a
+       * prefilled "felt strong" from Tuesday would be a sentence the app wrote
+       * and put somebody's name on.
+       * ⚠️ NAME COLLISION: this is `note`, the SESSION's description.
+       * `entry.notes` is the per-exercise coaching note that comes off the
+       * workout template. Different field, different owner, never merged. */
+      note: '',
       index: 0,
       entries: [],
       /* ---- guests (Open work 0e, the guest half) ----
@@ -2195,56 +2210,23 @@ export async function SessionView(workoutId) {
     return dropOrphanGroups(entries);
   }
 
-  /**
-   * Personal bests in what was just typed (UX review item 1: *"nothing
+  /* Personal bests in what was just typed (UX review item 1: *"nothing
    * anywhere says you hit a personal best"* — the one rewarding readout the
-   * whole app lacked).
+   * whole app lacked). It lived here as a private closure until 2026-09-02 and
+   * now lives in `js/personal-bests.js`, with its own tests, because typing a
+   * record into Weight · Volume · 1RM (social-plan §13 Step 5) made it real
+   * arithmetic rather than a max().
    *
-   * ⚠️ RULE 5-SAFE BY CONSTRUCTION: it compares two RECORDED sets — the
-   * number just typed against the biggest number ever typed for that
-   * exercise, benchmarks included. No estimate, no e1RM, no model anywhere
-   * in it, so nothing inferred can masquerade as measured.
-   *
-   * ⚠️ AND ONLY WHERE THERE WAS SOMETHING TO BEAT. The first time an
-   * exercise is ever logged, every set is trivially a maximum, and
-   * celebrating it would teach that the trophy is noise. Weight wins where
-   * the exercise has one; reps only where it does not (a pull-up), because
-   * "more reps at less weight" is not a bigger number, and time and
-   * distance are left alone — the app has no opinion on which direction of
-   * a mile is better (Rule 6).
+   * 🚨 THE RULE 5 CLAIM THAT USED TO SIT HERE IS GONE, BECAUSE IT STOPPED
+   * BEING TRUE. This block asserted the function was "RULE 5-SAFE BY
+   * CONSTRUCTION… No estimate, no e1RM, no model anywhere in it". There is now
+   * an e1RM in it: the `1RM` kind is the Marzagao curve applied to a set
+   * nobody performed, which is an inference. Rule 5 is still honoured, but by
+   * LABELLING rather than by absence — the record carries `estimated: true`
+   * and the finish screen prints the word "estimated" beside it in a `.tag`,
+   * a cue that is words rather than colour. See the module header for the
+   * whole argument, and see `showFinished()` for the render half.
    */
-  function personalBests(cleaned, priorSessions, priorBenchmarks) {
-    const out = [];
-    for (const e of cleaned) {
-      const field = e.sets.some((s) => Number(s.weight) > 0) ? 'weight'
-        : e.sets.some((s) => Number(s.reps) > 0) ? 'reps' : null;
-      if (!field) continue;
-
-      let prior = 0, seen = false;
-      for (const s of priorSessions) {
-        for (const pe of s.entries || []) {
-          if (pe.exerciseId !== e.exerciseId) continue;
-          for (const set of pe.sets || []) {
-            const all = [set, ...minisOf(set)];
-            for (const x of all) {
-              const v = Number(x[field]);
-              if (v > 0) { seen = true; if (v > prior) prior = v; }
-            }
-          }
-        }
-      }
-      for (const b of priorBenchmarks) {
-        if (b.exerciseId !== e.exerciseId || !b.values) continue;
-        const v = Number(b.values[field]);
-        if (v > 0) { seen = true; if (v > prior) prior = v; }
-      }
-      if (!seen) continue;
-
-      const now = Math.max(...e.sets.map((s) => Number(s[field]) || 0));
-      if (now > prior) out.push({ name: e.exerciseName, field, now, was: prior });
-    }
-    return out;
-  }
 
   async function finish() {
     // Everybody in the session — whoever is active plus everyone parked.
@@ -2275,9 +2257,13 @@ export async function SessionView(workoutId) {
       // On a RETRY after a mid-save failure this session is already stored,
       // and a session must not be its own history and beat itself.
       const ownId = state.saveIds && state.saveIds.you;
+      // ⚠️ `exMap` is handed over so a per-side lift's VOLUME record counts
+      // both dumbbells. It is the only thing the module needs the library for,
+      // and the module works without it — see its per-side note.
       prs = personalBests(cleaned,
         priorSessions.filter((s) => !ownId || s.id !== ownId),
-        priorBenchmarks.filter((b) => !ownId || b.sourceSessionId !== ownId));
+        priorBenchmarks.filter((b) => !ownId || b.sourceSessionId !== ownId),
+        exMap);
     } catch (_) { /* a PR readout must never block a save */ }
 
     /* ⚠️ THE ONE PLACE IN THIS APP WHERE A FAILURE COSTS SOMEBODY THEIR WORK.
@@ -2330,12 +2316,24 @@ export async function SessionView(workoutId) {
           // Absent rather than '' when there is none — one case for every
           // reader, the same contract startedAt set in the projection.
           ...(state.location ? { location: state.location } : {}),
+          // The description, on the same absent-rather-than-empty contract.
+          ...(state.note ? { note: state.note } : {}),
           entries: cleaned,
         });
       }
       // Each guest's half goes to its own collection under their name —
       // never into `sessions`, never a benchmark, never published (see the
       // guest-sessions note in store.js for why the separation is structural).
+      /* ⚠️ NO `note` ON A GUEST ROW, and it is a decision rather than an
+       * oversight. The description is written in a box labelled "How did it
+       * go?" by whoever is holding the phone, about THEIR workout — there is
+       * one box in the header, not one per person, so it cannot be anybody
+       * else's answer. And a guest row is offered to that person's account the
+       * moment they have one: shipping the recorder's sentence with it would
+       * put words in somebody's mouth on their own calendar. `location` is
+       * left off these rows already, for the milder version of the same
+       * reason. If a per-guest description is ever wanted it needs a per-guest
+       * box, which is a different feature. */
       for (const g of guests) {
         g.row = await store.saveGuestSession({
           id: state.saveIds['g:' + g.name],
@@ -2413,9 +2411,44 @@ export async function SessionView(workoutId) {
 
   function showFinished(entries, guests = [], prs = []) {
     const setCount = entries.reduce((n, e) => n + e.sets.length, 0);
-    const prLine = (p) => p.field === 'weight'
-      ? `${p.name} — ${units.withUnit(p.now)}, up from ${units.withUnit(p.was)}`
-      : `${p.name} — ${p.now} reps, up from ${p.was}`;
+
+    /* What each kind of record says, in a sentence that names the old number.
+     * "Up from" is the whole point — a bare "165 lbs" is not a celebration of
+     * anything, it is just the set you did. */
+    const prDetail = {
+      weight: (p) => `${units.withUnit(p.now)}, up from ${units.withUnit(p.was)}`,
+      // The tag already reads REPS, so the word is not repeated in the line.
+      reps: (p) => `${p.now}, up from ${p.was}`,
+      // "in one set", because this is the biggest SINGLE set, not the session
+      // total — a reader who assumed the latter would think they had done far
+      // less work than they did.
+      // ⚠️ "(both sides)" is not decoration. A per-side lift's volume counts
+      // both dumbbells, so "60 lbs × 12" and "1,440 lbs" do not multiply out
+      // and the reader is left with a total they cannot check.
+      volume: (p) => `${units.withUnit(p.now)} in one set${p.perSide ? ' (both sides)' : ''}`
+        + `, up from ${units.withUnit(p.was)}`,
+      /* ⚠️ ROUNDED TO THE POUND, AND THAT IS PART OF THE HONESTY. `fmtWeight`
+       * keeps two decimals, so the raw estimate prints as "202.65 lbs" — a
+       * precision the model does not have and which no measurement on this
+       * screen claims. An estimate may not out-resolve the set it came from.
+       *
+       * ⚠️ And it says what it was estimated FROM. That is the second half of
+       * the Rule 5 answer: the "estimated" tag says it is modelled, and this
+       * names the real set the model was fed, so the inference can be checked
+       * against a measurement rather than simply believed. */
+      e1rm: (p) => `${units.withUnit(Math.round(p.now))} from ${units.withUnit(p.weight)} × ${p.reps}`
+        + `, up from ${units.withUnit(Math.round(p.was))}`,
+    };
+
+    // One block per exercise, its records listed under the name — Hevy hangs
+    // the three types under the set that earned them (§12.15); our finish
+    // screen has no set rows on it, so the exercise is the closest true anchor.
+    const prGroups = [];
+    for (const p of prs) {
+      const last = prGroups[prGroups.length - 1];
+      if (last && last.name === p.name) last.items.push(p);
+      else prGroups.push({ name: p.name, items: [p] });
+    }
     /* ⚠️ THERE IS A WAY BACK OFF THIS SCREEN (2026-08-29).
      *
      * Tim: *"if a user clicks 'finish this workout' at the end of their last
@@ -2446,14 +2479,31 @@ export async function SessionView(workoutId) {
       scroll: el('div', { class: 'finish-hero' },
         el('div', { class: 'finish-check' }, icon('check')),
         el('h2', { text: 'Nice work' }),
-        // ⚠️ Personal bests lead, because they are the one thing on this
-        // screen that is not the same every time. Recorded-vs-recorded only
-        // (see personalBests) — this block may never hold an estimate.
-        prs.length
+        /* ⚠️ Personal bests lead, because they are the one thing on this
+         * screen that is not the same every time.
+         *
+         * 🚨 THIS BLOCK CAN NOW HOLD AN ESTIMATE, WHICH IT COULD NOT BEFORE.
+         * The comment here used to say "recorded-vs-recorded only — this block
+         * may never hold an estimate", and the 1RM record breaks that. Rule 5
+         * is kept instead by the pair of `.tag` pills every estimated record
+         * carries: `1RM` and `ESTIMATED`, in words, so the cue survives
+         * greyscale, colour-blindness and a screen reader. The three recorded
+         * kinds carry the type tag and no second one — the absence of the word
+         * is what says "measured".
+         *
+         * Calm, not a scoreboard: no medals, no counts, no colour beyond the
+         * one accent hairline `.finish-prs` already draws. */
+        prGroups.length
           ? el('div', { class: 'finish-prs' },
               el('div', { class: 'finish-prs-head' }, icon('up', 15),
                 `Personal best${prs.length === 1 ? '' : 's'}`),
-              ...prs.map((p) => el('div', { class: 'finish-pr', text: prLine(p) })),
+              ...prGroups.map((g) => el('div', { class: 'finish-pr' },
+                el('div', { text: g.name }),
+                ...g.items.map((p) => el('div', {},
+                  el('span', { class: 'tag', text: PB_LABEL[p.kind] }),
+                  p.estimated ? el('span', { class: 'tag', text: 'estimated' }) : null,
+                  ` ${prDetail[p.kind](p)}`)),
+              )),
             )
           : null,
         // The owner's line only describes the owner's training. When they
@@ -2710,6 +2760,77 @@ export async function SessionView(workoutId) {
     input.focus();
   });
 
+  /* ---- description (social-plan §13 Step 2): how it went, in one line ----
+   *
+   * ⚠️ IT LIVES IN THE RUNNER, NOT ON THE FINISH SCREEN, and that is the one
+   * judgement call in this feature. The plan says Hevy's is written before
+   * saving and that this is right — but our finish screen renders AFTER
+   * store.saveSession() has already landed, so a box there would be describing
+   * a row that is on disk, and would need a second write to attach itself. In
+   * the header it is part of the session the whole way through, it rides the
+   * draft like everything else, and Finish stays one write.
+   *
+   * ⚠️ `note` IS THE SESSION'S DESCRIPTION. `entry.notes` — rendered as
+   * `.note-card` on the set screen — is the per-exercise coaching note off the
+   * template. Same word, different fields; nothing here touches that one.
+   *
+   * The chip borrows `.session-loc` because it is the same kind of thing in the
+   * same sub-line: a session fact you can change, in the quiet dashed-underline
+   * voice. `session-note` carries no rules today and is there as a hook.
+   */
+  const noteBtn = el('button', { class: 'session-loc session-note' });
+  function renderNote() {
+    setChildren(noteBtn, icon('edit', 12),
+      el('span', { class: 'session-loc-name', text: state.note || 'How did it go?' }));
+    noteBtn.classList.toggle('is-empty', !state.note);
+    // The chip truncates at 15ch, so the full sentence has to be in the label
+    // or a screen reader gets the same clipped preview a sighted user does.
+    noteBtn.setAttribute('aria-label', state.note
+      ? `Description: ${state.note}. Change it` : 'Add a description for this workout');
+  }
+  renderNote();
+  noteBtn.addEventListener('click', () => {
+    // A textarea, not an input: 280 characters is three or four lines on a
+    // phone, and a single-line box that scrolls sideways hides what you wrote.
+    // `.field` + a label is all it takes — associateLabels() in ui.js wires the
+    // two together on mount, so no id is invented here.
+    const input = el('textarea', {
+      class: 'input', rows: '3', maxlength: '280',
+      placeholder: 'Felt strong. Legs were done by the last set…',
+    });
+    input.value = state.note;
+    const apply = (v) => {
+      /* ⚠️ 280 CHARACTERS, which is the plan's number and worth one line of
+       * why: this is a DESCRIPTION on a feed card, read in a glance under a
+       * workout title, not a training journal. A cap that lets it become an
+       * essay would make the card a wall of text on every reader's feed, and
+       * the app has no "read more". Enforced here AND in projectSession(), so
+       * a row that arrived from an import or an old backup cannot publish a
+       * longer one than a person could type. */
+      state.note = String(v || '').trim().slice(0, 280);
+      saveDraft(state);
+      renderNote();
+      close();
+    };
+    const { close } = openSheet({
+      title: 'How did it go?',
+      body: el('div', {},
+        el('p', { class: 'field-help', style: 'margin-top:0', text:
+          'A line about this workout — how it felt, what you changed, what hurt. '
+          + 'It is saved with the record, and friends you share full workouts with '
+          + 'see it on your card; people who only see that you trained do not.' }),
+        el('div', { class: 'field' }, el('label', { text: 'Description' }), input),
+      ),
+      footer: el('div', { class: 'btn-row' },
+        state.note
+          ? el('button', { class: 'btn ghost', text: 'Remove', onClick: () => apply('') })
+          : el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
+        el('button', { class: 'btn primary', text: 'Save', onClick: () => apply(input.value) }),
+      ),
+    });
+    input.focus();
+  });
+
   renderAll();
 
   return el('div', { class: 'screen no-nav' },
@@ -2723,6 +2844,10 @@ export async function SessionView(workoutId) {
           dateInput,
           dateNote,
           locationBtn,
+          // After the location, deliberately: the sub-line wraps, and the two
+          // facts that identify the session (when, where) come before the one
+          // that comments on it.
+          noteBtn,
         ),
       ),
     ),

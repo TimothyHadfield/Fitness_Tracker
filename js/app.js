@@ -14,7 +14,9 @@ import { AccountView, SignInView } from './views-account.js';
 import { ImportView } from './views-import.js';
 import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
-import { SocialView, FriendView, InviteView, FindView, AddView } from './views-social.js';
+import {
+  SocialView, FriendView, FriendSessionView, InviteView, FindView, AddView,
+} from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { setUnits } from './units.js';
 
@@ -151,7 +153,20 @@ async function resolve(route) {
     // whole tail is passed through and dispatched there, the same way `invite`
     // keeps its two-part parameter together.
     case 'goal':      return GoalRouteView(route.param);
-    case 'friend':    return FriendView(route.param);
+    /* #/friend/<uid> is their page; #/friend/<uid>/<sessionId> is one workout.
+     *
+     * ⚠️ IT HANGS OFF THE FRIEND ROUTE RATHER THAN BEING A ROUTE OF ITS OWN, and
+     * that is worth a line: a session belongs to a person, the nav bar's Home
+     * tab already stays lit for `friend`, and FULLSCREEN already lists it — so a
+     * second name would have needed both of those updated in lockstep with
+     * nothing to catch it if they were not. Same shape as `invite`, which keeps
+     * its two-part parameter together for the same reason. */
+    case 'friend': {
+      const [fuid, sid] = (route.param || '').split('/');
+      return sid
+        ? FriendSessionView(decodeURIComponent(fuid), decodeURIComponent(sid))
+        : FriendView(route.param);
+    }
     // #/invite/<ownerUid>/<token> — the whole param is passed through, because
     // parse() joins the rest back together and the token is the second half.
     case 'invite':    return InviteView(route.param);

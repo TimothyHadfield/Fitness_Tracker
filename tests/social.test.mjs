@@ -554,6 +554,35 @@ ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expi
      'capped at 80 characters at the builder, matching the input cap');
 }
 
+/* ---------- the description (§13 Step 2): how it went, mid and above ---------- */
+{
+  const s = {
+    id: 's11', date: '2026-08-20', workoutName: 'Push',
+    startedAt: '2026-08-20T18:00:00Z', note: '  Felt strong. Shoulder held up.  ', entries: [],
+  };
+  ok(!('note' in projectSession(s, LIGHT)),
+     '⚠️ the description is NOT published at light — light says the day and the name and '
+     + 'nothing from inside the workout, and a sentence about how it went is inside it');
+  ok(JSON.stringify(projectSession(s, LIGHT)).indexOf('Shoulder') === -1,
+     'and it does not survive at light as text either');
+  ok(projectSession(s, MID).note === 'Felt strong. Shoulder held up.',
+     'at mid the line is published, trimmed');
+  ok('note' in projectSession(s, FULL), 'and at full');
+  ok(!('note' in projectSession({ ...s, note: '   ' }, MID)),
+     'a blank description publishes NO key — absent, never empty (one case for the card)');
+  ok(!('note' in projectSession({ ...s, note: 42 }, MID)),
+     'a non-string description is dropped, not coerced — nobody wrote "42"');
+  const nonote = { ...s }; delete nonote.note;
+  ok(!('note' in projectSession(nonote, MID)),
+     'every session recorded before this field existed publishes no key — missing is missing');
+  ok(projectSession({ ...s, note: 'x'.repeat(400) }, MID).note.length === 280,
+     'capped at 280 at the builder as well as at the box, because an imported row never saw the box');
+  // ⚠️ The per-exercise `notes` is a DIFFERENT field with nearly the same name.
+  // It has never been published and this must not be what starts.
+  ok(!('notes' in projectSession(s, FULL)),
+     '⚠️ and `note` is the session’s description — the per-exercise `notes` is still nobody’s business');
+}
+
 /* ---------- duration: minutes rounded to five, mid and above ---------- */
 {
   const s = {

@@ -2492,6 +2492,57 @@ ok(!data.querySelector('.rep-target'),
   ok([...home.querySelectorAll('.feed-meta')].some((n) => / at /.test(n.textContent)),
      'and a card that HAS a time shows it, so the check above is not passing by there being none');
 
+  /* ---- the stat row (social-plan §13 step 1) ----
+   *
+   * ⚠️ SETS, NOT VOLUME. Tim's call on 2026-09-01 — "Replace Volume for # of
+   * sets" — and js/session-stats.js records why it is also the only one of the
+   * two that can be computed honestly for somebody else's training. */
+  const withStats = [...home.querySelectorAll('.feed-stats')];
+  ok(withStats.length > 0, `${withStats.length} cards carry a stat row`);
+  const labels = [...home.querySelectorAll('.feed-stat-label')].map((n) => n.textContent);
+  ok(labels.includes('Sets'), 'the middle column counts SETS');
+  ok(!labels.some((l) => /volume/i.test(l)),
+     '⚠️ and never volume — a friend\'s bodyweight work has no external load to total');
+  ok(labels.includes('Time'), 'duration moved out of the grey meta line and into the row');
+  ok(![...home.querySelectorAll('.feed-meta')].some((n) => /\d+ min/.test(n.textContent)),
+     '⚠️ and it left the meta line rather than appearing twice — one number, one place');
+  ok([...home.querySelectorAll('.feed-stat-value')].every((n) => n.textContent.trim() !== '0'),
+     'a column with nothing to say is dropped, not printed as 0');
+
+  /* ---- one row per exercise, set count first (§12.14 difference 2) ---- */
+  const exRows = [...home.querySelectorAll('.feed-ex')];
+  ok(exRows.length > 0, `${exRows.length} exercise rows across the feed`);
+  ok(exRows.some((n) => /^\d+ sets?$/.test(n.querySelector('.feed-ex-sets')?.textContent || '')),
+     'each says how much was done of it, not just that it was done');
+  ok([...home.querySelectorAll('.feed-card')].every((c) =>
+       c.querySelectorAll('.feed-ex:not(.is-quiet)').length <= 5),
+     '⚠️ at most five exercises on a card — one marathon session must not push every other card off the screen');
+
+  /* ---- the card is a way in (§13 step 3) ---- */
+  const opens = [...home.querySelectorAll('a.feed-open')];
+  ok(opens.length > 0, 'tapping a card opens the workout');
+  ok(opens.every((a) => /^#\/friend\/[^/]+\/[^/]+$/.test(a.getAttribute('href'))),
+     'at a route that addresses one session of one person');
+  ok([...home.querySelectorAll('.feed-card')].every((c) =>
+       c.querySelector('a.feed-open') || c.querySelector('.feed-open.is-flat')),
+     '⚠️ and a card with nothing behind it is flat rather than a dead tap');
+
+  /* 🚨 FOLLOW THE LINK. The href being well-formed proves nothing about there
+     being a screen at the other end — this walks the route the card actually
+     carries and asserts the workout is on it. The demo is the only account with
+     friends, so it is also the only place this whole path can be driven. */
+  const { FriendSessionView } = await import(BASE + 'views-social.js');
+  const [, , duid, dsid] = opens[0].getAttribute('href').split('/');
+  const opened = await mount(FriendSessionView(decodeURIComponent(duid), decodeURIComponent(dsid)));
+  for (let i = 0; i < 8; i++) await settle();
+  const openedTitle = cards[0].querySelector('.feed-title').textContent.trim();
+  ok(opened.textContent.includes(openedTitle),
+     `the card's link opens that same workout (${openedTitle})`);
+  ok(Boolean(opened.querySelector('.ws-sets')),
+     'and the screen shows the sets, which the card never did');
+  ok(Boolean(opened.querySelector('.feed-actions')),
+     'and carries kudos, comment and share — the same row, from the same function');
+
   sessionStorage.removeItem('ftrack:v1:demo');
   await (await import(BASE + 'store.js')).auth.retry();
 }
@@ -4806,6 +4857,212 @@ ok(!data.querySelector('.rep-target'),
   ok(!nasty.querySelector('.face-img'),
      '🚨 AN SVG IS NOT PAINTED. It is a document that can carry script rather than a picture, '
      + 'and this string was written by somebody else\'s account');
+
+  restore();
+}
+
+/* ================= a friend's workout, on its own screen ==================
+ *
+ * docs/social-plan.md §13 steps 3 and 4 — the screen a feed card now opens.
+ * Driven against a hand-written projection rather than the demo, because the
+ * cases worth pinning are the ragged ones: a session that has rolled off the
+ * published window, an exercise this library has never heard of, a plank that
+ * records seconds, and a drop set that must stay one set.
+ */
+{
+  const { FriendSessionView } = await import(BASE + 'views-social.js');
+  const { social } = await import(BASE + 'store.js');
+  const { BUILT_IN_EXERCISES: LIB } = await import(BASE + 'exercises.js');
+
+  const original = { state: social.state, friend: social.friend };
+  const restore = () => Object.assign(social, original);
+
+  const bench = LIB.find((e) => e.name === 'Barbell Bench Press');
+  const plank = LIB.find((e) => e.name === 'Plank');
+
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me',
+    name: 'Tim', shareBodyWeight: false,
+    connections: [{ uid: 'u1', name: 'Autumn', tier: 'mid', since: '2026-08-01' }],
+  });
+
+  const session = {
+    id: 's1', date: '2026-08-26', name: 'Push', note: 'Gotta start eating more pre lift',
+    startedAt: '2026-08-26T13:23:00.000Z', minutes: 65, location: 'Ironworks Gym',
+    entries: [
+      { exerciseId: bench.id, name: 'Barbell Bench Press', setType: 'drop', sets: [
+        { weight: 185, reps: 8, minis: [{ weight: 155, reps: 6 }, { weight: 135, reps: 6 }] },
+        { weight: 185, reps: 7 },
+      ] },
+      { exerciseId: plank.id, name: 'Plank', sets: [{ time: 60 }, { time: 60 }] },
+      // Their app knows this lift and ours does not. It must still be listed.
+      { exerciseId: 'their-own-id', name: 'Reverse Nordic Curl', sets: [{ reps: 10 }, { reps: 8 }] },
+    ],
+  };
+  social.friend = async () => ({
+    tier: 'mid', doc: { profile: { name: 'Autumn' }, activity: [session] },
+  });
+
+  const ws = await mount(FriendSessionView('u1', 's1'));
+  for (let i = 0; i < 8; i++) await settle();
+  const t = ws.textContent.replace(/\s+/g, ' ');
+
+  ok(/Push/.test(t), 'the workout is named');
+  ok(/Gotta start eating more pre lift/.test(t), 'and what they said about it is on the screen');
+  /* ⚠️ ABSOLUTE HERE, RELATIVE ON THE CARD. "6 hours ago" is right while you
+     are scanning a feed; once you have stopped to look at one workout, the
+     question is when it actually was. */
+  ok(/August 26, 2026|26 August 2026/.test(t),
+     '⚠️ the date is absolute here, not "2 days ago" — the card already did relative');
+
+  const labels = [...ws.querySelectorAll('.feed-stat-label')].map((n) => n.textContent);
+  ok(labels.includes('Time') && labels.includes('Sets') && labels.includes('Exercises'),
+     `the stat row reads Time · Sets · Exercises (${labels.join(' · ')})`);
+  ok(!labels.some((l) => /volume/i.test(l)), '⚠️ and still never volume');
+  ok(/1h 5min/.test(t), 'a 65-minute session reads as 1h 5min rather than as 65 minutes');
+
+  /* ---- the set tables, §12.15 ---- */
+  const heads = [...ws.querySelectorAll('.ws-set.is-head .ws-set-v')].map((n) => n.textContent);
+  ok(heads.includes('Weight & Reps'), 'a barbell lift is headed Weight & Reps');
+  ok(heads.includes('Time'),
+     '🚨 and a plank is headed Time — the header ADAPTS, because a weight column '
+     + 'over a plank is a column of dashes pretending to be data');
+  ok(/1:00/.test(t), 'and its sets read as a minute, not as the number 60');
+
+  const benchSets = ws.querySelectorAll('.ws-ex')[0].querySelectorAll('.ws-set:not(.is-head)');
+  ok(benchSets.length === 4,
+     `the drop set's minis hang under it as rows (${benchSets.length} = 2 sets + 2 drops)`);
+  ok(ws.querySelectorAll('.ws-set.is-mini').length === 2, 'and are marked as minis, not numbered as sets');
+  ok([...ws.querySelectorAll('.ws-ex')[0].querySelectorAll('.ws-set-n')]
+       .filter((n) => /^\d+$/.test(n.textContent)).length === 2,
+     '🚨 ONE HARD SET IS ONE NUMBER — a drop set is not three sets, and the numbering says so');
+
+  ok(/Reverse Nordic Curl/.test(t), 'an exercise this library has never heard of is still listed');
+  ok(/not in your library/.test(t), 'and says so once, rather than being silently dropped');
+
+  /* ---- bests in this workout, §13 step 5 ----
+   *
+   * The fixture gives them an earlier, lighter bench session, so today's 185
+   * really is a best within what they have shared. */
+  {
+    const earlier = { ...session, id: 's0', date: '2026-08-19', startedAt: '2026-08-19T13:00:00.000Z',
+      entries: [{ exerciseId: bench.id, name: 'Barbell Bench Press', sets: [{ weight: 155, reps: 8 }] }] };
+    social.friend = async () => ({
+      tier: 'mid', doc: { profile: { name: 'Autumn' }, activity: [session, earlier] } });
+    const withPr = await mount(FriendSessionView('u1', 's1'));
+    for (let i = 0; i < 8; i++) await settle();
+    const p = withPr.textContent.replace(/\s+/g, ' ');
+    ok(/Bests in this workout/.test(p), 'a best set in this workout is called out');
+    ok(/up from 155/.test(p), 'and says what it beat, which is the whole point of a best');
+    ok(/estimated/.test(p),
+       '⚠️ the 1RM one is labelled ESTIMATED in words — Rule 5 says an inference may never look '
+       + 'like a measurement, and the cue may not be colour alone');
+    /* 🚨 THE HONESTY LINE. We hold their last sixty published sessions, not
+       their life, so calling any of this a personal record would be a claim
+       about training this app has never seen. */
+    ok(/not against everything they have ever done|best here, which may not be their best/.test(p),
+       '🚨 and it says this is their best in what they SHARE, not their best ever');
+
+    // Put the single-session fixture back for the assertions below.
+    social.friend = async () => ({
+      tier: 'mid', doc: { profile: { name: 'Autumn' }, activity: [session] } });
+  }
+
+  /* ---- the muscle split, §13 step 4 ---- */
+  const pcts = [...ws.querySelectorAll('.split-pct')].map((n) => n.textContent);
+  ok(pcts.length > 0, `the session's muscle split is drawn (${pcts.join(' ')})`);
+  ok(pcts.every((p) => /%$/.test(p)),
+     '🚨 A SHARE, NOT AN ABSOLUTE — "52% of this workout was chest" is true of one session, '
+     + 'where "12.4 sets" only means something measured against a week');
+  const total = pcts.reduce((n, p) => n + parseFloat(p), 0);
+  ok(total >= 97 && total <= 103, `and the shares total 100 (${total})`);
+  ok(/1 exercise is not in your library/.test(t),
+     '⚠️ and it names what it could not count rather than quietly renormalising over the rest');
+  ok(/modelling choice/.test(t), 'the half-set rule travels with the number that used it');
+
+  /* ---- copying their workout into one of mine (§13 step 7) ---- */
+  {
+    const { store } = await import(BASE + 'store.js');
+    const before = (await store.getWorkouts()).length;
+    const copy = [...ws.querySelectorAll('button')].find((b) => /Save as my workout/.test(b.textContent));
+    ok(Boolean(copy), 'their workout can be saved as one of mine');
+    copy.click();
+    for (let i = 0; i < 8; i++) await settle();
+    const sheet = document.querySelector('.sheet');
+    const s = sheet.textContent.replace(/\s+/g, ' ');
+    ok(/from Autumn/.test(s), 'the copy is named after where it came from');
+    ok(/2 sets Barbell Bench Press|Barbell Bench Press/.test(s), 'it lists what will be copied');
+    /* 🚨 THE PART THAT MATTERS: a session is a RECORD and a workout is a PLAN.
+       Their 185 lb bench is a fact about them and would be a prescription to
+       me — and handing somebody else's numbers to a lifter is the one thing
+       this app's progression rule exists to prevent. */
+    ok(!/185/.test(s), '🚨 and never their weights — set counts carry across, loads do not');
+    ok(/not in your library/.test(s),
+       '⚠️ and it says what it cannot copy rather than quietly shrinking the routine');
+    ok((await store.getWorkouts()).length === before,
+       'nothing is saved until Save is pressed');
+    document.querySelector('.sheet-backdrop').remove();
+  }
+
+  /* ---- you and them on one exercise (§13 step 6) ---- */
+  {
+    const link = ws.querySelector('.ws-ex-name.as-link');
+    ok(Boolean(link), 'an exercise this library knows opens a comparison');
+    ok(![...ws.querySelectorAll('.ws-ex-name')]
+         .filter((n) => /Reverse Nordic/.test(n.textContent))
+         .some((n) => n.classList.contains('as-link')),
+       '⚠️ and one it does not know is NOT a link — a control that cannot do anything is worse than plain text');
+    link.click();
+    for (let i = 0; i < 10; i++) await settle();
+    const sheetNode = document.querySelector('.sheet');
+    const cmp = sheetNode.textContent.replace(/\s+/g, ' ');
+    const { NO_VERDICT_HEADER } = await import(BASE + 'compare.js');
+    /* 🚨 Hevy prints a yellow STRONGER rosette beside whoever leads. Calling a
+       winner off one exercise is exactly the unearned opinion Rule 6 forbids,
+       so the module refuses to produce one and says so in its own words —
+       printed here rather than paraphrased, so the sentence cannot drift from
+       the behaviour it describes. */
+    ok(cmp.includes(NO_VERDICT_HEADER.replace(/\s+/g, ' ')),
+       '🚨 the sheet states there is NO overall result, in the module\'s own sentence');
+    ok(!sheetNode.querySelector('.is-win, .winner, .stat-value.up, .stat-value.down'),
+       'and nothing in it is painted as a win or a loss');
+    /* ⚠️ Either it compares, or it says why it cannot — never a column of
+       zeros. "You 0, Autumn 0" would read as two people who both failed at
+       something, where the truth is that one of them has not logged it. */
+    const nums = [...sheetNode.querySelectorAll('.cmp-num')];
+    const said = [...sheetNode.querySelectorAll('.note')]
+      .map((n) => n.textContent.trim())
+      .filter((s) => s.length > 30 && !NO_VERDICT_HEADER.startsWith(s.slice(0, 20)));
+    ok(nums.length ? nums.every((n) => n.textContent.trim() !== '0') : said.length > 0,
+       nums.length
+         ? `it compares on ${nums.length / 2} measure(s) and none of them is a bare 0`
+         : `it says plainly why it cannot: "${said[0] || ''}"`);
+    document.querySelector('.sheet-backdrop').remove();
+  }
+
+  /* ---- a workout that has rolled off the published window ---- */
+  const gone = await mount(FriendSessionView('u1', 'not-published'));
+  for (let i = 0; i < 8; i++) await settle();
+  const g = gone.textContent.replace(/\s+/g, ' ');
+  ok(/not here|no longer/.test(g),
+     '⚠️ a session outside the published window says so — the window is 60, and an old card outlives it');
+  ok(/changed what they share|scrolled off/.test(g), 'and names both reasons it can happen');
+
+  /* ---- and one from somebody who shares only that they trained ---- */
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
+    shareBodyWeight: false,
+    connections: [{ uid: 'u1', name: 'Autumn', tier: 'light', since: '2026-08-01' }],
+  });
+  social.friend = async () => ({
+    tier: 'light',
+    doc: { profile: { name: 'Autumn' }, activity: [{ id: 's9', date: '2026-08-26', name: 'Workout' }] },
+  });
+  const light = await mount(FriendSessionView('u1', 's9'));
+  for (let i = 0; i < 8; i++) await settle();
+  ok(/shares that they trained/.test(light.textContent),
+     'the lowest tier gets a complete screen that says what it is, not an empty one');
+  ok(!light.querySelector('.ws-split'), 'and no muscle split invented out of nothing');
 
   restore();
 }

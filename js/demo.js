@@ -662,8 +662,79 @@ const DEMO_FEED_WORKOUTS = [
   ['Pull', ['Deadlift', 'Pull-Up', 'Barbell Row', 'Dumbbell Curl']],
   ['Legs', ['Back Squat', 'Romanian Deadlift', 'Leg Press', 'Standing Calf Raise']],
   ['Upper A', ['Barbell Bench Press', 'Lat Pulldown', 'Lateral Raise', 'Hammer Curl']],
-  ['Full Body', ['Front Squat', 'Dip', 'Barbell Row', 'Plank']],
+  ['Full Body', ['Front Squat', 'Chest Dip', 'Barbell Row', 'Plank']],
+  /* ⚠️ "Reverse Nordic Curl" IS NOT IN THIS APP'S LIBRARY, AND THAT IS THE
+   * POINT. A friend logs what their own app knows about, so the workout screen
+   * has to render an exercise it cannot look up — no muscle contribution, no
+   * load type — without dropping it, mislabelling it, or breaking the split.
+   * There was no fixture for that case until 2026-09-02. */
+  ['Quads', ['Back Squat', 'Leg Press', 'Reverse Nordic Curl', 'Standing Calf Raise']],
 ];
+
+/* What a demo friend actually lifted.
+ *
+ * ⚠️ ADDED 2026-09-02, AND THE FIXTURE WAS WRONG WITHOUT IT. Every published
+ * entry here carried `sets: []` and `exerciseId: null`, which was true to the
+ * projection's SHAPE and false about its CONTENT — the wire carries every set,
+ * rep and weight at mid tier, and has since the feed was built. Nothing noticed
+ * while the card printed exercise names only. The moment the card started
+ * counting sets, the demo said every friend did none.
+ *
+ * The lesson is the one the header already gives about absent-vs-null keys,
+ * arriving from the other side: a fixture may be thinner than the wire and pass
+ * every test written against it, right up until something reads the part that
+ * was never filled in.
+ *
+ * Loads are plausible rather than modelled — this is a fixture, not the
+ * generated year — and the reps come from the same window the year uses.
+ */
+const FEED_LOADS = {
+  'Barbell Bench Press': [185, 5, 8], 'Overhead Press': [110, 5, 8],
+  'Incline Dumbbell Bench Press': [60, 8, 12], 'Triceps Pushdown': [60, 10, 14],
+  'Deadlift': [295, 3, 6], 'Barbell Row': [145, 6, 10], 'Dumbbell Curl': [35, 8, 12],
+  'Back Squat': [235, 5, 8], 'Romanian Deadlift': [195, 6, 10], 'Leg Press': [380, 10, 14],
+  'Standing Calf Raise': [175, 10, 15], 'Lat Pulldown': [145, 8, 12],
+  'Lateral Raise': [20, 12, 16], 'Hammer Curl': [35, 8, 12], 'Front Squat': [165, 5, 8],
+};
+
+/* What somebody wrote about the session — the description field, published at
+ * mid and above like everything else inside a workout.
+ *
+ * ⚠️ NOT ON EVERY SESSION, because it is optional and most people skip it. A
+ * fixture where every card carries one would hide the layout question that
+ * actually matters: whether a card without a description still reads right. */
+const FEED_NOTES = [
+  'Felt strong today, everything moved well.',
+  'Short on time so I cut the accessories.',
+  'Back tweaked a bit on the second set — took it easy after that.',
+  'First session back after a week off. Humbling.',
+  'New gym, everything is in a different place.',
+];
+
+/** One entry's worth of recorded sets, in the projection's own shape. */
+function feedSets(ex, rand) {
+  const n = 3 + Math.floor(rand() * 2);
+  const out = [];
+  const fields = (ex && ex.fields) || ['weight', 'reps'];
+  const load = FEED_LOADS[ex && ex.name] || null;
+
+  for (let i = 0; i < n; i++) {
+    const set = {};
+    // Time-only work (a plank) records seconds and nothing else; bodyweight
+    // work (a pull-up, a dip) records reps and nothing else. Writing a weight
+    // against either is how a fixture teaches a bug.
+    if (fields.includes('weight') && load) set.weight = load[0];
+    if (fields.includes('reps')) {
+      const [, lo, hi] = load || [0, 6, 12];
+      set.reps = lo + Math.floor(rand() * (hi - lo + 1));
+    }
+    if (fields.includes('time') && !fields.includes('reps')) {
+      set.time = 45 + 15 * Math.floor(rand() * 3);
+    }
+    out.push(set);
+  }
+  return out;
+}
 
 /**
  * A fortnight of invented friend activity, newest first.
@@ -676,6 +747,7 @@ const DEMO_FEED_WORKOUTS = [
  */
 export function buildDemoFeed(today) {
   const rand = rng(DEMO_SEED ^ 0x5EED);
+  const byName = exerciseIndex();
   const out = [];
 
   for (let back = 0; back < 14; back++) {
@@ -709,7 +781,14 @@ export function buildDemoFeed(today) {
        */
       if (f.tier !== 'light') {
         act.startedAt = `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`;
-        act.entries = exercises.map((n) => ({ exerciseId: null, name: n, sets: [] }));
+        // ⚠️ A REAL LIBRARY ID, not null. The projection publishes one, and the
+        // per-session muscle split on the workout screen is computed by looking
+        // it up — a fixture full of nulls would render that screen's "not in
+        // your library" case for every exercise and prove nothing.
+        act.entries = exercises.map((n) => {
+          const ex = byName.get(n) || null;
+          return { exerciseId: ex ? ex.id : null, name: n, sets: feedSets(ex, rand) };
+        });
         // Location rides the same gate as startedAt (0m — a typed label,
         // published at mid and above). Only SOME sessions carry one, because
         // that is the live shape: it is optional and people forget it.
@@ -718,6 +797,9 @@ export function buildDemoFeed(today) {
         // on every card — sessions recorded before finishedAt existed have
         // none, and the fixture keeps the wire's raggedness.
         if (rand() > 0.25) act.minutes = 40 + 5 * Math.floor(rand() * 9);
+        // The description, on roughly a third of them. Same gate as the rest of
+        // what is inside a workout: mid and above, never light.
+        if (rand() > 0.65) act.note = FEED_NOTES[Math.floor(rand() * FEED_NOTES.length)];
       }
 
       out.push({ uid: f.uid, name: f.name, tier: f.tier, act });

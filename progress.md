@@ -4,45 +4,43 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-09-01, prepared for a chat reset.
+**Last updated:** 2026-09-02 — the Hevy-shaped home feed, built.
 
-# 🚧 START HERE: THE NEXT SESSION IS BUILDING THE SOCIAL FEED
+# ✅ START HERE: THE SOCIAL FEED IS BUILT — all eight steps of `docs/social-plan.md` §13
 
-**Tim, ending the 2026-09-01 session:** *"now that we have the notes in place, I want you to prepare
-everything for chat reset so we can start actually building this social structure in the next
-session."* And earlier: *"I eventually want to make the home page extremely similar to how Hevy does
-it."*
+**Tim, opening the 2026-09-02 session:** *"don't implement warm ups or volume yet. Replace Volume for
+# of sets. Begin working on the home page and social aspect changes now."*
 
-🚨 **THE WHOLE BRIEF IS `docs/social-plan.md` §13. READ IT BEFORE WRITING ANY CODE.** It is eight
-steps, in order, each shippable alone, with the file, the function, the trap and the test named for
-each. §12 above it is the research it came from — a teardown of Hevy's feed built from their own
-documentation, their store screenshots, their site's screenshots **and four photos Tim took of the
-one screen none of those had**.
+**Everything in that brief shipped.** The feed card has a stat row and a description and lists its
+exercises with set counts; tapping it opens **a friend's workout on its own screen** — stats, muscle
+split, typed bests, set tables — where you can compare an exercise against your own, copy the workout
+into your own plan, or share a picture of it. §13 of `docs/social-plan.md` now carries a ✅ block
+under every step recording what was built and where it departed from the plan; **§14 is the summary
+and the three findings.**
 
-**The three things a fresh session most needs to know before opening §13:**
+**The four things a fresh session most needs to know:**
 
-1. 🚨 **MOST OF A HEVY CARD IS ALREADY IN OUR PROJECTION AND SIMPLY IS NOT RENDERED.** Every set, rep
-   and weight, the set types, the duration, the time and the location all publish at **mid** already
-   (`projectSession()` in `js/social.js`). Our card draws a name, a grey meta line and a run-on list
-   of exercise names. **Steps 1 and 2 — a stat row and a description field — are most of the visible
-   gap, and neither needs a backend, money, or a decision.**
-2. ⚠️ **FOUR DECISIONS ARE TIM'S AND ARE LISTED AT THE END OF §13.** The biggest is **whether a
-   warm-up should be typed by the lifter** — Hevy marks one `W` in amber and numbers the working sets
-   from 1, which is a better answer to Open work 0c than either option this file has carried since
-   2026-08-24, because it is the only one where the app does not guess. **Ask; do not assume.**
-3. ⚠️ **THE HEVY SCREENSHOTS ARE DELIBERATELY NOT IN THE REPOSITORY** — it is public and they are
+1. ⏸️ **WARM-UP TYPING IS STILL OPEN AND STILL TIM'S**, by his own instruction this session. Every
+   recorded set still counts everywhere, and the screens still say so. It remains the highest-value
+   decision on the list (`docs/social-plan.md` §12.16, Open work 0c).
+2. ⏸️ **VOLUME IN POUNDS IS NOT BUILT, AND THE REASON OUTLIVED THE INSTRUCTION.** Tim asked for a set
+   count in that column instead; `js/session-stats.js`'s header records why it is also the more
+   honest one — a friend's bodyweight work has no external load to total, and their body weight
+   publishes only at the top tier, so a pounds figure would read a session of pull-ups as nothing.
+3. 🚨 **THE RECORDS COLUMN IS DELIBERATELY NOT ON THE CARD.** We hold a friend's last sixty published
+   sessions, not their life, so "Records 3" beside their name would read as a lifetime PR. The bests
+   are on the workout screen, where the sentence that qualifies them fits.
+4. ⚠️ **THE HEVY SCREENSHOTS ARE DELIBERATELY NOT IN THE REPOSITORY** — it is public and they are
    somebody else's UI. §12.12, §12.13 and §12.15 are written in enough detail to build from **because
    they are the record**. Do not go looking for image files and do not commit any.
 
-**Nothing was left half-finished.** The working tree is clean, everything below is pushed, and
-`docs/social-plan.md` §13 is a cold start rather than a continuation.
+**Nothing was left half-finished.** The working tree is clean and everything below is pushed.
 
 ---
 
-**This session is the 2026-09-01 section below — Data → Volume, the motion pass, the body map
-painted by sets, and the Hevy teardown.** The 2026-08-31 section under it was the previous session
-(eight pieces, A to H). ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth
-pass).
+**This session is the 2026-09-02 section below.** The 2026-09-01 section under it was the previous
+one — Data → Volume, the motion pass, the body map painted by sets, and the Hevy teardown that this
+session built from. ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
 
 ⏸️ **THE ABS QUESTION IS DEFERRED BY TIM, 2026-09-01: *"skip the abs"*.** It is not closed and not
 withdrawn — he was offered it as the standing loose end and chose other work. Do not re-raise it
@@ -67,7 +65,115 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ---
 
-## THIS SESSION (2026-09-01)
+## THIS SESSION (2026-09-02) — THE HEVY-SHAPED FEED, ALL EIGHT STEPS
+
+🆕 **A. THE FEED CARD IS A HEVY CARD NOW.** Under the title: their **description**, then a stat row
+reading **TIME · SETS**, then **one row per exercise with the set count first** (five, then "See N
+more"). 🚨 **SETS, NOT VOLUME — Tim's call, and it is also the only one of the two that can be
+computed honestly for somebody else's session**: a friend's bodyweight work has no external load to
+total and their body weight is not ours to have, so a pounds figure would have read a session of
+pull-ups as nothing. ⚠️ **Duration LEFT the grey meta line** when it moved into the row — the same
+number twice on one card reads as two facts, and a test pins that it is gone.
+
+🆕 **B. TAPPING A CARD OPENS THE WORKOUT — a whole screen, at `#/friend/<uid>/<sessionId>`.** Poster,
+absolute date, title, description, **TIME · SETS · EXERCISES**, kudos/comment/share, **bests set in
+it**, a **muscle split as percentages of the session**, and **set tables whose header adapts to the
+exercise** — `SET | WEIGHT & REPS` for a bench press, `SET | REPS` for a dip, `SET | TIME` for a
+plank. 🚨 **A drop set is one numbered set with its minis hanging under it**, not three.
+
+🆕 **C. THREE THINGS YOU CAN DO WITH SOMEBODY ELSE'S WORKOUT.** **Compare** an exercise against your
+own (rep-normalised, windowed, and refusing to name a winner); **save it as your own workout** (set
+counts carry, weights cannot); **share a picture of it** (canvas → PNG → the share sheet, no
+backend). Each is a pure module with its own test file.
+
+🆕 **D. A SESSION DESCRIPTION EXISTS AT LAST** — `note`, typed in the runner, capped at 280,
+published at mid and above, shown on the card, the workout screen, the calendar and editable after.
+
+🚨 **THE THREE FINDINGS.** ⚠️ **The demo fixture was thinner than the wire and every test passed
+anyway** — friends' entries carried `sets: []` for months, the right shape and the wrong content,
+and nothing noticed until the card started counting sets and said every friend had done none.
+⚠️ **Two bugs were invisible to 1,200 assertions and obvious in one screenshot** — the share card
+capping its list with empty space below it, and the friend page printing raw pounds to a kilogram
+user. ⚠️ **A stated invariant was broken and the comment was rewritten rather than left standing**:
+`personalBests()` claimed to be "Rule 5-safe by construction, no estimate anywhere in it", and the
+1RM record is an estimate. It is now labelled in words and names the set it was estimated from.
+
+**Audit: 96 route/width/theme combinations, 9,914 text nodes, zero below 4.5:1, zero horizontal
+overflow, zero unnamed controls** — including **the first two routes behind `#/friend` this project
+has ever audited**, which could not exist before today because a friend's uid is generated and there
+was no hash to put in the list. The feed card's own link is the way in.
+
+**Tests: render 802 → 855, plus three new suites** (`routine`, `share-image`, `compare`) and new
+blocks in `data-layer` and `social`.
+
+⚠️ **NOT VERIFIED: nothing here has been on Tim's phone, and no two real accounts have used it.**
+Proved in jsdom, in the data layer, in a real browser at 360 and 393px in both themes, and by the
+audit. The round trip between two people remains Open work item 1.
+
+---
+
+## 2026-09-02 — the details worth carrying, and the traps
+
+*The full step-by-step record is `docs/social-plan.md` §13, with a ✅ block under every step. This is
+what belongs here rather than there.*
+
+**Five new pure modules, each with its own tests**, because the rule in this project is that
+arithmetic lives outside a view: `js/session-stats.js` (a session's own set counts),
+`js/personal-bests.js` (extracted out of `views-session.js` and typed), `js/routine-from-session.js`,
+`js/compare.js`, `js/share-image.js`. **One new screen**, `FriendSessionView` in `js/views-social.js`.
+
+- 🚨 **`recordedSetCount()` MOVED OUT OF `store.js` RATHER THAN BEING COPIED.** The Volume tab, the
+  feed card and the workout screen must never disagree about whether a set was done — and typing
+  warm-ups is precisely the change that would make two copies drift apart. One definition, three
+  callers. That is the same argument the 2026-09-01 window helper made, applied one level down.
+- ⚠️ **THE NEW ROUTE HANGS OFF `friend` AND IS NOT A ROUTE OF ITS OWN.** `FULLSCREEN` and the Home
+  tab's `match` list in `app.js` already name `friend`; a new name would have needed both updated in
+  lockstep with **nothing to catch it if they were not** — `resolve()` falls through to `HomeView()`,
+  which is how `#/data` was audited as Home for two days. `#/friend/<uid>/<sessionId>`.
+- ⚠️ **THERE IS NO PER-SESSION READ AND THERE CANNOT BE ONE.** A friend publishes one document per
+  tier holding up to sixty sessions and Firestore grants per document, so this screen reads the same
+  document their page reads and finds the session by id. It costs what opening their page costs and
+  is served from the same 30-second read cache. **A workout that has scrolled off that window is a
+  normal outcome**, and the screen names both reasons it happens.
+- 🚨 **A FRIEND'S "BEST" IS NOT A PERSONAL RECORD AND THE SCREEN SAYS SO.** Sixty published sessions
+  are not a life. That is Rule 5's general form arriving from the direction of *scope* rather than of
+  inference, and it is why the Records column is on the workout screen and **not on the card** —
+  the count is honest only next to the sentence that qualifies it, and that sentence does not fit
+  beside somebody's name.
+- 🚨 **THE COMPARISON IS WINDOWED, AND A FOOTNOTE WOULD NOT HAVE DONE.** Their history is sixty
+  sessions and mine is my whole life; comparing the two flatters me every time, in the same
+  direction, so it does not average out. `compare.js` cuts both sides to the overlap and names it.
+  ⚠️ **Its test is paired with a control** — the same fixture run twice, once with my old PR outside
+  their window and once inside, asserting the two runs disagree — because a window test whose answer
+  is the same either way proves nothing.
+- ⚠️ **`entryLine()` ON THE FRIEND PAGE WAS PRINTING RAW POUNDS.** The projection publishes canonical
+  pounds and that line printed `s.weight` straight out, so a friend's 100 kg squat read as "100" to a
+  lifter whose whole app is in kilos. It goes through `fmtSet` now. Nobody had reported it; it was
+  found by rendering the screen beside a new one that did it correctly.
+- ⚠️ **`fmtSet` WRITES REPS AS "× 12"** because everywhere else they follow a weight. In a table with
+  its own REPS column the multiplication sign is left over from a number that is not there, so the
+  workout screen strips it **locally** — `fmtSet` is right for its six other callers.
+- ⚠️ **THE DEMO FIXTURE IS PART OF THE PRODUCT.** `buildDemoFeed()` now publishes real sets, real
+  library ids, descriptions on about a third of sessions, and **one exercise deliberately absent from
+  the library** (`Reverse Nordic Curl`) — because a friend logs what *their* app knows about, and the
+  workout screen has to render an exercise it cannot look up without dropping it, mislabelling it, or
+  breaking the muscle split. There was no fixture for that case until today.
+- ⚠️ **`feedActions()` IS EXPORTED NOW** so the workout screen carries the same kudos/comment/share
+  row. A second implementation would have been two places that must agree about a missing anchor, a
+  demo that must refuse, and an optimistic update.
+- ⚠️ **THE ACCESSIBILITY AUDIT GREW TWO ROUTES AND THEY ARE REACHED BY CLICKING**, not by hash — a
+  friend's uid is generated, so `#/friend/<uid>` never could be in that list. Both steps **throw if
+  they did not land**, per that file's own rule.
+
+**Six agents ran in parallel and every one returned working, tested code.** The lesson from
+2026-08-19 held: the failure then was seven agents launched at once into the same files. This time
+each had a written brief, an explicit list of files it owned, and an explicit list it must not touch
+— and the only collision all session was four of them appending to the same precache list in `sw.js`,
+which is a failed edit rather than a corruption.
+
+---
+
+## THE PREVIOUS SESSION (2026-09-01)
 
 🆕 **A. WEEKLY SETS PER MUSCLE IS ON A SCREEN — D3, THE METRIC THIS FILE HAS CALLED THE HEADLINE ONE
 SINCE DAY ONE.** Data → **Volume**: every muscle, sets a week, from what was RECORDED. 🚨 **Two
@@ -4766,8 +4872,9 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
-| **17** | 🚧 **the Hevy-shaped home feed — THE NEXT JOB** | 🚨 **THE BRIEF IS `docs/social-plan.md` §13** — eight steps, files and functions named, four decisions for Tim at the end. Tim asked for it by name: *"I eventually want to make the home page extremely similar to how Hevy does it."* The teardown is `docs/social-plan.md` **§12** — every field on a Hevy post, what we can build with no backend and no money, and what is blocked by what. 🚨 **The finding: most of the card is ALREADY IN THE PROJECTION and simply is not rendered.** §12.10 is the order, eight steps, each shippable alone; **step 2 (a session description field) is the cheapest high-value item in the whole document**. ⚠️ **Photos are step 9 and need Blaze — Tim's call** (same blocker as item 10). ⚠️ **Do not build the discovery feed**: §12.11 records that it is the thing D7 actually refused |
-| **1** | **the field checks — needs Tim's phone, not yours** | ⚠️ **THE BIGGEST ONE IS NOW A TEN-MINUTE JOB WITH AUTUMN**: search her by name, send a request, have her accept it, and record a workout for her so it lands in her account. **Everything social built on 2026-08-29 is proved against the rules engine and has never been done by two people.** Also standing: the **friend-name heal**, a real **kudos/comment** round trip, and — needing only his eyes — **the blue box round the profile picture on a laptop** (a real bug was found and fixed in that exact place, but a *blue* one was never reproduced). ⚠️ **And file import has never parsed an actual export** from any service. ⚠️ **Added 2026-08-30: nobody has read the Research topics on a phone** — the facts are checked and measured, the reading experience is not |
+| **17** | ~~the Hevy-shaped home feed~~ | ✅ **BUILT 2026-09-02 — all eight steps of `docs/social-plan.md` §13**, which now carries a ✅ block under each one and a §14 summary. What is left of it is two things Tim owes a decision on (**warm-up typing**, still item 2 below; **per-workout visibility**, §13's decision B) and **step 9, photos, which needs Blaze** and is item 10. ⚠️ **The Records column is deliberately absent from the card** — sixty published sessions are not a lifetime, and that caveat does not fit beside somebody's name; the bests are on the workout screen instead. ⚠️ **Nothing here has been used by two real accounts** — that is item 1, and it grew a longer list today |
+| **18** | ⚠️ **do not build the discovery feed** | Not work — a standing refusal, and it is listed here because a feed of strangers is the obvious next thing somebody will think of now that the feed looks like Hevy's. `docs/social-plan.md` §12.11: **it is the thing D7 actually refused**, it needs public profiles and enumeration of them (the thing the invite-link design exists to avoid), and it imports a moderation story this project does not have |
+| **1** | **the field checks — needs Tim's phone, not yours** | 🆕 **2026-09-02 ADDED A LOT TO THIS LIST AND NONE OF IT HAS BEEN ON A PHONE**: the new feed card, a friend's workout screen, the comparison sheet, copying a friend's workout into your own plan, and — the one most likely to behave differently on a real device — **sharing a picture**, which goes through `navigator.share({files})` and has only ever been driven in headless Chrome, where it falls through to the download path. ⚠️ **THE BIGGEST ONE IS STILL A TEN-MINUTE JOB WITH AUTUMN**: search her by name, send a request, have her accept it, and record a workout for her so it lands in her account. **Everything social built on 2026-08-29 is proved against the rules engine and has never been done by two people.** Also standing: the **friend-name heal**, a real **kudos/comment** round trip, and — needing only his eyes — **the blue box round the profile picture on a laptop** (a real bug was found and fixed in that exact place, but a *blue* one was never reproduced). ⚠️ **And file import has never parsed an actual export** from any service. ⚠️ **Added 2026-08-30: nobody has read the Research topics on a phone** — the facts are checked and measured, the reading experience is not |
 | **2** | **0c — the UX list** | ⚠️ **OPEN, and it is judgement rather than bugs.** Its headline item closed on 2026-08-25 (Home is a feed, which is nothing but growth) and the "hard sets" half was answered on 2026-08-24 by *saying* what is counted. **What is left is one question for Tim**: should logged warm-ups be excluded from the volume count? His call, because the obvious fix would also throw away genuine back-off work. 🆕 **2026-08-31 — THERE IS NOW A THIRD OPTION AND IT IS BETTER THAN BOTH**: Hevy's screens show a set is **typed at logging time** (`W` in amber for a warm-up, working sets numbered from 1), so the app never has to guess. That turns this from "which wrong answer do we pick" into a small feature — a set-type flag, a control in the runner, and the Volume tab's apology becomes a setting. ⚠️ **Every set already recorded is untyped and must stay counted rather than be retro-guessed.** `docs/social-plan.md` §12.16 |
 | **3** | **activities, Phase 2 — item 6** | Items 1–4 shipped 2026-08-27. **Item 6 says to ASK TIM** which activities his circle actually logs — climbing grades are the least standardised thing in the list. `docs/activities-plan.md` §3. ⚠️ **Item 5, activity PRs, is PINNED (P1)**, not open |
 | **5** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED.** Invisible hit halos grow every muscle ~10 px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44 px lands on **Tim's illustration**, so it stays his call |
@@ -5433,6 +5540,11 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5. ⚠️ **Since 2026-09-01 it is also on a screen of its own** (Data → Volume, D3), so its efficiency tiers and its `INDIRECT_NOTE_*` sentences are read by users rather than only by the rating — and the per-screen consequence clause pattern applies: one shared statement of what the 0.5 IS, one sentence per screen saying what would change without it, **both shipped from beside the constant** |
 | `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
+| `js/session-stats.js` | Not a doc. **One session's own numbers, and the file to read before anyone adds a volume figure** — its header is the argument for why the feed card's middle column counts SETS: a friend's bodyweight work has no external load to total and their body weight publishes only at the top tier, so a pounds figure would read a session of pull-ups as nothing. ⚠️ **`recordedSetCount()` lives here and `store.js` imports it** — the Volume tab, the feed card and the workout screen must never disagree about whether a set was done |
+| `js/personal-bests.js` | Not a doc. **Typed records — Weight · Volume · Reps · 1RM.** ⚠️ **Read the note about Rule 5 first**: this function used to be estimate-free by construction and the 1RM kind broke that, so the rule is now honoured by LABELLING — `estimated: true`, the word on screen, and the line naming the set the model was fed. ⚠️ Mini-sets count on **both** sides; per-side doubles **volume only** |
+| `js/compare.js` | Not a doc. **You and a friend on one exercise, and it refuses to name a winner** (Rule 6) — `NO_VERDICT_HEADER` is its own sentence saying so, printed rather than paraphrased. ⚠️ **Read the windowing argument before touching it**: their sixty published sessions against your whole history flatters you every time in the same direction, so both sides are cut to the overlap |
+| `js/routine-from-session.js` | Not a doc. **A friend's workout → one of yours.** Set counts and supersets carry; **weights cannot, by construction** — a workout template has no field to put one in, which is deliberate: their 185 lb bench would be a prescription to you |
+| `js/share-image.js` | Not a doc. **The shareable picture** — a pure `shareCardLayout()` plus a thin painter, the same split `qr.js` uses so the half worth testing is testable. ⚠️ **No weights on it**, enforced in the module rather than trusted to the caller, because the image leaves the app. The card sizes itself to its contents (1080–1350) — do not pass a `height` |
 | `docs/strength-map-plan.md` | Design + decisions for the Muscle Groups map. **§7 is where the fill/ink split is explained** |
 | `js/demo.js` | Not a doc. The demo account's generated year. **Read its header before touching it**: it explains why the data never touches storage, why the flag is per-tab, and why nothing in it may use `Math.random()`. The switch itself is in `store.js` |
 | `js/goals.js` | Not a doc. **Read its header before touching Goals**: it explains why a goal is a LEVEL and not a predicted number of pounds, why the target weight is FROZEN when the goal is set, and the two things the module refuses to do — read the deadline to decide what it asks of you, and emit a verdict |

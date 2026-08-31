@@ -946,10 +946,23 @@ different key.
 
 ---
 
-## 13. 🚧 THE BUILD BRIEF — the next session starts here
+## 13. ✅ THE BUILD BRIEF — BUILT 2026-09-02, steps 1–8
 
 **Written 2026-08-31 for a chat reset**, on Tim's instruction: *"prepare everything for chat reset so
 we can start actually building this social structure in the next session."*
+
+🚨 **ALL EIGHT STEPS SHIPPED ON 2026-09-02.** The brief below is kept as written, with a line under
+each step recording what was actually built and where it departed from the plan. §14 is the summary.
+
+⚠️ **TWO THINGS TIM DECIDED ON THE WAY IN**, and both narrow this document:
+
+1. **The stat row's middle column is SETS, not volume** — *"don't implement warm ups or volume yet.
+   Replace Volume for # of sets."* Step 1 below says volume; it shipped as sets. The reasoning is in
+   `js/session-stats.js`'s header and it turns out to be the more honest column anyway: a friend's
+   bodyweight work has no external load to total, and their body weight publishes only at the top
+   tier, so a pounds figure would have read a session of pull-ups as nothing.
+2. **Warm-up typing is NOT built** — decision A at the bottom of this section is still open, and
+   deliberately so. Every recorded set still counts, everywhere, and the screens still say so.
 
 §12 is the research. **This is the part to act on.** Every step below is independently shippable,
 none blocks the next, and the order is by value-per-hour rather than by dependency. **Nothing here
@@ -991,6 +1004,23 @@ are arithmetic on data already in hand.
   contributing 0, an empty session being 0 rather than NaN); the row rendering in
   `tests/render.test.mjs`'s feed block.
 
+> ✅ **BUILT — as `Time · Sets`.** `js/session-stats.js` (`sessionStats`, `recordedSetCount`,
+> `setsLabel`), `statRow()` in `js/views-workouts.js`, `.feed-stats` in `css/app.css`.
+> ⚠️ **`recordedSetCount` MOVED OUT OF `store.js`** rather than being copied: the Volume tab and the
+> feed card must never disagree about whether a set was done, and typing warm-ups is exactly the
+> change that would make two copies drift. One definition, three callers.
+> ⚠️ **Duration LEFT the grey meta line** when it moved into the row — the same number twice on one
+> card reads as two facts, and a test pins that it is gone from the meta line.
+> ⚠️ **No set count on an activity.** "1 set" of a run is an artifact of storage, not something
+> anybody did (D27).
+> 🆕 **Also built here, from §12.14's second difference:** one row per exercise with the SET COUNT
+> FIRST, capped at five with "See N more exercises". The run-on line of names survives as the
+> fallback for a session where no set carries a number.
+> ⚠️ **The demo fixture was WRONG and nothing had noticed.** Every demo friend's entry carried
+> `sets: []` and `exerciseId: null` — true to the projection's shape, false about its content. It
+> passed every test written against it right up until something read the part that was never filled
+> in. It now carries real sets, real library ids, and one exercise deliberately NOT in the library.
+
 ### Step 2 — the description field 🚨 cheapest high-value item in the whole document
 
 - **Store:** a `note` string on the session row. Written by `finish()` in `js/views-session.js` and
@@ -1006,6 +1036,19 @@ are arithmetic on data already in hand.
   deliberately.
 - **Card:** render under the title, above the stat row (§12.13).
 
+> ✅ **BUILT.** `state.note` in the runner (a chip in the topbar sub-line beside the location one,
+> capped at 280), `...(state.note ? { note: state.note } : {})` on the saved row, published at mid+
+> in `projectSession()` mirroring `location` exactly, rendered on the card, on the workout screen, in
+> `DayView` and editable in `views-edit-session.js`. Nine assertions in `tests/social.test.mjs`.
+> ⚠️ **It is typed in the RUNNER, not on the finish screen**, and the plan's instinct was right for
+> the wrong reason: our finish screen renders *after* `store.saveSession()` has already landed, so a
+> box there would describe a row on disk and need a second write.
+> ⚠️ **Guest rows do NOT carry it.** There is one box, labelled "How did it go?", so it can only be
+> the recorder's answer about their own session — and a guest row is offered to that person's own
+> account, where the recorder's sentence would be words in somebody else's mouth.
+> ⚠️ **`LIGHT_SESSION_FIELDS` was not touched** and the light tier still publishes exactly
+> `id,date,name`.
+
 ### Step 3 — tapping a card opens the workout
 
 - The renderer already exists — a friend's session opens with supersets and drop sets intact from
@@ -1014,6 +1057,24 @@ are arithmetic on data already in hand.
   one: `#/friend/<uid>` already exists.
 - ⚠️ **Old sessions published before ids existed have none** — `feedActions()` already handles that
   case with a sentence rather than a dead tap. Do the same here.
+
+> ✅ **BUILT — as a WHOLE SCREEN, not the friend page's expander.** `FriendSessionView(uid, id)` in
+> `js/views-social.js`, routed at **`#/friend/<uid>/<sessionId>`**.
+> ⚠️ **It hangs off the `friend` route deliberately**: `FULLSCREEN` and the Home tab's `match` list
+> in `app.js` already name `friend`, and a route of its own would have needed both updated in
+> lockstep with nothing to catch it if they were not. Same shape as `invite`.
+> ⚠️ **There is no per-session READ and there cannot be one** — a friend publishes one document per
+> tier holding up to sixty sessions, so this screen reads the same document the friend page reads and
+> finds the session inside it by id. It therefore costs what opening their page costs.
+> ⚠️ **A session that has rolled off the sixty-session window is a NORMAL outcome**, and the screen
+> names both reasons it happens rather than spinning.
+> ⚠️ **Degrades rather than dying:** a session with no id links to the friend's page instead — a real
+> destination one tap further, not a route that cannot resolve.
+> 🆕 **The demo can open these too**, for the same reason Home's feed has a demo branch: the demo is
+> where every screen in this app is looked at and audited.
+> 🆕 **Fixed on the way past:** the friend page's `entryLine()` printed `s.weight` raw out of the
+> projection, which publishes canonical POUNDS — so a friend's 100 kg squat read as "100" to a lifter
+> whose whole app is in kilos. It goes through `fmtSet` now, like every other set in the app.
 
 ### Step 4 — the per-session muscle split
 
@@ -1024,6 +1085,18 @@ are arithmetic on data already in hand.
   2026-09-01. ⚠️ **If the figure is used, the red-to-green ramp's whole justification is the legend
   and the numbers beside it** (`tools/volume-ramp.mjs` header) — a bare figure on a card would strip
   exactly the secondary encoding that makes that ramp legal.
+
+> ✅ **BUILT as BARS, and the figure was rejected for exactly the reason above.**
+> `muscleSplit()` in `js/views-social.js`, on the workout screen.
+> ⚠️ **ONE COLOUR, not the ramp.** A share of one session is not a rank, and a ramp would be an
+> ordering that says good and bad where the app has no opinion (Rule 6).
+> 🆕 **`INDIRECT_NOTE_SESSION` was added to `js/volume-map.js`** rather than written in the view —
+> that file's rule is one shared statement of what the 0.5 is plus one consequence clause per screen,
+> both shipped from beside the constant. ⚠️ **This screen's clause runs the OTHER WAY from the weekly
+> one**: shrinking indirect work does not lower a share, it moves percentage points from the helping
+> muscles to the working ones, because a share always totals 100.
+> ⚠️ **An exercise not in the reader's library is named and excluded**, never silently renormalised
+> over the rest.
 
 ### Step 5 — personal records, typed
 
@@ -1036,6 +1109,29 @@ are arithmetic on data already in hand.
   their history is 60 published sessions, not their life. On your own finish screen there is no such
   limit.
 
+> ✅ **BUILT, both halves.** `personalBests()` was extracted out of `js/views-session.js` into a pure
+> `js/personal-bests.js` with its own tests, and typed **Weight · Volume · Reps · 1RM**. It renders
+> grouped by exercise on the finish screen, and as "Bests in this workout" on a friend's workout
+> screen with the sharing caveat spelled out.
+> 🚨 **THE 1RM KIND BROKE A STATED INVARIANT AND THE COMMENT WAS REWRITTEN RATHER THAN LEFT.** That
+> function's doc block claimed it was "Rule 5-safe by construction — no estimate anywhere in it", and
+> that stopped being true. Rule 5 is now honoured by LABELLING instead: the record carries
+> `estimated: true`, the screen prints the word, and the line names the real set the model was fed
+> ("203 lbs from 165 lbs × 6") so the inference can be checked against a measurement.
+> ⚠️ **A REAL BUG WAS FOUND IN THE OLD FUNCTION**: mini-sets counted toward the PRIOR best but not
+> toward today's, so an exercise whose best set was a drop could raise the bar and never clear it.
+> Symmetric now.
+> ⚠️ **Per-side doubles VOLUME and nothing else** — a sum has a right answer, but "Weight 100 lbs" is
+> a number the lifter never typed for a 50 lb dumbbell, so weight and 1RM stay in logged units and
+> the volume line says "(both sides)".
+> ⚠️ **A friend's bests exclude their published BENCHMARKS even at the top tier** (Rule 4): mixing a
+> deliberate fresh test into a window of workout sets would make a record appear or vanish depending
+> on which tier they put you on.
+> ⚠️ **NOT ON THE CARD.** §12.13's third column is deliberately absent from the feed card: a bare
+> "Records 3" beside a friend's name reads as a lifetime PR, and what we can actually compute is "a
+> best within the sixty sessions they publish". The count is honest only next to the sentence that
+> qualifies it, and that sentence does not fit on a card. It is on the screen the card opens.
+
 ### Step 6 — compare on an exercise
 
 - Their layout: two avatars, per-metric rows, paired bars, a green/red delta (§12.12). **Ours has
@@ -1043,11 +1139,53 @@ are arithmetic on data already in hand.
   comparison that is fair rather than "who typed a bigger number".
 - ⚠️ **Skip their yellow STRONGER badge.** Declaring a winner off one exercise is Rule 6.
 
+> ✅ **BUILT.** `js/compare.js` (pure, 45 assertions) + a sheet opened by tapping an exercise name on
+> a friend's workout. Metrics: best estimated 1RM, heaviest set recorded, sets logged — and top reps
+> instead of the load rows when the lift is bodyweight.
+> 🚨 **NO VERDICT EXISTS TO RENDER.** The module refuses to produce one and ships the sentence saying
+> so (`NO_VERDICT_HEADER`), which the sheet prints rather than paraphrases. `better` is per metric
+> only, and `sets` carries `judged: false` — more sets is more time available, not better training.
+> 🚨 **THE COMPARISON IS WINDOWED TO THE OVERLAP, AND THIS IS THE PART THAT MATTERS.** Their
+> published history is sixty sessions and mine is my whole life, so an unwindowed comparison flatters
+> me every single time, in the same direction — which is exactly why a footnote would not have been
+> enough. Both sides are cut to the same dates and the window is named on screen.
+> ⚠️ **A bodyweight lift refuses the load metrics rather than guessing**: `totalResistance()` needs
+> the lifter's body weight and a friend's is published only at the top tier. Reps stay comparable.
+> ⚠️ **The rep gate (D5) is applied once, to one pool**, so the estimate and the heaviest set always
+> describe the same sets. Per-side doubling comes from `muscle-evidence.js`, not a second rule.
+> ⚠️ **An exercise NOT in the reader's library is not a link at all** — a comparison needs the
+> exercise, and a control that cannot do anything is worse than plain text.
+
 ### Step 7 — save their workout as a routine · Step 8 — a shareable image
 
 Both specified in §12.8. Step 7 is `entries[]` → the shape `addPresetSystem()` already writes
 (⚠️ theirs is a record and ours would be a plan: set counts carry, weights do not). Step 8 is
 canvas → PNG → `navigator.share({files})`, no backend.
+
+> ✅ **STEP 7 BUILT.** `js/routine-from-session.js` (pure, 42 assertions) + a sheet that shows what it
+> is about to do before it does it.
+> 🚨 **WEIGHTS CANNOT CARRY, BY CONSTRUCTION RATHER THAN BY FILTER** — a workout template has
+> `{ exerciseId, sets, notes }` and no field to put a weight in. Their 185 lb bench is a fact about
+> them and would be a prescription to me, which is the one thing this app's progression rule exists
+> to prevent.
+> ⚠️ **`group` DOES carry** — `normalizeWorkout()` already rebuilds it, so a superset survives; and a
+> group that loses a member to a missing exercise gets a warning, because the survivors are adjacent
+> but are not the block they did.
+> ⚠️ **An exercise not in the reader's library cannot be copied** (a template addresses by id) and is
+> NAMED on the sheet. Silently shrinking somebody's routine is the failure this app refuses.
+>
+> ✅ **STEP 8 BUILT.** `js/share-image.js` — a pure `shareCardLayout()` plus a thin painter, the same
+> split `qr.js` uses, so the half worth testing is testable (91 assertions).
+> ⚠️ **NO WEIGHTS ON THE PICTURE**, enforced in the module rather than trusted to the caller: it
+> leaves the app for a feed nobody here controls. Sets and time, the same call Tim made for the card.
+> ⚠️ **A cancelled share sheet is not an error** and says nothing; anything else falls through to a
+> download, so a broken share sheet still leaves somebody with the picture.
+> ⚠️ **TWO LAYOUT BUGS THAT ONLY A RENDER COULD FIND**, both the same measurement wrong in opposite
+> directions: on a square canvas the list capped at two of four and printed "+2 more" with two rows
+> of empty space beneath it, and on the tall one a short session left a third of the picture blank.
+> The card now sizes itself to its contents (1080–1350) with the wordmark following the content, and
+> a test bounds the air under the last row. **Nothing in the original suite could have caught either
+> — every assertion was about staying inside the bounds, none about wasting the space inside them.**
 
 ---
 
@@ -1055,8 +1193,8 @@ canvas → PNG → `navigator.share({files})`, no backend.
 
 | | The question | Why it cannot be decided here |
 |---|---|---|
-| **A** | **Should a warm-up be typed by the lifter?** (§12.16, Open work 0c) | It changes what every set row asks for mid-workout, and it retires the Volume tab's "we count everything" caveat. **The past stays counted rather than retro-guessed.** This is the highest-value decision on the list and it is no longer a choice between two guesses |
-| **B** | **Per-workout visibility, as well as per-person?** (§12.13) | A session-level flag honoured by `projectSession()`. It composes with the tiers rather than replacing them. Real feature, not a rename |
+| **A** | **Should a warm-up be typed by the lifter?** (§12.16, Open work 0c) | ⏸️ **STILL OPEN, and deliberately not built on 2026-09-02** — Tim: *"don't implement warm ups or volume yet."* It changes what every set row asks for mid-workout, and it retires the Volume tab's "we count everything" caveat. **The past stays counted rather than retro-guessed.** This is the highest-value decision on the list and it is no longer a choice between two guesses |
+| **B** | **Per-workout visibility, as well as per-person?** (§12.13) | A session-level flag honoured by `projectSession()`. It composes with the tiers rather than replacing them. Real feature, not a rename. ⚠️ **The description field shipped without one**, so a note written on a session is visible to everybody at mid+ — the same rule as the rest of what is inside a workout, and the first field where somebody might want per-post control |
 | **C** | **RPE?** (§12.9) | We deliberately have no reps-in-reserve field and the Goals screen names it as a thing the app cannot see. Adding one changes what the app asks of somebody mid-set |
 | **D** | **Blaze, for photos** (§12.9) | Money, and a moderation question. Step 9, and everything above it is free |
 
@@ -1064,3 +1202,29 @@ canvas → PNG → `navigator.share({files})`, no backend.
 
 **1 stats → 2 description → 3 tap-through → 4 muscle split → 5 PRs → 6 compare → 7 save routine →
 8 shareable.** Steps 1 and 2 together are most of the visual gap in §12.14.
+
+---
+
+## 14. What actually shipped — 2026-09-02
+
+All eight steps, in one session, with four decisions taken rather than asked about and one of Tim's
+own (sets, not volume) applied throughout. **New modules, every one pure and separately tested:**
+`session-stats.js`, `personal-bests.js`, `routine-from-session.js`, `compare.js`, `share-image.js`.
+**New screen:** a friend's workout at `#/friend/<uid>/<sessionId>`.
+
+**The three findings worth keeping:**
+
+1. 🚨 **THE DEMO FIXTURE WAS THINNER THAN THE WIRE AND EVERY TEST PASSED ANYWAY.** Friends' published
+   entries carried `sets: []` and `exerciseId: null` for months — the right SHAPE, the wrong
+   CONTENT — and nothing noticed until the card started counting sets and reported that every friend
+   had done none. This file's own §12.8 note about absent-vs-null keys is the same lesson from the
+   other side: *a fixture may be thinner than the wire and pass everything written against it, right
+   up until something reads the part that was never filled in.*
+2. 🚨 **TWO BUGS WERE INVISIBLE TO 1,200 ASSERTIONS AND OBVIOUS IN ONE SCREENSHOT** — the share
+   card's list capping with empty space below it, and the friend page printing raw pounds to a
+   kilogram user. jsdom is the structural check; a render is the visual one. Both were found by
+   looking.
+3. ⚠️ **THE PLAN'S OWN "CHEAPEST HIGH-VALUE ITEM" WAS RIGHT, AND ITS PLACEMENT WAS WRONG.** §13 step
+   2 says to put the description on the finish screen because Hevy writes it before saving. Ours
+   renders *after* the save has landed, so it had to go in the runner instead — the principle held,
+   the location did not.

@@ -4844,5 +4844,205 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await store.clearAll();
 }
 
+/* ---------- one session's own numbers (js/session-stats.js) ----------
+ *
+ * The feed card's stat row. ⚠️ VOLUME IS DELIBERATELY NOT HERE — Tim's call on
+ * 2026-09-01 was to put the SET COUNT in that column, and the module header
+ * records why that is also the honest choice for a friend's session (a
+ * bodyweight set has no external load to total, and their body weight is
+ * published only at the top tier). These assertions pin the count.
+ */
+{
+  const { sessionStats, recordedSetCount, setsLabel } = await import('../js/session-stats.js');
+
+  const s = sessionStats([
+    { exerciseId: 'a', exerciseName: 'Bench Press', sets: [{ weight: 135, reps: 8 }, { weight: 135, reps: 8 }] },
+    { exerciseId: 'b', exerciseName: 'Pull-Up', sets: [{ reps: 10 }, { reps: 8 }, { reps: 6 }] },
+    { exerciseId: 'c', exerciseName: 'Never Reached', sets: [{ weight: 0, reps: 0 }, {}] },
+  ]);
+  ok(s.sets === 5, `sets are counted across exercises (${s.sets})`);
+  ok(s.exercises === 2,
+     '🚨 an exercise nobody logged a set against is not counted as done — a workout finished early '
+     + 'must not claim the exercises it never reached');
+  ok(s.byExercise.length === 2 && s.byExercise[0].name === 'Bench Press',
+     'the breakdown keeps the order they were done in');
+  ok(s.byExercise[1].sets === 3, 'and carries each exercise\'s own count');
+
+  ok(sessionStats([]).sets === 0 && sessionStats(undefined).sets === 0,
+     'an empty session is 0 sets, not NaN and not a crash');
+
+  // ⚠️ A bodyweight set counts exactly like a loaded one. It is the reason the
+  // column is sets rather than volume: this session is 3 sets of real work, and
+  // any external-load total would have called it zero.
+  ok(sessionStats([{ exerciseName: 'Pull-Up', sets: [{ reps: 10 }, { reps: 8 }, { reps: 6 }] }]).sets === 3,
+     '⚠️ a bodyweight set counts — which external-load volume could not have done for a friend');
+
+  // The nesting rule, which is the oldest resolved-without-asking decision here.
+  ok(recordedSetCount({ sets: [{ weight: 200, reps: 6, minis: [{ weight: 150, reps: 5 }, { weight: 100, reps: 5 }] }] }) === 1,
+     '🚨 a drop set is ONE hard set, not one plus its minis — counting the drops would inflate '
+     + 'every total the moment somebody used a set type');
+
+  ok(setsLabel(1) === '1 set' && setsLabel(4) === '4 sets', 'one set is singular');
+}
+
+/* ---------- typed personal records (js/personal-bests.js) ----------
+ *
+ * Weight · Volume · 1RM, the way Hevy types them (social-plan §12.15/§13
+ * Step 5). This arithmetic ran for five days as a private closure inside
+ * views-session.js with no test on it at all; extracting it was half the job
+ * and this block is the other half.
+ *
+ * ⚠️ The 1RM kind is the first thing this function has ever emitted that is an
+ * ESTIMATE rather than a measurement, so the assertions below pin both halves
+ * of the Rule 5 answer: the rep gate that decides what may be inferred FROM,
+ * and the flag that tells a screen to say so.
+ */
+{
+  const { personalBests, PB_LABEL } = await import('../js/personal-bests.js');
+
+  const ent = (id, name, sets) => ({ exerciseId: id, exerciseName: name, sets });
+  const was = (entries) => [{ id: 'old', entries }];
+  const kindsOf = (list) => list.map((p) => p.kind).join(' ');
+  const of = (list, kind) => list.find((p) => p.kind === kind) || null;
+
+  /* ---- nothing to beat is not a record ---- */
+  ok(personalBests([ent('a', 'Bench', [{ weight: 100, reps: 5 }])], [], []).length === 0,
+     '🚨 the first time an exercise is ever logged is still not a personal best — every set of it '
+     + 'is trivially a maximum and a trophy for that teaches that the trophy is noise');
+
+  /* ---- all three kinds, in Hevy's order ---- */
+  const three = personalBests(
+    [ent('a', 'Bench', [{ weight: 105, reps: 5 }])],
+    was([ent('a', 'Bench', [{ weight: 100, reps: 5 }])]), []);
+  ok(kindsOf(three) === 'weight volume e1rm',
+     `one better set can be three records, listed Weight · Volume · 1RM (${kindsOf(three)})`);
+  ok(of(three, 'weight').now === 105 && of(three, 'weight').was === 100,
+     'the weight record is the heaviest ever, and says what it beat');
+  ok(of(three, 'volume').now === 525 && of(three, 'volume').was === 500,
+     'the volume record is ONE set’s weight × reps (105 × 5), not the session total');
+  ok(near(of(three, 'e1rm').now, e1rm(105, 5), 1e-9) && near(of(three, 'e1rm').was, e1rm(100, 5), 1e-9),
+     'and the 1RM record is e1rm.js applied to the same two sets');
+
+  /* ---- the kinds genuinely disagree, which is the whole reason for typing them ---- */
+  const heavier = personalBests(
+    [ent('a', 'Bench', [{ weight: 105, reps: 5 }])],
+    was([ent('a', 'Bench', [{ weight: 100, reps: 10 }])]), []);
+  ok(kindsOf(heavier) === 'weight',
+     '⚠️ 105 × 5 after 100 × 10 is a WEIGHT record and nothing else — less total work and, by the '
+     + 'curve, a smaller estimated max. One untyped PR could not have said that');
+
+  const longer = personalBests(
+    [ent('a', 'Bench', [{ weight: 100, reps: 8 }])],
+    was([ent('a', 'Bench', [{ weight: 100, reps: 5 }])]), []);
+  ok(kindsOf(longer) === 'volume e1rm',
+     'and the same weight for more reps is a volume and a 1RM record with no weight record — '
+     + 'matching the bar you actually walked up to, which had not moved');
+
+  /* ---- D5: what may be inferred from, on BOTH sides of the comparison ---- */
+  const gated = personalBests(
+    [ent('a', 'Bench', [{ weight: 140, reps: 5 }])],
+    was([ent('a', 'Bench', [{ weight: 100, reps: 5 }, { weight: 135, reps: 25 }])]), []);
+  ok(near(of(gated, 'e1rm').was, e1rm(100, 5), 1e-9),
+     '🚨 the 25-rep set is refused as 1RM evidence (D5, MAX_EVIDENCE_REPS) — the formula scores it '
+     + 'at 258 lb and it would have stood in the way of a real 140 × 5 forever');
+  ok(of(gated, 'volume') === null,
+     '⚠️ but the same set still counts as VOLUME, which is measured rather than inferred — 3,375 lb '
+     + 'of work happened, and 140 × 5 does not beat it');
+
+  const burnout = personalBests(
+    [ent('a', 'Bench', [{ weight: 60, reps: 20 }])],
+    was([ent('a', 'Bench', [{ weight: 100, reps: 5 }])]), []);
+  ok(kindsOf(burnout) === 'volume',
+     'and a 20-rep burnout set today earns the volume record it deserves and no 1RM trophy at all');
+
+  /* ---- the gate is PER KIND, so no record is ever "up from 0" ---- */
+  const firstLoaded = personalBests(
+    [ent('p', 'Pull-Up', [{ weight: 25, reps: 8 }])],
+    was([ent('p', 'Pull-Up', [{ reps: 10 }, { reps: 12 }])]), []);
+  ok(firstLoaded.length === 0,
+     '🚨 the first time a bodyweight lift is ever loaded is not a weight record — there is no '
+     + 'weight history to beat, and "up from 0 lbs" is not a thing that happened');
+
+  /* ---- bodyweight stays on reps, and only where there is no weight ---- */
+  const bw = personalBests(
+    [ent('p', 'Pull-Up', [{ reps: 14 }])],
+    was([ent('p', 'Pull-Up', [{ reps: 12 }])]), []);
+  ok(kindsOf(bw) === 'reps' && bw[0].now === 14 && bw[0].was === 12,
+     'a lift with no weight in it gets a reps record and no weight record');
+  ok(personalBests([ent('a', 'Bench', [{ weight: 100, reps: 12 }])],
+       was([ent('a', 'Bench', [{ weight: 100, reps: 5 }])]), [])
+       .every((p) => p.kind !== 'reps'),
+     '⚠️ and a loaded lift never gets one, because "more reps at less weight" is not a bigger '
+     + 'number and the app must not imply it is');
+
+  /* ---- MINI-SETS COUNT TOWARD TODAY, not just toward history ----
+   * The decision: SYMMETRIC, both sides, minis included. The old closure read
+   * `[set, ...minisOf(set)]` for history and the bare parent sets for today,
+   * so a drop could raise the bar and never clear it. */
+  const drop = personalBests(
+    [ent('a', 'Bench', [{ weight: 200, reps: 3, minis: [{ weight: 120, reps: 12 }] }])],
+    was([ent('a', 'Bench', [{ weight: 150, reps: 6 }])]), []);
+  ok(of(drop, 'volume').now === 1440,
+     '🚨 THE DECISION WENT SYMMETRIC: the 120 × 12 drop is today’s volume record (1,440), beating '
+     + 'its own 200 × 3 parent — minis have always counted as history and now count as evidence '
+     + 'today too, which is the only way a set can beat the bar it is allowed to set');
+  ok(personalBests([ent('a', 'Bench', [{ weight: 100, reps: 5 }])],
+       was([ent('a', 'Bench', [{ weight: 90, reps: 5, minis: [{ weight: 130, reps: 2 }] }])]), [])
+       .every((p) => p.kind !== 'weight'),
+     'and the same rule read backwards: a mini in the past is still something to beat');
+
+  /* ---- per-side load ---- */
+  const exMap = new Map([['d', { id: 'd', name: 'Dumbbell Press', loadType: 'per_side' }]]);
+  const perSide = personalBests(
+    [ent('d', 'Dumbbell Press', [{ weight: 50, reps: 10 }])],
+    was([ent('d', 'Dumbbell Press', [{ weight: 45, reps: 10 }])]), [], exMap);
+  ok(of(perSide, 'volume').now === 1000 && of(perSide, 'volume').was === 900,
+     '⚠️ a per-side lift does DOUBLE work: 50 lb dumbbells for 10 is 1,000 lb, not 500. Volume is '
+     + 'a sum and a sum has a right answer');
+  ok(of(perSide, 'volume').perSide === true && of(three, 'volume').perSide === false,
+     'and the record says the doubling happened, so the screen can print "(both sides)" — 50 × 10 '
+     + 'does not multiply out to 1,000 and a total nobody can check is a total nobody should '
+     + 'be asked to believe');
+  ok(of(perSide, 'weight').now === 50 && near(of(perSide, 'e1rm').now, e1rm(50, 10), 1e-9),
+     '⚠️ but the weight and 1RM records stay in the units the set was LOGGED in (50, not 100), '
+     + 'because every other screen prints that lift as 50/side and a record must be a number the '
+     + 'lifter recognises');
+  ok(personalBests([ent('d', 'Dumbbell Press', [{ weight: 50, reps: 10 }])],
+       was([ent('d', 'Dumbbell Press', [{ weight: 45, reps: 10 }])]), []).find((p) => p.kind === 'volume').now === 500,
+     'with no exercise map the doubling simply does not happen — and `now` and `was` still go '
+     + 'through the same rule, so the comparison stays honest even when the library does not');
+
+  /* ---- an estimate is flagged as one ---- */
+  ok(three.filter((p) => p.estimated).map((p) => p.kind).join() === 'e1rm',
+     '🚨 exactly one kind is flagged `estimated` and it is the 1RM — this is the flag the finish '
+     + 'screen turns into the word "estimated" beside it, because an inference may never look '
+     + 'like a measurement (Rule 5)');
+  ok(of(three, 'e1rm').weight === 105 && of(three, 'e1rm').reps === 5,
+     'and it carries the real set it was estimated from, so the guess can be checked against '
+     + 'something that actually happened');
+  ok(PB_LABEL.weight === 'Weight' && PB_LABEL.volume === 'Volume' && PB_LABEL['e1rm'] === '1RM',
+     'the four kinds have names a screen can print without inventing its own');
+
+  /* ---- a record has to be big enough to see ---- */
+  const hair = personalBests(
+    [ent('a', 'Bench', [{ weight: 135, reps: 3 }])],
+    was([ent('a', 'Bench', [{ weight: 105, reps: 10 }])]), []);
+  ok(kindsOf(hair) === 'weight',
+     '⚠️ 135 × 3 and 105 × 10 both estimate to 150 lb, so the 0.05 lb between them is not a 1RM '
+     + 'record — the estimate is compared at the precision it is PRINTED at, or the screen would '
+     + 'read "up from" a number identical to the one beside it');
+
+  /* ---- benchmarks are history too ---- */
+  ok(personalBests([ent('a', 'Bench', [{ weight: 150, reps: 5 }])], [],
+       [{ exerciseId: 'a', values: { weight: 200, reps: 1 } }]).every((p) => p.kind !== 'weight'),
+     'a benchmark counts as something to beat — a tested max is the most deliberate record there is');
+
+  /* ---- Rule 6: no opinion on a mile ---- */
+  ok(personalBests([ent('r', 'Run', [{ time: 300, distance: 2 }])],
+       was([ent('r', 'Run', [{ time: 400, distance: 1 }])]), []).length === 0,
+     'time and distance are left alone — the app has no opinion on which direction of a mile is '
+     + 'better (Rule 6)');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

@@ -10,6 +10,7 @@ import {
   MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
 } from './exercises.js';
 import { alternativesFor } from './exercise-families.js';
+import { sessionStats, setsLabel } from './session-stats.js';
 
 /** The library's Activity shelf, by lowercased name — see feedCard(). */
 const ACTIVITY_NAMES = new Set(
@@ -282,6 +283,48 @@ function feedEntries(seen) {
     || String(y.act.startedAt || '').localeCompare(String(x.act.startedAt || '')));
 }
 
+/* The numbers under the title — Hevy's stat row, in our type.
+ *
+ * ⚠️ THEIRS READS `Time · Volume · Records` AND OURS READS `Time · Sets`, which
+ * is Tim's call (2026-09-01: *"Replace Volume for # of sets"*) and is also the
+ * only column of the three that can be computed honestly for somebody else's
+ * session. `js/session-stats.js` has the full argument; the short version is
+ * that a friend's bodyweight sets have no external load to total and their body
+ * weight is not ours to have, so a pounds figure would quietly halve a session
+ * of pull-ups. A set count is the same number for everybody.
+ *
+ * Small grey label above, bold value below, in columns — their shape, because
+ * it is a good one. No boxes and no rules between the columns (Rule 2); the
+ * gaps do the separating.
+ */
+function statRow(pairs) {
+  const cells = pairs.filter((p) => p && p[1] != null && p[1] !== '');
+  if (!cells.length) return null;
+  return el('div', { class: 'feed-stats' },
+    ...cells.map(([label, value]) => el('div', { class: 'feed-stat' },
+      el('div', { class: 'feed-stat-label', text: label }),
+      el('div', { class: 'feed-stat-value', text: String(value) }),
+    )));
+}
+
+/** "1h 4min" / "45 min" — their format, because a two-hour session in minutes
+ *  is a number you have to do arithmetic on to understand. */
+function fmtMinutes(mins) {
+  const n = Math.round(Number(mins) || 0);
+  if (n <= 0) return null;
+  if (n < 60) return `${n} min`;
+  const h = Math.floor(n / 60);
+  const m = n % 60;
+  return m ? `${h}h ${m}min` : `${h}h`;
+}
+
+/* How many exercises to list on a card before it says "see the rest".
+ *
+ * Five, which is what Hevy's current build shows before "See 1 more exercise"
+ * (social-plan §12.13). Below that a leg day reads as a stub; above it one
+ * person's marathon session pushes everybody else's card off the screen. */
+const FEED_EX_LIMIT = 5;
+
 function feedCard(e) {
   const a = e.act;
 
@@ -290,9 +333,10 @@ function feedCard(e) {
   // Same here — and there is never a location yet, so the line is currently
   // always just the left half. Written this way so adding one is one term.
   const when = [relativeDay(a.date), fmtClock(a.startedAt)].filter(Boolean).join(' at ');
-  // Minutes ride between the time and the place — "Today at 6:32 PM · 45 min ·
-  // Ironworks Gym" — and drop out silently where a session has none.
-  const meta = [when, a.minutes ? `${a.minutes} min` : null, a.location].filter(Boolean).join(' · ');
+  // ⚠️ MINUTES LEFT THIS LINE ON 2026-09-02 and moved into the stat row, where
+  // it is read rather than skimmed past. It must not appear in both — the same
+  // number twice on one card reads as two different facts.
+  const meta = [when, a.location].filter(Boolean).join(' · ');
 
   // What they did. `entries` only exists at "my workouts" and above — at the
   // lowest tier a friend shares that they trained and nothing else, and the
@@ -301,6 +345,7 @@ function feedCard(e) {
     .map((x) => x && x.name)
     .filter(Boolean);
 
+  const stats = sessionStats(a.entries);
   const title = a.name || 'Workout';
 
   /* ⚠️ A RUN SHOULD READ AS A RUN WITHOUT BEING READ — activities-plan §3
@@ -316,11 +361,77 @@ function feedCard(e) {
   const said = names.length === 1 && names[0].trim().toLowerCase() === title.trim().toLowerCase()
     ? [] : names;
 
-  const did = said.length
-    ? el('div', { class: 'feed-did', text: said.join(' · ') })
-    : names.length
-      ? null
-      : el('div', { class: 'feed-did is-quiet', text: 'They share that they trained, not what they did.' });
+  /* ⚠️ ONE ROW PER EXERCISE, SET COUNT FIRST — the second-biggest gap in
+   * social-plan §12.14. A run-on line of names says what was touched and
+   * nothing about how much was done, which is the whole difference between a
+   * receipt and a record.
+   *
+   * The run-on survives as the fallback, and it earns its place: a friend on a
+   * tier that publishes entries can still have a session where no set carries a
+   * number — an old row, or a workout abandoned after the first exercise — and
+   * printing "0 sets" against every name would be a worse lie than the names
+   * alone. `stats.byExercise` is empty in exactly that case. */
+  const selfNamed = names.length === 1 && said.length === 0;
+  const rows = selfNamed ? [] : stats.byExercise;
+
+  const did = rows.length
+    ? el('div', { class: 'feed-exs' },
+        ...rows.slice(0, FEED_EX_LIMIT).map((x) => el('div', { class: 'feed-ex' },
+          el('span', { class: 'feed-ex-sets', text: setsLabel(x.sets) }),
+          el('span', { class: 'feed-ex-name', text: x.name }),
+        )),
+        rows.length > FEED_EX_LIMIT
+          ? el('div', { class: 'feed-ex is-quiet', text:
+              `See ${rows.length - FEED_EX_LIMIT} more exercise`
+              + (rows.length - FEED_EX_LIMIT === 1 ? '' : 's') })
+          : null,
+      )
+    : said.length
+      ? el('div', { class: 'feed-did', text: said.join(' · ') })
+      : names.length
+        ? null
+        : el('div', { class: 'feed-did is-quiet', text: 'They share that they trained, not what they did.' });
+
+  /* Tapping the card opens the workout — social-plan §13 step 3, and §12.14's
+   * fifth difference ("the card is not a way in").
+   *
+   * ⚠️ WHERE IT GOES DEGRADES RATHER THAN DYING. A session published before the
+   * projection carried ids has nothing to address, so the tap lands on the
+   * friend's page — a real destination where the same session is one tap
+   * further — instead of on a route that cannot resolve. A dead tap is the
+   * failure this project keeps refusing to ship; a slightly less specific
+   * destination is not. Light tier has no workout to open at all, so the body
+   * is not a link and the quiet line above says why. */
+  const openable = Boolean(a.entries && a.entries.length);
+  const href = a.id
+    ? `#/friend/${encodeURIComponent(e.uid)}/${encodeURIComponent(a.id)}`
+    : `#/friend/${encodeURIComponent(e.uid)}`;
+
+  const heading = el('h2', { class: 'feed-title' },
+    // ⚠️ The workout's name is the LARGEST text in the card, above the athlete's
+    // own name — which is Strava's hierarchy, and it is right: you scan a feed
+    // for what happened, and whose it is qualifies it.
+    el('span', { class: 'feed-kind' }, icon(isActivity ? 'activity' : 'dumbbell', 16)),
+    title);
+
+  // Their description, published at "my workouts" and above. Second thing you
+  // read, under the title and above the numbers — Hevy's order (§12.13), and
+  // the right one: it is what the person said, and the stats are what the app
+  // counted.
+  const note = typeof a.note === 'string' && a.note
+    ? el('p', { class: 'feed-note', text: a.note })
+    : null;
+
+  const body = [
+    heading,
+    note,
+    // ⚠️ NO SET COUNT ON A RUN. "1 set" is an artifact of how a quick activity
+    // is stored, not something anybody did, and D27 is explicit that activities
+    // are recorded first-class and modelled not at all. Time is the honest
+    // column for them and it is already there.
+    statRow([['Time', fmtMinutes(a.minutes)], ['Sets', isActivity ? null : (stats.sets || null)]]),
+    did,
+  ].filter(Boolean);
 
   return el('article', { class: 'feed-card' },
     el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
@@ -330,13 +441,9 @@ function feedCard(e) {
         el('span', { class: 'feed-meta', text: meta }),
       ),
     ),
-    // ⚠️ The workout's name is the LARGEST text in the card, above the athlete's
-    // own name — which is Strava's hierarchy, and it is right: you scan a feed
-    // for what happened, and whose it is qualifies it.
-    el('h2', { class: 'feed-title' },
-      el('span', { class: 'feed-kind' }, icon(isActivity ? 'activity' : 'dumbbell', 16)),
-      title),
-    did,
+    openable
+      ? el('a', { class: 'feed-open', href }, ...body)
+      : el('div', { class: 'feed-open is-flat' }, ...body),
     feedActions(e),
   );
 }
@@ -354,8 +461,13 @@ function feedCard(e) {
  * publishing invented workouts, and reading is fine while writing is not.
  *
  * Share needs no backend: `navigator.share`, clipboard fallback.
+ *
+ * ⚠️ EXPORTED SINCE 2026-09-02 so the workout screen can carry the same row.
+ * A second implementation over there would be two places that must agree about
+ * an anchor that can be missing, a demo that must refuse, and an optimistic
+ * update — the row is small and the rules around it are not.
  */
-function feedActions(e) {
+export function feedActions(e) {
   const row = el('div', { class: 'feed-actions' });
   const rx = e.rx || null;
   const slot = rx ? rx.slot : { kudos: [], myKudosId: null, comments: [] };

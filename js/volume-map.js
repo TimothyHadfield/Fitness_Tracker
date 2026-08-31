@@ -142,6 +142,25 @@ export const INDIRECT_NOTE_WEEKLY = `${INDIRECT_NOTE} Counting it lower would pu
   + 'ones you train directly.';
 
 /**
+ * ONE SESSION, as a share of itself — the muscle split on a workout screen.
+ *
+ * ⚠️ THE UNIT IS A PERCENTAGE AND THAT IS THE WHOLE DIFFERENCE. Everywhere else
+ * this module is read, the answer is a number of sets measured against a week.
+ * A single session has no week to be measured against: "12.4 sets of chest" is
+ * a quantity nobody can place, while "52 % of this workout was chest" is a true
+ * and complete statement about the thing on screen. Hevy makes the same choice
+ * and it is the right one (docs/social-plan.md §12.16).
+ *
+ * So the consequence clause is stated in percentage points, because that is
+ * what this reader is looking at — and the direction is the opposite of the
+ * weekly screen's: shrinking indirect work does not lower a share, it MOVES it,
+ * from the helping muscles to the working ones. A share always totals 100.
+ */
+export const INDIRECT_NOTE_SESSION = `${INDIRECT_NOTE} Because these are shares of one workout, `
+  + 'counting indirect work lower would not shrink them — it would move percentage points from the '
+  + 'muscles that only helped to the ones the exercise is for.';
+
+/**
  * The muscle groups weekly volume is totalled over.
  *
  * Excluded on purpose:
