@@ -6373,3 +6373,62 @@ photos become possible.
 One deliberate omission: your screenshots and the ones I pulled aren't in the repository. It's
 public and they're Hevy's UI — the written descriptions are detailed enough to build from, and that's
 on purpose.
+
+---
+
+## 2026-09-02 — the feed, built
+
+**You:** *"don't implement warm ups or volume yet. Replace Volume for # of sets. Begin working on
+the home page and social aspect changes now. Deploy many sub-agents… Continue working until you
+finish."*
+
+All eight steps of the brief shipped.
+
+**The card.** Under the workout's name: what they wrote about it, then a row reading TIME and SETS,
+then one line per exercise with the set count first — five of them, then "See 2 more exercises". The
+duration left the small grey line above when it moved into the row, because the same number twice on
+one card reads as two different facts.
+
+**Sets rather than volume turned out to be the better column, not just the one you asked for.** A
+friend's pull-ups and dips have no weight to add up, and their body weight is only published if they
+choose to share it — so a pounds figure would have reported a hard session of chin-ups as nothing at
+all. A set count is the same number for everybody.
+
+**Tapping a card now opens the workout.** A screen of its own: who and exactly when, the description,
+TIME · SETS · EXERCISES, kudos and comments, any bests set in it, a muscle split as percentages of
+that session, and the sets themselves in a table whose heading changes with the lift — "Weight &
+Reps" for a bench press, "Reps" for a dip, "Time" for a plank. A drop set is one numbered set with
+its drops hanging underneath, which is what it is.
+
+**Three things you can do with somebody else's workout.** Compare a lift against your own — fairly,
+normalised across rep counts, and measured over the same weeks for both of you rather than your whole
+history against their recent months, which would have flattered you every single time. Save it as one
+of your own workouts — the set counts and the supersets carry across, the weights do not, because
+their 185 lb bench is a fact about them and would be an instruction to you. And share a picture of
+it, drawn on the phone, no server involved.
+
+**Descriptions exist now.** A box in the workout header, up to 280 characters, saved with the
+session, shown on the card and on the calendar and fixable afterwards.
+
+**Three things worth telling you.**
+
+The demo account's friends had been publishing workouts with *no sets in them* for months. The shape
+was right so every test passed; the moment the card started counting sets, it said all your friends
+had done none. Fixed, and it now includes one exercise deliberately missing from the library, because
+a friend logs what their own app knows about.
+
+Two bugs were invisible to 1,200 automated checks and obvious the first time I looked at a picture of
+the screen: the shareable image was cutting its exercise list short while leaving blank space under
+it, and the friend's page had been printing pounds to anyone using kilos.
+
+And the personal-bests code carried a comment promising it never used an estimate. Adding a 1RM
+record broke that promise, so the promise was rewritten rather than left sitting there — the estimated
+one now says "estimated" on screen and names the actual set it was worked out from.
+
+**Still yours to decide, unchanged:** whether a warm-up should be typed by the lifter (you said not
+yet, and it is still the best idea on that list), whether visibility should also be per-workout, RPE,
+and Blaze for photos.
+
+**Not verified:** none of this has been on your phone, and no two real accounts have used it. The
+sharing-a-picture path in particular has only run in a headless browser, where it falls back to a
+download instead of the share sheet.
