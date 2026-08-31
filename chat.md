@@ -6314,3 +6314,31 @@ reading like a receipt.
 their documentation says a post *contains*. It says nothing about how it *looks* — spacing, type,
 colour, motion — which was the first thing you asked about. Ten minutes with the app on your phone
 and a few screenshots would settle that, and no amount of further reading from here will.
+
+### The screen I couldn't find — Tim sent it
+
+I'd recorded the expanded workout view as the one gap neither research pass could close, and said
+only the app itself would settle it. Tim sent four screenshots of it from his phone the same day.
+Written up as §12.15–12.16 of the social plan. Three things in it matter:
+
+**Warm-up sets are marked by the lifter, not guessed by the app.** A set row reads `W · 120 lbs x 12`
+in amber, and the working sets are numbered from 1 after it. That is a direct answer to the question
+that's been sitting open since August — should warm-ups count toward volume — and it is better than
+either option that was on the table, because both of those were the app guessing. One tap by the
+person who actually knows. It's still Tim's call, but it's a much easier call now: a set-type flag, a
+control in the runner, and the Volume tab's "we count everything and can't tell" apology turns into a
+setting. The catch is the past: every set already recorded is untyped and has to stay counted rather
+than be retro-guessed.
+
+**Personal records are typed and per set.** Under one set: 🏅Weight 🏅Volume 🏅1RM — heaviest weight,
+biggest single-set volume, best estimated one-rep max. We can compute all three already, and putting
+them under the set that earned them says *which* lift rather than just "3 records".
+
+**The muscle split is a percentage of the session**, not an absolute — Chest 52%, Arms 26%,
+Shoulders 21%. That's the right choice for one workout, and worth copying: per session a share, per
+week an absolute. Getting that backwards would put a weekly band on a single session.
+
+Smaller: the detail view uses an absolute date ("Wednesday, Aug 26, 2026 - 1:23pm") where the card
+uses "6 hours ago"; the set table's header changes per exercise (`SET | WEIGHT & REPS` vs
+`SET | REPS`) which our field model already knows how to do; and exercise names are blue links into
+the exercise page.

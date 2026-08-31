@@ -796,12 +796,12 @@ rather than replacing them — "not shared at all" would simply be a session the
 **Their own note about not being retroactive is worth copying word for word**, because it is the same
 honesty §2 already demands about revocation.
 
-#### Still not seen, after both passes
+#### ~~Still not seen, after both passes~~ ✅ CLOSED — see §12.15
 
-**The expanded workout view** — the screen you land on by tapping a post. It is described in their
-documentation (§12.3) and appears in none of the 22 store images or the site's own screenshots. It is
-step 3 of the build order in §12.10, so it is the one gap worth closing, and **only the app itself
-will close it**.
+The expanded workout view appears in none of the 22 store images or the site's own screenshots, and
+this section said only the app itself would close it. **It did: Tim sent four screenshots of it from
+his own phone the same day.** §12.15 is that screen and §12.16 is what it changes — including an
+answer to the warm-up question Open work 0c has been carrying since 2026-08-24.
 
 ---
 
@@ -835,3 +835,107 @@ ours and has no equivalent there.
 6. ⚪ **They use a boxed card on a grey gutter; ours uses hairlines on a flat ground.** ⚠️ **That one
    is not a defect — it is Design Rule 2**, and it should stay. Copying their information
    architecture does not require copying their boxes.
+
+### 12.15 🚨 THE EXPANDED WORKOUT, SEEN AT LAST — Tim's own screenshots
+
+**Added 2026-08-31, third pass.** §12.13 recorded the workout detail view as the one screen neither
+pass could find and said only the app itself would close it. **Tim sent four screenshots of it from
+his own phone**, in dark mode, on Android. That is the whole screen, top to bottom, and it is the
+most useful thing in this document.
+
+#### The screen, in order
+
+| | |
+|---|---|
+| **Header** | back arrow and a `⋯` overflow, both **circular translucent chips** floating over the content, with **"Workout Detail"** centred between them |
+| **Poster** | circular avatar, handle (`nstaig`), and — ⚠️ **an ABSOLUTE date**: *"Wednesday, Aug 26, 2026 - 1:23pm"*. The card says "6 hours ago"; the detail says exactly when |
+| **Title** | *"(Push) til failure"*, the largest text on the screen |
+| **Description** | *"Gotta start eating more pre lift"*, plain weight, directly under the title |
+| **Stat grid** | 🚨 **SIX cells in two rows of three**, label above value: `Time 37min · Volume 19,459.2 lbs · Sets 12` over `Records 🏅3 · Calories 🔥169`. Records and Calories carry a glyph; the other four do not |
+| **Media** | the photo, full width, below the stats |
+| **Actions** | outlined **thumb with the count beside it (`2`)**, speech bubble, share arrow — left-aligned, above a divider |
+| **Muscle Split** | horizontal bars, one per coarse group, name above the bar and the **percentage to the right of it**: `Chest 52% · Arms 26% · Shoulders 21%`. A **share of the session**, not an absolute |
+| **Workout** | then the exercises |
+
+#### How one exercise is laid out
+
+Circular thumbnail + **the exercise name in blue** (so it is a link — into the exercise page and its
+comparison), then a **two-column table header** and the set rows:
+
+```
+SET   WEIGHT & REPS
+ W    120 lbs x 12
+ 1    160 lbs x 8
+ 2    160 lbs x 8
+ 3    160 lbs x 8
+```
+
+- 🚨 **`W` IS A WARM-UP SET, PRINTED IN AMBER**, and the working sets are numbered from 1 after it.
+- ⚠️ **The table header ADAPTS to the exercise.** `Triceps Dip` reads `SET | REPS` with no weight
+  column at all, because that lift records reps only.
+- Rows are **zebra-striped**, alternating two very close dark greys.
+- 🚨 **PRs HANG UNDER THE SET THAT SET THEM, AND THEY ARE TYPED**:
+  `1 · 150 lbs x 12` with `🏅Weight  🏅Volume  🏅1RM` beneath it. Three different kinds of record on
+  one set. The card's `Records 3` is the count of exactly these.
+
+---
+
+### 12.16 ⚠️ What that screen changes for us — three things, and one is an answer to an open question
+
+#### 1. 🚨 THEIR ANSWER TO THE WARM-UP PROBLEM IS TO ASK
+
+`docs/social-plan.md` is not where this belongs, but it is where it was found, so it is recorded
+here and cross-referenced: **Open work 0c has been carrying "should logged warm-ups be excluded from
+the volume count?" as an unanswered question for Tim since 2026-08-24**, and the Volume tab shipped
+on 2026-09-01 saying out loud that it counts everything because *"the app has no way to tell a
+warm-up from a back-off set"*.
+
+**Hevy's answer is that the lifter marks it.** A set is typed at logging time — `W` for warm-up,
+numbered otherwise — and the app then knows. That is not a threshold, not a heuristic and not a
+judgement the app makes; it is one tap by the only person who actually knows which set was a warm-up.
+
+⚠️ **This is a genuinely better answer than either option that was on the table**, both of which were
+guesses by the app (exclude sets under some fraction of the top set, or count everything and admit
+it). **It is Tim's call and it is now a much easier call**: a set-type flag, a control in the runner,
+`volume-map.js` given the option to skip warm-ups, and the Volume tab's caveat becomes a setting
+instead of an apology. ⚠️ **The cost is a decision about the past**: every set already recorded is
+untyped, and they must stay counted rather than be retro-guessed.
+
+#### 2. PRs are typed, and all three types are things we can already compute
+
+`🏅Weight`, `🏅Volume`, `🏅1RM` — heaviest weight for that exercise, biggest single-set volume, best
+estimated one-rep max. **We hold all three**: weight and reps are in every recorded set, and
+`e1rm.js` already produces the third and is more careful about it than most apps (D5's rep gate).
+Showing them **per set, under the set that earned them** is better than a badge on the card, because
+it says *which* lift and *which* set rather than just "3".
+
+⚠️ **The honesty line stays where §12.8 put it**: for a FRIEND's workout we can only say "best in
+what they have shared". For **your own** finish screen there is no such limit — we have all of your
+history — and this project already ships a personal-best celebration there (2026-08-26). **Typing it
+into Weight / Volume / 1RM is a small change to something that already exists.**
+
+#### 3. The muscle split is a percentage bar, and ours can be better without being flashier
+
+Theirs is three horizontal bars over coarse groups — `Chest 52% · Arms 26% · Shoulders 21%` — as a
+**share of the session's volume**. Ours would use `volume-map.js`'s fractional per-muscle sets, which
+is a finer instrument, and we already draw both a bar list and a body figure for it.
+
+⚠️ **But their choice of a SHARE rather than an absolute is the right one for a single session** and
+worth copying: "52 % of this workout was chest" is a true statement about one workout, where "12.4
+sets" is a number that only means something against a week. **Per session: share. Per week:
+absolute.** That distinction is worth writing down, because getting it backwards would put a weekly
+band on a single session, which is the mistake §12.13's per-workout/per-person note is about in a
+different key.
+
+#### Smaller things worth taking
+
+- **Absolute date on the detail, relative on the card.** "6 hours ago" is right when scanning;
+  "Wednesday, Aug 26, 2026 - 1:23pm" is right when you have stopped to look. We use relative in both
+  places.
+- **The set table's header adapts to the exercise** — `SET | WEIGHT & REPS` vs `SET | REPS`. Our
+  `FIELD_META` already knows which fields an exercise records, so this is free.
+- **Circular thumbnails and blue exercise names** mark what is tappable. ⚠️ Ours are neither, and the
+  exercise-picture manifest is still empty (`js/exercise-images.js`) pending Tim buying the art.
+- **The like count sits beside the thumb** rather than in a separate summary line.
+- **Zebra-striped set rows.** ⚠️ Against Design Rule 2 as written; a hairline between rows does the
+  same job, and this app already renders set lists that way.
