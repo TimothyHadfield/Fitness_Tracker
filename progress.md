@@ -4,9 +4,45 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-09-01. **This session is the 2026-09-01 section directly below — Data →
-Volume, plus the motion pass.** The 2026-08-31 section under it was the previous session (eight
-pieces, A to H). ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
+**Last updated:** 2026-09-01, prepared for a chat reset.
+
+# 🚧 START HERE: THE NEXT SESSION IS BUILDING THE SOCIAL FEED
+
+**Tim, ending the 2026-09-01 session:** *"now that we have the notes in place, I want you to prepare
+everything for chat reset so we can start actually building this social structure in the next
+session."* And earlier: *"I eventually want to make the home page extremely similar to how Hevy does
+it."*
+
+🚨 **THE WHOLE BRIEF IS `docs/social-plan.md` §13. READ IT BEFORE WRITING ANY CODE.** It is eight
+steps, in order, each shippable alone, with the file, the function, the trap and the test named for
+each. §12 above it is the research it came from — a teardown of Hevy's feed built from their own
+documentation, their store screenshots, their site's screenshots **and four photos Tim took of the
+one screen none of those had**.
+
+**The three things a fresh session most needs to know before opening §13:**
+
+1. 🚨 **MOST OF A HEVY CARD IS ALREADY IN OUR PROJECTION AND SIMPLY IS NOT RENDERED.** Every set, rep
+   and weight, the set types, the duration, the time and the location all publish at **mid** already
+   (`projectSession()` in `js/social.js`). Our card draws a name, a grey meta line and a run-on list
+   of exercise names. **Steps 1 and 2 — a stat row and a description field — are most of the visible
+   gap, and neither needs a backend, money, or a decision.**
+2. ⚠️ **FOUR DECISIONS ARE TIM'S AND ARE LISTED AT THE END OF §13.** The biggest is **whether a
+   warm-up should be typed by the lifter** — Hevy marks one `W` in amber and numbers the working sets
+   from 1, which is a better answer to Open work 0c than either option this file has carried since
+   2026-08-24, because it is the only one where the app does not guess. **Ask; do not assume.**
+3. ⚠️ **THE HEVY SCREENSHOTS ARE DELIBERATELY NOT IN THE REPOSITORY** — it is public and they are
+   somebody else's UI. §12.12, §12.13 and §12.15 are written in enough detail to build from **because
+   they are the record**. Do not go looking for image files and do not commit any.
+
+**Nothing was left half-finished.** The working tree is clean, everything below is pushed, and
+`docs/social-plan.md` §13 is a cold start rather than a continuation.
+
+---
+
+**This session is the 2026-09-01 section below — Data → Volume, the motion pass, the body map
+painted by sets, and the Hevy teardown.** The 2026-08-31 section under it was the previous session
+(eight pieces, A to H). ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth
+pass).
 
 ⏸️ **THE ABS QUESTION IS DEFERRED BY TIM, 2026-09-01: *"skip the abs"*.** It is not closed and not
 withdrawn — he was offered it as the standing loose end and chose other work. Do not re-raise it
@@ -4730,6 +4766,7 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
+| **17** | 🚧 **the Hevy-shaped home feed — THE NEXT JOB** | 🚨 **THE BRIEF IS `docs/social-plan.md` §13** — eight steps, files and functions named, four decisions for Tim at the end. Tim asked for it by name: *"I eventually want to make the home page extremely similar to how Hevy does it."* The teardown is `docs/social-plan.md` **§12** — every field on a Hevy post, what we can build with no backend and no money, and what is blocked by what. 🚨 **The finding: most of the card is ALREADY IN THE PROJECTION and simply is not rendered.** §12.10 is the order, eight steps, each shippable alone; **step 2 (a session description field) is the cheapest high-value item in the whole document**. ⚠️ **Photos are step 9 and need Blaze — Tim's call** (same blocker as item 10). ⚠️ **Do not build the discovery feed**: §12.11 records that it is the thing D7 actually refused |
 | **1** | **the field checks — needs Tim's phone, not yours** | ⚠️ **THE BIGGEST ONE IS NOW A TEN-MINUTE JOB WITH AUTUMN**: search her by name, send a request, have her accept it, and record a workout for her so it lands in her account. **Everything social built on 2026-08-29 is proved against the rules engine and has never been done by two people.** Also standing: the **friend-name heal**, a real **kudos/comment** round trip, and — needing only his eyes — **the blue box round the profile picture on a laptop** (a real bug was found and fixed in that exact place, but a *blue* one was never reproduced). ⚠️ **And file import has never parsed an actual export** from any service. ⚠️ **Added 2026-08-30: nobody has read the Research topics on a phone** — the facts are checked and measured, the reading experience is not |
 | **2** | **0c — the UX list** | ⚠️ **OPEN, and it is judgement rather than bugs.** Its headline item closed on 2026-08-25 (Home is a feed, which is nothing but growth) and the "hard sets" half was answered on 2026-08-24 by *saying* what is counted. **What is left is one question for Tim**: should logged warm-ups be excluded from the volume count? His call, because the obvious fix would also throw away genuine back-off work. 🆕 **2026-08-31 — THERE IS NOW A THIRD OPTION AND IT IS BETTER THAN BOTH**: Hevy's screens show a set is **typed at logging time** (`W` in amber for a warm-up, working sets numbered from 1), so the app never has to guess. That turns this from "which wrong answer do we pick" into a small feature — a set-type flag, a control in the runner, and the Volume tab's apology becomes a setting. ⚠️ **Every set already recorded is untyped and must stay counted rather than be retro-guessed.** `docs/social-plan.md` §12.16 |
 | **3** | **activities, Phase 2 — item 6** | Items 1–4 shipped 2026-08-27. **Item 6 says to ASK TIM** which activities his circle actually logs — climbing grades are the least standardised thing in the list. `docs/activities-plan.md` §3. ⚠️ **Item 5, activity PRs, is PINNED (P1)**, not open |
@@ -4737,7 +4774,6 @@ than left at the top where they were written.
 | **6** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report; he asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
 | **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. ⚠️ **It has questions for Tim** — §16 sets the hard constraint (the band fits inside one level only 8.5 % of the time), and §14 asks whether the estimator may draw on all evidence at once (narrowing D14). ⚠️ **The plan's claim that Phase 1 is blocked on data the store does not carry is WRONG** — see the 2026-08-28 section, item 5. `setIndex` and `exerciseIndex` are array positions in data already on disk, derivable at any time. Phase 1 is small; what gates the feature is Phase 2, and Phase 2 needs him |
 | **15** | **the usability findings — waiting on Tim's pick** | ⚠️ Four standing findings from the 2026-08-28 usability drive, reported to him and not yet chosen from: **no wake lock** (the biggest hands-free lever), **prefill counts as recorded at Finish**, the **Record chooser's extra tap**, and the Run log's **"28" = 28 seconds** parse. See that day's second-pass section. ⚠️ **The prefill one is HALF fixed as of 2026-08-29 and the halves matter**: a never-done exercise is now guarded (`prefilled`, refused by the save path), an exercise WITH history is untouched — walk past it and last time's numbers record as though you did them. Left alone deliberately: it is a behaviour change on every workout and his to pick. ⚠️ **The rest-timer items in the same list are DECLINED, not waiting** — do not resurface them |
-| **17** | **the Hevy-shaped home feed** | 🆕 **2026-08-31, and Tim asked for it by name**: *"I eventually want to make the home page extremely similar to how Hevy does it."* The teardown is `docs/social-plan.md` **§12** — every field on a Hevy post, what we can build with no backend and no money, and what is blocked by what. 🚨 **The finding: most of the card is ALREADY IN THE PROJECTION and simply is not rendered.** §12.10 is the order, eight steps, each shippable alone; **step 2 (a session description field) is the cheapest high-value item in the whole document**. ⚠️ **Photos are step 9 and need Blaze — Tim's call** (same blocker as item 10). ⚠️ **Do not build the discovery feed**: §12.11 records that it is the thing D7 actually refused |
 | **16** | **the HANDLE version of finding people** | 🚨 **Specified, ready, and a DECISION rather than a discovery.** Name search shipped 2026-08-29 on Tim's explicit call at fewer than five users, and it required granting Firestore `list` on a directory — which is enumeration of every row and cannot be narrowed by a rule. The replacement: `handles/{handle}` → uid, **`get` yes and `list` no**, exact lookup of a handle you chose, nothing enumerable. `docs/social-plan.md` §3.4 already blesses that shape. ⚠️ **The rules test's one deliberate `allow` — "any signed-in account can list the whole directory" — is the line that flips to a denial the day this lands**, and the `directory` block should be deleted with it |
 
 ### ⚠️ PINNED — real work, deliberately NOT queued. Do not offer these as "the next thing to do"

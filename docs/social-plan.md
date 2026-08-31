@@ -1,5 +1,9 @@
 # Social — plan
 
+> 🚧 **BUILDING NEXT: read §13 first — it is the build brief.** §12 is a teardown of Hevy's feed
+> (Tim, 2026-08-31: he wants the home page *"extremely similar"* to it); §13 turns it into eight
+> steps with the files, the functions and the traps named, plus the four decisions he still owes.
+>
 > Design for `docs/vision.md` §1.1. **Planned 2026-08-17, BUILT 2026-08-18 — see §11**, which is the
 > section to read first if you only read one. The plan below is kept as written, because the
 > reasoning is why the build looks the way it does.
@@ -939,3 +943,124 @@ different key.
 - **The like count sits beside the thumb** rather than in a separate summary line.
 - **Zebra-striped set rows.** ⚠️ Against Design Rule 2 as written; a hairline between rows does the
   same job, and this app already renders set lists that way.
+
+---
+
+## 13. 🚧 THE BUILD BRIEF — the next session starts here
+
+**Written 2026-08-31 for a chat reset**, on Tim's instruction: *"prepare everything for chat reset so
+we can start actually building this social structure in the next session."*
+
+§12 is the research. **This is the part to act on.** Every step below is independently shippable,
+none blocks the next, and the order is by value-per-hour rather than by dependency. **Nothing here
+needs money, a server, or a decision from Tim** — the things that do are collected at the bottom.
+
+⚠️ **THE SCREENSHOTS ARE NOT IN THE REPOSITORY, DELIBERATELY.** Tim's four photos of the workout
+detail screen, and the store/site images the earlier passes read, are Hevy's UI. This repository is
+public. §12.12, §12.13 and §12.15 are written in enough detail to build from **because they are the
+durable record** — do not go looking for image files, and do not commit any.
+
+---
+
+### Step 1 — the stat row on the feed card
+
+**The single biggest visual gap** (§12.14): our card shows no numbers at all, and two of the three
+are arithmetic on data already in hand.
+
+- **Where:** `feedCard()` in `js/views-workouts.js` (~line 285). Add a stat row under the title,
+  above the exercise line.
+- **Shape:** Hevy's, because it is good — **small grey label above, bold value below**, in columns:
+  `Time · Volume · Records`. Three columns when there are records, two when not (§12.13).
+- **Duration is already there**: `a.minutes`, published at mid+. Take it out of the grey meta line
+  when it moves into the row, or the same number appears twice.
+- 🚨 **Volume needs a new pure module — put it in `js/session-stats.js`**, not in a view. It is wanted
+  in three places (the feed card, the finish screen, a friend's page) and this project's rule is that
+  arithmetic lives in a pure module with its own tests.
+  ```js
+  sessionVolume(entries, exMap)   // → { volume, sets, byExercise }
+  ```
+- ⚠️ **PER SIDE IS THE TRAP.** A dumbbell set at `50 lbs × 10` is **1,000 lbs of volume, not 500** —
+  `loadType === 'per_side'` doubles. The projection carries `exerciseId` per entry, so the READER
+  looks the exercise up in their own `store.getExerciseMap()` to recover `loadType`. Every weighted
+  exercise has one (`tests/data-layer.test.mjs` asserts it).
+- ⚠️ **BODY-WEIGHT LIFTS CANNOT BE COUNTED FOR A FRIEND, AND MUST NOT BE GUESSED.**
+  `totalResistance()` in `js/e1rm.js` needs the lifter's body weight, and a friend's body weight is
+  published only at **full** and only if they opted in. **Rule: volume counts external load only** —
+  a pull-up with no belt contributes 0. Say it where it shows, the way this app says everything else.
+- **Tests:** `sessionVolume` in `tests/data-layer.test.mjs` (per-side doubling, a bodyweight set
+  contributing 0, an empty session being 0 rather than NaN); the row rendering in
+  `tests/render.test.mjs`'s feed block.
+
+### Step 2 — the description field 🚨 cheapest high-value item in the whole document
+
+- **Store:** a `note` string on the session row. Written by `finish()` in `js/views-session.js` and
+  passed through `store.saveSession`.
+- **UI:** a text box on the finish screen. ⚠️ **Hevy's is written BEFORE saving** (§12.2) and that is
+  the right place — it makes the description part of finishing rather than a separate "post" step.
+- **Projection:** `projectSession()` in `js/social.js`, **at MID and above, never light** — light
+  publishes nothing from inside the workout, and a description is inside it. Trim and cap it the way
+  `location` is (that one is `.trim().slice(0, 80)`; a description wants ~280).
+- 🚨 **THE TIER TEST WILL FAIL UNTIL THE KEY IS ADDED TO THE ALLOW-LIST**, and that is by design:
+  `assertTierClean` in `tests/social.test.mjs` lists the keys each tier may contain, so a new field
+  showing up at light is a test failure rather than a quiet widening. Add it to the mid/full list
+  deliberately.
+- **Card:** render under the title, above the stat row (§12.13).
+
+### Step 3 — tapping a card opens the workout
+
+- The renderer already exists — a friend's session opens with supersets and drop sets intact from
+  the friend's page in `js/views-social.js`. This is a route and a tap target, not new rendering.
+- The projection carries a per-session `id` (it is what reactions anchor to), so a route can address
+  one: `#/friend/<uid>` already exists.
+- ⚠️ **Old sessions published before ids existed have none** — `feedActions()` already handles that
+  case with a sentence rather than a dead tap. Do the same here.
+
+### Step 4 — the per-session muscle split
+
+- `volumeContributions()` from `js/volume-map.js`, summed per muscle over the session's entries.
+- 🚨 **A SHARE, NOT AN ABSOLUTE** (§12.16). "52 % of this workout was chest" is true of one session;
+  "12.4 sets" only means something against a week. **Per session: share. Per week: absolute.**
+- Draw it as bars (Hevy's shape) or as the small figure — the ramp and the figure both exist since
+  2026-09-01. ⚠️ **If the figure is used, the red-to-green ramp's whole justification is the legend
+  and the numbers beside it** (`tools/volume-ramp.mjs` header) — a bare figure on a card would strip
+  exactly the secondary encoding that makes that ramp legal.
+
+### Step 5 — personal records, typed
+
+- Hevy hangs them under the set that earned them, typed **Weight · Volume · 1RM** (§12.15).
+- **We already have the hard half**: `personalBests()` in `js/views-session.js` (~line 2216) compares
+  recorded numbers against every prior session and benchmark, and is Rule 5-safe by construction —
+  no estimate anywhere in it. Typing it into three kinds is a small extension; **1RM would be the
+  first one that uses an estimate, so it must be labelled as one.**
+- ⚠️ **On a FRIEND's card the only honest claim is "a best in what they have shared"** (§12.8) —
+  their history is 60 published sessions, not their life. On your own finish screen there is no such
+  limit.
+
+### Step 6 — compare on an exercise
+
+- Their layout: two avatars, per-metric rows, paired bars, a green/red delta (§12.12). **Ours has
+  the components**: `.bar-row` with `.bar.start` / `.bar.now`, and `e1rm.js` for a rep-normalised
+  comparison that is fair rather than "who typed a bigger number".
+- ⚠️ **Skip their yellow STRONGER badge.** Declaring a winner off one exercise is Rule 6.
+
+### Step 7 — save their workout as a routine · Step 8 — a shareable image
+
+Both specified in §12.8. Step 7 is `entries[]` → the shape `addPresetSystem()` already writes
+(⚠️ theirs is a record and ours would be a plan: set counts carry, weights do not). Step 8 is
+canvas → PNG → `navigator.share({files})`, no backend.
+
+---
+
+### ⚠️ What Tim owes a decision on before the matching step can start
+
+| | The question | Why it cannot be decided here |
+|---|---|---|
+| **A** | **Should a warm-up be typed by the lifter?** (§12.16, Open work 0c) | It changes what every set row asks for mid-workout, and it retires the Volume tab's "we count everything" caveat. **The past stays counted rather than retro-guessed.** This is the highest-value decision on the list and it is no longer a choice between two guesses |
+| **B** | **Per-workout visibility, as well as per-person?** (§12.13) | A session-level flag honoured by `projectSession()`. It composes with the tiers rather than replacing them. Real feature, not a rename |
+| **C** | **RPE?** (§12.9) | We deliberately have no reps-in-reserve field and the Goals screen names it as a thing the app cannot see. Adding one changes what the app asks of somebody mid-set |
+| **D** | **Blaze, for photos** (§12.9) | Money, and a moderation question. Step 9, and everything above it is free |
+
+### The order, one line
+
+**1 stats → 2 description → 3 tap-through → 4 muscle split → 5 PRs → 6 compare → 7 save routine →
+8 shareable.** Steps 1 and 2 together are most of the visual gap in §12.14.

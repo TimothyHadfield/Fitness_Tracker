@@ -6342,3 +6342,34 @@ Smaller: the detail view uses an absolute date ("Wednesday, Aug 26, 2026 - 1:23p
 uses "6 hours ago"; the set table's header changes per exercise (`SET | WEIGHT & REPS` vs
 `SET | REPS`) which our field model already knows how to do; and exercise names are blue links into
 the exercise page.
+
+### Prepared for a chat reset
+
+Tim: *"now that we have the notes in place, I want you to prepare everything for chat reset so we can
+start actually building this social structure in the next session. Make sure we don't loose anything
+in the plan."*
+
+Nothing is half-finished — the working tree is clean and everything is pushed. Two things were
+written so the next session starts building rather than re-deriving:
+
+**`docs/social-plan.md` §13 — the build brief.** Eight steps in order, each shippable on its own,
+with the file, the function, the trap and the test named for each one. The traps are the part worth
+having written down: volume has to double a per-side dumbbell set or it reports half of somebody's
+session; a friend's bodyweight lifts can't be counted at all because we don't have their body weight,
+so volume counts external load only and says so; and adding a description to the projection will fail
+the tier test on purpose until the key is deliberately added to the allow-list, which is that test
+doing its job.
+
+**The top of `progress.md` now opens with it.** A fresh session reads that file first, so it now says
+in its first screen that the next job is the social feed, where the brief is, and the three things to
+know before opening it — the biggest being that most of a Hevy card is already in what we publish and
+simply isn't drawn.
+
+The four decisions that are yours are collected at the end of §13: whether a warm-up should be typed
+by the lifter (the best of them, and it retires an open question from August), whether visibility
+should also be per-workout the way theirs is, whether to add RPE, and whether to pay for Blaze so
+photos become possible.
+
+One deliberate omission: your screenshots and the ones I pulled aren't in the repository. It's
+public and they're Hevy's UI — the written descriptions are detailed enough to build from, and that's
+on purpose.
