@@ -4198,9 +4198,11 @@ ok(!data.querySelector('.rep-target'),
     ok(/Asked to connect/i.test(s.textContent),
        'an incoming request gets its own heading, separate from "Waiting for you"');
     ok(/Samira Okonkwo/.test(s.textContent), 'and names who asked');
-    ok(/just that I trained/i.test(s.textContent),
+    ok(/can see everything you have recorded/i.test(s.textContent),
        '⚠️ and says what accepting would actually give them — a request is a decision, not a '
-       + 'notification to dismiss');
+       + 'notification to dismiss. ⚠️ IT SAYS MORE THAN IT USED TO, because accepting now gives '
+       + 'more: this line read "they start on just that I trained" until 2026-09-03, and a '
+       + 'sentence that understates what a tap hands over is worse than no sentence');
 
     const row = [...s.querySelectorAll('.row')].find((r) => /Samira/.test(r.textContent));
     const no = [...row.querySelectorAll('button')].find((b) => b.textContent.trim() === 'No');
@@ -5060,20 +5062,25 @@ ok(!data.querySelector('.rep-target'),
      '⚠️ a session outside the published window says so — the window is 60, and an old card outlives it');
   ok(/changed what they share|scrolled off/.test(g), 'and names both reasons it can happen');
 
-  /* ---- and one from somebody who shares only that they trained ---- */
+  /* ---- and one with nothing inside it ----
+   *
+   * ⚠️ THIS USED TO BE THE LOWEST-TIER CASE and it is not gone with the tiers,
+   * only re-caused: a session with no entries is still reachable — an activity
+   * publishes none, and so does a workout finished with nothing logged. The
+   * screen has to read as complete rather than as one that failed to load. */
   social.state = async () => ({
     available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
-    shareBodyWeight: false,
-    connections: [{ uid: 'u1', name: 'Autumn', tier: 'light', since: '2026-08-01' }],
+    shareBodyWeight: false, visibility: 'private',
+    connections: [{ uid: 'u1', name: 'Autumn', since: '2026-08-01' }],
   });
   social.friend = async () => ({
-    tier: 'light',
+    audience: 'friends',
     doc: { profile: { name: 'Autumn' }, activity: [{ id: 's9', date: '2026-08-26', name: 'Workout' }] },
   });
   const light = await mount(FriendSessionView('u1', 's9'));
   for (let i = 0; i < 8; i++) await settle();
-  ok(/shares that they trained/.test(light.textContent),
-     'the lowest tier gets a complete screen that says what it is, not an empty one');
+  ok(/no exercises recorded in this one/i.test(light.textContent),
+     'a session with nothing in it gets a complete screen that says what it is, not an empty one');
   ok(!light.querySelector('.ws-split'), 'and no muscle split invented out of nothing');
 
   restore();
@@ -5270,6 +5277,254 @@ ok(!data.querySelector('.rep-target'),
      of rep count it is, is the whole difference between a guide and a lie. */
   ok(/maybe/.test(capText[1]), 'worded as a guess rather than as a target');
 
+  await store.clearAll();
+}
+
+/* ================================================================== *
+ * 🚨 PRIVATE OR PUBLIC, A FRIEND'S MUSCLE PANEL, AND TWO BODIES SIDE BY SIDE
+ *   — 2026-09-03
+ *
+ * Tim: *"I want to change how privacy settings work, as well as change the
+ * visibility one user has on another… a friend [should] be able to see another
+ * user's body, their graphs, volume, etc. as well as click on any muscle group
+ * like that own user can on themselves… make a compare button somewhere that
+ * allows that user to display another person's body side by side."*
+ * ================================================================== */
+{
+  const { FriendView, CompareBodiesView, FriendVolumeView, FriendGraphView, SocialView } =
+    await import(BASE + 'views-social.js');
+  const { social, store, todayISO } = await import(BASE + 'store.js');
+  sessionStorage.removeItem('ftrack:v1:demo');
+
+  const original = {
+    state: social.state, friend: social.friend, invites: social.invites,
+    handoffs: social.handoffs, requests: social.requests,
+    healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    processAcceptedRequests: social.processAcceptedRequests,
+    setVisibility: social.setVisibility,
+  };
+  social.invites = async () => [];
+  social.handoffs = async () => [];
+  social.requests = async () => [];
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.processAcceptedRequests = async () => 0;
+
+  let saved = null;
+  social.setVisibility = async (v) => { saved = v; return v; };
+
+  const state = (visibility = 'private') => async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
+    shareBodyWeight: false, visibility,
+    connections: [{ uid: 'u1', name: 'Autumn', since: '2026-08-01' }],
+  });
+
+  /* Their published muscle map, in the shape buildStrengthShare() produces —
+   * ⚠️ WITH TWO GRID ROWS, because the assertion that matters is that changing
+   * the comparison group changes the numbers on somebody ELSE's body. A fixture
+   * with one row would let a screen that silently ignores the control pass. */
+  const STRENGTH = {
+    muscles: [
+      { muscle: 'Chest', lift: 'Barbell Bench Press', estimate: 233.4, confidence: 0.71,
+        band: 'Good', basis: 'direct', contributorCount: 9, exerciseCount: 3,
+        contributors: [
+          { exerciseName: 'Barbell Bench Press', weight: 205, reps: 3, date: '2026-08-10',
+            loadType: 'total', source: 'benchmark' },
+          { exerciseName: 'Cable Fly', weight: 40, reps: 12, date: '2026-08-15',
+            loadType: 'per_side', source: 'workout' },
+        ],
+        hint: null, confident: true },
+      { muscle: 'Back', lift: 'Barbell Row', estimate: 180, confidence: 0.4,
+        band: 'Rough', basis: 'fallback', contributorCount: 2, exerciseCount: 1,
+        contributors: [{ exerciseName: 'Barbell Row', weight: 145, reps: 8, date: '2026-08-12',
+          loadType: 'total', source: 'workout' }],
+        hint: null, confident: false },
+    ],
+    grid: {
+      'lifters|male|own|own': { Chest: [62, 24.5], Back: [41, 30] },
+      'everyone|all|any|any': { Chest: [88.1, 61], Back: [70.2, 44] },
+    },
+    defaultCompare: 'lifters|male|own|own',
+  };
+
+  const theirSession = {
+    id: 'fs1', date: todayISO(), name: 'Pull', startedAt: `${todayISO()}T09:00:00.000Z`,
+    entries: [{ exerciseId: 'lat-pulldown', name: 'Lat Pulldown',
+      sets: [{ weight: 120, reps: 10 }, { weight: 120, reps: 9 }] }],
+  };
+  const theirDoc = {
+    audience: 'friends', isPublic: false,
+    profile: { name: 'Autumn' },
+    activity: [theirSession],
+    benchmarks: [{ date: '2026-08-10', exerciseId: 'lat-pulldown', name: 'Lat Pulldown',
+      values: { weight: 140, reps: 5 } }],
+    strength: STRENGTH,
+  };
+
+  social.state = state('private');
+  social.friend = async () => ({ audience: 'friends', doc: theirDoc });
+
+  /* ---- the account setting, on the Friends screen ---- */
+  {
+    const s = await mount(SocialView());
+    for (let i = 0; i < 8; i++) await settle();
+    const t = s.textContent.replace(/\s+/g, ' ');
+    ok(/Who can see your account/.test(t),
+       '🚨 who may see this account is stated ON the sharing screen — it is one setting for the '
+       + 'whole account now, so it belongs above the list of people it applies to');
+    ok(/Private/.test(t) && /Only friends you have accepted/.test(t),
+       'and says what the current choice means in words, not as a label to look up');
+    ok(!/just that I trained|My workouts/i.test(t),
+       '⚠️ AND THE FOUR PER-PERSON LEVELS ARE GONE FROM IT — a screen still offering them would be '
+       + 'offering a control that no longer decides anything');
+
+    const row = [...s.querySelectorAll('button.row')].find((b) => /Private/.test(b.textContent));
+    row.click();
+    for (let i = 0; i < 6; i++) await settle();
+    const sheet = document.querySelector('.sheet');
+    const sh = sheet.textContent.replace(/\s+/g, ' ');
+    ok(/Public/.test(sh) && /anyone signed in/i.test(sh),
+       'the sheet offers public and says who that is');
+    ok(/time of day|gym/i.test(sh),
+       '⚠️ AND NAMES WHAT A REASONABLE PERSON WOULD NOT GUESS FROM THE WORD "PUBLIC" — the time of '
+       + 'day they train and the gym they typed. D8: teach at the moment of use');
+    ok(/body weight/i.test(sh) && /friends/i.test(sh),
+       'and names the one thing that never goes public');
+
+    const pick = [...sheet.querySelectorAll('.pick-row')].find((b) => /^Public/.test(b.textContent));
+    pick.click();
+    for (let i = 0; i < 6; i++) await settle();
+    ok(saved === 'public', 'and choosing it goes through the store');
+  }
+
+  /* ---- their body map is tappable now ---- */
+  {
+    social.state = state('private');
+    const fr = await mount(FriendView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+
+    const map = fr.querySelector('.friend-body .body-map');
+    ok(Boolean(map), 'their muscle map is drawn');
+    ok(/Autumn/.test(map.getAttribute('aria-label')),
+       '⚠️ and its accessible label says WHOSE body it is — the same drawing carries two meanings '
+       + 'in this app already, and a screen-reader user must not be told it is their own');
+
+    const chest = fr.querySelector('.body-map [data-muscle="Chest"]');
+    ok(Boolean(chest), 'and every muscle is a control');
+    chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 8; i++) await settle();
+
+    const panel = fr.textContent.replace(/\s+/g, ' ');
+    ok(/Chest/.test(panel) && /Intermediate|Advanced|Proficient|Beginner|Novice|Expert|Elite/.test(panel),
+       '🚨 TAPPING A MUSCLE OPENS THE SAME PANEL YOUR OWN MAP OPENS — Tim: "click on any muscle '
+       + 'group like that own user can on themselves and pull details from it"');
+    ok(/Estimated 1-rep max/.test(panel),
+       '⚠️ including the estimate, which the projection deliberately withheld until today');
+    ok(/Barbell Bench Press 205/.test(panel.replace(/\s+/g, ' ')),
+       '🚨 AND THE RECORDED SETS IT CAME FROM. Rule 5 travels with the number: an estimate whose '
+       + 'source is not on screen is indistinguishable from one the app made up');
+    ok(/confidence/i.test(panel), 'and how much it is worth believing');
+
+    /* ⚠️ THE COMPARISON GROUP IS THEIRS, NOT MINE. The label over their figure
+     * must not claim a body weight this device does not have. */
+    const basis = fr.querySelector('.basis-sub');
+    ok(basis && /their body weight/.test(basis.textContent),
+       '⚠️ the comparison line says "their body weight" rather than naming a number — their weight '
+       + 'is not in the document, and "your body weight" would name the wrong person');
+
+    ok([...fr.querySelectorAll('a')].some((a) => /Compare/.test(a.textContent)),
+       '🚨 and a Compare button sits on their map');
+    ok(/Volume/.test(fr.textContent) && /Graphs/.test(fr.textContent),
+       'with their volume and graphs one tap away');
+
+    /* 🚨 THE LOAD-BEARING ONE FOR TIM'S ANSWER — *"allow them to use any
+     * comparison combination that is already available"*. The percentile behind
+     * a level is a ratio to THEIR body weight and age, which this device does
+     * not have; their client published one row per combination instead. So the
+     * assertion is that switching the group reads a DIFFERENT row: a screen
+     * that silently ignored the control, or fell back to their default, would
+     * pass every other assertion in this block. */
+    const est = () => fr.querySelector('.muscle-level').textContent.trim();
+    const before = est();
+    fr.querySelector('.basis-btn').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 8; i++) await settle();
+    const everyone = [...document.querySelectorAll('.sheet .preset')]
+      .find((b) => /Everyone/.test(b.textContent));
+    everyone.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 10; i++) await settle();
+    const after = est();
+    ok(before !== after,
+       `🚨 changing the comparison group changes their level (${before} → ${after}) — the grid is `
+       + 'being read, not decorated with');
+
+    /* ⚠️ AND IT IS NOT SAVED. A viewer flipping to "everyone" to look at a
+     * friend's map is asking a question about that screen, not changing the
+     * standard their own body is ranked against. */
+    const mySettings = await store.getSettings();
+    const myCompare = mySettings.compare || {};
+    ok(myCompare.pool !== 'everyone',
+       '⚠️ and the choice is NOT written into my own settings — silently re-ranking your own map '
+       + 'from somebody else\'s page is the kind of thing nobody would ever find');
+  }
+
+  /* ---- two bodies, side by side ---- */
+  {
+    // My own map needs a profile and a set before it can be ranked at all.
+    await store.saveProfile({ gender: 'male', birthYear: 1996 });
+    await store.logBodyWeight(178, todayISO());
+    await store.saveBenchmark({ date: todayISO(), exerciseId: 'barbell-bench-press--chest',
+      exerciseName: 'Barbell Bench Press', values: { weight: 185, reps: 5 } });
+
+    const cmp = await mount(CompareBodiesView('u1'));
+    for (let i = 0; i < 12; i++) await settle();
+
+    const cols = cmp.querySelectorAll('.cmp-col');
+    ok(cols.length === 2, `two columns, one per person (${cols.length})`);
+    const names = [...cmp.querySelectorAll('.cmp-name')].map((n) => n.textContent);
+    ok(names.includes('Autumn') && names.includes('You'),
+       `each column is named (${names.join(', ')}) — a body with no name over it is not a comparison`);
+    ok(cmp.querySelectorAll('.cmp-col .body-map').length === 2, 'and both figures are drawn');
+
+    /* 🚨 ONE SELECTION, BOTH BODIES. Two independent selections is the state
+     * where somebody reads one person's chest against the other's back. */
+    const chest = cmp.querySelector('.cmp-col .body-map [data-muscle="Chest"]');
+    chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 10; i++) await settle();
+    const panels = [...cmp.querySelectorAll('.cmp-grid')].pop();
+    ok(panels.querySelectorAll('.muscle-detail').length === 2,
+       '🚨 tapping one body opens the SAME muscle on both — two independent selections is the '
+       + 'state where somebody compares one person\'s chest against the other\'s back');
+
+    const text = cmp.textContent.replace(/\s+/g, ' ');
+    ok(/own body weight and age/.test(text),
+       '⚠️ AND THE SCREEN SAYS WHAT THE COLOURS MEAN: each body is ranked against people its own '
+       + 'size, so two people can read the same level at very different weights. "Advanced vs '
+       + 'Advanced" would otherwise read as "the same lift"');
+    ok(/never "who lifts more"|who is lifting more/.test(text),
+       'and points at the estimate as the number that does answer who lifts more');
+  }
+
+  /* ---- their volume and their graph, from the same functions as mine ---- */
+  {
+    const vol = await mount(FriendVolumeView('u1'));
+    for (let i = 0; i < 12; i++) await settle();
+    const v = vol.textContent.replace(/\s+/g, ' ');
+    ok(/Autumn/.test(v), 'their volume screen names whose it is');
+    ok(/most recent sixty|sixty/.test(v),
+       '🚨 AND SAYS THE WINDOW IS NOT THEIR HISTORY — they publish sixty sessions, so this screen '
+       + 'is not the same measurement as the one on their own phone, and silence would let it '
+       + 'claim to be');
+
+    const gr = await mount(FriendGraphView('u1'));
+    for (let i = 0; i < 12; i++) await settle();
+    const g = gr.textContent.replace(/\s+/g, ' ');
+    ok(/Autumn/.test(g), 'and so does their graph');
+    ok(/Lat Pulldown/.test(g) || /line to draw|two different days/.test(g),
+       'which either charts a lift of theirs or says why it cannot');
+  }
+
+  Object.assign(social, original);
   await store.clearAll();
 }
 

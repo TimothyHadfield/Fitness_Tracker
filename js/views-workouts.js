@@ -165,7 +165,7 @@ async function fillFeed(body) {
   const seen = await Promise.all(state.connections.map(async (c) => {
     try {
       const r = await social.friend(c.uid);
-      return { conn: c, tier: r.tier, doc: r.doc };
+      return { conn: c, audience: r.audience, doc: r.doc };
     } catch (_) { return null; }
   }));
 
@@ -273,7 +273,7 @@ function feedEntries(seen) {
     const avatar = (s.doc && s.doc.profile && s.doc.profile.avatar) || null;
     for (const a of acts) {
       if (!a || !a.date) continue;
-      out.push({ uid: s.conn.uid, name, avatar, tier: s.tier, act: a });
+      out.push({ uid: s.conn.uid, name, avatar, act: a });
     }
   }
   // `startedAt` breaks ties within a day where it exists, so two of somebody's
@@ -338,9 +338,9 @@ function feedCard(e) {
   // number twice on one card reads as two different facts.
   const meta = [when, a.location].filter(Boolean).join(' · ');
 
-  // What they did. `entries` only exists at "my workouts" and above — at the
-  // lowest tier a friend shares that they trained and nothing else, and the
-  // card has to be honest about that rather than looking broken.
+  // What they did. ⚠️ `entries` used to be missing at the lowest tier, which is
+  // why the card has an honest empty case at all; the tiers went on 2026-09-03
+  // and the empty case stays, because an activity carries no entries either.
   const names = (a.entries || [])
     .map((x) => x && x.name)
     .filter(Boolean);
@@ -366,8 +366,8 @@ function feedCard(e) {
    * nothing about how much was done, which is the whole difference between a
    * receipt and a record.
    *
-   * The run-on survives as the fallback, and it earns its place: a friend on a
-   * tier that publishes entries can still have a session where no set carries a
+   * The run-on survives as the fallback, and it earns its place: a session can
+   * still have entries where no set carries a
    * number — an old row, or a workout abandoned after the first exercise — and
    * printing "0 sets" against every name would be a worse lie than the names
    * alone. `stats.byExercise` is empty in exactly that case. */
@@ -390,7 +390,7 @@ function feedCard(e) {
       ? el('div', { class: 'feed-did', text: said.join(' · ') })
       : names.length
         ? null
-        : el('div', { class: 'feed-did is-quiet', text: 'They share that they trained, not what they did.' });
+        : el('div', { class: 'feed-did is-quiet', text: 'Nothing was recorded inside this one.' });
 
   /* Tapping the card opens the workout — social-plan §13 step 3, and §12.14's
    * fifth difference ("the card is not a way in").
@@ -400,8 +400,8 @@ function feedCard(e) {
    * friend's page — a real destination where the same session is one tap
    * further — instead of on a route that cannot resolve. A dead tap is the
    * failure this project keeps refusing to ship; a slightly less specific
-   * destination is not. Light tier has no workout to open at all, so the body
-   * is not a link and the quiet line above says why. */
+   * destination is not. A session with nothing inside it has no workout to open,
+   * so the body is not a link and the quiet line above says why. */
   const openable = Boolean(a.entries && a.entries.length);
   const href = a.id
     ? `#/friend/${encodeURIComponent(e.uid)}/${encodeURIComponent(a.id)}`

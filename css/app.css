@@ -3271,8 +3271,90 @@ a.row { text-decoration: none; }
   font-size: 12.5px; font-weight: 650; color: var(--accent); text-decoration: none;
 }
 
-.friend-body { margin: 6px 0 4px; }
-.friend-body .body-map { width: 100%; height: auto; }
+/* ⚠️ CAPPED SINCE 2026-09-03, AND THE REASON IS THE TAP RATHER THAN THE SIZE.
+   The figure was `width: 100%; height: auto`, which drew 640px of body on a
+   360×780 phone — fine while it was a picture, and wrong the moment it became a
+   control: tapping a muscle put the panel below the fold, so the screen answered
+   a tap by appearing to do nothing at all. Same cap, same reasoning and the same
+   aspect-ratio box as the Volume map (2026-09-01), which had this exact problem
+   with its key. */
+.friend-body {
+  margin: 6px 0 4px;
+  width: 100%;
+  aspect-ratio: var(--body-ar, 1);
+  max-height: 52dvh;
+  max-width: calc(52dvh * var(--body-ar, 1));
+  margin-inline: auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.friend-body .body-map { width: 100%; height: 100%; }
+@media (min-width: 860px) {
+  .friend-body { max-height: 64dvh; max-width: calc(64dvh * var(--body-ar, 1)); }
+}
+
+/* ==========================================================================
+   Two bodies, side by side  (#/compare/<uid>)
+   ==========================================================================
+   🚨 Tim, 2026-09-03: "make a compare button somewhere that allows that user to
+   display another person's body side by side to the current displayed body."
+
+   ⚠️ SIDE BY SIDE AT EVERY WIDTH, INCLUDING 360px, AND THAT IS THE WHOLE POINT
+   OF THE SCREEN. The obvious responsive move — stack the two columns on a phone
+   — would put one body above the other, which is not a comparison: you cannot
+   see two things at once by scrolling between them. Each figure is already two
+   half-width drawings (front and back) inside one viewBox, so a column at 176px
+   draws each at 88px. That is small and it is legible, because the figure is a
+   silhouette with coloured regions rather than something you read detail off.
+   The PANEL under it carries every number in words, at full size.
+   ========================================================================== */
+.cmp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start;
+  margin: 4px 0 8px;
+}
+.cmp-col { min-width: 0; }
+.cmp-name {
+  font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+  color: var(--ink-soft); text-align: center; margin-bottom: 2px;
+  /* A name that wraps to two lines on one side and one on the other would put
+     the two figures on different baselines, which reads as a rendering fault. */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* ⚠️ THE HEIGHT IS CAPPED AND THE KEY IS WHY — found by MEASURING, not by
+   looking. Left to fill its column the figure drew 405×599 at 1180×820 and put
+   the level key at 852 against a fold at 820: 32px below it, on a screen whose
+   whole job is that two coloured bodies can be read against each other.
+
+   The strength ramp is a multi-hue scale that lands in the CVD floor band, and
+   this project's own rule (progress.md §5, "Colour — validate, never eyeball")
+   is that such a ramp is legal ONLY with secondary encoding — the legend and the
+   named level on tap. A key below the fold is not secondary encoding. Same
+   argument, and the same resolution, as the Volume map's 71dvh on 2026-09-01:
+   the key wins.
+
+   ⚠️ `aspect-ratio` RATHER THAN A BARE max-height, for the reason that map
+   recorded: an SVG with a viewBox never crops — given a box of the wrong shape
+   it shrinks and pads the rest, which is a small body floating in a lot of
+   nothing. The box carries the drawing's own ratio, so it is exactly the
+   picture's shape at every width. */
+/* ⚠️ THE RATIO IS THE WHOLE DRAWING'S, NOT HALF OF IT, and getting that wrong
+   cost a measurement: `--body-ar / 2` reads as "each column is half the width"
+   and is a confusion between the COLUMN and the PICTURE. One figure here is
+   already both bodies — front and back inside one viewBox — so its ratio is
+   `--body-ar` whatever width the column happens to be. Halved, the box came out
+   wide and short, the SVG letterboxed inside it, and the laptop drew a 34×16
+   chest where the phone drew 43×20: a bigger screen showing a smaller body. */
+.cmp-body {
+  aspect-ratio: var(--body-ar, 1);
+  max-height: 46dvh;
+  max-width: calc(46dvh * var(--body-ar, 1));
+  margin-inline: auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.cmp-body .body-map { width: 100%; height: 100%; }
+/* The panels below the figures are cards already; this only stops a long
+   exercise name from widening its column and shunting the other one. */
+.cmp-grid .card { min-width: 0; }
+.cmp-grid .muscle-sources { overflow-wrap: anywhere; }
 
 /* ==========================================================================
    A friend's workout, on its own screen  (#/friend/<uid>/<sessionId>)

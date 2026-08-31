@@ -218,10 +218,51 @@ const AUDIT = `(() => {
 })()`;
 
 // ---------------------------------------------------------------------- main
+
+/* 🚨 REFUSE TO RUN AGAINST A PORT SOMEBODY ELSE IS ALREADY SERVING — 2026-09-03,
+ * and this is the trap that cost half an hour.
+ *
+ * `python -m http.server` on a taken port exits immediately, and `spawn` with
+ * stdio ignored says nothing at all. The audit then drives a browser against
+ * WHATEVER IS ALREADY THERE — in the case that found this, a server left running
+ * by an earlier run, serving a scratch copy two edits old. Every number came
+ * back plausible, four new routes reported a screen the source had not rendered
+ * for an hour, and nothing anywhere said "you are measuring a different build".
+ *
+ * ⚠️ A MEASUREMENT TOOL MUST NEVER SILENTLY MEASURE THE WRONG THING. That is
+ * worse than not running: a failed run gets re-run, and a wrong one gets
+ * believed and written into progress.md. So this checks the port BEFORE
+ * spawning, and again afterwards that what is answering is really ours.
+ *
+ * If it stops you: something else holds the port. On Windows,
+ *   Get-NetTCPConnection -LocalPort <port> -State Listen
+ * names the process. Kill it, or pass PORT=<other>.
+ */
+const portTaken = await fetch(`${BASE}/index.html`, { method: 'HEAD' })
+  .then((r) => r.ok).catch(() => false);
+if (portTaken) {
+  console.error(
+    `\n🚨 Port ${PORT} is ALREADY SERVING something. Refusing to audit — the numbers would be `
+    + 'about whatever that is, not about this working copy.\n'
+    + `   Find it:  Get-NetTCPConnection -LocalPort ${PORT} -State Listen\n`
+    + '   Or run:   PORT=8892 node tools/a11y-audit.mjs\n');
+  process.exit(2);
+}
+
 const server = spawn('python', ['-m', 'http.server', PORT], {
   cwd: process.env.APP_DIR, stdio: 'ignore',
 });
 await sleep(1200);
+
+// And the other half: what is answering now must be the copy we were pointed at.
+// A HEAD is not enough — the check is that the file on disk is the file served.
+{
+  const served = await fetch(`${BASE}/js/app.js`).then((r) => r.text()).catch(() => '');
+  if (!served) {
+    console.error(`\n🚨 Nothing is serving ${BASE} — is APP_DIR set and does it hold index.html?\n`);
+    process.exit(2);
+  }
+}
 
 const chrome = spawn(CHROME, [
   '--headless=new', `--remote-debugging-port=${CDP}`,
@@ -432,6 +473,52 @@ const ROUTES = [
        throw new Error('a11y: the feed card never opened a workout');
      }`],
 
+  /* ⚠️ A FRIEND'S PAGE AND EVERYTHING BEHIND IT — added 2026-09-03, and none of
+   * it could have been audited before that day for a reason worth recording: the
+   * demo account REFUSED this screen ("Sharing is off in the demo"), which was
+   * right while it listed workouts and became wrong the moment it carried a
+   * tappable body map. The demo now builds an invented friend, so these are
+   * reachable by hash like any other route.
+   *
+   * Two rows for the map, for the same reason the Muscles tab has two: the panel
+   * does not exist until a muscle is selected, so auditing the figure alone
+   * measures the drawing and none of the words beside it. */
+  ['#/friend/demo-friend-1', 'A friend\'s muscle map'],
+  /* ⚠️ THE WAITS HERE ARE LONGER THAN EVERY OTHER STEP IN THIS FILE, and they
+   * were measured rather than guessed: a friend's map is not read off a
+   * document, it is COMPUTED — the demo builds their year, rates every muscle
+   * and then works out a percentile for all 24 comparison groups before the
+   * figure can be drawn. At the 900ms every other step uses, both of these
+   * clicked into an empty screen and threw. */
+  ['#/friend/demo-friend-1', 'A friend\'s muscle map · panel',
+    `await new Promise((r) => setTimeout(r, 2200));
+     (() => { const m = document.querySelector('.friend-body [data-muscle="Chest"]')
+       || document.querySelector('.friend-body [data-muscle]');
+       if (m) m.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(m); })();
+     await new Promise((r) => setTimeout(r, 500));
+     if (!document.querySelector('.muscle-detail')) {
+       throw new Error('a11y: the friend-map step never opened a panel');
+     }`],
+  /* 🚨 TWO BODIES SIDE BY SIDE. The one screen in this app that draws the level
+   * ramp twice at once, at half width each — so if any of it is going to fail a
+   * contrast or touch-target check, it is this. */
+  ['#/compare/demo-friend-1', 'Compare · two bodies'],
+  ['#/compare/demo-friend-1', 'Compare · both panels',
+    `await new Promise((r) => setTimeout(r, 2800));
+     (() => { const m = document.querySelector('.cmp-col [data-muscle="Chest"]')
+       || document.querySelector('.cmp-col [data-muscle]');
+       if (m) m.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+       return Boolean(m); })();
+     await new Promise((r) => setTimeout(r, 600));
+     if (document.querySelectorAll('.muscle-detail').length < 2) {
+       throw new Error('a11y: the compare step never opened both panels');
+     }`],
+  // Their volume and their graph — the Data tab's screens, computed from what
+  // they published. Both are new routes and neither existed to be measured.
+  ['#/friend/demo-friend-1/volume', 'A friend\'s volume'],
+  ['#/friend/demo-friend-1/graph', 'A friend\'s graph'],
+
   // And the comparison over it, which is a sheet and therefore invisible to the
   // row above — the same reason the swap and exercises sheets have their own.
   ['#/home', 'A friend\'s workout · compare',
@@ -474,6 +561,38 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     });
     await send('Page.navigate', { url: `${BASE}/index.html` });
     await sleep(1800);
+    /* 🚨 THE SERVICE WORKER IS TORN DOWN BEFORE ANYTHING IS MEASURED — added
+     * 2026-09-03, after it quietly audited code that was two edits old.
+     *
+     * `sw.js` is stale-while-revalidate by design (progress.md §3, "Seeing a
+     * deploy"): the load after a change serves the OLD app and the change
+     * appears on the one after. That is right for a phone in a gym and it is
+     * poison for a measurement tool — this audit navigates exactly twice before
+     * it starts reading pixels, so a screen edited a minute ago is reported
+     * under its previous layout, with a full set of numbers and no error.
+     *
+     * It cost half an hour: four new routes reported "Sharing is off in the
+     * demo" against source that had not said those words for an hour, and every
+     * hypothesis (a stale scratch copy, an old Chrome on the debugging port, a
+     * cp that wrote js/js) was wrong. THE TOOL WAS RIGHT ABOUT THE PIXELS AND
+     * WRONG ABOUT WHICH BUILD THEY CAME FROM, which is the worst way for a
+     * measurement to be wrong.
+     *
+     * ⚠️ This does NOT weaken what the audit covers: the service worker is a
+     * caching layer, not a rendering one, and nothing on any screen depends on
+     * it. The offline test (§0.7) is where the worker itself is proved, and it
+     * proves it by killing the server, which nothing here can fake. */
+    await evaluate(`(async () => {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      return regs.length;
+    })()`);
+    await send('Page.navigate', { url: `${BASE}/index.html` });
+    await sleep(1200);
     // Demo account: a populated app, per progress.md §0.10 — do not hand-seed.
     await evaluate(`sessionStorage.setItem('ftrack:v1:demo','1')`);
     await send('Page.navigate', { url: `${BASE}/index.html` });
@@ -487,7 +606,15 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     await applyPalette();
     await sleep(300);
 
+    /* ⚠️ ONLY= IS A DEV FILTER, ADDED 2026-09-03 WHILE DEBUGGING ONE SCREEN.
+     * A full run is 124 routes across two widths, two themes and four palettes,
+     * and re-running all of it to look at one new screen is minutes per attempt
+     * — which is long enough that the temptation is to stop checking. Never set
+     * it for a real audit: the numbers this file reports are only meaningful
+     * over the whole list. */
+    const only = process.env.ONLY;
     for (const [hash, name, after] of ROUTES) {
+      if (only && !name.toLowerCase().includes(only.toLowerCase())) continue;
       await goto(hash);
       if (after) {
         // Wrapped in an async IIFE so a step can await its own settling — the
@@ -507,6 +634,10 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
       await sleep(150);
       try {
         const r = await evaluate(AUDIT);
+        if (only) {
+          console.log(`  ${name}: ${await evaluate(
+            'document.body.textContent.replace(/\\s+/g, " ").slice(0, 160)')}`);
+        }
         report[`${name} ${width}px ${theme}`] = r;
       } catch (e) {
         report[`${name} ${width}px ${theme}`] = { error: e.message.slice(0, 120) };

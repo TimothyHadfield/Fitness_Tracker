@@ -6545,3 +6545,60 @@ The README's numbers were mostly stale too — it claimed 272 exercises (318) an
 One mistake of my own, recorded in the notes as a rule: I truncated `progress.md` to zero bytes with
 a Python one-liner. Recovered from git in under a minute, and the file now carries a warning not to
 edit markdown through a script — which it already had, for PowerShell.
+
+---
+
+## 2026-09-03 — private or public, and a friend's body
+
+**You:** *"I want to change how privacy settings work, as well as change the visibility one user has
+on another… I also want a friend to be able to see another user's body, their graphs, volume, etc. as
+well as click on any muscle group like that own user can on themselves… make a compare button
+somewhere that allows that user to display another person's body side by side… you can either make
+your account private so only friends you accept can see, or public so anyone on the app that finds
+your account can see all details."*
+
+I asked three things first, because each one changed what got built:
+
+- **Do the per-person levels go away completely?** You said yes. So the four settings (Nothing / Just
+  that I trained / My workouts / Everything) are gone, and there is one switch for the account.
+- **Which of the more personal fields follow you into public?** You picked the profile photo, the
+  time of day you train and the gym name. **Body weight stays with friends** — it is the only
+  difference between what a friend sees and what a stranger sees, and it is why there are two copies
+  published rather than one.
+- **What should the colours mean with two bodies on screen?** You said default to people like them,
+  but allow any comparison the app already offers.
+
+That last answer is the interesting one to build, because a percentile is worked out from the
+person's own body weight and age — neither of which your phone has for them, and body weight is
+exactly what you said not to publish. So **their phone works out all 24 comparisons and publishes the
+answers**, and yours reads off whichever you pick. Nothing new about their body is published, and you
+can still ask every question.
+
+**What is on screen now.** A friend's muscle map is tappable, with the same panel your own has: the
+estimated max, what the next level costs, how sure it is, and the actual sets it came from. Their
+volume and their graphs are two rows on their page. A **Compare** button on any body map — theirs or
+yours — puts two bodies side by side, one comparison setting governing both, and tapping either one
+opens the same muscle on both.
+
+**Three things worth telling you about:**
+
+1. **A trap that would have added strangers to your friends list.** The app learns somebody accepted
+   your request by finding it can suddenly read them. That was airtight until today — and a public
+   account can be read by anyone, so anybody you had ever asked, who never replied, would have
+   quietly become a friend. It now checks specifically that it is reading you as a friend.
+2. **The Disconnect message would have lied.** It promises they can no longer see anything of yours,
+   which is false on a public account — they keep reading it like everybody else. It says so now.
+3. **Two layout faults I only found by measuring.** The level key fell off the bottom of the screen
+   on a laptop, and on a phone a friend's map filled the screen so completely that tapping a muscle
+   put the panel out of sight — the screen answered a tap by looking like it did nothing.
+
+**Not verified:** no phone, and no second real account — so nobody has actually seen what a public
+account looks like to a stranger. The rules are proved against Google's emulator (159 checks) and
+deployed; the screens are proved in the demo, in a real browser at 360 and 1180px in both themes, and
+by the accessibility audit (124 screens, zero contrast failures, nothing unnamed).
+
+**One aside, because it cost half an hour.** The accessibility audit spent four runs measuring a
+version of the app two edits old: a leftover web server from an earlier run was still holding the
+port, and Python's server exits silently when the port is taken, so the tool happily measured whatever
+was already there. It now refuses to run in that situation. A tool that quietly measures the wrong
+thing is worse than one that fails.

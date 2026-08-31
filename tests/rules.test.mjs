@@ -64,15 +64,20 @@ const asSam = env.authenticatedContext(SAM).firestore();
 const asStranger = env.authenticatedContext(STRANGER).firestore();
 const asNobody = env.unauthenticatedContext().firestore();
 
-const shared = (db, uid, tier) => doc(db, 'users', uid, 'shared', tier);
+const shared = (db, uid, audience) => doc(db, 'users', uid, 'shared', audience);
 const priv = (db, uid, name) => doc(db, 'users', uid, 'collections', name);
 // The sharded collections — one document per row. Open work 0b(c).
 const shard = (db, uid, name, id) => doc(db, 'users', uid, name, id);
 const graph = (db, uid) => doc(db, 'users', uid, 'social', 'graph');
 const invite = (db, uid, token) => doc(db, 'users', uid, 'invites', token);
 
-const projection = (tier, viewers, extra = {}) => ({
-  tier,
+/* 🚨 TWO AUDIENCES SINCE 2026-09-03, not three tiers. `isPublic` is the field
+ * the rules read to grant a signed-in stranger a read, so it is derived from the
+ * audience here exactly as js/social.js derives it — a fixture that could set it
+ * independently would be testing a document the app cannot produce. */
+const projection = (audience, viewers, extra = {}) => ({
+  audience,
+  isPublic: audience === 'public',
   viewers,
   profile: { name: 'Tim' },
   publishedAt: '2026-08-17T12:00:00.000Z',
@@ -86,9 +91,14 @@ await env.withSecurityRulesDisabled(async (ctx) => {
   await setDoc(priv(db, TIM, 'sessions'), { rows: [{ id: 's1', weight: 185 }], updatedAt: new Date() });
   await setDoc(shard(db, TIM, 'sessions', 's1'), { row: { id: 's1', weight: 185 }, updatedAt: new Date() });
   await setDoc(shard(db, TIM, 'guestSessions', 'g1'), { row: { id: 'g1', guestName: 'Alex' }, updatedAt: new Date() });
-  await setDoc(shared(db, TIM, 'full'), projection('full', [ALEX]));
-  await setDoc(shared(db, TIM, 'light'), projection('light', [SAM]));
-  await setDoc(graph(db, TIM), { connections: [{ uid: ALEX, tier: 'full' }] });
+  // Tim is PRIVATE: one friends document, and Alex is in it.
+  await setDoc(shared(db, TIM, 'friends'), projection('friends', [ALEX]));
+  // ⚠️ SAM IS A PUBLIC ACCOUNT, which is what gives these tests something to
+  // check that did not exist before 2026-09-03: a document nobody is listed on
+  // and everybody signed in may read.
+  await setDoc(shared(db, SAM, 'public'), projection('public', []));
+  await setDoc(shared(db, SAM, 'friends'), projection('friends', [ALEX]));
+  await setDoc(graph(db, TIM), { connections: [{ uid: ALEX }] });
   await setDoc(invite(db, TIM, 'open-token'), {
     token: 'open-token',
     createdAt: '2026-08-17T00:00:00.000Z',
@@ -113,7 +123,10 @@ console.log('\n--- The private data stays private. Asserted directly, not inheri
 // paths under users/{uid}/ and the one unacceptable outcome is that it widened
 // the old ones. Never delete these because "we didn't touch that rule".
 await denied(getDoc(priv(asAlex, TIM, 'sessions')),
-  'a FULL-tier friend still cannot read the private sessions document');
+  'an accepted friend still cannot read the private sessions document');
+await denied(getDoc(priv(asStranger, SAM, 'sessions')),
+  '🚨 AND NEITHER CAN ANYBODY READING A PUBLIC ACCOUNT — "public" widened exactly one document, '
+  + 'and the private collections are not it');
 await denied(getDoc(priv(asStranger, TIM, 'sessions')), 'a stranger cannot read private sessions');
 await denied(getDoc(priv(asNobody, TIM, 'sessions')), 'a signed-out caller cannot read private sessions');
 await denied(setDoc(priv(asAlex, TIM, 'sessions'), { rows: [], updatedAt: serverTimestamp() }),
@@ -132,8 +145,9 @@ await allowed(getDoc(priv(asTim, TIM, 'sessions')), 'the owner reads their own p
  * still a derived copy under shared/{tier}; it is not, and must never become,
  * a read permission on a real session document. */
 await denied(getDoc(shard(asAlex, TIM, 'sessions', 's1')),
-  '⚠️ a FULL-tier friend cannot read one sharded session either — sharding is not sharing');
-await denied(getDoc(shard(asSam, TIM, 'sessions', 's1')), 'nor can a light-tier friend');
+  '⚠️ a friend cannot read one sharded session either — sharding is not sharing');
+await denied(getDoc(shard(asStranger, SAM, 'sessions', 's1')),
+  'nor can somebody reading a public account');
 await denied(getDoc(shard(asStranger, TIM, 'sessions', 's1')), 'nor a stranger');
 await denied(getDoc(shard(asNobody, TIM, 'sessions', 's1')), 'nor a signed-out caller');
 await denied(getDocs(collection(asAlex, 'users', TIM, 'sessions')),
@@ -198,65 +212,99 @@ await denied(setDoc(backup(asTim, TIM, 'rolling-3-sessions'),
   { ...backupDoc, extra: 'nope' }),
   'and an invented field is refused at the wire, like everywhere else');
 
-console.log('\n--- Projections: only the listed viewers ---\n');
+console.log('\n--- A PRIVATE account: only the listed viewers ---\n');
 
-await allowed(getDoc(shared(asAlex, TIM, 'full')), 'a viewer listed on full reads the full projection');
-await allowed(getDoc(shared(asSam, TIM, 'light')), 'a viewer listed on light reads the light projection');
-await allowed(getDoc(shared(asTim, TIM, 'full')),
-  'the owner reads their own projection — "here is exactly what Alex can see"');
+await allowed(getDoc(shared(asAlex, TIM, 'friends')), 'an accepted friend reads the friends document');
+await allowed(getDoc(shared(asTim, TIM, 'friends')),
+  'the owner reads their own — "here is exactly what a friend can see"');
 
-await denied(getDoc(shared(asSam, TIM, 'full')),
-  'a LIGHT viewer cannot read the full projection');
-await denied(getDoc(shared(asStranger, TIM, 'full')), 'a stranger cannot read a projection');
-await denied(getDoc(shared(asStranger, TIM, 'light')), 'nor the lightest one');
-await denied(getDoc(shared(asNobody, TIM, 'light')), 'a signed-out caller cannot read a projection');
+await denied(getDoc(shared(asSam, TIM, 'friends')),
+  '🚨 somebody NOT on the viewers list cannot read it, even signed in — this is the whole of what '
+  + '"private" means');
+await denied(getDoc(shared(asStranger, TIM, 'friends')), 'nor can a stranger');
+await denied(getDoc(shared(asNobody, TIM, 'friends')), 'nor a signed-out caller');
 
-console.log('\n--- A viewer is a reader and nothing more ---\n');
+console.log('\n--- A PUBLIC account: anyone signed in, and nobody signed out ---\n');
 
-await denied(setDoc(shared(asAlex, TIM, 'full'), projection('full', [ALEX, STRANGER])),
-  'a viewer cannot write to a projection they can read');
-await denied(updateDoc(shared(asAlex, TIM, 'full'), { viewers: [ALEX, STRANGER] }),
+await allowed(getDoc(shared(asStranger, SAM, 'public')),
+  '🚨 A STRANGER READS A PUBLIC ACCOUNT — Tim, 2026-09-03: "public so anyone on the app that finds '
+  + 'your account can see all details"');
+await allowed(getDoc(shared(asTim, SAM, 'public')), 'and so does anybody else signed in');
+await denied(getDoc(shared(asNobody, SAM, 'public')),
+  '⚠️ BUT A SIGNED-OUT CALLER DOES NOT. "Anyone on the app" is not "the whole internet with a '
+  + 'scraper", and an unauthenticated read is also an unattributable one');
+await denied(getDoc(shared(asStranger, SAM, 'friends')),
+  '⚠️ and the friends document of a public account is STILL private — that is where body weight '
+  + 'lives, and it is the only reason there are two documents');
+await allowed(getDoc(shared(asAlex, SAM, 'friends')), 'while their actual friend still reads it');
+
+console.log('\n--- A reader is a reader and nothing more ---\n');
+
+await denied(setDoc(shared(asAlex, TIM, 'friends'), projection('friends', [ALEX, STRANGER])),
+  'a viewer cannot write to a document they can read');
+await denied(updateDoc(shared(asAlex, TIM, 'friends'), { viewers: [ALEX, STRANGER] }),
   'a viewer cannot add somebody to the audience');
-await denied(setDoc(shared(asStranger, TIM, 'full'), projection('full', [STRANGER])),
-  'a stranger cannot publish a projection into somebody else\'s account');
-await denied(updateDoc(shared(asStranger, TIM, 'light'), { viewers: [SAM, STRANGER] }),
+await denied(setDoc(shared(asStranger, TIM, 'friends'), projection('friends', [STRANGER])),
+  'a stranger cannot publish into somebody else\'s account');
+await denied(updateDoc(shared(asStranger, TIM, 'friends'), { viewers: [SAM, STRANGER] }),
   'A STRANGER CANNOT ADD THEMSELVES TO A VIEWERS LIST');
-await denied(deleteDoc(shared(asAlex, TIM, 'full')), 'a viewer cannot delete a projection');
+await denied(updateDoc(shared(asStranger, SAM, 'public'), { viewers: [STRANGER] }),
+  '🚨 AND READING A PUBLIC ACCOUNT DOES NOT LET YOU WRITE TO IT — the new grant is `get`, and '
+  + 'nothing else moved with it');
+await denied(deleteDoc(shared(asAlex, TIM, 'friends')), 'a viewer cannot delete a document');
+await denied(deleteDoc(shared(asStranger, SAM, 'public')), 'nor can a public reader');
 await denied(getDocs(collection(asAlex, 'users', TIM, 'shared')),
-  'a viewer cannot LIST the tiers — that would name the ones they were not granted');
-await allowed(getDocs(collection(asTim, 'users', TIM, 'shared')), 'the owner can list their own tiers');
+  'a viewer cannot LIST the audiences');
+await denied(getDocs(collection(asStranger, 'users', SAM, 'shared')),
+  '⚠️ nor can somebody reading a public account — listing would tell them a friends document '
+  + 'exists and how many people are on it');
+await allowed(getDocs(collection(asTim, 'users', TIM, 'shared')), 'the owner can list their own');
 
 console.log('\n--- Publishing, and its shape ---\n');
 
-await allowed(setDoc(shared(asTim, TIM, 'mid'), projection('mid', [SAM])), 'the owner publishes a tier');
-await denied(setDoc(shared(asTim, TIM, 'everything'), projection('everything', [SAM])),
-  'a tier that is not one of the three cannot be published');
-await denied(setDoc(shared(asTim, TIM, 'full'), { ...projection('full', [ALEX]), secret: 'x' }),
+await allowed(setDoc(shared(asTim, TIM, 'public'), projection('public', [])),
+  'the owner publishes their public document');
+await denied(setDoc(shared(asTim, TIM, 'full'), projection('full', [SAM])),
+  '⚠️ AN OLD TIER NAME CANNOT BE PUBLISHED — `light`, `mid` and `full` are not audiences, which '
+  + 'is what stops a stale client re-creating a document nothing reads and nobody can see');
+await denied(setDoc(shared(asTim, TIM, 'friends'), { ...projection('friends', [ALEX]), secret: 'x' }),
   'an unexpected field is refused — the document shape is pinned');
-await denied(setDoc(shared(asTim, TIM, 'full'), projection('full', 'alex')),
+await denied(setDoc(shared(asTim, TIM, 'friends'), projection('friends', 'alex')),
   'viewers must be a list, not a string');
-await denied(setDoc(shared(asTim, TIM, 'full'),
-  projection('full', Array.from({ length: 501 }, (_, i) => `u${i}`))),
+await denied(setDoc(shared(asTim, TIM, 'friends'),
+  projection('friends', Array.from({ length: 501 }, (_, i) => `u${i}`))),
   'more than 500 viewers is refused before the document can approach 1 MB');
-await denied(setDoc(shared(asTim, TIM, 'full'),
-  { ...projection('full', [ALEX]), activity: Array.from({ length: 61 }, () => ({ date: '2026-08-01' })) }),
+await denied(setDoc(shared(asTim, TIM, 'friends'),
+  { ...projection('friends', [ALEX]), activity: Array.from({ length: 61 }, () => ({ date: '2026-08-01' })) }),
   'more than 60 activity entries is refused');
+
+console.log('\n--- 🚨 BODY WEIGHT IS NOT IN A PUBLIC DOCUMENT, ON THE WIRE ---\n');
+
+await allowed(setDoc(shared(asTim, TIM, 'friends'),
+  { ...projection('friends', [ALEX]), bodyWeight: [{ date: '2026-08-01', weight: 178 }] }),
+  'weigh-ins may be published to friends');
+await denied(setDoc(shared(asTim, TIM, 'public'),
+  { ...projection('public', []), bodyWeight: [{ date: '2026-08-01', weight: 178 }] }),
+  '🚨 AND NOT TO THE PUBLIC — Tim\'s call, and it is enforced here as well as in the builder, so a '
+  + 'bug in js/social.js cannot publish it anyway. Two independent gates, same as everything else');
 
 console.log('\n--- Revocation ---\n');
 
 await env.withSecurityRulesDisabled(async (ctx) => {
-  await setDoc(shared(ctx.firestore(), TIM, 'full'), projection('full', []));
+  await setDoc(shared(ctx.firestore(), TIM, 'friends'), projection('friends', []));
 });
-await denied(getDoc(shared(asAlex, TIM, 'full')),
+await denied(getDoc(shared(asAlex, TIM, 'friends')),
   'removing somebody from viewers makes the document unreadable to them immediately');
-await allowed(deleteDoc(shared(asTim, TIM, 'mid')), 'the owner can delete a projection outright');
+await allowed(deleteDoc(shared(asTim, TIM, 'public')),
+  '⚠️ and the owner can delete a document outright — going private DELETES the public copy, which '
+  + 'is the only thing that actually stops strangers reading it');
 
 console.log('\n--- The connection graph is owner-only in both directions ---\n');
 
 await denied(getDoc(graph(asAlex, TIM)),
-  'a full-tier friend cannot read the graph — it names everyone else and their tier');
+  'a friend cannot read the graph — it names everyone else they are connected to');
 await denied(getDoc(graph(asStranger, TIM)), 'nor can a stranger');
-await denied(setDoc(graph(asAlex, TIM), { connections: [{ uid: ALEX, tier: 'full' }] }),
+await denied(setDoc(graph(asAlex, TIM), { connections: [{ uid: ALEX }] }),
   'and nobody can write themselves into it');
 await allowed(getDoc(graph(asTim, TIM)), 'the owner reads their own graph');
 
@@ -303,14 +351,14 @@ console.log('\n--- Reactions: the one narrow foreign write (0l) ---\n');
 // file: every one of them is a way the exception could have been wider than
 // designed.
 
-// Re-seed the projections: the revocation tests above rewrote shared/full
+// Re-seed the documents: the revocation tests above rewrote shared/friends
 // with an empty viewers list, and a reactions test that ran against that
 // state would be testing "a revoked viewer cannot react" three times while
 // believing it tested the happy path.
 await env.withSecurityRulesDisabled(async (ctx) => {
   const db = ctx.firestore();
-  await setDoc(shared(db, TIM, 'full'), projection('full', [ALEX]));
-  await setDoc(shared(db, TIM, 'light'), projection('light', [SAM]));
+  await setDoc(shared(db, TIM, 'friends'), projection('friends', [ALEX, SAM]));
+  await setDoc(shared(db, SAM, 'public'), projection('public', []));
 });
 
 const reaction = (db, owner, id) => doc(db, 'users', owner, 'reactions', id);
@@ -321,16 +369,23 @@ const commentDoc = (from, text = 'nice one', sessionId = 'sess-1') => ({
   kind: 'comment', sessionId, from, fromName: 'Somebody', text, at: serverTimestamp(),
 });
 
-// Viewers at ANY tier may react — seeing the card is what qualifies you.
+// 🚨 ACCEPTED FRIENDS, AND ONLY ACCEPTED FRIENDS.
 await allowed(setDoc(reaction(asAlex, TIM, 'k_sess-1_' + ALEX), kudosDoc(ALEX)),
-  'a full-tier viewer can give kudos');
+  'a friend can give kudos');
 await allowed(setDoc(reaction(asSam, TIM, 'k_sess-1_' + SAM), kudosDoc(SAM)),
-  'a light-tier viewer can too — they see the card, so they can react to it');
+  'and so can another friend');
 await allowed(setDoc(reaction(asAlex, TIM, 'c_sess-1_' + ALEX + '_n1'), commentDoc(ALEX)),
-  'a viewer can comment');
+  'a friend can comment');
 
 await denied(setDoc(reaction(asStranger, TIM, 'k_sess-1_' + STRANGER), kudosDoc(STRANGER)),
-  'a stranger cannot react — no published tier lists them');
+  'a stranger cannot react — they are on nobody\'s viewers list');
+await denied(setDoc(reaction(asStranger, SAM, 'k_sess-1_' + STRANGER), kudosDoc(STRANGER)),
+  '🚨 AND NOR CAN SOMEBODY READING A PUBLIC ACCOUNT, which is the decision of 2026-09-03 that did '
+  + 'NOT follow the account into public: reading is a grant, writing into somebody\'s subtree is a '
+  + 'moderation surface, and this project has no moderation story');
+await denied(getDocs(collection(asStranger, 'users', SAM, 'reactions')),
+  '⚠️ nor read the conversation on it — what they would be reading is people who know each other '
+  + 'talking, on a page they are merely allowed to look at');
 await denied(setDoc(reaction(asNobody, TIM, 'k_sess-1_anon'), kudosDoc('anon')),
   'a signed-out caller cannot react');
 await denied(setDoc(reaction(asAlex, TIM, 'k_forged'), kudosDoc(SAM)),
@@ -412,7 +467,10 @@ await denied(setDoc(handoff(asAlex, TIM, 'h_x6'),
 await allowed(setDoc(handoff(asAlex, TIM, 'h_s1'), handoffDoc(ALEX)),
   'a connected friend CAN offer Tim the session they recorded for him');
 await allowed(setDoc(handoff(asSam, TIM, 'h_s2'), { ...handoffDoc(SAM), fromName: 'Sam' }),
-  'and so can a light-tier friend — being able to see him is what qualifies you');
+  'and so can another friend — being on his viewers list is what qualifies you');
+await denied(setDoc(handoff(asStranger, SAM, 'h_s3'), handoffDoc(STRANGER)),
+  '⚠️ but somebody who can only READ a public account cannot hand its owner a workout to accept '
+  + 'into their own training — more obviously friends-only than reacting is');
 
 // ⚠️ NO UPDATE PATH. Same argument as reactions: every mutation a rule does
 // not have is a mutation that cannot be got wrong.

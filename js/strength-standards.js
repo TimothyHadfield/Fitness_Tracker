@@ -224,6 +224,64 @@ export const COMPARE_OPTIONS = {
   ],
 };
 
+/* ── COMPARISON GROUPS AS KEYS — 2026-09-03 ──────────────────────────────────
+ *
+ * 🚨 WHY A COMPARISON GROUP NEEDS A NAME YOU CAN PUT IN A DOCUMENT. Tim asked
+ * that a viewer be able to apply *"any comparison combination that is already
+ * available"* to somebody ELSE's body map. A percentile is a ratio to that
+ * person's own body weight and age, so the viewer's device cannot compute one
+ * without both — and body weight is the one number the public document
+ * deliberately does not carry (js/social.js).
+ *
+ * So the owner computes every combination on their own device, where those
+ * numbers already are, and publishes the answers keyed by these strings. Both
+ * sides of that exchange call the functions below, which is what stops a
+ * publisher and a reader disagreeing about what "lifters|male|own|own" means.
+ *
+ * ⚠️ `own` ON THE WEIGHT AND AGE AXES MEANS "THE PERSON THE MAP IS ABOUT", not
+ * the person reading it. That is already true of the label on your own screen
+ * and it is what makes a published grid meaningful at all.
+ */
+
+/** The 24 concrete combinations the sheet can produce. `sex: 'own'` is resolved. */
+export function allCompareCombos() {
+  const out = [];
+  for (const pool of COMPARE_OPTIONS.pool) {
+    for (const sex of COMPARE_OPTIONS.sex) {
+      if (sex.hidden) continue;
+      for (const weight of COMPARE_OPTIONS.weight) {
+        for (const age of COMPARE_OPTIONS.age) {
+          out.push({ pool: pool.key, sex: sex.key, weight: weight.key, age: age.key });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * A comparison group as one string.
+ *
+ * ⚠️ `ownSex` RESOLVES THE UNSET VALUE, and passing it is not optional when the
+ * key has to match a published grid: `sex: 'own'` is the stored default for
+ * anybody who has never opened the sheet, and no grid row is keyed on it.
+ * Reading a friend's map, "own" means THEIR sex, which their document states in
+ * `strength.defaultCompare`.
+ */
+export function compareKey(compare, ownSex) {
+  const c = normalizeCompare(compare);
+  const sex = c.sex === 'own'
+    ? (ownSex === 'female' ? 'female' : ownSex === 'all' ? 'all' : 'male')
+    : c.sex;
+  return `${c.pool}|${sex}|${c.weight}|${c.age}`;
+}
+
+/** The other half — back into the four axes, normalised. */
+export function parseCompareKey(key) {
+  const [pool, sex, weight, age] = String(key || '').split('|');
+  return normalizeCompare({ pool, sex, weight, age });
+}
+
 // The two presets the sheet offers at the top. "Like me" writes the user's own
 // sex, so it needs the profile.
 export function comparePreset(name, profile) {
@@ -400,11 +458,26 @@ export function comparisonLabel(profile) {
       ? (lifts ? 'women who lift' : 'all women')
       : (lifts ? 'men who lift' : 'all men');
 
+  /* ⚠️ "whose" IS A PARAMETER SINCE 2026-09-03, and it is not cosmetic. This
+   * label is now printed over SOMEBODY ELSE's body map, where the two `own` axes
+   * mean their body weight and their age — neither of which this device has, and
+   * body weight is deliberately not in a public document at all. Saying "your
+   * body weight" over a friend's figure would name the wrong person's number as
+   * the basis of what is on screen. */
+  const whose = (profile && profile.whose) || 'your';
   const bits = [];
   bits.push(c.weight === 'any' ? 'any body weight'
-    : (profile && profile.bodyWeight ? `${Math.round(profile.bodyWeight)} lbs` : 'your body weight'));
+    : (profile && profile.bodyWeight ? `${Math.round(profile.bodyWeight)} lbs` : `${whose} body weight`));
+  /* ⚠️ AND THE AGE FALLBACK IS NOT THE SAME SENTENCE ON THE TWO SCREENS, which
+   * looks like an inconsistency and is the opposite of one. On YOUR map, no
+   * recorded age means no age grading was applied — "any age" is the literal
+   * truth. On somebody else's, the axis says `own` and THEIR client applied
+   * THEIR age; this device simply does not know what it was. Printing "any age"
+   * there would state that a correction was skipped when it was not. */
   bits.push(c.age === 'any' ? 'any age'
-    : (profile && profile.age ? `around ${profile.age}` : 'any age'));
+    : (profile && profile.age
+      ? `around ${profile.age}`
+      : (whose === 'your' ? 'any age' : `${whose} age`)));
 
   return {
     main: `vs. ${who}`,

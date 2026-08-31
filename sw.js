@@ -59,6 +59,7 @@ const SHELL = [
   './js/set-types.js',
   './js/session-stats.js',
   './js/strength-observations.js',
+  './js/shared-map.js',
   './js/exercise-estimate.js',
   './js/compare.js',
   './js/share-image.js',

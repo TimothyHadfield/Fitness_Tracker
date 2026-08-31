@@ -439,30 +439,30 @@ export const FirebaseBackend = {
     return true;
   },
 
-  // Publish one tier's projection. The document is written WHOLE every time —
-  // never merged — so a field that stops being shared actually disappears
-  // rather than lingering from the previous publish.
-  async publishTier(tier, doc) {
+  // Publish one audience's projection — 'friends' or 'public'. The document is
+  // written WHOLE every time, never merged, so a field that stops being shared
+  // actually disappears rather than lingering from the previous publish.
+  async publishShared(audience, doc) {
     const c = await init();
     if (!user) throw new Error('Not signed in.');
-    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'shared', tier), doc);
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'shared', audience), doc);
     return true;
   },
 
-  async unpublishTier(tier) {
+  async unpublishShared(audience) {
     const c = await init();
     if (!user) throw new Error('Not signed in.');
-    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', user.uid, 'shared', tier));
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', user.uid, 'shared', audience));
     return true;
   },
 
   // Somebody else's projection. Returns null when the rules refuse, which is
-  // the normal answer while probing tiers — see PROBE_ORDER in social.js — and
-  // must not be logged as an error or it fills the console on every visit.
-  async readShared(ownerUid, tier) {
+  // the normal answer while probing — see PROBE_ORDER in social.js — and must
+  // not be logged as an error or it fills the console on every visit.
+  async readShared(ownerUid, audience) {
     const c = await init();
     try {
-      const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', ownerUid, 'shared', tier));
+      const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', ownerUid, 'shared', audience));
       return snap.exists() ? snap.data() : null;
     } catch (err) {
       if (err && err.code === 'permission-denied') return null;

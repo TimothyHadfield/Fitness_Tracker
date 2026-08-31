@@ -8,7 +8,7 @@
 // "of people who lift" everywhere, and the general-population figure is a
 // separate, clearly-labelled line.
 
-import { store, muscleStrength } from './store.js';
+import { store, social, muscleStrength } from './store.js';
 // `weightForPercentile` and `MUSCLE_LIFTS` left with the seven-row target table
 // on 2026-08-21 — nothing on this screen asks what a level is worth in pounds
 // any more, only what the next one costs, and `m.toNext` carries that.
@@ -81,6 +81,15 @@ export async function muscleGroupsPane(host, top) {
       // The old "vs. everyone" toggle is gone: comparing against people who do
       // not lift is now one of the four axes in the sheet, so having it in two
       // places would let them contradict each other.
+      /* 🚨 COMPARE — Tim, 2026-09-03: *"whenever you're on a muscle group display
+       * of someone… make a compare button somewhere that allows that user to
+       * display another person's body side by side."* It is on THIS map as well
+       * as on a friend's, because "someone" includes yourself: the obvious thing
+       * to want from your own body map is somebody else's beside it. */
+      el('button', {
+        class: 'btn small', text: 'Compare',
+        onClick: () => pickSomebodyToCompare(),
+      }),
     ),
   );
 
@@ -128,6 +137,43 @@ export async function muscleGroupsPane(host, top) {
   render();
 }
 
+/**
+ * Who to put beside you — friends, because they are who this app knows about.
+ *
+ * ⚠️ IT OPENS A SHEET RATHER THAN NAVIGATING, and the difference matters on a
+ * screen with no obvious second person: a "Compare" button that jumped straight
+ * to a chooser screen would take somebody off their own map to answer a question
+ * they might not want to answer. The sheet is dismissible over the top of it.
+ *
+ * ⚠️ THE HONEST REFUSALS ARE HERE TOO. No friends, no cloud, the demo account —
+ * each one gets the sentence that says which, because "nobody to compare with"
+ * over an empty list would read as the feature being broken.
+ */
+async function pickSomebodyToCompare() {
+  let state;
+  try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
+
+  const body = el('div', { class: 'pick-list' });
+  if (!state.available || !state.connections.length) {
+    setChildren(body,
+      el('p', { class: 'note', text: state.available
+        ? 'Nobody to compare with yet. Add a friend and their body map appears here.'
+        : 'Comparing needs a friend, and friends need an account you are signed in to.' }),
+      el('a', { class: 'btn primary block', href: '#/social', text: 'Friends' }),
+    );
+  } else {
+    setChildren(body, ...state.connections.map((c) => el('a', {
+      class: 'pick-row', href: `#/compare/${encodeURIComponent(c.uid)}`,
+    },
+      el('div', { style: 'flex:1;min-width:0' },
+        el('div', { class: 'pick-title', text: c.name || 'Friend' }),
+        el('div', { class: 'pick-sub', text: 'Their body beside yours' }),
+      ),
+    )));
+  }
+  openSheet({ title: 'Compare with', body });
+}
+
 /* ------------------------------------------------------------------ *
  * Legend — always on screen, so level is never colour-alone
  * ------------------------------------------------------------------ */
@@ -150,7 +196,7 @@ export async function muscleGroupsPane(host, top) {
  * percentile is a little harsh for some people."* The level is the answer; the
  * percentile behind it is the working.
  */
-function legend(moreDetails) {
+export function legend(moreDetails) {
   return el('div', { class: 'lv-key-wrap' },
     el('div', { class: 'lv-key' },
       ...LEVELS.map((l) =>
@@ -210,17 +256,29 @@ const PRESETS = [
   { key: 'everyone', name: 'Everyone', hint: 'All adults, any sex, weight or age' },
 ];
 
-function openCompareSheet(profile, onChange) {
+/**
+ * @param {object}   profile   whose body the map is about
+ * @param {Function} onChange  re-rank and repaint
+ * @param {Function} [save]    ⚠️ how the choice is REMEMBERED, and it is a
+ *   parameter since 2026-09-03 because there are two answers. On your own map it
+ *   writes `settings.compare`, as it always has. On somebody ELSE's it must not:
+ *   a viewer flipping to "women" to look at a friend's map is asking a question
+ *   about that screen, not changing the standard their own body is ranked
+ *   against, and silently rewriting their setting from another person's page is
+ *   the kind of thing nobody would ever find.
+ */
+export function openCompareSheet(profile, onChange, save) {
   let current = normalizeCompare(profile.compare);
   const body = el('div', { class: 'compare-sheet' });
+  const persist = save || ((next) => store.saveSettings({ compare: { ...next } }));
 
   const apply = async (next) => {
     current = normalizeCompare(next);
-    await store.saveSettings({ compare: { ...current } });
+    await persist(current);
     draw();
     // Re-rank rather than repaint: the percentile, the level, the targets and
     // the colours all move together.
-    onChange();
+    onChange(current);
   };
 
   function draw() {
@@ -367,6 +425,23 @@ function blockedNote(blocked) {
   // actually did, and "3 sets not counted" without saying which is no better.
   return el('div', { class: 'muscle-warn', text:
     `${sets} set${sets === 1 ? '' : 's'} of ${listed} not counted — ${blocked.exercises[0].reason}.` });
+}
+
+/**
+ * ⚠️ EXPORTED SINCE 2026-09-03, and it is the same function on both screens.
+ *
+ * A friend's muscle panel could have been written beside this one — and then
+ * there would be two places that must agree forever about what "estimated" means,
+ * which caveat is allowed to be shortened, and whether an inference may sit next
+ * to a measurement without being labelled. `js/shared-map.js` translates their
+ * published map into the shape this already takes, so there is one panel.
+ *
+ * `blocked` is always null for somebody else: the sets a rating had to discard
+ * are worked out from a private library walk that is not published. The panel
+ * simply omits that line rather than inventing one.
+ */
+export function musclePanel(m, muscle, profile, blocked, moreDetails) {
+  return detail(m, muscle, profile, blocked, moreDetails);
 }
 
 function detail(m, muscle, profile, blocked, moreDetails) {

@@ -1938,10 +1938,17 @@ function schedulePublish() {
   }, 2500);
 }
 
-// Every tier gets rewritten on every publish, including the ones with nobody in
-// them — an empty tier is DELETED rather than left behind. Leaving a stale
-// document with an old viewers list would keep somebody's access alive after
-// they were moved out of it, which is the one thing revocation has to be.
+/* ⚠️ THE THREE LEGACY TIER DOCUMENTS — deleted on the first publish after
+ * 2026-09-03. Nothing reads them any more (PROBE_ORDER is friends/public), and a
+ * document nobody reads that still lists viewers is the exact shape of an access
+ * grant nobody can see. Deleting is idempotent and costs three writes ONCE per
+ * account, guarded by a settings flag so it is not three writes per publish. */
+const LEGACY_TIERS = ['light', 'mid', 'full'];
+
+// Both documents are rewritten on every publish, and an audience with nobody in
+// it is DELETED rather than left behind. Leaving a stale document with an old
+// viewers list would keep somebody's access alive after they were removed from
+// it, which is the one thing revocation has to be.
 async function republish() {
   // ⚠️ THE GUARD THAT MATTERS, and it is here at the write rather than on the
   // screen. This function builds a friend-visible projection out of
@@ -1960,40 +1967,53 @@ async function republish() {
     store.getSessions(), store.getBenchmarks(), store.getBodyWeights(),
   ]);
 
-  let strength = [];
+  let strength = null;
   try {
-    const { muscles, ready } = await muscleStrength();
-    if (ready) {
-      strength = [...muscles.values()].map((m) => ({
-        muscle: m.muscle,
-        level: m.level && m.level.name ? m.level.name : m.level,
-        percentile: m.percentile,
-        confidence: m.confidence,
-      }));
-    }
+    strength = await buildStrengthShare();
   } catch (err) {
     // A body map that cannot be computed must not stop the rest publishing.
     console.warn('Muscle map not included in this publish.', err);
   }
 
+  const viewers = S.allViewers(graph);
+  const wantPublic = S.isPublicAccount(settings.visibility);
   const publishedAt = new Date().toISOString();
-  for (const tier of S.TIERS) {
-    const viewers = S.viewersForTier(graph, tier);
-    if (!viewers.length) { await impl.unpublishTier(tier).catch(() => {}); continue; }
-    const doc = S.buildProjection({
-      tier,
-      viewers,
-      // ⚠️ The photo rides with the name, and social.js decides whether it is
-      // publishable at all — this passes the stored value through rather than
-      // testing it here, so there is exactly one rule about what a published
-      // face may be (2026-08-31, Tim's report that friends only ever saw the
-      // blank humanoid).
-      profile: { name: settings.displayName || '', avatar: settings.avatar },
-      sessions, benchmarks, strength, bodyWeights,
-      shareBodyWeight: Boolean(settings.shareBodyWeight),
-      publishedAt,
-    });
-    await impl.publishTier(tier, doc);
+
+  const build = (audience) => S.buildProjection({
+    audience,
+    viewers,
+    // ⚠️ The photo rides with the name, and social.js decides whether it is
+    // publishable at all — this passes the stored value through rather than
+    // testing it here, so there is exactly one rule about what a published
+    // face may be (2026-08-31, Tim's report that friends only ever saw the
+    // blank humanoid).
+    profile: { name: settings.displayName || '', avatar: settings.avatar },
+    sessions, benchmarks, strength, bodyWeights,
+    shareBodyWeight: Boolean(settings.shareBodyWeight),
+    publishedAt,
+  });
+
+  // ⚠️ THE PUBLIC DOCUMENT IS WRITTEN FIRST AND DELETED LAST, deliberately. Of
+  // the two orders, this is the one where a half-finished publish leaves LESS
+  // visible rather than more: going public, the friends document is stale for a
+  // moment; going private, the public copy is gone before anything else changes.
+  if (wantPublic) {
+    await impl.publishShared(S.PUBLIC, build(S.PUBLIC));
+  }
+  if (viewers.length) {
+    await impl.publishShared(S.FRIENDS, build(S.FRIENDS));
+  } else {
+    await impl.unpublishShared(S.FRIENDS).catch(() => {});
+  }
+  if (!wantPublic) {
+    await impl.unpublishShared(S.PUBLIC).catch(() => {});
+  }
+
+  // The one-off cleanup of the tier documents. After the flag is set this costs
+  // nothing; before it, it is what actually revokes the old grants.
+  if (settings.sharedTiersCleared !== true) {
+    for (const tier of LEGACY_TIERS) await impl.unpublishShared(tier).catch(() => {});
+    await store.saveSettings({ sharedTiersCleared: true });
   }
   return true;
 }
@@ -2118,6 +2138,9 @@ export const social = {
       uid: impl.currentUid(),
       name: settings.displayName || '',
       shareBodyWeight: Boolean(settings.shareBodyWeight),
+      // 'private' | 'public' — the whole of who may see this account since
+      // 2026-09-03. Unknown stored values degrade to private in social.js.
+      visibility: S.normalizeVisibility(settings.visibility),
       connections: S.normalizeGraph(graph).connections,
     };
   },
@@ -2140,17 +2163,21 @@ export const social = {
     await republish();
   },
 
-  /** Move one person between tiers — or to `none`, which shares nothing. */
-  async setTier(uid, tier) {
-    const impl = requireRemote();
-    const graph = await readGraphFresh(impl);
-    const row = graph.connections.find((c) => c.uid === uid);
-    if (!row) throw new Error('You are not connected to them.');
-    row.tier = tier;
-    await impl.writeGraph(graph);
-    socialWrote();
+  /**
+   * Private or public — 2026-09-03, and it replaced the per-person tiers.
+   *
+   * ⚠️ GOING PRIVATE HAS TO DELETE THE PUBLIC DOCUMENT, not merely stop writing
+   * it, and republish() is where that happens. A setting that changes what is
+   * published without changing what is ALREADY published is the fault that froze
+   * Autumn's muscle map in 2026-08-28 — except this version would leave a whole
+   * account readable by strangers after its owner switched them off.
+   */
+  async setVisibility(value) {
+    const S = await socialMod();
+    const next = S.normalizeVisibility(value);
+    await store.saveSettings({ visibility: next });
     await republish();
-    return row;
+    return next;
   },
 
   /**
@@ -2227,13 +2254,11 @@ export const social = {
 
   async addConnection(uid, name) {
     const impl = requireRemote();
-    const S = await socialMod();
     const graph = await readGraphFresh(impl);
     if (!graph.connections.some((c) => c.uid === uid)) {
       graph.connections.push({
         uid,
         name: String(name || '').slice(0, 60),
-        tier: S.DEFAULT_TIER,
         since: todayISO(),
       });
       await impl.writeGraph(graph);
@@ -2519,8 +2544,22 @@ export const social = {
     const g = S.normalizeGraph(await readGraphCached(impl));
     if (!g.pending.length) return 0;
 
+    /* 🚨 THE FRIENDS DOCUMENT, NOT ANY DOCUMENT — and getting this wrong on
+     * 2026-09-03 would have added strangers to people's friends lists.
+     *
+     * The probe IS the notification: a document coming back means I am in their
+     * viewers list, which only their own accept could have put me in. That was
+     * airtight while every published document was gated on `viewers` — and it
+     * stopped being airtight the moment a PUBLIC account existed, because its
+     * public document answers everybody. Somebody I asked, who never replied,
+     * whose account happens to be public, would have been silently promoted to
+     * an accepted friend on the next visit to this screen.
+     *
+     * So the test is the audience, not the answer. Only `friends` proves it. */
     const answers = await Promise.all(g.pending.map((p) =>
-      this.friend(p.uid).then((r) => (r && r.doc ? p : null)).catch(() => null)));
+      this.friend(p.uid)
+        .then((r) => (r && r.doc && r.audience === S.FRIENDS ? p : null))
+        .catch(() => null)));
     const accepted = answers.filter(Boolean);
     if (!accepted.length) return 0;
 
@@ -2533,7 +2572,6 @@ export const social = {
         uid: p.uid,
         // Their published name beats the one I typed when I searched.
         name: String(p.name || '').slice(0, 60),
-        tier: S.DEFAULT_TIER,
         since: todayISO(),
       });
     }
@@ -2548,32 +2586,28 @@ export const social = {
   /* --- reading a friend --- */
 
   /**
-   * What one friend has shared with me.
+   * What one person has shared with me — a friend, or anybody public.
    *
-   * Tries the tiers most-generous-first because a viewer is listed in exactly
-   * one of them and is never told which (js/social.js, viewersForTier). A
-   * refusal is the normal answer for the tiers above yours, not an error.
+   * ⚠️ IT IS NOT ONLY FRIENDS ANY MORE (2026-09-03) and the name is kept because
+   * forty call sites use it. Two documents are tried at once: `friends`, which
+   * answers if they have accepted me, and `public`, which answers if their
+   * account is public. A refusal is the normal answer for the one that is not
+   * mine to read, never an error.
+   *
+   * ⚠️ BOTH AT ONCE, not friends-then-public. The serial version spends a whole
+   * network round trip on the refusal, and the feed multiplies that by every
+   * friend. Precedence is applied to the ANSWERS instead — friends wins where
+   * both come back, because that document is the one with body weight in it.
    */
   async friend(uid) {
     const impl = requireRemote();
     const S = await socialMod();
-    // ⚠️ ALL THREE TIERS AT ONCE, not most-generous-first one at a time. A
-    // viewer is listed in exactly one tier, so the serial version spent a whole
-    // network round trip on each REFUSAL above their own — three of them for
-    // somebody on the lowest tier, which is the default everybody starts on and
-    // therefore the common case. The feed multiplies that by every friend.
-    //
-    // ⚠️ THE PRECEDENCE IS UNCHANGED, and that is the part worth checking: the
-    // most generous readable tier still wins, because PROBE_ORDER is applied to
-    // the ANSWERS rather than to the order of asking. A refused read is null
-    // (readShared maps permission-denied to null), so a denial cannot reject
-    // the batch and blank a friend who is really there.
     const docs = await Promise.all(
-      S.PROBE_ORDER.map((tier) => impl.readShared(uid, tier).catch(() => null)));
+      S.PROBE_ORDER.map((audience) => impl.readShared(uid, audience).catch(() => null)));
     for (let i = 0; i < S.PROBE_ORDER.length; i++) {
-      if (docs[i]) return { tier: S.PROBE_ORDER[i], doc: docs[i] };
+      if (docs[i]) return { audience: S.PROBE_ORDER[i], doc: docs[i] };
     }
-    return { tier: null, doc: null };
+    return { audience: null, doc: null };
   },
 
   /* --- reactions: kudos + comments (Open work 0l) --- */
@@ -2786,17 +2820,36 @@ export const social = {
     try {
       if (demo.active()) return false;
       const impl = requireRemote();
-      const graph = await readGraphFresh(impl);
-      if (!graph.connections.length) return false;
+      const [graph, settings, S] = await Promise.all([
+        readGraphFresh(impl), store.getSettings(), socialMod(),
+      ]);
+      // ⚠️ A PUBLIC ACCOUNT WITH NO FRIENDS STILL HAS SOMETHING TO KEEP FRESH
+      // (2026-09-03). This used to return early on an empty graph, which was
+      // right when the only readers were connections; a public document read by
+      // strangers is exactly as stale-able and nobody is on the list.
+      const wantPublic = S.isPublicAccount(settings.visibility);
+      if (!graph.connections.length && !wantPublic) return false;
 
-      const S = await socialMod();
       let newest = null;
-      for (const tier of S.TIERS) {
-        const d = await impl.readShared(impl.currentUid(), tier).catch(() => null);
+      // ⚠️ The legacy tier documents are read too, and on purpose: an account
+      // that has not published since the model changed has its newest timestamp
+      // in one of them, and skipping them would make every such account look
+      // "never published" and republish on every single boot.
+      for (const audience of [...S.AUDIENCES, ...LEGACY_TIERS]) {
+        const d = await impl.readShared(impl.currentUid(), audience).catch(() => null);
         if (d && typeof d.publishedAt === 'string'
             && (!newest || Date.parse(d.publishedAt) > Date.parse(newest))) {
           newest = d.publishedAt;
         }
+      }
+      // 🚨 AND THE MIGRATION ITSELF IS A REASON TO REPUBLISH. An account whose
+      // last publish predates 2026-09-03 has three tier documents and neither of
+      // the two a reader now looks for — so its friends see nothing at all until
+      // it publishes again. `sharedTiersCleared` is set by that publish and is
+      // therefore the flag for "this account has been through the change".
+      if (settings.sharedTiersCleared !== true) {
+        await republish();
+        return true;
       }
       const sessions = await store.getSessions();
       if (!S.needsRepublish({ sessions, publishedAt: newest })) return false;
@@ -2880,8 +2933,19 @@ export const SOURCE_LABEL = { benchmark: 'Benchmarks', workout: 'Workouts' };
 // Sets are kept individually rather than reduced per day, because the rep count
 // that appears most often is counted over real observations — a workout of
 // 3 x 10 genuinely contributes three tens.
-export async function weightRepObservations(exerciseId, source = null) {
-  const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);
+export async function weightRepObservations(exerciseId, source = null, rows = null) {
+  /* ⚠️ `rows` IS A FRIEND'S PUBLISHED TRAINING (2026-09-03) — `{sessions,
+   * benchmarks}` straight out of their document. Everything above this line
+   * about what counts as an observation is then true of their chart as well as
+   * yours, because it is the same walk.
+   *
+   * ⚠️ THEIR SESSION ROWS NAME THE EXERCISE DIFFERENTLY: the projection publishes
+   * `entries[].name`, not `exerciseName`, and benchmark rows publish `name` too.
+   * Only `exerciseId` is used for matching here, which both shapes carry, and the
+   * label is read defensively below for the same reason. */
+  const [sessions, benchmarks] = rows
+    ? [rows.sessions || [], rows.benchmarks || []]
+    : await Promise.all([store.getSessions(), store.getBenchmarks()]);
   const out = [];
 
   const push = (date, weight, reps, src, label) => {
@@ -2897,7 +2961,11 @@ export async function weightRepObservations(exerciseId, source = null) {
       // these rows — so a second entry going unread is a set that was
       // performed and does not vote. See entriesFor().
       for (const entry of entriesFor(s, exerciseId)) {
-        for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', s.workoutName);
+        // `workoutName` is what a private row calls it and `name` is what a
+        // published one does — the label is decoration on the chart's hover
+        // readout, so it degrades rather than being made a special case.
+        const label = s.workoutName || s.name || '';
+        for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', label);
       }
     }
   }
@@ -2913,8 +2981,8 @@ export async function weightRepObservations(exerciseId, source = null) {
 }
 
 // The rep count everything gets compared at, by default.
-export async function defaultTargetReps(exerciseId, source = null) {
-  return modalReps(await weightRepObservations(exerciseId, source));
+export async function defaultTargetReps(exerciseId, source = null, rows = null) {
+  return modalReps(await weightRepObservations(exerciseId, source, rows));
 }
 
 // One point per day, every point expressed as the weight you would have lifted
@@ -2924,12 +2992,12 @@ export async function defaultTargetReps(exerciseId, source = null) {
 // that set wins (heaviest of them) and the point is marked `actual` — a real
 // measurement always beats an estimate. Otherwise the set with the highest
 // estimated 1RM wins and the point is marked as an estimate.
-export async function normalizedSeries(exerciseId, targetReps, source = null) {
+export async function normalizedSeries(exerciseId, targetReps, source = null, rows = null) {
   const target = clampReps(targetReps);
   if (target === null) return [];
 
   const byDate = new Map();
-  for (const o of await weightRepObservations(exerciseId, source)) {
+  for (const o of await weightRepObservations(exerciseId, source, rows)) {
     const isActual = o.reps === target;
     const value = isActual ? o.weight : normalizeWeight(o.weight, o.reps, target);
     if (!(value > 0)) continue;
@@ -3052,6 +3120,151 @@ export async function muscleRatings(rows) {
     if (rating) out.set(muscle, rating);
   }
   return out;
+}
+
+/**
+ * The muscle map as somebody else will read it — 2026-09-03.
+ *
+ * 🚨 THIS IS THE OTHER HALF OF "a friend can click on any muscle group like that
+ * own user can". js/social.js explains the document shape; this computes it.
+ *
+ * Two parts, and the split is the whole design:
+ *
+ *   `muscles` — what does not depend on who you compare against. The estimate,
+ *     the confidence, and the recorded sets it was converted from (Rule 5
+ *     travels with the number, or a panel on somebody else's screen shows an
+ *     inference dressed as a measurement).
+ *   `grid`  — what does. One row per comparison combination the sheet offers,
+ *     computed HERE because a percentile is a ratio to this person's own body
+ *     weight and age, and neither is in the public document.
+ *
+ * ⚠️ 24 combinations × 13 muscles, two numbers each. Measured at ~9 KB of JSON
+ * against a 1 MiB document that is mostly sixty sessions — cheap enough that the
+ * alternative (publishing body weight so the reader can do the arithmetic) buys
+ * nothing but exposure.
+ */
+/**
+ * `muscleRatings()` output dressed in the shape `muscleStrength()` returns.
+ *
+ * ⚠️ IT IS THE SAME FIELDS BY THE SAME FUNCTIONS, and the reason it exists at all
+ * is that `muscleStrength()` reads THIS device's store and the demo's friends do
+ * not live there. Anything that diverges here shows up as a friend's panel
+ * disagreeing with the identical panel on your own screen.
+ */
+async function ratedFromRows(rows, profile) {
+  const [ratings, {
+    keyLiftFor, percentileFor, levelFor, nextLevelAfter, levelProgress, weightForPercentile,
+  }, { confidenceBand, tintFor, raiseConfidenceHint }] = await Promise.all([
+    muscleRatings(rows), import('./strength-standards.js'), import('./muscle-evidence.js'),
+  ]);
+
+  const out = new Map();
+  for (const [muscle, rating] of ratings) {
+    const percentile = percentileFor(rating.estimate, muscle, profile);
+    if (percentile === null) continue;
+    const level = levelFor(percentile);
+    const next = nextLevelAfter(level);
+    const nextWeight = next ? weightForPercentile(next.percentile, muscle, profile) : null;
+    const top = rating.used[0];
+    out.set(muscle, {
+      muscle,
+      lift: keyLiftFor(muscle),
+      estimate: rating.estimate,
+      confidence: rating.confidence,
+      band: confidenceBand(rating.confidence),
+      tint: tintFor(rating.confidence),
+      basis: rating.kind,
+      contributors: rating.used,
+      contributorCount: rating.contributorCount,
+      exerciseCount: rating.exerciseCount,
+      hint: raiseConfidenceHint(muscle, rating),
+      best: top ? { ...top } : null,
+      percentile,
+      level,
+      next,
+      toNext: nextWeight ? Math.max(0, nextWeight - rating.estimate) : null,
+      progress: levelProgress(percentile, level),
+      confident: Boolean(top && top.reps <= 5),
+    });
+  }
+  return out;
+}
+
+export async function buildStrengthShare(rows = null, asProfile = null) {
+  /* ⚠️ `rows` AND `asProfile` ARE FOR SOMEBODY WHO IS NOT SIGNED IN HERE — the
+   * demo account's invented friends, which is how every screen in this app gets
+   * looked at, measured and audited (progress.md §0.10). Without them a friend's
+   * muscle map could not be seen anywhere but on a real second account, which is
+   * exactly the state that let the feed's own fixture ship thinner than the wire
+   * on 2026-09-02. The publishing path is otherwise identical, deliberately:
+   * one function, so the fixture cannot be a tidier shape than the real thing. */
+  const {
+    percentileFor, levelFor, nextLevelAfter, weightForPercentile,
+    allCompareCombos, compareKey, keyLiftFor,
+  } = await import('./strength-standards.js');
+
+  let profile;
+  let muscles;
+  if (rows) {
+    profile = asProfile || {};
+    if (!profile.bodyWeight || !profile.gender) return null;
+    muscles = await ratedFromRows(rows, profile);
+  } else {
+    const [mine, s] = await Promise.all([store.getProfile(), muscleStrength()]);
+    profile = mine;
+    if (!s.ready) return null;
+    muscles = s.muscles;
+  }
+  if (!muscles.size) return null;
+
+  const ownSex = profile.gender === 'female' ? 'female' : 'male';
+  const rated = [...muscles.values()];
+
+  const grid = {};
+  for (const combo of allCompareCombos()) {
+    // ⚠️ The owner's profile with ONE field replaced. Every other input — sex,
+    // age, body weight — has to be theirs, which is the entire reason this runs
+    // on their device and not on the reader's.
+    const asked = { ...profile, compare: combo };
+    const row = {};
+    for (const m of rated) {
+      const pct = percentileFor(m.estimate, m.muscle, asked);
+      if (pct === null) continue;
+      const next = nextLevelAfter(levelFor(pct));
+      const nextWeight = next ? weightForPercentile(next.percentile, m.muscle, asked) : null;
+      row[m.muscle] = [
+        pct,
+        Number.isFinite(nextWeight) ? Math.max(0, nextWeight - m.estimate) : null,
+      ];
+    }
+    grid[compareKey(combo, ownSex)] = row;
+  }
+
+  return {
+    muscles: rated.map((m) => ({
+      muscle: m.muscle,
+      lift: m.lift && m.lift.name ? m.lift.name : (keyLiftFor(m.muscle) || {}).name || null,
+      estimate: m.estimate,
+      confidence: m.confidence,
+      band: m.band ? m.band.name : null,
+      basis: m.basis,
+      contributorCount: m.contributorCount,
+      exerciseCount: m.exerciseCount,
+      contributors: (m.contributors || []).map((c) => ({
+        exerciseName: c.exerciseName,
+        weight: c.weight,
+        reps: c.reps,
+        date: c.date,
+        loadType: c.loadType,
+        source: c.source,
+      })),
+      hint: m.hint || null,
+      confident: m.confident === true,
+    })),
+    grid,
+    // Which row is THEIR "like me" — the combination their own screen opens on.
+    defaultCompare: compareKey({ pool: 'lifters', sex: ownSex, weight: 'own', age: 'own' }, ownSex),
+  };
 }
 
 export async function muscleStrength() {
@@ -3599,10 +3812,20 @@ export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
  *             contributors: {name: string, sets: number, kind: string}[]}[],
  * }>}
  */
-export async function weeklyVolumeByMuscle(windowDays = 28, today = null) {
+export async function weeklyVolumeByMuscle(windowDays = 28, today = null, rows = null) {
+  /* ⚠️ `rows` IS HOW A FRIEND'S VOLUME IS COMPUTED (2026-09-03), and it is the
+   * same trick `muscleRatings(rows)` used on 2026-09-02 for the same reason: the
+   * arithmetic must not be written twice. Their published sessions carry every
+   * exercise id and every set, so this walk over their rows produces the number
+   * their own screen shows, from the same function, on this device.
+   *
+   * ⚠️ Their sessions are a 60-session WINDOW rather than a history, which does
+   * not matter here — this function only ever looks at a trailing four weeks —
+   * but the caller must not describe the result as "all their training". */
   const [sessions, exMap, { volumeContributions, VOLUME_MUSCLES, SESSION_CEILING }] =
     await Promise.all([
-      store.getSessions(), store.getExerciseMap(), import('./volume-map.js'),
+      rows ? Promise.resolve(rows) : store.getSessions(),
+      store.getExerciseMap(), import('./volume-map.js'),
     ]);
 
   const win = volumeWindow(sessions, windowDays, today);

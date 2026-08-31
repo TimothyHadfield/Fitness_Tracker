@@ -1019,7 +1019,11 @@ export async function GraphView() {
 
 let chartObserver = null;
 
-function fillChart(host, points, field, label) {
+// ⚠️ EXPORTED SINCE 2026-09-03 so a friend's graph is drawn by the same
+// measured-SVG chart as yours, gridlines, markers, hover readout and all —
+// rather than by a second, thinner chart that would have to be kept in step
+// with this one forever. Rule 5's marker rule lives inside it.
+export function fillChart(host, points, field, label) {
   let lastW = 0, lastH = 0;
 
   const draw = () => {
@@ -1916,10 +1920,22 @@ function volumeLegend(selectedKey, perWeek) {
   );
 }
 
-async function renderVolumePane(host, top) {
-  const data = await weeklyVolumeByMuscle(volDays);
+/**
+ * @param {object} [opts]
+ * @param {object[]} [opts.rows]  ⚠️ SOMEBODY ELSE'S SESSIONS (2026-09-03). Tim
+ *   asked that a friend's volume be readable the way your own is, and the honest
+ *   way to do that is to render the SAME screen from their published rows rather
+ *   than to write a second, thinner one that drifts. `weeklyVolumeByMuscle()`
+ *   takes the rows; everything below here is unchanged.
+ * @param {string} [opts.subject]  Whose training this is, for the sentences that
+ *   name a person. Absent means yours.
+ */
+export async function renderVolumePane(host, top, opts = {}) {
+  const rows = opts.rows || null;
+  const who = opts.subject || null;
+  const data = await weeklyVolumeByMuscle(volDays, null, rows);
 
-  const reload = () => renderVolumePane(host, top);
+  const reload = () => renderVolumePane(host, top, opts);
   setChildren(top,
     el('div', { class: 'control-row' },
       el('div', { class: 'chips tight' }, VOL_WINDOWS.map(([days, label]) =>
@@ -1931,12 +1947,15 @@ async function renderVolumePane(host, top) {
   );
 
   if (!data) {
-    setChildren(host, emptyState(
-      'Nothing recorded in this window',
-      'Weekly sets per muscle is counted from workouts you have logged, so it fills in as you '
-      + 'train. It counts every set — including the ones you got through a compound, at half.',
-      el('a', { class: 'btn primary', href: '#/start', text: 'Record a workout' }),
-    ));
+    setChildren(host, who
+      ? emptyState('Nothing in this window',
+        `${who} has not published a session in the last ${volDays} days. Try a longer window.`)
+      : emptyState(
+        'Nothing recorded in this window',
+        'Weekly sets per muscle is counted from workouts you have logged, so it fills in as you '
+        + 'train. It counts every set — including the ones you got through a compound, at half.',
+        el('a', { class: 'btn primary', href: '#/start', text: 'Record a workout' }),
+      ));
     return;
   }
 
@@ -2014,8 +2033,16 @@ async function renderVolumePane(host, top) {
     el('div', { class: 'vol-pane' },
       el('div', { class: 'vol-intro' },
         el('div', { class: 'vol-intro-main', text: perWeek
-          ? `Sets a week per muscle, from ${sess} over the last ${span}.`
+          ? `${who ? `${who}: s` : 'S'}ets a week per muscle, from ${sess} over the last ${span}.`
           : `${sess} over ${span} so far.` }),
+        /* ⚠️ A FRIEND'S WINDOW IS NOT THEIR HISTORY, and the screen has to say
+         * so. What they publish is their last sixty sessions, so a long window
+         * over a busy account can be measuring a shorter stretch than it says.
+         * Silence here would let this screen quietly claim to be the same
+         * measurement as the one on their own phone. */
+        who ? el('div', { class: 'field-help', text:
+          `Counted from the sessions ${who} publishes — their most recent sixty. If they train a `
+          + 'lot, a long window here may reach further back than what they share.' }) : null,
         // ⚠️ ONE LINE ABOVE THE FIGURE WHEN THERE IS A RATE TO STATE. The
         // sentence that used to sit here — why weekly sets is the metric — moved
         // to the notes at the bottom: every pixel above the drawing is a pixel
@@ -2044,7 +2071,7 @@ async function renderVolumePane(host, top) {
           + 'that volume, not how much you ought to be doing.' }),
         el('div', { class: 'field-help', text: INDIRECT_NOTE_WEEKLY }),
         el('div', { class: 'field-help', text:
-          '⚠️ Every set you logged is counted, warm-ups included. The app has no way to tell a '
+          '⚠️ Every recorded set is counted, warm-ups included. The app has no way to tell a '
           + 'warm-up from a back-off set, and throwing away the light ones would throw away real '
           + 'work with them — so these counts run a little high for anyone who logs their warm-ups.' }),
         el('div', { class: 'field-help', text:

@@ -1,4 +1,8 @@
-// Social — visibility tiers and the projection builder.
+// Social — who may see an account, and the projection builder.
+//
+// ⚠️ THIS FILE USED TO BE ABOUT TIERS. It is about two audiences now — see
+// "PRIVATE OR PUBLIC" below, 2026-09-03. The tier reasoning is kept where it
+// still explains something and is marked as history where it does not.
 //
 // docs/social-plan.md, Phase 1. Tim, 2026-08-17. NOTHING in this file is wired
 // to a screen yet: it is the security half of the feature, built first and on
@@ -33,24 +37,45 @@
 //      year and a delete-based builder publishes it. A whitelist fails closed —
 //      the new field is simply absent until somebody names it here.
 //
-// ── THE TIERS ────────────────────────────────────────────────────────────────
+// ── PRIVATE OR PUBLIC — 🚨 THE MODEL CHANGED ON 2026-09-03 ───────────────────
 //
-// Tim's, 2026-08-17, and his cut is not the one the plan first drafted. The
-// draft split mid from full on WEIGHTS; his splits on SESSION vs ANALYSIS —
-// the whole workout at mid, benchmarks and the muscle map at full.
+// Tim: *"you can either make your account private so only friends you accept
+// can see, or public so anyone on the app that finds your account can see all
+// details."* Asked directly whether the per-person levels should go with it, he
+// said yes: **account-level only**.
 //
-// His is better, and the load-bearing reason is this one: it needs no field
-// surgery. Hiding weights meant walking into every set — AND into the `minis`
-// nested inside a drop set or myo-rep — to strip one field while keeping its
-// siblings. That is exactly the shape of code that leaves a number behind. His
-// version copies whole objects or omits them, so there is no partial object
-// anywhere in this file, and the test is an absence check rather than a shape
-// check. See docs/social-plan.md §3.3.1.
+// ⚠️ WHAT WENT, AND IT WAS FOUR YEARS OF ARGUMENT IN THIS FILE: the tiers.
+// `light` / `mid` / `full` — "just that I trained" / "my workouts" /
+// "everything" — were Tim's own cut on 2026-08-17 and are recorded in
+// docs/social-plan.md §3.3.1. They are gone. One person is not shown less than
+// another; the account decides who may look at all. The reasoning is kept in
+// the plan rather than deleted, because the shape it argued for is exactly the
+// shape somebody would re-derive if this ever needs narrowing again.
 //
-// ⚠️ What it gives up, and the trade was taken deliberately: "they can see my
-// volume but not my weights" (docs/vision.md §1.1) is NOT expressible. Volume
-// is computed from weights, so anything showing it hands the weights back by
-// another door. Do not add a fourth tier for this without re-reading §3.3.1.
+// ⚠️ WHAT SURVIVED THE CHANGE, AND IT IS THE PART THAT MATTERS: sharing still
+// publishes a DERIVED COPY and still never widens a permission on the source
+// (D24, above). What used to be three documents cut by tier is now two cut by
+// AUDIENCE:
+//
+//   friends — read by the uids in its own `viewers` list. Everything.
+//   public  — read by anybody signed in, and only written while the account is
+//             public. Everything EXCEPT body weight.
+//
+// 🚨 BODY WEIGHT IS THE ONE FIELD THE TWO DOCUMENTS DISAGREE ABOUT, and that is
+// Tim's call too — asked which of the more personal fields should follow him
+// into public, he picked the profile photo, the time of day he trains and the
+// gym name, and left body weight out. It is the most personal number the app
+// stores, it keeps its own opt-in switch, and it reaches accepted friends only.
+// That is the whole reason there are two documents rather than one with a flag:
+// a single document cannot be two different things to two readers.
+//
+// ⚠️ AND THE HONEST LIMIT OF THAT PROTECTION, WRITTEN DOWN SO NOBODY OVERCLAIMS
+// IT: a reader who has the published sets AND a percentile can work backwards
+// to an approximate body weight, because the strength standards are ratios to
+// it and this project publishes its own formulas. Keeping the weigh-in series
+// out of the public document means no exact number and no history of it; it is
+// not a guarantee that nobody can estimate one. Say "not published", never
+// "cannot be known".
 //
 // Pure: no DOM, no store, no clock of its own. Same reason as e1rm.js,
 // set-types.js and next-workout.js — the whole point of this module is that it
@@ -58,60 +83,53 @@
 // localStorage cannot be.
 
 /* ------------------------------------------------------------------ *
- * Tiers
+ * Audiences and the account setting
  * ------------------------------------------------------------------ */
 
-export const NONE = 'none';
-export const LIGHT = 'light';
-export const MID = 'mid';
-export const FULL = 'full';
+/** The two published documents. These strings are Firestore document ids. */
+export const FRIENDS = 'friends';
+export const PUBLIC = 'public';
 
-/** Least to most visible. Index IS the rank — see tierRank(). */
-export const TIERS = [LIGHT, MID, FULL];
+/** Most-trusted first — see PROBE_ORDER, which is this list. */
+export const AUDIENCES = [FRIENDS, PUBLIC];
+
+/** The account setting. `private` is the default and the safe one. */
+export const PRIVATE_ACCOUNT = 'private';
+export const PUBLIC_ACCOUNT = 'public';
+
+export const VISIBILITY_LABEL = {
+  [PRIVATE_ACCOUNT]: 'Private',
+  [PUBLIC_ACCOUNT]: 'Public',
+};
 
 /**
- * What the owner is told each tier means.
+ * What the owner is told each choice means.
  *
- * The UI never shows the word "tier" or this table; it says "Alex can see:"
- * and one of these. A visibility control the user cannot restate in their own
- * words is not a control, which is the first reason Tim's cut beat the draft's.
+ * ⚠️ IT NAMES WHAT IS SHARED RATHER THAN WHO IS EXCLUDED. "Private" that does
+ * not say "your friends see everything" is a control the user cannot restate in
+ * their own words, which is the test this file has always applied to a
+ * visibility label.
  */
-export const TIER_LABEL = {
-  [NONE]: 'Nothing',
-  [LIGHT]: 'Just that I trained',
-  [MID]: 'My workouts',
-  [FULL]: 'Everything',
+export const VISIBILITY_DETAIL = {
+  [PRIVATE_ACCOUNT]:
+    'Only friends you have accepted. They see everything: your workouts, benchmarks, muscle map, '
+    + 'graphs and volume.',
+  [PUBLIC_ACCOUNT]:
+    'Anyone signed in who finds your account sees all of that too. Your body weight stays with '
+    + 'accepted friends either way.',
 };
 
-export const TIER_DETAIL = {
-  [NONE]: 'They stay connected but see nothing at all.',
-  [LIGHT]: 'The day, and what the workout was called. Nothing inside it.',
-  // ⚠️ "and the time you started" is not decoration — it is the only place the
-  // owner is told that moving somebody to this tier hands over their routine as
-  // well as their lifts. A visibility control the user cannot restate in their
-  // own words is not a control, and time-of-day is the part of mid a reasonable
-  // person would not have guessed from "my workouts". See projectSession().
-  [MID]: 'The whole session — exercises, sets, reps and weights, and the time you started.',
-  [FULL]: 'The above, plus benchmarks, your muscle map and your progress.',
-};
-
-/** A brand-new connection starts here. Never `mid`, never "whatever was last used". */
-export const DEFAULT_TIER = LIGHT;
-
-/** -1 for anything that is not a tier, so unknown input is never "at least light". */
-export function tierRank(tier) {
-  return TIERS.indexOf(tier);
+/** Unknown stored values degrade to PRIVATE — never to the wider setting. */
+export function normalizeVisibility(value) {
+  return value === PUBLIC_ACCOUNT ? PUBLIC_ACCOUNT : PRIVATE_ACCOUNT;
 }
 
-export function isTier(tier) {
-  return tierRank(tier) >= 0;
+export function isPublicAccount(value) {
+  return normalizeVisibility(value) === PUBLIC_ACCOUNT;
 }
 
-/** Does `tier` include everything `needed` includes? Unknown input is always false. */
-export function atLeast(tier, needed) {
-  const a = tierRank(tier);
-  const b = tierRank(needed);
-  return a >= 0 && b >= 0 && a >= b;
+export function isAudience(audience) {
+  return AUDIENCES.includes(audience);
 }
 
 /* ------------------------------------------------------------------ *
@@ -193,10 +211,11 @@ export function normalizeGraph(graph) {
     connections.push({
       uid: c.uid,
       name: typeof c.name === 'string' ? c.name : '',
-      // An unrecognised stored tier degrades to the SAFEST value, not the
-      // nearest one. A hand-edited or half-migrated graph must never widen
-      // access by accident.
-      tier: isTier(c.tier) || c.tier === NONE ? c.tier : DEFAULT_TIER,
+      // ⚠️ `tier` IS DELIBERATELY DROPPED HERE (2026-09-03) rather than carried
+      // through. Every graph written before that date has one, and a key that no
+      // longer decides anything is worse than an absent one: the next reader
+      // finds it, believes it, and writes a screen that quietly disagrees with
+      // what is actually published. A connection is a connection now.
       since: typeof c.since === 'string' ? c.since : null,
     });
   }
@@ -231,34 +250,22 @@ export function normalizeGraph(graph) {
   return { connections, pending };
 }
 
-/** What one person is allowed to see. Anyone not connected sees nothing. */
-export function tierForViewer(graph, uid) {
-  const found = normalizeGraph(graph).connections.find((c) => c.uid === uid);
-  return found ? found.tier : NONE;
+/** Is this person an accepted friend? Anyone not connected is not. */
+export function isConnected(graph, uid) {
+  return normalizeGraph(graph).connections.some((c) => c.uid === uid);
 }
 
 /**
- * Who is listed in the `viewers` array of one tier's document.
+ * Who may read the `friends` document — every accepted connection.
  *
- * ⚠️ EXACT membership, not cumulative: somebody on `full` appears in the full
- * document's viewers and in NO other. The documents themselves are cumulative
- * instead (full contains everything mid does), so one document is all any
- * reader ever needs.
- *
- * The wrinkle this creates is on the READING side, and it is written down in
- * docs/social-plan.md §3.2: a reader does not know which tier they were given,
- * so they try full → mid → light and keep the first that works. That is cheap —
- * Firestore does not bill a permission-denied read — and the answer is cached
- * locally, re-probed only on a miss. The alternative, listing each viewer in
- * every tier at or below theirs, means three documents to rewrite whenever one
- * person's tier changes, and three places for that write to half-fail.
+ * ⚠️ ONE LIST NOW, WHERE THERE WERE THREE. Under the tiers a viewer appeared in
+ * exactly one document's `viewers` and was never told which, so a reader had to
+ * probe. That is over: a friend is in this list or is not connected. The probe
+ * survives in a much smaller form (PROBE_ORDER) because a reader still cannot
+ * know whether they are reading as a friend or as a member of the public.
  */
-export function viewersForTier(graph, tier) {
-  if (!isTier(tier)) return [];
-  return normalizeGraph(graph).connections
-    .filter((c) => c.tier === tier)
-    .map((c) => c.uid)
-    .slice(0, MAX_VIEWERS);
+export function allViewers(graph) {
+  return normalizeGraph(graph).connections.map((c) => c.uid).slice(0, MAX_VIEWERS);
 }
 
 /* ------------------------------------------------------------------ *
@@ -297,20 +304,22 @@ function clone(value) {
  * ------------------------------------------------------------------ */
 
 /**
- * One recorded session, as the given tier is allowed to see it.
+ * One recorded session, as a reader of either document sees it.
  *
- * `light` is built from three fields and cannot contain a number from inside
- * the workout, because it never looks inside it. `mid` and `full` are the same
- * object — the tiers differ in what is published ALONGSIDE the sessions, not in
- * how a session is rendered.
+ * ⚠️ THERE IS NO LONGER A `tier` ARGUMENT, and its absence is the change of
+ * 2026-09-03. A session used to be published three different ways; both
+ * audiences now get the whole thing — exercises, sets, reps, weights, the time
+ * it started, where it was and what the owner wrote about it. The two documents
+ * differ only in what is published ALONGSIDE the sessions (body weight), never
+ * in how a session is rendered.
  *
  * Weights are published in POUNDS, which is how everything is stored
  * (units.js). The reader's own lbs/kg preference converts at display, so two
  * people with different unit settings see the same workout in their own units
  * and neither is converting a number that was already converted.
  */
-export function projectSession(session, tier) {
-  if (!session || !atLeast(tier, LIGHT)) return null;
+export function projectSession(session) {
+  if (!session) return null;
   const date = typeof session.date === 'string' ? session.date : null;
   if (!date) return null;
 
@@ -322,39 +331,25 @@ export function projectSession(session, tier) {
       : 'Workout',
   };
 
-  if (!atLeast(tier, MID)) return out;
-
-  // ── THE START TIME, AND WHY IT IS ON THIS SIDE OF THE MID GATE ─────────────
+  // ── THE START TIME ────────────────────────────────────────────────────────
   //
   // Tim wants a Strava-shaped home feed — a friend's name, the date and the
   // time at the top of each card — and the projection had no time in it at all,
   // so the feed could not have shown one however the view was written.
   //
-  // ⚠️ IT IS PUBLISHED AT MID, NOT LIGHT, AND THAT IS THE DECISION IN THIS
-  // FUNCTION — the parsing below is the easy half. Four reasons, in the order
-  // they actually decided it:
+  // ⚠️ IT USED TO BE GATED AT MID, AND THE GATE IS GONE WITH THE TIERS. The
+  // argument for keeping it off the lowest tier was that sixty start times are a
+  // SCHEDULE — when a house is empty, where a person reliably is — and that the
+  // lowest tier was the default everybody landed on without choosing it. Neither
+  // half applies now: there is no low tier to default into, and the only
+  // question left is whether a start time follows the account into public.
   //
-  //   1. LIGHT IS THE DEFAULT TIER (DEFAULT_TIER above), so it is what every
-  //      connection Tim has ever made is on unless he moved them. Adding a
-  //      field to light does not ask anybody anything: the next publish widens
-  //      what every existing light viewer can see, retroactively, across the
-  //      whole 60-session activity window. A widening has to be an act by the
-  //      owner, never a consequence of a deploy. That reason alone settles it.
-  //   2. A TIME OF DAY IS A DIFFERENT KIND OF FACT FROM A DATE. "He trained on
-  //      Tuesday" is about him; "he trains at 18:40 most weekdays" is a
-  //      schedule, and a schedule says when a house is empty and where a person
-  //      reliably is. Sixty of them say it with confidence. Light exists to say
-  //      the minimum — TIER_DETAIL calls it "the day, and what the workout was
-  //      called. Nothing inside it" — and a start time is not the minimum.
-  //   3. AT MID IT COSTS NOTHING, which is the other half of the same argument.
-  //      A mid viewer already has every exercise, set, rep and weight; somebody
-  //      holding that does not learn much from also knowing it began at 18:40.
-  //      The field is therefore nearly free where it is added and not free
-  //      where it is not — so there is no version of this where light is the
-  //      better trade.
-  //   4. The feed does not need it at light anyway. views-social.js renders a
-  //      light row flat, with no disclosure to open, precisely because there is
-  //      nothing behind it. The rich card Tim described is the mid/full one.
+  // 🚨 TIM WAS ASKED THAT DIRECTLY ON 2026-09-03 AND SAID YES — the time of day
+  // and the gym name both go public with the rest. The schedule argument above
+  // is not refuted by that answer, it is OVERRULED by the person whose schedule
+  // it is, which is the only way this decision was ever going to be taken. It
+  // is left standing because it is what somebody would need if they ever want a
+  // public account that keeps its hours to itself.
   //
   // Rejected: publishing a bare 'HH:MM' clock string instead of the instant.
   // It would have been strictly less data and it is what the card renders — but
@@ -398,7 +393,7 @@ export function projectSession(session, tier) {
   // start plus finish hands over how long somebody was out of the house. Tim
   // asked for the session length on the feed card, so the claim NARROWS
   // rather than falls: what is published is minutes rounded to the nearest
-  // five, at MID and above where startedAt already is — so a reader learns
+  // five, beside startedAt — so a reader learns
   // "about 45 minutes", never the exact instant the gym was left. The
   // rounding is the concession the old argument keeps. finishedAt itself is
   // still never published, and the same sanity guards the estimate uses
@@ -412,7 +407,7 @@ export function projectSession(session, tier) {
     }
   }
 
-  // ── LOCATION, AND WHY IT SITS BESIDE startedAt AND NOT AT LIGHT ────────────
+  // ── LOCATION ──────────────────────────────────────────────────────────────
   //
   // Open work 0m. Tim asked for Strava's "{date} at {time} · {place}" line.
   //
@@ -423,27 +418,25 @@ export function projectSession(session, tier) {
   // and reverse-geocoding it would have handed coordinates to a third party to
   // render a string the owner could just have typed.
   //
-  // ⚠️ MID AND ABOVE, for a STRONGER version of startedAt's argument: sixty
-  // start times describe a schedule; sixty start times WITH A PLACE describe
-  // where a person reliably is and when. Light is the default tier and exists
-  // to say the minimum. Same fail-closed shape too — missing is missing, no
-  // key rather than null, and assertTierClean's key allow-list at light means
-  // this field showing up there is a test failure, not a quiet widening.
+  // ⚠️ IT GOES PUBLIC WITH THE ACCOUNT — Tim's answer on 2026-09-03, given the
+  // argument that a place plus a time describes where a person reliably is and
+  // when. The label is still theirs to write or leave blank, which is the part
+  // that makes an owner's answer to this question a real one.
   if (typeof session.location === 'string' && session.location.trim()) {
     out.location = session.location.trim().slice(0, 80);
   }
 
-  // ── THE DESCRIPTION, AND WHY IT IS ON THE MID SIDE OF THE GATE TOO ────────
+  // ── THE DESCRIPTION ───────────────────────────────────────────────────────
   //
   // social-plan.md §13 Step 2. One line the owner typed during the workout —
   // "how did it go" — shown under the title on the feed card.
   //
-  // ⚠️ MID AND ABOVE, and the argument is shorter than startedAt's because it
-  // is not a privacy trade at all: light publishes NOTHING FROM INSIDE THE
-  // WORKOUT ("the day, and what the workout was called"), and a sentence about
-  // how the workout went is by definition inside it. It could say a PR was hit,
-  // that a shoulder gave out, who was there. There is no version of light that
-  // carries it.
+  // ⚠️ IT IS A SENTENCE A PERSON WROTE, which is the one field here that can
+  // say anything at all: that a PR was hit, that a shoulder gave out, who was
+  // there. Nothing filters it and nothing should — but it is worth knowing,
+  // when an account goes public, that this is the field most likely to carry
+  // something its author did not think of as public. The screen that turns
+  // public on says so.
   //
   // ⚠️ NOT `entry.notes`. That is the per-exercise coaching note on a workout
   // template and it has never been published by this function; this is the
@@ -502,40 +495,53 @@ function projectSet(set) {
  * ------------------------------------------------------------------ */
 
 /**
- * Everything one tier publishes, as the document that gets written to
- * users/{uid}/shared/{tier}.
+ * Everything one audience reads, as the document written to
+ * users/{uid}/shared/{audience}.
  *
  * Every input is passed in. This function reads nothing and knows no clock —
  * `publishedAt` is an argument — so the whole of what a person shares can be
  * asserted in a headless test with no emulator, no browser and no account.
  *
  * @param {object}   o
- * @param {string}   o.tier          light | mid | full
- * @param {string[]} o.viewers       uids allowed to read this document
+ * @param {string}   o.audience      'friends' | 'public'
+ * @param {string[]} o.viewers       uids allowed to read this document (friends only)
  * @param {object}   o.profile       { name, avatar } — NEVER the email address
  * @param {object[]} o.sessions      private session rows
- * @param {object[]} o.benchmarks    private benchmark rows      (full only)
- * @param {object[]} o.strength      muscle ratings              (full only)
- * @param {object[]} o.bodyWeights   private body-weight rows    (full AND opted in)
+ * @param {object[]} o.benchmarks    private benchmark rows
+ * @param {object}   o.strength      the muscle map — see buildStrengthShare()
+ * @param {object[]} o.bodyWeights   private body-weight rows  (friends AND opted in)
  * @param {boolean}  o.shareBodyWeight
  * @param {string}   o.publishedAt   ISO instant, passed in
  */
 export function buildProjection({
-  tier,
+  audience,
   viewers = [],
   profile = {},
   sessions = [],
   benchmarks = [],
-  strength = [],
+  strength = null,
   bodyWeights = [],
   shareBodyWeight = false,
   publishedAt = null,
 } = {}) {
-  if (!isTier(tier)) throw new Error(`Not a visibility tier: ${tier}`);
+  if (!isAudience(audience)) throw new Error(`Not an audience: ${audience}`);
+  const forPublic = audience === PUBLIC;
 
   const doc = {
-    tier,
-    viewers: [...new Set(viewers.filter((v) => typeof v === 'string' && v))].slice(0, MAX_VIEWERS),
+    audience,
+    // 🚨 THE FLAG THE RULES READ. firestore.rules grants a read on this document
+    // to any signed-in caller when it is true, so it is the one field in this
+    // file that is itself a permission. It is derived from the audience rather
+    // than passed in for exactly that reason — a caller cannot hand
+    // `isPublic: true` to the friends document.
+    isPublic: forPublic,
+    // ⚠️ The public document carries an EMPTY viewers list rather than no key.
+    // The rules check `viewers is list` before indexing it, and a missing key
+    // would make every friends-path rule evaluation on it an error rather than
+    // a clean false.
+    viewers: forPublic
+      ? []
+      : [...new Set(viewers.filter((v) => typeof v === 'string' && v))].slice(0, MAX_VIEWERS),
     // The shared identity is a name the user typed. Never the email address,
     // which is the only other identifier the app holds for a person and is
     // exactly the thing not to broadcast (docs/social-plan.md §3.5).
@@ -555,53 +561,153 @@ export function buildProjection({
     .filter((s) => s && typeof s.date === 'string')
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, MAX_ACTIVITY);
-  doc.activity = dated.map((s) => projectSession(s, tier)).filter(Boolean);
+  doc.activity = dated.map((s) => projectSession(s)).filter(Boolean);
 
-  if (atLeast(tier, FULL)) {
-    doc.benchmarks = (Array.isArray(benchmarks) ? benchmarks : [])
-      .filter((b) => b && typeof b.date === 'string')
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, MAX_BENCHMARKS)
-      .map((b) => ({
-        date: b.date,
-        exerciseId: typeof b.exerciseId === 'string' ? b.exerciseId : null,
-        name: typeof b.exerciseName === 'string' ? b.exerciseName : 'Exercise',
-        values: clone(b.values || {}),
-      }));
+  doc.benchmarks = (Array.isArray(benchmarks) ? benchmarks : [])
+    .filter((b) => b && typeof b.date === 'string')
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, MAX_BENCHMARKS)
+    .map((b) => ({
+      date: b.date,
+      exerciseId: typeof b.exerciseId === 'string' ? b.exerciseId : null,
+      name: typeof b.exerciseName === 'string' ? b.exerciseName : 'Exercise',
+      values: clone(b.values || {}),
+    }));
 
-    // Level and percentile only — not the estimated weight behind them. The
-    // body map renders from exactly these two, so publishing the estimate would
-    // be a number nothing displays, and data nobody needs is data that only has
-    // downside. Real recorded numbers are already in `benchmarks` at this tier.
-    doc.strength = (Array.isArray(strength) ? strength : [])
-      .filter((m) => m && typeof m.muscle === 'string')
-      .map((m) => ({
-        muscle: m.muscle,
-        level: typeof m.level === 'string' ? m.level : (m.level && m.level.name) || null,
-        percentile: Number.isFinite(m.percentile) ? m.percentile : null,
-        confidence: Number.isFinite(m.confidence) ? m.confidence : null,
-      }));
+  doc.strength = projectStrength(strength);
 
-    // ⚠️ Body weight is the exception INSIDE full, and it is off unless the
-    // owner turned it on separately. It is the most personal number the app
-    // stores and it is not what anybody means by "how strong I am" — it sits in
-    // this bucket only because the strength maths needs it. Letting an accident
-    // of the schema decide a privacy question is how this sort of thing goes
-    // wrong. See docs/social-plan.md §3.3.1.
-    if (shareBodyWeight) {
-      doc.bodyWeight = (Array.isArray(bodyWeights) ? bodyWeights : [])
-        .filter((r) => r && typeof r.date === 'string' && Number.isFinite(r.weight))
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .map((r) => ({ date: r.date, weight: r.weight }));
-    }
+  // ⚠️ BODY WEIGHT IS THE ONE THING THE TWO DOCUMENTS DISAGREE ABOUT, and it is
+  // off even for friends unless the owner turned it on separately. It is the
+  // most personal number the app stores and it is not what anybody means by "how
+  // strong I am" — it sits in this bucket only because the strength maths needs
+  // it. Letting an accident of the schema decide a privacy question is how this
+  // sort of thing goes wrong. See docs/social-plan.md §3.3.1.
+  //
+  // 🚨 `!forPublic` IS THE GATE TIM CHOSE ON 2026-09-03 and it is enforced here,
+  // in the builder, rather than left to the caller — assertAudienceClean below
+  // then refuses the document anyway if this line is ever edited wrong.
+  if (shareBodyWeight && !forPublic) {
+    doc.bodyWeight = (Array.isArray(bodyWeights) ? bodyWeights : [])
+      .filter((r) => r && typeof r.date === 'string' && Number.isFinite(r.weight))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((r) => ({ date: r.date, weight: r.weight }));
   }
 
   // Defence in depth. Everything above is a whitelist and should already be
   // correct; this refuses to hand back a document that is not, so a mistake
   // becomes a thrown error at the publish site instead of a leak on somebody
   // else's screen. It costs one walk of a small object.
-  assertTierClean(doc, tier);
+  assertAudienceClean(doc, audience);
   return doc;
+}
+
+/* ------------------------------------------------------------------ *
+ * The muscle map, as somebody else reads it
+ *
+ * 🚨 THIS IS WHAT MADE A FRIEND'S BODY MAP TAPPABLE (2026-09-03). Tim: *"I also
+ * want a friend to be able to see another user's body, their graphs, volume,
+ * etc. as well as click on any muscle group like that own user can on
+ * themselves and pull details from it."*
+ *
+ * The old projection published `[{ muscle, level, percentile, confidence }]` and
+ * said so in as many words: "Level and percentile only — not the estimated
+ * weight behind them… data nobody needs is data that only has downside." That
+ * was right while a friend's map was a picture. It is not enough for a panel,
+ * which names the estimate, what the next level costs, how well corroborated the
+ * reading is and which recorded sets it came from.
+ *
+ * ⚠️ AND THE GRID IS THE PART WORTH UNDERSTANDING. Tim asked that a viewer be
+ * able to use *"any comparison combination that is already available"* on
+ * somebody else's body — men, women, everyone, any body weight, any age. A
+ * percentile is a ratio to the person's own body weight and age, so recomputing
+ * one on the viewer's device would mean publishing both. Instead the OWNER
+ * computes every combination the app offers, on their own device where those
+ * numbers already are, and publishes the answers: `grid[comboKey][muscle]`.
+ *
+ * The reader picks a combination and reads it off. Nobody's body weight is in
+ * the document, the viewer can still ask every question the sheet offers, and
+ * the arithmetic that produced both people's numbers is the same code.
+ * ------------------------------------------------------------------ */
+
+/** 13 rateable muscles today; the cap is a runaway guard, not a limit. */
+export const MAX_SHARED_MUSCLES = 40;
+/** pool(2) × sex(3) × weight(2) × age(2) = 24 today. */
+export const MAX_SHARED_COMBOS = 60;
+/** The panel names at most three contributing sets — muscle-evidence.js decides. */
+export const MAX_SHARED_CONTRIBUTORS = 3;
+
+function num(v) {
+  return Number.isFinite(v) ? v : null;
+}
+
+function str(v, max = 60) {
+  return typeof v === 'string' ? v.slice(0, max) : null;
+}
+
+/**
+ * Whitelist the muscle map. Same discipline as everything else in this file: a
+ * field invented next year is absent from a friend's screen until somebody
+ * names it here, rather than published because nobody thought about it.
+ */
+export function projectStrength(strength) {
+  const s = strength && typeof strength === 'object' && !Array.isArray(strength) ? strength : {};
+
+  const muscles = (Array.isArray(s.muscles) ? s.muscles : [])
+    .filter((m) => m && typeof m.muscle === 'string')
+    .slice(0, MAX_SHARED_MUSCLES)
+    .map((m) => ({
+      muscle: m.muscle,
+      lift: str(m.lift),
+      estimate: num(m.estimate),
+      confidence: num(m.confidence),
+      band: str(m.band, 24),
+      basis: str(m.basis, 24),
+      contributorCount: num(m.contributorCount),
+      exerciseCount: num(m.exerciseCount),
+      // ⚠️ Rule 5 travels with the number. These name the real recorded sets the
+      // estimate was converted FROM, which is the only thing that lets a reader
+      // tell "195 lb bench" from "195 lb inferred off a dumbbell press". A panel
+      // that showed the estimate without them would be an inference dressed as a
+      // measurement on somebody else's screen.
+      contributors: (Array.isArray(m.contributors) ? m.contributors : [])
+        .slice(0, MAX_SHARED_CONTRIBUTORS)
+        .map((c) => ({
+          exerciseName: str(c && c.exerciseName, 80),
+          weight: num(c && c.weight),
+          reps: num(c && c.reps),
+          date: str(c && c.date, 10),
+          loadType: str(c && c.loadType, 16),
+          source: str(c && c.source, 16),
+        })),
+      hint: str(m.hint, 200),
+      confident: m.confident === true,
+    }));
+
+  const grid = {};
+  let combos = 0;
+  for (const [key, byMuscle] of Object.entries(s.grid && typeof s.grid === 'object' ? s.grid : {})) {
+    if (combos >= MAX_SHARED_COMBOS) break;
+    if (!byMuscle || typeof byMuscle !== 'object') continue;
+    const row = {};
+    for (const [muscle, pair] of Object.entries(byMuscle)) {
+      if (!Array.isArray(pair)) continue;
+      // [percentile, weight to the next level]. A pair rather than an object
+      // because there are 24 of these per muscle and the document has a ceiling.
+      row[muscle] = [num(pair[0]), num(pair[1])];
+    }
+    grid[String(key).slice(0, 40)] = row;
+    combos++;
+  }
+
+  return {
+    muscles,
+    grid,
+    // Which combination is THEIR "like me" — the one their own screen opens on.
+    // ⚠️ It encodes their sex, which is the only thing about their body this
+    // document carries, and it is here because the alternative is a viewer's
+    // "Like me" silently meaning "like ME" on somebody else's body.
+    defaultCompare: str(s.defaultCompare, 40),
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -616,65 +722,62 @@ export function leaves(value, path = '') {
 }
 
 /**
- * The complete set of fields a session may carry below MID.
+ * The complete set of top-level keys a published document may carry.
  *
- * ⚠️ Adding a name here WIDENS what every light viewer sees. There is no other
- * switch: this list and projectSession() are the two places that decide it.
+ * ⚠️ Adding a name here WIDENS what a reader gets. It fails closed: a key this
+ * list does not know about throws at the publish site rather than appearing on
+ * somebody's screen.
  */
-const LIGHT_SESSION_FIELDS = new Set(['id', 'date', 'name']);
+const DOC_FIELDS = new Set([
+  'audience', 'isPublic', 'viewers', 'profile', 'publishedAt',
+  'activity', 'benchmarks', 'strength', 'bodyWeight',
+]);
+
+/** What the PUBLIC document may never hold, whatever the builder did. */
+const PRIVATE_TO_FRIENDS = ['bodyWeight'];
 
 /**
- * Throw if a projection contains something its tier does not allow.
+ * Throw if a published document holds something its audience may not have.
  *
- * ⚠️ This is an ABSENCE check, not a shape check, and the difference is the
+ * ⚠️ THIS IS AN ABSENCE CHECK, NOT A SHAPE CHECK, and the difference is the
  * whole point. A test that lists the fields it expects to be missing passes
  * happily the day somebody adds a new field and forgets — which is exactly how
  * this kind of leak happens in practice. So: walk the finished document and
- * fail on anything that is not on the short list the tier is allowed to hold.
+ * fail on anything that is not on the short list the audience may hold.
  *
- * `light` may hold no number from inside a workout at all. `mid` may hold the
- * session numbers and nothing from the analysis collections.
+ * ⚠️ IT LOST ITS BIGGEST JOB ON 2026-09-03 AND KEPT ITS SHAPE ON PURPOSE. Under
+ * the tiers it walked every leaf below a session, because `light` was allowed no
+ * number from inside a workout at all and a leak there would have been silent.
+ * Both audiences now get the whole session, so that walk has nothing left to
+ * find — and the guard is still here, still fail-closed, because the ONE
+ * remaining difference between the two documents (body weight) is exactly the
+ * kind of difference an edit six months from now will quietly undo.
  */
-export function assertTierClean(doc, tier) {
+export function assertAudienceClean(doc, audience) {
   const bad = [];
+  if (!isAudience(audience)) throw new Error(`Not an audience: ${audience}`);
 
-  if (!atLeast(tier, MID)) {
-    for (const { path, value } of leaves(doc.activity || [], 'activity')) {
-      // A date is a string; an id is a string. A NUMBER below a session at this
-      // tier can only be something that leaked out of the workout.
-      if (typeof value === 'number') bad.push(`${path} = ${value}`);
-
-      // ⚠️ AND THE SAME QUESTION ASKED ABOUT THE KEY, WHICH THIS GUARD DID NOT
-      // ASK UNTIL 2026-08-25. Every leak it was written to catch happened to be
-      // a number — a weight, a rep count — so "no numbers below a session"
-      // looked like the whole of it. It is not. Adding the session's start
-      // time to light would have been a STRING, the guard would have passed it
-      // without a murmur, and the safety net the whole sharing model leans on
-      // would have been silent for the one field somebody had just thought
-      // hardest about. Found by adding that field (at mid) and asking what
-      // would have happened had it gone to light.
-      //
-      // So: the leaf's own field path, with the array index stripped, must be
-      // one of the three names light admits. This fails CLOSED — a field
-      // invented next year is a leak here until somebody names it above, which
-      // is the same discipline projectSession()'s whitelist already follows,
-      // and it subsumes the number rule rather than replacing it (both run, so
-      // a number under an allowed key is still caught).
-      const field = path.replace(/^activity\[\d+\]\.?/, '');
-      if (!LIGHT_SESSION_FIELDS.has(field)) bad.push(`${path} is not shared at ${tier}`);
-    }
+  for (const key of Object.keys(doc || {})) {
+    if (!DOC_FIELDS.has(key)) bad.push(`${key} is not a published field`);
   }
 
-  if (!atLeast(tier, FULL)) {
-    for (const key of ['benchmarks', 'strength', 'bodyWeight']) {
-      if (doc[key] !== undefined) bad.push(`${key} present`);
+  if (audience === PUBLIC) {
+    for (const key of PRIVATE_TO_FRIENDS) {
+      if (doc[key] !== undefined) bad.push(`${key} present in the public document`);
     }
+    // A public document with a viewers list would be two access models on one
+    // document, and the narrower one would be doing nothing.
+    if (Array.isArray(doc.viewers) && doc.viewers.length) bad.push('public document has viewers');
+    if (doc.isPublic !== true) bad.push('public document is not marked public');
+  } else {
+    // 🚨 The other direction, and it is the one that would actually hurt: a
+    // friends document marked public is readable by everybody signed in, body
+    // weight and all. The rules read `isPublic` and nothing else.
+    if (doc.isPublic !== false) bad.push('friends document is marked public');
   }
-
-  if (doc.bodyWeight !== undefined && !atLeast(tier, FULL)) bad.push('bodyWeight present');
 
   if (bad.length) {
-    throw new Error(`Projection for "${tier}" leaks: ${bad.join(', ')}`);
+    throw new Error(`Projection for "${audience}" leaks: ${bad.join(', ')}`);
   }
   return true;
 }
@@ -782,16 +885,17 @@ export function parseInviteRoute(param) {
 }
 
 /**
- * The order a reader tries a friend's tiers in: most generous first.
+ * The order a reader tries somebody's documents in: friends first.
  *
- * A viewer is listed in exactly one tier's document (see viewersForTier), so
- * they do not know which one they were given and have to find out by asking.
- * High to low, keeping the first that answers. A refusal is not billed as a
- * read, and the answer is worth caching — but the cache must be re-probed on a
- * miss, because the owner can move somebody down at any moment and a stale
- * "they let me see everything" must never survive that.
+ * ⚠️ IT IS TWO NOW, NOT THREE, and the reason for probing at all has changed
+ * with it. Under the tiers a viewer was listed in exactly one document and was
+ * never told which. Now the question is different and smaller: am I reading this
+ * person as an accepted friend, or as a member of the public? Friends first,
+ * because their document is the one with body weight in it — and because a
+ * friend of a public account should not be silently downgraded to the stranger's
+ * view. A refusal is not billed as a read.
  */
-export const PROBE_ORDER = [FULL, MID, LIGHT];
+export const PROBE_ORDER = [FRIENDS, PUBLIC];
 
 export function inviteState(invite, nowISO) {
   if (!invite || typeof invite.token !== 'string' || !invite.token) return 'invalid';
@@ -821,8 +925,18 @@ export function inviteState(invite, nowISO) {
  *
  * ⚠️ THE RESOLUTION IS A NARROW EXCEPTION, NOT A RETREAT FROM THE MODEL. A
  * reaction lives at users/{owner}/reactions/{id} — under the owner of the
- * workout it reacts to — and the rules allow a VIEWER of any published tier
- * to CREATE one there. What made a foreign write unacceptable everywhere
+ * workout it reacts to — and the rules allow an ACCEPTED FRIEND to CREATE one
+ * there. What made a foreign write unacceptable everywhere
+ *
+ * 🚨 REACTING IS FRIENDS-ONLY, AND IT DID NOT FOLLOW THE ACCOUNT INTO PUBLIC
+ * (2026-09-03). Tim asked that a public account be READABLE by anyone signed in;
+ * letting anyone signed in also write into that account's reactions subtree is a
+ * different feature — it is the moderation surface, and this project has no
+ * moderation story (docs/social-plan.md §12.11 refuses the discovery feed on the
+ * same grounds). So a stranger reads a public account and cannot leave anything
+ * on it. Reversing that is one clause in firestore.rules and a decision, not an
+ * oversight.
+ *
  * else is that one document holds a whole collection, so a single bad write
  * replaces someone's training history. A reaction is one document per
  * reaction, create-only (no update path at all), shape-checked by the rules,

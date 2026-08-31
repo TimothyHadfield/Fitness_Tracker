@@ -17,6 +17,7 @@ import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
 import {
   SocialView, FriendView, FriendSessionView, InviteView, FindView, AddView,
+  FriendVolumeView, FriendGraphView, CompareBodiesView,
 } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { setUnits } from './units.js';
@@ -53,7 +54,7 @@ import { setUnits } from './units.js';
  * still inside it — is how a merge starts feeling like a dead end.
  */
 const NAV = [
-  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home', 'social', 'friend', 'invite', 'find', 'add'] },
+  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home', 'social', 'friend', 'invite', 'find', 'add', 'compare'] },
   { hash: '#/workouts', label: 'Workouts', icon: 'dumbbell', match: ['workouts', 'system', 'workout', 'explore'] },
   // ⚠️ The hash is #/record and the view is the old start picker with the
   // benchmark action folded in. Both #/start and #/benchmark still resolve, so
@@ -92,7 +93,7 @@ const NAV = [
 // ⚠️ `goals` joined this list on 2026-08-25 when it stopped being a tab. A
 // screen with no tab of its own is reached FROM somewhere, so it needs a back
 // button, which is what being fullscreen gives it — the same shape as `start`.
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import'];
+const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import', 'compare'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -164,10 +165,23 @@ async function resolve(route) {
      * its two-part parameter together for the same reason. */
     case 'friend': {
       const [fuid, sid] = (route.param || '').split('/');
+      /* ⚠️ TWO RESERVED SECOND SEGMENTS SINCE 2026-09-03 — `volume` and `graph`,
+       * a friend's own version of the Data tab's screens (Tim: *"I also want a
+       * friend to be able to see another user's body, their graphs, volume,
+       * etc."*). They sit under `friend` for the same reason a session does, and
+       * they are checked BEFORE the session branch because a session id is
+       * opaque: a workout that happened to be called `volume` is not possible
+       * (ids are generated), but reading the check in the other order would make
+       * that a question somebody has to answer. */
+      if (sid === 'volume') return FriendVolumeView(decodeURIComponent(fuid));
+      if (sid === 'graph') return FriendGraphView(decodeURIComponent(fuid));
       return sid
         ? FriendSessionView(decodeURIComponent(fuid), decodeURIComponent(sid))
         : FriendView(route.param);
     }
+    /* Two bodies, side by side — #/compare/<uid> against yourself, or
+     * #/compare/<uid>/<uid> for two other people. Tim, 2026-09-03. */
+    case 'compare':   return CompareBodiesView(route.param || '');
     // #/invite/<ownerUid>/<token> — the whole param is passed through, because
     // parse() joins the rest back together and the token is the second half.
     case 'invite':    return InviteView(route.param);

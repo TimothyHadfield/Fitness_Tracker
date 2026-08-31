@@ -30,10 +30,16 @@ import {
   refreshRoute,
 } from './ui.js';
 import {
-  TIERS, TIER_LABEL, TIER_DETAIL, NONE, LIGHT, MID, FULL,
-  atLeast, parseInviteRoute, profileLink,
+  PRIVATE_ACCOUNT, PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL,
+  FRIENDS, parseInviteRoute, profileLink,
 } from './social.js';
 import { encodeQR } from './qr.js';
+// ⚠️ A STATIC IMPORT, because a friend's body weight and every weight on their
+// muscle panel are published in POUNDS and this app has kilogram users. The one
+// shipped bug of 2026-09-02's feed work was exactly this — `entryLine()` putting
+// raw pounds on a kilogram user's screen — and it was found by rendering two
+// screens side by side rather than by a test.
+import * as units from './units.js';
 import { sessionStats, recordedSetCount } from './session-stats.js';
 import { minisOf, miniLabel, groupLabel } from './set-types.js';
 
@@ -84,31 +90,73 @@ function unavailable(reason) {
   );
 }
 
-// The control that says what one person may see. The sheet names all four
-// options and says what each means — "mid visibility" is meaningless to
-// somebody who has not read the plan, and D8 says teach at the moment of use.
-function visibilitySheet(name, current, onPick) {
-  const options = [FULL, MID, LIGHT, NONE];
-  const row = (tier) => el('button', {
-    class: 'pick-row' + (tier === current ? ' is-on' : ''),
-    onClick: () => { close(); onPick(tier); },
+/**
+ * Who may see this account — 🚨 ONE SETTING FOR THE WHOLE ACCOUNT since
+ * 2026-09-03, replacing the per-person picker.
+ *
+ * Tim: *"you can either make your account private so only friends you accept can
+ * see, or public so anyone on the app that finds your account can see all
+ * details."* Asked whether the four per-person levels should go with it, he said
+ * yes.
+ *
+ * ⚠️ THE PUBLIC OPTION SAYS WHAT IT COSTS, IN THE SHEET, BEFORE IT IS TAPPED.
+ * Everything else in this app that widens what somebody can see is an act by the
+ * owner with the consequence named — D8, teach at the moment of use — and this
+ * is the widest one there is. What is named is what a reasonable person would
+ * not have guessed from the word "public": the time of day, the gym, and the
+ * sentence they typed during a workout.
+ */
+export function visibilitySheet(current, onPick) {
+  const options = [PRIVATE_ACCOUNT, PUBLIC_ACCOUNT];
+  const row = (value) => el('button', {
+    class: 'pick-row' + (value === current ? ' is-on' : ''),
+    onClick: () => { close(); onPick(value); },
   },
     el('div', { style: 'flex:1;min-width:0' },
-      el('div', { class: 'pick-title', text: TIER_LABEL[tier] }),
-      el('div', { class: 'pick-sub', text: TIER_DETAIL[tier] }),
+      el('div', { class: 'pick-title', text: VISIBILITY_LABEL[value] }),
+      el('div', { class: 'pick-sub', text: VISIBILITY_DETAIL[value] }),
     ),
-    tier === current ? icon('check') : null,
+    value === current ? icon('check') : null,
   );
 
   const { close } = openSheet({
-    title: `What ${name} can see`,
+    title: 'Who can see your account',
     body: el('div', { class: 'pick-list' },
       ...options.map(row),
       el('p', { class: 'note', text:
-        'Changing this takes effect straight away. It cannot un-see anything they have already '
+        'Public means anyone signed in who searches your name or scans your code — not just '
+        + 'friends. They see your workouts with their weights, the time of day you trained, the '
+        + 'gym you typed, anything you wrote about a session, your benchmarks, your muscle map and '
+        + 'your volume.' }),
+      el('p', { class: 'note', text:
+        'Your body weight is never in that. It stays with friends you have accepted, and only if '
+        + 'you switched it on.' }),
+      el('p', { class: 'note', text:
+        'Changing this takes effect straight away. It cannot un-see anything somebody has already '
         + 'looked at.' }),
     ),
   });
+}
+
+/** The row that states it, wherever it needs stating. */
+function visibilityRow(visibility, after) {
+  return el('button', {
+    class: 'row as-button',
+    onClick: () => visibilitySheet(visibility, async (next) => {
+      try {
+        await social.setVisibility(next);
+        toast(next === PUBLIC_ACCOUNT ? 'Your account is public.' : 'Your account is private.');
+        if (after) after();
+      } catch (err) { toast(err.message); }
+    }),
+  },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: VISIBILITY_LABEL[visibility] || VISIBILITY_LABEL[PRIVATE_ACCOUNT] }),
+      el('div', { class: 'row-sub wrap', text:
+        VISIBILITY_DETAIL[visibility] || VISIBILITY_DETAIL[PRIVATE_ACCOUNT] }),
+    ),
+    chevron(),
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -279,8 +327,7 @@ async function fillSocial(body, state) {
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: r.name }),
           el('div', { class: 'row-sub wrap', text:
-            'They want to connect. If you add them they start on "just that I trained" '
-            + 'until you change it.' }),
+            'They want to connect. If you add them they can see everything you have recorded.' }),
         ),
         el('button', {
           class: 'btn small primary', text: 'Add',
@@ -328,12 +375,20 @@ async function fillSocial(body, state) {
     }
   }
 
+  /* ⚠️ WHO CAN SEE THIS ACCOUNT, ON THE SCREEN WHERE THE SHARING IS (2026-09-03).
+   * It is one setting for the whole account now, so it belongs above the list of
+   * people it applies to rather than inside any one of them — and a person
+   * scanning this screen should be able to answer "is my training public?"
+   * without opening anything. */
+  parts.push(el('h2', { class: 'section-head', text: 'Who can see your account' }));
+  parts.push(visibilityRow(state.visibility, refresh));
+
   parts.push(el('h2', { class: 'section-head', text: 'Friends' }));
 
   if (!state.connections.length) {
     parts.push(el('p', { class: 'note', text:
       'Nobody yet. Search for them by name, show them your code, or send an invite link — '
-      + 'whichever is easier. New friends start on "just that I trained" until you change it.' }));
+      + 'whichever is easier. Anybody you accept sees everything you have recorded.' }));
   } else {
     for (const c of state.connections) {
       const title = el('div', { class: 'row-title', text: c.name || 'Friend' });
@@ -356,7 +411,10 @@ async function fillSocial(body, state) {
         faceSlot,
         el('div', { class: 'row-main' },
           title,
-          el('div', { class: 'row-sub', text: `They can see: ${TIER_LABEL[c.tier] || TIER_LABEL[LIGHT]}` }),
+          // ⚠️ THE "They can see: …" LINE WENT WITH THE TIERS. Every friend sees
+          // the same thing now, so a per-row restatement of it would be the same
+          // sentence twelve times under a heading that already says it once.
+          el('div', { class: 'row-sub', text: c.since ? `Friends since ${relativeDay(c.since)}` : 'Friend' }),
         ),
         chevron(),
       ));
@@ -573,6 +631,13 @@ export async function InviteView(param) {
 export async function FriendView(uid) {
   const back = () => { location.hash = '#/social'; };
 
+  /* ⚠️ THE DEMO GOES THROUGH friendDoc(), WHICH BUILDS AN INVENTED FRIEND. Until
+   * 2026-09-03 this screen was one of the ones the demo refused outright, which
+   * was defensible while it listed workouts and is not now that it carries the
+   * body map, the volume, the graphs and the way into the compare screen. */
+  const pre = await friendDoc(uid);
+  if (pre.demo) return friendScreen(uid, pre, back);
+
   let state;
   try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
   if (!state.available) {
@@ -580,26 +645,47 @@ export async function FriendView(uid) {
   }
 
   const conn = state.connections.find((c) => c.uid === uid);
-  if (!conn) {
-    return screenShell({ title: 'Friend', back, noNav: true,
-      scroll: emptyState('Not connected', 'You are not connected to them any more.') });
-  }
 
-  let seen = { tier: null, doc: null };
+  let seen = { audience: null, doc: null };
   try { seen = await social.friend(uid); } catch (_) {}
 
-  const name = (seen.doc && seen.doc.profile && seen.doc.profile.name) || conn.name || 'Friend';
+  /* 🚨 THIS SCREEN IS NO LONGER FRIENDS-ONLY (2026-09-03). Tim: *"public so
+   * anyone on the app that finds your account can see all details."* So the old
+   * early return on "not connected" is gone — a stranger's public document is a
+   * perfectly good thing to be looking at, and refusing to render it would have
+   * made the public setting do nothing anybody could see.
+   *
+   * ⚠️ The two cases are still told apart on screen, everywhere it matters: the
+   * subtitle says which, an unconnected person gets an Add button rather than a
+   * Disconnect one, and the "what they can see of yours" block only appears for
+   * somebody who can actually see anything of yours. */
+  const isFriend = Boolean(conn);
+  if (!isFriend && !seen.doc) {
+    return screenShell({ title: 'Not connected', back, noNav: true,
+      scroll: emptyState('Nothing to show',
+        'You are not connected to them, and their account is private. Send them a friend request '
+        + 'and they can accept it.') });
+  }
+
+  const name = (seen.doc && seen.doc.profile && seen.doc.profile.name)
+    || (conn && conn.name) || 'Friend';
   // Opening their page is the other moment their real name is in hand while
   // the graph may still hold the accept-flow placeholder — persist it, so the
   // lists stop saying "Friend" even if this screen is the only one visited.
-  if (!conn.name || conn.name === 'Friend') {
+  if (isFriend && (!conn.name || conn.name === 'Friend')) {
     social.healConnectionName(uid).catch(() => {});
   }
   const body = el('div', { class: 'list' });
 
   const screen = screenShell({
     title: name,
-    sub: seen.tier ? `They share: ${TIER_LABEL[seen.tier]}` : 'They share nothing with you',
+    // ⚠️ SAY WHICH DOCUMENT THIS IS, because the two are different promises. A
+    // friend's page is what they share with people they accepted; a public page
+    // is what anybody signed in can read, and somebody looking at one should
+    // know which they are looking at without working it out.
+    sub: !seen.doc
+      ? 'They share nothing with you'
+      : seen.audience === FRIENDS ? 'Friends' : 'Public account',
     back, noNav: true,
     scroll: body,
   });
@@ -618,44 +704,54 @@ export async function FriendView(uid) {
     ));
   }
 
-  // What I share with them, always first and always visible — the thing a
-  // person most wants to check on this screen is not what their friend shared,
-  // it is what they themselves are giving away.
-  parts.push(el('h2', { class: 'section-head', text: 'What they can see of yours' }));
-  const mine = el('button', {
-    class: 'row as-button',
-    onClick: () => visibilitySheet(conn.name || 'They', conn.tier, async (tier) => {
-      try {
-        await social.setTier(uid, tier);
-        toast('Updated.');
-        refreshRoute(`#/friend/${encodeURIComponent(uid)}`);
-      } catch (err) { toast(err.message); }
-    }),
-  },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: TIER_LABEL[conn.tier] || TIER_LABEL[LIGHT] }),
-      // `.wrap`, because this one is a sentence rather than a name — clipped to
-      // one line it ended "...plus benchmarks, your muscle map and your pr…",
-      // which is the one row on this screen where the detail is the point.
-      el('div', { class: 'row-sub wrap', text: TIER_DETAIL[conn.tier] || TIER_DETAIL[LIGHT] }),
-    ),
-    chevron(),
-  );
-  parts.push(mine);
+  // What I share with them, always first and always visible for a friend — the
+  // thing a person most wants to check on this screen is not what their friend
+  // shared, it is what they themselves are giving away. ⚠️ It is now MY ACCOUNT
+  // setting rather than a dial on this one person, so it says so and leads to
+  // the same sheet the Friends screen opens.
+  if (isFriend) {
+    parts.push(el('h2', { class: 'section-head', text: 'What they can see of yours' }));
+    parts.push(visibilityRow(state.visibility,
+      () => refreshRoute(`#/friend/${encodeURIComponent(uid)}`)));
+    parts.push(el('p', { class: 'note', text:
+      'Friends see everything either way. This setting decides whether anybody else can.' }));
+  }
 
   if (!seen.doc) {
     parts.push(el('h2', { class: 'section-head', text: 'What they share' }));
     parts.push(el('p', { class: 'note', text:
-      'Nothing yet. They have either not chosen what to share with you, or have not trained since '
-      + 'they connected.' }));
+      'Nothing yet. They have not published anything since you connected.' }));
   } else {
-    if (atLeast(seen.tier, FULL) && seen.doc.strength && seen.doc.strength.length) {
+    const strength = seen.doc.strength;
+    if (strength && strength.muscles && strength.muscles.length) {
       parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
-      parts.push(await friendBody(seen.doc.strength));
+      parts.push(await friendBody(strength, { name, uid }));
     }
+
+    /* 🚨 THEIR NUMBERS, ON THE SAME SCREENS AS YOURS (2026-09-03). Tim: *"I also
+     * want a friend to be able to see another user's body, their graphs, volume,
+     * etc."* Both are computed on this device from what they published — their
+     * sessions and benchmarks are in the document already — so neither costs a
+     * read and neither needs anything new from them. */
+    parts.push(el('h2', { class: 'section-head', text: 'Their training' }));
+    parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/volume` },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: 'Volume' }),
+        el('div', { class: 'row-sub', text: 'Weekly sets per muscle, from what they recorded' }),
+      ),
+      chevron(),
+    ));
+    parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/graph` },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: 'Graphs' }),
+        el('div', { class: 'row-sub', text: 'One exercise over time, in your units' }),
+      ),
+      chevron(),
+    ));
+
     if (seen.doc.bodyWeight && seen.doc.bodyWeight.length) {
       const last = seen.doc.bodyWeight[seen.doc.bodyWeight.length - 1];
-      parts.push(el('p', { class: 'note', text: `Body weight ${Math.round(last.weight)} lbs on ${fmtDateLong(last.date)}` }));
+      parts.push(el('p', { class: 'note', text: `Body weight ${units.withUnit(Math.round(last.weight))} on ${fmtDateLong(last.date)}` }));
     }
 
     parts.push(el('h2', { class: 'section-head', text: 'Recent workouts' }));
@@ -663,8 +759,23 @@ export async function FriendView(uid) {
     if (!acts.length) {
       parts.push(el('p', { class: 'note', text: 'Nothing recorded yet.' }));
     } else {
-      for (const a of acts) parts.push(activityRow(a, seen.tier, uid));
+      for (const a of acts) parts.push(activityRow(a, uid));
     }
+  }
+
+  /* ⚠️ THE BOTTOM OF THIS SCREEN DEPENDS ON WHETHER THEY ARE A FRIEND, and both
+   * halves have to exist: a public account you are only reading has nothing to
+   * disconnect FROM, and offering a red Disconnect button on it would be a
+   * control that either does nothing or does something nobody asked for. */
+  if (!isFriend) {
+    parts.push(el('div', { class: 'danger-zone' },
+      el('a', { class: 'btn primary block', href: `#/add/${encodeURIComponent(uid)}`,
+        text: 'Send a friend request' }),
+      el('p', { class: 'note', text:
+        'You are reading their public page. Becoming friends is what lets them see yours.' }),
+    ));
+    setChildren(body, ...parts);
+    return screen;
   }
 
   parts.push(el('div', { class: 'danger-zone' },
@@ -685,8 +796,18 @@ export async function FriendView(uid) {
         // of what the code does is a lie the user acts on — they press this
         // believing a link is cut in both directions, and it is not. Say what
         // actually happens until the other half exists.
-        message: `${conn.name || 'They'} will no longer be able to see anything of yours, and they `
-          + 'drop off your friends list. It cannot un-see anything they have already looked at.\n\n'
+        /* 🚨 AND IT HAD TO BE CORRECTED AGAIN ON 2026-09-03, FOR THE SAME CLASS
+         * OF REASON. "They will no longer be able to see anything of yours" is
+         * false on a PUBLIC account — disconnecting takes them out of the
+         * friends document and leaves the public one, which they can read like
+         * anybody else. A sheet that says a link is cut when it is not is a lie
+         * the user acts on, which is the whole lesson of the note above. */
+        message: `${conn.name || 'They'} drops off your friends list`
+          + (state.visibility === PUBLIC_ACCOUNT
+            ? ', but your account is PUBLIC — so they can carry on reading your training like '
+              + 'anybody else signed in. Make your account private if you want that to stop.'
+            : ', and will no longer be able to see anything of yours.')
+          + ' It cannot un-see anything they have already looked at.\n\n'
           + 'They are told, so their app will drop you too the next time they open it. Until then '
           + 'their training may still be readable by this account.',
         confirmLabel: 'Disconnect',
@@ -708,6 +829,400 @@ export async function FriendView(uid) {
 
   setChildren(body, ...parts);
   return screen;
+}
+
+/**
+ * The demo's version of the page above — the same sections, minus everything
+ * that is about a relationship rather than about training.
+ *
+ * ⚠️ NO VISIBILITY ROW, NO DISCONNECT, NO ADD. Those act on a real account, and
+ * a control that cannot do what it says is worse than an absent one. What is
+ * kept is exactly what the demo exists to show: the map, the numbers, and the
+ * screens they lead to.
+ */
+async function friendScreen(uid, pre, back) {
+  const body = el('div', { class: 'list' });
+  const screen = screenShell({
+    title: pre.name, sub: 'In the demo account', back, noNav: true, scroll: body,
+  });
+  const parts = [];
+  const strength = pre.doc.strength;
+  if (strength && strength.muscles && strength.muscles.length) {
+    parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
+    parts.push(await friendBody(strength, { name: pre.name, uid }));
+  }
+  parts.push(el('h2', { class: 'section-head', text: 'Their training' }));
+  parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/volume` },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: 'Volume' }),
+      el('div', { class: 'row-sub', text: 'Weekly sets per muscle, from what they recorded' })),
+    chevron()));
+  parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/graph` },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: 'Graphs' }),
+      el('div', { class: 'row-sub', text: 'One exercise over time, in your units' })),
+    chevron()));
+
+  parts.push(el('h2', { class: 'section-head', text: 'Recent workouts' }));
+  for (const a of pre.doc.activity || []) parts.push(activityRow(a, uid));
+
+  setChildren(body, ...parts);
+  return screen;
+}
+
+/* ================================================================== *
+ * THEIR DATA SCREENS — #/friend/<uid>/volume and #/friend/<uid>/graph
+ *
+ * 🚨 Tim, 2026-09-03: *"I also want a friend to be able to see another user's
+ * body, their graphs, volume, etc."*
+ *
+ * ⚠️ NEITHER OF THESE COSTS A READ OF ANYTHING NEW. A published document already
+ * carries their sessions (with every set) and their benchmarks, so both screens
+ * are computed on THIS device from what is already in hand — and both go through
+ * the same functions that draw your own, handed their rows instead of the
+ * store's. `weeklyVolumeByMuscle(days, today, rows)` and
+ * `normalizedSeries(id, reps, source, rows)` grew that parameter for this.
+ *
+ * ⚠️ WHAT THEY ARE NOT: a copy of your screens with somebody else's numbers
+ * poured in. Two things are true of a friend's data and not of yours, and each
+ * one is said on the screen rather than left for the reader to work out — their
+ * published window is sixty sessions rather than a lifetime, and their weights
+ * are canonical pounds that must go through the reader's own units.
+ * ================================================================== */
+
+/**
+ * Shared preamble: who they are, what they published, and the honest refusals.
+ *
+ * 🚨 IT HAS A DEMO BRANCH, AND IT IS THE ONLY WAY THESE SCREENS CAN BE SEEN AT
+ * ALL BEFORE TWO REAL ACCOUNTS EXIST. The demo is where every screen in this app
+ * gets looked at, measured and read for contrast (progress.md §0.10), and until
+ * today a friend's page in it said "Sharing is off in the demo" — which was
+ * right when the page was a list of their workouts and is not right now that it
+ * carries a tappable body, their volume, their graphs and a compare screen.
+ *
+ * ⚠️ READING AN INVENTED FRIEND IS NOT THE HAZARD; PUBLISHING TO A REAL ONE IS,
+ * and that stays refused at `republish()` where it always was. Nothing in this
+ * branch touches the network, storage or anybody's account.
+ */
+async function friendDoc(uid) {
+  let state;
+  try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
+
+  if (state.reason === 'demo') {
+    const [{ buildDemoFeed, demoFriendProfile }, { todayISO, buildStrengthShare }] =
+      await Promise.all([import('./demo.js'), import('./store.js')]);
+    const profile = demoFriendProfile(uid);
+    const feed = buildDemoFeed(todayISO()).filter((x) => x.uid === uid);
+    if (!feed.length) {
+      return { fail: emptyState('Not here', 'That person is not in the demo account.') };
+    }
+    const sessions = feed.map((x) => x.act);
+    // Their map goes through the SAME publisher your own does — see
+    // buildStrengthShare. A fixture with hand-written levels would look
+    // identical and prove nothing about the path that really produces them.
+    const strength = profile
+      ? await buildStrengthShare({ sessions, benchmarks: [], bodyWeights: [] }, profile).catch(() => null)
+      : null;
+    const doc = {
+      audience: FRIENDS, isPublic: false,
+      profile: { name: feed[0].name },
+      activity: sessions,
+      benchmarks: [],
+      ...(strength ? { strength } : {}),
+    };
+    return { state, seen: { audience: FRIENDS, doc }, name: feed[0].name, doc, demo: true };
+  }
+
+  if (!state.available) return { fail: unavailable(state.reason) };
+
+  let seen = { audience: null, doc: null };
+  try { seen = await social.friend(uid); } catch (_) {}
+  const conn = (state.connections || []).find((c) => c.uid === uid);
+  const name = (seen.doc && seen.doc.profile && seen.doc.profile.name) || (conn && conn.name) || 'Friend';
+
+  if (!seen.doc) {
+    return { fail: emptyState('Nothing to show',
+      'They have not published anything you can read.') };
+  }
+  return { state, seen, name, doc: seen.doc };
+}
+
+/** Their weekly sets per muscle — the Data tab's Volume screen, their rows. */
+export async function FriendVolumeView(uid) {
+  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
+  const r = await friendDoc(uid);
+  if (r.fail) return screenShell({ title: 'Volume', back, noNav: true, scroll: r.fail });
+
+  const top = el('div', { class: 'pane-top' });
+  const host = el('div', {});
+  const screen = screenShell({ title: `${r.name} · Volume`, back, noNav: true, top, scroll: host });
+
+  const { renderVolumePane } = await import('./views-data.js');
+  await renderVolumePane(host, top, { rows: r.doc.activity || [], subject: r.name });
+  return screen;
+}
+
+/**
+ * One of their exercises over time.
+ *
+ * ⚠️ IT IS A SMALLER SCREEN THAN YOUR OWN GRAPH TAB, deliberately and not for
+ * lack of time: your Graphs screen carries a source switch, a body-weight
+ * series, a bar mode and a bests pane, and three of those four are about data a
+ * friend does not publish or a question you would not ask of somebody else. What
+ * it keeps is the part that answers "are they getting stronger at this" — the
+ * same measured SVG chart, the same rep-normalisation, the same marker rule.
+ */
+export async function FriendGraphView(uid) {
+  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
+  const r = await friendDoc(uid);
+  if (r.fail) return screenShell({ title: 'Graphs', back, noNav: true, scroll: r.fail });
+
+  const rows = { sessions: r.doc.activity || [], benchmarks: r.doc.benchmarks || [] };
+  const exMap = await store.getExerciseMap().catch(() => new Map());
+
+  /* Which of their lifts can be charted at all. ⚠️ TWO DIFFERENT DAYS, which is
+   * the same bar `chartableExercises()` applies to yours — one day is a
+   * measurement and not a line, and drawing a "trend" through it would be the
+   * app inventing a direction. */
+  const byId = new Map();
+  const note = (id, name, date, set) => {
+    if (!id || !(Number(set.weight) > 0) || !(Number(set.reps) >= 1)) return;
+    let e = byId.get(id);
+    if (!e) { e = { id, name, days: new Set() }; byId.set(id, e); }
+    e.days.add(date);
+  };
+  for (const s of rows.sessions) {
+    for (const entry of s.entries || []) {
+      const nm = (exMap.get(entry.exerciseId) || {}).name || entry.name || 'Exercise';
+      for (const set of entry.sets || []) note(entry.exerciseId, nm, s.date, set);
+    }
+  }
+  for (const b of rows.benchmarks) {
+    const nm = (exMap.get(b.exerciseId) || {}).name || b.name || 'Exercise';
+    note(b.exerciseId, nm, b.date, b.values || {});
+  }
+  const options = [...byId.values()]
+    .filter((o) => o.days.size >= 2)
+    .sort((a, b) => b.days.size - a.days.size || a.name.localeCompare(b.name));
+
+  const top = el('div', { class: 'graph-controls' });
+  const host = el('div', { class: 'graph-host' });
+  const screen = screenShell({ title: `${r.name} · Graphs`, back, noNav: true, top, scroll: host });
+
+  if (!options.length) {
+    setChildren(host, emptyState('No line to draw yet',
+      `A chart needs the same lift on two different days. Nothing ${r.name} has published clears `
+      + 'that yet — their page still shows every workout.'));
+    return screen;
+  }
+
+  let chosen = options[0].id;
+  const { normalizedSeries, defaultTargetReps } = await import('./store.js');
+  const { fillChart } = await import('./views-data.js');
+
+  async function draw() {
+    setChildren(top, el('div', { class: 'control-row' },
+      el('select', {
+        class: 'input compact', 'aria-label': 'What to chart',
+        onChange: (e) => { chosen = e.target.value; draw(); },
+      }, options.map((o) => el('option', {
+        value: o.id, text: o.name, selected: o.id === chosen,
+      }))),
+    ));
+
+    /* ⚠️ BOTH SOURCES TOGETHER, AND IT IS NOT A BREACH OF THE ONE-SOURCE RULE
+     * (D14) — it is that rule applied to what is actually on the wire. A
+     * published benchmark and a published workout set arrive in the same window
+     * and this screen charts what a person has; the reason D14 exists is that
+     * mixing them makes a TREND look like wild swings, and the mixing it forbids
+     * is two lines' worth of points on one line where the user cannot see which
+     * is which. Here the hover readout names the source of every point, and
+     * there is no toggle to offer because a friend's document is one stream.
+     * ⚠️ If this ever grows a source switch, it needs the same one-at-a-time
+     * treatment views-data.js gives your own. */
+    const target = await defaultTargetReps(chosen, null, rows);
+    const points = await normalizedSeries(chosen, target, null, rows);
+    if (points.length < 2) {
+      setChildren(host, emptyState('One recording so far',
+        'Charting needs the same lift on two different days.'));
+      return;
+    }
+    const plot = el('div', { class: 'chart-wrap' });
+    setChildren(host, plot, el('div', { class: 'chart-foot' },
+      el('div', { class: 'chart-caption', text:
+        `Every set shown as the weight at ${target} reps, so heavier-for-fewer and lighter-for-more `
+        + 'sit on one line. A marker means they really lifted it at that rep count.' }),
+      el('div', { class: 'chart-caption', text:
+        `From the sessions and benchmarks ${r.name} publishes — their most recent sixty sessions.` }),
+    ));
+    fillChart(plot, points, 'weight');
+  }
+
+  await draw();
+  return screen;
+}
+
+/* ================================================================== *
+ * TWO BODIES, SIDE BY SIDE  —  #/compare/<uid>[/<uid>]
+ *
+ * 🚨 Tim, 2026-09-03: *"whenever you're on a muscle group display of someone
+ * (full body with colors for strength), make a compare button somewhere that
+ * allows that user to display another person's body side by side to the current
+ * displayed body."*
+ *
+ * ⚠️ ONE COMPARISON GROUP GOVERNS BOTH FIGURES, and that is the decision this
+ * screen turns on. Tim's answer when asked what the colours should mean was
+ * *"make the default comparison vs people like them, but allow them to use any
+ * comparison combination that is already available"* — so the control at the top
+ * sets one group and both bodies are read under it. Two figures each answering a
+ * different question, with one legend under them, is the fault the Volume tab's
+ * key had on 2026-09-01: a screen that can be read two ways has already failed
+ * once, whatever the arithmetic underneath it is doing.
+ *
+ * ⚠️ WHAT "LIKE ME" MEANS ON A SCREEN WITH TWO PEOPLE ON IT. Each side is read
+ * against people of ITS OWN body weight and age — that is what `own` on those
+ * axes has always meant, and it is why a 150 lb lifter and a 220 lb lifter can
+ * both be Advanced. The caption says so in words, because "Advanced vs Advanced"
+ * would otherwise read as "the same lift", which it is not.
+ * ================================================================== */
+
+export async function CompareBodiesView(param) {
+  const [leftUid, rightUid] = String(param || '').split('/').map((x) => decodeURIComponent(x || ''));
+  const back = () => {
+    location.hash = leftUid ? `#/friend/${encodeURIComponent(leftUid)}` : '#/graphs';
+  };
+
+  const [
+    { ratingsFromShared, levelMapFrom }, { bodySvg, BODY_ASPECT }, muscles,
+    { normalizeCompare, comparisonLabel }, settings,
+  ] = await Promise.all([
+    import('./shared-map.js'), import('./body-map.js'), import('./views-muscles.js'),
+    import('./strength-standards.js'), store.getSettings(),
+  ]);
+
+  /* Whose bodies. ⚠️ ONE uid MEANS "THEM AGAINST ME", which is the case the
+   * button on a friend's map produces and the one somebody actually wants; two
+   * uids is two other people, which the button on YOUR map produces. Either way
+   * the left column is the person whose screen you pressed it on. */
+  const sides = [];
+  let mine = null;
+  for (const uid of [leftUid, rightUid].filter(Boolean)) {
+    const r = await friendDoc(uid).catch(() => ({ fail: true }));
+    if (r.fail || !r.doc || !r.doc.strength) continue;
+    sides.push({ uid, name: r.name, strength: r.doc.strength, demo: Boolean(r.demo) });
+  }
+  /* ⚠️ IN THE DEMO, "YOU" IS THE DEMO ACCOUNT — whose muscle map is the one the
+   * Muscles tab is drawing two taps away, computed from its invented year. That
+   * is exactly the right second body: comparing a demo friend against the real
+   * signed-out account's empty map would show an empty column and teach nothing.
+   * `buildStrengthShare()` reads the store, and in the demo the store IS the
+   * demo, so this needs no branch of its own. */
+  if (!rightUid) {
+    mine = await mySharedMap().catch(() => null);
+    if (mine) sides.push({ uid: null, name: 'You', strength: mine });
+  }
+
+  const top = el('div', { class: 'pane-top' });
+  const host = el('div', {});
+  const screen = screenShell({
+    title: 'Compare', back, noNav: true, top, scroll: host,
+  });
+
+  if (sides.length < 2) {
+    setChildren(host, emptyState('Nothing to compare yet',
+      sides.length === 1 && !mine
+        ? 'Your own muscle map needs your sex, body weight and age before it can be ranked — and '
+          + 'at least one recorded set.'
+        : 'One of these two has not published a muscle map.',
+      el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' })));
+    return screen;
+  }
+
+  let compare = normalizeCompare(settings.compare);
+  let selected = null;
+  const more = settings.moreDetails === true;
+
+  function draw() {
+    const label = comparisonLabel({ compare, gender: null, whose: 'each' });
+    setChildren(top, el('div', { class: 'control-row' },
+      el('button', {
+        class: 'basis basis-btn', 'aria-haspopup': 'dialog',
+        onClick: () => muscles.openCompareSheet(
+          { compare, gender: null, whose: 'each' },
+          (next) => { compare = next; draw(); },
+          async () => {},          // per-screen, never written to settings
+        ),
+      },
+        el('span', { class: 'basis-main' }, label.main, icon('down', 15)),
+        el('span', { class: 'basis-sub', text: label.sub }),
+      ),
+    ));
+
+    const read = sides.map((s) => ({ ...s, ...ratingsFromShared(s.strength, compare) }));
+
+    const columns = read.map((s) => {
+      const figure = bodySvg(levelMapFrom(s.muscles), selected, (muscle) => {
+        // ⚠️ TAPPING EITHER BODY SELECTS THE SAME MUSCLE ON BOTH. Two
+        // independent selections is the state where somebody reads one person's
+        // chest against the other's back and never notices.
+        selected = selected === muscle ? null : muscle;
+        draw();
+      }, { label: `${s.name}'s muscle groups, coloured by strength level` });
+      return el('div', { class: 'cmp-col' },
+        el('div', { class: 'cmp-name', text: s.name }),
+        // The drawing's own aspect ratio, so the box is the picture's shape at
+        // every width and the SVG never letterboxes inside it — see the CSS.
+        el('div', { class: 'cmp-body', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` }, figure),
+      );
+    });
+
+    const panels = selected
+      ? read.map((s) => el('div', { class: 'cmp-col' },
+          el('div', { class: 'cmp-name', text: s.name }),
+          s.missing
+            ? el('div', { class: 'card' }, el('div', { class: 'field-help', text:
+                `${s.name} has not published a map for that comparison.` }))
+            : muscles.musclePanel(s.muscles.get(selected), selected,
+                { compare, gender: null, whose: 'their' }, null, more),
+        ))
+      : [];
+
+    setChildren(host,
+      el('div', { class: 'cmp-grid' }, ...columns),
+      muscles.legend(more),
+      selected
+        ? el('div', { class: 'cmp-grid' }, ...panels)
+        : el('div', { class: 'card' },
+            el('div', { class: 'field-help', text: 'Tap a muscle on either body — both open it.' })),
+      el('div', { class: 'vol-notes' },
+        el('div', { class: 'field-help', text:
+          'Each body is ranked against people of its own body weight and age, so two people can '
+          + 'read the same level at very different weights. The level answers "how far along is '
+          + 'this person", never "who lifts more".' }),
+        el('div', { class: 'field-help', text:
+          'Tap a muscle to see both estimated one-rep maxes, which is the number that does answer '
+          + 'who is lifting more — and the recorded sets each was worked out from.' }),
+      ),
+    );
+  }
+
+  draw();
+  return screen;
+}
+
+/**
+ * My own map in the SAME published shape, so the compare screen has one kind of
+ * input rather than two.
+ *
+ * ⚠️ IT IS BUILT BY THE PUBLISHER, NOT BY A SECOND WALK. `buildStrengthShare()`
+ * is what my client would publish for a friend to read; using it here means the
+ * left and right columns of this screen are literally the same data structure
+ * produced by the same function, and a bug in it shows up on both sides instead
+ * of on one.
+ */
+async function mySharedMap() {
+  const { buildStrengthShare } = await import('./store.js');
+  return buildStrengthShare();
 }
 
 /* ------------------------------------------------------------------ *
@@ -752,21 +1267,27 @@ export async function FriendSessionView(uid, sessionId) {
   }
 
   const conn = demoEntry
-    ? { uid, name: demoEntry.name, tier: demoEntry.tier }
+    ? { uid, name: demoEntry.name }
     : (state.connections || []).find((c) => c.uid === uid);
-  if (!conn) {
-    return screenShell({ title: 'Workout', back, noNav: true,
-      scroll: emptyState('Not connected', 'You are not connected to them any more.') });
-  }
 
-  let seen = { tier: null, doc: null };
+  let seen = { audience: null, doc: null };
   if (demoEntry) {
-    seen = { tier: demoEntry.tier, doc: { profile: { name: demoEntry.name } } };
+    seen = { audience: FRIENDS, doc: { profile: { name: demoEntry.name } } };
   } else {
     try { seen = await social.friend(uid); } catch (_) {}
   }
 
-  const name = (seen.doc && seen.doc.profile && seen.doc.profile.name) || conn.name || 'Friend';
+  // ⚠️ A public account's workout opens here too (2026-09-03) — the same read,
+  // the same screen. Only somebody who is neither a friend nor public is
+  // refused, and the sentence says which of the two it is.
+  if (!conn && !seen.doc) {
+    return screenShell({ title: 'Workout', back, noNav: true,
+      scroll: emptyState('Nothing to show',
+        'You are not connected to them, and their account is private.') });
+  }
+
+  const name = (seen.doc && seen.doc.profile && seen.doc.profile.name)
+    || (conn && conn.name) || 'Friend';
   const acts = demoEntry ? [demoEntry.act] : ((seen.doc && seen.doc.activity) || []);
   const a = acts.find((x) => x && x.id === sessionId) || null;
 
@@ -851,9 +1372,13 @@ export async function FriendSessionView(uid, sessionId) {
   const { feedActions } = await import('./views-workouts.js');
   parts.push(feedActions({ uid, name, act: a, rx, demo: Boolean(demoEntry) }));
 
-  if (!atLeast(seen.tier, MID) || !a.entries || !a.entries.length) {
+  /* ⚠️ THE TIER CHECK IS GONE AND THE EMPTY CASE IS NOT (2026-09-03). Nobody
+   * shares "that I trained" without the contents any more — but a session with
+   * no entries is still a real row: an activity (a run, a swim) carries none by
+   * design, and so does a workout finished with nothing logged. */
+  if (!a.entries || !a.entries.length) {
     parts.push(el('p', { class: 'note', text:
-      `${name} shares that they trained, not what they did. There is nothing more to show here.` }));
+      'There are no exercises recorded in this one.' }));
     setChildren(body, ...parts);
     return screen;
   }
@@ -1347,14 +1872,13 @@ function trimNumber(n) {
   return Number.isInteger(v) ? String(v) : v.toFixed(1);
 }
 
-// One workout. At `light` this is the whole thing — a date and a name, and no
-// disclosure to open, because there is nothing behind it. Pretending otherwise
-// with an arrow that reveals an empty box would be worse than saying less.
-function activityRow(a, tier, uid) {
+// One workout. A row with nothing inside it — an activity, or a session that
+// recorded no sets — stays flat, with no disclosure to open: an arrow that
+// reveals an empty box is worse than saying less.
+function activityRow(a, uid) {
   // ⚠️ THE TERNARY IS NOT OPTIONAL. `startedAt` arrived with the Home feed on
-  // 2026-08-25 and is published at MID and above only, so a light-tier row and
-  // every session recorded before the field existed have none — and
-  // `new Date(undefined).toLocaleTimeString()` renders the string "Invalid
+  // 2026-08-25, so every session recorded before the field existed has none —
+  // and `new Date(undefined).toLocaleTimeString()` renders the string "Invalid
   // Date" straight into the card. The line simply loses its last term instead.
   const clock = a.startedAt
     ? ' · ' + new Date(a.startedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -1365,7 +1889,7 @@ function activityRow(a, tier, uid) {
     el('div', { class: 'row-sub', text: `${fmtDateLong(a.date)} · ${relativeDay(a.date)}${clock}` }),
   );
 
-  if (!atLeast(tier, MID) || !a.entries || !a.entries.length) {
+  if (!a.entries || !a.entries.length) {
     return el('div', { class: 'row' }, head);
   }
 
@@ -1439,21 +1963,120 @@ function entryLine(entry, exMap) {
   );
 }
 
-// Their body map, drawn with the same art and the same colour ramp as your own.
-// It is the most distinctive thing the app has and it is a STATE rather than an
-// event, which is what makes it the right thing to put on a profile.
-async function friendBody(strength) {
-  const [{ bodySvg }, { LEVELS }] = await Promise.all([
-    import('./body-map.js'), import('./strength-standards.js'),
+/**
+ * Their body map, drawn with the same art and the same colour ramp as your own.
+ * It is the most distinctive thing the app has and it is a STATE rather than an
+ * event, which is what makes it the right thing to put on a profile.
+ *
+ * 🚨 AND IT IS TAPPABLE SINCE 2026-09-03 — Tim: *"click on any muscle group like
+ * that own user can on themselves and pull details from it."* It was a picture
+ * before: `bodySvg(levels, null, () => {})`, a no-op click handler, because the
+ * projection carried a level name and nothing to put in a panel.
+ *
+ * Three things are worth knowing about how it works:
+ *
+ * ⚠️ THE PANEL IS THE SAME FUNCTION AS YOURS (`musclePanel`), fed by
+ * `shared-map.js`. Writing a second one would be two places that must agree
+ * forever about which caveats may be shortened.
+ *
+ * ⚠️ THE COMPARISON GROUP IS PER-SCREEN AND IS NOT SAVED. Changing it here asks
+ * a question about the body in front of you; writing it into `settings.compare`
+ * would silently re-rank your own map from somebody else's page.
+ *
+ * ⚠️ AND THE COMPARE BUTTON PUTS TWO BODIES SIDE BY SIDE — his other ask in the
+ * same message. It lives on this map and on your own, and it is the same screen
+ * either way (`#/compare/...`).
+ */
+async function friendBody(strength, who) {
+  const [{ bodySvg, setSelected, BODY_ASPECT }, { ratingsFromShared, levelMapFrom }, muscles] =
+    await Promise.all([
+      import('./body-map.js'), import('./shared-map.js'), import('./views-muscles.js'),
+    ]);
+  const [settings, { comparisonLabel, normalizeCompare }] = await Promise.all([
+    store.getSettings(), import('./strength-standards.js'),
   ]);
-  const byName = new Map(LEVELS.map((l) => [l.name, l]));
-  const levels = new Map();
-  for (const s of strength) {
-    const lv = byName.get(s.level);
-    if (lv) levels.set(s.muscle, { levelKey: lv.key, label: lv.name });
+
+  // ⚠️ THE VIEWER'S OWN CHOICE IS THE STARTING POINT, not a fixed default:
+  // somebody who reads every screen as "everyone" should not have this one
+  // screen quietly answer a different question. It is a copy from here on.
+  let compare = normalizeCompare(settings.compare);
+  const more = settings.moreDetails === true;
+  let selected = null;
+
+  // The drawing's own ratio, so the capped box is the picture's shape at every
+  // width and the figure never letterboxes inside it.
+  const wrap = el('div', { class: 'friend-body', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` });
+  const foot = el('div', { class: 'body-foot' });
+
+  const draw = () => {
+    const { muscles: rated, missing } = ratingsFromShared(strength, compare);
+    // ⚠️ The figure says WHOSE it is in its accessible label. The same drawing
+    // carries two meanings on the Volume tab already (2026-09-01) and this is the
+    // same discipline: a screen-reader user meeting this map should not be told
+    // it is their own.
+    const body = bodySvg(levelMapFrom(rated), selected, (muscle) => {
+      selected = selected === muscle ? null : muscle;
+      setSelected(body, selected);
+      paintFoot(rated, missing);
+    }, { label: `${who.name}'s muscle groups, coloured by strength level` });
+    setChildren(wrap, body);
+    paintFoot(rated, missing);
+  };
+
+  function paintFoot(rated, missing) {
+    /* ⚠️ A GROUP THEIR DOCUMENT DOES NOT CARRY IS SAID OUT LOUD rather than
+     * quietly answered with a different one. Their client publishes a row per
+     * comparison group; one published before this existed has none, and a body
+     * painted against a group other than the one named above it is exactly the
+     * fault this control was built to prevent on our own screen. */
+    setChildren(foot,
+      muscles.legend(more),
+      missing
+        ? el('div', { class: 'card' },
+            el('div', { class: 'field-help', text:
+              `${who.name} has not published a map for that comparison. Their app publishes one when `
+              + 'they next open it — try "Like me", which every version publishes.' }))
+        : selected
+          ? muscles.musclePanel(rated.get(selected), selected,
+              { compare, gender: null, whose: 'their' }, null, more)
+          : el('div', { class: 'card' },
+              el('div', { class: 'field-help', text: 'Tap a muscle for their numbers.' }),
+              el('div', { class: 'field-help', text:
+                'Every number here was worked out on their device from their own training, and '
+                + 'published. Nothing about their body weight is in it.' })),
+    );
   }
-  const wrap = el('div', { class: 'friend-body' }, bodySvg(levels, null, () => {}));
-  return wrap;
+
+  const label = comparisonLabel({ compare, gender: null, whose: 'their' });
+  const controls = el('div', { class: 'control-row' },
+    el('button', {
+      class: 'basis basis-btn', 'aria-haspopup': 'dialog',
+      onClick: () => muscles.openCompareSheet(
+        // ⚠️ A THROWAWAY PROFILE. `comparisonLabel` prints a body weight when the
+        // axis is "own" — and it is THEIR body weight, which this device does not
+        // have and is not supposed to. With no `bodyWeight` on the object the
+        // label says "their body weight" instead of a number nobody published.
+        { compare, gender: null, whose: 'their' },
+        (next) => { compare = next; draw(); },
+        // Not saved. See the header.
+        async () => {},
+      ),
+    },
+      el('span', { class: 'basis-main' }, label.main, icon('down', 15)),
+      el('span', { class: 'basis-sub', text: label.sub }),
+    ),
+    /* 🚨 THE COMPARE BUTTON — Tim, 2026-09-03: *"whenever you're on a muscle
+     * group display of someone… make a compare button somewhere that allows that
+     * user to display another person's body side by side to the current
+     * displayed body."* */
+    el('a', {
+      class: 'btn small', href: `#/compare/${encodeURIComponent(who.uid)}`,
+      text: 'Compare',
+    }),
+  );
+
+  draw();
+  return el('div', null, controls, wrap, foot);
 }
 
 /* ================================================================== *

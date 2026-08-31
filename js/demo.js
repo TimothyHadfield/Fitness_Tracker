@@ -650,12 +650,49 @@ function daysApart(fromISO, toISO) {
  * rather than as a card that failed to load.
  * ------------------------------------------------------------------ */
 
+/* ⚠️ EACH ONE CARRIES A BODY (2026-09-03), and it is not decoration. A friend's
+ * muscle map is tappable now and there is a screen that puts two bodies side by
+ * side — neither can be looked at, measured or audited without somebody to be
+ * the other person, and this app's rule is that you use the demo rather than
+ * hand-seeding (progress.md §0.10).
+ *
+ * ⚠️ THE NUMBERS ARE A FIXTURE AND THE ARITHMETIC IS NOT. `gender`, `bodyWeight`
+ * and `age` are made up; every level, percentile and estimate on their map is
+ * computed from their invented training by the same functions that rate yours
+ * (store.js buildStrengthShare). A fixture that carried hand-written levels
+ * would look identical on screen and prove nothing about the real path — which
+ * is the mistake this file already made once, publishing `sets: []` for months.
+ *
+ * Priya is deliberately much lighter than Marcus: the side-by-side screen's own
+ * caption says two people can read the same level at very different body
+ * weights, and a fixture where everybody weighs the same could never show it. */
 const DEMO_FRIENDS = [
-  { uid: 'demo-friend-1', name: 'Marcus Webb', tier: 'mid', location: 'Ironworks Gym' },
-  { uid: 'demo-friend-2', name: 'Priya Raman', tier: 'mid', location: 'Home garage' },
-  // No entries are published for this one, whatever the generator picks.
-  { uid: 'demo-friend-3', name: 'Sam Okafor', tier: 'light' },
+  { uid: 'demo-friend-1', name: 'Marcus Webb', location: 'Ironworks Gym',
+    gender: 'male', bodyWeight: 196, age: 34 },
+  { uid: 'demo-friend-2', name: 'Priya Raman', location: 'Home garage',
+    gender: 'female', bodyWeight: 132, age: 27 },
+  /* ⚠️ THIS ONE USED TO BE THE LOWEST-TIER FRIEND and now it is the one whose
+   * sessions carry no exercises. The tiers went on 2026-09-03, and the case they
+   * existed to exercise here did NOT: a card with nothing inside it is still
+   * reachable — an activity (a run, a swim) publishes no entries, and so does a
+   * workout finished with nothing logged. It is the case most likely to be built
+   * wrong and never noticed, because it has to read as complete rather than as a
+   * card that failed to load. So the fixture keeps it, for the live reason
+   * instead of the retired one. */
+  { uid: 'demo-friend-3', name: 'Sam Okafor', empty: true },
 ];
+
+/** The invented profile behind a demo friend's map. Null for anybody real. */
+export function demoFriendProfile(uid) {
+  const f = DEMO_FRIENDS.find((x) => x.uid === uid);
+  if (!f || f.empty) return null;
+  return { gender: f.gender, bodyWeight: f.bodyWeight, age: f.age, compare: {} };
+}
+
+/** Everybody the demo account is "connected" to, in graph shape. */
+export function demoConnections() {
+  return DEMO_FRIENDS.map((f) => ({ uid: f.uid, name: f.name, since: null }));
+}
 
 const DEMO_FEED_WORKOUTS = [
   ['Push', ['Barbell Bench Press', 'Overhead Press', 'Incline Dumbbell Bench Press', 'Triceps Pushdown']],
@@ -762,24 +799,20 @@ export function buildDemoFeed(today) {
 
       const act = { id: `${f.uid}-${date}`, date, name };
 
-      /* ⚠️ THE LIGHT-TIER FRIEND GETS NEITHER `entries` NOR `startedAt`, and
-       * both omissions matter for the same reason: this fixture has to be the
-       * shape the NETWORK really returns, not a convenient lookalike.
-       *
-       * `projectSession()` publishes both only at MID and above — the start
-       * time because sixty of them describe a person's weekly schedule, which
-       * is a different fact from "they trained on Tuesday", and LIGHT is the
-       * tier everybody is on by default.
+      /* ⚠️ ONE FRIEND GETS NEITHER `entries` NOR `startedAt`, and both omissions
+       * matter for the same reason: this fixture has to be the shape the NETWORK
+       * really returns, not a convenient lookalike. A session recorded before
+       * `startedAt` existed has no start time, and an activity has no entries.
        *
        * ⚠️ AND THE KEYS ARE ABSENT RATHER THAN NULL OR EMPTY. An empty
        * `entries` array would let a card rendering "" pass for one rendering
-       * the honest "they share that they trained" line, and a null `startedAt`
-       * would hide a card that prints "Invalid Date". This project has already
-       * been bitten once by a fixture that was tidier than the wire — the
-       * expired-invite bug lived in exactly that gap, because the old tests fed
-       * an ISO string where Firestore returns a Timestamp.
+       * the honest empty line, and a null `startedAt` would hide a card that
+       * prints "Invalid Date". This project has already been bitten once by a
+       * fixture that was tidier than the wire — the expired-invite bug lived in
+       * exactly that gap, because the old tests fed an ISO string where
+       * Firestore returns a Timestamp.
        */
-      if (f.tier !== 'light') {
+      if (!f.empty) {
         act.startedAt = `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`;
         // ⚠️ A REAL LIBRARY ID, not null. The projection publishes one, and the
         // per-session muscle split on the workout screen is computed by looking
@@ -789,27 +822,25 @@ export function buildDemoFeed(today) {
           const ex = byName.get(n) || null;
           return { exerciseId: ex ? ex.id : null, name: n, sets: feedSets(ex, rand) };
         });
-        // Location rides the same gate as startedAt (0m — a typed label,
-        // published at mid and above). Only SOME sessions carry one, because
-        // that is the live shape: it is optional and people forget it.
+        // A typed label (0m), never a coordinate. Only SOME sessions carry one,
+        // because that is the live shape: it is optional and people forget it.
         if (rand() > 0.4) act.location = f.location;
-        // Duration, same gate (2026-08-26): minutes rounded to five, and not
-        // on every card — sessions recorded before finishedAt existed have
-        // none, and the fixture keeps the wire's raggedness.
+        // Duration (2026-08-26): minutes rounded to five, and not on every card
+        // — sessions recorded before finishedAt existed have none, and the
+        // fixture keeps the wire's raggedness.
         if (rand() > 0.25) act.minutes = 40 + 5 * Math.floor(rand() * 9);
-        // The description, on roughly a third of them. Same gate as the rest of
-        // what is inside a workout: mid and above, never light.
+        // The description, on roughly a third of them.
         if (rand() > 0.65) act.note = FEED_NOTES[Math.floor(rand() * FEED_NOTES.length)];
       }
 
-      out.push({ uid: f.uid, name: f.name, tier: f.tier, act });
+      out.push({ uid: f.uid, name: f.name, act });
     }
   }
 
   return out.sort((x, y) =>
     y.act.date.localeCompare(x.act.date)
-    // `startedAt` is absent on light-tier rows, so this coerces to '' for them
+    // `startedAt` is absent on the empty rows, so this coerces to '' for them
     // rather than to the string "undefined", which would sort above every real
-    // time and float the one friend who shares least to the top of every day.
+    // time and float the one friend with no contents to the top of every day.
     || String(y.act.startedAt || '').localeCompare(String(x.act.startedAt || '')));
 }

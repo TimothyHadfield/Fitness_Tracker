@@ -13,11 +13,12 @@
 // of this kind happens.
 
 const {
-  NONE, LIGHT, MID, FULL, TIERS, TIER_LABEL,
-  tierRank, isTier, atLeast, DEFAULT_TIER,
-  normalizeGraph, tierForViewer, viewersForTier,
-  projectSession, buildProjection, assertTierClean, leaves,
-  MAX_VIEWERS, MAX_ACTIVITY, MAX_AVATAR_CHARS,
+  FRIENDS, PUBLIC, AUDIENCES, PROBE_ORDER,
+  PRIVATE_ACCOUNT, PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL,
+  normalizeVisibility, isPublicAccount, isAudience,
+  normalizeGraph, isConnected, allViewers,
+  projectSession, projectStrength, buildProjection, assertAudienceClean, leaves,
+  MAX_VIEWERS, MAX_ACTIVITY, MAX_AVATAR_CHARS, MAX_SHARED_CONTRIBUTORS,
   newInviteToken, inviteExpiry, inviteState, INVITE_TTL_DAYS,
 } = await import('../js/social.js');
 
@@ -91,11 +92,30 @@ const BENCHMARKS = [
   { id: 'b-1', date: '2026-08-10', exerciseId: 'ex-bench', exerciseName: 'Barbell Bench Press',
     values: { weight: 205, reps: 3 } },
 ];
-const STRENGTH = [{ muscle: 'Chest', level: 'Intermediate', percentile: 62, confidence: 0.71, estimate: 233.4 }];
+/* The muscle map as buildStrengthShare() produces it — the combination-keyed
+ * grid, and the per-muscle facts that do not depend on a comparison group. */
+const STRENGTH = {
+  muscles: [{
+    muscle: 'Chest', lift: 'Barbell Bench Press', estimate: 233.4, confidence: 0.71,
+    band: 'Good', basis: 'direct', contributorCount: 9, exerciseCount: 3,
+    contributors: [
+      { exerciseName: 'Barbell Bench Press', weight: 205, reps: 3, date: '2026-08-10', loadType: 'total', source: 'benchmark' },
+      { exerciseName: 'Incline Dumbbell Bench Press', weight: 70, reps: 8, date: '2026-08-06', loadType: 'per_side', source: 'workout' },
+      { exerciseName: 'Cable Fly', weight: 40, reps: 12, date: '2026-08-15', loadType: 'per_side', source: 'workout' },
+      { exerciseName: 'Push-Up', weight: 0, reps: 30, date: '2026-08-02', loadType: 'total', source: 'workout' },
+    ],
+    hint: 'Benchmark heavier for a firmer placing.', confident: false,
+  }],
+  grid: {
+    'lifters|male|own|own': { Chest: [62, 24.5] },
+    'everyone|all|any|any': { Chest: [88.1, 61] },
+  },
+  defaultCompare: 'lifters|male|own|own',
+};
 const BODY_WEIGHTS = [{ id: 'bw-1', date: '2026-08-01', weight: 178 }];
 
-const base = (tier, extra = {}) => buildProjection({
-  tier,
+const base = (audience, extra = {}) => buildProjection({
+  audience,
   viewers: ['alex'],
   profile: { name: 'Tim' },
   sessions: SESSIONS,
@@ -107,103 +127,65 @@ const base = (tier, extra = {}) => buildProjection({
 });
 
 /* ------------------------------------------------------------------ *
- * Tiers
+ * Private or public — 2026-09-03, replacing the three tiers
  * ------------------------------------------------------------------ */
 
-ok(TIERS.join(',') === 'light,mid,full', 'three tiers, least to most visible');
-ok(DEFAULT_TIER === LIGHT, 'a new connection defaults to the LEAST visible tier');
-ok(tierRank(LIGHT) < tierRank(MID) && tierRank(MID) < tierRank(FULL), 'tiers are ordered');
-ok(tierRank('nonsense') === -1 && tierRank(NONE) === -1, 'a non-tier has no rank');
-ok(atLeast(FULL, MID) && atLeast(MID, MID) && !atLeast(LIGHT, MID), 'atLeast compares rank');
-ok(!atLeast(NONE, LIGHT) && !atLeast(undefined, LIGHT) && !atLeast('full ', LIGHT),
-   'unknown input is NEVER at least light — a typo must not widen access');
-ok(TIERS.every((t) => TIER_LABEL[t] && !TIER_LABEL[t].includes('tier')),
-   'every tier has a label that does not use the word "tier"');
+ok(AUDIENCES.join(',') === 'friends,public', 'two audiences: friends, and everybody signed in');
+ok(PROBE_ORDER.join(',') === 'friends,public',
+   '⚠️ and a reader tries FRIENDS first — a friend of a public account must not be silently '
+   + 'downgraded to the stranger\'s view, which is the one with no body weight in it');
+ok(normalizeVisibility(undefined) === PRIVATE_ACCOUNT
+   && normalizeVisibility('sneaky') === PRIVATE_ACCOUNT
+   && normalizeVisibility('Public') === PRIVATE_ACCOUNT,
+   '🚨 an unrecognised stored visibility degrades to PRIVATE — a typo, a half-migrated account or '
+   + 'a hand-edited settings row must never publish somebody to the world');
+ok(normalizeVisibility(PUBLIC_ACCOUNT) === PUBLIC_ACCOUNT && isPublicAccount(PUBLIC_ACCOUNT)
+   && !isPublicAccount(PRIVATE_ACCOUNT),
+   'and the real value survives, so the guard above is not simply refusing everything');
+ok(!isAudience('full') && !isAudience('friends ') && isAudience(FRIENDS) && isAudience(PUBLIC),
+   'a document id that is not an audience is not one — the old tier names included');
+ok([PRIVATE_ACCOUNT, PUBLIC_ACCOUNT].every((v) =>
+     VISIBILITY_LABEL[v] && VISIBILITY_DETAIL[v] && VISIBILITY_DETAIL[v].length > 40),
+   'each choice has a label and a sentence saying what it actually means (D8)');
+ok(/friends/i.test(VISIBILITY_DETAIL[PRIVATE_ACCOUNT])
+   && /body weight/i.test(VISIBILITY_DETAIL[PUBLIC_ACCOUNT]),
+   '⚠️ and the public sentence names the exception rather than leaving it to be discovered');
 
 /* ------------------------------------------------------------------ *
  * The graph
  * ------------------------------------------------------------------ */
 
 const GRAPH = { connections: [
-  { uid: 'alex', name: 'Alex', tier: FULL, since: '2026-08-01' },
-  { uid: 'sam', name: 'Sam', tier: MID },
-  { uid: 'jo', name: 'Jo', tier: LIGHT },
-  { uid: 'pat', name: 'Pat', tier: NONE },
+  { uid: 'alex', name: 'Alex', since: '2026-08-01' },
+  { uid: 'sam', name: 'Sam' },
+  { uid: 'jo', name: 'Jo' },
 ] };
 
-ok(tierForViewer(GRAPH, 'alex') === FULL, 'a connection resolves to its tier');
-ok(tierForViewer(GRAPH, 'stranger') === NONE, 'somebody not connected gets nothing');
-ok(tierForViewer(null, 'alex') === NONE, 'no graph at all means nothing is shared');
-ok(normalizeGraph({ connections: [{ uid: 'a', tier: 'sneaky' }] }).connections[0].tier === DEFAULT_TIER,
-   'an unrecognised stored tier degrades to the SAFEST value, not the nearest');
-ok(normalizeGraph({ connections: [{ uid: 'a', tier: FULL }, { uid: 'a', tier: LIGHT }] })
-     .connections.length === 1,
+ok(isConnected(GRAPH, 'alex') && !isConnected(GRAPH, 'stranger') && !isConnected(null, 'alex'),
+   'a connection is a connection; nobody else is');
+ok(allViewers(GRAPH).join() === 'alex,sam,jo',
+   'every accepted friend reads the friends document — there is no longer a tier to sort them into');
+ok(normalizeGraph({ connections: [{ uid: 'a', tier: 'full' }] }).connections[0].tier === undefined,
+   '⚠️ a stored `tier` from before 2026-09-03 is DROPPED rather than carried — a key that no longer '
+   + 'decides anything is worse than an absent one, because the next reader believes it');
+ok(normalizeGraph({ connections: [{ uid: 'a' }, { uid: 'a' }] }).connections.length === 1,
    'a duplicated uid appears once');
-ok(normalizeGraph({ connections: [{ tier: FULL }] }).connections.length === 0,
+ok(normalizeGraph({ connections: [{ name: 'No uid' }] }).connections.length === 0,
    'a connection with no uid is dropped rather than published to nobody');
 
-ok(viewersForTier(GRAPH, FULL).join() === 'alex', 'full viewers = exactly the full connections');
-ok(viewersForTier(GRAPH, MID).join() === 'sam', 'mid viewers = exactly the mid connections');
-ok(viewersForTier(GRAPH, LIGHT).join() === 'jo', 'light viewers = exactly the light connections');
-ok(!viewersForTier(GRAPH, LIGHT).includes('pat') && !viewersForTier(GRAPH, FULL).includes('pat'),
-   'somebody set to Nothing appears in NO tier');
-ok(viewersForTier(GRAPH, 'full ').length === 0, 'a non-tier has no viewers');
-// Membership is exact, not cumulative — the documents are cumulative instead.
-ok(!viewersForTier(GRAPH, LIGHT).includes('alex'),
-   'a full viewer is not also listed on light (membership is exact, docs are cumulative)');
-
 /* ------------------------------------------------------------------ *
- * LIGHT — the assertion this whole feature turns on
+ * What a friend gets — everything
  * ------------------------------------------------------------------ */
 
-const light = base(LIGHT);
-const lightNumbers = leaves(light.activity, 'activity').filter((l) => typeof l.value === 'number');
-ok(lightNumbers.length === 0,
-   `light publishes NO number from inside a workout (found ${lightNumbers.length}: ${lightNumbers.map((l) => l.path).join(' ')})`);
-// ⚠️ VACUITY GUARD. The assertion above is "found no numbers", which is also
-// what a walk that looks in the wrong place reports. So run the identical walk
-// over the identical sessions at MID and require that it DOES find numbers —
-// otherwise the test above proves nothing at all.
-const midNumbers = leaves(buildProjection({
-  tier: MID, viewers: ['alex'], profile: { name: 'Tim' }, sessions: SESSIONS,
-  publishedAt: '2026-08-17T12:00:00.000Z',
-}).activity, 'activity').filter((l) => typeof l.value === 'number');
-ok(midNumbers.length > 0,
-   `the same walk finds ${midNumbers.length} numbers at mid — so "none at light" is a real result`);
-
-ok(light.activity.length === 3, 'light still says a workout happened, three times');
-ok(light.activity[0].date === '2026-08-17' && light.activity[2].date === '2026-08-13',
-   'activity is newest first');
-ok(light.activity.every((a) => a.name && typeof a.name === 'string'), 'and names each workout');
-ok(light.activity.every((a) => a.entries === undefined),
-   'light never looks inside the workout at all');
-ok(light.activity.every((a) => a.startedAt === undefined),
-   'light says WHICH DAY somebody trained and never what time — a time of day is a routine, '
-   + 'and light is the tier every new connection starts on');
-ok(JSON.stringify(light).indexOf('T09:00') === -1,
-   'and the start time does not survive at light as text either');
-// ⚠️ The three assertions above are absences, so pin the fields light DOES
-// carry — otherwise a builder that published nothing at all would pass them.
-ok(light.activity.every((a) => Object.keys(a).sort().join() === 'date,id,name'),
-   'a light session is exactly id, date and name — nothing more, and not less');
-ok(light.benchmarks === undefined && light.strength === undefined && light.bodyWeight === undefined,
-   'light carries no benchmarks, no muscle map, no body weight');
-
-// The same walk, over the deliberately nasty session on its own.
-const lightOne = projectSession(SESSION, LIGHT);
-ok(leaves(lightOne).every((l) => typeof l.value !== 'number'),
-   'a session with supersets, a drop set and a legacy myo-rep still leaks no number at light');
-ok(JSON.stringify(lightOne).indexOf('185') === -1 && JSON.stringify(lightOne).indexOf('minis') === -1,
-   'and no weight or mini-set survives even as text');
-
-/* ------------------------------------------------------------------ *
- * MID — the whole session, and nothing from the analysis
- * ------------------------------------------------------------------ */
-
-const mid = base(MID);
+const mid = base(FRIENDS);
 const midSession = mid.activity.find((a) => a.name === 'Push');
-ok(midSession.entries.length === 4, 'mid publishes every exercise');
-ok(midSession.entries[0].sets[0].weight === 185, 'mid publishes weights');
+ok(mid.activity.length === 3, 'every session in the window is published');
+ok(mid.activity[0].date === '2026-08-17' && mid.activity[2].date === '2026-08-13',
+   'activity is newest first');
+ok(mid.audience === FRIENDS && mid.isPublic === false,
+   'the friends document says which it is, and says it is not public');
+ok(midSession.entries.length === 4, 'every exercise is published');
+ok(midSession.entries[0].sets[0].weight === 185, 'with its weights');
 ok(midSession.entries[0].group === 'g1' && midSession.entries[1].group === 'g1',
    'the superset survives — both halves keep the same group');
 ok(midSession.entries[2].setType === 'drop', 'the drop set is still a drop set');
@@ -212,9 +194,6 @@ ok(midSession.entries[3].sets[0].minis.length === 1,
    'a myo-rep stored under the LEGACY `drops` key still publishes its mini-sets');
 ok(midSession.entries[3].sets[0].drops === undefined,
    'and publishes them as `minis`, so a reader has one shape to render, not two');
-ok(mid.benchmarks === undefined && mid.strength === undefined && mid.bodyWeight === undefined,
-   'mid carries nothing from the analysis collections — that is the whole mid/full cut');
-
 // Data minimisation: the private row has fields the projection has no business
 // carrying, and a whitelist is what keeps them out. ⚠️ `startedAt` used to be
 // the example here and now IS published at mid, so the example moved to the
@@ -233,7 +212,7 @@ ok(JSON.stringify(mid).indexOf('10:14') === -1,
  * ------------------------------------------------------------------ */
 
 ok(midSession.startedAt === '2026-08-15T09:00:00.000Z',
-   'mid publishes when the session started, so a feed card can say a time and not just a day');
+   'the session says when it started, so a feed card can say a time and not just a day');
 ok(Number.isFinite(Date.parse(midSession.startedAt)),
    'and publishes it as an instant a Date can be built from — the view formats, it does not repair');
 
@@ -255,14 +234,14 @@ for (const [bad, what] of [
   [{}, 'an object with nothing readable in it'],
   [1e20, 'a number outside the range a Date can hold'],
 ]) {
-  const p = projectSession({ date: '2026-08-01', workoutName: 'Push', startedAt: bad }, MID);
+  const p = projectSession({ date: '2026-08-01', workoutName: 'Push', startedAt: bad });
   ok(p.startedAt === undefined, `${what} publishes no time — never "Invalid Date", never a guess`);
 }
 
 // ⚠️ Vacuity guard for the six above: they are all absences, and a builder that
 // never published a time would pass every one of them. This is the same call
 // with a GOOD instant, and it must produce one.
-ok(projectSession({ date: '2026-08-01', startedAt: '2026-08-01T18:40:00.000Z' }, MID).startedAt
+ok(projectSession({ date: '2026-08-01', startedAt: '2026-08-01T18:40:00.000Z' }).startedAt
      === '2026-08-01T18:40:00.000Z',
    'the same call with a real instant DOES publish it — so "absent" above is a result, not a hole');
 
@@ -270,46 +249,87 @@ ok(projectSession({ date: '2026-08-01', startedAt: '2026-08-01T18:40:00.000Z' },
 // objects. That exact shape is the one bug this module has ever shipped — see
 // instantMillis() and the invite section at the foot of this file — so the time
 // goes through the same reader and comes out canonical whatever went in.
-ok(projectSession({ date: '2026-08-01', startedAt: new Date('2026-08-01T18:40:00.000Z') }, MID)
+ok(projectSession({ date: '2026-08-01', startedAt: new Date('2026-08-01T18:40:00.000Z') })
      .startedAt === '2026-08-01T18:40:00.000Z',
    'a Date is normalised to one canonical ISO instant, so a reader has one shape to parse');
-ok(projectSession({ date: '2026-08-01', startedAt: { seconds: 1785508800 } }, MID).startedAt
+ok(projectSession({ date: '2026-08-01', startedAt: { seconds: 1785508800 } }).startedAt
      === new Date(1785508800000).toISOString(),
    'and so is a Firestore Timestamp that has been through JSON');
 
-// The tier line, asserted from both sides.
-ok(projectSession(SESSION, LIGHT).startedAt === undefined
-   && projectSession(SESSION, MID).startedAt === '2026-08-15T09:00:00.000Z',
-   'the SAME session publishes a time at mid and none at light — the tier is what decides it');
-
 /* ------------------------------------------------------------------ *
- * FULL
+ * 🚨 THE PUBLIC DOCUMENT — and the one thing it may never hold
+ *
+ * Tim, asked on 2026-09-03 which of the more personal fields should follow him
+ * into public, picked the profile photo, the time of day he trains and the gym
+ * name, and left BODY WEIGHT out. That is the whole difference between these two
+ * documents, so it is asserted from every direction it could be got wrong.
  * ------------------------------------------------------------------ */
 
-const full = base(FULL);
-ok(full.benchmarks.length === 1 && full.benchmarks[0].values.weight === 205, 'full publishes benchmarks');
-ok(full.strength.length === 1 && full.strength[0].level === 'Intermediate', 'full publishes the muscle map');
-ok(full.strength[0].estimate === undefined,
-   'but not the estimated weight behind a level — nothing renders it, so nothing needs it');
-ok(full.activity.find((a) => a.name === 'Push').entries.length === 4, 'full contains everything mid does');
-ok(full.activity.find((a) => a.name === 'Push').startedAt === '2026-08-15T09:00:00.000Z',
-   'including the start time — the documents are cumulative, so full is never missing a mid field');
+const pub = base(PUBLIC, { shareBodyWeight: true });
+const friendsBw = base(FRIENDS, { shareBodyWeight: true });
 
-ok(full.bodyWeight === undefined,
-   'BODY WEIGHT IS OFF EVEN AT FULL unless it was turned on separately');
-const fullBw = base(FULL, { shareBodyWeight: true });
-ok(fullBw.bodyWeight.length === 1 && fullBw.bodyWeight[0].weight === 178,
-   'and appears once it is');
-const midBw = base(MID, { shareBodyWeight: true });
-ok(midBw.bodyWeight === undefined,
-   'asking to share body weight cannot smuggle it into a lower tier');
+ok(friendsBw.bodyWeight.length === 1 && friendsBw.bodyWeight[0].weight === 178,
+   'a friend gets the weigh-ins once the owner switches them on');
+ok(pub.bodyWeight === undefined,
+   '🚨 AND THE PUBLIC DOCUMENT DOES NOT — with the identical inputs, including the switch turned on');
+ok(JSON.stringify(pub).indexOf('178') === -1,
+   '⚠️ and 178 does not survive anywhere in it as text either, which is the assertion that would '
+   + 'catch it being smuggled through some other field');
+ok(base(FRIENDS).bodyWeight === undefined,
+   'and it is off even for friends until the owner turns it on separately');
+
+ok(pub.isPublic === true && pub.audience === PUBLIC,
+   'the public document is marked public — 🚨 this flag IS the read permission, firestore.rules '
+   + 'grants any signed-in caller a read when it is true');
+ok(pub.viewers.length === 0,
+   '⚠️ and carries an EMPTY viewers list rather than a populated one: two access models on one '
+   + 'document would leave the narrower one doing nothing');
+ok(Array.isArray(pub.viewers),
+   'the key is present though — the rules check `viewers is list` before indexing it, and a '
+   + 'missing key turns a clean denial into an evaluation error');
+
+ok(pub.activity.length === 3 && pub.activity.find((a) => a.name === 'Push').entries.length === 4,
+   'everything else is there: a public account really does publish the whole workout');
+ok(pub.activity.find((a) => a.name === 'Push').startedAt === '2026-08-15T09:00:00.000Z',
+   'including the time of day — Tim\'s explicit answer, given the argument that sixty start times '
+   + 'describe a weekly schedule');
+ok(pub.benchmarks.length === 1 && pub.strength.muscles.length === 1,
+   'and the benchmarks and the muscle map');
+
+/* ------------------------------------------------------------------ *
+ * The muscle map somebody else reads — 2026-09-03
+ * ------------------------------------------------------------------ */
+
+const shared = base(FRIENDS).strength;
+ok(shared.muscles[0].estimate === 233.4,
+   '🚨 THE ESTIMATED 1RM IS PUBLISHED NOW. It was deliberately withheld — "nothing renders it, so '
+   + 'nothing needs it" — and that stopped being true the moment a friend could tap a muscle');
+ok(shared.muscles[0].contributors.length === MAX_SHARED_CONTRIBUTORS,
+   `⚠️ and at most ${MAX_SHARED_CONTRIBUTORS} contributing sets come with it — Rule 5 travels with `
+   + 'the number, or the panel shows an inference dressed as a measurement');
+ok(shared.muscles[0].contributors[0].exerciseName === 'Barbell Bench Press'
+   && shared.muscles[0].contributors[0].weight === 205,
+   'each naming a real recorded set');
+ok(shared.grid['lifters|male|own|own'].Chest[0] === 62,
+   'the grid carries a percentile per comparison group');
+ok(shared.grid['everyone|all|any|any'].Chest[0] === 88.1,
+   '⚠️ and a DIFFERENT one for a different group — which is the whole point of publishing a grid '
+   + 'rather than one number: the reader can ask any question the sheet offers');
+ok(shared.defaultCompare === 'lifters|male|own|own',
+   'and says which row is their own "like me", so a viewer\'s "own" resolves to THEIR sex');
+ok(projectStrength({ muscles: [{ muscle: 'Chest', secretNote: 'x' }], grid: {} })
+     .muscles[0].secretNote === undefined,
+   '⚠️ the map is whitelisted like everything else — a field invented next year is absent from a '
+   + "friend's screen until somebody names it, rather than published because nobody thought");
+ok(projectStrength(null).muscles.length === 0 && projectStrength([]).grid !== undefined,
+   'and a missing or legacy-shaped map degrades to an empty one rather than throwing mid-publish');
 
 /* ------------------------------------------------------------------ *
  * Identity
  * ------------------------------------------------------------------ */
 
 const withEmail = buildProjection({
-  tier: LIGHT, viewers: ['alex'],
+  audience: FRIENDS, viewers: ['alex'],
   profile: { name: 'Tim', email: 'tim@example.com', uid: 'abc123' },
   sessions: [], publishedAt: '2026-08-17T12:00:00.000Z',
 });
@@ -321,9 +341,10 @@ ok(withEmail.profile.name === 'Tim', 'the display name is what is shared');
 /* ---- the profile photo (2026-08-31) ----
  *
  * Tim: *"your friends can't see the profile picture… its just the default blank
- * humanoid, not the picture that they actually added."* It is published with
- * the name now, at every tier, because `profile` is IDENTITY and the tiers cut
- * TRAINING — somebody who can see your name can see your face.
+ * humanoid, not the picture that they actually added."* It rides beside the
+ * name, because `profile` is IDENTITY — somebody who can see your name can see
+ * your face. ⚠️ Asked on 2026-09-03 whether it follows the account into public,
+ * he said yes, so it is asserted in BOTH documents below.
  *
  * 🚨 THE REFUSALS ARE THE POINT OF THIS BLOCK. The same string is read back off
  * somebody else's document and put into an `src` by ui.js personFace(), so the
@@ -331,15 +352,14 @@ ok(withEmail.profile.name === 'Tim', 'the display name is what is shared');
  */
 {
   const FACE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAA==';
-  const withFace = (avatar, tier = LIGHT) => buildProjection({
-    tier, viewers: ['alex'], profile: { name: 'Tim', avatar },
+  const withFace = (avatar, audience = FRIENDS) => buildProjection({
+    audience, viewers: ['alex'], profile: { name: 'Tim', avatar },
     sessions: [], publishedAt: '2026-08-31T12:00:00.000Z',
   });
 
-  ok(withFace(FACE).profile.avatar === FACE,
-     'a photo is published beside the name at the LOWEST tier — a friend who sees only that you '
-     + 'trained still sees who you are');
-  ok(withFace(FACE, FULL).profile.avatar === FACE, 'and at the highest');
+  ok(withFace(FACE).profile.avatar === FACE, 'a photo is published beside the name to friends');
+  ok(withFace(FACE, PUBLIC).profile.avatar === FACE,
+     'and to the public — Tim picked the photo as one of the three that follow the account there');
   ok(withFace(undefined).profile.avatar === undefined,
      '⚠️ and it is ABSENT rather than null on an account with no photo, which is most of them — '
      + 'every reader already treats a missing avatar as "draw the glyph"');
@@ -359,9 +379,10 @@ ok(withEmail.profile.name === 'Tim', 'the display name is what is shared');
   ok(withFace({ toString: () => FACE }).profile.avatar === undefined,
      'and a non-string is not coaxed into one');
 
-  // The absence guard has to stay happy with it, or publishing breaks at light.
-  ok(assertTierClean(withFace(FACE), LIGHT) === true,
-     'and the tier guard passes a light projection carrying a face — identity is not training');
+  // The absence guard has to stay happy with it, or publishing breaks outright.
+  ok(assertAudienceClean(withFace(FACE), FRIENDS) === true
+     && assertAudienceClean(withFace(FACE, PUBLIC), PUBLIC) === true,
+     'and the guard passes a document carrying a face — identity is not training');
 }
 
 /* ------------------------------------------------------------------ *
@@ -373,78 +394,53 @@ const many = Array.from({ length: 400 }, (_, i) => ({
   date: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
   entries: [],
 }));
-const capped = buildProjection({ tier: LIGHT, viewers: [], profile: {}, sessions: many, publishedAt: null });
+const capped = buildProjection({ audience: FRIENDS, viewers: [], profile: {}, sessions: many, publishedAt: null });
 ok(capped.activity.length === MAX_ACTIVITY, `activity is capped at ${MAX_ACTIVITY}`);
 
 const manyViewers = Array.from({ length: MAX_VIEWERS + 50 }, (_, i) => `u${i}`);
-ok(buildProjection({ tier: LIGHT, viewers: manyViewers, sessions: [] }).viewers.length === MAX_VIEWERS,
+ok(buildProjection({ audience: FRIENDS, viewers: manyViewers, sessions: [] }).viewers.length === MAX_VIEWERS,
    `viewers are capped at ${MAX_VIEWERS} — a document that quietly outgrows 1 MB stops publishing`);
-ok(buildProjection({ tier: LIGHT, viewers: ['a', 'a', 'b', '', null], sessions: [] }).viewers.join() === 'a,b',
+ok(buildProjection({ audience: FRIENDS, viewers: ['a', 'a', 'b', '', null], sessions: [] }).viewers.join() === 'a,b',
    'viewers are de-duplicated and empties dropped');
 
 /* ------------------------------------------------------------------ *
  * The guard itself
- * ------------------------------------------------------------------ */
-
-throws(() => buildProjection({ tier: 'everything', viewers: [], sessions: [] }),
-       'building a projection for a tier that does not exist throws rather than guessing');
-throws(() => assertTierClean({ activity: [{ date: '2026-08-01', name: 'Push', sets: [{ weight: 100 }] }] }, LIGHT),
-       'the guard catches a number smuggled into light activity');
-throws(() => assertTierClean({ activity: [], benchmarks: [] }, MID),
-       'the guard catches benchmarks appearing at mid');
-throws(() => assertTierClean({ activity: [], bodyWeight: [{ date: '2026-08-01', weight: 178 }] }, LIGHT),
-       'the guard catches body weight at light');
-ok(assertTierClean(light, LIGHT) && assertTierClean(mid, MID) && assertTierClean(full, FULL),
-   'and passes all three real projections');
-
-// The guard must survive a leak that is buried, not top-level — otherwise it is
-// checking the easy case only.
-throws(() => assertTierClean({ activity: [
-  { date: '2026-08-01', name: 'Push', entries: [{ name: 'Fly', sets: [{ minis: [{ weight: 30 }] }] }] },
-]}, LIGHT), 'the guard catches a weight nested two levels down inside a mini-set');
-
-/* ------------------------------------------------------------------ *
- * ⚠️ THE LEAK THE GUARD COULD NOT SEE UNTIL 2026-08-25
  *
- * Every leak assertTierClean was written against happened to be a NUMBER — a
- * weight, a rep count — so "no numbers below a session at light" read like the
- * whole of it. It was not. The start time is a STRING, and a string sailed
- * through the guard untouched: the one field this change thought hardest about
- * was the one field the safety net could not have caught. The guard now checks
- * the KEY as well as the value, against the three names light admits.
+ * ⚠️ IT LOST ITS BIGGEST JOB ON 2026-09-03 AND KEPT ITS SHAPE. Under the tiers
+ * it walked every leaf below a session, because `light` was allowed no number
+ * from inside a workout at all. Both audiences get the whole session now, so
+ * that walk has nothing left to find — and the guard still exists, still fails
+ * closed, because the ONE remaining difference between the two documents is
+ * exactly the kind an edit six months from now will quietly undo.
  * ------------------------------------------------------------------ */
 
-throws(() => assertTierClean({ activity: [
-  { id: 's-1', date: '2026-08-01', name: 'Push', startedAt: '2026-08-01T18:40:00.000Z' },
-]}, LIGHT), 'the guard catches a start time at light — a leak with no number in it anywhere');
-throws(() => assertTierClean({ activity: [
-  { id: 's-1', date: '2026-08-01', name: 'Push', notes: 'felt awful, left early' },
-]}, LIGHT), 'and catches a field nobody has invented yet — the guard fails closed, not open');
-// The vacuity guard for both: the identical documents MINUS the extra field
-// must pass, or the two above prove only that the guard rejects everything.
-ok(assertTierClean({ activity: [{ id: 's-1', date: '2026-08-01', name: 'Push' }] }, LIGHT),
-   'while id, date and name together are clean — light is not simply rejecting whatever it sees');
-ok(assertTierClean({ activity: [
-  { id: 's-1', date: '2026-08-01', name: 'Push', startedAt: '2026-08-01T18:40:00.000Z' },
-]}, MID), 'and the same start time is clean at mid, which is the tier that publishes it');
-
-// And the real thing, re-asserted after the change: all three tiers, built from
-// sessions that DO carry times, still pass their own guard.
-ok(assertTierClean(light, LIGHT) && assertTierClean(mid, MID) && assertTierClean(full, FULL)
-   && assertTierClean(base(FULL, { shareBodyWeight: true }), FULL),
-   'every real projection still passes its own guard now that sessions carry a time');
+throws(() => buildProjection({ audience: 'full', viewers: [], sessions: [] }),
+       'building a projection for an audience that does not exist — an OLD TIER NAME, which is the '
+       + 'shape a stale caller would really pass — throws rather than guessing');
+throws(() => assertAudienceClean({ isPublic: true, bodyWeight: [{ date: '2026-08-01', weight: 178 }] }, PUBLIC),
+       '🚨 the guard catches body weight in the public document');
+throws(() => assertAudienceClean({ isPublic: true, viewers: ['alex'] }, PUBLIC),
+       'and a public document carrying a viewers list');
+throws(() => assertAudienceClean({ isPublic: true, viewers: [] }, FRIENDS),
+       '🚨 AND THE OTHER DIRECTION, WHICH IS THE ONE THAT WOULD HURT: a FRIENDS document marked '
+       + 'public is readable by everybody signed in, body weight and all. The rules read that flag '
+       + 'and nothing else');
+throws(() => assertAudienceClean({ isPublic: false, secretPlans: 'x' }, FRIENDS),
+       'and a top-level field nobody has invented yet — the guard fails closed, not open');
+ok(assertAudienceClean(mid, FRIENDS) && assertAudienceClean(pub, PUBLIC)
+   && assertAudienceClean(friendsBw, FRIENDS),
+   'and passes every real document, including the one carrying weigh-ins');
 
 /* ------------------------------------------------------------------ *
  * Edge shapes
  * ------------------------------------------------------------------ */
 
-ok(projectSession(null, LIGHT) === null, 'no session, no projection');
-ok(projectSession({ workoutName: 'Push' }, LIGHT) === null,
+ok(projectSession(null) === null, 'no session, no projection');
+ok(projectSession({ workoutName: 'Push' }) === null,
    'a session with no date is not published — a dateless entry cannot be placed');
-ok(projectSession(SESSION, NONE) === null, 'the "nothing" tier publishes nothing');
-ok(projectSession({ date: '2026-08-01' }, LIGHT).name === 'Workout',
+ok(projectSession({ date: '2026-08-01' }).name === 'Workout',
    'a session with no name still says a workout happened');
-ok(projectSession({ date: '2026-08-01', entries: null }, MID).entries.length === 0,
+ok(projectSession({ date: '2026-08-01', entries: null }).entries.length === 0,
    'a malformed entries list becomes empty rather than throwing mid-publish');
 
 // NaN and Infinity are not JSON and Firestore rejects them; a publish that
@@ -452,7 +448,7 @@ ok(projectSession({ date: '2026-08-01', entries: null }, MID).entries.length ===
 const nasty = projectSession({
   date: '2026-08-01', workoutName: 'Push',
   entries: [{ exerciseName: 'Bench', sets: [{ weight: NaN, reps: Infinity, note: undefined }] }],
-}, MID);
+});
 ok(nasty.entries[0].sets[0].weight === null && nasty.entries[0].sets[0].reps === null,
    'NaN and Infinity become null rather than reaching Firestore');
 ok(JSON.stringify(nasty).indexOf('undefined') === -1, 'undefined is dropped, not stringified');
@@ -533,75 +529,65 @@ ok(inviteExpiry(stamp('2026-08-17T00:00:00.000Z')) === '2026-08-24T00:00:00.000Z
    'inviteExpiry reads a Timestamp too, so the fallback cannot be the odd one out');
 ok(inviteExpiry({}) === null, 'and an unreadable creation date still has no expiry');
 
-/* ---------- location (0m): a typed label, mid and above ---------- */
+/* ---------- location (0m): a typed label, never a coordinate ---------- */
 {
   const s = {
     id: 's9', date: '2026-08-20', workoutName: 'Push',
     startedAt: '2026-08-20T18:00:00Z', location: '  Gold’s Gym  ', entries: [],
   };
-  ok(!('location' in projectSession(s, LIGHT)),
-     '⚠️ location is NOT published at light — sixty times-and-places describe where a person reliably is');
-  ok(projectSession(s, MID).location === 'Gold’s Gym',
-     'at mid the label is published, trimmed');
-  ok('location' in projectSession(s, FULL), 'and at full');
-  ok(!('location' in projectSession({ ...s, location: '   ' }, MID)),
+  ok(projectSession(s).location === 'Gold’s Gym', 'the label is published, trimmed');
+  ok(base(PUBLIC, { sessions: [s] }).activity[0].location === 'Gold’s Gym',
+     '⚠️ INCLUDING TO THE PUBLIC — Tim\'s answer on 2026-09-03, given the argument that a place '
+     + 'plus a time says where a person reliably is and when. It was mid-and-above before');
+  ok(!('location' in projectSession({ ...s, location: '   ' })),
      'a blank label publishes NO key — absent, never empty (one case for the view)');
-  ok(!('location' in projectSession({ ...s, location: 42 }, MID)),
+  ok(!('location' in projectSession({ ...s, location: 42 })),
      'a non-string label is dropped, not coerced');
   const nos = { ...s }; delete nos.location;
-  ok(!('location' in projectSession(nos, MID)), 'missing is missing');
-  ok(projectSession({ ...s, location: 'x'.repeat(300) }, MID).location.length === 80,
+  ok(!('location' in projectSession(nos)), 'missing is missing');
+  ok(projectSession({ ...s, location: 'x'.repeat(300) }).location.length === 80,
      'capped at 80 characters at the builder, matching the input cap');
 }
 
-/* ---------- the description (§13 Step 2): how it went, mid and above ---------- */
+/* ---------- the description (§13 Step 2): how it went ---------- */
 {
   const s = {
     id: 's11', date: '2026-08-20', workoutName: 'Push',
     startedAt: '2026-08-20T18:00:00Z', note: '  Felt strong. Shoulder held up.  ', entries: [],
   };
-  ok(!('note' in projectSession(s, LIGHT)),
-     '⚠️ the description is NOT published at light — light says the day and the name and '
-     + 'nothing from inside the workout, and a sentence about how it went is inside it');
-  ok(JSON.stringify(projectSession(s, LIGHT)).indexOf('Shoulder') === -1,
-     'and it does not survive at light as text either');
-  ok(projectSession(s, MID).note === 'Felt strong. Shoulder held up.',
-     'at mid the line is published, trimmed');
-  ok('note' in projectSession(s, FULL), 'and at full');
-  ok(!('note' in projectSession({ ...s, note: '   ' }, MID)),
+  ok(projectSession(s).note === 'Felt strong. Shoulder held up.', 'the line is published, trimmed');
+  ok(!('note' in projectSession({ ...s, note: '   ' })),
      'a blank description publishes NO key — absent, never empty (one case for the card)');
-  ok(!('note' in projectSession({ ...s, note: 42 }, MID)),
+  ok(!('note' in projectSession({ ...s, note: 42 })),
      'a non-string description is dropped, not coerced — nobody wrote "42"');
   const nonote = { ...s }; delete nonote.note;
-  ok(!('note' in projectSession(nonote, MID)),
+  ok(!('note' in projectSession(nonote)),
      'every session recorded before this field existed publishes no key — missing is missing');
-  ok(projectSession({ ...s, note: 'x'.repeat(400) }, MID).note.length === 280,
+  ok(projectSession({ ...s, note: 'x'.repeat(400) }).note.length === 280,
      'capped at 280 at the builder as well as at the box, because an imported row never saw the box');
   // ⚠️ The per-exercise `notes` is a DIFFERENT field with nearly the same name.
   // It has never been published and this must not be what starts.
-  ok(!('notes' in projectSession(s, FULL)),
+  ok(!('notes' in projectSession(s)),
      '⚠️ and `note` is the session’s description — the per-exercise `notes` is still nobody’s business');
 }
 
-/* ---------- duration: minutes rounded to five, mid and above ---------- */
+/* ---------- duration: minutes rounded to five ---------- */
 {
   const s = {
     id: 's10', date: '2026-08-20', workoutName: 'Push',
     startedAt: '2026-08-20T18:00:00.000Z', finishedAt: '2026-08-20T18:47:00.000Z',
     entries: [],
   };
-  ok(!('minutes' in projectSession(s, LIGHT)),
-     'duration is NOT published at light — it rides the same gate as the start time');
-  ok(projectSession(s, MID).minutes === 45,
-     `47 minutes publishes as 45 — rounded to five, so the exact finish stays private (${projectSession(s, MID).minutes})`);
-  ok(!('finishedAt' in projectSession(s, FULL)),
-     '⚠️ finishedAt itself is STILL never published, at any tier');
-  ok(!('minutes' in projectSession({ ...s, finishedAt: '2026-08-21T08:00:00.000Z' }, MID)),
+  ok(projectSession(s).minutes === 45,
+     `47 minutes publishes as 45 — rounded to five, so the exact finish stays private (${projectSession(s).minutes})`);
+  ok(!('finishedAt' in projectSession(s)),
+     '⚠️ finishedAt itself is STILL never published, to anybody');
+  ok(!('minutes' in projectSession({ ...s, finishedAt: '2026-08-21T08:00:00.000Z' })),
      'a draft left open overnight publishes NO duration rather than a fourteen-hour one');
-  ok(!('minutes' in projectSession({ ...s, finishedAt: s.startedAt }, MID)),
+  ok(!('minutes' in projectSession({ ...s, finishedAt: s.startedAt })),
      'a zero-length stamp pair (the quick activity log) publishes no duration');
   const noFinish = { ...s }; delete noFinish.finishedAt;
-  ok(!('minutes' in projectSession(noFinish, MID)),
+  ok(!('minutes' in projectSession(noFinish)),
      'sessions from before finishedAt existed publish no key — missing is missing');
 }
 

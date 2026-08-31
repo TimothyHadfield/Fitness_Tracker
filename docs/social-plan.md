@@ -84,15 +84,22 @@ screenshot. The UI must say this at the moment of sharing, not in a settings pag
 users/{uid}/collections/{name}     UNCHANGED. Owner-only. The private source of truth.
                                    Nothing in this plan touches these rules.
 
-users/{uid}/shared/{tier}          THE PROJECTION. One document per audience tier.
-                                   { viewers: [uid…], profile: {…}, activity: […],
+users/{uid}/shared/{audience}      THE PROJECTION. ⚠️ TWO documents since 2026-09-03 —
+                                   `friends` and `public`, where there were three
+                                   tiers (§15).
+                                   { audience, isPublic, viewers: [uid…], profile: {…},
+                                     activity: […], benchmarks: […], strength: {…},
+                                     bodyWeight: […]  ← friends only, and opt-in,
                                      publishedAt }
-                                   Written by the owner. Read by anyone in `viewers`.
+                                   Written by the owner. `friends` is read by anyone in
+                                   `viewers`; `public` by anyone SIGNED IN, when
+                                   `isPublic` is true.
 
-users/{uid}/social/graph           Owner-only. Who they have connected to, who is in which
-                                   tier, pending invites. Never readable by anyone else —
-                                   the audience list lives in the projection instead,
-                                   see below.
+users/{uid}/social/graph           Owner-only. Who they have connected to and pending
+                                   invites. ⚠️ No longer "who is in which tier" — a
+                                   connection is a connection. Never readable by anyone
+                                   else; the audience list lives in the projection
+                                   instead, see below.
 
 invites/{token}                    A one-shot connection token. See §3.4.
 ```
@@ -120,6 +127,13 @@ problem. Both are fine for what Tim described and neither is fine for a public a
 audience, which is a reason §9 recommends mutual connections rather than followers.
 
 ### 3.3 Tiers, and how they deliver *per-person* control
+
+> 🛑 **SUPERSEDED 2026-09-03 — THE TIERS NO LONGER EXIST. READ §15 BEFORE THIS SECTION.** Tim
+> replaced per-person visibility with one account-level setting: private (accepted friends see
+> everything) or public (anybody signed in does). This section and §3.3.1 are kept because the shape
+> they argue for is what somebody would re-derive if this ever needs narrowing again, and because one
+> of their conclusions outlived them — a whole object is copied or omitted, never edited field by
+> field. **Nothing below describes what the app does today.**
 
 Tim asked for per-person visibility. Publishing one document per *person* would mean rewriting N
 documents after every workout, so instead there are a small fixed number of tiers, and per-person
@@ -1244,7 +1258,7 @@ canvas → PNG → `navigator.share({files})`, no backend.
 | | The question | Why it cannot be decided here |
 |---|---|---|
 | **A** | **Should a warm-up be typed by the lifter?** (§12.16, Open work 0c) | ⏸️ **STILL OPEN, and deliberately not built on 2026-09-02** — Tim: *"don't implement warm ups or volume yet."* It changes what every set row asks for mid-workout, and it retires the Volume tab's "we count everything" caveat. **The past stays counted rather than retro-guessed.** This is the highest-value decision on the list and it is no longer a choice between two guesses |
-| **B** | **Per-workout visibility, as well as per-person?** (§12.13) | A session-level flag honoured by `projectSession()`. It composes with the tiers rather than replacing them. Real feature, not a rename. ⚠️ **The description field shipped without one**, so a note written on a session is visible to everybody at mid+ — the same rule as the rest of what is inside a workout, and the first field where somebody might want per-post control |
+| **B** | **Per-workout visibility?** (§12.13) | A session-level flag honoured by `projectSession()`. ⚠️ **REPHRASED 2026-09-03: it is no longer "as well as per-person", because per-person is gone** (§15). The account is private or public and every friend sees the same thing, so a per-WORKOUT flag is now the only granularity anybody could ask for — which makes this question sharper rather than moot. ⚠️ **The description field shipped without one**, so a note written on a session is visible to everybody who can see the account at all |
 | **C** | **RPE?** (§12.9) | We deliberately have no reps-in-reserve field and the Goals screen names it as a thing the app cannot see. Adding one changes what the app asks of somebody mid-set |
 | **D** | **Blaze, for photos** (§12.9) | Money, and a moderation question. Step 9, and everything above it is free |
 
@@ -1278,3 +1292,131 @@ own (sets, not volume) applied throughout. **New modules, every one pure and sep
    2 says to put the description on the finish screen because Hevy writes it before saving. Ours
    renders *after* the save has landed, so it had to go in the runner instead — the principle held,
    the location did not.
+
+---
+
+## 15. 🚨 THE TIERS ARE GONE — private or public, 2026-09-03
+
+Tim: *"I want to change how privacy settings work… you can either make your account private so only
+friends you accept can see, or public so anyone on the app that finds your account can see all
+details."* Asked directly whether the four per-person levels should go with it, he said **yes:
+account-level only**.
+
+**§3.3 and §3.3.1 are the reasoning for a design this app no longer has**, and they are kept rather
+than deleted for two reasons: the *shape* they argue for is what somebody would re-derive if this
+ever needs narrowing again, and one of their conclusions survived the change intact — **a whole
+object is copied or omitted, never edited field by field**, which is why there is still no partial
+object anywhere in `js/social.js` and why the guard is an absence check.
+
+### What replaced them
+
+**Two documents, cut by AUDIENCE rather than by tier:**
+
+| | `users/{uid}/shared/friends` | `users/{uid}/shared/public` |
+|---|---|---|
+| Who may read | the uids in its own `viewers` list | anybody **signed in**, when `isPublic == true` |
+| Written when | there is at least one accepted friend | the account setting is `public` |
+| Holds | everything | everything **except body weight** |
+
+- 🚨 **BODY WEIGHT IS THE ONLY FIELD THE TWO DISAGREE ABOUT**, and it is Tim's call: asked which of
+  the more personal fields should follow him into public, he picked the **profile photo**, the **time
+  of day he trains** and the **gym name**, and left body weight out. It keeps its own opt-in switch
+  and reaches accepted friends only. **That is the entire reason there are two documents** — one
+  document cannot be two things to two readers.
+- ⚠️ **AND THE HONEST LIMIT OF THAT PROTECTION.** A reader holding the published sets AND a
+  percentile can work backwards to an approximate body weight, because the standards are ratios to
+  it and this project publishes its own formulas. Keeping the weigh-in series out means no exact
+  number and no history of it. **Say "not published", never "cannot be known".**
+- ⚠️ **SIGNED IN IS REQUIRED FOR THE PUBLIC DOCUMENT.** "Anyone on the app" is not "the whole
+  internet with a scraper", and an unauthenticated read is also an unattributable one.
+- 🚨 **REACTING DID NOT FOLLOW THE ACCOUNT INTO PUBLIC.** Kudos, comments and handoffs stay
+  **friends-only** in `firestore.rules`. Reading is a grant; writing into somebody's subtree is a
+  moderation surface, and §12.11 refuses the discovery feed on exactly those grounds. A stranger
+  reads a public account and leaves nothing on it — including its comment threads, which are people
+  who know each other talking.
+- ⚠️ **THE PROBE SURVIVES, SMALLER.** `PROBE_ORDER` is `friends → public`: a reader still cannot know
+  which they are, and a friend of a public account must not be silently downgraded to the stranger's
+  view.
+- 🚨 **AND ONE TRAP THAT WOULD HAVE ADDED STRANGERS TO PEOPLE'S FRIENDS LISTS.** `processAccepted
+  Requests()` treats "I can read them" as proof they accepted me — airtight while every document was
+  gated on `viewers`, and false the moment a public document answers everybody. It now requires the
+  **friends** document specifically. Nothing else in the codebase made that assumption; this one did,
+  in one line, and it was found by asking what each existing read means now.
+
+### Migration
+
+The three tier documents are **deleted** on the first publish after the change (`sharedTiersCleared`
+in settings), and `healStalePublish()` republishes any account whose last publish predates it —
+otherwise its friends would see nothing at all, since nothing looks for `light`/`mid`/`full` any
+more. The rules refuse to (re)create them: `validAudience()` admits only the two names.
+
+### What a friend can see now
+
+Everything the owner can, minus the private collections: **the tappable muscle map with its full
+panel**, **their volume**, **their graphs**, their workouts, their benchmarks. See §16.
+
+---
+
+## 16. A friend's body, their numbers, and two bodies side by side — 2026-09-03
+
+Tim, in the same message: *"I also want a friend to be able to see another user's body, their graphs,
+volume, etc. as well as click on any muscle group like that own user can on themselves and pull
+details from it. Additionally, whenever you're on a muscle group display of someone… make a compare
+button somewhere that allows that user to display another person's body side by side."*
+
+**The panel is the same function on both screens** (`musclePanel`, exported from `views-muscles.js`),
+fed by `js/shared-map.js`, which translates a published map back into the shape `muscleStrength()`
+returns. A second panel would have been two places that must agree forever about which caveats may be
+shortened and whether an inference may sit beside a measurement unlabelled.
+
+🚨 **THE GRID IS THE IDEA WORTH KEEPING.** A percentile is a ratio to the person's own body weight and
+age — neither of which the reader has, and body weight is deliberately not in the public document. So
+**the owner computes every comparison group the sheet can produce (24 of them) and publishes the
+answers**, keyed `pool|sex|weight|age`; the reader picks a group and reads it off. Tim asked for
+*"the default comparison vs people like them, but allow them to use any comparison combination that
+is already available"*, and this is what makes that possible without publishing a single new fact
+about their body. ~9 KB in a document that is mostly sixty sessions.
+
+- ⚠️ **THE CHOICE IS PER-SCREEN AND IS NOT SAVED.** Flipping to "everyone" to look at a friend's map
+  is a question about that screen; writing it into `settings.compare` would silently re-rank your own
+  map from somebody else's page.
+- ⚠️ **THE LABEL SAYS "their body weight", NOT A NUMBER**, and on the compare screen "each body
+  weight". `comparisonLabel()` took a `whose` parameter for exactly this: printing "your body weight"
+  over a friend's figure names the wrong person as the basis of what is on screen.
+- ⚠️ **A GROUP THEIR DOCUMENT DOES NOT CARRY IS SAID OUT LOUD** rather than quietly answered with
+  their default — a body painted against a different group than the one named above it is the fault
+  the control exists to prevent.
+- 🚨 **TAPPING EITHER BODY SELECTS THE SAME MUSCLE ON BOTH.** Two independent selections is the state
+  where somebody reads one person's chest against the other's back and never notices.
+- ⚠️ **WHAT THE COLOURS MEAN IS ON THE SCREEN.** Each body is ranked against people of ITS OWN body
+  weight and age, so two people can read the same level at very different weights. "Advanced vs
+  Advanced" would otherwise read as "the same lift" — the estimate under a tapped muscle is the
+  number that actually answers who lifts more.
+- ⚠️ **SIDE BY SIDE AT EVERY WIDTH, INCLUDING 360px.** Stacking the columns on a phone would put one
+  body above the other, which is not a comparison — you cannot see two things at once by scrolling
+  between them.
+
+### Measured, not eyeballed
+
+- **Both figures capped so the level key stays on screen.** Left to fill its column the figure drew
+  405×599 at 1180×820 and put the key **32px below the fold**; this ramp is legal only with the
+  secondary encoding the key provides. Capped: 255×377 on a laptop, 161×238 at 360px, key visible at
+  both. The friend's own map had the same fault in a worse form — the tap opened a panel below the
+  fold, so **the screen answered a tap by appearing to do nothing**.
+- **Audit: 124 route/width/theme combinations, 10,938 text nodes, zero below 4.5:1, zero horizontal
+  overflow, zero unnamed controls** — including six new rows for these screens.
+- ⚠️ **THE ONE THING THAT DOES NOT MEET 44px IS A MUSCLE ON THE COMPARE SCREEN** — Traps measures
+  45×12 there against 62×17 on a friend's own map. Same class as Open work 0i (it is Tim's
+  illustration, at half width). **WCAG 2.5.8 is met by equivalence**, the same argument the year grid
+  uses: every muscle is reachable at full size one tap away, on the friend's own map and on your own
+  Muscles tab, and every muscle carries its level and confidence in its accessible name.
+
+### 🚨 The trap this pass found, and it was not in the app
+
+`tools/a11y-audit.mjs` spent four runs measuring **a build two edits old**. `python -m http.server`
+on a port that is already taken exits immediately and silently, so a server left running by an
+earlier run kept answering — and the audit happily drove a browser against it, reporting a full set
+of plausible numbers for a screen the source had not rendered for an hour. It now **refuses to run
+when the port is already serving**, names the process to kill, and tears down the service worker
+before measuring. *A measurement tool that silently measures the wrong thing is worse than one that
+does not run: a failed run gets re-run, and a wrong one gets believed and written down.*

@@ -154,11 +154,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // A published projection. One document per visibility tier.
+    // A published projection. 🚨 ONE DOCUMENT PER AUDIENCE since 2026-09-03,
+    // where there used to be one per visibility tier — `friends` and `public`.
+    // Tim: *"you can either make your account private so only friends you accept
+    // can see, or public so anyone on the app that finds your account can see
+    // all details."*
     //
-    // The list of who may read it lives INSIDE the document, so this rule needs
-    // no get() of a second document — resource.data is free, a get() is billed
-    // on every access and counts against the ten-get limit.
+    // The list of who may read the friends document lives INSIDE it, so this
+    // rule needs no get() of a second document — resource.data is free, a get()
+    // is billed on every access and counts against the ten-get limit.
     //
     // ⚠️ `resource` is null on create, which is why create is checked against
     // request.resource and read is checked against resource. Merging the two
@@ -170,41 +174,69 @@ service cloud.firestore {
              && request.auth.uid in resource.data.viewers;
     }
 
-    function validTier(tier) {
-      return tier in ['light', 'mid', 'full'];
+    // 🚨 THE PUBLIC READ, AND IT IS THE WIDEST GRANT IN THIS FILE. It is gated
+    // on a field the OWNER's own client wrote, which is the same shape as
+    // `viewers` — a document says who may read it, and only its owner may write
+    // it. `isPublic` is set by js/social.js from the audience rather than from a
+    // caller's argument, and assertAudienceClean() refuses to hand back a
+    // friends document carrying it.
+    //
+    // ⚠️ SIGNED IN IS REQUIRED. "Anyone on the app" is what Tim asked for, and
+    // an unauthenticated read is not that — it is the whole internet with a
+    // scraper, and it would also make every read unattributable.
+    function isPublicDoc() {
+      return signedIn()
+             && resource != null
+             && resource.data.isPublic == true;
+    }
+
+    function validAudience(audience) {
+      return audience in ['friends', 'public'];
     }
 
     function validProjection() {
       return request.resource.data.keys().hasOnly(
-               ['tier', 'viewers', 'profile', 'publishedAt', 'activity',
+               ['audience', 'isPublic', 'viewers', 'profile', 'publishedAt', 'activity',
                 'benchmarks', 'strength', 'bodyWeight'])
           && request.resource.data.viewers is list
           && request.resource.data.viewers.size() <= 500
           && request.resource.data.activity is list
-          && request.resource.data.activity.size() <= 60;
+          && request.resource.data.activity.size() <= 60
+          // ⚠️ THE ONE FIELD THE PUBLIC DOCUMENT MAY NOT HOLD, enforced on the
+          // wire as well as in the builder. Body weight reaches accepted friends
+          // only (Tim, 2026-09-03), and this is the gate that survives a bug in
+          // js/social.js rather than trusting it — the same two-independent-gates
+          // discipline the whole sharing model rests on.
+          && (request.resource.data.isPublic != true
+              || !('bodyWeight' in request.resource.data));
     }
 
-    match /users/{userId}/shared/{tier} {
-      // The owner reads their own to show "here is exactly what Alex can see",
-      // which is the answer a copy-based design can give and a permission-based
-      // one cannot.
-      allow get: if isOwner(userId) || isPublishedViewer();
-      // ⚠️ list is DENIED even for viewers. A viewer reads the one tier they
-      // were granted, by name. Listing would hand them the names of the tiers
-      // they were NOT granted, which is a small leak and an entirely avoidable
-      // one.
+    match /users/{userId}/shared/{audience} {
+      // The owner reads their own to show "here is exactly what a friend can
+      // see", which is the answer a copy-based design can give and a
+      // permission-based one cannot.
+      allow get: if isOwner(userId) || isPublishedViewer() || isPublicDoc();
+      // ⚠️ list is DENIED even for viewers, and it still matters with two
+      // documents: listing would tell a stranger reading a public account that a
+      // friends document exists and how many people are in it.
       allow list: if isOwner(userId);
 
-      allow create, update: if isOwner(userId) && validTier(tier) && validProjection();
-      // Unsharing deletes the document. That is the whole revocation mechanism,
-      // so it has to be permitted — and it is worth being clear that it is not
-      // retroactive: it stops future reads and cannot reach what was already
-      // read or screenshotted.
+      allow create, update: if isOwner(userId) && validAudience(audience) && validProjection();
+      // Unsharing deletes the document. That is the whole revocation mechanism
+      // — going private deletes the public copy — so it has to be permitted, and
+      // it is worth being clear that it is not retroactive: it stops future
+      // reads and cannot reach what was already read or screenshotted.
+      //
+      // ⚠️ THE LEGACY TIER DOCUMENTS ARE DELETED THROUGH THIS SAME RULE. An
+      // account that published before 2026-09-03 has light/mid/full documents
+      // whose `viewers` lists are live grants that nothing reads any more;
+      // store.js clears them on the first publish after the change. `delete` is
+      // deliberately not narrowed by validAudience — you must be able to delete
+      // a document you are no longer allowed to write.
       allow delete: if isOwner(userId);
     }
 
-    // Who the owner is connected to and what each person may see. Owner-only in
-    // BOTH directions — this is never how a viewer discovers their own tier.
+    // Who the owner is connected to. Owner-only in BOTH directions.
     match /users/{userId}/social/{doc} {
       allow read, write: if isOwner(userId);
     }
@@ -255,28 +287,29 @@ service cloud.firestore {
     // reads. The worst possible write is one spurious kudos, and the
     // owner can delete it.
     //
-    // Who may react: anyone the owner has published ANY tier to. A
-    // light-tier viewer sees the workout card in their feed, so they can
-    // kudos it — reacting requires exactly the relationship that showed
-    // you the thing you are reacting to.
+    // 🚨 WHO MAY REACT: AN ACCEPTED FRIEND, AND ONLY AN ACCEPTED FRIEND.
+    // It used to be a viewer of any tier. When the account model became
+    // private/public on 2026-09-03 this deliberately did NOT follow it:
+    // Tim asked that a public account be READABLE by anyone signed in,
+    // and letting anyone signed in also write into that account's
+    // reactions subtree is a different feature — it is the moderation
+    // surface, and this project has no moderation story (see
+    // docs/social-plan.md §12.11, which refuses the discovery feed on
+    // exactly those grounds). A stranger reads a public account and
+    // leaves nothing on it. Reversing that is this one function.
     // ================================================================
 
     // ⚠️ exists() BEFORE get(), for the same reason claimingUnclaimedInvite
     // checks fields before reading them: an erroring rule is a denial today
     // and a trap for the next person to reorder it. Repeated accesses to the
-    // same document count once against the ten-get limit, so this is at most
-    // three billed reads on the miss path.
-    function viewerOfTier(userId, tier) {
-      return exists(/databases/$(database)/documents/users/$(userId)/shared/$(tier))
-          && get(/databases/$(database)/documents/users/$(userId)/shared/$(tier)).data.viewers is list
-          && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)/shared/$(tier)).data.viewers;
-    }
-
-    function viewerOfAnyTier(userId) {
+    // same document count once against the ten-get limit, so this is ONE
+    // billed read now rather than three — the tiers are gone and there is a
+    // single document to consult.
+    function isFriendOf(userId) {
       return signedIn()
-             && (viewerOfTier(userId, 'light')
-              || viewerOfTier(userId, 'mid')
-              || viewerOfTier(userId, 'full'));
+          && exists(/databases/$(database)/documents/users/$(userId)/shared/friends)
+          && get(/databases/$(database)/documents/users/$(userId)/shared/friends).data.viewers is list
+          && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)/shared/friends).data.viewers;
     }
 
     function validReaction() {
@@ -301,14 +334,19 @@ service cloud.firestore {
     }
 
     match /users/{userId}/reactions/{reactionId} {
-      // The owner reads what landed on their workouts; viewers read so the
-      // feed can show counts and threads. list is allowed for viewers —
-      // unlike shared/{tier}, there is nothing here a viewer was not meant
-      // to see: every document is a reaction to something published to them
-      // or to somebody at a laxer tier.
-      allow get, list: if isOwner(userId) || viewerOfAnyTier(userId);
+      // The owner reads what landed on their workouts; friends read so the
+      // feed can show counts and threads. list is allowed for friends —
+      // unlike shared/{audience}, there is nothing here a friend was not
+      // meant to see: every document is a reaction to something published
+      // to them.
+      //
+      // ⚠️ A STRANGER READING A PUBLIC ACCOUNT SEES NO KUDOS AND NO
+      // COMMENTS, which follows from reacting being friends-only: what
+      // they would be reading is a conversation between people who know
+      // each other, on a page they are merely allowed to look at.
+      allow get, list: if isOwner(userId) || isFriendOf(userId);
 
-      allow create: if viewerOfAnyTier(userId) && validReaction();
+      allow create: if isFriendOf(userId) && validReaction();
 
       // No update path AT ALL. Editing is delete-and-repost; a kudos toggle
       // is create/delete of a deterministic id. Every mutation a rule does
@@ -360,7 +398,7 @@ service cloud.firestore {
     // obvious next move is to keep adding guards until it does. The emulator
     // still logs an evaluation error on these denials AFTER the guards, and so
     // does the reactions block above (L233/L243), which shipped that way on
-    // 2026-08-26. The remaining source is the `get()` inside viewerOfAnyTier()
+    // 2026-08-26. The remaining source is the `get()` inside isFriendOf()
     // on documents that do not exist, not a missing field check. **Every denial
     // is still a denial** — that is what tests/rules.test.mjs asserts and what
     // matters — but do not read a clean run as the goal here, and do not
@@ -398,7 +436,10 @@ service cloud.firestore {
       // viewer to see — an offer is addressed to one person.
       allow get, list: if isOwner(userId);
 
-      allow create: if viewerOfAnyTier(userId) && validHandoff();
+      // ⚠️ FRIENDS ONLY, and more obviously so than reactions: handing somebody
+      // a whole workout to accept into their own training is not something a
+      // stranger who can merely read a public account gets to do.
+      allow create: if isFriendOf(userId) && validHandoff();
 
       // No update path at all, for the reason the reactions block gives:
       // every mutation a rule does not have is one that cannot be got wrong.

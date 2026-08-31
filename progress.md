@@ -4,14 +4,36 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-09-02, prepared for a chat reset — the home feed, back (Rule 8), and an
-estimated 1RM on every exercise.
+**Last updated:** 2026-09-03 — the tiers are gone (private/public), a friend's body map is tappable,
+and two bodies can be compared side by side.
 
-# 🟢 START HERE: NOTHING IS IN PROGRESS AND NOTHING IS BLOCKING
+# 🟢 START HERE: NOTHING IS IN PROGRESS
 
-**The working tree is clean, everything is pushed, and the live site is serving it.** There is no
-half-finished job to pick up and no next job assigned. **Between jobs, say what is done and stop —
-do not propose what to build next** (§1, and Tim has asked for that twice).
+**The working tree is clean, everything is pushed, the rules are deployed and the live site is
+serving it.** **Between jobs, say what is done and stop — do not propose what to build next** (§1,
+and Tim has asked for that twice).
+
+⏸️ **ONE THING IS ASSIGNED AND NOT STARTED: HOW TO RANK ABS.** Tim, 2026-09-03, at the end of the
+visibility work: *"I want to finally design a way to rank ab muscles on the muscle group strength
+display."* He offered two approaches and asked for the problems with each plus any other ideas. **It
+is a DESIGN conversation he asked for, not a build order** — see the 2026-09-03 section for what was
+answered. This supersedes the standing "the abs question is deferred" note below: he has un-deferred
+it himself.
+
+## What changed on 2026-09-03, in one line each
+
+1. 🚨 **THE THREE VISIBILITY TIERS ARE GONE.** An account is **private** (accepted friends see
+   everything) or **public** (anybody signed in who finds you sees everything too). Tim's call, and
+   he was asked directly whether the per-person levels should go with them: yes. **Body weight is the
+   one field that never goes public**, and it keeps its own opt-in switch for friends.
+2. 🚨 **A FRIEND'S MUSCLE MAP IS TAPPABLE, WITH THE SAME PANEL AS YOUR OWN** — the estimate, what the
+   next level costs, the confidence and the recorded sets behind it. **And you can ask it any
+   comparison question the sheet offers**, because their client publishes a percentile per group
+   rather than one number.
+3. 🆕 **THEIR VOLUME AND THEIR GRAPHS**, computed on your device from what they published, by the
+   same functions that draw yours.
+4. 🆕 **TWO BODIES SIDE BY SIDE** at `#/compare/<uid>`, reached from a Compare button on any muscle
+   map — theirs or your own.
 
 ## What changed on 2026-09-02, in one line each
 
@@ -33,13 +55,18 @@ Three passes, each with its own dated section below.
 1. ⏸️ **THREE DECISIONS ARE TIM'S, AND MUST NOT BE MADE BY IMPLEMENTING THEM.**
    **(a) Should a warm-up be typed by the lifter?** — still the highest-value item on the list. Every
    recorded set counts everywhere until he says otherwise, and the screens say so
-   (`docs/social-plan.md` §12.16, Open work 0c). **(b) Per-workout visibility as well as per-person?**
-   (§13's decision B). **(c) Ratify D18?** — Open question 1, unanswered since 2026-08-16.
+   (`docs/social-plan.md` §12.16, Open work 0c). **(b) Per-WORKOUT visibility?** — ⚠️ **the "as well
+   as per-person" half of that question died on 2026-09-03**; per-person is gone, so a per-workout
+   flag is now the only granularity left to ask for (`docs/social-plan.md` §13 decision B, §15).
+   **(c) Ratify D18?** — Open question 1, unanswered since 2026-08-16.
 2. ⏸️ **VOLUME IN POUNDS IS NOT BUILT.** Tim asked for a set count instead — *"Replace Volume for # of
    sets"* — and `js/session-stats.js`'s header records why that is also the more honest column.
-3. 🚨 **NOTHING FROM 2026-09-02 HAS BEEN ON A PHONE, AND NO TWO REAL ACCOUNTS HAVE USED ANY OF IT.**
-   It is proved in jsdom, in a real browser at 360 and 393px in both themes, and by the accessibility
-   audit — three different things, none of them a person. **Open work item 1.**
+3. 🚨 **NOTHING FROM 2026-09-02 OR -03 HAS BEEN ON A PHONE, AND NO TWO REAL ACCOUNTS HAVE USED ANY
+   OF IT.** It is proved in jsdom, in a real browser at 360 and 1180px in both themes, and by the
+   accessibility audit — three different things, none of them a person. **Open work item 1.**
+   ⚠️ **The visibility change makes that list heavier, not lighter**: the only way to see what a
+   PUBLIC account looks like to a stranger is a second real account, and the only way to prove the
+   migration worked is an account that published under the old tiers.
 4. 🚨 **NO HUMAN HAS CHECKED A SINGLE PREDICTED NUMBER AGAINST AN ACTUAL ATTEMPT.** The estimator
    rests on a curve whose absolute accuracy was never validated (`docs/research.md` §1.3) and on
    ratios describing a population rather than a person. Everything it prints ships with a confidence
@@ -55,7 +82,7 @@ Three passes, each with its own dated section below.
   missing, a product this app decided twice, in writing, not to be. Open work 18.
 - 🛑 **DO NOT SURFACE THE PINNED ITEMS (P1–P4)** as "the next thing to do" — Tim's standing
   instruction, 2026-08-28. Build them if he names them; otherwise leave them alone.
-- ⏸️ **The abs question is deferred** (below). Do not re-raise it unprompted.
+- 🆕 **The abs question is OPEN again — Tim re-opened it himself on 2026-09-03.** ~~deferred~~
 - ⚠️ **NEVER BULK-EDIT A MARKDOWN FILE THROUGH A SCRIPT.** §0.11 says it about PowerShell; on
   2026-09-02 the same mistake was made in **Python** — `open(path, 'w')` truncated this file to zero
   bytes and then died on an emoji surrogate before writing a byte back. Recovered with
@@ -68,9 +95,13 @@ Three passes, each with its own dated section below.
 previous one — Data → Volume, the motion pass, the body map painted by sets, and the Hevy teardown
 this session built from.
 
-⏸️ **THE ABS QUESTION IS DEFERRED BY TIM, 2026-09-01: *"skip the abs"*.** It is not closed and not
-withdrawn — he was offered it as the standing loose end and chose other work. Do not re-raise it
-unprompted; build it if he asks. The finding, kept because it is still true: **the panel is honest
+🆕 **THE ABS QUESTION IS NO LONGER DEFERRED — TIM RE-OPENED IT HIMSELF ON 2026-09-03** and asked for
+the problems with two approaches of his own. The assessment is its own section above; **the decision
+is his and nothing is built.** The paragraph below is the 2026-09-01 finding, kept because it is
+still exactly true and is the thing part (a) of that assessment fixes:
+
+~~⏸️ **THE ABS QUESTION IS DEFERRED BY TIM, 2026-09-01: *"skip the abs"*.**~~ It is not closed and not
+withdrawn — he was offered it as the standing loose end and chose other work. The finding: **the panel is honest
 and the COLOUR is not** — Core and Neck are permanently unrankable (no published standards exist),
 and the panel says exactly that when you tap them, but the body map paints them **grey**, and the
 only grey entry in the legend is **"No data."** So somebody who trains abs three times a week sees
@@ -89,6 +120,242 @@ never be reported as if it had.
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
 keep the sequence a reader navigates by; never compute an interval from them.
+
+---
+
+## 2026-09-03 — 🚨 PRIVATE OR PUBLIC, A FRIEND'S BODY, AND TWO OF THEM SIDE BY SIDE
+
+Tim: *"I want to change how privacy settings work, as well as change the visibility one user has on
+another. We already made it so that a user can see any friends workouts and whatnot, however I also
+want a friend to be able to see another user's body, their graphs, volume, etc. as well as click on
+any muscle group like that own user can on themselves and pull details from it. Additionally,
+whenever you're on a muscle group display of someone… make a compare button somewhere that allows
+that user to display another person's body side by side to the current displayed body. For the
+privacy settings, you can either make your account private so only friends you accept can see, or
+public so anyone on the app that finds your account can see all details."*
+
+**Three questions were put to him before anything was built, and his answers are the specification:**
+
+| | Asked | Answered |
+|---|---|---|
+| 1 | Do the per-person levels go away completely? | **Yes — account-level only.** |
+| 2 | Which personal fields follow the account into public? | **The photo, the time of day, the gym name.** Not body weight. |
+| 3 | What do the colours mean with two bodies on screen? | *"make the default comparison vs people like them, but allow them to use any comparison combination that is already available"* |
+
+### A. The tiers are gone
+
+`light` / `mid` / `full` — "just that I trained" / "my workouts" / "everything" — were Tim's own cut
+on 2026-08-17 and the subject of the longest argument in `docs/social-plan.md`. **They are replaced
+by one account setting and two documents:** `shared/friends` (read by the uids in its own `viewers`
+list) and `shared/public` (read by anybody **signed in**, when `isPublic` is true, and written only
+while the account is public).
+
+- 🚨 **BODY WEIGHT IS THE ONLY FIELD THE TWO DOCUMENTS DISAGREE ABOUT**, which is the whole reason
+  there are two: one document cannot be two things to two readers. It keeps its own opt-in switch
+  and reaches accepted friends only.
+- ⚠️ **AND THE LIMIT OF THAT IS STATED RATHER THAN OVERSOLD.** With the published sets and a
+  percentile in hand, an approximate body weight is derivable — the standards are ratios to it and
+  this project publishes its own formulas. What "not public" buys is no exact number and no history
+  of one. **Say "not published", never "cannot be known".**
+- 🚨 **REACTING DID NOT FOLLOW THE ACCOUNT INTO PUBLIC.** Kudos, comments and handoffs are
+  friends-only in the rules. Reading is a grant; writing into somebody's subtree is a moderation
+  surface, and this project has no moderation story (`docs/social-plan.md` §12.11 refuses the
+  discovery feed on the same grounds). A stranger reads a public account and leaves nothing on it —
+  and does not see its comment threads, which are people who know each other talking.
+- 🚨 **ONE TRAP WOULD HAVE PUT STRANGERS ON PEOPLE'S FRIENDS LISTS.** `processAcceptedRequests()`
+  treats "I can read them" as proof they accepted my request — airtight while every document was
+  gated on `viewers`, and false the moment a public document answers everybody. Somebody I asked, who
+  never replied, whose account happens to be public, would have been silently promoted to a friend on
+  the next visit to that screen. It now requires the **friends** document specifically. Found by
+  asking what each existing read MEANS under the new model rather than by a test.
+- ⚠️ **THE DISCONNECT SHEET WOULD HAVE LIED AGAIN.** It promises they "will no longer be able to see
+  anything of yours" — false on a public account, where disconnecting takes somebody out of the
+  friends document and leaves the public one. It now says which of the two happened. **This is the
+  second time that sheet has had to be corrected for promising a link was cut when it was not**
+  (2026-08-24 was the first).
+- **Migration:** the three tier documents are deleted on the first publish after the change, and the
+  boot heal republishes any account whose last publish predates it — otherwise its friends would see
+  nothing at all, because nothing looks for `light`/`mid`/`full` any more. The rules refuse to
+  re-create them.
+- **Rules: 159 assertions, all passing on the emulator, and deployed.** The new ones are the ones
+  worth reading: a stranger reads a public account and cannot write to it, cannot list the audiences,
+  cannot read its friends document, cannot react and cannot hand it a workout; and **body weight in a
+  public document is refused on the wire** as well as in the builder.
+
+### B. A friend's muscle map is tappable, and it answers any comparison question
+
+**The panel is the same function on both screens** — `musclePanel()`, exported from
+`views-muscles.js`, fed by the new `js/shared-map.js`. A second panel would have been two places that
+must agree forever about which caveats may be shortened.
+
+🚨 **THE GRID IS THE PART WORTH UNDERSTANDING.** A percentile is a ratio to the person's own body
+weight and age, and neither is in the public document. So **the owner computes all 24 comparison
+groups on their own device and publishes the answers**, keyed `pool|sex|weight|age`; the reader picks
+a group and reads it off. That is what makes Tim's *"any comparison combination that is already
+available"* possible without publishing one new fact about their body. Measured at ~9 KB.
+
+- ⚠️ **THE ESTIMATE IS PUBLISHED NOW, AND IT WAS DELIBERATELY WITHHELD BEFORE.** The old projection
+  said so in as many words — *"Level and percentile only… data nobody needs is data that only has
+  downside"* — which was right while a friend's map was a picture and stopped being right the moment
+  it grew a panel. **The three recorded sets behind it are published with it**, because Rule 5 has to
+  travel with the number.
+- ⚠️ **THE COMPARISON CHOICE IS PER-SCREEN AND IS NOT SAVED.** Flipping to "everyone" on a friend's
+  map is a question about that screen; writing it into `settings.compare` would silently re-rank your
+  own map from somebody else's page.
+- ⚠️ **THE LABEL SAYS "their body weight", NOT A NUMBER.** `comparisonLabel()` took a `whose`
+  parameter for exactly this — "your body weight" over a friend's figure names the wrong person as
+  the basis of what is on screen. The age line differs between the two screens on purpose: on yours,
+  no recorded age means no age grading was applied and "any age" is literally true; on theirs, their
+  client DID apply their age and this device simply does not know it.
+
+### C. Their volume, their graphs, and two bodies side by side
+
+**Volume and graphs are the same functions that draw yours**, handed their rows —
+`weeklyVolumeByMuscle(days, today, rows)` and `normalizedSeries(id, reps, source, rows)` grew that
+parameter, the way `muscleRatings(rows)` did on 2026-09-02. Neither costs a read: their sessions and
+benchmarks are already in the document their page reads.
+
+- ⚠️ **THEIR WINDOW IS NOT THEIR HISTORY AND THE SCREEN SAYS SO.** They publish sixty sessions, so a
+  long window can reach further back than what they share. Silence would let the screen claim to be
+  the same measurement as the one on their own phone.
+- 🚨 **TAPPING EITHER BODY SELECTS THE SAME MUSCLE ON BOTH.** Two independent selections is the state
+  where somebody reads one person's chest against the other's back and never notices.
+- ⚠️ **WHAT THE COLOURS MEAN IS ON THE SCREEN**: each body is ranked against people of ITS OWN body
+  weight and age, so two people can read the same level at very different weights. "Advanced vs
+  Advanced" would otherwise read as "the same lift"; the estimate under a tapped muscle is the number
+  that answers who lifts more.
+
+### D. Two layout faults, both found by MEASURING and neither visible to a test
+
+1. **The level key fell below the fold on a laptop** — the figures drew 405×599 and put it at 852
+   against a fold at 820. This ramp is legal *only* with the secondary encoding that key provides, so
+   the key wins: capped, 255×377 on a laptop and 161×238 at 360px, visible at both.
+2. **A friend's own map answered a tap by appearing to do nothing** — uncapped, it drew 640px of body
+   on a 360×780 phone and put the panel below the fold. Same cap, same reason.
+   ⚠️ **And the first fix for both was wrong in a way worth recording**: `--body-ar / 2` reads as
+   "each column is half the width" and confuses the COLUMN with the PICTURE — one figure is already
+   both bodies inside one viewBox. Halved, the laptop drew a 34×16 chest where the phone drew 43×20:
+   a bigger screen showing a smaller body.
+
+### E. 🚨 THE AUDIT SPENT FOUR RUNS MEASURING A BUILD TWO EDITS OLD
+
+`python -m http.server` on a port that is already taken **exits immediately and silently**, so a
+server left running by an earlier run kept answering — and `tools/a11y-audit.mjs` drove a browser
+against it, reporting a full set of plausible numbers for a screen the source had not rendered for an
+hour. Every hypothesis chased first (a stale scratch copy, an old Chrome on the debugging port, a
+`cp` that wrote `js/js`) was wrong, and each was checkable in a way that made the real cause look
+ruled out.
+
+**It now refuses to run when the port is already serving**, names the command that identifies the
+process, and tears down the service worker before measuring anything. It also grew an `ONLY=` filter,
+because a full run is 124 routes and re-running all of it to look at one screen is long enough that
+the temptation is to stop checking. *A measurement tool that silently measures the wrong thing is
+worse than one that does not run: a failed run gets re-run, and a wrong one gets believed and written
+into this file.*
+
+### F. The demo has friends with bodies now
+
+A friend's page used to say "Sharing is off in the demo" — right while it listed workouts, wrong the
+moment it carried a tappable map, and it meant none of today's work could be looked at, measured or
+audited anywhere. The demo's friends now carry an invented `gender`, `bodyWeight` and `age`, and
+**their map goes through the same publisher yours does** (`buildStrengthShare`), so the fixture cannot
+be a tidier shape than the wire — which is precisely how `sets: []` survived for months. Priya is
+deliberately much lighter than Marcus, because the compare screen's own caption claims two people can
+read the same level at very different body weights and a fixture where everybody weighs the same
+could never show it.
+
+**Tests: render 875 → 904, social rewritten around the two audiences, rules 159.**
+**Audit: 124 route/width/theme combinations, 10,938 text nodes, zero below 4.5:1, zero horizontal
+overflow, zero unnamed controls.**
+
+⚠️ **NOT VERIFIED: no phone, and no two real accounts.** In particular **nobody has seen what a
+public account looks like to a stranger** — that needs a second real account, and so does proving the
+tier migration on an account that published under the old model. Open work 1.
+
+⚠️ **ONE THING DOES NOT MEET 44px**: a muscle on the compare screen (Traps, 45×12 at 360px) — the
+same class as Open work 0i, on Tim's illustration at half width. WCAG 2.5.8 is met by **equivalence**,
+the year grid's argument: every muscle is reachable at full size one tap away, and every one carries
+its level and confidence in its accessible name.
+
+---
+
+## 2026-09-03 — ⏸️ HOW TO RANK ABS: the two ideas assessed, and a third
+
+Tim, immediately after the visibility work: *"I want to finally design a way to rank ab muscles on
+the muscle group strength display. I have a few ideas, but I want you to see if there are any
+problems or whatever with them… Let me know if you have any other ideas on this topic."*
+
+**NOTHING IS BUILT. This is the assessment he asked for, and the decision is his.**
+
+**The state of play.** Core is in `UNRANKABLE` (`js/strength-standards.js`) beside Neck, because
+`MUSCLE_LIFTS` has no entry for it: *"Core's best exercises are time-based or bodyweight."* It paints
+**grey**, and the only grey in the legend is **"No data"** — so somebody who trains abs three times a
+week sees the colour of somebody who has never done a sit-up. That is the complaint, and it is worth
+separating from "we cannot rank abs", because they are not the same problem.
+
+### His first idea — estimate the numbers, or pull weaker data from somewhere
+
+**Better than it sounds, and it does not fix as much as it looks like it does.**
+
+- ✅ **The machinery needs nothing new.** The library already holds WEIGHTED core work — Cable
+  Crunch, Machine Crunch, Decline Sit-Up, Russian Twist all record weight and reps. A cable crunch
+  1RM is an ordinary weighted lift, so it can go through the identical path every other muscle uses:
+  ratio → key lift → published median → log-normal percentile.
+- 🚨 **BUT IT WOULD BE THE ONLY ENTRY IN THE TABLE WITH NO SECOND SOURCE.** `docs/research.md` §11 is
+  explicit that the strength of the current medians is that two independent methods agree within
+  ~3 % — ExRx-style body-weight ratios against Gravitus/Strength Level measured medians, lift by
+  lift. For a cable crunch there is one source family (logging apps) and no independent cross-check,
+  and the load is far more equipment-dependent than a barbell: stack weight through a pulley, with
+  the leverage set by rope length, knee position and how much of the movement is hip flexion.
+- ⚠️ **AND IT ONLY RANKS PEOPLE WHO DO WEIGHTED AB WORK.** Somebody whose core training is planks,
+  hanging leg raises and ab wheel — which is most people — is exactly as grey afterwards.
+- **Verdict: buildable, honestly, IF it is pulled properly** (a research pass into
+  `docs/research.md` with a grade, per this project's own rule that nothing ships above the evidence)
+  **and if it lands with the confidence model doing visible work** — the map already desaturates a
+  thin rating and the panel already says "a rough placing". It would answer maybe a third of the
+  complaint.
+
+### His second idea — seed abs near the average of their other muscles, then track improvement
+
+**This is the one with real problems, and they are not fixable by calibrating longer.**
+
+1. 🚨 **IT PUTS TWO DIFFERENT MEANINGS IN ONE COLOUR.** Every other muscle's colour answers *"where
+   do I stand among people like me"*. Core's would answer *"how much have I improved since the app
+   started watching"*, seeded from unrelated muscles. Tapping Chest and Core would give two numbers
+   that look identical and are not the same kind of fact. This is the fault the Volume map was
+   careful to avoid on 2026-09-01 (the same drawing carrying two meanings) and it is Rule 5's whole
+   subject.
+2. 🚨 **THE SEED IS NOT A MEASUREMENT OF THE ABS AT ALL.** "Your other muscles average Intermediate,
+   so your abs start at Novice" assumes ab strength tracks average trained strength. **Nobody has
+   measured that correlation**, and this app's credibility rests on not inventing exactly this kind
+   of number.
+3. ⚠️ **IT BREAKS ON THE SCREEN BUILT TODAY.** Tim already spotted that the comparison settings leave
+   it behind; side by side it is worse — Core would be the one muscle where two people's colours are
+   not comparable to each other either, on a screen whose entire point is that they are.
+4. ⚠️ **THE FROZEN SEED DRIFTS.** Get stronger everywhere and the seed you were given would have been
+   higher — but it is frozen, so your abs read as improving. Recompute it and your abs level moves
+   when you bench more.
+5. The 2–4 calibration sessions are the least of it.
+
+### The third option, and it is the one I would take
+
+**Three parts, in the order they pay off:**
+
+- **(a) FIX THE COLOUR, WHICH NEEDS NO NEW DATA AT ALL.** Give unrankable-but-trained muscles their
+  own mark — a hatch, which survives greyscale and colour blindness — and their own legend entry
+  ("Trained · can't be ranked"), and have the panel say **what HAS been logged**: sets this month,
+  longest plank, heaviest cable crunch. This answers the actual complaint — *does this app know I
+  train my abs* — without inventing a percentile. It was offered on 2026-09-01 and never taken up.
+- **(b) THEN HIS FIRST IDEA, PROPERLY SOURCED**, for the people who do weighted core work: a real
+  rating, one source, stated as such, desaturated by the existing confidence model.
+- **(c) AND THE HONEST HALF OF HIS SECOND IDEA, WITHOUT THE INVENTED SEED.** What he is reaching for
+  with "rank off their own improvement" is *progress on abs*, and that does not need a level at all:
+  **"your hardest recorded core work is up 20 % since June"** on the panel is true, useful, needs no
+  standards, and cannot be mistaken for a percentile because it is not one. No colour, no level, no
+  comparison to other people — which is exactly why it is safe.
+
+⚠️ **WHAT THIS DOES NOT DO IS RANK A PLANK AGAINST OTHER PEOPLE.** No published norms exist for it,
+and none of the three parts above pretends otherwise.
 
 ---
 
@@ -5045,6 +5312,7 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
+| **21** | 🆕 **the abs ranking — TIM'S DECISION, ASSESSED 2026-09-03** | ⏸️ He re-opened it himself and asked for the problems with two approaches. The assessment is a section of its own above; the short version: **his first idea (weighted core work through the normal machinery) is buildable if the numbers are pulled properly, and answers about a third of it**; **his second (seed from their other muscles, then track improvement) puts two different meanings in one colour and invents a correlation nobody has measured**; and **the cheapest fix needs no new data at all** — give trained-but-unrankable muscles their own mark and legend entry, and have the panel say what HAS been logged. **Nothing is built and nothing should be until he picks** |
 | **17** | ~~the Hevy-shaped home feed~~ | ✅ **BUILT 2026-09-02 — all eight steps of `docs/social-plan.md` §13**, which now carries a ✅ block under each one and a §14 summary. What is left of it is two things Tim owes a decision on (**warm-up typing**, still item 2 below; **per-workout visibility**, §13's decision B) and **step 9, photos, which needs Blaze** and is item 10. ⚠️ **The Records column is deliberately absent from the card** — sixty published sessions are not a lifetime, and that caveat does not fit beside somebody's name; the bests are on the workout screen instead. ⚠️ **Nothing here has been used by two real accounts** — that is item 1, and it grew a longer list today |
 | **18** | ⚠️ **do not build the discovery feed** | Not work — a standing refusal, and it is listed here because a feed of strangers is the obvious next thing somebody will think of now that the feed looks like Hevy's. `docs/social-plan.md` §12.11: **it is the thing D7 actually refused**, it needs public profiles and enumeration of them (the thing the invite-link design exists to avoid), and it imports a moderation story this project does not have |
 | **1** | **the field checks — needs Tim's phone, not yours** | 🆕 **2026-09-02 ADDED A LOT TO THIS LIST AND NONE OF IT HAS BEEN ON A PHONE**: the new feed card, a friend's workout screen, the comparison sheet, copying a friend's workout into your own plan, and — the one most likely to behave differently on a real device — **sharing a picture**, which goes through `navigator.share({files})` and has only ever been driven in headless Chrome, where it falls through to the download path. ⚠️ **THE BIGGEST ONE IS STILL A TEN-MINUTE JOB WITH AUTUMN**: search her by name, send a request, have her accept it, and record a workout for her so it lands in her account. **Everything social built on 2026-08-29 is proved against the rules engine and has never been done by two people.** Also standing: the **friend-name heal**, a real **kudos/comment** round trip, and — needing only his eyes — **the blue box round the profile picture on a laptop** (a real bug was found and fixed in that exact place, but a *blue* one was never reproduced). ⚠️ **And file import has never parsed an actual export** from any service. ⚠️ **Added 2026-08-30: nobody has read the Research topics on a phone** — the facts are checked and measured, the reading experience is not. 🚨 **AND THE OTHER TWO PASSES OF 2026-09-02 ARE ON THIS LIST TOO, one of them at the top of it: `goBack()` changed EVERY back arrow in the app and has never met the iOS edge-swipe gesture** — which is the one input the design was chosen to survive, and which exists on no machine here. A router-level change to 48 controls verified only in desktop Chrome is the highest-risk unfielded thing of the day. Also unread on a phone: the benchmark screen's estimate and its two captions |
@@ -5056,7 +5324,8 @@ than left at the top where they were written.
 | **15** | **the usability findings — waiting on Tim's pick** | ⚠️ Four standing findings from the 2026-08-28 usability drive, reported to him and not yet chosen from: **no wake lock** (the biggest hands-free lever), **prefill counts as recorded at Finish**, the **Record chooser's extra tap**, and the Run log's **"28" = 28 seconds** parse. See that day's second-pass section. ⚠️ **The prefill one is HALF fixed as of 2026-08-29 and the halves matter**: a never-done exercise is now guarded (`prefilled`, refused by the save path), an exercise WITH history is untouched — walk past it and last time's numbers record as though you did them. Left alone deliberately: it is a behaviour change on every workout and his to pick. ⚠️ **The rest-timer items in the same list are DECLINED, not waiting** — do not resurface them |
 | **19** | 🆕 **the estimator has never been checked against a person** | ⚠️ **Not a bug — a standing hole that got much bigger on 2026-09-02.** The app now prints an estimated 1RM for virtually every exercise, a percentage of it, and a predicted rep count, and **not one of those numbers has ever been compared with an actual attempt.** `docs/strength-estimate-plan.md` §11.2 — the backtest against Tim's own held-out benchmarks — is the only thing that would change that, and it has never been run. **It needs nothing from anybody: the data is already on disk.** The cheapest honesty win left in the project |
 | **20** | 🆕 **`docs/research.md` §2's table has a transcription error** | ⚠️ It gives **~5 reps at both 95 % and 90 % of a max**, which cannot both be true — found 2026-09-02 while building the rep prediction, and flagged in place. Nothing has ever been shipped off that row. Fixing it means re-reading PMC10933212 (Nuzzo et al. 2024). Small, and it is a wrong claim sitting in the file the whole app cites |
-| **16** | **the HANDLE version of finding people** | 🚨 **Specified, ready, and a DECISION rather than a discovery.** Name search shipped 2026-08-29 on Tim's explicit call at fewer than five users, and it required granting Firestore `list` on a directory — which is enumeration of every row and cannot be narrowed by a rule. The replacement: `handles/{handle}` → uid, **`get` yes and `list` no**, exact lookup of a handle you chose, nothing enumerable. `docs/social-plan.md` §3.4 already blesses that shape. ⚠️ **The rules test's one deliberate `allow` — "any signed-in account can list the whole directory" — is the line that flips to a denial the day this lands**, and the `directory` block should be deleted with it |
+| **22** | 🆕 **nobody has seen a PUBLIC account from the outside** | ⚠️ Part of item 1, listed separately because it is the one thing today's change cannot be checked without: a second real account. The rules are proved on the emulator (159 assertions) and the screens are proved in the demo, and **neither of those is a stranger opening somebody's page.** Also unproved: the tier migration, which needs an account that published under the old model — every account Tim has does, so this is one sign-in away |
+| **16** | **the HANDLE version of finding people** | 🚨 **Specified, ready, and a DECISION rather than a discovery.** ⚠️ **2026-09-03 raised the stakes**: a public account is read by anybody signed in, so the directory is now how a stranger FINDS one — though nothing about what the directory holds changed (a uid and a chosen name). Name search shipped 2026-08-29 on Tim's explicit call at fewer than five users, and it required granting Firestore `list` on a directory — which is enumeration of every row and cannot be narrowed by a rule. The replacement: `handles/{handle}` → uid, **`get` yes and `list` no**, exact lookup of a handle you chose, nothing enumerable. `docs/social-plan.md` §3.4 already blesses that shape. ⚠️ **The rules test's one deliberate `allow` — "any signed-in account can list the whole directory" — is the line that flips to a denial the day this lands**, and the `directory` block should be deleted with it |
 
 ### ⚠️ PINNED — real work, deliberately NOT queued. Do not offer these as "the next thing to do"
 
@@ -5717,10 +5986,11 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/optimal.js` | Not a doc. Read it before touching the rating: the dose-response curves are **fitted to published values, with the derivation in a comment on each constant**, and the header lists the three things the rating refuses to do — reward extra training days for growth, extrapolate past the evidence, or imply precision the source lacks |
 | `tools/volume-ramp.mjs` | Not a doc, and dev-only. **The red-to-green ramp the Volume body map is painted in — GENERATED, and `css/app.css`'s five `--vol-*` hexes are its output.** ⚠️ **Read its header before touching a colour**: red-to-green is the worst pairing there is for colour blindness and it is defensible only through strictly monotone lightness (which the tool proves under three CVD simulations) plus the legend, labels and list that state every number in words. `tests/a11y.test.mjs` regenerates the hexes and fails if the stylesheet has drifted from them |
 | `js/volume-map.js` | Not a doc. **⚠️ Not the same table as `muscle-evidence.js`** — that one asks "how strong is this muscle", this one asks "how much work landed here". Direct 1.0, indirect 0.5. ⚠️ **Since 2026-09-01 it is also on a screen of its own** (Data → Volume, D3), so its efficiency tiers and its `INDIRECT_NOTE_*` sentences are read by users rather than only by the rating — and the per-screen consequence clause pattern applies: one shared statement of what the 0.5 IS, one sentence per screen saying what would change without it, **both shipped from beside the constant** |
-| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
+| `js/social.js` | Not a doc. **Read its header before touching anything social**: it explains why sharing publishes a copy rather than widening a permission, and why the builder is a whitelist — a delete-based one fails OPEN the day somebody adds a field. 🚨 **THE TIERS ARE GONE AS OF 2026-09-03** — it is two audiences now, `friends` and `public`, and the one field they disagree about is body weight. Wired to `views-social.js` since 2026-08-18, and ✅ **two real accounts connected over the live project on 2026-08-22** — invite, claim, accept, tier, publish, read, downgrade, disconnect, each one checked against what Firestore actually hands the other account. See item 1 for the two defects it turned up |
 | `js/set-types.js` | Not a doc. Read its header before touching supersets or drop sets: it explains why they are **two different shapes** and why drops nest inside a set rather than sitting beside it (D23) |
 | `js/exercise-estimate.js` | Not a doc. **What could you lift on an exercise you have never done** — the body map's arithmetic run backwards. ⚠️ **Read its header before touching it**: it explains why this is not a new model, why D14 did not need reopening, and the line it draws — *an estimate you read is not an estimate you lift*, so it has no quality gate where the runner's opening-weight suggestion has two. Also holds the rep prediction, which is capped at 15 for the same reason D5 caps evidence |
 | `js/strength-observations.js` | Not a doc. **The walk that turns sessions and benchmarks into per-muscle evidence**, extracted out of `store.js` on 2026-09-02 so a FRIEND's published training goes through the identical arithmetic. ⚠️ `today` is handed in, never read from a clock — that is what makes the golden table in `tests/data-layer.test.mjs` date-stable |
+| `js/shared-map.js` | Not a doc. **Somebody else's muscle map, turned back into the shape our own panel renders** (2026-09-03). ⚠️ **Read its header before touching the compare screens**: it explains why the arithmetic is NOT redone on the reader's device, and the one thing it deliberately cannot do — recompute a percentile, which needs a body weight the public document does not carry. A comparison group with no published row is a stated outcome, never a silent fallback to their default |
 | `js/session-stats.js` | Not a doc. **One session's own numbers, and the file to read before anyone adds a volume figure** — its header is the argument for why the feed card's middle column counts SETS: a friend's bodyweight work has no external load to total and their body weight publishes only at the top tier, so a pounds figure would read a session of pull-ups as nothing. ⚠️ **`recordedSetCount()` lives here and `store.js` imports it** — the Volume tab, the feed card and the workout screen must never disagree about whether a set was done |
 | `js/personal-bests.js` | Not a doc. **Typed records — Weight · Volume · Reps · 1RM.** ⚠️ **Read the note about Rule 5 first**: this function used to be estimate-free by construction and the 1RM kind broke that, so the rule is now honoured by LABELLING — `estimated: true`, the word on screen, and the line naming the set the model was fed. ⚠️ Mini-sets count on **both** sides; per-side doubles **volume only** |
 | `js/compare.js` | Not a doc. **You and a friend on one exercise, and it refuses to name a winner** (Rule 6) — `NO_VERDICT_HEADER` is its own sentence saying so, printed rather than paraphrased. ⚠️ **Read the windowing argument before touching it**: their sixty published sessions against your whole history flatters you every time in the same direction, so both sides are cut to the overlap |
@@ -5798,6 +6068,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
 | Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
 | **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that it picked its top three by converted weight, so a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. ⚠️ **Picking a muscle never moves or resizes the body, in either layout** (2026-08-21). On a screen ≥ 860px the detail opens in a **side column beside the figures**; below that it stacks underneath, and the figure holds a fixed 57 % of the pane while the panel takes what is left and scrolls inside itself. Before that fix the phone's figure shrank and rose by however many words the panel happened to have. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). ⚠️ **Tap → five lines and no more** (2026-08-21, Tim: "we want it to be easy to understand, not a paragraph"): level, estimate + percentile, the bar to the next level, the confidence line, and the set the number came from. The seven-row table of per-level weight targets, the confidence bar and the confidence percentage were cut. **Every caveat survived, one line each** — shortening a caveat is allowed, softening one is not — and a **40-word cap is a test**, because every other assertion on this panel checks something is present and none of them can catch words piling back up. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
+| **Who can see you** | 🚨 **PRIVATE OR PUBLIC, ONE SETTING FOR THE WHOLE ACCOUNT (2026-09-03)**, replacing the four per-person levels. **Private:** only friends you accept, and they see everything — workouts, benchmarks, muscle map, graphs, volume. **Public:** anybody **signed in** who finds you sees all of that too. ⚠️ **Body weight is never in the public copy** and keeps its own opt-in switch for friends; the photo, the time of day and the gym name DO go public, which is Tim's explicit answer to the question. ⚠️ **Reacting stayed friends-only** — a stranger reads a public account and leaves nothing on it, because writing into somebody's subtree is a moderation surface and this project has no moderation story. Set on the Friends screen and on any friend's page; `docs/social-plan.md` §15 |
 | **Friends** (was Social) | 🚨 **THREE WAYS IN SINCE 2026-08-29, and one of them reversed a locked decision.** *Add a friend* (`#/find`) offers **search by name**, **your own permanent QR code** (`#/add/<uid>`, scanned by their camera app — nothing to install) and the original **invite link**. Somebody found by search or code gets a **friend request** they accept; ⚠️ **accepting needs no new permission** — it republishes with them in `viewers`, so the asker learns by an existing read succeeding, eventually, and the screen says when it happens. ⚠️ **The name search needs Firestore `list` on a public `directory` collection, which IS enumeration and cannot be narrowed by a rule** — Tim's explicit call at fewer than five users; the handle replacement is Open work 16. **Settings → Findable by name** takes your row out, and is described as a courtesy rather than a protection because the rules cannot enforce it. ⚠️ **No longer its own tab — it is the Friends half of HOME** since 2026-08-22, and since 2026-08-25 the **You** half is a feed of those same friends' workouts rather than a place to start one. reached by a You / Friends switch, and the screen is titled **Friends** rather than Social because that is what a person has. `#/social` is still its route. **Mutual friends.** ⚠️ ~~a list you VISIT — there is no feed~~ **CORRECTED 2026-09-02, and it had been wrong here since 2026-08-25**: the **You/Friends** switch on Home IS a feed of their sessions, and since 2026-09-02 it is a Hevy-shaped one — each card carries the description they wrote, a **Time · Sets** row and one line per exercise with its set count, and **tapping it opens their workout on its own screen** at `#/friend/<uid>/<sessionId>`: an absolute date, a muscle split as percentages of that session, typed bests, and set tables whose header adapts to the lift. From there you can **compare a lift against your own** (rep-normalised, windowed to what you both have, and refusing to name a winner), **save their workout as one of yours** (set counts carry, weights cannot) or **share a picture of it**. **D7 was never narrowed** — what it still refuses is the **discovery** feed of strangers (Open work 18). Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. **You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing — and the picker names and *explains* each, because "mid visibility" means nothing to somebody who has not read the plan (D8). A friend's page shows **their body map in the app's own art and colour ramp**, their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away. New connections start at the least visible setting, never the last one used. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
 | **Goals** (no longer a nav tab) | ⚠️ **Off the bar since 2026-08-25, reached from Settings**; the route and all its deep links still resolve. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
 | **Bodyweight lifts rank** | **Pull-ups, chin-ups, dips and push-ups rate a muscle** (2026-08-19). Their resistance is a fraction of body weight plus whatever was added, and the fraction is per exercise. ⚠️ **The pull-up and the dip are 1.00 by STATICS, not by citation** — nothing but the hands is in contact, so the hands carry all of it, and the research confirmed no published %BM figure exists for either. A push-up is 0.75 from two independent force-plate studies half a percent apart (Suprak 2011, Mier 2014); the familiar 64 % and 66 % figures measure *different quantities* and mixing them would be worse than choosing one. ⚠️ **Body weight is read from the DATE OF THE SET**, never today's — otherwise losing twenty pounds would rewrite last year's pull-ups. What has no honest fraction stays refused, permanently and by name: an inverted row is 37–79 % depending on a bar height the app does not record. The panel distinguishes the two kinds of "can't", because "log a weigh-in" is actionable and "nobody has measured this" is not. `js/exercises.js` `BODY_WEIGHT_FRACTION`, `totalResistance()` in `js/e1rm.js` |
@@ -6743,6 +7014,22 @@ widens a permission on the source*, which is forced by the storage shape (one do
 row of a collection, and Firestore grants per document, so "let a friend see some of my workouts"
 has no permission that expresses it). D25: *social requires upgrading off an anonymous account*,
 which narrows D12 rather than breaching it. Both get locked if and when Phase 1 is built.
+
+🚨 **D29 IS RECORDED ON 2026-09-03, AND IT REPLACES A DESIGN RATHER THAN NARROWING ONE:** *visibility
+is a property of the ACCOUNT, not of a relationship — private (accepted friends see everything) or
+public (anybody signed in who finds you sees everything too), with body weight the single exception
+that never leaves the friends document.* Tim's instruction, and he was asked directly whether the
+four per-person tiers should go with it: yes.
+
+- ⚠️ **IT DOES NOT TOUCH D24.** Sharing still publishes a derived copy and still never widens a
+  permission on the source; what changed is how many copies there are and who may read each. The
+  private collections are exactly as private as they were, and `tests/rules.test.mjs` asserts it from
+  both directions — a friend and a public reader.
+- ⚠️ **WHAT IT COSTS, STATED**: there is no way to keep one person at arm's length any more. The
+  answer to "I do not want them seeing that" is to disconnect, or to not accept. Tim was given that
+  trade in the question and took it.
+- 🚨 **AND WHAT IT DELIBERATELY DID NOT WIDEN: writing.** Kudos, comments and handoffs are
+  friends-only. Reading is a grant; writing into somebody's subtree is a moderation surface.
 
 ### Standing recommendations
 
