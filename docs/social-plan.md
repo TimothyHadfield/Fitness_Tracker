@@ -491,16 +491,20 @@ pages and help centre, read 2026-08-31:
 - `/discovery-feed/` · `/workout-comparison/` · `/shareable/` · `/hevy-tutorial/`
 - `help.hevyapp.com` — *Hevy App Social Guide: Connect, Follow, and Share Your Workouts*
 
-🚨 **NOBODY HERE HAS OPENED THE APP.** So this is an accurate inventory of **what a post contains**
-and **what the screens do**, and it is *not* a description of how they look: no type scale, no
-spacing, no colour, no iconography, no motion. Where the wording below says "the card shows X", that
-is Hevy's documentation talking about a field, not a measurement of a screen.
+🚨 **NOBODY HERE HAS OPENED THE APP**, so §12.1–12.7 is an inventory of **what a post contains** and
+**what the screens do**, taken from what Hevy publishes about itself.
 
-⚠️ **THAT GAP LANDS ON EXACTLY THE HALF TIM ASKED ABOUT FIRST — "the looks… how movement and details
-look".** Nothing in this document can settle it, and no amount of further reading will: **it needs
-the app on a phone**, ten minutes with it and a handful of screenshots. That is a ten-minute job for
-Tim and an impossible one from here. Until then, treat §12.10's layout notes as *this app's* design
-rules applied to Hevy's field list, and not as a copy of their screen.
+⚠️ **BUT THE LOOK IS NOT UNKNOWABLE AFTER ALL — see §12.12.** The first version of this section said
+the visual half could only be settled by putting the app on a phone. That was wrong, and it was
+wrong in the cheap direction: **the App Store listing carries ten full-resolution screenshots of the
+real UI**, they can be downloaded, and they can be looked at. §12.12 is what is actually in them —
+the feed card laid out element by element, the comparison screen, the logging header — and it
+corrects two things §12.1 got from the documentation.
+
+⚠️ **WHAT SCREENSHOTS STILL CANNOT SETTLE**, and it is worth being exact about: they are marketing
+assets. The data in them is staged, they are whatever build was current when they were uploaded, and
+**they show no motion at all** — no transition, no gesture, no timing. Tim's *"how movement and
+details look"* is the one part of the ask that still needs the app in a hand.
 
 ### 12.1 The shape of the product
 
@@ -648,3 +652,78 @@ Photos are step 9 **and they need Tim to say yes to Blaze** (§12.9). Everything
    else's fitness art already (`docs/research.md` §11, and the Gym Visual pull on 2026-08-30).
    **Build the same information architecture in this app's own type, colour and spacing** — which, at
    44px targets and AA contrast across four palettes, is not a compromise.
+
+### 12.12 The screens, actually seen — from the App Store listing
+
+**Added 2026-08-31, after Tim asked whether the visuals could be got at from here.** They can:
+`apps.apple.com/us/app/hevy-workout-tracker-gym-log/id1458862350` serves its screenshots from
+`mzstatic.com` at any size, so ten of them were pulled at 750×1624 and read. What follows is
+described from those images.
+
+⚠️ **They are marketing assets** — staged data, an unknown build, and no motion. Treat the layout as
+real and the numbers in it as fiction.
+
+#### The feed card, element by element
+
+Reading down the one screenshot that shows Home:
+
+| | What is there |
+|---|---|
+| **Screen header** | a **"Home ⌄" pill** on the left — the dropdown that swaps Home for Discover — with a **search glass** and a **bell** on the right. No title text; the pill *is* the title |
+| **Row 1** | circular avatar, ~48px, left. Beside it the **username in bold**, and under that **"2 hours ago"** in grey. Nothing else on that row |
+| **Row 2** | the **workout title** — *"Chest Day 💪"* — bold, about 1.4× the username, full width, below the avatar row rather than beside it |
+| **Row 3, the stat row** | **two columns**: `Time / 44 min` and `Volume / 5, 340kg`. **Small grey label ABOVE, big black value BELOW**, left-aligned, roughly at the thirds. PRs would be the third column when there are any |
+| — | a hairline rule |
+| **Row 4** | the grey section word **"Workout"** |
+| **Rows 5–7** | up to **three exercises**, each a **circular line-drawing thumbnail (~56px)** and one line of text in the form **"3 sets Bench Press (Barbell)"** — the set count leads, the equipment is in brackets |
+| **Row 8** | **"See 1 more exercise"**, centred, grey — the list is capped at three |
+| **Row 9** | **overlapping circular avatars of the people who liked it**, then **"8 likes"**; **"3 comments"** right-aligned on the same line |
+| **Row 10** | a full-width action bar of **three icons — thumb, speech bubble, share arrow — separated by vertical hairlines**, the thumb filled blue when you have liked it |
+| **Between cards** | a **"Suggested Athletes"** carousel with **"+ Invite a friend"**, each suggestion dismissible by an ✕ |
+
+**Four things in that list are worth taking, and they are all restraint rather than richness:**
+
+1. **Two numbers, not five.** The documentation says duration, volume and PRs; the actual card shows
+   **Time and Volume** and leaves the rest to the tap. Our current card shows none.
+2. **Label above value.** The same pattern appears again in the workout logger's header
+   (`Time / 1h 15min · Volume / 6 800 kg · Sets / 18`), so it is the app's stat motif rather than a
+   one-off. It is compact, it never needs a colon, and it reads at a glance.
+3. **Three exercises and a "see more".** A cap, not a scroll — a feed card never grows with the
+   session.
+4. **The title is the biggest thing on the card, above the person.** Which is what this app's own
+   feed already does, from the Strava pass on 2026-08-25. That decision was right.
+
+#### Two corrections to §12.1
+
+- ⚠️ **The tab bar is THREE tabs, not four** — **Home · Workout · Profile**. Discover is not a tab;
+  it is the dropdown on the Home pill. The "four tabs" reading came from the tutorial page listing
+  Discovery alongside the others.
+- ⚠️ **The per-exercise screen has four tabs of its own** — **Summary · History · How to ·
+  Leaderboard** — which the documentation never mentions. "Leaderboard" is a whole social surface
+  this analysis had not seen, and it is worth knowing that the comparison feature has a public,
+  ranked sibling.
+
+#### The comparison screen, seen
+
+Two avatars side by side with a blue **VS** between them, the higher one ringed and badged
+**STRONGER** in yellow. Then the exercise, then one block per metric — **One Rep Max**, **Heaviest
+Weight**, **Best Set (Volume)** — each with a **green ↑ / red ↓ percentage** beside its name and
+**two stacked bars**, yours filled blue and theirs grey, each bar tagged with the person's little
+avatar and ending in the number.
+
+🟢 **We could build that almost as-is.** `e1rm.js` already gives a rep-normalised one-rep max — which
+is the fair version of "who is stronger" — and `.bar-row` with `.bar.start` / `.bar.now` is already
+a paired-bar component with a first/latest legend. ⚠️ **The one thing to think about before copying
+it is the yellow STRONGER badge**: this app has a rule against unearned opinions, and declaring a
+winner off one exercise is exactly that. The percentage and the two bars say the same thing without
+crowning anybody.
+
+#### The exercise page, seen
+
+An animated figure with the worked muscles in red (their paid illustration set — see §12.11),
+**"Primary: Quadriceps"**, a headline **"80 kg · Jan 31"** with an **All time ⌄** range picker, a
+line chart, and a row of chips switching the metric: **Heaviest Weight · One Rep Max · Best Set**,
+with **Personal Records** under it.
+
+⚠️ **That chip row is the same idea as our Data tab's segmented control**, and the range picker is
+the same idea as Volume's 4/8/12 weeks. We are closer to this screen than to any other in the app.
