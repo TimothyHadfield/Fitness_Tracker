@@ -470,3 +470,181 @@ round trip — create an invite, open it as somebody else, claim it, accept, pub
 from two sides. Until it has, this is reviewed code with tested rules underneath it. Two throwaway
 accounts against the live project, then deleted, is the same treatment that closed the equivalent
 gap in `firebase-backend.js`.
+
+---
+
+## 12. Hevy's home feed, pulled apart — and what of it we can have
+
+**Written 2026-08-31 on Tim's ask:** *"do an in-depth analysis on how the Lifting app Hevy shares
+details with it's home page and seeing friends' workouts. Everything from the looks, to every detail
+that is shared on a post… analyze what we could realistically incorporate in our cite as of right
+now. For the things we can't incorporate… make a note on what we would need and what is limiting
+us."* He also said: *"I eventually want to make the home page extremely similar to how Hevy does
+it."*
+
+### 12.0 ⚠️ What this is based on, and what it is NOT
+
+Every factual claim in §12.1–12.7 comes from **Hevy's own published documentation** — their feature
+pages and help centre, read 2026-08-31:
+
+- `hevyapp.com/features/content-feed/` · `/social-features/` · `/athlete-workouts/`
+- `/discovery-feed/` · `/workout-comparison/` · `/shareable/` · `/hevy-tutorial/`
+- `help.hevyapp.com` — *Hevy App Social Guide: Connect, Follow, and Share Your Workouts*
+
+🚨 **NOBODY HERE HAS OPENED THE APP.** So this is an accurate inventory of **what a post contains**
+and **what the screens do**, and it is *not* a description of how they look: no type scale, no
+spacing, no colour, no iconography, no motion. Where the wording below says "the card shows X", that
+is Hevy's documentation talking about a field, not a measurement of a screen.
+
+⚠️ **THAT GAP LANDS ON EXACTLY THE HALF TIM ASKED ABOUT FIRST — "the looks… how movement and details
+look".** Nothing in this document can settle it, and no amount of further reading will: **it needs
+the app on a phone**, ten minutes with it and a handful of screenshots. That is a ten-minute job for
+Tim and an impossible one from here. Until then, treat §12.10's layout notes as *this app's* design
+rules applied to Hevy's field list, and not as a copy of their screen.
+
+### 12.1 The shape of the product
+
+Four tabs: **Workout** (routines, start a session), **Home** (the social feed), **Profile** (your own
+analytics), **Discovery** (strangers' workouts and suggested people). Home carries a toggle that
+switches the same surface between **Home** (people you follow) and **Discover** (people you do not).
+
+The social model is **follow / follower**, not mutual friendship. Profiles are public by default; a
+**private profile** turns follows into requests. You do not have to follow somebody to read their
+workouts if their profile is public.
+
+### 12.2 A post in the feed, field by field
+
+Hevy's documentation gives the collapsed card as:
+
+| Element | Notes |
+|---|---|
+| **Who** | the user who posted, with their avatar |
+| **Session name** | the workout's title |
+| **Description** | free text *"written before saving the workout"*, if any |
+| **Duration** | training time |
+| **Volume** | total weight lifted in the session |
+| **Personal records** | *"the number of personal bests during the session (if any)"* — a count, not a list |
+| **Average heart rate** | only when the session was logged on a smartwatch |
+| **Media** | up to **three photos, or two photos and one video**; swipeable; a video plays without opening the workout |
+| **Likes / comments** | counts, and you can comment from the card |
+| **Share** | an upward-arrow icon bottom-right generates a link to the workout |
+
+Three of those are decisions rather than data, and they are the ones worth stealing:
+
+1. **The stat row is three numbers and no more** — duration, volume, PRs. Everything else is behind a
+   tap. A feed is scanned, and three numbers is what a person takes in per card.
+2. **The description is written BEFORE saving**, which makes it part of finishing a workout rather
+   than a separate act. There is no "compose a post" step anywhere in Hevy's flow.
+3. **PRs are a count on the card and a detail inside.** "3 PRs" is the headline; which lifts they
+   were on is not.
+
+### 12.3 The expanded workout
+
+Tapping the post opens the session, and their documentation is specific:
+
+> *"the muscle split, sets and set types, exercises, reps, weight, RPE, duration, personal records
+> (if any), and notes the user has written."*
+
+Plus, for smartwatch sessions: average heart rate, a heart-rate graph, and calories.
+
+From that screen you can **Compare** (tap any exercise you also do and see your performance against
+theirs), **Save as routine**, **Copy workout** (start a live session with the same parameters,
+editable), and like / comment / reply.
+
+### 12.4 Comparison
+
+Reached two ways: an exercise inside somebody's workout, or a **Comparison** section on their
+profile. Side by side it shows **muscle split** (volume across back, chest, legs, core, arms,
+shoulders), **number of workouts**, **time spent training**, **training volume** and **exercises in
+common**, over the **last 30 days, 3 months, year, or all time**. Your numbers in blue, theirs in
+grey. Per-exercise, you can drill into a single movement.
+
+### 12.5 Profiles and discovery
+
+A profile carries a **bio**, **workout count**, **followers**, **following**, a **week-to-week
+activity graph** and their recent workouts. Discovery surfaces recent workouts from people you do not
+follow, algorithmically; posts there carry the same fields plus the poster's weekly activity graph
+and follower count. There are controls to turn off suggested users and to mute a given person's
+workout notifications, and a block/report path.
+
+### 12.6 Shareables
+
+On finishing a session Hevy **auto-generates** a set of images: PRs, volume/sets/duration, a muscle
+distribution chart, a "your volume equals a truck" novelty, streaks and a consistency calendar, plus
+a monthly report. Light, dark or **transparent** background so it can be laid over a photo, with
+size/position/rotation controls, and a one-tap path to Instagram Stories.
+
+### 12.7 What it is underneath
+
+A server-side feed of recent posts from people you follow, plus a second algorithmic feed of
+strangers, with per-user notifications. 15M+ users: a public network, not a group chat.
+
+---
+
+### 12.8 ⚠️ WHAT WE CAN BUILD NOW — no new backend, no billing, no decision from Tim
+
+**The finding that matters: most of that card is already in our projection and is simply not being
+rendered.** `projectSession()` publishes, at **mid** and above, every entry, every set, every rep,
+every weight, with set types and groups intact, plus `startedAt`, `minutes` and `location`. The feed
+card draws a name, a meta line and a list of exercise names, and stops.
+
+| Hevy element | Us, today | What it takes |
+|---|---|---|
+| Who, avatar, title, time | ✅ **built** | — |
+| Duration | ✅ **published** (`minutes`, mid+) | move it into a stat row; it is already in the meta line |
+| Location | ✅ **published** (hand-typed, never GPS) | already rendered |
+| **Volume** | 🟢 **derivable client-side** from `entries[].sets` | one function. ⚠️ It has to go through `totalResistance()`: a per-side dumbbell set is not `weight × reps`, and a bodyweight set is not zero. Getting that wrong publishes a number that flatters or halves somebody's session |
+| **Sets / reps / weights, set types** | ✅ **published at mid+**, and already rendered on the friend's page | make it reachable from the card — a tap that opens the session rather than the person |
+| **Muscle split** | 🟢 **derivable client-side** — `volume-map.js` already maps every exercise onto fractional muscle contributions, and since 2026-09-01 we have a validated ramp and a figure to paint it on | the Volume tab's own figure, per session. **The most distinctive thing we could put on a card**, because it is ours and it is measured rather than declared |
+| **PR count** | 🟡 **derivable, with a caveat that must be on screen** | we hold their last 60 published sessions, so "a best **in what they have shared**" is computable and honest; "a lifetime PR" is not, because we do not have their history. Rule 5: the badge has to say which it is |
+| **Description** | 🔴 **not stored at all** | a session-level `note`, a box on the finish screen, one line in `projectSession` at mid, one line on the card. **No backend, no billing, no decision — the cheapest high-value item in this document** |
+| Likes / comments | ✅ **built** (0l) | — |
+| Share | ✅ **built** — `navigator.share` + clipboard | — |
+| **Compare on an exercise** | 🟢 **buildable** | their sets are in hand at mid+, ours are in the store, and `e1rm.js` already normalises across rep counts — which is what makes it a comparison rather than "who typed a bigger number" |
+| **Save / copy their workout** | 🟢 **buildable** | `entries[]` → a workout in a system, the same shape `addPresetSystem()` already writes. ⚠️ Theirs is a RECORD and ours would be a PLAN: set counts carry across, weights do not |
+| **Profile: workout count, weekly activity graph** | 🟢 **buildable** from the published window | `year-grid.js` already draws exactly that shape |
+| **Shareable image** | 🟢 **buildable, no backend** | canvas → PNG → `navigator.share({files})`, download as the fallback. We already hand-draw a QR code and every chart in the app |
+
+**Not one of the green rows needs money, a server, or an answer from Tim.** They need building.
+
+### 12.9 🔴 WHAT WE CANNOT — and precisely what is in the way
+
+| Hevy element | What is actually blocking it |
+|---|---|
+| **Photos and video on a post** | 🚨 **Firebase Storage, which needs Blaze — a card on file.** Same blocker as Open work 10, and it is **Tim's call rather than a technical one**. There is no honest workaround: a published document is capped at **1 MiB** and already carries 60 sessions, and the profile avatar is capped at ~90 KB *for that reason alone*. Base64 photos in the projection would break publishing for everybody the first time somebody attached two. It also needs storage rules mirroring the viewer model, an answer for D6 (a gym basement, offline), and a moderation story we do not have |
+| **Heart rate, calories** | 🚨 **A native app.** A PWA cannot read Apple HealthKit and there is no web API for it. This is R1 (web, not native) doing exactly what R1 was chosen to do. `docs/airpods-plan.md` §2b records the same wall from the other side |
+| **RPE on a set** | 🟡 **A decision, not a blocker.** We deliberately have no reps-in-reserve field — `docs/goals-plan.md` says so, and the Goals screen names it as one of the things the app cannot see. Adding one is a day's work and a change to what the app asks of somebody mid-set. **Ask Tim; do not add it because Hevy has it** |
+| **Discovery feed of strangers** | 🚨 **It reverses a decision this project has made twice.** It needs public profiles and enumeration of them — the thing the invite-link design exists to avoid and the reason Open work 16 (handles: `get` yes, `list` no) exists. It also imports moderation: a feed of strangers is a feed of whatever strangers upload. ⚠️ **D7 was narrowed to a friends feed on the grounds that it is a list you visit. A public discovery feed is the thing D7 actually refused** |
+| **Follow / follower model** | 🟡 **A decision.** Ours is mutual by design and that was Tim's own answered question. One-way follows change what sharing means: a tier granted to a friend becomes a tier granted to an audience |
+| **Push notifications** ("tell me when Alex trains") | 🚨 **Needs a server to send them.** FCM is free, but one client cannot push to another — it needs a Cloud Function holding the server key, which is Blaze again |
+| **"All time" comparison** | 🟡 **Our published window is 60 sessions.** Comparing a year against somebody who trains four times a week runs out of data around week 15. The fix is not a bigger window — it is publishing a small **derived summary** (totals per muscle, per period) beside the sessions. That is a projection change and it is cheap |
+| **A server-side feed** | 🟡 **Ours is a pull**: opening Home reads one document per friend. At Tim's scale that is nothing; at 100 friends it is 100 reads per open, and it cannot be ranked or paged. Recorded because it is the thing that would eventually force a server, and nothing before it will |
+
+### 12.10 If Tim says go — the order that gets a Hevy-shaped card fastest
+
+Each step ships on its own and none blocks the next.
+
+1. **The stat row** — duration · volume · muscle split. Three numbers, no more, exactly Hevy's
+   discipline, and two of the three are already in hand.
+2. **The description field.** Cheapest high-value item here, and the one thing that turns a card from
+   a receipt into a post.
+3. **Tap the card to open the session** — the renderer already exists on the friend's page.
+4. **The per-post muscle map.** Ours, measured, and nothing in the market shows a validated
+   red-to-green body per session.
+5. **PR badges**, carrying the "in what they have shared" caveat.
+6. **Compare on an exercise**, rep-normalised.
+7. **Save their workout as a routine.**
+8. **A shareable image** — the one Hevy feature with real pull that needs nothing we do not have.
+
+Photos are step 9 **and they need Tim to say yes to Blaze** (§12.9). Everything above them is free.
+
+### 12.11 ⚠️ Two things NOT to copy, and why
+
+1. **The discovery feed.** See §12.9. It is not a feature this app is missing; it is a product this
+   app decided not to be, twice, in writing.
+2. **Their look, literally.** Copying a *pattern* — a stat row, a card, an avatar-and-title header —
+   is ordinary, and it is what Strava's card shape already gave this feed. Lifting their icons,
+   illustrations, ramp or copy is not, and this project has hit two licensing walls on somebody
+   else's fitness art already (`docs/research.md` §11, and the Gym Visual pull on 2026-08-30).
+   **Build the same information architecture in this app's own type, colour and spacing** — which, at
+   44px targets and AA contrast across four palettes, is not a compromise.

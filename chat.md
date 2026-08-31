@@ -6254,3 +6254,63 @@ change: the key had no unit on it. Five chips reading "10–19" sitting directly
 says "4 weeks / 8 weeks / 12 weeks" is a number with no unit next to something that looks like one.
 It says **SETS A WEEK** now, and the notes underneath say plainly that the bands don't move with the
 window. A screen that can be read two ways has already failed once, whatever the arithmetic is doing.
+
+---
+
+## 2026-08-31 — Hevy's feed, taken apart
+
+Tim: *"I want to improve the social aspect of the cite and how it operates and looks… do an in-depth
+analysis on how the Lifting app Hevy shares details with it's home page… analyze what we could
+realistically incorporate in our cite as of right now. For the things we can't incorporate right now,
+make a note on what we would need and what is limiting us."* And: *"I eventually want to make the
+home page extremely similar to how Hevy does it."*
+
+Research only — nothing built. It is written up as **§12 of `docs/social-plan.md`**, from Hevy's own
+feature pages and help centre.
+
+**The thing worth knowing before anything else:** most of a Hevy card is already in what this app
+publishes and is simply not being drawn. Every set, rep and weight, the set types, the duration, the
+time of day and the location all cross to a friend at the middle visibility tier already. The feed
+card renders a name, a line of meta and a list of exercise names, and stops there.
+
+**What a Hevy post actually contains:** who, the session name, a description written before saving,
+and then exactly three numbers — duration, total volume, and a count of personal records. Media
+(up to three photos, or two and a video). Likes, comments, a share link. That is the whole card. Tap
+it and you get the muscle split, every set and set type, reps, weights, RPE, PRs and their notes,
+plus a Compare button on any exercise you also do, and buttons to save their session as a routine or
+start it live.
+
+Two of their decisions are worth copying outright: **three numbers on the card and no more**, and
+**the description is part of finishing a workout**, not a separate "post" step.
+
+**What we could build with no money, no server and no decision from you:** the stat row (duration is
+already published, volume is arithmetic on data we hold); tapping a card to open the session (that
+renderer already exists on the friend's page); a **per-session muscle map** using the figure and the
+ramp built earlier today — which is the one thing on that list nobody else has; PR badges, as long as
+they say "a best in what they've shared" rather than implying a lifetime record; per-exercise
+comparison, rep-normalised so it isn't just who typed a bigger number; saving their workout as a
+routine; and a shareable image.
+
+**The cheapest high-value thing on the whole list is a description field.** We don't store one at
+all. A box on the finish screen, one line in the projection, one line on the card — and a card stops
+reading like a receipt.
+
+**What's actually blocked, and by what:**
+
+- **Photos and video** — needs Firebase Storage, which needs Blaze and a card on file. That's your
+  call, not a technical one. There's no workaround: a published document is capped at 1 MiB and
+  already carries 60 sessions, which is exactly why the profile photo is capped at ~90 KB.
+- **Heart rate and calories** — needs a native app. A web app can't read Apple Health, and that's the
+  web-not-native choice doing what it was chosen to do.
+- **RPE** — not blocked, it's a decision. We deliberately don't ask for reps-in-reserve, and the
+  Goals screen names it as something the app can't see. Worth asking you about; not worth adding just
+  because Hevy has it.
+- **Push notifications** — one phone can't notify another without a server, so Blaze again.
+- **A discovery feed of strangers** — recorded as a thing not to build. It needs public, enumerable
+  profiles, which is the thing the invite-link design exists to avoid, and it brings a moderation
+  problem with it.
+
+**And the honest limit of the whole exercise: nobody here has opened Hevy.** Everything above is what
+their documentation says a post *contains*. It says nothing about how it *looks* — spacing, type,
+colour, motion — which was the first thing you asked about. Ten minutes with the app on your phone
+and a few screenshots would settle that, and no amount of further reading from here will.
