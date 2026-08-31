@@ -4,47 +4,69 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-09-02 — the home feed, Design Rule 8 (back), and an estimated 1RM everywhere.
+**Last updated:** 2026-09-02, prepared for a chat reset — the home feed, back (Rule 8), and an
+estimated 1RM on every exercise.
 
-# ✅ START HERE: THE SOCIAL FEED IS BUILT, AND EVERY EXERCISE NOW HAS AN ESTIMATED 1RM
+# 🟢 START HERE: NOTHING IS IN PROGRESS AND NOTHING IS BLOCKING
 
-**Three pieces of work on 2026-09-02**, newest first: the per-exercise strength estimate (third pass
-below), Design Rule 8 — back goes to the screen you were just on (second pass), and the Hevy-shaped
-home feed (first pass, and the bulk of it).
+**The working tree is clean, everything is pushed, and the live site is serving it.** There is no
+half-finished job to pick up and no next job assigned. **Between jobs, say what is done and stop —
+do not propose what to build next** (§1, and Tim has asked for that twice).
 
-**Tim, opening the 2026-09-02 session:** *"don't implement warm ups or volume yet. Replace Volume for
-# of sets. Begin working on the home page and social aspect changes now."*
+## What changed on 2026-09-02, in one line each
 
-**Everything in that brief shipped.** The feed card has a stat row and a description and lists its
-exercises with set counts; tapping it opens **a friend's workout on its own screen** — stats, muscle
-split, typed bests, set tables — where you can compare an exercise against your own, copy the workout
-into your own plan, or share a picture of it. §13 of `docs/social-plan.md` now carries a ✅ block
-under every step recording what was built and where it departed from the plan; **§14 is the summary
-and the three findings.**
+Three passes, each with its own dated section below.
 
-**The four things a fresh session most needs to know:**
+1. **The home feed became a Hevy-shaped feed** — all eight steps of `docs/social-plan.md` §13. Cards
+   carry a description, a **Time · Sets** row and one line per exercise; tapping one opens **a
+   friend's workout on its own screen** (`#/friend/<uid>/<sessionId>`) with a muscle split, typed
+   bests and set tables, where you can compare a lift against your own, copy the workout into your
+   own plan, or share a picture of it.
+2. **Back means the screen you were just on** — **Design Rule 8**. Every back arrow used to go to a
+   hard-coded PARENT; it now goes back through history and the parent is only the fallback.
+3. **Every exercise has an estimated 1RM** — `js/exercise-estimate.js`. Comparisons use it where a
+   side has never done the lift, and the benchmark screen shows the estimate, what share of it a
+   typed weight is, and roughly how many reps it allows.
 
-1. ⏸️ **WARM-UP TYPING IS STILL OPEN AND STILL TIM'S**, by his own instruction this session. Every
-   recorded set still counts everywhere, and the screens still say so. It remains the highest-value
-   decision on the list (`docs/social-plan.md` §12.16, Open work 0c).
-2. ⏸️ **VOLUME IN POUNDS IS NOT BUILT, AND THE REASON OUTLIVED THE INSTRUCTION.** Tim asked for a set
-   count in that column instead; `js/session-stats.js`'s header records why it is also the more
-   honest one — a friend's bodyweight work has no external load to total, and their body weight
-   publishes only at the top tier, so a pounds figure would read a session of pull-ups as nothing.
-3. 🚨 **THE RECORDS COLUMN IS DELIBERATELY NOT ON THE CARD.** We hold a friend's last sixty published
-   sessions, not their life, so "Records 3" beside their name would read as a lifetime PR. The bests
-   are on the workout screen, where the sentence that qualifies them fits.
-4. ⚠️ **THE HEVY SCREENSHOTS ARE DELIBERATELY NOT IN THE REPOSITORY** — it is public and they are
-   somebody else's UI. §12.12, §12.13 and §12.15 are written in enough detail to build from **because
-   they are the record**. Do not go looking for image files and do not commit any.
+## The five things a fresh session most needs to know
 
-**Nothing was left half-finished.** The working tree is clean and everything below is pushed.
+1. ⏸️ **THREE DECISIONS ARE TIM'S, AND MUST NOT BE MADE BY IMPLEMENTING THEM.**
+   **(a) Should a warm-up be typed by the lifter?** — still the highest-value item on the list. Every
+   recorded set counts everywhere until he says otherwise, and the screens say so
+   (`docs/social-plan.md` §12.16, Open work 0c). **(b) Per-workout visibility as well as per-person?**
+   (§13's decision B). **(c) Ratify D18?** — Open question 1, unanswered since 2026-08-16.
+2. ⏸️ **VOLUME IN POUNDS IS NOT BUILT.** Tim asked for a set count instead — *"Replace Volume for # of
+   sets"* — and `js/session-stats.js`'s header records why that is also the more honest column.
+3. 🚨 **NOTHING FROM 2026-09-02 HAS BEEN ON A PHONE, AND NO TWO REAL ACCOUNTS HAVE USED ANY OF IT.**
+   It is proved in jsdom, in a real browser at 360 and 393px in both themes, and by the accessibility
+   audit — three different things, none of them a person. **Open work item 1.**
+4. 🚨 **NO HUMAN HAS CHECKED A SINGLE PREDICTED NUMBER AGAINST AN ACTUAL ATTEMPT.** The estimator
+   rests on a curve whose absolute accuracy was never validated (`docs/research.md` §1.3) and on
+   ratios describing a population rather than a person. Everything it prints ships with a confidence
+   and a source list for that reason. **Do not describe any of it as accurate.** Open work 19.
+5. ⚠️ **THE HEVY SCREENSHOTS ARE DELIBERATELY NOT IN THE REPOSITORY** — it is public and they are
+   somebody else's UI. `docs/social-plan.md` §12.12, §12.13 and §12.15 are written in enough detail
+   to build from **because they are the record**. Do not look for image files; do not commit any.
+
+## Standing instructions that survive a reset
+
+- 🛑 **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
+- 🛑 **DO NOT BUILD THE DISCOVERY FEED.** `docs/social-plan.md` §12.11 — not a feature this app is
+  missing, a product this app decided twice, in writing, not to be. Open work 18.
+- 🛑 **DO NOT SURFACE THE PINNED ITEMS (P1–P4)** as "the next thing to do" — Tim's standing
+  instruction, 2026-08-28. Build them if he names them; otherwise leave them alone.
+- ⏸️ **The abs question is deferred** (below). Do not re-raise it unprompted.
+- ⚠️ **NEVER BULK-EDIT A MARKDOWN FILE THROUGH A SCRIPT.** §0.11 says it about PowerShell; on
+  2026-09-02 the same mistake was made in **Python** — `open(path, 'w')` truncated this file to zero
+  bytes and then died on an emoji surrogate before writing a byte back. Recovered with
+  `git checkout --`, which is the only reason it cost a minute. **Use the editing tools for file
+  content and keep scripts for running things.**
 
 ---
 
-**This session is the 2026-09-02 section below.** The 2026-09-01 section under it was the previous
-one — Data → Volume, the motion pass, the body map painted by sets, and the Hevy teardown that this
-session built from. ⚠️ **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
+**This session is the four 2026-09-02 sections below.** The 2026-09-01 section under them was the
+previous one — Data → Volume, the motion pass, the body map painted by sets, and the Hevy teardown
+this session built from.
 
 ⏸️ **THE ABS QUESTION IS DEFERRED BY TIM, 2026-09-01: *"skip the abs"*.** It is not closed and not
 withdrawn — he was offered it as the standing loose end and chose other work. Do not re-raise it
@@ -58,10 +80,11 @@ muscle, which is a partial answer to the same complaint from the other side. The
 and unanswered: give unrankable muscles their own mark and legend entry, and/or have the panel say
 what HAS been logged.
 
-⏸️ **AND TIM ASKED FOR NO VERIFICATION THIS SESSION: *"skip any verification (I'll tell you if it's
-not working)"*.** That is about HIS phone rather than about the machines — the tests, the audit and
-the CDP measurements all ran as usual. It means the field-check list (Open work 1) did not move and
-must not be reported as if it had.
+⏸️ **TIM ASKED FOR NO PHONE VERIFICATION ON 2026-09-01 — *"skip any verification (I'll tell you if
+it's not working)"* — AND THAT IS STILL WHERE THINGS STAND.** It is about HIS phone rather than about
+the machines: the tests, the audit and the browser measurements all ran as usual, on that session and
+on 2026-09-02. It means the field-check list (Open work 1) has not moved in two sessions and must
+never be reported as if it had.
 
 ⚠️ **THE DATES IN THIS FILE ARE SESSIONS, NOT CALENDAR DAYS.** Every commit from `e1a7afd` onward
 carries a git date of **2026-08-26** or **-27**, including everything headed -28 and -29. Headings
@@ -69,7 +92,11 @@ keep the sequence a reader navigates by; never compute an interval from them.
 
 ---
 
-## THIS SESSION (2026-09-02) — THE HEVY-SHAPED FEED, ALL EIGHT STEPS
+*⚠️ The four 2026-09-02 sections below are ordered by importance rather than by clock, and each
+heading says which pass it is: the feed summary first because it is the bulk of the day, then the
+third pass (the estimator), then the second (back), then the feed's full write-up.*
+
+## 2026-09-02, FIRST pass in four lines — THE HEVY-SHAPED FEED, ALL EIGHT STEPS
 
 🆕 **A. THE FEED CARD IS A HEVY CARD NOW.** Under the title: their **description**, then a stat row
 reading **TIME · SETS**, then **one row per exercise with the set count first** (five, then "See N
@@ -116,8 +143,7 @@ audit. The round trip between two people remains Open work item 1.
 
 ---
 
-## 2026-09-02, third pass — 🚨 EVERY EXERCISE HAS AN ESTIMATED 1RM NOW, AND THE BENCHMARK SCREEN
-## PREDICTS BEFORE YOU LIFT
+## 2026-09-02, THIRD pass — 🚨 EVERY EXERCISE HAS AN ESTIMATED 1RM, AND THE BENCHMARK SCREEN PREDICTS
 
 Tim: *"if that person has an exercise that the site can estimate from another similar exercise, than
 estimate it rather than say there are no recorded excersizes… I don't have any barbell rows recorded
@@ -202,7 +228,7 @@ confidence and a source list rather than alone.
 
 ---
 
-## 2026-09-02, second pass — BACK MEANS THE SCREEN YOU WERE JUST ON (Design Rule 8)
+## 2026-09-02, SECOND pass — BACK MEANS THE SCREEN YOU WERE JUST ON (Design Rule 8)
 
 Tim, on the feed shipped an hour earlier: *"When you click back on something it should always go to
 what you were on right before. Currently when you click on someone else's workout and then go back,
@@ -256,7 +282,7 @@ assume a real account). Real accounts have neither problem.
 
 ---
 
-## 2026-09-02 — the details worth carrying, and the traps
+## 2026-09-02, FIRST pass in full — the feed, the details worth carrying, and the traps
 
 *The full step-by-step record is `docs/social-plan.md` §13, with a ✅ block under every step. This is
 what belongs here rather than there.*
@@ -5023,8 +5049,10 @@ than left at the top where they were written.
 | **3** | **activities, Phase 2 — item 6** | Items 1–4 shipped 2026-08-27. **Item 6 says to ASK TIM** which activities his circle actually logs — climbing grades are the least standardised thing in the list. `docs/activities-plan.md` §3. ⚠️ **Item 5, activity PRs, is PINNED (P1)**, not open |
 | **5** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED.** Invisible hit halos grow every muscle ~10 px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44 px lands on **Tim's illustration**, so it stays his call |
 | **6** | **0f — Tim's friend could not sign in** | ⚠️ Unread bug report; he asked to investigate it himself. **May not be new** — a plain Safari tab is still the one surface no working device has confirmed |
-| **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. ⚠️ **It has questions for Tim** — §16 sets the hard constraint (the band fits inside one level only 8.5 % of the time), and §14 asks whether the estimator may draw on all evidence at once (narrowing D14). ⚠️ **The plan's claim that Phase 1 is blocked on data the store does not carry is WRONG** — see the 2026-08-28 section, item 5. `setIndex` and `exerciseIndex` are array positions in data already on disk, derivable at any time. Phase 1 is small; what gates the feature is Phase 2, and Phase 2 needs him |
+| **8** | **item 2 — the estimator, Phases 1–3** | The Goals *verdict* waits on it. ⚠️ **It has questions for Tim** — **§6.1** sets the hard constraint (the band fits inside one level only 8.5 % of the time; ⚠️ **this file cited §16 for that for weeks, and §16 is a different section** — corrected 2026-09-02), and §14 asks whether the estimator may draw on all evidence at once (narrowing D14). 🆕 **2026-09-02 moved two pieces of this without touching the plan's phases**: `buildObservations()` is out of `store.js` and into `js/strength-observations.js`, so a friend's training goes through the same walk as yours; and `muscleRatings()` is that same rating WITHOUT the profile gate, which is what lets an account with no weigh-in have an estimate at all. ⚠️ **The plan's claim that Phase 1 is blocked on data the store does not carry is WRONG** — see the 2026-08-28 section, item 5. `setIndex` and `exerciseIndex` are array positions in data already on disk, derivable at any time. Phase 1 is small; what gates the feature is Phase 2, and Phase 2 needs him |
 | **15** | **the usability findings — waiting on Tim's pick** | ⚠️ Four standing findings from the 2026-08-28 usability drive, reported to him and not yet chosen from: **no wake lock** (the biggest hands-free lever), **prefill counts as recorded at Finish**, the **Record chooser's extra tap**, and the Run log's **"28" = 28 seconds** parse. See that day's second-pass section. ⚠️ **The prefill one is HALF fixed as of 2026-08-29 and the halves matter**: a never-done exercise is now guarded (`prefilled`, refused by the save path), an exercise WITH history is untouched — walk past it and last time's numbers record as though you did them. Left alone deliberately: it is a behaviour change on every workout and his to pick. ⚠️ **The rest-timer items in the same list are DECLINED, not waiting** — do not resurface them |
+| **19** | 🆕 **the estimator has never been checked against a person** | ⚠️ **Not a bug — a standing hole that got much bigger on 2026-09-02.** The app now prints an estimated 1RM for virtually every exercise, a percentage of it, and a predicted rep count, and **not one of those numbers has ever been compared with an actual attempt.** `docs/strength-estimate-plan.md` §11.2 — the backtest against Tim's own held-out benchmarks — is the only thing that would change that, and it has never been run. **It needs nothing from anybody: the data is already on disk.** The cheapest honesty win left in the project |
+| **20** | 🆕 **`docs/research.md` §2's table has a transcription error** | ⚠️ It gives **~5 reps at both 95 % and 90 % of a max**, which cannot both be true — found 2026-09-02 while building the rep prediction, and flagged in place. Nothing has ever been shipped off that row. Fixing it means re-reading PMC10933212 (Nuzzo et al. 2024). Small, and it is a wrong claim sitting in the file the whole app cites |
 | **16** | **the HANDLE version of finding people** | 🚨 **Specified, ready, and a DECISION rather than a discovery.** Name search shipped 2026-08-29 on Tim's explicit call at fewer than five users, and it required granting Firestore `list` on a directory — which is enumeration of every row and cannot be narrowed by a rule. The replacement: `handles/{handle}` → uid, **`get` yes and `list` no**, exact lookup of a handle you chose, nothing enumerable. `docs/social-plan.md` §3.4 already blesses that shape. ⚠️ **The rules test's one deliberate `allow` — "any signed-in account can list the whole directory" — is the line that flips to a denial the day this lands**, and the `directory` block should be deleted with it |
 
 ### ⚠️ PINNED — real work, deliberately NOT queued. Do not offer these as "the next thing to do"
@@ -5699,7 +5727,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/goals-plan.md` | **Goals** (`docs/vision.md` §1.6). **Phases 1–2 BUILT 2026-08-19 — §11 records what the build decided that the plan did not.** **§3 is still the section to read** — four problems, one serious: raising weights to hit a deadline would hand heavier weights to somebody who has missed two weeks, which is backwards and is the only thing in this project that could cause physical harm. §8 is the progression rule Phase 4 needs. §10 is what may and may not scale with ambition — and §11.4 records where the build departed from it |
 | `docs/optimal-rating-plan.md` | **The "% optimal" rating** (`docs/vision.md` §1.3), planned 2026-08-18. **§2 is the part to read** — the evidence says frequency does *not* independently drive hypertrophy, so a rating must not reward training more days; and the models explain only ~a quarter of the variance, which is why the output is a band, never a point |
 | `docs/social-plan.md` | ⚠️ **§12 IS THE NEW PART — the Hevy teardown, 2026-08-31**, and it is where the home-feed work is specified: every field on a Hevy post, the eight-step order to get a card shaped like one, and exactly what is blocked by Blaze, by a native app, or by a decision this project has already made. **Read §12.0 first** — it says what the analysis is based on (their published docs) and what it cannot tell anybody (how it LOOKS, which needs the app on a phone). **Plan only, written 2026-08-17 on Tim's ask.** Design for `docs/vision.md` §1.1. **§2 is the load-bearing part** — one document per collection means sharing cannot be a permission, so it publishes a derived copy instead (proposed D24). Proposes D25, recommends profile-before-feed so D7 need not be narrowed at all, and §7 is why rules now need the emulator. **§3.3 is Tim's own three visibility tiers**, and **§3.3.1 is why his mid/full cut beat the first draft's** — read it before moving that line |
-| `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. §11's simulator is the top open item. Proposes D18 |
+| `docs/strength-estimate-plan.md` | Mostly plan. §10 (evidence from other exercises) **was built** on 2026-08-17 and that section records how its own ordering turned out to be wrong. ⚠️ **"§11's simulator is the top open item" was stale here for two weeks** — the simulator shipped 2026-08-19 (`tools/strength-sim.mjs`, `tools/strength-fit.mjs`). **The real top open item is §11.2, the backtest against Tim's own held-out benchmarks**, which has never been run and needs nothing from anybody. ⚠️ **§6.1, not §16**, is where the 8.5 % band finding lives. Proposes D18, still unratified |
 | `docs/firebase-setup.md` | Firebase state, and what is still unverified. **Corrected 2026-08-17** — it had claimed for a day that Google sign-in was not enabled, while this file carried a note saying that claim was wrong. The source is fixed; the note is gone |
 | `js/import-file.js` | Not a doc. **Read its header before touching the importer**: it records that NOTHING here has ever seen a real export file, which is why every column is detected by name and confirmed by the user rather than hard-coded as "the Strava importer". ⚠️ Three things it REFUSES to guess — the date order, the weight unit and the distance unit — because each would be wrong silently and permanently. The distance one was a real shipped bug, caught by driving it |
 | `js/image-crop.js` | Not a doc. The profile-photo crop, in SOURCE pixels so the result does not depend on the phone it was cropped on. One invariant: the crop square never leaves the image, or an avatar saves with a blank wedge in it |
@@ -6073,11 +6101,29 @@ Fitness_Tracker/
 │   │                           seeded. Never Math.random(), or "resets to the
 │   │                           default" stops being true. The SWITCH lives in
 │   │                           store.js; this file only builds the data
-│   ├── strength-estimate.js    THE ESTIMATOR — pure, clock passed in. Phase 0:
-│   │                           IMPORTED BY NOTHING IN THE APP on purpose.
-│   │                           Its constants are FITTED to tools/strength-sim,
-│   │                           not reasoned — and the ones that could not be
-│   │                           fitted say so on the constant
+│   ├── strength-estimate.js    THE ESTIMATOR — pure, clock passed in.
+│   │                           ⚠️ THIS SAID "IMPORTED BY NOTHING IN THE APP
+│   │                           on purpose" AND THAT STOPPED BEING TRUE:
+│   │                           muscle-evidence.js imports robustAggregate()
+│   │                           from it, and muscle-evidence is on the Muscles
+│   │                           screen. Its WINDOWED, BANDED output is still
+│   │                           wired to nothing, which is what that line was
+│   │                           really about. Constants FITTED to
+│   │                           tools/strength-sim, not reasoned — and the ones
+│   │                           that could not be fitted say so on the constant
+│   ├── strength-observations.js THE WALK that turns sessions and benchmarks
+│   │                           into per-muscle evidence — pure, `today` passed
+│   │                           in. Out of store.js on 2026-09-02 so a FRIEND's
+│   │                           published training goes through the same rules
+│   ├── exercise-estimate.js    ONE NAMED LIFT's estimated 1RM — the body map's
+│   │                           arithmetic run backwards, plus the rep
+│   │                           prediction. Read its header before touching it
+│   ├── session-stats.js        ONE SESSION's own numbers. Owns recordedSetCount
+│   ├── personal-bests.js       TYPED RECORDS — weight / volume / reps / 1RM
+│   ├── compare.js              TWO PEOPLE ON ONE LIFT — and no verdict
+│   ├── routine-from-session.js A FRIEND'S WORKOUT → one of yours. Sets carry,
+│   │                           weights cannot
+│   ├── share-image.js          THE SHAREABLE PICTURE — pure layout + a painter
 │   ├── progression.js          DOUBLE PROGRESSION — pure, and deliberately
 │   │                           NOT part of goals.js. No clock, no import from
 │   │                           goals.js, so "a deadline may not make this ask

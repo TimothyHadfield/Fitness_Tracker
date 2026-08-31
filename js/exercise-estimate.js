@@ -102,6 +102,29 @@ export function estimateOneRM(exercise, muscles, bodyWeight) {
   const rating = muscles.get(best.muscle);
   if (!rating || !(rating.estimate > 0)) return null;
 
+  /* 🚨 A RATING THAT IS ITSELF A STAND-IN CANNOT BE CONVERTED OUTWARD, and this
+   * was missed in the first version — found on 2026-09-02 by an agent reading
+   * this module against its own header, which is the best kind of bug report.
+   *
+   * The check above rejects a FALLBACK CONTRIBUTION: the target exercise may not
+   * reach its muscle through one. But `rateMuscle()` has a fallback of its own —
+   * `kind: 'fallback'` means that muscle had NO direct evidence at all and a
+   * compound stood in for it, converted across by a published cross-muscle
+   * ratio. Reading `rating.estimate` without looking at `rating.kind` let the
+   * exact chain this file says it refuses through the back door: an observation,
+   * times a cross-muscle ratio, times this exercise's ratio. Three estimates
+   * multiplied together is what `muscle-evidence.js` calls the machine for
+   * confidently wrong numbers, and the confidence degrading is not a defence —
+   * it is the same defence that let a made-up dip machine rate somebody's
+   * triceps on 2026-08-31, because a low number is still the only number in the
+   * room when there is nothing to argue with it.
+   *
+   * ⚠️ It is also what Tim's own boundary describes: a muscle with only a
+   * fallback rating is a muscle whose owner has recorded nothing that trains it
+   * directly — *"If the user has no exercises recorded on a certain muscle group
+   * at all, then you can say that you can't compare."* */
+  if (rating.kind === 'fallback') return null;
+
   const oneRM = rating.estimate * best.ratio;
   if (!(oneRM > 0)) return null;
 

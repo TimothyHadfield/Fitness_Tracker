@@ -126,6 +126,26 @@ const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
      + 'module inherits the refusal rather than re-deciding it');
   ok(estimateOneRM(byName('Pull-Up'), muscles) === null,
      '⚠️ a bodyweight lift with no weigh-in is refused, because its load is unknown rather than zero');
+
+  /* 🚨 A RATING THAT IS ITSELF A STAND-IN. `rateMuscle()` returns kind
+     'fallback' when a muscle had no direct evidence and a compound was
+     converted across to cover it. Multiplying that outward into a named lift is
+     an observation × a cross-muscle ratio × this exercise's ratio — the three
+     estimates muscle-evidence.js calls the machine for confidently wrong
+     numbers, and the exact chain this module's header says it refuses. The
+     first version read `rating.estimate` without looking at `rating.kind`. */
+  const standIn = new Map([['Back', {
+    estimate: 200, confidence: 0.5, kind: 'fallback',
+    contributors: [{ exerciseName: 'Deadlift' }], exerciseCount: 1,
+  }]]);
+  ok(estimateOneRM(byName('Barbell Row'), standIn) === null,
+     '🚨 a muscle known only through a compound standing in for it converts to nothing — three '
+     + 'estimates multiplied is the chain this module exists to refuse');
+  ok(estimateOneRM(byName('Barbell Row'), new Map([['Back', {
+    estimate: 200, confidence: 0.5, kind: 'direct',
+    contributors: [{ exerciseName: 'Dumbbell Row' }], exerciseCount: 1,
+  }]])) !== null,
+     'and the same rating marked direct still converts, so the check above is not refusing everything');
   ok(estimateOneRM(null, muscles) === null && estimateOneRM(byName('Barbell Row'), null) === null,
      'and a missing argument is an answer, not a crash');
 

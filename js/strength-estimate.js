@@ -24,9 +24,16 @@
 // 1. ⚠️ IT DOES NOT REPORT A POINT. Every estimate leaves here as a value AND a
 //    fractional band, and `displayLevel()` will not assert a level unless the
 //    whole band sits inside it. That is not decoration: the honest answer to a
-//    single twelve-rep seated calf raise is "somewhere between Proficient and
-//    Elite" (measured: ±28.6 % off one set), and an app that says "Elite"
+//    single twelve-rep seated calf raise is "somewhere between Advanced and
+//    Elite" (measured: ±21.3 % off one set), and an app that says "Elite"
 //    instead is lying with a straight face.
+//    ⚠️ THOSE TWO FIGURES WERE WRONG HERE UNTIL 2026-09-02 — this said ±28.6 %
+//    and "Proficient to Elite", where `tools/strength-fit.mjs` prints ±21.3 %
+//    and `tests/strength-estimate.test.mjs` computes ±21.33 % from the shipped
+//    constants and reports the span as levels 4–6. Reaching Proficient needs
+//    about ±25 %. Neither number was ever asserted, which is why a prose slip
+//    survived: the test pins the CONCLUSION (`certain: false`, three levels
+//    spanned) and interpolates the value into its message.
 // 2. ⚠️ IT DOES NOT LET ONE NUMBER RUN AWAY WITH THE ANSWER. The aggregate is
 //    winsorised (see winsorK), so a low-credibility outlier at twice the
 //    credible reading moves the result by a bounded amount rather than by its

@@ -2,10 +2,23 @@
 
 **Status:** ~~plan, nothing built~~ — **Phase 0 is BUILT, 2026-08-19.** Written 2026-08-16.
 
-> **Phase 0 shipped nothing user-visible and that was the point.** `js/strength-estimate.js` is pure
-> maths wired to no screen; `tools/strength-sim.mjs` is the simulator §11.1 asked for;
+> ~~**Phase 0 shipped nothing user-visible and that was the point.** `js/strength-estimate.js` is pure
+> maths wired to no screen~~; `tools/strength-sim.mjs` is the simulator §11.1 asked for;
 > `tools/strength-fit.mjs` re-runs every sweep the constants came from; `tests/strength-estimate.test.mjs`
 > is 72 assertions, most of them on **measured simulator outcomes** rather than on the code running.
+>
+> ⚠️ **CORRECTED 2026-09-02 — THE STRUCK SENTENCE WAS ALREADY FALSE ON THE DAY IT WAS WRITTEN, IN
+> BOTH HALVES.** `js/muscle-evidence.js` imports `robustAggregate` from `js/strength-estimate.js`
+> (line 26) and calls it inside `rateMuscle()`, and that import landed in the **same commit** as
+> Phase 0 itself — `cec196f`, 2026-08-19; see §15.1. `muscle-evidence.js` is what colours the Muscles
+> screen, so Phase 0's maths has been user-visible since the day it shipped: one of its three answers,
+> the winsoriser, went straight into the body map's aggregate.
+>
+> **What is still true, and it is the more useful half:** the *estimator proper* — `estimateAt()`,
+> `displayLevel()`, the band, the hysteresis, the plausibility screen — has no caller anywhere in
+> `js/` and remains Phase 2 work. Every headline number below measures that unwired part. Much of
+> this document was written assuming a fully inert Phase 0; read it with that correction in hand,
+> and see §16's last bullet.
 >
 > **Headline measurements**, 24 virtual lifters over a known year each:
 > **bias +0.68 %** · **RMSE 4.63 %** · **lag 12.1 days** to recognise a genuine gain ·
@@ -351,8 +364,23 @@ I actually lifted at 5 reps") and it answers it well.
 > blend with direct evidence within a muscle, because "hammer curl" and "barbell curl" are both
 > direct biceps work and picking one to ignore would throw away real information.
 >
-> What did NOT come with it is §11 — there is no simulator, and the constants in that module are
-> reasoned rather than fitted. **That is now the top open item.**
+> ~~What did NOT come with it is §11 — there is no simulator, and the constants in that module are
+> reasoned rather than fitted. **That is now the top open item.**~~
+>
+> ⚠️ **STALE, CORRECTED 2026-09-02 — the reasoning above this line still stands, the closing verdict
+> does not.** Written 2026-08-17, overtaken on 2026-08-19. `tools/strength-sim.mjs` and
+> `tools/strength-fit.mjs` both exist and §11.0/§11.1 describe what they measured; `node
+> tools/strength-fit.mjs` re-runs the sweeps and prints the tables today. So "there is no simulator"
+> is simply false now, and the simulator is not the top open item.
+>
+> **What survives of the paragraph, restated:** the simulator was built for the *estimator*, not for
+> `js/muscle-evidence.js`, and the cross-exercise **ratio table** in that module is still reasoned
+> rather than fitted against a known truth — no simulator run has ever taken a virtual lifter with a
+> known 1RM on lift A and scored the conversion into lift B. (One sweep did happen: commit `eb38fad`,
+> *"Finish the ratio sweep, and find that the reasoned entries were the worst ones"* — but that is a
+> sweep against **published standards**, not against the simulator, and this document has never
+> written it up.) The top open item is **§11.2's backtest**, Phase 5, which is the same conclusion
+> §12 reaches by a different route.
 
 ### The original text, kept because its warning still stands
 
@@ -370,6 +398,61 @@ If built, the rules are: a substituted lift may only ever **unlock a muscle that
 evidence**, never override or blend with direct evidence; it carries a much wider band; and the UI
 names the substitution outright. Otherwise this becomes a machine for confidently wrong numbers,
 which is the one thing this project has consistently refused to be.
+
+### 10.1 Cross-exercise estimation now has a USER-FACING consumer — `js/exercise-estimate.js`
+
+Added 2026-09-02, from Tim's ask recorded verbatim in `js/views-session.js`. Until now §10's
+machinery ran inward only: sets → a muscle rating → a colour on the body map. This runs it **outward**
+— a muscle rating → a number in pounds on a named lift you may never have performed.
+
+**It is read by two screens, and this is what makes it Phase-4-shaped rather than internal:**
+
+| Screen | Where | What it shows |
+|---|---|---|
+| **Benchmark entry** | `js/views-session.js` (the *Save benchmark* sheet) | an estimated 1RM before a number is typed, plus *"x % of your estimated max"* over the weight field and *"maybe N to failure"* over the reps field |
+| **Exercise comparison between two people** | `js/views-social.js` → `friendEstimates()` / `compareSheet()` | an estimate for either side on a lift that side has never performed, so a comparison is not simply blank |
+
+**It is not a new model, and that is the whole argument for it.** The module's own header makes the
+case better than a paraphrase: `muscleStrength()` has always converted a recorded set into a muscle's
+key lift by **dividing** by a published ratio; this **multiplies back out** through the same table in
+the same direction it was measured in. Nothing about the person is invented — the input is their own
+sets. The session runner has done exactly this since 2026-08-26 to suggest an opening weight; this is
+that code lifted out, plus a confidence, the source list, and the inverse rep prediction.
+
+#### Against §10's four rules, honestly
+
+| §10's rule | Honoured? |
+|---|---|
+| **Name the substitution** | **Yes, and the caller is required to.** Every result carries `muscle`, `ratio`, `ratioQuality` and `from` (the exercises the number came from), and both screens print them — *"Worked out from your dumbbell rows, converted through back."* `isKeyLift` distinguishes "this is your own lift" from "this is converted" so the two never read alike (Rule 5) |
+| **Lower confidence** | **Yes, and structurally rather than by a new constant.** `confidence = rating.confidence × ratioQuality` — how much the muscle's own number is worth believing, times how much the conversion is worth believing. That is the same idiom `muscle-evidence.js` already uses for a second hop (`base.quality * src.q`) |
+| **A much wider band** | ⚠️ **NO — it produces a BAND NAME, not a ± figure, and the reason is a hole in this document.** The result carries `confidenceBand(confidence)` — Low / Fair / Good / High — and the screen prints *"fair confidence"*. It cannot print ±x % because **no constant for "how much error a ratio of quality q adds" has ever been fitted in this project**; `RATIO_ERROR_AT_Q0` in `tools/strength-sim.mjs` is labelled assumed, not measured. A ± printed off that would be §15.2's refusal broken — a guess wearing a measurement's clothes. A named band is weaker than §10 asked for, and it is what the evidence supports |
+| **Compounds only fill muscles with nothing direct** | **Yes at the conversion, and stricter than the rule.** `estimateOneRM()` filters the exercise's contributions to `kind === 'direct'` and returns `null` if none survives, so it will not chain a conversion on top of a substitution — the third multiplication. ⚠️ **But it does not check the RATING's own `kind`.** `rateMuscle()` marks a rating `'fallback'` when a compound stood in for a muscle with nothing direct, and `estimateOneRM()` reads `rating.estimate` without looking. So a muscle known only through a compound can still be converted outward. The credence does degrade — a fallback rating's confidence is already multiplied down — but the *refusal* is not made. ⚠️ **Unresolved: whether that is a deliberate choice or an oversight.** Nothing in the module's header addresses it either way, and no test was found asserting it |
+
+#### Is this inside or outside §12's Phase 4 gate?
+
+§12 lists Phase 4 as *"Cross-exercise evidence, **if the backtest justifies it**"* — and **§11.2's
+backtest has not been run.** So this has to be answered plainly rather than left for a fresh session
+to trip over.
+
+> **The judgement recorded here — and it IS a judgement, not a measurement.** The cross-exercise
+> *machinery* shipped on 2026-08-17 under D19 and has been colouring the body map ever since, ungated,
+> because without it a muscle was ranked by a single named lift and Tim's hammer curls rated nothing
+> (§10's opening). `exercise-estimate.js` adds no ratio, no model and no evidence path — it reads a
+> rating that was already on screen and prints it in a different lift's units. On that reading it
+> **exposes** Phase 4 rather than **being** Phase 4, and the gate never applied to it.
+>
+> ⚠️ **The honest counter, which a fresh session should weigh rather than skip.** Phase 4 was gated
+> because a *confidently wrong number* is the failure mode, and a number in pounds on a lift you have
+> never attempted is a more confident-looking output than a desaturated colour. The gate was about
+> what reaches a person, and more now reaches a person than did on 2026-08-17. Two things stand
+> against that: the module refuses outright rather than guessing where it cannot convert (no direct
+> contribution, no rating, a custom exercise), and the *opening-weight suggestion* — the one place an
+> estimate gets attempted at a bar — keeps its hard gates (ratio quality ≥ 0.45, muscle confidence
+> ≥ 0.35) and is deliberately left alone.
+>
+> **What would settle it is the same thing §12 always said would: §11.2's backtest (Phase 5).** It is
+> now more valuable than when it was written, because it would be measuring something a person is
+> already reading.
 
 ---
 
@@ -456,7 +539,7 @@ which is exactly the sort of claim this project should be willing to state and d
 | **1** | Extend `weightRepObservations` to carry set index and exercise index (needed for §3.1 and §3.2) | Low, additive — **and low is the right reading.** ⚠️ **The "bigger than it reads" note below was WRONG and is corrected 2026-08-28**: both indices are array positions in data already stored |
 | **2** | Wire the estimator into the **body map** — band-aware levels, hysteresis, source named | Medium — changes what a colour means. **§6.1's measurement changes the design**: the band fits inside one level only 8.5 % of the time, so the hedged reading is the normal case |
 | **3** | The **setting**, and the estimate line + band on the graph | Medium |
-| **4** | Cross-exercise evidence, if the backtest justifies it | High — may be dropped |
+| **4** | Cross-exercise evidence, if the backtest justifies it. ⚠️ **The machinery shipped 2026-08-17 (D19) and got a user-facing OUTWARD consumer on 2026-09-02 — see §10.1 — while the backtest that gates this row has still not been run. §10.1 records why that is argued to be outside the gate, and records it as a judgement** | High — may be dropped |
 | **5** *(new)* | **§11.2's backtest against real held-out benchmarks.** Now the highest-value item after Phase 1, because three of Phase 0's constants are conditional on assumptions only real data can settle | Low to run, high in what it might overturn |
 
 Phase 0 is worth doing regardless: it is inert, it is where all the risk actually lives, and the
@@ -536,7 +619,10 @@ simulator tells us whether the rest is worth building before any of it is user-v
 
 ## 15. The three residuals in `progress.md` §9 — answered with measurements
 
-Written 2026-08-19. **Phase 0 changed nothing user-visible and nothing in `js/muscle-evidence.js`.**
+Written 2026-08-19. ~~**Phase 0 changed nothing user-visible and nothing in `js/muscle-evidence.js`.**~~
+⚠️ **CORRECTED 2026-09-02: §15.1 WAS APPLIED, AND IN THE SAME COMMIT AS PHASE 0.** See the note at
+the end of §15.1. §15.2 and §15.3 remain recommendations, and they are what the rest of this section
+is now for.
 These are recommendations with the numbers behind them, for whoever owns that file next.
 
 ### 15.1 Should the aggregate be robust to an outlier? — **YES, and it is free**
@@ -568,8 +654,21 @@ shoulders case the nudge goes **+3.9 % → +1.0 %**.
 
 > **Recommendation for `js/muscle-evidence.js`:** replace the final weighted mean in `rateMuscle()`
 > with `robustAggregate()` from `js/strength-estimate.js`. It is a two-line change, it is
-> measurably free on clean data, and it bounds the residual. ⚠️ **Not applied by Phase 0** — that
-> file is owned elsewhere this wave and Phase 0 ships nothing user-visible.
+> measurably free on clean data, and it bounds the residual. ~~⚠️ **Not applied by Phase 0** — that
+> file is owned elsewhere this wave and Phase 0 ships nothing user-visible.~~
+>
+> ✅ **SHIPPED 2026-08-19, in the same commit as Phase 0 (`cec196f`).** `js/muscle-evidence.js` line 26
+> imports `robustAggregate` from `js/strength-estimate.js`, and `rateMuscle()` builds its answer as
+> `robustAggregate(used.map((u) => ({ x: u.estimate, w: u.evidenceWeight })))` — the weighted mean it
+> replaced is gone. Verified 2026-09-02 against the file and against `git log -S`.
+>
+> ⚠️ **The struck sentence was wrong on the day it was written, and it is worth knowing why**: the
+> file *was* owned elsewhere that wave, by a parallel agent in the same five-agent pass, and that
+> agent applied this recommendation while this section was being written to say nobody would. The
+> commit message for `cec196f` says so outright — *"One of its three answers shipped"*. The failure
+> mode is not "the plan went stale", it is **a plan asserting the state of a file it was not
+> holding**. Anything this document says about `js/muscle-evidence.js` should be checked against the
+> file, never quoted from here.
 
 ### 15.2 How far may a high-rep isolation set be extrapolated? — **NOT SHRUNK. BANDED, AND THE LEVEL REFUSED**
 
@@ -588,6 +687,34 @@ module's band is **±21.3 %**, which spans **three levels** — the display is *
 Advanced and Elite"*, and `displayLevel()` returns `certain: false` and `asserted: null` so the UI
 cannot accidentally say Elite. A two-rep set off the same history carries ±11.8 %, so the width is
 coming from the rep count rather than from having one observation.
+
+> ⚠️ **THE MODULE HEADER DISAGREES WITH THIS PARAGRAPH, AND THIS PARAGRAPH IS THE ONE THAT IS
+> RIGHT. Settled by re-derivation 2026-09-02.**
+>
+> | | figure | span named | where |
+> |---|---|---|---|
+> | here (§15.2) and §14 | **±21.3 %** / "±21 %" | Advanced … Elite | `docs/strength-estimate-plan.md` |
+> | the module's own header | ±28.6 % | "Proficient to Elite" | `js/strength-estimate.js`, refusal 1 |
+>
+> Both were re-derived rather than argued about. `node tools/strength-fit.mjs` prints
+> *"module's own band off one 12-rep set: **±21.3 %** (effective_n 0.45)"*, and `node
+> tests/strength-estimate.test.mjs` computes the same quantity from the shipped constants and prints
+> **±21.33 %**, *"which spans levels 4 to 6"* — on the Calves boundaries the fit tool also prints
+> (142 · 183 · 240 · 271 · 314 · 362 · 406), levels 4–6 are **Advanced, Expert, Elite**. The band's
+> lower edge lands at 417 × 0.787 ≈ **328 lb**, above the 314 boundary; it would have to reach below
+> 314 to touch Proficient, which needs about ±25 %. So both halves of the header's sentence are
+> wrong, and by the same slip: a wider number would indeed have spanned Proficient to Elite.
+>
+> **Nothing asserts ±28.6 %.** It appears in one prose comment and nowhere else — no constant, no
+> test, no tool. **Nothing asserts ±21.3 % as a literal either**, and that is worth being exact
+> about: the test *computes* the band and interpolates it into its message, then asserts
+> `!shown.certain` and `shown.high - shown.low >= 2`. What is pinned is **"the band spans at least
+> three levels and no level may be asserted"** — the conclusion, not the width. The width is
+> reproducible on demand from either tool, which is why it can be stated here.
+>
+> ⚠️ **Not fixed in the module** — `js/strength-estimate.js` was not owned by this pass, and the
+> wrong number is still in its header. **Correcting that comment is an open item**, and this is
+> exactly the §15.1 failure again: a prose claim about a number that the code next to it can print.
 
 **A measured aside worth keeping.** The e1RM of a *low*-rep set is more biased DOWNWARD by unknown
 reps-in-reserve than a high-rep one (−7.4 % at 1 rep against −2.8 % at 15), while being far less
@@ -665,4 +792,9 @@ Stated plainly, because the numbers in §11.0 look more confident than the thing
 - **The simulator models one exercise per lifter** for the estimator, and a separate three-exercise
   construction for the muscle aggregate. A real lifter's Chest is rated from several exercises whose
   histories interleave, and that combined case has not been simulated end to end.
-- **Nothing is wired to a screen**, so none of this has been seen by a browser, a person, or a phone.
+- ~~**Nothing is wired to a screen**, so none of this has been seen by a browser, a person, or a
+  phone.~~ ⚠️ **CORRECTED 2026-09-02, same correction as the header block.** `robustAggregate()` has
+  been on the Muscles screen since the day this was written (§15.1), so one piece of Phase 0 has been
+  seen by a browser, a person and a phone. **What is still unseen is everything else**: `estimateAt()`,
+  the band, `displayLevel()`, the hysteresis and the plausibility screen have no caller in `js/`
+  outside the tools and tests. Every headline number in §11.0 is a measurement of *that* unseen part.
