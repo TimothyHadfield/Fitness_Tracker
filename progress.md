@@ -190,6 +190,11 @@ inverse rep prediction.
 load-bearing one is the round trip: `repsForWeight(e1rm(w, r), w)` must return `r` at every weight
 and rep count, which a wrong exponent or a wrong k both fail and almost nothing else would catch.
 
+**Audit: 100 route/width/theme combinations, 11,365 text nodes, zero below 4.5:1, zero horizontal
+overflow, zero unnamed controls.** The benchmark screen joined the list **with an exercise picked and
+a weight typed**, because everything added today only exists after that — the empty form is what the
+audit had been reading for months.
+
 ⚠️ **NOT VERIFIED: no human has checked any of these numbers against a real attempt.** The whole
 chain rests on a curve whose absolute accuracy was never validated (`research.md` §1.3) and on ratios
 whose spread is a population's rather than a person's. That is why every figure ships with a
