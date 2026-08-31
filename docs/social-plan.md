@@ -591,6 +591,21 @@ strangers, with per-user notifications. 15M+ users: a public network, not a grou
 
 ### 12.8 ⚠️ WHAT WE CAN BUILD NOW — no new backend, no billing, no decision from Tim
 
+> ✅ **CORRECTED 2026-09-02 — MOST OF THIS TABLE HAS SINCE BEEN BUILT. Read the row markers, not the
+> colours.** §12.10's eight steps all shipped on 2026-09-02; §13 carries a ✅ block under each and §14
+> is the summary. Of the rows below: **six shipped as described** (description, sets/reps/weights
+> reachable from the card, muscle split, compare on an exercise, save their workout, shareable
+> image); **one shipped with a decision this table did not anticipate** (PR count — the Records
+> column is deliberately NOT on the feed card); **one was refused by Tim and is deliberately not
+> built** (Volume); and **one green row is still genuinely open** — *Profile: workout count, weekly
+> activity graph*, which has no year grid on a friend's page as of this correction.
+>
+> ⚠️ **THE ROWS ARE KEPT EXACTLY AS WRITTEN ON 2026-08-31 and nothing has been deleted**, per this
+> file's convention (§12.13 corrects §12.12 the same way, and §13 keeps its own brief intact). The
+> reasoning inside each row is *why* the thing was built the way it was — the per-side and bodyweight
+> traps named in the Volume row are the argument that decided which column shipped. Per-row ✅ / ⏸️
+> markers are appended in place.
+
 **The finding that matters: most of that card is already in our projection and is simply not being
 rendered.** `projectSession()` publishes, at **mid** and above, every entry, every set, every rep,
 every weight, with set types and groups intact, plus `startedAt`, `minutes` and `location`. The feed
@@ -599,21 +614,28 @@ card draws a name, a meta line and a list of exercise names, and stops.
 | Hevy element | Us, today | What it takes |
 |---|---|---|
 | Who, avatar, title, time | ✅ **built** | — |
-| Duration | ✅ **published** (`minutes`, mid+) | move it into a stat row; it is already in the meta line |
+| Duration | ✅ **published** (`minutes`, mid+) | move it into a stat row; it is already in the meta line. ✅ **DONE 2026-09-02** — `statRow()` in `js/views-workouts.js`, and it LEFT the grey meta line so the number appears once (§13 step 1) |
 | Location | ✅ **published** (hand-typed, never GPS) | already rendered |
-| **Volume** | 🟢 **derivable client-side** from `entries[].sets` | one function. ⚠️ It has to go through `totalResistance()`: a per-side dumbbell set is not `weight × reps`, and a bodyweight set is not zero. Getting that wrong publishes a number that flatters or halves somebody's session |
-| **Sets / reps / weights, set types** | ✅ **published at mid+**, and already rendered on the friend's page | make it reachable from the card — a tap that opens the session rather than the person |
-| **Muscle split** | 🟢 **derivable client-side** — `volume-map.js` already maps every exercise onto fractional muscle contributions, and since 2026-09-01 we have a validated ramp and a figure to paint it on | the Volume tab's own figure, per session. **The most distinctive thing we could put on a card**, because it is ours and it is measured rather than declared |
-| **PR count** | 🟡 **derivable, with a caveat that must be on screen** | we hold their last 60 published sessions, so "a best **in what they have shared**" is computable and honest; "a lifetime PR" is not, because we do not have their history. Rule 5: the badge has to say which it is |
-| **Description** | 🔴 **not stored at all** | a session-level `note`, a box on the finish screen, one line in `projectSession` at mid, one line on the card. **No backend, no billing, no decision — the cheapest high-value item in this document** |
+| **Volume** | 🟢 **derivable client-side** from `entries[].sets` | one function. ⚠️ It has to go through `totalResistance()`: a per-side dumbbell set is not `weight × reps`, and a bodyweight set is not zero. Getting that wrong publishes a number that flatters or halves somebody's session. ⏸️ **DELIBERATELY NOT BUILT.** Tim, 2026-09-02: *"don't implement warm ups or volume yet. Replace Volume for # of sets."* The middle column shipped as a **set count**. `js/session-stats.js`'s header argues the same conclusion from the code side: a set count needs nothing outside the session, is the same number for everybody, and — the point this row half-saw — a friend's **bodyweight** work could never be totalled at all, because `totalResistance()` needs their body weight and that publishes only at the top tier and only on opt-in, so a session of pull-ups would have read as a rest day. It also matches the unit the rest of the app thinks in (D3). ⚠️ Volume still belongs in that module when it ships, taking an exercise map |
+| **Sets / reps / weights, set types** | ✅ **published at mid+**, and already rendered on the friend's page | make it reachable from the card — a tap that opens the session rather than the person. ✅ **BUILT 2026-09-02** — as a whole screen rather than an expander: `FriendSessionView(uid, sessionId)` in `js/views-social.js`, routed at `#/friend/<uid>/<sessionId>` from `js/app.js` (§13 step 3) |
+| **Muscle split** | 🟢 **derivable client-side** — `volume-map.js` already maps every exercise onto fractional muscle contributions, and since 2026-09-01 we have a validated ramp and a figure to paint it on | the Volume tab's own figure, per session. **The most distinctive thing we could put on a card**, because it is ours and it is measured rather than declared. ✅ **BUILT 2026-09-02** — `muscleSplit()` in `js/views-social.js`. ⚠️ **Two departures from this row**: it is on the **workout screen, not the card**, and it is **bars in one colour, not the figure** — a share of one session is not a rank, and the red-to-green ramp's justification is the legend and numbers beside it, which a card would strip (§13 step 4) |
+| **PR count** | 🟡 **derivable, with a caveat that must be on screen** | we hold their last 60 published sessions, so "a best **in what they have shared**" is computable and honest; "a lifetime PR" is not, because we do not have their history. Rule 5: the badge has to say which it is. ✅ **BUILT 2026-09-02, AND THE CAVEAT DECIDED THE PLACEMENT** — `personalBests()` was extracted into a pure `js/personal-bests.js` and typed **Weight · Volume · Reps · 1RM**, grouped by exercise on the finish screen and as "Bests in this workout" on a friend's workout screen with the sharing caveat spelled out. 🚨 **THE DECISION THIS ROW DID NOT ANTICIPATE: they are deliberately NOT on the feed card.** A bare "Records 3" beside somebody's name reads as a lifetime PR, and what is actually computable is "a best within the sixty sessions they publish" — the count is honest only next to the sentence that qualifies it, and that sentence does not fit on a card. So the badge does not appear where it cannot carry its caveat; it is on the screen the card opens. Also recorded in `progress.md` Open work 17. ⚠️ The 1RM kind is the first that uses an estimate, so it carries `estimated: true`, prints the word, and names the real set it was derived from |
+| **Description** | 🔴 **not stored at all** | a session-level `note`, a box on the finish screen, one line in `projectSession` at mid, one line on the card. **No backend, no billing, no decision — the cheapest high-value item in this document**. ✅ **BUILT 2026-09-02, and it was the cheapest high-value item.** `session.note`, typed in the **runner** — not the finish screen this plan assumed, because ours renders after the save has landed (§14 finding 3) — capped at **280** in `js/views-session.js` and again at 280 in `projectSession()` (`js/social.js`), published at **mid and above**, absent when blank. ⚠️ Kept distinct from `entry.notes`, the per-exercise coaching note, which has never been published. ⚠️ It shipped with **no per-post visibility control**, which is §13's open decision B |
 | Likes / comments | ✅ **built** (0l) | — |
 | Share | ✅ **built** — `navigator.share` + clipboard | — |
-| **Compare on an exercise** | 🟢 **buildable** | their sets are in hand at mid+, ours are in the store, and `e1rm.js` already normalises across rep counts — which is what makes it a comparison rather than "who typed a bigger number" |
-| **Save / copy their workout** | 🟢 **buildable** | `entries[]` → a workout in a system, the same shape `addPresetSystem()` already writes. ⚠️ Theirs is a RECORD and ours would be a PLAN: set counts carry across, weights do not |
-| **Profile: workout count, weekly activity graph** | 🟢 **buildable** from the published window | `year-grid.js` already draws exactly that shape |
-| **Shareable image** | 🟢 **buildable, no backend** | canvas → PNG → `navigator.share({files})`, download as the fallback. We already hand-draw a QR code and every chart in the app |
+| **Compare on an exercise** | 🟢 **buildable** | their sets are in hand at mid+, ours are in the store, and `e1rm.js` already normalises across rep counts — which is what makes it a comparison rather than "who typed a bigger number". ✅ **BUILT 2026-09-02** — `js/compare.js`, pure, **53 passing assertions** in `tests/compare.test.mjs` (counted 2026-09-02; §13 step 6 says 45, which was the count on the day it shipped — the file was extended by the exercise-estimate work in commit `416e5e4`). Opened by tapping an exercise name on a friend's workout. 🚨 **The load-bearing correction to this row: the comparison is WINDOWED to the overlap.** Their history is sixty published sessions and mine is my whole life, so an unwindowed comparison flatters me every time, in the same direction. Both sides are cut to the same dates and the window is named on screen. 🚨 **No verdict is produced at all** (Rule 6) — `better` is per metric, `sets` carries `judged: false` |
+| **Save / copy their workout** | 🟢 **buildable** | `entries[]` → a workout in a system, the same shape `addPresetSystem()` already writes. ⚠️ Theirs is a RECORD and ours would be a PLAN: set counts carry across, weights do not. ✅ **BUILT 2026-09-02** — `js/routine-from-session.js`, pure, **42 passing assertions** in `tests/routine.test.mjs`, plus a sheet that shows what it is about to do first. 🚨 **The weights caveat turned out to hold BY CONSTRUCTION rather than by filter**: a workout template is `{ exerciseId, sets, notes }` and has no field to put a weight in. ⚠️ `group` does carry, so a superset survives; an exercise missing from the reader's library is **named** rather than silently dropped |
+| **Profile: workout count, weekly activity graph** | 🟢 **buildable** from the published window | `year-grid.js` already draws exactly that shape. ⚠️ **STILL NOT BUILT as of 2026-09-02 — the only green row here that is still open.** A friend's page (`FriendView`, `js/views-social.js`) shows their avatar, the tier each way and their sessions; there is no workout count and no year grid on it |
+| **Shareable image** | 🟢 **buildable, no backend** | canvas → PNG → `navigator.share({files})`, download as the fallback. We already hand-draw a QR code and every chart in the app. ✅ **BUILT 2026-09-02** — `js/share-image.js`: a pure `shareCardLayout()` plus a thin painter, the same split `qr.js` uses, **91 passing assertions** in `tests/share-image.test.mjs`. ⚠️ **NO WEIGHTS ON THE PICTURE**, enforced inside the module rather than trusted to the caller, because it leaves the app for a feed nobody here controls — sets and time, the same call Tim made for the card. ⚠️ Two layout bugs only a render could find; the card now sizes itself to its contents (1080–1350) |
 
 **Not one of the green rows needs money, a server, or an answer from Tim.** They need building.
+
+> ⚠️ **CORRECTED 2026-09-02 — that closing line is no longer true, in two different ways.**
+> **Six of the green/red rows were built** on 2026-09-02 (§13, §14) and needed exactly what this line
+> predicted: no money, no server. **One did need an answer from Tim and got a refusal** — Volume,
+> which he replaced with a set count. And **one green row is still unbuilt**: the profile's workout
+> count and weekly activity graph. The sentence was right about the cost and wrong to assume no row
+> here was Tim's to decide.
 
 ### 12.9 🔴 WHAT WE CANNOT — and precisely what is in the way
 
@@ -630,21 +652,49 @@ card draws a name, a meta line and a list of exercise names, and stops.
 
 ### 12.10 If Tim says go — the order that gets a Hevy-shaped card fastest
 
+> ✅ **HE SAID GO, AND ALL EIGHT SHIPPED ON 2026-09-02.** This section is no longer a proposal. The
+> list below is kept as written because it is the order the work was actually done in; §13 is the
+> brief each step was built from, with a ✅ block under each, and §14 is what shipped. **Two steps
+> changed on the way**, both marked in place: step 1's middle column is **sets, not volume** (Tim's
+> instruction), and step 4's muscle map is **bars on the workout screen, not a figure on the card**.
+> **Step 9, photos, is still blocked on Blaze** and is still Tim's call.
+
 Each step ships on its own and none blocks the next.
 
 1. **The stat row** — duration · volume · muscle split. Three numbers, no more, exactly Hevy's
    discipline, and two of the three are already in hand.
+   ✅ **BUILT — as `Time · Sets`.** Tim replaced volume with a set count; `js/session-stats.js`,
+   `statRow()` in `js/views-workouts.js`. The muscle split moved to step 4's screen rather than
+   sharing this row, so the card carries two numbers, not three.
 2. **The description field.** Cheapest high-value item here, and the one thing that turns a card from
    a receipt into a post.
+   ✅ **BUILT** — `session.note`, typed in the **runner** (not the finish screen this plan assumed),
+   280 characters, published at mid+.
 3. **Tap the card to open the session** — the renderer already exists on the friend's page.
+   ✅ **BUILT as a whole screen** — `FriendSessionView` at `#/friend/<uid>/<sessionId>` — rather than
+   as the friend page's expander.
 4. **The per-post muscle map.** Ours, measured, and nothing in the market shows a validated
    red-to-green body per session.
+   ✅ **BUILT as one-colour BARS on the workout screen**, and the figure was deliberately rejected:
+   the ramp's justification is the legend and numbers beside it, which a card strips, and a share of
+   one session is not a rank (Rule 6).
 5. **PR badges**, carrying the "in what they have shared" caveat.
+   ✅ **BUILT — `js/personal-bests.js`, typed Weight · Volume · Reps · 1RM — but 🚨 NOT ON THE CARD.**
+   The caveat is what decided it: the count is honest only beside the sentence that qualifies it, and
+   that sentence does not fit next to somebody's name. They are on the screen the card opens.
 6. **Compare on an exercise**, rep-normalised.
+   ✅ **BUILT** — `js/compare.js`, windowed to the overlap so a sixty-session history is not measured
+   against a lifetime, and refusing to produce a verdict at all.
 7. **Save their workout as a routine.**
+   ✅ **BUILT** — `js/routine-from-session.js`. Weights cannot carry by construction: a template has
+   no field to hold one.
 8. **A shareable image** — the one Hevy feature with real pull that needs nothing we do not have.
+   ✅ **BUILT** — `js/share-image.js`, a pure layout plus a thin painter, with no weights on the
+   picture by module-level rule.
 
 Photos are step 9 **and they need Tim to say yes to Blaze** (§12.9). Everything above them is free.
+⏸️ **Still true 2026-09-02: step 9 has not been built and Blaze is still unanswered** (§13 decision D,
+`progress.md` Open work 10). Everything above it was indeed free.
 
 ### 12.11 ⚠️ Two things NOT to copy, and why
 

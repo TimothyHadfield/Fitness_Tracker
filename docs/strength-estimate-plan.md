@@ -50,7 +50,7 @@ and only one of them is "got stronger":
 
 | # | Source of variance | Size | Can we see it? |
 |---|---|---|---|
-| 1 | **Proximity to failure** — 8 reps with 3 left is not 8 reps to failure | **Huge** (±15–20 % on e1RM) | No. No RIR field, deliberately (D9) |
+| 1 | **Proximity to failure** — 8 reps with 3 left is not 8 reps to failure | **Huge** (±15–20 % on e1RM) | No. No RIR field, deliberately (D28 — ⚠️ this said D9 until 2026-09-02, and D9 is progressive disclosure) |
 | 2 | **Warm-up and ramp sets** logged alongside working sets | Huge | **Yes** — from load and order |
 | 3 | **Back-off sets** after the top set | Large | **Yes** — same |
 | 4 | **Rep count** — e1RM degrades badly above ~10 reps (D5, D11) | Large | **Yes** — we know the reps |
@@ -585,7 +585,7 @@ simulator tells us whether the rest is worth building before any of it is user-v
 - **`f_load` is self-referential.** Someone who never trains hard has a low recent best, so all their
   sets look like top efforts and confidence is overstated. Mitigation: the absolute rep gate still
   applies, and confidence is capped hard while the observation count is small.
-- **RIR is invisible and always will be** under D9. The corroboration term (§3.3) is a partial
+- **RIR is invisible and always will be** under D28 (⚠️ written D9 here until 2026-09-02). The corroboration term (§3.3) is a partial
   substitute, not a fix.
 - **A long deload will eventually age out of the window** and the estimate will fall. The staleness
   label (§5) makes that visible rather than silent, but it will still look like a drop to someone not

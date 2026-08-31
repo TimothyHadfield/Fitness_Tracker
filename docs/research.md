@@ -457,7 +457,7 @@ quarter of the variance cannot honestly separate an 83 % from an 87 %, which is 
   than measured**, overall fit quality was "modest", and the analysis is exploratory.
 
 ⚠️ **Consequence for this app: the variable that most modulates whether a set produces growth is
-invisible to it.** There is no RIR field and that is deliberate (D9). Any volume-based rating is
+invisible to it.** There is no RIR field and that is deliberate (D28). Any volume-based rating is
 therefore conditional on "assuming sets are taken close to failure", and must say so.
 
 ### 6.9 Protein 🟢 — pulled 2026-08-18 for `docs/goals-plan.md`
@@ -873,7 +873,7 @@ partial does not.
 
 - **Nothing enters the model.** ROM is a property of how a rep is performed. The app records nothing
   about it and **should not start asking**: a per-set ROM field is jargon (D8), it is one more thing
-  to fill in mid-set (D9), and self-reported ROM is the kind of data that is wrong in a direction
+  to fill in mid-set (D28), and self-reported ROM is the kind of data that is wrong in a direction
   that flatters. This is the clearest "the evidence is real and the app must not model it" case of
   the four.
 - **It licenses a teaching note at the point of use (D8)**, which the app has a shape for already:

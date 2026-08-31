@@ -307,7 +307,7 @@ already researched or can already see:
 |---|---|---|
 | Volume below the minimum effective dose | **Measured** — it already names muscles under 4 sets/week | `research.md` §6.2 |
 | Not training often enough | **Measured** — sessions per week, from history | §6.3 |
-| Not training close enough to failure | **Invisible** — no RIR field (D9) | §6.7 |
+| Not training close enough to failure | **Invisible** — no RIR field (D28) | §6.7 |
 | Protein below ~0.7 g/lb | **Invisible** | §6.9 |
 | Too little sleep | **Invisible** | §6.10 |
 | Effort, stress, illness, life | **Invisible** | — |

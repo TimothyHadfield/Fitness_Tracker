@@ -20,13 +20,18 @@ on more than one device.
   them, each carrying four numbers: how good it is for growth and for strength, and what it costs
   you in days a week and minutes a session. Or build your own.
 - **Log while you lift** — every exercise pre-filled with what you did last time, adjusted with
-  big +/− buttons sized for one thumb. **272 exercises** built in across 15 muscle groups, plus your
+  big +/− buttons sized for one thumb. **318 exercises** built in across 16 muscle groups, plus your
   own when yours isn't listed. Supersets, tri-sets, giant sets, drop sets and myo-reps, with a rest
   timer that knows the difference.
 - **Record opens on the next workout in your rotation** — it reads your last session, offers the
   one after it, and says what it read. Every other workout is one tap below it.
 - **Home is a feed** — what the people you train with have been doing: their name, when, the
-  workout, and the exercises they did.
+  workout, the line they wrote about how it went, a **Time · Sets** row, and every exercise with
+  its set count. **Tap a card to open their whole workout** — the muscle split as a share of that
+  session, their bests typed by kind (Weight · Reps · Volume · 1RM), and set tables with the supersets
+  and drop sets intact. From there you can **compare a lift against your own**, **save their workout
+  as one of yours**, or **share a picture of it**. Kudos and comments, no streaks and no
+  leaderboards.
 - **Body map** — every muscle rated from *every* exercise that trains it, coloured by where you rank
   among a comparison group **you choose**, and faded in proportion to how much evidence there
   actually is. Tap one for the number, the level, and the set it came from. You get a **ranking**, not
@@ -63,12 +68,27 @@ python -m http.server 8765
 ## Tests
 
 ```bash
-node tests/data-layer.test.mjs     # 1193 assertions, no dependencies
-npm i jsdom && node tests/render.test.mjs
+node tests/data-layer.test.mjs     # 1847 assertions, no dependencies
+
+# ⚠️ ALL THE TEST-ONLY DEPS IN ONE COMMAND — `--no-save` REPLACES what is
+# already installed, so installing them one at a time makes the previous
+# suite fail with MODULE_NOT_FOUND.
+npm i --no-save jsdom jsqr @firebase/rules-unit-testing
+node tests/render.test.mjs
 ```
 
-Eleven suites, 2474 assertions. Only `render` needs anything installed. `progress.md` lists the rest,
-including what each one is actually for — and, more usefully, what is **not** verified.
+**Sixteen suites run headlessly: 3,975 assertions** (recounted 2026-08-31 by running every one).
+Nothing installed here ships with the app.
+
+- **Three suites need an npm package, not one:** `render` needs `jsdom`, `qr` needs `jsqr`, `rules`
+  needs `@firebase/rules-unit-testing`. The other thirteen need nothing.
+- **Two more suites exist and are not in that 3,975**, because neither runs on `node` alone:
+  `tests/rules.test.mjs` (147 assertions — the Firestore security rules, run under
+  `firebase emulators:exec`, and the only tests here that run as somebody who is *not* you) and
+  `tests/sw-update.test.mjs` (12 assertions — a real service worker driven in real Chrome).
+
+`progress.md` lists every suite and what each one is actually for — and, more usefully, what is
+**not** verified.
 
 ## Project layout
 
@@ -80,10 +100,17 @@ js/store.js             data layer (backend-agnostic async API)
 js/firebase-backend.js  Firestore + auth adapter
 js/exercises.js         the exercise library
 js/preset-systems.js    the nine ready-made programmes
+js/social.js            friends, tiers, and the published projection
 js/ui.js                DOM builder, icons, sheets, steppers, formatters
 js/views-*.js           screens
 js/body-*.js            the body illustration and its muscle map
-docs/                   spec, research, plans, Firebase setup
+tests/                  eighteen suites — see Tests above; `node tests/<name>.test.mjs`
+tools/                  offline generators and audits, run by hand, never shipped
+                        (the body art, the volume colour ramp, the strength fit,
+                        the accessibility audit) — read a tool's header before
+                        changing anything it generates
+docs/                   spec, vision, research, plans, Firebase setup
+firestore.rules         who may read whose data — tested by tests/rules.test.mjs
 progress.md             project state, decisions, and what is not verified
 chat.md                 the human-readable log
 ```

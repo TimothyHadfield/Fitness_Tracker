@@ -90,7 +90,7 @@ export function weightForReps(target, reps) {
  *    docs/research.md §3, graded 🟢: asked to predict their own reps to failure,
  *    141 lifters under-guessed — experienced ones by 1–2, less experienced by
  *    4–5 — and even believing you are at failure you typically have reps left.
- *    The app has no reps-in-reserve field and never will (D9), so this number
+ *    The app has no reps-in-reserve field and never will (D28), so this number
  *    is systematically HIGHER than the reps somebody will actually stop at.
  *    Present it as a rough guide, never as a target or a prescription.
  *

@@ -6686,9 +6686,9 @@ work, single-arm work and carries; `FORCE_TOTAL` for one implement in two hands 
 | D4 | **Target = spreadsheet transparency + app ergonomics.** | Spreadsheets win on whole-block visibility, structural freedom, permanence. Apps only win the logging loop. Take both. |
 | D5 | **e1RM must be rep-range honest.** Full confidence 2–10 reps, flag 11–15, don't normalise above 15. | Formulas degrade badly above ~10 reps. Built — and **enforced in ranking as `MAX_EVIDENCE_REPS = 15`** since 2026-08-16. It was not, and a 135×25 burnout set extrapolated to 258 lb, beat a real 205×5 top set and promoted a muscle a whole level. Benchmarks get no exemption. |
 | D6 | **Offline-first logging is non-negotiable.** | Gyms are basements. **Built 2026-08-16** — `sw.js` precaches the whole shell. Until then this was a claim, not a feature: store.js falls back to localStorage when the *cloud* fails, but with no signal the app never BOOTED, so that fallback never ran. Verified by killing the origin server, not by emulating offline — see §0.7. |
-| D7 | **No social feed.** | Repeatedly unwanted in Hevy reviews. |
+| D7 | **No social feed.** | Repeatedly unwanted in Hevy reviews. ⚠️ **NARROWED IN PRACTICE AND THE ROW HAD NOT SAID SO UNTIL 2026-09-02.** Home has been a feed of your own friends since 2026-08-25 and a Hevy-shaped one since 2026-09-02, and **D7 was never reopened to allow it** — the argument, in `docs/social-plan.md` §11 and §12.11, is that a list of people you chose to connect to is a list you VISIT, and what D7 actually refused is a **discovery feed of strangers**, which remains refused (Open work 18). A reader hitting this row first was being told the opposite of what the app does. |
 | D8 | **Teach at the moment of use**, never a manual or onboarding carousel. | RP Hypertrophy has the best science and worst delivery. |
-| D9 | **Progressive disclosure is core architecture.** | Audience is "any level". Can't be bolted on later. |
+| D9 | **Progressive disclosure is core architecture.** | Audience is "any level". Can't be bolted on later. 🚨 **D9 IS THIS AND ONLY THIS. Eleven places in this repo cite "(D9)" for the refusal to add an RIR/RPE field, which is a completely different decision and was never in this table at all** — recorded as **D28** below, 2026-09-02. Two of the citations (`docs/spec.md`) do mean progressive disclosure and are correct. |
 | D10 | **Training goal is a user setting that reconfigures the dashboard.** | One fixed dashboard would be wrong for most users. |
 | D11 | **Marzagão (2026) weight-dependent e1RM**, not Epley/Brzycki.<br>`1RM = w × (1 + (r−1)^0.85 / k(w))`<br>`k(w) = max(4.58, −2.55 + 4.58·ln(w_kg))` | The reps↔%1RM curve genuinely differs by exercise (Nuzzo 2024: exercise type is the *only* meaningful moderator). Classical formulas use one fixed factor for every exercise in the library. **⚠️ Our k-floor is 4.58, NOT the paper's 0.5** — below k = B the published curve *decreases* in weight, so a heavier lift would score lower and the inverse stops being unique. Asserted monotone across 1–400 lb. See `docs/research.md` §1. |
 | D12 | **Accounts are anonymous-first**; upgrading *links* the account so uid and data carry over. | A signup wall on first open is the biggest killer of retention, and D8/D9 say no wall on day one. Cost: un-upgraded data lives in one browser — the UI states that plainly. |
@@ -6720,6 +6720,22 @@ and swimming: *activities are RECORDED first-class — calendar, feed, backups, 
 and MODELLED not at all: never the muscle map, the ratings, volume or progression.* It narrows
 **D2** the way D21 narrowed D15: D2's real content was that the analysis is lifting-evidence-
 based, and that stays fully true. `docs/activities-plan.md` §1.
+
+🚨 **D28 IS RECORDED ON 2026-09-02, AND RECORDING IT IS THE WHOLE POINT — the decision was made long
+ago, honoured everywhere, and written down nowhere:** *the app has no reps-in-reserve or RPE field,
+and is not getting one.* Every module that touches proximity to failure defers to it —
+`js/e1rm.js`, `js/optimal.js`, `js/goals.js`, `js/strength-estimate.js`, `js/views-data.js`,
+`js/views-session.js` — and `docs/research.md` §3 is the evidence behind it: rep-based formulas all
+assume a set went to failure, lifters under-predict their own reps to failure by one to five, and
+asking somebody to rate a set mid-workout is a real cost in the one place this app is used
+one-handed. It is the largest single source of error the app deliberately cannot see: ±15–20 % on an
+e1RM (`docs/strength-estimate-plan.md` §1).
+
+⚠️ **AND IT WAS CITED AS "(D9)" IN ELEVEN PLACES, WHICH IS A DIFFERENT DECISION.** D9 is progressive
+disclosure. Nobody noticed because the sentence around the citation was always correct — the number
+was doing no work, so nothing depended on it being right, which is exactly how a wrong reference
+survives for weeks. **Anything that says "no RIR field (D9)" means D28.** The citations in
+`docs/spec.md` genuinely are about disclosure and are correct.
 
 **D24 and D25 are proposals too, in `docs/social-plan.md`**, and are not in the table for the same
 reason — nothing is built, so nothing is decided. D24: *sharing publishes a derived copy and never

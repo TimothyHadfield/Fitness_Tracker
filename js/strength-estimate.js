@@ -104,7 +104,7 @@ export const DEFAULTS = Object.freeze({
 
   /* — §3.3 corroboration ———————————————————————————————————————————— */
   // Repeated performance is the closest thing available to the RIR field the
-  // app deliberately does not have (D9): you do not hit your top load three
+  // app deliberately does not have (D28): you do not hit your top load three
   // times if the first one was maximal. Within 3 % of the best set's e1RM
   // counts as agreeing; two such sets is the most that can be earned.
   corroborationBonus: 0.15,

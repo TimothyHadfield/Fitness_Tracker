@@ -120,7 +120,7 @@ and Muscle Hypertrophy." *Sports Medicine* 54(9), 2024. doi:10.1007/s40279-024-0
 - Caveats the authors state plainly: RIR was *estimated* from study descriptions rather than
   measured, fit quality was "modest", and the analysis is exploratory.
 
-**The app has no RIR field, deliberately (D9).** So the single variable that most decides whether a
+**The app has no RIR field, deliberately (D28).** So the single variable that most decides whether a
 set counts for growth is invisible to any rating this app can compute. That is not a reason to
 abandon the rating — it is a reason the rating must be stated as *conditional*: "assuming sets are
 taken close to failure". A programme cannot make you train hard.

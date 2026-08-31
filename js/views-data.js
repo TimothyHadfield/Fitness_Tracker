@@ -777,7 +777,7 @@ export async function GraphView() {
     const source = pickSource(opt);
 
     // Only offered when the exercise genuinely has both. No control for a
-    // choice that doesn't exist (D9).
+    // choice that doesn't exist (D28).
     const sourceChips = opt.usableSources.length > 1
       ? el('div', { class: 'chips tight' }, opt.usableSources.map((s) =>
           el('button', {

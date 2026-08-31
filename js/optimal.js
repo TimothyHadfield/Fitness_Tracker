@@ -47,7 +47,7 @@
 // And two it cannot do, both of which are things the UI has to say out loud
 // rather than things a comment can settle:
 //
-// A. The app has no RIR field (D9), so proximity to failure — the variable that
+// A. The app has no RIR field (D28), so proximity to failure — the variable that
 //    most decides whether a set grows anything — is invisible. Every score is
 //    conditional on sets being taken HARD ENOUGH. (Phrased as a floor, not as
 //    an instruction: ACSM 2026 puts "training to momentary failure is not

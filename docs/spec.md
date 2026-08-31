@@ -102,9 +102,28 @@ migration.
 | Set type flag | straight, warmup, drop, myo-rep, cluster, AMRAP, backoff |
 | Non-weight metrics | time, distance, bodyweight-only, assisted (negative load) |
 | Exercise → muscle mapping | primary + secondary, with weighting, for P2 |
-| Warmup sets excluded from volume | they are not hard sets and must not inflate the count |
+| ⚠️ ~~Warmup sets excluded from volume~~ | 🚨 **THIS IS NOT A REQUIREMENT ANY MORE — IT IS AN OPEN DECISION TIM OWES, and it must not be built by whoever reads this row.** The original reasoning below still stands as reasoning. See the note under this table. |
 | Unit system per user | kg / lb, stored canonically, displayed per preference |
 | Sync-ready identity | stable UUIDs + timestamps so a sync layer can be added without migration |
+
+🚨 **The warmup row, struck 2026-08-31 — read this before touching volume.** It was written as an
+unmet requirement, and a fresh session reading only this file would go and implement it. It is
+instead **⏸️ a live open decision that is Tim's to make** (`progress.md`, "three decisions are Tim's"
+(a), and Open work 0c; the option that changed it is `docs/social-plan.md` §12.16).
+
+- **Today every logged set counts, everywhere, and the screens say so out loud** — the Volume tab
+  admits it counts warm-ups because the app has no way to tell a warm-up from a back-off set.
+- The two options on the table were both **guesses by the app**, which is why neither was taken:
+  exclude sets under some fraction of the top set (which also throws away genuine back-off work), or
+  count everything and admit it.
+- ⚠️ **There is now a third and better option: the lifter types the set**, the way Hevy does — `W`
+  for a warm-up, working sets numbered. The app never guesses. That is a set-type flag, a control in
+  the runner, an option in `volume-map.js`, and the Volume tab's apology becoming a setting.
+- ⚠️ **Whatever is chosen, every set already recorded is untyped and must stay counted** rather than
+  be retro-guessed.
+
+🚨 **Do not close this by building it.** `progress.md` states it as a decision that "must not be made
+by implementing" it, and it has been the highest-value item on that list since 2026-08-24.
 
 ### Schema AS BUILT (current, in `js/store.js` + `js/exercises.js`)
 
@@ -124,10 +143,28 @@ Workout               (a template, not a performed session)
 
 Session               (a performed workout)
   id, workoutId, workoutName, date, startedAt, finishedAt
-  entries[]           { exerciseId, exerciseName, sets[] }
+  isBenchmark         always written, true when the session was a tested max
+  location?           hand-typed place label, absent when blank — NEVER a coordinate
+  note?               the session description, ≤280 chars, absent when blank
+                      ⚠️ added 2026-09-02. NOT the same key as an entry's `notes`,
+                      which is the per-exercise coaching note on a TEMPLATE
+  acceptedFrom?       set when the row came from somebody else's guest session
+  entries[]           { exerciseId, exerciseName, group?, setType?, sets[] }
+                        group     the superset / tri-set / giant-set grouping —
+                                  a statement about the space BETWEEN adjacent
+                                  exercises (D23)
+                        setType   'drop' | 'myo'  — absent for a straight set
 
-Set                   (flat — see gaps below)
+Set
   weight?, reps?, time?, distance?
+  minis[]?            the drops of a drop set, or a myo-rep's match sets, NESTED
+                      inside the one set so `sets.length` keeps counting ONE hard
+                      set (D23). The legacy key was `drops`; `minisOf()` still
+                      reads it. Absent rather than `[]` when there are none
+
+GuestSession          ← a person you logged FOR, in its own collection
+  the same shape plus guestName / personId? / forUid?, and deliberately no
+  `location` and no `note` — see the guest-row note in js/views-session.js
 
 Benchmark
   id, date, exerciseId, exerciseName, values{ weight?, reps?, time?, distance? }
@@ -142,12 +179,27 @@ BodyWeight                                 ← added 2026-08-15
 `normalizeWorkout()` in `store.js` migrates the older `exerciseIds[]` shape to `exercises[]` on
 read. Keep it — saved data in the wild still uses the old shape.
 
+⚠️ **Corrected 2026-08-31.** The Session and Set blocks above were stale: they had been carrying the
+day-one shape and omitted `isBenchmark`, `location`, `note`, `acceptedFrom`, the entry-level `group`
+and `setType`, and the set-level `minis[]` — all of which the code writes today. Checked against
+`store.saveSession()`'s call site and `cleanedEntriesOf()` in `js/views-session.js`, and against
+`projectSession()` in `js/social.js`, which publishes the same fields to a friend. **A schema block
+that is short a field is worse than no schema block**, because the next reader takes it as the list.
+
+⚠️ **And this block is short three whole collections, which are named here rather than sketched from
+memory.** `COLLECTIONS` in `js/store.js` is the authority and reads:
+`customExercises · workouts · sessions · benchmarks · settings · bodyWeight · systems · goals ·
+guestSessions · people`. **`systems`, `goals` and `people` have never been written up here** — read
+the store for their shape. ⚠️ **`sessions` and `guestSessions` are SHARDED** (one Firestore document
+per row, `SHARDED_COLLECTIONS` in `js/firebase-backend.js`); every other collection is still one
+document holding every row, which is the constraint the whole sharing model is built around.
+
 ### Gaps between as-built and target
 
 | Missing | Blocks | Difficulty |
 |---|---|---|
 | ~~`BodyWeightEntry` table~~ | — | **Built 2026-08-15** as the `bodyWeight` collection |
-| `rir` / `rpe` / `tempo` / `setType` on Set | Autoregulation, warmup exclusion | Easy, additive — nullable columns |
+| `rir` / `rpe` / `tempo` on Set — ~~`setType`~~ | Autoregulation, warmup exclusion | Easy, additive — nullable columns. ⚠️ **`setType` is PART BUILT (2026-08-17, D23)**: `drop` and `myo` are recorded, with the extensions nested as `minis[]` inside the one set. `warmup` is NOT a value it takes — that is the struck row above, and it is Tim's decision, not a gap |
 | Weighted primary/secondary muscle mapping | **D3 (weekly volume per muscle)**, and better muscle-map coverage than one-lift-one-muscle | Medium; changes `exercises.js` shape and needs a migration for custom exercises |
 | `UserProfile` — `goal`, `experience`, `disclosureLevel` | D9 disclosure level, D10 goal-driven dashboard | Easy, additive. **Partially done**: `gender` and `birthYear` now live on Settings for the strength map |
 | `Program` / `Block` | Tier 2 | Not designed yet |
@@ -199,10 +251,31 @@ UserProfile
 
 - **Web app / PWA**, no build step, no dependencies. Plain ES modules; serve the folder and it runs.
 - **`localStorage`** behind an async API in `store.js`. *(The original plan said IndexedDB; the
-  async API means swapping is a one-file change if volume ever demands it. Workout data is small
-  text — roughly 300 bytes a session — so this is not urgent.)*
-- **Local-first, no accounts.** A complete Firestore adapter sits in `js/firebase-backend.js`,
-  activated by filling `js/firebase-config.js` and flipping `BACKEND` in `store.js`. Untested.
+  async API means swapping is a one-file change if volume ever demands it.)*
+  ⚠️ **~~roughly 300 bytes a session~~ — CORRECTED, TWICE, on 2026-08-24, and both corrections went
+  the same way: the app's own guess was too small.** A real serialisation put a session at
+  **~1,100 bytes of JSON**, and Firestore does not charge JSON length — on this app's own data the
+  true cost is **1.66× that, so ~2,000 bytes as Firestore counts it.** The original claim was out by
+  more than 3× at the point it mattered (it implied ~3,000 sessions inside a 1 MiB document; the
+  honest figure was ~950 on JSON and ~520 as charged). ⚠️ **Do not re-state a per-session byte
+  figure from memory** — `store.cloudUsage()` exists precisely because a constant nobody can check
+  drifted twice, and it reports *this account's* measured rows. `sessions` and `guestSessions` are
+  one document per row since the sharding migration and are not measured against the cap at all.
+- **Local-first, and an account is optional.**
+  🚨 **~~activated by filling `js/firebase-config.js` and flipping `BACKEND` in `store.js`. Untested.~~
+  — WRONG SINCE 2026-08-15/22, corrected 2026-08-31. THE CLOUD IS LIVE. There is no setup left to
+  do, and this row was sending a fresh session to redo finished work.** As built:
+  - `js/firebase-config.js` holds the **real** project (`fitness-tracker-th`). Those values are not
+    secrets — they identify the project, not the user; Auth plus `firestore.rules` are what protect
+    the data.
+  - `store.js` runs **`BACKEND = 'auto'`**, so the app is on Firestore whenever the config is present
+    and falls back to local storage when it cannot connect. Nothing needs flipping.
+  - It is **tested**: `tests/rules.test.mjs` is a Firestore-emulator suite that runs as somebody who
+    is *not* you and asserts the denials as well as the allows — the only tests here that can. And
+    **two real accounts connected over the live project on 2026-08-22** (invite, claim, accept, tier,
+    publish, read, downgrade, disconnect).
+  - ⚠️ **What is still unverified is the SOCIAL work built since**, not the adapter. `progress.md` is
+    the authority on which parts two real accounts have and have not exercised.
 - **No framework.** DOM built with the `el()` helper in `ui.js`.
 - **Charts hand-rolled** — SVG for the line chart, HTML/CSS for the bars.
 
@@ -213,6 +286,6 @@ UserProfile
 | Cut | Reason |
 |---|---|
 | Diet / nutrition tracking | See `../progress.md` D1 — free alternatives are not meaningfully crippled |
-| Social feed | Repeatedly cited as unwanted by Hevy users |
+| ⚠️ ~~Social feed~~ → **the DISCOVERY feed of strangers** | **Narrowed 2026-08-31, and the refusal is real — it is just narrower than this row used to claim.** A **friends' feed** is BUILT: it is the Friends half of Home (since 2026-08-25, Hevy-shaped since 2026-09-02) and shows sessions published by people you are mutually connected to. What is still refused is **algorithmic discovery — a feed of people you do not know**: that is what D7 was actually written against, it needs public profiles and the ability to enumerate them (the exact thing the invite-link design exists to avoid), and it imports a moderation story this project does not have. ⚠️ **D7 itself was never narrowed** and still reads "No social feed" in `progress.md` §6; the standing refusal is Open work 18 there |
 | AI-generated workouts | Fitbod's model actively undermines progressive overload — you can't beat last week on a lift you didn't do last week |
 | A library of thousands of programs | Boostcamp owns this. A small set of well-explained programs serves beginners better |

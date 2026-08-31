@@ -20,7 +20,7 @@ their briefs are recorded here so nobody has to re-derive them.
 | Review | What it was to find | Status |
 |---|---|---|
 | **Adversarial code review** | Bugs in code written 2026-08-19 — much of it written fast by parallel agents. Top target `js/progression.js`, because it is the only part of this app that can cause physical harm | ✅ **RAN 2026-08-20 — progression only. FOUND A REAL BUG**, below. `strength-estimate.js` and the body-weight work still not attacked |
-| **Human behaviour / UX** | The app judged as a product for strangers. Jargon leaks, first-run path, what brings anyone back | Not run — one finding recovered by hand, §1.1 |
+| **Human behaviour / UX** | The app judged as a product for strangers. Jargon leaks, first-run path, what brings anyone back | ✅ **RAN 2026-08-22 — CORRECTED HERE 2026-09-02; this cell said "Not run" for ten days after it had.** It found the sharpest single thing on the list: **Goals told a user who was meeting their target that they were short**. See `progress.md`, 2026-08-22 fifth pass, and its "findings that are NOT fixed" list — that list is judgement rather than bugs and is where the unfinished work sits. Item 1 on it, *nothing a user can see on Home ever grows*, is still open |
 | **Competitive** | Whether the differentiation still holds in Aug 2026; what rivals do better; what users complain about now | ⚠️ **PINNED 2026-08-28 — not run, and deliberately not queued** (see below) |
 | **Cross-screen consistency** | Two screens disagreeing about the same fact | ✅ **RAN 2026-08-20 — found one**, below. Two §3 hypotheses checked and CLOSED |
 | **Accessibility / mobile reality** | Touch targets, contrast, keyboard, screen readers, text scaling. **Never audited once** | ✅ **RAN 2026-08-20 — contrast, touch targets and accessible names. FAILED ON ALL THREE**, below. Keyboard, screen readers and text scaling still NOT checked |
@@ -30,7 +30,11 @@ their briefs are recorded here so nobody has to re-derive them.
 ~~**The single most valuable of the four still open is the social round trip**~~ — **it has now run**,
 and it did what it was scoped to do: it converted the largest built feature in the project from
 "reviewed code" to "verified", and it found two things no amount of reading had. **Edge cases ran
-the same day.** **Two still open**: human behaviour / UX, and competitive.
+the same day.** ~~**Two still open**: human behaviour / UX, and competitive.~~
+⚠️ **CORRECTED 2026-09-02 — ONE is still open, not two.** The human-behaviour / UX review **ran on
+2026-08-22**, last of the seven, and found the Goals target bug. **SIX of the seven have run and
+every one found something real.** The only one outstanding is the **competitive** review, and it is
+PINNED — see immediately below.
 
 ⚠️ **THE COMPETITIVE REVIEW IS PINNED — 2026-08-28. Do not offer it as the next thing to do.** It is
 the odd one out of the seven and always was: **the six that ran inspected the APP and found
@@ -141,6 +145,12 @@ already carries body weight in its key — and the per-session clamp, which live
 
 ### 1.1 ⚠️ The first-run path makes a stranger learn a concept before they can log anything
 
+> ✅ **FIXED 2026-08-21 — kept here because the reasoning is why the fix took the shape it did.**
+> Option 1 below is what shipped: **Explore leads an empty account**, and install → first logged set
+> is **five taps, measured**, against about a dozen before. §4 Tier B item 3 already records this;
+> this heading did not, and read as a live confirmed problem for eleven days. ⚠️ **The jargon sweep
+> that follows it (Tier B item 4) has NOT been done.**
+
 **Verified by hand, 2026-08-19.** On an empty account, Home's primary button reads **"Create your
 first workout"** and navigates to `#/workouts` — a screen titled *Workouts* whose two actions are
 **"New system"** and **"Explore ready-made systems"**, over an empty state explaining what a system
@@ -192,6 +202,13 @@ These are already recorded, already honest, and still open. Listed so the plan i
 `docs/competitive-teardown.html` plus what has been built since, and it **needs checking before it
 is repeated to anyone**, because the teardown predates most of this app.
 
+⚠️ **2026-09-02: THIS IS NOW THE ONLY ⚠️ NOT AUDITED SECTION LEFT, AND IT CANNOT BE CLOSED THE WAY
+THE HEADER SAYS.** The file's opening banner tells a reader to re-run the review before trusting a
+NOT AUDITED section; **the competitive review is PINNED and must not be offered as the next thing to
+do** (§0, and the PINNED table in `progress.md`). So this section stays unbacked deliberately.
+**Treat it as a position, not a finding, and do not repeat it to anyone as fact** — that instruction
+is the whole of what to do here unless Tim asks for the review by name.
+
 ### Real advantages, in rough order of durability
 
 1. **It says when it does not know.** Confidence on every muscle rating, bands rather than points,
@@ -212,7 +229,8 @@ is repeated to anyone**, because the teardown predates most of this app.
 3. **Nothing yet creates a reason to come back tomorrow** beyond conscientiousness. ⚠️ This is the
    one I would most want the UX review to test, because it is the difference between an app someone
    admires and an app someone uses.
-4. **The first-run path is slow** (§1.1).
+4. ~~**The first-run path is slow** (§1.1).~~ ✅ **FIXED 2026-08-21** — five taps from install to a
+   logged set, measured. See §1.1.
 
 ---
 
@@ -249,11 +267,18 @@ Ranked by where I would look first, given what this codebase has already been bi
 
 **Tier A — verify what exists.** Nothing new should be built before these.
 
-1. Re-run the reviews in §0. **Three have run** (adversarial, cross-screen, accessibility) and all
+1. Re-run the reviews in §0. ~~**Three have run** (adversarial, cross-screen, accessibility) and all
    three found something real; **four are left** — UX, competitive, edge cases, and the social round
-   trip. Start with the social round trip. ⚠️ **Serially, not as a parallel wave** — the wave is what
+   trip. Start with the social round trip.~~ ⚠️ **Serially, not as a parallel wave** — the wave is what
    the usage limit killed on 2026-08-19, and doing them by hand cost less and actually returned
    findings.
+   ⚠️ **CORRECTED 2026-09-02: SIX have run, not three, and ONE is left.** Edge cases, the social
+   round trip and human behaviour / UX all ran on **2026-08-22**, and all three found something real.
+   The only outstanding review is **competitive**, which is **PINNED** — do not offer it as the next
+   thing to do (§0). ⚠️ **The "serially, not as a wave" instruction was itself narrowed on
+   2026-08-22** — §0 records that a wave of three, each with a written brief and an explicit list of
+   files it must not touch, worked. Seven at once is what failed; **file conflicts are the thing to
+   plan for.**
 2. Act on whatever they find.
 
 **Tier B — the newcomer.**
@@ -265,12 +290,22 @@ Ranked by where I would look first, given what this codebase has already been bi
 
 **Tier C — finish what is half-built.**
 
-5. **The estimator, Phases 1–3.** ⚠️ Read §16 of the estimate plan first: the band fits inside one
-   level only **8.5 %** of the time, so Phase 2 must be *designed for the hedged reading*. This is
+5. **The estimator, Phases 1–3.** ⚠️ Read **§6.1** of the estimate plan first: the band fits inside
+   one level only **8.5 %** of the time, so Phase 2 must be *designed for the hedged reading*. This is
    what the Goals verdict waits on.
-6. **The weekly-sets-per-muscle screen** (D3). The mapping and the target bands both exist and are
+   ⚠️ **CORRECTED 2026-09-02: this line said §16, and it was wrong.** The 8.5 % measurement is in
+   `docs/strength-estimate-plan.md` **§6.1 ("Levels stop flapping")**, in the MEASURED block under
+   it. §16 exists — it is *"What Phase 0 did NOT establish"* — which is what made the miscitation
+   expensive: it sends a reader to a real section that does not contain the number, so it reads as a
+   missing paragraph rather than an obvious typo. §6.1's finding is also restated in that plan's
+   §12 phase table and in §14's open questions.
+6. ~~**The weekly-sets-per-muscle screen** (D3). The mapping and the target bands both exist and are
    unused. This is the clearest "insight comes out" feature still unbuilt, and it is what the
-   teardown says every rival fails at.
+   teardown says every rival fails at.~~ ✅ **BUILT 2026-09-01 — Data → Volume**, the fifth segment on
+   that tab. Computed from **recorded sessions**, every muscle. ⚠️ **One departure worth keeping**:
+   it reads against the **published efficiency tiers** — what another set buys — rather than against
+   the "target bands" this line assumed, because the app does not get to tell somebody they are doing
+   too little or too much (Rule 6). D3 in `progress.md` carries the same note.
 7. **A report of what you actually did**, which is where the two findings the rating cannot use
    belong: the share of logged sets at 8 reps or fewer (load matters enormously for strength), and
    exercise order (88 % QoE, the highest-confidence finding this project has). Both are measurements
@@ -279,15 +314,30 @@ Ranked by where I would look first, given what this codebase has already been bi
 **Tier D — reach.**
 
 8. Real-device testing, when Tim decides. Deferred deliberately; not to be raised.
-9. Social phase 4, which still needs D7 narrowed first.
+9. ~~Social phase 4, which still needs D7 narrowed first.~~ ✅ **BUILT 2026-09-02** — the Hevy-shaped
+   home feed, all eight steps of `docs/social-plan.md` §13, summarised in its §14. ⚠️ **D7 was never
+   actually reopened**: `docs/social-plan.md` §11 records that "see what my friends are doing" was
+   delivered by a friend's page, so the locked decision was not in the way; §12.9 states the sharper
+   version — **a friends feed is a list you visit, and the public DISCOVERY feed is the thing D7
+   refused.** 🛑 **Do not build the discovery feed** (§12.11, `progress.md` Open work 18). What is
+   left of social is photos (step 9, needs Blaze), two decisions Tim owes (warm-up typing,
+   per-workout visibility), and 🚨 **the fact that none of the 2026-09-02 work has been used by two
+   real accounts or seen a phone.**
 
 ---
 
 ## 5. Open questions for Tim
 
-1. **Ratify D18?** Still the only genuinely open question in `progress.md`. Phase 0 of the estimator
-   is now done, so the fallback — ship it as a separate labelled chart mode — is concrete rather
-   than hypothetical.
+1. **Ratify D18?** ~~Still the only genuinely open question in `progress.md`.~~ Phase 0 of the
+   estimator is now done, so the fallback — ship it as a separate labelled chart mode — is concrete
+   rather than hypothetical.
+   ⚠️ **CORRECTED 2026-09-02: it is no longer the only one.** `progress.md`'s "five things a fresh
+   session most needs to know" now lists **three** decisions that are Tim's and must not be made by
+   implementing them: **(a) should a warm-up be typed by the lifter?** — the highest-value item on
+   that list, since every recorded set counts everywhere until he says otherwise; **(b) per-workout
+   visibility as well as per-person?** (`docs/social-plan.md` §13, decision B); and **(c) ratify
+   D18**, unanswered since 2026-08-16. ⏸️ **Volume in pounds is a fourth thing he has already
+   answered — with a refusal** (*"Replace Volume for # of sets"*), and it should not be re-offered.
 2. **Is "a reason to come back tomorrow" a goal?** The app is deliberately free of streaks, badges
    and nudges, and that is defensible — but it means retention rests entirely on the analysis being
    worth returning to. Worth an explicit decision rather than an accident.

@@ -655,7 +655,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       status: 'invisible',
       value: null,
       source: 'research.md §6.7',
-      detail: 'The app has no reps-in-reserve field and is not getting one (D9), so it cannot see '
+      detail: 'The app has no reps-in-reserve field and is not getting one (D28), so it cannot see '
         + 'how hard your sets are. This is the variable that most decides whether a set grows '
         + 'anything.',
     },

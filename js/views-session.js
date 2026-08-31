@@ -3103,7 +3103,7 @@ export async function BenchmarkView() {
    * a guess rather than a target. It answers "reps to momentary failure", and
    * research.md §3 measured that people under-predict their own reps to failure
    * by one to five — so somebody stopping where they normally stop will do fewer
-   * than this says. The app has no reps-in-reserve field and never will (D9), so
+   * than this says. The app has no reps-in-reserve field and never will (D28), so
    * that gap is invisible to it and has to be stated instead.
    */
   function renderEstimate() {

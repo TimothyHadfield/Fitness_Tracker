@@ -14,13 +14,22 @@
 > resolved. Twice now the conflict turned out to be with a specific model rather than with the idea
 > (D15 → D21), and re-examining it produced something better than either the old rule or an override.
 
-**Started:** 2026-08-16 · **Last added to:** 2026-08-18
+**Started:** 2026-08-16 · **Last added to:** 2026-08-18 · **Last checked against the code:**
+2026-08-31
+
+⚠️ **"Last added to" is not "last true", and this file went twelve days without anybody noticing the
+difference.** Nothing was *added* after 2026-08-18 and that line is still accurate — but the file
+itself was untouched from 2026-08-19 to 2026-08-31, and in that gap **§1.1 stopped describing what
+was built**. The corrections are appended in place below, under 🆕 headings, per the rule in this
+file's own *How to use* section and in `progress.md`'s upkeep table: **entries are marked and never
+deleted, because the superseded reasoning is the point of the file.** Two dates are therefore kept
+from here on — when Tim last added, and when somebody last checked.
 
 **Where each idea stands** — the detail, and the reasoning, is under each heading:
 
 | | Idea | State |
 |---|---|---|
-| §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — a Social tab, mutual friends, invite links, per-person visibility, a friend's page with their body map. **D7 never had to be reopened**: there is no feed. Untested between two real accounts |
+| §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — ~~a Social tab~~, mutual friends, invite links, per-person visibility, a friend's page with their body map. **D7 never had to be reopened**: ~~there is no feed~~. ~~Untested between two real accounts~~ · 🆕 **CORRECTED 2026-08-31, three ways.** It is the **Friends half of Home**, not a tab of its own, since 2026-08-22. **There IS a feed** — the You/Friends switch on Home, since 2026-08-25, Hevy-shaped since 2026-09-02. **Two real accounts connected over the live project on 2026-08-22.** ⚠️ D7 still did not have to be reopened, and that part stands: what it refuses is the **discovery** feed of strangers. ⚠️ What is *now* unverified is the social work built since 2026-08-27 — see §1.1's 🆕 note |
 | §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
 | §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating sits beside each one on Explore and on the Workouts list — growth and strength, banded to 5. **Extended 2026-08-19**: the badge also carries the COST — days a week and minutes a session — because a score without what it asks of you is half a sentence |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
@@ -73,6 +82,30 @@ by building the recommendation** — mutual friends rather than followers, and a
 than a feed — which is why **D7 never had to be narrowed**. What has not happened: two real accounts
 have never connected. See `progress.md` NOT verified.
 
+🆕 **CORRECTED 2026-08-31 — the paragraph above is kept because it is what was true on 2026-08-18,
+and three of its claims stopped being true afterwards. The reasoning is still worth reading; the
+state is not.**
+
+- ⚠️ **"a fifth nav tab" → the Friends half of HOME**, since 2026-08-22. There is a **You / Friends**
+  switch; `#/social` is still its route and the screen is titled *Friends* rather than *Social*,
+  because that is what a person actually has.
+- 🚨 **"a list you visit rather than a feed" → THERE IS A FEED**, since 2026-08-25, and it has been
+  **Hevy-shaped since 2026-09-02**. Each card carries the description its owner typed, a
+  **Time · Sets** row and one line per exercise with its set count; **tapping it opens their workout
+  on its own screen** (`#/friend/<uid>/<sessionId>`), where you can **compare a lift against your
+  own**, **save their workout as one of yours**, or **share a picture of it**. ⚠️ **This does not
+  reopen D7 and D7 was never narrowed** — the thing it refuses is the **discovery** feed of
+  strangers, which needs public, enumerable profiles and a moderation story this project does not
+  have. That refusal is now written down as a standing one (`progress.md` Open work 18,
+  `docs/social-plan.md` §12.11). **The open question the 2026-08-18 note thought it had dodged was
+  answered by building the feed and finding D7 still fitted.**
+- ✅ **"two real accounts have never connected" → they did, on 2026-08-22**, over the live project:
+  invite, claim, accept, tier, publish, read, downgrade, disconnect, each checked against what
+  Firestore actually handed the other account. ⚠️ **The unverified claim has MOVED rather than
+  gone**: everything social built since 2026-08-27 — and everything from 2026-09-02 — has still
+  never run between two real accounts, and none of it has been on a phone. `progress.md` is the
+  authority on which is which; do not read this file for that.
+
 **PLANNED 2026-08-17 — `docs/social-plan.md`.** Four things from the plan worth knowing without
 reading it:
 
@@ -89,6 +122,13 @@ reading it:
   build a connection's **profile page** and no feed. That delivers "see what a friend is doing"
   completely, and leaves D7 to be judged later against a real screen. No likes, streaks or
   leaderboards either way — those are the engagement mechanics D7 was actually written against.
+  🆕 **SUPERSEDED 2026-08-31, and the way it was superseded is the point.** The recommendation did
+  its job: the profile page was built first, D7 *was* judged later against a real screen, and the
+  answer was that a feed of people you already chose is not what D7 refused. **The feed shipped on
+  2026-08-25 without D7 being touched.** ⚠️ **The second sentence did NOT survive intact** — kudos
+  and comments are real since 2026-08-26. Streaks and leaderboards are still refused; those are the
+  ranking mechanics. `docs/social-plan.md` §12.11 and §13 carry the current reasoning, and this
+  paragraph stays because it is why the order of the build was right.
 - **The privacy note above turned out to be the understatement.** This is the first feature where
   being wrong is not recoverable, and revocation cannot be: unsharing deletes a document, it does not
   un-see what somebody already read. The plan says that has to be on screen when you share, not
@@ -322,7 +362,7 @@ label cannot.
 structure had been stripped out; 11 of its exercises are now marked as myo-reps and that sentence
 has been deleted from the warning because it stopped being true. **Chris Bumstead shipped the same day** and is the
 system this was built for — eight drop sets, a tri-set and a superset, none of which could have been
-expressed before. RIR and tempo remain deliberately absent (D9).
+expressed before. RIR and tempo remain deliberately absent (D28 — ⚠️ cited as D9 here until 2026-09-02; D9 is progressive disclosure).
 
 **Where this connects:** ranked pre-designed systems (§1.3) — several of the best-known programmes
 could not even be *entered* before this, so the celebrity library had a ceiling. Nothing here
