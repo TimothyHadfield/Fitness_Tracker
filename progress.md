@@ -46,7 +46,7 @@ wrong.**
 wants the home page *"extremely similar to how Hevy does it"*. 🚨 **The finding: most of a Hevy card
 is already in our projection and simply is not rendered** — sets, reps, weights, duration and
 location all publish at mid, volume and muscle split are derivable client-side, and the description
-is the only field we do not store at all. **Eight steps, each shippable alone, none needing money.**
+is the only field we do not store at all. **Eight steps, each shippable alone, none needing money.** ⚠️ **§12.13 corrects §12.12 from a NEWER build found on their own site** — the stat row is three columns (Time · Volume · Records 🏅), the description sits under the title, and **the card is a swipeable pager: media on page one, the exercise list on page two**. 🚨 **And their visibility is PER WORKOUT where ours is per person** — a real feature difference, not a rename. §12.14 is our card beside theirs, driven in the demo: six differences, the biggest being that we show no stat row at all.
 ⚠️ **Photos need Blaze (Tim's call) and heart rate needs a native app**; the discovery feed is
 recorded as the thing D7 actually refused. ⚠️ **Nobody here has opened the app** — the analysis is
 from their published docs and says nothing about how it looks.

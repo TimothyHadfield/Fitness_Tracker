@@ -672,7 +672,7 @@ Reading down the one screenshot that shows Home:
 | **Screen header** | a **"Home ⌄" pill** on the left — the dropdown that swaps Home for Discover — with a **search glass** and a **bell** on the right. No title text; the pill *is* the title |
 | **Row 1** | circular avatar, ~48px, left. Beside it the **username in bold**, and under that **"2 hours ago"** in grey. Nothing else on that row |
 | **Row 2** | the **workout title** — *"Chest Day 💪"* — bold, about 1.4× the username, full width, below the avatar row rather than beside it |
-| **Row 3, the stat row** | **two columns**: `Time / 44 min` and `Volume / 5, 340kg`. **Small grey label ABOVE, big black value BELOW**, left-aligned, roughly at the thirds. PRs would be the third column when there are any |
+| **Row 3, the stat row** | **Small grey label ABOVE, big black value BELOW**, left-aligned, roughly at the thirds. ⚠️ **This card shows two — `Time / 44 min` and `Volume / 5, 340kg` — but §12.13 found the real one has THREE**, the third being `Records 2 🏅` when the session set any |
 | — | a hairline rule |
 | **Row 4** | the grey section word **"Workout"** |
 | **Rows 5–7** | up to **three exercises**, each a **circular line-drawing thumbnail (~56px)** and one line of text in the form **"3 sets Bench Press (Barbell)"** — the set count leads, the equipment is in brackets |
@@ -727,3 +727,111 @@ with **Personal Records** under it.
 
 ⚠️ **That chip row is the same idea as our Data tab's segmented control**, and the range picker is
 the same idea as Volume's 4/8/12 weeks. We are closer to this screen than to any other in the app.
+
+### 12.13 ⚠️ A NEWER BUILD, AND IT CORRECTS §12.12
+
+**Added 2026-08-31, second pass.** The App Store images are marketing assets and are *older* than the
+app. `hevyapp.com` embeds what look like **real device screenshots** of a current build in its
+feature pages, and they differ from §12.12 in ways that matter. Where the two disagree, **these
+win**.
+
+#### The stat row is THREE columns, and the third is Records
+
+`Time 1h 4min · Volume 8,220 kg · Records 2 🏅`. §12.12 said two, from a card that happened to have
+no PRs. **The third column appears when there are records, with a medal glyph beside the count** —
+which also answers how a PR is marked: a **yellow rosette**, used again on the exercise page beside
+the chart.
+
+#### The description sits UNDER the title, above the stats
+
+`marioit` → **Chest & Shoulders** → *"Vamoss con todo 💪"* → the stat row. So the reading order is
+**who → what it was called → what they said about it → the numbers**. The description is not a
+footnote; it is the second thing you read.
+
+#### 🚨 THE CARD IS A SWIPEABLE PAGER, WHICH §12.12 GOT WRONG ENTIRELY
+
+A card with media shows **the photo or video filling the card**, with **page dots in the footer
+row** — and the *exercise list is the second page*. Swipe sideways and the same card turns into
+`7 sets Hack Squat (Machine) · 4 sets Viking press · …`. That is a much better idea than it sounds:
+**the media and the data are peers**, and the card never grows to hold both.
+
+⚠️ **It also means the exercise cap is not three.** The current build lists **five** and then *"See 1
+more exercise"*.
+
+#### Other things visible in the current build
+
+- **Four tabs: Home · Workout · Coach · Profile.** The marketing set shows three. "Coach" is their
+  coaching product and is new.
+- **The comments screen** is its own page: the workout's name as a row with a chevron back into it,
+  a `👍 0 likes / 1 comment` summary bar, each comment with avatar, handle, age, a like button and
+  **Reply** — and **a strip of one-tap emoji above the input** (💪 🔥 👏 🏋️ 👊 🥵 🏆). URLs in comments
+  render as live links.
+- **Search** has two tabs — **Search** and **Contacts** — over a suggested-athletes list where each
+  row has a **Follow** button and an **✕** to dismiss the suggestion.
+- **Invite Friends** is a share sheet of its own: WhatsApp, Messenger, Facebook, X, Copy Link, Share
+  More, plus **"Connect with Contacts — find people you know"**.
+- **They have a dark theme**, shown beside the light one.
+- **Suggested Athletes is interleaved INTO the feed** between posts, not parked at the top.
+
+#### 🚨 AND THE ONE THAT IS ARCHITECTURAL: VISIBILITY IS PER WORKOUT, NOT PER PERSON
+
+Their Privacy & Social screen has **Private Profile**, **Hide Suggested Users**, and:
+
+> **Default Workout Visibility — Everyone ›**
+> *"Set the default workout visibility for new workouts. You can change it for specific workouts when
+> saving them. It does not affect existing workouts retroactively."*
+
+⚠️ **That is the opposite axis from ours.** Hevy asks *"who can see THIS WORKOUT"* and answers it once
+per post; this app asks *"what can THIS PERSON see"* and answers it once per person (§3.3). Neither
+is a subset of the other:
+
+- **Theirs** lets you post one session privately without changing anything about anyone. **Ours
+  cannot do that at all** — a session is either in the projection or not, for everybody at that tier.
+- **Ours** lets one friend see weights while another sees only that you trained. **Theirs cannot do
+  that**, because visibility is a property of the post rather than of the reader.
+
+**If Tim wants the Hevy behaviour it is a real feature and not a rename**: a per-session `visibility`
+flag, honoured by `projectSession()`, plus a control on the finish screen. It composes with the tiers
+rather than replacing them — "not shared at all" would simply be a session the projection skips. ⚠️
+**Their own note about not being retroactive is worth copying word for word**, because it is the same
+honesty §2 already demands about revocation.
+
+#### Still not seen, after both passes
+
+**The expanded workout view** — the screen you land on by tapping a post. It is described in their
+documentation (§12.3) and appears in none of the 22 store images or the site's own screenshots. It is
+step 3 of the build order in §12.10, so it is the one gap worth closing, and **only the app itself
+will close it**.
+
+---
+
+### 12.14 Our card today, beside theirs
+
+Driven in the demo account at 393×852, so this is what a real person sees:
+
+> **Priya Raman** · Today at 10:17 AM · 70 min
+> **🏋 Full Body**
+> Front Squat · Dip · Barbell Row · Plank
+> 👍 Kudos  💬 Comment  ↗ Share
+
+**What we already do that they do:** the poster's name and avatar, a relative timestamp, the workout
+title as the largest thing on the card, and a three-action row. The kind glyph beside the title is
+ours and has no equivalent there.
+
+**Six differences, in the order they cost the most:**
+
+1. 🔴 **No stat row at all.** Duration is buried mid-sentence in the grey meta line; volume and
+   records do not exist on the card. **This is the single biggest visual gap and two thirds of it is
+   arithmetic on data we already hold.**
+2. 🔴 **The exercises are a run-on line** — `Front Squat · Dip · Barbell Row · Plank` — where theirs
+   is one row per exercise with **the set count first** and a thumbnail. Ours does not say how much
+   was done of anything.
+3. 🔴 **No description**, because we do not store one (§12.8).
+4. 🟡 **No counts on the actions.** We have kudos and comments working, but the card never says *8
+   likes · 3 comments*, and the faces of the people who reacted are the cheapest social signal there
+   is.
+5. 🟡 **The card is not a way in.** Tapping it does nothing; the only route to the session is via the
+   friend's page. Theirs opens the workout.
+6. ⚪ **They use a boxed card on a grey gutter; ours uses hairlines on a flat ground.** ⚠️ **That one
+   is not a defect — it is Design Rule 2**, and it should stay. Copying their information
+   architecture does not require copying their boxes.
