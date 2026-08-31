@@ -6432,3 +6432,30 @@ and Blaze for photos.
 **Not verified:** none of this has been on your phone, and no two real accounts have used it. The
 sharing-a-picture path in particular has only run in a headless browser, where it falls back to a
 download instead of the share sheet.
+
+---
+
+## 2026-09-02, second pass — back
+
+**You:** *"When you click back on something it should always go to what you were on right before.
+Currently when you click on someone else's workout and then go back. It takes you to that users
+profile/page rather than back to the home menu where you saw the post on."*
+
+You reported one screen and it turned out to be true of all forty-eight. Every back arrow in the app
+had a *fixed* destination written into it — the calendar for a day, Workouts for a workout, the
+friend for their session — which is the right answer only when that is where you came from. The
+workout screen is just the first screen in the app you can reach from two different places, so it is
+the first one where the fault is visible. Every older screen has it too; nobody had hit it because
+there was only ever one way in.
+
+So the fix is one function rather than forty-eight edits: the arrow now goes *back*, and each
+screen's written-in destination survives as the fallback for when there is nothing to go back to — a
+link somebody shared with you, a bookmark, the first screen after opening the app. That way a deep
+link still lands somewhere sensible instead of stepping off the site entirely.
+
+One screen deliberately keeps its old behaviour: the arrow on the "workout complete" screen, which
+means "go and change what I just recorded" rather than "back". Going back from there would reopen the
+workout you have just finished.
+
+Checked in a real browser: home → tap a post → the workout → back → home, with the feed intact.
+
