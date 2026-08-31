@@ -3,6 +3,7 @@
 import { store, demo, warmReadCache, social } from './store.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
+  markRoute,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -209,7 +210,16 @@ async function render() {
   const app = document.getElementById('app');
   const route = parse(location.hash);
 
-  if (route.name === 'blank') { rendering = false; return; } // used to force a refresh
+  /* ⚠️ NOTHING IN THIS APP NAVIGATES TO `#/blank` ANY MORE (2026-09-02) — the
+   * nine places that used it to force a re-render call `refreshRoute()`, which
+   * re-renders in place instead of pushing two history entries. The guard stays
+   * because a bookmark or an open tab from before today can still be sitting on
+   * one, and rendering nothing is better than falling through to Home. */
+  if (route.name === 'blank') { rendering = false; return; }
+
+  // Where this screen sits in the visit, so the back arrow can go BACK rather
+  // than to a hard-coded parent. See markRoute() in ui.js.
+  markRoute();
 
   try {
     const screen = await resolve(route);

@@ -17,6 +17,7 @@ import {
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge, exerciseLabel,
+  refreshRoute,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
@@ -635,11 +636,11 @@ export async function DayView(date) {
   });
 }
 
-// Force the router to rebuild the current view after a delete.
+// Force the router to rebuild the current view after a delete. ⚠️ Re-renders in
+// place — the old `#/blank` bounce pushed two history entries and broke the
+// back arrow (2026-09-02, see refreshRoute()).
 function refresh() {
-  const h = location.hash;
-  location.hash = '#/blank';
-  setTimeout(() => { location.hash = h; }, 0);
+  refreshRoute();
 }
 
 /* ================================================================== *

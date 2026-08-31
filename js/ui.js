@@ -920,7 +920,100 @@ export function emptyState(title, message, action) {
 // `title` may be a string or a DOM node. Passing a node lets a screen put its
 // primary control in the header instead of a redundant heading, which buys back
 // a whole row for the content.
-export function screenShell({ title, sub, back, actions, top, scroll, bottom, body, noNav, profile }) {
+/* ==========================================================================
+   BACK MEANS "THE SCREEN YOU WERE JUST ON" — 2026-09-02, Tim.
+
+   *"When you click back on something it should always go to what you were on
+   right before. Currently when you click on someone else's workout and then go
+   back, it takes you to that user's profile/page rather than back to the home
+   menu where you saw the post on."*
+
+   ⚠️ HE IS DESCRIBING ONE SCREEN AND REPORTING A FAULT IN ALL 48. Every
+   `screenShell({ back })` in this app hard-codes a PARENT — the calendar for a
+   day, Workouts for a workout, the friend for their session — and a parent is
+   only the right answer when you arrived from the parent. Reached from
+   anywhere else, the back arrow silently moves you sideways in the app and the
+   screen you were reading is now two taps away.
+
+   The fix is one function, here, rather than 48 edits: the arrow goes BACK
+   through history, and the hard-coded parent survives as the FALLBACK for the
+   case history cannot serve — a link opened from outside, a shared URL, the
+   first screen of a cold start. So a deep link still lands somewhere sensible
+   instead of leaving the site.
+
+   ⚠️ THE POSITION IS STAMPED ON THE HISTORY ENTRY, not counted in a variable.
+   A counter cannot tell a forward navigation from the browser's own back
+   button — both arrive as one `hashchange` and nothing distinguishes them — so
+   it drifts the first time somebody uses the OS gesture, and drifts silently.
+   `history.state` travels WITH the entry: an entry that has been visited
+   already knows its own index, whichever direction it was reached from.
+   ========================================================================== */
+
+let lastIndex = -1;
+
+/* ⚠️ `window.history`, NEVER THE BARE GLOBAL — and this is not defensiveness,
+ * it is a bug that already happened. `tests/render.test.mjs` assigns jsdom's
+ * window, document and location onto globalThis and does NOT assign `history`,
+ * so a bare `history.state` is a ReferenceError there. It throws inside a click
+ * handler, where jsdom reports it to its virtual console and carries on — so
+ * the back button silently did nothing and one assertion failed with no stack
+ * anywhere near the cause. In a browser the two are the same object. */
+const hist = () => (typeof window !== 'undefined' && window.history) || null;
+
+/** Stamp the current history entry with its position. Called once per render. */
+export function markRoute() {
+  const h = hist();
+  if (!h) return;
+  const state = h.state;
+  if (state && typeof state.navIndex === 'number') { lastIndex = state.navIndex; return; }
+  lastIndex += 1;
+  // `replaceState` rather than `pushState`: the entry already exists — the hash
+  // change made it — and this only writes what it is.
+  try { h.replaceState({ ...(state || {}), navIndex: lastIndex }, ''); } catch (_) {}
+}
+
+/** True when there is a screen of ours behind this one. */
+export function canGoBack() {
+  const h = hist();
+  const state = h && h.state;
+  return Boolean(state && typeof state.navIndex === 'number' && state.navIndex > 0);
+}
+
+/**
+ * The back arrow. Goes to the previous screen, or to `fallback` when this is
+ * the first screen this visit.
+ */
+export function goBack(fallback) {
+  if (canGoBack()) { hist().back(); return; }
+  if (typeof fallback === 'function') fallback();
+}
+
+/**
+ * Re-render the CURRENT route, optionally changing the hash without pushing a
+ * new entry.
+ *
+ * ⚠️ THIS REPLACES THE `#/blank` TRICK, and it had to. Nine places did
+ * `location.hash = '#/blank'; location.hash = '#/social'` to force a re-render,
+ * which pushes TWO history entries — so once back means "the previous entry",
+ * pressing it landed on `#/blank`, a route the router deliberately renders
+ * nothing for. The arrow would have appeared to do nothing, and the second
+ * press would have skipped a screen. Re-rendering in place has neither problem
+ * and is what those call sites were describing all along.
+ */
+export function refreshRoute(hash) {
+  if (hash && location.hash !== hash) {
+    const h = hist();
+    try { h.replaceState(h.state, '', hash); } catch (_) { location.hash = hash; }
+  }
+  /* ⚠️ `window.Event`, NOT the bare global. Under jsdom the module scope's
+   * `Event` is Node's own class and `window.dispatchEvent` rejects it outright
+   * — "parameter 1 is not of type 'Event'". In a browser the two are the same
+   * object, so this costs nothing and is the only form that works in both. */
+  const Ev = (typeof window !== 'undefined' && window.Event) || Event;
+  window.dispatchEvent(new Ev('hashchange'));
+}
+
+export function screenShell({ title, sub, back, backExact, actions, top, scroll, bottom, body, noNav, profile }) {
   const heading = title instanceof Node
     ? el('div', { class: 'topbar-slot' }, title)
     : el('div', { style: 'flex:1;min-width:0' },
@@ -930,10 +1023,17 @@ export function screenShell({ title, sub, back, actions, top, scroll, bottom, bo
 
   const screen = el('div', { class: 'screen' + (noNav ? ' no-nav' : '') },
     el('header', { class: 'topbar' },
-      // Left slot: back where there is somewhere to go back to, otherwise the
-      // profile button. Never both — two things competing for the top-left
-      // corner is how you get people tapping the wrong one.
-      back ? iconBtn('left', 'Back', back) : (profile ? profileButton() : null),
+      /* Left slot: back where there is somewhere to go back to, otherwise the
+       * profile button. Never both — two things competing for the top-left
+       * corner is how you get people tapping the wrong one.
+       *
+       * ⚠️ `back` IS THE FALLBACK, NOT THE DESTINATION (2026-09-02). The arrow
+       * goes back through history and only uses this handler when there is no
+       * history to go back through. `backExact` opts out for the one screen
+       * where the arrow is not a back at all — see the finish screen. */
+      back
+        ? iconBtn('left', 'Back', backExact ? back : () => goBack(back))
+        : (profile ? profileButton() : null),
       heading,
       ...(actions || []),
     ),

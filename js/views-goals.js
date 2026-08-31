@@ -35,6 +35,7 @@ import { INDIRECT_NOTE_SETS } from './volume-map.js';
 import { STRENGTH_CAVEAT } from './optimal.js';
 import {
   el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, trimNum,
+  refreshRoute,
 } from './ui.js';
 import * as units from './units.js';
 
@@ -457,8 +458,7 @@ function endSheet(goal, p) {
     onConfirm: async () => {
       await store.endGoal(goal.id, p.reached ? 'reached' : 'ended');
       toast('Goal ended.');
-      go('#/blank');
-      go('#/goals');
+      refreshRoute('#/goals');
     },
   });
 }
@@ -606,8 +606,7 @@ function confirmGoal(o, m, profile, existing) {
     });
     await store.setGoal(goal);
     toast('Goal set.');
-    go('#/blank');
-    go('#/goals');
+    refreshRoute('#/goals');
   };
 
   if (existing) {

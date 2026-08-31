@@ -19,6 +19,14 @@ const { window } = dom;
 globalThis.window = window;
 globalThis.document = window.document;
 globalThis.location = window.location;
+/* ⚠️ ADDED 2026-09-02, and its absence hid a real failure. The back arrow now
+   reads `history.state` to decide whether there is a screen behind this one;
+   without this line that was a ReferenceError thrown inside a click handler,
+   which jsdom reports to its virtual console and swallows — so the button
+   silently did nothing and the only symptom was one assertion failing with no
+   stack anywhere near the cause. `ui.js` also guards it, and both are worth
+   having: the guard keeps the app working, this keeps the test honest. */
+globalThis.history = window.history;
 globalThis.Node = window.Node;
 globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0);
 globalThis.ResizeObserver = class { observe() {} disconnect() {} };
@@ -3838,7 +3846,11 @@ ok(!data.querySelector('.rep-target'),
   window.location.hash = '#/account';
   backBtn.click();
   await settle();
-  ok(window.location.hash === '#/home', `Account's back goes Home, not Settings (${window.location.hash})`);
+  // ⚠️ THE FALLBACK, and that is now what this asserts. Since 2026-09-02 the
+  // arrow goes BACK through history and only uses the screen's own handler when
+  // there is nothing behind it — which is the case here, because nothing in
+  // this file drives the router that stamps a position on a history entry.
+  ok(window.location.hash === '#/home', `Account's back falls back to Home, not Settings (${window.location.hash})`);
 
   const st = await mount(SettingsView());
   ok(!/Download backup/.test(text(st)) && !/Delete all data/.test(text(st)),
@@ -5065,6 +5077,85 @@ ok(!data.querySelector('.rep-target'),
   ok(!light.querySelector('.ws-split'), 'and no muscle split invented out of nothing');
 
   restore();
+}
+
+/* ================= back means the screen you were just on =================
+ *
+ * Tim, 2026-09-02: *"When you click back on something it should always go to
+ * what you were on right before. Currently when you click on someone else's
+ * workout and then go back, it takes you to that user's profile/page rather
+ * than back to the home menu where you saw the post on."*
+ *
+ * ⚠️ HE REPORTED ONE SCREEN AND DESCRIBED ALL 48. Every `screenShell({ back })`
+ * in this app hard-codes a PARENT, which is only the right answer when you
+ * arrived from the parent. The fix is in `ui.js` — the arrow goes back through
+ * history and the hard-coded parent is the fallback — so this block tests the
+ * mechanism rather than the one screen that happened to reveal it.
+ */
+{
+  const { screenShell, el, markRoute, canGoBack, refreshRoute } = await import(BASE + 'ui.js');
+  const backOf = (node) => node.querySelector('.topbar .icon-btn');
+
+  // A cold start: one entry, nothing behind it.
+  history.replaceState(null, '', '#/home');
+  markRoute();
+  ok(!canGoBack(), 'on the first screen of a visit there is nothing behind you');
+
+  let fellBack = 0;
+  const first = screenShell({ title: 'Home', back: () => { fellBack++; }, scroll: el('div') });
+  backOf(first).click();
+  ok(fellBack === 1,
+     '⚠️ so the arrow uses the screen\'s own destination — a deep link must land somewhere, '
+     + 'not step off the site');
+
+  // Now walk: home → a friend's workout, the way a card does it.
+  location.hash = '#/friend/u1/s1';
+  await settle();
+  markRoute();
+  ok(canGoBack(), 'after moving to a second screen there IS something behind you');
+
+  const second = screenShell({
+    title: 'Workout',
+    // The parent this screen would have gone to before — a friend's page, which
+    // is NOT where the reader came from.
+    back: () => { location.hash = '#/friend/u1'; },
+    scroll: el('div'),
+  });
+  backOf(second).click();
+  await settle(); await settle();
+  ok(location.hash === '#/home',
+     `🚨 back goes to the screen you were on, not to the parent (${location.hash})`);
+  ok(location.hash !== '#/friend/u1',
+     '⚠️ and specifically NOT to the friend\'s page, which is the bug Tim reported');
+
+  /* ---- the one screen that opts out ---- */
+  history.replaceState(null, '', '#/session/x');
+  markRoute();
+  location.hash = '#/session/y';
+  await settle();
+  markRoute();
+  let exact = 0;
+  const finish = screenShell({
+    title: 'Workout complete', back: () => { exact++; }, backExact: true, scroll: el('div'),
+  });
+  backOf(finish).click();
+  ok(exact === 1 && canGoBack(),
+     '🚨 `backExact` still runs its own handler even with history behind it — the finish screen\'s '
+     + 'arrow means "go and edit what you just recorded", and the entry behind it is a workout '
+     + 'whose draft has just been cleared');
+
+  /* ---- and the re-render that used to push two entries ---- */
+  let renders = 0;
+  const onHash = () => { renders++; };
+  window.addEventListener('hashchange', onHash);
+  const before = location.hash;
+  refreshRoute();
+  await settle();
+  ok(renders === 1, 'refreshRoute() re-renders the screen you are on');
+  ok(location.hash === before,
+     '⚠️ without moving — the `#/blank` bounce it replaced pushed two entries and put a route that '
+     + 'renders nothing directly behind every screen that used it');
+  window.removeEventListener('hashchange', onHash);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

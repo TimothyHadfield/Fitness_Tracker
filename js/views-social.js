@@ -27,6 +27,7 @@ import { store, auth, social } from './store.js';
 import {
   el, icon, iconBtn, screenShell, emptyState, openSheet, confirmSheet, toast,
   fmtDateLong, relativeDay, chevron, setChildren, fmtSet, youFriendsTabs, personFace,
+  refreshRoute,
 } from './ui.js';
 import {
   TIERS, TIER_LABEL, TIER_DETAIL, NONE, LIGHT, MID, FULL,
@@ -72,7 +73,7 @@ function unavailable(reason) {
       + 'whole workout offline and it will sync when you are back.',
       el('button', {
         class: 'btn', text: 'Try again',
-        onClick: async () => { await auth.retry(); location.hash = '#/blank'; location.hash = '#/social'; },
+        onClick: async () => { await auth.retry(); refreshRoute('#/social'); },
       }),
     );
   }
@@ -400,8 +401,7 @@ async function fillSocial(body, state) {
 }
 
 function refresh() {
-  location.hash = '#/blank';
-  location.hash = '#/social';
+  refreshRoute('#/social');
 }
 
 /* ------------------------------------------------------------------ *
@@ -628,7 +628,7 @@ export async function FriendView(uid) {
       try {
         await social.setTier(uid, tier);
         toast('Updated.');
-        location.hash = '#/blank'; location.hash = `#/friend/${encodeURIComponent(uid)}`;
+        refreshRoute(`#/friend/${encodeURIComponent(uid)}`);
       } catch (err) { toast(err.message); }
     }),
   },

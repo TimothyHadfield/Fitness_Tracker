@@ -2475,6 +2475,16 @@ export async function SessionView(workoutId) {
       // iconBtn as its onClick, and el() silently ignores a non-function `onX`
       // — so a string here renders a back button that does nothing at all.
       back: entries.length && ownId ? () => go(`#/edit/${ownId}`) : null,
+      /* 🚨 THE ONE SCREEN WHERE THE ARROW IS NOT A BACK (2026-09-02). Every
+       * other one now goes back through history and treats its `back` as a
+       * fallback; this arrow means "go and change what you just recorded", and
+       * it is the whole reason it exists (Tim, 2026-08-29).
+       *
+       * ⚠️ AND HISTORY WOULD BE ACTIVELY WRONG HERE. This screen is drawn by
+       * replacing #app directly, WITHOUT changing the hash — so the previous
+       * entry is the session runner, whose draft has just been cleared.
+       * Stepping back onto it would reopen a workout that no longer exists. */
+      backExact: true,
       noNav: true,
       scroll: el('div', { class: 'finish-hero' },
         el('div', { class: 'finish-check' }, icon('check')),

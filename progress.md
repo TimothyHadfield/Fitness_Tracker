@@ -4,7 +4,7 @@
 > you need. `docs/` holds the detail; `chat.md` is a human-readable log you only need in order to
 > answer "what did we say about X".
 
-**Last updated:** 2026-09-02 — the Hevy-shaped home feed, built.
+**Last updated:** 2026-09-02 — the Hevy-shaped home feed, and Design Rule 8 (back).
 
 # ✅ START HERE: THE SOCIAL FEED IS BUILT — all eight steps of `docs/social-plan.md` §13
 
@@ -109,6 +109,60 @@ blocks in `data-layer` and `social`.
 ⚠️ **NOT VERIFIED: nothing here has been on Tim's phone, and no two real accounts have used it.**
 Proved in jsdom, in the data layer, in a real browser at 360 and 393px in both themes, and by the
 audit. The round trip between two people remains Open work item 1.
+
+---
+
+## 2026-09-02, second pass — BACK MEANS THE SCREEN YOU WERE JUST ON (Design Rule 8)
+
+Tim, on the feed shipped an hour earlier: *"When you click back on something it should always go to
+what you were on right before. Currently when you click on someone else's workout and then go back,
+it takes you to that user's profile/page rather than back to the home menu where you saw the post
+on."*
+
+🚨 **HE REPORTED ONE SCREEN AND IT WAS TRUE OF ALL FORTY-EIGHT.** Every `screenShell({ back })` in
+this app hard-codes a parent, and a parent is the right answer only when you arrived from the parent.
+The new workout screen simply made it obvious: it is the first screen in the app you routinely reach
+from two different places, so it is the first one where a fixed destination is visibly wrong. **Every
+older screen has the same fault and nobody had hit it** — a day reached from the calendar goes back
+to the calendar, which is right, and there was no other way in.
+
+**The whole fix is one function, not 48 edits.** `goBack(fallback)` in `js/ui.js`: go back through
+history, and use the screen's own destination only when there is nothing behind this one. Design
+Rule 8 in §5 has the reasoning; three things are worth having here.
+
+- ⚠️ **THE POSITION IS STAMPED ON THE HISTORY ENTRY, NOT COUNTED.** The obvious build is a depth
+  counter incremented on navigation — and it cannot work: a forward navigation and the browser's own
+  back button both arrive as one `hashchange` with nothing to tell them apart, so the counter drifts
+  the first time somebody uses the OS back gesture, and drifts silently. `history.state` travels WITH
+  the entry, so an entry that has been visited already knows its own index however it was reached.
+- 🚨 **`#/blank` HAD TO GO, AND IT WAS NOT OPTIONAL.** Nine places forced a re-render by setting the
+  hash to `#/blank` and then back — two history entries, the first of which the router deliberately
+  renders nothing for. The moment back meant "the previous entry", the arrow would have landed on a
+  screen that does not exist and appeared to do nothing. `refreshRoute()` re-renders in place instead,
+  which is what all nine of them were describing anyway. The router still guards `blank` for tabs
+  open from before today.
+- ⚠️ **ONE SCREEN OPTS OUT AND IT IS THE FINISH SCREEN** (`backExact: true`). Its arrow means "go and
+  edit what you just recorded" — Tim's own ask on 2026-08-29 — and history would be actively wrong
+  there, because that screen is drawn by replacing `#app` WITHOUT changing the hash, so the entry
+  behind it is the session runner whose draft has just been cleared. Stepping back onto it would
+  reopen a workout that no longer exists.
+- ⚠️ **A BUG THE TESTS HID FROM THEMSELVES, worth remembering.** `tests/render.test.mjs` assigns
+  jsdom's `window`, `document` and `location` onto `globalThis` and never assigned `history` — so the
+  first version of this read `history.state` and threw a ReferenceError **inside a click handler**,
+  which jsdom reports to its virtual console and swallows. The button silently did nothing and the
+  only symptom was one unrelated-looking assertion failing with no stack anywhere near the cause.
+  Fixed in both places on purpose: `ui.js` goes through `window.history` (the guard keeps the app
+  working), and the harness now assigns it (which keeps the test honest).
+
+**Verified in a real browser, not only in jsdom:** Home → tap a card → the workout screen → back →
+**Home**, with all 21 cards still there. Eight new assertions in `tests/render.test.mjs` pin the
+mechanism — the fallback on a cold start, the real back on a second screen, the `backExact` opt-out,
+and that `refreshRoute()` moves nothing.
+
+⚠️ **A KNOWN ASYMMETRY, LEFT DELIBERATELY:** in the demo account a card's *body* opens a real workout
+screen while its *name* still leads to "Sharing is off in the demo". Both screens are honest, and
+making the friend page work in the demo is a bigger job (tiers, disconnect and the muscle map all
+assume a real account). Real accounts have neither problem.
 
 ---
 
@@ -6365,6 +6419,33 @@ faster mile is better, a longer plank is better) and **body weight is neutral to
 goal for one user and losing it for the next, and nothing has ever asked which. `summaryStats()`
 takes a `judged` flag for exactly this. The training goal that D10 will introduce is what would
 eventually earn the app an opinion here.
+
+### Rule 8 — back means the screen you were just on
+
+Added 2026-09-02 on Tim's report: *"When you click back on something it should always go to what you
+were on right before. Currently when you click on someone else's workout and then go back, it takes
+you to that user's profile/page rather than back to the home menu where you saw the post on."*
+
+⚠️ **HE REPORTED ONE SCREEN AND DESCRIBED ALL FORTY-EIGHT.** Every `screenShell({ back })` in this
+app hard-coded a **parent** — the calendar for a day, Workouts for a workout, the friend for their
+session — and a parent is the right answer only when you arrived from the parent. Reached from
+anywhere else, the arrow moved you sideways and put what you were reading two taps away.
+
+**The rule:** the arrow goes back through history. A screen's own `back` is the **fallback**, for the
+case history cannot serve — a shared link, a bookmark, the first screen of a cold start — so a deep
+link still lands somewhere sensible instead of stepping off the site.
+
+- **The position is stamped on the history entry** (`markRoute()` in `ui.js`), not counted in a
+  variable. ⚠️ A counter cannot tell a forward navigation from the browser's own back button — both
+  arrive as one `hashchange` — so it drifts the first time somebody uses the OS gesture, silently.
+- **`backExact: true` is the opt-out, and there is exactly one user of it**: the finish screen, whose
+  arrow means *"go and edit what you just recorded"* rather than *back*. History would be actively
+  wrong there — that screen is drawn by replacing `#app` without changing the hash, so the entry
+  behind it is the session runner whose draft has just been cleared.
+- ⚠️ **`#/blank` IS GONE.** Nine places forced a re-render by bouncing through it, which pushes two
+  history entries — so under this rule the back arrow landed on a route that deliberately renders
+  nothing. `refreshRoute()` re-renders in place and pushes nothing. The router still guards `blank`
+  for tabs open from before.
 
 ### Rule 7 — motion states a relationship, or it does not ship
 

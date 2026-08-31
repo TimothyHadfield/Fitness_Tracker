@@ -11,15 +11,18 @@ import { store } from './store.js';
 import {
   el, screenShell, toast, emptyState, confirmSheet, iconBtn,
   fmtDateShort, trimNum,
+  refreshRoute,
 } from './ui.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 
+// Rebuild the screen you are on. ⚠️ It used to bounce through `#/blank`, which
+// pushed two history entries and therefore broke the back arrow the day back
+// started meaning "the previous screen" (2026-09-02). `refreshRoute()` renders
+// in place and pushes nothing.
 function refresh() {
-  const h = location.hash;
-  location.hash = '#/blank';
-  setTimeout(() => { location.hash = h; }, 0);
+  refreshRoute();
 }
 
 // Why each field is asked for, said plainly at the point of asking (D8). Nobody

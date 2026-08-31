@@ -18,7 +18,7 @@
 // it — before anything is written, not after.
 
 import { store } from './store.js';
-import { el, screenShell, toast, confirmSheet, setChildren, icon } from './ui.js';
+import { el, screenShell, toast, confirmSheet, setChildren, icon, refreshRoute } from './ui.js';
 import * as imp from './import-file.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -26,11 +26,11 @@ const go = (hash) => { location.hash = hash; };
 /* ⚠️ SETTING THE HASH YOU ARE ALREADY ON FIRES NO EVENT, so `go('#/import')`
  * from the import screen did precisely nothing — "Choose a different file" was
  * a dead button and so was the one after a finished import. Found by driving
- * the screen rather than by reading it. Same bounce through #/blank the Account
- * screen already uses to force a re-render. */
+ * the screen rather than by reading it. ⚠️ It used to bounce through `#/blank`
+ * like the Account screen did; that pushed two history entries and broke the
+ * back arrow once back meant "the previous screen" (2026-09-02). */
 function reopen() {
-  location.hash = '#/blank';
-  setTimeout(() => { location.hash = '#/import'; }, 0);
+  refreshRoute('#/import');
 }
 
 export async function ImportView() {

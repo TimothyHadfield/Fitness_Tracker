@@ -9,7 +9,9 @@
 // site data destroys it permanently. That is stated plainly rather than buried.
 
 import { store, auth, probeOffline, demo, todayISO, social } from './store.js';
-import { el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron } from './ui.js';
+import {
+  el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron, refreshRoute,
+} from './ui.js';
 import { cloudFullWarning } from './views-data.js';
 import * as units from './units.js';
 import * as crop from './image-crop.js';
@@ -82,10 +84,12 @@ function demoScreen() {
   });
 }
 
+// Rebuild the screen you are on. ⚠️ It used to bounce through `#/blank`, which
+// pushed two history entries and therefore broke the back arrow the day back
+// started meaning "the previous screen" (2026-09-02). `refreshRoute()` renders
+// in place and pushes nothing.
 function refresh() {
-  const h = location.hash;
-  location.hash = '#/blank';
-  setTimeout(() => { location.hash = h; }, 0);
+  refreshRoute();
 }
 
 // Firebase reports its own errors; anything else gets a generic line.
