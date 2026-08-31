@@ -6509,3 +6509,39 @@ ever been built off that row.
 
 **Not verified:** nobody has checked any of these predictions against an actual attempt. Every number
 carries its confidence and its sources for that reason.
+
+---
+
+## 2026-09-02, fourth pass — the notes, made ready for a reset
+
+**You:** *"prepare md files for chat reset."*
+
+The top of `progress.md` was a summary of what I had just done. A fresh session needs the opposite —
+where things stand and what is open — so it now opens with "nothing is in progress and nothing is
+blocking", the three decisions that are yours, the two things nobody has verified, and the standing
+"don't do this" list.
+
+Then I had the notes audited against the code, and they were worse than I expected. **Four places
+would have sent the next session to build something that already exists:**
+
+- The next-steps section still said no two accounts had ever connected and that a feed was unstarted.
+  Both had been false for over a week — and the same file got them right two thousand lines away.
+- The roadmap still called weekly volume "blocked", eighty lines from the entry marking it built.
+- The social plan still read as a proposal for the eight things that shipped this morning, under a
+  heading beginning "If Tim says go".
+- The spec said the cloud backend was untested and needed switching on. It has been live with your
+  real data since August.
+
+**And one thing nobody had ever written down.** Eleven places in the code and notes cite decision
+"D9" for the rule that this app has no RIR/RPE field — the "how many reps did you have left" rating
+some apps ask for mid-set. D9 is a completely different decision. The RIR rule was never recorded at
+all, despite six modules deferring to it and it being the single biggest thing the app deliberately
+cannot see. It is written down now as D28. Nobody noticed because the sentence around the number was
+always correct, so nothing ever depended on the number being right.
+
+The README's numbers were mostly stale too — it claimed 272 exercises (318) and eleven test suites
+(sixteen).
+
+One mistake of my own, recorded in the notes as a rule: I truncated `progress.md` to zero bytes with
+a Python one-liner. Recovered from git in under a minute, and the file now carries a warning not to
+edit markdown through a script — which it already had, for PowerShell.
