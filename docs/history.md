@@ -17,6 +17,71 @@
 
 ---
 
+## 2026-09-06 — EVERY BLANK AND EVERY REFUSAL, LISTED FOR TIM
+
+Open work 24, closed. Tim, 2026-09-04: *"if you want to give me a list of the places this does
+already happen, it could help me with this. Do this after we're done questioning."* — the deliverable
+`docs/direction.md` §3.1 created, alongside the note-to-the-developer feature that shipped on the 4th.
+
+🛑 **NOTHING WAS CHANGED, AND NOTHING MAY BE.** *"I think I'll notice the places that show blanks and
+I'll manually tell you to fix them if I want."* This is a list he picks from. **The whole list was
+delivered in the terminal**, because he does not read these files; this section is the record so a
+later session can act on whichever item he names without re-deriving it.
+
+**Method:** every `emptyState()` call site in `js/` (26 of them), plus every refusal that returns
+`null` rather than a number — `estimateOneRM()`, `rankBlockedReason()`, `normalizeBlockedReason()`,
+`observedDaysPerWeek()`, the runner's two gates, and the two screens that state a refusal in prose
+(the Goals verdict, the Volume rate).
+
+### A. The app holds the data and says nothing — the eight worth changing
+
+| | Where | Now | What it could say |
+|---|---|---|---|
+| 1 | `views-muscles.js:117`, and the same gate at `views-goals.js:52` | The **whole map** is replaced by "Tell us about you first" when sex, body weight or age is missing — over an account that may hold a year of sets | Paint it from a **stated default population**, with the assumption in the header and the Open profile button kept. 🚨 **The biggest single item on this list**: it is not one number, it is every screen behind the profile gate |
+| 2 | `views-goals.js:299` | **No on-track / behind / ahead verdict at all**, explained on screen | A trend **with its width stated**. ⚠️ The refusal's reasoning is still correct — a raw day-to-day estimate swings several percent — so this is a band, never a word |
+| 3 | `views-data.js:2198` | Volume **refuses a per-week rate** under a fortnight, showing raw totals | The rate **with the window named** |
+| 4 | `goals.js:546`, `goals.js:588` | "Not enough logged training yet to measure this" under two weeks | The partial figure, said to be partial |
+| 5 | `views-session.js:3118` | Benchmark screen: "No estimate for this one yet — nothing you have recorded converts to it". Fires when `rating.kind === 'fallback'` — the muscle is itself only rated by a stand-in | A number **is** reachable. ⚠️ **It is three estimates multiplied**, which `exercise-estimate.js`'s own header calls the machine for confidently wrong numbers. If he picks it, it ships as a named chain with the widest band, or not at all |
+| 6 | `views-session.js:222`, `:226` | The runner leaves the weight field **blank with no explanation** for a never-done lift below ratio quality 0.45 or confidence 0.35 | ⚠️ **Say WHY at minimum.** A number here is walked up to a bar — the gate itself is right and `exercise-estimate.js` §"an estimate you read is not an estimate you lift" is the argument for keeping it |
+| 7 | `views-data.js:1212` | **Bars** is blank until the same exercise is benchmarked twice | Graph already falls back to `bestsPane()` — every lift, best effort, how long ago. Bars has no equivalent |
+| 8 | `views-data.js:966`, `:903` | "Only one data point" | The point and its estimated max. ⚠️ **Not a line** — Rule 5, a trend drawn through one point is an inference wearing a measurement's clothes |
+
+### B. Permanent refusals — no published data exists. Two of them have a real fix
+
+- **`js/exercises.js` — the inverted row and the incline push-up.** 37–79 % of body weight depending
+  on bar height; 41 % vs 55 % on hand height. 🆕 **The fix is to ASK for the parameter**, not to pick
+  a number — §9 of the handbook has said so for weeks and it is the only one of these that is a
+  feature rather than a literature gap.
+- **`muscle-evidence.js:84` — a custom exercise never sets a strength level** (2026-08-31, after a
+  made-up "Dip Machine" rated a beginner's triceps Advanced). Counted for volume, named on the panel.
+  🆕 **Could let the creator pick the closest library exercise and borrow its ratio, labelled.**
+- Diamond and wide-grip push-ups, bench dips, handstand and pike push-ups, ring dips, muscle-ups —
+  no published fraction at all. ⚠️ The circulating "handstand push-up ≈ 90–100 % BW" figure is
+  misattributed to a paper about push-ups; do not use anything from that lineage.
+- Bodyweight squats and all lower-body/trunk bodyweight work — the key lift logs *external* load, so
+  a bodyweight squat converts to an empty bar.
+- Band work (`muscle-evidence.js:117`) — resistance depends on how far it is stretched.
+- **Neck** — hatched since 2026-09-04, never rankable. The panel says what HAS been logged, which is
+  the 2026-09-04 answer to this same complaint arriving about Core.
+- `views-data.js:2246` — the research age chart draws **8 of 11 muscles**; no published per-group age
+  curve exists for Chest, Back or Traps.
+- `shared-map.js` — a friend's percentile in a comparison group they did not publish. **Stated, never
+  a silent fallback to their default.**
+- `compare.js:571` — a bodyweight lift has **no load row** in a comparison, because a friend's body
+  weight is not in the public copy. Same reason `session-stats.js` counts sets rather than pounds on
+  a feed card.
+
+### C. Honest blanks — nothing exists yet to estimate from
+
+About fifteen first-run empty states (no sessions, no weigh-ins, no friends, no goal, an empty
+calendar day, an empty feed, a system with no workouts) and five failure states (offline feed,
+friends list failed, lookup failed, demo sharing off, anonymous account, expired invite). ⚠️ **These
+are the ones a sweep would wreck**: "something is better than nothing" has nothing to work from when
+the account is empty, and inventing an encouraging number for a new user is the one place this app
+would be lying to somebody with no way to check.
+
+---
+
 ## 2026-09-05 — 🚨 EACH BODY ITS OWN POPULATION, A FRIEND'S DATA AS TABS, AND ONE CONTROL REMOVED
 
 Three instructions from Tim in one session, all on screens about other people.
