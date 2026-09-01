@@ -49,6 +49,15 @@
    which broke the instruction at the top of it. Putting a full write-up back into it walks straight
    into that again.
 
+   🚨 **THERE IS A TEST, AND IT IS IN THE `sw.js` PRECACHE BLOCK OF `tests/data-layer.test.mjs`
+   BECAUSE IT IS THE SAME KIND OF FAULT.** Every file you are told to read whole has a byte budget
+   — progress.md 160 KB, this file 220 KB, chat.md 220 KB — set **well under the 256 KB read limit
+   so it fails while there is still room to act.** 🛑 **When one trips, the fix is never to raise the
+   number**; the failure message names what to move and where. The archives (`docs/history.md`,
+   `docs/chat-archive.md`) have no budget by design, and the test says so in a comment so nobody
+   "fixes" them. One more assertion checks that **this item still states the rule** — otherwise the
+   files stay split while the habit that split them lapses.
+
 4. **The Firebase CLI is installed and already authenticated** as `timhadfield7@gmail.com`. You can
    create projects, deploy rules, and call the admin APIs directly. An access token can be minted
    from the CLI's stored refresh token — that is how Auth providers were configured. Don't assume

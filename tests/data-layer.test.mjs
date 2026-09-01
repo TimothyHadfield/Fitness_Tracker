@@ -1876,6 +1876,52 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(/url\.origin !== self\.location\.origin/.test(sw),
      'sw.js ignores cross-origin requests');
   ok(/req\.method !== 'GET'/.test(sw), 'sw.js never intercepts a write');
+
+  /* ---- THE DOCUMENTS A SESSION IS TOLD TO READ MUST STILL BE READABLE ---- */
+  // 🚨 THIS IS A REAL FAILURE THAT WENT UNNOTICED FOR WEEKS, not a tidiness
+  // rule. `progress.md` grew by a dated section every session until it reached
+  // 626 KB, and the tool a fresh session uses to read a file refuses anything
+  // over 256 KB. So the instruction at the top of that file — "read this entire
+  // file before doing anything" — had been quietly impossible for some time,
+  // and nothing anywhere said so. It was found by trying, on 2026-09-04.
+  //
+  // ⚠️ IT IS A TEST FOR THE SAME REASON THE PRECACHE LIST IS. Both are hand-
+  // maintained facts about the repo that look perfect from inside the session
+  // that broke them, and both fail somewhere nobody is watching. This project's
+  // own rule: an absolute claim needs a test, not a design argument.
+  //
+  // ⚠️ THE BUDGETS ARE DELIBERATELY WELL UNDER 256 KB, so this fails while
+  // there is still room to act rather than at the moment the file stops
+  // opening. When one trips, the fix is never to raise the number.
+  const KB = 1024;
+  const READ_WHOLE = [
+    // file, budget, what to do when it trips
+    ['progress.md', 160 * KB,
+     'move the dated section to the TOP of docs/history.md and leave only its one-line summary here'],
+    ['docs/handbook.md', 220 * KB,
+     'a section has outgrown the handbook — split the offender into its own docs/ file and leave a pointer'],
+    ['chat.md', 220 * KB,
+     'move its older half into docs/chat-archive.md, the way 2026-08-14..20 was moved on 2026-09-04'],
+  ];
+  for (const [rel, budget, fix] of READ_WHOLE) {
+    const bytes = fsMod.statSync(pathMod.join(up, rel)).size;
+    ok(bytes <= budget,
+       bytes > budget
+         ? `${rel} is ${Math.round(bytes / KB)} KB, past its ${budget / KB} KB budget — ${fix}`
+         : `${rel} is ${Math.round(bytes / KB)} KB of its ${budget / KB} KB budget`);
+  }
+
+  // ⚠️ NO BUDGET ON THE ARCHIVES, AND THAT IS THE POINT OF THEM. docs/history.md
+  // and docs/chat-archive.md are grep-then-read files: search for the date, then
+  // read that range. They are allowed to be any size, and this comment exists so
+  // that nobody "fixes" them to match the rule above.
+
+  // The split is only self-maintaining while the rule is written down where the
+  // next session meets it. Assert the rule itself is still there, or the files
+  // stay split and the habit that split them quietly lapses.
+  const handbook = fsMod.readFileSync(pathMod.join(up, 'docs', 'handbook.md'), 'utf8');
+  ok(/docs\/history\.md/.test(handbook) && /one-line summary/.test(handbook),
+     'the handbook still states where a session write-up goes (§0.3)');
 }
 
 /* ================= "Compared to:" — the chosen comparison group ================= */

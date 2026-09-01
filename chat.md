@@ -2723,3 +2723,13 @@ modules — everything in `js/` is imported by something.**
 
 **Nothing about the app changed**, and the whole headless suite proves it: 16 suites, all green,
 render still 911.
+
+**Then Tim asked the right follow-up:** *"so now we also made a system that will stay organized as we
+continue working?"* — and the honest answer was **only half**. The rule was written in three places a
+fresh session would meet it, and nothing enforced it. This project's own lesson is that an absolute
+claim needs a test rather than a design argument, so **it is a test now**: every file a session is
+told to read whole has a byte budget, checked in the same block that checks the `sw.js` precache
+list, because it is the same shape of fault — a hand-maintained fact about the repo that looks
+perfect from inside the session that broke it. The budgets sit well under the 256 KB limit so it
+fails while there is still room to act, and the message says what to move rather than just the
+number. **Mutation-checked**: dropping the budget to 80 KB fails exactly that assertion.

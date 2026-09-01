@@ -86,7 +86,8 @@ npm i --no-save jsdom jsqr @firebase/rules-unit-testing
 node tests/render.test.mjs
 ```
 
-**Seventeen suites run headlessly: 4,004 assertions** (recounted 2026-09-03 by running every one).
+**Seventeen suites run headlessly: 4,008 assertions** (recounted 2026-09-03 by running every one;
++4 on 2026-09-04 for the document-size budgets).
 Nothing installed here ships with the app.
 
 - **Three suites need an npm package, not one:** `render` needs `jsdom`, `qr` needs `jsqr`, `rules`

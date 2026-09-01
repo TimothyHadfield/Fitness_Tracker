@@ -40,6 +40,25 @@ quietly impossible for some time, and nothing said so.** `chat.md` had crossed t
 `docs/history.md`, AND ONLY ITS ONE-LINE SUMMARY COMES HERE.** That is the whole mechanism, and it
 is restated in §0.3. This file then grows by about two kilobytes a session instead of forty.
 
+🚨 **AND THE RULE IS A TEST, NOT A GOOD INTENTION** — `tests/data-layer.test.mjs`, in the same block
+that checks the `sw.js` precache list, because it is the same shape of fault: **a hand-maintained
+fact about the repo that looks perfect from inside the session that broke it.** Every file a session
+is *told to read whole* has a byte budget, and the budgets sit **well under the 256 KB limit so the
+test fails while there is still room to act**, naming the fix rather than the number:
+
+| | budget | now |
+|---|---|---|
+| `progress.md` | 160 KB | 87 KB |
+| `docs/handbook.md` | 220 KB | 183 KB |
+| `chat.md` | 220 KB | 176 KB |
+
+🛑 **WHEN ONE TRIPS, THE FIX IS NEVER TO RAISE THE NUMBER** — the failure message says what to move
+and where. ⚠️ **The two archives have NO budget on purpose**, and the test says so in a comment, so
+that nobody "fixes" them to match: they are grep-then-read files and are allowed to be any size.
+There is also an assertion that **§0.3 still states the rule**, because the files could stay split
+while the habit that split them quietly lapsed. **Mutation-checked** — dropping progress.md's budget
+to 80 KB fails exactly that one assertion, with the instruction in the message.
+
 ⚠️ **NOTHING WAS REWRITTEN IN THE MOVE, AND THAT WAS CHECKED RATHER THAN ASSERTED.** The split was
 done on raw bytes, and every line of both originals was then searched for in its successors: the
 only ones that did not turn up are the twenty-nine pointers deliberately rewritten (a "section
