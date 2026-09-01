@@ -17,7 +17,7 @@ import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
 import {
   SocialView, FriendView, FriendSessionView, InviteView, FindView, AddView,
-  FriendVolumeView, FriendGraphView, CompareBodiesView,
+  CompareBodiesView,
 } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { setUnits } from './units.js';
@@ -177,8 +177,14 @@ async function resolve(route) {
        * opaque: a workout that happened to be called `volume` is not possible
        * (ids are generated), but reading the check in the other order would make
        * that a question somebody has to answer. */
-      if (sid === 'volume') return FriendVolumeView(decodeURIComponent(fuid));
-      if (sid === 'graph') return FriendGraphView(decodeURIComponent(fuid));
+      /* 🔄 THESE WERE SCREENS OF THEIR OWN AND ARE TABS NOW — 2026-09-05. They
+       * still RESOLVE, and open the friend's page on that tab, because the
+       * routes were live and this project has not broken a deep link yet
+       * (`#/calendar` kept its own through two redesigns). ⚠️ `graph` maps to
+       * the tab key `trend`, which is what the Data screen has always called
+       * that mode internally. */
+      if (sid === 'volume') return FriendView(decodeURIComponent(fuid), 'volume');
+      if (sid === 'graph') return FriendView(decodeURIComponent(fuid), 'trend');
       return sid
         ? FriendSessionView(decodeURIComponent(fuid), decodeURIComponent(sid))
         : FriendView(route.param);

@@ -17,6 +17,116 @@
 
 ---
 
+## 2026-09-05 — 🚨 EACH BODY ITS OWN POPULATION, A FRIEND'S DATA AS TABS, AND ONE CONTROL REMOVED
+
+Three instructions from Tim in one session, all on screens about other people.
+
+### A. 🚨 "RELATIVE TO EACH" — the compare screen was ranking two people against one population
+
+Tim: *"when I said the default was comparing against people similar to the users, I was meaning that
+each account would compare themselves against people like them. For example, if there is a young
+woman, the girl's muscle group is compared to other young women, but if that is being compared to an
+older man, then the man is being compared to other older men. Right now both people are being
+compared to the same people."*
+
+**He asked for a third preset; what he had actually asked for on 2026-09-03 was the DEFAULT, and it
+was built one reading off.** Both are now true: `Relative to each` is the first chip in the sheet and
+is what the compare screen opens on.
+
+- 🚨 **WEIGHT AND AGE WERE ALREADY PER-PERSON. ONLY SEX WAS NOT** — which is why this was easy to
+  miss and why the screen's own caption did not catch it. `weight: 'own'` and `age: 'own'` are
+  resolved by the OWNER when they publish their 24-row grid ("at my body weight, my age"), so those
+  two axes have always meant each person's own. **Sex is the only axis the READER resolves**, and
+  `comparePreset('like-me')` was resolving it eagerly into a concrete `male`/`female`.
+- ⚠️ **THE MECHANISM ALREADY EXISTED AND WAS UNREACHABLE.** `compareKey(compare, ownSex)` resolves
+  `sex: 'own'` against whichever document it is applied to, and `ownSexOf()` reads that from the
+  published `defaultCompare`. `own` was in the options table marked `hidden` — the stored value for
+  somebody who has never opened the sheet, never a choice. The fix is one preset that keeps it
+  unresolved; **one comparison object, two different keys, one per body.**
+- ⚠️ **`matchesPreset` HAD TO KEEP MATCHING 'own' FOR "Like me"**, or a brand-new user's own map
+  would show no preset selected. So `each` matches on the LITERAL `own` and the sheet resolves the
+  tie by testing it first — `pressedPreset()`, which exists only because both answers are correct on
+  a screen with one body.
+- 🚨 **THE SEX AXIS WOULD HAVE LIT "Men" WHILE NO SEX WAS IN USE.** `isChosen()` resolves `own`
+  against the viewer's gender, and the compare screen passes no gender — so the fallback is `male`.
+  A chip claiming a choice nobody made is worse than no chip lit: in that one mode the axis shows
+  nothing selected and the help text under it says why.
+- ⚠️ **AND THE CAPTION WAS NARROWLY TRUE AND MISLEADING BY OMISSION.** It said "each body is ranked
+  against people of its own body weight and age" — both true — and was silent on sex, which read as
+  completeness. **The render test pinned exactly the two axes that already worked.** It now names all
+  three and changes when the mode does.
+
+### B. A FRIEND'S DATA IS THE DATA SCREEN NOW
+
+Tim: *"they're displayed at the bottom of the body view, rather than as tabs at the top. I want it to
+look nearly exactly like how a user views their own data section, but with the 'research' tab
+replaced with that user's 'calendar' data. And then keep the 'recent workouts' display below that
+user's body view as it is now."*
+
+🚨 **THE LITERAL WAY TO GET "nearly exactly like" IS FOR IT TO BE THE SAME FUNCTION.** `GraphView()`
+now takes a subject: `{ rows, subject, tab, back, musclesPane, musclesExtra }`. A friend's Volume tab
+is not a copy of yours, it **is** yours, reading their rows — so it cannot drift by a pixel or a word.
+**Six store getters grew a `rows` parameter** for it (`activityByDate`, `currentBests`,
+`benchmarkComparison`, `chartableExercises`, `bodyWeightSeries`, `seriesForExercise`), the same move
+`muscleRatings(rows)` and `weeklyVolumeByMuscle(rows)` already made.
+
+- ⚠️ **THE MUSCLES PANE IS HANDED IN, NOT COMPUTED.** A friend's percentile was worked out on THEIR
+  device against their body weight and age, neither of which is in a published document — so
+  `GraphView` cannot recompute it and the friend page passes `friendBody()`, which reads the grid.
+  **This is the one pane that is genuinely not shared, and the reason is the design rather than
+  effort.**
+- 🚨 **`graphMode` IS MODULE STATE AND A FRIEND'S PAGE MUST NOT WRITE IT.** Browsing somebody else
+  would otherwise change which tab your own Data screen opens on — and picking their **Calendar**
+  would leave it holding a key that does not exist in `DATA_TABS`, so your next visit would silently
+  fall through to the trend chart. One control, two memories (`setMode`).
+- ⚠️ **CALENDAR IS MONTHS ONLY, AND THE YEARS VIEW IS DELIBERATELY ABSENT.** Years exists to fit a
+  whole history on one screen; a friend publishes sixty sessions, so the squares would thin out and
+  stop partway up the page — **a picture of what they SHARE, drawn as though it were a picture of
+  what they have DONE.**
+- 🚨 **AND ITS DAYS GO NOWHERE, AS INERT CELLS RATHER THAN NO-OP BUTTONS.** `#/day/<iso>` is MY
+  training for that date; linking there would open the right day for the wrong person and look like
+  it had worked. A button that does nothing takes focus and is announced as a control.
+- ⚠️ **THE OLD ROUTES SURVIVE.** `#/friend/<uid>/volume` and `/graph` open the page on that tab.
+  **`FriendVolumeView` and `FriendGraphView` are deleted** — 113 lines no route reached. The screens
+  went; the addresses did not, which is the treatment `#/calendar` got through two redesigns.
+- 🚨 **THE DEMO'S FRIEND PAGE IS A SEPARATE IMPLEMENTATION AND WOULD HAVE KEPT THE OLD LAYOUT.**
+  `friendScreen()` is a near-duplicate kept because the demo has no relationship to show. Leaving it
+  on rows would have meant **the demo showed a screen the app no longer has** — and the demo is where
+  every screen gets looked at, measured and audited. The `sets: []` fault in a different costume.
+
+### C. 🔄 "What they can see of yours" is gone from a friend's page
+
+Tim: *"since we talked about how that single option is only changeable in the profile section for now
+and all friends can see everything, please remove this choice from the user display."*
+
+⚠️ **IT WAS RIGHT WHEN IT WAS BUILT AND WRONG BY THE TIME IT WAS REMOVED, AND THE DIFFERENCE IS
+2026-09-03.** It was a PER-PERSON dial — four visibility levels, set on that screen, for that one
+friend — and putting it at the top of their page was the whole point. When the tiers went it became
+one ACCOUNT setting that merely happened to be drawn there, and **a per-person position for an
+account-wide control reads as though it were still per person**: somebody could reasonably have
+believed they were changing what THIS friend sees. Nothing was lost — it is still on the Friends
+screen and in Settings, where an account-wide choice belongs.
+
+### D. ⚠️ I EMPTIED `views-data.js` WITH A SCRIPT, AND §0.11 SAYS EXACTLY WHY
+
+A Python read-modify-write truncated the file to zero bytes and then died on an emoji surrogate
+before writing a byte back — **the identical failure recorded on 2026-09-02**, which this file
+already warns about twice, and which I had read the same session. Recovered with `git checkout --`,
+which cost the session's `views-data.js` work and no more.
+
+🚨 **THE MECHANISM OF THE RELAPSE IS THE PART WORTH KEEPING.** The rule was not forgotten; it was
+eroded. Scripted edits worked perfectly a dozen times earlier in the session — surgical two-string
+replacements, each one fine — and every success made the next one feel safer. **That is precisely
+what the 2026-09-03 note predicted in writing** ("a scripted two-string replacement in this file
+worked fine, twice — which is exactly how the habit comes back"). The edits after the recovery were
+done with the editing tools, and a later `sed`-style line-range deletion still left a stray `}` that
+`node --check` did not catch and the test suite did.
+
+**Tests: render 947 → 956, 4,112 headless, all green.** ⚠️ **Not looked at in a browser** — the
+session was paused here for a chat reset.
+
+---
+
 ## 2026-09-04, third pass — A NOTE TO THE DEVELOPER, ABS IN THE DEMO, AND A CORRECTED TABLE
 
 Tim, having been given a ranked list: *"build the note-to-developer feature, give the demo some ab

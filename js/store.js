@@ -3023,8 +3023,11 @@ function instantOf(value) {
 
 // Flattens sessions and benchmarks into one time series per exercise.
 // Session value for a given field = the best set that day (max, except time-only which uses max too).
-export async function seriesForExercise(exerciseId, field, source = null) {
-  const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);
+export async function seriesForExercise(exerciseId, field, source = null, rows = null) {
+  // See the note on activityByDate() for what `rows` is.
+  const [sessions, benchmarks] = rows
+    ? [rows.sessions || [], rows.benchmarks || []]
+    : await Promise.all([store.getSessions(), store.getBenchmarks()]);
   const points = [];
 
   if (source !== 'benchmark') {
@@ -3061,9 +3064,13 @@ export async function seriesForExercise(exerciseId, field, source = null) {
 // Body weight as a chartable series, in the same {date, value} shape the line
 // chart takes for everything else. Already one row per day and already sorted,
 // so this is a rename — but it keeps the view out of the storage shape.
-export async function bodyWeightSeries() {
-  const rows = await store.getBodyWeights();
-  return rows.map((r) => ({ date: r.date, value: r.weight, source: 'bodyweight' }));
+export async function bodyWeightSeries(rows = null) {
+  /* ⚠️ A FRIEND'S WEIGH-INS ARE OFTEN ABSENT AND THAT IS NOT AN ERROR. Body
+   * weight is the one field that never goes in a public document and is opt-in
+   * even for friends, so `rows.bodyWeight` is frequently an empty list. The
+   * caller gets [] and the chart offers no body-weight line, which is correct. */
+  const src = rows ? (rows.bodyWeight || []) : await store.getBodyWeights();
+  return src.map((r) => ({ date: r.date, value: r.weight, source: 'bodyweight' }));
 }
 
 /* ------------------------------------------------------------------ *
@@ -3528,12 +3535,15 @@ export async function muscleStrength() {
 }
 
 // Every exercise that has at least `min` recorded data points, per field.
-export async function chartableExercises(min = 2) {
-  const [sessions, benchmarks, exMap] = await Promise.all([
-    store.getSessions(),
-    store.getBenchmarks(),
-    store.getExerciseMap(),
-  ]);
+export async function chartableExercises(min = 2, rows = null) {
+  // See the note on activityByDate() for what `rows` is.
+  const [sessions, benchmarks, exMap] = rows
+    ? [rows.sessions || [], rows.benchmarks || [], await store.getExerciseMap()]
+    : await Promise.all([
+      store.getSessions(),
+      store.getBenchmarks(),
+      store.getExerciseMap(),
+    ]);
 
   // Everything is tracked PER SOURCE. A benchmark is a deliberate test; a set
   // logged mid-workout is whatever the session called for. Mixing them into one
@@ -3635,10 +3645,19 @@ export async function chartableExercises(min = 2) {
  *   { id, name, muscle, best{ weight, reps, date, source, ... }, e1rm,
  *     latestDate, days, sessions }
  */
-export async function currentBests() {
-  const [sessions, benchmarks, exMap] = await Promise.all([
-    store.getSessions(), store.getBenchmarks(), store.getExerciseMap(),
-  ]);
+/* ⚠️ THE PARAMETER IS `from`, NOT `rows`, AND THAT IS FORCED. This function
+ * already has a local `rows` — the Map it is building — so naming the parameter
+ * `rows` for consistency with its neighbours is a redeclaration, and the whole
+ * module fails to parse. Caught immediately by the test suite refusing to load
+ * store.js at all; worth a line here so the next person who tidies the names
+ * back into line finds out why they were not. */
+export async function currentBests(from = null) {
+  // See the note on activityByDate() for what `from` is.
+  const [sessions, benchmarks, exMap] = from
+    ? [from.sessions || [], from.benchmarks || [], await store.getExerciseMap()]
+    : await Promise.all([
+      store.getSessions(), store.getBenchmarks(), store.getExerciseMap(),
+    ]);
 
   const rows = new Map();
   const row = (exId) => {
@@ -3721,8 +3740,11 @@ export async function currentBests() {
 // than mixing in whatever happened to get logged on a training day.
 //
 // Returns { fields: [...], byField: { weight: [{...}], ... } }.
-export async function benchmarkComparison(minPoints = 2) {
-  const [benchmarks, exMap] = await Promise.all([store.getBenchmarks(), store.getExerciseMap()]);
+export async function benchmarkComparison(minPoints = 2, rows = null) {
+  // See the note on activityByDate() for what `rows` is.
+  const [benchmarks, exMap] = rows
+    ? [rows.benchmarks || [], await store.getExerciseMap()]
+    : await Promise.all([store.getBenchmarks(), store.getExerciseMap()]);
   const FIELDS = ['weight', 'reps', 'time', 'distance'];
 
   // exerciseId -> field -> [{date, value}]
@@ -4073,8 +4095,17 @@ export async function weeklyVolumeByMuscle(windowDays = 28, today = null, rows =
 }
 
 // Everything recorded on a given date.
-export async function activityByDate() {
-  const [sessions, benchmarks] = await Promise.all([store.getSessions(), store.getBenchmarks()]);
+/* ⚠️ `rows` IS SOMEBODY ELSE'S PUBLISHED TRAINING (2026-09-05), the same trick
+ * `muscleRatings(rows)` and `weeklyVolumeByMuscle(rows)` already use and for the
+ * same reason: a friend's Data screens must be the SAME arithmetic as yours, not
+ * a second copy that can drift. Absent, it reads the store, exactly as before.
+ *
+ * ⚠️ THEIR ROWS ARE A WINDOW, NOT A HISTORY — sixty published sessions — so a
+ * caller must not describe the result as all of their training. */
+export async function activityByDate(rows = null) {
+  const [sessions, benchmarks] = rows
+    ? [rows.sessions || [], rows.benchmarks || []]
+    : await Promise.all([store.getSessions(), store.getBenchmarks()]);
   const map = new Map();
   const push = (date, item) => {
     if (!map.has(date)) map.set(date, { sessions: [], benchmarks: [] });

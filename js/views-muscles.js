@@ -354,6 +354,39 @@ const PRESETS = [
   { key: 'everyone', name: 'Everyone', hint: 'All adults, any sex, weight or age' },
 ];
 
+/* 🚨 THE THIRD PRESET, AND IT ONLY EXISTS WHERE TWO BODIES DO — 2026-09-05.
+ *
+ * Tim: *"add a third option at the top of the 'compared to' section that says
+ * 'relative to each' or something like that."*
+ *
+ * ⚠️ IT IS NOT OFFERED ON A SCREEN WITH ONE BODY, and that is not tidiness: with
+ * one person it describes exactly the same population as "Like me", so two chips
+ * would sit side by side doing the identical thing and inviting somebody to
+ * wonder which is which. It is meaningful only when there is more than one
+ * person for "each" to range over.
+ */
+const EACH_PRESET = {
+  key: 'each', name: 'Relative to each',
+  hint: 'Every body against people like them',
+};
+
+/**
+ * Which preset chip is lit.
+ *
+ * ⚠️ `each` IS TESTED FIRST AND THE ORDER IS THE WHOLE FUNCTION. `sex: 'own'`
+ * satisfies BOTH `each` and `like-me` — deliberately, so that a user who has
+ * never opened the sheet still sees "Like me" selected on their own map (see
+ * matchesPreset). Where `each` is on offer it is the more specific answer, so it
+ * wins; where it is not, the old behaviour is untouched.
+ */
+function pressedPreset(current, offered, profile) {
+  if (offered.some((p) => p.key === 'each') && matchesPreset(current, 'each', profile)) return 'each';
+  for (const p of offered) {
+    if (p.key !== 'each' && matchesPreset(current, p.key, profile)) return p.key;
+  }
+  return null;
+}
+
 /**
  * @param {object}   profile   whose body the map is about
  * @param {Function} onChange  re-rank and repaint
@@ -365,9 +398,12 @@ const PRESETS = [
  *   against, and silently rewriting their setting from another person's page is
  *   the kind of thing nobody would ever find.
  */
-export function openCompareSheet(profile, onChange, save) {
+export function openCompareSheet(profile, onChange, save, opts = {}) {
   let current = normalizeCompare(profile.compare);
   const body = el('div', { class: 'compare-sheet' });
+  /* ⚠️ OPT-IN, not inferred from `profile.whose`. The caller knows whether there
+   * is more than one body on its screen; this function would be guessing. */
+  const presets = opts.perPerson ? [EACH_PRESET, ...PRESETS] : PRESETS;
   const persist = save || ((next) => store.saveSettings({ compare: { ...next } }));
 
   const apply = async (next) => {
@@ -390,15 +426,17 @@ export function openCompareSheet(profile, onChange, save) {
       // axes below are the escape hatch rather than the main event.
       el('div', { class: 'compare-axis' },
         el('div', { class: 'compare-opts' },
-          ...PRESETS.map((p) =>
-            el('button', {
+          ...presets.map((p) => {
+            const lit = pressedPreset(current, presets, profile) === p.key;
+            return el('button', {
               class: 'btn preset',
-              'aria-pressed': String(matchesPreset(current, p.key === 'everyone' ? 'everyone' : 'like-me', profile)),
-              onClick: () => apply(comparePreset(p.key === 'everyone' ? 'everyone' : 'like-me', profile)),
+              'aria-pressed': String(lit),
+              onClick: () => apply(comparePreset(p.key, profile)),
             },
               el('span', { class: 'preset-name', text: p.name }),
               el('span', { class: 'preset-hint', text: p.hint }),
-            ))),
+            );
+          })),
       ),
 
       ...COMPARE_AXES.map((axis) =>
@@ -411,15 +449,23 @@ export function openCompareSheet(profile, onChange, save) {
                 // so the state lives in the attribute the screen reader reads
                 // rather than in a second class that could disagree with it.
                 class: 'chip',
-                'aria-pressed': String(isChosen(axis.key, opt.key, current, profile)),
+                'aria-pressed': String(isChosen(axis.key, opt.key, current, profile, opts.perPerson)),
                 text: opt.name,
                 onClick: () => apply({ ...current, [axis.key]: opt.key }),
               }))),
-          el('div', { class: 'field-help', text: axis.help }),
+          el('div', { class: 'field-help', text:
+            /* ⚠️ THE SEX AXIS EXPLAINS ITS OWN EMPTY STATE, and only when it has
+               one. With "Relative to each" active no chip below is lit, because
+               no single sex is in use — and an axis with nothing selected reads
+               as broken unless it says why. */
+            axis.key === 'sex' && opts.perPerson && current.sex === 'own'
+              ? 'Each body is using its own — pick one here to hold both to the same standard instead.'
+              : axis.help }),
         )),
 
       el('div', { class: 'field-help' },
-        'Now comparing you against ',
+        // "you" is wrong where the sheet governs two other people's bodies.
+        opts.perPerson ? 'Now comparing against ' : 'Now comparing you against ',
         el('b', { text: comparisonLabel(live).main.replace(/^vs\. /, '') }),
         ` — ${comparisonLabel(live).sub}.`),
     );
@@ -429,11 +475,21 @@ export function openCompareSheet(profile, onChange, save) {
   openSheet({ title: 'Compared to', body });
 }
 
-// `sex: 'own'` is the stored default and is never shown, so the chip that lights
-// up for it is the user's actual sex. Without this, someone who has never opened
-// the sheet would see nothing selected under Sex and read it as broken.
-function isChosen(axis, key, current, profile) {
+/**
+ * `sex: 'own'` is the stored default and is never shown, so the chip that lights
+ * up for it is the user's actual sex. Without this, someone who has never opened
+ * the sheet would see nothing selected under Sex and read it as broken.
+ *
+ * 🚨 EXCEPT WHERE 'own' IS A REAL CHOICE RATHER THAN AN UNSET VALUE — 2026-09-05.
+ * On the compare screen "Relative to each" keeps `sex: 'own'` deliberately, and
+ * resolving it here would light **Men** (the fallback when there is no profile
+ * gender) while both bodies were in fact being ranked against their own sexes.
+ * A chip claiming a choice nobody made is worse than no chip lit, so in that one
+ * mode the axis shows nothing selected and the help text below it explains why.
+ */
+function isChosen(axis, key, current, profile, perPerson) {
   if (axis !== 'sex') return current[axis] === key;
+  if (perPerson && current.sex === 'own') return false;
   const resolved = current.sex === 'own'
     ? (profile && profile.gender === 'female' ? 'female' : 'male')
     : current.sex;

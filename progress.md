@@ -22,9 +22,34 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-04 — the docs were reorganised (this file, the handbook and the history);
-nothing about the app changed. Before that, 2026-09-03: the tiers are gone (private/public), a
-friend's body map is tappable, and two bodies can be compared side by side.
+**Last updated:** 2026-09-05 — each body on the compare screen is ranked against its own population,
+a friend's data is the Data screen with tabs, and the visibility control left their page.
+
+## What changed on 2026-09-05, in one line each
+
+**Three instructions from Tim, all about screens showing other people.** Full write-up at the top of
+`docs/history.md`.
+
+1. 🚨 **"RELATIVE TO EACH" — the compare screen was ranking two people against ONE population.**
+   *"if there is a young woman, the girl's muscle group is compared to other young women, but if that
+   is being compared to an older man, then the man is being compared to other older men."* It is now
+   the first preset in the sheet **and the default that screen opens on**. ⚠️ **Weight and age were
+   always per-person; only SEX was not** — the owner resolves the other two when publishing their
+   grid, and the reader was resolving sex once for both bodies.
+2. 🆕 **A FRIEND'S DATA IS THE DATA SCREEN.** Muscles · Volume · Graph · Bars · **Calendar** (where
+   Research is on yours), with recent workouts still under the body. 🚨 **It is literally
+   `GraphView()` with a subject** — six store getters grew a `rows` parameter — so their Volume tab
+   cannot drift from yours. `FriendVolumeView`/`FriendGraphView` deleted; their routes still open the
+   page on that tab.
+3. 🔄 **"What they can see of yours" is gone from a friend's page.** It was a per-person dial until
+   the tiers went on 2026-09-03; after that it was an account-wide setting sitting in a per-person
+   position, which invites somebody to think they are changing what THIS friend sees. Still on the
+   Friends screen and in Settings.
+
+⚠️ **AND I EMPTIED `js/views-data.js` WITH A SCRIPT** — the §0.11 failure, for the third time in this
+project and the second in Python. Recovered with `git checkout --`. 🚨 **The rule was not forgotten,
+it was eroded**: a dozen surgical scripted edits had worked earlier in the same session, which is
+exactly what the 2026-09-03 note said would happen. See `docs/history.md`, 2026-09-05 §D.
 
 ## ⚠️ 2026-09-04 — WHY THE NOTES ARE IN FIVE FILES NOW, AND THE RULE THAT KEEPS THEM THAT WAY
 
@@ -161,6 +186,12 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
    deliberately reverted** — see Open work 25.
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT, AND ONE THING IS WAITING ON TIM
+
+⚠️ **THE 2026-09-05 WORK WAS NOT LOOKED AT IN A BROWSER.** The session was paused mid-flight for this
+reset, with everything green (4,112 headless assertions) and pushed. **The compare fix WAS driven in
+a real browser and confirmed**; the friend-page tabs were not. Per `docs/direction.md` §3.3 that is
+not a blocker and must not be written up as one — Tim tests continuously and reports what breaks —
+but it is the one thing this session would have done next.
 
 **The working tree is clean, everything is pushed, the rules are deployed and the live site is
 serving it.** No half-finished job to pick up. **Between jobs, say what is done and stop — do not

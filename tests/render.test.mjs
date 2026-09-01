@@ -5537,7 +5537,7 @@ ok(!data.querySelector('.rep-target'),
  * allows that user to display another person's body side by side."*
  * ================================================================== */
 {
-  const { FriendView, CompareBodiesView, FriendVolumeView, FriendGraphView, SocialView } =
+  const { FriendView, CompareBodiesView, SocialView } =
     await import(BASE + 'views-social.js');
   const { social, store, todayISO } = await import(BASE + 'store.js');
   sessionStorage.removeItem('ftrack:v1:demo');
@@ -5708,8 +5708,82 @@ ok(!data.querySelector('.rep-target'),
 
     ok([...fr.querySelectorAll('a')].some((a) => /Compare/.test(a.textContent)),
        '🚨 and a Compare button sits on their map');
-    ok(/Volume/.test(fr.textContent) && /Graphs/.test(fr.textContent),
-       'with their volume and graphs one tap away');
+    /* 🚨 THEIR DATA IS TABS NOW, NOT ROWS UNDER THE BODY — 2026-09-05. Tim:
+     * *"I want it to look nearly exactly like how a user views their own data
+     * section, but with the 'research' tab replaced with that user's 'calendar'
+     * data."*
+     *
+     * ⚠️ THE ABSENCE OF **Research** IS HALF THE ASSERTION. It is the one Data
+     * tab that is identical on everybody's screen — eleven topics about training
+     * in general — so leaving it here would be a tab on somebody's page that is
+     * not about them. Calendar takes its slot, in place, so the four tabs a
+     * person already knows do not move. */
+    const tabLabels = [...fr.querySelectorAll('.segmented .seg')].map((b) => b.textContent);
+    ok(tabLabels.join('|') === 'Muscles|Volume|Graph|Bars|Calendar',
+       `🚨 their page carries the Data tab bar, with Calendar where Research is on yours (${tabLabels.join('|')})`);
+    ok(!tabLabels.includes('Research'),
+       '⚠️ and NOT Research — it is the same on every screen, so on a friend\'s page it would be '
+       + 'a tab that is not about them');
+
+    /* Recent workouts stayed under the body rather than becoming a sixth tab —
+     * Tim: *"keep the 'recent workouts' display below that user's body view as
+     * it is now."* */
+    ok(/Recent workouts/.test(fr.textContent),
+       '⚠️ and Recent workouts is still under the body, not promoted to a tab');
+
+    /* 🔄 ~~"What they can see of yours"~~ GONE — 2026-09-05, on Tim's
+     * instruction. It was a PER-PERSON dial when it was built; the tiers went on
+     * 2026-09-03 and it became one account-wide setting that merely happened to
+     * be drawn here, where its position still read as "for this friend". */
+    ok(!/What they can see of yours/.test(fr.textContent),
+       '🚨 and the visibility control is gone from a friend\'s page — an account-wide setting in a '
+       + 'per-person position invites somebody to think they are changing what THIS friend sees');
+
+    /* ---- the other tabs draw THEIR numbers, from the same code as yours ---- */
+    const tabBtn = (label) => [...fr.querySelectorAll('.segmented .seg')]
+      .find((b) => b.textContent === label);
+
+    tabBtn('Volume').click();
+    await settle(); await settle();
+    ok(/sets a week|Weekly sets|sets\b/i.test(fr.textContent),
+       'their Volume tab draws the weekly-sets screen');
+
+    tabBtn('Calendar').click();
+    await settle(); await settle();
+    const calText = fr.textContent;
+    ok(/most recent sixty sessions/.test(calText),
+       '🚨 their Calendar says it is a WINDOW rather than a history — sixty published sessions, so '
+       + 'an empty month may mean they rested or may mean it fell off the end');
+    /* ⚠️ AND ITS DAYS GO NOWHERE. `#/day/<iso>` is MY training for that date;
+       linking there from their calendar would open the right day for the wrong
+       person and look like it had worked. */
+    const calCells = [...fr.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
+    ok(calCells.length > 0, 'and it draws day cells');
+    ok(calCells.every((c) => c.tagName.toLowerCase() !== 'button'),
+       '🚨 none of which is a button — there is no screen for one of their days, and a control that '
+       + 'does nothing takes focus and is announced as a control');
+
+    /* 🚨 AND BROWSING THEIR TABS MUST NOT MOVE MINE. `graphMode` is module state
+     * — the tab my own Data screen opens on — and a friend's page keeping its
+     * own `mode` is the only thing stopping "look at their calendar" from
+     * leaving my Data screen on a tab that does not exist in its own list. */
+    const { GraphView: MyData } = await import(BASE + 'views-data.js');
+    const mine = await mount(MyData());
+    await settle();
+    const mySelected = [...mine.querySelectorAll('.segmented .seg')]
+      .find((b) => b.getAttribute('aria-selected') === 'true');
+    ok(mySelected && mySelected.textContent !== 'Calendar',
+       `⚠️ my own Data screen is unaffected by having browsed theirs (${mySelected && mySelected.textContent})`);
+    ok([...mine.querySelectorAll('.segmented .seg')].some((b) => b.textContent === 'Research'),
+       'and still has Research, which is mine and not theirs');
+
+    /* ⚠️ PUT THEIR PAGE BACK ON MUSCLES BEFORE LEAVING. This file is one long
+       script over one jsdom, so a block that walks a screen into a different
+       state hands that state to every block after it — the assertions below
+       read the muscle panel, and the first version of this left them looking at
+       a calendar. Restoring the tab is the block's own job. */
+    tabBtn('Muscles').click();
+    await settle(); await settle();
 
     /* 🚨 THE LOAD-BEARING ONE FOR TIM'S ANSWER — *"allow them to use any
      * comparison combination that is already available"*. The percentile behind
@@ -5770,12 +5844,75 @@ ok(!data.querySelector('.rep-target'),
        + 'state where somebody compares one person\'s chest against the other\'s back');
 
     const text = cmp.textContent.replace(/\s+/g, ' ');
-    ok(/own body weight and age/.test(text),
-       '⚠️ AND THE SCREEN SAYS WHAT THE COLOURS MEAN: each body is ranked against people its own '
-       + 'size, so two people can read the same level at very different weights. "Advanced vs '
-       + 'Advanced" would otherwise read as "the same lift"');
+    /* ⚠️ AND THE SCREEN SAYS WHAT THE COLOURS MEAN: each body is ranked against
+       people its own size, so two people can read the same level at very
+       different weights. "Advanced vs Advanced" would otherwise read as "the
+       same lift".
+
+       🚨 THE ASSERTION NOW REQUIRES **SEX**, AND ITS ABSENCE WAS THE BUG. Until
+       2026-09-05 this line said "own body weight and age" and passed — while
+       both bodies were in fact ranked against a single sex, the viewer's. Weight
+       and age were per-person from the start, so the caption was narrowly true
+       and complete-sounding, and the test was pinning exactly the two axes that
+       already worked. Naming all three is what makes it catch a regression. */
+    ok(/own sex, body weight and age/.test(text),
+       '🚨 the screen states that each body is on its OWN sex, body weight and age — the three '
+       + `axes, not the two that were never in doubt (${text.slice(text.indexOf('Each body'), text.indexOf('Each body') + 90)})`);
+    ok(/vs\. people like each of them/.test(text),
+       '⚠️ and the header names the per-person group rather than one population — a caption naming '
+       + 'a population the colours were not computed against is the fault this label exists to prevent');
     ok(/never "who lifts more"|who is lifting more/.test(text),
        'and points at the estimate as the number that does answer who lifts more');
+
+    /* ================= 🚨 EACH BODY GETS ITS OWN POPULATION =================
+     *
+     * Tim, 2026-09-05: *"if there is a young woman, the girl's muscle group is
+     * compared to other young women, but if that is being compared to an older
+     * man, then the man is being compared to other older men. Right now both
+     * people are being compared to the same people."*
+     *
+     * ⚠️ ASSERTED AT THE KEY, NOT THROUGH THE PIXELS, and that is deliberate.
+     * Two bodies of different sexes will often land on the same LEVEL by
+     * coincidence — the standards are built so that comparable people read
+     * comparably — so an assertion on the rendered colours would pass with the
+     * bug present most of the time. The comparison KEY is the thing that was
+     * wrong, and it is exact: one object must produce two different keys.
+     *
+     * Marcus (male) and Priya (female) are in the demo precisely because they
+     * differ; see DEMO_FRIENDS.
+     */
+    const { compareKey, comparePreset } = await import(BASE + 'strength-standards.js');
+    const { ownSexOf } = await import(BASE + 'shared-map.js');
+
+    const each = comparePreset('each');
+    const asMale = { defaultCompare: 'lifters|male|own|own' };
+    const asFemale = { defaultCompare: 'lifters|female|own|own' };
+
+    ok(compareKey(each, ownSexOf(asMale)) === 'lifters|male|own|own'
+       && compareKey(each, ownSexOf(asFemale)) === 'lifters|female|own|own',
+       '🚨 ONE comparison object produces a DIFFERENT key per body — the man is read against men '
+       + 'and the woman against women, which is the whole of what was asked for');
+
+    // And the old behaviour, so the difference is pinned rather than assumed:
+    // a concrete preset gives both bodies the same population.
+    const likeMe = comparePreset('like-me', { gender: 'male' });
+    ok(compareKey(likeMe, ownSexOf(asMale)) === compareKey(likeMe, ownSexOf(asFemale)),
+       '⚠️ while "Like me" deliberately still gives BOTH bodies one population — it is a valid '
+       + 'question ("hold them to the same standard"), and it was only wrong as the DEFAULT');
+
+    ok(each.sex === 'own',
+       '⚠️ and the mechanism is that the sex axis stays UNRESOLVED — weight and age were always '
+       + 'per-person, because the owner resolves those when publishing their grid');
+
+    /* The grid a real publisher writes must actually contain both rows, or the
+     * key above resolves to nothing and the body silently fails to paint. */
+    const { buildStrengthShare } = await import(BASE + 'store.js');
+    const share = await buildStrengthShare();
+    if (share && share.grid) {
+      ok(Boolean(share.grid['lifters|male|own|own']) && Boolean(share.grid['lifters|female|own|own']),
+         '🚨 and a published grid carries BOTH sexes\' rows, so the key each body resolves to is '
+         + 'one that exists — a reader cannot recompute a percentile, so a missing row is a blank body');
+    }
   }
 
   /* ---- 🚨 A FRIEND WHO HAS NOT MIGRATED YET ----
@@ -5829,18 +5966,29 @@ ok(!data.querySelector('.rep-target'),
     social.friend = async () => ({ audience: 'friends', doc: theirDoc });
   }
 
-  /* ---- their volume and their graph, from the same functions as mine ---- */
+  /* ---- their volume and their graph, from the same functions as mine ----
+   *
+   * 🔄 REACHED AS TABS SINCE 2026-09-05, where they used to be screens of their
+   * own. ⚠️ THE OLD ROUTES ARE ASSERTED HERE RATHER THAN THE OLD FUNCTIONS:
+   * `#/friend/<uid>/volume` and `/graph` were live addresses, so they still have
+   * to land somewhere sensible — on the friend's page, opened on that tab. The
+   * screens went; the addresses did not.
+   */
   {
-    const vol = await mount(FriendVolumeView('u1'));
+    const vol = await mount(FriendView('u1', 'volume'));
     for (let i = 0; i < 12; i++) await settle();
     const v = vol.textContent.replace(/\s+/g, ' ');
-    ok(/Autumn/.test(v), 'their volume screen names whose it is');
+    ok(/Autumn/.test(v), 'their volume tab names whose it is');
     ok(/most recent sixty|sixty/.test(v),
        '🚨 AND SAYS THE WINDOW IS NOT THEIR HISTORY — they publish sixty sessions, so this screen '
        + 'is not the same measurement as the one on their own phone, and silence would let it '
        + 'claim to be');
+    ok([...vol.querySelectorAll('.segmented .seg')]
+       .some((b) => b.textContent === 'Volume' && b.getAttribute('aria-selected') === 'true'),
+       '⚠️ and the old /volume route opens the page ON that tab rather than 404-ing or landing on '
+       + 'Muscles — a deep link that resolves to the wrong screen is worse than one that fails');
 
-    const gr = await mount(FriendGraphView('u1'));
+    const gr = await mount(FriendView('u1', 'trend'));
     for (let i = 0; i < 12; i++) await settle();
     const g = gr.textContent.replace(/\s+/g, ' ');
     ok(/Autumn/.test(g), 'and so does their graph');

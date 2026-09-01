@@ -639,7 +639,15 @@ export async function InviteView(param) {
  * One friend  —  #/friend/<uid>
  * ------------------------------------------------------------------ */
 
-export async function FriendView(uid) {
+/**
+ * @param {string} uid
+ * @param {string} [tab]  which Data tab to open on. ⚠️ IT EXISTS SO THE OLD
+ *   ROUTES STILL WORK: `#/friend/<uid>/volume` and `/graph` were their own
+ *   screens until 2026-09-05 and are now tabs of this one, so they resolve here
+ *   instead of 404-ing. This project has broken no deep link yet and this is not
+ *   the place to start — `#/calendar` kept its route through two redesigns.
+ */
+export async function FriendView(uid, tab) {
   const back = () => { location.hash = '#/social'; };
 
   /* ⚠️ THE DEMO GOES THROUGH friendDoc(), WHICH BUILDS AN INVENTED FRIEND. Until
@@ -647,7 +655,7 @@ export async function FriendView(uid) {
    * was defensible while it listed workouts and is not now that it carries the
    * body map, the volume, the graphs and the way into the compare screen. */
   const pre = await friendDoc(uid);
-  if (pre.demo) return friendScreen(uid, pre, back);
+  if (pre.demo) return friendScreen(uid, pre, back, tab);
 
   let state;
   try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
@@ -715,18 +723,23 @@ export async function FriendView(uid) {
     ));
   }
 
-  // What I share with them, always first and always visible for a friend — the
-  // thing a person most wants to check on this screen is not what their friend
-  // shared, it is what they themselves are giving away. ⚠️ It is now MY ACCOUNT
-  // setting rather than a dial on this one person, so it says so and leads to
-  // the same sheet the Friends screen opens.
-  if (isFriend) {
-    parts.push(el('h2', { class: 'section-head', text: 'What they can see of yours' }));
-    parts.push(visibilityRow(state.visibility,
-      () => refreshRoute(`#/friend/${encodeURIComponent(uid)}`)));
-    parts.push(el('p', { class: 'note', text:
-      'Friends see everything either way. This setting decides whether anybody else can.' }));
-  }
+  /* 🔄 ~~"What they can see of yours"~~ REMOVED 2026-09-05, on Tim's
+   * instruction: *"Since we talked about how that single option is only
+   * changeable in the profile section for now and all friends can see
+   * everything, please remove this choice from the user display."*
+   *
+   * ⚠️ IT WAS RIGHT WHEN IT WAS BUILT AND WRONG BY THE TIME IT WAS REMOVED, and
+   * the difference is 2026-09-03. It was a PER-PERSON dial — four visibility
+   * levels, set on this screen, for this one friend — and putting it at the top
+   * of their page was the whole point: the thing you most want to check is what
+   * you are giving away. When the tiers went, it became one ACCOUNT setting that
+   * happened to be duplicated here, and a per-person position for an account-wide
+   * control reads as though it were still per person. **Somebody could reasonably
+   * have believed they were changing what THIS friend sees.**
+   *
+   * ⚠️ NOTHING WAS LOST. The setting still lives on the Friends screen and in
+   * Settings, which is where an account-wide choice belongs, and the sentence
+   * that mattered — friends see everything either way — is true without it. */
 
   if (!seen.doc) {
     parts.push(el('h2', { class: 'section-head', text: 'What they share' }));
@@ -750,26 +763,17 @@ export async function FriendView(uid) {
       }
     }
 
-    /* 🚨 THEIR NUMBERS, ON THE SAME SCREENS AS YOURS (2026-09-03). Tim: *"I also
-     * want a friend to be able to see another user's body, their graphs, volume,
-     * etc."* Both are computed on this device from what they published — their
-     * sessions and benchmarks are in the document already — so neither costs a
-     * read and neither needs anything new from them. */
-    parts.push(el('h2', { class: 'section-head', text: 'Their training' }));
-    parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/volume` },
-      el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: 'Volume' }),
-        el('div', { class: 'row-sub', text: 'Weekly sets per muscle, from what they recorded' }),
-      ),
-      chevron(),
-    ));
-    parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/graph` },
-      el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: 'Graphs' }),
-        el('div', { class: 'row-sub', text: 'One exercise over time, in your units' }),
-      ),
-      chevron(),
-    ));
+    /* 🔄 ~~Rows linking to their Volume and Graph screens~~ THEY ARE TABS NOW —
+     * 2026-09-05. Tim: *"you can see volume and graphs, but they're displayed at
+     * the bottom of the body view, rather than as tabs at the top. I want it to
+     * look nearly exactly like how a user views their own data section."*
+     *
+     * ⚠️ THE TAB BAR IS NOT BUILT HERE. This page hands its rows to `GraphView`,
+     * which is the same function that draws your own Data screen — so a friend's
+     * Volume tab is not a copy of yours, it IS yours, reading their rows. See the
+     * note above GraphView. The old `#/friend/<uid>/volume` and `/graph` routes
+     * still resolve and simply open the page on that tab, so nothing anybody
+     * bookmarked broke. */
 
     if (seen.doc.bodyWeight && seen.doc.bodyWeight.length) {
       const last = seen.doc.bodyWeight[seen.doc.bodyWeight.length - 1];
@@ -849,8 +853,55 @@ export async function FriendView(uid) {
     }),
   ));
 
-  setChildren(body, ...parts);
-  return screen;
+  /* 🚨 THE PAGE BECOMES THE DATA SCREEN WHERE THERE IS DATA TO TAB THROUGH.
+   *
+   * Everything gathered into `parts` above — their face, their map, their body
+   * weight, their recent workouts and the disconnect footer — becomes the
+   * MUSCLES pane, which is what Tim asked for: *"keep the 'recent workouts'
+   * display below that user's body view as it is now."* The other four tabs are
+   * their volume, their graph, their bars and their calendar, drawn by the same
+   * code that draws yours.
+   *
+   * ⚠️ ONLY WHERE THEY HAVE PUBLISHED A MAP. With nothing to show, tabs would be
+   * five doors onto four empty rooms; the plain list says what is missing and is
+   * the better screen. */
+  const hasMap = seen.doc && seen.doc.strength
+    && seen.doc.strength.muscles && seen.doc.strength.muscles.length;
+
+  if (!hasMap) {
+    setChildren(body, ...parts);
+    return screen;
+  }
+
+  return dataScreenFor({ uid, name, doc: seen.doc, back, tab, parts });
+}
+
+/**
+ * Somebody else's Data screen: their rows, our panes.
+ *
+ * ⚠️ THE MUSCLES PANE IS HANDED IN RATHER THAN COMPUTED. A friend's percentile
+ * was worked out on their device against their body weight and age, neither of
+ * which is in a published document — so `GraphView` cannot recompute it and
+ * this passes `friendBody()`, which reads the published grid instead.
+ */
+async function dataScreenFor({ uid, name, doc, back, tab, parts }) {
+  const { GraphView } = await import('./views-data.js');
+  return GraphView({
+    subject: name,
+    tab,
+    back,
+    rows: {
+      sessions: doc.activity || [],
+      benchmarks: doc.benchmarks || [],
+      // Usually empty: body weight never goes in a public document and is opt-in
+      // even for friends, so their graph offers no body-weight line. Correct.
+      bodyWeight: doc.bodyWeight || [],
+    },
+    musclesPane: async (host, top) => {
+      setChildren(top);
+      setChildren(host, ...parts.filter(Boolean));
+    },
+  });
 }
 
 /**
@@ -862,7 +913,7 @@ export async function FriendView(uid) {
  * kept is exactly what the demo exists to show: the map, the numbers, and the
  * screens they lead to.
  */
-async function friendScreen(uid, pre, back) {
+async function friendScreen(uid, pre, back, tab) {
   const body = el('div', { class: 'list' });
   const screen = screenShell({
     title: pre.name, sub: 'In the demo account', back, noNav: true, scroll: body,
@@ -873,20 +924,22 @@ async function friendScreen(uid, pre, back) {
     parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
     parts.push(await friendBody(strength, { name: pre.name, uid }));
   }
-  parts.push(el('h2', { class: 'section-head', text: 'Their training' }));
-  parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/volume` },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: 'Volume' }),
-      el('div', { class: 'row-sub', text: 'Weekly sets per muscle, from what they recorded' })),
-    chevron()));
-  parts.push(el('a', { class: 'row', href: `#/friend/${encodeURIComponent(uid)}/graph` },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: 'Graphs' }),
-      el('div', { class: 'row-sub', text: 'One exercise over time, in your units' })),
-    chevron()));
-
   parts.push(el('h2', { class: 'section-head', text: 'Recent workouts' }));
   for (const a of pre.doc.activity || []) parts.push(activityRow(a, uid));
+
+  /* 🚨 THE DEMO GETS THE SAME TABS AS A REAL FRIEND — 2026-09-05, and it had to.
+   *
+   * This function is a near-duplicate of FriendView's body, kept because the
+   * demo has no relationship to show. When the real page grew a Data tab bar,
+   * leaving this one on rows would have meant **the demo showed the old layout**
+   * — and the demo is where every screen in this app gets looked at, measured
+   * and audited (§0.10). A fixture that renders a screen the app no longer has
+   * is the `sets: []` fault in a different costume. */
+  if (strength && strength.muscles && strength.muscles.length) {
+    return dataScreenFor({
+      uid, name: pre.name, doc: pre.doc, back, tab, parts,
+    });
+  }
 
   setChildren(body, ...parts);
   return screen;
@@ -1017,120 +1070,22 @@ async function friendDoc(uid) {
   return { state, seen, name, doc: seen.doc, legacy: Boolean(seen.legacy) };
 }
 
-/** Their weekly sets per muscle — the Data tab's Volume screen, their rows. */
-export async function FriendVolumeView(uid) {
-  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
-  const r = await friendDoc(uid);
-  if (r.fail) return screenShell({ title: 'Volume', back, noNav: true, scroll: r.fail });
-
-  const top = el('div', { class: 'pane-top' });
-  const host = el('div', {});
-  const screen = screenShell({ title: `${r.name} · Volume`, back, noNav: true, top, scroll: host });
-
-  const { renderVolumePane } = await import('./views-data.js');
-  await renderVolumePane(host, top, { rows: r.doc.activity || [], subject: r.name });
-  return screen;
-}
-
-/**
- * One of their exercises over time.
+/* 🔄 ~~FriendVolumeView~~ and ~~FriendGraphView~~ DELETED 2026-09-05.
  *
- * ⚠️ IT IS A SMALLER SCREEN THAN YOUR OWN GRAPH TAB, deliberately and not for
- * lack of time: your Graphs screen carries a source switch, a body-weight
- * series, a bar mode and a bests pane, and three of those four are about data a
- * friend does not publish or a question you would not ask of somebody else. What
- * it keeps is the part that answers "are they getting stronger at this" — the
- * same measured SVG chart, the same rep-normalisation, the same marker rule.
- */
-export async function FriendGraphView(uid) {
-  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
-  const r = await friendDoc(uid);
-  if (r.fail) return screenShell({ title: 'Graphs', back, noNav: true, scroll: r.fail });
-
-  const rows = { sessions: r.doc.activity || [], benchmarks: r.doc.benchmarks || [] };
-  const exMap = await store.getExerciseMap().catch(() => new Map());
-
-  /* Which of their lifts can be charted at all. ⚠️ TWO DIFFERENT DAYS, which is
-   * the same bar `chartableExercises()` applies to yours — one day is a
-   * measurement and not a line, and drawing a "trend" through it would be the
-   * app inventing a direction. */
-  const byId = new Map();
-  const note = (id, name, date, set) => {
-    if (!id || !(Number(set.weight) > 0) || !(Number(set.reps) >= 1)) return;
-    let e = byId.get(id);
-    if (!e) { e = { id, name, days: new Set() }; byId.set(id, e); }
-    e.days.add(date);
-  };
-  for (const s of rows.sessions) {
-    for (const entry of s.entries || []) {
-      const nm = (exMap.get(entry.exerciseId) || {}).name || entry.name || 'Exercise';
-      for (const set of entry.sets || []) note(entry.exerciseId, nm, s.date, set);
-    }
-  }
-  for (const b of rows.benchmarks) {
-    const nm = (exMap.get(b.exerciseId) || {}).name || b.name || 'Exercise';
-    note(b.exerciseId, nm, b.date, b.values || {});
-  }
-  const options = [...byId.values()]
-    .filter((o) => o.days.size >= 2)
-    .sort((a, b) => b.days.size - a.days.size || a.name.localeCompare(b.name));
-
-  const top = el('div', { class: 'graph-controls' });
-  const host = el('div', { class: 'graph-host' });
-  const screen = screenShell({ title: `${r.name} · Graphs`, back, noNav: true, top, scroll: host });
-
-  if (!options.length) {
-    setChildren(host, emptyState('No line to draw yet',
-      `A chart needs the same lift on two different days. Nothing ${r.name} has published clears `
-      + 'that yet — their page still shows every workout.'));
-    return screen;
-  }
-
-  let chosen = options[0].id;
-  const { normalizedSeries, defaultTargetReps } = await import('./store.js');
-  const { fillChart } = await import('./views-data.js');
-
-  async function draw() {
-    setChildren(top, el('div', { class: 'control-row' },
-      el('select', {
-        class: 'input compact', 'aria-label': 'What to chart',
-        onChange: (e) => { chosen = e.target.value; draw(); },
-      }, options.map((o) => el('option', {
-        value: o.id, text: o.name, selected: o.id === chosen,
-      }))),
-    ));
-
-    /* ⚠️ BOTH SOURCES TOGETHER, AND IT IS NOT A BREACH OF THE ONE-SOURCE RULE
-     * (D14) — it is that rule applied to what is actually on the wire. A
-     * published benchmark and a published workout set arrive in the same window
-     * and this screen charts what a person has; the reason D14 exists is that
-     * mixing them makes a TREND look like wild swings, and the mixing it forbids
-     * is two lines' worth of points on one line where the user cannot see which
-     * is which. Here the hover readout names the source of every point, and
-     * there is no toggle to offer because a friend's document is one stream.
-     * ⚠️ If this ever grows a source switch, it needs the same one-at-a-time
-     * treatment views-data.js gives your own. */
-    const target = await defaultTargetReps(chosen, null, rows);
-    const points = await normalizedSeries(chosen, target, null, rows);
-    if (points.length < 2) {
-      setChildren(host, emptyState('One recording so far',
-        'Charting needs the same lift on two different days.'));
-      return;
-    }
-    const plot = el('div', { class: 'chart-wrap' });
-    setChildren(host, plot, el('div', { class: 'chart-foot' },
-      el('div', { class: 'chart-caption', text:
-        `Every set shown as the weight at ${target} reps, so heavier-for-fewer and lighter-for-more `
-        + 'sit on one line. A marker means they really lifted it at that rep count.' }),
-      el('div', { class: 'chart-caption', text:
-        `From the sessions and benchmarks ${r.name} publishes — their most recent sixty sessions.` }),
-    ));
-    fillChart(plot, points, 'weight');
-  }
-
-  await draw();
-  return screen;
-}
+ * They were whole screens of their own — a friend's Volume and their Graph,
+ * reached by a row under their body map. Both are TABS now, drawn by the same
+ * `GraphView()` that draws your own Data screen from their published rows, so
+ * these two were left reachable by no route at all.
+ *
+ * ⚠️ THE ROUTES SURVIVE, and that is the part worth keeping: app.js maps
+ * `#/friend/<uid>/volume` and `/graph` onto the friend page opened on that tab,
+ * so every link anybody has is still good. It is the SCREENS that are gone, not
+ * the addresses — the same treatment `#/calendar` got through two redesigns.
+ *
+ * ⚠️ FriendGraphView carried its own walk over their sessions to work out
+ * which lifts could be charted. That is not lost either: `chartableExercises()`
+ * grew a `rows` parameter and now answers the same question for both subjects,
+ * which is one implementation where there were two. */
 
 /* ================================================================== *
  * TWO BODIES, SIDE BY SIDE  —  #/compare/<uid>[/<uid>]
@@ -1164,7 +1119,7 @@ export async function CompareBodiesView(param) {
 
   const [
     { ratingsFromShared, levelMapFrom }, { bodySvg, BODY_ASPECT }, muscles,
-    { normalizeCompare, comparisonLabel }, settings,
+    { comparisonLabel, comparePreset }, settings,
   ] = await Promise.all([
     import('./shared-map.js'), import('./body-map.js'), import('./views-muscles.js'),
     import('./strength-standards.js'), store.getSettings(),
@@ -1236,7 +1191,28 @@ export async function CompareBodiesView(param) {
     return screen;
   }
 
-  let compare = normalizeCompare(settings.compare);
+  /* 🚨 THE DEFAULT IS PER-PERSON, NOT THE VIEWER'S OWN SETTING — 2026-09-05.
+   *
+   * Tim, on what he had asked for on 2026-09-03 (*"make the default comparison
+   * vs people like them"*): *"I was meaning that each account would compare
+   * themselves against people like them. For example, if there is a young woman,
+   * the girl's muscle group is compared to other young women, but if that is
+   * being compared to an older man, then the man is being compared to other older
+   * men. Right now both people are being compared to the same people."*
+   *
+   * It opened on `settings.compare` — the viewer's own saved group, with a
+   * CONCRETE sex in it — so both bodies were ranked against that one population.
+   * ⚠️ Weight and age were per-person all along, because the owner resolves those
+   * when they publish their grid; sex is the only axis the reader resolves, and
+   * it was being resolved once for both. `comparePreset('each')` keeps it
+   * unresolved so `compareKey()` answers it separately for each document.
+   *
+   * ⚠️ THE VIEWER'S OWN SETTING IS DELIBERATELY NOT CONSULTED HERE. It is a
+   * statement about how they want their OWN body ranked, and carrying it onto a
+   * screen about two other people is what produced the bug. Changing it here
+   * still writes nothing back (the `save` no-op below, unchanged).
+   */
+  let compare = comparePreset('each');
   let selected = null;
   const more = settings.moreDetails === true;
 
@@ -1249,6 +1225,8 @@ export async function CompareBodiesView(param) {
           { compare, gender: null, whose: 'each' },
           (next) => { compare = next; draw(); },
           async () => {},          // per-screen, never written to settings
+          // Offers "Relative to each" — only meaningful with more than one body.
+          { perPerson: true },
         ),
       },
         el('span', { class: 'basis-main' }, label.main, icon('down', 15)),
@@ -1293,10 +1271,19 @@ export async function CompareBodiesView(param) {
         : el('div', { class: 'card' },
             el('div', { class: 'field-help', text: 'Tap a muscle on either body — both open it.' })),
       el('div', { class: 'vol-notes' },
+        /* ⚠️ THIS SENTENCE USED TO NAME ONLY WEIGHT AND AGE, AND THAT WAS THE
+           TELL. Both were per-person from the start; sex was not, and the
+           caption's silence about it read as completeness. It now states which
+           standard each body is on and changes when that changes — so the
+           screen can never claim per-person ranking while a single sex is
+           selected, or the reverse. */
         el('div', { class: 'field-help', text:
-          'Each body is ranked against people of its own body weight and age, so two people can '
-          + 'read the same level at very different weights. The level answers "how far along is '
-          + 'this person", never "who lifts more".' }),
+          (compare.sex === 'own'
+            ? 'Each body is ranked against people of its own sex, body weight and age'
+            : 'Each body is ranked against people of its own body weight and age, but both '
+              + 'against the one sex you picked')
+          + ', so two people can read the same level at very different weights. The level answers '
+          + '"how far along is this person", never "who lifts more".' }),
         el('div', { class: 'field-help', text:
           'Tap a muscle to see both estimated one-rep maxes, which is the number that does answer '
           + 'who is lifting more — and the recorded sets each was worked out from.' }),

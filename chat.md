@@ -2908,3 +2908,50 @@ first. Nothing in the app used either cell.
 
 **Still owed from the earlier list: the blanks-and-refusals list.** It keeps getting queued behind
 things Tim picks, which is the right order — it's a list for him to choose from, not a change.
+
+---
+
+## 2026-09-05 — each body its own population, a friend's data as tabs, one control removed
+
+Three instructions in one session, all about screens that show other people.
+
+**"Relative to each."** Tim pointed out that on the compare screen both bodies were being ranked
+against the same population — and that what he'd asked for on 2026-09-03 was that each person be
+measured against people like *them*. He was right, and it had been built one reading off.
+
+The interesting part: **weight and age were already per-person, and only sex was not.** The owner
+resolves body weight and age when they publish their grid, so those two axes have always meant "their
+own". Sex is the only axis the reader resolves, and the "Like me" preset was resolving it eagerly
+into a concrete male or female — so whichever the viewer happened to be, both bodies got it. The
+machinery for the fix already existed and was simply unreachable: keeping the sex axis unresolved
+makes one comparison object produce a different key per body. It's now the first chip in the sheet
+and the default that screen opens on.
+
+Two smaller things fell out. The Sex axis would have lit "Men" while no sex was actually in use, so
+in that mode nothing is lit and the help text says why. And the screen's caption said "each body is
+ranked against its own body weight and age" — narrowly true, silent on sex, and the test was pinning
+exactly the two axes that already worked.
+
+**A friend's data is the Data screen now.** Tabs at the top — Muscles, Volume, Graph, Bars, Calendar
+where Research is on yours — with recent workouts still under their body. The way to make it look
+"nearly exactly like" your own screen was to make it *be* your own screen: `GraphView()` takes a
+subject, six store getters grew a rows parameter, and a friend's Volume tab is literally yours
+reading their rows. The one pane that isn't shared is the muscle map, because their percentile was
+computed on their device against a body weight that isn't in any published document.
+
+Their calendar is months only — the years view would draw sixty published sessions as though it were
+their whole history — and its days go nowhere, as inert cells rather than buttons that do nothing.
+
+**"What they can see of yours" is gone from a friend's page.** It was right when it was built: a
+per-person dial, at the top of that person's page. When the tiers went it became one account-wide
+setting that merely happened to be drawn there — and a per-person position for an account-wide
+control invites somebody to think they're changing what *this* friend sees.
+
+**And I emptied `views-data.js` with a script** — the exact failure the notes warn about twice, which
+I'd read the same session. Recovered from git; it cost that file's work for the session and nothing
+else. Worth recording *how* it happened: the rule wasn't forgotten, it eroded. A dozen surgical
+scripted edits had worked earlier in the session, and each success made the next feel safer — which
+is word for word what the 2026-09-03 note predicted.
+
+Paused here for a chat reset with everything green and pushed. The compare fix was confirmed in a
+real browser; the friend-page tabs weren't looked at yet.

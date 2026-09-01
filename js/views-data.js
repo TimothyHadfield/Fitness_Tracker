@@ -64,7 +64,19 @@ function monthRange(activity) {
   return out;
 }
 
-function monthBlock(year, month, activity, today) {
+/**
+ * @param {Function|false} [onDay]  ⚠️ WHERE A DAY GOES, and it is a parameter
+ *   since 2026-09-05 because `#/day/<iso>` is MY day. On a friend's calendar
+ *   that link would open my own training for the date I tapped on theirs — the
+ *   same day, the wrong person, and it would look like it had worked.
+ *
+ *   🚨 `false` MAKES THE CELLS INERT RATHER THAN NO-OP BUTTONS. A friend's
+ *   calendar has nowhere to go: there is no screen for one of their days. A
+ *   button that does nothing is worse than no button — it takes focus, it is
+ *   announced as a control, and it teaches a keyboard or screen-reader user to
+ *   press something that will never answer.
+ */
+function monthBlock(year, month, activity, today, onDay = null) {
   const first = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
   const isCurrent = today.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`);
@@ -102,7 +114,14 @@ function monthBlock(year, month, activity, today) {
         ? `${MONTHS[month]} ${day}: ${rec.sessions.map((s) => s.workoutName).join(', ')}${rec.benchmarks.length ? (rec.sessions.length ? ', ' : '') + 'benchmark' : ''}`
         : `${MONTHS[month]} ${day}, nothing recorded`;
 
-      return el('button', { class: cls.join(' '), onClick: () => go('#/day/' + iso), 'aria-label': label },
+      // Inert where there is nowhere to go — see the note on `onDay`.
+      return el(onDay === false ? 'div' : 'button', {
+        class: cls.join(' '),
+        'aria-label': label,
+        ...(onDay === false
+          ? { role: 'img' }
+          : { onClick: () => (onDay ? onDay(iso) : go('#/day/' + iso)) }),
+      },
         el('span', { class: 'cal-day', text: String(day) }),
         el('span', { class: 'cal-tags' }, tags),
       );
@@ -383,9 +402,33 @@ function landOnCurrentMonth(screen) {
 const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Graph'],
   ['compare', 'Bars'], ['research', 'Research']];
 
-function dataTabs(active, onChartMode) {
+/* 🚨 A FRIEND'S FIFTH TAB IS THEIR CALENDAR, NOT RESEARCH — Tim, 2026-09-05:
+ * *"with the 'research' tab replaced with that user's 'calendar' data."*
+ *
+ * ⚠️ AND THE SWAP IS THE RIGHT WAY ROUND. Research is eleven topics about
+ * training in general — identical on everybody's screen — so on a friend's page
+ * it would be five tabs of which one is not about them at all. A calendar IS
+ * about them, and their sessions are already in the document their page reads,
+ * so it costs no extra read.
+ *
+ * ⚠️ THE POSITION IS KEPT. Swapping in place rather than appending means the
+ * four tabs somebody already knows do not move when they open another person's
+ * page: the muscle map is still first, the calendar is where Research was. */
+const FRIEND_TABS = [...DATA_TABS.slice(0, 4), ['calendar', 'Calendar']];
+
+/**
+ * @param {Function} [setMode]  🚨 HOW THE CHOSEN TAB IS REMEMBERED, and it is a
+ *   parameter for the same reason `openCompareSheet`'s `save` is. `graphMode` is
+ *   MODULE state — the tab you left your own Data screen on — and a friend's
+ *   page must not write it. Browsing somebody else would otherwise change which
+ *   tab your own screen opens on, and picking their Calendar would leave
+ *   `graphMode` holding a key that does not exist in `DATA_TABS`, so your next
+ *   visit would silently fall through to the trend chart. One control, two
+ *   memories.
+ */
+function dataTabs(active, onChartMode, tabs = DATA_TABS, setMode = null) {
   return el('div', { class: 'segmented', role: 'tablist' },
-    DATA_TABS.map(([key, label]) =>
+    tabs.map(([key, label]) =>
       el('button', {
         class: 'seg', role: 'tab', 'aria-selected': String(key === active),
         // NOTHING here is disabled. Both chart modes fall back to the
@@ -396,7 +439,8 @@ function dataTabs(active, onChartMode) {
         disabled: false,
         text: label,
         onClick: () => {
-          graphMode = key;
+          if (setMode) setMode(key);
+          else graphMode = key;
           if (onChartMode) onChartMode();
           else go('#/graphs');
         },
@@ -698,9 +742,38 @@ function pickSource(opt) {
   return best;
 }
 
-export async function GraphView() {
+/**
+ * The Data screen — and, since 2026-09-05, a friend's Data screen too.
+ *
+ * 🚨 ONE FUNCTION, TWO SUBJECTS, AND THAT IS THE POINT. Tim: *"I want it to look
+ * nearly exactly like how a user views their own data section."* The literal way
+ * to get that is for it to BE the same function: every pane, every empty state,
+ * every caption and every control comes from here, so a friend's Volume screen
+ * cannot drift from yours by a pixel or a word.
+ *
+ * ⚠️ THE ALTERNATIVE WAS A SECOND SET OF PANES, which is what this project keeps
+ * writing warnings about — `musclePanel()` was exported on 2026-09-03 for
+ * exactly this reason, and `muscleRatings(rows)` and `weeklyVolumeByMuscle(rows)`
+ * grew their row parameters on the same argument. Six more store getters grew
+ * one for this.
+ *
+ * @param {object} [opts]
+ * @param {{sessions,benchmarks,bodyWeight}} [opts.rows]  somebody else's
+ *   published training. Absent means mine, read from the store.
+ * @param {string} [opts.subject]  whose it is, for titles and captions.
+ * @param {string} [opts.tab]      which tab to open on.
+ * @param {Function} [opts.back]   where the arrow goes; only for a friend.
+ * @param {Function} [opts.musclesPane]  renders the Muscles tab. A friend's map
+ *   comes from their published grid and cannot be recomputed here.
+ * @param {Node} [opts.musclesExtra]  appended under the Muscles pane — the
+ *   friend page's "Recent workouts", which Tim asked to keep under the body.
+ */
+export async function GraphView(opts = {}) {
+  const rows = opts.rows || null;
+  const subject = opts.subject || null;
   const [options, comparison, bwPoints, bests] = await Promise.all([
-    chartableExercises(2), benchmarkComparison(2), bodyWeightSeries(), currentBests(),
+    chartableExercises(2, rows), benchmarkComparison(2, rows),
+    bodyWeightSeries(rows), currentBests(rows),
   ]);
 
   // ONE weigh-in is enough to normalise a pull-up, where TWO are needed to draw
@@ -730,7 +803,14 @@ export async function GraphView() {
   const top = el('div', { class: 'graph-controls' });
   const host = el('div', { class: 'graph-host' });
 
-  const modeSwitch = dataTabs(graphMode, () => render());
+  /* Which tabs, and whose memory of the chosen one. ⚠️ A friend's page keeps its
+   * own `mode` rather than writing the module-level `graphMode` — see dataTabs. */
+  const tabs = rows ? FRIEND_TABS : DATA_TABS;
+  let mode = rows
+    ? (tabs.some(([k]) => k === opts.tab) ? opts.tab : 'muscles')
+    : graphMode;
+  const setMode = rows ? ((k) => { mode = k; }) : ((k) => { graphMode = k; mode = k; });
+  const modeSwitch = dataTabs(mode, () => render(), tabs, setMode);
 
   /* ---------- trend (line, all sources) ---------- */
 
@@ -816,7 +896,7 @@ export async function GraphView() {
       return;
     }
 
-    const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field, source);
+    const points = await seriesForExercise(graphChoice.exerciseId, graphChoice.field, source, rows);
     if (points.length < 2) {
       // One point is not a line, but it IS a measurement. Show it.
       const one = points[0];
@@ -860,7 +940,7 @@ export async function GraphView() {
     const key = opt.id + '|' + source;
     let target = targetReps.get(key);
     if (target == null) {
-      target = clampReps(await defaultTargetReps(opt.id, source)) || 10;
+      target = clampReps(await defaultTargetReps(opt.id, source, rows)) || 10;
       targetReps.set(key, target);
     }
 
@@ -881,7 +961,7 @@ export async function GraphView() {
       ),
     );
 
-    const points = await normalizedSeries(opt.id, target, source);
+    const points = await normalizedSeries(opt.id, target, source, rows);
     if (points.length < 2) {
       setChildren(host, emptyState('Only one data point',
         `Record this exercise with a weight and a rep count on another day to see a line. `
@@ -993,24 +1073,43 @@ export async function GraphView() {
     // Indexed off the shared list, so adding or reordering a segment cannot
     // leave the selected state pointing at the wrong one.
     modeSwitch.querySelectorAll('.seg').forEach((b, i) =>
-      b.setAttribute('aria-selected', String(DATA_TABS[i][0] === graphMode)));
+      b.setAttribute('aria-selected', String(tabs[i][0] === mode)));
     // Muscles is the one mode with a side panel on a wide screen, so it is the
     // one mode that lays out as a row. The class carries that; the CSS decides
     // at which width it actually applies.
-    host.classList.toggle('is-muscles', graphMode === 'muscles');
-    if (graphMode === 'muscles') await muscleGroupsPane(host, top);
-    else if (graphMode === 'volume') await renderVolumePane(host, top);
-    else if (graphMode === 'compare') renderCompare();
-    else if (graphMode === 'research') await renderResearchPane(host, top);
+    host.classList.toggle('is-muscles', mode === 'muscles');
+    if (mode === 'muscles') {
+      /* 🚨 A FRIEND'S MAP IS NOT `muscleGroupsPane` WITH ROWS, AND CANNOT BE.
+       * Their percentile was computed on THEIR device against their body weight
+       * and age, neither of which is in a published document — that is the whole
+       * design (js/shared-map.js). So the friend page hands in its own renderer,
+       * which reads the published grid, rather than this screen recomputing a
+       * number it does not have the inputs for. */
+      if (opts.musclesPane) await opts.musclesPane(host, top);
+      else await muscleGroupsPane(host, top);
+      /* ⚠️ APPENDED, NOT A SIXTH TAB. Tim asked for the friend page's recent
+       * workouts to stay "below that user's body view as it is now" — it is the
+       * list you scroll to after looking at their map, and promoting it to a tab
+       * would put it behind one more decision than it deserves. */
+      if (opts.musclesExtra) host.append(opts.musclesExtra);
+    } else if (mode === 'volume') {
+      await renderVolumePane(host, top, { rows: rows && rows.sessions, subject });
+    } else if (mode === 'compare') renderCompare();
+    else if (mode === 'research') await renderResearchPane(host, top);
+    else if (mode === 'calendar') await renderCalendarPane(host, top, { rows, subject });
     else await renderTrend();
   }
 
   await render();
 
   return screenShell({
-    profile: true,
-    title: modeSwitch,
-    top,
+    // A friend's page is a fullscreen view with a back arrow and their name in
+    // the title; my own is a nav-level screen whose header IS the tab bar.
+    profile: !rows,
+    noNav: Boolean(rows),
+    back: opts.back,
+    title: rows ? subject : modeSwitch,
+    top: rows ? el('div', {}, modeSwitch, top) : top,
     scroll: host,
   });
 }
@@ -1930,6 +2029,54 @@ function volumeLegend(selectedKey, perWeek) {
  * @param {string} [opts.subject]  Whose training this is, for the sentences that
  *   name a person. Absent means yours.
  */
+/**
+ * A CALENDAR PANE — a friend's fifth tab, where Research is on yours.
+ *
+ * Tim, 2026-09-05: *"with the 'research' tab replaced with that user's
+ * 'calendar' data."*
+ *
+ * ⚠️ MONTHS ONLY, AND THE YEARS VIEW IS LEFT OFF DELIBERATELY. Years exists to
+ * fit a whole training history on one screen; a friend publishes their most
+ * recent **sixty sessions**, so the squares would thin out and stop partway up
+ * the page — a picture of what they SHARE, drawn as though it were a picture of
+ * what they have DONE. Months cannot mislead that way: it shows the range it
+ * actually holds and nothing beyond it.
+ *
+ * ⚠️ AND THE CELLS GO NOWHERE. `#/day/<iso>` is my own training for that date
+ * and there is no equivalent screen for somebody else; their individual workouts
+ * are already reachable from the feed and from Recent workouts. So a cell states
+ * what they did and is inert, rather than going somewhere wrong.
+ */
+export async function renderCalendarPane(host, top, opts = {}) {
+  const rows = opts.rows || null;
+  const who = opts.subject || 'They';
+  const activity = await activityByDate(rows);
+  const today = todayISO();
+
+  setChildren(top);
+
+  if (!activity.size) {
+    setChildren(host, emptyState('Nothing recorded yet',
+      `${who} has not published any sessions you can read.`));
+    return;
+  }
+
+  setChildren(host,
+    el('div', { class: 'legend' },
+      el('span', {}, el('i', { class: 'w' }), 'Workout'),
+      el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
+    ),
+    // The same caveat their volume and graph screens carry, and this screen
+    // needs it most: a calendar looks more like a complete history than
+    // anything else here, so an empty February could mean they rested or could
+    // mean it fell out of the window.
+    el('div', { class: 'field-help', text:
+      `From the most recent sixty sessions ${who} publishes — not their whole history.` }),
+    ...monthRange(activity).map(({ year, month }) =>
+      monthBlock(year, month, activity, today, false)),
+  );
+}
+
 export async function renderVolumePane(host, top, opts = {}) {
   const rows = opts.rows || null;
   const who = opts.subject || null;

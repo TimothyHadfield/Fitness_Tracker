@@ -373,17 +373,55 @@ export function parseCompareKey(key) {
   return normalizeCompare({ pool, sex, weight, age });
 }
 
-// The two presets the sheet offers at the top. "Like me" writes the user's own
-// sex, so it needs the profile.
+/* The presets the sheet offers at the top. "Like me" writes the user's own sex,
+ * so it needs the profile.
+ *
+ * 🚨 `each` IS THE THIRD, ADDED 2026-09-05, AND IT IS THE ONE THAT KEEPS
+ * `sex: 'own'` UNRESOLVED. Every other preset writes a concrete sex, which is
+ * correct when one body is on screen and wrong when two are: resolving it means
+ * both people get ranked against the SAME population, so a woman and a man are
+ * both measured against whichever the viewer happens to be.
+ *
+ * Tim, 2026-09-05: *"when I said the default was comparing against people
+ * similar to the users, I was meaning that each account would compare themselves
+ * against people like them… Right now both people are being compared to the same
+ * people."* That was his original instruction on 2026-09-03 and it was built one
+ * reading off.
+ *
+ * ⚠️ WEIGHT AND AGE WERE ALREADY PER-PERSON AND ONLY SEX WAS NOT, which is why
+ * the fault was easy to miss. `weight: 'own'` and `age: 'own'` are resolved by
+ * the OWNER when they publish their grid — "at my body weight, my age" — so
+ * those two axes have always meant each person's own. Sex is the only axis the
+ * READER resolves, and `comparePreset()` was resolving it eagerly.
+ */
 export function comparePreset(name, profile) {
   const own = profile && profile.gender === 'female' ? 'female' : 'male';
   if (name === 'everyone') return { pool: 'everyone', sex: 'all', weight: 'any', age: 'any' };
+  // ⚠️ 'own' IS KEPT LITERALLY. compareKey() resolves it per document against
+  // that document's own `defaultCompare`, so the same object produces a
+  // different key for each body it is applied to. That is the whole mechanism.
+  if (name === 'each') return { pool: 'lifters', sex: 'own', weight: 'own', age: 'own' };
   return { pool: 'lifters', sex: own, weight: 'own', age: 'own' };
 }
 
 export function matchesPreset(compare, name, profile) {
   const a = normalizeCompare(compare);
   const b = comparePreset(name, profile);
+
+  /* ⚠️ `each` MATCHES ON THE LITERAL 'own', NOT ON THE RESOLVED SEX, and that is
+   * the difference between it and "Like me" — for the viewer's own body the two
+   * describe the identical population, and only the unresolved form stays
+   * per-person when it is applied to somebody else. */
+  if (name === 'each') {
+    return a.sex === 'own' && a.pool === b.pool && a.weight === b.weight && a.age === b.age;
+  }
+
+  /* ⚠️ AND "Like me" STILL MATCHES 'own' — deliberately, and this is load-bearing
+   * for the screen that has only one body on it. `sex: 'own'` is the stored value
+   * for anybody who has never opened the sheet, so tightening this to a concrete
+   * sex would leave a brand-new user's own muscle map showing NO preset selected.
+   * Where both presets are on offer, the sheet resolves the tie by testing
+   * `each` first — see pressedPreset() in views-muscles.js. */
   const sexA = a.sex === 'own' ? (profile && profile.gender === 'female' ? 'female' : 'male') : a.sex;
   return sexA === b.sex && a.pool === b.pool && a.weight === b.weight && a.age === b.age;
 }
@@ -537,6 +575,27 @@ export function comparisonLabel(profile) {
   const c = normalizeCompare(profile && profile.compare);
   const own = profile && profile.gender === 'female' ? 'female' : 'male';
   const sex = c.sex === 'own' ? own : c.sex;
+
+  /* 🚨 THE PER-PERSON CASE HAS ITS OWN SENTENCE, because every other branch of
+   * this function names ONE population and this one deliberately does not.
+   *
+   * It fires only where two bodies are on screen (`whose === 'each'`) AND the
+   * sex axis is still the unresolved 'own' — i.e. the `each` preset. Falling
+   * through would print "vs. men who lift" over a pair that includes a woman,
+   * which is the exact fault this label exists to prevent: the caption naming a
+   * population the colours were not computed against.
+   *
+   * ⚠️ IT NAMES ALL THREE AXES rather than only sex. Weight and age were always
+   * per-person here; saying so is what stops somebody reading the change as
+   * "sex is now handled" and assuming the other two are shared. */
+  if (c.sex === 'own' && (profile && profile.whose) === 'each') {
+    return {
+      main: c.pool === 'lifters' ? 'vs. people like each of them' : 'vs. adults like each of them',
+      sub: 'each against their own sex, body weight and age',
+      pool: c.pool,
+      isDefault: c.pool === 'lifters' && c.weight === 'own' && c.age === 'own',
+    };
+  }
 
   // The noun states the pool outright. This screen's oldest rule is that it must
   // never imply a ranking against everyone when it means lifters — so now that
