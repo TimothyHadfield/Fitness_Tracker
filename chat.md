@@ -2733,3 +2733,48 @@ list, because it is the same shape of fault — a hand-maintained fact about the
 perfect from inside the session that broke it. The budgets sit well under the 256 KB limit so it
 fails while there is still room to act, and the message says what to move rather than just the
 number. **Mutation-checked**: dropping the budget to 80 KB fails exactly that assertion.
+
+---
+
+## 2026-09-04, later — Tim is interviewed about what this project actually is
+
+Tim: *"now I want you to ask me a bunch of questions about how I view this project and what I want it
+to be… Don't stop asking questions until you feel like you understand everything. Make detailed notes
+about this somewhere."*
+
+**Six rounds, twenty-four questions. The record is `docs/direction.md`**, and it is required reading
+because **four rules that had been enforced hard for weeks were reversed by his answers.**
+
+**The frame.** It is a real product for strangers — he and his girlfriend use it as their main
+strength tracker now, it goes to the **App Store in the next few months**, and *"the long-term goal
+is to get it as big as the biggest lifting apps or even bigger."* He is clear-eyed about it: *"If I
+don't make it big at all then that's fine, but I'm just saying that the dream is actually
+realistic."* It competes on **quality and being free**, he is paying for it himself, and he wants
+revenue capped at what it costs to run — donations or slight ads, never more. He works on it most
+days with no deadline. **Scope order: weightlifting, then other exercise, then diet, then others.**
+A rename is coming and he will bring it.
+
+**What flipped.**
+
+1. **"Something is always better than nothing."** *"It's about getting the BEST numbers we can, not
+   necessarily having it perfect or held to an extreamly high standard. When our numbers aren't as
+   perfect, have a way to be upfront about it."* The labelling survives — that half is his own words
+   — but the blanket refusals do not. **He does not want a sweep; he wants a list**, and will pick.
+2. **The discovery feed.** Refused twice in writing when this was an app for two people. Asked
+   whether that survives the App Store: **"It has to go eventually."**
+3. **The "not verified on a phone" warnings.** *"Don't record them at all. I'm constantly testing
+   almost every part of the cite so when something has a problem, I'll come to you."* Shipped is
+   working unless he says otherwise. The one thing that does not cover is a *predicted number* — you
+   cannot spot a wrong estimate by looking at it.
+4. **Visuals.** The strongest instruction he gave: the app *"looks very AI-generated and not very
+   professional… I don't want you to automatically go fixing things yourself, I think it needs a
+   human perspective."* **Wait for him, screen by screen.**
+
+**Two things he asked for**, and they are the only work this created: a **note-to-the-developer**
+feature with his account as a rule-enforced developer role, and the **list of every blank and
+refusal** so he can choose which ones get a number. **Three things he deferred**: the app's voice,
+what "quality" means, and the abs ranking — *"I'll talk to you about it after questioning."*
+
+He also confirmed what does not change: recommend only when asked, never ask him about other
+people's opinions, safety is noted but not worked on yet, and **he does not read any of these notes
+— they are for the next session of me.**

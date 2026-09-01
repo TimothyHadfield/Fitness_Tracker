@@ -1,0 +1,173 @@
+# Direction — what Tim wants this to be
+
+> 🚨 **READ THIS BEFORE PROPOSING ANYTHING, AND BEFORE APPLYING A RULE FROM `docs/handbook.md` THAT
+> PREDATES IT.** It is the record of a long interview on **2026-09-04** in which Tim was asked, and
+> answered, what this project is for. **Several answers reverse standing rules that had been
+> enforced hard for weeks** — they are marked 🔄 below and the old rule is quoted beside the new one
+> so nobody re-applies it from memory.
+>
+> `docs/vision.md` is his running list of **features** he wants. **This is the frame around it**: who
+> it is for, what it competes on, what may be loosened, and how he wants to be worked with.
+>
+> ⚠️ **EVERY QUOTE HERE IS HIS, VERBATIM.** Where he did not say something, this file says so rather
+> than filling the gap. Three topics he explicitly deferred are listed at the bottom as **open
+> threads** — do not guess at them.
+
+---
+
+## 1. The one-paragraph version
+
+**This is a real product for strangers, not a personal tool, and he means it.** He and his girlfriend
+use it as their main strength tracker today; in the next few months he intends to put it on the
+**Apple App Store** and get people he knows, then strangers, onto it. *"The long-term goal is to get
+it as big as the biggest lifting apps or even bigger."* He is realistic rather than deluded about
+that — *"If I don't make it big at all then that's fine, but I'm just saying that the dream is
+actually realistic."* **He is absorbing the cost and the time himself and does not want to profit
+from it.** He works on it **most days**, and there is **no deadline**.
+
+---
+
+## 2. What it is, and what it competes on
+
+| | |
+|---|---|
+| **Who for** | Strangers, eventually. Design for people who have never met him. |
+| **The core** | ⚠️ He rejected the framing of "pick one": **"tracking your self progress is most important, and then interactions with others is also a main feature."** Both. Self-progress leads. |
+| **The edge** | **Quality, and being free.** *"I think I can make the quality better, and having it be virtually or completely free is motivating."* **Not** a single killer feature. |
+| **Scope order** | 🔒 **Weightlifting → other exercise (swim, run, etc.) → diet → others.** *"I'm not against going extreamly broad, but for now we'll stay close to weightlifting."* |
+| **Name** | ⚠️ **"Fitness Tracker" is a placeholder. A rename is coming and he will bring it.** 🛑 **Do not push him on it.** Keep renaming cheap — do not scatter the string. |
+| **Platforms** | The **website stays** for anyone who wants it. The iOS app is an addition, not a replacement. |
+
+**On money.** He wants an **in-depth cost analysis eventually** — developer account plus server fees
+against user numbers — and believes per-user cost is close to nothing. The ceiling he set is the
+important part: **donations or slight ad revenue, and never more than it costs to run.** *"I don't
+want to make the cost or ad revenue higher than the cost to maintain the servers and other
+base-costs."* 🛑 **He asked for the analysis ONLY IF HE ASKS.** Do not spend a session on it.
+
+---
+
+## 3. 🔄 THE FOUR REVERSALS — old rule, new rule
+
+### 🔄 3.1 "Something is always better than nothing" — the honesty rule is recalibrated
+
+> **Was:** the app refuses to state anything it cannot back up. Blank states, permanent refusals, no
+> on-track verdict, no rating for anything without published standards.
+>
+> **Now, Tim:** *"It's about getting the BEST numbers we can, not necessarily having it perfect or
+> held to an extreamly high standard. When our numbers aren't as perfect, have a way to be upfront
+> about it but something is always better than nothing."*
+
+**What survives, and it is the half he explicitly kept: *"have a way to be upfront about it."*** A
+best-effort number, clearly labelled, beats a blank. **A number presented as something it is not is
+still wrong** — that is Rule 5, and he endorsed the labelling rather than waiving it.
+
+⚠️ **HE DOES NOT WANT A SWEEP.** *"I think I'll notice the places that show blanks and I'll manually
+tell you to fix them if I want."* **He did ask for a list** of where the app currently refuses or
+shows a blank, so he can pick from it — that list is owed to him and is the one deliverable this
+interview created besides this file.
+
+### 🔄 3.2 The discovery feed is no longer refused
+
+> **Was:** 🛑 refused **twice, in writing** — `docs/social-plan.md` §12.11 and Open work 18: "not a
+> feature this app is missing, a product this app decided twice, in writing, not to be."
+>
+> **Now, Tim:** **"It has to go eventually."**
+
+**That refusal was made when the app was for him and Autumn, and the premise has changed.** A public
+app needs people to find each other. 🛑 **Nothing is built and no plan was asked for** — the
+reversal is recorded so a future session does not quote the old refusal at him as settled law.
+⚠️ **It carries the moderation work with it** (§3.4 below).
+
+### 🔄 3.3 Stop recording "not verified on a phone"
+
+> **Was:** every session's write-up ended with a loud ⚠️ NOT VERIFIED block — nothing has been on a
+> phone, no two real accounts, the field-check list has not moved.
+>
+> **Now, Tim:** *"Don't record the 'not verified on iphone' warnings at all. I'm constantly testing
+> almost every part of the cite so when something has a problem, I'll come to you."* And earlier:
+> *"there is a lot of behind-the-scenes testing going on that I'm not telling you about. Assume if I
+> havn't told you that something isn't working, then it is."*
+
+🔒 **THE OPERATING RULE: SHIPPED IS WORKING UNLESS TIM SAYS OTHERWISE.** Do not write the caveat, do
+not open a session by listing it, do not treat it as blocking.
+
+⚠️ **This is about DEVICE verification, not about arithmetic.** A screen he has looked at is
+verified by him looking at it. **A predicted number is not**, because a wrong estimate looks exactly
+like a right one — that is a different claim and it is still true that no prediction has been checked
+against a real attempt. State that where it is relevant to a number; never as a standing warning
+about a screen.
+
+### 🔄 3.4 Safety and moderation — real, but explicitly not now
+
+> **Tim:** *"I'm not concerned about saftey whatsoever as of right now, but as we get more users and
+> start preparing for full deployment for maximum users, then it will become more of an issue. I
+> don't think you should worry about it at all right now **unless you think it will drastically
+> change how we build knowing we'll change it in the future**."*
+
+And on reporting/blocking specifically: *"That is something we'll need to do, but just put it in the
+notes. no plan or work building yet."*
+
+🛑 **NO PLAN, NO BUILD.** ✅ **The one live clause is his own**: if a decision being made now would be
+expensive to undo once moderation exists, **say so at the time**. That is the only circumstance in
+which safety may be raised unprompted.
+
+---
+
+## 4. How he wants to be worked with
+
+| Rule | His words |
+|---|---|
+| 🛑 **Never touch visuals unprompted** | The app *"looks very AI-generated and not very professional… I don't want you to automatically go fixing things yourself, I think it needs a human perspective."* **Wait for him, screen by screen.** He will point; you execute. |
+| 🛑 **Do not ask about other people's opinions** | *"I don't want you to ask me about other's oppinions."* Autumn is not a design input to be polled. |
+| ✅ **Recommend only when asked** | And when asked, give a **real ranked answer**, not a shrug. Between jobs: report what is done and stop. |
+| ✅ **Speak up about nothing else** | The single exception is §3.4's clause — a decision now that would be expensive to reverse later. |
+| 📄 **The docs are for you, not him** | *"Purely for you."* He does not read `progress.md` or the handbook. Write them for whatever makes a fresh session effective; do not optimise them for a human reader. |
+| 👤 **It is only ever you and him** | *"Just us."* No second contributor to write for. |
+| ⏱️ **Steady, most days. No deadline.** | Nothing needs to be sequenced backwards from a date. |
+
+**Three topics he deferred with "I'll talk about it later" — 🛑 do not pre-empt any of them:**
+
+1. **The app's voice and wordiness.** He said sections are wordy; asked whether to cut the
+   explaining back, he said he would talk about it later. **Do not shorten copy globally.**
+2. **What "quality" means concretely** — his stated competitive edge, undefined on purpose for now.
+3. **The abs ranking.** Still open from 2026-09-03. *"I'll talk to you about it after questioning.
+   don't do anything now."* ⚠️ Note that §3.1 makes his own first idea (rate weighted core work
+   through the normal machinery) sit much better than it did under the old rule.
+
+---
+
+## 5. The App Store, as he described it
+
+- **Timing:** *"in the next few months"*, via his own developer account, someone else's, or one
+  shared with his brother. **Convert the current version** once it is *"very good"*.
+- **The website stays.** The app is an addition.
+- ⚠️ **He was told, and accepted, that this is not a small step**: Apple rejects thin website
+  wrappers (guideline 4.2), so the listing has to be earned with a shell that adds real native
+  value, plus a $99/yr account and review.
+- ⚠️ **Sign in with Apple will be required.** Guideline 4.8: an app offering Google sign-in must
+  offer Apple's too. **His call: "Note it, deal with it then."** Not now — but it is a known cost of
+  the App Store plan, not a surprise to discover at submission.
+- 🛑 **No App Store work has been started and none was asked for.**
+
+---
+
+## 6. What this interview queued
+
+Neither of these was invented — both are things he asked for during it.
+
+1. **A list of every place the app refuses or shows a blank**, so he can choose which ones get a
+   best-effort number instead. *"if you want to give me a list of the places this does already
+   happen, it could help me with this. Do this after we're done questioning."*
+2. **A note-to-the-developer feature.** *"adding a temporary section to the app that allows the user
+   to write a note or idea straight to the developer (me) would be nice to have. Then, make my
+   account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas
+   straight on the app. I might have you do most of the reading, but just in case, I'll have it there
+   aswell."* **He asked to build it after questioning finished**, and it is deliberately
+   **temporary** — for the next couple of months, while early users have fresh opinions.
+   ⚠️ **The developer role has to be a rule-enforced read**, not a hidden screen: notes are other
+   people's words about their own training and only he may read them.
+
+**He also said, of the four standing open-work items he was shown** (handles instead of the
+enumerable directory, checking the estimator against a real attempt, a two-account round trip,
+warm-up set typing): *"All of these are things I want to work on, but I'll let you know about them."*
+🛑 **All four are wanted. None is authorised. Do not surface them as "the next thing to do."**

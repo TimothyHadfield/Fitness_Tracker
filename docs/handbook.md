@@ -14,6 +14,13 @@
 > architecture (§4), the binding design rules (§5), and the decisions that are locked (§6).
 > ⚠️ **Skipping it is how a rule that was learned expensively gets re-learned expensively.**
 >
+> 🚨 **`docs/direction.md` IS NEWER THAN THIS FILE AND OVERRULES IT WHERE THEY DISAGREE.** On
+> 2026-09-04 Tim answered a long interview about what this project is for, and **four rules written
+> below were reversed by his answers**: the blanket honesty refusals, the ban on a discovery feed,
+> the "not verified on a phone" warnings, and whether visuals may be touched unprompted. **This file
+> was NOT rewritten to match** — the old reasoning is worth keeping and direction.md quotes both
+> sides, so read it first and you will know which paragraphs here are history.
+>
 > ⚠️ **WHERE THE SECTIONS BELOW SAY "the section above" OR NAME A DATE, THEY MEAN
 > `docs/history.md`.** These sections sat under the dated log for months and cite it constantly. The
 > wording was left as written rather than swept, because rewriting dozens of pointers by hand is how
@@ -43,6 +50,9 @@
      standing instructions or **Open work**. Nothing long.
    - **`docs/handbook.md`** (this file) ← only when a RULE changed: a new trap in §0, an
      architectural move in §4, a design rule in §5, a decision locked in §6.
+   - **`docs/direction.md`** ← only when **Tim says something about what the project IS** — who it
+     is for, what it competes on, what he wants loosened, how he wants to be worked with. ⚠️ **A
+     feature request is not direction**; that is `docs/vision.md` or Open work.
    - **`chat.md`** ← the human-readable exchange, as before.
 
    ⚠️ **progress.md reached 626 KB doing it the old way and stopped being openable in one read**,
@@ -217,6 +227,7 @@ Tim is the **manager**; Claude is the **builder**.
 | File | Job |
 |---|---|
 | `progress.md` | **The catch-up file.** What is true now, the standing instructions, and **Open work** |
+| `docs/direction.md` | 🚨 **What Tim wants this to BE** — the 2026-09-04 interview, and the four rules it reversed. **Newer than this file and overrules it** |
 | `docs/handbook.md` | **This file — §0 to §10.** Every `§N` citation in the project resolves here |
 | `docs/history.md` | **The dated log**, newest first. Searched by date, never read whole |
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |

@@ -15,6 +15,12 @@
 >
 > `chat.md` is the human-readable log and answers "what did we say about X"; it starts at
 > 2026-08-21, with everything before that in `docs/chat-archive.md`.
+>
+> 🚨 **AND READ `docs/direction.md` — it is short, it is newer than the handbook, and it OVERRULES
+> it.** On 2026-09-04 Tim was interviewed about what this project is for, and **four standing rules
+> were reversed by his answers**: the blanket honesty refusals, the discovery-feed ban, the
+> "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
+> the old versions in places** — direction.md quotes both, so you can tell which is which.
 
 **Last updated:** 2026-09-04 — the docs were reorganised (this file, the handbook and the history);
 nothing about the app changed. Before that, 2026-09-03: the tiers are gone (private/public), a
@@ -109,6 +115,30 @@ a 4,000-line file:
 - **No dead modules.** Every file in `js/` is imported by something — checked against `sw.js`, the
   views and the tests. Nothing to delete.
 
+## 🚨 2026-09-04 — TIM WAS INTERVIEWED ABOUT WHAT THIS PROJECT IS FOR, AND FOUR RULES FLIPPED
+
+**`docs/direction.md` is the full record and it is required reading.** The summary, because these
+change what you are allowed to do:
+
+1. 🔄 **"Something is always better than nothing."** The blanket refusals are recalibrated — *"It's
+   about getting the BEST numbers we can… have a way to be upfront about it but something is always
+   better than nothing."* **Labelling survives; blank states do not.** ⚠️ **He does not want a
+   sweep** — he will point at blanks himself. He did ask for **a list of where they are**.
+2. 🔄 **The discovery feed is no longer refused** — *"It has to go eventually."* The twice-written
+   🛑 was decided when this was for two people. **Nothing is built and no plan was asked for.**
+3. 🔄 **Stop recording "not verified on a phone" warnings entirely** — *"I'm constantly testing
+   almost every part of the cite so when something has a problem, I'll come to you."* **Shipped is
+   working unless Tim says otherwise.** ⚠️ Still true of a *predicted number*, which no amount of
+   looking at a screen can check.
+4. 🛑 **Never touch visuals unprompted.** The app *"looks very AI-generated"* and fixing that
+   *"needs a human perspective"*. **Wait for him, screen by screen.**
+
+**And the frame:** it is a **real product for strangers**, going to the **App Store in the next few
+months**, aiming *"as big as the biggest lifting apps or even bigger"*, free with at most enough
+donation or ad revenue to cover its own costs. Scope order is **weightlifting → other exercise →
+diet → others**. A **rename is coming** and he will bring it. He works on it **most days**, with no
+deadline. 🛑 **He reads none of these notes — they are for you.**
+
 # 🟢 START HERE: NOTHING IS HALF-BUILT, AND ONE THING IS WAITING ON TIM
 
 **The working tree is clean, everything is pushed, the rules are deployed and the live site is
@@ -193,12 +223,12 @@ Three passes, each with its own dated section in `docs/history.md`.
    **(c) Ratify D18?** — Open question 1, unanswered since 2026-08-16.
 2. ⏸️ **VOLUME IN POUNDS IS NOT BUILT.** Tim asked for a set count instead — *"Replace Volume for # of
    sets"* — and `js/session-stats.js`'s header records why that is also the more honest column.
-3. 🚨 **NOTHING FROM 2026-09-02 OR -03 HAS BEEN ON A PHONE, AND NO TWO REAL ACCOUNTS HAVE USED ANY
-   OF IT.** It is proved in jsdom, in a real browser at 360 and 1180px in both themes, and by the
-   accessibility audit — three different things, none of them a person. **Open work item 1.**
-   ⚠️ **The visibility change makes that list heavier, not lighter**: the only way to see what a
-   PUBLIC account looks like to a stranger is a second real account, and the only way to prove the
-   migration worked is an account that published under the old tiers.
+3. 🔄 ~~**NOTHING HAS BEEN ON A PHONE**~~ **DROPPED BY TIM ON 2026-09-04 AND MUST NOT COME BACK.**
+   *"Don't record the 'not verified on iphone' warnings at all. I'm constantly testing almost every
+   part of the cite so when something has a problem, I'll come to you."* 🔒 **Shipped is working
+   unless he says otherwise.** ⚠️ **It was device verification he waived, not arithmetic** — item 4
+   below is a different claim and still stands, because a wrong prediction looks exactly like a
+   right one however long you stare at the screen. `docs/direction.md` §3.3.
 4. 🚨 **NO HUMAN HAS CHECKED A SINGLE PREDICTED NUMBER AGAINST AN ACTUAL ATTEMPT.** The estimator
    rests on a curve whose absolute accuracy was never validated (`docs/research.md` §1.3) and on
    ratios describing a population rather than a person. Everything it prints ships with a confidence
@@ -209,12 +239,32 @@ Three passes, each with its own dated section in `docs/history.md`.
 
 ## Standing instructions that survive a reset
 
+- 🛑 **NEVER TOUCH VISUALS UNPROMPTED — 2026-09-04, and it is the strongest instruction on this
+  list.** The app *"looks very AI-generated and not very professional"*, and *"I don't want you to
+  automatically go fixing things yourself, I think it needs a human perspective."* **Wait for him,
+  screen by screen.** He points, you execute. The same applies to the app's **wording**, which he
+  called wordy and then deferred: 🛑 **do not shorten copy globally.**
+- 🛑 **DO NOT ASK HIM ABOUT OTHER PEOPLE'S OPINIONS** — *"I don't want you to ask me about other's
+  oppinions."* Autumn is not a design input to be polled.
+- 🛑 **RECOMMEND ONLY WHEN ASKED**, and then give a real ranked answer. The one exception he granted:
+  if a decision being made now would be **expensive to undo once moderation exists**, say so at the
+  time. Nothing else gets raised unprompted.
 - 🛑 **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
-- 🛑 **DO NOT BUILD THE DISCOVERY FEED.** `docs/social-plan.md` §12.11 — not a feature this app is
-  missing, a product this app decided twice, in writing, not to be. Open work 18.
+- 🔄 ~~**DO NOT BUILD THE DISCOVERY FEED**~~ **THE REFUSAL IS LIFTED — Tim, 2026-09-04: "It has to go
+  eventually."** It was decided twice in writing, and both times the premise was an app for two
+  people. 🛑 **Nothing is built and no plan was asked for** — but do not quote `social-plan.md`
+  §12.11 at him as settled law. `docs/direction.md` §3.2.
+- 🛑 **MODERATION AND SAFETY: NOTED, NO PLAN, NO WORK.** *"I'm not concerned about saftey whatsoever
+  as of right now."* Reporting and blocking are wanted eventually — *"just put it in the notes."*
+- 🛑 **A RENAME IS COMING AND HE WILL BRING IT.** "Fitness Tracker" is a placeholder. **Do not push
+  him on it**; just keep the string cheap to change.
 - 🛑 **DO NOT SURFACE THE PINNED ITEMS (P1–P4)** as "the next thing to do" — Tim's standing
   instruction, 2026-08-28. Build them if he names them; otherwise leave them alone.
-- 🆕 **The abs question is OPEN again — Tim re-opened it himself on 2026-09-03.** ~~deferred~~
+- 🛑 **NOR THE FOUR OPEN-WORK ITEMS HE WAS SHOWN ON 2026-09-04** — handles, checking the estimator,
+  the two-account round trip, warm-up typing. *"All of these are things I want to work on, but I'll
+  let you know about them."* **Wanted, none authorised.**
+- 🆕 **The abs question is OPEN again — Tim re-opened it himself on 2026-09-03**, and on 2026-09-04
+  said *"I'll talk to you about it after questioning. don't do anything now."* ~~deferred~~
 - ⚠️ **NEVER BULK-EDIT A MARKDOWN FILE THROUGH A SCRIPT.** §0.11 says it about PowerShell; on
   2026-09-02 the same mistake was made in **Python** — `open(path, 'w')` truncated this file to zero
   bytes and then died on an emoji surrogate before writing a byte back. Recovered with
@@ -288,10 +338,12 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
+| **23** | 🆕 **a note to the developer, from inside the app — HE ASKED FOR IT, 2026-09-04** | 🟢 **AUTHORISED, and he said to build it once questioning finished.** *"adding a temporary section to the app that allows the user to write a note or idea straight to the developer (me) would be nice to have. Then, make my account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas straight on the app."* ⚠️ **DELIBERATELY TEMPORARY** — it exists to catch fresh opinions while the first users are new, not forever. 🚨 **The developer role has to be enforced by `firestore.rules`, not by hiding a screen**: these are other people's words about their own training, and "only Tim can read them" has to be true on the wire. ⚠️ **It is also the first user-submitted free text this app has ever stored**, which is the moderation surface he parked the same day — worth one sentence to him if a decision here would be expensive to undo, and nothing more (that is the single exception he granted to staying quiet) |
+| **24** | 🆕 **the list of every blank and refusal — HE ASKED FOR IT, 2026-09-04** | 🟢 **AUTHORISED.** *"if you want to give me a list of the places this does already happen, it could help me with this. Do this after we're done questioning."* Every screen where the app currently shows a blank, an empty state, or a permanent refusal instead of a best-effort number — with, for each, what it could honestly say instead and how it would be labelled. ⚠️ **It is a LIST, not a sweep**: *"I think I'll notice the places that show blanks and I'll manually tell you to fix them if I want."* 🛑 **Change nothing off the back of it without him picking** |
 | **21** | 🆕 **the abs ranking — TIM'S DECISION, ASSESSED 2026-09-03** | ⏸️ He re-opened it himself and asked for the problems with two approaches. The assessment is `docs/history.md`, "2026-09-03 — HOW TO RANK ABS"; the short version: **his first idea (weighted core work through the normal machinery) is buildable if the numbers are pulled properly, and answers about a third of it**; **his second (seed from their other muscles, then track improvement) puts two different meanings in one colour and invents a correlation nobody has measured**; and **the cheapest fix needs no new data at all** — give trained-but-unrankable muscles their own mark and legend entry, and have the panel say what HAS been logged. **Nothing is built and nothing should be until he picks** |
 | **17** | ~~the Hevy-shaped home feed~~ | ✅ **BUILT 2026-09-02 — all eight steps of `docs/social-plan.md` §13**, which now carries a ✅ block under each one and a §14 summary. What is left of it is two things Tim owes a decision on (**warm-up typing**, still item 2 below; **per-workout visibility**, §13's decision B) and **step 9, photos, which needs Blaze** and is item 10. ⚠️ **The Records column is deliberately absent from the card** — sixty published sessions are not a lifetime, and that caveat does not fit beside somebody's name; the bests are on the workout screen instead. ⚠️ **Nothing here has been used by two real accounts** — that is item 1, and it grew a longer list today |
-| **18** | ⚠️ **do not build the discovery feed** | Not work — a standing refusal, and it is listed here because a feed of strangers is the obvious next thing somebody will think of now that the feed looks like Hevy's. `docs/social-plan.md` §12.11: **it is the thing D7 actually refused**, it needs public profiles and enumeration of them (the thing the invite-link design exists to avoid), and it imports a moderation story this project does not have |
-| **1** | **the field checks — needs Tim's phone, not yours** | 🆕 **2026-09-03 PUT THE BIGGEST SINGLE ITEM ON THIS LIST: NOBODY HAS SEEN A PUBLIC ACCOUNT FROM THE OUTSIDE.** Every account is public by default now, and the only way to know what a stranger actually gets is a second real account opening the first one's page — the rules are proved on the emulator and the screens are proved in the demo, and **neither of those is a stranger**. Also unfielded from that day: the tappable friend map, the two-body compare screen, a friend's volume and graph screens, and the **legacy fallback**, which is proved against a fixture shaped like Autumn's live document but has never actually been the thing a real second phone rendered. 🆕 **2026-09-02 ADDED A LOT TO THIS LIST AND NONE OF IT HAS BEEN ON A PHONE**: the new feed card, a friend's workout screen, the comparison sheet, copying a friend's workout into your own plan, and — the one most likely to behave differently on a real device — **sharing a picture**, which goes through `navigator.share({files})` and has only ever been driven in headless Chrome, where it falls through to the download path. ⚠️ **THE BIGGEST ONE IS STILL A TEN-MINUTE JOB WITH AUTUMN**: search her by name, send a request, have her accept it, and record a workout for her so it lands in her account. **Everything social built on 2026-08-29 is proved against the rules engine and has never been done by two people.** Also standing: the **friend-name heal**, a real **kudos/comment** round trip, and — needing only his eyes — **the blue box round the profile picture on a laptop** (a real bug was found and fixed in that exact place, but a *blue* one was never reproduced). ⚠️ **And file import has never parsed an actual export** from any service. ⚠️ **Added 2026-08-30: nobody has read the Research topics on a phone** — the facts are checked and measured, the reading experience is not. 🚨 **AND THE OTHER TWO PASSES OF 2026-09-02 ARE ON THIS LIST TOO, one of them at the top of it: `goBack()` changed EVERY back arrow in the app and has never met the iOS edge-swipe gesture** — which is the one input the design was chosen to survive, and which exists on no machine here. A router-level change to 48 controls verified only in desktop Chrome is the highest-risk unfielded thing of the day. Also unread on a phone: the benchmark screen's estimate and its two captions |
+| **18** | 🔄 ~~do not build the discovery feed~~ **THE REFUSAL WAS LIFTED 2026-09-04** | Tim, asked directly whether a ban decided when this was an app for two people still held once it is on the App Store: **"It has to go eventually."** 🛑 **Nothing is built and he did not ask for a plan.** What the old entry got right is the COST, and that part is unchanged: it needs public profiles and a way to enumerate them, and it imports a moderation story this project still does not have — which he also parked the same day (*"just put it in the notes"*). So the sequence is fixed even though the decision flipped: **finding strangers cannot ship before blocking and reporting do.** `docs/social-plan.md` §12.11 holds the reasoning and is now history rather than law; `docs/direction.md` §3.2 |
+| **1** | 🔄 ~~the field checks — needs Tim's phone~~ **CLOSED BY TIM, 2026-09-04** | 🛑 **DO NOT RE-OPEN THIS AND DO NOT WRITE ITS WARNINGS AGAIN.** *"Don't record the 'not verified on iphone' warnings at all. I'm constantly testing almost every part of the cite so when something has a problem, I'll come to you."* **Shipped is working unless he says otherwise** (`docs/direction.md` §3.3). ⚠️ **One thing it contained is NOT covered by that and lives on as item 19**: no *predicted number* has been checked against a real attempt, and no amount of using the app can check one. ⚠️ **The two-account round trip also survives, but as something he WANTS rather than as a gap** — he named it among four items he intends to work on and will raise himself. Everything below this line is the record of what the item used to say, kept because it lists precisely what was proved by machine rather than by a person. ~~🆕 2026-09-03 PUT THE BIGGEST SINGLE ITEM ON THIS LIST: NOBODY HAS SEEN A PUBLIC ACCOUNT FROM THE OUTSIDE.~~ Every account is public by default now, and the only way to know what a stranger actually gets is a second real account opening the first one's page — the rules are proved on the emulator and the screens are proved in the demo, and **neither of those is a stranger**. Also unfielded from that day: the tappable friend map, the two-body compare screen, a friend's volume and graph screens, and the **legacy fallback**, which is proved against a fixture shaped like Autumn's live document but has never actually been the thing a real second phone rendered. 🆕 **2026-09-02 ADDED A LOT TO THIS LIST AND NONE OF IT HAS BEEN ON A PHONE**: the new feed card, a friend's workout screen, the comparison sheet, copying a friend's workout into your own plan, and — the one most likely to behave differently on a real device — **sharing a picture**, which goes through `navigator.share({files})` and has only ever been driven in headless Chrome, where it falls through to the download path. ⚠️ **THE BIGGEST ONE IS STILL A TEN-MINUTE JOB WITH AUTUMN**: search her by name, send a request, have her accept it, and record a workout for her so it lands in her account. **Everything social built on 2026-08-29 is proved against the rules engine and has never been done by two people.** Also standing: the **friend-name heal**, a real **kudos/comment** round trip, and — needing only his eyes — **the blue box round the profile picture on a laptop** (a real bug was found and fixed in that exact place, but a *blue* one was never reproduced). ⚠️ **And file import has never parsed an actual export** from any service. ⚠️ **Added 2026-08-30: nobody has read the Research topics on a phone** — the facts are checked and measured, the reading experience is not. 🚨 **AND THE OTHER TWO PASSES OF 2026-09-02 ARE ON THIS LIST TOO, one of them at the top of it: `goBack()` changed EVERY back arrow in the app and has never met the iOS edge-swipe gesture** — which is the one input the design was chosen to survive, and which exists on no machine here. A router-level change to 48 controls verified only in desktop Chrome is the highest-risk unfielded thing of the day. Also unread on a phone: the benchmark screen's estimate and its two captions |
 | **2** | **0c — the UX list** | ⚠️ **OPEN, and it is judgement rather than bugs.** Its headline item closed on 2026-08-25 (Home is a feed, which is nothing but growth) and the "hard sets" half was answered on 2026-08-24 by *saying* what is counted. **What is left is one question for Tim**: should logged warm-ups be excluded from the volume count? His call, because the obvious fix would also throw away genuine back-off work. 🆕 **2026-08-31 — THERE IS NOW A THIRD OPTION AND IT IS BETTER THAN BOTH**: Hevy's screens show a set is **typed at logging time** (`W` in amber for a warm-up, working sets numbered from 1), so the app never has to guess. That turns this from "which wrong answer do we pick" into a small feature — a set-type flag, a control in the runner, and the Volume tab's apology becomes a setting. ⚠️ **Every set already recorded is untyped and must stay counted rather than be retro-guessed.** `docs/social-plan.md` §12.16 |
 | **3** | **activities, Phase 2 — item 6** | Items 1–4 shipped 2026-08-27. **Item 6 says to ASK TIM** which activities his circle actually logs — climbing grades are the least standardised thing in the list. `docs/activities-plan.md` §3. ⚠️ **Item 5, activity PRs, is PINNED (P1)**, not open |
 | **5** | **0i — the body map's touch targets** | ⚠️ **MOSTLY CLOSED.** Invisible hit halos grow every muscle ~10 px in all directions without touching the art (Traps 44×15 → ~64×35 effective, CDP-verified). What remains under 44 px lands on **Tim's illustration**, so it stays his call |
@@ -300,7 +352,7 @@ than left at the top where they were written.
 | **15** | **the usability findings — waiting on Tim's pick** | ⚠️ Four standing findings from the 2026-08-28 usability drive, reported to him and not yet chosen from: **no wake lock** (the biggest hands-free lever), **prefill counts as recorded at Finish**, the **Record chooser's extra tap**, and the Run log's **"28" = 28 seconds** parse. See that day's second-pass section. ⚠️ **The prefill one is HALF fixed as of 2026-08-29 and the halves matter**: a never-done exercise is now guarded (`prefilled`, refused by the save path), an exercise WITH history is untouched — walk past it and last time's numbers record as though you did them. Left alone deliberately: it is a behaviour change on every workout and his to pick. ⚠️ **The rest-timer items in the same list are DECLINED, not waiting** — do not resurface them |
 | **19** | 🆕 **the estimator has never been checked against a person** | ⚠️ **Not a bug — a standing hole that got much bigger on 2026-09-02.** The app now prints an estimated 1RM for virtually every exercise, a percentage of it, and a predicted rep count, and **not one of those numbers has ever been compared with an actual attempt.** `docs/strength-estimate-plan.md` §11.2 — the backtest against Tim's own held-out benchmarks — is the only thing that would change that, and it has never been run. **It needs nothing from anybody: the data is already on disk.** The cheapest honesty win left in the project |
 | **20** | 🆕 **`docs/research.md` §2's table has a transcription error** | ⚠️ It gives **~5 reps at both 95 % and 90 % of a max**, which cannot both be true — found 2026-09-02 while building the rep prediction, and flagged in place. Nothing has ever been shipped off that row. Fixing it means re-reading PMC10933212 (Nuzzo et al. 2024). Small, and it is a wrong claim sitting in the file the whole app cites |
-| **22** | 🆕 **nobody has seen a PUBLIC account from the outside** | ⚠️ Part of item 1, listed separately because it is the one thing today's change cannot be checked without: a second real account. The rules are proved on the emulator (159 assertions) and the screens are proved in the demo, and **neither of those is a stranger opening somebody's page.** Also unproved: the tier migration, which needs an account that published under the old model — every account Tim has does, so this is one sign-in away |
+| **22** | 🔄 ~~nobody has seen a PUBLIC account from the outside~~ **CLOSED WITH ITEM 1, 2026-09-04** | 🛑 Same instruction: do not write this warning again. It remains true that a stranger's view has only ever been simulated, and Tim's answer is that he tests continuously and will report what is broken. ~~⚠️ Part of item 1, listed separately because it is the one thing today's change cannot be checked without: a second real account.~~ The rules are proved on the emulator (159 assertions) and the screens are proved in the demo, and **neither of those is a stranger opening somebody's page.** Also unproved: the tier migration, which needs an account that published under the old model — every account Tim has does, so this is one sign-in away |
 | **16** | **the HANDLE version of finding people** | 🚨 **Specified, ready, and a DECISION rather than a discovery.** ⚠️ **2026-09-03 raised the stakes**: a public account is read by anybody signed in, so the directory is now how a stranger FINDS one — though nothing about what the directory holds changed (a uid and a chosen name). Name search shipped 2026-08-29 on Tim's explicit call at fewer than five users, and it required granting Firestore `list` on a directory — which is enumeration of every row and cannot be narrowed by a rule. The replacement: `handles/{handle}` → uid, **`get` yes and `list` no**, exact lookup of a handle you chose, nothing enumerable. `docs/social-plan.md` §3.4 already blesses that shape. ⚠️ **The rules test's one deliberate `allow` — "any signed-in account can list the whole directory" — is the line that flips to a denial the day this lands**, and the `directory` block should be deleted with it |
 
 ### ⚠️ PINNED — real work, deliberately NOT queued. Do not offer these as "the next thing to do"
