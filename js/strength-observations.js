@@ -138,6 +138,12 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
         quality: c.quality,
         kind: c.kind,
         via: c.via,
+        // ⚠️ A SECOND FIELD, NOT A SECOND MEANING FOR `via`. `via` is the muscle
+        // a fallback came through; this is the library exercise a USER matched
+        // their own exercise to. See contributionsFor() for why they are not one
+        // field — a value whose meaning depends on reading `kind` first is
+        // correct until somebody reads it without `kind`.
+        standInName: c.standInName || null,
         ratio: c.ratio,
         reps: Math.round(Number(reps)),
         weight: Number(weight),

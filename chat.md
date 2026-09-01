@@ -2997,3 +2997,42 @@ at 3.96:1 in the light theme. Real, left alone, because colours are Tim's. And t
 measured 404 pages the whole way through — a stale server on the port — reporting zero contrast
 failures and zero overflow across 128 routes. A clean sweep and a broken one look the same; only the
 text-node count tells them apart.
+
+---
+
+## 2026-09-06 (later) — the follow-ups, and one task that killed itself
+
+Asked what was next, gave a ranked answer, and got: *"alright do all of those that you just
+mentioned."* Three agents again.
+
+**The research one is the interesting failure.** The job was to add a bar-height parameter so
+inverted rows and incline push-ups could be ranked, because the handbook said *"adding the parameter
+is the fix, not adding a number."* The answer came back no, and the handbook's own sentence was the
+problem. The incline push-up's two figures are already two named box heights — the parameter was
+never missing — but they measure peak dynamic force where the app's push-up number is a static hold,
+so shipping them would have scored one movement at three heights where part of the first step is the
+definition changing rather than the exercise. And the inverted row's parameter turns out to be body
+angle, not bar height, from a journal that is predatory and unindexed. Nothing built; the note that
+sent me there is corrected.
+
+Worth keeping the shape of that: a warning that names a *fix* gets acted on. This one named the wrong
+fix and had sat there long enough to be believed.
+
+**Custom exercises can borrow a ratio now**, but only because the person names what theirs is closest
+to — the app stopped guessing from the equipment dropdown and started being told. The safety is
+arithmetic rather than a rule: a match is worth 0.40 of what the real exercise is worth, which puts
+even the best possible match below the threshold where it could chain into a second inference. The
+dip-machine set that started all this now converts at quality 0.14 instead of rating somebody
+Advanced.
+
+**The PER SIDE chip is fixed** and, more usefully, the palette test can now catch it. It never could
+before: it reads tokens out of `:root`, and the failing pair only existed because a class painted one
+on the other.
+
+Two things I got wrong and caught. An agent nearly put two different meanings in one field — the same
+fault the notes already record twice — and flagged it itself. And my first mutation check of the
+colour fix passed, which should have meant the test was worthless; the mutation had hit the hex in
+the comment above the rule instead of the rule. A mutation check that passes proves nothing until you
+know it landed.
+
+Audit ends the day clean: 128 routes, zero contrast failures, zero overflow.

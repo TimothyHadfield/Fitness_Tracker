@@ -1805,3 +1805,223 @@ rather than a checked-and-rejected one.
 - Strength Level, *Cable Crunch Standards for Men and Women (lb)* — https://strengthlevel.com/strength-standards/cable-crunch/lb
 - Strength Level, *Machine Seated Crunch Standards for Men and Women (lb)* — https://strengthlevel.com/strength-standards/machine-seated-crunch/lb
 - Fitness Volt, *Cable Crunch Standards by Bodyweight (lbs)* — https://fitnessvolt.com/strength-standards/cable-crunch/ (modelled, used only as the cross-check that disagreed)
+
+
+---
+
+## 15. Body-weight anchors at named positions — inverted row, incline push-up, bench dip 🔴
+
+**Pulled 2026-09-06.** The question asked: `docs/handbook.md` §9 records the inverted row and the
+incline push-up as *"measured, but the app lacks the parameter"* and says **"adding the parameter is
+the fix, not adding a number."** Do **published, citable anchor values exist at specific, describable
+positions** — bar at hip height, hands on a 24-inch box — such that the app could ship them as
+separate library exercises a user picks between, with no data-model change at all?
+
+### 15.1 🚨 The answer is NO — and §9's diagnosis is wrong about *why*
+
+**Discrete, sourced, named-position anchors do exist for the incline push-up.** They are not the
+missing piece. **They measure the wrong quantity**, and no amount of parameter-adding fixes that.
+
+| | What §9 says is missing | What is actually missing |
+|---|---|---|
+| **Incline Push-Up** | the hand height | **nothing about position** — Ebben names two box heights. What is missing is a *static down-position* measurement at either of them. |
+| **Inverted Row** | the bar height | **nothing was ever measured at a bar height.** The only source varied **body angle on a suspension trainer**. |
+| **Bench Dip** | — | everything. No force-plate figure exists at any position. |
+
+⚠️ **So "adding the parameter" would not close either gap, and for the incline push-up it would
+actively make the table worse.** The fix is a measurement nobody has taken. Recorded here so the
+next session does not spend an afternoon designing a hand-height field.
+
+### 15.2 Incline Push-Up — the anchors are perfect and the quantity is wrong 🔴
+
+Read directly from the open-access ISBS conference version of Ebben's study, Table 1 — *"Push up
+peak ground reaction force expressed as a percentage of subject static body mass peak ground
+reaction force"*, n = 23 recreationally fit young adults (22.5 ± 4.6 y, 80.59 ± 9.28 kg, both sexes),
+AMTI BP6001200 force platform at 1000 Hz, **metronome-controlled two-second repetitions**:
+
+| Variation | Body-weight coefficient |
+|---|---|
+| Feet elevated 60.96 cm | 0.74 ± 0.02 |
+| Feet elevated 30.48 cm | 0.70 ± 0.02 |
+| **Regular** | **0.64 ± 0.04** |
+| **Hands elevated 30.48 cm (12 in)** | **0.55 ± 0.05** |
+| Bent knee | 0.49 ± 0.05 |
+| **Hands elevated 60.96 cm (24 in)** | **0.41 ± 0.06** |
+
+**This is where the handbook's "41 % vs 55 %" comes from, and it is a pair of discrete anchors at
+positions anyone could describe** — a 12-inch box and a 24-inch box. Two library exercises, no new
+field, exactly the cheap route. And they must still be refused.
+
+🚨 **BECAUSE THE ROW ABOVE THEM IS 0.64, AND `BODY_WEIGHT_FRACTION` ALREADY REJECTED 0.64.** The
+table's `'Push-Up'` entry is 0.75, from Suprak (2011) and Mier (2014) holding a **static down
+position** on a force plate. Ebben's 0.64 is the **peak dynamic ground-reaction force of a moving
+repetition** — the very figure `js/exercises.js` names as "not the number most people quote" and
+declines. Admitting 0.55 and 0.41 would put two Ebben-basis numbers in a table whose only other
+measured entry is Suprak-basis, and the app would score the same movement at three hand heights as
+**0.75 / 0.55 / 0.41** — where part of the 0.75 → 0.55 step is not the exercise getting easier, it is
+the measurement definition changing underneath it. `js/exercises.js` already makes exactly this
+argument for the **Decline** Push-Up ("mixing the two scales would put a decline push-up BELOW a
+regular one, which is absurd"). **The same argument binds the incline, and it is the real reason —
+the stated hand-height reason is not.**
+
+⚠️ **THE TEMPTING RESCUE, AND WHY IT IS REFUSED.** Ebben's regular push-up is 0.64 and Suprak's is
+0.75, a ratio of 1.172. Multiply through and the boxes become 0.64 and 0.48. **Do not.** Nothing
+published establishes that the dynamic-to-static ratio is constant across hand heights, and there is
+positive reason to think it is not: raising the hands makes the repetition easier and therefore
+faster, and the dynamic overshoot is precisely the part that scales with speed. That is an
+interpolation dressed as a citation, which is the one thing this table exists to prevent.
+
+**🔴 — the values are 🟢 (read from the primary table, and two independent labs report the regular
+condition within two points: Ebben 0.64, Gouvali & Boudolos 0.66). The grade is 🔴 because a solid
+measurement of the wrong quantity is worth nothing here.**
+
+⚠️ **Suprak (2011) does NOT contain an incline condition, despite its title.** Its two variants are
+**traditional** (69.16 % up / 75.04 % down) and **modified = knees down** (53.56 % up / **61.80 %
+down**), n = 28 strength-trained men, four static positions. Checked, so nobody re-opens it hoping.
+
+### 15.3 Inverted Row — the range is real, and it is not a bar height 🔴
+
+The handbook's **37–79 %** traces to **Melrose D & Dawes J (2015)**, *J Athl Enhanc* 4(1):2–5, and
+`js/exercises.js` already carries it. Reported values — forty male and female college students, a TRX
+suspension trainer run through an **in-line dynamometer** hung from a power rack, **isometric holds**:
+
+| Body angle from vertical | % of body mass at the hands |
+|---|---|
+| 30° (near upright) | 37.44 ± 1.45 |
+| 45° | 52.88 ± 0.59 |
+| 60° | 68.08 ± 1.95 |
+| 75° (near horizontal) | 79.38 ± 2.14 |
+
+These *are* four discrete anchors, and the quantity is right — a static in-line force at the hands,
+the same kind of thing Suprak measured. Four separate reasons they still cannot ship:
+
+1. 🚨 **THE PARAMETER IS NOT BAR HEIGHT, AND §9 SAYS IT IS.** Melrose varied **the angle of the
+   body**, on a strap of adjustable length. Bar height and body angle are not interchangeable — the
+   same bar gives a different angle to a 5'2" and a 6'4" lifter, and moving the feet changes the
+   angle with the bar untouched. **A user cannot report their body angle from a supine position**:
+   "was that 45° or 60°?" is a 15-point difference in the fraction and nobody can eyeball it. So even
+   the honest version of this parameter is unusable, which is a stronger objection than §9 makes.
+2. ⚠️ **It is a suspension trainer, not a bar.** A strap lets the hands travel; a fixed bar pins them
+   to an arc. Nothing published maps one onto the other. `js/exercises.js` already notes this.
+3. 🚨 **THE JOURNAL DOES NOT MEET THIS PROJECT'S BAR.** *Journal of Athletic Enhancement* is
+   published by **SciTechnol, a brand of OMICS Publishing Group** — a publisher fined **$50.1 M by
+   the US FTC in 2019** for deceptive publishing practices, and the standard textbook example of a
+   predatory press. It is not MEDLINE-indexed and the paper has no PMID. **§11's whole argument is
+   that two independent methods agree within ~3 %.** A single unindexed paper is not that. The one
+   thing in its favour: **Ronai P & Scibek E (2016)**, *Strength Cond J* 38(4), a peer-reviewed NSCA
+   review, reproduces the 60° and 75° figures (68 % and 79 %) — but as a *report of* Melrose, not as
+   a second measurement.
+4. ⚠️ **The elbow position is unstated.** Giancotti et al. found flexed elbows read higher than
+   extended on the same hold. The app deliberately uses the **hardest** position for the push-up
+   (0.75, the bottom). Which end of the row's range these four numbers describe is not recoverable,
+   so they are not even known to be the same *kind* of static figure as the 0.75.
+
+**🔴 — a single unindexed source, on the wrong equipment, keyed to a parameter a user cannot
+self-report, at an unstated point in the range.** Any one of those is fatal on its own.
+
+**A cross-check was found and it does not rescue it:** Vural et al. (2023), *PLoS ONE* 18(9):e0291608,
+put load cells on suspension straps and get 69.5–75.7 % near horizontal — consistent with Melrose's
+60–75° band, and also suspension work, n = 12.
+
+### 15.4 Bench Dip — NONE FOUND, and the search is now on record 🔴
+
+No force-plate or load-cell measurement of the share carried by the hands in a bench dip exists, at
+any foot position. The only biomechanical comparison of the dip family — *"Bench, Bar, and Ring Dips:
+Do Kinematics and Muscle Activity Differ?"* (PMC9603242) — used **3-D motion capture and surface EMG
+only, no force plate**, and reports no load at all. `js/exercises.js`'s note that Bench Dip "is the
+same problem as the inverted row" understates it: the inverted row at least has a number. **Recorded
+so this is a checked-and-rejected lead, not an open one.**
+
+### 15.5 ⚠️ Two name traps, so nobody chases them
+
+- **"A predictive model for vertical ground reaction force during incline push-ups"**, *Sci Rep* 15,
+  44454 (2025), doi:10.1038/s41598-025-28012-7. Reads like the exact paper wanted. **It is not.** Its
+  "incline" is **feet elevated** (10°/20°/30°), so the load runs the *wrong way*; it reports **peak
+  dynamic** force under metronome tempo; and it gives **newtons only** — 666.72 / 663.10 / 595.61 N
+  against a 78.74 kg mean, never normalised to body weight by the authors.
+- **The handstand push-up lineage.** Re-confirmed, unchanged: the circulating "≈ 90–100 % of body
+  weight" is misattributed to a paper about push-ups. Nothing found this pass changes that.
+
+### 15.6 What would have to exist for the answer to change
+
+Small, cheap and specific — one undergraduate afternoon each:
+
+- **Incline push-up:** Suprak's own protocol (hands on a force platform, held static in the up and
+  down positions) repeated with the platform on a **named box height**. Two heights and the incline
+  push-up ships the same day, on the same basis as the 0.75, with no new field.
+- **Inverted row:** the same static hold on a **fixed bar at a stated height**, reported against the
+  lifter's height so it can be turned into something a user can actually pick. In an indexed journal.
+- **Bench dip:** anything at all.
+
+**Until then both stay refused, and the refusal is now cited rather than assumed.**
+
+### 15.7 One lead this pass turned up that IS actionable
+
+⚠️ **Suprak (2011) measured a knee push-up on the same day, on the same force plate, with the same 28
+subjects, as the 0.75 the app already trusts: 61.80 % in the static down position.** That is the
+right quantity, from the source already cited, with no mixing and no new parameter — and it is
+`basis: 'measured'` on the same footing as Push-Up.
+
+**The library has no Knee Push-Up**, so this is not a one-line change; it is a new exercise plus an
+entry. **It was not part of the question asked and nothing above depends on it.** Flagged as an open
+lead, in §14.6's style, rather than acted on:
+
+```js
+// If a Knee Push-Up is ever added to the library — Suprak 2011, same paper,
+// same 28 subjects, same static down position as the 0.75 above.
+'Knee Push-Up':  { fraction: 0.62, q: 0.70, basis: 'measured' },
+```
+
+`q` **0.70**, identical to Push-Up's, and for the identical reason: the fraction sits behind a
+judgement about *which* published quantity belongs in a strength estimate, not behind a guess. It
+would be wrong to give it more than the push-up it was measured alongside, and there is no reason to
+give it less.
+
+### 15.8 ⚠️ What this section contradicts elsewhere in the project
+
+- **`docs/handbook.md` §9** — *"An inverted row is 37–79 % of body weight depending on bar height."*
+  **The source varied body angle on a suspension trainer.** No study has measured an inverted row at
+  a bar height. §15.3.
+- **`docs/handbook.md` §9** — *"Adding the parameter is the fix, not adding a number."* **True for
+  neither.** For the incline push-up the positions are already named and the *basis* is wrong
+  (§15.2); for the inverted row the parameter is not one a user can supply (§15.3).
+- **`js/exercises.js`, the Incline Push-Up exclusion note** — gives the reason as *"the app does not
+  record the height."* **That reason does not bind**, because Ebben names two box heights and two
+  library exercises would satisfy it. The reason that binds is the one the note itself gives two
+  bullets later for the Decline Push-Up: **Ebben is peak dynamic, the table's push-up is static.**
+  The exclusion is right; its stated ground is the weaker of the two available.
+- **`js/exercises.js`, the Inverted Row exclusion note** — correct in substance and one grade too
+  generous in tone. Calling the fraction "measured" grants Melrose & Dawes a standing the journal
+  does not support (§15.3, point 3).
+
+### 15.9 Sources
+
+- Wurm B, VanderZanden TL, Spadavecchia M, Durocher J, Bickham C, Petushek EJ, Ebben WP. *Kinetic
+  analysis of several variations of push-ups.* ISBS Conference Proceedings Archive —
+  https://ojs.ub.uni-konstanz.de/cpa/article/view/4457 (open access; **Table 1 read directly from
+  this PDF**). Journal version: Ebben WP et al., *J Strength Cond Res* 25(10):2891–4, 2011,
+  doi:10.1519/JSC.0b013e31820c8587.
+- Suprak DN, Dawes J, Stephenson MD. *The effect of position on the percentage of body mass supported
+  during traditional and modified push-up variants.* *J Strength Cond Res* 25(2):497–503, 2011.
+  PMID 20179649, doi:10.1519/JSC.0b013e3181bde2cf.
+- Melrose D, Dawes J. *Resistance characteristics of the TRX™ suspension training system at different
+  angles and distances from the hanging point.* *J Athl Enhanc* 4(1):2–5, 2015. ⚠️ **SciTechnol /
+  OMICS; not MEDLINE-indexed; no PMID.** Values reached through the citing literature, not the
+  paper's own PDF (paywalled or 403 on every route tried) — they match the four values already
+  recorded in `js/exercises.js`, which is the corroboration this claim has and the whole of it.
+- Ronai P, Scibek E. *The Suspension Inverted Row.* *Strength Cond J* 38(4), 2016,
+  doi:10.1519/SSC.0000000000000226. Peer-reviewed, but reports Melrose rather than re-measuring.
+- Gülmez İ. *Effects of angle variations in suspension push-up exercise.* *J Strength Cond Res*
+  31(4):1017–1023, 2017. PMID 26950344, doi:10.1519/JSC.0000000000001401. n = 28 men, TRX push-up at
+  0/15/30/45°, **static, and it splits elbow-extended from elbow-flexed** — 50.4 % vs **75.3 %** of
+  body weight on the straps at 0°. Right quantity, right idea, wrong apparatus (strap angle, not hand
+  height). Only the 0° pair was recoverable without the full text; **the 15/30/45° values were not
+  obtained and are the single most useful unpulled number in this section.**
+- Vural F et al. *Can different variations of suspension exercises provide adequate loads and muscle
+  activations for upper body training?* *PLoS ONE* 18(9):e0291608, 2023.
+- *Bench, bar, and ring dips: do kinematics and muscle activity differ?* PMC9603242 — **motion capture
+  and EMG only; no force data.**
+- *A predictive model for vertical ground reaction force during incline push-ups.* *Sci Rep* 15:44454,
+  2025, doi:10.1038/s41598-025-28012-7. ⚠️ **Feet elevated, not hands.** See §15.5.
+- OMICS Publishing Group / FTC judgment, US District Court for the District of Nevada, 2019 —
+  $50,130,810. Background for the §15.3 grade: https://en.wikipedia.org/wiki/OMICS_Publishing_Group

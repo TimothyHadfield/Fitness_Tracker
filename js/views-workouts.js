@@ -8,7 +8,13 @@ import {
 } from './set-types.js';
 import {
   MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
+  canStandIn, standInFor,
 } from './exercises.js';
+/* ⚠️ Statically imported, and it costs nothing: `store.js` above already pulls
+ * muscle-evidence.js in through strength-observations.js, so this names a module
+ * that is loaded either way. It is here for one job — the custom-exercise sheet
+ * must not offer a stand-in that converts nothing (see standInOptions). */
+import { contributionsFor } from './muscle-evidence.js';
 import { alternativesFor } from './exercise-families.js';
 import { sessionStats, setsLabel } from './session-stats.js';
 
@@ -1990,8 +1996,13 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
       } },
         el('div', { class: 'row-main' },
           exerciseLabel({ exercise: ex, tag: 'div', className: 'row-title', inControl: true }),
+          /* ⚠️ THE MATCH IS NAMED HERE TOO — Rule 5, and the reason is that this
+           * row is where somebody meets a custom exercise made months ago. The
+           * creator sheet said what a match does once, to the person making it;
+           * this says it every time, to whoever is picking it. */
           el('div', { class: 'row-sub' },
-            `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}`,
+            `${ex.muscle} · ${ex.equipment}${ex.isCustom ? ' · custom' : ''}`
+            + (ex.isCustom && standInFor(ex) ? ` · rated as ${standInFor(ex).name}` : ''),
           ),
         ),
         ex.loadType ? loadBadge(ex.loadType) : null,
@@ -2019,10 +2030,46 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
  * Custom exercise creator
  * ================================================================== */
 
+/* The library exercises somebody may point a custom one at, grouped by muscle.
+ *
+ * ⚠️ TWO FILTERS, AND THE SECOND ONE IS THE INTERESTING ONE. `canStandIn()`
+ * removes what a custom exercise's logged number cannot mean — bodyweight and
+ * assisted work, whose ratios convert a resistance derived from a weigh-in.
+ * `contributionsFor()` removes what has no ratio at all: Machine Dip, Wrist
+ * Roller, the exercises the library deliberately refuses to convert. Offering
+ * one of those would let somebody make a match, be told nothing was wrong, and
+ * still get no rating — a dead end the app knew about before they picked it.
+ *
+ * Built once, lazily, so opening any other sheet does not pay for it. Grouped
+ * with <optgroup> rather than a flat 250-row list, and by MUSCLE_GROUPS order so
+ * it reads in the same order as the dropdown three rows above it. */
+let standInOptionCache = null;
+function standInOptions() {
+  if (standInOptionCache) return standInOptionCache;
+  const byMuscle = new Map();
+  for (const e of BUILT_IN_EXERCISES) {
+    if (!canStandIn(e) || !contributionsFor(e).length) continue;
+    if (!byMuscle.has(e.muscle)) byMuscle.set(e.muscle, []);
+    byMuscle.get(e.muscle).push(e);
+  }
+  const order = [...MUSCLE_GROUPS.filter((m) => byMuscle.has(m)),
+    ...[...byMuscle.keys()].filter((m) => !MUSCLE_GROUPS.includes(m))];
+  standInOptionCache = order.map((m) => el('optgroup', { label: m },
+    byMuscle.get(m).map((e) => el('option', { value: e.id, text: e.name }))));
+  return standInOptionCache;
+}
+
 export function openCustomExerciseSheet(onPick) {
   const name = el('input', { class: 'input', type: 'text', placeholder: 'Exercise name', maxlength: '60' });
   const muscle = el('select', { class: 'input' }, MUSCLE_GROUPS.map((m) => el('option', { value: m, text: m })));
   const equip = el('select', { class: 'input' }, EQUIPMENT.map((m) => el('option', { value: m, text: m })));
+  /* ⚠️ "None" IS THE FIRST OPTION AND THE DEFAULT, because leaving it alone has
+   * to be the thing that happens when somebody does not read the field. The
+   * whole 2026-08-31 decision rests on a custom exercise rating nothing unless
+   * a person deliberately said what it was. */
+  const standIn = el('select', { class: 'input' },
+    el('option', { value: '', text: 'None' }),
+    standInOptions());
 
   const chosen = new Set(['weight', 'reps']);
   let loadType = 'total';
@@ -2079,12 +2126,23 @@ export function openCustomExerciseSheet(onPick) {
        * a made-up "Dip Machine" rated a beginner's triceps Advanced. It no
        * longer does, and this is the sentence that stops the absence reading as
        * a bug when somebody later wonders why their custom lift moved nothing.
-       * js/muscle-evidence.js's CUSTOM_RATIO header has the whole argument. */
+       * js/muscle-evidence.js's CUSTOM_RATIO header has the whole argument.
+       *
+       * ⚠️ REWORDED 2026-09-05, because "they do not set a strength level" is no
+       * longer true without a condition on it. The condition is the field below,
+       * and the ORDER matters: this paragraph says what a custom exercise does,
+       * and the control that changes it sits directly underneath. Reversing them
+       * would make the field look like a required step. */
       el('div', { class: 'field-help', text:
-        'Custom exercises are logged, charted and counted in your weekly volume — '
-        + 'but they do not set a strength level, because there is no published way '
-        + 'to compare a movement the app has never seen with a barbell. Tell Tim and '
-        + 'it can be added to the library properly.' }),
+        'Custom exercises are logged, charted and counted in your weekly volume. '
+        + 'They only set a strength level if you pick the closest library exercise below.' }),
+      el('div', { class: 'field' },
+        el('label', { text: 'Closest library exercise' }),
+        standIn,
+        el('div', { class: 'field-help', text:
+          'Optional. Your sets convert through it, labelled as your match rather than '
+          + 'a measurement. Leave it blank and this exercise sets no strength level.' }),
+      ),
       el('div', { class: 'field' },
         el('label', { text: 'What do you want to track?' }),
         fieldChips,
@@ -2104,6 +2162,9 @@ export function openCustomExerciseSheet(onPick) {
           equipment: equip.value,
           fields: ['weight', 'reps', 'time', 'distance'].filter((f) => chosen.has(f)),
           loadType,
+          // Empty string when "None" is selected; makeCustomExercise() resolves
+          // it and stores null unless it names an eligible library row.
+          standInId: standIn.value || null,
         });
         await store.addCustomExercise(ex);
         close();

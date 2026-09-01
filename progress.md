@@ -22,10 +22,41 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-06 — eight of those blanks are numbers now, and the one gate that had to
-stay was kept on purpose.
+**Last updated:** 2026-09-06 — the blanks became numbers, custom exercises can borrow a ratio, and
+the browser audit is clean for the first time since 2026-08-27.
 
-## What changed on 2026-09-06, in one line each
+## What changed on 2026-09-06 (third pass), in one line each
+
+1. 🔄 **CUSTOM EXERCISES CAN SET A STRENGTH LEVEL AGAIN — IF THE PERSON NAMES WHAT IT IS CLOSEST
+   TO.** ⚠️ **Not a reversal of 2026-08-31**: the app stopped INFERRING from the equipment dropdown
+   and started being TOLD. **The match decides the muscle**, quality is knocked to
+   **`STAND_IN_QUALITY` 0.40** of the target's, **1.00 × 0.40 lands below `FALLBACK_MIN_QUALITY`** so
+   it can never chain onward, one hop only, and bodyweight/assisted targets are refused. Her 60×10
+   now converts at quality **0.14**.
+2. 🛑 **THE BAR-HEIGHT WORK WAS NOT BUILT, AND §9's OWN DIAGNOSIS WAS WHY.** *"Adding the parameter
+   is the fix"* is true of neither exercise: the incline push-up's two figures are named box heights
+   measuring the **wrong quantity**, and the inverted row's parameter is **body angle, not bar
+   height**, from a **predatory unindexed journal**. `docs/research.md` §15, graded 🔴; §9 corrected.
+   ⚠️ **One lead not acted on**: Suprak's knee push-up at 61.80 %, right quantity, needs a new
+   library exercise.
+3. ✅ **The 3.96:1 "PER SIDE" chip is fixed** — `#82570B`, 5.02:1, scoped to the **default palette
+   only** because the other three already passed and an unscoped rule would have broken them.
+   🚨 **`tests/a11y.test.mjs` now asserts that pair**, which it structurally could not before: it
+   walks `:root` tokens, and this pair exists only because a CLASS puts one on the other.
+4. ✅ **The three behaviours that shipped untested are pinned** — Bars' one-source-per-row (D14),
+   Goals' "what has moved" (with a guard that would catch it growing into a verdict), and the
+   runner's blank-field line.
+5. ✅ **`benchmarkComparison()` deleted** — 🚨 it held a **second copy** of `normalizedSeries()`'s
+   per-day rule. Its assertions were re-pointed at the surviving copy, not deleted.
+6. ⚠️ **A `via` field was about to carry two meanings** (a muscle on a fallback, an exercise name on
+   a stand-in) disambiguated by reading `kind` first — **the invites/requests fault**, and
+   `exercise-estimate.js` already reads `via` bare. Split into `standInName`.
+7. ✅ **Browser audit clean: 128 routes, 11,912 text nodes, ZERO below 4.5:1, zero overflow.**
+8. ⚠️ **A MUTATION CHECK CAN LIE IN THE REASSURING DIRECTION** — mine passed because the mutation
+   landed on a hex **in a comment** rather than in the rule. A passing mutation check is evidence
+   only once you know the mutation hit the code.
+
+## What changed on 2026-09-06 (second pass), in one line each
 
 1. 🚨 **THE MUSCLE MAP RANKS WITHOUT A PROFILE.** A missing weigh-in **widens the comparison to
    lifters of every size** rather than inventing a body weight; a missing sex assumes male and

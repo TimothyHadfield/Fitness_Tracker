@@ -17,6 +17,111 @@
 
 ---
 
+## 2026-09-06 (third pass) — THE FOLLOW-UPS, AND A RESEARCH ANSWER THAT KILLED ITS OWN TASK
+
+Tim, asked what was next and given a ranked answer: *"alright do all of those that you just
+mentioned."* Three agents on disjoint file sets again; tests, integration and both audits mine.
+
+### A. 🚨 THE RESEARCH SAID NO, AND THE HANDBOOK'S OWN DIAGNOSIS WAS THE THING THAT WAS WRONG
+
+§9 had said, of the inverted row and the incline push-up: *"measured, but the app lacks the
+parameter… **adding the parameter is the fix, not adding a number**."* **That sentence sent this
+session off to design a hand-height field.** `docs/research.md` §15 is the pull, graded 🔴:
+
+- **The incline push-up's 41 % / 55 % ARE two named, pickable box heights** (Ebben 2011, 12in and
+  24in). **So the parameter was never the obstacle.** 🚨 **They measure the wrong quantity**: the same
+  table gives a regular push-up as **0.64**, the exact figure `js/exercises.js` already rejects,
+  because Ebben measures *peak dynamic ground-reaction force* and this app's 0.75 is Suprak/Mier's
+  *static down position*. Shipping them would score one movement 0.75 / 0.55 / 0.41 where part of the
+  first step is **the definition changing rather than the exercise**.
+- **The inverted row's parameter is BODY ANGLE, not bar height.** Nobody has measured one at a bar
+  height. Melrose & Dawes give four angle anchors — unusable (nobody self-reports their angle from
+  under a bar; 45° vs 60° is fifteen points) — and ⚠️ **the journal is SciTechnol/OMICS: predatory,
+  unindexed, no PMID.** The 37–79 % this handbook has quoted for weeks traces to it.
+- **Bench dip: nothing at any position**, now recorded as checked rather than assumed.
+
+🛑 **Nothing was built and §9 was corrected instead.** ⚠️ **One lead, deliberately not acted on:**
+Suprak 2011 measured a **knee push-up on the same plate, same 28 subjects, same static down position
+— 61.80 %.** Right quantity, source already cited, no new parameter. It needs a new library exercise
+rather than a table row, and nobody asked for it. §15.7.
+
+**The lesson is about the shape of the note, not the exercises.** A `⚠️` bullet that names a *fix*
+gets acted on; this one had named the wrong fix and sat there long enough to be believed. **A stated
+diagnosis is a claim and ages like one.**
+
+### B. Custom exercises can borrow a ratio — because the person NAMES it
+
+2026-08-31 took the strength level off custom exercises after a made-up "Dip Machine" rated a
+beginner Advanced off a ratio guessed from the equipment dropdown. **That is not reversed.** What
+changed is that the app stopped *inferring* and started being *told*: an optional `standInId` points
+at a real library exercise.
+
+🚨 **THE SAFETY IS ARITHMETIC RATHER THAN A THRESHOLD**, which is what makes it hold under later
+edits:
+
+- **The match decides the MUSCLE.** She filed her dip machine under Triceps; matched to a chest
+  press, the evidence lands on **Chest**. The dropdown that produced the original bug now decides
+  nothing.
+- **`STAND_IN_QUALITY = 0.40`** multiplies the target's own `q`, so a stand-in is worth strictly less
+  than the exercise it points at **at every ratio and rep count** — it can never out-rank its own
+  target, and no future ratio edit can make it.
+- 🚨 **1.00 × 0.40 = 0.40, below `FALLBACK_MIN_QUALITY` (0.45).** The best possible match still
+  cannot chain onward into a cross-muscle inference **even if that filter were deleted**. The guard
+  is a number, not a branch somebody can reorder.
+- **One hop, structurally** — the target comes from `BUILT_IN_EXERCISES`, which never carries a
+  `standInId`, so there is no second hop to take. A custom matched to a custom yields `[]`, and a
+  non-resolving id stores `null` rather than a dead reference.
+- **Bodyweight and assisted targets are refused** — not caution, correctness: their ratios convert a
+  resistance derived from a weigh-in, while a custom exercise's logged number is read as plain load.
+  Borrowing an assisted pull-up's ratio would apply a body-weight conversion to a bare stack number
+  on a machine where *more* on the stack is a *lighter* set. That is the 2026-08-31 incident rebuilt
+  out of two individually-fine halves.
+- Replayed on her own numbers: 60 × 10 now converts at **quality 0.14**, against the ratio-1.00 guess
+  that rated her Advanced.
+
+⚠️ **AND ONE THING THE AGENT FLAGGED FOR A SECOND OPINION, WHICH WAS RIGHT TO FLAG.** It first put
+the matched exercise's name in `via` — a field that already means *"the muscle a fallback came
+through"* — safe only because the two can never coexist, so you read it against `kind`. 🚨 **That is
+the shape of a bug this project has written down twice**: `firestore.rules` keeps `invites` and
+`requests` apart because *"two meanings in one collection is how a read rule ends up wrong"*, and
+D9/D28 were cited interchangeably for weeks. **`exercise-estimate.js` already reads `via` bare inside
+its fallback branch.** Split into its own `standInName`; neither field needs a guard now.
+
+### C. The three that had shipped without a test, and one dead function
+
+- **Bars' one-source-per-row (D14), Goals' "what has moved", and the runner's blank-field line** are
+  now pinned. All three had been verified in throwaway scripts the agents then deleted, which is
+  exactly the proof this project does not count. The Goals one carries a **no-verdict guard** that
+  strips `.goal-verdict` and requires the words to be gone — it would catch the movement line quietly
+  growing into the judgement the estimator has not earned.
+- **`benchmarkComparison()` deleted.** Bars stopped reading it that morning and nothing else ever
+  did. 🚨 **The reason it went rather than sat there: its middle forty lines were a SECOND COPY of
+  `normalizedSeries()`'s per-day reduction**, down to the tie-break where a set performed at the
+  target rep count beats an estimate on the same day. Two copies of one rule in one file is drift
+  waiting to happen. **Its assertions were re-pointed at the surviving copy rather than deleted** —
+  the rule was what mattered, not the caller.
+
+### D. ✅ The contrast failure is fixed, and the token test now catches it
+
+`.load-badge.per-side` at **3.96:1** → `#82570B` at **5.02:1**, scoped
+`:root[data-theme="light"]:not([data-palette])`. ⚠️ **The scoping is the whole job**: teal, indigo
+and ember already cleared AA (4.56–5.02), and the obvious selector would have **broken three
+palettes to fix one**.
+
+🚨 **`tests/a11y.test.mjs` could not have caught this and now can.** It walks tokens out of `:root`
+blocks, and `--accent` on `--accent-dim` is a pair no `:root` rule declares — it exists only because
+a CLASS puts one on the other. It now asserts that pair in every palette.
+
+⚠️ **AND MY FIRST MUTATION CHECK OF IT PASSED, WHICH WOULD HAVE MEANT A VACUOUS TEST.** The mutation
+replaced the first `#82570B` in the file — **the one in the comment above the rule**, not the
+declaration. The test was fine; the check was lying, in the reassuring direction. **A mutation check
+that passes is only evidence if you know the mutation landed on the code.**
+
+✅ **Final audit: 128 routes, 11,912 text nodes, ZERO below 4.5:1, zero overflow** — 8 fixed, 0
+introduced, against the `git archive HEAD` control taken this morning.
+
+---
+
 ## 2026-09-06 (second pass) — 🚨 EIGHT BLANKS BECAME NUMBERS, AND ONE GATE WAS KEPT ON PURPOSE
 
 Tim, having been given the list below: *"it seems like you have a good idea of what should be changed

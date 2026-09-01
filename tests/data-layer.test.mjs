@@ -11,7 +11,7 @@ globalThis.localStorage = {
 const { BUILT_IN_EXERCISES, makeCustomExercise } = await import('../js/exercises.js');
 const {
   store, auth, seriesForExercise, chartableExercises, activityByDate, todayISO,
-  normalizeWorkout, DEFAULT_SETS, benchmarkComparison,
+  normalizeWorkout, DEFAULT_SETS,
   normalizedSeries, defaultTargetReps, weightRepObservations, ageFromBirthYear,
   bodyWeightSeries, trainingForMuscle, weeklyVolumeByMuscle,
 } = await import('../js/store.js');
@@ -303,55 +303,56 @@ ok(soloOpt.usableSources.length === 1 && soloOpt.usableSources[0] === 'benchmark
    'squat has benchmarks only, so no pointless source toggle');
 ok(soloOpt.sources.workout.normalizable === false, 'squat reports no workout data');
 
-/* ---------- benchmark comparison (bar chart) ---------- */
-const cmp = await benchmarkComparison(2);
+/* ---------- what the bar chart is built on ----------
+ *
+ * ⚠️ THIS BLOCK USED TO DRIVE `benchmarkComparison()`, WHICH WAS DELETED ON
+ * 2026-09-06 — Bars now goes through `pickSource()` like the Graph, so it fills
+ * from workout sets for somebody who never benchmarks. The assertions were not
+ * simply deleted with it: what they were really pinning is the PER-DAY rule,
+ * and that rule survives in `normalizedSeries()` — which is where the deleted
+ * function had a second copy of it. So they are re-pointed at the surviving
+ * copy rather than thrown away, because the rule is what mattered, not the
+ * caller.
+ *
+ * The row-shaping half (sorting by biggest mover, the `incomplete` count) is
+ * now `sourcedComparison()` in views-data.js and is asserted through the
+ * mounted screen in tests/render.test.mjs, where it can be read the way a user
+ * reads it. */
+{
+  // Bench benchmarks are 135x5 (June) and 175x3 (August); the modal count over
+  // those two ties and resolves to the more recent, 3.
+  const pts = await normalizedSeries(bench.id, 3, 'benchmark');
+  ok(pts.length === 2, `two benchmark days for the bench (${pts.length})`);
+  ok(pts[1].actual === true && pts[1].value === 175, 'the latest was measured at 3 reps');
+  ok(pts[0].actual === false, 'the first (5 reps) is an estimate at 3 reps');
+  ok(near(pts[0].value, 146.11), `135x5 normalises to 146.1 at 3 reps (${pts[0].value.toFixed(2)})`);
+  ok(pts[1].value - pts[0].value < 40,
+     '⚠️ normalising DEFLATES the apparent gain: raw weight would claim +40, and some of that 40 lb '
+     + 'was just doing fewer reps');
 
-ok(cmp.fields.includes('weight'), 'weight is a comparable field');
-ok(!cmp.fields.includes('time'), 'time excluded — plank has only one benchmark');
-ok(!cmp.fields.includes('reps'),
-   'reps dropped as a standalone comparison once weight is rep-normalised');
+  // Sessions also hold bench sets. If the source leaked, this would exceed the
+  // two benchmark days.
+  ok(pts.length === 2, 'workout sets stay out of a benchmark series (Rule 4 / D14)');
 
-const weightRows = cmp.byField.weight;
-ok(weightRows.length === 2, `two exercises comparable by weight (${weightRows.length})`);
+  // An exercise with a single benchmark cannot produce a comparison at all.
+  const solo = byName('Deadlift');
+  await store.saveBenchmark({ date: '2026-08-01', exerciseId: solo.id, exerciseName: solo.name, values: { weight: 405, reps: 1 } });
+  ok((await normalizedSeries(solo.id, 1, 'benchmark')).length < 2,
+     'one recorded day is not a comparison — a bar needs two');
 
-const benchRow = weightRows.find((r) => r.id === bench.id);
-// Benchmarks are 135x5 (June) and 175x3 (August); the modal count over those
-// two ties and resolves to the more recent, 3.
-ok(benchRow.atReps === 3, 'row reports the rep count it was compared at');
-ok(benchRow.nowActual === true && benchRow.now === 175, 'latest benchmark was measured at 3 reps');
-ok(benchRow.startActual === false, 'first benchmark (5 reps) is an estimate at 3 reps');
-ok(near(benchRow.start, 146.11), `start normalised 135x5 -> 146.1 at 3 reps (${benchRow.start.toFixed(2)})`);
-ok(near(benchRow.delta, 28.89), `delta uses normalised weights (${benchRow.delta.toFixed(2)})`);
-ok(Math.round(benchRow.pct) === 20, `pct computed (${benchRow.pct.toFixed(1)}%)`);
-// Raw weight would have claimed +40 / +30%. Normalising shows the smaller,
-// honest gain: some of that 40 lbs was just doing fewer reps.
-ok(benchRow.delta < 40, 'normalising deflates the apparent gain from dropping reps');
-
-// The bench also has sets logged in SESSIONS. If sessions leaked in, the count
-// would exceed the two benchmark days.
-ok(benchRow.count === 2, 'session data excluded from the comparison (2 benchmark days only)');
-
-ok(weightRows[0].id === squat.id, 'rows sorted by biggest mover (squat before bench)');
-ok(cmp.incomplete.weight === 0, 'no incomplete weight exercises');
-
-// An exercise with a single benchmark must not appear.
-const solo = byName('Deadlift');
-await store.saveBenchmark({ date: '2026-08-01', exerciseId: solo.id, exerciseName: solo.name, values: { weight: 405, reps: 1 } });
-const cmp2 = await benchmarkComparison(2);
-ok(!cmp2.byField.weight.find((r) => r.id === solo.id), 'single-benchmark exercise excluded');
-ok(cmp2.incomplete.weight === 1, 'incomplete count reports the excluded exercise');
-
-// Same-day duplicates collapse to one point. Adding 165x4 alongside 175x3 on
-// 2026-08-12 makes 4 the most recent of the tied rep counts, so the target
-// moves to 4 — and the day then resolves to the set actually done at 4 reps
-// rather than an estimate off the 3-rep set.
-await store.saveBenchmark({ date: '2026-08-12', exerciseId: bench.id, exerciseName: bench.name, values: { weight: 165, reps: 4 } });
-const cmp3 = await benchmarkComparison(2);
-const benchRow3 = cmp3.byField.weight.find((r) => r.id === bench.id);
-ok(benchRow3.count === 2, 'same-day benchmarks collapse to one point');
-ok(benchRow3.atReps === 4, 'target moves to the newly most-recent tied rep count');
-ok(benchRow3.now === 165 && benchRow3.nowActual === true,
-   'the measured 4-rep set wins the day over an estimate from the 3-rep set');
+  /* 🚨 SAME-DAY COLLAPSE, AND THE TIE-BREAK INSIDE IT. Adding 165x4 alongside
+     175x3 on the same day must still yield ONE point for that day, and at a
+     target of 4 the set actually performed at 4 reps must beat the estimate
+     converted from the 3-rep set — a measurement outranks an inference even
+     when the inference is the bigger number (Rule 5). This is the rule the
+     deleted function had a duplicate of. */
+  await store.saveBenchmark({ date: '2026-08-12', exerciseId: bench.id, exerciseName: bench.name, values: { weight: 165, reps: 4 } });
+  const at4 = await normalizedSeries(bench.id, 4, 'benchmark');
+  ok(at4.length === 2, `same-day benchmarks collapse to one point (${at4.length} days)`);
+  ok(at4[1].value === 165 && at4[1].actual === true,
+     'the measured 4-rep set wins the day over an estimate from the 3-rep set — and it is the '
+     + 'SMALLER number, so this cannot pass by accident');
+}
 
 /* ---------- calendar ---------- */
 const activity = await activityByDate();
@@ -2861,6 +2862,98 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      silent.length
        ? `🚨 these contribute nothing AND explain nothing: ${silent.join(', ')}`
        : 'every rankable library exercise either converts to its key lift or says why it cannot');
+
+  /* ================= …UNLESS THE PERSON SAYS WHAT IT IS (2026-09-06) =========
+   *
+   * The 2026-08-31 refusal above is not reversed and every assertion in it still
+   * holds. What changed is that the user can now NAME the library exercise their
+   * own one is closest to, and that named match is evidence where a dropdown
+   * guess never was: the app stopped inferring, and started being told.
+   *
+   * 🚨 THE WHOLE SAFETY ARGUMENT IS ARITHMETIC RATHER THAN A THRESHOLD, and
+   * these assertions are what pin it. */
+  const { STAND_IN_QUALITY, FALLBACK_MIN_QUALITY } = me3;
+  const machinePress = byName('Machine Chest Press');
+
+  const matched = makeCustomExercise({
+    name: 'Chest Machine', muscle: 'Triceps', equipment: 'Machine',
+    fields: ['weight', 'reps'], standInId: machinePress.id,
+  });
+  const matchedContribs = me3.contributionsFor(matched);
+  const targetContribs = me3.contributionsFor(machinePress);
+
+  ok(matchedContribs.length > 0,
+     'a custom exercise with an explicit match DOES convert — the person supplied the one thing the '
+     + 'equipment dropdown could never supply');
+  ok(matchedContribs[0].muscle === targetContribs[0].muscle && matchedContribs[0].muscle === 'Chest',
+     '🚨 AND THE MATCH DECIDES THE MUSCLE, NOT THE DROPDOWN. She filed the dip machine under Triceps; '
+     + 'what she matched it to is a chest press, so the evidence lands on Chest. The dropdown was the '
+     + 'input that produced the original bug and it no longer decides anything');
+  ok(near(matchedContribs[0].quality, targetContribs[0].quality * STAND_IN_QUALITY, 1e-9),
+     `the match is worth ${STAND_IN_QUALITY} of what the real exercise is worth `
+     + `(${matchedContribs[0].quality.toFixed(3)} vs ${targetContribs[0].quality.toFixed(3)})`);
+  ok(matchedContribs[0].quality < targetContribs[0].quality,
+     '⚠️ STRICTLY less, at every ratio — so a stand-in can never out-rank the exercise it points at, '
+     + 'and no future edit to the ratio table can make it');
+
+  ok(1 * STAND_IN_QUALITY < FALLBACK_MIN_QUALITY,
+     `🚨 THE STRUCTURAL ONE: the best possible match — a key lift at quality 1.00 — lands at `
+     + `${STAND_IN_QUALITY}, below FALLBACK_MIN_QUALITY (${FALLBACK_MIN_QUALITY}). So even if the `
+     + 'explicit fallback filter were deleted tomorrow, a user\'s match could never chain onward '
+     + 'into a cross-muscle inference. The guard is arithmetic, not a branch somebody can reorder');
+
+  ok(matchedContribs.every((c) => c.kind === 'direct'),
+     'and only DIRECT contributions carry through a match — a match may not become the first hop of '
+     + 'a two-muscle chain');
+
+  /* ---- one hop, and it is structural ---- */
+  const chained = makeCustomExercise({
+    name: 'Chained', muscle: 'Chest', equipment: 'Machine',
+    fields: ['weight', 'reps'], standInId: matched.id,
+  });
+  ok(me3.contributionsFor(chained).length === 0,
+     '🚨 a custom exercise matched to ANOTHER CUSTOM EXERCISE converts to nothing — one hop, and to '
+     + 'a real library entry only. Three estimates multiplied is the machine for confidently wrong '
+     + 'numbers, and this is the door it would come through');
+  ok(chained.standInId === null,
+     'in fact the id never even stores, because makeCustomExercise resolves it against the library '
+     + 'first — a dead reference is worse than an absent one');
+
+  /* ---- the field split, which is the thing that would rot quietly ---- */
+  ok(matchedContribs[0].standInName === machinePress.name && !matchedContribs[0].via,
+     '⚠️ the match travels in its OWN field. `via` means the muscle a FALLBACK came through, and '
+     + 'putting both in it would be a value whose meaning depends on reading `kind` first — correct '
+     + 'until somebody reads it without `kind`, which exercise-estimate.js already does');
+
+  /* ---- and the 2026-08-31 incident, replayed through the new path ---- */
+  const asMatched = me3.contributionsFor(matched)[0];
+  const asGuessed = me3.contributionsFor(machinePress)[0];
+  ok(asMatched.quality < 0.2,
+     `🚨 HER SET, REPLAYED: 60×10 on a made-up machine now converts at quality `
+     + `${asMatched.quality.toFixed(2)} — against the ${asGuessed.quality.toFixed(2)} the real `
+     + 'machine carries, and against the ratio-1.00 guess that rated her Advanced. The number is '
+     + 'still hers; what changed is how much the app is willing to believe it');
+
+  /* ---- a match to something the library itself cannot convert ---- */
+  const toDip = makeCustomExercise({
+    name: 'My Dip', muscle: 'Triceps', equipment: 'Machine',
+    fields: ['weight', 'reps'], standInId: byName('Machine Dip').id,
+  });
+  ok(me3.contributionsFor(toDip).length === 0
+     // ⚠️ Both apostrophes. The app's copy uses a typographic one and an ASCII
+     // regex silently missed it — the assertion failed while the behaviour was
+     // right, which is the flattering direction for a test to be wrong in.
+     && /can.t be converted|cannot be converted/.test(me3.rankBlockedReason(toDip) || ''),
+     '⚠️ matching to an exercise the library ALREADY refuses converts to nothing and says so — '
+     + 'Machine Dip has no ratio because nobody has published the leverage, and a user pointing at '
+     + 'it does not create one');
+
+  /* ---- and nothing rates without an explicit choice ---- */
+  ok(me3.contributionsFor(custom).length === 0
+     && /your own exercise/.test(me3.rankBlockedReason(custom) || ''),
+     '🛑 THE 2026-08-31 GUARANTEE IS INTACT: a custom exercise with no match chosen still converts '
+     + 'to nothing, with the same wording. This is the assertion that stops the feature above from '
+     + 'quietly becoming the bug it was built around');
 }
 
 /* ================= the library expansion (2026-08-31) =================

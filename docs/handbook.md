@@ -312,7 +312,7 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 | **Set types** | **Supersets, tri-sets, giant sets, drop sets and myo-reps** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise opens a sheet naming all three set types *and explaining what each one is* (D8 — "myo-reps" is jargon), with a mini-set count under whichever is picked; and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. A nested set's button IS the instruction — "Strip the weight — add a drop" or "Rest 10–15 seconds — add a mini-set" — not the name of a technique. **Drop sets and myo-reps are the same nesting shape**, differing only in what changes between mini-sets, and are stored under `minis` |
 | Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
 | Exercise library | **318 exercises** (275 until 2026-08-31), searchable, filterable by muscle group (16 groups incl. Full Body, Cardio and Activity; **13 are real muscles**). ⚠️ **A new row needs three things or it is inert**: the tuple here, a ratio rule in `muscle-evidence.js`, and a movement family in `exercise-families.js`. Tests assert all three |
-| Custom exercises | User-created; choose tracked fields and how weight is counted. 🚨 **THEY DO NOT SET A STRENGTH LEVEL since 2026-08-31** — the conversion used to be guessed from the equipment dropdown, and one 60×10 set on a made-up "Dip Machine" rated a beginner's triceps Advanced. They are still logged, charted and counted in weekly volume, the create form says so before you make one, and the muscle panel says so if you go looking. **Tim's plan is to fold the good ones into the library periodically** |
+| Custom exercises | User-created; choose tracked fields and how weight is counted. 🚨 **THEY DO NOT SET A STRENGTH LEVEL since 2026-08-31** — the conversion used to be guessed from the equipment dropdown, and one 60×10 set on a made-up "Dip Machine" rated a beginner's triceps Advanced. They are still logged, charted and counted in weekly volume, the create form says so before you make one, and the muscle panel says so if you go looking. 🔄 **UNLESS THE PERSON NAMES WHAT IT IS CLOSEST TO — 2026-09-06.** An optional `standInId` on the create form points at a real library exercise and the sets convert through it. ⚠️ **That is not a reversal of 2026-08-31**: the app stopped INFERRING and started being TOLD, which is a different claim. Four things hold the line — the match decides the **muscle** (her dip machine was filed under Triceps and a chest press lands on Chest), the quality is knocked to **`STAND_IN_QUALITY` 0.40** of the target's so a stand-in can never out-rank what it points at, **1.00 × 0.40 = 0.40 sits below `FALLBACK_MIN_QUALITY` (0.45)** so a match can never chain onward into a cross-muscle inference even if that filter were deleted, and **bodyweight/assisted targets are refused** because their ratios convert a resistance derived from a weigh-in while a custom exercise's number is read as plain load. Labelled on the panel — *"rated as X because you matched them — your own match, not a published conversion."* **Tim's plan is still to fold the good ones into the library periodically** |
 | Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → calendar. ⚠️ **RECORDS FOR OTHER PEOPLE since 2026-08-29 in two different ways, and the difference is on screen**: pick a **friend** and their half is offered to **their own account** at Finish (their suggestion read from the training they share with you); pick or type a **saved person** and their sets stay here, under their name, never mixed into your own. ⚠️ **Anybody can be taken back OUT since 2026-08-30** (Tim: *"in case it was just a test, or an accident"*) — a ✕ that exists **only on the person you are already recording for**, so a destructive control is never next to a chip you are aiming at to switch. Quiet with nothing recorded, a confirm naming the count if there is; a friend's confirm says their workout will no longer reach their account; the saved identity is never deleted. ⚠️ **Swap opens on FIVE ALTERNATIVES since 2026-08-30** (`js/exercise-families.js`), with the full 318-exercise picker one tap underneath. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
 | Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
 | Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft |
@@ -529,15 +529,25 @@ Press-and-hold repeats.
   ✅ **Re-run again 2026-08-27 over 60 combinations × all four palettes — 240 in total, 23,496
   text nodes, zero below 4.5:1, zero horizontal overflow.** The activity log joined the route list
   then too; it had shipped unaudited.
-  🚨 **AND "ZERO BELOW 4.5:1" IS NO LONGER TRUE — 2026-09-06.** 128 gold routes, **11,912 text nodes,
-  zero overflow, and EIGHT contrast failures**: `.load-badge.per-side` — the 9px "PER SIDE" chip in
-  `js/ui.js:897` — measures **3.96:1 in the LIGHT theme**, on the session runner's swap sheet and
-  exercises sheet. 🛑 **Not fixed, because it is a colour and colours are Tim's** (2026-09-04). It is
-  a real AA failure and it is on this list until he says otherwise.
-  ⚠️ **It is NOT a regression from that day's work, and that was MEASURED rather than assumed** — the
-  same audit was run against a scratch copy built from `git archive HEAD` and returned **the identical
-  eight**. When an audit finds something after a change, run the control; "it was probably already
-  there" is exactly the sentence this file exists to stop.
+  ✅ **Re-run 2026-09-06 — 128 gold routes, 11,912 text nodes, zero below 4.5:1, zero overflow.**
+  🚨 **That run started as EIGHT failures and they were real.** `.load-badge.per-side` — the 9px
+  "PER SIDE" chip in `js/ui.js:897` — measured **3.96:1 in the LIGHT theme** on the session runner's
+  swap and exercises sheets. Tim was told, asked for it fixed, and it is: a scoped
+  `#82570B` at **5.02:1**.
+  ⚠️ **IT WAS FIXED FOR THE DEFAULT PALETTE ONLY, AND THAT IS THE INTERESTING PART.** Gold is the
+  palette with no `data-palette` attribute; teal, indigo and ember already cleared AA on that pair
+  (4.56–5.02). The obvious selector — the shape `.row-start` uses — would have painted gold's hex
+  over all four, **breaking three that passed in order to fix one.** The rule is therefore
+  `:root[data-theme="light"]:not([data-palette]) .load-badge.per-side`.
+  🚨 **AND `tests/a11y.test.mjs` COULD NOT HAVE CAUGHT IT, FOR A STRUCTURAL REASON WORTH KEEPING.**
+  That suite walks tokens out of `:root` blocks, and `--accent` on `--accent-dim` is a pair no
+  `:root` rule declares — it exists only because one CLASS puts one on the other. It now asserts this
+  pair directly, in every palette, and **mutation-checking it reproduced the browser's own 3.96:1**,
+  so the audit does not have to find it a second time.
+  ⚠️ **The eight were NOT a regression from that day's work, and that was MEASURED rather than
+  assumed** — the same audit was run against a scratch copy built from `git archive HEAD` and
+  returned the identical eight. When an audit finds something after a change, run the control;
+  *"it was probably already there"* is exactly the sentence this file exists to stop.
   🚨 **AND A TRAP THAT COST THE FIRST RUN OF THAT AUDIT: A STALE `python -m http.server` WAS ALREADY
   BOUND TO PORT 8791.** The tool's own "nothing is serving" guard passed — something *was* serving —
   and every one of the 128 routes measured an *"Error code: 404"* page: **zero contrast failures, zero
@@ -1406,9 +1416,32 @@ re-examining it produces something better than either the old rule or a plain ov
 - ~~**Body weight is charted but not yet wired into rep normalisation.**~~ **CLOSED 2026-08-19.**
   Pull-ups, chin-ups, dips and push-ups now rank. What remains open is narrower and is stated on
   screen rather than hidden:
-  - **Measured, but the app lacks the parameter.** An inverted row is 37–79 % of body weight
-    depending on bar height; an incline push-up 41 % vs 55 % depending on hand height. The app
-    records neither, so both stay refused. Adding the parameter is the fix, not adding a number.
+  - ~~**Measured, but the app lacks the parameter.**~~ 🚨 **THIS BULLET WAS WRONG IN ITS DIAGNOSIS
+    AND IT WAS ACTED ON — CORRECTED 2026-09-06.** It said an inverted row is 37–79 % of body weight
+    *depending on bar height*, an incline push-up 41 % vs 55 % *depending on hand height*, and that
+    **"adding the parameter is the fix, not adding a number."** That sentence sent a session off to
+    build a hand-height field. **It is the fix for neither exercise.** `docs/research.md` §15 is the
+    full pull; the short version:
+    - **The incline push-up's two figures ARE named, pickable positions** — Ebben 2011, hands on a
+      12-inch box (0.55) and a 24-inch box (0.41). So the parameter was never the obstacle. 🚨 **The
+      obstacle is that they are the WRONG MEASURED QUANTITY**: the same table gives a regular push-up
+      as **0.64**, which is the exact figure `js/exercises.js` already rejects, because Ebben measures
+      peak *dynamic* ground-reaction force and this app's 0.75 is Suprak/Mier's *static down
+      position*. Shipping them would score one movement as 0.75 / 0.55 / 0.41, where part of the
+      first step is **the definition changing rather than the exercise**. `exercises.js` already makes
+      this argument for the decline push-up; it binds the incline too.
+    - **The inverted row's parameter is BODY ANGLE, not bar height** — Melrose & Dawes (2015), four
+      anchors at 30/45/60/75°. Nobody has ever measured one at a bar height. It is also unusable
+      (nobody can self-report their angle from underneath a bar, and 45° vs 60° is fifteen points),
+      and ⚠️ **the journal is SciTechnol/OMICS — predatory, unindexed, no PMID.** The 37–79 % in this
+      handbook traced back to it.
+    - **Bench dip: nothing published at any position**, now recorded as checked rather than assumed.
+    🛑 **Do not build a hand-height or bar-height field.** What would change the answer is one
+    afternoon of force-plate work in an indexed journal, and that is written down in §15.
+    ⚠️ **One real lead came out of it and is NOT built**: Suprak 2011 measured a **knee push-up on
+    the same plate, the same 28 subjects and the same static down position — 61.80 %.** Right
+    quantity, source already cited, no mixing and no new parameter. It needs a new library exercise
+    rather than a one-line entry, and nobody has asked for it. `docs/research.md` §15.7.
   - **No published figure exists at all** for diamond and wide-grip push-ups, bench dips, handstand
     and pike push-ups, ring dips or muscle-ups. ⚠️ **The "handstand push-up ≈ 90–100 % of body
     weight" figure circulating online is misattributed** to a paper that studied push-ups. Do not

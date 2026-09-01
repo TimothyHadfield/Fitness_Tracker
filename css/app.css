@@ -2419,6 +2419,31 @@ a.seg {
   flex: none;
 }
 .load-badge.per-side { background: var(--accent-dim); color: var(--accent); }
+/* ⚠️ THE DEFAULT PALETTE'S LIGHT GOLD CANNOT CARRY THIS CHIP — browser audit
+   2026-09-06, 128 routes, eight failures and all of them this one element. The
+   badge is 9px/800, so WCAG AA wants 4.5:1, and --accent on --accent-dim
+   measured 3.96:1 (#96660F on #F0E4CB). Nothing else painted here is wrong: the
+   fill is left exactly as it is, and only the letters darken, so the chip still
+   matches the --accent-dim pills (.set-type.is-on, the linked button) sitting
+   beside it on the same sheet.
+
+   Measured, --accent on --accent-dim, every palette in both themes:
+     gold   dark 6.27  light 3.96 ← the only failure, fixed to 5.02 below
+     teal   dark 6.22  light 4.64
+     indigo dark 6.35  light 5.02
+     ember  dark 6.01  light 4.56
+   The chip background is an opaque token, so the surface underneath it —
+   ground on the set list, surface on the swap and exercises sheets — cannot
+   change the ratio, and one value settles every place the badge is painted.
+
+   ⚠️ SCOPED WITH :not([data-palette]) BECAUSE THAT IS WHAT "DEFAULT" MEANS HERE
+   — boot removes the attribute for gold and sets it only for a chosen palette
+   (js/app.js, js/views-data.js). A plain :root[data-theme="light"] rule, which
+   is the shape .row-start uses, would paint this gold over teal, indigo and
+   ember light too, and those three already clear AA on their own accents.
+   #82570B is the same hue as #96660F, darkened: 5.02:1 on --accent-dim, with
+   margin rather than the 4.50 that .row-start's #8B5E0D sits exactly on. */
+:root[data-theme="light"]:not([data-palette]) .load-badge.per-side { color: #82570B; }
 
 /* ==========================================================================
    Finish screen

@@ -703,8 +703,98 @@ export const BUILT_IN_EXERCISES = RAW.map(([name, muscle, equipment, code]) => (
   isCustom: false,
 }));
 
-export function makeCustomExercise({ name, muscle, equipment, fields, loadType }) {
+/* ------------------------------------------------------------------ *
+ * A custom exercise's stand-in
+ * ------------------------------------------------------------------ */
+
+/* 🚨 THE PERSON SAYS WHAT THEIR EXERCISE IS CLOSEST TO — 2026-09-05.
+ *
+ * ⚠️ THIS DOES NOT REOPEN 2026-08-31, AND THE DISTINCTION IS THE WHOLE DESIGN.
+ * What died that day was GUESSING a conversion from the equipment dropdown:
+ * "Machine" 0.80, and one 60 x 10 set on a made-up "Dip Machine" rated a
+ * beginner's triceps Advanced. That stays dead, and it stays dead for a reason
+ * this file has always given one level up — *"guessing one from its equipment is
+ * exactly what this table refuses to do"*. No dropdown can tell an assisted dip
+ * machine, where the 60 lbs is HELP, from a plate-loaded one.
+ *
+ * What is added is the thing that was missing: **the person naming a real
+ * library exercise**. A dropdown the app reads as a mechanism is a guess; a
+ * user saying "this is my cable fly" is a statement about their own gym, and it
+ * is the only party in the room who has seen the machine. It is OPTIONAL —
+ * a custom exercise with no stand-in behaves exactly as it has since
+ * 2026-08-31, refused in the same words.
+ *
+ * ⚠️ AN ID, NOT A NAME, for the reason `exercise-images.js` is keyed by id:
+ * "Cable Kickback" exists TWICE in this library (Triceps and Glutes), so a name
+ * does not identify an exercise and a name lookup would silently take whichever
+ * came first.
+ *
+ * ⚠️ AND THE FRACTION QUESTION IS NOT REOPENED EITHER. `bodyWeightFractionFor()`
+ * above still refuses every custom exercise, and it must: somebody saying their
+ * exercise is "like a pull-up" has told the app what movement it resembles, not
+ * what share of their body weight it carries. See `canStandIn()` for the
+ * consequence — a bodyweight or assisted exercise may not BE a stand-in either.
+ */
+
+let libraryById = null;
+function libraryExercise(id) {
+  if (!libraryById) libraryById = new Map(BUILT_IN_EXERCISES.map((e) => [e.id, e]));
+  return (id && libraryById.get(id)) || null;
+}
+
+/**
+ * May this LIBRARY exercise stand in for somebody's custom one?
+ *
+ * 🚨 THE BODYWEIGHT AND ASSISTED REFUSAL IS A CORRECTNESS GUARD, NOT CAUTION.
+ * For those exercises the ratio in muscle-evidence.js converts a RESISTANCE the
+ * app computes from a weigh-in — body weight x fraction, plus or minus what was
+ * logged. A custom exercise has no fraction and never can, so `setLoad()` reads
+ * its logged number as plain load. Letting a custom exercise borrow an assisted
+ * pull-up's 1.28 would apply a body-weight ratio to a bare stack number, and on
+ * an assist machine that number runs the WRONG WAY — more on the stack is a
+ * lighter set. That is the 2026-08-31 incident's own machine, rebuilt out of
+ * two halves that are each individually fine.
+ *
+ * The rest is the ordinary shape check: something with no weight field has no
+ * load to convert, and a custom exercise can never be the target because only a
+ * LIBRARY row may be the far end of the hop (see standInFor).
+ */
+export function canStandIn(exercise) {
+  if (!exercise || !exercise.name || exercise.isCustom) return false;
+  if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return false;
+  if (BODY_WEIGHT_FRACTION[exercise.name]) return false;
+  if (exercise.equipment === 'Bodyweight' || /^Assisted /.test(exercise.name)) return false;
+  return true;
+}
+
+/**
+ * The library exercise this custom one stands in for, or null.
+ *
+ * 🚨 ONE HOP, GUARANTEED BY CONSTRUCTION AND NOT BY A DEPTH COUNTER. Only a
+ * custom exercise is asked (`isCustom` gate), and the answer can only come out
+ * of `BUILT_IN_EXERCISES`, whose rows are built by this file and never carry a
+ * `standInId` at all. So there is no second hop to take: a stand-in cannot
+ * point at another custom exercise, and a library exercise cannot point
+ * anywhere. `exercise-estimate.js`'s header calls a chain of estimates "the
+ * machine for confidently wrong numbers"; this is how the chain is kept to one
+ * link without anybody having to remember to check.
+ */
+export function standInFor(exercise) {
+  if (!exercise || !exercise.isCustom || !exercise.standInId) return null;
+  // Nothing to convert if the user's own exercise records no weight.
+  if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return null;
+  const target = libraryExercise(exercise.standInId);
+  return target && canStandIn(target) ? target : null;
+}
+
+export function makeCustomExercise({ name, muscle, equipment, fields, loadType, standInId }) {
   const f = fields && fields.length ? fields : ['weight', 'reps'];
+  // ⚠️ RESOLVED AND CHECKED HERE rather than trusted from the form. The field is
+  // the one thing on a custom exercise that can move a strength rating, so an id
+  // that does not name an eligible library row is stored as null rather than
+  // kept and quietly ignored later — a dead id in the data would read, to
+  // anybody looking at it, like a match the user made and the app lost.
+  const target = f.includes('weight') ? libraryExercise(standInId) : null;
   return {
     id: 'custom-' + slugify(name) + '-' + Date.now().toString(36),
     name: name.trim(),
@@ -712,6 +802,9 @@ export function makeCustomExercise({ name, muscle, equipment, fields, loadType }
     equipment: equipment || 'Other',
     fields: f,
     loadType: f.includes('weight') ? (loadType || 'total') : null,
+    // Absent on every custom exercise made before 2026-09-05, which is exactly
+    // the behaviour those exercises already had.
+    standInId: target && canStandIn(target) ? target.id : null,
     isCustom: true,
   };
 }

@@ -22,7 +22,7 @@
 // bugs in this project because it is fully testable headlessly.
 
 import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
-import { bodyWeightFractionFor } from './exercises.js';
+import { bodyWeightFractionFor, standInFor } from './exercises.js';
 import { robustAggregate } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
 
@@ -82,8 +82,25 @@ export function rankBlockedReason(exercise, opts) {
    * which is true of every exercise nobody has measured and is not the reason
    * THIS one is not counted. Say the reason that can be acted on. */
   if (exercise.isCustom) {
-    return 'it is your own exercise, so there is no published way to compare it '
-      + 'with a barbell — it still counts toward your volume';
+    /* 🚨 THE 2026-08-31 WORDING IS UNCHANGED AND STILL FIRES, and this is the
+     * path that stops the stand-in becoming that bug again. A custom exercise
+     * with nothing chosen is refused in exactly the same words it has been
+     * refused in since the incident — the sentence is the design, not a
+     * leftover. */
+    const target = standInFor(exercise);
+    if (!target) {
+      return 'it is your own exercise, so there is no published way to compare it '
+        + 'with a barbell — it still counts toward your volume';
+    }
+    /* ⚠️ ASKED OF THE REAL FUNCTION, for the same reason the weighted branch at
+     * the bottom of this function is. A match is not a guarantee of a rating:
+     * somebody can pick a library exercise that has no ratio of its own
+     * (Machine Dip, Wrist Roller), and a sentence saying their exercise cannot
+     * be converted would leave them wondering what the match did. Name the
+     * exercise they picked, because that is the thing they can change. */
+    if (contributionsFor(exercise, opts).length) return null;
+    return `you matched this with ${target.name}, and that one can’t be converted `
+      + 'into a barbell lift either — it still counts toward your volume';
   }
 
   const spec = bodyWeightFractionFor(exercise);
@@ -997,6 +1014,61 @@ const RATIOS = {
  * is logged, charted, counted in weekly volume and coloured on the volume map.
  * What it cannot do is set a strength LEVEL, and `rankBlockedReason()` says so
  * on the muscle panel rather than leaving the sets looking uncounted.
+ *
+ * ⚠️ AND SINCE 2026-09-05 THERE IS EXACTLY ONE WAY PAST THAT, WHICH IS THE USER
+ * SAYING SO — see STAND_IN_QUALITY below. Nothing above is reversed: the
+ * equipment dropdown is still not a measurement and still converts nothing.
+ * ⚠️ Note this comment used to run on unterminated into the banner below, so
+ * the whole "Fallback" heading was inside it. Closed here. */
+
+/* ------------------------------------------------------------------ *
+ * The stand-in a person chose
+ * ------------------------------------------------------------------ */
+
+/* 🚨 HOW MUCH A USER-CHOSEN MATCH IS WORTH, AND WHY IT IS 0.40.
+ *
+ * `standInFor()` in exercises.js resolves a custom exercise to the LIBRARY
+ * exercise its owner said it was closest to. That exercise's ratio is then used
+ * unchanged — the arithmetic of "a machine chest press converts at 0.91" does
+ * not become worse because of who invoked it — and its QUALITY is multiplied by
+ * this. Quality is the only place the discount belongs: `q` is defined at the
+ * top of this file as how much the conversion is worth believing, and a match
+ * somebody made by eye is a strictly weaker claim than the library's own entry
+ * for the exercise they pointed at.
+ *
+ * ⚠️ IT IS A MULTIPLIER BELOW 1, WHICH IS WHAT MAKES THE ORDERING UNBREAKABLE.
+ * `rateMuscle()` ranks on `evidenceWeight`, which is linear in quality, so a
+ * stand-in is worth strictly less than the very exercise it points at, at every
+ * rep count, on every date, forever. A stand-in can never out-rank its own
+ * target, and no future ratio edit can change that — it is arithmetic, not a
+ * threshold somebody has to maintain.
+ *
+ * ⚠️ 0.40 IS PICKED SO THE HIGHEST POSSIBLE STAND-IN LANDS UNDER
+ * FALLBACK_MIN_QUALITY (0.45). The best case is a key lift: ratio 1.00 at
+ * quality 1.00, the strongest evidence this app holds — and 1.00 x 0.40 = 0.40,
+ * below the floor a contribution must clear to stand in for a SECOND muscle.
+ * So even if the explicit refusal in contributionsFor() below were deleted, a
+ * user's match could never chain outward into a cross-muscle inference. Two
+ * independent guards on the same wrong number, and the second one is a
+ * consequence of the constant rather than a line of code to remember.
+ *
+ * ⚠️ AND IT SITS BESIDE THE TABLE'S OWN "CARRIED, NOT MEASURED" DISCOUNTS, which
+ * is the honest comparison. When a maintainer of this file reasons an entry
+ * across a near-relative — Cable Press Around 0.25 off the cable fly's 0.30,
+ * Kroc Row 0.35 off the dumbbell row's 0.60, Machine Pullover 0.25 off 0.30 —
+ * the anchor keeps 40-80 % of its credibility. A user's match is the same KIND
+ * of claim made with less information, so it takes the bottom of that band.
+ *
+ * 🛑 WHAT THIS DOES NOT FIX, recorded rather than glossed. History H's finding
+ * was that *"the low quality only protects a muscle that has other evidence"* —
+ * Tim's friend had no other triceps lift, so a 0.20 guess led outright. That is
+ * still true of 0.40, and no number can make it false. What has changed is the
+ * thing being weighted: not a dropdown the app interpreted, but a claim a person
+ * made about their own equipment. It can still be wrong; it can no longer be
+ * wrong without somebody having said it. The remaining defence is Rule 5 — the
+ * rating says whose match it came through, in `raiseConfidenceHint()`.
+ */
+export const STAND_IN_QUALITY = 0.40;
 
 /* ------------------------------------------------------------------ *
  * Fallback: what a big lift says about the muscles it also works
@@ -1067,6 +1139,61 @@ function matchRule(muscle, name) {
 // Returns [] for anything that cannot be converted to a load at all.
 export function contributionsFor(exercise, opts) {
   if (!exercise || !exercise.name) return [];
+
+  /* ── The stand-in a person chose (2026-09-05) ─────────────────────────────
+   *
+   * 🚨 FIRST, AND NOTHING ELSE IN THIS FUNCTION MAY SEE A CUSTOM EXERCISE. Every
+   * branch below reads `exercise.equipment`, `exercise.name` or the muscle the
+   * library filed it under, and on a custom exercise all three are things
+   * somebody typed. The refusal at the top of buildContributions() still stands
+   * behind this as the backstop; this branch is the ONLY route by which a custom
+   * exercise reaches a ratio, and it needs an explicit id to take it.
+   *
+   * ⚠️ NO STAND-IN, NO CONTRIBUTION — unchanged since 2026-08-31, and this is
+   * the line that keeps that true. `standInFor()` returns null for a custom
+   * exercise with no `standInId`, for one whose id no longer resolves, and for
+   * one pointed at something that may not be a stand-in. All three return [].
+   *
+   * ⚠️ RECURSION IS SAFE AND IS ONE LEVEL DEEP. The target came out of
+   * BUILT_IN_EXERCISES, so `isCustom` is false and this branch cannot be taken
+   * again — see the argument in standInFor(). `opts` is passed through for
+   * shape, and carries nothing that matters: a target with a body-weight
+   * fraction is refused by canStandIn() precisely so the two load models can
+   * never be spliced.
+   *
+   * 🚨 DIRECT ONLY. A stand-in rates the muscles the library exercise trains and
+   * nothing further. Chaining a user's match into the cross-muscle FALLBACK
+   * table would be their judgement, times a ratio, times a population
+   * conversion — three estimates deep, which is the thing this project names as
+   * the machine for confidently wrong numbers. STAND_IN_QUALITY is chosen so
+   * this filter is belt to that constant's braces.
+   *
+   * 🚨 IT CARRIES THE TARGET'S NAME IN ITS OWN FIELD, `standInName`, AND THAT
+   * IS DELIBERATE. The first version put it in `via`, which already exists and
+   * already means "the muscle a fallback came through" — two meanings in one
+   * field, disambiguated by reading a DIFFERENT field (`kind`) first.
+   *
+   * ⚠️ THAT IS SAFE TODAY AND IS THE SHAPE OF A BUG THIS PROJECT HAS ALREADY
+   * WRITTEN DOWN TWICE. `firestore.rules` keeps `invites` and `requests` apart
+   * for exactly this reason — *"an invite is a capability I issued, a request is
+   * something asked OF me, and two meanings in one collection is how a read rule
+   * ends up wrong"* — and D9/D28 were cited interchangeably for weeks because
+   * nothing depended on the number being right. A field whose meaning depends on
+   * a neighbouring field is correct until somebody reads it without the
+   * neighbour, and `exercise-estimate.js` already reads `via` bare inside its
+   * fallback branch.
+   *
+   * So: `via` still means one thing, `standInName` means the other, and neither
+   * needs a guard. strength-observations.js copies both onto every observation,
+   * which is what makes the panel's Rule 5 caveat reachable. */
+  if (exercise.isCustom) {
+    const target = standInFor(exercise);
+    if (!target) return [];
+    return contributionsFor(target, opts)
+      .filter((c) => c.kind === 'direct')
+      .map((c) => ({ ...c, quality: c.quality * STAND_IN_QUALITY, standInName: target.name }))
+      .filter((c) => c.quality > 0);
+  }
 
   // ── Bodyweight and assisted work ─────────────────────────────────────────
   //
@@ -1540,9 +1667,47 @@ export function tintFor(confidence) {
   return MIN_TINT + (1 - MIN_TINT) * c;
 }
 
+/* 🚨 RULE 5, FOR THE ONE RATING THAT CAME THROUGH SOMEBODY'S OWN MATCH.
+ *
+ * The muscle panel names the sets an estimate was converted from — "from Dip
+ * Machine 60 lbs×10" — and that line cannot tell a library exercise from a
+ * custom one standing in for a library exercise. Rule 5 is that an inference
+ * must never look like a measurement, and a match a person made by eye is the
+ * softest inference in the whole pipeline, so it must say so where the number
+ * is read.
+ *
+ * ⚠️ IT RIDES ON THE HINT RATHER THAN REPLACING IT. The old advice is still
+ * true and still worth acting on, so the caveat is prefixed rather than
+ * substituted: whichever line raiseConfidenceHint() would have returned still
+ * follows. That also means the caveat cannot be lost to a branch ordering,
+ * which is the failure the other caveats on that panel have each had once.
+ *
+ * ⚠️ IT READS `standInName`, WHICH ONLY A USER'S MATCH EVER SETS. It used to
+ * read `via` and check `kind` first, because `via` means the muscle on a
+ * fallback contribution — see contributionsFor() for why that was separated
+ * into its own field instead. There is nothing to disambiguate now, so this
+ * function cannot be broken by somebody reordering the branches above it.
+ */
+function standInNote(rating) {
+  const used = (rating && (rating.used || rating.contributors) || [])
+    .filter((u) => u && u.standInName);
+  if (!used.length) return null;
+  // `used` is credibility-sorted, so this is the match that mattered most.
+  const led = used[0];
+  return `${led.exerciseName} is rated as ${led.standInName} because you matched them — `
+    + 'your own match, not a published conversion.';
+}
+
 // The single most useful thing to log next, in plain words. This is what turns
 // the map from a scoreboard into a to-do list.
 export function raiseConfidenceHint(muscle, rating) {
+  const note = standInNote(rating);
+  const rest = confidenceHint(muscle, rating);
+  if (!note) return rest;
+  return rest ? `${note} ${rest}` : note;
+}
+
+function confidenceHint(muscle, rating) {
   const spec = MUSCLE_LIFTS[muscle];
   const keyLift = spec ? spec.lift : null;
   if (!rating) return keyLift ? `Record any ${muscle.toLowerCase()} exercise to rate this.` : null;

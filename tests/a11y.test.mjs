@@ -184,6 +184,38 @@ for (const t of TEXT) {
     ok(contrast(hex, raised) >= AA,
        `${p}: and it clears AA on that palette's own light --raised (${contrast(hex, raised)}:1 on ${raised})`);
   }
+
+  /* ---------- the PER SIDE chip's scoped light fix (2026-09-06) ----------
+   *
+   * 🚨 THE BROWSER AUDIT FOUND THIS ONE AND THIS FILE COULD NOT HAVE. The 9px
+   * "PER SIDE" badge inherited `--accent` on `--accent-dim` and measured
+   * **3.96:1 in gold light** — the only failing pair of 128 routes, on the
+   * session runner's swap and exercises sheets. The token test missed it for a
+   * structural reason worth keeping: it walks tokens out of `:root` blocks, and
+   * `--accent` on `--accent-dim` is a pair no `:root` rule declares — it only
+   * exists because one CLASS puts one on the other.
+   *
+   * ⚠️ AND THE FIX IS SCOPED TO THE DEFAULT PALETTE, WHICH IS THE TRAP. Gold is
+   * the palette with no `data-palette` attribute, and the three named palettes
+   * already clear AA on this pair (4.56–5.02). A rule written without
+   * `:not([data-palette])` would paint gold's hex over teal, indigo and ember —
+   * breaking three that passed in order to fix one. That is why this asserts the
+   * SELECTOR as well as the number. */
+  ok(/:root\[data-theme="light"\]:not\(\[data-palette\]\) \.load-badge\.per-side/.test(CSS),
+     '⚠️ the PER SIDE chip has a light fix scoped to the DEFAULT palette only — an unscoped one '
+     + 'would repaint three palettes that already pass');
+  const perSide = (CSS.match(/:root\[data-theme="light"\]:not\(\[data-palette\]\) \.load-badge\.per-side\s*\{[^}]*color:\s*(#[0-9a-fA-F]{6})/) || [])[1];
+  ok(Boolean(perSide) && contrast(perSide, lightOnly['accent-dim'] || light['accent-dim']) >= AA,
+     `🚨 and it clears AA on the chip's own fill (${perSide} on --accent-dim = `
+     + `${contrast(perSide, lightOnly['accent-dim'] || light['accent-dim'])}:1) — this is the `
+     + 'assertion that stops the audit having to find it a second time');
+  for (const p of PALETTES) {
+    const pal = { ...dark, ...lightOnly, ...paletteBlock(p, true) };
+    ok(contrast(pal.accent, pal['accent-dim']) >= AA,
+       `${p}: and the un-overridden chip still reads on its own fill in light `
+       + `(${contrast(pal.accent, pal['accent-dim'])}:1) — the vacuity guard, because the fix above `
+       + 'only covers the default palette and the other three have to pass on their own');
+  }
 }
 
 /* ---------- the accent is not asked to carry text it cannot ---------- */

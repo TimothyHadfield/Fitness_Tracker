@@ -3794,123 +3794,23 @@ export async function currentBests(from = null) {
   return out.sort((a, b) => (a.latestDate < b.latestDate ? 1 : a.latestDate > b.latestDate ? -1 : a.name.localeCompare(b.name)));
 }
 
-// Start-vs-now comparison built from BENCHMARKS ONLY — workout sessions are
-// deliberately excluded, so this answers "how has my tested best moved?" rather
-// than mixing in whatever happened to get logged on a training day.
-//
-// Returns { fields: [...], byField: { weight: [{...}], ... } }.
-export async function benchmarkComparison(minPoints = 2, rows = null) {
-  // See the note on activityByDate() for what `rows` is.
-  const [benchmarks, exMap] = rows
-    ? [rows.benchmarks || [], await store.getExerciseMap()]
-    : await Promise.all([store.getBenchmarks(), store.getExerciseMap()]);
-  const FIELDS = ['weight', 'reps', 'time', 'distance'];
+/* ⚠️ `benchmarkComparison()` WAS DELETED HERE ON 2026-09-06, and this note is
+ * shorter than the function was.
+ *
+ * It built the Bars tab's start-vs-now rows from BENCHMARKS ONLY. Bars stopped
+ * reading it the same day — it now goes through `pickSource()` like the Graph
+ * does, so a lifter who logs workouts and never benchmarks gets bars at all —
+ * and nothing else in the app has ever called it.
+ *
+ * 🚨 THE REASON IT IS DELETED RATHER THAN LEFT SITTING THERE is not tidiness.
+ * Its middle forty lines were a SECOND COPY of `normalizedSeries()`'s per-day
+ * reduction, down to the tie-break where a set actually performed at the target
+ * rep count beats an estimate on the same day. Two copies of one rule in one
+ * file is the drift this project keeps writing down: the day somebody fixes the
+ * live one, the dead one still passes its own tests and the two disagree about
+ * what a day means. Checked before deleting — `normalizedSeries()` carries the
+ * identical logic and is the copy every screen actually reads. */
 
-  // exerciseId -> field -> [{date, value}]
-  const grouped = new Map();
-  for (const b of benchmarks) {
-    for (const f of FIELDS) {
-      const v = b.values ? b.values[f] : undefined;
-      if (typeof v !== 'number' || Number.isNaN(v)) continue;
-      if (!grouped.has(b.exerciseId)) grouped.set(b.exerciseId, {});
-      const rec = grouped.get(b.exerciseId);
-      if (!rec[f]) rec[f] = [];
-      rec[f].push({ date: b.date, value: v });
-    }
-  }
-
-  // Exercises whose weight is comparable only after rep normalisation. For
-  // these the raw weight is replaced by equivalent load at their own modal rep
-  // count, and the bare `reps` comparison is suppressed — "reps went 10 -> 4"
-  // is not a result, it is half of one.
-  const normalized = new Map(); // exerciseId -> { target, ordered: [...] }
-  for (const b of benchmarks) {
-    const ex = exMap.get(b.exerciseId);
-    if (!canNormalize(ex) || normalized.has(b.exerciseId)) continue;
-
-    const obs = benchmarks
-      .filter((x) => x.exerciseId === b.exerciseId)
-      .map((x) => ({ date: x.date, weight: Number((x.values || {}).weight), reps: Number((x.values || {}).reps) }))
-      .filter((o) => o.weight > 0 && o.reps >= 1 && !Number.isNaN(o.weight) && !Number.isNaN(o.reps));
-    if (!obs.length) continue;
-
-    const target = modalReps(obs);
-    const byDate = new Map();
-    for (const o of obs) {
-      const isActual = Math.round(o.reps) === target;
-      const value = isActual ? o.weight : normalizeWeight(o.weight, o.reps, target);
-      if (!(value > 0)) continue;
-      const cand = { date: o.date, value, actual: isActual, rank: e1rm(o.weight, o.reps) || 0 };
-      const prev = byDate.get(o.date);
-      if (!prev) { byDate.set(o.date, cand); continue; }
-      if (prev.actual !== cand.actual) { if (cand.actual) byDate.set(o.date, cand); continue; }
-      if (cand.actual ? cand.value > prev.value : cand.rank > prev.rank) byDate.set(o.date, cand);
-    }
-    normalized.set(b.exerciseId, {
-      target,
-      ordered: [...byDate.values()].sort((a, b2) => a.date.localeCompare(b2.date)),
-    });
-  }
-
-  const byField = {};
-  const incomplete = {};
-
-  for (const f of FIELDS) {
-    const rows = [];
-    let pending = 0;
-
-    for (const [exId, rec] of grouped) {
-      const norm = normalized.get(exId);
-      if (norm && f === 'reps') continue;          // meaningless once weight is normalised
-
-      const useNorm = Boolean(norm) && f === 'weight' && norm.ordered.length > 0;
-      const points = useNorm ? norm.ordered : rec[f];
-      if (!points) continue;
-
-      // One entry per day; if a day has several, keep the best.
-      // Normalised points arrive already reduced per day.
-      let ordered;
-      if (useNorm) ordered = points;
-      else {
-        const byDate = new Map();
-        for (const p of points) {
-          const prev = byDate.get(p.date);
-          if (!prev || p.value > prev.value) byDate.set(p.date, p);
-        }
-        ordered = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
-      }
-
-      if (ordered.length < minPoints) { pending++; continue; }
-
-      const first = ordered[0];
-      const last = ordered[ordered.length - 1];
-      const ex = exMap.get(exId);
-      rows.push({
-        id: exId,
-        name: ex ? ex.name : 'Unknown exercise',
-        loadType: ex ? ex.loadType : null,
-        atReps: useNorm ? norm.target : null,
-        startActual: useNorm ? first.actual : true,
-        nowActual: useNorm ? last.actual : true,
-        start: first.value,
-        startDate: first.date,
-        now: last.value,
-        nowDate: last.date,
-        delta: last.value - first.value,
-        pct: first.value === 0 ? null : ((last.value - first.value) / Math.abs(first.value)) * 100,
-        count: ordered.length,
-      });
-    }
-
-    if (rows.length) {
-      // Biggest movers first — the chart's job is to show change.
-      byField[f] = rows.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-      incomplete[f] = pending;
-    }
-  }
-
-  return { fields: Object.keys(byField), byField, incomplete };
-}
 
 /* ------------------------------------------------------------------ *
  * Weekly volume, from what was RECORDED

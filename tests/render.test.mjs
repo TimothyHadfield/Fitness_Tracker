@@ -3048,6 +3048,36 @@ ok(!data.querySelector('.rep-target'),
      'it states outright that it will not give an on-track verdict yet');
   ok(/bad Tuesday/i.test(live), 'and why — a day-to-day estimate swings several percent');
 
+  /* 🆕 AND SINCE 2026-09-06 IT SAYS WHAT HAS MOVED. The refusal above was always
+     right and the BLANK under it was not (docs/direction.md §3.1) — so the
+     screen now subtracts two numbers it already holds and states the noise floor
+     in the same breath, leaving the conclusion to the reader. Rule 6 exactly:
+     report the measurement, withhold the opinion. */
+  ok(/where it started|unchanged to the nearest pound/i.test(live),
+     'a goal set today reports no movement yet, and says so as a measurement rather than leaving a '
+     + 'gap somebody reads as broken');
+
+  // Now move it: a heavier benchmark after the goal was set.
+  await store.saveBenchmark({
+    date: todayISO(), exerciseId: b.id, exerciseName: b.name,
+    values: { weight: 245, reps: 3 },
+  });
+  const moved = text(await mount(GoalsView()));
+  ok(/has gone from/i.test(moved),
+     '🚨 and once the estimate really moves it prints the change — the screen used to explain why '
+     + 'it would not judge and then say nothing at all');
+  ok(/estimate/i.test(moved) && /not a tested max|neither is a tested max/i.test(moved),
+     '⚠️ with BOTH ends named as estimates (Rule 5) — a lifter who never tested a max must not read '
+     + 'this as two measurements');
+  ok(/inside that|is larger than that/i.test(moved),
+     'and against a stated yardstick, so a move smaller than the noise is not read as progress');
+
+  const movedNoVerdict = (await mount(GoalsView()));
+  movedNoVerdict.querySelectorAll('.goal-verdict').forEach((n) => n.remove());
+  ok(!/behind|on track|ahead of/i.test(text(movedNoVerdict)),
+     '🛑 AND STILL NOT ONE VERDICT WORD OUTSIDE THAT BLOCK. This is the assertion that would catch '
+     + 'the movement line quietly growing into the verdict the estimator has not earned yet');
+
   // "behind" is allowed exactly once on this screen: inside the paragraph
   // explaining why there is no verdict, and in the future tense. Strip that
   // paragraph out and the word must be gone — otherwise something somewhere has
@@ -6079,6 +6109,82 @@ ok(!data.querySelector('.rep-target'),
   ok(!/One point is not a line/i.test(gr) || !gr.includes('trend line'),
      '⚠️ and draws no line through one point — Rule 5, an inference must not look like a '
      + 'measurement, and one point has no trend to show');
+
+  await store.clearAll();
+}
+
+/* ================================================================== *
+ * THE THREE THAT SHIPPED WITHOUT A TEST NAMING THEM — 2026-09-06
+ *
+ * ⚠️ ALL THREE WERE VERIFIED BY HAND IN THROWAWAY SCRIPTS THAT WERE THEN
+ * DELETED, which is exactly the proof this project does not count. The
+ * one-source-per-row rule is the reason this block exists at all: it is D14,
+ * and a rule with no test is a rule that comes back.
+ * ================================================================== */
+{
+  const { GraphView } = await import(BASE + 'views-data.js');
+  const { GoalsView } = await import(BASE + 'views-goals.js');
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { store } = await import(BASE + 'store.js');
+  const text = (n) => n.textContent.replace(/\s+/g, ' ');
+  const tab = (root, name) => [...root.querySelectorAll('.seg')].find((b) => b.textContent === name);
+
+  await store.clearAll();
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-06-01');
+
+  const bench = byName('Barbell Bench Press');
+  const squat = byName('Back Squat');
+
+  /* ---- 🚨 ONE SOURCE PER ROW ON BARS (Rule 4 / D14) ----
+     The squat is BENCHMARKED on two days; the bench is only ever done in
+     WORKOUTS, on two days. So the two rows must come from different sources and
+     each must say which — and neither row may be built by taking a start from
+     one source and a now from the other, which is the mixing that makes
+     strength look like it swings wildly. */
+  await store.saveBenchmark({ date: '2026-06-10', exerciseId: squat.id, exerciseName: squat.name, values: { weight: 275, reps: 5 } });
+  await store.saveBenchmark({ date: '2026-08-10', exerciseId: squat.id, exerciseName: squat.name, values: { weight: 315, reps: 5 } });
+  await store.saveSession({ workoutId: 'w1', workoutName: 'Push', date: '2026-06-12',
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 185, reps: 5 }] }] });
+  await store.saveSession({ workoutId: 'w1', workoutName: 'Push', date: '2026-08-12',
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 205, reps: 5 }] }] });
+
+  let d = await mount(GraphView());
+  tab(d, 'Bars').click();
+  await settle(); await settle(); await settle();
+  const bars = text(d);
+
+  ok(!/Nothing to compare yet/i.test(bars),
+     'Bars fills from workout sets instead of the blank it used to show when nothing had been '
+     + 'benchmarked twice');
+  ok(/Barbell Bench Press/.test(bars) && /Back Squat/.test(bars),
+     'and both lifts get a row — one that was benchmarked, one that was only ever done in workouts');
+  ok(/Workouts/.test(bars) && /Benchmarks/.test(bars),
+     '🚨 EACH ROW SAYS WHICH SOURCE IT CAME FROM. Two rows from two sources on one screen is fine; '
+     + 'a row that does not say which is not, because the reader cannot tell whether the comparison '
+     + 'is like-for-like');
+  ok(/never mixed|One source per lift/i.test(bars),
+     '⚠️ and the screen states the rule itself (D14) — one source per lift, never a start from a '
+     + 'benchmark against a now from a training day');
+
+  /* ---- the runner says WHY a weight field is blank ----
+     Leg Press is a machine: its ratio quality sits below FALLBACK_MIN_QUALITY
+     precisely because a leg press depends on leverage the app knows nothing
+     about. With no leg history either, the runner has nothing honest to put in
+     the field — and used to leave it blank with no explanation. */
+  const legPress = byName('Leg Press');
+  const w = await store.saveWorkout({
+    name: 'Legs', systemId: null,
+    exercises: [{ exerciseId: legPress.id, sets: 3 }],
+  });
+  const run = await mount(SessionView(w.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const rt = text(run);
+  ok(/No opening weight/i.test(rt),
+     '🚨 the runner SAYS why the weight field is empty — "no suggestion" for a reason you cannot '
+     + 'see reads as broken, which is the argument historyForPerson() already makes one screen over');
+  ok(/nothing you have recorded|closely enough/i.test(rt),
+     'and gives the reason rather than just announcing the absence');
 
   await store.clearAll();
 }
