@@ -1315,8 +1315,23 @@ object anywhere in `js/social.js` and why the guard is an absence check.
 | | `users/{uid}/shared/friends` | `users/{uid}/shared/public` |
 |---|---|---|
 | Who may read | the uids in its own `viewers` list | anybody **signed in**, when `isPublic == true` |
-| Written when | there is at least one accepted friend | the account setting is `public` |
+| Written when | there is at least one accepted friend | the account setting is `public` — **the default** |
 | Holds | everything | everything **except body weight** |
+
+🚨 **PUBLIC IS THE DEFAULT — Tim, the same day, an hour after this shipped the other way round:**
+*"I would like the default to be public. Maybe later when we make users login for the first time we
+can have them choose directly, but for now it should definently be public… Change this now so
+everyone's information is public."*
+
+- ⚠️ **It reverses this file's own habit** — absent normally means the narrowest reading; here it
+  means the widest, so an account that has never opened the sheet publishes to anybody signed in.
+  Recorded as a decision in `normalizeVisibility()`'s header so nobody "fixes" it back.
+- 🚨 **A DEFAULT ONLY CHANGES WHAT IS COMPUTED, NEVER WHAT IS ALREADY PUBLISHED.** Nothing writes on
+  a boot where no training changed, so existing accounts would have read as Public on their own
+  screen while serving no public document. `healStalePublish()` compares the published documents
+  against the setting and republishes on a mismatch, both directions.
+- ✅ **A friend has always seen everything either way** — the `friends` document is gated on the
+  viewers list, never on the public flag.
 
 - 🚨 **BODY WEIGHT IS THE ONLY FIELD THE TWO DISAGREE ABOUT**, and it is Tim's call: asked which of
   the more personal fields should follow him into public, he picked the **profile photo**, the **time

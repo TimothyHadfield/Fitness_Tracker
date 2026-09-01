@@ -5398,6 +5398,33 @@ ok(!data.querySelector('.rep-target'),
     ok(saved === 'public', 'and choosing it goes through the store');
   }
 
+  /* 🚨 AN ACCOUNT THAT HAS NEVER CHOSEN READS AS PUBLIC — Tim, 2026-09-03,
+   * hours after this shipped the other way round: *"I would like the default to
+   * be public… for now it should definently be public."*
+   *
+   * ⚠️ ASSERTED THROUGH THE SCREEN, not just through normalizeVisibility(). The
+   * unit test proves the function; this proves the default actually reaches the
+   * row somebody reads, which is a different claim — the state object simply
+   * carries no `visibility` key here, exactly as it will for every account that
+   * predates the setting. */
+  {
+    social.state = async () => ({
+      available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
+      shareBodyWeight: false,
+      connections: [{ uid: 'u1', name: 'Autumn', since: '2026-08-01' }],
+    });
+    const s = await mount(SocialView());
+    for (let i = 0; i < 8; i++) await settle();
+    const row = [...s.querySelectorAll('button.row')]
+      .find((b) => /Who can see|Public|Private/.test(b.textContent));
+    ok(row && /Public/.test(row.textContent),
+       '🚨 an account with no stored choice reads as PUBLIC on the screen');
+    ok(/anyone signed in who finds your account/i.test(row.textContent.toLowerCase())
+       || /anyone signed in/i.test(row.textContent),
+       'and the row says what that means rather than only naming it');
+    social.state = state('private');
+  }
+
   /* ---- their body map is tappable now ---- */
   {
     social.state = state('private');

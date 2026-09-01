@@ -6602,3 +6602,32 @@ version of the app two edits old: a leftover web server from an earlier run was 
 port, and Python's server exits silently when the port is taken, so the tool happily measured whatever
 was already there. It now refuses to run in that situation. A tool that quietly measures the wrong
 thing is worse than one that fails.
+
+---
+
+## 2026-09-03, later — public by default
+
+**You:** *"I think right now the default privacy for people is private, but I would like the default
+to be public… for now it should definently be public. Additionally, even if it is private by default,
+users that are already friends with someone should definently be able to see that friends
+information. Change this now so everyone's information is public."*
+
+**Your second point was already true** — a friend reads a different document from the one the public
+setting controls, so private has never hidden anything from someone you accepted. Nothing to change
+there.
+
+**The default is public now.** The interesting half was not the default itself but making it reach
+accounts that already exist: nothing republishes on a boot where no training changed, so every
+account would have shown "Public" on its own screen while still publishing nothing a stranger could
+open. The app now checks, every time it starts, whether what is published matches what the setting
+says, and fixes it if not — in both directions, so turning it off works the same way.
+
+**One bug caught by a test on the way**: the Friends screen had its own idea of the default and kept
+saying "Private" after the change. Two places deciding one thing. The screen asks the one source now,
+and the test that found it checks the default by reading the screen rather than by calling the
+function — which is the only version of that test that would have failed.
+
+⚠️ **Worth being plain about what this means**: anybody signed in who searches your name can now open
+your account and read your training — workouts with weights, the times, the gym, your benchmarks,
+your muscle map — unless they turn it off. Your body weight is still the exception. Your idea of
+asking at first sign-in is the right fix for that, and it is not built.

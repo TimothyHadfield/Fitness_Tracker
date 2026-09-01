@@ -2831,16 +2831,44 @@ export const social = {
       if (!graph.connections.length && !wantPublic) return false;
 
       let newest = null;
+      const present = new Set();
       // ⚠️ The legacy tier documents are read too, and on purpose: an account
       // that has not published since the model changed has its newest timestamp
       // in one of them, and skipping them would make every such account look
       // "never published" and republish on every single boot.
       for (const audience of [...S.AUDIENCES, ...LEGACY_TIERS]) {
         const d = await impl.readShared(impl.currentUid(), audience).catch(() => null);
-        if (d && typeof d.publishedAt === 'string'
+        if (!d) continue;
+        present.add(audience);
+        if (typeof d.publishedAt === 'string'
             && (!newest || Date.parse(d.publishedAt) > Date.parse(newest))) {
           newest = d.publishedAt;
         }
+      }
+
+      /* 🚨 WHAT IS PUBLISHED MUST MATCH WHAT THE SETTING SAYS, and this check is
+       * what makes a change to the DEFAULT reach accounts that already exist.
+       *
+       * Tim, 2026-09-03, hours after the setting shipped: *"Change this now so
+       * everyone's information is public."* Flipping the default only changes
+       * what `normalizeVisibility()` computes — every account that had already
+       * published carried on with exactly the documents it had, because nothing
+       * writes on a boot where no training changed. An account would have read
+       * as public on its own Friends screen while publishing nothing a stranger
+       * could open, which is the worst of both: a setting that says one thing
+       * and a database that does another.
+       *
+       * ⚠️ IT IS A COMPARISON, NOT A ONE-OFF FLAG. A migration flag would fire
+       * once and be spent; this asks "is the public document there when it
+       * should be, and gone when it should not be?" on every boot, so it also
+       * repairs a publish that half-failed and a setting changed on another
+       * device. It costs nothing when the answer is yes — the documents were
+       * already read for the timestamp above. */
+      const hasPublic = present.has(S.PUBLIC);
+      const wantFriends = graph.connections.length > 0;
+      if (wantPublic !== hasPublic || (wantFriends && !present.has(S.FRIENDS))) {
+        await republish();
+        return true;
       }
       // 🚨 AND THE MIGRATION ITSELF IS A REASON TO REPUBLISH. An account whose
       // last publish predates 2026-09-03 has three tier documents and neither of

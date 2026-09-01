@@ -119,9 +119,31 @@ export const VISIBILITY_DETAIL = {
     + 'accepted friends either way.',
 };
 
-/** Unknown stored values degrade to PRIVATE — never to the wider setting. */
+/**
+ * 🚨 THE DEFAULT IS PUBLIC — Tim, 2026-09-03, hours after the setting shipped
+ * private-by-default: *"I think right now the default privacy for people is
+ * private, but I would like the default to be public… for now it should
+ * definently be public."*
+ *
+ * ⚠️ THIS REVERSES THE RULE THE REST OF THIS FILE IS BUILT ON, AND IT IS WORTH
+ * BEING PLAIN ABOUT THAT. Everywhere else, an unrecognised or missing value
+ * degrades to the NARROWEST reading — an unknown tier was never "at least
+ * light", a graph with a hand-edited row never widened access. Here, absent now
+ * means the WIDEST setting: an account that has never opened the sheet publishes
+ * its training to anybody signed in who searches its name.
+ *
+ * That is a product decision and it is Tim's to make; it is not an accident, and
+ * it must not be "tidied" back to private by somebody who reads the paragraph
+ * above and assumes it was an oversight. What it costs is written down beside it
+ * in progress.md. The plan he named for undoing it is the right one: ask on
+ * first sign-in, so the answer is a choice rather than a default.
+ *
+ * ⚠️ ONLY THE EXACT STRING 'private' MEANS PRIVATE. Everything else — absent,
+ * misspelled, a number, an object — is public, because it means "this account
+ * has not said otherwise". The settings row is written by this app alone.
+ */
 export function normalizeVisibility(value) {
-  return value === PUBLIC_ACCOUNT ? PUBLIC_ACCOUNT : PRIVATE_ACCOUNT;
+  return value === PRIVATE_ACCOUNT ? PRIVATE_ACCOUNT : PUBLIC_ACCOUNT;
 }
 
 export function isPublicAccount(value) {

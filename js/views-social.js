@@ -31,7 +31,7 @@ import {
 } from './ui.js';
 import {
   PRIVATE_ACCOUNT, PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL,
-  FRIENDS, parseInviteRoute, profileLink,
+  normalizeVisibility, FRIENDS, parseInviteRoute, profileLink,
 } from './social.js';
 import { encodeQR } from './qr.js';
 // ⚠️ A STATIC IMPORT, because a friend's body weight and every weight on their
@@ -138,8 +138,20 @@ export function visibilitySheet(current, onPick) {
   });
 }
 
-/** The row that states it, wherever it needs stating. */
-function visibilityRow(visibility, after) {
+/**
+ * The row that states it, wherever it needs stating.
+ *
+ * ⚠️ IT NORMALISES RATHER THAN CARRYING ITS OWN FALLBACK, and that is not
+ * defensive tidying — it was written as `LABEL[visibility] || LABEL[PRIVATE]`
+ * and, when Tim flipped the default to public an hour later, this row went on
+ * saying "Private" for an account with no stored choice while the publisher
+ * treated it as public. A screen and a database disagreeing about who can see
+ * somebody's training is the worst version of this bug there is. **One
+ * definition of the default, in social.js.** Caught by a test that asserts the
+ * default through the SCREEN rather than through the function.
+ */
+function visibilityRow(value, after) {
+  const visibility = normalizeVisibility(value);
   return el('button', {
     class: 'row as-button',
     onClick: () => visibilitySheet(visibility, async (next) => {
@@ -151,9 +163,8 @@ function visibilityRow(visibility, after) {
     }),
   },
     el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: VISIBILITY_LABEL[visibility] || VISIBILITY_LABEL[PRIVATE_ACCOUNT] }),
-      el('div', { class: 'row-sub wrap', text:
-        VISIBILITY_DETAIL[visibility] || VISIBILITY_DETAIL[PRIVATE_ACCOUNT] }),
+      el('div', { class: 'row-title', text: VISIBILITY_LABEL[visibility] }),
+      el('div', { class: 'row-sub wrap', text: VISIBILITY_DETAIL[visibility] }),
     ),
     chevron(),
   );

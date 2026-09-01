@@ -134,14 +134,24 @@ ok(AUDIENCES.join(',') === 'friends,public', 'two audiences: friends, and everyb
 ok(PROBE_ORDER.join(',') === 'friends,public',
    '⚠️ and a reader tries FRIENDS first — a friend of a public account must not be silently '
    + 'downgraded to the stranger\'s view, which is the one with no body weight in it');
-ok(normalizeVisibility(undefined) === PRIVATE_ACCOUNT
-   && normalizeVisibility('sneaky') === PRIVATE_ACCOUNT
-   && normalizeVisibility('Public') === PRIVATE_ACCOUNT,
-   '🚨 an unrecognised stored visibility degrades to PRIVATE — a typo, a half-migrated account or '
-   + 'a hand-edited settings row must never publish somebody to the world');
-ok(normalizeVisibility(PUBLIC_ACCOUNT) === PUBLIC_ACCOUNT && isPublicAccount(PUBLIC_ACCOUNT)
-   && !isPublicAccount(PRIVATE_ACCOUNT),
-   'and the real value survives, so the guard above is not simply refusing everything');
+/* 🚨 THE DEFAULT IS PUBLIC, AND THIS ASSERTION WAS THE OPPOSITE THIS MORNING.
+ *
+ * Tim, hours after the setting shipped private-by-default: *"I would like the
+ * default to be public… for now it should definently be public."*
+ *
+ * ⚠️ IT REVERSES THE RULE THE REST OF THIS FILE IS BUILT ON — everywhere else an
+ * unrecognised value degrades to the NARROWEST reading. Here, absent means the
+ * widest. That is a product decision, not an oversight, and this test says so in
+ * as many words because the next person to read `normalizeVisibility` will be
+ * tempted to "fix" it back. */
+ok(normalizeVisibility(undefined) === PUBLIC_ACCOUNT
+   && normalizeVisibility('sneaky') === PUBLIC_ACCOUNT
+   && normalizeVisibility('Private') === PUBLIC_ACCOUNT,
+   '🚨 an account that has never chosen is PUBLIC — Tim\'s call, 2026-09-03');
+ok(normalizeVisibility(PRIVATE_ACCOUNT) === PRIVATE_ACCOUNT && !isPublicAccount(PRIVATE_ACCOUNT)
+   && isPublicAccount(PUBLIC_ACCOUNT),
+   '⚠️ and ONLY the exact string "private" turns it off — so the choice, once made, is honoured '
+   + 'exactly, and the default above is not simply swallowing everything');
 ok(!isAudience('full') && !isAudience('friends ') && isAudience(FRIENDS) && isAudience(PUBLIC),
    'a document id that is not an audience is not one — the old tier names included');
 ok([PRIVATE_ACCOUNT, PUBLIC_ACCOUNT].every((v) =>
