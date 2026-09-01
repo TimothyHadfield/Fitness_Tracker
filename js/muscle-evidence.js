@@ -374,6 +374,26 @@ const RATIOS = {
     // standard of 6 reps estimates 167 against a 127 lb bench (1.32), and at
     // the 15-rep ceiling estimates 213 against roughly 154 (1.38).
     [/^Push-Up$/, 1.35, 0.35],
+    /* 🆕 THE KNEE PUSH-UP CARRIES THE PUSH-UP'S RATIO — 2026-09-06 — and the
+     * reason it may is that the two differ ONLY in the load, which is already
+     * handled a step earlier. `totalResistance()` reads the body-weight fraction
+     * (0.62 against 0.75, both measured in the same protocol), so what arrives
+     * here is a horizontal press against a known load in both cases, and the
+     * ratio's job from that point is identical.
+     *
+     * ⚠️ IT IS CARRIED, NOT CALIBRATED, AND THAT IS WHY q DROPS to 0.30. There
+     * are no published knee push-up standards to fit against — the push-up's
+     * 1.35 was checked against Strength Level's own beginner and 15-rep figures
+     * and this one cannot be. §0h's lesson is exactly this: **the worst entries
+     * in this table were the ones somebody had REASONED about**, so a carried
+     * ratio is priced below its anchor rather than beside it.
+     *
+     * ⚠️ THE ORDERING WAS CHECKED RATHER THAN ASSUMED, because getting it
+     * backwards would rate a beginner above somebody stronger. At 180 lb: a knee
+     * push-up estimates 104 / 117 / 133 lb of bench at 6 / 10 / 15 reps against a
+     * full push-up's 124 / 140 / 158 — strictly below at every rep count, which
+     * is the only relationship between these two that could be obviously wrong. */
+    [/^Knee Push-Up$/, 1.35, 0.30],
     [/Dumbbell Pullover/, 0.35, 0.35],
     // ⚠️ 0.55 UNTIL 2026-08-26, AND IT WAS THE WORST ERROR THE SWEEP FOUND —
     // inflating every pec-deck user's chest by ~60 %. SL machine chest fly

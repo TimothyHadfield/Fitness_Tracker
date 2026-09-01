@@ -17,6 +17,88 @@
 
 ---
 
+## 2026-09-06 (fourth pass) — THE KG BUG, A COMMENT THAT WAS LOAD-BEARING, AND ONE NEW EXERCISE
+
+Tim: *"fix the kg bug. I'm not really sure what needs fixing with the comments and knee push up, but
+whatever you think should be done, do it."*
+
+### A. 🚨 THE WHOLE WEIGHT CHART WAS IN POUNDS FOR A KG USER, NOT JUST THE READOUT
+
+Reported as the hover readout printing `205 lbs`. **It was bigger than that.** Two separate places,
+and the second was the one that mattered:
+
+- `fmtField()` in `js/ui.js` read `FIELD_META.weight.unit`, a hard-coded `'lbs'`, and printed the
+  stored pounds figure raw.
+- 🚨 **The chart's Y AXIS did the same thing with no unit at all** — every gridline label was the
+  pounds number. So a reader on kg saw their bench charted as 205 while the set list, the muscle
+  panel and the record screen all said 93.
+
+⚠️ **THE SHAPE OF THE CHART WAS RIGHT, WHICH IS WHY NOBODY WOULD NOTICE.** The line rises when you
+get stronger either way; only the words down the left-hand side were wrong. **A number in the wrong
+unit is not a smaller error than a wrong number — it is a wrong number with a plausible alibi.**
+
+**Fixed at the display edge in both places.** ⚠️ **Only the labels convert, never the geometry**, and
+that is exact rather than a shortcut: pounds→kilograms is a pure scale with no offset, so every
+gridline stays on the pixel it was already on and only its name changes. The decimal-place
+derivation moved to the *converted* gap — in kg the same span is 2.2× smaller, so a step that earned
+whole numbers in pounds can need a decimal, and the old derivation would have printed two adjacent
+gridlines with the same number on them.
+
+✅ **A workaround was DELETED rather than left standing**: `views-data.js` had been bypassing
+`fmtField` for weight, with a comment explaining that FIELD_META hard-codes lbs. Fixing the source
+makes the branch a fossil that says the bug is still there.
+
+⚠️ **Mutation-checked, and it is the kind of bug nothing else here could catch**: the number was
+right, the chart was right, the app was internally consistent with its own storage, and **this suite
+has always run in pounds.** Only a reader on kg would ever have seen it.
+
+### B. A COMMENT THAT WAS DOING REAL WORK, AND WAS DOING IT WRONG
+
+`js/exercises.js` gave the Incline Push-Up's exclusion as *"the app does not record the height, and
+41 vs 55 is not a rounding difference."* 🚨 **That states a problem the app can SOLVE** — two library
+exercises, one per box height, and the objection is gone. **A session read it and set out to build
+exactly that.**
+
+The binding reason was two bullets further down, under the decline: Ebben's figures are **peak
+dynamic ground-reaction forces**, a different basis from the static 75 % this file uses. Corrected,
+along with the Inverted Row entry, whose stated reason ("the app records no bar height") describes a
+field **that would not help if it existed** — the varied parameter is body angle — and whose source
+turns out to be a predatory unindexed journal.
+
+🚨 **THE RULE, WORTH MORE THAN THE TWO ENTRIES: A RULE GUARDED BY ITS WEAKEST REASON GETS OVERTURNED
+BY WHOEVER SOLVES THAT REASON.** State the binding one first. The same correction went into
+`tests/bodyweight.test.mjs`'s `MUST_STAY_UNRANKABLE`, which had been carrying the weak wording too —
+so the test that exists to stop somebody filling these in was itself pointing at the wrong obstacle.
+
+### C. 🆕 THE KNEE PUSH-UP — one exercise, and the only variant that could be admitted
+
+`{ fraction: 0.62, q: 0.70, basis: 'measured' }`, ratio 1.35 at quality 0.30.
+
+- **It is admitted for the reason the rest of the family is refused: no mixing.** Suprak 2011
+  measured it **on the same plate, with the same 28 men, in the same static down position** as the
+  push-up's 0.75 — so the two are directly comparable, and a knee push-up sits below a full one
+  because it is genuinely lighter rather than because two labs disagreed.
+- **`q` is the push-up's own 0.70, unchanged.** The uncertainty priced there is the judgement about
+  *which published quantity belongs in a strength estimate*, and it is the same judgement — not a
+  second guess stacked on the first.
+- ⚠️ **The RATIO is carried, not calibrated, so its quality drops to 0.30.** There are no published
+  knee push-up standards to fit against. §0h's lesson is exactly this: **the worst entries in that
+  table were the ones somebody had reasoned about.**
+- 🚨 **THE ORDERING WAS DRIVEN, NOT REASONED.** At 180 lb it estimates **104 / 117 / 133 lb** of bench
+  at 6 / 10 / 15 reps against a full push-up's **124 / 140 / 158** — strictly below at every rep
+  count the app will accept as evidence. **Mutation-checked** by inverting the ratio, which flips it
+  at all four. Getting this backwards would rate a beginner above somebody stronger, which is the
+  class of inversion §9 records as the worst defect this ranking model has ever had.
+- **Why it is worth an exercise at all**: it is the most likely FIRST chest movement anybody logs,
+  and the map was grey for exactly the people with least reason to trust the app yet.
+
+⚠️ **THE RATIO'S DIRECTION WAS NEARLY GOT BACKWARDS.** `estimate = raw / ratio`, so a *larger* ratio
+gives a *smaller* bench equivalent. Reading it the other way made a 6-rep knee push-up look like a
+189 lb bench and nearly killed the whole idea as obviously unsafe. **Checked against the arithmetic
+before anything was written.**
+
+---
+
 ## 2026-09-06 (third pass) — THE FOLLOW-UPS, AND A RESEARCH ANSWER THAT KILLED ITS OWN TASK
 
 Tim, asked what was next and given a ranked answer: *"alright do all of those that you just

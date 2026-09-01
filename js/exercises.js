@@ -41,6 +41,16 @@ const RAW = [
   ['Cable Press Around', 'Chest', 'Cable', 'wr'],
   ['Chest Dip', 'Chest', 'Bodyweight', 'wr'],
   ['Push-Up', 'Chest', 'Bodyweight', 'r'],
+  /* 🆕 2026-09-06, and it is the ONE variant the research could admit. Suprak
+   * 2011 measured it on the same force platform, with the same 28 men, in the
+   * same static down position as the push-up below — 61.80 % — so it is the same
+   * quantity rather than a second scale (docs/research.md §15.7). Every other
+   * variant in this family is out for exactly that reason.
+   *
+   * ⚠️ It is also the variant most likely to be somebody's FIRST chest exercise,
+   * which is the whole argument for it: the map was grey for precisely the people
+   * with least reason to trust the app yet. */
+  ['Knee Push-Up', 'Chest', 'Bodyweight', 'r'],
   ['Incline Push-Up', 'Chest', 'Bodyweight', 'r'],
   ['Decline Push-Up', 'Chest', 'Bodyweight', 'r'],
   ['Diamond Push-Up', 'Chest', 'Bodyweight', 'r'],
@@ -518,9 +528,35 @@ const FORCE_TOTAL = new Set([
  *     on the single most important term is not something a citation can rescue.
  *     Both sources are suspension-trainer work in any case, not a bar.
  *
+ *     ⚠️ TWO CORRECTIONS FROM docs/research.md §15 (2026-09-06). The varied
+ *     parameter is BODY ANGLE, not bar height — nobody has ever measured an
+ *     inverted row at a stated bar height, so "the app records no bar height"
+ *     describes a field that would not help if it existed; a lifter cannot
+ *     report their own angle from underneath the bar, and 45 vs 60 degrees is
+ *     fifteen points. And ⚠️ MELROSE & DAWES IS SCITECHNOL/OMICS — predatory,
+ *     unindexed, no PMID. Ronai & Scibek (2016) is peer-reviewed and only
+ *     REPORTS it. The 37-79 % should never have been quoted as settled.
+ *
  *   Incline Push-Up — Ebben et al. (2011) measured 55 % with the hands on a
- *     30.5 cm box and 41 % on a 61 cm box. Same objection: the app does not
- *     record the height, and 41 vs 55 is not a rounding difference.
+ *     30.5 cm box and 41 % on a 61 cm box. 🚨 THE BINDING REASON IS THE ONE THE
+ *     DECLINE ENTRY GIVES BELOW, NOT THE HEIGHT — corrected 2026-09-06 after
+ *     docs/research.md §15 went looking, and the wording here is why it had to.
+ *
+ *     This used to read "the app does not record the height, and 41 vs 55 is not
+ *     a rounding difference", which states a problem the app could SOLVE: two
+ *     library exercises, one per box, and the objection is gone. A session
+ *     duly set out to build exactly that.
+ *
+ *     ⚠️ IT WOULD STILL HAVE BEEN WRONG. Those are Ebben's PEAK DYNAMIC
+ *     ground-reaction forces — the same table gives a regular push-up as 64 %,
+ *     against the 75 % static figure this file uses below — so the three would
+ *     have read 0.75 / 0.55 / 0.41 with part of the first step being the
+ *     measurement basis changing rather than the exercise. Re-admitting the
+ *     incline means re-basing the whole family on Ebben, exactly as the decline
+ *     entry says, and it is one number short of being able to.
+ *
+ *     ⚠️ A RULE GUARDED BY ITS WEAKEST REASON GETS OVERTURNED BY WHOEVER SOLVES
+ *     THAT REASON. State the binding one first.
  *
  *   Decline Push-Up — Ebben's two heights are close (70 % and 74 %), so the
  *     height problem is mild. It is out for a different reason: those are peak
@@ -625,6 +661,24 @@ export const BODY_WEIGHT_FRACTION = {
   // hangs because which of these quantities belongs in a strength estimate is a
   // judgement, not a measurement.
   'Push-Up':             { fraction: 0.75, q: 0.70, basis: 'measured' },
+
+  /* 🆕 THE KNEE PUSH-UP, ADMITTED 2026-09-06 — the same study, the same plate,
+   * the same 28 men, the same static down position: 61.80 %. Suprak 2011 Table 2.
+   *
+   * 🚨 IT IS HERE FOR THE REASON EVERY OTHER VARIANT IS NOT: no mixing. The
+   * exclusion list above turns away the incline, the decline, diamond and
+   * wide-grip because their only figures are Ebben's PEAK DYNAMIC forces, which
+   * put a regular push-up at 64 % against this file's 75 % — a different
+   * measurement wearing the same units. This number needs no reconciling: it was
+   * taken beside the 75 % in the same protocol, so the two are directly
+   * comparable and a knee push-up sits below a full one because it IS lighter,
+   * not because two labs disagreed.
+   *
+   * `q` is the push-up's own 0.70, unchanged and for the identical reason: the
+   * uncertainty priced there is the judgement about WHICH published quantity
+   * belongs in a strength estimate, and that judgement is the same one. It is not
+   * a second guess stacked on the first. */
+  'Knee Push-Up':        { fraction: 0.62, q: 0.70, basis: 'measured' },
 
   // ---- the one that runs the other way ----
   //

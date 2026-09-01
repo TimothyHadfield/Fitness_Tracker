@@ -3036,3 +3036,38 @@ the comment above the rule instead of the rule. A mutation check that passes pro
 know it landed.
 
 Audit ends the day clean: 128 routes, zero contrast failures, zero overflow.
+
+---
+
+## 2026-09-06 (last) — the kg bug was bigger than reported
+
+Fixed the kg bug and, since you left the other two to my judgement, did both.
+
+**The kg one turned out to be worse than I described it to you.** I'd found the chart's hover readout
+printing "205 lbs" to someone on kg. What I hadn't checked was the axis — every gridline label was
+the raw pounds number too, so the entire weight chart was in the wrong unit, not just the tooltip.
+The shape of the line was right, which is exactly why it could sit there: it rises when you get
+stronger either way, and only the numbers down the left-hand side were lying. Only the labels
+convert now, never the plotted geometry — pounds to kilograms is a pure scale, so every gridline
+stays where it was and only its name changes.
+
+Worth saying that nothing in the test suite could have caught this, because the suite has always run
+in pounds. It's now pinned in both units.
+
+**The comment one is the same lesson as yesterday's handbook sentence, one layer down.** The code
+said the incline push-up was excluded because "the app does not record the height" — which is a
+problem the app can obviously solve, and that's precisely why a session went off to solve it. The
+real reason was two bullets below and unfixable. Corrected in the code and in the test that's
+supposed to stop people filling these in, which was carrying the same weak wording. A rule guarded by
+its weakest reason gets overturned by whoever solves that reason.
+
+**And the knee push-up is in.** It's the one variant the research could admit, because it was
+measured on the same force plate with the same men in the same position as the push-up figure the app
+already uses — so nothing has to be reconciled. It matters because it's the most likely first chest
+exercise anybody logs, and the map was grey for exactly the people with least reason to trust the app
+yet.
+
+One near-miss worth recording: I almost rejected it. The ratio divides rather than multiplies, and
+reading it the wrong way round made a beginner's knee push-up look like a 189 lb bench. Checked the
+arithmetic before writing anything, and the real number is 104. The ordering against a full push-up
+is now a test rather than an argument.

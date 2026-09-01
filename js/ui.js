@@ -690,12 +690,30 @@ export function parseTime(str) {
   return Math.max(0, Math.round(parseFloat(t) || 0));
 }
 
+/**
+ * One recorded number, formatted for a screen.
+ *
+ * 🚨 WEIGHT GOES THROUGH `units`, AND DID NOT UNTIL 2026-09-06. This read
+ * `${trimNum(value)} ${m.unit}` with `FIELD_META.weight.unit` hard-coded to
+ * 'lbs' — so it printed the STORED pounds figure, labelled lbs, to a reader who
+ * had chosen kg and saw kg on every other screen in the app. Not a wrong number:
+ * the wrong unit, stated confidently, on a graph somebody reads to decide
+ * whether they are getting stronger.
+ *
+ * ⚠️ EVERY CALLER MUST THEREFORE HAND IT POUNDS, which is the app's one storage
+ * rule (units.js) and was already true of both call sites. A caller that
+ * converts first would now convert twice.
+ *
+ * ⚠️ `distance` keeps its hard-coded unit deliberately — miles is the only unit
+ * the app stores or shows for it, and there is no setting to disagree with. The
+ * day that changes it wants the same treatment, not a second literal.
+ */
 export function fmtField(field, value) {
   if (value === null || value === undefined || Number.isNaN(value)) return '—';
   const m = FIELD_META[field];
   if (field === 'time') return fmtTime(value);
   if (field === 'distance') return `${Number(value).toFixed(2)} ${m.unit}`;
-  if (field === 'weight') return `${trimNum(value)} ${m.unit}`;
+  if (field === 'weight') return units.withUnit(value);
   return `${trimNum(value)}`;
 }
 

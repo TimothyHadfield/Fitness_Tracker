@@ -227,8 +227,14 @@ ok(bodyWeightFractionFor(ex('Pull-Up')).assist === false,
 // ⚠️ THE EXCLUSION LIST. These are the ones a later session will be tempted to
 // fill in, and each is out for a stated reason rather than for want of looking.
 const MUST_STAY_UNRANKABLE = [
-  ['Inverted Row', 'the fraction runs 37-79 % with the bar height, which is not recorded'],
-  ['Incline Push-Up', 'Ebben measured 55 % at 30 cm and 41 % at 61 cm — the height is not recorded'],
+  // ⚠️ REASONS CORRECTED 2026-09-06 (docs/research.md §15). Both of these were
+  // out for a stated reason that was the WEAKER one, and a rule guarded by its
+  // weakest reason gets overturned by whoever solves that reason — a session
+  // duly set out to build the hand-height field this list implied would work.
+  ['Inverted Row', 'the varied parameter is BODY ANGLE, not bar height, is not self-reportable, '
+    + 'and the only source is an unindexed predatory journal'],
+  ['Incline Push-Up', 'Ebben\'s box heights ARE named — the figures are peak dynamic GRF, a '
+    + 'different basis from the static 75 % this app uses for the push-up'],
   ['Decline Push-Up', 'measured on a different basis (peak dynamic GRF) from the standard push-up'],
   ['Diamond Push-Up', 'no percent-of-body-mass figure exists for hand placement'],
   ['Wide-Grip Push-Up', 'same — Gouvali & Boudolos reported EMG only for hand variants'],
@@ -729,6 +735,62 @@ ok(worst < 0.06,
    + 'a bounded correction, not a re-scoring');
 ok([...before.values()].every((r) => r.level.key !== 'elite' && r.level.key !== 'expert'),
    'on a year of ordinary training no muscle reads Elite or Expert');
+
+/* ================= the knee push-up (2026-09-06) =================
+ *
+ * The one variant `docs/research.md` §15 could admit, and it is admitted for the
+ * reason the rest of the family is refused: **no mixing of measurement bases.**
+ * Suprak 2011 measured it on the same plate, with the same 28 men, in the same
+ * static down position as the push-up — so the two numbers are directly
+ * comparable, and a knee push-up sits below a full one because it is genuinely
+ * lighter rather than because two labs disagreed. */
+{
+  const knee = ex('Knee Push-Up');
+  ok(Boolean(knee), 'the library has a Knee Push-Up — the most likely FIRST chest exercise anybody '
+     + 'logs, and the map was grey for exactly the people with least reason to trust it yet');
+
+  const spec = BODY_WEIGHT_FRACTION['Knee Push-Up'];
+  ok(spec && spec.fraction === 0.62 && spec.basis === 'measured',
+     'its fraction is 0.62, MEASURED — Suprak 2011 gives 61.80 %');
+  ok(spec.q === BODY_WEIGHT_FRACTION['Push-Up'].q,
+     '⚠️ and it carries the push-up\'s own q, unchanged: the uncertainty priced there is the '
+     + 'judgement about which published quantity belongs in a strength estimate, and it is the '
+     + 'same judgement — not a second guess stacked on the first');
+  ok(spec.fraction < BODY_WEIGHT_FRACTION['Push-Up'].fraction,
+     'and it is lighter than a full push-up, which is the only thing about these two a reader '
+     + 'already knows and would notice being wrong');
+
+  /* 🚨 THE ORDERING, DRIVEN RATHER THAN REASONED. Getting this backwards would
+     rate a beginner on knee push-ups ABOVE somebody doing full ones at the same
+     rep count — the exact class of inversion §9 records as the worst defect this
+     ranking model has ever had. It is checked at every rep count the app will
+     accept as evidence, not at one convenient pair. */
+  const opts = { bodyWeight: 180, bodyWeightQuality: 1 };
+  const kneeRatio = contributionsFor(ex('Knee Push-Up'), opts)[0].ratio;
+  const pushRatio = contributionsFor(ex('Push-Up'), opts)[0].ratio;
+  // The estimate the map would actually show, through the whole pipeline: total
+  // resistance -> e1RM at that rep count -> divided by the ratio. Comparing the
+  // resistances alone would prove less, because a later ratio edit could invert
+  // the result without moving either load.
+  const estimateAt = (name, reps, ratio) =>
+    e1rm(totalResistance(ex(name), 0, 180).load, reps) / ratio;
+  const inverted = [3, 6, 10, 15].filter((reps) =>
+    !(estimateAt('Knee Push-Up', reps, kneeRatio) < estimateAt('Push-Up', reps, pushRatio)));
+  ok(inverted.length === 0,
+     '🚨 a knee push-up estimates STRICTLY LESS than a full one at every rep count the app will use '
+     + `as evidence${inverted.length ? ` — inverted at ${inverted.join(', ')}` : ' (104/117/133 lb '
+     + 'against 124/140/158 at 6/10/15)'}. Getting this backwards would rate a beginner above `
+     + 'somebody stronger, which is the class of inversion §9 records as the worst defect this '
+     + 'ranking model has ever had');
+
+  const kneeContribs = contributionsFor(knee, opts);
+  ok(kneeContribs.length > 0 && kneeContribs[0].muscle === 'Chest',
+     'it rates Chest rather than sitting in the blocked list — which is the entire point of adding it');
+  ok(kneeContribs[0].quality < contributionsFor(ex('Push-Up'), opts)[0].quality,
+     '⚠️ but is worth LESS than a full push-up: the ratio is CARRIED from it rather than calibrated '
+     + 'against knee push-up standards, which do not exist. §0h\'s lesson — the worst entries in '
+     + 'that table were the ones somebody had reasoned about');
+}
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

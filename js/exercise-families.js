@@ -56,6 +56,11 @@ export const FAMILIES = [
     label: 'Flat pressing',
     members: ['Barbell Bench Press', 'Dumbbell Bench Press', 'Machine Chest Press',
       'Smith Machine Bench Press', 'Floor Press', 'Larsen Press', 'Push-Up',
+      // Same horizontal press, shorter lever. It belongs here for the swap
+      // sheet's sake as much as the map's: somebody who cannot finish a set of
+      // push-ups wants the easier one offered, and this family is where the
+      // runner looks.
+      'Knee Push-Up',
       'Wide-Grip Push-Up', 'Incline Push-Up', 'Dumbbell Squeeze Press'],
   },
   {

@@ -927,13 +927,14 @@ export async function GraphView(opts = {}) {
         if (!top || (e1rm(o.weight, o.reps) || 0) > (e1rm(top.weight, top.reps) || 0)) top = o;
       }
       setChildren(host, oneRecordingState({
-        // ⚠️ `units.withUnit` for a weight, `fmtField` for everything else, and
-        // that is not fussiness: FIELD_META hard-codes "lbs" while the estimated
-        // max beside it goes through the user's chosen unit. One sentence
-        // reading "120 lbs … ~81 kg max" is a sentence nobody can act on.
-        setText: graphChoice.field === 'weight'
-          ? units.withUnit(one.value)
-          : fmtField(graphChoice.field, one.value),
+        /* ⚠️ THIS USED TO BRANCH, AND THE REASON IT NO LONGER HAS TO IS THE
+         * POINT. `fmtField` hard-coded "lbs" while the estimated max beside it
+         * went through the user's unit, so this sentence could read
+         * "120 lbs … ~81 kg max" — and the workaround was to bypass fmtField for
+         * weight. `fmtField` was fixed at the source on 2026-09-06, so the
+         * branch is gone rather than left standing as a fossil that quietly
+         * says the bug is still there. */
+        setText: fmtField(graphChoice.field, one.value),
         date: one.date,
         source,
         est: top ? e1rm(top.weight, top.reps) : null,
@@ -1533,14 +1534,35 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
   // Deriving it from the step keeps both from happening — every label is as
   // coarse as it can be while still being different from its neighbour.
   const gap = (vMax - vMin) / steps;
-  const dp = gap >= 5 ? 0 : gap >= 0.5 ? 1 : 2;
+
+  /* 🚨 THE AXIS IS IN THE READER'S UNIT — 2026-09-06, and it was not before.
+   * Every value on this chart is POUNDS, because that is the one thing this app
+   * stores (units.js), and the labels printed it raw. A reader on kg saw their
+   * bench charted as 205 while the set list, the muscle panel and the record
+   * screen all said 93. **Nothing was wrong with the chart except the words
+   * down its left-hand side**, which is the worst kind: the shape is right, so
+   * there is nothing to notice.
+   *
+   * ⚠️ ONLY THE LABEL IS CONVERTED, NOT THE GEOMETRY, and that is exact rather
+   * than a shortcut: pounds to kilograms is a pure scale with no offset, so
+   * every gridline stays on the pixel it was already on and only its name
+   * changes. Converting the plotted values would move nothing and risk the
+   * scaling. */
+  const asShown = (v) => (field === 'weight' ? units.toDisplay(v) : v);
+
+  // ⚠️ Derived from the gap AS SHOWN. In kg the same span is 2.2x smaller, so a
+  // step that earned whole numbers in pounds can need a decimal — and the old
+  // derivation, run on pounds, would have printed two adjacent gridlines with
+  // the same number on them.
+  const shownGap = Math.abs(asShown(vMin + gap) - asShown(vMin));
+  const dp = shownGap >= 5 ? 0 : shownGap >= 0.5 ? 1 : 2;
 
   for (let i = 0; i <= steps; i++) {
     const v = vMin + gap * i;
     const yy = y(v);
     add('line', { x1: padL, x2: W - padR, y1: yy, y2: yy }, 'grid-line');
     const t = add('text', { x: padL - 7, y: yy + 3.5, 'text-anchor': 'end' }, 'axis-text');
-    t.textContent = field === 'time' ? fmtTime(v) : trimNum(Number(v.toFixed(dp)));
+    t.textContent = field === 'time' ? fmtTime(v) : trimNum(Number(asShown(v).toFixed(dp)));
   }
 
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(ts[i]).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');

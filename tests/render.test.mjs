@@ -1830,7 +1830,33 @@ ok(!data.querySelector('.rep-target'),
   typed.dispatchEvent(new window.Event('blur', { bubbles: false }));
   ok(Math.abs(got - 132.277) < 0.01, `typing 60 kg stores 132.28 lb (${got && got.toFixed(3)})`);
 
+  /* 🚨 AND THE OTHER DIRECTION — WHAT A CHART PRINTS (2026-09-06).
+   *
+   * The stepper above has respected the unit setting since kg shipped. The
+   * GRAPH did not: `fmtField()` read `FIELD_META.weight.unit`, a hard-coded
+   * 'lbs', so the hover readout printed the stored pounds figure and labelled it
+   * lbs, to somebody who saw kg everywhere else in the app.
+   *
+   * ⚠️ IT IS THE ONE KIND OF BUG NOTHING ELSE HERE COULD CATCH: the number was
+   * right, the chart's shape was right, and the app was internally consistent
+   * with its own storage. Only a reader on kg would ever see it, and this suite
+   * has always run in pounds. */
+  const { fmtField } = await import(BASE + 'ui.js');
+
+  u.setUnits('kg');
+  ok(/kg/.test(fmtField('weight', 220.46)) && !/lbs/.test(fmtField('weight', 220.46)),
+     `🚨 a charted weight is printed in the reader's own unit (${fmtField('weight', 220.46)}), not `
+     + 'in the pounds it happens to be stored as');
+  ok(/^100\b/.test(fmtField('weight', 220.46)),
+     '⚠️ and CONVERTED, not merely relabelled — 220.46 lb reads 100, which is the assertion that '
+     + 'would catch somebody fixing the unit string and leaving the number alone');
+
   u.setUnits('lbs');
+  ok(/^135 lbs$/.test(fmtField('weight', 135)),
+     'the vacuity guard: in pounds it is unchanged, so the two units really are being told apart');
+  ok(fmtField('distance', 3) === '3.00 mi',
+     '⚠️ distance keeps its literal on purpose — miles is the only unit the app stores or shows for '
+     + 'it, so there is no setting for it to disagree with');
 }
 
 /* ================= workout systems ================= */

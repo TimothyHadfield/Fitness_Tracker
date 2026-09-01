@@ -22,8 +22,33 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-06 — the blanks became numbers, custom exercises can borrow a ratio, and
-the browser audit is clean for the first time since 2026-08-27.
+**Last updated:** 2026-09-06 — the blanks became numbers, and the weight chart is finally in the
+reader's own unit.
+
+## What changed on 2026-09-06 (fourth pass), in one line each
+
+1. 🚨 **THE WEIGHT CHART WAS ENTIRELY IN POUNDS FOR A KG USER** — not just the hover readout that was
+   reported, but **every gridline label on the Y axis**. Their bench charted as 205 while every other
+   screen said 93. ⚠️ **The shape of the chart was right, which is why nobody would notice**; only
+   the words down the side were wrong. Fixed at the display edge in `fmtField()` and the axis —
+   **labels convert, geometry does not**, which is exact because lb→kg is a pure scale. A bypass in
+   `views-data.js` was deleted rather than left as a fossil. **Mutation-checked**, and it is a bug
+   nothing here could have caught: **this suite has always run in pounds.**
+2. 🚨 **A CODE COMMENT WAS LOAD-BEARING AND WAS POINTING AT THE WRONG OBSTACLE.**
+   `exercises.js` gave the Incline Push-Up's exclusion as *"the app does not record the height"* —
+   **a problem the app can solve**, and a session had duly set out to solve it. The binding reason is
+   the measurement basis, two bullets below. Corrected there, in the Inverted Row entry, and in
+   `tests/bodyweight.test.mjs`'s `MUST_STAY_UNRANKABLE` — **the test that exists to stop somebody
+   filling these in was carrying the weak wording too.** 🔒 **A rule guarded by its weakest reason
+   gets overturned by whoever solves that reason. State the binding one first.**
+3. 🆕 **THE KNEE PUSH-UP IS IN THE LIBRARY** — `{ fraction: 0.62, q: 0.70, basis: 'measured' }`,
+   ratio 1.35 at quality **0.30**. Admitted for the reason the rest of the family is refused: **same
+   plate, same 28 men, same static position** as the push-up's 0.75, so no bases are mixed. ⚠️ The
+   ratio is **carried, not calibrated** — no knee push-up standards exist. 🚨 **The ordering was
+   DRIVEN**: 104/117/133 lb against a full push-up's 124/140/158 at 6/10/15 reps, strictly below at
+   every rep count, mutation-checked by inverting the ratio.
+   ⚠️ **`estimate = raw / ratio`, so a BIGGER ratio means a SMALLER number** — reading it backwards
+   made a 6-rep knee push-up look like a 189 lb bench and nearly killed the idea.
 
 ## What changed on 2026-09-06 (third pass), in one line each
 
