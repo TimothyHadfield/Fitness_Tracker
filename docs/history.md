@@ -17,6 +17,81 @@
 
 ---
 
+## 2026-09-04 — 🚨 GREY MEANT TWO OPPOSITE THINGS: THE ABS COLOUR, FIXED
+
+Tim: *"okay fix the color issue now."* — after asking where the abs question stood, and proposing his
+own next step (a 1RM estimator for Core off a specific exercise, *"and if we have to, we can estimate
+the numbers ourselves"*). **That second half is his decision and nothing was built for it.**
+
+### What was actually wrong, and it was not a judgement call
+
+Core and Neck are in `UNRANKABLE` (`js/strength-standards.js`) because no published strength
+standards exist for them. They were painted `lv-none` — **the same fill as a muscle nobody has ever
+trained** — and the only grey in the key reads **"No data."**
+
+🚨 **THE SCREEN WAS ALREADY CONTRADICTING ITSELF IN PLAIN SIGHT.** A few lines under the figure it
+printed *"Core and Neck can't be ranked — there are no published strength standards for them."* So
+the app said the true thing in words and a false thing in colour, **on one screen, at the same
+time**. That reframes the two-session-old complaint: this was not the app being cautious, it was the
+app being wrong, and it needed no decision from Tim about standards to fix.
+
+### The third state
+
+- **`lv-unranked`, a HATCH rather than a ninth colour.** The level ramp is legal only because the key
+  gives it a second encoding (2026-09-03 D), and another flat hue would be one more thing to tell
+  apart by eye alone. A hatch survives greyscale and every form of colour blindness, and it reads as
+  *marked but not on the scale* rather than as a rank between two levels.
+- **An SVG `<pattern>` with a PER-FIGURE id**, `hatch-${seq}` — the compare screen puts two figures
+  in one document, and a shared def id silently resolves to the first one's pattern. The same class
+  of bug the ink masks already carry a per-figure id for.
+- 🚨 **THE STRIPES ARE CLASSED AND THE STYLESHEET FILLS THEM.** The first version used
+  `fill="var(--unranked-bg)"` as a presentation attribute, which is **not a place `var()` can be
+  relied on** — it is mapped to a CSS declaration, but substitution inside one is not supported the
+  way it is in a rule, so it is exactly the kind of thing that renders in one engine and paints black
+  in another. Classes also keep the colours where the other four palettes across two themes already
+  live.
+- **The key gains an entry only when something on the figure is wearing the mark.** A key entry for a
+  state nobody is in is a puzzle rather than a key.
+- **Tapping it now says what HAS been logged** — set count, sessions, and the exercises behind it,
+  over a **365-day window that is named in the sentence**. ⚠️ **Every number in that block is a count
+  of things that happened**, so none of it needs a median, a body weight, an age or a comparison
+  group; that is precisely what makes it safe under a muscle the app has just said it cannot rank.
+- ⚠️ **NO BUTTON THROUGH TO THE VOLUME SCREEN**, though that is where the work is charted: the Data
+  screen's five segments are in-page state on `#/graphs`, so there is no hash that opens Volume and
+  the link would land the user back on the tab they are already reading. Named in words instead.
+
+### Two things worth keeping
+
+- 🚨 **THE DEMO CANNOT SHOW THIS STATE, AND THE FIX FOR THAT WAS REVERTED ON PURPOSE.** The generated
+  year contains exactly one ab exercise — a Plank, in a Full Body workout the demo never runs — so
+  the demo's Core is permanently "nothing recorded" and the hatch is unreachable there. Adding a
+  Cable Crunch to Lower A works, and **re-rolls the entire seeded year**: every subsequent `random()`
+  draw shifts, which moved the goal-progress assertions and invalidated the golden observation table
+  in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. **Re-baselining
+  a regression pin is not a side effect of a colour fix**, so it was backed out and left for Tim.
+  ⚠️ **The demo also has no time-only path in its set builder** — every set it writes is
+  `{weight, reps}` — so a Plank there would be a fixture in a shape the app never produces, which is
+  the `sets: []` fault again.
+- ⚠️ **THE PROBE THAT SAID IT WAS BROKEN WAS MEASURING THE WRONG THING.** The first paint check
+  serialised the `<svg>` to a data URI and sampled that, which **detaches it from the document's
+  stylesheet** — every classed rect fell back to black and it reported "1 distinct colour" for a
+  figure rendering perfectly. The lesson is 2026-09-03 E's, arriving through a different door: a
+  clipped `Page.captureScreenshot` of the real pixels settled it in one attempt.
+
+**Verified:** hatch paints in both themes in real Chrome at 390px (screenshotted and looked at);
+computed fill resolves to `url(#hatch-2)`; both stripe tokens resolve per theme. **Audit: 16
+route/width/theme/palette combinations over the muscle screens, 728 text nodes, zero below 4.5:1,
+zero unnamed controls, zero overflow.** ⚠️ **The new key row did not render during it** — the demo
+cannot produce the state — but its text uses the same `.lv-name` class as the "No data" row beside
+it, which passes.
+
+**Tests: render 911 → 922.** Mutation-checked: disabling `trainedButUnrankable()` fails **10 of the
+11** new assertions. The pair worth keeping together is *"core with nothing logged is grey"* and
+*"core with logged work is hatched"* — hatching Core unconditionally would be the same bug pointing
+the other way, and only the pair pins the actual fix.
+
+---
+
 ## 2026-09-03 — 🚨 PRIVATE OR PUBLIC, A FRIEND'S BODY, AND TWO OF THEM SIDE BY SIDE
 
 Tim: *"I want to change how privacy settings work, as well as change the visibility one user has on

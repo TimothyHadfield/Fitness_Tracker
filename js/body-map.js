@@ -100,6 +100,38 @@ export function bodySvg(levels, selected, onPick, opts = {}) {
   const defs = mk('defs', {});
   svg.append(defs);
 
+  /* THE HATCH for "trained, can't be ranked" — Core and Neck.
+   *
+   * ⚠️ THE ID IS PER-FIGURE (`seq`), and that is not tidiness. The compare
+   * screen puts TWO of these in one document, and a duplicated def id means the
+   * second figure silently resolves `url(#…)` to the first one's pattern — the
+   * same class of bug the ink masks already carry a per-figure id for.
+   *
+   * ⚠️ THE STRIPES ARE CLASSED AND THE STYLESHEET FILLS THEM — no `fill`
+   * attribute here, and not because of taste. A presentation attribute is not a
+   * place `var()` can be relied on: it is mapped to a CSS declaration, but
+   * substitution inside one is not supported the way it is in a rule, so
+   * `fill="var(--unranked-bg)"` is the kind of thing that renders in one engine
+   * and paints black in another. Classes also keep this figure's colours where
+   * every other colour on it already lives — four palettes across two themes,
+   * which a literal here would go stale against the moment somebody switches
+   * theme without a re-render (the same trap the `--tint` note records).
+   *
+   * `patternUnits=userSpaceOnUse` keeps the stripe pitch constant in viewBox
+   * units, so the hatch does not scale with whichever muscle it fills — Core is
+   * many times the area of Neck and a proportional hatch would read as two
+   * different marks.
+   */
+  const hatchId = `hatch-${id}`;
+  const hatch = mk('pattern', {
+    id: hatchId, width: 6, height: 6,
+    patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)',
+  });
+  hatch.append(mk('rect', { width: 6, height: 6 }, 'hatch-bg'));
+  hatch.append(mk('rect', { width: 2.2, height: 6 }, 'hatch-ink'));
+  defs.append(hatch);
+  svg.style.setProperty('--hatch', `url(#${hatchId})`);
+
   for (const { view, dx, label } of [
     { view: 'front', dx: 0, label: 'Front' },
     { view: 'back', dx: w + gap, label: 'Back' },
@@ -136,9 +168,16 @@ export function bodySvg(levels, selected, onPick, opts = {}) {
 
     for (const [muscle, d] of Object.entries(art.muscles)) {
       const info = levels.get(muscle);
+      /* 🚨 THREE STATES, NOT TWO (2026-09-04). `unrankable` means the work was
+       * recorded and no published standard exists to place it against — Core
+       * and Neck. It used to fall through to `lv-none`, which is the fill for
+       * "never trained", and the legend's only grey says "No data". A hatch
+       * rather than a ninth colour: this ramp is legal only because the key
+       * gives it a second encoding, and hatching survives greyscale and colour
+       * blindness where another hue would not. */
       const node = mk('path', { d }, [
         'body-region',
-        info ? `lv-${info.levelKey}` : 'lv-none',
+        info ? (info.unrankable ? 'lv-unranked' : `lv-${info.levelKey}`) : 'lv-none',
       ].join(' '));
       node.dataset.muscle = muscle;
       // Confidence rides on the fill as a custom property, so the CSS keeps
@@ -156,12 +195,21 @@ export function bodySvg(levels, selected, onPick, opts = {}) {
       // Confidence is stated in words as well as painted, because the fade is
       // a colour cue and this screen's rule is that nothing is colour-alone.
       const conf = info && info.confidence ? `, ${info.confidence.toLowerCase()} confidence` : '';
-      node.setAttribute('aria-label',
-        `${muscle} — ${info ? info.label + conf : 'nothing recorded'}`);
+      /* ⚠️ THE HATCH IS NOT ALLOWED TO BE THE ONLY WAY TO TELL. A screen reader
+       * gets no fill at all, so the third state has to be in the name — and
+       * "nothing recorded" over work somebody did is exactly the lie the
+       * colour was telling. The set count rides along because it is the
+       * evidence the label is asserting. */
+      const said = info
+        ? (info.unrankable
+          ? `${info.label}${info.sets ? `, ${info.sets} sets recorded` : ''}`
+          : info.label + conf)
+        : 'nothing recorded';
+      node.setAttribute('aria-label', `${muscle} — ${said}`);
       // A <title> gives a native tooltip on desktop for free, and screen
       // readers announce it.
       const t = mk('title', {});
-      t.textContent = `${muscle}: ${info ? info.label + conf : 'no data'}`;
+      t.textContent = `${muscle}: ${info ? said : 'no data'}`;
       node.append(t);
 
       node.addEventListener('click', () => onPick(muscle));

@@ -175,7 +175,11 @@ ok(inkImgs.length === 2
 
 // Every muscle drawn shows up in both views where expected, and each region
 // carries exactly one level class.
-const levelClasses = new Set(LEVELS.map((l) => 'lv-' + l.key).concat(['lv-none', 'lv-below']));
+const levelClasses = new Set(LEVELS.map((l) => 'lv-' + l.key)
+  // `lv-unranked` is not a level and never ranks anything — but it IS the third
+  // mutually-exclusive fill a region can wear, so it belongs in the set this
+  // "exactly one" check counts against.
+  .concat(['lv-none', 'lv-below', 'lv-unranked']));
 let everyRegionClassed = true;
 for (const r of regions) {
   const cls = [...r.classList].filter((c) => levelClasses.has(c));
@@ -196,7 +200,80 @@ const biceps = [...regions].find((r) => r.getAttribute('aria-label').startsWith(
 ok(biceps && biceps.classList.contains('lv-none'), 'biceps stays grey with no benchmark');
 
 const core = [...regions].find((r) => r.getAttribute('aria-label').startsWith('Core'));
-ok(core && core.classList.contains('lv-none'), 'core is grey — no published standards');
+ok(core && core.classList.contains('lv-none'),
+   'core with NOTHING logged is grey — no published standards and no work either');
+
+/* 🚨 TRAINED, BUT NOT RANKABLE — the third fill, added 2026-09-04.
+ *
+ * Core has no published standards, so it can never carry a level. Until today it
+ * therefore wore `lv-none`, which is also the fill for a muscle nobody has ever
+ * trained — and the key's only grey reads "No data". Somebody who trains abs
+ * three times a week was shown the colour of somebody who has never done a
+ * sit-up, while the same screen printed the truth in words two lines below.
+ *
+ * ⚠️ THE ASSERTION DIRECTLY ABOVE IS THE OTHER HALF, AND BOTH ARE LOAD-BEARING.
+ * Grey is still right for an unrankable muscle with nothing logged. The bug was
+ * one fill carrying two opposite facts, and hatching Core unconditionally would
+ * be the same bug pointing the other way — which is what makes this pair, rather
+ * than either line alone, the thing that pins the fix.
+ */
+{
+  const plank = byName('Plank');
+  const crunch = byName('Cable Crunch');
+  for (const [i, ex] of [plank, plank, crunch].entries()) {
+    await store.saveSession({
+      workoutName: 'Abs', date: `2026-08-2${i + 1}`, startedAt: `2026-08-2${i + 1}T10:00:00.000Z`,
+      entries: [{ exerciseId: ex.id, exerciseName: ex.name,
+        sets: [{ time: 60 }, { time: 60 }] }],
+    });
+  }
+
+  const withAbs = await mount(GraphView());
+  [...withAbs.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles').click();
+  await settle();
+  const abs = [...withAbs.querySelectorAll('.body-region')]
+    .find((r) => (r.getAttribute('aria-label') || '').startsWith('Core'));
+
+  ok(abs && abs.classList.contains('lv-unranked'),
+     `🚨 core with logged work is hatched, not grey (${abs && [...abs.classList].join(' ')})`);
+  ok(abs && !abs.classList.contains('lv-none'),
+     '🚨 and it is NOT wearing the "no data" fill any more — that was the whole complaint');
+
+  // The hatch is a fill, and a fill says nothing to a screen reader. Whatever
+  // the colour does, the name has to carry the same fact.
+  ok(abs && /can't be ranked/.test(abs.getAttribute('aria-label') || '')
+     && !/nothing recorded/.test(abs.getAttribute('aria-label') || ''),
+     `⚠️ its accessible name says trained-but-unrankable, not "nothing recorded" (${abs && abs.getAttribute('aria-label')})`);
+  ok(abs && /\d/.test(abs.getAttribute('aria-label') || ''),
+     'and it states the set count, so the claim can be checked rather than trusted');
+
+  // A mark with no key entry is a puzzle. The key gains one only when something
+  // on the figure is actually wearing it.
+  const keyNames = [...withAbs.querySelectorAll('.lv-key-item .lv-name')].map((n) => n.textContent);
+  ok(keyNames.some((t) => /Trained/.test(t) && /can't be ranked/.test(t)),
+     `🚨 the key names the new mark (${keyNames.join(' · ')})`);
+  ok(withAbs.querySelector('.lv-sw.lv-unranked'),
+     'and shows the hatch itself beside it, rather than describing it in words alone');
+
+  // The figure's pattern def has to be per-figure: the compare screen draws two
+  // of these in one document, and a shared id resolves to the wrong one.
+  const pat = withAbs.querySelector('svg.body-map pattern');
+  ok(pat && /^hatch-\d+$/.test(pat.id), `the hatch is a pattern def with its own id (${pat && pat.id})`);
+
+  // Tapping it used to say only that it cannot be ranked — a fact about the
+  // world rather than about you, and the reason grey felt like it had not
+  // noticed. It now says what it HAS got, and none of that needs a standard.
+  abs.dispatchEvent(new withAbs.ownerDocument.defaultView.Event('click', { bubbles: true }));
+  await settle();
+  const logged = withAbs.querySelector('.muscle-logged');
+  ok(Boolean(logged), 'tapping it says what HAS been logged');
+  ok(logged && /\d+ sets? recorded/.test(logged.textContent),
+     `⚠️ as a count of things that happened — no level, no percentile (${logged && logged.textContent.slice(0, 90)})`);
+  ok(logged && /Plank/.test(logged.textContent),
+     'and names the exercises behind the count, so it is checkable');
+  ok(logged && !/percentile|stronger than/i.test(logged.textContent),
+     '🚨 and never ranks it against anybody — that is the thing there is no standard for');
+}
 
 /* ⚠️ THE KEY IS CHIPS, AND THEY ARE NOT DECORATION.
  *

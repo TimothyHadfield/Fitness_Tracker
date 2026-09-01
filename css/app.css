@@ -2803,12 +2803,24 @@ a.seg {
   /* No data sits OUTSIDE the ramp entirely: neutral, zero chroma, so it can
      never be mistaken for a low level. */
   --lv-none:         #282F33;
+  /* TRAINED, CAN'T BE RANKED — Core and Neck (2026-09-04).
+     ⚠️ IT IS A HATCH OF THESE TWO, NOT A NINTH COLOUR. The pattern is built in
+     body-map.js and reads these two tokens, so the stylesheet still owns every
+     colour on the figure. The ground is "no data" itself and the stripe is a
+     neutral lift off it: the muscle stays plainly outside the ramp — which is
+     true, nothing about it is ranked — while no longer being the same fill as a
+     muscle nobody has ever trained. Zero chroma on both, so it cannot be read
+     as a level however briefly it is glanced at. */
+  --unranked-bg:     #282F33;
+  --unranked-ink:    #59646B;
 }
 :root[data-theme="light"] {
-  /* Only the two non-level tokens change. The seven hues are mid-tone Material
+  /* Only the non-level tokens change. The seven hues are mid-tone Material
      colours that carry on both surfaces, and a level meaning one colour
      everywhere is worth more than a per-theme optimisation. */
   --lv-none:         #DBDED7;
+  --unranked-bg:     #DBDED7;
+  --unranked-ink:    #A9AFA4;
 }
 
 /* min-width:0 guards the flexbox trap where an item's automatic minimum size is
@@ -2907,6 +2919,15 @@ a.seg {
 .lv-elite, .body-region.lv-elite               { fill: var(--lv-elite); }
 .body-region.lv-below                          { fill: var(--lv-below); }
 .body-region.lv-none                           { fill: var(--body-none); }
+/* TRAINED, CAN'T BE RANKED. --hatch is set on the <svg> by body-map.js and
+   points at that figure's OWN pattern def, which is why this is a variable and
+   not a literal url(): the compare screen draws two figures in one document. */
+.body-region.lv-unranked                       { fill: var(--hatch); }
+/* The stripes themselves. They are filled from here rather than from a `fill`
+   attribute because var() cannot be relied on inside a presentation attribute —
+   see the note in body-map.js. */
+.hatch-bg  { fill: var(--unranked-bg); }
+.hatch-ink { fill: var(--unranked-ink); }
 
 /* CONFIDENCE = how vivid the colour is. The rating owns the hue; how sure we
    are of it owns the saturation, mixed toward the same neutral that means "no
@@ -3007,6 +3028,16 @@ a.seg {
 .lv-sw.lv-expert { background: var(--lv-expert); }
 .lv-sw.lv-elite { background: var(--lv-elite); }
 .lv-sw.lv-none { background: var(--lv-none); }
+/* The key's own hatch. A repeating-linear-gradient rather than the SVG pattern,
+   because this swatch is an ordinary HTML element — but the angle, the pitch and
+   both colours are the same numbers body-map.js uses, so the key and the figure
+   cannot show different marks for one state. */
+.lv-sw.lv-unranked {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--unranked-ink) 0 2.2px,
+    var(--unranked-bg) 2.2px 6px);
+}
 /* The legend's own example of a faded rating, mixed at the same floor the map
    uses so the two cannot drift apart. */
 .lv-sw.lv-faded { background: var(--lv-advanced); opacity: .42; }
@@ -3067,6 +3098,17 @@ a.seg {
 .muscle-warn {
   border-left: 2px solid var(--accent);
   padding-left: 9px;
+  font-size: 11.5px; line-height: 1.35; color: var(--ink-soft);
+}
+
+/* What a muscle with no standards HAS got. Same bracket shape as the caveat
+   above it, in the neutral the hatch is made of rather than in the accent: this
+   is not a warning and should not borrow a warning's colour, but it is the same
+   KIND of thing — a short statement qualifying what the panel above it said. */
+.muscle-logged {
+  border-left: 2px solid var(--unranked-ink);
+  padding-left: 9px;
+  display: flex; flex-direction: column; gap: 4px;
   font-size: 11.5px; line-height: 1.35; color: var(--ink-soft);
 }
 

@@ -8,7 +8,7 @@
 // "of people who lift" everywhere, and the general-population figure is a
 // separate, clearly-labelled line.
 
-import { store, social, muscleStrength } from './store.js';
+import { store, social, muscleStrength, weeklyVolumeByMuscle } from './store.js';
 // `weightForPercentile` and `MUSCLE_LIFTS` left with the seven-row target table
 // on 2026-08-21 — nothing on this screen asks what a level is worth in pounds
 // any more, only what the next one costs, and `m.toNext` carries that.
@@ -24,9 +24,68 @@ const go = (hash) => { location.hash = hash; };
 
 let selected = null;
 
+/* ------------------------------------------------------------------ *
+ * TRAINED, BUT NOT RANKABLE — the third state this map needs
+ * ------------------------------------------------------------------ *
+ *
+ * 🚨 GREY MEANT TWO OPPOSITE THINGS AND THE LEGEND ONLY ADMITTED ONE. Core and
+ * Neck have no published strength standards, so they were painted with exactly
+ * the fill somebody gets when they have never trained a muscle — and the only
+ * grey entry in the key reads "No data". Somebody who trains abs three times a
+ * week saw the colour of somebody who has never done a sit-up.
+ *
+ * ⚠️ IT WAS NOT A CAUTIOUS CHOICE, IT WAS A FALSE ONE. The screen already
+ * printed the truth in words a few lines below the figure — "Core and Neck
+ * can't be ranked, there are no published strength standards for them" — so the
+ * app was saying the right thing in text and the wrong thing in colour, on one
+ * screen, at the same time. Reported by Tim on 2026-09-01 and again on -09-03;
+ * fixed 2026-09-04.
+ *
+ * 🚨 IT IS A HATCH, NOT A NEW COLOUR, and that is deliberate: this figure's
+ * ramp is already legal only because the level key gives it a second encoding,
+ * and a ninth flat colour would be one more thing to tell apart by hue alone. A
+ * hatch survives greyscale and every form of colour blindness, and it reads as
+ * "marked, but not on the scale" rather than as a rank between two levels.
+ *
+ * ⚠️ THE WINDOW IS A YEAR, AND THE PANEL SAYS SO. The question this answers is
+ * the one grey was getting wrong — "does this app know I train my abs" — and
+ * that is a question about training rather than about the last four weeks. The
+ * Volume screen's 28-day rate is a different claim and stays where it is.
+ *
+ * ⚠️ THIS DOES NOT RANK ANYTHING, and must never start to. It says the work was
+ * recorded and that no standard exists to place it against. If Core becomes
+ * rankable later, this state does not disappear — Neck keeps it permanently,
+ * and so does anybody whose ab work is planks and leg raises.
+ */
+const TRAINED_WINDOW_DAYS = 365;
+
+/** Muscles with no standards that nonetheless have recorded work behind them. */
+async function trainedButUnrankable(rows = null) {
+  const out = new Map();
+  // Cardio and Activity are library shelves rather than muscles — they are not
+  // on the figure at all, so marking them would mark nothing.
+  const wanted = UNRANKABLE.filter((u) => u !== 'Cardio' && u !== 'Activity');
+
+  const vol = await weeklyVolumeByMuscle(TRAINED_WINDOW_DAYS, null, rows);
+  if (!vol) return out;
+
+  for (const m of vol.muscles) {
+    if (!wanted.includes(m.muscle) || !m.totalSets) continue;
+    out.set(m.muscle, {
+      sets: m.totalSets,
+      days: m.daysTrained,
+      windowDays: TRAINED_WINDOW_DAYS,
+      // Named, for the same reason the rated panel names the set it came from:
+      // "we counted 14 sets" is a claim somebody should be able to check.
+      contributors: m.contributors,
+    });
+  }
+  return out;
+}
+
 export async function muscleGroupsPane(host, top) {
-  const [{ profile, muscles, blocked, ready }, settings] = await Promise.all([
-    muscleStrength(), store.getSettings(),
+  const [{ profile, muscles, blocked, ready }, settings, trained] = await Promise.all([
+    muscleStrength(), store.getSettings(), trainedButUnrankable(),
   ]);
   // ⚠️ OFF BY DEFAULT — Tim, 2026-08-25: *"showing the percentile is a little
   // harsh for some people."* The level is the answer; the percentile is the
@@ -110,6 +169,15 @@ export async function muscleGroupsPane(host, top) {
     });
   }
 
+  // The third state, painted after the rated ones so it can never overwrite a
+  // real level: a muscle that is both rankable and unrankable is a contradiction
+  // the map should not try to draw, and `MUSCLE_LIFTS` and `UNRANKABLE` are
+  // disjoint by construction anyway.
+  for (const [muscle, t] of trained) {
+    if (levelMap.has(muscle)) continue;
+    levelMap.set(muscle, { unrankable: true, label: 'trained, can\'t be ranked', sets: t.sets });
+  }
+
   // The figure is built ONCE. Rebuilding it on every tap would re-attach the
   // two ink mask images and flash the drawing; only the panel below changes.
   const body = bodySvg(levelMap, selected, (muscle) => {
@@ -121,11 +189,11 @@ export async function muscleGroupsPane(host, top) {
 
   function renderPanel() {
     setChildren(foot,
-      legend(more),
+      legend(more, trained.size > 0),
       selected
         ? detail(muscles.get(selected), selected, profile,
-                 blocked ? blocked.get(selected) : null, more)
-        : summary(muscles),
+                 blocked ? blocked.get(selected) : null, more, trained.get(selected))
+        : summary(muscles, trained),
     );
   }
 
@@ -196,7 +264,7 @@ async function pickSomebodyToCompare() {
  * percentile is a little harsh for some people."* The level is the answer; the
  * percentile behind it is the working.
  */
-export function legend(moreDetails) {
+export function legend(moreDetails, anyTrainedUnrankable = false) {
   return el('div', { class: 'lv-key-wrap' },
     el('div', { class: 'lv-key' },
       ...LEVELS.map((l) =>
@@ -212,6 +280,17 @@ export function legend(moreDetails) {
         el('i', { class: 'lv-sw lv-none' }),
         el('span', { class: 'lv-name', text: 'No data' }),
       ),
+      /* ⚠️ ONLY SHOWN WHEN SOMETHING ON THE FIGURE IS ACTUALLY HATCHED. A key
+         entry for a mark that is nowhere on screen is a puzzle rather than a
+         key — it invites somebody to go looking for a state they are not in.
+         Same reasoning as "No data", which is always shown because a body with
+         nothing recorded is the state everybody starts in. */
+      anyTrainedUnrankable
+        ? el('span', { class: 'lv-key-item' },
+            el('i', { class: 'lv-sw lv-unranked' }),
+            el('span', { class: 'lv-name', text: 'Trained · can\'t be ranked' }),
+          )
+        : null,
       // Without this the fade is an unexplained visual, and an unexplained
       // visual reads as a rendering bug rather than as information.
       el('span', { class: 'lv-key-item lv-key-note' },
@@ -371,7 +450,7 @@ function confidenceLine(m) {
   return `${m.band.name} confidence · ${sources}`;
 }
 
-function summary(muscles) {
+function summary(muscles, trained = new Map()) {
   const ranked = [...muscles.values()].filter((m) => m.level);
   // Cardio and Activity are library shelves, not muscles — listing them as
   // "not ranked" beside Core and Neck would imply the map is missing them.
@@ -386,8 +465,17 @@ function summary(muscles) {
           `Strongest: ${strongest.muscle} (${strongest.level.name}). `
           + `Furthest behind: ${weakest.muscle} (${weakest.level.name}).`)
       : null,
+    /* ⚠️ THIS SENTENCE WAS ALREADY TRUE AND THE COLOUR BESIDE IT WAS NOT. It
+       now names which of them you have actually trained, because "can't be
+       ranked" and "nothing recorded" were the two things the old grey ran
+       together, and saying so in the same breath is what stops the hatch
+       reading as a worse level. */
     el('div', { class: 'field-help', text:
-      `${unranked.join(' and ')} can't be ranked — there are no published strength standards for them.` }),
+      `${unranked.join(' and ')} can't be ranked — there are no published strength standards for them.`
+      + (trained.size
+        ? ` Your ${[...trained.keys()].join(' and ')} work is still recorded and counted; `
+          + 'tap for what it found.'
+        : '') }),
   );
 }
 
@@ -428,6 +516,42 @@ function blockedNote(blocked) {
 }
 
 /**
+ * What a muscle with no standards HAS got: sets, days, and the exercises.
+ *
+ * ⚠️ EVERY NUMBER HERE IS A COUNT OF THINGS THAT HAPPENED, and that is the whole
+ * design. A count needs no published median, no body weight, no age and no
+ * comparison group, so nothing in this block can be wrong in the way a
+ * percentile can — which is what makes it safe to show for a muscle the app has
+ * just admitted it cannot rank.
+ *
+ * ⚠️ THE WINDOW IS STATED. "14 sets" without "in the last year" is a number
+ * whose meaning depends on how long you have been logging.
+ */
+function trainedNote(trained) {
+  if (!trained || !trained.sets) return null;
+  const { sets, days, windowDays, contributors } = trained;
+  const months = Math.round(windowDays / 30);
+  const names = (contributors || []).slice(0, 3).map((c) => c.name);
+  const rest = (contributors || []).length - names.length;
+
+  /* ⚠️ NO BUTTON TO THE VOLUME SCREEN, THOUGH THAT IS WHERE THIS WORK IS
+     CHARTED. The Data screen's five segments are in-page state on `#/graphs`,
+     so there is no hash that opens Volume — a link would land the user back on
+     the Muscles tab they are already looking at, which is a dead end wearing a
+     button. Naming the screen in words is the honest version until the segment
+     is addressable. */
+  return el('div', { class: 'muscle-logged' },
+    el('div', { text:
+      `${sets} set${sets === 1 ? '' : 's'} recorded in the last ${months} months, `
+      + `across ${days} session${days === 1 ? '' : 's'}, and every one counts toward your weekly `
+      + 'volume — there is just no published standard to place it against.' }),
+    names.length
+      ? el('div', { text: `From ${names.join(', ')}${rest > 0 ? ` and ${rest} more` : ''}.` })
+      : null,
+  );
+}
+
+/**
  * ⚠️ EXPORTED SINCE 2026-09-03, and it is the same function on both screens.
  *
  * A friend's muscle panel could have been written beside this one — and then
@@ -440,11 +564,11 @@ function blockedNote(blocked) {
  * are worked out from a private library walk that is not published. The panel
  * simply omits that line rather than inventing one.
  */
-export function musclePanel(m, muscle, profile, blocked, moreDetails) {
-  return detail(m, muscle, profile, blocked, moreDetails);
+export function musclePanel(m, muscle, profile, blocked, moreDetails, trained) {
+  return detail(m, muscle, profile, blocked, moreDetails, trained);
 }
 
-function detail(m, muscle, profile, blocked, moreDetails) {
+function detail(m, muscle, profile, blocked, moreDetails, trained) {
   if (!m) {
     const lift = keyLiftFor(muscle);
     const note = blockedNote(blocked);
@@ -458,6 +582,13 @@ function detail(m, muscle, profile, blocked, moreDetails) {
               + `${lift.name} is the standard it is measured against, but it is not the only thing `
               + 'that rates it.')
           : 'This muscle has no published strength standards, so it can\'t be ranked.'),
+      /* 🚨 THE HALF THE PANEL WAS MISSING. Tapping Core used to say only that it
+         cannot be ranked, which is a statement about the world rather than about
+         you — and it is what made grey feel like the app had not noticed. What
+         it HAS got is a set count and the exercises behind it: no level, no
+         percentile, no comparison to anybody, which is exactly why none of it
+         needs a standard to be true. */
+      trainedNote(trained),
       note,
       lift
         ? el('a', { class: 'btn primary block', href: '#/benchmark', text: `Benchmark ${lift.name}` })

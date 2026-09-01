@@ -139,6 +139,17 @@ donation or ad revenue to cover its own costs. Scope order is **weightlifting �
 diet → others**. A **rename is coming** and he will bring it. He works on it **most days**, with no
 deadline. 🛑 **He reads none of these notes — they are for you.**
 
+## What changed on 2026-09-04, in one line each
+
+1. **The docs were split into five files** so they can be read at all — see the section above.
+2. **The direction interview** — `docs/direction.md`, and the four rules it reversed.
+3. 🆕 **THE ABS COLOUR IS FIXED.** A muscle with no published standards but recorded work is now
+   **hatched**, with its own key entry, and tapping it says what HAS been logged. It used to wear the
+   same grey as a muscle nobody had ever trained, while the same screen printed *"Core and Neck can't
+   be ranked"* two lines below — **the app was right in words and wrong in colour at the same time**.
+   Full write-up in `docs/history.md`. ⚠️ **The demo cannot show this state and a fix for that was
+   deliberately reverted** — see Open work 25.
+
 # 🟢 START HERE: NOTHING IS HALF-BUILT, AND ONE THING IS WAITING ON TIM
 
 **The working tree is clean, everything is pushed, the rules are deployed and the live site is
@@ -338,6 +349,7 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
+| **25** | 🆕 **the demo cannot show a trained-but-unrankable muscle — 2026-09-04** | ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |
 | **23** | 🆕 **a note to the developer, from inside the app — HE ASKED FOR IT, 2026-09-04** | 🟢 **AUTHORISED, and he said to build it once questioning finished.** *"adding a temporary section to the app that allows the user to write a note or idea straight to the developer (me) would be nice to have. Then, make my account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas straight on the app."* ⚠️ **DELIBERATELY TEMPORARY** — it exists to catch fresh opinions while the first users are new, not forever. 🚨 **The developer role has to be enforced by `firestore.rules`, not by hiding a screen**: these are other people's words about their own training, and "only Tim can read them" has to be true on the wire. ⚠️ **It is also the first user-submitted free text this app has ever stored**, which is the moderation surface he parked the same day — worth one sentence to him if a decision here would be expensive to undo, and nothing more (that is the single exception he granted to staying quiet) |
 | **24** | 🆕 **the list of every blank and refusal — HE ASKED FOR IT, 2026-09-04** | 🟢 **AUTHORISED.** *"if you want to give me a list of the places this does already happen, it could help me with this. Do this after we're done questioning."* Every screen where the app currently shows a blank, an empty state, or a permanent refusal instead of a best-effort number — with, for each, what it could honestly say instead and how it would be labelled. ⚠️ **It is a LIST, not a sweep**: *"I think I'll notice the places that show blanks and I'll manually tell you to fix them if I want."* 🛑 **Change nothing off the back of it without him picking** |
 | **21** | 🆕 **the abs ranking — TIM'S DECISION, ASSESSED 2026-09-03** | ⏸️ He re-opened it himself and asked for the problems with two approaches. The assessment is `docs/history.md`, "2026-09-03 — HOW TO RANK ABS"; the short version: **his first idea (weighted core work through the normal machinery) is buildable if the numbers are pulled properly, and answers about a third of it**; **his second (seed from their other muscles, then track improvement) puts two different meanings in one colour and invents a correlation nobody has measured**; and **the cheapest fix needs no new data at all** — give trained-but-unrankable muscles their own mark and legend entry, and have the panel say what HAS been logged. **Nothing is built and nothing should be until he picks** |

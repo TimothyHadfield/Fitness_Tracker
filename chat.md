@@ -2778,3 +2778,45 @@ what "quality" means, and the abs ranking — *"I'll talk to you about it after 
 He also confirmed what does not change: recommend only when asked, never ask him about other
 people's opinions, safety is noted but not worked on yet, and **he does not read any of these notes
 — they are for the next session of me.**
+
+---
+
+## 2026-09-04, later — the abs colour, fixed
+
+Tim asked where the abs question stood, got the answer (nothing agreed, nothing built), and then made
+two moves: **"fix the color issue now"**, and a proposal of his own — give Core a 1RM estimator off a
+specific exercise, from whatever can be found online, *"and if we have to, we can estimate the numbers
+ourselves given normal trends."*
+
+**On his proposal**, agreed with one modification: there is a real difference between finding one
+source where every other muscle has two, and making the number up. The first is a real median with a
+known weakness and the confidence model already handles it; the second is our own guess wearing a
+percentile's clothes, with nothing to check it against. Search hard first; if we do end up estimating
+it ourselves, say **the app's own estimate** — which is his own rule, not caution.
+
+**Two facts that sharpened it.** Only **8 of 30** core exercises in the library record a weight, so
+his idea rates about a quarter of the ways people train abs — every plank variant, hanging leg raise,
+ab wheel and sit-up is in the other three-quarters. And a research question nobody had asked: there
+may be published population norms for the **plank hold** and the **60-second sit-up** (ACSM trunk
+endurance, McGill, military PT standards). If those hold up they rank the 73 % rather than the 27 %,
+and they fit something the app already has — those are *tests*, and it already distinguishes a
+benchmark from a set logged mid-workout. Unverified until a proper research pass runs.
+
+**The colour fix itself turned out not to be a judgement call at all.** The screen was already
+printing *"Core and Neck can't be ranked — there are no published strength standards for them"* a few
+lines under the figure, while painting those muscles the exact grey that means "nobody has ever
+trained this", whose only key entry says "No data". Right in words, wrong in colour, same screen.
+
+Core and Neck with recorded work are now **hatched**, with their own key entry, and tapping one says
+what it has got — sets, sessions and the exercises behind them, over a stated year. No level, no
+percentile, no comparison to anybody, which is why none of it needs a standard.
+
+Verified by screenshotting a real browser in both themes rather than trusting the tests: jsdom has no
+paint, and the first probe that *did* try to sample pixels was measuring the wrong thing — it
+re-rasterised the SVG from a data URI, which detaches it from the stylesheet, and reported the figure
+as solid black while it was rendering perfectly.
+
+**One thing left undone on purpose:** the demo has no ab work, so this state cannot be seen there.
+Fixing that re-rolls the entire seeded demo year and invalidates a golden table that exists to catch
+regressions — not something to do quietly inside a colour fix, so it is written up as Open work 25
+for Tim to call.
