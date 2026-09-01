@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  WHAT IT COSTS TO RUN — the cost analysis docs/direction.md §2 parked behind
+  "only if he asks". Asked for and written 2026-09-06; the full write-up of how
+  it was built is in docs/history.md under that date.
+
+  ⚠️ PRICES WERE CONFIRMED LIVE ON 2026-09-01 AND WILL DRIFT. The MEASUREMENTS
+  are the durable half — bytes per session, reads per cold open — because they
+  are properties of this code rather than of Google's price list. If this is
+  re-run, re-confirm every price rather than trusting the tables below.
+
+  ⚠️ This is a STANDALONE page, not part of the app. It is not in sw.js's
+  precache and must never be: it is a document that happens to live in the repo,
+  the same way docs/competitive-teardown.html does.
+
+  Also published as an artifact:
+  https://claude.ai/code/artifact/9bc624aa-45b9-4f81-8e19-0b793e3e3742
+-->
+<title>What It Costs To Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+  /* ---- tokens: light is the bare :root, per the three theme states ---- */
+  :root {
+    --ground:      #EEF1F2;
+    --surface:     #FFFFFF;
+    --sunken:      #E3E8EA;
+    --line:        #D2DADD;
+    --line-strong: #B3BFC4;
+    --ink:         #12181B;
+    --ink-2:       #3D4A50;
+    --ink-3:       #667780;
+    --accent:      #0F5F78;
+    --accent-soft: #DCEAEF;
+    --good:        #216B4C;
+    --good-soft:   #DAEBE2;
+    --warn:        #8A5A06;
+    --warn-soft:   #F3E7CF;
+    --crit:        #96332C;
+    --crit-soft:   #F5DEDB;
+
+    --measure: 68ch;
+    --r: 3px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0D1316;
+      --surface:     #141C20;
+      --sunken:      #101819;
+      --line:        #26343A;
+      --line-strong: #3A4C54;
+      --ink:         #E9EFF1;
+      --ink-2:       #B4C3C9;
+      --ink-3:       #7E9199;
+      --accent:      #56B4D0;
+      --accent-soft: #123039;
+      --good:        #58C293;
+      --good-soft:   #102E23;
+      --warn:        #DFAA53;
+      --warn-soft:   #322611;
+      --crit:        #E8817A;
+      --crit-soft:   #35191A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #0D1316;
+    --surface:     #141C20;
+    --sunken:      #101819;
+    --line:        #26343A;
+    --line-strong: #3A4C54;
+    --ink:         #E9EFF1;
+    --ink-2:       #B4C3C9;
+    --ink-3:       #7E9199;
+    --accent:      #56B4D0;
+    --accent-soft: #123039;
+    --good:        #58C293;
+    --good-soft:   #102E23;
+    --warn:        #DFAA53;
+    --warn-soft:   #322611;
+    --crit:        #E8817A;
+    --crit-soft:   #35191A;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 20px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 940px; margin: 0 auto; }
+  .prose { max-width: var(--measure); }
+
+  /* ---- type ---- */
+  h1, h2, h3, .eyebrow, .num, th, .tag, .stat-label { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; }
+  .mono, td.n, .num, .fig-val, .bar-val { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  h1 {
+    font-size: clamp(2.1rem, 5.4vw, 3.15rem);
+    line-height: 1.04;
+    letter-spacing: -0.022em;
+    font-weight: 700;
+    margin: 0 0 .5rem;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: 1.42rem;
+    letter-spacing: -0.012em;
+    font-weight: 650;
+    margin: 0 0 .15rem;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: -0.004em;
+    margin: 2rem 0 .4rem;
+  }
+  p { margin: 0 0 1.05rem; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+
+  .eyebrow {
+    font-size: .69rem;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 .55rem;
+  }
+
+  /* ---- masthead ---- */
+  header.mast {
+    padding: 72px 0 30px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 40px;
+  }
+  .lede {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 60ch;
+    margin: .9rem 0 0;
+  }
+  .mast-meta {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 30px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .74rem;
+    color: var(--ink-3);
+    letter-spacing: .01em;
+  }
+
+  section { margin: 0 0 58px; }
+  section > .prose:first-child > h2 { margin-top: 0; }
+
+  /* ---- the answer up top ---- */
+  .answer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 2px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin: 30px 0 8px;
+  }
+  .stat { background: var(--surface); padding: 22px 22px 20px; }
+  .stat-label {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .11em;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .stat .num {
+    font-size: 2.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    display: block;
+  }
+  .stat .sub {
+    font-size: .87rem;
+    color: var(--ink-2);
+    margin-top: 9px;
+    line-height: 1.42;
+    display: block;
+  }
+  .stat.hero .num { color: var(--accent); }
+
+  /* ---- tables ---- */
+  .scroller { overflow-x: auto; margin: 20px 0 10px; -webkit-overflow-scrolling: touch; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 540px;
+    font-size: .9rem;
+    background: var(--surface);
+  }
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-family: Archivo, sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 0 10px;
+  }
+  th, td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  thead th {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .085em;
+    color: var(--ink-3);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  td.n, th.n { text-align: right; }
+  tbody tr:last-child td { border-bottom: none; }
+  .col-now { background: var(--crit-soft); }
+  .col-best { background: var(--good-soft); }
+  td.strat { font-family: Archivo, sans-serif; font-weight: 600; font-size: .84rem; }
+  .free { color: var(--good); font-weight: 600; }
+
+  /* ---- headroom bars ---- */
+  .bars { margin: 26px 0 6px; display: flex; flex-direction: column; gap: 20px; }
+  .bar-row { display: grid; grid-template-columns: 1fr; gap: 7px; }
+  .bar-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .bar-name { font-family: Archivo, sans-serif; font-weight: 600; font-size: .93rem; }
+  .bar-val { font-size: .93rem; font-weight: 600; }
+  .bar-track {
+    height: 15px;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 0 var(--r) var(--r) 0; }
+  .bar-note { font-size: .84rem; color: var(--ink-2); line-height: 1.45; }
+  .f-crit { background: var(--crit); }
+  .f-warn { background: var(--warn); }
+  .f-good { background: var(--good); }
+  .t-crit { color: var(--crit); }
+  .t-warn { color: var(--warn); }
+  .t-good { color: var(--good); }
+
+  /* ---- callout ---- */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--r);
+    padding: 18px 22px;
+    margin: 24px 0;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.crit { border-left-color: var(--crit); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout h3 { margin-top: 0; }
+
+  /* ---- composition strip ---- */
+  .comp { display: flex; height: 36px; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); margin: 18px 0 10px; }
+  .comp span {
+    display: flex; align-items: center; justify-content: center;
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem; font-weight: 600;
+    color: #fff; white-space: nowrap; overflow: hidden;
+  }
+  .comp .c-reads { background: var(--crit); }
+  .comp .c-egress { background: var(--warn); }
+  .comp .c-store { background: var(--accent); }
+  .comp .c-writes { background: var(--ink-3); }
+  .comp-key { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: .8rem; color: var(--ink-2); }
+  .comp-key i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
+
+  /* ---- list ---- */
+  ul.clean { margin: 0 0 1.05rem; padding-left: 1.1rem; }
+  ul.clean li { margin-bottom: .55rem; }
+
+  .tag {
+    display: inline-block;
+    font-size: .64rem;
+    font-weight: 600;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    vertical-align: 2px;
+    margin-left: 7px;
+  }
+  .tag.measured { background: var(--good-soft); color: var(--good); }
+  .tag.confirmed { background: var(--accent-soft); color: var(--accent); }
+  .tag.assumed { background: var(--warn-soft); color: var(--warn); }
+
+  footer {
+    margin-top: 70px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: .84rem;
+    color: var(--ink-3);
+    max-width: var(--measure);
+  }
+
+  @media (max-width: 620px) {
+    body { font-size: 16px; padding: 0 16px 70px; }
+    header.mast { padding-top: 46px; }
+    .stat .num { font-size: 1.72rem; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-fill { animation: grow .75s cubic-bezier(.22,.75,.3,1) both; }
+    @keyframes grow { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); } }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Fitness Tracker · running costs</p>
+  <h1>What it costs to run, and where that changes</h1>
+  <p class="lede">Almost nothing, for a long time — and then it depends entirely on one line of code
+  that nobody has had a reason to think about yet.</p>
+  <div class="mast-meta">
+    <span>Prices confirmed 2026-09-01</span>
+    <span>Usage measured from this repo</span>
+    <span>All figures USD</span>
+  </div>
+</header>
+
+<section>
+  <div class="prose">
+    <h2>The short answer</h2>
+    <p>For your first hundred or so users the app costs <strong>$110 a year</strong>, and none of
+    that is servers — it is the Apple developer account and a domain name. Hosting is free and stays
+    free. Sign-in is free with no ceiling.</p>
+  </div>
+
+  <div class="answer">
+    <div class="stat hero">
+      <div class="stat-label">Today, all in</div>
+      <span class="num">$110<span style="font-size:.5em;font-weight:500;color:var(--ink-3)">/yr</span></span>
+      <span class="sub">Apple $99 + domain $11. Firebase and GitHub Pages are $0 at this size.</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Servers cost $0 until</div>
+      <span class="num">~94<span style="font-size:.5em;font-weight:500;color:var(--ink-3)"> users</span></span>
+      <span class="sub">Where a realistic mix of users exhausts Firestore's free reads.</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">At 10,000 users</div>
+      <span class="num">$141<span style="font-size:.5em;font-weight:500;color:var(--ink-3)">/mo</span></span>
+      <span class="sub">Or <strong>$14/mo</strong> after the one change described below.</span>
+    </div>
+  </div>
+  <p style="font-size:.82rem;color:var(--ink-3);margin-top:12px;max-width:var(--measure)">
+    "A realistic mix" means 55% newish and casual, 30% two years in, 15% committed and four years
+    deep — not everyone at once, which is what makes an average per-user figure misleading.</p>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>What one person actually costs</h2>
+    <p>These are not estimates from a pricing page. They are measured out of this repository, using
+    the app's own Firestore byte accounting and a generated year of real training.</p>
+  </div>
+
+  <div class="scroller">
+    <table>
+      <caption>Per user, measured</caption>
+      <thead>
+        <tr><th>Thing</th><th class="n">Figure</th><th>Why it is that</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>One recorded workout<span class="tag measured">measured</span></td>
+          <td class="n mono">2,072 B</td>
+          <td>One Firestore document, priced by Firestore's own per-type rules, not raw JSON.</td>
+        </tr>
+        <tr>
+          <td>A year of training<span class="tag measured">measured</span></td>
+          <td class="n mono">440 KiB</td>
+          <td>209 sessions, 20 benchmarks, 53 weigh-ins, two programmes.</td>
+        </tr>
+        <tr>
+          <td>Saving a workout<span class="tag measured">measured</span></td>
+          <td class="n mono">1 write</td>
+          <td>Only the changed row is written. Writes are never the problem.</td>
+        </tr>
+        <tr class="col-now">
+          <td><strong>Opening the app cold</strong><span class="tag measured">measured</span></td>
+          <td class="n mono"><strong>10 + every session</strong></td>
+          <td><strong>The whole history is re-read every time. This is the entire bill.</strong></td>
+        </tr>
+        <tr>
+          <td>First visit, per device<span class="tag measured">measured</span></td>
+          <td class="n mono">920 KiB</td>
+          <td>The app shell from GitHub Pages, gzipped. Free, and cached forever after.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout crit">
+    <h3>The cost grows with a user's history, not with their training</h3>
+    <p>Because a cold open re-reads every session document, somebody three years in costs three
+    times what they cost in year one — for doing exactly the same amount of exercise. A committed
+    user at year five costs <span class="mono">91,000</span> reads a month on their own. Your most
+    loyal users become your most expensive, at a rate that never levels off.</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>Where the free tier ends</h2>
+    <p>Firestore gives 50,000 reads a day free, and keeps giving it after you enable billing. Reads
+    run out long before storage or bandwidth do — storage would last to about 1,900 users and
+    bandwidth to about 320.</p>
+  </div>
+
+  <div class="bars">
+    <div class="bar-row">
+      <div class="bar-head">
+        <span class="bar-name">As the app reads today</span>
+        <span class="bar-val t-crit">94 users</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill f-crit" style="width:5%"></div></div>
+      <p class="bar-note"><code class="mono">getDocs()</code> on the whole sessions collection, every cold open.</p>
+    </div>
+    <div class="bar-row">
+      <div class="bar-head">
+        <span class="bar-name">Reading only the last 16 weeks</span>
+        <span class="bar-val t-warn">544 users</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill f-warn" style="width:29%"></div></div>
+      <p class="bar-note">Older sessions load when somebody actually scrolls back to them.</p>
+    </div>
+    <div class="bar-row">
+      <div class="bar-head">
+        <span class="bar-name">Reading only what changed</span>
+        <span class="bar-val t-good">1,894 users</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill f-good" style="width:100%"></div></div>
+      <p class="bar-note">Offline persistence is already switched on; this asks it for the difference since last sync.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>The bill at scale</h2>
+    <p>Firestore only, per month, for that blended population. The two rows are the same code in two
+    database regions — a choice made once when the database is created and <strong>never
+    changeable afterwards</strong>.</p>
+  </div>
+
+  <div class="scroller">
+    <table>
+      <caption>Firestore, $/month</caption>
+      <thead>
+        <tr>
+          <th>Read pattern</th>
+          <th class="n">100</th><th class="n">1,000</th><th class="n">10,000</th>
+          <th class="n">100,000</th><th class="n">1,000,000</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="col-now">
+          <td class="strat">Today &mdash; multi-region</td>
+          <td class="n mono free">free</td><td class="n mono">$11</td><td class="n mono">$132</td>
+          <td class="n mono">$1,347</td><td class="n mono">$13,497</td>
+        </tr>
+        <tr>
+          <td class="strat">Today &mdash; single region</td>
+          <td class="n mono free">free</td><td class="n mono">$7</td><td class="n mono">$84</td>
+          <td class="n mono">$862</td><td class="n mono">$8,643</td>
+        </tr>
+        <tr>
+          <td class="strat">Windowed &mdash; single region</td>
+          <td class="n mono free">free</td><td class="n mono free">free</td><td class="n mono">$12</td>
+          <td class="n mono">$143</td><td class="n mono">$1,447</td>
+        </tr>
+        <tr class="col-best">
+          <td class="strat">Changed-only &mdash; single region</td>
+          <td class="n mono free">free</td><td class="n mono free">free</td><td class="n mono">$3</td>
+          <td class="n mono">$36</td><td class="n mono">$384</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <p style="margin-top:18px">Add <span class="mono">$9.17</span> a month of fixed cost to every
+    cell. Below about a thousand users that fixed cost <em>is</em> the bill — the servers round to
+    nothing, and the Apple account is the whole expense.</p>
+  </div>
+
+  <h3>What the bill is made of at 10,000 users</h3>
+  <div class="comp" role="img" aria-label="At ten thousand users, document reads are 81 percent of the Firestore bill, bandwidth 18 percent, storage and writes under 1 percent each.">
+    <span class="c-reads" style="flex:81">reads 81%</span>
+    <span class="c-egress" style="flex:18">bandwidth 18%</span>
+    <span class="c-store" style="flex:1"></span>
+  </div>
+  <div class="comp-key">
+    <span><i style="background:var(--crit)"></i>Document reads</span>
+    <span><i style="background:var(--warn)"></i>Bandwidth</span>
+    <span><i style="background:var(--accent)"></i>Storage &amp; writes, under 1%</span>
+  </div>
+  <p class="prose" style="margin-top:14px">Both of the big slices are the same root cause. Re-reading
+  a history is what generates the reads <em>and</em> what sends the bytes.</p>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>The one change worth making</h2>
+    <p>Everything above turns on <code class="mono">readShard()</code> asking Firestore for every
+    session document on every cold start. Offline persistence is already enabled — the data is
+    sitting on the phone — but a plain fetch goes to the server anyway and is billed for every
+    document it brings back.</p>
+    <p>Asking only for what changed since the last sync is worth roughly <strong>20&times; at every
+    scale</strong>. It is the difference between paying at a hundred users and paying at two
+    thousand, and between $13,000 a month and $640 at a million.</p>
+  </div>
+  <div class="callout">
+    <h3>It is also the fix for the thing you already noticed</h3>
+    <p>The lag you reported on the nav bar in August was this same pattern — asking again for data
+    the page already had. Some of that was fixed with an in-memory cache. The rest is this.</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>What could go wrong with the bill</h2>
+    <ul class="clean">
+      <li><strong>There is no hard spending cap on Firestore.</strong><span class="tag confirmed">confirmed</span>
+      Google shipped real spend caps in July 2026, but Firestore, Auth and Identity Platform are
+      explicitly not covered. Budget alerts are alerts only, and can lag by <em>up to a few
+      days</em>. The only true stop is a script that deletes the billing account, which takes the
+      whole project down with it and may not be recoverable.</li>
+      <li><strong>Region doubles it, and cannot be undone.</strong><span class="tag confirmed">confirmed</span>
+      Multi-region costs exactly twice single-region on every operation. It is fixed at database
+      creation. Worth checking which one this project is on before it matters.</li>
+      <li><strong>The free tier is a cliff, not a slope.</strong><span class="tag confirmed">confirmed</span>
+      50,000 reads a day is fine, and then it is billed at full rate. There is no ramp.</li>
+      <li><strong>Don't opt into Identity Platform &mdash; and this one has your name on it.</strong><span class="tag confirmed">confirmed</span>
+      Basic Firebase Auth is unlimited and free for email, Google, Apple and anonymous sign-in. The
+      opt-in upgrade turns it into per-user billing: free to 50,000 monthly active users, then
+      <span class="mono">$0.0055</span> each, tapering to <span class="mono">$0.0025</span> above ten
+      million. That looks harmless until you remember <strong>this app signs everybody in
+      anonymously by default</strong> &mdash; and anonymous accounts count as billable active users
+      unless automatic clean-up is switched on, which deletes them after 30 days. Every abandoned
+      browser profile would be a line on the bill. Staying on basic Auth avoids the question
+      entirely.</li>
+      <li><strong>Indexes are billed as storage.</strong><span class="tag confirmed">confirmed</span>
+      A collection with several composite indexes can store more index than data. Not a problem at
+      this size; worth knowing before adding indexes casually.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>The ceiling you set</h2>
+    <p>You said revenue must never exceed what it costs to run. That number is now concrete: it is
+    <strong>$110 a year</strong> today, and it stays under about <strong>$1,700 a year</strong> all
+    the way to ten thousand users on the current code — or under $280 with the read change.</p>
+
+    <h3>Donations</h3>
+    <p>GitHub Pages explicitly permits donation buttons and crowdfunding links; ads are the thing
+    its terms push back on. GitHub Sponsors takes <strong>0%</strong> from personal accounts. Ko-fi
+    is 0% on one-time tips if you opt out of its Standard tier, plus Stripe at about
+    <strong>1.5% + 20p</strong> in the UK. Buy Me a Coffee is nearer 9–10% all in.</p>
+    <p>Below <strong>£1,000</strong> a year the UK trading allowance means there is nothing to
+    report. Above it, Self Assessment. Whether donations attached to a product count as taxable
+    income is genuinely fact-dependent, and worth ten minutes with someone qualified rather than my
+    reading of HMRC's manuals.</p>
+
+    <h3>Ads are a worse fit than they look</h3>
+    <p>Apple's guideline 2.5.18 forbids targeted or behavioural advertising based on health data,
+    which is most of what this app knows about anybody. Apps "designed predominantly for the display
+    of ads" are refused outright. Given the numbers above, ads would be solving a $110 problem by
+    introducing a review risk and a tracking-consent prompt.</p>
+  </div>
+</section>
+
+<section>
+  <div class="prose">
+    <h2>One correction to your notes</h2>
+    <p>Your direction file says Sign in with Apple <em>will be required</em> because of guideline
+    4.8. That guideline has been rewritten. It is now called <strong>Login Services</strong>, it
+    names no Apple product, and it describes a capability: if you offer a third-party login, you
+    must also offer one that collects only name and email, lets people hide their email, and doesn't
+    use their activity for ads. Sign in with Apple satisfies it — but so could other things, and
+    <strong>the obligation is triggered by offering Google sign-in at all</strong>. Anonymous
+    accounts and your own email accounts trigger nothing.</p>
+  </div>
+</section>
+
+<footer>
+  <p><strong>How to read the confidence.</strong> Everything tagged <em>measured</em> came out of
+  this repository. Everything tagged <em>confirmed</em> was read off Google's, Apple's or GitHub's
+  own documentation on 2026-09-01, not from memory.</p>
+  <p>Four figures could not be confirmed and are not load-bearing here: Firestore's storage price in
+  a single region and in European regions, the Identity Platform per-user bands, and Apple's fee in
+  pounds. The first would make the single-region column slightly cheaper than shown; the others do
+  not enter the model. Engagement rates — how often people open the app, how many friends they
+  have — are assumptions, and they are the numbers most worth arguing with.</p>
+  <p style="margin-top:18px">Written 2026-09-06. Prices confirmed 2026-09-01 against Google's,
+  Apple's, GitHub's and Porkbun's own pages. Usage measured from this repository. The method, and
+  what was deliberately left out, is in <span class="mono">docs/history.md</span> under that date.</p>
+</footer>
+
+</div>
+
+</body>
+</html>

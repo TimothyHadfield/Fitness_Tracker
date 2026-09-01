@@ -269,6 +269,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `docs/airpods-plan.md` | **AirPods remote control — PLAN ONLY, nothing deployed, on Tim's instruction.** §1: head-motion is impossible for a web app, stem presses are buildable via MediaSession. §2 the design + priced costs (occupies Now Playing → opt-in only); §3 the dead-end table; §4 the build order if he says go, starting with an on-device spike |
 | `docs/icon-options/` | 🛑 **DELETED 2026-08-31, and it is not coming back on your initiative.** Tim rejected all six candidates and took the icon back: *"a mistake for you to work on them… I'm going to improve it later myself."* Recoverable at commit `fb72f8d`. `icon.svg` is untouched |
 | `docs/competitive-teardown.html` | Competitive research (published artifact) |
+| `docs/running-costs.html` | **What it costs to run — the cost analysis, 2026-09-06**, kept in the repo at Tim's ask so he can reopen it. A standalone page: open it in a browser, do not add it to `sw.js`'s precache. ⚠️ **The PRICES were confirmed live on 2026-09-01 and will drift; the MEASUREMENTS are the durable half** because they are properties of this code. 🚨 **Its finding is the one to carry**: `readShard()` re-reads a user's whole session history on every cold open, so cost scales with how long somebody has trained rather than how much, and reads are 81 % of the bill at 10 k users |
 
 ---
 
