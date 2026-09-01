@@ -3071,3 +3071,39 @@ One near-miss worth recording: I almost rejected it. The ratio divides rather th
 reading it the wrong way round made a beginner's knee push-up look like a 189 lb bench. Checked the
 arithmetic before writing anything, and the real number is 104. The ordering against a full push-up
 is now a test rather than an argument.
+
+---
+
+## 2026-09-06 (cost) — the analysis you parked in the interview
+
+You asked for the cost analysis, opened up to a range and with something to read it in. It's an
+artifact: https://claude.ai/code/artifact/9bc624aa-45b9-4f81-8e19-0b793e3e3742
+
+Your instinct that per-user cost is near nothing was right, with one exception that turned out to
+matter more than everything else in the analysis combined.
+
+**It costs $110 a year.** Apple's account and a domain. GitHub Pages is free and — worth knowing —
+literally cannot bill you; if you exceed its limits it degrades and sends an email. Sign-in is free
+with no ceiling as long as nobody enables the Identity Platform upgrade.
+
+**But the bill isn't driven by how much people train.** Every cold app open re-reads a user's entire
+session history, so somebody three years in costs three times what they cost in year one for doing
+the same amount of exercise, and it never levels off. Your most loyal users become your most
+expensive. That single pattern is 81% of the bill at ten thousand users, and reading only what
+changed since last sync is worth about 20× at every scale — free to nearly two thousand users
+instead of ninety-four.
+
+I recorded that rather than building it. Nobody asked for it and it's a real change to how the app
+talks to Firestore.
+
+**Two things I'd want you to know before they cost you anything.** There is no hard spending cap on
+Firestore — Google shipped caps in July but Firestore isn't covered, alerts can lag days, and the
+only true stop deletes the billing account. And never accept the Identity Platform upgrade: it bills
+per active user, and because this app signs everyone in anonymously by default, every abandoned
+browser profile would become a line on the bill.
+
+Also corrected a note in your direction file: guideline 4.8 doesn't require Sign in with Apple any
+more. It's been rewritten so that offering Google sign-in is what creates the obligation.
+
+Ads I'd avoid regardless of the money — Apple forbids behavioural advertising on health data, which
+is most of what this app knows about anyone.

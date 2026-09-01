@@ -42,7 +42,14 @@ from it.** He works on it **most days**, and there is **no deadline**.
 against user numbers — and believes per-user cost is close to nothing. The ceiling he set is the
 important part: **donations or slight ad revenue, and never more than it costs to run.** *"I don't
 want to make the cost or ad revenue higher than the cost to maintain the servers and other
-base-costs."* 🛑 **He asked for the analysis ONLY IF HE ASKS.** Do not spend a session on it.
+base-costs."* ~~🛑 **He asked for the analysis ONLY IF HE ASKS.** Do not spend a session on it.~~
+
+✅ **HE ASKED, AND IT WAS DELIVERED 2026-09-06** — published as an artifact, with the full write-up in
+`docs/history.md`. **His instinct that per-user cost is near nothing was right, with one exception
+that matters more than the rest of the analysis combined** (the read pattern, §A of that section).
+The answer in one line: **$110/year today, free servers to ~94 users, and the ceiling he set is a
+real number rather than a principle.** 🛑 **Do not re-run it unprompted**; prices were confirmed on
+2026-09-01 and will drift.
 
 ---
 
@@ -144,9 +151,18 @@ which safety may be raised unprompted.
 - ⚠️ **He was told, and accepted, that this is not a small step**: Apple rejects thin website
   wrappers (guideline 4.2), so the listing has to be earned with a shell that adds real native
   value, plus a $99/yr account and review.
-- ⚠️ **Sign in with Apple will be required.** Guideline 4.8: an app offering Google sign-in must
-  offer Apple's too. **His call: "Note it, deal with it then."** Not now — but it is a known cost of
-  the App Store plan, not a surprise to discover at submission.
+- 🔄 ~~**Sign in with Apple will be required.** Guideline 4.8: an app offering Google sign-in must
+  offer Apple's too.~~ 🚨 **CORRECTED 2026-09-06, reading the live guideline rather than memory.**
+  **4.8 is now called "Login Services" and names no Apple product.** It is a capability spec: an app
+  whose primary account uses a third-party login must ALSO offer a login service that limits
+  collection to name and email, lets the user keep their email private, and does not use in-app
+  activity for advertising without consent. **Sign in with Apple satisfies it and is not mandated by
+  name.** ⚠️ **The trigger is offering GOOGLE SIGN-IN at all** — anonymous accounts (D12, the default
+  path here) and the app's own email accounts trigger nothing. **His call stands: "Note it, deal with
+  it then."**
+- ⚠️ **A free app with no in-app purchase pays Apple NO commission at any revenue level** — the
+  $99/yr is the whole Apple bill. The uncosted item is a **Mac**, which is a hard requirement:
+  every Xcode version lists a macOS minimum and Xcode Cloud does not remove it.
 - 🛑 **No App Store work has been started and none was asked for.**
 
 ---

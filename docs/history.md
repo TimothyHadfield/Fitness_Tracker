@@ -17,6 +17,96 @@
 
 ---
 
+## 2026-09-06 (fifth pass) — 🚨 THE COST ANALYSIS, AND THE READ PATTERN IS THE WHOLE BILL
+
+Tim asked for the cost analysis `docs/direction.md` §2 had parked behind *"only if he asks"*, with two
+conditions: *"open it up to a range of possibilities and make a display for me to read it all in."*
+Delivered as an artifact:
+**https://claude.ai/code/artifact/9bc624aa-45b9-4f81-8e19-0b793e3e3742**
+
+⚠️ **Prices were confirmed live on 2026-09-01 and will drift. The MEASUREMENTS below are the durable
+half** — they are properties of this code, not of Google's price list.
+
+### A. 🚨 THE FINDING: COST SCALES WITH A USER'S HISTORY, NOT THEIR TRAINING
+
+**Measured with the app's own `firestoreDocBytes()` over the demo year, not estimated:**
+
+| | measured |
+|---|---|
+| One session document | **2,072 bytes** |
+| A year of training (209 sessions) | **440 KiB** |
+| Saving a workout | **1 document write** (`shardDiff` — writes are never the problem) |
+| **One cold app open** | **10 reads + EVERY session document + 2 per friend** |
+| First visit per device, from Pages | 920 KiB gzipped, then cached forever |
+
+🚨 **`readShard()` does `getDocs()` on the whole sessions collection every cold start.** So somebody
+three years in costs three times what they cost in year one **for doing the same amount of
+exercise**, and it never levels off. A committed five-year user is 91,000 reads a month on their own.
+**The most loyal users become the most expensive.**
+
+⚠️ **Offline persistence IS already enabled** (`persistentLocalCache`) and does not help: a plain
+`getDoc`/`getDocs` goes to the server anyway and is billed per document returned. The 2026-08-22 note
+about nav lag already said this out loud — *"a `getDoc` waits for the SERVER even with offline
+persistence enabled"* — and its cost consequence was simply never followed through.
+
+**What it is worth, on a blended population (55 % casual/new, 30 % two years, 15 % committed/four
+years):**
+
+| read pattern | free tier lasts to | 10 k users | 1 M users |
+|---|---|---|---|
+| **today** — whole history | **~94 users** | $132/mo | $13,497/mo |
+| windowed to 16 weeks | ~544 users | $20/mo | $2,302/mo |
+| **only what changed since last sync** | **~1,894 users** | **$4.65/mo** | **$643/mo** |
+
+**~20× at every scale, from one change.** Reads are **81 %** of the bill at 10 k users and bandwidth
+another 18 % — and both have the same root cause, because re-reading a history is what generates the
+reads *and* sends the bytes. 🛑 **Recorded as a finding, NOT queued** — nobody asked for it.
+
+### B. The rest of the money, which is nearly all zero
+
+- **$110/year, total, today**: Apple $99 + a .com at $11.08 (Porkbun, flat renewal). **GitHub Pages
+  is $0 and cannot bill** — it degrades and emails; it has no metered overage at all. **Basic
+  Firebase Auth is $0 with no ceiling** for email, Google, Apple and anonymous.
+- ⚠️ **Below ~1,000 users the fixed cost IS the bill.** The servers round to nothing and the Apple
+  account is the entire expense.
+- ✅ **The ceiling Tim set is now a number**: revenue must not exceed **$110/yr** today, or about
+  **$1,700/yr** even at ten thousand users on the current code.
+
+### C. 🛑 Four traps, all confirmed from source
+
+1. **THERE IS NO HARD SPENDING CAP ON FIRESTORE.** Google shipped native spend caps on 2026-07-28 —
+   and **Firestore, Auth and Identity Platform are not eligible services**. Budget alerts are alerts
+   only and can lag **up to a few days**. The only real stop is a Pub/Sub script that deletes the
+   billing account, which takes the whole project down and *"resources might be irretrievably
+   deleted."*
+2. **Region is a silent 2× and cannot be changed after the database is created.** Multi-region is
+   exactly twice single-region on every operation. ⚠️ **Which one `fitness-tracker-th` is on was not
+   checked** — worth knowing before it matters.
+3. 🚨 **NEVER OPT INTO IDENTITY PLATFORM, and this app is unusually exposed.** Basic Auth is
+   unlimited and free; the upgrade bills per monthly active user (free to 50 k, then $0.0055) — and
+   **anonymous accounts count as billable actives unless auto-cleanup is on.** D12 makes this app
+   anonymous-FIRST, so every abandoned browser profile would be a line item.
+4. **Ads are a worse fit than they look.** Apple 2.5.18 forbids behavioural advertising on health
+   data, which is most of what this app knows; 3.2.2(iii) refuses apps built predominantly around
+   ads; and GitHub's own AUP is hostile to ads while **explicitly permitting donation buttons.**
+
+### D. A correction to `docs/direction.md`
+
+**Guideline 4.8 no longer names Sign in with Apple.** It is now "Login Services", a capability spec —
+and **the obligation is triggered by offering Google sign-in at all**. Anonymous accounts and the
+app's own email accounts trigger nothing. Corrected in place. Also recorded there: a free app with no
+IAP pays **no commission at any revenue level**, and the uncosted requirement is a **Mac**.
+
+### E. ⚠️ What was deliberately NOT put in the model
+
+**No ad revenue figure.** Google publishes no vertical RPM benchmarks and every number available is
+ad-mediation vendor marketing. Four prices could not be read off a source page — Firestore's regional
+and European **storage** rates, and Apple's **GBP** fee among them — and are flagged in the artifact
+rather than filled in from memory. **None of them change a conclusion**; the regional storage one
+would only make the cheaper column cheaper.
+
+---
+
 ## 2026-09-06 (fourth pass) — THE KG BUG, A COMMENT THAT WAS LOAD-BEARING, AND ONE NEW EXERCISE
 
 Tim: *"fix the kg bug. I'm not really sure what needs fixing with the comments and knee push up, but

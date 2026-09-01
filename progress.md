@@ -22,8 +22,36 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-06 — the blanks became numbers, and the weight chart is finally in the
-reader's own unit.
+**Last updated:** 2026-09-06 — the cost analysis is done, and it found that this app's bill is one
+line of code rather than a price list.
+
+## What changed on 2026-09-06 (fifth pass), in one line each
+
+1. ✅ **THE COST ANALYSIS IS DELIVERED** — `docs/direction.md` §2's parked item, asked for and done.
+   Artifact: **https://claude.ai/code/artifact/9bc624aa-45b9-4f81-8e19-0b793e3e3742** ·
+   full write-up at the top of `docs/history.md`. **$110/year today** (Apple + a domain; Pages and
+   Auth are $0 and Pages *cannot* bill), **free servers to ~94 users**, and below ~1,000 users the
+   fixed cost IS the bill.
+2. 🚨 **THE FINDING, AND IT IS ABOUT THE CODE RATHER THAN THE PRICES: COST SCALES WITH A USER'S
+   HISTORY, NOT THEIR TRAINING.** `readShard()` does `getDocs()` on the whole sessions collection
+   **every cold open**, so a three-year user costs 3× a one-year user for the same exercise, forever.
+   Reads are **81 %** of the bill at 10 k users. **Reading only what changed is worth ~20× at every
+   scale** — free to ~1,894 users instead of ~94. ⚠️ **Offline persistence is already on and does not
+   help**: a plain `getDoc` is billed even when the data is on the device — which the 2026-08-22 nav
+   note already said, without following through to the cost. 🛑 **Recorded, not queued.**
+3. 🛑 **NO HARD SPENDING CAP EXISTS FOR FIRESTORE.** Google shipped spend caps 2026-07-28 and
+   **Firestore/Auth are not eligible**. Alerts lag **up to days**; the only true stop deletes the
+   billing account and the project with it.
+4. 🚨 **NEVER OPT INTO IDENTITY PLATFORM** — basic Auth is unlimited and free, and the upgrade would
+   bill **anonymous** users as monthly actives. **D12 makes this app anonymous-first**, so every
+   abandoned browser profile would be a line item.
+5. ⚠️ **Region is a silent 2× and is fixed at database creation** — which one `fitness-tracker-th`
+   uses was **not checked**.
+6. 🔄 **`docs/direction.md` §5 CORRECTED: guideline 4.8 no longer names Sign in with Apple.** It is a
+   capability spec now, and **offering Google sign-in is what triggers it** — anonymous accounts
+   trigger nothing. Also recorded: a free app with no IAP pays **no commission at any revenue level**.
+7. ⚠️ **Ads are a worse fit than they look** — Apple 2.5.18 forbids behavioural ads on health data.
+   **No ad revenue figure was modelled**: every available RPM number is vendor marketing.
 
 ## What changed on 2026-09-06 (fourth pass), in one line each
 
