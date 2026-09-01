@@ -22,138 +22,97 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-06 — the cost analysis is done, and it found that this app's bill is one
-line of code rather than a price list.
+**Last updated:** 2026-09-06 — a long session in five passes: the blanks list, eight of those blanks
+turned into numbers, two follow-ups, and the cost analysis.
 
-## What changed on 2026-09-06 (fifth pass), in one line each
+## What changed on 2026-09-06, in one line each
 
-1. ✅ **THE COST ANALYSIS IS DELIVERED** — `docs/direction.md` §2's parked item, asked for and done.
-   Artifact: **https://claude.ai/code/artifact/9bc624aa-45b9-4f81-8e19-0b793e3e3742** ·
-   full write-up at the top of `docs/history.md`. **$110/year today** (Apple + a domain; Pages and
-   Auth are $0 and Pages *cannot* bill), **free servers to ~94 users**, and below ~1,000 users the
-   fixed cost IS the bill.
-2. 🚨 **THE FINDING, AND IT IS ABOUT THE CODE RATHER THAN THE PRICES: COST SCALES WITH A USER'S
-   HISTORY, NOT THEIR TRAINING.** `readShard()` does `getDocs()` on the whole sessions collection
-   **every cold open**, so a three-year user costs 3× a one-year user for the same exercise, forever.
-   Reads are **81 %** of the bill at 10 k users. **Reading only what changed is worth ~20× at every
-   scale** — free to ~1,894 users instead of ~94. ⚠️ **Offline persistence is already on and does not
-   help**: a plain `getDoc` is billed even when the data is on the device — which the 2026-08-22 nav
-   note already said, without following through to the cost. 🛑 **Recorded, not queued.**
-3. 🛑 **NO HARD SPENDING CAP EXISTS FOR FIRESTORE.** Google shipped spend caps 2026-07-28 and
-   **Firestore/Auth are not eligible**. Alerts lag **up to days**; the only true stop deletes the
-   billing account and the project with it.
-4. 🚨 **NEVER OPT INTO IDENTITY PLATFORM** — basic Auth is unlimited and free, and the upgrade would
-   bill **anonymous** users as monthly actives. **D12 makes this app anonymous-first**, so every
-   abandoned browser profile would be a line item.
-5. ⚠️ **Region is a silent 2× and is fixed at database creation** — which one `fitness-tracker-th`
-   uses was **not checked**.
-6. 🔄 **`docs/direction.md` §5 CORRECTED: guideline 4.8 no longer names Sign in with Apple.** It is a
-   capability spec now, and **offering Google sign-in is what triggers it** — anonymous accounts
-   trigger nothing. Also recorded: a free app with no IAP pays **no commission at any revenue level**.
-7. ⚠️ **Ads are a worse fit than they look** — Apple 2.5.18 forbids behavioural ads on health data.
-   **No ad revenue figure was modelled**: every available RPM number is vendor marketing.
+⚠️ **This was FIVE passes and they are collapsed here on purpose.** Each has its own dated section in
+`docs/history.md` (2026-09-06, second through fifth pass); go there for any of it.
 
-## What changed on 2026-09-06 (fourth pass), in one line each
+**What Tim asked for, in order:** the list of every blank and refusal → build the ones worth
+building → the follow-ups from that → the cost analysis.
 
-1. 🚨 **THE WEIGHT CHART WAS ENTIRELY IN POUNDS FOR A KG USER** — not just the hover readout that was
-   reported, but **every gridline label on the Y axis**. Their bench charted as 205 while every other
-   screen said 93. ⚠️ **The shape of the chart was right, which is why nobody would notice**; only
-   the words down the side were wrong. Fixed at the display edge in `fmtField()` and the axis —
-   **labels convert, geometry does not**, which is exact because lb→kg is a pure scale. A bypass in
-   `views-data.js` was deleted rather than left as a fossil. **Mutation-checked**, and it is a bug
-   nothing here could have caught: **this suite has always run in pounds.**
-2. 🚨 **A CODE COMMENT WAS LOAD-BEARING AND WAS POINTING AT THE WRONG OBSTACLE.**
-   `exercises.js` gave the Incline Push-Up's exclusion as *"the app does not record the height"* —
-   **a problem the app can solve**, and a session had duly set out to solve it. The binding reason is
-   the measurement basis, two bullets below. Corrected there, in the Inverted Row entry, and in
-   `tests/bodyweight.test.mjs`'s `MUST_STAY_UNRANKABLE` — **the test that exists to stop somebody
-   filling these in was carrying the weak wording too.** 🔒 **A rule guarded by its weakest reason
-   gets overturned by whoever solves that reason. State the binding one first.**
-3. 🆕 **THE KNEE PUSH-UP IS IN THE LIBRARY** — `{ fraction: 0.62, q: 0.70, basis: 'measured' }`,
-   ratio 1.35 at quality **0.30**. Admitted for the reason the rest of the family is refused: **same
-   plate, same 28 men, same static position** as the push-up's 0.75, so no bases are mixed. ⚠️ The
-   ratio is **carried, not calibrated** — no knee push-up standards exist. 🚨 **The ordering was
-   DRIVEN**: 104/117/133 lb against a full push-up's 124/140/158 at 6/10/15 reps, strictly below at
-   every rep count, mutation-checked by inverting the ratio.
-   ⚠️ **`estimate = raw / ratio`, so a BIGGER ratio means a SMALLER number** — reading it backwards
-   made a 6-rep knee push-up look like a 189 lb bench and nearly killed the idea.
+1. ✅ **OPEN WORK 24 CLOSED — every blank, empty state and permanent refusal was listed**: eight
+   where the app holds the data and says nothing, nine permanent refusals, twenty honest first-run
+   blanks a sweep would wreck. He then said to build what I thought was worth building.
+2. 🚨 **THE MUSCLE MAP RANKS WITHOUT A PROFILE.** A missing weigh-in **widens the comparison to
+   lifters of every size** rather than inventing a body weight; a missing sex assumes male **and says
+   so**. 🚨 **An assumed map is NEVER published to a friend** — `buildStrengthShare()` refuses,
+   because a reader cannot recompute a percentile and has nothing to check it against.
+3. 🛑 **GOALS KEPT ITS GATE ON PURPOSE** — it branched on the map's `ready` flag, and **a goal FREEZES
+   its target weight (D20)**, so an assumption made once would sit inside that target for twelve
+   weeks. It now reads the raw `profile.missing`.
+4. 🆕 **Goals says WHAT HAS MOVED** since the goal was set, with the ±12 % yardstick and **still no
+   verdict word** (Rule 6) · **Volume states a rate under a fortnight** · **Bars falls back to workout
+   sets**, one source per row (D14) · **one recording shows its value and estimated max**, no line ·
+   **the benchmark screen estimates through a stand-in**, capped and both hops named · **the runner
+   says why** a weight field is blank without filling it.
+5. 🔄 **CUSTOM EXERCISES CAN SET A LEVEL AGAIN — if the person NAMES the closest library exercise.**
+   Not a reversal of 2026-08-31: the app stopped INFERRING and started being TOLD. `STAND_IN_QUALITY`
+   0.40, one hop, and **1.00 × 0.40 lands below `FALLBACK_MIN_QUALITY`** so it can never chain onward.
+6. 🆕 **The knee push-up is in the library** — 319 exercises now. Same plate, same men, same static
+   position as the push-up's 0.75, so no measurement bases are mixed.
+7. 🚨 **THE WEIGHT CHART WAS ENTIRELY IN POUNDS FOR A KG USER** — the axis as well as the readout.
+   **The shape was right, which is why nobody would notice.** Fixed at the display edge; labels
+   convert, geometry does not. ⚠️ **Nothing here could have caught it: this suite has always run in
+   pounds.**
+8. ✅ **The 3.96:1 "PER SIDE" chip is fixed** and the palette test now asserts that pair, which it
+   structurally could not before. ✅ **Browser audit clean — 128 routes, 11,912 text nodes, zero below
+   4.5:1, zero overflow.**
+9. 🚨 **A THREE-HOP WEIGHT COULD REACH THE RUNNER'S FIELD** — `derivedWeights` never checked
+   `rating.kind`. **The identical bug fixed in `exercise-estimate.js` on 2026-09-02**, alive four days
+   in the one place that puts a number in a field somebody loads a bar to. Closed.
+10. ✅ **`benchmarkComparison()` deleted** — it held a **second copy** of `normalizedSeries()`'s
+    per-day rule. Its assertions moved to the surviving copy rather than dying with it.
+11. 🛑 **THE BAR-HEIGHT WORK WAS NOT BUILT, AND §9's OWN DIAGNOSIS WAS WHY** — *"adding the parameter
+    is the fix"* is true of neither exercise. `docs/research.md` §15 (🔴); §9 corrected.
+12. ✅ **THE COST ANALYSIS IS DELIVERED** — `docs/running-costs.html` in the repo, and an artifact.
+    **$110/year today, free servers to ~94 users.** See the section below; it is the one piece of
+    today a fresh session most needs.
 
-## What changed on 2026-09-06 (third pass), in one line each
+## 💷 WHAT IT COSTS TO RUN — the numbers a fresh session should not re-derive
 
-1. 🔄 **CUSTOM EXERCISES CAN SET A STRENGTH LEVEL AGAIN — IF THE PERSON NAMES WHAT IT IS CLOSEST
-   TO.** ⚠️ **Not a reversal of 2026-08-31**: the app stopped INFERRING from the equipment dropdown
-   and started being TOLD. **The match decides the muscle**, quality is knocked to
-   **`STAND_IN_QUALITY` 0.40** of the target's, **1.00 × 0.40 lands below `FALLBACK_MIN_QUALITY`** so
-   it can never chain onward, one hop only, and bodyweight/assisted targets are refused. Her 60×10
-   now converts at quality **0.14**.
-2. 🛑 **THE BAR-HEIGHT WORK WAS NOT BUILT, AND §9's OWN DIAGNOSIS WAS WHY.** *"Adding the parameter
-   is the fix"* is true of neither exercise: the incline push-up's two figures are named box heights
-   measuring the **wrong quantity**, and the inverted row's parameter is **body angle, not bar
-   height**, from a **predatory unindexed journal**. `docs/research.md` §15, graded 🔴; §9 corrected.
-   ⚠️ **One lead not acted on**: Suprak's knee push-up at 61.80 %, right quantity, needs a new
-   library exercise.
-3. ✅ **The 3.96:1 "PER SIDE" chip is fixed** — `#82570B`, 5.02:1, scoped to the **default palette
-   only** because the other three already passed and an unscoped rule would have broken them.
-   🚨 **`tests/a11y.test.mjs` now asserts that pair**, which it structurally could not before: it
-   walks `:root` tokens, and this pair exists only because a CLASS puts one on the other.
-4. ✅ **The three behaviours that shipped untested are pinned** — Bars' one-source-per-row (D14),
-   Goals' "what has moved" (with a guard that would catch it growing into a verdict), and the
-   runner's blank-field line.
-5. ✅ **`benchmarkComparison()` deleted** — 🚨 it held a **second copy** of `normalizedSeries()`'s
-   per-day rule. Its assertions were re-pointed at the surviving copy, not deleted.
-6. ⚠️ **A `via` field was about to carry two meanings** (a muscle on a fallback, an exercise name on
-   a stand-in) disambiguated by reading `kind` first — **the invites/requests fault**, and
-   `exercise-estimate.js` already reads `via` bare. Split into `standInName`.
-7. ✅ **Browser audit clean: 128 routes, 11,912 text nodes, ZERO below 4.5:1, zero overflow.**
-8. ⚠️ **A MUTATION CHECK CAN LIE IN THE REASSURING DIRECTION** — mine passed because the mutation
-   landed on a hex **in a comment** rather than in the rule. A passing mutation check is evidence
-   only once you know the mutation hit the code.
+**`docs/running-costs.html`** is the full analysis, in the repo so it can be reopened; it is also an
+artifact. `docs/history.md`, 2026-09-06 fifth pass, is how it was built.
 
-## What changed on 2026-09-06 (second pass), in one line each
+- **$110/year, total, today** — Apple's $99 plus a domain. **GitHub Pages is $0 and structurally
+  CANNOT bill** (it degrades and emails). **Basic Firebase Auth is $0 with no ceiling.**
+- **Firestore is free to ~94 users**, and below ~1,000 users the fixed cost IS the whole bill.
+- 🚨 **THE FINDING, AND IT IS ABOUT THIS CODE RATHER THAN GOOGLE'S PRICES: COST SCALES WITH A USER'S
+  HISTORY, NOT THEIR TRAINING.** `readShard()` does `getDocs()` on the whole sessions collection
+  **every cold open**, so a three-year user costs 3× a one-year user for the same exercise, and it
+  never levels off. **Reads are 81 % of the bill at 10 k users.** Reading only what changed is worth
+  **~20× at every scale** — free to ~1,894 users instead of ~94. ⚠️ **Offline persistence is already
+  on and does not help**: a plain `getDoc` is billed even when the data is on the device, which the
+  2026-08-22 nav note said without following it through to the cost. 🛑 **RECORDED, NOT QUEUED —
+  nobody asked for it.**
+- 🛑 **NO HARD SPENDING CAP EXISTS FOR FIRESTORE.** Google shipped spend caps 2026-07-28 and
+  **Firestore and Auth are not eligible**. Alerts lag **up to days**; the only true stop deletes the
+  billing account and the project with it.
+- 🚨 **NEVER OPT INTO IDENTITY PLATFORM** — basic Auth is unlimited and free, and the upgrade bills
+  **anonymous** users as monthly actives. **D12 makes this app anonymous-first**, so every abandoned
+  browser profile would be a line item.
+- ⚠️ **Region is a silent 2× fixed at database creation** — which one `fitness-tracker-th` uses was
+  **not checked**, and it cannot be changed afterwards.
+- ⚠️ **Ads are a worse fit than they look** — Apple 2.5.18 forbids behavioural ads on health data.
+  **No ad revenue figure was modelled**: every available RPM number is vendor marketing.
+- ⚠️ **PRICES WERE CONFIRMED 2026-09-01 AND WILL DRIFT. The measurements will not** — they are
+  properties of this code. Re-confirm every price before re-quoting one.
 
-1. 🚨 **THE MUSCLE MAP RANKS WITHOUT A PROFILE.** A missing weigh-in **widens the comparison to
-   lifters of every size** rather than inventing a body weight; a missing sex assumes male and
-   **says so on screen**. 🚨 **An assumed map is never published to a friend** —
-   `buildStrengthShare()` refuses, because `shared-map.js` cannot recompute a percentile and a reader
-   has nothing to check it against. Mutation-checked.
-2. 🛑 **GOALS KEPT ITS GATE, DELIBERATELY, AND IT NOW ASKS A DIFFERENT QUESTION.** It branched on the
-   map's `ready` flag, so lifting that opened Goals too — and **a goal FREEZES its target weight when
-   set (D20)**, so an assumption made once would stay frozen in for twelve weeks after the profile
-   was filled in. `hasProfile` reads the raw `profile.missing`. Mutation-checked.
-3. 🆕 **Goals says WHAT HAS MOVED** since the goal was set — the two estimated 1RMs subtracted, the
-   ±12 % yardstick beside it, **still no verdict word** (Rule 6). ⚠️ Not the percentiles: those move
-   with the comparison group, so subtracting them reports a change in the standards as a change in
-   the lifter.
-4. 🆕 **Volume states a rate under a fortnight**, span named — and that fixed a latent bug where the
-   body map painted window TOTALS against weekly-dose colour bands. **Bars** falls back to workout
-   sets, one source per row (D14). **One recording** shows its value and estimated max, no line.
-   **Goals' two "not enough training yet"** rows show totals.
-5. 🆕 **The benchmark screen estimates through a stand-in** when it must — opt-in, flagged, **band
-   capped at Fair**, both hops named. 🛑 **The default did not move**: the runner and compare keep
-   the refusal. The runner now **says why** a weight field is blank without filling it.
-6. 🚨 **AND A THREE-HOP WEIGHT COULD REACH THE RUNNER'S FIELD.** `derivedWeights` checked
-   `rating.estimate` and `rating.confidence` and never `rating.kind` — **the identical bug fixed in
-   `exercise-estimate.js` on 2026-09-02**, alive for four days in the one place that puts a number in
-   a field somebody loads a bar to. Closed; it can only ever withhold. Found by an agent reading the
-   two modules side by side.
-7. ⚠️ **THE BROWSER AUDIT WAS RUN AGAINST `HEAD` AS A CONTROL** — 128 routes, 11,912 text nodes, zero
-   overflow, and its **8 contrast failures are identical on HEAD, so today introduced none.** They
-   are real though: `.load-badge.per-side` (`ui.js:897`) is **3.96:1 in light**. 🛑 Not fixed — it is
-   a colour. **The handbook's "zero below 4.5:1" line is stale.**
-8. ⚠️ **A GREEN AUDIT WITH A ZERO NODE COUNT IS NOT A PASS** — the first run measured **404 pages** (a
-   stale server on the port), and reported zero contrast failures and zero overflow across 128
-   routes. See `docs/history.md`.
+### 🔒 Three lessons from today that are about METHOD, not about this app
 
-## What was already recorded on 2026-09-06
-
-1. ✅ **OPEN WORK 24 IS CLOSED — the list of every blank, empty state and permanent refusal was
-   delivered**, grouped into **eight worth changing** (the profile gate blanking the whole muscle map
-   and Goals is the biggest by a distance), **nine permanent refusals where nothing is published**
-   (two of which have a real fix — asking for an inverted row's bar height, and letting a custom
-   exercise borrow a library ratio), and **twenty honest first-run blanks that a sweep would wreck**.
-   Full table at the top of `docs/history.md`. 🛑 **It is a LIST — nothing was changed and nothing may
-   be until he picks**: *"I think I'll notice the places that show blanks and I'll manually tell you
-   to fix them if I want."*
+- 🔒 **A RULE GUARDED BY ITS WEAKEST REASON GETS OVERTURNED BY WHOEVER SOLVES THAT REASON.** §9 and
+  `exercises.js` both gave "the app does not record the height" as why two exercises are unrankable —
+  **a problem the app can obviously solve** — when the binding reason was an unfixable mismatch of
+  measurement bases. A session read it and set out to build the field. **State the binding reason
+  first.** Corrected in three places, including the test that exists to stop somebody filling them in.
+- ⚠️ **A MUTATION CHECK CAN LIE IN THE REASSURING DIRECTION.** One of mine passed because the
+  mutation landed on a hex **in a comment** rather than in the rule it was testing. **A passing
+  mutation check is evidence only once you know the mutation hit the code** — see §0.14.
+- ⚠️ **A GREEN BROWSER AUDIT WITH A ZERO TEXT-NODE COUNT IS NOT A PASS.** The first run measured 404
+  pages end to end — a stale server on the port — and reported zero contrast failures and zero
+  overflow across all 128 routes. **Check the node count before reading anything else.**
 
 ## What changed on 2026-09-05, in one line each
 
@@ -317,17 +276,26 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT, AND ONE THING IS WAITING ON TIM
 
-⚠️ **THE 2026-09-05 WORK WAS NOT LOOKED AT IN A BROWSER.** The session was paused mid-flight for this
-reset, with everything green (4,112 headless assertions) and pushed. **The compare fix WAS driven in
-a real browser and confirmed**; the friend-page tabs were not. Per `docs/direction.md` §3.3 that is
-not a blocker and must not be written up as one — Tim tests continuously and reports what breaks —
-but it is the one thing this session would have done next.
+**The working tree is clean, everything is pushed, and every suite is green** — seventeen of them,
+including 982 render assertions, plus a browser audit at **128 routes / 11,912 text nodes / zero
+contrast failures / zero overflow**. **No half-finished job to pick up.**
 
-**The working tree is clean, everything is pushed, the rules are deployed and the live site is
-serving it.** No half-finished job to pick up. **Between jobs, say what is done and stop — do not
-propose what to build next** (§1, and Tim has asked for that twice).
+🛑 **BETWEEN JOBS, SAY WHAT IS DONE AND STOP — DO NOT PROPOSE WHAT TO BUILD NEXT** (§1, and Tim has
+asked for that twice). ⚠️ **He does ask "what's next?" directly, and then a real ranked answer is
+wanted** — that is a question, not an opening. The pinned items (P1–P4) and the four he said he would
+raise himself stay out of the answer either way.
 
-## ⏸️ THE ONE OPEN THREAD: HOW TO RANK ABS — Tim asked, it was answered, HE HAS NOT PICKED
+⚠️ **DO NOT WRITE "not verified on a phone" ANYWHERE** — `docs/direction.md` §3.3, and it is the rule
+this file has broken most often. Shipped is working unless Tim says otherwise.
+
+**Two things sit unbuilt on purpose, and neither is a loose end:**
+
+- 🛑 **The read-pattern change** — worth ~20× on running cost and the clearest single improvement
+  left in this codebase. **Nobody asked for it**, and it changes how the app talks to Firestore. See
+  the cost section above.
+- 🛑 **The abs ranking** — his, and open. Below.
+
+## ⏸️ THE OPEN THREAD THAT IS TIM'S: HOW TO RANK ABS — he asked, it was answered, HE HAS NOT PICKED
 
 Tim, 2026-09-03: *"I want to finally design a way to rank ab muscles on the muscle group strength
 display. I have a few ideas, but I want you to see if there are any problems or whatever with
@@ -344,7 +312,10 @@ true and is the thing option (a) fixes. He deferred it on 2026-09-01 and re-open
 
 ## 🚨 THE ONE THING TO KNOW ABOUT THE LIVE STATE
 
-**Autumn's account has not opened the app since 2026-09-03, so it is still on the OLD sharing
+⚠️ **THIS WAS TRUE ON 2026-09-03 AND NOBODY HAS CHECKED SINCE — it resolves itself the moment she
+opens the app once, so treat it as "may already be fixed" rather than as current fact.**
+
+**Autumn's account had not opened the app as of 2026-09-03, so it was still on the OLD sharing
 model** — `shared/full`, published 2026-08-31. Tim's is migrated. **This is normal and handled**:
 each account migrates its own documents on its own device, and a reader falls back to the tier
 documents (`social.friend()` probes `friends` → `public` → `full`/`mid`/`light`). Her map, her cards
@@ -440,6 +411,19 @@ Three passes, each with its own dated section in `docs/history.md`.
   as of right now."* Reporting and blocking are wanted eventually — *"just put it in the notes."*
 - 🛑 **A RENAME IS COMING AND HE WILL BRING IT.** "Fitness Tracker" is a placeholder. **Do not push
   him on it**; just keep the string cheap to change.
+- 🟢 **SUB-AGENTS ARE WANTED, AND HE HAS ASKED TWICE** — *"Deploy many sub-agents to get it done if
+  you need"*, then *"Remember to delploy sub-agents."* 🚨 **THE THING THAT MAKES IT WORK IS DISJOINT
+  FILE SETS.** On 2026-09-06 four agents wrote at once with a named list of files each may edit and a
+  named list it may not, and **nobody was allowed near `css/app.css` or `tests/`** — the two places
+  four writers collide *silently*. Tests, integration and both audits were done afterwards in one
+  pass. ⚠️ **Agents must not commit**, and they must be told to run the suites and report verbatim.
+  ⚠️ **The 2026-08-22 note about wave size was about REVIEW agents**; four writing at once is a
+  different thing and it held.
+- ⚠️ **AGENTS FLAG THEIR OWN NEAR-MISSES, AND THOSE ARE WORTH READING CLOSELY.** On 2026-09-06 one
+  reported that it had nearly put two meanings in one field and asked for a second opinion — it was
+  right, and the fix went in. Another found a real bug on the logging path it had been told not to
+  touch, and reported rather than fixed it. **Read the "what I decided NOT to do" section of every
+  agent report.**
 - 🛑 **DO NOT SURFACE THE PINNED ITEMS (P1–P4)** as "the next thing to do" — Tim's standing
   instruction, 2026-08-28. Build them if he names them; otherwise leave them alone.
 - 🛑 **NOR THE FOUR OPEN-WORK ITEMS HE WAS SHOWN ON 2026-09-04** — handles, checking the estimator,
@@ -520,9 +504,11 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
+| **26** | 🆕 **the read pattern — the running cost of this app, quantified 2026-09-06** | 🛑 **RECORDED, NOT AUTHORISED. Nobody asked for it, and it changes how the app talks to Firestore.** `readShard()` does `getDocs()` on the whole sessions collection **every cold open**, so cost scales with how LONG somebody has trained rather than how much — a three-year user costs 3× a one-year user for the same exercise, forever, and **reads are 81 % of the bill at 10 k users**. Reading only what changed since last sync is worth **~20× at every scale** (free to ~1,894 users against ~94). ⚠️ **Offline persistence is already enabled and does not help** — a plain `getDoc` is billed even when the data is on the device. ⚠️ **It is also the unfinished half of the 2026-08-22 nav-lag fix**, which said this out loud and stopped at an in-memory cache. `docs/running-costs.html` |
+| **25b** | 🆕 **the demo has no TIME-based strength set** | ⚠️ Left over from 25. The generator writes every set as `{weight, reps}`, so there is no plank, L-sit or dead hang anywhere in the demo year — a shape the app supports and the demo cannot show. Small; nobody has asked |
 | **25** | ✅ ~~the demo cannot show a trained-but-unrankable muscle~~ **FIXED 2026-09-04** | Cable Crunch (Core ranks) and Neck Curl (Neck hatches) — one of each, because the two states cannot sit on one muscle now Core is rankable. Tim authorised the re-baseline it forced. ⚠️ **Still open, and smaller**: the generator writes every set as `{weight, reps}`, so the demo has no TIME-based strength set anywhere — no plank, no L-sit, no dead hang. ~~ ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |
 | **23** | ✅ ~~a note to the developer~~ **BUILT 2026-09-04** | Form on Account, inbox at `#/notes`, `js/feedback.js` + a `feedback/{noteId}` collection. 🚨 **The developer is a hard-coded uid in `firestore.rules`** and the screen protects nothing; the author cannot read their own note back and nobody can edit one. Rules deployed and proved on the live project. 🛑 **TEMPORARY — take it out when the first users stop being new**, or it becomes a support inbox nobody is staffing. ~~ 🟢 **AUTHORISED, and he said to build it once questioning finished.** *"adding a temporary section to the app that allows the user to write a note or idea straight to the developer (me) would be nice to have. Then, make my account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas straight on the app."* ⚠️ **DELIBERATELY TEMPORARY** — it exists to catch fresh opinions while the first users are new, not forever. 🚨 **The developer role has to be enforced by `firestore.rules`, not by hiding a screen**: these are other people's words about their own training, and "only Tim can read them" has to be true on the wire. ⚠️ **It is also the first user-submitted free text this app has ever stored**, which is the moderation surface he parked the same day — worth one sentence to him if a decision here would be expensive to undo, and nothing more (that is the single exception he granted to staying quiet) |
-| **24** | ✅ ~~the list of every blank and refusal~~ **DELIVERED 2026-09-06** | The table is at the top of `docs/history.md`: **eight places the app holds the data and says nothing**, **nine permanent refusals** (two with a real fix), **twenty honest first-run blanks**. 🚨 **The biggest item is not a number, it is a gate**: `views-muscles.js:117` blanks the WHOLE muscle map — and `views-goals.js:52` the whole Goals screen — until sex, body weight and age are entered, over an account that may hold a year of sets. 🛑 **Nothing was changed and nothing may be until he picks one.** ⚠️ **Do not surface this list as "the next thing to do"** — he has it, and the standing instruction is that he points. ~~ 🟢 **AUTHORISED.** *"if you want to give me a list of the places this does already happen, it could help me with this. Do this after we're done questioning."* Every screen where the app currently shows a blank, an empty state, or a permanent refusal instead of a best-effort number — with, for each, what it could honestly say instead and how it would be labelled. ⚠️ **It is a LIST, not a sweep**: *"I think I'll notice the places that show blanks and I'll manually tell you to fix them if I want."* 🛑 **Change nothing off the back of it without him picking** |
+| **24** | ✅ ~~the list of every blank and refusal~~ **DELIVERED AND THEN BUILT, 2026-09-06** | The list went to Tim (eight places the app held data and said nothing, nine permanent refusals, twenty honest first-run blanks) and he answered: *"make a plan for each one and start building. Don't ask me questions, just go with whatever you recommend."* ✅ **All eight of the first group shipped that day** — see the 2026-09-06 summary at the top of this file. 🛑 **Two were deliberately NOT built and the reasons are the point**: the Goals profile gate (a goal FREEZES its target weight, so an assumption made once outlives every screen that would relabel it), and the bar-height parameter (`docs/research.md` §15 — the diagnosis in §9 was wrong, and the fix it named would not have worked). ⚠️ **The nine permanent refusals stand**, one of them now with a knee push-up beside it. ~~ 🟢 **AUTHORISED.** *"if you want to give me a list of the places this does already happen, it could help me with this. Do this after we're done questioning."* Every screen where the app currently shows a blank, an empty state, or a permanent refusal instead of a best-effort number — with, for each, what it could honestly say instead and how it would be labelled. ⚠️ **It is a LIST, not a sweep**: *"I think I'll notice the places that show blanks and I'll manually tell you to fix them if I want."* 🛑 **Change nothing off the back of it without him picking** |
 | **21** | 🔄 ~~the abs ranking~~ **BUILT 2026-09-04** | ✅ Tim picked his own first idea and it shipped: Core has a key lift (Cable Crunch), a measured median, its own spread and its own reliability penalty. `docs/history.md` 2026-09-04 second pass; `docs/research.md` §14. ⚠️ **What is NOT done, and he has not been asked for it**: it rates about a quarter of how people train abs, and §14.6 records the obvious next lead — published norms for the **plank hold** and the **60-second sit-up** — as **unchecked**, not as rejected. 🛑 Do not start it. ~~ ⏸️ He re-opened it himself and asked for the problems with two approaches. The assessment is `docs/history.md`, "2026-09-03 — HOW TO RANK ABS"; the short version: **his first idea (weighted core work through the normal machinery) is buildable if the numbers are pulled properly, and answers about a third of it**; **his second (seed from their other muscles, then track improvement) puts two different meanings in one colour and invents a correlation nobody has measured**; and **the cheapest fix needs no new data at all** — give trained-but-unrankable muscles their own mark and legend entry, and have the panel say what HAS been logged. **Nothing is built and nothing should be until he picks** |
 | **17** | ~~the Hevy-shaped home feed~~ | ✅ **BUILT 2026-09-02 — all eight steps of `docs/social-plan.md` §13**, which now carries a ✅ block under each one and a §14 summary. What is left of it is two things Tim owes a decision on (**warm-up typing**, still item 2 below; **per-workout visibility**, §13's decision B) and **step 9, photos, which needs Blaze** and is item 10. ⚠️ **The Records column is deliberately absent from the card** — sixty published sessions are not a lifetime, and that caveat does not fit beside somebody's name; the bests are on the workout screen instead. ⚠️ **Nothing here has been used by two real accounts** — that is item 1, and it grew a longer list today |
 | **18** | 🔄 ~~do not build the discovery feed~~ **THE REFUSAL WAS LIFTED 2026-09-04** | Tim, asked directly whether a ban decided when this was an app for two people still held once it is on the App Store: **"It has to go eventually."** 🛑 **Nothing is built and he did not ask for a plan.** What the old entry got right is the COST, and that part is unchanged: it needs public profiles and a way to enumerate them, and it imports a moderation story this project still does not have — which he also parked the same day (*"just put it in the notes"*). So the sequence is fixed even though the decision flipped: **finding strangers cannot ship before blocking and reporting do.** `docs/social-plan.md` §12.11 holds the reasoning and is now history rather than law; `docs/direction.md` §3.2 |
@@ -983,7 +969,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **4,004 assertions across SEVENTEEN suites** (recounted 2026-09-03 by running every one: data-layer 1847, render 911, goals 232, bodyweight 175, social 162, a11y 102, share-image 91, optimal 76, strength-estimate 72, volume-map 64, demo 58, compare 53, year-grid 45, routine 42, qr 33, estimate 29, sw-update 12), plus **159 in `rules`** (emulator, not in that total). ⚠️ **`social` went DOWN (181 → 162) and that is not a loss of coverage** — the tier model it tested no longer exists, and one absence check over three tiers replaced a walk over every leaf of a light projection. ⚠️ **Four suites are new on 2026-09-02** — `compare`, `routine`, `share-image` and `estimate` — and the per-suite rows below are the recount too. ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **4,118 assertions across SEVENTEEN suites** (recounted 2026-09-06 by running every one: data-layer 1870, render 982, goals 232, bodyweight 184, social 162, a11y 107, share-image 91, optimal 76, strength-estimate 72, volume-map 64, demo 58, compare 53, year-grid 45, routine 42, qr 33, estimate 35, sw-update 12), plus **159 in `rules`** (emulator, not in that total). *(2026-09-03's recount was 4,004; the +114 is that day's work being pinned.)* ⚠️ **`social` went DOWN (181 → 162) and that is not a loss of coverage** — the tier model it tested no longer exists, and one absence check over three tiers replaced a walk over every leaf of a light projection. ⚠️ **Four suites are new on 2026-09-02** — `compare`, `routine`, `share-image` and `estimate` — and the per-suite rows below are the recount too. ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1847 assertions, **no dependencies**. ⚠️ Since 2026-08-30 it also holds the **EXERCISE-PICTURE manifest**: that it matches `img/exercises/` on disk (a forgotten `tools/build-exercise-images.mjs` fails here, because the drift is otherwise silent — a filename typed wrong shows no picture, and no picture is this feature's normal state), that every picture is in the sw precache (**D6**), and 🚨 that a picture given to one "Cable Kickback" is not given to the other. ⚠️ Since 2026-08-30 it also holds the **MOVEMENT FAMILIES** — that all 271 members resolve to exactly one exercise (the `preset-systems` by-name lesson on a second table), that no exercise is in two families, that a leg press offers four kinds of EQUIPMENT rather than five barbell squats, and 🚨 that Hip Adduction, Neck Curl and Tibialis Raise have **no family on purpose** because each is the opposite movement to its lookalike. And **the Research tab's content**: that every claim on that screen cites a source that is actually defined, that every topic states its own limit, and the **WORD BUDGETS** — 45 words an answer, 48 a bullet, 260 a topic. That last group is the point of this section: every other assertion anybody would write about educational text checks it is PRESENT, and none of them can catch prose piling back up. It also pins the three sentences whose popular version is the OPPOSITE of the finding (stretching not preventing injury, "not to failure" not meaning stop early, no best time of day). ⚠️ Since 2026-08-27 it also holds the **profile-photo crop maths** (the crop square never leaves the image — 1,925 combinations, zero escapes) and the **file-import parser**: the date order, the weight unit and the distance unit are each REFUSED rather than guessed, and a re-import upserts instead of doubling. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 175 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |

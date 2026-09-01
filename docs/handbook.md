@@ -197,6 +197,25 @@
     builds behind**; the app now checks for updates on resume, but a build that predates that fix
     cannot help itself.
 
+14. **🚨 A MUTATION CHECK THAT PASSES PROVES NOTHING UNTIL YOU KNOW THE MUTATION LANDED ON THE CODE.**
+    This project mutation-checks constantly, and the check has exactly one failure mode: **it fails
+    in the reassuring direction.** On 2026-09-06 a colour fix was verified by replacing its hex and
+    re-running the suite. The suite stayed green, which should have meant the new assertion was
+    vacuous and worthless. It was not — **the string replacement had hit the same hex written in the
+    COMMENT above the rule**, and the rule itself was untouched. The test was fine; the evidence for
+    it was fabricated.
+
+    ⚠️ **The asymmetry is what makes this dangerous.** A mutation check that fails tells you
+    something true immediately. A mutation check that passes looks exactly like a vacuous test, and
+    the natural response — rewrite the assertion — is work spent on a problem that does not exist,
+    while the real one (a check you cannot trust) survives.
+
+    **So: make the mutation observable before you trust either outcome.** Print the mutated line, or
+    assert the replacement count, or pick an anchor that cannot appear twice. Comments in this
+    codebase quote the values they explain constantly, so a bare
+    `s.replace('#82570B', …)` is a coin toss about which one it finds. The same trap applies to any
+    constant a comment repeats — a ratio, a threshold, a byte count.
+
 ---
 
 ## 1. Working agreement

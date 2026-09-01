@@ -3107,3 +3107,29 @@ more. It's been rewritten so that offering Google sign-in is what creates the ob
 
 Ads I'd avoid regardless of the money — Apple forbids behavioural advertising on health data, which
 is most of what this app knows about anyone.
+
+---
+
+## 2026-09-06 (reset prep) — tidying the notes
+
+Collapsed today's five passes in progress.md into one section. They'd stacked up as five separate
+"what changed" blocks, which is exactly the sprawl the file split was meant to stop — the rule is one
+line per thing here and the full write-up in history.md, and five passes in one day had quietly
+broken it. The file is smaller now than before I started, despite the day's work being in it.
+
+Refreshed the top of the file too: the START HERE block was still describing 2026-09-05 and saying
+the last session's work hadn't been looked at in a browser, which is both stale and the exact caveat
+you told me to stop writing.
+
+Recounted the assertions properly rather than leaving the 2026-09-03 total: 4,118 across seventeen
+suites, up 114.
+
+Added two things a fresh session would otherwise have to learn the hard way. One is that you want
+sub-agents used, and that the thing making it work is giving each a list of files it may touch and a
+list it may not — nobody near the stylesheet or the tests, because that's where parallel writers
+collide without anyone noticing. The other is a trap I hit today: a mutation check can pass because
+the mutation landed on a value written in a comment rather than in the code, which looks identical to
+a worthless test and sends you off rewriting a test that was fine.
+
+Also flagged the Autumn note as unchecked since the 3rd rather than leaving it reading as current
+fact — it fixes itself the moment she opens the app, and nobody has looked.
