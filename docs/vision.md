@@ -29,7 +29,7 @@ from here on — when Tim last added, and when somebody last checked.
 
 | | Idea | State |
 |---|---|---|
-| §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — ~~a Social tab~~, mutual friends, invite links, per-person visibility, a friend's page with their body map. **D7 never had to be reopened**: ~~there is no feed~~. ~~Untested between two real accounts~~ · 🆕 **CORRECTED 2026-08-31, three ways.** It is the **Friends half of Home**, not a tab of its own, since 2026-08-22. **There IS a feed** — the You/Friends switch on Home, since 2026-08-25, Hevy-shaped since 2026-09-02. **Two real accounts connected over the live project on 2026-08-22.** ⚠️ D7 still did not have to be reopened, and that part stands: what it refuses is the **discovery** feed of strangers. ⚠️ What is *now* unverified is the social work built since 2026-08-27 — see §1.1's 🆕 note |
+| §1.1 | Social, Strava-shaped | **BUILT 2026-08-18** — ~~a Social tab~~, mutual friends, invite links, ~~per-person visibility~~ **(gone 2026-09-03 — the account is private or public, public by default)**, a friend's page with their body map **which is tappable since 2026-09-03, alongside their volume, their graphs and a two-body compare screen**. **D7 never had to be reopened**: ~~there is no feed~~. ~~Untested between two real accounts~~ · 🆕 **CORRECTED 2026-08-31, three ways.** It is the **Friends half of Home**, not a tab of its own, since 2026-08-22. **There IS a feed** — the You/Friends switch on Home, since 2026-08-25, Hevy-shaped since 2026-09-02. **Two real accounts connected over the live project on 2026-08-22.** ⚠️ D7 still did not have to be reopened, and that part stands: what it refuses is the **discovery** feed of strangers. ⚠️ What is *now* unverified is the social work built since 2026-08-27 — see §1.1's 🆕 note |
 | §1.2 | Smart systems | **Half built** — Home suggests *which workout*; the weights and reps wait on the estimator |
 | §1.3 | Ready-made systems, ranked "% optimal" | **BUILT 2026-08-18.** Nine systems, six credited, and the rating sits beside each one on Explore and on the Workouts list — growth and strength, banded to 5. **Extended 2026-08-19**: the badge also carries the COST — days a week and minutes a session — because a score without what it asks of you is half a sentence |
 | §1.4 | "Compared to:" on the muscle map | **BUILT** 2026-08-17 |
@@ -102,9 +102,23 @@ state is not.**
 - ✅ **"two real accounts have never connected" → they did, on 2026-08-22**, over the live project:
   invite, claim, accept, tier, publish, read, downgrade, disconnect, each checked against what
   Firestore actually handed the other account. ⚠️ **The unverified claim has MOVED rather than
-  gone**: everything social built since 2026-08-27 — and everything from 2026-09-02 — has still
-  never run between two real accounts, and none of it has been on a phone. `progress.md` is the
-  authority on which is which; do not read this file for that.
+  gone**: everything social built since 2026-08-27 — and everything from 2026-09-02 and -03 — has
+  still never run between two real accounts, and none of it has been on a phone. `progress.md` is
+  the authority on which is which; do not read this file for that.
+
+🚨 **CORRECTED AGAIN 2026-09-03 — "choose per person what they see" IS NO LONGER TRUE, and it is the
+oldest claim in this section.** Visibility is a property of the ACCOUNT now, not of a relationship:
+**private** (only friends you accept, and they see everything) or **public** (anybody signed in who
+finds you), with **public as the default** and body weight the single exception that never leaves the
+friends document. The four per-person levels are gone. Tim's call, twice on the same day — the model,
+and then the default. `docs/social-plan.md` §15.
+
+🆕 **AND A FRIEND IS NOW SEEN THE WAY YOU SEE YOURSELF** (2026-09-03): their body map is tappable,
+muscle by muscle, with the same panel your own has and **any comparison group you pick** — their
+client publishes a percentile per group so nothing new about their body has to be published. Their
+weekly volume and their graphs are on their page, computed on your device from what they published.
+And **two bodies can be put side by side** at `#/compare/<uid>`, one comparison governing both.
+`docs/social-plan.md` §16.
 
 **PLANNED 2026-08-17 — `docs/social-plan.md`.** Four things from the plan worth knowing without
 reading it:

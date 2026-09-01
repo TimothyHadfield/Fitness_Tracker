@@ -115,6 +115,12 @@ match /users/{userId}/shared/{tier} {
 }
 ```
 
+> ⚠️ **That is the 2026-08-17 sketch, not the deployed rule.** What ships reads
+> `shared/{audience}`, grants `get` on `isOwner || isPublishedViewer || isPublicDoc`, denies `list`
+> to everybody but the owner, and refuses to write any id but `friends` and `public` — see §15 and
+> `firestore.rules` itself, which is the only authority. The point this snippet is making, that
+> `resource.data` costs no extra read, is unchanged and is why it is kept.
+
 `resource.data` is the document being read, so this costs **no extra document read** — the
 alternative (a separate audience document consulted with `get()` from the rule) bills a read on
 every single access and counts against the ten-`get()` limit. At friend scale the difference is
@@ -1097,7 +1103,9 @@ are arithmetic on data already in hand.
 - 🚨 **THE TIER TEST WILL FAIL UNTIL THE KEY IS ADDED TO THE ALLOW-LIST**, and that is by design:
   `assertTierClean` in `tests/social.test.mjs` lists the keys each tier may contain, so a new field
   showing up at light is a test failure rather than a quiet widening. Add it to the mid/full list
-  deliberately.
+  deliberately. ⚠️ **`assertTierClean` NO LONGER EXISTS — it is `assertAudienceClean` since
+  2026-09-03** (§15), it guards the two audiences rather than three tiers, and the field it protects
+  is body weight. The discipline is identical and the name is not: do not grep for the old one.
 - **Card:** render under the title, above the stat row (§12.13).
 
 > ✅ **BUILT.** `state.note` in the runner (a chip in the topbar sub-line beside the location one,

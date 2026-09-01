@@ -41,8 +41,15 @@ on more than one device.
 - **Calendar and graphs** — every workout and benchmark on the day you did it, month by month or as
   **one square per day so whole years fit on a single screen**; trends for anything you've recorded
   twice, from workout sets as well as one-off records.
-- **Friends** — mutual only, invite by link, and **you choose per person** how much they see:
-  everything, just your workouts, just that you trained, or nothing.
+- **Friends** — mutual only. Find them by name, by your own QR code, or by an invite link.
+- **One privacy setting for the whole account: private or public.** Private means only friends you
+  accept, and they see everything. Public — **the default** — means anybody signed in who finds you
+  sees it too. **Your body weight is the exception and never goes public**; it reaches accepted
+  friends only, and only if you switch it on.
+- **See a friend the way you see yourself** — their body map, tappable muscle by muscle with the same
+  panel yours has, under **any comparison group you pick**; their weekly volume; their graphs. And a
+  **Compare** button on any muscle map that puts two bodies side by side, one comparison governing
+  both, tapping either opening the same muscle on both.
 - **A demo account** — Account → *View demo account* fills every screen with a generated year of
   training so you can judge the app without logging any of it. It never touches storage, and a
   reload starts it over.
@@ -54,7 +61,9 @@ another device — see [docs/firebase-setup.md](docs/firebase-setup.md). Either 
 Download backup** gives you the whole lot as a file, and deleting your account deletes the data with
 it.
 
-Friends only ever see what you chose to share with that person.
+Anybody who can see your account reads a **published copy** of your training, never your own data —
+so what is shared is decided when it is written, and the rules decide who may read it. Those are two
+independent gates and neither is allowed to become the only one.
 
 ## Run it locally
 
@@ -77,15 +86,15 @@ npm i --no-save jsdom jsqr @firebase/rules-unit-testing
 node tests/render.test.mjs
 ```
 
-**Sixteen suites run headlessly: 3,975 assertions** (recounted 2026-08-31 by running every one).
+**Seventeen suites run headlessly: 4,004 assertions** (recounted 2026-09-03 by running every one).
 Nothing installed here ships with the app.
 
 - **Three suites need an npm package, not one:** `render` needs `jsdom`, `qr` needs `jsqr`, `rules`
-  needs `@firebase/rules-unit-testing`. The other thirteen need nothing.
-- **Two more suites exist and are not in that 3,975**, because neither runs on `node` alone:
-  `tests/rules.test.mjs` (147 assertions — the Firestore security rules, run under
-  `firebase emulators:exec`, and the only tests here that run as somebody who is *not* you) and
-  `tests/sw-update.test.mjs` (12 assertions — a real service worker driven in real Chrome).
+  needs `@firebase/rules-unit-testing`. The other fourteen need nothing.
+- **One more suite exists and is not in that 4,004**, because it does not run on `node` alone:
+  `tests/rules.test.mjs` (**159 assertions** — the Firestore security rules, run under
+  `firebase emulators:exec`, and the only tests here that run as somebody who is *not* you).
+  `tests/sw-update.test.mjs` (12) IS in the count but needs real Chrome to mean anything.
 
 `progress.md` lists every suite and what each one is actually for — and, more usefully, what is
 **not** verified.
@@ -100,11 +109,12 @@ js/store.js             data layer (backend-agnostic async API)
 js/firebase-backend.js  Firestore + auth adapter
 js/exercises.js         the exercise library
 js/preset-systems.js    the nine ready-made programmes
-js/social.js            friends, tiers, and the published projection
+js/social.js            friends, private/public, and the published projection
+js/shared-map.js        somebody else's muscle map, in the shape our panel renders
 js/ui.js                DOM builder, icons, sheets, steppers, formatters
 js/views-*.js           screens
 js/body-*.js            the body illustration and its muscle map
-tests/                  eighteen suites — see Tests above; `node tests/<name>.test.mjs`
+tests/                  eighteen suites (17 headless + rules) — see Tests above; `node tests/<name>.test.mjs`
 tools/                  offline generators and audits, run by hand, never shipped
                         (the body art, the volume colour ramp, the strength fit,
                         the accessibility audit) — read a tool's header before
