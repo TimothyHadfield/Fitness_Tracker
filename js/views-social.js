@@ -737,6 +737,17 @@ export async function FriendView(uid) {
     if (strength && strength.muscles && strength.muscles.length) {
       parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
       parts.push(await friendBody(strength, { name, uid }));
+    } else if (seen.legacy) {
+      /* 🚨 A FRIEND WHO HAS NOT OPENED THE APP SINCE 2026-09-03. Their account
+       * still holds the old tier document, which carries a level per muscle and
+       * deliberately nothing behind it. Their body is still worth drawing — and
+       * the line under it says what is missing and why, rather than letting the
+       * screen look broken or, worse, letting the map look complete. */
+      const levels = await legacyBody(seen.doc, name);
+      if (levels) {
+        parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
+        parts.push(levels);
+      }
     }
 
     /* 🚨 THEIR NUMBERS, ON THE SAME SCREENS AS YOURS (2026-09-03). Tim: *"I also
@@ -881,6 +892,52 @@ async function friendScreen(uid, pre, back) {
   return screen;
 }
 
+/**
+ * The map of a friend whose app has not updated yet — painted, not tappable.
+ *
+ * ⚠️ IT IS DELIBERATELY LESS THAN THE REAL ONE AND SAYS SO. The old projection
+ * carried a level per muscle and nothing behind it: no estimate, none of the
+ * sets it came from, and no percentile for any comparison group but the one
+ * their app happened to be set to — which the document does not record. So the
+ * figure is drawn (it is still true, and it is the most recognisable thing this
+ * app has), tapping does nothing, the comparison control is absent, and one line
+ * says what would fix it. **A control that cannot answer is worse than no
+ * control**, and a map that looks identical to the real one while being unable
+ * to answer anything is worse still.
+ */
+async function legacyBody(doc, name) {
+  const [{ legacyLevels }, { bodySvg, BODY_ASPECT }, { LEVELS }, muscles] = await Promise.all([
+    import('./social.js'), import('./body-map.js'), import('./strength-standards.js'),
+    import('./views-muscles.js'),
+  ]);
+  const rows = legacyLevels(doc);
+  if (!rows) return null;
+
+  const byName = new Map(LEVELS.map((l) => [l.name, l]));
+  const levels = new Map();
+  for (const r of rows) {
+    const lv = byName.get(r.level);
+    if (lv) levels.set(r.muscle, { levelKey: lv.key, label: lv.name });
+  }
+  if (!levels.size) return null;
+
+  const settings = await store.getSettings();
+  return el('div', null,
+    el('div', { class: 'friend-body', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` },
+      bodySvg(levels, null, () => {},
+        { label: `${name}'s muscle groups, coloured by strength level` })),
+    muscles.legend(settings.moreDetails === true),
+    el('div', { class: 'card' },
+      el('div', { class: 'field-help', text:
+        `${name}'s app has not updated since this screen changed, so this is the last map they `
+        + 'published — the levels are theirs, and the numbers behind them are not in it yet.' }),
+      el('div', { class: 'field-help', text:
+        'Tapping a muscle, and comparing your body against theirs, both start working the next time '
+        + 'they open the app. Nothing is lost in the meantime.' }),
+    ),
+  );
+}
+
 /* ================================================================== *
  * THEIR DATA SCREENS — #/friend/<uid>/volume and #/friend/<uid>/graph
  *
@@ -955,7 +1012,9 @@ async function friendDoc(uid) {
     return { fail: emptyState('Nothing to show',
       'They have not published anything you can read.') };
   }
-  return { state, seen, name, doc: seen.doc };
+  // `legacy` travels with it: every screen that can meet a friend on the old
+  // model has to say so rather than render an empty box (see legacyBody).
+  return { state, seen, name, doc: seen.doc, legacy: Boolean(seen.legacy) };
 }
 
 /** Their weekly sets per muscle — the Data tab's Volume screen, their rows. */
@@ -1116,11 +1175,31 @@ export async function CompareBodiesView(param) {
    * uids is two other people, which the button on YOUR map produces. Either way
    * the left column is the person whose screen you pressed it on. */
   const sides = [];
+  const missing = [];
   let mine = null;
   for (const uid of [leftUid, rightUid].filter(Boolean)) {
     const r = await friendDoc(uid).catch(() => ({ fail: true }));
-    if (r.fail || !r.doc || !r.doc.strength) continue;
-    sides.push({ uid, name: r.name, strength: r.doc.strength, demo: Boolean(r.demo) });
+    const map = r && r.doc && r.doc.strength;
+    if (map && map.muscles && map.muscles.length) {
+      sides.push({ uid, name: r.name, strength: map, demo: Boolean(r.demo) });
+      continue;
+    }
+    /* 🚨 SAY WHO, AND SAY WHY. This screen shipped saying "One of these two has
+     * not published a muscle map", which is the sentence Tim hit within minutes
+     * — it names neither the person nor the reason, and the reason is almost
+     * always the same one: their app has not opened since the model changed, so
+     * their map is in a document that cannot answer a comparison. A refusal a
+     * person cannot act on is barely better than a broken screen. */
+    missing.push({
+      name: (r && r.name) || 'They',
+      why: r && r.legacy
+        ? 'their app has not updated since this screen changed — it starts working the next time '
+          + 'they open it'
+        : (r && r.doc
+          ? 'they have not recorded enough for a map yet, or their profile is missing the sex, body '
+            + 'weight and age a ranking needs'
+          : 'nothing of theirs is readable from here'),
+    });
   }
   /* ⚠️ IN THE DEMO, "YOU" IS THE DEMO ACCOUNT — whose muscle map is the one the
    * Muscles tab is drawing two taps away, computed from its invented year. That
@@ -1140,12 +1219,20 @@ export async function CompareBodiesView(param) {
   });
 
   if (sides.length < 2) {
-    setChildren(host, emptyState('Nothing to compare yet',
-      sides.length === 1 && !mine
-        ? 'Your own muscle map needs your sex, body weight and age before it can be ranked — and '
-          + 'at least one recorded set.'
-        : 'One of these two has not published a muscle map.',
-      el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' })));
+    // Whose fault it is decides both the sentence and the button under it —
+    // "Open profile" is the right next step for YOUR map and useless for theirs.
+    const mineMissing = !rightUid && !mine;
+    setChildren(host, emptyState(
+      'Nothing to compare yet',
+      mineMissing
+        ? 'Your own muscle map needs your sex, body weight and age before it can be ranked — and at '
+          + 'least one recorded set.'
+        : missing.length
+          ? `${missing.map((m) => `${m.name}: ${m.why}`).join('. ')}.`
+          : 'There is only one map to draw here.',
+      mineMissing
+        ? el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' })
+        : el('a', { class: 'btn', href: `#/friend/${encodeURIComponent(leftUid)}`, text: 'Their page' })));
     return screen;
   }
 

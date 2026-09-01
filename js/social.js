@@ -919,6 +919,64 @@ export function parseInviteRoute(param) {
  */
 export const PROBE_ORDER = [FRIENDS, PUBLIC];
 
+/* ------------------------------------------------------------------ *
+ * 🚨 READING A FRIEND WHO HAS NOT MIGRATED YET — 2026-09-03
+ *
+ * Tim, within minutes of the change shipping: *"When I click on compare for my
+ * muscle map, and click on one of my friends, it says: Nothing to compare yet."*
+ *
+ * ⚠️ THE CAUSE IS THE SHAPE OF THE MIGRATION ITSELF, and it was foreseeable.
+ * Each account migrates ITS OWN documents, on ITS OWN device, the next time its
+ * owner opens the app — because nobody's client may write into anybody else's
+ * account (D24, and the whole of firestore.rules). So the moment one person
+ * updates, every friend who has not yet opened the app is invisible to them:
+ * their `shared/friends` does not exist, and the reader looks nowhere else.
+ *
+ * 🚨 THAT IS NOT A COMPARE-SCREEN BUG, IT IS EVERY SCREEN. Their feed cards,
+ * their workouts, their benchmarks and their map all vanish at once — which is
+ * exactly the shape of the 2026-08-28 incident where Autumn's published data
+ * looked lost and had merely never been re-shared. **A friend disappearing from
+ * the app is never an acceptable way to wait for a deploy to propagate.**
+ *
+ * So a reader falls back to the tier documents it can still read. What comes
+ * back is honestly less: the old projection carried a LEVEL and a percentile per
+ * muscle and deliberately nothing else, so their map can still be painted and
+ * their workouts still open, while the panel's estimate, the sets behind it and
+ * the 24 comparison groups simply are not in the document. **Every screen that
+ * meets one says so rather than rendering an empty box.**
+ *
+ * ⚠️ THIS IS A READ PATH ONLY. Nothing writes a tier document ever again — the
+ * rules refuse to create one — and the fallback disappears from a friend's
+ * account the moment they open the app. Delete it when nobody is left on an old
+ * build; it costs one extra read per unmigrated friend and nothing otherwise.
+ * ------------------------------------------------------------------ */
+
+export const LEGACY_AUDIENCES = ['full', 'mid', 'light'];
+
+/**
+ * The old per-muscle array, if this is an old document.
+ *
+ * ⚠️ IT IS NOT CONVERTED INTO THE NEW SHAPE, and that is deliberate. The new
+ * shape's grid is keyed by comparison group, and the old percentiles were
+ * computed under whatever group their owner had chosen at the time — which the
+ * document does not record. Fabricating a key for them would put a number under
+ * a label nobody checked, on a screen whose whole job is that the number and the
+ * population it refers to cannot drift apart. So it stays a separate, clearly
+ * poorer thing, and the views treat it as one.
+ */
+export function legacyLevels(doc) {
+  const s = doc && doc.strength;
+  if (!Array.isArray(s) || !s.length) return null;
+  return s
+    .filter((m) => m && typeof m.muscle === 'string' && typeof m.level === 'string')
+    .map((m) => ({
+      muscle: m.muscle,
+      level: m.level,
+      percentile: Number.isFinite(m.percentile) ? m.percentile : null,
+      confidence: Number.isFinite(m.confidence) ? m.confidence : null,
+    }));
+}
+
 export function inviteState(invite, nowISO) {
   if (!invite || typeof invite.token !== 'string' || !invite.token) return 'invalid';
   if (invite.claimedBy) return 'claimed';

@@ -6631,3 +6631,28 @@ function — which is the only version of that test that would have failed.
 your account and read your training — workouts with weights, the times, the gym, your benchmarks,
 your muscle map — unless they turn it off. Your body weight is still the exception. Your idea of
 asking at first sign-in is the right fix for that, and it is not built.
+
+---
+
+## 2026-09-03, later still — "Nothing to compare yet"
+
+**You:** *"When I click on compare for my muscle map, and click on one of my friends, it says:
+Nothing to compare yet. One of these two has not published a muscle map. What is happening?"*
+
+I read your project's live data rather than guessing. **Your account had updated to the new sharing
+model; Autumn's had not** — she still has the old document from the 31st, because each account
+updates its own copy the next time its owner opens the app, and she has not since the deploy.
+
+**And it was worse than the compare screen.** Her workouts, her feed cards and her benchmarks had all
+gone blank in your app too — the same thing that happened in August when her data looked lost and had
+simply never been re-shared. A friend disappearing while waiting for an update to reach their phone
+is not an acceptable way for this to work.
+
+**Fixed:** your app now falls back to reading her old document when the new one is not there. Her body
+map, her workouts and her cards are back immediately, without her touching anything. What the old
+document cannot do is the new detail — tapping a muscle, and comparing bodies — because it only ever
+held a level per muscle, so those two say **"Autumn's app has not updated since this screen changed;
+it starts working the next time she opens it"** instead of a blank screen. The compare screen names
+her and the reason now, rather than "one of these two".
+
+It all starts working properly the moment she opens the app once.

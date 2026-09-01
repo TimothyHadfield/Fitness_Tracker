@@ -5532,6 +5532,57 @@ ok(!data.querySelector('.rep-target'),
        'and points at the estimate as the number that does answer who lifts more');
   }
 
+  /* ---- 🚨 A FRIEND WHO HAS NOT MIGRATED YET ----
+   *
+   * Tim, minutes after the change shipped: *"When I click on compare for my
+   * muscle map, and click on one of my friends, it says: Nothing to compare
+   * yet."* His account had migrated; hers had not, because each account does its
+   * own on its own device — so her whole page, feed cards included, had gone
+   * blank to him.
+   *
+   * ⚠️ THE FIXTURE IS THE SHAPE HER LIVE DOCUMENT ACTUALLY HAD, read off the
+   * project: a `full` tier document with `strength` as an ARRAY of
+   * {muscle, level, percentile, confidence}. A tidier fixture would have proved
+   * nothing — that is the mistake this file's own notes record about `sets: []`.
+   */
+  {
+    const legacyDoc = {
+      tier: 'full',
+      profile: { name: 'Autumn' },
+      activity: [theirSession],
+      benchmarks: [],
+      strength: [
+        { muscle: 'Chest', level: 'Intermediate', percentile: 62, confidence: 0.7 },
+        { muscle: 'Back', level: 'Novice', percentile: 31, confidence: 0.4 },
+      ],
+    };
+    social.friend = async () => ({ audience: 'full', doc: legacyDoc, legacy: true });
+
+    const fr = await mount(FriendView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+    const t = fr.textContent.replace(/\s+/g, ' ');
+
+    ok(Boolean(fr.querySelector('.friend-body .body-map')),
+       '🚨 THEIR BODY IS STILL DRAWN — a friend does not vanish from the app while waiting for a '
+       + 'deploy to reach their phone, which is the 2026-08-28 "her data is lost" incident in a '
+       + 'different costume');
+    ok(/Pull/.test(t), 'and their workouts are still listed');
+    ok(/has not updated/.test(t),
+       '⚠️ with one line saying why it is less than the real thing');
+    ok(!fr.querySelector('.basis-btn'),
+       '⚠️ AND NO COMPARISON CONTROL, because the old document cannot answer a different comparison '
+       + 'group — a control that cannot answer is worse than an absent one');
+
+    const cmp = await mount(CompareBodiesView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+    const c = cmp.textContent.replace(/\s+/g, ' ');
+    ok(/Autumn/.test(c) && /has not updated/.test(c),
+       '🚨 and the compare screen NAMES THE PERSON AND THE REASON — it shipped saying "one of these '
+       + 'two has not published a muscle map", which names neither and cannot be acted on');
+
+    social.friend = async () => ({ audience: 'friends', doc: theirDoc });
+  }
+
   /* ---- their volume and their graph, from the same functions as mine ---- */
   {
     const vol = await mount(FriendVolumeView('u1'));

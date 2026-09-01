@@ -147,6 +147,52 @@ public so anyone on the app that finds your account can see all details."*
 | 2 | Which personal fields follow the account into public? | **The photo, the time of day, the gym name.** Not body weight. |
 | 3 | What do the colours mean with two bodies on screen? | *"make the default comparison vs people like them, but allow them to use any comparison combination that is already available"* |
 
+### A00. 🚨 A FRIEND WHO HAS NOT MIGRATED YET — reported by Tim within minutes
+
+Tim: *"When I click on compare for my muscle map, and click on one of my friends, it says: Nothing to
+compare yet. One of these two has not published a muscle map. What is happening?"*
+
+**Diagnosed against the live project rather than guessed at** (§0.4 — mint a token from the CLI's
+refresh token and read Firestore directly), and the answer was in two documents:
+
+- **Tim's account had migrated** — `shared/friends` and `shared/public`, each with the 24-row grid.
+- **Autumn's had not.** She still had `shared/full`, published 2026-08-31, with the OLD array-shaped
+  `strength`. Her client has not run since the deploy.
+
+🚨 **THE CAUSE IS THE SHAPE OF THE MIGRATION AND IT WAS FORESEEABLE. Each account migrates its own
+documents, on its own device, because nobody's client may write into anybody else's account** — D24,
+and the whole of `firestore.rules`. So the instant one person updates, every friend who has not yet
+opened the app becomes invisible to them.
+
+🚨 **AND IT WAS NEVER A COMPARE-SCREEN BUG.** Her feed cards, her workouts, her benchmarks and her map
+all vanished from his app at once — **which is the 2026-08-28 incident in a different costume**, the
+one where Autumn's published data looked lost and had merely never been re-shared. That section is
+two thousand lines below this one and its lesson did not get applied to a migration.
+
+**The fix: a reader falls back to the tier documents it can still read.** `social.friend()` probes
+`friends` → `public` → `full`/`mid`/`light`, in that order, and tags the result `legacy`.
+
+- ⚠️ **SECOND, NEVER FIRST.** A migrated account must never be read through its old copy — it is
+  stale by definition and may list viewers it no longer has. The legacy reads only happen when both
+  new documents are absent, and a refusal is not billed, so a migrated friend costs nothing.
+- ⚠️ **WHAT COMES BACK IS HONESTLY LESS, AND EVERY SCREEN SAYS SO.** The old projection carried a
+  level per muscle and deliberately nothing behind it, so the body is still painted — it is still
+  true, and it is the most recognisable thing this app has — while **tapping does nothing and the
+  comparison control is absent**, because the old percentiles were computed under whatever group
+  their owner had set and the document does not record which. **Fabricating a key for them would put
+  a number under a label nobody checked.**
+- ⚠️ **THE COMPARE SCREEN NAMES THE PERSON AND THE REASON NOW.** "One of these two has not published
+  a muscle map" names neither and cannot be acted on — it is the sentence Tim actually hit.
+- ⚠️ **A LEGACY DOCUMENT ALSO COUNTS AS PROOF OF AN ACCEPTED REQUEST**, and safely: every tier
+  document was gated on its own `viewers` list and there was no public tier to read without being on
+  one. Excluding them would strand a request accepted just before the change.
+- **Verified against the live data**: her `full` document lists Tim in `viewers`, holds 5 sessions and
+  9 rated muscles, and the deployed rules already allow the read (the `get` rule is on
+  `shared/{audience}` and never named the tiers). **The fallback resolves for him without anybody
+  touching her phone.**
+- 🛑 **DELETE THIS PATH when nobody is left on an old build.** It is a read path only — nothing writes
+  a tier document ever again, and the rules refuse to create one.
+
 ### A0. 🚨 THE DEFAULT IS PUBLIC — the same day, an hour later
 
 Tim, having read the above: *"I think right now the default privacy for people is private, but I

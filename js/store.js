@@ -2558,7 +2558,13 @@ export const social = {
      * So the test is the audience, not the answer. Only `friends` proves it. */
     const answers = await Promise.all(g.pending.map((p) =>
       this.friend(p.uid)
-        .then((r) => (r && r.doc && r.audience === S.FRIENDS ? p : null))
+        /* ⚠️ A LEGACY DOCUMENT IS ALSO PROOF, and for the same reason the
+         * friends document is: every tier document was gated on its own
+         * `viewers` list, and there was no public tier for anybody to read
+         * without being on one. Excluding them would leave a request accepted
+         * just before the change unrecognised until the accepter opened the app
+         * — which is the exact class of stall this whole fallback exists for. */
+        .then((r) => (r && r.doc && (r.legacy || r.audience === S.FRIENDS) ? p : null))
         .catch(() => null)));
     const accepted = answers.filter(Boolean);
     if (!accepted.length) return 0;
@@ -2605,9 +2611,28 @@ export const social = {
     const docs = await Promise.all(
       S.PROBE_ORDER.map((audience) => impl.readShared(uid, audience).catch(() => null)));
     for (let i = 0; i < S.PROBE_ORDER.length; i++) {
-      if (docs[i]) return { audience: S.PROBE_ORDER[i], doc: docs[i] };
+      if (docs[i]) return { audience: S.PROBE_ORDER[i], doc: docs[i], legacy: false };
     }
-    return { audience: null, doc: null };
+
+    /* 🚨 AND THEN THE TIER DOCUMENTS, for a friend who has not opened the app
+     * since 2026-09-03. See the header above LEGACY_AUDIENCES in social.js: each
+     * account migrates its own documents on its own device, so between one
+     * person updating and the other opening the app, THIS is the only thing
+     * standing between them and their friend vanishing from every screen.
+     *
+     * ⚠️ SECOND, NEVER FIRST, and only when the new documents are absent — a
+     * migrated account must never be read through its old copy, which is stale
+     * by definition and may list viewers it no longer has.
+     *
+     * ⚠️ The reads are serial-in-parallel like the pair above, and a refusal is
+     * not billed, so the cost of this for a MIGRATED friend is zero: the loop
+     * above returns before it is reached. */
+    const legacy = await Promise.all(
+      S.LEGACY_AUDIENCES.map((tier) => impl.readShared(uid, tier).catch(() => null)));
+    for (let i = 0; i < S.LEGACY_AUDIENCES.length; i++) {
+      if (legacy[i]) return { audience: S.LEGACY_AUDIENCES[i], doc: legacy[i], legacy: true };
+    }
+    return { audience: null, doc: null, legacy: false };
   },
 
   /* --- reactions: kudos + comments (Open work 0l) --- */
