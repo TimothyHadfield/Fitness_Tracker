@@ -169,14 +169,14 @@ const plain = (items) => {
   let n = 0, d = 0; for (const i of items) { n += i.x * i.w; d += i.w; } return n / d;
 };
 
-// (a) progress.md §9's shoulders case, arithmetically.
+// (a) docs/handbook.md §9's shoulders case, arithmetically.
 {
   const credible = { x: 130, w: 1.00 };   // overhead press benchmark
   const second = { x: 122, w: 0.55 };     // dumbbell shoulder press, 8 reps
   const outlier = { x: 260, w: 0.06 };    // 15-rep face pull, converted at 0.30
   const clean = [credible, second];
   const dirty = [credible, second, outlier];
-  console.log('\n  (a) the shoulders case from progress.md §9, in key-lift pounds');
+  console.log('\n  (a) the shoulders case from docs/handbook.md §9, in key-lift pounds');
   console.log(`      plain weighted mean    clean ${plain(clean).toFixed(1)} → dirty `
     + `${plain(dirty).toFixed(1)}   (+${((plain(dirty) / plain(clean) - 1) * 100).toFixed(1)} %)`);
   for (const k of [0.2, 0.25, 0.35, 0.5, 0.75]) {
@@ -311,9 +311,9 @@ for (const sigma of [0.05, REP_CURVE_SIGMA, 0.15]) {
   console.log(`    → EXTRA log-SD at 15 reps over 1 rep: ${extra.toFixed(4)}   so u_reps = ${extra.toFixed(2)}`);
 }
 
-// What that means for the case in progress.md §9.
+// What that means for the case in docs/handbook.md §9.
 {
-  console.log('\n  the seated calf raise from progress.md §9: 180 lb × 12, ratio 0.62');
+  console.log('\n  the seated calf raise from docs/handbook.md §9: 180 lb × 12, ratio 0.62');
   const est = e1rm(180, 12) / 0.62;
   const bounds = levelBoundaries('Calves');
   const names = ['Beginner', 'Novice', 'Intermediate', 'Proficient', 'Advanced', 'Expert', 'Elite'];

@@ -3246,7 +3246,7 @@ async function ratedFromRows(rows, profile) {
 export async function buildStrengthShare(rows = null, asProfile = null) {
   /* ⚠️ `rows` AND `asProfile` ARE FOR SOMEBODY WHO IS NOT SIGNED IN HERE — the
    * demo account's invented friends, which is how every screen in this app gets
-   * looked at, measured and audited (progress.md §0.10). Without them a friend's
+   * looked at, measured and audited (docs/handbook.md §0.10). Without them a friend's
    * muscle map could not be seen anywhere but on a real second account, which is
    * exactly the state that let the feed's own fixture ship thinner than the wire
    * on 2026-09-02. The publishing path is otherwise identical, deliberately:

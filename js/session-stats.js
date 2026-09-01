@@ -44,7 +44,7 @@
  * projection, which we do not control the writing of.
  *
  * ⚠️ A drop set or a myo-rep set is ONE set, not one plus its minis. That is
- * this project's oldest resolved-without-asking decision (progress.md §6) and
+ * this project's oldest resolved-without-asking decision (docs/handbook.md §6) and
  * `volume-map.js` counts the same way — nesting lives inside `minis` on the
  * parent set and is never walked here, on purpose. Counting them separately
  * would inflate every total the moment somebody used a set type.

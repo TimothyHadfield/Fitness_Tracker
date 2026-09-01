@@ -529,7 +529,7 @@ export function boundaryEnsemble(count = 21, muscle = 'Chest') {
  * Q1's real shape: several exercises rating ONE muscle
  * ------------------------------------------------------------------ */
 
-// The residual in progress.md §9 is not about one lift's history — it is about
+// The residual in docs/handbook.md §9 is not about one lift's history — it is about
 // the AGGREGATE ACROSS EXERCISES that js/muscle-evidence.js computes. A face
 // pull and an overhead press both rate Shoulders; each is converted to the key
 // lift by a ratio; the ratios are population averages and one person's own

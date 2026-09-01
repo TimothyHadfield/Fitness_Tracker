@@ -11,3 +11,13 @@ node_modules/
 *.jpeg
 package.json
 package-lock.json
+
+# Scratch output from a probe or a driver script. `probe-body.tmp` — an empty
+# file — was committed in August 2026 and sat in the repo for a week, and this
+# site is PUBLIC: anything tracked here is served by GitHub Pages.
+*.tmp
+
+# Screenshots taken while working. Two of the app's own screens (record.png,
+# sets.png, ~200 KB) were committed the same way and served to the world for
+# no reason. Real app art lives in img/ and is committed deliberately.
+/*.png

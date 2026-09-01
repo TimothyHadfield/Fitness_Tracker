@@ -1372,7 +1372,7 @@ select.input {
 .set-pick:active { opacity: .65; }
 
 /* A drop hangs under its set, indented, and is NOT numbered — one drop set is
-   one hard set (progress.md §6), and numbering the drops 2, 3, 4 would teach
+   one hard set (docs/handbook.md §6), and numbering the drops 2, 3, 4 would teach
    the reader the opposite of the rule the data model is built on. */
 .set-drop { padding-left: 22px; }
 /* A drop is a continuation, not a set, so it does not claim a full 44px row of
@@ -3325,7 +3325,7 @@ a.row { text-decoration: none; }
    whole job is that two coloured bodies can be read against each other.
 
    The strength ramp is a multi-hue scale that lands in the CVD floor band, and
-   this project's own rule (progress.md §5, "Colour — validate, never eyeball")
+   this project's own rule (docs/handbook.md §5, "Colour — validate, never eyeball")
    is that such a ramp is legal ONLY with secondary encoding — the legend and the
    named level on tap. A key below the fold is not secondary encoding. Same
    argument, and the same resolution, as the Volume map's 71dvh on 2026-09-01:

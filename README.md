@@ -96,8 +96,8 @@ Nothing installed here ships with the app.
   `firebase emulators:exec`, and the only tests here that run as somebody who is *not* you).
   `tests/sw-update.test.mjs` (12) IS in the count but needs real Chrome to mean anything.
 
-`progress.md` lists every suite and what each one is actually for — and, more usefully, what is
-**not** verified.
+`docs/handbook.md` §4 lists every suite and what each one is actually for; `progress.md` carries what
+is **not** verified.
 
 ## Project layout
 
@@ -119,10 +119,23 @@ tools/                  offline generators and audits, run by hand, never shippe
                         (the body art, the volume colour ramp, the strength fit,
                         the accessibility audit) — read a tool's header before
                         changing anything it generates
-docs/                   spec, vision, research, plans, Firebase setup
+docs/                   spec, vision, research, plans, Firebase setup — and the
+                        three files below
 firestore.rules         who may read whose data — tested by tests/rules.test.mjs
-progress.md             project state, decisions, and what is not verified
-chat.md                 the human-readable log
+
+progress.md             project state and the open-work list — the catch-up file
+docs/handbook.md        §0–§10: environment traps, working agreement, architecture,
+                        design rules, locked decisions. Every "§N" in this project
+                        means this file
+docs/history.md         the dated session log, newest first — searched, not read
+chat.md                 the human-readable log (2026-08-21 onward)
+docs/chat-archive.md    the same log, 2026-08-14 to 2026-08-20
 ```
+
+⚠️ **The four documents split on 2026-09-04**, when `progress.md` reached 626 KB and could no longer
+be opened in one read. Nothing was rewritten — the dated log moved to `docs/history.md` and the
+numbered sections to `docs/handbook.md`, byte for byte. **A session's full write-up now goes to the
+top of `history.md` and only its one-line summary to `progress.md`**, which is what keeps that file
+readable.
 
 `store.js` exposes an async API, so switching backends touches no screen code.

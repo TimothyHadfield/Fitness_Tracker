@@ -1955,7 +1955,7 @@ ok(!data.querySelector('.rep-target'),
     await settle();
     ok(/Resting/.test(rest.textContent), 'logging the drop is what starts the rest');
 
-    // ⚠️ The locked rule (progress.md §6): a drop set is ONE hard set. If drops
+    // ⚠️ The locked rule (docs/handbook.md §6): a drop set is ONE hard set. If drops
     // were rows in `sets` this count would read 3 and every volume figure in
     // the app would inflate the day someone used the feature.
     ok(s.querySelectorAll('.set-item:not(.set-drop)').length === 2,

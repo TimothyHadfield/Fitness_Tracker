@@ -57,7 +57,7 @@ function daysBetweenDays(fromISO, toISO) {
  * the UX review, 2026-08-22.
  *
  * ⚠️ It was near-harmless in practice and that is not the point. A strip on
- * every screen of the demo says *"nothing is saved"*, and progress.md §0.10
+ * every screen of the demo says *"nothing is saved"*, and docs/handbook.md §0.10
  * said *"nothing it does can reach localStorage"*. **Both were false**, and in
  * this project a claim that is false is a bigger defect than the leak it
  * describes. sessionStorage matches the demo flag's own lifetime: per tab, gone
@@ -1300,7 +1300,7 @@ export async function SessionView(workoutId) {
 
         // Drops hang UNDER their set and are indented, because that is what they
         // are — the same set continued at a lower weight. They are deliberately
-        // not numbered as sets: one drop set is one hard set (progress.md §6),
+        // not numbered as sets: one drop set is one hard set (docs/handbook.md §6),
         // and numbering them 1, 2, 3 would teach the opposite.
         minisOf(s).forEach((d, di) => {
           const dOpen = isHere && entry.activeDrop === di && editing;

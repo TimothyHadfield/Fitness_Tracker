@@ -2,7 +2,7 @@
 //
 //   node tests/sw-update.test.mjs        (needs Chrome; no other dependencies)
 //
-// ⚠️ THIS IS THE ONE TEST THAT CANNOT BE FAKED, and progress.md §0.7 says why:
+// ⚠️ THIS IS THE ONE TEST THAT CANNOT BE FAKED, and docs/handbook.md §0.7 says why:
 // a service worker is its own target, so emulated offline sails past it and a
 // stubbed cache proves nothing. So this copies the app to a scratch directory,
 // serves it over real HTTP, lets the worker install, then EDITS A FILE ON DISK

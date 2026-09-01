@@ -1,7 +1,7 @@
 // Headless tests for BODY WEIGHT AS RESISTANCE. No dependencies.
 //   node tests/bodyweight.test.mjs
 //
-// progress.md §9 first gap / §10 item 5: a pull-up used to rate no muscle at
+// docs/handbook.md §9 first gap / §10 item 5: a pull-up used to rate no muscle at
 // all, because a bodyweight movement logs ADDED load and an assisted one logs
 // SUBTRACTED load, so neither number was comparable to a barbell's. Body weight
 // is now a dated series, so total resistance is computable.
@@ -509,7 +509,7 @@ ok(rateFrom(heavyDay, { bodyWeights: [], muscle: 'Back', profile: MALE_180 }) ==
  * 8. Sanity against a real year of training (the demo account)
  * ================================================================== */
 //
-// progress.md §0.10: running the demo year through the real pipeline is what
+// docs/handbook.md §0.10: running the demo year through the real pipeline is what
 // exposed the credibility inversion that 1069 assertions had missed. The demo
 // year contains no bodyweight work at all, so the first thing to prove is that
 // this change does NOTHING to it — and then that bolting pull-ups on top of a

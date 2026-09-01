@@ -963,7 +963,7 @@ async function legacyBody(doc, name) {
  *
  * 🚨 IT HAS A DEMO BRANCH, AND IT IS THE ONLY WAY THESE SCREENS CAN BE SEEN AT
  * ALL BEFORE TWO REAL ACCOUNTS EXIST. The demo is where every screen in this app
- * gets looked at, measured and read for contrast (progress.md §0.10), and until
+ * gets looked at, measured and read for contrast (docs/handbook.md §0.10), and until
  * today a friend's page in it said "Sharing is off in the demo" — which was
  * right when the page was a list of their workouts and is not right now that it
  * carries a tappable body, their volume, their graphs and a compare screen.

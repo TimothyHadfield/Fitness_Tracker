@@ -103,7 +103,7 @@ function sessionList(input) {
  * they have done a hundred times.
  *
  * ⚠️ `minis` are not walked, and no drop or myo-rep set is expanded. A drop set
- * is ONE set — this project's oldest resolved decision (progress.md §6), and
+ * is ONE set — this project's oldest resolved decision (docs/handbook.md §6), and
  * what session-stats.js and volume-map.js both count. It also costs nothing
  * here: every mini is lighter than the set it hangs off, so it can be neither
  * the heaviest set nor the best e1RM.

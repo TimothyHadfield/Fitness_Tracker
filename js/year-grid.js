@@ -23,7 +23,7 @@
  *
  * ⚠️ ISO DATES ARE SPLIT, NEVER PARSED. `new Date('2026-03-01')` is UTC midnight
  * and lands on the last day of February for everyone west of Greenwich —
- * progress.md §4 records this costing a real bug in `next-workout.js`. Every
+ * docs/handbook.md §4 records this costing a real bug in `next-workout.js`. Every
  * date here is built from integers through `new Date(y, m, d)`, which is local.
  */
 

@@ -197,7 +197,7 @@ ok(near(positionFactor(0, 0), 1, 1e-12) && positionFactor(4, 1) < positionFactor
 /* ================= §ROBUST · Q1 ================= */
 
 {
-  // progress.md §9's shoulders case: an overhead press benchmark, a dumbbell
+  // docs/handbook.md §9's shoulders case: an overhead press benchmark, a dumbbell
   // press, and a 15-rep face pull converting to twice the credible reading.
   const credible = { x: 130, w: 1.00 };
   const second = { x: 122, w: 0.55 };
@@ -214,7 +214,7 @@ ok(near(positionFactor(0, 0), 1, 1e-12) && positionFactor(4, 1) < positionFactor
 
   ok(plainNudge > 0.03,
      `a plain weighted mean lets a 6 %-credibility outlier nudge the answer ${pc(plainNudge)} — `
-     + 'the first residual in progress.md §9');
+     + 'the first residual in docs/handbook.md §9');
   ok(robustNudge < plainNudge / 2.5,
      `winsorising at k = ${DEFAULTS.winsorK} cuts that to ${pc(robustNudge)}`);
   ok(near(cleanRobust, cleanPlain, 0.5),
@@ -313,7 +313,7 @@ ok(near(positionFactor(0, 0), 1, 1e-12) && positionFactor(4, 1) < positionFactor
      'rep load runs 0 at a single to 1 at the top of the rankable range');
 }
 
-/* ================= Q2 · the high-rep case from progress.md §9 ================= */
+/* ================= Q2 · the high-rep case from docs/handbook.md §9 ================= */
 
 {
   // A seated calf raise at 180x12, converted to a standing calf raise at the
@@ -322,7 +322,7 @@ ok(near(positionFactor(0, 0), 1, 1e-12) && positionFactor(4, 1) < positionFactor
   const boundaries = sim.levelBoundaries('Calves');
   ok(estimate > boundaries[6],
      `the unshrunk conversion is ${estimate.toFixed(0)} lb, above the Elite boundary of `
-     + `${boundaries[6].toFixed(0)} — reproduced exactly as progress.md §9 describes it`);
+     + `${boundaries[6].toFixed(0)} — reproduced exactly as docs/handbook.md §9 describes it`);
 
   const one = estimateAt(dailyValues([
     { day: 0, exerciseId: 'calf', weight: estimate * 0.62 / 1, reps: 12, setIndex: 0 },
@@ -509,7 +509,7 @@ ok(MIN_CONFIDENCE > 0,
    + 'effective_n and make the band look narrower than the evidence deserves');
 
 {
-  // The UTC/local trap from progress.md §4.
+  // The UTC/local trap from docs/handbook.md §4.
   ok(dayNumber('2026-08-19') - dayNumber('2026-08-18') === 1, 'day numbers are calendar days apart');
   ok(dayNumber('2026-01-01') - dayNumber('2025-12-31') === 1, 'across a year boundary too');
   ok(dayNumber('not a date') === null && dayNumber(null) === null,

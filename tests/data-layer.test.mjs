@@ -3722,7 +3722,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 
   /* ---- DROP SETS: one drop set is ONE hard set ---- */
   {
-    // progress.md §6 locks this. It is true here BY CONSTRUCTION — drops live
+    // docs/handbook.md §6 locks this. It is true here BY CONSTRUCTION — drops live
     // inside the set object — so every existing count of `sets.length` keeps
     // counting one without knowing drop sets exist. Flattening them into `sets`
     // would have inflated every volume figure in the app.

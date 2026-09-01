@@ -654,7 +654,7 @@ function daysApart(fromISO, toISO) {
  * muscle map is tappable now and there is a screen that puts two bodies side by
  * side — neither can be looked at, measured or audited without somebody to be
  * the other person, and this app's rule is that you use the demo rather than
- * hand-seeding (progress.md §0.10).
+ * hand-seeding (docs/handbook.md §0.10).
  *
  * ⚠️ THE NUMBERS ARE A FIXTURE AND THE ARITHMETIC IS NOT. `gender`, `bodyWeight`
  * and `age` are made up; every level, percentile and estimate on their map is

@@ -37,7 +37,7 @@
 // 2. ⚠️ IT DOES NOT LET ONE NUMBER RUN AWAY WITH THE ANSWER. The aggregate is
 //    winsorised (see winsorK), so a low-credibility outlier at twice the
 //    credible reading moves the result by a bounded amount rather than by its
-//    full weight — measured on progress.md §9's shoulders case, +3.9 % becomes
+//    full weight — measured on docs/handbook.md §9's shoulders case, +3.9 % becomes
 //    +1.0 %, and across 200 simulated muscles the worst error halves.
 // 3. ⚠️ IT DOES NOT TREAT AN IMPOSSIBLE JUMP AS A PR. An observation above what
 //    training could plausibly have delivered since the last reading is
@@ -72,7 +72,7 @@ import { e1rm, isRankableSet, MAX_EVIDENCE_REPS } from './e1rm.js';
  *
  * ⚠️ Parsed by SPLITTING, never `new Date(iso)`. A bare date string is read as
  * UTC midnight, which lands a day early for everyone west of Greenwich — the
- * trap already recorded in progress.md §4 for `daysBetween()`. Date.UTC on the
+ * trap already recorded in docs/handbook.md §4 for `daysBetween()`. Date.UTC on the
  * split parts is pure calendar arithmetic with no zone in it at all, so the
  * difference between two day numbers is exactly the number of calendar days.
  */
@@ -132,7 +132,7 @@ export const DEFAULTS = Object.freeze({
   topN: 3,
 
   /* — bounding what one observation may do ——————————————————————————— */
-  // ⚠️ THE ANSWER TO THE FIRST OF THE THREE RESIDUALS IN progress.md §9.
+  // ⚠️ THE ANSWER TO THE FIRST OF THE THREE RESIDUALS IN docs/handbook.md §9.
   //
   // A plain weighted mean lets an outlier at twice the credible reading move
   // the answer by its weight share, which for a 15-rep face pull beside an
@@ -464,7 +464,7 @@ export function weightedMedian(items) {
 }
 
 /**
- * ⚠️ THE ROBUST AGGREGATE — the answer to residual 1 in progress.md §9.
+ * ⚠️ THE ROBUST AGGREGATE — the answer to residual 1 in docs/handbook.md §9.
  *
  * Clip every contributing value into [m/(1+k), m×(1+k)] around the weighted
  * median m, THEN take the weighted mean. An outlier keeps its direction and

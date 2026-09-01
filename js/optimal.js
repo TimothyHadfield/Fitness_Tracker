@@ -326,7 +326,7 @@ const dayNumber = (iso) => {
   // all. Two things have to be true here and only this form gives both.
   //
   //   `new Date(iso)` reads a bare date as UTC midnight and lands a day early
-  //   for everyone west of Greenwich. That is the trap progress.md §4 records,
+  //   for everyone west of Greenwich. That is the trap docs/handbook.md §4 records,
   //   and splitting the string is what avoids it.
   //
   //   ⚠️ But splitting into a LOCAL Date and flooring — which is what this did

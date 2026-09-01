@@ -1,5 +1,5 @@
 // THE ACCESSIBILITY AUDIT. Dev-only; needs Chrome and python. Run it against a
-// SCRATCH COPY with firebase-config.js blanked (progress.md §0.6), never the
+// SCRATCH COPY with firebase-config.js blanked (docs/handbook.md §0.6), never the
 // real folder:
 //
 //   cp -r index.html css js img sw.js manifest.webmanifest icon.svg /tmp/a11y-app
@@ -16,10 +16,10 @@
 // on one cell in the month, and the token test found a latent light-theme pair
 // that no screen currently paints.
 //
-// It uses the DEMO ACCOUNT (progress.md §0.10) rather than hand-seeding, so
+// It uses the DEMO ACCOUNT (docs/handbook.md §0.10) rather than hand-seeding, so
 // every screen has real content in it.
 //
-// Driven over CDP. progress.md §0.6: --window-size does not change the layout
+// Driven over CDP. docs/handbook.md §0.6: --window-size does not change the layout
 // viewport in this headless build, so device metrics are set through
 // Emulation.setDeviceMetricsOverride and the app is pointed at directly.
 //
@@ -564,7 +564,7 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     /* 🚨 THE SERVICE WORKER IS TORN DOWN BEFORE ANYTHING IS MEASURED — added
      * 2026-09-03, after it quietly audited code that was two edits old.
      *
-     * `sw.js` is stale-while-revalidate by design (progress.md §3, "Seeing a
+     * `sw.js` is stale-while-revalidate by design (docs/handbook.md §3, "Seeing a
      * deploy"): the load after a change serves the OLD app and the change
      * appears on the one after. That is right for a phone in a gym and it is
      * poison for a measurement tool — this audit navigates exactly twice before
@@ -593,7 +593,7 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     })()`);
     await send('Page.navigate', { url: `${BASE}/index.html` });
     await sleep(1200);
-    // Demo account: a populated app, per progress.md §0.10 — do not hand-seed.
+    // Demo account: a populated app, per docs/handbook.md §0.10 — do not hand-seed.
     await evaluate(`sessionStorage.setItem('ftrack:v1:demo','1')`);
     await send('Page.navigate', { url: `${BASE}/index.html` });
     await sleep(2500);

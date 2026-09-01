@@ -71,7 +71,7 @@ const entry = (exerciseId, name, sets, extra = {}) => ({ exerciseId, name, sets,
 }
 
 {
-  // progress.md §6, and the oldest resolved-without-asking decision here.
+  // docs/handbook.md §6, and the oldest resolved-without-asking decision here.
   const session = {
     date: '2026-08-30',
     name: 'Arms',
