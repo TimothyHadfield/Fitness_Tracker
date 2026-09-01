@@ -458,7 +458,13 @@ for (const muscle of Object.keys(ss.MUSCLE_LIFTS)) {
   ok(lift && lift.id, `${muscle} key lift "${ss.MUSCLE_LIFTS[muscle].lift}" resolves to a real exercise`);
 }
 ok(ss.muscleForLift(byName('Barbell Bench Press').id) === 'Chest', 'reverse lookup works');
-ok(!ss.canRank('Core') && !ss.canRank('Neck'), 'Core and Neck are deliberately unrankable');
+// 🔄 CORE BECAME RANKABLE 2026-09-04 — a measured Cable Crunch table was found
+// and pulled (docs/research.md §14), which is the same bar every other key lift
+// cleared. ⚠️ NECK DID NOT AND THERE IS NO ROUTE OUT FOR IT: nobody publishes
+// neck norms. Asserting both here is what keeps this from reading as a general
+// loosening; tests/core-rating.test.mjs holds the rest of Core's guarantees.
+ok(ss.canRank('Core'), 'Core is rankable — its key lift has a measured standard');
+ok(!ss.canRank('Neck'), '🛑 and Neck is still deliberately unrankable');
 
 // Every muscle drawn on the body must either be rankable or explicitly
 // unrankable — otherwise a region would be permanently grey for no stated reason.
@@ -492,7 +498,11 @@ ok(ss.medianFor('Chest', male150) > 225 * (150 / 180), 'allometric beats a flat 
 ok(ss.medianFor('Chest', { gender: 'female', bodyWeight: 140, age: 30 }) === 100,
    'female standards are their own numbers, not a blanket multiplier');
 ok(ss.medianFor('Chest', { gender: 'male' }) === null, 'no body weight means no standard');
-ok(ss.medianFor('Core', male180) === null, 'unrankable muscle has no standard');
+ok(ss.medianFor('Neck', male180) === null, 'an unrankable muscle has no standard');
+// Core has one now, and it is the measured figure rather than something derived
+// from a neighbouring lift — 151 lb at the reference body weight.
+ok(near(ss.medianFor('Core', male180), 151, 1),
+   `and Core's IS the pulled number (${ss.medianFor('Core', male180).toFixed(1)} at 180 lb)`);
 
 // Percentiles round-trip against the thresholds.
 for (const l of ss.LEVELS) {

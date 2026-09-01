@@ -46,6 +46,12 @@ const ALLOMETRIC = 0.67;
 // tier anchors closely (see docs/research.md §11). One value for every lift is a
 // simplification — isolation work is probably wider — and is worth revisiting
 // once real data exists.
+//
+// ⚠️ 2026-09-04: THAT REVISIT ARRIVED, FOR ONE MUSCLE, AND THE DATA SAYS THE
+// SIMPLIFICATION IS REAL. Core's published tiers fit σ ≈ 0.48, not 0.32, so a
+// muscle may now override it — see `sigma` in MUSCLE_LIFTS and docs/research.md
+// §14. This stays the default for everything else because everything else fits
+// it: the bench tiers at 180 lb (127/169/220/277/339) come out at σ ≈ 0.30.
 const SIGMA = 0.32;
 
 // Fraction of US adults doing muscle-strengthening activity 2+ days/week
@@ -77,15 +83,100 @@ export const MUSCLE_LIFTS = {
   Traps:      { lift: 'Barbell Shrug',          median: { male: 225, female: 125 } },
   Calves:     { lift: 'Standing Calf Raise',    median: { male: 240, female: 150 } },
   Forearms:   { lift: 'Wrist Curl',             median: { male: 95,  female: 50 } },
-  // Core and Neck have no usable published standards — Core's best exercises are
-  // time-based or bodyweight, and nobody publishes neck norms. They stay grey
-  // permanently, and the UI says so rather than letting it look like a bug.
+
+  /* 🚨 CORE — RANKABLE SINCE 2026-09-04, AND IT IS THE ONLY ENTRY IN THIS TABLE
+   * THAT CARRIES ITS OWN SPREAD AND ITS OWN RELIABILITY PENALTY.
+   *
+   * Tim: *"set a good 1RM estimator for the ab muscle group for a specific
+   * exercise… This makes the ab muscle group nearly identical to any other
+   * muscle group and how it operates but with a little less reliability."* This
+   * is that, and the three fields below are where "a little less reliability"
+   * stops being a sentence and becomes arithmetic. docs/research.md §14 has the
+   * pull; the short version:
+   *
+   * ⚠️ `median` IS MEASURED, NOT MODELLED. Strength Level's Cable Crunch table,
+   * 12,596 qualifying results out of 211,507 logged lifts (Oct 2019 – Mar 2026):
+   * at 180 lb male 58/98/151/216/288, at 140 lb female 36/65/106/157/214.
+   *
+   * 🚨 BUT IT HAS NO AGREEING SECOND SOURCE, WHICH EVERY OTHER ROW HERE DOES.
+   * §11's whole argument for this table is that two independent methods land
+   * within ~3 % lift by lift. The only cross-check for a cable crunch (Fitness
+   * Volt, 178/123) is **17 % higher** — and it is not really independent, being
+   * ratio-modelled off powerlifting anchors rather than measured for this lift.
+   * So: the measured source wins, and the disagreement is carried as
+   * `standardQuality` rather than hidden.
+   *
+   * 🚨 `sigma` — THE TIERS ARE MUCH WIDER THAN EVERY OTHER LIFT'S. Fitting the
+   * five published anchors gives 0.39–0.58 (the left tail is the wide end),
+   * mean ≈ 0.48, against ≈ 0.30 for the bench. Reusing the global 0.32 would put
+   * a lifter sitting exactly on the published *Beginner* mark at the **0.1st**
+   * percentile instead of the 5th — the model would call a real beginner the
+   * weakest person alive. This is a stack on a pulley whose leverage depends on
+   * rope length, knee position and how much of the movement is hip flexion, so a
+   * genuinely wider spread is what you would expect.
+   *
+   * ⚠️ `standardQuality` MULTIPLIES THE RATING'S CONFIDENCE, so a Core reading
+   * with flawless evidence still lands below one from a bench press. That is the
+   * honest shape of "less reliable": it is not the lifter's evidence that is
+   * thin, it is the standard, and no amount of extra logging can fix it — which
+   * is exactly why it belongs on the muscle and not on the observation.
+   */
+  Core: {
+    lift: 'Cable Crunch',
+    median: { male: 151, female: 106 },
+    sigma: 0.48,
+    standardQuality: 0.6,
+    // Shown under a Core rating, every time. Not a tooltip: the one thing a
+    // user must not do with this number is treat it like the bench figure.
+    caveat: 'Core standards are thinner than the rest — one measured source, and '
+      + 'a cable stack depends on the machine. Treat it as a rough placing.',
+  },
+  // Neck has no usable published standards — nobody publishes neck norms — so it
+  // stays unranked permanently, and the UI says so rather than looking broken.
 };
 
 // ⚠️ 'Activity' joins these the day it exists, not later. A group that is not
 // in this list is a group the map will try to RANK — and there is no published
 // standard that turns a 40-minute hike into a percentile. D27.
-export const UNRANKABLE = ['Core', 'Neck', 'Cardio', 'Activity'];
+//
+// 🔄 CORE LEFT THIS LIST ON 2026-09-04. It is not a general loosening: Core left
+// because a measured table for a weighted core lift was found and pulled, which
+// is the same bar every other entry cleared. Neck is still here and there is no
+// route out for it.
+export const UNRANKABLE = ['Neck', 'Cardio', 'Activity'];
+
+/**
+ * The log-space spread to rank this muscle with.
+ *
+ * ⚠️ PER MUSCLE SINCE 2026-09-04, defaulting to the global value. A single σ for
+ * every lift was always a stated simplification; Core is the first muscle whose
+ * published tiers refuse it outright, and the override is deliberately narrow so
+ * that nothing else moves by a pound.
+ */
+export function sigmaFor(muscle) {
+  const spec = MUSCLE_LIFTS[muscle];
+  return spec && typeof spec.sigma === 'number' ? spec.sigma : SIGMA;
+}
+
+/**
+ * How much to trust the STANDARD for this muscle, 0–1, independent of how good
+ * the lifter's own evidence is. Multiplied into the rating's confidence.
+ *
+ * ⚠️ TWO DIFFERENT DOUBTS, AND CONFLATING THEM WOULD BE THE BUG. "You logged one
+ * set six weeks ago" is fixable by logging more; "no second source agrees about
+ * where the middle is" is not, and telling somebody to record another set would
+ * be answering the wrong question. `raiseConfidenceHint()` says so for Core.
+ */
+export function standardQualityFor(muscle) {
+  const spec = MUSCLE_LIFTS[muscle];
+  return spec && typeof spec.standardQuality === 'number' ? spec.standardQuality : 1;
+}
+
+/** The muscle-level caveat that must travel with the number, or null. */
+export function standardCaveatFor(muscle) {
+  const spec = MUSCLE_LIFTS[muscle];
+  return spec && spec.caveat ? spec.caveat : null;
+}
 
 let liftIdCache = null;
 function liftIds() {
@@ -404,7 +495,7 @@ export function percentileFor(oneRepMax, muscle, profile) {
     const median = medianForPopulation(muscle, pop.gender,
       refBodyWeight(profile, pop.gender), refAge(profile), pop.trained);
     if (!median) return null;
-    p += pop.share * normalCdf((Math.log(v) - Math.log(median)) / SIGMA);
+    p += pop.share * normalCdf((Math.log(v) - Math.log(median)) / sigmaFor(muscle));
   }
   return Math.min(99.9, Math.max(0.1, p * 100));
 }
@@ -422,7 +513,7 @@ export function weightForPercentile(percentile, muscle, profile) {
   // One population still has a closed form, and it is kept: the targets panel
   // and levelFor() are held together by a round-trip whose error budget was
   // measured against exactly this expression (see BOUNDARY_EPSILON).
-  if (pops.length === 1) return medians[0] * Math.exp(normalInv(p / 100) * SIGMA);
+  if (pops.length === 1) return medians[0] * Math.exp(normalInv(p / 100) * sigmaFor(muscle));
 
   // A mixture has no closed-form inverse. Its CDF is strictly increasing in
   // weight, so bisection always converges, and 80 halvings take the bracket
@@ -433,7 +524,7 @@ export function weightForPercentile(percentile, muscle, profile) {
     const mid = (lo + hi) / 2;
     let cdf = 0;
     for (let j = 0; j < pops.length; j++) {
-      cdf += pops[j].share * normalCdf((Math.log(mid) - Math.log(medians[j])) / SIGMA);
+      cdf += pops[j].share * normalCdf((Math.log(mid) - Math.log(medians[j])) / sigmaFor(muscle));
     }
     if (cdf < target) lo = mid; else hi = mid;
   }

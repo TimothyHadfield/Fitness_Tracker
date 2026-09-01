@@ -1676,3 +1676,111 @@ Kept here so nobody re-pulls it hoping for a different answer.
 - **Injury-rate figures for powerlifting and weightlifting specifically.** In the Keogh review but
   not extracted here: bodybuilding is the relevant comparison for this app's users, and quoting a
   competitive powerlifter's rate at a gym-goer would be the same category error as §13.2's warning.
+
+---
+
+## 14. Ranking the abs — a key lift for Core 🟡
+
+**Pulled 2026-09-04**, on Tim's instruction: *"set a good 1RM estimator for the ab muscle group for
+a specific exercise and base it off of whatever information we can find online in order to compare it
+to others… This makes the ab muscle group nearly identical to any other muscle group and how it
+operates but with a little less reliability."*
+
+🚨 **THE GRADE IS 🟡 AND IT IS THE ONLY 🟡 IN THE STANDARDS TABLE.** §11's whole argument for the
+medians is that **two independent methods agree within ~3 %** lift by lift. Core has one measured
+source and no agreeing second, and that is stated on screen rather than smoothed over. Read §11
+first; this section is an exception to it, not an extension of it.
+
+### 14.1 What was found
+
+**Cable Crunch — Strength Level** (measured; 12,596 qualifying results out of 211,507 logged lifts,
+3 Oct 2019 – 5 Mar 2026). 1RM in lb:
+
+| Body weight | Beginner (p5) | Novice (p20) | Intermediate (p50) | Advanced (p80) | Elite (p95) |
+|---|---|---|---|---|---|
+| **180 lb male** | 58 | 98 | **151** | 216 | 288 |
+| **140 lb female** | 36 | 65 | **106** | 157 | 214 |
+
+**Machine Seated Crunch — Strength Level** (21,870 qualifying out of 233,517), same reference
+weights: male 65 / 110 / 170 / 243 / 325, female 30 / 57 / 94 / 140 / 192.
+
+### 14.2 The cross-check disagrees, and that is the finding
+
+**Fitness Volt** gives 178 (male) and 123 (female) at the same body weights — **17 % and 16 % above**
+Strength Level. That is five to six times the disagreement §11 accepts elsewhere.
+
+⚠️ **AND IT IS NOT AN INDEPENDENT MEASUREMENT.** Fitness Volt describes its tables as *"modeled level
+tables, ratio-derived from base lifts that are anchored to … the public OpenPowerlifting dataset"* —
+so for a cable crunch it is a ratio somebody chose from a powerlifting anchor, not a record of anyone
+actually doing cable crunches. **Strength Level's is the measurement; Fitness Volt's is a model of
+it.** The measured figure is used, and the gap is carried as `standardQuality: 0.6`, which multiplies
+into the rating's confidence so a Core reading with flawless evidence still lands below a bench
+press reading with the same evidence.
+
+### 14.3 🚨 The spread is much wider than every other lift, and reusing the global σ was wrong
+
+Fitting σ to the five published anchors, in log space:
+
+| From | Core (cable crunch) | Chest (bench press) |
+|---|---|---|
+| Elite / median | 0.393 | 0.263 |
+| Advanced / median | 0.425 | 0.274 |
+| median / Novice | 0.514 | 0.314 |
+| median / Beginner | 0.582 | 0.334 |
+| **used** | **0.48** | 0.32 (global) |
+
+**Core's tiers are roughly 50 % wider, and asymmetric — the left tail is the wide end.** Ranking Core
+with the global σ = 0.32 puts a lifter sitting **exactly on the published Beginner mark** at the
+**0.1st percentile** instead of the 5th: the model would call a published beginner the weakest lifter
+alive. So `MUSCLE_LIFTS` grew an optional per-muscle `sigma`, defaulting to the global value, and
+Core is the only muscle that sets it. 🟡 — a single value fitted to one lift's five anchors, and the
+asymmetry means no single σ fits all five.
+
+⚠️ **This is the revisit `strength-standards.js` predicted.** Its own comment said one σ for every
+lift was *"a simplification — isolation work is probably wider — and is worth revisiting once real
+data exists."* Real data existed for exactly one muscle and it was wider, by half again.
+
+### 14.4 The conversion between the two crunches, and why it is only quality 0.55
+
+Per level, Machine Seated Crunch ÷ Cable Crunch:
+
+- **Men:** 1.121 / 1.122 / 1.126 / 1.125 / 1.128 — **flatter than any entry the 2026-08-26 ratio
+  sweep produced.** On the technique §11 established (one population, both lifts, a 180 lb male,
+  divide, take the median) this is as good as a derivation gets.
+- **Women:** 0.833 / 0.877 / 0.887 / 0.892 / 0.897 — internally just as flat, and **27 % away.**
+
+🚨 **BOTH CANNOT BE THE POPULATION RATIO.** The likeliest explanation is that the two exercises draw
+different logging populations at different sample sizes, and the female tables are the thinner of the
+four. `RATIOS` has no sex dimension, so the larger male sample is used at a reduced quality rather
+than the two being averaged into a number neither table supports.
+
+### 14.5 What is still refused, and why each one is not an oversight
+
+Eight of the library's thirty core exercises record a weight. Six of the eight are still refused:
+
+| Exercise | Why not |
+|---|---|
+| **Decline Sit-Up** | The logged weight is a plate at the chest; the real resistance is that plate **plus a fraction of the torso**, and the fraction moves with the decline angle. Identical in kind to the inverted row (37–79 % of body weight depending on bar height), which §11 already refuses. |
+| **Russian Twist**, **Cable Woodchop**, **Landmine Twist** | Rotation, not spinal flexion — a different movement, and the load is largely a lever-arm choice. No published table maps either onto a crunch. |
+| **Pallof Press** | **Anti**-rotation. Resisting a stack is not the same quantity as moving one. |
+| **Suitcase Carry** | Anti-lateral-flexion, and timed. There is no 1RM to compare. |
+
+⚠️ **AND THE HONEST HEADLINE: THIS RATES ABOUT A QUARTER OF HOW PEOPLE TRAIN ABS.** Twenty-two of the
+thirty core exercises record reps or time and no load at all — every plank variant, hanging leg
+raise, ab wheel, sit-up and V-up. **Nothing in this section ranks any of them**, and the map marks
+them "trained, can't be ranked" (2026-09-04) rather than pretending otherwise.
+
+### 14.6 What was NOT pulled, and is the obvious next question
+
+**Published population norms for the plank hold and the 60-second sit-up** — ACSM trunk-endurance and
+curl-up tables, McGill's plank data, military PT standards. If those hold up they would rank the
+other three-quarters, and they fit the app's existing shape because they are **tests**, and the app
+already separates a benchmark from a set logged mid-workout. **This was not searched for on
+2026-09-04 and nothing here rests on it.** Recorded so the next session knows it is an open lead
+rather than a checked-and-rejected one.
+
+### 14.7 Sources
+
+- Strength Level, *Cable Crunch Standards for Men and Women (lb)* — https://strengthlevel.com/strength-standards/cable-crunch/lb
+- Strength Level, *Machine Seated Crunch Standards for Men and Women (lb)* — https://strengthlevel.com/strength-standards/machine-seated-crunch/lb
+- Fitness Volt, *Cable Crunch Standards by Bodyweight (lbs)* — https://fitnessvolt.com/strength-standards/cable-crunch/ (modelled, used only as the cross-check that disagreed)

@@ -2820,3 +2820,47 @@ as solid black while it was rendering perfectly.
 Fixing that re-rolls the entire seeded demo year and invalidates a golden table that exists to catch
 regressions — not something to do quietly inside a colour fix, so it is written up as Open work 25
 for Tim to call.
+
+---
+
+## 2026-09-04, later — Core is a ranked muscle
+
+Tim: *"start planning and then when you're ready start building a version you think follows my
+description and you think is good enough for the app."*
+
+**Built.** Core has a key lift — the **Cable Crunch** — a measured median (151 lb for a 180 lb man,
+106 for a 140 lb woman), and it now behaves like every other muscle on the map. `UNRANKABLE` is down
+to Neck, Cardio and Activity.
+
+**Three things the research decided rather than confirmed**, and they are why this took a research
+pass instead of four lines of table:
+
+1. **The cross-check disagreed by 17 %**, where every other lift in the app agrees within 3 %. The
+   measured source (Strength Level, 12,596 logged cable crunches) beat the modelled one, and the gap
+   is carried as an actual penalty rather than a footnote.
+2. **Core's tiers are 50 % wider than any other lift's.** Reusing the app's global spread would have
+   put a lifter sitting exactly on the published *Beginner* mark at the 0.1st percentile — the model
+   calling a published beginner the weakest person alive. Core now carries its own; nothing else
+   moved by a pound.
+3. **The machine-crunch conversion is the cleanest number in the whole ratio table for men** — five
+   levels agreeing to three decimals — **and the women's tables say something 27 % different.** Both
+   cannot be right, so it went in at reduced quality rather than being averaged into a number
+   neither table supports.
+
+**"A little less reliability" is arithmetic now, not a sentence.** Identical evidence gives an
+identical estimate and a lower confidence, so Core reads *fair* where Chest reads *high*, and the map
+paints it less vividly. That also forced a smaller change worth knowing about: every "how to improve
+this" hint in the app is an instruction, and on Core an instruction would be a lie — no amount of
+logging fixes a thin standard. It now says *"nothing more to log — this one is held back by the
+standards, not by your training"*, and only after the genuinely fixable reasons are exhausted.
+
+**Two things would have shipped broken.** The morning's hatch was computed from "is this muscle in
+the unrankable list" — so the moment Core left that list, anyone whose ab work is planks would have
+dropped back to "No data" over three sessions a week. That is the original bug reintroduced for the
+majority, and it would have *looked* like a success. It now asks whether a rating actually came out.
+And a test written for a completely different sweep caught Ab Wheel Rollout going silent — it records
+no weight, so it fell through every branch saying nothing.
+
+**The honest headline, unchanged from the estimate I gave beforehand: this rates about a quarter of
+how people train abs.** Twenty-two of thirty core exercises record reps or time and no load. They
+keep the hatch. The plank and sit-up norms are written down as an unchecked lead, not a rejected one.

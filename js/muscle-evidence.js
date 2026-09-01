@@ -24,7 +24,7 @@
 import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
 import { robustAggregate } from './strength-estimate.js';
-import { MUSCLE_LIFTS } from './strength-standards.js';
+import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
 
 /* ------------------------------------------------------------------ *
  * Load
@@ -118,7 +118,32 @@ export function rankBlockedReason(exercise, opts) {
       + 'compared with a weight';
   }
 
-  if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return null;
+  /* 🚨 AND THE LAST SILENT SHAPE, CLOSED 2026-09-04 BY MAKING CORE RANKABLE.
+   *
+   * An exercise that records NO LOAD AT ALL and has no measured body-weight
+   * fraction — the Ab Wheel Rollout is the only one in the library — used to
+   * fall straight out of the bottom of this function saying nothing. It went
+   * unnoticed for as long as it did because the branch below returns null for
+   * anything without a `weight` field, and every such exercise happened to sit
+   * under Core, which was not rated, so nothing ever asked.
+   *
+   * ⚠️ THE MOMENT CORE BECAME RANKABLE THAT STOPPED BEING TRUE, and the
+   * data-layer assertion that walks the whole library caught it in the same
+   * commit. Worth recording: the rankability change did not create this hole,
+   * it revealed one — and the test that found it was written for a different
+   * sweep entirely, which is the argument for that kind of test.
+   *
+   * ⚠️ IT NAMES THE REAL OBSTACLE. The generic message further down says nobody
+   * has published a conversion, which invites somebody to go and look for one.
+   * For a rollout there is nothing to convert: the resistance is a lever, set by
+   * how far out you go, and the app records neither that nor a weight. */
+  const noLoad = !Array.isArray(exercise.fields) || !exercise.fields.includes('weight');
+  if (noLoad && !bodyWeightFractionFor(exercise)) {
+    return 'this one records no weight, and how hard it is depends on leverage the app '
+      + 'cannot see — so it can’t be compared with a barbell. It still counts toward your volume';
+  }
+
+  if (noLoad) return null;
   // ⚠️ ASKED OF THE REAL FUNCTION, not re-derived from the rules table. The first
   // version of this branch returned the message for EVERY weighted exercise and
   // told the barbell row it could not be converted — caught immediately by
@@ -884,6 +909,52 @@ const RATIOS = {
     [/Reverse Curl/, 0.80, 0.40],
     [/Plate Pinch Hold/, 0.45, 0.20],
   ],
+
+  /* 🚨 CORE — NEW 2026-09-04, AND WHAT IS *ABSENT* FROM IT IS THE DESIGN.
+   *
+   * Only two entries, out of thirty core exercises in the library. Eight of
+   * those thirty record a weight at all; six of the eight are still refused
+   * here, on purpose, and the reasons are worth having because the obvious next
+   * change is to add them.
+   *
+   * ✅ Cable Crunch — the key lift. docs/research.md §14.
+   * ✅ Machine Crunch — the cleanest ratio in this whole table. Strength Level's
+   *    Machine Seated Crunch at 180 lb male (65/110/170/243/325) over Cable
+   *    Crunch (58/98/151/216/288) gives 1.121 / 1.122 / 1.126 / 1.125 / 1.128 —
+   *    five levels agreeing to the third decimal, which is flatter than any
+   *    entry the 2026-08-26 sweep produced.
+   *    🚨 AND ITS QUALITY IS STILL ONLY 0.55, BECAUSE THE WOMEN'S TABLES SAY
+   *    0.89. Same method, same site, same day: female Machine Seated Crunch over
+   *    female Cable Crunch is 0.833/0.877/0.887/0.892/0.897 — internally just as
+   *    flat, and 27 % away from the male answer. Both cannot be the population
+   *    ratio. This table has no sex dimension, so the larger male sample is used
+   *    and the disagreement is priced in rather than averaged away.
+   *
+   * 🛑 REFUSED, and each for its own reason rather than out of caution:
+   *
+   *   Decline Sit-Up — the logged weight is a plate held at the chest, so the
+   *     real resistance is that plate PLUS a fraction of the torso, and the
+   *     fraction moves with the decline angle. That is the inverted-row problem
+   *     exactly (37–79 % of body weight depending on a parameter the app does
+   *     not record), and it is already refused there. Adding the plate weight
+   *     alone would read a 25 lb sit-up as a 25 lb cable crunch and rate a
+   *     genuinely strong lifter Beginner.
+   *   Russian Twist · Cable Woodchop · Landmine Twist — ROTATION, not spinal
+   *     flexion. A different movement, and no published table maps either onto
+   *     a crunch. The load is also mostly a lever-arm choice.
+   *   Pallof Press — ANTI-rotation: the measure is resisting a stack, not moving
+   *     one, so the number is not the same kind of quantity.
+   *   Suitcase Carry — anti-lateral-flexion, and time-based; there is no 1RM.
+   *
+   * ⚠️ THE HONEST CONSEQUENCE, AND IT IS NOT SMALL: somebody whose ab training
+   * is planks, hanging leg raises and an ab wheel gets NO rating from this, and
+   * that is most people. Their Core is hatched instead of coloured — the
+   * 2026-09-04 "trained, can't be ranked" state — which is a true statement
+   * about what the app knows, not a hole. */
+  Core: [ // key: Cable Crunch
+    [/^Cable Crunch$/, 1.00, 1.00],
+    [/^Machine Crunch$/, 1.13, 0.55],
+  ],
 };
 
 /* 🚨 A CUSTOM EXERCISE NO LONGER RATES ANYTHING — 2026-08-31, AND THIS REVERSES
@@ -1284,7 +1355,22 @@ const fatigueOf = (o) => (Number.isFinite(o.fatigueFactor) ? o.fatigueFactor : 1
  * @returns null when nothing is admissible, else
  *   { estimate, confidence, used[], kind, contributorCount, newestAgeDays }
  */
-export function rateMuscle(observations) {
+/**
+ * @param {object[]} observations
+ * @param {string|null} [muscle] which muscle these are FOR.
+ *
+ * ⚠️ `muscle` IS OPTIONAL AND ONLY ONE THING USES IT: the standard's own
+ * reliability (2026-09-04). Every other input to this function is evidence the
+ * lifter produced; `standardQualityFor()` is the opposite — how much the
+ * PUBLISHED TABLE for that muscle is worth, which no amount of logging can
+ * improve. Core is the only muscle that is not 1.
+ *
+ * It is a parameter rather than a lookup inside the loop because the caller is
+ * the only thing that knows which muscle a bag of observations belongs to, and
+ * because leaving it out has to keep working: `demo.js` rates a muscle without
+ * naming one, and defaulting to 1 means it gets the old behaviour exactly.
+ */
+export function rateMuscle(observations, muscle = null) {
   const admissible = (observations || []).filter((o) => o && o.estimate > 0 && repFactor(o.reps) > 0);
   if (!admissible.length) return null;
 
@@ -1406,7 +1492,13 @@ export function rateMuscle(observations) {
 
   return {
     estimate,
-    confidence: confidenceOf(used, scored),
+    // ⚠️ TWO DOUBTS, MULTIPLIED, AND THEY ARE NOT THE SAME DOUBT. The first term
+    // is how good this lifter's evidence is — fixable by logging more. The
+    // second is how good the published standard is — fixable by nobody. Keeping
+    // them as one number is what lets the map fade a Core rating honestly
+    // without implying the user did anything wrong, and `raiseConfidenceHint()`
+    // says which of the two is in play.
+    confidence: confidenceOf(used, scored) * standardQualityFor(muscle),
     used,
     kind,
     contributorCount: scored.length,
@@ -1454,6 +1546,21 @@ export function raiseConfidenceHint(muscle, rating) {
   const spec = MUSCLE_LIFTS[muscle];
   const keyLift = spec ? spec.lift : null;
   if (!rating) return keyLift ? `Record any ${muscle.toLowerCase()} exercise to rate this.` : null;
+
+  /* 🚨 THE HINT MUST NOT ASK FOR WORK THAT CANNOT HELP — 2026-09-04.
+   *
+   * Every line below tells the user to log something, because every line below
+   * answers a shortage of THEIR evidence. Core's confidence is held down partly
+   * by `standardQuality`, which is a shortage of the WORLD's evidence: one
+   * measured source and a 17 %-adrift cross-check. Telling somebody to do
+   * another set to fix that would be a small lie, repeated on every visit, and
+   * it would never come true however many sets they did.
+   *
+   * ⚠️ It is checked FIRST but only fires once the ordinary reasons are gone —
+   * otherwise it would mask a genuinely stale or single-source reading, which
+   * are fixable and worth saying. So: fall through the real advice, and if none
+   * of it applies and the rating still is not confident, say why. */
+  const standardBound = spec && typeof spec.standardQuality === 'number' && spec.standardQuality < 1;
 
   if (rating.kind === 'fallback') {
     return `This is inferred from other lifts. Any direct ${muscle.toLowerCase()} exercise would rate it properly.`;
@@ -1512,6 +1619,14 @@ export function raiseConfidenceHint(muscle, rating) {
   const bestQuality = Math.max(...rating.used.map((u) => u.quality));
   if (bestQuality < 0.8 && keyLift) {
     return `Based on close matches rather than the standard lift. A heavy set of ${keyLift} would confirm it.`;
+  }
+
+  // Nothing the lifter can do is left, and the reading is still not confident.
+  // Say what is actually holding it down rather than returning null and leaving
+  // a faded colour unexplained. See the note at the top of this function.
+  if (standardBound) {
+    return 'Nothing more to log — this one is held back by the standards, not by '
+      + 'your training. Fewer people publish core numbers, so the placing is rougher.';
   }
   return null;
 }

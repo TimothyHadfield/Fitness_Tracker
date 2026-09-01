@@ -86,12 +86,11 @@ npm i --no-save jsdom jsqr @firebase/rules-unit-testing
 node tests/render.test.mjs
 ```
 
-**Seventeen suites run headlessly: 4,008 assertions** (recounted 2026-09-03 by running every one;
-+4 on 2026-09-04 for the document-size budgets).
+**Eighteen suites run headlessly: 4,068 assertions** (recounted 2026-09-04 by running every one).
 Nothing installed here ships with the app.
 
 - **Three suites need an npm package, not one:** `render` needs `jsdom`, `qr` needs `jsqr`, `rules`
-  needs `@firebase/rules-unit-testing`. The other fourteen need nothing.
+  needs `@firebase/rules-unit-testing`. The other fifteen need nothing.
 - **One more suite exists and is not in that 4,004**, because it does not run on `node` alone:
   `tests/rules.test.mjs` (**159 assertions** — the Firestore security rules, run under
   `firebase emulators:exec`, and the only tests here that run as somebody who is *not* you).

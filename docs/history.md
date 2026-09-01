@@ -17,6 +17,107 @@
 
 ---
 
+## 2026-09-04, second pass — 🚨 CORE IS A RANKED MUSCLE NOW
+
+Tim: *"start planning and then when you're ready start building a version you think follows my
+description and you think is good enough for the app."* His description, from an hour earlier: *"set
+a good 1RM estimator for the ab muscle group for a specific exercise and base it off of whatever
+information we can find online… This makes the ab muscle group nearly identical to any other muscle
+group and how it operates but with a little less reliability."*
+
+**Built. `Core` has a key lift, its own spread, its own reliability penalty and its own caveat, and
+`UNRANKABLE` is down to Neck, Cardio and Activity.** The research pull is `docs/research.md` §14 —
+🟡, the only 🟡 in the standards table, and the grade is the point.
+
+### A. What the research actually said, including the part that argued against the plan
+
+**Cable Crunch is measured**, which is why it is the key lift: Strength Level, 12,596 qualifying
+results out of 211,507 logged lifts. At 180 lb male 58/98/**151**/216/288; at 140 lb female
+36/65/**106**/157/214.
+
+- 🚨 **THE CROSS-CHECK DISAGREES BY 17 %, WHERE §11 ACCEPTS ~3 %.** Fitness Volt says 178/123. It is
+  also **not independent** — its own page says the tables are *"modeled… ratio-derived from base
+  lifts anchored to the OpenPowerlifting dataset"*, so for a cable crunch it is somebody's chosen
+  ratio, not a record of anyone doing cable crunches. The measured source wins and the gap is
+  **carried as a number** (`standardQuality: 0.6`) rather than mentioned in a comment.
+- 🚨 **THE SPREAD IS 50 % WIDER THAN EVERY OTHER LIFT, AND REUSING THE GLOBAL σ WOULD HAVE BEEN
+  WRONG IN A WAY NOBODY WOULD HAVE SEEN.** Core's anchors fit σ ≈ 0.48 (asymmetric, 0.39–0.58);
+  the bench fits ≈ 0.30, which is why 0.32 has worked everywhere. Under 0.32 a lifter sitting
+  **exactly on the published Beginner mark** reads **p0.1 instead of p5** — the model calling a
+  published beginner the weakest lifter alive. `MUSCLE_LIFTS` grew an optional per-muscle `sigma`;
+  Core is the only muscle that sets one. ⚠️ **This is the revisit the file predicted**: its own
+  comment said one σ for every lift was a simplification *"worth revisiting once real data exists."*
+- ⚠️ **THE MACHINE-CRUNCH RATIO IS THE CLEANEST IN THE TABLE AND STILL ONLY QUALITY 0.55.** Men:
+  1.121/1.122/1.126/1.125/1.128 across five levels — flatter than anything the 2026-08-26 sweep
+  produced. Women: 0.833/0.877/0.887/0.892/0.897, internally just as flat and **27 % away**. Both
+  cannot be the population ratio; `RATIOS` has no sex dimension, so the larger male sample is used
+  and the disagreement is priced in rather than averaged into a number neither table supports.
+
+### B. "A little less reliability", as arithmetic rather than a sentence
+
+- **`standardQuality` multiplies the rating's confidence**, so identical evidence gives an identical
+  ESTIMATE and a lower CONFIDENCE — 0.428 against Chest's 0.713. 🚨 **The two doubts are different
+  and conflating them would have been the bug**: "you logged one set six weeks ago" is fixable by
+  logging more, "no second source agrees where the middle is" is not.
+- 🚨 **SO THE HINT HAD TO LEARN TO ASK FOR NOTHING.** Every other line `raiseConfidenceHint()` can
+  return is an instruction. On Core, once the fixable reasons are exhausted, an instruction would be
+  a small lie repeated on every visit — it now says *"nothing more to log — this one is held back by
+  the standards, not by your training."* ⚠️ **Checked last, not first**, so a genuinely stale or
+  single-source reading still gets the advice somebody can act on.
+- **The caveat travels with the number, on both the local rating and the published projection**, so
+  it cannot be lost by being read on a friend's phone.
+
+### C. Two things that would have shipped broken, and how each was caught
+
+1. 🚨 **THE HATCH WOULD HAVE REGRESSED FOR MOST PEOPLE — caught in planning, not by a test.** The
+   morning's "trained, can't be ranked" mark was computed from the `UNRANKABLE` list. The moment
+   Core left that list, a lifter whose ab work is planks and hanging leg raises would have dropped
+   back to `lv-none`, "No data", over three sessions a week — **the original bug, reintroduced for
+   the majority**, since only 8 of 30 core exercises record a weight. It would have looked like a
+   success, because Core colours beautifully for the minority who do cable crunches. The mark now
+   asks **"did a rating come out"** rather than "could one ever", which is narrower, more honest,
+   and generalises: a Back whose only sets were 20-rep inverted rows has always been painted
+   "No data" too.
+2. ⚠️ **AB WHEEL ROLLOUT WENT SILENT, AND A TEST WRITTEN FOR A DIFFERENT SWEEP CAUGHT IT.**
+   `data-layer`'s "no library exercise is silent" walk failed the moment Core became rankable: the
+   rollout records no weight, has no measured body-weight fraction, and fell out of
+   `rankBlockedReason()` saying nothing. **Making Core rankable did not create that hole, it
+   revealed one** — the exercise had been sitting under an unrated muscle where nothing ever asked.
+   It now names the real obstacle (a lever the app cannot see), rather than the generic "nobody has
+   published a conversion", which would invite somebody to go looking for one.
+
+### D. What it still refuses, and the headline nobody should lose
+
+Six of the eight weighted core exercises are still refused, each for its own reason — **Decline
+Sit-Up** because the load is a plate *plus* an unmeasured fraction of the torso (the inverted-row
+problem exactly); **Russian Twist / Cable Woodchop / Landmine Twist** because rotation is not spinal
+flexion; **Pallof Press** because anti-rotation is a different quantity; **Suitcase Carry** because
+it is timed. Each is a test, so "finishing the table" later requires arguing with a named reason.
+
+⚠️ **AND THE HONEST HEADLINE: THIS RATES ABOUT A QUARTER OF HOW PEOPLE TRAIN ABS.** Twenty-two of
+thirty core exercises record reps or time and no load — every plank, hanging leg raise, ab wheel,
+sit-up and V-up. They get the hatch, which is a true statement rather than a hole. 🆕 **The obvious
+next lead is recorded and explicitly NOT checked**: published norms for the plank hold and the
+60-second sit-up (§14.6).
+
+**Verified in a real browser at 390×844 in both themes**, seeded through the app's own store because
+the demo has no ab work (Open work 25): Core reads *Intermediate, fair confidence* — "fair" where
+Chest on comparable evidence reads "high", which is the penalty visible in the UI.
+
+⚠️ **AND THE CAVEAT WAS MOVED BECAUSE OF WHAT THAT SHOWED.** It was last, with the other caveats,
+which is where a caveat about a *reading* belongs — and at 390×844 it fell **below the fold**, with
+"182 lbs · Estimated 1-rep max in Cable Crunch" on screen and the sentence saying that figure is
+rougher than every other number on the map not. It now sits directly under the estimate it
+qualifies. Rule 5 says a caveat travels with its number, and one you have to scroll for is not
+travelling with anything.
+
+**Tests: a new `tests/core-rating.test.mjs` (41), render 922 → 926, data-layer's two Core assertions
+rewritten to pin the new truth rather than deleted.** Mutation-checked: removing Core's `sigma` fails
+4 assertions, removing `standardQuality` fails 5. **Audit: 16 route/width/theme/palette combinations,
+728 text nodes, zero below 4.5:1, zero unnamed, zero overflow.**
+
+---
+
 ## 2026-09-04 — 🚨 GREY MEANT TWO OPPOSITE THINGS: THE ABS COLOUR, FIXED
 
 Tim: *"okay fix the color issue now."* — after asking where the abs question stood, and proposing his

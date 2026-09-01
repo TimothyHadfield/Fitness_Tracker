@@ -53,24 +53,39 @@ let selected = null;
  * Volume screen's 28-day rate is a different claim and stays where it is.
  *
  * ⚠️ THIS DOES NOT RANK ANYTHING, and must never start to. It says the work was
- * recorded and that no standard exists to place it against. If Core becomes
- * rankable later, this state does not disappear — Neck keeps it permanently,
- * and so does anybody whose ab work is planks and leg raises.
+ * recorded and that no standard exists to place it against.
+ *
+ * 🚨 THE TEST IS "HAS WORK, HAS NO RATING" — IT IS NOT "IS IN `UNRANKABLE`", AND
+ * THAT CHANGED ON 2026-09-04 WHEN CORE BECAME RANKABLE. Written the first way,
+ * this function asked the standards table whether a muscle *could* be ranked;
+ * the moment Core left `UNRANKABLE`, a lifter whose ab work is planks and
+ * hanging leg raises would have fallen straight back to `lv-none` — "No data"
+ * over three sessions a week — which is the exact bug this whole state exists to
+ * fix, reintroduced for **most** people, since only 8 of the 30 core exercises
+ * in the library record a weight at all.
+ *
+ * ⚠️ Asking instead whether a rating CAME OUT is both narrower and more honest,
+ * and it generalises for free: a Back whose only sets were 20-rep inverted rows
+ * has work and no rating too, and it has been painted "No data" all along.
  */
 const TRAINED_WINDOW_DAYS = 365;
 
-/** Muscles with no standards that nonetheless have recorded work behind them. */
-async function trainedButUnrankable(rows = null) {
+/**
+ * Muscles with recorded work that produced no rating.
+ * @param {Map} rated  what `muscleStrength()` managed to rank — anything in here
+ *   is already coloured and must not be hatched over the top of its own level.
+ */
+async function trainedButUnrankable(rated, rows = null) {
   const out = new Map();
   // Cardio and Activity are library shelves rather than muscles — they are not
   // on the figure at all, so marking them would mark nothing.
-  const wanted = UNRANKABLE.filter((u) => u !== 'Cardio' && u !== 'Activity');
+  const shelves = new Set(['Cardio', 'Activity']);
 
   const vol = await weeklyVolumeByMuscle(TRAINED_WINDOW_DAYS, null, rows);
   if (!vol) return out;
 
   for (const m of vol.muscles) {
-    if (!wanted.includes(m.muscle) || !m.totalSets) continue;
+    if (shelves.has(m.muscle) || (rated && rated.has(m.muscle)) || !m.totalSets) continue;
     out.set(m.muscle, {
       sets: m.totalSets,
       days: m.daysTrained,
@@ -84,9 +99,13 @@ async function trainedButUnrankable(rows = null) {
 }
 
 export async function muscleGroupsPane(host, top) {
-  const [{ profile, muscles, blocked, ready }, settings, trained] = await Promise.all([
-    muscleStrength(), store.getSettings(), trainedButUnrankable(),
+  const [{ profile, muscles, blocked, ready }, settings] = await Promise.all([
+    muscleStrength(), store.getSettings(),
   ]);
+  // Sequenced, not parallel: which muscles are "trained but unranked" is defined
+  // against what actually got ranked, so it cannot be computed until that is
+  // known. Costs nothing — the sessions it walks are already in the read cache.
+  const trained = await trainedButUnrankable(muscles);
   // ⚠️ OFF BY DEFAULT — Tim, 2026-08-25: *"showing the percentile is a little
   // harsh for some people."* The level is the answer; the percentile is the
   // working behind it, and the working is what stings. See SettingsView.
@@ -466,16 +485,27 @@ function summary(muscles, trained = new Map()) {
           + `Furthest behind: ${weakest.muscle} (${weakest.level.name}).`)
       : null,
     /* ⚠️ THIS SENTENCE WAS ALREADY TRUE AND THE COLOUR BESIDE IT WAS NOT. It
-       now names which of them you have actually trained, because "can't be
-       ranked" and "nothing recorded" were the two things the old grey ran
-       together, and saying so in the same breath is what stops the hatch
-       reading as a worse level. */
+       now names which muscles you have actually trained but the app could not
+       rank, because "can't be ranked" and "nothing recorded" were the two things
+       the old grey ran together, and saying so in the same breath is what stops
+       the hatch reading as a worse level.
+
+       ⚠️ THE TWO HALVES ARE DIFFERENT CLAIMS AND ARE NOT THE SAME LIST. The
+       first is about the WORLD — Neck has no published standards and never will.
+       The second is about YOU: work the app holds and could not place, which
+       since Core became rankable (2026-09-04) is usually somebody whose ab
+       training is planks rather than a muscle with no standards at all. Merging
+       them would tell a plank-doer that abs cannot be ranked, which is no longer
+       true — they just cannot be ranked from a plank. */
     el('div', { class: 'field-help', text:
-      `${unranked.join(' and ')} can't be ranked — there are no published strength standards for them.`
-      + (trained.size
-        ? ` Your ${[...trained.keys()].join(' and ')} work is still recorded and counted; `
-          + 'tap for what it found.'
-        : '') }),
+      `${unranked.join(' and ')} can't be ranked — there ${unranked.length === 1 ? 'is' : 'are'} `
+      + `no published strength standard${unranked.length === 1 ? '' : 's'} for `
+      + `${unranked.length === 1 ? 'it' : 'them'}.` }),
+    trained.size
+      ? el('div', { class: 'field-help', text:
+          `Your ${[...trained.keys()].join(' and ')} work is recorded and counted toward volume, `
+          + 'but nothing in it could be placed against other people. Tap for what it found.' })
+      : null,
   );
 }
 
@@ -668,6 +698,25 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
     el('div', { class: 'muscle-est-note', text: m.lift && m.lift.name
       ? `Estimated 1-rep max in ${m.lift.name}`
       : 'Estimated 1-rep max' }),
+
+    /* 🚨 THE MUSCLE'S OWN CAVEAT SITS DIRECTLY UNDER THE NUMBER IT QUALIFIES,
+     * AND THE POSITION WAS CHOSEN BY MEASURING RATHER THAN BY TASTE.
+     *
+     * It was originally last, with the other caveats — which is where a caveat
+     * about THIS READING belongs. Driven in a real browser at 390×844 it fell
+     * **below the fold**: "182 lbs · Estimated 1-rep max in Cable Crunch" was on
+     * screen and the sentence saying that figure is rougher than every other
+     * number on the map was not. The panel scrolls, so nothing was hidden
+     * exactly — but Rule 5 is that a caveat travels with its number, and one you
+     * have to scroll for is not travelling with anything.
+     *
+     * ⚠️ IT IS A DIFFERENT KIND OF CAVEAT FROM THE ONES AT THE BOTTOM, which is
+     * why it may leave them. Those qualify this reading — a fallback, a high-rep
+     * set, an unusual comparison group — and each can be argued away by logging
+     * something better. This one qualifies the STANDARD, applies identically to
+     * a perfect reading, and cannot be improved by the user at all. Set only for
+     * Core (docs/research.md §14). */
+    m.caveat ? el('div', { class: 'muscle-warn', text: m.caveat }) : null,
 
     // The near goal, and the only target worth a row of its own.
     m.next

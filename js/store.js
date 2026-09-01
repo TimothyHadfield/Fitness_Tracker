@@ -3169,7 +3169,9 @@ export async function muscleRatings(rows) {
 
   const out = new Map();
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
-    const rating = rateMuscle(byMuscle.get(muscle) || []);
+    // The muscle is passed so the rating can carry the STANDARD's reliability
+    // as well as the evidence's — see rateMuscle() (2026-09-04).
+    const rating = rateMuscle(byMuscle.get(muscle) || [], muscle);
     if (rating) out.set(muscle, rating);
   }
   return out;
@@ -3207,6 +3209,7 @@ export async function muscleRatings(rows) {
 async function ratedFromRows(rows, profile) {
   const [ratings, {
     keyLiftFor, percentileFor, levelFor, nextLevelAfter, levelProgress, weightForPercentile,
+    standardCaveatFor,
   }, { confidenceBand, tintFor, raiseConfidenceHint }] = await Promise.all([
     muscleRatings(rows), import('./strength-standards.js'), import('./muscle-evidence.js'),
   ]);
@@ -3231,6 +3234,13 @@ async function ratedFromRows(rows, profile) {
       contributorCount: rating.contributorCount,
       exerciseCount: rating.exerciseCount,
       hint: raiseConfidenceHint(muscle, rating),
+      /* ⚠️ THE MUSCLE'S OWN CAVEAT, AND IT TRAVELS WITH THE NUMBER RATHER THAN
+       * LIVING ON THE SCREEN. Core's standards are thinner than every other
+       * muscle's (docs/research.md §14). The panel that renders it is the SAME
+       * function a friend's map uses, and this field is set on BOTH the local
+       * rating and the published projection — so a caveat cannot be lost by
+       * being read on somebody else's phone. Null for every other muscle. */
+      caveat: standardCaveatFor(muscle),
       best: top ? { ...top } : null,
       percentile,
       level,
@@ -3332,7 +3342,8 @@ export async function muscleStrength() {
   // every page that touches the store.
   const [
     { MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
-      levelProgress, weightForPercentile, generalPopulationPercentile },
+      levelProgress, weightForPercentile, generalPopulationPercentile,
+      standardCaveatFor },
     { rateMuscle, confidenceBand, tintFor, raiseConfidenceHint },
     { buildObservations },
   ] = await Promise.all([
@@ -3353,7 +3364,9 @@ export async function muscleStrength() {
   });
 
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
-    const rating = rateMuscle(byMuscle.get(muscle) || []);
+    // The muscle is passed so the rating can carry the STANDARD's reliability
+    // as well as the evidence's — see rateMuscle() (2026-09-04).
+    const rating = rateMuscle(byMuscle.get(muscle) || [], muscle);
     if (!rating) continue;
 
     const percentile = percentileFor(rating.estimate, muscle, profile);
@@ -3382,6 +3395,13 @@ export async function muscleStrength() {
       exerciseCount: rating.exerciseCount,
       newestAgeDays: rating.newestAgeDays,
       hint: raiseConfidenceHint(muscle, rating),
+      /* ⚠️ THE MUSCLE'S OWN CAVEAT, AND IT TRAVELS WITH THE NUMBER RATHER THAN
+       * LIVING ON THE SCREEN. Core's standards are thinner than every other
+       * muscle's (docs/research.md §14). The panel that renders it is the SAME
+       * function a friend's map uses, and this field is set on BOTH the local
+       * rating and the published projection — so a caveat cannot be lost by
+       * being read on somebody else's phone. Null for every other muscle. */
+      caveat: standardCaveatFor(muscle),
       // Kept for the panel, which still wants to show a real recorded set
       // rather than only a derived number.
       best: {

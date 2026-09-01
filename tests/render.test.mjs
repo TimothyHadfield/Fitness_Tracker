@@ -273,6 +273,64 @@ ok(core && core.classList.contains('lv-none'),
      'and names the exercises behind the count, so it is checkable');
   ok(logged && !/percentile|stronger than/i.test(logged.textContent),
      '🚨 and never ranks it against anybody — that is the thing there is no standard for');
+
+  /* 🚨 THE REGRESSION GUARD FOR 2026-09-04's SECOND CHANGE, and it is the whole
+   * reason the hatch is computed from "did a rating come out" rather than from
+   * the UNRANKABLE list.
+   *
+   * Core became rankable the same day, off the Cable Crunch. Written the obvious
+   * way — hatch the muscles that are in UNRANKABLE — this lifter would have
+   * dropped straight back to `lv-none`, "No data", over three sessions a week of
+   * planks, because only 8 of the library's 30 core exercises record a weight at
+   * all. That is the ORIGINAL bug, reintroduced for the majority of people, and
+   * it would have looked like a success: Core would have coloured beautifully
+   * for anyone who does cable crunches, which is the smaller group.
+   *
+   * The assertions above (plank + cable crunch, hatched) and this one (plank
+   * only, still hatched) are not duplicates: the first proves the mark exists,
+   * this proves it does not depend on the standards table.
+   */
+  ok(abs && abs.classList.contains('lv-unranked'),
+     '🚨 a lifter whose core work is PLANKS is still hatched after Core became rankable — '
+     + 'the mark tracks "no rating came out", not "no standard exists"');
+
+  // And the other half: weighted core work now produces a real level.
+  const cableCrunch = byName('Cable Crunch');
+  await store.saveSession({
+    workoutName: 'Abs', date: '2026-08-27', startedAt: '2026-08-27T10:00:00.000Z',
+    entries: [{ exerciseId: cableCrunch.id, exerciseName: cableCrunch.name,
+      sets: [{ weight: 120, reps: 10 }, { weight: 120, reps: 9 }] }],
+  });
+
+  const ranked = await mount(GraphView());
+  [...ranked.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles').click();
+  await settle();
+  const rankedAbs = [...ranked.querySelectorAll('.body-region')]
+    .find((r) => (r.getAttribute('aria-label') || '').startsWith('Core'));
+
+  ok(rankedAbs && !rankedAbs.classList.contains('lv-unranked')
+     && !rankedAbs.classList.contains('lv-none'),
+     `🚨 one cable crunch and Core carries a real level (${rankedAbs && [...rankedAbs.classList].join(' ')})`);
+
+  /* ⚠️ SELECTION IS MODULE STATE AND IT SURVIVES A REMOUNT, so a bare click here
+     TOGGLES OFF the Core that an earlier block already selected — which reads as
+     "the caveat is missing" and is nothing of the kind. Click until it is
+     actually open rather than assuming, and cap it so a genuinely broken panel
+     still fails instead of hanging. */
+  let warnText = '';
+  for (let i = 0; i < 2; i++) {
+    warnText = [...ranked.querySelectorAll('.muscle-warn')].map((n) => n.textContent).join(' ');
+    if (/rough placing/.test(warnText)) break;
+    rankedAbs.dispatchEvent(new ranked.ownerDocument.defaultView.Event('click', { bubbles: true }));
+    await settle();
+  }
+  warnText = [...ranked.querySelectorAll('.muscle-warn')].map((n) => n.textContent).join(' ');
+
+  ok(/rough placing/.test(warnText),
+     '⚠️ the panel carries the muscle\'s own caveat — Core\'s standards are thinner than the '
+     + `rest, and the number may never appear without saying so (${warnText.slice(0, 90)})`);
+  ok(/thinner|one measured source/.test(warnText),
+     'and says WHY it is rougher, not just that it is');
 }
 
 /* ⚠️ THE KEY IS CHIPS, AND THEY ARE NOT DECORATION.
