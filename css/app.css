@@ -509,6 +509,81 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .navbar a.nav-primary[aria-current="page"] svg { background: var(--accent); color: var(--accent-ink); }
 .navbar a.nav-primary[aria-current="page"] { color: var(--accent); }
 
+/* ==========================================================================
+   A workout in progress — the bar above the nav (2026-09-07)
+
+   Tim's ask, modelled on Hevy: put a workout down with the ▾ in the runner's
+   corner, walk around the app, and this is the way back in.
+
+   ⚠️ A FULL-WIDTH STRIP, WHERE HEVY DRAWS A FLOATING ROUNDED PILL, and the
+   difference is Rule 2 rather than taste — this app builds structure from
+   hairlines and spacing, and the two things it already docks to the bottom of a
+   screen (.navbar) and the top (.demo-bar) are both strips with one rule and a
+   surface. A pill here would be the only card in the app.
+
+   ⚠️ IT IS THE LAST CHILD OF .screen, NOT A SIBLING OF THE NAVBAR. #app is
+   column-reverse on a phone and row on a desktop, so a sibling lands above the
+   nav on one and beside it on the other. Inside the screen it is the bottom of
+   the content area in both.
+
+   ⚠️ NO ENTRANCE ANIMATION, deliberately, and this is the Rule 7 call: the bar
+   is rebuilt on every route change, so a slide would replay every time anybody
+   tapped anything for the length of a workout. Motion has to say what just
+   happened, and "you are still on the same screen you were" is not an event.
+   ========================================================================== */
+
+.session-mini {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 56px;
+  padding: 8px var(--pad);
+  /* --raised, not --raised-hi: every text token in the app is proved against
+     --raised in both themes and all four palettes (tests/a11y.test.mjs), and
+     --raised-hi is not in that matrix. */
+  background: var(--raised);
+  border-top: 1px solid var(--rule);
+  color: inherit;
+  text-decoration: none;
+}
+/* The bottom-most element owes the home-indicator inset, and on a tabbed route
+   that is the navbar underneath — which pays it already. This only applies where
+   there is no nav below the bar. */
+.screen.no-nav .session-mini { padding-bottom: calc(8px + var(--safe-b)); }
+/* ...and then the screen's own bottom must stop paying it, because with a bar
+   under it the screen is no longer against the edge of the display. Same shape
+   as `.demo-bar + .topbar` at the other end. */
+.screen.no-nav.has-mini .pane-bottom { padding-bottom: 10px; }
+
+.session-mini:active { background: var(--rule-soft); }
+
+/* The arrow points UP, at the workout the ▾ in the runner put down here. */
+.mini-arrow {
+  flex: none;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.mini-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mini-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.mini-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.mini-name {
+  min-width: 0;
+  font-size: 14.5px; font-weight: 700;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Pushed to the far edge so the elapsed time sits in the same place whatever the
+   workout is called — a clock that moves with the length of a name reads as a
+   different number each time you glance at it. */
+.mini-clock { flex: none; margin-left: auto; font-size: 13px; font-weight: 650; color: var(--ink-soft); }
+.mini-now {
+  font-size: 12.5px; color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 /* A segmented control that is subordinate to another one above it — the
    Months/Years switch under the Data tabs. Same control, quieter: it is a
    choice WITHIN the screen the row above already chose. */
@@ -2552,6 +2627,11 @@ a.seg {
   /* Comes after the base .list rule, so its `margin-inline: auto` cancels the
      mobile full-bleed negative margin as well as centring the column. */
   .pane-top > *, .pane-scroll > *, .pane-bottom > * { max-width: 820px; width: 100%; margin-inline: auto; }
+
+  /* The workout bar keeps its full-width surface — it is the bottom edge of the
+     content area, like the navbar is the left edge — but its CONTENTS line up
+     with the 820px column above them rather than sitting out at the margin. */
+  .session-mini { padding-inline: max(var(--pad), calc((100% - 820px) / 2)); }
   .list > * { padding-inline: 0; }
 
   .steppers { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }

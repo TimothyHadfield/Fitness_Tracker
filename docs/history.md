@@ -17,6 +17,136 @@
 
 ---
 
+## 2026-09-07 — PUT A WORKOUT DOWN AND PICK IT BACK UP
+
+Tim, with three Hevy screenshots: *"I want the user to be able to 'leave' a workout and interact with
+the rest of the cite and then come back to the workout at any time … instead of having the X in the
+upper left cornour, it has a down arrow … while you move around the cite, if a workout is currently
+running, it will appear as a box right above the main bars (home, data, record, etc) with an up
+arrow, and if you click on the up arrow it brings you back inside the workout."*
+
+⚠️ **The third screenshot is Hevy's SAVE screen and is not part of this** — he said so himself and
+said he would come back to it. Nothing on that screen was touched. 🛑 **And the screenshots stay out
+of the repository** (§9, and `docs/social-plan.md` §12.12): this repo is public and they are somebody
+else's UI.
+
+### A. 🚨 THE DRAFT ALREADY SURVIVED LEAVING. WHAT DID NOT EXIST WAS THE WAY BACK
+
+This is the thing worth carrying out of the session. Every set has gone to `ftrack:v1:draftSession`
+since the runner shipped, and starting the same workout again on the same day has always resumed it
+— **the feature Tim asked for was, in the data, already built.** What was missing was any way to
+believe it:
+
+- the only door back in was that workout's own row in the Record picker,
+- the only statement that the door existed was one sentence inside the confirm sheet you got on the
+  way out — *"Your progress is saved as a draft"* — which is a thing you read once, while leaving,
+  in a dialog with a Cancel button on it.
+
+**So the app kept the workout and looked exactly as though it had thrown it away.** A capability
+nobody can see is not a capability, and the fix was almost entirely a matter of saying so.
+
+### B. What shipped
+
+1. **The ✕ is a ▾, and it asks nothing.** The confirm sheet is gone — a question with a Cancel button
+   is the app saying this might cost you something, and nothing is at stake. It goes back through
+   history rather than to `#/home` (Rule 8): you reach the runner from the picker, from a workout's
+   own screen or from a deep link, and the arrow means the screen you were on.
+2. **A bar above the nav, on every screen, for as long as the workout is open** — `js/live-session.js`.
+   The workout's name, the elapsed time, the exercise you are on, and an up arrow that is the mirror
+   of the ▾ that put it there.
+3. **`js/session-draft.js`** — `saveDraft`/`loadDraft`/`clearDraft` and the same-day rule, moved out
+   of `views-session.js` unchanged. The bar has to answer "is one open?" on every screen and cannot
+   import the runner: the runner is the screen the bar exists to get back to, and pulling it in for a
+   two-line pill would drag the exercise picker along behind it.
+
+⚠️ **THE BAR IS IN THE LAYOUT, NOT FLOATING OVER IT**, and this is the one structural decision.
+`.update-bar` is `position: fixed` and can be — it is transient. This one is up for the length of a
+workout, and fixed would put it permanently on top of `.pane-bottom`, which is where "Save changes"
+and "Finish" live on every screen that has one. It is appended as **the last child of `.screen`**,
+which is the bottom of the content area on the phone's `column-reverse` layout *and* beside the
+desktop sidebar — a sibling of the navbar would have been above the nav on one and a third column on
+the other. **Measured at 393×852: the bar occupies 741–798 and the navbar's top edge is 798**, and on
+a fullscreen route it sits at 795–852 against a 852 viewport. On every route the scrolling pane ends
+exactly where the bar begins, so nothing is ever underneath it.
+
+### C. 🚨 AND IT UNCOVERED A WAY TO LOSE A WORKOUT, WHICH IS NOW SHUT
+
+`SessionView` opened with `if (rawDraft && !existingDraft) clearDraft()` — **starting any other
+workout deleted the one in progress, silently, with no screen mentioning it.**
+
+⚠️ **That was defensible right up until this session and is not any more, and the reason is the
+feature itself.** Reaching it used to take a deliberate departure through a sheet and then a
+deliberate start of something else. With a bar on every screen advertising that a workout is open,
+**it is a stroll**: Record, tap the next workout, twelve sets gone. A feature that makes a hazard
+easy to reach owns that hazard.
+
+So a second workout now meets a screen that **names the open one, says how many sets are in it, and
+offers both real answers** — *Back to Push* as the primary, and a quiet *Discard it and start Pull*
+which then confirms. ⚠️ **The destructive one is deliberately NOT in `.pane-bottom`**: that is where
+the thumb already is on every other screen in the app, and a Discard sitting in that muscle memory is
+how somebody deletes the workout they meant to go back to. ⚠️ **A draft with nothing recorded in it
+is still replaced without a question** — there is nothing to lose, and a question about nothing is
+how people learn to tap through questions.
+
+⚠️ **The set count it quotes is the SAVE PATH's definition of recorded**, prefill and all, so it is
+honest about what would actually be lost — which on a workout with history is every planned set
+carrying last time's numbers. That is Open work 15's half-fixed prefill behaviour showing through,
+not a new claim, and it is still Tim's call.
+
+### D. What was checked
+
+- **1,004 render assertions** (was 982), all seventeen suites green.
+- **Mutation-checked, three ways, and one of mine was passing for the wrong reason.**
+  - Reading `entries[index]` instead of walking `stepsFor` flips exactly the superset assertion —
+    the fixture is a two-member superset at **step 3**, where the answer is entry 0 and `entries[2]`
+    does not exist. At step 2 both readings agree, which is why that case alone would have proved
+    nothing.
+  - Making the bar skip the same-day rule flips exactly the "yesterday's draft" assertion. Removing
+    the rule from `liveDraft` itself takes an *older* block of the suite down with it, which is a
+    fair reading of how load-bearing it is.
+  - Restoring the silent wipe flips four. ⚠️ **And it caught a weak assertion of mine**: *"nothing
+    was thrown away while the question was asked"* read `Boolean(loadDraft())`, and the wipe writes a
+    fresh draft for the workout you just opened — so something is always on disk. It now asserts the
+    draft is still **Push A's**. §0.14 is about mutations landing on comments; this is the same
+    family — *a mutation that fails to flip an assertion is telling you about the assertion.*
+- **Driven in headless Chrome at 393×852**, in the demo account: start Push, type 135×8, tap ▾, land
+  on Home with the bar up, walk to Data / Calendar / Workouts / Settings / Account / Profile with it
+  in place on every one, tap it, and arrive back inside the runner with **135 and 8 still in the
+  fields** and the bar correctly absent.
+- **Contrast measured on the bar itself, in both themes and all four palettes — worst 9.25:1**, and
+  the tap target is the whole 393×57 pill. ⚠️ **The standing audit cannot reach this control**: it
+  only exists while a draft does, and the audit never starts a workout. That is why the numbers were
+  taken here rather than left to the next sweep.
+
+### E. ⚠️ AND I BROKE §0.11 AGAIN — THE FOURTH TIME IN THIS PROJECT
+
+A mutation check was applied to `js/live-session.js` with `Get-Content -Raw` piped through
+`Set-Content -Encoding utf8`, which is **exactly** what §0.11 forbids: PS 5.1 decodes as ANSI, so
+every em dash and ⚠️ in the file was double-encoded — `E2 80 94` became `C3 A2 E2 82 AC E2 80 9D`.
+Caught by inspecting the bytes, and the file was rewritten through the editor.
+
+🚨 **The interesting part is not that it happened, it is what it happened FOR.** Every previous
+instance was a bulk edit of prose. This one was a **one-line, deliberately temporary code change I
+intended to revert in ninety seconds** — the exact case that feels too small to open an editor for.
+⚠️ **A mutation check is the most dangerous place in this workflow to reach for a script**, because
+the edit is designed to be thrown away, so nobody diffs it afterwards; a revert that "puts the line
+back" restores the line and leaves the encoding damage in every other line of the file. The rule
+already said "keep scripts for running things". **It needs no exception for temporary edits, and the
+temptation is strongest exactly there.**
+
+### F. Left alone on purpose
+
+- 🛑 **No discard control on the bar.** Hevy has a trash icon on it; Tim described the arrow and did
+  not ask for one, and a one-tap delete for a live workout sitting under the thumb on every screen is
+  not something to add unasked. The discard that exists is on the conflict screen, beside a count of
+  what it would destroy. **Raised with him, not built.**
+- 🛑 **The Record picker does not say "Resume" on the open workout's row.** The bar is on that screen
+  too, saying the same thing more loudly. Not asked for.
+- 🛑 **Two workouts open at once.** That is a second draft key and a second thing to explain, and
+  nobody asked for it. The app says "one at a time" on the conflict screen rather than implying it.
+
+---
+
 ## 2026-09-06 (fifth pass) — 🚨 THE COST ANALYSIS, AND THE READ PATTERN IS THE WHOLE BILL
 
 Tim asked for the cost analysis `docs/direction.md` §2 had parked behind *"only if he asks"*, with two

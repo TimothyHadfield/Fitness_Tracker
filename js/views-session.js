@@ -1,12 +1,13 @@
 // The in-workout recording flow, plus the benchmark form.
 
-import { store, social, muscleStrength, muscleRatings, todayISO, demo, uid, DEFAULT_SETS } from './store.js';
+import { store, social, muscleStrength, muscleRatings, todayISO, uid, DEFAULT_SETS } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
 import { totalResistance } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel,
+  fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel, goBack, refreshRoute,
 } from './ui.js';
+import { saveDraft, loadDraft, clearDraft, liveDraft } from './session-draft.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
   DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
@@ -20,7 +21,6 @@ import { estimateOneRM, percentOfMax, repPrediction } from './exercise-estimate.
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
-const DRAFT_KEY = 'ftrack:v1:draftSession';
 
 /**
  * Whole days between two stored YYYY-MM-DD days.
@@ -42,48 +42,9 @@ function daysBetweenDays(fromISO, toISO) {
   return a === null || b === null ? null : Math.round((b - a) / 86400000);
 }
 
-/* ------------------------------------------------------------------ *
- * Draft persistence — a phone call or an app switch must not lose a workout
- * ------------------------------------------------------------------ */
-
-/**
- * ⚠️ THE DEMO ACCOUNT DOES NOT WRITE DRAFTS TO DISK.
- *
- * `store.js` swaps its whole BACKEND for an in-memory one inside the demo, so
- * no invented session can reach localStorage or Firestore — but the draft never
- * went through the store. It is written straight to localStorage from here, so
- * running a workout inside the demo left `ftrack:v1:draftSession` full of
- * made-up sets on the real device, and it survived leaving the demo. Found by
- * the UX review, 2026-08-22.
- *
- * ⚠️ It was near-harmless in practice and that is not the point. A strip on
- * every screen of the demo says *"nothing is saved"*, and docs/handbook.md §0.10
- * said *"nothing it does can reach localStorage"*. **Both were false**, and in
- * this project a claim that is false is a bigger defect than the leak it
- * describes. sessionStorage matches the demo flag's own lifetime: per tab, gone
- * when the browser closes, and never visible to the real account.
- */
-const draftStore = () => {
-  try {
-    return demo.active() ? sessionStorage : localStorage;
-  } catch (_) {
-    return localStorage;
-  }
-};
-
-function saveDraft(d) {
-  try { draftStore().setItem(DRAFT_KEY, JSON.stringify(d)); } catch (_) {}
-}
-export function loadDraft() {
-  try { const r = draftStore().getItem(DRAFT_KEY); return r ? JSON.parse(r) : null; } catch (_) { return null; }
-}
-export function clearDraft() {
-  // ⚠️ Cleared from BOTH. A draft written before this fix is sitting in real
-  // localStorage on somebody's phone right now, and the demo is the one place
-  // that can no longer see it to tidy it up.
-  try { sessionStorage.removeItem(DRAFT_KEY); } catch (_) {}
-  try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
-}
+/* ⚠️ DRAFT PERSISTENCE MOVED TO js/session-draft.js ON 2026-09-07, when the bar
+ * above the nav started asking the same question from every screen in the app.
+ * The functions are unchanged; read that file's header for why they left. */
 
 /* ================================================================== *
  * Session runner
@@ -282,18 +243,89 @@ export async function SessionView(workoutId) {
     }
   } catch (_) { /* no estimate is a quieter screen, never an error */ }
 
-  // A draft only resumes on the same day. Yesterday's abandoned session should not
-  // silently reappear and get saved with today's date.
-  //
-  // That check is against startedOn — the day the draft was CREATED — and not
-  // against `date`, which is the day the session is recorded for and which the
-  // user can move. Comparing `date` would mean back-dating a workout threw its
-  // own draft away the moment you switched apps. `date` is the fallback for
-  // drafts written before startedOn existed.
-  const rawDraft = loadDraft();
-  const existingDraft = rawDraft && rawDraft.workoutId === workout.id
-    && (rawDraft.startedOn || rawDraft.date) === todayISO() ? rawDraft : null;
-  if (rawDraft && !existingDraft) clearDraft();
+  /* A draft only resumes on the same day, and that rule now lives in
+   * session-draft.js because the bar above the nav applies exactly the same
+   * one — the two disagreeing would put a workout on the screen that opening it
+   * then throws away. */
+  const open = liveDraft(todayISO());
+  const existingDraft = open && open.workoutId === workout.id ? open : null;
+
+  /* 🚨 STARTING A SECOND WORKOUT USED TO DELETE THE FIRST ONE WITH NO WARNING.
+   *
+   * `if (rawDraft && !existingDraft) clearDraft()` is what stood here, and it
+   * was defensible while the only way out of the runner was a sheet promising
+   * the draft was safe: you had to deliberately leave, and then deliberately
+   * start something else. **The bar above the nav makes it a stroll** — Record,
+   * tap the next workout, and a session with twelve sets in it is gone with no
+   * screen having mentioned it.
+   *
+   * ⚠️ It is asked rather than merged, and never resolved quietly. Two workouts
+   * open at once is a second draft key and a second thing to explain; silently
+   * resuming the OTHER one is worse still, because the tap said start this. So
+   * the screen names what is open, says how much is in it, and offers both real
+   * answers. **The discard is the app's first "throw a workout away" control,
+   * and this is the only place it belongs**: beside a count of exactly what is
+   * being lost.
+   *
+   * A draft with nothing recorded in it — started, walked away from, never
+   * typed into — is cleared without asking. There is nothing to lose and a
+   * question about nothing is how people learn to tap through questions. */
+  if (open && !existingDraft) {
+    const lost = draftRecordedSets(open);
+    if (lost) return conflictScreen(open, lost);
+    clearDraft();
+  }
+  // Yesterday's. Cleared without asking, exactly as before: it cannot be
+  // resumed, and leaving it on disk would only make tomorrow's ask about it.
+  if (!open && loadDraft()) clearDraft();
+
+  /** Every set a person really typed into this draft, guests included. */
+  function draftRecordedSets(d) {
+    const walk = (entries) => (entries || []).reduce(
+      (n, e) => n + (e.sets || []).filter((s) => setIsRecorded(s, e.fields || [])).length, 0);
+    return walk(d.entries) + (d.others || []).reduce((n, o) => n + walk(o.entries), 0);
+  }
+
+  /**
+   * "You already have one open." The screen that stands between a second
+   * workout and the first one's sets.
+   */
+  function conflictScreen(d, lost) {
+    const name = d.workoutName || 'a workout';
+    return screenShell({
+      title: workout.name,
+      back: () => go('#/record'),
+      scroll: emptyState(
+        `${name} is still open`,
+        `It has ${lost} set${lost === 1 ? '' : 's'} recorded. Starting ${workout.name} now would `
+        + 'throw that away — this app only keeps one workout open at a time.',
+        /* ⚠️ THE DESTRUCTIVE ONE IS UP HERE AND THE SAFE ONE IS THE BIG BUTTON
+         * BELOW, deliberately. `.pane-bottom` is where the thumb already is on
+         * every other screen in the app, and a Discard sitting in that muscle
+         * memory is how somebody deletes a workout they meant to go back to. */
+        el('button', {
+          class: 'btn ghost',
+          text: `Discard it and start ${workout.name}`,
+          onClick: () => confirmSheet({
+            title: `Discard ${name}?`,
+            message: `${lost} recorded set${lost === 1 ? '' : 's'} will be deleted. This cannot be undone.`,
+            confirmLabel: 'Discard',
+            danger: true,
+            // Clear, then re-run this very route: with nothing open, the branch
+            // above falls through and the workout starts fresh. `refreshRoute`
+            // rather than a hash bounce, so back does not land on a screen that
+            // renders nothing (Rule 8).
+            onConfirm: () => { clearDraft(); refreshRoute(); },
+          }),
+        }),
+      ),
+      bottom: el('button', {
+        class: 'btn primary block',
+        text: `Back to ${name}`,
+        onClick: () => go('#/session/' + encodeURIComponent(d.workoutId)),
+      }),
+    });
+  }
 
   let state;
 
@@ -2685,14 +2717,24 @@ export async function SessionView(workoutId) {
     }));
   }
 
-  function quit() {
-    confirmSheet({
-      title: 'Leave this workout?',
-      message: 'Your progress is saved as a draft — start this workout again today and you will pick up where you left off.',
-      confirmLabel: 'Leave',
-      danger: false,
-      onConfirm: () => go('#/home'),
-    });
+  /**
+   * Put the workout down without ending it — Tim's ask, 2026-09-07.
+   *
+   * ⚠️ IT ASKS NOTHING, AND THE SHEET IT REPLACED IS WHY THE FEATURE WAS NEEDED.
+   * The ✕ used to open *"Leave this workout? Your progress is saved as a
+   * draft"*, which was true and read as a warning — a question with a Cancel
+   * button is the app saying this might cost you something. Nothing is at stake:
+   * every set is already on disk, the bar above the nav says so on every screen,
+   * and the way back is one tap. A confirmation here would be friction charged
+   * for an action that undoes itself.
+   *
+   * ⚠️ Through `goBack`, not `#/home` (Rule 8). You reach the runner from the
+   * Record picker, from a workout's own screen, or from a deep link, and the
+   * arrow means the screen you were on — home is only the fallback for a session
+   * opened cold.
+   */
+  function minimize() {
+    goBack(() => go('#/home'));
   }
 
   /* ---- rest timer ---- */
@@ -2956,7 +2998,11 @@ export async function SessionView(workoutId) {
 
   return el('div', { class: 'screen no-nav' },
     el('header', { class: 'topbar' },
-      iconBtn('x', 'Leave workout', quit),
+      /* ⚠️ A DOWN ARROW, NOT AN ✕ — and the glyph is the whole message. An ✕
+       * closes, and closing a workout is precisely what this does not do. Hevy
+       * uses the same arrow for the same reason: it says "put this away", and
+       * the bar it minimises into carries the matching arrow pointing back up. */
+      iconBtn('down', 'Leave this workout open and go back', minimize),
       el('div', { style: 'flex:1;min-width:0' },
         el('h1', { text: workout.name }),
         el('div', { class: 'topbar-sub session-sub' },

@@ -3133,3 +3133,34 @@ a worthless test and sends you off rewriting a test that was fine.
 
 Also flagged the Autumn note as unchecked since the 3rd rather than leaving it reading as current
 fact — it fixes itself the moment she opens the app, and nobody has looked.
+
+---
+
+## 2026-09-07 — leaving a workout and coming back to it
+
+You asked for the Hevy behaviour: a down arrow instead of the ✕, walk around the app, and a box above
+the tab bar with an up arrow to get back in. Built.
+
+The thing worth telling you: **the app already kept the workout.** Every set has been saved as you
+type it since the runner shipped, and starting the same workout again the same day has always picked
+up where you left off. What was missing was any way to know that — the only way back in was finding
+that workout in Record, and the only place the app ever said so was one line inside the "are you
+sure" box you got on the way out. So it kept your workout and looked exactly like it had binned it.
+
+Now the ✕ is a ▾ and it doesn't ask you anything, because there's nothing to warn you about. The bar
+sits above the tab bar on every screen with the workout's name, how long it's been running and the
+exercise you're on. Tap it and you're back in with your numbers still in the fields.
+
+One thing I found while building it, and it could have cost you a session: **starting a different
+workout used to delete the one in progress, silently.** That was survivable when leaving took a
+deliberate trip through a confirmation box — but with a bar on every screen telling you a workout is
+open, it's a stroll: Record, tap the next one, gone. So starting a second workout now stops and tells
+you the first is still open and how many sets are in it, and you pick. If nothing's been recorded in
+it, it just swaps without asking.
+
+Two things I didn't do. Hevy has a bin icon on that bar for throwing the workout away — you didn't
+ask for one, and a one-tap delete for a live workout sitting under your thumb on every screen isn't
+something I wanted to add on my own. Say the word if you want it. And I left the finish screen alone,
+since you said the third screenshot is a separate conversation.
+
+Checked in a browser at phone size, both themes, all four colours.

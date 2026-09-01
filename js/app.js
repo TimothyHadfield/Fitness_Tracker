@@ -1,6 +1,7 @@
 // Router + boot.
 
-import { store, demo, warmReadCache, social } from './store.js';
+import { store, demo, warmReadCache, social, todayISO } from './store.js';
+import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
   markRoute,
@@ -260,6 +261,21 @@ async function render() {
     // never be in any doubt about whose year it is; that mistake would be far
     // worse than the feature is worth.
     if (demo.active()) screen.prepend(demoBar());
+    /* ⚠️ A WORKOUT IN PROGRESS FOLLOWS YOU ROUND THE APP (2026-09-07).
+     *
+     * Appended INSIDE the screen, as its last child, rather than as a sibling of
+     * the navbar — and that is the one decision in this feature worth reading
+     * twice. `#app` is `column-reverse` on a phone and `row` on a desktop, so a
+     * sibling would be above the nav on one and a third column on the other. The
+     * last child of `.screen` is the bottom of the content area in both, which
+     * is exactly where Tim asked for it on the phone and the only sane place for
+     * it beside a sidebar.
+     *
+     * The class is what lets the stylesheet stop `.pane-bottom` paying the
+     * safe-area inset twice — with a bar under it, the screen is no longer the
+     * thing against the bottom of the display. */
+    const mini = liveSessionBar({ route: route.name, today: todayISO() });
+    if (mini) { screen.classList.add('has-mini'); screen.append(mini); }
     app.append(screen);
     // ⚠️ Every screen, here rather than in screenShell, for the same reason the
     // demo bar is: no route may be reached without it. See associateLabels()

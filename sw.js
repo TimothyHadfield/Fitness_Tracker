@@ -58,6 +58,8 @@ const SHELL = [
   './js/next-workout.js',
   './js/set-types.js',
   './js/session-stats.js',
+  './js/session-draft.js',
+  './js/live-session.js',
   './js/strength-observations.js',
   './js/shared-map.js',
   './js/exercise-estimate.js',

@@ -6215,6 +6215,157 @@ ok(!data.querySelector('.rep-target'),
   await store.clearAll();
 }
 
+/* ====== leaving a workout open, and the way back in (2026-09-07) ======
+ *
+ * Tim: *"I want the user to be able to leave a workout and interact with the
+ * rest of the cite and then come back to the workout at any time."*
+ *
+ * ⚠️ THE DRAFT ALREADY SURVIVED LEAVING. What is new is the ▾ that puts it down
+ * without a question, and the bar that says it is still there — so the
+ * assertions worth having are about the two things that could quietly not be
+ * true: that leaving keeps the workout, and that starting a different one no
+ * longer eats it. */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { liveSessionBar } = await import(BASE + 'live-session.js');
+  const { loadDraft, saveDraft, clearDraft, liveDraft } = await import(BASE + 'session-draft.js');
+  const { todayISO } = await import(BASE + 'store.js');
+  const today = todayISO();
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+
+  clearDraft();
+  const wA = await store.saveWorkout({
+    name: 'Push A',
+    exercises: [
+      { exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '' },
+      { exerciseId: byName('Barbell Curl').id, sets: 1, notes: '' },
+    ],
+  });
+  const wB = await store.saveWorkout({
+    name: 'Pull B',
+    exercises: [{ exerciseId: byName('Barbell Row').id, sets: 2, notes: '' }],
+  });
+
+  const run = await mount(SessionView(wA.id));
+  const corner = run.querySelector('.topbar button');
+  ok(corner && /leave this workout open/i.test(corner.getAttribute('aria-label') || ''),
+     '🚨 the runner\'s corner control LEAVES THE WORKOUT OPEN — it was an ✕ labelled "Leave '
+     + `workout", and an ✕ means closed (${corner && corner.getAttribute('aria-label')})`);
+
+  type(run.querySelectorAll('.step-value')[0], 185);
+  await settle();
+  type(run.querySelectorAll('.step-value')[1], 5);
+  await settle();
+  ok(Boolean(loadDraft()), 'a set is typed and the workout is on disk');
+
+  /* ⚠️ COUNTED BEFORE AND AFTER, not asserted absent. Sheets are appended to
+     document.body and earlier blocks in this file leave theirs there, so
+     `!document.querySelector('.sheet')` fails whatever this button does — a
+     test that can only fail is worth no more than one that can only pass. */
+  const sheetsBefore = document.querySelectorAll('.sheet').length;
+  corner.click();
+  await settle();
+  ok(document.querySelectorAll('.sheet').length === sheetsBefore,
+     '⚠️ and leaving ASKS NOTHING. The sheet it replaced said the draft was safe, which was true '
+     + 'and read as a warning — a Cancel button is the app saying this might cost you something');
+  ok(Boolean(loadDraft()),
+     '🚨 THE HEADLINE: the workout is still open after walking away from it');
+
+  /* ---- the bar that says so ---- */
+  const bar = liveSessionBar({ route: 'home', today });
+  ok(Boolean(bar), 'a workout in progress puts a bar on every other screen');
+  ok(bar.getAttribute('href') === '#/session/' + wA.id,
+     '⚠️ and the WHOLE bar is the way back, not just the arrow inside it — 56px of pill that does '
+     + 'nothing but hold a 34px button is the touch-target complaint (0i) built on purpose');
+  ok(/Push A/.test(bar.textContent), 'it names the workout');
+  ok(/Bench Press/.test(bar.textContent),
+     'and the exercise you are on, so it is a place rather than a notification');
+  ok(!liveSessionBar({ route: 'session', today }),
+     '⚠️ never on the runner itself — a way back to the screen you are already looking at');
+
+  /* ---- the same-day rule, applied by ONE function ----
+     The runner and the bar disagreeing here would put a workout on screen that
+     opening it immediately throws away. */
+  const real = loadDraft();
+  saveDraft({ ...real, startedOn: '2020-01-01' });
+  ok(!liveDraft(today) && !liveSessionBar({ route: 'home', today }),
+     "🚨 yesterday's draft is not a live workout, and the bar reads the same rule the runner does");
+  saveDraft(real);
+  ok(Boolean(liveSessionBar({ route: 'home', today })),
+     '⚠️ the vacuity guard for that — today\'s draft still shows, so the check above is the DATE '
+     + 'and not a bar that never renders');
+
+  /* ---- starting a second workout no longer eats the first ---- */
+  const clash = await mount(SessionView(wB.id));
+  ok(/Push A is still open/.test(clash.textContent),
+     '🚨 STARTING ANOTHER WORKOUT USED TO DELETE THIS ONE SILENTLY. `if (rawDraft && !existingDraft) '
+     + 'clearDraft()` was defensible while leaving the runner took a deliberate tap through a sheet; '
+     + 'the bar makes it a stroll — Record, tap the next workout, twelve sets gone');
+  ok(/1 set recorded/.test(clash.textContent),
+     '⚠️ and it says how much is at stake, because "you have one open" is not a decision anybody '
+     + 'can make');
+  /* ⚠️ THE DRAFT IS STILL PUSH A's, not merely "a draft exists". The weaker
+     version of this passed under the mutation that restores the silent wipe —
+     the wipe writes a fresh draft for the workout you just opened, so something
+     is always on disk. What is being asserted is that the SESSION survived. */
+  ok((loadDraft() || {}).workoutId === wA.id,
+     '⚠️ and Push A is untouched while the question is being asked');
+  ok(!clash.querySelector('.set-list'),
+     'the second workout has not started either — one open at a time, and the screen says which');
+
+  const discard = [...clash.querySelectorAll('button')].find((b) => /^Discard it and start/.test(b.textContent));
+  ok(Boolean(discard) && !discard.closest('.pane-bottom'),
+     '⚠️ THE DESTRUCTIVE ONE IS NOT IN THE FOOTER. `.pane-bottom` is where the thumb already is on '
+     + 'every other screen, and a Discard in that muscle memory is how somebody deletes the workout '
+     + 'they meant to go back to');
+  const before = document.querySelectorAll('.sheet').length;
+  discard.click();
+  await settle();
+  const sheets = document.querySelectorAll('.sheet');
+  ok(sheets.length === before + 1, 'and it still asks before deleting anything');
+  [...sheets[sheets.length - 1].querySelectorAll('button')].find((b) => /^Discard$/.test(b.textContent)).click();
+  await settle();
+  ok(!loadDraft(), 'confirming discards it');
+
+  /* ⚠️ THE VACUITY GUARD, and it is the half that keeps the guard from becoming
+     a nag: a workout started and never typed into has nothing to lose, so
+     starting a different one just works. */
+  await mount(SessionView(wA.id));
+  await settle();
+  const clean = await mount(SessionView(wB.id));
+  ok(!/is still open/.test(clean.textContent) && Boolean(clean.querySelector('.set-list')),
+     '⚠️ an untouched draft is replaced without a question — a question about nothing is how '
+     + 'people learn to tap through questions');
+
+  /* ---- the second line follows the WALK, not the entry list ----
+     A superset is one step per member per round, so `state.index` and an index
+     into `entries` are different numbers. The runner's own swap path carries
+     this warning; a second reading of it on the bar that got it wrong would
+     name the wrong lift exactly when a workout is at its most complicated. */
+  clearDraft();
+  const wS = await store.saveWorkout({
+    name: 'Superset day',
+    exercises: [
+      { exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '', group: 'g1' },
+      { exerciseId: byName('Barbell Curl').id, sets: 2, notes: '', group: 'g1' },
+    ],
+  });
+  await mount(SessionView(wS.id));
+  const sd = loadDraft();
+  ok(sd && sd.entries.length === 2, 'a superset draft is two entries');
+  saveDraft({ ...sd, index: 1 });
+  ok(/Curl/.test(liveSessionBar({ route: 'home', today }).textContent),
+     'step 2 of the round is the second exercise');
+  saveDraft({ ...sd, index: 2 });
+  ok(/Bench Press/.test(liveSessionBar({ route: 'home', today }).textContent),
+     '🚨 AND STEP 3 IS THE FIRST EXERCISE AGAIN — round two, member one. `entries[2]` does not '
+     + 'exist, so a bar reading the entry list would have printed nothing here and looked fine on '
+     + 'every workout without a superset in it');
+
+  clearDraft();
+  await store.clearAll();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 
