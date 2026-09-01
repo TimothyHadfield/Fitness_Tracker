@@ -77,7 +77,7 @@ python -m http.server 8765
 ## Tests
 
 ```bash
-node tests/data-layer.test.mjs     # 1847 assertions, no dependencies
+node tests/data-layer.test.mjs     # 1855 assertions, no dependencies
 
 # ⚠️ ALL THE TEST-ONLY DEPS IN ONE COMMAND — `--no-save` REPLACES what is
 # already installed, so installing them one at a time makes the previous
@@ -86,13 +86,13 @@ npm i --no-save jsdom jsqr @firebase/rules-unit-testing
 node tests/render.test.mjs
 ```
 
-**Eighteen suites run headlessly: 4,068 assertions** (recounted 2026-09-04 by running every one).
+**Nineteen suites run headlessly: 4,109 assertions** (recounted 2026-09-04 by running every one).
 Nothing installed here ships with the app.
 
 - **Three suites need an npm package, not one:** `render` needs `jsdom`, `qr` needs `jsqr`, `rules`
-  needs `@firebase/rules-unit-testing`. The other fifteen need nothing.
-- **One more suite exists and is not in that 4,004**, because it does not run on `node` alone:
-  `tests/rules.test.mjs` (**159 assertions** — the Firestore security rules, run under
+  needs `@firebase/rules-unit-testing`. The other sixteen need nothing.
+- **One more suite exists and is not in that 4,109**, because it does not run on `node` alone:
+  `tests/rules.test.mjs` (**175 assertions** — the Firestore security rules, run under
   `firebase emulators:exec`, and the only tests here that run as somebody who is *not* you).
   `tests/sw-update.test.mjs` (12) IS in the count but needs real Chrome to mean anything.
 
@@ -110,11 +110,12 @@ js/firebase-backend.js  Firestore + auth adapter
 js/exercises.js         the exercise library
 js/preset-systems.js    the nine ready-made programmes
 js/social.js            friends, private/public, and the published projection
+js/feedback.js          a note to the developer — and who the developer is
 js/shared-map.js        somebody else's muscle map, in the shape our panel renders
 js/ui.js                DOM builder, icons, sheets, steppers, formatters
 js/views-*.js           screens
 js/body-*.js            the body illustration and its muscle map
-tests/                  eighteen suites (17 headless + rules) — see Tests above; `node tests/<name>.test.mjs`
+tests/                  twenty suites (19 headless + rules) — see Tests above; `node tests/<name>.test.mjs`
 tools/                  offline generators and audits, run by hand, never shipped
                         (the body art, the volume colour ramp, the strength fit,
                         the accessibility audit) — read a tool's header before

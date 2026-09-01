@@ -61,6 +61,7 @@ const SHELL = [
   './js/strength-observations.js',
   './js/shared-map.js',
   './js/exercise-estimate.js',
+  './js/feedback.js',
   './js/compare.js',
   './js/share-image.js',
   './js/routine-from-session.js',

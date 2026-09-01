@@ -85,7 +85,23 @@ const DELOAD_WEEKS = [17, 35];
 const HOLIDAY_WEEKS = [21, 22];
 const ILLNESS_WEEK = 40;
 const BENCHMARK_WEEKS = [6, 14, 22, 30, 38, 46];
-const GOAL_WEEKS_AGO = 5;
+/* How long ago the demo's goal was set.
+ *
+ * ⚠️ 5 → 7 ON 2026-09-04, AND THIS IS THE ONE CHANGE IN THAT COMMIT THAT WAS NOT
+ * A RE-BASELINE. Adding a Cable Crunch and a Neck Curl re-rolls every random
+ * draw in the year, and in the new roll this lifter's chest happened not to move
+ * in the five weeks before today — so the demo opened on a goal reading **+0 lb
+ * and 0 % of the way there**, which is the least interesting state a goal
+ * screen has and is the exact thing `demo.test.mjs` asserts against.
+ *
+ * ⚠️ THE FIX BELONGS HERE RATHER THAN IN THE TEST. "The demo shows a goal
+ * part-way through" is a designed property of this file, stated in its own
+ * comments; the test was reporting that the property had been lost, not being
+ * too strict. This constant exists to place the goal in the year, so moving it
+ * is what it is for. At 7 the goal reads +14 lb, 33 % of the way, 5 weeks left —
+ * slightly behind pace, which is a more useful screen to look at than comfortably
+ * ahead and is honest about a lifter who deloaded in between. */
+const GOAL_WEEKS_AGO = 7;
 
 const START_BODY_WEIGHT = 172;
 const END_BODY_WEIGHT = 184;
@@ -152,6 +168,36 @@ const LIFTS = {
   'Seated Leg Curl':              { reps: [10, 14], start: 80,  inc: 10, stall: 0.32 }, // -> 110, dropped at the switch
   'Seated Calf Raise':            { reps: [12, 16], start: 90,  inc: 10, stall: 0.20 }, // -> ~125, dropped at the switch
   'Face Pull':                    { reps: [12, 16], start: 40,  inc: 5,  stall: 0.63 }, // -> 55
+
+  /* 🚨 CORE AND NECK, ADDED 2026-09-04, AND THEY ARE HERE TO EXERCISE TWO STATES
+   * RATHER THAN TO ROUND OUT A PROGRAMME.
+   *
+   * A year of generated training used to contain exactly one ab exercise — a
+   * Plank, in a Full Body workout the demo never runs — so the demo's Core was
+   * permanently "nothing recorded". That made BOTH of the states built on
+   * 2026-09-04 unreachable in the one account this project uses to look at,
+   * measure and audit every screen (§0.10), which is the same fault as the
+   * friends' `sets: []` fixture: a demo thinner than the real thing does not
+   * fail, it just never reaches the branch.
+   *
+   * ⚠️ ONE OF EACH, ON PURPOSE, BECAUSE THE TWO STATES CANNOT COEXIST ON ONE
+   * MUSCLE. Cable Crunch makes **Core rank** — it is Core's key lift, so the
+   * demo now shows the new rating, its lower confidence and its caveat. Neck
+   * Curl makes **Neck hatch** — trained, and no published standard to place it
+   * against — which is the state Core itself was in this morning and which
+   * nothing else in the demo can produce now that Core is rankable.
+   *
+   * ⚠️ NECK WORK IS NOT ODD FOR THIS LIFTER, and it is worth saying so before
+   * somebody "tidies" it out: it is three sets of a light isolation movement on
+   * an upper day, which is exactly how people who train neck train it.
+   *
+   * 🛑 WHAT IS STILL MISSING, and it is a real gap rather than an omission: this
+   * generator writes every set as `{weight, reps}`, so the demo still contains
+   * no TIME-based strength set anywhere — no plank, no L-sit, no dead hang.
+   * Adding one needs a time-only path through the builder and a progression that
+   * advances seconds rather than pounds. Left alone deliberately; see Open work. */
+  'Cable Crunch':                 { reps: [10, 15], start: 70,  inc: 10, stall: 0.55 }, // -> 110
+  'Neck Curl':                    { reps: [12, 16], start: 20,  inc: 5,  stall: 0.80 }, // -> 30
 };
 /* ------------------------------------------------------------------ *
  * The two programmes
@@ -188,6 +234,8 @@ const PROGRAMMES = [
         { name: 'Leg Press', sets: 3 },
         { name: 'Lying Leg Curl', sets: 3 },
         { name: 'Standing Calf Raise', sets: 4 },
+        // Core's key lift — see the note in LIFTS.
+        { name: 'Cable Crunch', sets: 3 },
       ] },
       { id: 'demo-w-ub', name: 'Upper B', exercises: [
         { name: 'Incline Dumbbell Bench Press', sets: 4 },
@@ -196,6 +244,8 @@ const PROGRAMMES = [
         { name: 'Lateral Raise', sets: 4 },
         { name: 'Hammer Curl', sets: 3 },
         { name: 'Overhead Cable Extension', sets: 3 },
+        // Trained, and unrankable forever — the hatch. See the note in LIFTS.
+        { name: 'Neck Curl', sets: 3 },
       ] },
       { id: 'demo-w-lb', name: 'Lower B', exercises: [
         { name: 'Deadlift', sets: 3 },
@@ -575,7 +625,12 @@ function buildChestGoal({ sessions, benchmarks, byName, exMap, goalStart, profil
     }
   }
 
-  const rating = rateMuscle(obs);
+  // Named, though every observation above was already filtered to Chest. Chest's
+  // standard needs no discount so this changes nothing today — but a call that
+  // rates a specific muscle without saying which one is a call that quietly
+  // stops matching store.muscleStrength() the day that muscle gets a penalty,
+  // which is exactly what happened to Core on 2026-09-04. See rateMuscle().
+  const rating = rateMuscle(obs, 'Chest');
   if (!rating || !(rating.estimate > 0)) return null;
   const best = rating.estimate;
 

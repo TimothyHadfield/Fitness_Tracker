@@ -2102,6 +2102,102 @@ function socialWrote() {
   socialReadAt.delete('invites');
 }
 
+/* ------------------------------------------------------------------ *
+ * NOTES TO THE DEVELOPER — 2026-09-04, and deliberately temporary
+ * ------------------------------------------------------------------ *
+ *
+ * Tim: *"adding a temporary section to the app that allows the user to write a
+ * note or idea straight to the developer (me)… make my account a developer
+ * account where I can read all these notes or ideas straight on the app."*
+ *
+ * ⚠️ IT IS CLOUD-ONLY AND SAYS SO. There is no local fallback and there should
+ * not be: a note queued on one device and never sent is worse than a refusal,
+ * because the sender believes they were heard. D13's fallback exists so TRAINING
+ * survives a bad connection; a note is not training.
+ */
+export const feedback = {
+  /**
+   * Can a note be sent, and if not, exactly why — the same three-refusal shape
+   * `social.state()` uses, for the same reason: each one has a different next
+   * step and a single boolean would lose which.
+   */
+  async state() {
+    // The demo first. Its user is invented, so a note from it would arrive with
+    // a uid that belongs to nobody — and it would be a REAL write out of an
+    // account whose whole promise is that nothing it does leaves the tab.
+    if (demo.active()) return { available: false, reason: 'demo', developer: false };
+    const a = await auth.state();
+    if (a.mode !== 'cloud') {
+      return { available: false, reason: a.reason === 'offline' ? 'offline' : 'local', developer: false };
+    }
+    /* ⚠️ `isAnonymous`, NOT `anonymous`, AND THE WRONG ONE READ AS WORKING.
+     * The first version of this guard tested `a.user.anonymous`, which is
+     * always undefined — so the check never fired, an anonymous account was
+     * offered the form, and its note would have arrived from a browser profile
+     * that will be lost with nobody to reply to. `social.state()` twenty lines
+     * below gets this right and was the thing to copy. **jsdom did not catch
+     * it because the test mocked the same wrong field name** — a test written
+     * against the implementation rather than against the store. Found by
+     * driving the real app against the real project. */
+    if (!a.user || a.user.isAnonymous) {
+      return { available: false, reason: 'anonymous', developer: false };
+    }
+    const { isDeveloper } = await import('./feedback.js');
+    return { available: true, reason: null, developer: isDeveloper(a.user.uid) };
+  },
+
+  /** Send one. Returns the note's id, or throws with something sayable. */
+  async send(text) {
+    const st = await this.state();
+    if (!st.available) throw new Error(FEEDBACK_REFUSALS[st.reason] || 'Notes are unavailable.');
+
+    const [{ buildNote }, settings] = await Promise.all([
+      import('./feedback.js'), store.getSettings(),
+    ]);
+    const a = await auth.state();
+    const built = buildNote({
+      text,
+      uid: a.user.uid,
+      name: settings.displayName || a.user.name || '',
+      now: new Date().toISOString(),
+      // What they were running it on — see the note in feedback.js for why
+      // this is the device rather than an app version.
+      platform: typeof navigator !== 'undefined' ? String(navigator.userAgent || '') : '',
+    });
+    if (!built.ok) throw new Error(built.reason);
+    return (await active()).sendNote(built.note);
+  },
+
+  /**
+   * Every note, newest first. Refused by the rules for anybody but Tim.
+   *
+   * ⚠️ NOT CACHED. The read cache exists for collections a screen asks for on
+   * every render; this is one screen opened deliberately, and a stale inbox is
+   * the one thing an inbox must not be.
+   */
+  async list() {
+    const st = await this.state();
+    if (!st.available || !st.developer) return [];
+    const { sortNotes } = await import('./feedback.js');
+    return sortNotes(await (await active()).listNotes());
+  },
+
+  async remove(id) {
+    const st = await this.state();
+    if (!st.available || !st.developer) return false;
+    await (await active()).deleteNote(id);
+    return true;
+  },
+};
+
+// One sentence per refusal, and each names the thing to do about it.
+const FEEDBACK_REFUSALS = {
+  demo: 'The demo account cannot send a note — leave the demo first.',
+  offline: 'No connection. Notes are sent straight away rather than queued, so try again when you are back online.',
+  local: 'Sending a note needs an account.',
+  anonymous: 'Sending a note needs a real account, so there is somebody to reply to.',
+};
+
 export const social = {
   /**
    * Can this account be social at all, and if not, exactly why.

@@ -1351,6 +1351,117 @@ ok(!data.querySelector('.rep-target'),
   auth.configured = realConfigured;
 }
 
+/* ========= a note to the developer (2026-09-04) =========
+ *
+ * Tim asked for a way for a user to send him an idea from inside the app. What
+ * is asserted here is the SCREEN; who may actually read a note is
+ * `firestore.rules` and is checked by tests/rules.test.mjs, which runs as
+ * somebody who is not you. Both halves are needed and neither substitutes for
+ * the other — the whole failure mode this feature has is a screen and a
+ * database disagreeing about who the developer is.
+ */
+{
+  const { AccountView, NotesView } = await import(BASE + 'views-account.js');
+  const { auth, feedback } = await import(BASE + 'store.js');
+  const { DEVELOPER_UID, buildNote } = await import(BASE + 'feedback.js');
+
+  const realState = auth.state.bind(auth);
+  const realConfigured = auth.configured;
+
+  /* ---- signed in for real: the form is there ---- */
+  auth.configured = () => true;
+  auth.state = async () => ({ mode: 'cloud', user: { uid: 'someone', isAnonymous: false, name: 'Alex' } });
+
+  const screen = await mount(AccountView());
+  await settle();
+  const box = screen.querySelector('textarea[aria-label="Your note to the developer"]');
+  ok(Boolean(box), 'a signed-in account gets a note box on the Account screen');
+  ok(box && Number(box.getAttribute('maxlength')) === 1000,
+     'capped in the markup as well as in the builder and the rule');
+  ok(/goes straight to the person building it/.test(screen.textContent),
+     'and says where it goes');
+  ok(![...screen.querySelectorAll('a')].some((a) => a.getAttribute('href') === '#/notes'),
+     '🚨 and an ordinary account is NOT offered the inbox link');
+
+  /* ---- the developer gets one more control ---- */
+  auth.state = async () => ({
+    mode: 'cloud', user: { uid: DEVELOPER_UID, isAnonymous: false, name: 'Tim' },
+  });
+  const devScreen = await mount(AccountView());
+  await settle();
+  ok([...devScreen.querySelectorAll('a')].some((a) => a.getAttribute('href') === '#/notes'),
+     'the developer\'s own account is offered the inbox');
+
+  /* ---- and every refusal says which one it is ----
+   *
+   * ⚠️ THE STATE IS RESOLVED BEFORE THE BOX IS DRAWN, and these assert that: a
+   * textarea somebody fills in and then cannot send is worse than no textarea,
+   * because the refusal arrives after the effort rather than before it. */
+  /* 🚨 `isAnonymous`, AND THE FIELD NAME IS THE ASSERTION.
+   *
+   * These three lines passed against `anonymous: true` while the app was broken,
+   * because the store read `a.user.anonymous` — always undefined — and the mock
+   * had been written to match the store rather than the store's INPUT. So the
+   * guard never fired in the real app: an anonymous account was offered the box
+   * and its note would have arrived from a browser profile that will be lost,
+   * with nobody to reply to. Found by driving the real app against the real
+   * project; 941 jsdom assertions were green over it.
+   *
+   * ⚠️ THE LESSON IS ABOUT MOCKS, NOT ABOUT THIS FIELD. A mock is a claim about
+   * what the real thing produces, and a mock copied from the consumer proves
+   * only that the consumer agrees with itself. `auth.state()` is what defines
+   * this shape — `firebase-backend.js` sets `isAnonymous` — so that is the name
+   * a test must use even when the code under test spells it wrong. */
+  auth.state = async () => ({ mode: 'cloud', user: { uid: 'anon-1', isAnonymous: true } });
+  const anon = await mount(AccountView());
+  await settle();
+  ok(!anon.querySelector('textarea[aria-label="Your note to the developer"]'),
+     '🚨 an anonymous account gets no box…');
+  ok(/nobody to reply to/.test(anon.textContent), '…and is told why, in terms of the fix');
+
+  auth.state = async () => ({ mode: 'local', user: null, reason: 'offline' });
+  const off = await mount(AccountView());
+  await settle();
+  ok(/rather than queued/.test(off.textContent),
+     '⚠️ offline explains that notes are NOT queued — otherwise somebody types one, closes the '
+     + 'app and believes they were heard');
+
+  /* ---- the inbox is empty for everybody but the developer, and says nothing ---- */
+  auth.state = async () => ({ mode: 'cloud', user: { uid: 'someone', isAnonymous: false } });
+  const notMine = await mount(NotesView());
+  await settle();
+  ok(/nothing on this screen/i.test(notMine.textContent),
+     '🚨 a non-developer who types #/notes sees an empty screen that does not mention notes — '
+     + 'a screen saying "you are not the developer" confirms there is something worth being');
+  ok(!/No notes have been sent/.test(notMine.textContent),
+     'and specifically not the developer\'s own empty state');
+
+  /* ---- a note reaches the inbox, and its text is never markup ---- */
+  const built = buildNote({
+    text: '<img src=x onerror=alert(1)>\nsecond line',
+    uid: 'someone', name: 'Alex', now: '2026-09-04T10:00:00.000Z',
+  });
+  ok(built.ok, 'a note containing markup still builds — it is text, and refusing it would be odd');
+
+  const realList = feedback.list;
+  feedback.list = async () => [{ id: 'n1', ...built.note }];
+  auth.state = async () => ({ mode: 'cloud', user: { uid: DEVELOPER_UID, isAnonymous: false } });
+  const inbox = await mount(NotesView());
+  await settle();
+  const bodyEl = inbox.querySelector('.note-body');
+  ok(Boolean(bodyEl), 'the developer sees the note');
+  ok(bodyEl && bodyEl.querySelector('img') === null,
+     '🚨 and its markup is NOT rendered — this is the only free text in the app written by one '
+     + 'person for another to read, so `text` rather than `html` is load-bearing here');
+  ok(bodyEl && /onerror=alert\(1\)/.test(bodyEl.textContent),
+     'it is shown as the characters they typed');
+  ok(/Alex/.test(inbox.textContent), 'attributed to whoever sent it');
+
+  feedback.list = realList;
+  auth.state = realState;
+  auth.configured = realConfigured;
+}
+
 /* ========= the offline account screen ========= */
 // Reported by Tim: after a while away, the account screen said his account
 // "could not be reached" and printed a raw gstatic import URL. He concluded the

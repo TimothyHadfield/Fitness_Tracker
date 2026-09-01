@@ -645,6 +645,73 @@ await allowed(deleteDoc(doc(asAlex, 'directory', ALEX)),
 await denied(getDocs(collection(asNobody, 'directory')),
   '⚠️ and signing in is still required — the directory is not open to the whole internet');
 
+/* ================================================================== *
+ * 🚨 NOTES TO THE DEVELOPER — 2026-09-04
+ * ================================================================== *
+ *
+ * The first collection in this app where one account may read what another
+ * account wrote as PROSE. Everything social is a projection of training the
+ * sender chose to publish; a note is free text aimed at a person. So the read
+ * side is the narrowest in the file — exactly one uid — and these assertions
+ * exist to keep it that way.
+ *
+ * ⚠️ THE DEVELOPER uid IS IMPORTED RATHER THAN TYPED. It is duplicated between
+ * js/feedback.js and firestore.rules by necessity (one draws a screen, one
+ * guards the data), and importing it here means this suite is running against
+ * the same string the app is — so a rules file that granted a DIFFERENT uid
+ * would fail here rather than quietly working for nobody.
+ */
+console.log('\n--- 🚨 Notes to the developer: one reader, and prose ---\n');
+
+const { DEVELOPER_UID } = await import('../js/feedback.js');
+const asDev = env.authenticatedContext(DEVELOPER_UID).firestore();
+
+const note = (uid, extra = {}) => ({
+  uid, name: 'Alex', text: 'the rest timer is too loud', platform: 'iPhone',
+  createdAt: '2026-09-04T10:00:00.000Z', ...extra,
+});
+
+await allowed(setDoc(doc(asAlex, 'feedback', 'n1'), note(ALEX)),
+  'anybody signed in can send a note');
+await allowed(setDoc(doc(asSam, 'feedback', 'n2'), note(SAM)),
+  'and so can somebody else');
+
+await denied(setDoc(doc(asAlex, 'feedback', 'forged'), note(SAM)),
+  '🚨 but NOT under somebody else\'s uid — otherwise the developer answers the wrong person '
+  + 'about a complaint they never made');
+await denied(setDoc(doc(asNobody, 'feedback', 'anon'), note(ALEX)),
+  'and not signed out at all');
+await denied(setDoc(doc(asAlex, 'feedback', 'empty'), note(ALEX, { text: '' })),
+  'an empty note is refused on the wire, not only in the form');
+await denied(setDoc(doc(asAlex, 'feedback', 'huge'), note(ALEX, { text: 'x'.repeat(1001) })),
+  '⚠️ and one over the cap — the client caps it too, and this is the copy that holds '
+  + 'when the client is not ours');
+await denied(setDoc(doc(asAlex, 'feedback', 'extra'), note(ALEX, { secret: 'x' })),
+  'a note carrying a field nobody audited is refused, like a directory row');
+
+/* 🚨 THE READ SIDE. This is the whole feature. */
+await denied(getDoc(doc(asAlex, 'feedback', 'n1')),
+  '🚨 the AUTHOR cannot read their own note back — create-only has no rule conditioned on a '
+  + 'field inside the document, which is the shape where a mistake reads somebody else\'s note');
+await denied(getDoc(doc(asStranger, 'feedback', 'n1')),
+  'and a stranger certainly cannot');
+await denied(getDocs(collection(asAlex, 'feedback')),
+  '🚨 nor can anybody LIST them — a note is not discoverable by the people around it');
+await denied(getDocs(collection(asTim, 'feedback')),
+  '⚠️ not even the fixture "tim-uid", which is NOT the developer — the rule keys on a real uid, '
+  + 'so a test that used a friendly-looking id would have passed while the app failed');
+
+await allowed(getDoc(doc(asDev, 'feedback', 'n1')), 'the developer can read one');
+await allowed(getDocs(collection(asDev, 'feedback')), 'and list them all');
+
+await denied(setDoc(doc(asDev, 'feedback', 'n1'), note(ALEX, { text: 'edited' })),
+  '🛑 and NOBODY can edit one, including the developer — a note is a record of what somebody '
+  + 'said, not of what they wish they had said');
+await denied(deleteDoc(doc(asAlex, 'feedback', 'n1')),
+  'the author cannot delete it either');
+await allowed(deleteDoc(doc(asDev, 'feedback', 'n2')),
+  'while the developer can clear one they have dealt with');
+
 console.log('\n--- Nothing else in the database exists ---\n');
 
 await denied(setDoc(doc(asTim, 'users', TIM, 'collections', 'invented'), { rows: [], updatedAt: serverTimestamp() }),

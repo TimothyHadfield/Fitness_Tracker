@@ -362,6 +362,13 @@ const ROUTES = [
        return Boolean(m); })()`],
   ['#/goals', 'Goals'], ['#/social', 'Social'], ['#/settings', 'Settings'],
   ['#/account', 'Account'], ['#/profile', 'Profile'],
+  /* The developer's inbox — added 2026-09-04 with the note feature. ⚠️ IT IS
+   * MEASURED IN ITS EMPTY STATE AND THAT IS ALL THIS CAN DO: the demo account
+   * is not the developer, so the list is empty by design here. The note CARDS
+   * are covered by render tests instead. Auditing the empty state is still
+   * worth it — it is what a stranger who types the URL gets, and it is the only
+   * screen in the app one account can open and another cannot. */
+  ['#/notes', 'Notes (developer inbox)'],
   // Added 2026-08-26: the quick activity log shipped with the Record chooser
   // and had never been measured — a whole screen of steppers and a date field.
   ['#/activity/Running', 'Activity log'],

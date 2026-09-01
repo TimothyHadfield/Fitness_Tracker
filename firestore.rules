@@ -637,6 +637,93 @@ service cloud.firestore {
       allow delete: if signedIn() && uid == request.auth.uid;
     }
 
+    /* ================================================================== *
+     * NOTES TO THE DEVELOPER — 2026-09-04
+     * ================================================================== *
+     *
+     * Tim asked for a way for users to send him an idea or a problem from
+     * inside the app, and for his own account to be able to read them there.
+     *
+     * 🚨 THIS IS THE SECOND TOP-LEVEL COLLECTION IN THE APP, AND THE FIRST THAT
+     * IS NOT WORLD-READABLE. It is top-level for one reason: the developer has
+     * to LIST every note, and notes filed under `users/{uid}/…` could only be
+     * listed by first enumerating users — which is the thing the whole invite
+     * design exists to avoid. A flat collection that exactly one uid may list is
+     * strictly less surface than a users collection anybody may walk.
+     *
+     * 🚨 AND IT IS THE FIRST FREE TEXT ONE PERSON WRITES FOR ANOTHER TO READ.
+     * Everything social so far is a projection of training somebody chose to
+     * publish. A note is prose aimed at a human, so the read side is as narrow
+     * as it can be made: ONE uid, hard-coded, and nobody — not even the author —
+     * can read one back.
+     *
+     * ⚠️ WHY THE AUTHOR CANNOT READ THEIR OWN. It would be harmless and slightly
+     * friendly, and it would mean the collection has a `get` rule whose
+     * condition is a field inside the document. That is a shape where a mistake
+     * is invisible: the rule looks right, and a document with a forged `uid`
+     * reads somebody else's note. Create-only has no such shape. The screen
+     * confirms the send instead.
+     */
+    function isDeveloper() {
+      // ⚠️ DUPLICATED IN js/feedback.js AS `DEVELOPER_UID`, AND A TEST ASSERTS
+      // THE TWO MATCH. This copy is the one that protects anything; the other
+      // only decides whether a screen is drawn. If they ever disagree, the app
+      // shows an inbox that the database refuses to fill — or, far worse, hides
+      // one it would happily have answered.
+      //
+      // ⚠️ A uid, NOT AN EMAIL. request.auth.token.email depends on the provider
+      // and can change; a uid is issued once and never moves. Same key every
+      // other rule in this file uses.
+      return signedIn() && request.auth.uid == '0WQLOAaP8DaRCTDMBSBbRM9haJq2';
+    }
+
+    function validNote() {
+      // Shape-checked like the directory row, and for the same reason: a
+      // document that may carry arbitrary keys is a document somebody puts
+      // something unaudited in.
+      return request.resource.data.keys().hasOnly(['uid', 'name', 'text', 'platform', 'createdAt'])
+             // The sender is the caller. Without this, anybody could file a note
+             // under somebody else's uid, and the developer would answer the
+             // wrong person about a complaint they never made.
+             && request.resource.data.uid == request.auth.uid
+             && request.resource.data.text is string
+             && request.resource.data.text.size() > 0
+             // Matches MAX_NOTE in js/feedback.js. The client caps it too; this
+             // is the copy that holds when the client is not ours.
+             && request.resource.data.text.size() <= 1000
+             && request.resource.data.name is string
+             && request.resource.data.name.size() <= 60
+             // The DEVICE, not an app version — see the note in js/feedback.js.
+             // A user-agent string is long, so this cap is the loosest here.
+             && request.resource.data.platform is string
+             && request.resource.data.platform.size() <= 120
+             && request.resource.data.createdAt is string
+             && request.resource.data.createdAt.size() <= 40;
+    }
+
+    match /feedback/{noteId} {
+      // Anybody signed in may send one, and that is the whole write surface.
+      allow create: if signedIn() && validNote();
+
+      // 🛑 NO UPDATE, FOR ANYBODY, INCLUDING THE DEVELOPER. A note is a record of
+      // what somebody said; an edit path would let it become a record of what
+      // somebody wishes they had said, and there is no version of this feature
+      // that needs one.
+      allow update: if false;
+
+      // Exactly one account reads them, and it is the only account that can
+      // discover they exist.
+      allow get, list: if isDeveloper();
+
+      // ⚠️ DELETE IS THE DEVELOPER'S ONLY, AND IT IS DELIBERATE THAT THE AUTHOR
+      // CANNOT. Letting the sender delete would need a read of the existing
+      // document to check ownership, which re-introduces exactly the
+      // field-conditioned rule the note above rejects — and "I take it back"
+      // is not a thing this channel needs to support for a couple of months.
+      // Tim can clear anything he has dealt with, or anything unpleasant.
+      allow delete: if isDeveloper();
+    }
+
   }
 
 }

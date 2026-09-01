@@ -17,6 +17,107 @@
 
 ---
 
+## 2026-09-04, third pass — A NOTE TO THE DEVELOPER, ABS IN THE DEMO, AND A CORRECTED TABLE
+
+Tim, having been given a ranked list: *"build the note-to-developer feature, give the demo some ab
+work, and fix the transcription error."* All three.
+
+### A. 🚨 A NOTE TO THE DEVELOPER — the first prose one person writes for another
+
+`feedback/{noteId}`, the **second top-level collection** in the app and the first that is not
+world-readable. A form on the Account screen, an inbox at `#/notes`, and `js/feedback.js` holding the
+shape and the developer's uid.
+
+- 🚨 **THE READ SIDE IS ONE uid, HARD-CODED IN `firestore.rules`, AND THE SCREEN PROTECTS NOTHING.**
+  `feedback.list()` returns `[]` for anybody else because the *database* refuses, not because the
+  view checked. ⚠️ **A uid rather than an email**: `request.auth.token.email` is only as good as the
+  provider that filled it in and a Google primary address can be changed; a uid is issued once.
+  ⚠️ **And not a flag in a document** — "developer: true" in a settings document is a permission its
+  own holder can grant themselves.
+- 🚨 **THE AUTHOR CANNOT READ THEIR OWN NOTE BACK, AND THAT IS THE DESIGN RATHER THAN AN OVERSIGHT.**
+  It would be harmless and slightly friendly, and it would mean a `get` rule conditioned on a field
+  *inside* the document — the shape where a mistake is invisible and a forged `uid` reads somebody
+  else's note. Create-only has no such shape. The screen confirms the send instead, and says there is
+  no reply here so anyone wanting one should leave contact details in the note.
+- 🛑 **NOBODY CAN EDIT ONE, INCLUDING TIM.** A note is a record of what somebody said, not of what
+  they wish they had said. He can delete.
+- ⚠️ **IT STORES THE DEVICE, NOT AN APP VERSION.** The obvious field is a version — and this app has
+  no build step, so any version string would be a constant that never changed *while looking exactly
+  like something that did*. That is worse than nothing: it would answer "were they on the old build?"
+  with a confident wrong yes. The user-agent is the thing that is actually knowable and it happens to
+  answer the first real question about a bug report.
+- ⚠️ **THE INBOX RENDERS `text`, NEVER `html`.** This is the only free text in the app written by one
+  person for another to read, so that is load-bearing rather than habitual, and a render test pins it
+  with an `<img onerror>` payload.
+- ⚠️ **DELIBERATELY TEMPORARY.** It exists to catch what a new user thinks before they get used to
+  the app. 🛑 **When the first users stop being new it should come out**, or it becomes a support
+  inbox nobody is staffing.
+
+🚨 **TWO REAL BUGS SURVIVED 941 JSDOM ASSERTIONS AND DIED IN ONE BROWSER RUN.**
+
+1. **`backend()` is not a function** — the store's accessor is `await active()`. Every send would have
+   thrown. Invisible to jsdom because no test reached the cloud branch.
+2. 🚨 **THE ANONYMOUS GUARD NEVER FIRED, AND THE TEST MATCHED THE BUG.** The store read
+   `a.user.anonymous`; the field is **`isAnonymous`**, as `social.state()` twenty lines below gets
+   right. So an anonymous account — a browser profile that will be lost, with nobody to reply to —
+   was offered the form. **The render test had mocked `anonymous: true`, copying the shape from the
+   code under test rather than from `auth.state()`**, so it asserted the guard worked against a mock
+   built to satisfy it. ⚠️ **A mock is a claim about what the real thing produces; a mock copied from
+   the consumer proves only that the consumer agrees with itself.** The test now uses the real field
+   name and carries that note.
+
+**Proved on the live project, not only the emulator**: a throwaway account created through the app's
+own sign-up sent a real note over the deployed rules (five fields, newlines intact, device captured),
+and both the note and the account were deleted afterwards — the collection is empty again.
+**Rules: 159 → 175 assertions**, including that the author cannot read, nobody can list, and nobody
+can edit. **Deployed.**
+
+### B. The demo trains abs — and a neck
+
+Open work 25, and Tim authorised the re-baseline it needs.
+
+- **Cable Crunch → Core RANKS** (it is Core's key lift), **Neck Curl → Neck HATCHES.** ⚠️ **One of
+  each on purpose, because the two states cannot coexist on one muscle**: now that Core is rankable,
+  ab work colours it, and the hatch built the same morning would have had nothing in the demo to
+  appear on. Neck is the only muscle that can still produce it.
+- ⚠️ **ADDING AN EXERCISE RE-ROLLS THE WHOLE SEEDED YEAR.** Every number in the golden observation
+  table moved. 🚨 **A re-baseline is not a pass**: each was checked for plausibility before being
+  pasted in — every muscle within 11 % (worst Triceps +10.1 %, Quads −8.2 %), and the demo lifter
+  still reads as one coherent person, everything Novice to Proficient.
+- 🚨 **ONE FAILURE WAS NOT A RE-BASELINE AND WAS FIXED IN THE DEMO INSTEAD.** The re-rolled year left
+  the goal reading **+0 lb, 0 % of the way** — the demo is *supposed* to open on a goal part-way
+  through, and the test was reporting a lost property rather than being too strict. `GOAL_WEEKS_AGO`
+  5 → 7 restores it: +14 lb, 33 %, five weeks left. That constant exists to place the goal in the
+  year, so moving it is what it is for.
+- ⚠️ **AND THE DEMO STILL HAS NO TIME-BASED STRENGTH SET ANYWHERE** — no plank, no L-sit, no dead
+  hang — because the generator writes every set as `{weight, reps}`. Recorded in `demo.js`; a plank
+  there would be a fixture in a shape the app never produces, which is the `sets: []` fault again.
+
+⚠️ **AND THE CROSS-PATH TEST EARNED ITS KEEP.** `data-layer`'s "the store and the module reach the
+same answer" assertion failed the moment Core started being rated in the demo — because it called
+`rateMuscle()` without the muscle while the store passes it, so the two disagreed on exactly one
+muscle. That is the join it exists to protect, catching a change made two files away. `demo.js` now
+names 'Chest' at its own call for the same reason, though Chest's standard needs no discount today.
+
+### C. `docs/research.md` §2's transcription error — fixed
+
+Re-read against PMC10933212. **The 95 % figure is ~2, not ~5**, and a *second* cell was wrong: the
+general 80 % column held the bench-press value.
+
+🚨 **BOTH WERE SHIFTS RATHER THAN INVENTED NUMBERS** — every wrong cell held a real number from a
+neighbouring one — **which is exactly why the table stayed plausible enough to sit there for weeks.**
+§2 now records that shape, so the next wrong table in this project gets checked for a shift first.
+⚠️ **The figures come from Figures 2–4 rather than prose**, so the 95 % row is graded 🟡 and the rest
+🟢; the paper's running text only quotes the historical table it replaces. ✅ **Nothing in the app
+moved** — the one citation of §2 is `exercise-estimate.js`, which quotes the bench cell, and that
+cell was always right.
+
+**Tests: a new `tests/feedback.test.mjs` (26), render 926 → 941, rules 159 → 175. 4,109 headless.**
+**Audit: the Account and the new Notes screen, 64 text nodes, zero below 4.5:1, zero unnamed, zero
+overflow.**
+
+---
+
 ## 2026-09-04, second pass — 🚨 CORE IS A RANKED MUSCLE NOW
 
 Tim: *"start planning and then when you're ready start building a version you think follows my

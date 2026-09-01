@@ -8,9 +8,10 @@
 // An anonymous account lives in one browser and nothing recovers it — clearing
 // site data destroys it permanently. That is stated plainly rather than buried.
 
-import { store, auth, probeOffline, demo, todayISO, social } from './store.js';
+import { store, auth, probeOffline, demo, todayISO, social, feedback } from './store.js';
 import {
   el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron, refreshRoute,
+  setChildren, fmtDateShort,
 } from './ui.js';
 import { cloudFullWarning } from './views-data.js';
 import * as units from './units.js';
@@ -644,6 +645,12 @@ async function personalSections({ mode }) {
       }),
     ),
 
+    /* ⚠️ ABOVE "Delete all data" AND BELOW EVERYTHING ELSE, which is a placement
+     * rather than an accident. It has to be findable — a feedback channel nobody
+     * sees collects nothing — and it must not sit next to the irreversible
+     * button, because the two get tapped in the same downward scan. */
+    noteToDeveloper(),
+
     el('button', {
       class: 'btn danger block',
       text: 'Delete all data',
@@ -656,6 +663,105 @@ async function personalSections({ mode }) {
     }),
   ];
 }
+
+/* ------------------------------------------------------------------ *
+ * A NOTE TO THE DEVELOPER — 2026-09-04, and deliberately temporary
+ * ------------------------------------------------------------------ *
+ *
+ * Tim: *"adding a temporary section to the app that allows the user to write a
+ * note or idea straight to the developer (me) would be nice to have."*
+ *
+ * ⚠️ IT EXISTS TO CATCH WHAT A NEW USER THINKS BEFORE THEY GET USED TO THE APP,
+ * which is the one thing that cannot be recovered later. **It should come out
+ * when the first users stop being new** — otherwise it quietly becomes a support
+ * inbox nobody is staffing.
+ *
+ * ⚠️ THE STATE IS RESOLVED BEFORE THE CARD IS DRAWN, not on submit. A textarea
+ * somebody fills in and then cannot send is worse than no textarea: they have
+ * already spent the effort, and the refusal arrives at the moment it costs most.
+ */
+function noteToDeveloper() {
+  const host = el('div', { class: 'card' });
+
+  const draw = async () => {
+    const st = await feedback.state();
+
+    if (!st.available) {
+      /* ⚠️ THE DEMO SAYS NOTHING AT ALL. Everywhere else in this app the demo
+       * explains why a cloud feature is off, because those are features
+       * somebody came looking for. Nobody opens the demo in order to send
+       * feedback about it, and a card explaining that the invented account
+       * cannot contact the developer is pure noise on a screen being evaluated
+       * by a stranger. */
+      if (st.reason === 'demo') { setChildren(host); host.className = ''; return; }
+
+      host.className = 'card';
+      setChildren(host,
+        el('div', { class: 'section-label', text: 'Tell the developer something' }),
+        el('div', { class: 'field-help', text: FEEDBACK_UNAVAILABLE[st.reason]
+          || 'Notes are unavailable right now.' }),
+      );
+      return;
+    }
+
+    const box = el('textarea', {
+      class: 'input', rows: 3, maxLength: 1000,
+      placeholder: 'An idea, something confusing, something broken…',
+      'aria-label': 'Your note to the developer',
+    });
+    const send = el('button', { class: 'btn primary block', text: 'Send' });
+
+    send.addEventListener('click', async () => {
+      // Guarded against a double tap: a second note is a duplicate, and the
+      // sender cannot see or delete either of them.
+      if (send.disabled) return;
+      send.disabled = true;
+      try {
+        await feedback.send(box.value);
+        /* ⚠️ THE CARD IS REPLACED BY A THANK-YOU RATHER THAN CLEARED. An empty
+         * box that used to have words in it is ambiguous — it looks the same as
+         * a box that ate them — and this is the one flow where the sender can
+         * never check whether it arrived, because they cannot read notes back
+         * (see firestore.rules). Saying so is the only receipt they get. */
+        setChildren(host,
+          el('div', { class: 'section-label', text: 'Sent — thank you' }),
+          el('div', { class: 'field-help', text:
+            'It goes straight to the developer. There is no reply here, so if you want an answer, '
+            + 'leave a way to reach you in the note itself.' }),
+          el('button', { class: 'btn ghost block', text: 'Write another', onClick: draw }),
+        );
+      } catch (err) {
+        send.disabled = false;
+        // The reason, in the person's words — buildNote() and feedback.state()
+        // both return sentences rather than codes for exactly this line.
+        toast(err && err.message ? err.message : 'Could not send that.');
+      }
+    });
+
+    host.className = 'card';
+    setChildren(host,
+      el('div', { class: 'section-label', text: 'Tell the developer something' }),
+      el('div', { class: 'field-help', text:
+        'This app is new and being worked on. If something is confusing, broken, or missing, '
+        + 'say so here — it goes straight to the person building it.' }),
+      box,
+      send,
+      // Only Tim sees this, and only because the rules let him read them.
+      st.developer
+        ? el('a', { class: 'btn ghost block', href: '#/notes', text: 'Read notes' })
+        : null,
+    );
+  };
+
+  draw();
+  return host;
+}
+
+const FEEDBACK_UNAVAILABLE = {
+  offline: 'You are offline. Notes are sent straight away rather than queued, so come back when you have a connection.',
+  local: 'Sending a note needs an account, so there is somebody to reply to.',
+  anonymous: 'Add an email to your account to send a note — otherwise there is nobody to reply to.',
+};
 
 export async function AccountView() {
   // Before anything asks the account a question. In the demo there is no
@@ -1158,6 +1264,79 @@ function passwordCard() {
 /* ------------------------------------------------------------------ *
  * Sign in to an existing account
  * ------------------------------------------------------------------ */
+
+/**
+ * 🚨 THE DEVELOPER'S INBOX — the only screen in this app one account can open
+ * and another cannot.
+ *
+ * ⚠️ AND THE SCREEN IS NOT WHAT PROTECTS IT. `feedback.list()` returns [] for
+ * anybody who is not the developer because `firestore.rules` refuses the read,
+ * not because this function checked. The empty state below therefore has to be
+ * honest for two completely different people: Tim with no notes yet, and
+ * somebody else who typed the URL. **It says nothing about what it is hiding**,
+ * because a screen that says "you are not the developer" is a screen that
+ * confirms there is something worth being.
+ *
+ * ⚠️ These are other people's words, so nothing here is published, cached or
+ * shared — it is read on open and gone when you leave.
+ */
+export async function NotesView() {
+  const [notes, st] = await Promise.all([feedback.list(), feedback.state()]);
+
+  const body = el('div', { class: 'pane-scroll' });
+
+  const draw = () => {
+    if (!notes.length) {
+      setChildren(body, emptyState(
+        'Nothing here',
+        st.developer
+          ? 'No notes have been sent yet. They arrive here as soon as somebody writes one.'
+          : 'There is nothing on this screen.',
+      ));
+      return;
+    }
+
+    setChildren(body,
+      el('div', { class: 'field-help', text:
+        `${notes.length} note${notes.length === 1 ? '' : 's'}, newest first.` }),
+      ...notes.map((n) => {
+        const card = el('div', { class: 'card' },
+          el('div', { class: 'muscle-meta', text:
+            `${n.name || 'Someone'} · ${n.createdAt ? fmtDateShort(n.createdAt.slice(0, 10)) : 'undated'}` }),
+          // ⚠️ `text`, never `html`. A note is somebody else's free text and it
+          // is the only such text in this app; rendering it as markup would be
+          // a script injection with an invitation attached.
+          el('div', { class: 'note-body', text: n.text || '' }),
+          n.platform ? el('div', { class: 'muscle-meta', text: n.platform }) : null,
+          el('button', {
+            class: 'btn ghost small', text: 'Delete',
+            onClick: () => confirmSheet({
+              title: 'Delete this note?',
+              message: 'It is gone for good — the person who sent it cannot see it or send it again.',
+              confirmLabel: 'Delete',
+              onConfirm: async () => {
+                await feedback.remove(n.id);
+                notes.splice(notes.indexOf(n), 1);
+                draw();
+                toast('Note deleted');
+              },
+            }),
+          }),
+        );
+        return card;
+      }),
+    );
+  };
+
+  draw();
+
+  return screenShell({
+    title: 'Notes',
+    sub: st.developer ? 'What people have sent in' : '',
+    back: '#/account',
+    scroll: body,
+  });
+}
 
 export async function SignInView() {
   if (!auth.configured()) return AccountView();

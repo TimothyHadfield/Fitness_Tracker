@@ -2864,3 +2864,47 @@ no weight, so it fell through every branch saying nothing.
 **The honest headline, unchanged from the estimate I gave beforehand: this rates about a quarter of
 how people train abs.** Twenty-two of thirty core exercises record reps or time and no load. They
 keep the hatch. The plank and sit-up norms are written down as an unchecked lead, not a rejected one.
+
+---
+
+## 2026-09-04, last — three off the list: the note feature, abs in the demo, the wrong table
+
+Tim asked for a ranked list of what to do next, then picked three of it: *"build the note-to-developer
+feature, give the demo some ab work, and fix the transcription error."*
+
+**The note feature.** Anybody signed in can send Tim an idea or a problem from the Account screen; his
+account reads them at `#/notes`. The part that took the thought was the read side: **only his uid can
+read a note, and that is enforced by the security rules rather than by hiding a screen.** The author
+cannot even read their own note back — that would need a rule that looks *inside* the document to
+decide, which is the shape where a mistake quietly shows somebody else's note. Nobody can edit one,
+including Tim, because a note is a record of what somebody said. He can delete.
+
+It stores what device they were on rather than an app version — there is no build step, so a version
+string would be a constant that never changed while looking exactly like something that did, which is
+worse than storing nothing.
+
+**Two real bugs got through 941 jsdom assertions and died the first time I drove a real browser.** One
+was a wrong function call that would have made every send throw. The other is the more interesting:
+the check meant to stop anonymous accounts sending never fired, because the store read `anonymous`
+where the field is `isAnonymous` — **and the test had mocked the wrong name too**, having been written
+from the code rather than from what `auth.state()` actually returns. A mock copied from the thing
+you're testing only proves it agrees with itself. Both fixed; the test now uses the real field and
+says why.
+
+Proved on the live project, not just the emulator: a throwaway account sent a real note over the
+deployed rules, I checked its shape, then deleted both the note and the account.
+
+**The demo trains abs now** — and a neck, which sounds odd until you notice that Core ranking means ab
+work no longer produces the hatch, so nothing else in the demo could show that state. Adding
+exercises re-rolls the whole seeded year, so the golden table moved; I checked every number was still
+plausible before accepting it rather than just pasting. One failure wasn't a re-baseline at all — the
+demo's goal came out reading 0% progress, which is a property the demo is supposed to have, so that
+got fixed in the demo instead of in the test.
+
+**The research table is corrected.** 95% is ~2 reps, not ~5 — and a second cell was wrong too. Both
+were *shifts*: every wrong number was a real number from the cell next door, which is exactly why it
+looked sound for weeks. That pattern is now written down, so the next wrong table gets checked for it
+first. Nothing in the app used either cell.
+
+**Still owed from the earlier list: the blanks-and-refusals list.** It keeps getting queued behind
+things Tim picks, which is the right order — it's a list for him to choose from, not a change.

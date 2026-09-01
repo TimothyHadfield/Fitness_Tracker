@@ -695,6 +695,40 @@ export const FirebaseBackend = {
       .filter((r) => r.uid !== user.uid);
   },
 
+  /* --- notes to the developer (2026-09-04) ---
+   *
+   * ⚠️ THE ONLY THING PROTECTING THESE IS `firestore.rules`. Nothing below
+   * checks who is asking, on purpose: a client-side check would be a second,
+   * weaker definition of "developer" that could drift from the rule, and the
+   * rule is the one that holds against a client that is not ours. `listNotes()`
+   * simply fails for everybody else, which is what it should do. */
+
+  async sendNote(note) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    // A generated id rather than the uid: one person may send more than one.
+    const ref = c.fs.doc(c.fs.collection(c.db, 'feedback'));
+    await c.fs.setDoc(ref, note);
+    return ref.id;
+  },
+
+  async listNotes(max = 500) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    // No orderBy — see sortNotes() in js/feedback.js for why the sort is done
+    // in the client. The cap is a billing guard.
+    const snap = await c.fs.getDocs(
+      c.fs.query(c.fs.collection(c.db, 'feedback'), c.fs.limit(max)));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  },
+
+  async deleteNote(id) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'feedback', String(id)));
+    return true;
+  },
+
   /* --- accounts --- */
 
   currentUser() { return describeUser(user); },

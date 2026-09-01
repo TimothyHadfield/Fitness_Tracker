@@ -234,17 +234,38 @@ did not clearly moderate it at all.
 
 | %1RM | Mean reps (general) | Bench press | Leg press |
 |---|---|---|---|
-| 95 % | ~5 ⚠️ | | |
-| 90 % | ~5 | | |
-| 80 % | ~9 | ~9 | ~13 |
+| 95 % | ~2 | ~2 | ~3 |
+| 90 % | ~5 | ~4 | ~9 |
+| 80 % | ~8 | ~9 | ~13 |
 | 70 % | ~15 | ~14 | ~19 |
-| 60 % | ~20+ | | |
+| 60 % | ~24 | ~21 | ~28 |
 
-⚠️ **THE 95 % AND 90 % ROWS BOTH SAY ~5 AND THEY CANNOT BOTH BE RIGHT** — flagged 2026-09-02 while
-building the rep prediction. A heavier relative load must allow fewer reps, so one of those two
-figures is a transcription slip in this file rather than a finding. **Nothing has been shipped off
-the 95 % row and nothing should be until somebody re-reads PMC10933212.** The rest of the table is
-consistent and is what the comparison below is drawn against.
+✅ **RE-READ AND CORRECTED 2026-09-04.** ~~The 95 % and 90 % rows both said ~5, which cannot both be
+right~~ — flagged 2026-09-02 while building the rep prediction, and now fixed against the source.
+**The 95 % figure is ~2, not ~5.**
+
+🚨 **AND THE ERROR HAD A SHAPE WORTH RECORDING, BECAUSE IT EXPLAINS ITSELF.** Two cells were wrong
+and both are **row- and column-shifts rather than invented numbers**: the 95 % general cell held the
+**90 % value**, and the 80 % general cell held the **bench-press value** (~9, where the general model
+says ~8). That is what a transcription slip looks like — every wrong number was a real number from a
+neighbouring cell — and it is the reason the table stayed internally plausible enough to sit here for
+weeks. ⚠️ **When a table in this file is wrong, check whether it is a shift before assuming it is a
+misreading**: a shift leaves the surrounding cells correct and the whole thing looking sound.
+
+⚠️ **THE FIGURES ARE READ OFF FIGURE 2 (general), 3 (bench) and 4 (leg press), NOT OUT OF PROSE.**
+The paper gives these estimates graphically; its running text quotes only the *historical* Baechle
+table it is replacing ("at 90, 80, and 70 % 1RM, the estimates in Table 1 are 4, 8, and 11
+repetitions"). So each cell above is one careful reading of a chart, and the 95 % row is the least
+certain of them — it is the steepest part of the curve and the smallest number. **Grade this table
+🟡 for the 95 % row specifically and 🟢 for the rest**, which is corroborated by the paper's own
+statement that its estimates differ from the historical table "most … at lighter loads, whereas
+estimates at higher loads are more similar" — 5/8 against the old 4/8 at 90/80 %, and 15 against 11
+at 70 %.
+
+✅ **NOTHING IN THE APP MOVED, AND THAT WAS CHECKED RATHER THAN ASSUMED.** `js/exercise-estimate.js`
+cites this section for "~9 reps at 80 % of a bench max" — that is the **bench-press** cell, which was
+always correct and is unchanged. Nothing has ever been computed from the general column or the 95 %
+row.
 
 ⚠️ **AND THIS TABLE IS NOT WHAT THE APP COMPUTES.** `repsForWeight()` in `js/e1rm.js` inverts the
 **Marzagão** curve (§1.3, graded 🟡), and the two disagree: at 80 % of a bench-press-weight max it

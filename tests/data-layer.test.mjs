@@ -1706,27 +1706,47 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   };
   const { byMuscle, blocked } = buildObservations(args);
 
-  // muscle, observations, estimate, confidence, contributors, exercises —
-  // captured from the walk as it stood inside store.js, before it moved.
+  /* muscle, observations, estimate, confidence, contributors, exercises —
+     captured from the walk as it stood inside store.js, before it moved.
+
+     🔄 RE-BASELINED 2026-09-04, on Tim's instruction, when the demo year gained
+     a Cable Crunch and a Neck Curl (Open work 25 — the two states built that day
+     were unreachable in the demo, which is the account this project uses to look
+     at every screen). ⚠️ ADDING AN EXERCISE RE-ROLLS THE WHOLE SEEDED YEAR:
+     every later `random()` draw shifts, so every number below moved.
+
+     🚨 A RE-BASELINE IS NOT A PASS. These were checked for PLAUSIBILITY before
+     being pasted in, which is the only thing that distinguishes re-baselining
+     from deleting the test: every muscle moved by under 11 % (worst: Triceps
+     +10.1 %, Quads −8.2 %, the rest under 5 %), and the demo lifter still reads
+     as one coherent person — everything Novice to Proficient, clustered around
+     Intermediate. A shift of 40 % anywhere would have meant the exercise
+     addition changed something structural, not just the dice.
+
+     🆕 CORE IS THE NEW ROW and it is the point of the change: 1 exercise, no
+     corroboration, and confidence 0.28 — the lowest in the table — because
+     Core's `standardQuality` discounts it on top of a single-exercise reading. */
   const GOLDEN = [
-    ['Back', 720, 208.3807, 0.7798, 214, 4],
-    ['Biceps', 1095, 109.9027, 0.6448, 125, 2],
-    ['Calves', 332, 264.9498, 0.8707, 84, 2],
-    ['Chest', 465, 238.7469, 0.9063, 129, 2],
-    ['Forearms', 1095, 104.5091, 0.4832, 339, 6],
-    ['Glutes', 630, 380.5382, 0.7628, 66, 1],
-    ['Hamstrings', 882, 272.5143, 0.8855, 146, 3],
-    ['Quads', 563, 323.3257, 0.8985, 170, 4],
-    ['Shoulders', 1076, 142.6966, 0.7895, 191, 4],
-    ['Traps', 720, 238.7407, 0.5526, 214, 4],
-    ['Triceps', 1100, 168.1443, 0.4935, 125, 2],
+    ['Back', 720, 203.8378, 0.8019, 212, 4],
+    ['Biceps', 1095, 108.5921, 0.7016, 125, 2],
+    ['Calves', 332, 260.3998, 0.9506, 84, 2],
+    ['Chest', 465, 232.4839, 0.8158, 130, 2],
+    ['Core', 66, 124.1868, 0.2800, 22, 1],
+    ['Forearms', 1095, 96.1469, 0.5699, 337, 6],
+    ['Glutes', 630, 364.5160, 0.7628, 64, 1],
+    ['Hamstrings', 882, 268.2010, 0.9141, 146, 3],
+    ['Quads', 567, 296.9289, 0.9068, 171, 4],
+    ['Shoulders', 1080, 146.9308, 0.8883, 192, 4],
+    ['Traps', 720, 233.7850, 0.5694, 212, 4],
+    ['Triceps', 1100, 185.2054, 0.5310, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
   let goldenOk = true, firstBad = '';
   for (const [muscle, count, est, conf, contributors, exercises] of GOLDEN) {
     const obs = byMuscle.get(muscle) || [];
-    const rating = rateMuscle(obs);
+    // Named, like the store does — Core's confidence depends on it.
+    const rating = rateMuscle(obs, muscle);
     const bad = !rating
       || obs.length !== count
       || !near(rating.estimate, est, 0.0001)
@@ -1801,7 +1821,14 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   });
   let agree = stored.ready && stored.muscles.size === GOLDEN.length;
   for (const [muscle, v] of stored.muscles) {
-    const r = rateMuscle(direct.byMuscle.get(muscle) || []);
+    /* ⚠️ THE MUSCLE IS PASSED, AND OMITTING IT IS WHAT THIS ASSERTION CAUGHT.
+       `rateMuscle()` took an optional `muscle` on 2026-09-04 so a rating can
+       carry the STANDARD's reliability as well as the evidence's. This line did
+       not pass it, so the moment the demo year gained a Cable Crunch and Core
+       started being rated, the store's answer and the module's answer differed
+       on exactly one muscle — which is precisely the join this assertion exists
+       to protect, doing its job against a change made two files away. */
+    const r = rateMuscle(direct.byMuscle.get(muscle) || [], muscle);
     if (!r || !near(r.estimate, v.estimate, 1e-9) || !near(r.confidence, v.confidence, 1e-9)
         || r.contributorCount !== v.contributorCount || r.exerciseCount !== v.exerciseCount) {
       agree = false;
