@@ -3220,12 +3220,17 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
  *
  * 🚨 THE GATE ABOVE IS ABOUT PERCENTILES, NOT ABOUT STRENGTH, and conflating the
  * two cost this app its whole estimate for anybody who has not stepped on a
- * scale. `muscleStrength()` returns nothing at all when the profile is
- * incomplete, and rightly so: placing somebody against published standards
- * needs their sex, their age and their body weight, and a percentile without
- * those is not a weaker claim, it is a different person's.
+ * scale. `muscleStrength()` used to return nothing at all when the profile was
+ * incomplete: placing somebody against published standards needs their sex and
+ * their body weight, and a percentile computed without those is not a weaker
+ * claim, it is a different person's.
  *
- * ⚠️ BUT "ROUGHLY WHAT COULD YOU ROW" NEEDS NONE OF THEM. It is their own sets,
+ * ⚠️ THAT GATE IS NOW A STATED ASSUMPTION RATHER THAN A REFUSAL (2026-09-06,
+ * docs/direction.md §3.1) — see `withAssumptions()` — but the distinction this
+ * function was extracted for did not move an inch. A percentile still needs a
+ * comparison group, which is still either given or assumed and labelled.
+ *
+ * ⚠️ AND "ROUGHLY WHAT COULD YOU ROW" NEEDS NEITHER. It is their own sets,
  * converted by a published ratio, in pounds. Sending that through the
  * percentile gate meant a lifter with four months of training and no weigh-in
  * was told the app knew nothing about their back — which it plainly did.
@@ -3378,7 +3383,32 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
   } else {
     const [mine, s] = await Promise.all([store.getProfile(), muscleStrength()]);
     profile = mine;
-    if (!s.ready) return null;
+    /* 🚨 AN ASSUMED PROFILE IS NEVER PUBLISHED — 2026-09-06, and this line is the
+     * whole of it. `muscleStrength()` stopped refusing an incomplete profile on
+     * that date so the OWNER can still see their own map, ranked on a stated
+     * assumption (male, and lifters of every size). That is defensible on their
+     * own screen, where the sentence saying so sits under the figure and the
+     * profile is one tap away.
+     *
+     * 🛑 IT IS NOT DEFENSIBLE ON SOMEBODY ELSE'S. A reader gets 24 rows of
+     * percentiles with no way to check any of them: js/shared-map.js does not
+     * recompute a percentile — it cannot, because body weight is deliberately not
+     * in a public document — so a grid built against a guessed sex would be read
+     * as the owner's real standing, and a silently-different comparison group is
+     * the precise fault that module's header says this control exists to prevent.
+     * There is nowhere on a friend's page for the caveat to travel to.
+     *
+     * ⚠️ TESTED ON `mine.missing`, THE RAW PROFILE, NOT ON `s.profile.assumed`.
+     * The two agree today and the raw one cannot stop agreeing: `s.profile` is
+     * the assumed overlay, so a future field that gets a fallback would make
+     * `assumed` the thing that has to be remembered. `missing` is the store's own
+     * account of what the user has not told us, which is the question being
+     * asked here. `!s.ready` is kept beside it because it is still the general
+     * "there is no map" answer, and this must not become the only guard.
+     *
+     * The `rows` branch above refuses the same way, one line up: no body weight
+     * or no gender on the profile handed in, no publication. */
+    if (!s.ready || mine.missing.length) return null;
     muscles = s.muscles;
   }
   if (!muscles.size) return null;
@@ -3446,7 +3476,7 @@ export async function muscleStrength() {
   const [
     { MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, nextLevelAfter,
       levelProgress, weightForPercentile, generalPopulationPercentile,
-      standardCaveatFor },
+      standardCaveatFor, withAssumptions },
     { rateMuscle, confidenceBand, tintFor, raiseConfidenceHint },
     { buildObservations },
   ] = await Promise.all([
@@ -3456,7 +3486,36 @@ export async function muscleStrength() {
   ]);
 
   const out = new Map();
-  if (profile.missing.length) return { profile, muscles: out, ready: false };
+
+  /* 🚨 THE PROFILE GATE IS GONE — 2026-09-06. It used to read
+   * `if (profile.missing.length) return { ready: false }`, and every screen
+   * downstream drew "Tell us about you first" over an account that could be
+   * holding a year of recorded sets. Two settings, and the map refused the whole
+   * body. docs/direction.md §3.1: *"something is always better than nothing"*,
+   * with the half he kept being *"have a way to be upfront about it"*.
+   *
+   * `withAssumptions()` in js/strength-standards.js is where the substitution and
+   * its reasoning live — a forced `weight: 'any'` axis rather than an invented
+   * body weight, and male rather than no sex at all. What comes back here is the
+   * LIST of what it had to do, on `ranked.assumed`, and every consumer of this
+   * function is expected to use it:
+   *
+   *   - the screen SAYS it — `comparisonLabel().assumed` (views-muscles.js);
+   *   - `buildStrengthShare()` REFUSES on it, a few dozen lines above. A map
+   *     built on an assumed sex must never be published to a friend, who cannot
+   *     check it against anything.
+   *
+   * ⚠️ `ready` STAYS IN THE RETURN and is now always true here. It is not dead:
+   * views-goals.js and the friend screens still branch on it, and a caller that
+   * wants the old refusal should test `profile.assumed.length` — which says WHAT
+   * was missing rather than only that something was.
+   *
+   * ⚠️ AND `profile` BELOW IS THE ASSUMED ONE, deliberately, because it is what
+   * every percentile on this page was actually computed against. Handing back the
+   * raw profile would let a screen print a comparison group the colours were not
+   * built from. `missing` rides along untouched inside it, so nothing that asks
+   * the user to fill the gap has stopped asking. */
+  const ranked = withAssumptions(profile);
 
   // The walk itself is js/strength-observations.js — same function, same rules,
   // whether the rows came from my store or from a friend's published feed.
@@ -3472,11 +3531,11 @@ export async function muscleStrength() {
     const rating = rateMuscle(byMuscle.get(muscle) || [], muscle);
     if (!rating) continue;
 
-    const percentile = percentileFor(rating.estimate, muscle, profile);
+    const percentile = percentileFor(rating.estimate, muscle, ranked);
     if (percentile === null) continue;
     const level = levelFor(percentile);
     const next = nextLevelAfter(level);
-    const nextWeight = next ? weightForPercentile(next.percentile, muscle, profile) : null;
+    const nextWeight = next ? weightForPercentile(next.percentile, muscle, ranked) : null;
 
     // The single strongest contributor, named in the panel so an inference
     // never looks like a measurement (Rule 5).
@@ -3531,7 +3590,7 @@ export async function muscleStrength() {
     });
   }
 
-  return { profile, muscles: out, blocked, ready: true };
+  return { profile: ranked, muscles: out, blocked, ready: true };
 }
 
 // Every exercise that has at least `min` recorded data points, per field.

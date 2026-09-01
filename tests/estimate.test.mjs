@@ -149,6 +149,36 @@ const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
   ok(estimateOneRM(null, muscles) === null && estimateOneRM(byName('Barbell Row'), null) === null,
      'and a missing argument is an answer, not a crash');
 
+  /* 🚨 …AND SINCE 2026-09-06 THAT REFUSAL IS OPT-OUT-ABLE, FOR ONE SCREEN.
+     docs/direction.md §3.1: *"something is always better than nothing"*, with
+     the half Tim kept being *"have a way to be upfront about it."* The benchmark
+     screen is a thing somebody READS, so a rough marker with both hops named
+     beats silence there. The runner — a number somebody LOADS A BAR TO — keeps
+     the refusal, and so does everything else, because the default did not move. */
+  const viaOpt = estimateOneRM(byName('Barbell Row'), standIn, undefined, { allowFallback: true });
+  ok(viaOpt !== null && viaOpt.viaFallback === true,
+     'the opt-in returns a number AND flags it as having gone through a stand-in — a caller cannot '
+     + 'take the number without being handed the fact that it is twice-converted');
+  ok(estimateOneRM(byName('Barbell Row'), standIn) === null,
+     '🚨 THE DEFAULT DID NOT MOVE. Called the old way it still refuses — which is what keeps every '
+     + 'existing call site, including the runner, exactly as safe as it was yesterday');
+  ok(estimateOneRM(byName('Barbell Row'), standIn, undefined, { allowFallback: 'yes' }) === null,
+     '⚠️ and it is checked === true, so a stray truthy value cannot open the gate by accident');
+
+  const direct = estimateOneRM(byName('Barbell Row'), new Map([['Back', {
+    estimate: 200, confidence: 0.5, kind: 'direct',
+    contributors: [{ exerciseName: 'Dumbbell Row' }], exerciseCount: 1,
+  }]]), undefined, { allowFallback: true });
+  ok(direct.viaFallback === false,
+     'a direct rating asked the same way is NOT flagged — the flag means "this one went the long '
+     + 'way round", not "somebody passed the option"');
+  ok(viaOpt.confidence < direct.confidence,
+     'the twice-converted number is less believable than the once-converted one, and the number '
+     + 'says so rather than the sentence beside it having to');
+  ok(viaOpt.band.name !== direct.band.name && !/high|good/i.test(viaOpt.band.name),
+     `🚨 and its band is CAPPED (${viaOpt.band.name}) — three estimates multiplied may never wear a `
+     + 'confident label, however high the inputs happen to be');
+
   /* ---- the estimate agrees with the curve that produced it ---- */
   const target = weightForReps(row.oneRM, 5);
   ok(near(repsForWeight(row.oneRM, target), 5, 1e-6),

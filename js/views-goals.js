@@ -15,12 +15,30 @@
 // from raw session numbers, which move several percent day to day. The screen
 // says so in as many words rather than leaving a gap somebody has to guess at.
 //
+// ⚠️ BUT SINCE 2026-09-06 IT SAYS WHAT HAS MOVED, which is not the same thing.
+// docs/direction.md §3.1: "something is always better than nothing", with the
+// half Tim kept — "have a way to be upfront about it". Two places on this screen
+// used to refuse where they could have measured, and both now report:
+//
+//   · verdictBlock() prints the CHANGE since the goal was set — a subtraction of
+//     two estimates the app already holds — with the noise floor in the same
+//     breath and no verdict word anywhere near it (movedSince()).
+//   · Under two weeks of history the "what you are actually doing" rows used to
+//     say "not enough logged training yet". They now show TOTALS with the window
+//     named, via trainingOrShortWindow() below and the `enough: false` branch in
+//     stallReasons(). A total is a measurement; a rate over nine days is not.
+//
+// Neither adds an opinion and neither touches a weight. Rule 6 is the line: the
+// measurement is reported, the conclusion is left to the reader.
+//
 // Also not here: anything that changes a weight. docs/goals-plan.md §3.1 —
 // progression follows your last session, never the calendar, because a deadline
 // that raises loads would push hardest on somebody who has just missed two
 // weeks. That is the one thing in this app that could hurt a person.
 
-import { store, muscleStrength, trainingForMuscle, todayISO } from './store.js';
+import {
+  store, muscleStrength, trainingForMuscle, weeklyVolumeByMuscle, todayISO,
+} from './store.js';
 import { comparisonLabel } from './strength-standards.js';
 import {
   candidateGoals, buildGoal, goalProgress, requirementsFor, stallReasons,
@@ -66,11 +84,92 @@ function needsHistory() {
   );
 }
 
+/**
+ * 🚨 `ready` IS NO LONGER THE QUESTION THIS SCREEN ASKS, AND THE DIFFERENCE IS
+ * THE WHOLE REASON GOALS KEPT A GATE THE MUSCLE MAP GAVE UP (2026-09-06).
+ *
+ * `muscleStrength()` used to refuse outright on an incomplete profile. It now
+ * ranks anyway — assuming male where sex is missing, and comparing against
+ * lifters of EVERY SIZE where there is no weigh-in rather than inventing one —
+ * and says so on the map. That is right there: the map is a reading, it is
+ * relabelled the moment the real details arrive, and nothing is stored.
+ *
+ * ⚠️ IT IS NOT RIGHT HERE, because a goal FREEZES. `targetWeight` is written
+ * once, in pounds, when the goal is set, and never recomputed (D20, and the
+ * Goal shape in §4 says so) — precisely so that gaining four pounds cannot make
+ * a goal quietly harder. Set a goal against an assumed sex or against "lifters
+ * of every size", and that assumption is frozen into the target too, months
+ * after the profile has been filled in properly and every other screen has
+ * stopped mentioning it. The reading would be corrected; the goal would not.
+ *
+ * So this screen asks the raw question — is the profile actually there — and
+ * `profile.missing` is untouched by the assumption overlay for exactly this
+ * kind of caller. `ready` is left in the return because the friend screens
+ * still read it and it is not this file's to redefine.
+ */
 async function context() {
   const [{ profile, muscles, ready }, goal] = await Promise.all([
     muscleStrength(), store.activeGoal(),
   ]);
-  return { profile, muscles, ready, goal };
+  return { profile, muscles, ready, hasProfile: !profile.missing.length, goal };
+}
+
+/**
+ * ⚠️ THE WINDOW IS NAMED ONCE AND PASSED, never left to two defaults.
+ *
+ * Both store functions below default to 28 days, and this screen prints the
+ * window in words ("the last four weeks"). Three places agreeing by coincidence
+ * is how a sentence ends up describing a window nobody is measuring — so the
+ * number is stated here, handed to both calls, and the sentence is built from
+ * it. Change it in one place and the copy follows.
+ */
+const WINDOW_DAYS = 28;
+
+/**
+ * What has been logged for one muscle, INCLUDING when there is too little of it.
+ *
+ * ⚠️ `trainingForMuscle()` returns null below a two-week span, on purpose: it
+ * feeds sentences about sets PER WEEK, and a rate measured over four days would
+ * make those sentences false. That is right, and it is also why this screen used
+ * to go blank-with-a-refusal for anybody a week into the app.
+ *
+ * `weeklyVolumeByMuscle()` is the same arithmetic over the same window from the
+ * same volumeWindow() — its own header says it "returns a window that is too
+ * short rather than null" for exactly this caller — so the fallback cannot
+ * disagree with the primary about a number. It carries `enough: false`, and
+ * stallReasons() reads that flag to report TOTALS instead of rates.
+ *
+ * ⚠️ Not merged into one call, because when there IS enough history the two
+ * screens must go on reading the function that guarantees the two-week floor.
+ * This is a fallback, not a replacement.
+ */
+async function trainingOrShortWindow(muscle) {
+  const full = await trainingForMuscle(muscle, WINDOW_DAYS).catch(() => null);
+  if (full) return full;
+
+  const all = await weeklyVolumeByMuscle(WINDOW_DAYS).catch(() => null);
+  if (!all) return null;
+
+  // Absent from the list means the window held no work for this muscle — which
+  // is a finding ("nothing you logged reached your chest"), not a missing value,
+  // so it reads as zero rather than as null. Same argument weeklyVolumeByMuscle()
+  // makes for listing every muscle including the ones on zero.
+  const row = all.muscles.find((r) => r.muscle === muscle);
+  return {
+    muscle,
+    weeklySets: row ? row.weeklySets : 0,
+    sessionsPerWeek: row ? row.sessionsPerWeek : 0,
+    totalSets: row ? row.totalSets : 0,
+    daysTrained: row ? row.daysTrained : 0,
+    sessions: all.sessions,
+    spanDays: all.spanDays,
+    windowDays: all.windowDays,
+    // Copied from the window rather than hard-coded false: if a later change
+    // ever makes this path reachable with a full window, stallReasons() takes
+    // its ordinary branches on the same numbers instead of silently downgrading
+    // a real rate to a total.
+    enough: all.enough,
+  };
 }
 
 /** Protein in the unit the user reads. The published figures are both here. */
@@ -85,9 +184,9 @@ function proteinRate(perLb) {
  * ================================================================== */
 
 export async function GoalsView() {
-  const { profile, muscles, ready, goal } = await context();
+  const { profile, muscles, hasProfile, goal } = await context();
 
-  if (!ready) {
+  if (!hasProfile) {
     return screenShell({ title: 'Goals', profile: true, back: () => go('#/settings'),
                          scroll: needsProfile(profile) });
   }
@@ -195,9 +294,9 @@ async function activeGoalScreen(goal, profile, muscles) {
   // a pair and a digression about weights in the middle of them reads as part of
   // the requirement. It also puts the sentence that matters most — the goal does
   // not set your weights — next to the screen's other honest limits.
-  body.append(measuredHost, verdictBlock(p), progressionBlock(), moreRows());
+  body.append(measuredHost, verdictBlock(goal, p, m), progressionBlock(), moreRows());
 
-  trainingForMuscle(goal.muscle)
+  trainingOrShortWindow(goal.muscle)
     .then((measured) => measuredHost.append(measuredBlock(goal, req, measured)))
     .catch((err) => console.error('Could not measure training for the goal', err));
 
@@ -283,6 +382,26 @@ function stat(label, value) {
 }
 
 /**
+ * The size a change has to beat before this app can tell it from noise.
+ *
+ * ⚠️ IT IS MODELLED, NOT MEASURED ON THE READER, and the copy beside it says so
+ * — Rule 5. docs/strength-estimate-plan.md §6.1 and §14 hold the only number
+ * this project has actually derived for how wide a strength estimate is: the
+ * simulator put the band at ±12.2 % on average, and ±21 % off a single high-rep
+ * set. Twelve is that rounded DOWN, and down is the conservative direction here
+ * — it makes the app quicker to allow that a move might be real, never quicker
+ * to announce one.
+ *
+ * ⚠️ AND IT IS NOT AN ERROR BAR ON THE NUMBER THIS SCREEN SHOWS. That band was
+ * measured on js/strength-estimate.js, which is not wired into the rating yet
+ * (that plan's Phase 2). The estimate a goal is scored against comes from
+ * js/muscle-evidence.js and carries no band at all. Printing ±12 % as if it
+ * belonged to this estimate would be an inference dressed as a measurement, so
+ * the sentence offers it as a yardstick and names where it came from instead.
+ */
+const ESTIMATE_NOISE_PCT = 12;
+
+/**
  * ⚠️ THE MISSING VERDICT IS STATED, NOT HIDDEN.
  *
  * "On track / ahead / behind" is the thing a goals screen is expected to say,
@@ -295,14 +414,39 @@ function stat(label, value) {
  * telling somebody they are behind when they are not costs a user who was doing
  * fine, so "behind" waits until it is genuinely unlikely the goal can be
  * reached. Saying that now sets the expectation correctly.
+ *
+ * ── WHAT IT SAYS INSTEAD, SINCE 2026-09-06 ───────────────────────────────────
+ *
+ * ⚠️ REFUSING A VERDICT IS NOT A REASON TO REFUSE THE MEASUREMENT. Until now
+ * this block explained what the app would not say and then said nothing at all,
+ * which is the shape docs/direction.md §3.1 reversed: "have a way to be upfront
+ * about it but something is always better than nothing." The change since the
+ * goal was set is a subtraction of two numbers the app already has, and it is a
+ * measurement — so it is printed, with the yardstick in the same breath and the
+ * conclusion left to the reader. That is the Rule 6 line exactly: report the
+ * measurement, withhold the opinion. No verdict word, no colour, no
+ * encouragement, and nothing here reaches a weight.
+ *
+ * ⚠️ THE MOVEMENT IS IN POUNDS, AND THE PERCENTILE IS DELIBERATELY LEFT OUT.
+ * The goal also froze `startPercentile` and `startLevel`, and subtracting
+ * today's percentile from them looks like the obvious version of this. It is
+ * wrong: a percentile is computed against a comparison group and a body weight,
+ * both of which move, and this screen already tells the reader that changing
+ * the comparison will not move a running goal (D20). The difference would then
+ * report a change in the STANDARDS as a change in the lifter. Two estimated
+ * 1RMs for the same muscle subtract cleanly; two percentiles do not.
  */
-function verdictBlock(p) {
+function verdictBlock(goal, p, m) {
   return el('div', { class: 'goal-verdict' },
     el('div', { class: 'section-label', text: 'On track?' }),
     el('p', { class: 'goal-verdict-body', text:
       'The app will not tell you yet, and that is deliberate. A day-to-day strength estimate '
       + 'swings several percent on sleep, food and what time you trained, so a verdict built on it '
       + 'would tell you that you were behind because you had a bad Tuesday.' }),
+
+    // What it CAN say: the measured change, and the size a change has to beat.
+    ...movedSince(goal, p, m),
+
     el('p', { class: 'goal-verdict-body', text:
       // ⚠️ "everything ABOVE", not "below" — this block moved down the screen on
       // 2026-08-21 and the sentence pointed at what used to follow it. A caveat
@@ -316,6 +460,118 @@ function verdictBlock(p) {
           'This goal has run its twelve weeks. Ending it keeps the record.' })
       : null,
   );
+}
+
+/**
+ * What has actually changed since the goal was set, and how big a change has to
+ * be before this app can see it.
+ *
+ * ⚠️ EVERY NUMBER HERE IS ARITHMETIC ON FIELDS THAT ALREADY EXIST — `startWeight`
+ * and `startDate` frozen on the goal, and the current rating. Nothing is
+ * recomputed, nothing new is modelled, and `targetWeight` is not touched: it is
+ * frozen and stays frozen.
+ *
+ * ⚠️ AND NOTHING HERE READS THE DEADLINE. `endDate`, `daysLeft` and `weeksLeft`
+ * are all sitting on `p` and every one of them is deliberately unused — this
+ * block reports a change over elapsed time and nothing else. docs/goals-plan.md
+ * §3.1: the moment a screen starts phrasing a measurement in terms of how much
+ * time is left, the next session's obvious improvement is to phrase a
+ * REQUIREMENT that way, and that is the one thing in this app that could hurt
+ * somebody. The deadline is stated once, in the hero, as a date.
+ *
+ * Returns an array so the caller can spread it — an empty section would leave a
+ * stray element, and a block that renders nothing at all is what this change
+ * exists to remove.
+ */
+function movedSince(goal, p, m) {
+  const lift = goal.liftName || `${goal.muscle} key lift`;
+
+  // ⚠️ SAID SPECIFICALLY, not left blank. "There is no current estimate" and
+  // "you have not moved" are different facts and must not look alike (Rule 5) —
+  // a blank here would read as the second. progressBlock() says what to do about
+  // it; this says what it costs, which is this measurement.
+  if (p.currentWeight === null || !(p.startWeight > 0)) {
+    return [el('p', { class: 'goal-verdict-body', text:
+      `There is nothing to measure yet: ${goal.muscle} has no current rating, so there is no `
+      + 'estimate to subtract the starting one from. Log a set of anything that trains it and the '
+      + 'change since this goal was set appears here.' })];
+  }
+
+  const delta = p.gained;
+  const pct = Math.abs(delta) / p.startWeight * 100;
+  const pctText = `${trimNum(Math.round(pct * 10) / 10)} %`;
+  const from = units.withUnit(Math.round(p.startWeight));
+  const to = units.withUnit(Math.round(p.currentWeight));
+
+  /* ⚠️ FLAT IS DECIDED BY WHAT GETS PRINTED, NOT BY `delta === 0`. The two ends
+   * are estimates carrying decimals, so a goal set the same day reads as a
+   * change of 0.2 lb — and rounding that for display printed "0 lbs higher",
+   * which is a sentence saying two contradictory things at once. Rounding
+   * first and asking whether anything survived is the fix, and it also gives
+   * the honest wording: unchanged TO THE NEAREST POUND, which is all the
+   * screen ever claimed. */
+  const step = Math.round(Math.abs(delta));
+  const unitWord = units.units() === 'kg' ? 'kilo' : 'pound';
+  const moved = step === 0
+    ? `The ${lift} estimate is where it started, ${from} — unchanged to the nearest ${unitWord}.`
+    : `The ${lift} estimate has gone from ${from} then to ${to} now — `
+      + `${units.withUnit(step)} ${delta > 0 ? 'higher' : 'lower'}, or ${pctText}.`;
+
+  // ⚠️ ELAPSED, NEVER REMAINING. See the note above — `p.daysLeft` is right
+  // there and is deliberately not read. Days under a fortnight, weeks after
+  // that, and nothing at all on the day the goal was set: "0 days ago" is the
+  // kind of phrase that makes a screen look like it is guessing.
+  const days = p.daysElapsed;
+  const ago = days === null || days === 0 ? ''
+    : days < 14
+      ? `, ${days} day${days === 1 ? '' : 's'} ago`
+      : `, ${p.weeksElapsed} week${p.weeksElapsed === 1 ? '' : 's'} ago`;
+
+  // ⚠️ The comparison against the yardstick is arithmetic, not a judgement:
+  // "smaller than 12 %" is a fact about resolution, and the sentence stops
+  // there rather than turning it into good news or bad news (Rule 6).
+  const scale = step === 0
+    ? 'A flat reading and a small real change look identical at that resolution, so this is not '
+      + 'evidence either way.'
+    : pct < ESTIMATE_NOISE_PCT
+      ? `A move of ${pctText} is inside that, so it is not yet something the app can tell apart `
+        + 'from an ordinary swing. Read it as the measurement it is, not as a result either way.'
+      : `A move of ${pctText} is larger than that. It is still built from your best recorded sets `
+        + 'rather than a tested max, so it is the estimate that has moved, not a max you have hit.';
+
+  return [
+    el('p', { class: 'goal-verdict-body', text:
+      `What has moved: this goal was set on ${fmtDateLong(goal.startDate)}${ago}. ${moved} `
+      + "Both ends of that are this app's own estimate from your recorded sets, and neither is a "
+      + 'tested max.' }),
+
+    el('p', { class: 'goal-verdict-body', text:
+      `For scale: this project's own simulation of a strength estimate puts the uncertainty on one `
+      + `at about ±${ESTIMATE_NOISE_PCT} %, and the figure above carries no band of its own. `
+      + scale }),
+
+    // Rule 5 — the yardstick names what it came from, and says it is not a
+    // measurement of this reader. Same pattern as progressionBlock's citation.
+    el('div', { class: 'req-source', text:
+      `the ±${ESTIMATE_NOISE_PCT} % is modelled, not measured on you · `
+      + 'strength-estimate-plan.md §6.1' }),
+
+    /* ⚠️ THE DATE IS THE POINT OF THIS LINE, and it is why it is not a repeat of
+     * the source line progressBlock() already prints further up. That one says
+     * which set the estimate came from; this one says WHEN, and a change-over-
+     * time claim is worthless without it. "Up 11 lb since 4 August" measures
+     * nothing recent if the newest chest set it rests on is from July — the
+     * reader can only see that if the date is beside the sentence making the
+     * claim, not four blocks away. Rule 5: the number names where it came from,
+     * and here "where" includes when. */
+    m
+      ? el('div', { class: 'field-help', text:
+          `The "now" end of that was last moved by ${m.best.exerciseName}, `
+          + `${units.fmtWeight(m.best.weight)}${m.best.loadType === 'per_side' ? '/side' : ''}`
+          + `×${m.best.reps} on ${fmtDateLong(m.best.date)} — so that is how recent this `
+          + 'comparison actually is.' })
+      : null,
+  ];
 }
 
 /**
@@ -418,11 +674,30 @@ function measuredBlock(goal, req, measured) {
       ),
       el('div', { class: 'req-value mono', text: r.value === null ? '—' : String(r.value) }),
     )),
-    el('div', { class: 'field-help', text: measured
-      ? `Measured from the last ${Math.round(measured.spanDays / 7)} weeks of logged sessions — `
-        + `${measured.sessions} of them.`
-      : 'Measured from your logged sessions once there are two weeks of them.' }),
+    // ⚠️ THE WINDOW IS PART OF THE NUMBER, so it is printed every time and it
+    // says which of the three states produced the rows above — a full window, a
+    // window too short to divide into weeks, or no sessions at all. The middle
+    // one used to be folded into the last, which is how a lifter eight days in
+    // was told the app had nothing rather than being shown what they had done.
+    el('div', { class: 'field-help', text: measuredFooter(measured) }),
   );
+}
+
+function measuredFooter(measured) {
+  if (!measured) {
+    return `No sessions logged in the last ${WINDOW_DAYS / 7} weeks, so there is nothing here to `
+      + 'measure from yet.';
+  }
+  const days = measured.spanDays;
+  if (measured.enough === false) {
+    return `Counted over the ${days} day${days === 1 ? '' : 's'} since your first session in the `
+      + `last ${WINDOW_DAYS / 7} weeks — ${measured.sessions} `
+      + `session${measured.sessions === 1 ? '' : 's'}. Under two weeks, so these are totals of `
+      + 'what you have done, not rates per week; the goal is stated per week, so the two cannot be '
+      + 'compared until there is a fortnight to divide by.';
+  }
+  return `Measured from the last ${Math.round(days / 7)} weeks of logged sessions — `
+    + `${measured.sessions} of them.`;
 }
 
 function moreRows() {
@@ -478,9 +753,9 @@ export async function GoalRouteView(param) {
 /* ---- step one: which lift ---- */
 
 async function GoalMuscleView() {
-  const { profile, muscles, ready } = await context();
+  const { profile, muscles, hasProfile } = await context();
 
-  if (!ready) {
+  if (!hasProfile) {
     return screenShell({ title: 'Choose a goal', back: () => go('#/goals'), scroll: needsProfile(profile) });
   }
   if (!muscles.size) {
@@ -535,12 +810,12 @@ async function GoalMuscleView() {
 /* ---- step two: which level ---- */
 
 async function GoalLevelView(muscle) {
-  const { profile, muscles, ready, goal } = await context();
+  const { profile, muscles, hasProfile, goal } = await context();
 
-  if (!ready || !muscles.has(muscle)) {
+  if (!hasProfile || !muscles.has(muscle)) {
     return screenShell({
       title: muscle, back: () => go('#/goal/new'),
-      scroll: ready ? needsHistory() : needsProfile(profile),
+      scroll: hasProfile ? needsHistory() : needsProfile(profile),
     });
   }
 
@@ -631,7 +906,9 @@ async function GoalStallsView() {
   if (!goal) return screenShell({ title: 'Why progress stalls', back: () => go('#/goals'), scroll: noGoal() });
 
   const req = requirementsFor(goal.ambition, { bodyWeight: profile.bodyWeight });
-  const measured = await trainingForMuscle(goal.muscle).catch(() => null);
+  // The same fallback the Goals screen uses, so the two never disagree about
+  // what has been logged — this screen and that one read the same rows.
+  const measured = await trainingOrShortWindow(goal.muscle).catch(() => null);
   const rows = stallReasons({ requirements: req, measured, muscle: goal.muscle });
 
   const seen = rows.filter((r) => r.visible);

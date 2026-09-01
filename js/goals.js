@@ -515,6 +515,8 @@ export function goalProgress(goal, currentWeight, today) {
  * @param {object} arg
  * @param {object} arg.requirements  from requirementsFor()
  * @param {object|null} arg.measured { weeklySets, sessionsPerWeek, spanDays, sessions }
+ *   plus, when the window is under two weeks, { enough: false, totalSets,
+ *   daysTrained } — see the SHORT WINDOW note below.
  * @param {string} arg.muscle
  */
 export function stallReasons({ requirements, measured, muscle }) {
@@ -538,13 +540,63 @@ export function stallReasons({ requirements, measured, muscle }) {
   const MEASURED_SETS_CAVEAT = ' This counts every set you logged, warm-ups included — '
     + 'so if you log warm-ups, your real hard-set count is lower.';
 
+  /* ── THE SHORT WINDOW ────────────────────────────────────────────────────────
+   *
+   * ⚠️ A WINDOW UNDER TWO WEEKS IS A REASON NOT TO SAY "PER WEEK". It is not a
+   * reason to say nothing. Both rows below used to refuse outright under the
+   * floor — "Not enough logged training yet to measure this" — which threw away
+   * the one thing a week-old account definitely has: the sets it actually
+   * logged. docs/direction.md §3.1, Tim 2026-09-04: "have a way to be upfront
+   * about it but something is always better than nothing."
+   *
+   * ⚠️ SO A SHORT WINDOW REPORTS TOTALS, NEVER RATES, and that split is Rule 5
+   * doing its job. A total is a count of things that happened; a rate over nine
+   * days is an inference from too little data, and the two must not wear the
+   * same clothes. Every short-window sentence names the span it was counted
+   * over, because a total with no window attached means nothing at all.
+   *
+   * ⚠️ AND THE STATUS STAYS 'unknown', WHICH IS THE HONEST ANSWER RATHER THAN A
+   * SOFTENING. The question these rows ask is "how does this compare with the
+   * sets-per-week the goal asks for", and over nine days that comparison really
+   * is unavailable — so the neutral heading and the neutral row styling both
+   * still apply, and a week of training is never headlined as short OR as ok.
+   * Rule 6 from both sides at once: no unearned negative, no unearned positive.
+   *
+   * `enough` is set by the caller from the same volumeWindow() that defines the
+   * two-week floor in store.js — weeklyVolumeByMuscle() returns a too-short
+   * window rather than null for exactly this purpose, and says so in its header.
+   * On the ordinary trainingForMuscle() path the key is absent, so `undefined`
+   * takes the branches below unchanged. `measured: null` — nothing logged in the
+   * window at all — is still its own case, and still shows no number.
+   */
+  const shortWindow = Boolean(measured) && measured.enough === false;
+  const overDays = (n) => `${n} day${n === 1 ? '' : 's'}`;
+  const loggedSessions = (n) => `${n} logged session${n === 1 ? '' : 's'}`;
+
   const volume = (() => {
+    if (shortWindow) {
+      const total = round(measured.totalSets || 0);
+      return {
+        status: 'unknown',
+        value: total,
+        detail: `${total} sets on ${muscle} so far — a total, counted over the `
+          + `${overDays(measured.spanDays)} since your first session in this window, across `
+          + `${loggedSessions(measured.sessions)}. Not a rate: under two weeks a per-week figure is `
+          + `mostly noise, so this cannot be set against the ${req.sets[0]}–${req.sets[1]} a week `
+          + 'the goal asks for yet.'
+          + MEASURED_SETS_CAVEAT,
+      };
+    }
     if (!has) {
       return {
         status: 'unknown',
         value: null,
-        detail: 'Not enough logged training yet to measure this. Two weeks of sessions is the '
-          + 'floor — below that a rate per week is noise.',
+        // Reached only when the window holds no sessions at all — a short
+        // window with sessions in it takes the branch above. So this says what
+        // is actually true rather than the old blanket "not enough yet".
+        detail: 'No sessions logged in the window this is measured over, so there is nothing to '
+          + 'count. Log a workout and the sets it puts on this muscle show up here as a total; a '
+          + 'rate per week waits for two weeks of sessions, because below that it is noise.',
       };
     }
     const v = measured.weeklySets;
@@ -581,11 +633,29 @@ export function stallReasons({ requirements, measured, muscle }) {
   })();
 
   const frequency = (() => {
+    if (shortWindow) {
+      // Days, not sessions-per-week, and for the same reason the row above
+      // counts sets rather than sets-a-week. `daysTrained` counts a day only
+      // where DIRECT work for this muscle was logged — the rule weeklyFrequency()
+      // uses — so it is the same quantity the rate is built from, just not
+      // divided by a span too short to divide by.
+      const days = measured.daysTrained || 0;
+      return {
+        status: 'unknown',
+        value: days,
+        detail: `${days} day${days === 1 ? '' : 's'} of ${muscle} work in the `
+          + `${overDays(measured.spanDays)} counted here, out of `
+          + `${loggedSessions(measured.sessions)} of any kind. A count, not a rate: two weeks is `
+          + `the floor before "sessions a week" means anything, so the ${req.sessions[0]} a week `
+          + 'this goal asks for is not something these days can be set against yet.',
+      };
+    }
     if (!measured || !Number.isFinite(measured.sessionsPerWeek)) {
       return {
         status: 'unknown',
         value: null,
-        detail: 'Not enough logged training yet to measure this.',
+        detail: 'No sessions logged in the window this is measured over, so there is nothing to '
+          + 'count. Log a workout and the days it trains this muscle show up here.',
       };
     }
     const f = measured.sessionsPerWeek;

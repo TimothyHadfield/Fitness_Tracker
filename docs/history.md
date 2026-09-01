@@ -17,6 +17,106 @@
 
 ---
 
+## 2026-09-06 (second pass) — 🚨 EIGHT BLANKS BECAME NUMBERS, AND ONE GATE WAS KEPT ON PURPOSE
+
+Tim, having been given the list below: *"it seems like you have a good idea of what should be changed
+or not so make a plan for each one and start building. Don't ask me questions, just go with whatever
+you recommend. Deploy many sub-agents to get it done if you need."*
+
+**Four agents on disjoint file sets**, none allowed to touch `css/app.css` or `tests/` — the two
+places four parallel writers would have collided, and the two places where a collision is silent.
+Integration, every new assertion, both mutation checks and the browser audit were done afterwards in
+one pass. ⚠️ **The file partition is the whole reason this worked**; the 2026-08-22 note about wave
+size was about *review* agents, and this is the first time this project has had four agents WRITING
+at once.
+
+### A. 🚨 THE MUSCLE MAP RANKS WITHOUT A PROFILE — and invents no body weight
+
+`muscleStrength()` returned `ready: false` on a missing sex or a missing weigh-in, and every screen
+downstream drew *"Tell us about you first"* over an account that could be holding a year of sets.
+**Two settings, and the map refused the whole body.**
+
+`withAssumptions()` in `js/strength-standards.js` is the substitution, and the shape of it is the
+point:
+
+- 🚨 **A MISSING WEIGH-IN IS NOT A GUESSED WEIGHT.** It forces the comparison's weight axis to
+  `'any'` — which `refBodyWeight()` already treats as the reference median with no allometric
+  scaling, i.e. **lifters of every size**. That is a real group that can be named truthfully on
+  screen. The obvious alternative was to drop in `REF_BW` and stand the user beside a made-up 180 lb
+  man, which would have looked identical and been a fabrication. **There is an assertion whose only
+  job is to fail if somebody later "helpfully" fills that field in.**
+- **A missing sex assumes male, and says so** — every median in `MUSCLE_LIFTS` is a male/female pair
+  and `MALE_SHARE` (0.55) already records that lifters skew male, so it is the modal answer rather
+  than a value judgement. It is stated, never silent.
+- The screen carries it: *"Assumed male — your sex is not on your profile. Compared against lifters
+  of every size — no weigh-in on record."* with the profile one tap away.
+
+🚨 **AND IT IS NEVER PUBLISHED.** `buildStrengthShare()` now refuses on `mine.missing.length`.
+`js/shared-map.js` cannot recompute a percentile — body weight is deliberately not in a public
+document — so a friend would receive 24 rows built on a guessed sex **with no way to check any of
+them and nowhere for the caveat to travel to.** **Mutation-checked**: removing that clause flips
+exactly one assertion. It also protects the compare screen for free, which reaches the same publisher
+through `mySharedMap()`.
+
+### B. 🛑 GOALS KEPT THE GATE, AND THAT WAS THE ONE REAL DECISION OF THE DAY
+
+`GoalsView` branched on the same `ready` flag, so lifting it opened Goals too. **That is a trap, and
+the fix was to stop asking the map's question.** A goal **freezes** `targetWeight` in pounds when it
+is set and never recomputes it (D20) — precisely so gaining four pounds cannot make a goal quietly
+harder. Set a goal against an assumed sex and **that assumption is frozen into the target for twelve
+weeks**, long after the profile has been filled in and every other screen has stopped mentioning it.
+The map is a reading and gets relabelled; a goal does not.
+
+`context()` now returns `hasProfile: !profile.missing.length` and all three gates read it.
+**Mutation-checked**: forcing `hasProfile: true` flips three assertions.
+
+### C. The other six
+
+| | Was | Now |
+|---|---|---|
+| Goals verdict | a paragraph explaining there would be no verdict, and nothing else | **what has moved** since the goal was set, with the ±12 % yardstick in the same breath and still no verdict word. ⚠️ Built from the two estimated **1RMs**, not the frozen percentiles — a percentile moves with the comparison group, so subtracting those would report a change in the STANDARDS as a change in the lifter |
+| Goals, under two weeks | *"Not enough logged training yet to measure this"* | totals, with the span and the session count named, and why it is not yet a rate |
+| Volume, under a fortnight | raw totals under a heading that said "a week" | a **rate**, span named. 🚨 **This also fixed a latent bug**: the body map was painting `totalSets` against `volumeShade()`, whose bands are *weekly* doses — a 9-day beginner with 21 sets wore the colour of someone training hard. The `perWeek` flag was **deleted** rather than pinned true, because a boolean threaded through five call sites is five chances to print a total under a rate's heading |
+| Bars | blank until the same lift was benchmarked twice | falls back to workout sets through the Graph's own `pickSource()`, **one source per row**, each row saying which (Rule 4 / D14 — a row whose start is a benchmark and whose now is a workout set is the mixing that makes strength look like it swings) |
+| One recording | *"Only one data point"* | the value, its date and its estimated max, marked `~`. **No line** — one point has no trend, and drawing one would be Rule 5 exactly |
+| Benchmark estimate | refused when the muscle was itself rated by a stand-in | **opt-in for that one read-only screen**, flagged `viaFallback`, confidence multiplied down a third time, **band capped at Fair**, both hops named on screen. 🛑 **The default did not move**, so the runner and compare keep the refusal |
+| Runner's blank weight | a blank field and no explanation | *"No opening weight — nothing you have recorded points to this lift closely enough."* 🛑 **The field is still not filled** — a number here gets walked up to a bar |
+
+### D. 🚨 AND AN AGENT FOUND A REAL BUG ON THE LOGGING PATH
+
+The runner's own `derivedWeights` loop checked `rating.estimate` and `rating.confidence` and **never
+`rating.kind`** — so a fallback rating times a direct ratio could put a **three-hop weight into a
+field somebody loads a bar to.** That is the identical bug fixed in `exercise-estimate.js` on
+2026-09-02; it survived four days here because **the two files look like they do different jobs and
+do the same arithmetic.** Of the two places to have missed it, this was the worse one: that one puts
+a number on a screen somebody reads.
+
+Closed. ⚠️ **It can only ever withhold a suggestion, never raise one** — the same asymmetry the
+lay-off rule and `trainingRange()` rest on. Found by an agent reading the two modules side by side,
+which is the second time an agent reading a module against its own header has produced the best bug
+report of the day.
+
+### E. What was checked, and what it cost
+
+- **All seventeen suites green**, 967 render assertions (up 11), plus new sections in
+  `data-layer.test.mjs` and `estimate.test.mjs`.
+- **Two mutation checks**, both listed above.
+- 🆕 **THE BROWSER AUDIT WAS RUN TWICE, AND THE SECOND RUN IS THE POINT.** 128 routes, **11,912 text
+  nodes, zero overflow.** Eight contrast failures — and rather than assume they were pre-existing,
+  the same audit was run against a scratch copy built from `git archive HEAD`: **identical eight,
+  0 introduced today.** ⚠️ **They are real and they are not ours**: `.load-badge.per-side` — the 9px
+  "PER SIDE" chip in `js/ui.js:897` — measures **3.96:1 in the light theme** on the runner's swap and
+  exercises sheets. 🛑 **Not fixed: it is a colour, and colours are Tim's.** It also means the
+  handbook's "zero below 4.5:1" line is stale.
+- ⚠️ **A TRAP WORTH RECORDING: THE FIRST AUDIT RUN MEASURED 404 PAGES.** A stale `python -m
+  http.server` was already bound to port 8791, so the tool's own "nothing is serving" guard passed
+  while every route returned *"Error code: 404"* — 128 routes, 0 text nodes, **zero contrast failures
+  and zero overflow, which reads exactly like a clean sweep.** Every interactive step "failed" with a
+  sensible-looking message about the demo, which is what gave it away. **A green audit with a zero
+  node count is not a pass**, and the node count is the only thing that says so.
+
+---
+
 ## 2026-09-06 — EVERY BLANK AND EVERY REFUSAL, LISTED FOR TIM
 
 Open work 24, closed. Tim, 2026-09-04: *"if you want to give me a list of the places this does

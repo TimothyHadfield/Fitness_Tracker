@@ -1576,14 +1576,20 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     await st.clearAll();
     await st.saveSettings({ gender: 'male', birthYear: 1994, units: 'lbs' });
 
-    // ⚠️ A weigh-in is logged here on purpose, and the reason is worth knowing:
-    // WITHOUT one the map does not render at all. `profile.missing` includes
-    // body weight and muscleStrength() returns ready:false, so "you have logged
-    // pull-ups but we don't know what you weigh" is unreachable on this screen —
-    // by the time there is a panel to read, every bodyweight exercise with a
-    // published fraction is already counting. That message reaches the user on
-    // the GRAPH instead, which has no profile gate. The blocked list on the map
-    // therefore only ever carries the PERMANENT kind.
+    // ⚠️ A weigh-in is logged here on purpose, and the reason CHANGED ON
+    // 2026-09-06 while the line of code did not — which is the kind of stale
+    // comment this file exists to avoid, so it is rewritten rather than left.
+    //
+    // It used to read: "without one the map does not render at all", because
+    // `profile.missing` included body weight and muscleStrength() returned
+    // ready:false. That gate is gone — the map now ranks against lifters of
+    // every size and says so — so "you have logged pull-ups but we don't know
+    // what you weigh" IS reachable on this screen now, and the blocked list can
+    // carry the actionable kind as well as the permanent kind.
+    //
+    // The weigh-in stays because THIS block is about the permanent kind: it
+    // wants pull-ups counting normally, so that the only thing left in the
+    // blocked list is work nobody has ever measured.
     await st.logBodyWeight(180, '2026-08-01');
 
     const pullId = BUILT_IN_EXERCISES.find((e) => e.name === 'Pull-Up').id;
@@ -5259,6 +5265,98 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        was([ent('r', 'Run', [{ time: 400, distance: 1 }])]), []).length === 0,
      'time and distance are left alone — the app has no opinion on which direction of a mile is '
      + 'better (Rule 6)');
+}
+
+/* ================================================================== *
+ * RANKING SOMEBODY WHOSE PROFILE IS INCOMPLETE — 2026-09-06
+ *
+ * The map used to refuse the whole body over two missing settings, and
+ * docs/direction.md §3.1 reversed that: *"something is always better than
+ * nothing"*, with the half Tim kept being *"have a way to be upfront about it."*
+ *
+ * 🚨 THE ASSERTIONS THAT MATTER HERE ARE THE ONES ABOUT WHAT IS **NOT**
+ * INVENTED AND WHAT IS **NOT** PUBLISHED. Ranking on an assumption is only
+ * defensible while both of those hold, and neither is visible on screen:
+ * a guessed body weight would look exactly like a real one, and a friend
+ * reading a guessed grid has nothing to check it against.
+ * ================================================================== */
+{
+  const { withAssumptions, normalizeCompare } = await import('../js/strength-standards.js');
+  const { muscleStrength, buildStrengthShare } = await import('../js/store.js');
+
+  /* ---- what it does, and what it refuses to do ---- */
+  const bare = { gender: null, bodyWeight: null, age: 30, compare: null, missing: ['gender', 'body weight'] };
+  const a = withAssumptions(bare);
+
+  ok(a.gender === 'male' && a.assumed.includes('sex'),
+     'no sex on the profile assumes male, and SAYS it did — every median in MUSCLE_LIFTS is a '
+     + 'male/female pair and MALE_SHARE already records that lifters skew male, so it is the modal '
+     + 'answer rather than a value judgement');
+  ok(normalizeCompare(a.compare).weight === 'any' && a.assumed.includes('body weight'),
+     '🚨 NO BODY WEIGHT IS EVER INVENTED. A missing weigh-in widens the comparison to lifters of '
+     + 'every size — a real group that can be named truthfully — rather than standing the user next '
+     + 'to a made-up 180 lb man');
+  ok(!(a.bodyWeight > 0),
+     '⚠️ and the mutation guard for that: `bodyWeight` stays empty. The day somebody "helpfully" '
+     + 'fills it with REF_BW, the axis above still reads `any` and this is the only assertion that '
+     + 'would notice a number had been conjured');
+  ok(bare.gender === null && bare.bodyWeight === null,
+     'the input profile is not mutated — the assumption is for one render and must never leak back '
+     + 'toward anything that writes settings');
+  ok(a.missing.join() === 'gender,body weight',
+     '`missing` rides through untouched, so every screen that asks the user to fill the gap is '
+     + 'still asking');
+
+  const full = { gender: 'female', bodyWeight: 150, age: 30, compare: null, missing: [] };
+  const f = withAssumptions(full);
+  ok(f.assumed.length === 0 && f.gender === 'female' && f.bodyWeight === 150,
+     'a complete profile is handed back untouched and assumes NOTHING — the vacuity guard, because '
+     + 'a function that always claimed an assumption would pass every test above');
+  ok(normalizeCompare(f.compare).weight !== 'any',
+     'and it does not widen a comparison nobody asked to widen');
+
+  const sexOnly = withAssumptions({ gender: 'male', bodyWeight: 190, age: 30, compare: null, missing: [] });
+  ok(sexOnly.assumed.length === 0,
+     'the two gaps are independent: a profile with both fields assumes neither');
+
+  /* ---- the map really does rank now ----
+     Seeded from scratch rather than inherited: this block runs last, and what
+     the store happens to hold by then is whatever the section above it left. */
+  await store.clearAll();
+  await store.saveSettings({ gender: null, birthYear: 1994, units: 'lbs' });
+  await store.logBodyWeight(180, '2026-08-01');
+  await store.saveSession({
+    workoutId: 'w1', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: byName('Barbell Bench Press').id,
+                exerciseName: 'Barbell Bench Press',
+                sets: [{ weight: 185, reps: 5 }, { weight: 205, reps: 3 }] }],
+  });
+
+  const noSex = await muscleStrength();
+  ok(noSex.ready === true && noSex.muscles.size > 0,
+     '🚨 THE HEADLINE: with no sex on file the map RANKS instead of returning nothing. Before '
+     + '2026-09-06 this was `ready:false` and an account holding a year of sets was shown "Tell us '
+     + 'about you first" and not one number');
+  ok((noSex.profile.assumed || []).includes('sex'),
+     'and the profile it hands back is the one the colours were actually computed against, carrying '
+     + 'the list of what had to be assumed — a screen cannot state a comparison group the numbers '
+     + 'were not built from');
+
+  /* ---- 🚨 and it is never published ---- */
+  ok(await buildStrengthShare() === null,
+     '🚨 AN ASSUMED MAP IS NEVER PUBLISHED TO A FRIEND. This is the load-bearing assertion of the '
+     + 'whole change: js/shared-map.js cannot recompute a percentile (body weight is deliberately '
+     + 'not in a public document), so a reader would get 24 rows built on a guessed sex with no way '
+     + 'to check any of them, and nowhere for the caveat to travel to');
+
+  await store.saveSettings({ gender: 'male' });
+  const restored = await muscleStrength();
+  ok(restored.ready === true && (restored.profile.assumed || []).length === 0,
+     'putting the sex back assumes nothing again');
+  ok(await buildStrengthShare() !== null,
+     '⚠️ THE VACUITY GUARD FOR THE REFUSAL ABOVE — with a real profile it publishes. Without this, '
+     + 'a buildStrengthShare() that had been broken into returning null forever would pass the '
+     + 'assertion above and look like a safety feature');
 }
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);

@@ -201,13 +201,38 @@ export async function SessionView(workoutId) {
    * Below either, no weight is offered and the screen says the field is theirs
    * to fill in.
    *
-   * ⚠️ DIRECT contributions only, never a fallback. A fallback is one muscle
-   * standing in for another and is the weakest reading in the table.
+   * 🚨 AND SINCE 2026-09-06 IT SAYS SO IN WORDS — `openingWithheld` below.
+   * THE GATES DID NOT MOVE AND MUST NOT: a number on this screen gets walked up
+   * to a bar and attempted, which is the whole of "an estimate you read is not
+   * an estimate you lift" (js/exercise-estimate.js's header). What changed is
+   * only that a field left blank BECAUSE THE APP LOOKED AND WOULD NOT STAND
+   * BEHIND A NUMBER now reads as a decision rather than as nothing having
+   * happened — the same argument `historyForPerson()` already carries: *"no
+   * suggestion" for a reason you cannot see reads as broken.* Tim's §3.1 is
+   * satisfied by the label, not by filling the field: he kept the half that
+   * says *"have a way to be upfront about it."*
+   *
+   * ⚠️ DIRECT contributions only, never a fallback — and since 2026-09-06, the
+   * RATING may not be a fallback either. Those are two different doors into the
+   * same room: one is this exercise reaching its muscle through a stand-in, the
+   * other is that muscle having no direct evidence of its own. Either way it is
+   * one muscle standing in for another, the weakest reading in the table, and
+   * the second door was open until the check below closed it.
    *
    * Fire-and-forget: every failure yields an empty map and the runner opens on
    * reps alone, which is exactly what it did before this existed.
    */
   const derivedWeights = new Map();
+  /* Exercises the block below LOOKED AT and declined to put a weight on.
+   *
+   * ⚠️ IT IS NOT "everything missing from `derivedWeights`", and the difference
+   * is the whole point of the second map. An exercise with no weight field was
+   * never a candidate; a thrown import or a failed `muscleStrength()` means the
+   * app never got as far as an opinion. Neither of those may claim on screen
+   * that the evidence was weighed — so both leave this set empty and the runner
+   * stays as silent as it was before. Only the paths below the weight check
+   * add to it, and every one of them is the app declining. */
+  const openingWithheld = new Set();
   try {
     const [{ muscles }, ev, e1] = await Promise.all([
       muscleStrength(),
@@ -221,14 +246,37 @@ export async function SessionView(workoutId) {
       const best = contribs
         .filter((c) => c.kind === 'direct' && c.quality >= ev.FALLBACK_MIN_QUALITY)
         .sort((a, b) => b.quality - a.quality)[0];
-      if (!best) continue;
+      if (!best) { openingWithheld.add(ex.id); continue; }
       const rating = muscles.get(best.muscle);
-      if (!rating || !(rating.estimate > 0) || !(rating.confidence >= 0.35)) continue;
+      if (!rating || !(rating.estimate > 0) || !(rating.confidence >= 0.35)) {
+        openingWithheld.add(ex.id); continue;
+      }
+      /* 🚨 AND THE RATING ITSELF MUST NOT BE A STAND-IN — closed 2026-09-06,
+       * and it was open on the ONE path where it mattered most.
+       *
+       * The filter above refuses a fallback CONTRIBUTION: this exercise may not
+       * reach its muscle through one. But `rateMuscle()` has a fallback of its
+       * own — `kind: 'fallback'` means that muscle had no direct evidence at all
+       * and a compound stood in for it, converted across by a published
+       * cross-muscle ratio. Reading `rating.estimate` without looking at
+       * `rating.kind` let the whole chain through the back door: an observation,
+       * times a cross-muscle ratio, times this exercise's ratio.
+       *
+       * ⚠️ THIS IS THE IDENTICAL BUG FIXED IN `exercise-estimate.js` ON
+       * 2026-09-02, and it survived here for four days because the two files
+       * look like they do different jobs and do the same arithmetic. That one
+       * puts a number on a screen somebody READS. This one puts a number in a
+       * field somebody LOADS A BAR TO — so of the two places to have missed it,
+       * this was the worse one. Found by an agent reading the two side by side.
+       *
+       * ⚠️ It can only ever WITHHOLD a suggestion, never raise one, which is the
+       * same asymmetry the lay-off rule and `trainingRange()` are built on. */
+      if (rating.kind === 'fallback') { openingWithheld.add(ex.id); continue; }
       // `ratio` is this exercise's load as a fraction of the muscle's key lift,
       // and it is in TOTAL load — so a per-side entry halves on the way out.
       const oneRepTotal = rating.estimate * best.ratio;
       const forTen = e1.weightForReps(oneRepTotal, DEFAULT_REPS);
-      if (!(forTen > 0)) continue;
+      if (!(forTen > 0)) { openingWithheld.add(ex.id); continue; }
       const shown = ex.loadType === 'per_side' ? forTen / 2 : forTen;
       derivedWeights.set(ex.id, { weight: shown, from: best.muscle });
     }
@@ -332,6 +380,13 @@ export async function SessionView(workoutId) {
         // 'derived' | 'reps' | null — see startingSet().
         opening: opening ? opening.how : null,
         openingFrom: opening ? opening.from : null,
+        /* Whether the blank weight field is a DECISION rather than an absence.
+         * ⚠️ Only meaningful with no history — with history the field is not
+         * blank, it holds last time's numbers — so the note that reads this is
+         * gated on `hadHistory` as well. A draft written before this existed has
+         * no key at all, which reads as false and keeps the screen silent: the
+         * correct answer for a session whose suggestions were never weighed. */
+        openingWithheld: openingWithheld.has(ex.id),
       });
     }
     return out;
@@ -1610,6 +1665,61 @@ export async function SessionView(workoutId) {
       entry.hadHistory
         ? el('div', { class: 'prefill-note' }, icon('check', 16),
             el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
+        : null,
+
+      /* 🚨 THE OTHER HALF OF THAT SENTENCE: WHY THERE IS NO NUMBER (2026-09-06).
+       *
+       * "Last time" above is the one line that says where the numbers in front
+       * of you came from. On a lift nobody here has ever done there are no
+       * numbers, and until now there was also nothing said — which is the exact
+       * failure `historyForPerson()` names further up this file: *"no
+       * suggestion" for a reason you cannot see reads as broken.* A blank weight
+       * box is indistinguishable from a bug, and the app HAD a reason.
+       *
+       * 🛑 IT LABELS, IT DOES NOT FILL. The opening-weight gates (ratio quality
+       * ≥ 0.45, muscle confidence ≥ 0.35) are untouched and stay untouched: this
+       * number would be walked up to a bar. Tim's §3.1 asks for a best-effort
+       * number where one can be stood behind and for the app to be *"upfront
+       * about it"* where one cannot — this is the second case, and being upfront
+       * is the whole of what is owed here.
+       *
+       * ⚠️ IT IS ALSO PROSE ON THE SCREEN TIM TOOK PROSE OFF, so the tension is
+       * stated rather than hidden. What he removed on 2026-08-31 (see the block
+       * directly above) EXPLAINED NUMBERS THAT WERE THERE — a suggestion, its
+       * reasoning, a toggle. This explains a number that is NOT there, appears
+       * only in the case where the box is empty, and is one line. If he wants it
+       * gone it is one node; the gates it describes are what must not move.
+       *
+       * ⚠️ FIVE CONDITIONS, AND EACH REMOVES A WAY OF LYING:
+       *   • the OWNER is the one being recorded for. `derivedWeights` is built
+       *     from `muscleStrength()`, which is the owner's own training — the
+       *     prefill has always been the owner's and a guest inherits it, but a
+       *     SENTENCE saying "nothing you have recorded" would put that
+       *     inheritance into words and get it wrong. Whose numbers a guest's
+       *     screen is using is already answered by the `for-note` above.
+       *   • `!hadHistory`  — with history the field is not blank at all.
+       *   • `openingWithheld` — the app actually looked and declined. An import
+       *     that threw never had an opinion and may not claim one.
+       *   • a weight field — nothing to explain on a lift that has no weight.
+       *   • nothing typed  — the moment a real number is in any set this is a
+       *     note about a box that is no longer empty. Read from the sets rather
+       *     than from `prefilled`, because that flag is cleared on the first
+       *     keystroke and this must also stay away from a set restored from a
+       *     draft somebody had already filled in.
+       *
+       * ⚠️ RULE 7 — NOTHING MOVES ON THE LOGGING PATH. This is a static line in
+       * the slot "Last time" would occupy, and it is drawn by `renderPane()`
+       * only. Typing into a stepper goes through `syncSetValues()` in place and
+       * does not re-render the pane, so the line cannot vanish out from under a
+       * thumb mid-set and shove the set list up; it is simply gone the next time
+       * this exercise is drawn. */
+      state.forName == null
+        && !entry.hadHistory
+        && entry.openingWithheld
+        && entry.fields.includes('weight')
+        && !entry.sets.some((s) => Number(s.weight) > 0)
+        ? el('div', { class: 'session-ex-meta', text:
+            'No opening weight — nothing you have recorded points to this lift closely enough.' })
         : null,
 
       // The add button rides on the "Sets" heading rather than sitting under the
@@ -3049,6 +3159,29 @@ export async function BenchmarkView() {
 
   // What the app thinks this lift is worth, before a single number is typed.
   let est = null;
+
+  /* 🚨 THE ONE CALLER IN THE APP THAT ASKS FOR A STAND-IN RATING, AND THE FLAG
+   * LIVES HERE RATHER THAN AT THE TWO CALL SITES SO THERE IS ONE THING TO GREP.
+   *
+   * `estimateOneRM()` refuses by default when the muscle it would convert
+   * through has no direct evidence of its own — three estimates multiplied is
+   * the chain that module's header spends thirty lines arguing against, and it
+   * is still the default for every other caller: the runner's opening weight
+   * (js/views-session.js, `derivedWeights`) and the compare screen
+   * (js/views-social.js, `friendEstimates`) both leave it alone.
+   *
+   * ⚠️ WHY THIS SCREEN IS DIFFERENT, IN ONE SENTENCE: nothing here is loaded
+   * onto a bar. This is a number somebody reads while deciding what to attempt,
+   * on Tim's instruction that a labelled best-effort number beats a blank
+   * (docs/direction.md §3.1) — and the half of that instruction he kept is
+   * *"have a way to be upfront about it"*, which is `renderEstimate()`'s job
+   * below and is not optional. The runner's field is the opposite case and JOB B
+   * of this change deliberately left it empty.
+   *
+   * ⚠️ AND IT IS OPT-IN, NOT A LOOSENING. Without this object the refusal is
+   * exactly what it was; the estimate that comes back is flagged `viaFallback`,
+   * its confidence is multiplied down a third time and its band is capped. */
+  const ESTIMATE_OPTS = { allowFallback: true };
   // Set by renderSteppers(), so the estimate landing late can repaint them.
   let repaintCaptions = () => {};
 
@@ -3063,7 +3196,7 @@ export async function BenchmarkView() {
         exBtn.querySelector('.row-title').textContent = ex.name;
         exBtn.querySelector('.row-sub').textContent =
           `${ex.muscle} · ${ex.equipment}${ex.loadType ? ' · weight ' + LOAD_LABEL[ex.loadType] : ''}`;
-        est = muscles ? estimateOneRM(ex, muscles, bodyWeight) : null;
+        est = muscles ? estimateOneRM(ex, muscles, bodyWeight, ESTIMATE_OPTS) : null;
         renderEstimate();
         renderSteppers();
         submitBtn.disabled = false;
@@ -3076,7 +3209,7 @@ export async function BenchmarkView() {
          * estimate over the new one's. */
         ratingsReady.then(() => {
           if (!muscles || !state.exercise || state.exercise.id !== ex.id) return;
-          est = estimateOneRM(state.exercise, muscles, bodyWeight);
+          est = estimateOneRM(state.exercise, muscles, bodyWeight, ESTIMATE_OPTS);
           renderEstimate();
           repaintCaptions();
         });
@@ -3112,6 +3245,14 @@ export async function BenchmarkView() {
       // picked yet; the history has been read and this lift cannot be reached
       // from it; or the read has not finished. Saying "nothing converts to it"
       // while still working would be a claim the app has not checked.
+      //
+      // ⚠️ AND THE MIDDLE ONE IS NARROWER THAN IT LOOKS NOW. Since this screen
+      // passes `allowFallback`, a muscle known only through a stand-in no longer
+      // lands here — it gets a number and the sentence below. What still reaches
+      // this line is a lift with no direct contribution at all, a custom
+      // exercise, a bodyweight lift with no weigh-in, or a muscle with no rating
+      // of any kind, which is Tim's own "you can't compare" case. The claim is
+      // unchanged and still true; the population it describes is smaller.
       setChildren(estLine,
         el('div', { class: 'field-help', text:
           !state.exercise ? 'Pick an exercise.'
@@ -3129,12 +3270,29 @@ export async function BenchmarkView() {
       ),
       el('div', { class: 'bench-est-note', text:
         `Estimated 1-rep max${est.perSide ? ' per side' : ''} · ${est.band.name.toLowerCase()} confidence` }),
+      /* 🚨 THE FALLBACK BRANCH IS FIRST, AND THAT ORDER IS LOAD-BEARING. An
+       * exercise can BE its muscle's key lift while that muscle's rating is
+       * itself a stand-in — `isKeyLift` and `viaFallback` are both true, and
+       * checking `isKeyLift` first would print "nothing here was converted" over
+       * a number that was converted twice. That is the exact failure Rule 5
+       * names: an inference wearing a measurement's clothes.
+       *
+       * ⚠️ IT NAMES BOTH HOPS BY NAME, because a reader cannot judge a chain
+       * they cannot see: which muscle stood in for which, and which exercise the
+       * stand-in was then converted into. The confidence band above is capped at
+       * Fair for exactly this case, so the words and the label agree. */
       el('div', { class: 'field-help', text:
-        est.isKeyLift
-          ? `Worked out from ${from} — nothing here was measured on this lift at a single rep.`
-          : `Worked out ${from}, converted through ${est.muscle.toLowerCase()}. `
-            + 'A conversion between exercises is an estimate on top of an estimate, which is what '
-            + 'the confidence above is about.' }),
+        est.viaFallback
+          ? `Nothing you have recorded trains ${est.muscle.toLowerCase()} directly, so ${from}`
+            + `${est.standIn ? ` — ${est.standIn.toLowerCase()} work — ` : ' '}`
+            + `stood in for it, and that stand-in was then converted into ${state.exercise.name}. `
+            + 'Two conversions on top of your own sets: a rough marker, not a target. '
+            + `Any direct ${est.muscle.toLowerCase()} exercise would rate it properly.`
+          : est.isKeyLift
+            ? `Worked out from ${from} — nothing here was measured on this lift at a single rep.`
+            : `Worked out ${from}, converted through ${est.muscle.toLowerCase()}. `
+              + 'A conversion between exercises is an estimate on top of an estimate, which is what '
+              + 'the confidence above is about.' }),
     );
   }
 

@@ -6000,6 +6000,89 @@ ok(!data.querySelector('.rep-target'),
   await store.clearAll();
 }
 
+/* ================================================================== *
+ * THE BLANKS THAT BECAME NUMBERS — 2026-09-06, docs/direction.md §3.1
+ *
+ * Tim: *"something is always better than nothing"*, with the half he kept being
+ * *"have a way to be upfront about it."* Four screens used to refuse where they
+ * were holding the numbers. Each assertion below is paired with the thing that
+ * must NOT have happened — a screen that started guessing instead of widening,
+ * or a gate that came off where it was load-bearing.
+ * ================================================================== */
+{
+  const { GraphView } = await import(BASE + 'views-data.js');
+  const { GoalsView } = await import(BASE + 'views-goals.js');
+  const { store } = await import(BASE + 'store.js');
+  const text = (n) => n.textContent.replace(/\s+/g, ' ');
+  const tab = (root, name) => [...root.querySelectorAll('.seg')].find((b) => b.textContent === name);
+
+  await store.clearAll();
+  await store.saveSettings({ units: 'lbs' });          // no gender, no weigh-in
+  const bp = byName('Barbell Bench Press');
+  await store.saveSession({
+    workoutId: 'w1', workoutName: 'Push', date: '2026-08-10',
+    entries: [{ exerciseId: bp.id, exerciseName: bp.name,
+                sets: [{ weight: 185, reps: 5 }, { weight: 205, reps: 3 }] }],
+  });
+
+  /* ---- the muscle map ranks, and says what it had to assume ---- */
+  let d = await mount(GraphView());
+  tab(d, 'Muscles').click();
+  await settle(); await settle();
+  const m = text(d);
+
+  ok(Boolean(d.querySelector('svg')),
+     '🚨 THE HEADLINE: with no sex and no weigh-in the body is DRAWN. This screen used to be two '
+     + 'sentences and a button over an account holding recorded sets');
+  ok(/assumed male/i.test(m),
+     'and it says the sex was assumed — the label is the whole permission for the number');
+  ok(/every size/i.test(m),
+     '🚨 NO INVENTED BODY WEIGHT. A missing weigh-in widens the comparison to lifters of every '
+     + 'size, which is a real group; the alternative was standing the user beside a made-up 180 lb '
+     + 'man and never saying so');
+  ok(!/180 ?lb/.test(m),
+     '⚠️ the mutation guard for that — no reference weight is printed as if it were theirs');
+  ok(Boolean(d.querySelector('a[href="#/profile"]')),
+     'and the way to replace the assumption with the truth is still one tap away');
+
+  /* ---- 🛑 but Goals still refuses, and that is deliberate ---- */
+  const g = await mount(GoalsView());
+  ok(/gender|body weight/i.test(text(g)) && Boolean(g.querySelector('a[href="#/profile"]')),
+     '🛑 GOALS KEEPS THE GATE THE MAP GAVE UP, and this is a regression test for a trap rather '
+     + 'than a leftover: a goal FREEZES its target weight when set (D20), so a goal set against an '
+     + 'assumed sex would carry that assumption for twelve weeks after the profile was filled in '
+     + 'and every other screen had stopped mentioning it. The map is a reading and is relabelled; '
+     + 'a goal is not');
+
+  /* ---- Volume states a rate over a short window, and names the window ---- */
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-08-01');
+  d = await mount(GraphView());
+  tab(d, 'Volume').click();
+  await settle(); await settle();
+  const v = text(d);
+  ok(/\/ ?wk/.test(v),
+     'Volume states sets a WEEK even on a few days of history — it used to print raw totals under a '
+     + 'heading that had changed while the thresholds had not');
+  ok(/\d+ days?/.test(v),
+     'and names the span it measured over, because a rate from five days is a real number and a '
+     + 'settled one is a different claim');
+
+  /* ---- one recording is a number, not an empty state ---- */
+  tab(d, 'Graph').click();
+  await settle(); await settle();
+  const gr = text(d);
+  ok(/One recording so far/i.test(gr) || /205|185/.test(gr),
+     'a lift recorded on one day shows what was recorded rather than "nothing to chart"');
+  ok(!/^\s*$/.test(gr) && (!/One recording so far/i.test(gr) || /~/.test(gr)),
+     'and when it says so it prints the estimated max beside it, marked with ~ as an estimate');
+  ok(!/One point is not a line/i.test(gr) || !gr.includes('trend line'),
+     '⚠️ and draws no line through one point — Rule 5, an inference must not look like a '
+     + 'measurement, and one point has no trend to show');
+
+  await store.clearAll();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

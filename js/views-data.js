@@ -1,9 +1,9 @@
 // Calendar, day detail, graphs, settings.
 
 import {
-  store, auth, social, seriesForExercise, chartableExercises, activityByDate, todayISO, benchmarkComparison,
+  store, auth, social, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL, currentBests,
-  CLOUD_WARN_AT, weeklyVolumeByMuscle,
+  CLOUD_WARN_AT, weeklyVolumeByMuscle, weightRepObservations,
 } from './store.js';
 import {
   hypertrophyTier, strengthTier, INDIRECT_NOTE_WEEKLY, SESSION_CEILING,
@@ -12,7 +12,7 @@ import {
 import { bodySvg, setSelected, MAPPED_MUSCLES, BODY_ASPECT } from './body-map.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
-  clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
+  clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS, e1rm,
 } from './e1rm.js';
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
@@ -771,9 +771,14 @@ function pickSource(opt) {
 export async function GraphView(opts = {}) {
   const rows = opts.rows || null;
   const subject = opts.subject || null;
-  const [options, comparison, bwPoints, bests] = await Promise.all([
-    chartableExercises(2, rows), benchmarkComparison(2, rows),
-    bodyWeightSeries(rows), currentBests(rows),
+  /* ⚠️ `benchmarkComparison()` USED TO BE READ HERE AND IS NOT ANY MORE. Bars is
+   * no longer benchmarks-only — it builds its rows through `pickSource()` so a
+   * lift with workout sets and no benchmarks can still be compared — and two
+   * comparison builders over one screen is two answers the day either changes.
+   * The store getter is left exported: it is a fair question to ask and nothing
+   * about it was wrong, it just is not the only question this tab asks. */
+  const [options, bwPoints, bests] = await Promise.all([
+    chartableExercises(2, rows), bodyWeightSeries(rows), currentBests(rows),
   ]);
 
   // ONE weigh-in is enough to normalise a pull-up, where TWO are needed to draw
@@ -900,12 +905,42 @@ export async function GraphView(opts = {}) {
     if (points.length < 2) {
       // One point is not a line, but it IS a measurement. Show it.
       const one = points[0];
-      setChildren(host, emptyState(
-        'One recording so far',
-        one
-          ? `${fmtField(graphChoice.field, one.value)} on ${fmtDateShort(one.date)}. `
-            + 'Record it on another day and this becomes a line.'
-          : 'Record this exercise on another day to see a line.'));
+      if (!one) {
+        setChildren(host, emptyState('Nothing to chart from this source',
+          `No ${SOURCE_LABEL[source].toLowerCase()} recorded for this exercise yet.`));
+        return;
+      }
+      /* 🚨 THE ESTIMATE IS BUILT FROM THE SAME SOURCE AND THE SAME DAY as the
+       * value printed above it. `currentBests()` was the tempting shortcut and
+       * it is the wrong one here: it ranks benchmarks and workout sets together
+       * on purpose, so a chart showing a workout set would have printed a max
+       * computed from a benchmark and said nothing about the swap — precisely
+       * the mixing Rule 4 / D14 forbids, arriving through the back door.
+       *
+       * ⚠️ There may be no pair to estimate from at all — a plank, a run, a
+       * carry — and that is a stated outcome rather than a gap: the recording
+       * and its day are still shown, and `est` simply stays null. */
+      const sameDay = (await weightRepObservations(opt.id, source, rows))
+        .filter((o) => o.date === one.date);
+      let top = null;
+      for (const o of sameDay) {
+        if (!top || (e1rm(o.weight, o.reps) || 0) > (e1rm(top.weight, top.reps) || 0)) top = o;
+      }
+      setChildren(host, oneRecordingState({
+        // ⚠️ `units.withUnit` for a weight, `fmtField` for everything else, and
+        // that is not fussiness: FIELD_META hard-codes "lbs" while the estimated
+        // max beside it goes through the user's chosen unit. One sentence
+        // reading "120 lbs … ~81 kg max" is a sentence nobody can act on.
+        setText: graphChoice.field === 'weight'
+          ? units.withUnit(one.value)
+          : fmtField(graphChoice.field, one.value),
+        date: one.date,
+        source,
+        est: top ? e1rm(top.weight, top.reps) : null,
+        estFrom: top
+          ? `${units.withUnit(top.weight)}${opt.loadType === 'per_side' ? '/side' : ''} × ${top.reps} that day`
+          : '',
+      }));
       return;
     }
 
@@ -963,9 +998,25 @@ export async function GraphView(opts = {}) {
 
     const points = await normalizedSeries(opt.id, target, source, rows);
     if (points.length < 2) {
-      setChildren(host, emptyState('Only one data point',
-        `Record this exercise with a weight and a rep count on another day to see a line. `
-        + `Showing ${SOURCE_LABEL[source].toLowerCase()} only.`));
+      const p = points[0];
+      /* ⚠️ THE SET AS IT WAS RECORDED, NOT THE NORMALISED VALUE. Every point on
+       * this chart is a weight restated at the target rep count, and for a set
+       * that was not performed at that count the restated weight is itself an
+       * estimate. With one point there is nothing to compare it against, so
+       * printing it would be an estimate standing in for the measurement —
+       * Rule 5 the wrong way round. `p.weight × p.reps` is what was lifted; the
+       * estimated max beside it is the derived number, and it is labelled. */
+      setChildren(host, p
+        ? oneRecordingState({
+            setText: `${units.withUnit(p.weight)}${opt.loadType === 'per_side' ? '/side' : ''} × ${p.reps}`,
+            date: p.date,
+            source,
+            est: e1rm(p.weight, p.reps),
+            estFrom: 'that set',
+          })
+        : emptyState('Nothing to chart from this source',
+            `No ${SOURCE_LABEL[source].toLowerCase()} with both a weight and a rep count `
+            + 'recorded for this exercise yet.'));
       return;
     }
 
@@ -1024,23 +1075,154 @@ export async function GraphView(opts = {}) {
     fillChart(plot, bwPoints, 'weight', 'Body weight over time');
   }
 
-  /* ---------- compare (paired bars, benchmarks only) ---------- */
+  /* ---------- compare (paired bars) ---------- */
 
-  function renderCompare() {
-    if (!comparison.fields.length) {
+  /**
+   * Where each lift started and where it is now — ONE SOURCE PER LIFT.
+   *
+   * 🚨 IT USED TO BE BENCHMARKS ONLY, AND THAT LEFT THE TAB BLANK FOR ALMOST
+   * EVERYBODY. `benchmarkComparison()` needs the same exercise benchmarked on
+   * two different days; most people never record a benchmark at all, so Bars
+   * fell through to bestsPane() while the app held months of workout sets that
+   * answer exactly the question the screen asks. docs/direction.md §3.1 — a
+   * clearly-labelled best-effort number beats a blank.
+   *
+   * 🚨 ONE SOURCE PER ROW, AND THE ROW SAYS WHICH (Rule 4 / D14). A row whose
+   * "First" is a benchmark and whose "Now" is a mid-workout set is the mixing
+   * that rule exists to stop: a benchmark is taken fresh and a workout set comes
+   * after everything else the session did, so the pair would read as strength
+   * swinging when nothing had happened but a change of measuring instrument.
+   * The guarantee here is structural rather than a check — every row is built
+   * from ONE call to `seriesForExercise`/`normalizedSeries` with an explicit
+   * `source`, and those never return the other one's readings. A lift whose
+   * picked source cannot supply two days is dropped rather than patched from
+   * the other; the source is then named on the row itself.
+   *
+   * ⚠️ WHICH SOURCE IS `pickSource()` — the Graph's own picker, not a second
+   * rule. Whichever has more days to draw, ties to benchmarks, and an explicit
+   * tap on the Graph's source chips wins here too. Two tabs reading one body of
+   * data must not disagree about which half of it they are reading.
+   */
+  async function sourcedComparison() {
+    // Fixed order, so the field chips do not reshuffle with whatever the walk
+    // happened to see first.
+    const FIELD_ORDER = ['weight', 'reps', 'time', 'distance'];
+    const byField = {};
+    const covered = new Set();
+
+    const mkRow = (opt, src, pts, atReps) => {
+      const first = pts[0], last = pts[pts.length - 1];
+      return {
+        id: opt.id,
+        name: opt.name,
+        loadType: opt.loadType,
+        source: src,
+        atReps,
+        // Only a normalised series has anything to be estimated ABOUT: a raw
+        // field is the number that was written down.
+        startActual: atReps ? first.actual !== false : true,
+        nowActual: atReps ? last.actual !== false : true,
+        start: first.value,
+        startDate: first.date,
+        now: last.value,
+        nowDate: last.date,
+        delta: last.value - first.value,
+        pct: first.value === 0 ? null : ((last.value - first.value) / Math.abs(first.value)) * 100,
+        count: pts.length,
+      };
+    };
+
+    // Everything one source can say about one exercise. Returns [] rather than
+    // reaching for the other source — that decision belongs to the caller, and
+    // it is the decision that keeps a row unmixed.
+    const fromSource = async (opt, src) => {
+      const s = opt.sources[src];
+      if (!s) return [];
+      const out = [];
+
+      if (s.normalizable) {
+        // The same rep target the Graph is using for this exercise and source,
+        // seeded from the modal rep count the first time either tab asks.
+        const key = opt.id + '|' + src;
+        let target = targetReps.get(key);
+        if (target == null) {
+          target = clampReps(await defaultTargetReps(opt.id, src, rows)) || 10;
+          targetReps.set(key, target);
+        }
+        const pts = await normalizedSeries(opt.id, target, src, rows);
+        if (pts.length >= 2) out.push(['weight', mkRow(opt, src, pts, target)]);
+      }
+
+      for (const f of s.fields) {
+        // Once weight is compared at a fixed rep count, the raw weight and the
+        // bare rep count are each half of a result — "reps went 10 → 4" is not
+        // an answer. The same suppression `benchmarkComparison()` makes.
+        if (s.normalizable && (f === 'weight' || f === 'reps')) continue;
+        const pts = await seriesForExercise(opt.id, f, src, rows);
+        if (pts.length >= 2) out.push([f, mkRow(opt, src, pts, null)]);
+      }
+      return out;
+    };
+
+    for (const opt of options) {
+      // Picked source first; the other usable one only if the picked one has
+      // nothing to say at all. Never both — see the block comment.
+      const picked = pickSource(opt);
+      const order = [picked, ...opt.usableSources.filter((s) => s !== picked)];
+      for (const src of order) {
+        const built = await fromSource(opt, src);
+        if (!built.length) continue;
+        for (const [f, row] of built) {
+          if (!byField[f]) byField[f] = [];
+          byField[f].push(row);
+          covered.add(row.id);
+        }
+        break;
+      }
+    }
+
+    // Biggest movers first — the chart's job is to show change.
+    for (const f of Object.keys(byField)) byField[f].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+    return {
+      fields: FIELD_ORDER.filter((f) => byField[f]),
+      byField,
+      // Lifts the app holds a number for and still cannot compare: one recorded
+      // day. Counted off `bests`, which is every lift with anything at all.
+      pending: (bests || []).filter((b) => !covered.has(b.id)).length,
+    };
+  }
+
+  /* ⚠️ REBUILT ONLY WHEN THE SOURCE OR REP-TARGET CHOICES HAVE MOVED. Those are
+   * module-level maps the Graph tab writes to, so a cache with no key goes stale
+   * the moment somebody taps a source chip and comes back — and rebuilding on
+   * every field-chip tap walks every exercise again for a list that cannot have
+   * changed. The signature is taken AFTER the build because the build itself
+   * seeds `targetReps`; taking it before guarantees a miss on the next call. */
+  let compareCache = null;
+  const compareSig = () => JSON.stringify([[...sourceChoice], [...targetReps]]);
+
+  async function renderCompare() {
+    if (!compareCache || compareCache.key !== compareSig()) {
+      const data = await sourcedComparison();
+      compareCache = { key: compareSig(), data };
+    }
+    const cmp = compareCache.data;
+
+    if (!cmp.fields.length) {
       setChildren(top);
       setChildren(host, bestsPane(bests,
-        'This compares your first benchmark against your latest, so it needs the same exercise '
-        + 'benchmarked on two different days. Until then, here is where everything stands.'));
+        'A bar needs the same lift recorded on two different days — as a benchmark, or in a '
+        + 'workout. Until then, here is where everything stands.'));
       return;
     }
-    if (!compareField || !comparison.fields.includes(compareField)) compareField = comparison.fields[0];
-    const rows = comparison.byField[compareField];
+    if (!compareField || !cmp.fields.includes(compareField)) compareField = cmp.fields[0];
+    const barRows = cmp.byField[compareField];
 
     setChildren(top,
       el('div', { class: 'control-row' },
-        comparison.fields.length > 1
-          ? el('div', { class: 'chips tight' }, comparison.fields.map((f) =>
+        cmp.fields.length > 1
+          ? el('div', { class: 'chips tight' }, cmp.fields.map((f) =>
               el('button', {
                 class: 'chip', 'aria-pressed': String(f === compareField),
                 text: FIELD_META[f].label,
@@ -1054,16 +1236,22 @@ export async function GraphView(opts = {}) {
       ),
     );
 
-    const note = comparison.incomplete[compareField];
-    const anyNormalized = rows.some((r) => r.atReps);
+    const anyNormalized = barRows.some((r) => r.atReps);
+    const usedSources = [...new Set(barRows.map((r) => r.source))];
     setChildren(host,
-      barChart(rows, compareField),
+      barChart(barRows, compareField),
       el('div', { class: 'chart-foot' },
         el('div', { class: 'chart-caption' },
           el('span', {
-            text: 'Benchmarks only'
+            // ⚠️ THE CAPTION SAYS THE RULE, THE ROW SAYS THE ANSWER. When every
+            // row happens to come from one source the caption can state it
+            // outright; when they differ, the only honest sentence up here is
+            // that no row mixes them, and the label on each row carries which.
+            text: (usedSources.length === 1
+              ? `${SOURCE_LABEL[usedSources[0]]} only`
+              : 'One source per lift, never mixed — each row says which')
               + (anyNormalized ? ' · @N reps means weight compared at that rep count, faded bars estimated' : '')
-              + (note ? ` · ${note} more need a second benchmark` : ''),
+              + (cmp.pending ? ` · ${cmp.pending} more need a second recorded day` : ''),
           })),
       ),
     );
@@ -1094,7 +1282,7 @@ export async function GraphView(opts = {}) {
       if (opts.musclesExtra) host.append(opts.musclesExtra);
     } else if (mode === 'volume') {
       await renderVolumePane(host, top, { rows: rows && rows.sessions, subject });
-    } else if (mode === 'compare') renderCompare();
+    } else if (mode === 'compare') await renderCompare();
     else if (mode === 'research') await renderResearchPane(host, top);
     else if (mode === 'calendar') await renderCalendarPane(host, top, { rows, subject });
     else await renderTrend();
@@ -1205,12 +1393,50 @@ function bestSetText(b) {
   return '—';
 }
 
-/* ---- paired horizontal bars: first benchmark vs latest ---- */
+/* ---- one recording: the number, not a blank ---- */
+//
+// 🚨 A SINGLE RECORDING IS A MEASUREMENT, AND BOTH CHART BRANCHES USED TO THROW
+// IT AWAY. "One recording so far" and "Only one data point" printed an empty
+// pane while the app was holding the weight, the reps and the day it was lifted
+// — the same fault bestsPane() was written for in 2026-08-17, surviving one
+// level further in. docs/direction.md §3.1: *"something is always better than
+// nothing"*, with the half Tim kept being *"have a way to be upfront about it"*.
+//
+// 🛑 STILL NO LINE, AND NO TREND THROUGH ONE POINT. Drawing a shape out of one
+// reading invents the shape — Rule 5, an inference must never look like a
+// measurement — so this is text, and it says so out loud rather than leaving
+// the absence of a chart to imply it.
+//
+// ⚠️ THE ESTIMATE IS LABELLED THE WAY bestsPane() LABELS ONE: the tilde, the
+// word estimate, and the set the model was fed named beside it. `estFrom` is
+// required rather than optional for that reason — an estimated max whose input
+// is not on the screen is indistinguishable from one the app made up.
+//
+// ⚠️ AND `source` IS NAMED ON IT. The caller has already picked one source and
+// this number came from that source alone; saying which is what keeps it from
+// reading as "your best, from everywhere" (Rule 4 / D14).
+function oneRecordingState({ setText, date, source, est, estFrom }) {
+  return emptyState(
+    'One recording so far',
+    `${setText} on ${fmtDateShort(date)}, from ${SOURCE_LABEL[source].toLowerCase()}.`
+      + (est ? ` Estimated max ~${units.withUnit(Math.round(est))}.` : ''),
+    el('div', { class: 'field-help', text:
+      (est ? `The "~" max is an estimate from ${estFrom}, not a weight you have lifted. ` : '')
+      + 'One point is not a line, so nothing here is drawn as a trend. Record this on another '
+      + 'day and it becomes one.' }),
+  );
+}
+
+/* ---- paired horizontal bars: where a lift started, where it is now ---- */
 
 function barChart(rows, field) {
+  // A guard, not a screen anybody should reach: renderCompare() falls back to
+  // bestsPane() when there is nothing to compare, because a list of where every
+  // lift stands is worth more than a sentence about what to record next.
   if (!rows || !rows.length) {
     return emptyState('Nothing to compare yet',
-      'Record the same exercise as a benchmark on two different days and it will appear here.');
+      'Record the same exercise on two different days — as a benchmark or in a workout — and it '
+      + 'will appear here.');
   }
 
   const max = Math.max(...rows.flatMap((r) => [r.start, r.now])) || 1;
@@ -1235,6 +1461,16 @@ function barChart(rows, field) {
       return el('div', { class: 'bar-row' },
         el('div', { class: 'bar-head' },
           el('span', { class: 'bar-name', text: r.name }),
+          /* 🚨 WHICH SOURCE THIS ROW IS, ON THE ROW (Rule 4 / D14). Both bars in
+           * a row are always from one source, and the list as a whole may hold
+           * rows from either — so the fact has to travel with the row rather
+           * than sit in one caption underneath the lot of them.
+           *
+           * ⚠️ IT WEARS `.bar-reps` RATHER THAN A CLASS OF ITS OWN. That class
+           * is the head's small faint qualifier slot; a new one would be a
+           * visual change nobody asked for, and this needs the styling that is
+           * already there, not a new look. */
+          r.source ? el('span', { class: 'bar-reps', text: SOURCE_LABEL[r.source] }) : null,
           r.atReps ? el('span', { class: 'bar-reps mono', text: `@${r.atReps} reps` }) : null,
           el('span', { class: 'bar-delta mono' + cls, text: `${sign}${fmt(Math.abs(r.delta))}${r.pct === null ? '' : ` · ${r.delta > 0 ? '+' : ''}${r.pct.toFixed(0)}%`}` }),
         ),
@@ -1863,16 +2099,19 @@ const fmtSets = (n) => (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, '');
  * thing"*) arriving on a different screen. The working has one home now, in the
  * panel under the figure, and this row is one of the two ways to point at it.
  */
-function volRow(m, scale, perWeek, weeks, open, onToggle) {
-  const value = perWeek ? m.weeklySets : m.totalSets;
+/* ⚠️ THE `perWeek` FLAG IS GONE FROM THIS FAMILY OF FUNCTIONS (2026-09-06), and
+ * its absence is the point — see the block above `renderVolumePane`'s span line.
+ * The row, the panel, the contributor list, the figure's colours and the legend
+ * are all a RATE, unconditionally, because a flag threaded through five places
+ * is five chances to print a window total under a weekly heading. */
+function volRow(m, scale, open, onToggle) {
+  const value = m.weeklySets;
   const tier = hypertrophyTier(m.weeklySets);
   const none = value <= 0;
 
   const sub = none
     ? 'Nothing logged'
-    : perWeek
-      ? `${tier.label} · ${m.daysTrained ? `${fmtSets(m.sessionsPerWeek)} days a week` : 'never trained directly'}`
-      : `${m.daysTrained} ${m.daysTrained === 1 ? 'day' : 'days'} so far`;
+    : `${tier.label} · ${m.daysTrained ? `${fmtSets(m.sessionsPerWeek)} days a week` : 'never trained directly'}`;
 
   const btn = el('button', {
     class: 'vol-row' + (none ? ' is-none' : ''),
@@ -1884,7 +2123,7 @@ function volRow(m, scale, perWeek, weeks, open, onToggle) {
       el('span', { class: 'vol-name', text: m.muscle }),
       el('span', { class: 'vol-num' },
         el('b', { text: fmtSets(value) }),
-        el('span', { class: 'vol-unit', text: perWeek ? ' / wk' : ' sets' }),
+        el('span', { class: 'vol-unit', text: ' / wk' }),
       ),
     ),
     // Decorative: every number and every label above and below it is already
@@ -1911,7 +2150,7 @@ function volRow(m, scale, perWeek, weeks, open, onToggle) {
  * checkable against the sessions they came from — the same argument the muscle
  * panel's "from … and … and …" line makes one screen over.
  */
-function volDetail(m, perWeek, weeks) {
+function volDetail(m, weeks) {
   const hyp = hypertrophyTier(m.weeklySets);
   const str = strengthTier(m.weeklySets);
   // ⚠️ IN THE SAME UNIT AS THE NUMBER ABOVE THEM, which the first version got
@@ -1919,7 +2158,12 @@ function volDetail(m, perWeek, weeks) {
   // store counts a window and the row divides by it. Parts that do not add up to
   // the whole in front of them are worse than no parts at all — the whole reason
   // this block exists is that somebody can check the figure.
-  const shown = (sets) => fmtSets(perWeek ? sets / weeks : sets);
+  //
+  // ⚠️ AND IT IS NO LONGER CONDITIONAL. It used to divide by the weeks only when
+  // the rows were showing a rate; the rows always are now, so this always does.
+  // The two halves of that pairing must move together or the block is quoting a
+  // different quantity in the same column, which is the exact fault above.
+  const shown = (sets) => fmtSets(sets / weeks);
 
   if (!m.contributors.length) {
     return el('div', { class: 'vol-detail' },
@@ -1931,15 +2175,15 @@ function volDetail(m, perWeek, weeks) {
   }
 
   return el('div', { class: 'vol-detail' },
-    perWeek
-      ? el('div', { class: 'vol-tier' },
-          el('div', { class: 'vol-tier-line' }, el('b', { text: hyp.label + '. ' }), hyp.detail),
-          el('div', { class: 'vol-tier-line' }, el('b', { text: 'For strength: ' }),
-            `${str.label.toLowerCase()}. ${str.detail}`),
-        )
-      : null,
-    el('div', { class: 'vol-contrib-head', text: perWeek
-      ? 'Where those sets come from — a week' : 'What has been logged' }),
+    // The published bands are bands of a WEEKLY dose, so they read against the
+    // weekly figure and nothing else. That is now the only figure this screen
+    // prints, which is why they are unconditional.
+    el('div', { class: 'vol-tier' },
+      el('div', { class: 'vol-tier-line' }, el('b', { text: hyp.label + '. ' }), hyp.detail),
+      el('div', { class: 'vol-tier-line' }, el('b', { text: 'For strength: ' }),
+        `${str.label.toLowerCase()}. ${str.detail}`),
+    ),
+    el('div', { class: 'vol-contrib-head', text: 'Where those sets come from — a week' }),
     el('div', { class: 'vol-contrib' },
       ...m.contributors.map((c) => el('div', { class: 'vol-contrib-row' },
         el('span', { class: 'vol-contrib-name', text: c.name }),
@@ -1969,25 +2213,30 @@ function volDetail(m, perWeek, weeks) {
  * has a number, because zero sets IS a number, so every muscle is painted and
  * the one thing this screen cannot do is fail to say something.
  */
+/* 🚨 AND THE COLOURS ARE A RATE, WHICH THEY WERE NOT UNTIL 2026-09-06. Under a
+ * fortnight this painted `totalSets` — a window total — against `volumeShade()`,
+ * whose bands are weekly doses out of the literature. The legend's heading
+ * changed to "Sets so far" and the band edges did not, so a nine-day beginner
+ * with 21 recorded sets was painted the colour of somebody training hard. That
+ * is the fault the key's own header comment describes, arriving through the
+ * figure instead of through the chips. One unit, one scale, one key. */
 function volumeFigure(data, selected, onPick) {
   const byMuscle = new Map(data.muscles.map((m) => [m.muscle, m]));
   const levels = new Map();
   for (const muscle of MAPPED_MUSCLES) {
     const m = byMuscle.get(muscle);
-    const sets = m ? (data.enough ? m.weeklySets : m.totalSets) : 0;
+    const sets = m ? m.weeklySets : 0;
     const shade = volumeShade(sets);
     levels.set(muscle, {
       levelKey: `vol-${shade.key}`,
       // Read out on tap and on hover. The number is the answer; the band is how
       // it is painted, and both are said in words because the colour cannot be
       // trusted to carry it on its own.
-      label: `${fmtSets(sets)} ${data.enough ? 'sets a week' : 'sets so far'}`,
+      label: `${fmtSets(sets)} sets a week`,
     });
   }
   return bodySvg(levels, selected, onPick, {
-    label: data.enough
-      ? 'Muscle groups coloured by how many sets a week each one is getting'
-      : 'Muscle groups coloured by how many sets each one has had so far',
+    label: 'Muscle groups coloured by how many sets a week each one is getting',
   });
 }
 
@@ -2004,12 +2253,16 @@ function volumeFigure(data, selected, onPick) {
  * out of the literature; scaling them by the window would compare somebody's
  * training against a target the research never states.
  */
-function volumeLegend(selectedKey, perWeek) {
+function volumeLegend(selectedKey) {
   // ⚠️ Read in the direction the RAMP runs — none first, most last — while
   // VOLUME_SHADES is stored descending because that is the order its lookup
   // needs. A key printed against the scale backwards is a key nobody trusts.
   return el('div', { class: 'vol-legend', role: 'list' },
-    el('span', { class: 'vol-legend-unit', text: perWeek ? 'Sets a week' : 'Sets so far' }),
+    // ⚠️ "Sets a week", never "Sets so far". The band edges below it are weekly
+    // doses and cannot be relabelled without being recomputed; the heading used
+    // to switch under a fortnight while they stayed put, which named the wrong
+    // quantity over the right numbers.
+    el('span', { class: 'vol-legend-unit', text: 'Sets a week' }),
     ...[...VOLUME_SHADES].reverse().map((s) => el('span', {
       class: 'vol-chip' + (s.key === selectedKey ? ' is-on' : ''), role: 'listitem',
     },
@@ -2106,8 +2359,31 @@ export async function renderVolumePane(host, top, opts = {}) {
     return;
   }
 
-  const perWeek = data.enough;
-  const biggest = Math.max(...data.muscles.map((m) => (perWeek ? m.weeklySets : m.totalSets)), 0);
+  /* 🚨 A RATE EVEN UNDER A FORTNIGHT — changed 2026-09-06, and this is the note
+   * to read before putting the refusal back.
+   *
+   * This screen used to check `data.enough` (a two-week span) and, below it,
+   * print raw window totals under a ⚠️ line saying a weekly figure over a few
+   * days is noise. The noise is real. The refusal was still the wrong answer:
+   * `m.weeklySets` is computed either way, and "17 sets" is comparable to
+   * nothing on the screen it is printed on — not to the 4 / 10 / 20 bands beside
+   * it, not to the same muscle at a different window length, not to any figure
+   * in the literature. It replaced an imprecise answer with an unanswerable one.
+   * docs/direction.md §3.1, Tim: *"something is always better than nothing"*.
+   *
+   * ⚠️ THE HALF HE KEPT IS *"have a way to be upfront about it"*, and that is
+   * two sentences below: the intro names the sessions and the span the rate was
+   * measured over, and a short window carries a caveat saying what that does to
+   * it. A labelled best-effort rate is not a measurement dressed as a settled
+   * one (Rule 5) — what it must never do is print silently.
+   *
+   * 🚨 AND IT IS ONE UNIT FOR THE WHOLE SCREEN, which is why the `perWeek` flag
+   * was deleted rather than pinned to true. The rows, the panel under the
+   * figure, the contributor list inside it, the body map's colours and the
+   * legend's bands all have to be the same quantity or the parts stop adding up
+   * to the whole — the fault `volDetail()`'s header describes. A flag threaded
+   * through five call sites is five chances to get that wrong; no flag is none. */
+  const biggest = Math.max(...data.muscles.map((m) => m.weeklySets), 0);
   // ⚠️ ONE SCALE FOR EVERY ROW, and it is the whole reason the bars are worth
   // drawing: the comparison people actually make on this screen is between their
   // own muscles. Rounded up to a multiple of 4 so the minimum-dose tick lands on
@@ -2138,7 +2414,7 @@ export async function renderVolumePane(host, top, opts = {}) {
   };
 
   setChildren(list, ...data.muscles.map((m) => volRow(
-    m, scale, perWeek, data.weeks, volOpen === m.muscle, () => select(m.muscle),
+    m, scale, volOpen === m.muscle, () => select(m.muscle),
   )));
 
   const figure = volumeFigure(data, volOpen, select);
@@ -2152,23 +2428,21 @@ export async function renderVolumePane(host, top, opts = {}) {
 
   function drawPicked() {
     const m = volOpen ? data.muscles.find((x) => x.muscle === volOpen) : null;
-    setChildren(legendHost,
-      volumeLegend(m ? volumeShade(perWeek ? m.weeklySets : m.totalSets).key : null, perWeek));
+    setChildren(legendHost, volumeLegend(m ? volumeShade(m.weeklySets).key : null));
     pickedWrap.classList.toggle('is-open', Boolean(m));
     hint.hidden = Boolean(m);
     hint.textContent = 'Tap a muscle on the figure — or a row below it — to see the exercises '
       + 'behind its number.';
     if (!m) return;
-    const value = perWeek ? m.weeklySets : m.totalSets;
     setChildren(picked,
       el('div', { class: 'vol-picked-head' },
         el('span', { class: 'vol-picked-name', text: m.muscle }),
         el('span', { class: 'vol-picked-num' },
-          fmtSets(value),
-          el('span', { class: 'vol-unit', text: perWeek ? ' / wk' : ' sets' }),
+          fmtSets(m.weeklySets),
+          el('span', { class: 'vol-unit', text: ' / wk' }),
         ),
       ),
-      volDetail(m, perWeek, data.weeks),
+      volDetail(m, data.weeks),
     );
   }
   drawPicked();
@@ -2179,9 +2453,14 @@ export async function renderVolumePane(host, top, opts = {}) {
   setChildren(host,
     el('div', { class: 'vol-pane' },
       el('div', { class: 'vol-intro' },
-        el('div', { class: 'vol-intro-main', text: perWeek
-          ? `${who ? `${who}: s` : 'S'}ets a week per muscle, from ${sess} over the last ${span}.`
-          : `${sess} over ${span} so far.` }),
+        /* 🚨 THE SPAN IT WAS ACTUALLY MEASURED OVER IS IN THIS SENTENCE, and
+         * that is what earns the rate below it. `data.spanDays` runs from the
+         * FIRST session in the window to today, not from the window's own edge
+         * — so somebody nine days into training reads "over the last 9 days"
+         * under a chip saying 4 weeks, which is the truth about the measurement
+         * rather than the truth about the control. */
+        el('div', { class: 'vol-intro-main', text:
+          `${who ? `${who}: s` : 'S'}ets a week per muscle, from ${sess} over the last ${span}.` }),
         /* ⚠️ A FRIEND'S WINDOW IS NOT THEIR HISTORY, and the screen has to say
          * so. What they publish is their last sixty sessions, so a long window
          * over a busy account can be measuring a shorter stretch than it says.
@@ -2190,14 +2469,29 @@ export async function renderVolumePane(host, top, opts = {}) {
         who ? el('div', { class: 'field-help', text:
           `Counted from the sessions ${who} publishes — their most recent sixty. If they train a `
           + 'lot, a long window here may reach further back than what they share.' }) : null,
-        // ⚠️ ONE LINE ABOVE THE FIGURE WHEN THERE IS A RATE TO STATE. The
-        // sentence that used to sit here — why weekly sets is the metric — moved
-        // to the notes at the bottom: every pixel above the drawing is a pixel
-        // off the drawing, and it was repeating what the line above it says.
-        perWeek ? null : el('div', { class: 'field-help', text:
-          '⚠️ Too little history to state a rate per week — a weekly figure measured over a few '
-          + 'days is noise. These are the sets recorded so far; it turns into a weekly rate once '
-          + 'there is a fortnight to measure over.' }),
+        /* ⚠️ ONE LINE ABOVE THE FIGURE, AND ONLY WHEN IT IS EARNED. The sentence
+         * that used to sit here — why weekly sets is the metric — moved to the
+         * notes at the bottom: every pixel above the drawing is a pixel off the
+         * drawing, and it was repeating what the line above it says.
+         *
+         * 🚨 THIS IS THE "UPFRONT ABOUT IT" HALF OF §3.1 AND IT IS NOT OPTIONAL.
+         * The rate is still shown under a fortnight — see the block above
+         * `biggest` — so the caveat is what stops a nine-day window reading as a
+         * settled measurement. It states the span, states that the figures are
+         * recorded sets stated per week, and states the consequence in the terms
+         * that actually move it: one session. It does NOT say the number is
+         * wrong, because it is not; it says how much it can move. */
+        /* ⚠️ "Measured over N days", NOT "N days of history". `spanDays` runs
+         * from the first session INSIDE this window to today, so somebody with a
+         * year of training who took three weeks off has a short span and a long
+         * history — and on a friend's page the document is only their last sixty
+         * sessions either way. The span is a fact about the measurement; history
+         * would be a claim about the person. */
+        data.enough ? null : el('div', { class: 'field-help', text:
+          `⚠️ Measured over ${span}, not the fortnight a weekly rate settles over. Every figure `
+          + `here is the sets actually recorded, spread across those ${span} and stated per week `
+          + '— a best effort, not a settled rate. One session more or less moves it a long way at '
+          + 'this length, and it steadies as the window fills.' }),
       ),
 
       el('div', { class: 'vol-figure', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` }, figure),

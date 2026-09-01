@@ -444,6 +444,99 @@ export function normalizeCompare(compare) {
   return { pool: pick('pool'), sex: pick('sex'), weight: pick('weight'), age: pick('age') };
 }
 
+/* ------------------------------------------------------------------ *
+ * RANKING SOMEBODY WHOSE PROFILE IS INCOMPLETE — 2026-09-06
+ * ------------------------------------------------------------------ *
+ *
+ * 🚨 THE MAP USED TO REFUSE THE WHOLE BODY OVER TWO MISSING SETTINGS. No sex or
+ * no weigh-in and `muscleStrength()` returned `ready: false`, so an account
+ * holding a year of recorded sets was shown "Tell us about you first" and
+ * nothing else. docs/direction.md §3.1 is the instruction that reverses that:
+ * *"It's about getting the BEST numbers we can… When our numbers aren't as
+ * perfect, have a way to be upfront about it but something is always better than
+ * nothing."* The half he kept is the labelling, so this function's OTHER job —
+ * the one it exists for as much as the substitution — is to return the list of
+ * what it had to assume, so the screen can say it.
+ *
+ * The two gaps are NOT the same kind of gap, and that is the whole design:
+ *
+ * 🚨 BODY WEIGHT — NOTHING IS INVENTED. A guessed body weight would be a number
+ * with no source, and every percentile on the screen is a ratio to it. So the
+ * weight AXIS is forced to `any` instead: `refBodyWeight()` reads that as the
+ * reference median with no allometric scaling, which is a real, nameable
+ * comparison group — lifters of every size — rather than a stand-in for a
+ * measurement. The caption already says "any body weight" for anybody who picks
+ * that option deliberately, so what is on screen is true either way.
+ *
+ * ⚠️ SEX — ASSUMED, AND IT MUST BE STATED. There is no ungraded option here to
+ * fall back to: every entry in `MUSCLE_LIFTS` is a male/female PAIR, so a
+ * percentile cannot be computed without picking one. Male is the modal answer
+ * rather than a judgement — `MALE_SHARE` above already records that the people
+ * who lift and log skew male — and it is what `populations()` has always
+ * silently fallen back to when `gender` is null. This makes that fallback
+ * explicit and, more to the point, REPORTABLE: silent was the fault.
+ *
+ * 🛑 NOTHING HERE IS WRITTEN BACK. This is a render-time overlay on a profile,
+ * not a repair of one: `missing` is passed through untouched, so the account
+ * screen still asks for the two settings and the note below the map still says
+ * they are absent. An assumption that got saved would stop being an assumption.
+ *
+ * 🚨 AND A MAP BUILT ON ONE MUST NOT BE PUBLISHED — see `buildStrengthShare()`
+ * in js/store.js, which refuses on `assumed`. A reader of somebody else's map
+ * cannot check it against anything, and a silently-different comparison group is
+ * the exact fault js/shared-map.js exists to prevent.
+ *
+ * @param {object} profile  as `store.getProfile()` returns it
+ * @returns {object} the same profile, plus `assumed` — a subset of
+ *   ['sex', 'body weight'], empty when nothing had to be assumed.
+ */
+export function withAssumptions(profile) {
+  const p = profile && typeof profile === 'object' ? profile : {};
+  const out = { ...p };
+  const assumed = [];
+
+  if (!p.gender) {
+    out.gender = 'male';
+    assumed.push('sex');
+  }
+  // Not `p.missing`: this module is pure and this is the condition that actually
+  // breaks the arithmetic — `medianForPopulation()` refuses a body weight that
+  // is not a positive number, whatever the store thought it had.
+  if (!(Number(p.bodyWeight) > 0)) {
+    out.compare = { ...normalizeCompare(p.compare), weight: 'any' };
+    assumed.push('body weight');
+  }
+
+  out.assumed = assumed;
+  return out;
+}
+
+/**
+ * What had to be assumed, in words, or null.
+ *
+ * ⚠️ TWO SENTENCES RATHER THAN ONE LIST, because the two gaps are answered
+ * differently and merging them would flatten that: "assumed male" is a value the
+ * app picked, and "lifters of every size" is a comparison group it moved to. A
+ * single "Assumed: male, any body weight" would present the second as a guessed
+ * measurement, which is exactly what it is not.
+ *
+ * It lives in `comparisonLabel()`'s return rather than on the screen so that the
+ * caption naming the comparison group and the line admitting how that group was
+ * arrived at come out of one function and cannot drift apart.
+ */
+function assumptionNote(profile) {
+  const assumed = (profile && Array.isArray(profile.assumed)) ? profile.assumed : [];
+  if (!assumed.length) return null;
+  const bits = [];
+  if (assumed.includes('sex')) {
+    bits.push('Assumed male — your sex is not on your profile.');
+  }
+  if (assumed.includes('body weight')) {
+    bits.push('Compared against lifters of every size — no weigh-in on record.');
+  }
+  return bits.join(' ');
+}
+
 // The reference population as a MIXTURE: a list of { gender, trained, share }.
 // One entry for the simple case, up to four for "everyone, both sexes".
 //
@@ -575,6 +668,12 @@ export function comparisonLabel(profile) {
   const c = normalizeCompare(profile && profile.compare);
   const own = profile && profile.gender === 'female' ? 'female' : 'male';
   const sex = c.sex === 'own' ? own : c.sex;
+  /* ⚠️ ON EVERY BRANCH, INCLUDING THE PER-PERSON ONE. This is the sentence that
+   * stops "vs. men who lift" reading as a fact about the reader when the app
+   * picked the sex itself (withAssumptions above). Null for a complete profile,
+   * which is every friend's map — theirs was computed on their own device from
+   * their own settings, so nothing on that screen was ever assumed here. */
+  const assumed = assumptionNote(profile);
 
   /* 🚨 THE PER-PERSON CASE HAS ITS OWN SENTENCE, because every other branch of
    * this function names ONE population and this one deliberately does not.
@@ -593,6 +692,7 @@ export function comparisonLabel(profile) {
       main: c.pool === 'lifters' ? 'vs. people like each of them' : 'vs. adults like each of them',
       sub: 'each against their own sex, body weight and age',
       pool: c.pool,
+      assumed,
       isDefault: c.pool === 'lifters' && c.weight === 'own' && c.age === 'own',
     };
   }
@@ -633,6 +733,7 @@ export function comparisonLabel(profile) {
     main: `vs. ${who}`,
     sub: bits.join(' · '),
     pool: c.pool,
+    assumed,
     isDefault: c.pool === 'lifters' && c.weight === 'own' && c.age === 'own'
       && (c.sex === 'own' || c.sex === own),
   };

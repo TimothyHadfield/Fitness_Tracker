@@ -22,10 +22,45 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-06 — the list of every blank and every refusal was delivered to Tim.
-Nothing in the app changed.
+**Last updated:** 2026-09-06 — eight of those blanks are numbers now, and the one gate that had to
+stay was kept on purpose.
 
-## What changed on 2026-09-06, in one line
+## What changed on 2026-09-06, in one line each
+
+1. 🚨 **THE MUSCLE MAP RANKS WITHOUT A PROFILE.** A missing weigh-in **widens the comparison to
+   lifters of every size** rather than inventing a body weight; a missing sex assumes male and
+   **says so on screen**. 🚨 **An assumed map is never published to a friend** —
+   `buildStrengthShare()` refuses, because `shared-map.js` cannot recompute a percentile and a reader
+   has nothing to check it against. Mutation-checked.
+2. 🛑 **GOALS KEPT ITS GATE, DELIBERATELY, AND IT NOW ASKS A DIFFERENT QUESTION.** It branched on the
+   map's `ready` flag, so lifting that opened Goals too — and **a goal FREEZES its target weight when
+   set (D20)**, so an assumption made once would stay frozen in for twelve weeks after the profile
+   was filled in. `hasProfile` reads the raw `profile.missing`. Mutation-checked.
+3. 🆕 **Goals says WHAT HAS MOVED** since the goal was set — the two estimated 1RMs subtracted, the
+   ±12 % yardstick beside it, **still no verdict word** (Rule 6). ⚠️ Not the percentiles: those move
+   with the comparison group, so subtracting them reports a change in the standards as a change in
+   the lifter.
+4. 🆕 **Volume states a rate under a fortnight**, span named — and that fixed a latent bug where the
+   body map painted window TOTALS against weekly-dose colour bands. **Bars** falls back to workout
+   sets, one source per row (D14). **One recording** shows its value and estimated max, no line.
+   **Goals' two "not enough training yet"** rows show totals.
+5. 🆕 **The benchmark screen estimates through a stand-in** when it must — opt-in, flagged, **band
+   capped at Fair**, both hops named. 🛑 **The default did not move**: the runner and compare keep
+   the refusal. The runner now **says why** a weight field is blank without filling it.
+6. 🚨 **AND A THREE-HOP WEIGHT COULD REACH THE RUNNER'S FIELD.** `derivedWeights` checked
+   `rating.estimate` and `rating.confidence` and never `rating.kind` — **the identical bug fixed in
+   `exercise-estimate.js` on 2026-09-02**, alive for four days in the one place that puts a number in
+   a field somebody loads a bar to. Closed; it can only ever withhold. Found by an agent reading the
+   two modules side by side.
+7. ⚠️ **THE BROWSER AUDIT WAS RUN AGAINST `HEAD` AS A CONTROL** — 128 routes, 11,912 text nodes, zero
+   overflow, and its **8 contrast failures are identical on HEAD, so today introduced none.** They
+   are real though: `.load-badge.per-side` (`ui.js:897`) is **3.96:1 in light**. 🛑 Not fixed — it is
+   a colour. **The handbook's "zero below 4.5:1" line is stale.**
+8. ⚠️ **A GREEN AUDIT WITH A ZERO NODE COUNT IS NOT A PASS** — the first run measured **404 pages** (a
+   stale server on the port), and reported zero contrast failures and zero overflow across 128
+   routes. See `docs/history.md`.
+
+## What was already recorded on 2026-09-06
 
 1. ✅ **OPEN WORK 24 IS CLOSED — the list of every blank, empty state and permanent refusal was
    delivered**, grouped into **eight worth changing** (the profile gate blanking the whole muscle map

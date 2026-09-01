@@ -56,9 +56,55 @@
        you can say that you can't compare."*
      • A custom exercise → nothing, because `contributionsFor()` refuses one
        and this module never looks at the ratio table directly.
+
+   ── THE ONE THAT IS NOW OPT-OUT-ABLE, AND BOTH SIDES OF IT ────────────────
+   🚨 A FALLBACK *RATING* — the second bullet's neighbour, `rating.kind ===
+   'fallback'` — CAN NOW BE LET THROUGH BY A CALLER THAT ASKS FOR IT BY NAME
+   (`{ allowFallback: true }`). The default is unchanged and is still refusal;
+   exactly one caller passes it. Both halves of the argument belong here,
+   because the half that lost is still true.
+
+   ⚠️ THE ARGUMENT AGAINST, WHICH IS NOT WITHDRAWN. A fallback rating means the
+   muscle had NO direct evidence and a compound stood in for it across a
+   published cross-muscle ratio. Converting that outward is an observation,
+   times a cross-muscle ratio, times this exercise's ratio: three estimates
+   multiplied, which is precisely what muscle-evidence.js calls the machine for
+   confidently wrong numbers. Degrading the confidence is not a defence on its
+   own — that was the defence that let a made-up dip machine rate somebody's
+   triceps on 2026-08-31, because a low number is still the only number in the
+   room when there is nothing to argue with it. The block below (2026-09-02)
+   was a real bug fix and it stays the default for every caller.
+
+   ⚠️ WHY IT IS OFFERED ANYWAY, ON ONE SCREEN. Tim, 2026-09-04 (docs/direction.md
+   §3.1): *"It's about getting the BEST numbers we can… When our numbers aren't
+   as perfect, have a way to be upfront about it but something is always better
+   than nothing."* That recalibrates the honesty rule but keeps the half he
+   named: **have a way to be upfront about it.** Three things make this a
+   legitimate use of it rather than a hole in the refusal:
+
+     1. **It is a READ-ONLY screen.** The benchmark form's estimate is looked at,
+        not loaded onto a bar. The line at the top of this header — an estimate
+        you read is not an estimate you lift — is the line this respects: the
+        runner's opening weight, the one number somebody walks up to a bar with,
+        does NOT pass the option and is not offered one.
+     2. **It arrives labelled with BOTH hops.** The caller prints which muscle
+        stood in and which exercise the number was then converted into, so a
+        reader can see it is an estimate built on an estimate. Rule 5 is not
+        waived by §3.1 — Tim endorsed it. A number presented as something it is
+        not is still wrong.
+     3. **It cannot wear a confident label.** The confidence is multiplied down
+        a THIRD time by the stand-in's own quality, and the reported band is
+        capped at the second-lowest — a three-hop number may never read "good"
+        or "high" however kind the arithmetic is to it.
+
+   🛑 If a fourth screen wants this, that is a new decision and not this one.
+   The option exists so the refusal has exactly one named exception, visible at
+   the call site, rather than becoming a default nobody re-argued.
    ========================================================================== */
 
-import { contributionsFor, confidenceBand } from './muscle-evidence.js';
+import {
+  contributionsFor, confidenceBand, CONFIDENCE_BANDS, FALLBACK_MIN_QUALITY,
+} from './muscle-evidence.js';
 import { e1rm, weightForReps, repsForWeight, MAX_EVIDENCE_REPS } from './e1rm.js';
 
 /**
@@ -67,6 +113,11 @@ import { e1rm, weightForReps, repsForWeight, MAX_EVIDENCE_REPS } from './e1rm.js
  * @param {object} exercise   the library entry
  * @param {Map}    muscles    muscle name -> rating, from `muscleStrength()`
  * @param {number} [bodyWeight]  latest weigh-in, for bodyweight/assisted lifts
+ * @param {object} [opts]
+ * @param {boolean} [opts.allowFallback=false]  let a muscle rating that is
+ *   itself a stand-in convert outward. ⚠️ OPT-IN, BY ONE CALLER, ON A READ-ONLY
+ *   SCREEN — see the header. Anything that puts a weight in a field somebody
+ *   loads must leave this alone.
  *
  * @returns {null | {
  *   oneRM: number,        // TOTAL load, pounds — both dumbbells, body included
@@ -79,9 +130,11 @@ import { e1rm, weightForReps, repsForWeight, MAX_EVIDENCE_REPS } from './e1rm.js
  *   from: string[],       // the exercises whose sets produced it
  *   exerciseCount: number,
  *   perSide: boolean,
+ *   viaFallback: boolean, // true when the MUSCLE was itself a stand-in
+ *   standIn: string|null, // and which muscle stood in for it
  * }}
  */
-export function estimateOneRM(exercise, muscles, bodyWeight) {
+export function estimateOneRM(exercise, muscles, bodyWeight, opts) {
   if (!exercise || !muscles) return null;
   if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return null;
 
@@ -123,7 +176,30 @@ export function estimateOneRM(exercise, muscles, bodyWeight) {
    * fallback rating is a muscle whose owner has recorded nothing that trains it
    * directly — *"If the user has no exercises recorded on a certain muscle group
    * at all, then you can say that you can't compare."* */
-  if (rating.kind === 'fallback') return null;
+  /* ⚠️ …AND THE ONE CALLER THAT MAY OPT OUT OF THAT REFUSAL DOES IT HERE, BY
+   * NAME. `allowFallback` is checked as `=== true` rather than for truthiness:
+   * this is the one line in the module that turns the refusal off, and it must
+   * not be switchable by an options object that happened to carry a stray
+   * value. Everything below prices the extra hop; the header argues both sides
+   * of whether the hop should be available at all. */
+  const viaFallback = rating.kind === 'fallback';
+  if (viaFallback && !(opts && opts.allowFallback === true)) return null;
+
+  /* ⚠️ TWO KEYS FOR ONE LIST, AND BOTH ARE REAL. `rateMuscle()` returns the
+   * observations it used as `used`; `muscleStrength()` re-publishes the same
+   * array to its callers as `contributors`. This module is handed whichever of
+   * the two the caller happens to have — the raw rating in a test, the screen's
+   * version in the app — and reading only one of them is how the sources line
+   * silently came out empty the first time this shipped. */
+  const used = rating.contributors || rating.used || [];
+
+  /* The observation that LED the rating, which for a fallback rating is the
+   * stand-in worth believing most. `rateMuscle()` sorts `used` by credibility
+   * (`evidenceWeight`) before slicing, so element 0 is not "the first one we
+   * found" — it is the one that decided the number. Its `via` is the muscle
+   * that stood in and its `quality` is `base.quality * src.q`, the credibility
+   * of the cross-muscle hop itself (muscle-evidence.js's `add(...)` call). */
+  const lead = used[0] || null;
 
   const oneRM = rating.estimate * best.ratio;
   if (!(oneRM > 0)) return null;
@@ -142,23 +218,55 @@ export function estimateOneRM(exercise, muscles, bodyWeight) {
    * assumed, not measured. So this produces a BAND NAME, never a ± figure. A
    * guessed ± would be a guess wearing a measurement's clothes, which is the
    * exact thing §15.2 of the estimate plan refused to ship. */
-  const confidence = Math.max(0, Math.min(1, rating.confidence * best.quality));
+  let confidence = Math.max(0, Math.min(1, rating.confidence * best.quality));
+  let band = confidenceBand(confidence);
+  let standIn = null;
 
-  /* ⚠️ TWO KEYS FOR ONE LIST, AND BOTH ARE REAL. `rateMuscle()` returns the
-   * observations it used as `used`; `muscleStrength()` re-publishes the same
-   * array to its callers as `contributors`. This module is handed whichever of
-   * the two the caller happens to have — the raw rating in a test, the screen's
-   * version in the app — and reading only one of them is how the sources line
-   * silently came out empty the first time this shipped. */
-  const from = (rating.contributors || rating.used || [])
-    .map((u) => u && u.exerciseName)
-    .filter(Boolean);
+  /* ⚠️ A THIRD MULTIPLICATION IS PRICED AS A THIRD MULTIPLICATION. Two hops
+   * above cost two credences; a stand-in rating is a hop the two terms above
+   * do not price, so it costs a third. `lead.quality` is that hop's own
+   * credibility — the same number `muscle-evidence.js` computed as
+   * `base.quality * src.q` when it decided the compound could stand in at all.
+   *
+   * ⚠️ YES, THIS DOUBLE-COUNTS, AND THAT IS THE POINT. `rating.confidence`
+   * already contains the observations' quality, but at a FOURTH ROOT
+   * (`Math.pow(quality * depth * agreement * fresh, 0.25)`), which damps a poor
+   * stand-in to almost nothing. A cross-muscle ratio at q = 0.25 arriving as a
+   * ~0.7 multiplier is not a punishment, it is a rounding error. The full
+   * multiplication is the deliberate over-penalty owed to a chain this module
+   * spent its header arguing against.
+   *
+   * ⚠️ AND WHEN THE STAND-IN'S QUALITY IS UNKNOWN, ASSUME THE WORST IT COULD
+   * LEGALLY BE. `FALLBACK_MIN_QUALITY` is the floor a contribution must clear
+   * to stand in for another muscle at all, so it is the most pessimistic value
+   * consistent with this rating existing — never 1, which would silently make a
+   * rating with no provenance the best-treated of the three. */
+  if (viaFallback) {
+    const q = lead && lead.quality > 0 ? Math.min(1, lead.quality) : FALLBACK_MIN_QUALITY;
+    confidence = Math.max(0, Math.min(1, confidence * q));
+    standIn = (lead && lead.via) || null;
+
+    /* 🚨 AND A HARD CEILING ON THE WORD, NOT ONLY ON THE NUMBER. The band is
+     * what a reader actually reads — "good confidence" is a sentence, 0.58 is
+     * not — so the arithmetic being kind is not allowed to produce a confident
+     * label. Capped at the SECOND-LOWEST band: three estimates multiplied may
+     * read "low" or "fair" and nothing better, ever. Not the lowest, because
+     * "low" is the honest word for a genuinely poor two-hop estimate too, and
+     * flattening every three-hop number onto it would stop the band saying
+     * anything at all. */
+    const cap = CONFIDENCE_BANDS[1];
+    const at = confidenceBand(confidence);
+    const rank = (b) => CONFIDENCE_BANDS.findIndex((x) => x.key === b.key);
+    band = rank(at) > rank(cap) ? cap : at;
+  }
+
+  const from = used.map((u) => u && u.exerciseName).filter(Boolean);
 
   return {
     oneRM,
     shown: exercise.loadType === 'per_side' ? oneRM / 2 : oneRM,
     confidence,
-    band: confidenceBand(confidence),
+    band,
     muscle: best.muscle,
     ratio: best.ratio,
     ratioQuality: best.quality,
@@ -167,7 +275,20 @@ export function estimateOneRM(exercise, muscles, bodyWeight) {
     perSide: exercise.loadType === 'per_side',
     // True when the number really is about this lift rather than converted from
     // its neighbours — the key lift's own ratio is 1.00 at quality 1.00.
+    //
+    // ⚠️ IT IS ABOUT THE LAST HOP ONLY, and `viaFallback` can be true beside it:
+    // an exercise can BE a muscle's key lift while that muscle's rating is
+    // itself a stand-in. A caller printing "nothing was converted for this"
+    // off `isKeyLift` alone would then be wrong in the worst available
+    // direction, so `viaFallback` is checked FIRST wherever the two meet.
     isKeyLift: best.ratio === 1 && best.quality === 1,
+    // Flagged, never inferred from the shape of the other fields — the caller
+    // is required to say so on screen, and a caller that forgot would otherwise
+    // print a three-hop number in a two-hop sentence.
+    viaFallback,
+    // Which muscle stood in. Null when the rating carried no provenance; the
+    // caller has a wording for that case and must not invent a muscle name.
+    standIn,
   };
 }
 

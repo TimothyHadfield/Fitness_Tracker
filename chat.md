@@ -2955,3 +2955,45 @@ is word for word what the 2026-09-03 note predicted.
 
 Paused here for a chat reset with everything green and pushed. The compare fix was confirmed in a
 real browser; the friend-page tabs weren't looked at yet.
+
+---
+
+## 2026-09-06 — the list of blanks, and then eight of them turned into numbers
+
+Tim asked for the list `docs/direction.md` §3.1 says he wanted: every place the app shows a blank or a
+permanent refusal instead of a best-effort number. Delivered as three groups — eight where the app is
+holding the data and says nothing, nine where nothing is published anywhere, and about twenty
+first-run blanks that have nothing to estimate from and that a sweep would wreck.
+
+Then: *"it seems like you have a good idea of what should be changed or not so make a plan for each
+one and start building. Don't ask me questions, just go with whatever you recommend."*
+
+Four agents, one per file set, none allowed near `css/app.css` or `tests/` — the two places four
+parallel writers collide silently. Tests, integration and the audit came after, in one pass.
+
+**The muscle map was the big one.** Two missing settings used to blank the whole body over an account
+holding a year of sets. It ranks now, and the shape of the fix is the part worth keeping: a missing
+weigh-in **widens the comparison to lifters of every size** rather than inventing a body weight. That
+is a real group that can be named honestly, and there's an assertion whose only job is to fail if
+somebody later fills that field in with a reference weight. A missing sex assumes male and says so.
+
+**And it is never published to a friend.** A reader can't recompute a percentile — body weight isn't
+in a public document by design — so a guessed grid would be read as somebody's real standing with
+nothing to check it against.
+
+**Goals kept its gate, and that was the one real decision.** It branched on the same flag, so lifting
+it opened Goals too. But a goal *freezes* its target weight when you set it, so an assumption made
+once would sit inside that target for twelve weeks after the profile was filled in and every other
+screen had stopped mentioning it. The map is a reading and gets relabelled; a goal doesn't.
+
+**An agent found a real bug on the way past.** The session runner's opening-weight loop never checked
+whether the muscle's own rating was a stand-in — so a three-hop estimate could land in a field
+somebody loads a bar to. Same bug fixed elsewhere four days ago; it survived here because the two
+files look like they do different jobs and do the same arithmetic.
+
+**The audit is worth two notes.** Run against the changes it found eight contrast failures — so it was
+run again against unmodified `HEAD`, which found the identical eight. Not ours: a 9px "PER SIDE" chip
+at 3.96:1 in the light theme. Real, left alone, because colours are Tim's. And the first run of it
+measured 404 pages the whole way through — a stale server on the port — reporting zero contrast
+failures and zero overflow across 128 routes. A clean sweep and a broken one look the same; only the
+text-node count tells them apart.

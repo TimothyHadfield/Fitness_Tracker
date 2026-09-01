@@ -98,8 +98,48 @@ async function trainedButUnrankable(rated, rows = null) {
   return out;
 }
 
+/* ------------------------------------------------------------------ *
+ * WHAT WAS ASSUMED, SAID ON THE SCREEN — 2026-09-06
+ * ------------------------------------------------------------------ *
+ *
+ * 🚨 THE WHOLE MAP USED TO DISAPPEAR OVER TWO MISSING SETTINGS. No sex or no
+ * weigh-in and this pane drew "Tell us about you first" and nothing else — over
+ * an account that could be holding a year of recorded sets. docs/direction.md
+ * §3.1: *"something is always better than nothing"*, and the half Tim kept,
+ * *"have a way to be upfront about it"*, is this line.
+ *
+ * ⚠️ THE WORDS COME FROM `comparisonLabel()`, WHICH IS NOT AN INDIRECTION FOR ITS
+ * OWN SAKE. The caption above the figure names the comparison group; this names
+ * how that group was arrived at. Written here they would be two sentences about
+ * one thing, in two files, free to drift — and the drift that matters is the one
+ * where the caption says "men who lift" and nothing on screen admits the app
+ * chose that itself.
+ *
+ * ⚠️ IT IS IN `top`, NOT IN THE PANEL, so it does not scroll away and is not
+ * something you can be looking at a level without having seen. `top` is the same
+ * fixed strip the "Compared to" button sits in.
+ *
+ * ⚠️ AND IT IS SHOWN ON THE EMPTY ACCOUNT TOO, where nothing has been ranked yet.
+ * That is not a stray: the sentence describes the comparison this map WILL use,
+ * and it is the only thing on that screen that points at the profile. Somebody
+ * who logs their first benchmark should not meet the assumption for the first
+ * time already applied to a colour.
+ *
+ * 🛑 NO BUTTON, AND NO SECOND CALL TO ACTION. `.text-link` inside the sentence is
+ * the existing pattern for "a sentence needs to point somewhere and a button
+ * would shout" (css/app.css). The screen's one big control is the figure.
+ */
+function assumedNote(profile) {
+  const said = comparisonLabel(profile).assumed;
+  if (!said) return null;
+  return el('div', { class: 'field-help' },
+    `${said} `,
+    el('a', { class: 'text-link', href: '#/profile', text: 'Open profile' }),
+  );
+}
+
 export async function muscleGroupsPane(host, top) {
-  const [{ profile, muscles, blocked, ready }, settings] = await Promise.all([
+  const [{ profile, muscles, blocked }, settings] = await Promise.all([
     muscleStrength(), store.getSettings(),
   ]);
   // Sequenced, not parallel: which muscles are "trained but unranked" is defined
@@ -114,19 +154,14 @@ export async function muscleGroupsPane(host, top) {
   // targets and the colours, so the whole pane is rebuilt rather than repainted.
   const reload = () => muscleGroupsPane(host, top);
 
-  if (!ready) {
-    setChildren(top);
-    setChildren(host, emptyState(
-      'Tell us about you first',
-      `Ranking a muscle group needs your ${profile.missing.join(' and ')} — every strength `
-      + 'standard is a ratio to body weight, and they differ between men and women.',
-      el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' }),
-    ));
-    return;
-  }
-
+  /* 🛑 THE "Tell us about you first" EMPTY STATE IS GONE, and it was the whole
+     screen. `muscleStrength()` no longer refuses an incomplete profile — it ranks
+     on a stated assumption instead — so the only branch left here is the account
+     with genuinely nothing in it. What that empty state was really for, the route
+     to the profile, is now in `assumedNote()` and is on the screen in BOTH
+     states rather than only in the one that showed no map. */
   if (!muscles.size) {
-    setChildren(top);
+    setChildren(top, assumedNote(profile));
     setChildren(host, emptyState(
       'Nothing to rank yet',
       'Any exercise that trains a muscle rates it — a hammer curl rates biceps just as a barbell '
@@ -169,6 +204,13 @@ export async function muscleGroupsPane(host, top) {
         onClick: () => pickSomebodyToCompare(),
       }),
     ),
+    /* ⚠️ UNDER the caption, not inside the button. The caption IS the control
+       that changes the comparison group, and putting a link to a different
+       screen inside it would give one target two destinations. `.graph-controls`
+       is already a column with a gap, so this is a second row rather than a new
+       layout. Null whenever the profile is complete, which is the normal case
+       and adds nothing to the screen. */
+    assumedNote(profile),
   );
 
   /* ---- the body ---- */
@@ -575,18 +617,31 @@ function summary(muscles, trained = new Map()) {
 // needs it because a rating built on rows while ignoring every chin-up is
 // under-reporting its own evidence while looking complete.
 //
-// ⚠️ ONLY THE UNMEASURED CASE CAN REACH THIS SCREEN, and that is why there is no
-// "log a weigh-in" button here even though rankBlockedReason() can produce that
-// message. The map requires a body weight before it renders anything at all —
-// `profile.missing` includes it, and muscleStrength() returns ready:false — so
-// by the time a panel exists, a weigh-in exists and every bodyweight exercise
-// with a published fraction is already counting. What is left is the permanent
-// kind: an inverted row whose fraction spans 37–79 % with a bar height the app
-// does not record, or a handstand push-up nobody has ever put on a force plate.
-// Offering a button for those would be a promise the app cannot keep.
+// 🚨 BOTH KINDS REACH THIS SCREEN AS OF 2026-09-06, AND THIS NOTE USED TO SAY THE
+// OPPOSITE. It read: only the permanent kind can get here, because the map
+// requires a body weight before it renders anything at all — `profile.missing`
+// includes it and muscleStrength() returns ready:false. That was true until the
+// map started ranking on a stated assumption instead of refusing. A lifter with
+// no weigh-in now gets a figure, and their pull-ups are in this list.
 //
-// The actionable wording is not wasted — it reaches the user on the GRAPH, in
-// normalizeBlockedReason(), which has no profile gate in front of it.
+// 🛑 WHICH IS EXACTLY WHY rankBlockedReason() IN js/muscle-evidence.js WAS LEFT
+// ALONE. "Log a weigh-in and it starts counting" is the one blocked reason a
+// person can act on, and it is still true: a pull-up's resistance cannot be known
+// without a body weight, and this screen's assumption supplies nothing that would
+// fix it. Forcing the comparison to `weight: 'any'` says who you are ranked
+// AGAINST — lifters of every size — it does not invent what you weigh, and only
+// the second could rate a pull-up. The two must not be confused.
+//
+// The permanent kind is unchanged: an inverted row whose fraction spans 37–79 %
+// with a bar height the app does not record, or a handstand push-up nobody has
+// ever put on a force plate. Offering a button for those would be a promise the
+// app cannot keep — and there is still no button for the fixable kind either,
+// because the sentence already names the fix and the profile link sits above the
+// figure in every state this screen has.
+//
+// The same actionable wording also reaches the user on the GRAPH, through
+// normalizeBlockedReason(), which never had a profile gate in front of it — and
+// that route is now the second way of saying it rather than the only one.
 function blockedNote(blocked) {
   if (!blocked || !blocked.exercises.length) return null;
   const names = blocked.exercises.map((e) => e.name);
