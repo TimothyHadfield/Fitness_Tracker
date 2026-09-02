@@ -3335,3 +3335,38 @@ three paragraphs explaining why the app wants your gender, birth year and weight
 
 I didn't put your screenshot in the repo — it's someone else's app and the repo is public. I wrote
 down what it showed instead.
+
+---
+
+## 2026-09-08, second pass — the read pattern, and more of the wordiness
+
+**You:** *"do 1 and 3 for now, I'll work on #2 along with some other things later"*, plus the note
+about question marks sitting too far from what they explain, and four more wordy places.
+
+**Opening the app no longer re-downloads your whole training history.** It asks for what changed
+since this device last looked, plus a cheap count that catches anything deleted on another phone.
+That's the 20× on running cost — free servers to about 1,900 users instead of 94.
+
+My first attempt at it was wrong and a test caught it. I was tracking "what's new" to the nearest
+millisecond, and the database stamps everything written together with the same instant — so
+restoring a backup gave a whole year one timestamp and the app could never get past it. It would
+have re-read everything every time, for exactly the people with the most data. Fixed.
+
+One thing worth saying plainly: like the rest of the cloud code here, this has never run against the
+real database, only against a stand-in. The arithmetic is tested hard; the network calls are
+reviewed, not executed.
+
+**The question marks now sit next to their labels.** You were right — I'd put them on the right-hand
+edge, which reads fine under a body map and is obviously wrong beside a two-word heading.
+
+**And the wordiness**, on Goals, Data, and the three places you named: the compare box, the details
+under someone's posted muscle split, and the friend comparison. Three things I deliberately did not
+hide: anything refusing to give you a verdict, anything saying who can see your data, and anything
+marking a number as estimated rather than lifted. Those change what the number *is*; only the
+reasons moved.
+
+**One thing I found and did not fix:** deleting your account doesn't actually delete your workouts
+from the database. The safety guard that stops the app erasing sessions in bulk — the one added
+after your calendar came up empty — refuses that write too, and the error is swallowed. The account
+goes, the data stays where nobody can reach it. The fix is one word, but it means handing out the
+exact flag that guard exists to make rare, so I'd rather you decide.

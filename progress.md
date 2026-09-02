@@ -56,9 +56,35 @@ top of `docs/history.md`.
    or it goes off the side of a 360px screen.
 6. 🆕 **`firestore.rules` gained a comment, not a rule** — `allow read` already covers `list`, and the
    line now says narrowing it to `get` would break every read of a sharded collection.
-7. ✅ **1,911 data-layer assertions** (was 1,874). The Firestore double grew queries, counts and **a
-   moving server clock that shares one instant across a batch** — the property that caught the
-   millisecond cursor. Its `where()` models **only `>`**, so the original bug cannot come back quietly.
+7. 🆕 **THE WORDINESS WENT TO SIX SCREENS** — Goals, Data, and the four places Tim named (the compare
+   box, the muscle-split details under someone's posted workout, the ready-made systems, the friend
+   comparison). **Three agents, one named file each, nobody near `css/app.css` or `tests/`.**
+   🚨 **Every refusal stayed on the screen** — `NO_VERDICT_HEADER` whole and unparaphrased,
+   *"measured, not judged"*, *"the ranking is the same either way"*, *"3 sets of 20 and 3 sets of 5
+   get the same strength percentage"*. Only the reasoning moved.
+8. 🔒 **A CAVEAT IS NOW SPLIT BY A MARKER INSIDE THE MODULE'S OWN STRING, AND IT FAILS TOWARDS THE
+   SCREEN** — if `compare.js` or `optimal.js` ever rewords one, the marker stops matching and the
+   **whole** caveat prints as it does today. A missed marker shows too much, never too little.
+9. 🛑 **NOT ONE WORD OF A CREATOR SYSTEM'S `warning` WENT BEHIND A "?"** — attribution behind a
+   disclosure is not attribution, and the facts that matter most are *sentence three* in three of the
+   six, so any "hide the tail" rule would have hidden exactly those. Re-shaped, not hidden.
+   ⚠️ **`render.test.mjs` requires the first 40 characters of a warning to stay in ONE text node**,
+   which is what actually fixed the visible lead at two sentences.
+10. 🚩 **BIGGEST DUPLICATE LEFT, REPORTED NOT FIXED**: every transcribed system's `notes` opens by
+    restating its own `warning`, on the same screen inches apart. That is a `preset-systems.js`
+    content change — a different decision from a presentation one.
+11. 🚨 **OPEN WORK 27 IS NEW AND IT IS A REAL BUG**: **"Delete account" leaves every session document
+    in Firestore.** Found by reading that code, not by using the app. See the table below.
+12. ✅ **1,055 render assertions** (was 1,046) and **1,911 data-layer** (was 1,870). The Firestore
+    double grew queries, counts and **a moving server clock that shares one instant across a batch** —
+    the property that caught the millisecond cursor. Its `where()` models **only `>`**, so the
+    original bug cannot come back quietly. ✅ **Browser audit over Goals and all six Data segments,
+    360 and 390 px, both themes — 28 route-instances, zero contrast failures, zero overflow, zero
+    unnamed controls.**
+13. ⚠️ **AN AGENT RAN `git stash` MID-FLIGHT and briefly reverted three other writers' files.**
+    Nothing was lost, and it reported the incident unprompted. 🛑 **The brief said "do not commit"; it
+    did not say "do not stash". The next one must say: an agent may not run any git command that
+    changes the working tree.**
 
 ## What changed on 2026-09-08, in one line each
 
@@ -583,6 +609,13 @@ Three passes, each with its own dated section in `docs/history.md`.
   named list it may not, and **nobody was allowed near `css/app.css` or `tests/`** — the two places
   four writers collide *silently*. Tests, integration and both audits were done afterwards in one
   pass. ⚠️ **Agents must not commit**, and they must be told to run the suites and report verbatim.
+  🚨 **AND SINCE 2026-09-08 "DO NOT COMMIT" IS NOT ENOUGH — AN AGENT MAY NOT RUN ANY GIT COMMAND THAT
+  CHANGES THE WORKING TREE.** One ran `git stash` to get a clean test baseline and briefly reverted
+  three other writers' files; `git stash pop` then refused, because two of them had written again in
+  the meantime. Nothing was lost — it recovered everything and reported the incident unprompted — but
+  *"do not commit"* turned out to be one instance of the rule rather than the rule. **No `stash`, no
+  `reset`, no `checkout`, no `restore`.** ⚠️ **It also confirmed the arrangement works**: three
+  agents ran at once on 2026-09-08 on one named file each and none of them collided.
   ⚠️ **The 2026-08-22 note about wave size was about REVIEW agents**; four writing at once is a
   different thing and it held.
 - ⚠️ **AGENTS FLAG THEIR OWN NEAR-MISSES, AND THOSE ARE WORTH READING CLOSELY.** On 2026-09-06 one
@@ -671,6 +704,7 @@ than left at the top where they were written.
 | | What | State |
 |---|---|---|
 | **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ⚠️ **What is NOT done**: this has never run against real Firestore — the aggregation query, the `>` on a real server timestamp and the rules' `list` on an aggregation are all reviewed rather than executed, exactly like the rest of this file's network paths. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass |
+| **27** | 🚨 **"DELETE ACCOUNT" LEAVES THE SESSIONS IN FIRESTORE — found 2026-09-08, NOT FIXED** | ⚠️ **Found while reading that code for the read-pattern work, not by using the app, and it is Tim's call rather than a quiet fix.** `FirebaseBackend.deleteAccount()` clears five collections with `this.write(name, [])` and **passes no `wholesale` flag**, so for `sessions` the mass-delete guard (2026-08-28, *"make it extremely difficult to erase data from people's accounts"*) refuses the write outright. The throw is caught and logged, `deleteUser()` then runs, and **every session document stays at `users/{uid}/sessions/*` for an account that can never sign in again** — unreachable under the rules, but present, billable, and not what somebody pressing *Delete everything permanently* was promised. ⚠️ **`guestSessions` is not even in the list.** 🛑 **The fix is one word (`{ wholesale: true }`) plus that collection, and it is deliberately not made here**: the guard exists precisely so nobody sprinkles that flag around, and the two flows already allowed to use it snapshot to the cloud first — which is meaningless for an account being deleted, so the right shape needs a decision rather than a keystroke |
 | **25b** | 🆕 **the demo has no TIME-based strength set** | ⚠️ Left over from 25. The generator writes every set as `{weight, reps}`, so there is no plank, L-sit or dead hang anywhere in the demo year — a shape the app supports and the demo cannot show. Small; nobody has asked |
 | **25** | ✅ ~~the demo cannot show a trained-but-unrankable muscle~~ **FIXED 2026-09-04** | Cable Crunch (Core ranks) and Neck Curl (Neck hatches) — one of each, because the two states cannot sit on one muscle now Core is rankable. Tim authorised the re-baseline it forced. ⚠️ **Still open, and smaller**: the generator writes every set as `{weight, reps}`, so the demo has no TIME-based strength set anywhere — no plank, no L-sit, no dead hang. ~~ ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |
 | **23** | ✅ ~~a note to the developer~~ **BUILT 2026-09-04** | Form on Account, inbox at `#/notes`, `js/feedback.js` + a `feedback/{noteId}` collection. 🚨 **The developer is a hard-coded uid in `firestore.rules`** and the screen protects nothing; the author cannot read their own note back and nobody can edit one. Rules deployed and proved on the live project. 🛑 **TEMPORARY — take it out when the first users stop being new**, or it becomes a support inbox nobody is staffing. ~~ 🟢 **AUTHORISED, and he said to build it once questioning finished.** *"adding a temporary section to the app that allows the user to write a note or idea straight to the developer (me) would be nice to have. Then, make my account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas straight on the app."* ⚠️ **DELIBERATELY TEMPORARY** — it exists to catch fresh opinions while the first users are new, not forever. 🚨 **The developer role has to be enforced by `firestore.rules`, not by hiding a screen**: these are other people's words about their own training, and "only Tim can read them" has to be true on the wire. ⚠️ **It is also the first user-submitted free text this app has ever stored**, which is the moderation surface he parked the same day — worth one sentence to him if a decision here would be expensive to undo, and nothing more (that is the single exception he granted to staying quiet) |

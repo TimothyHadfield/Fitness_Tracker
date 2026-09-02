@@ -3909,10 +3909,22 @@ a.row { text-decoration: none; }
    one. `.field-help` carries no margin and this box carried no gap, so the
    caption, the score's explanation, the coverage line and the two caveats ran
    together into ~350 unbroken grey words — measured on a phone 2026-08-21,
-   where it filled the screen. Nothing here is hidden or shortened: on a phone
-   the caveats are load-bearing and a disclosure is how a caveat stops being
-   read. They are simply no longer a wall, and the workout list now sits above
-   them so nobody has to scroll past them to reach their own programme. */
+   where it filled the screen. They are no longer a wall, and the workout list
+   now sits above them so nobody has to scroll past them to reach their own
+   programme.
+
+   🔄 ⚠️ THIS PARAGRAPH USED TO END *"Nothing here is hidden or shortened: on a
+   phone the caveats are load-bearing and a disclosure is how a caveat stops
+   being read."* THAT WAS OVERTURNED BY TIM ON 2026-09-07, and the distinction
+   he drew is finer than the one this comment made. A caveat behind a `<details>`
+   nobody opens does stop being read — that part was right. What was wrong is
+   treating every sentence in the block as the same kind of claim. Design Rule 9
+   splits them: what the number IS stays in the open (*"3 sets of 20 and 3 sets
+   of 5 get the same strength percentage"*, *"Indirect work counts half a set"*,
+   *"Nothing real reaches 100 %"*), and only the reasoning behind each moved
+   behind a "?" — which, unlike a disclosure, is a named control sitting against
+   the words it answers for. Kept rather than deleted because the wrong version
+   is why this block was built the way it was. */
 .own-rating { margin-bottom: 6px; display: flex; flex-direction: column; gap: 7px; }
 /* Top-aligned since the badge became two rows: centring left the heading
    floating against the middle of a taller block, reading as neither its label

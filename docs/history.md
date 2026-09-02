@@ -91,6 +91,80 @@ comment is how the next person simplifies the true one away.**
   caught the millisecond cursor. Its `where()` models **only `>`**, deliberately: a double that
   quietly accepted either operator would let the original bug back in unnoticed.
 
+### A2. 🚨 TWO THINGS FOUND WHILE READING THAT CODE, NEITHER FIXED
+
+- 🚨 **"DELETE ACCOUNT" DOES NOT DELETE THE SESSIONS.** `deleteAccount()` clears five collections
+  with `this.write(name, [])` and passes **no `wholesale` flag**, so for `sessions` the mass-delete
+  guard refuses the write, the throw is caught and logged, and `deleteUser()` runs anyway. Every
+  session document stays under a uid that can never sign in again. `guestSessions` is not even in the
+  list. **Open work 27**, and 🛑 **deliberately not fixed here** — the one-word fix sprinkles the
+  exact flag the guard exists to make rare, and the two flows already allowed to use it snapshot to
+  the cloud first, which is meaningless for an account being deleted.
+- ⚠️ **`describeAccount()`'s four `dataHelp` strings are produced and never read** (`views-data.js`
+  ~1724–1765). An agent found it and flagged rather than deleted it, which was the right call.
+  Recorded, not swept.
+
+### A3. THE WORDINESS, ON SIX SCREENS — three agents, disjoint files
+
+Tim took job 3 and then named four more places: *"the compare box that appears when you click on an
+exercise someone else posted · details below muscle splits inside someone's workout they posted ·
+many details in the ready-made workout systems · when comparing muscle groups with a friend."*
+
+**Run as three agents with a named file each** — `views-goals.js` + `views-data.js`, `views-social.js`,
+`views-workouts.js` — with nobody allowed near `css/app.css` or `tests/`, which is the arrangement
+2026-09-06 recorded as the thing that makes parallel writing work. Integration, the test conversions
+and both audits were done here afterwards, in one pass.
+
+🚨 **THE THING THAT SURVIVED IN ALL THREE, AND IT IS THE POINT OF THE RULE: the refusals stayed on
+the screen.** `NO_VERDICT_HEADER` printed whole and unparaphrased; *"measured, not judged"*; *"None
+of these is a prediction"*; *"It is a target, not a promise"*; *"the ranking is the same either way"*
+on the More-details toggle; *"Switching never changes anything you have recorded"*; *"3 sets of 20
+and 3 sets of 5 get the same strength percentage"*; *"Indirect work counts half a set"*. **Only the
+reasoning behind each moved.**
+
+⚠️ **AND TWO PATTERNS CAME OUT OF IT THAT ARE WORTH MORE THAN THE EDITS:**
+
+- 🔒 **A CAVEAT IS SPLIT BY A MARKER INSIDE THE MODULE'S OWN STRING, AND IT FAILS TOWARDS THE
+  SCREEN.** Both the compare sheet and the system screens cut `compare.js`'s / `optimal.js`'s /
+  `volume-map.js`'s real constants rather than paraphrasing them, keyed on a marker: **if the source
+  module ever rewords one, the marker stops matching and the whole caveat prints exactly as it does
+  today.** A missed marker shows too much, never too little. `volume-map.js`'s header records what
+  happened the one time a screen paraphrased a constant instead — it quietly lost *"not a measured
+  fact"*.
+- 🛑 **NOT ONE WORD OF A CREATOR SYSTEM'S `warning` WENT BEHIND A "?", DELIBERATELY.** Attribution
+  behind a disclosure is not attribution. And the reason is sharper than taste: the facts that matter
+  most — Bumstead's eight-day cycle, Dr. Mike's cutting split, Arnold's disagreeing versions — are
+  **sentence three** in three of the six, so any uniform "hide the tail" rule would have hidden
+  precisely those. The warnings were **re-shaped into lines and a list**, words unedited and order
+  unchanged.
+
+⚠️ **A CONSTRAINT NOBODY KNEW WAS THERE:** `render.test.mjs` asserts `detail.textContent.includes(
+p.warning.slice(0, 40))`, and `textContent` concatenates without spaces — so **the first two
+sentences of a warning have to stay in one text node**. Five of the six straddle a sentence break
+inside those 40 characters. That, not judgement, is what fixed the visible lead at two sentences.
+
+⚠️ **AND A SAFARI CONSTRAINT ON THE SPLITTER:** no lookbehind regex (Safari 16.4, and an iPhone is
+the target), and *"Dr."* / *"Mr."* are non-terminal, or *"These workouts are NOT Dr. Israetel's"*
+gets cut in half.
+
+**Deleted rather than hidden, each with its duplicate named:** *"Nothing real reaches 100 %"* said
+twice on Explore; *"You have already added this one"* under a button reading **Add another copy**;
+*"Tap a muscle"* on the compare screen, said again a few pixels above; three clauses on Goals whose
+next sentence or section heading already said them.
+
+🚩 **PROPOSALS FROM AN AGENT, NOT ACTED ON, and the first is the biggest duplicate left:** every
+transcribed system's `notes` **opens by restating its own `warning`**, on the same screen inches
+apart. Thurston says the same two facts twice. The fix is a `preset-systems.js` content change, which
+is a different decision from a presentation change, so it was reported rather than made. Also: split
+Bumstead's 45-word sentence three, and give Nippard a `warning` of his own so the unevenness of his
+sourcing is not only in the notes.
+
+⚠️ **AN AGENT RAN `git stash` MID-FLIGHT TO GET A CLEAN BASELINE, and it briefly reverted the other
+three writers' files.** Nothing was lost — it recovered everything, said so unprompted, and the tree
+was independently verified complete here before the commit. 🛑 **The brief said "do not commit"; it
+did not say "do not stash", and it should have.** Add it to the next one: **an agent may not run any
+git command that changes the working tree.**
+
 ### B. THE "?" SITS AGAINST ITS LABEL NOW
 
 The first version right-aligned every dot, because `.help-line > .section-label { flex: 1 }` was

@@ -47,7 +47,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, youFriendsTabs, exerciseLabel,
-  personFace,
+  personFace, helpDot,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -963,6 +963,112 @@ export function openSetTypeSheet(item, onChange) {
  * Explore ready-made systems
  * ================================================================== */
 
+/* ------------------------------------------------------------------ *
+ * Rule 9 on these screens — the "?" holds WHY, never WHAT
+ *
+ * Tim, 2026-09-08: "many details in the ready-made workout systems" are too
+ * wordy. What was measured: 186 grey words under the Explore list, and the
+ * rating block on a system's own screen was already down as ~350 unbroken ones
+ * in August (see `.own-rating` in css/app.css). Identical on every visit, under
+ * the only things that change — the nine programmes and their four numbers.
+ *
+ * ⚠️ `.own-rating`'s CSS comment says "nothing here is hidden or shortened,
+ * because a disclosure is how a caveat stops being read". That was written on
+ * 2026-08-21 and Rule 9 (2026-09-07) is the answer to it: a caveat behind a ?
+ * is still stated, and what governs is whether it is WHAT or WHY. The gap that
+ * comment asks for is still doing its job — these are still separate claims.
+ *
+ * 🚨 NOT ONE WORD WAS DELETED FOR BEING LONG, and the split here is stricter
+ * than on any other screen because some of this prose is about SOMEBODY ELSE'S
+ * WORK. What stays on the screen, always:
+ *
+ *   · that a programme was TRANSCRIBED rather than given to us, and by whom —
+ *     attribution is never an explanation (see warningBlock below);
+ *   · what each badge number measures, and that nothing real reaches 100 %;
+ *   · that 3 sets of 20 and 3 sets of 5 get the same strength percentage —
+ *     §3 "What the strength score cannot see" says so in words, because a
+ *     `title` does nothing on a phone and a phone is where this is read;
+ *   · that indirect work counts half a set.
+ *
+ * Behind the ?: where the number came from and why it is drawn that way.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Cut a caveat that ships from another module into the half that stays on the
+ * screen and the half that goes behind the ?.
+ *
+ * ⚠️ THE CONSTANT IS NEVER RE-TYPED HERE. `STRENGTH_CAVEAT` lives in optimal.js
+ * beside the number it is about (and volume-map.js records what happened the one
+ * time a screen hand-wrote its own paraphrase: it quietly lost "not a measured
+ * fact"). This splits the real string at a marker inside it, so both halves are
+ * still the words that ship with the constant.
+ *
+ * ⚠️ AND IF THE MARKER IS EVER GONE, EVERYTHING STAYS ON THE SCREEN. A caveat
+ * may fail loud; it may never fail quiet.
+ */
+function splitCaveat(text, marker) {
+  const s = String(text || '');
+  const i = s.indexOf(marker);
+  if (i < 0) return { seen: s, why: null };
+  let seen = s.slice(0, i).replace(/[\s—–,]+$/, '');
+  if (!/[.!?]$/.test(seen)) seen += '.';
+  const why = s.slice(i).replace(/^[\s—–]+/, '');
+  return { seen, why: why.charAt(0).toUpperCase() + why.slice(1) };
+}
+
+/**
+ * A block of prose as its sentences.
+ *
+ * ⚠️ "Dr." AND "Mr." ARE NOT THE END OF A SENTENCE, and both appear in these
+ * strings — "These workouts are NOT Dr. Israetel's" and "a four-time Mr.
+ * Olympia's programme". Breaking there would cut an attribution in half, which
+ * is the one thing this file may not do.
+ *
+ * ⚠️ No lookbehind: Safari only learned it in 16.4 and an iPhone is the target.
+ */
+function sentencesOf(text) {
+  const s = String(text || '');
+  const out = [];
+  const re = /[.!?]\s+/g;
+  let start = 0;
+  let m;
+  while ((m = re.exec(s))) {
+    const head = s.slice(start, m.index + 1).trim();
+    if (/\b(?:Dr|Mr|Mrs|Ms|St)\.$/.test(head)) continue;
+    out.push(head);
+    start = m.index + m[0].length;
+  }
+  const tail = s.slice(start).trim();
+  if (tail) out.push(tail);
+  return out;
+}
+
+/**
+ * The two caveats that travel with EVERY rating, wherever one is drawn.
+ *
+ * Both are stated on the screen and both keep their full text one tap away.
+ * The strength one keeps its concrete half visible on purpose — "3 sets of 20
+ * and 3 sets of 5 get the same strength percentage" changes what the reader
+ * thinks the number IS, so it is not allowed behind a dot; what moved is why
+ * that matters and by how much. The half-a-set line follows the Volume screen,
+ * which says "indirect work counts half" on the screen and keeps the modelling
+ * argument behind its ?.
+ */
+function ratingCaveats() {
+  const strength = splitCaveat(STRENGTH_CAVEAT, 'They are not the same');
+  return [
+    el('div', { class: 'help-line' },
+      el('span', { class: 'field-help', text: strength.seen }),
+      strength.why
+        ? helpDot(strength.why, { label: 'Why the weight matters for strength' })
+        : null),
+    el('div', { class: 'help-line' },
+      el('span', { class: 'field-help', text: 'Indirect work counts half a set.' }),
+      helpDot(INDIRECT_NOTE_RATING,
+        { label: 'Why indirect work counts half', title: 'Half a set' })),
+  ];
+}
+
 /**
  * The rating beside a ready-made system.
  *
@@ -1110,13 +1216,23 @@ async function ownSystemRating(systemId, workouts, systemRow) {
   if (!rating || !(rating.raw.hypertrophy > 0)) return null;
 
   const under = rating.under;
+  // ⚠️ THE SCORE AND ITS CEILING STAY ON THE SCREEN; THE ARITHMETIC BEHIND THE
+  // CEILING DOES NOT. "Nothing real reaches 100 %" is what the percentage IS —
+  // without it 55 % reads as a bad mark — while "42 hard sets per muscle every
+  // week" is where that ceiling came from, which is WHY.
+  const growth = splitCaveat(explain(rating.hypertrophy), 'that would mean');
   return el('div', { class: 'own-rating' },
     el('div', { class: 'own-rating-head' },
       el('div', { class: 'section-label', text: 'How this programme rates' }),
       ratingBadge(rating),
     ),
+    // What the number is based on — measured, declared or assumed. WHAT, in
+    // full: a rating computed from an assumption and one computed from ten
+    // sessions are not the same claim and must not look alike.
     el('div', { class: 'field-help', text: rating.caption }),
-    el('div', { class: 'field-help', text: explain(rating.hypertrophy) }),
+    el('div', { class: 'help-line' },
+      el('span', { class: 'field-help', text: growth.seen }),
+      growth.why ? helpDot(growth.why, { label: 'Why nothing reaches 100 %' }) : null),
     // Coverage in words, never folded into the score — "a good programme that
     // skips calves" should read as exactly that, and it is the most actionable
     // thing on the screen.
@@ -1126,12 +1242,12 @@ async function ownSystemRating(systemId, workouts, systemRow) {
           + `${under.join(', ')}.` })
       : el('div', { class: 'field-help', text:
           'Every muscle group gets at least the minimum effective dose.' }),
-    // ⚠️ The two things these numbers do not know, in full words, on the screen
-    // where somebody actually stops and reads them. D8: at the moment of use,
-    // never in a manual. Both strings come from the modules that own the
-    // constants they are about, so neither can drift.
-    el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
-    el('div', { class: 'field-help', text: INDIRECT_NOTE_RATING }),
+    // ⚠️ The two things these numbers do not know, on the screen where somebody
+    // actually stops and reads them. D8: at the moment of use, never in a
+    // manual. Both strings still come from the modules that own the constants
+    // they are about, so neither can drift — see ratingCaveats(), which keeps
+    // the fact on the screen and the reasoning one tap away.
+    ...ratingCaveats(),
   );
 }
 
@@ -1177,17 +1293,31 @@ export async function ExploreView() {
       // becomes "system" on the next tap, and the definition lived on a screen
       // the first-run path routes past). A stranger arrives here from "Pick a
       // programme"; the bridge is built where they are standing (D8).
-      el('div', { class: 'field-help', text:
-        'Pick one and it is copied into your systems — a system is just a programme you own. '
-        + 'From then on it is yours: rename it, change the exercises, delete what you do not do.' }),
+      // ⚠️ THE WORD SWAP STAYS ON THE SCREEN. What went behind the ? is what
+      // owning the copy lets you DO, which is a consequence of "copied" rather
+      // than part of it.
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          'Pick one and it is copied into your systems — a system is just a programme you own.' }),
+        helpDot('From then on it is yours: rename it, change the exercises, delete what you do '
+          + 'not do.', { label: 'What happens when you add one' })),
       // ⚠️ WHAT THE NUMBERS MEAN, BEFORE THE NINE NUMBERS (UX review: "Explore
       // ranks nine programmes by a number it explains nine cards later"). The
-      // full caveats stay below; this is the one line without which 55 % reads
-      // as a bad mark.
-      el('div', { class: 'field-help', text:
-        'Each badge: how much of the growth and strength stimulus the research supports a '
-        + 'programme delivering — nothing real reaches 100 % — plus days a week and minutes a '
-        + 'session, which are what it costs.' }),
+      // caveats stay below; this is the line without which 55 % reads as a bad
+      // mark, so both halves of it — what the percentage measures, and that
+      // nothing real reaches 100 % — are WHAT and stay put.
+      //
+      // ⚠️ "Nothing real reaches 100 %" USED TO BE SAID TWICE, here in passing
+      // and again in full under the list. It is said once now, here, where the
+      // reader meets the first badge; the 42-sets arithmetic that was the rest
+      // of that sentence is WHY and went behind this dot.
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          'Each badge: how much of the growth and strength stimulus the research supports a '
+          + 'programme delivering, plus what it costs in days a week and minutes a session. '
+          + 'Nothing real reaches 100 %.' }),
+        helpDot('That would mean 42 hard sets per muscle every week.',
+          { label: 'Why nothing reaches 100 %' })),
       el('div', { class: 'list' }, PRESET_SYSTEMS.map((p) =>
         el('button', { class: 'row row-rated', onClick: () => go('#/explore/' + p.id) },
           el('div', { class: 'row-main' },
@@ -1210,19 +1340,19 @@ export async function ExploreView() {
           ratingBadge(ratings.get(p.id)),
           chevron(),
         ))),
-      // The short version now sits ABOVE the list (2026-08-26); this is the
-      // full statement — what 100 % would mean, and the assumptions. Both
-      // facts stay on the screen, not just in the docs.
+      // The two assumptions inside the percentage. Both are WHAT — they change
+      // what the reader thinks the number is a percentage OF — so neither goes
+      // behind a dot. What left this line is the "nothing reaches 100 %"
+      // sentence, which the line above the list now carries on its own.
       el('div', { class: 'field-help', text:
-        'Nothing real reaches 100 % — that would mean 42 hard sets per muscle every week. The '
-        + 'percentages assume you train close to failure, and more days is not itself better '
+        'The percentages assume you train close to failure, and more days is not itself better '
         + 'for growth.' }),
       // ⚠️ These two go under the list, not only in a tooltip. A `title` is
       // invisible on a phone, and this is where a stranger is comparing nine
       // strength percentages against each other — the exact moment the number's
-      // blind spot matters most.
-      el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
-      el('div', { class: 'field-help', text: INDIRECT_NOTE_RATING }),
+      // blind spot matters most. Rule 9 splits each of them: the blind spot
+      // itself on the screen, why it matters behind the ?.
+      ...ratingCaveats(),
       el('div', { class: 'field-help', text:
         `${PRESET_SYSTEMS.length} to choose from, with more to come.` }),
     ],
@@ -1232,6 +1362,43 @@ export async function ExploreView() {
 /* ================================================================== *
  * One ready-made system, before you commit to it
  * ================================================================== */
+
+/**
+ * The red-ruled warning above a transcribed programme.
+ *
+ * 🛑 NOTHING HERE IS HIDDEN AND NOTHING HERE MAY BE. Every other block on these
+ * screens gave its WHY to a "?"; this one did not, and the reason is that a
+ * `warning` is not a caveat about a number — it is a statement about what the
+ * programme IS. That it was transcribed from a published write-up rather than
+ * handed to us, that Bumstead's rotation is an eight-day cycle and not a week,
+ * that Israetel's is a cutting split, that the versions of Arnold's disagree:
+ * a reader must not be able to mistake any of that for the author's own upload
+ * WITHOUT TAPPING ANYTHING. Attribution behind a disclosure is not attribution.
+ *
+ * ⚠️ SO THE FIX HERE IS SHAPE, NOT DISCLOSURE — Rule 9's "re-shaping is as
+ * often the fix as hiding". Up to seventy words arrived as one dense red
+ * paragraph and left as a lead plus the things to know. The words are the
+ * warning's own, unedited and in their own order; only the line breaks are new.
+ *
+ * ⚠️ THE LEAD IS TWO SENTENCES, NEVER ONE. All but one of these open with the
+ * three words "Not official." and the claim only lands with the sentence after
+ * it — and `tests/render.test.mjs` reads the first forty characters of the
+ * warning as one string, which straddles that break.
+ */
+function warningBlock(text) {
+  const parts = sentencesOf(text);
+  if (parts.length <= 2) return el('div', { class: 'preset-warning' }, el('span', { text }));
+  const lead = parts.slice(0, 2).join(' ');
+  const rest = parts.slice(2);
+  return el('div', { class: 'preset-warning' },
+    el('div', { text: lead }),
+    rest.length > 1
+      // Three things in one paragraph are three things nobody counts — the same
+      // reason the visibility sheet's sentence became `.vis-list`.
+      ? el('ul', { class: 'vis-list' }, rest.map((s) => el('li', { text: s })))
+      : el('div', { text: rest[0] }),
+  );
+}
 
 export async function ExploreDetailView(id) {
   const [{ presetById, presetSetCount }, added] = await Promise.all([
@@ -1294,11 +1461,10 @@ export async function ExploreDetailView(id) {
       // The default assumes a video transcription, which is true of exactly one
       // system here — anything else states its own case.
       preset.unofficial
-        ? el('div', { class: 'preset-warning' }, el('span', {
-            text: preset.warning
-              || 'Not official. Transcribed from published write-ups of the free videos, '
-                 + 'not from the author or their paid programme. Sets and reps are as reported — '
-                 + 'check the source before you trust a number.' }))
+        ? warningBlock(preset.warning
+            || 'Not official. Transcribed from published write-ups of the free videos, '
+               + 'not from the author or their paid programme. Sets and reps are as reported — '
+               + 'check the source before you trust a number.')
         : null,
 
       preset.notes
@@ -1327,9 +1493,13 @@ export async function ExploreDetailView(id) {
         text: alreadyAdded ? 'Add another copy' : 'Add to my systems',
         onClick: add,
       }),
+      // ⚠️ The button above already says "Add another copy" when this shows, so
+      // "You have already added this one" was the button read back to the
+      // reader — the shape Rule 9 deletes rather than hides. What is left is
+      // the half the button does not say: the two copies are separate.
       alreadyAdded
         ? el('div', { class: 'field-help', text:
-            'You have already added this one. Adding it again makes a second, separate copy.' })
+            'Adding it again makes a second, separate copy.' })
         : null,
     ],
   });
