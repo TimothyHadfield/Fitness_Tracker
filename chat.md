@@ -3254,3 +3254,24 @@ stricter test than before, because the words have to be reachable, not just pres
 
 That's seven places done out of about three hundred. The mechanism and the pattern are in, and I'd
 rather you point at the screens that bother you than have me sweep the lot.
+
+---
+
+## 2026-09-07 (reset prep) — tidying the notes
+
+Collapsed today's four passes in progress.md into one section. They'd stacked up as four separate
+"what changed" blocks, which is the same sprawl I cut on the 6th — one line per thing here, the full
+write-up in history.md. The file is smaller now than before I started, despite everything today being
+in it.
+
+Two stale lines went with them, and they're the reason this matters: the first-pass notes still said
+"no discard control on the bar" and "the save screen is a separate job he'll raise later". Both were
+true when written and both were done by the end of the day. A fresh session reading that would have
+believed the app was two features behind.
+
+Refreshed the top of the file. It now tells a new session to check `git status` before anything else,
+because the muscle-outline work may be sitting uncommitted in the tree.
+
+Recorded in direction.md that you've opened the wordiness topic — it was on the deferred list with
+"don't shorten copy globally" next to it, and that's no longer right. Your carve-out for the research
+section is written in there word for word.

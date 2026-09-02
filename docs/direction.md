@@ -134,8 +134,20 @@ which safety may be raised unprompted.
 
 **Three topics he deferred with "I'll talk about it later" — 🛑 do not pre-empt any of them:**
 
-1. **The app's voice and wordiness.** He said sections are wordy; asked whether to cut the
-   explaining back, he said he would talk about it later. **Do not shorten copy globally.**
+1. 🔄 ~~**The app's voice and wordiness.**~~ **HE OPENED IT ON 2026-09-07 — the deferral is over and
+   "do not shorten copy globally" is lifted BY HIM, on this topic.** *"analyze everywhere in the cite
+   where it has sentences longer than maybe 10-15 words and really think about if every single word
+   in that sentence is important … With paragraphs, if it's explaining something, I think it's best
+   to have a little question mark somewhere near the thing that it's explaining … when you touch it
+   it opens a mini box that shares what it's trying to say."*
+   ⚠️ **IT IS STILL NOT A SWEEP.** He asked for the ANALYSIS first, and it is done: **18,631
+   user-facing words, 304 sentences over 15 words, 63 blocks of 40+**, ranked by file in
+   `progress.md`. Seven places converted, ~300 left, and **he points**.
+   🆕 **Design Rule 9 came out of it — the ? holds WHY, never WHAT** (`docs/handbook.md` §5).
+   🛑 **AND ONE CARVE-OUT IS HIS, VERBATIM**: *"the research section is extreamly wordy and while I
+   do think we need to make the descriptions in that section more clear, we should allow it to
+   describe that section sufficiently."* **Research's framing may shrink; its teaching content may
+   not.**
 2. **What "quality" means concretely** — his stated competitive edge, undefined on purpose for now.
 3. **The abs ranking.** Still open from 2026-09-03. *"I'll talk to you about it after questioning.
    don't do anything now."* ⚠️ Note that §3.1 makes his own first idea (rate weighted core work

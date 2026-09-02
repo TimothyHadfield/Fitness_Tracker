@@ -848,6 +848,9 @@ Fitness_Tracker/
 │   │                           and a FAMILY in exercise-families.js or it is
 │   │                           inert; both are asserted
 │   ├── ui.js                   el(), icons, sheets, toasts, steppers, screenShell, profileButton
+│   │                           ⚠️ AND helpDot() SINCE 2026-09-07 — Tim's "?"
+│   │                           and its popover. Design Rule 9 governs what may
+│   │                           go in one: WHY, never WHAT
 │   ├── views-workouts.js       home, the RECORD tab (StartPickerView — the
 │   │                           workout list plus the benchmark action),
 │   │                           SYSTEMS list, one system, workout builder,

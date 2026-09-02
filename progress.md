@@ -11,7 +11,7 @@
 >
 > **`docs/history.md` is the dated log** — every session's full write-up, newest first. You do not
 > read it; the recent ones are summarised below and you go there for the detail, searching by date.
-> ⚠️ **It is larger than one read** (366 KB): grep it for the date, then read that range.
+> ⚠️ **It is larger than one read** (453 KB): grep it for the date, then read that range.
 >
 > `chat.md` is the human-readable log and answers "what did we say about X"; it starts at
 > 2026-08-21, with everything before that in `docs/chat-archive.md`.
@@ -25,132 +25,61 @@
 **Last updated:** 2026-09-07 — four passes: leaving a workout open, the save screen and the cost of
 photos, the bin on the bar, then the wordiness measured and the "?".
 
-## What changed on 2026-09-07 (fourth pass), in one line each
+## What changed on 2026-09-07, in one line each
 
-**Tim opened the wordiness topic `docs/direction.md` §4 had parked.** 🛑 **"Do not shorten copy
-globally" is lifted BY HIM on this topic** — but he asked for the analysis first, and that is the
-deliverable. Full write-up at the top of `docs/history.md`.
+⚠️ **THIS WAS FOUR PASSES AND THEY ARE COLLAPSED HERE ON PURPOSE** — the same cut 2026-09-06 needed.
+Each has its own dated section in `docs/history.md` (2026-09-07, first through fourth pass).
 
-1. 📊 **MEASURED FOR THE FIRST TIME: 18,631 user-facing words, 304 sentences over 15 words, 63 blocks
-   of 40+.** Worst first: `research-topics.js` 54 · `preset-systems.js` 37 · `views-goals.js` 30 ·
-   `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19. ⚠️ **The top two are not the
-   app's voice** — transcribed coaching notes and teaching content that already has word budgets.
-2. 🚨 **THE FINDING: THE COPY IS NOT PADDED, IT IS MIS-PLACED.** Almost every offender is an
-   *explanation*. The standing rule that every caveat is stated on screen never said WHERE, so Volume
-   ended as a body map, your numbers, and **five paragraphs of ~150 words** — identical every visit,
-   under the only thing that changes.
-3. 🆕 **`helpDot()` IN `js/ui.js` — Tim's "?"**. 26px dot in a 44px target, a popover positioned
-   against it and clamped to the screen. **A popover, not a sheet**: a sheet covers the thing being
-   explained. 🔒 **THE RULE IT INTRODUCES: THE ? MAY HOLD *WHY*, NEVER *WHAT*.**
-4. ✅ **SEVEN PLACES CONVERTED** — Volume's notes (5 paragraphs → one 18-word line), Volume's short
-   window, Goals' no-verdict and its stalls note, Settings' findable-by-name, the Research blurb.
-5. 🚨 **THE VISIBILITY SHEET GOT NO ? AND THAT IS THE INSTRUCTIVE ONE** — what a stranger can see is
-   WHAT, so nothing was hidden. A 48-word sentence became **a list**. Not every wordy thing wants a ?.
-6. ⚠️ **SIX CAVEAT-GUARDING ASSERTIONS FAILED AND WERE RIGHT TO.** 🔒 **They were not relaxed — they
-   now OPEN the ?**, which is stronger: the words must be reachable by the control, not merely
-   present somewhere in the pane.
-7. 🆕 **Research's FRAMING shrank; its topics did not** — Tim, mid-session: *"we should allow it to
-   describe that section sufficiently."*
-8. ✅ **1,046 render assertions**, sixteen suites green, driven at 393×852. ⚠️ The dot moved off
-   `--ink-faint` (4.52:1 measured in light gold — a pass with nothing spare) and the box is capped at
-   62dvh after measuring 525px on the Volume screen.
-9. 🛑 **SEVEN DOWN, ~300 TO GO — AND DO NOT SWEEP IT.** The mechanism, the rule and the test pattern
-   exist; the ranked list above is the queue and Tim points.
+**What Tim asked for, in order:** leave a workout and come back to it → the screen after a workout
+finishes, plus *"how would that change storage"* about photos → a bin on the bar → the app's
+wordiness.
 
-## What changed on 2026-09-07 (third pass), in one line each
-
-**Tim:** *"right now the workout pull down is perfect. Just add a trash can on the right side of the
-box that delets the workout if the user clicks on it."* — the control flagged when the bar shipped,
-now authorised.
-
-1. 🆕 **A BIN ON THE RIGHT OF THE BAR**, 52 × 56 px behind its own hairline. ⚠️ **It asks first when
-   there is something to lose, and only then** — the rule every other destructive control here
-   already follows (removing a person, the save screen's Discard), and it matters most on the one
-   that sits a few pixels from the Home tab for a whole workout. Nothing recorded, nothing asked.
-2. 🚨 **THE BIN IS A SIBLING OF THE LINK, NEVER INSIDE IT** — a `<button>` inside an `<a>` is invalid
-   HTML that browsers recover from differently, and whether a tap opens or deletes must never be
-   ambiguous. Pinned by an assertion.
-3. ✅ **`setIsRecorded` NOW HAS ONE HOME** — `js/session-draft.js`, with `hasNumbers` and
-   `draftRecordedSets()`. It was a closure in the runner; **four callers** now ask the same question,
-   and three copies of it is what this project deletes functions over.
-4. ✅ **1,033 render assertions**, sixteen suites green, mutation-checked, driven at 393×852,
-   contrast re-measured across both themes and all four palettes (worst 9.25:1).
-
-## What changed on 2026-09-07 (second pass), in one line each
-
-**Tim:** *"Instead of putting the description and location at the top of the cite During a workout,
-put all that information as an option after the workout is finished, and then the user can post the
-workout."* Plus a question about photos. Full write-up at the top of `docs/history.md`.
-
-1. 🚨 **FINISH NO LONGER SAVES — IT OPENS A SAVE SCREEN**, and the button there is what writes.
-   Duration · Sets · Exercises, a description, a gym, the day, and a discard. **The order is the
-   whole change**: the old code argued the description had to live in the runner *because the finish
-   screen renders after the save has landed*, which was true and is what moving the boundary fixed.
-   The fields now describe a draft, and Finish is still one write.
-2. ⚠️ **`saveError` MOVED WITH THE BUTTON** — left in the runner it would have re-created the
-   2026-08-22 bug: a failed save writing its explanation into a screen nobody is looking at. There is
-   an assertion that the message lands on the save screen.
-3. 🛑 **THREE DELIBERATE DEPARTURES FROM HEVY'S SCREEN**: **sets and exercises, not volume in pounds**
-   (`session-stats.js`'s own argument, and Tim asked for a set count); **no Visibility row**, because
-   visibility is account-wide (D29) and a per-workout flag is a decision he owes rather than one to
-   build; **no title field and no Apple Health row**, neither of which exists here.
-4. ⚠️ **THE DAY IS EDITABLE IN BOTH PLACES ON PURPOSE** — the objection to two controls is drift and
-   there is none (one state, both re-render, never on screen together). The header one says NOT TODAY
-   the whole way through a back-dated workout; this one makes the screen a true summary.
-5. 💷 **PHOTOS: YES, BUT NOT FREE, AND THE BILL IS EGRESS RATHER THAN STORAGE.** It needs **Blaze**
-   (already the parked decision in `docs/social-plan.md` §13 step 9). At ~200 KB a photo, storage is
-   ~$1/month at 1,000 users; **people LOOKING is ~$100/year at 1,000 users and ~$2,500/year at
-   10,000** — against a $110/year app today. 🚨 **And D29 makes accounts public by default, so the
-   audience has no ceiling**, with no hard spending cap on Firebase. 🛑 **Nothing built.**
-6. ✅ **RAISED UNPROMPTED, AND IT IS THE ONE EXCEPTION HE GRANTED** (`direction.md` §3.4): photos are
-   user-uploaded content on public-by-default accounts with **no blocking, reporting or moderation**.
-   Not an argument against photos — an argument that those land first.
-7. 🚨 **`tests/sw-update.test.mjs` IS FLAKY ON THIS MACHINE AND IT IS NOT THIS CHANGE** — 5 of 6 runs
-   failed, and **the control was measured**: three runs on the stashed baseline failed 4 / 4 / 1.
-   ⚠️ **Do not read today's suite list as including it.** 1,025 render assertions; the other sixteen
-   suites green.
-
-## What changed on 2026-09-07 (first pass), in one line each
-
-**Tim asked for one thing:** *"I want the user to be able to 'leave' a workout and interact with the
-rest of the cite and then come back to the workout at any time."* Full write-up at the top of
-`docs/history.md`.
-
-1. 🚨 **THE DRAFT ALREADY SURVIVED LEAVING — THERE WAS NO WAY BACK.** Every set has gone to
-   `ftrack:v1:draftSession` since the runner shipped and the same workout has always resumed the same
-   day, but the only door was that workout's row in the Record picker and **the only statement that
-   the door existed was one sentence inside the sheet you got on the way out.** The app kept the
-   workout and looked exactly as though it had thrown it away.
-2. 🆕 **THE ✕ IS A ▾, AND IT ASKS NOTHING** — the confirm sheet is gone, because a question with a
-   Cancel button says this might cost you something and nothing is at stake. Back through history,
-   not to `#/home` (Rule 8).
-3. 🆕 **A BAR ABOVE THE NAV ON EVERY SCREEN while a workout is open** — `js/live-session.js`: name,
-   elapsed time, the exercise you are on, up arrow. ⚠️ **In the layout, not fixed over it** — it is
-   the **last child of `.screen`**, which is above the nav on a phone and the bottom of the content
-   column beside the desktop sidebar; fixed would sit permanently on top of `.pane-bottom`, where
-   every screen's primary action lives.
-4. 🚨 **AND IT UNCOVERED A WAY TO LOSE A WORKOUT, NOW SHUT.** `SessionView` opened with
-   `if (rawDraft && !existingDraft) clearDraft()` — **starting any other workout deleted the one in
-   progress, silently.** Defensible while leaving took a deliberate tap through a sheet; with a bar
-   advertising the open workout it is a stroll. A second workout now meets a screen that names the
-   open one, says how many sets are in it, and offers both answers. 🛑 **The discard is not in
-   `.pane-bottom`** — that is where the thumb already is.
-5. ✅ **1,004 render assertions** (was 982), all seventeen suites green, **mutation-checked three
-   ways** — and one of my own assertions was passing for the wrong reason until the mutation exposed
-   it. ✅ **Driven at 393×852 end to end**; contrast on the new bar measured in **both themes and all
-   four palettes, worst 9.25:1** — the standing audit cannot reach it, because it only exists while a
-   draft does.
-6. ⚠️ **I BROKE §0.11 AGAIN, ON A ONE-LINE MUTATION CHECK I MEANT TO REVERT IN NINETY SECONDS** —
-   PowerShell read-modify-write double-encoded every non-ASCII character in a new file. Caught by
-   reading the bytes, rewritten through the editor. 🚨 **A mutation check is the most dangerous place
-   in this workflow to reach for a script**: the edit is designed to be thrown away, so nobody diffs
-   it, and putting the line back leaves the encoding damage in every other line.
-7. 🛑 **NO DISCARD CONTROL ON THE BAR.** Hevy has a trash icon there; he described the arrow and did
-   not ask for one, and a one-tap delete for a live workout under the thumb on every screen is not
-   something to add unasked. Raised with him.
-8. ⏸️ **HEVY'S SAVE SCREEN IS A SEPARATE JOB HE HAS FLAGGED** — the third screenshot he sent. *"It
-   does relate to how the cite interacts with the user once a workout finishes. I'll talk to you
-   about that afterwards."* **Nothing on the finish screen was touched.**
+1. 🚨 **THE DRAFT ALWAYS SURVIVED LEAVING — THERE WAS NO WAY BACK.** Every set has gone to
+   `ftrack:v1:draftSession` since the runner shipped and the same workout has always resumed the
+   same day, but the only door was that workout's row in Record and **the only statement that the
+   door existed was one sentence in the sheet you got on the way out.** The app kept the workout and
+   looked exactly as though it had thrown it away. **The fix was mostly making it visible.**
+2. 🆕 **THE ✕ IS A ▾ AND ASKS NOTHING** · **a bar above the nav on every screen while a workout is
+   open** (`js/live-session.js` — name, elapsed, the exercise you are on) · **a bin on the right of
+   it**, which asks first only when sets are recorded. ⚠️ **The bar is in the LAYOUT, not fixed over
+   it** — last child of `.screen`, which is above the nav on a phone and the bottom of the content
+   column beside the desktop sidebar. ⚠️ **The bin is a SIBLING of the link, never inside it.**
+3. 🚨 **THAT UNCOVERED A WAY TO LOSE A WORKOUT, NOW SHUT.** `SessionView` opened with
+   `if (rawDraft && !existingDraft) clearDraft()` — **starting any other workout silently deleted
+   the one in progress.** Defensible while leaving took a deliberate tap through a sheet; with a bar
+   advertising the open workout it is a stroll. A second workout now meets a screen naming the open
+   one and its set count.
+4. 🚨 **FINISH NO LONGER SAVES — IT OPENS A SAVE SCREEN** (Duration · Sets · Exercises, description,
+   gym, day, discard) and the button there writes. **The order is the whole change**: the old code
+   argued the description had to live in the runner *because the finish screen renders after the save
+   has landed*. ⚠️ **`saveError` moved with the button**, or a failed save would explain itself on a
+   screen nobody is looking at. 🛑 **Three deliberate departures from Hevy**: sets not volume in
+   pounds, no per-workout Visibility row (D29 — a decision he owes), no title field.
+5. 💷 **PHOTOS: POSSIBLE, NOT FREE, AND THE BILL IS EGRESS NOT STORAGE.** Needs **Blaze**. ~200 KB a
+   photo: storage ~$1/month at 1,000 users; **people LOOKING is ~$100/yr at 1,000 users and ~$2,500/yr
+   at 10,000** against a $110/yr app. 🚨 **D29 makes accounts public by default so the audience has no
+   ceiling**, and Firebase has no hard spending cap. 🛑 **Nothing built.** ✅ **Moderation raised
+   unprompted — the one exception `direction.md` §3.4 grants.**
+6. 📊 **THE WORDINESS WAS MEASURED FOR THE FIRST TIME: 18,631 user-facing words, 304 sentences over
+   15 words, 63 blocks of 40+.** Worst first: `research-topics.js` 54 · `preset-systems.js` 37 ·
+   `views-goals.js` 30 · `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19.
+   ⚠️ **The top two are not the app's voice** — transcribed coaching notes, and teaching content that
+   already has word budgets.
+7. 🚨 **THE FINDING: THE COPY IS NOT PADDED, IT IS MIS-PLACED.** Almost every offender is the app
+   *explaining itself*. The standing rule that every caveat is stated on screen never said WHERE, so
+   Volume ended as a body map, your numbers, and **five paragraphs of ~150 words** identical on every
+   visit. 🆕 **`helpDot()` is Tim's "?"** and **Design Rule 9** is what it introduced: **the ? holds
+   WHY, never WHAT.** Seven places converted.
+8. 🚨 **THE VISIBILITY SHEET GOT NO ? AND IT IS THE INSTRUCTIVE ONE** — what a stranger can see is
+   WHAT, so nothing was hidden; a 48-word sentence became **a list**. ⚠️ **Six caveat-guarding
+   assertions failed and were right to** — 🔒 **not relaxed, they now OPEN the ?**, which is stricter.
+9. ⚠️ **I BROKE §0.11 AGAIN, ON A ONE-LINE MUTATION CHECK I MEANT TO REVERT IN NINETY SECONDS** —
+   PowerShell read-modify-write double-encoded a whole new file. 🚨 **A mutation check is the most
+   dangerous place in this workflow to reach for a script**: the edit is designed to be thrown away,
+   so nobody diffs it, and putting the line back leaves the damage in every other line. §0.11 updated.
+10. ✅ **1,046 render assertions** (was 982), mutation-checked throughout, driven at 393×852, contrast
+    re-measured across both themes and all four palettes. 🚨 **`tests/sw-update.test.mjs` is flaky on
+    this machine and it is NOT this work** — see START HERE.
 
 ## What changed on 2026-09-06, in one line each
 
@@ -401,11 +330,22 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
    Full write-up in `docs/history.md`. ⚠️ **The demo cannot show this state and a fix for that was
    deliberately reverted** — see Open work 25.
 
-# 🟢 START HERE: NOTHING IS HALF-BUILT, AND ONE THING IS WAITING ON TIM
+# 🟢 START HERE: CHECK `git status` FIRST, THEN NOTHING IS HALF-BUILT
 
-**The working tree is clean, everything is pushed, and sixteen of the seventeen suites are green** —
-including 1,025 render assertions, plus a browser audit at **128 routes / 11,912 text nodes / zero
-contrast failures / zero overflow**. **No half-finished job to pick up.**
+**Everything of mine is pushed, and sixteen of the seventeen suites are green** — including **1,046
+render assertions**, plus a browser audit at **128 routes / 11,912 text nodes / zero contrast
+failures / zero overflow**. **No half-finished job to pick up.**
+
+⏸️ **ONE THING MAY BE SITTING IN THE WORKING TREE, AND IT IS NOT MINE: THE MUSCLE-MAP OUTLINES.**
+Tim, 2026-09-07: *"the lines that outline and define where a muscle is are very bumpy and don't
+perfectly outline where the muscle truely is … Is there any way you can make it smoother?"* — he sent
+five screenshots (Lats worst, then Glutes and Hamstrings; Chest is the standard to reach). **A
+sub-agent was working on `tools/build-body-art.py` and the generated `js/body-art.js` /
+`img/ink-*.webp` when this file was written, and it was told not to commit.** 🚨 **SO CHECK
+`git status` FIRST.** If those files are modified, that is the outline work: read the 2026-09-07
+section of `docs/history.md`, re-run `node tests/data-layer.test.mjs` (the art↔standards invariant
+lives there) and `node tests/render.test.mjs`, look at the map in a browser, and only then decide
+whether to keep it. **If the tree is clean, the job was never landed and Tim will raise it again.**
 
 🚨 **THE SEVENTEENTH, `tests/sw-update.test.mjs`, IS FLAKY ON THIS MACHINE AS OF 2026-09-07 AND IT IS
 NOT A REGRESSION.** It fails most runs on *"the service worker takes control on the second load"*,
@@ -422,12 +362,18 @@ raise himself stay out of the answer either way.
 ⚠️ **DO NOT WRITE "not verified on a phone" ANYWHERE** — `docs/direction.md` §3.3, and it is the rule
 this file has broken most often. Shipped is working unless Tim says otherwise.
 
-**Two things sit unbuilt on purpose, and neither is a loose end:**
+**Four things sit unbuilt on purpose, and none is a loose end:**
 
 - 🛑 **The read-pattern change** — worth ~20× on running cost and the clearest single improvement
   left in this codebase. **Nobody asked for it**, and it changes how the app talks to Firestore. See
   the cost section above.
 - 🛑 **The abs ranking** — his, and open. Below.
+- 🛑 **The rest of the wordiness** — the mechanism, the rule (Design Rule 9) and the test pattern all
+  exist, and **seven places of ~300 are done**. The ranked list is in the 2026-09-07 summary above.
+  ⚠️ **He asked for the analysis first and it is delivered; he points at screens from here.** 🛑 **And
+  Research's teaching content is carved out by name** — `docs/direction.md` §4.1.
+- 🛑 **Photos** — costed on 2026-09-07 (~$100/yr at 1,000 users, ~$2,500/yr at 10,000, and it needs
+  Blaze). **Answered, not queued.**
 
 ## ⏸️ THE OPEN THREAD THAT IS TIM'S: HOW TO RANK ABS — he asked, it was answered, HE HAS NOT PICKED
 
@@ -1103,7 +1049,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | **4,140 assertions across SEVENTEEN suites** (2026-09-07: render 982 → **1,004**, the workout you can leave open; everything else as recounted 2026-09-06 by running every one: data-layer 1870, render 1004, goals 232, bodyweight 184, social 162, a11y 107, share-image 91, optimal 76, strength-estimate 72, volume-map 64, demo 58, compare 53, year-grid 45, routine 42, qr 33, estimate 35, sw-update 12), plus **159 in `rules`** (emulator, not in that total). *(2026-09-03's recount was 4,004; the +114 is that day's work being pinned.)* ⚠️ **`social` went DOWN (181 → 162) and that is not a loss of coverage** — the tier model it tested no longer exists, and one absence check over three tiers replaced a walk over every leaf of a light projection. ⚠️ **Four suites are new on 2026-09-02** — `compare`, `routine`, `share-image` and `estimate` — and the per-suite rows below are the recount too. ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | **4,182 assertions across SEVENTEEN suites** (2026-09-07's four passes took render 982 → **1,046**; everything else as recounted 2026-09-06 by running every one: data-layer 1870, render 1046, goals 232, bodyweight 184, social 162, a11y 107, share-image 91, optimal 76, strength-estimate 72, volume-map 64, demo 58, compare 53, year-grid 45, routine 42, qr 33, estimate 35, sw-update 12), plus **159 in `rules`** (emulator, not in that total). *(2026-09-03's recount was 4,004; the +114 is that day's work being pinned.)* ⚠️ **`social` went DOWN (181 → 162) and that is not a loss of coverage** — the tier model it tested no longer exists, and one absence check over three tiers replaced a walk over every leaf of a light projection. ⚠️ **Four suites are new on 2026-09-02** — `compare`, `routine`, `share-image` and `estimate` — and the per-suite rows below are the recount too. ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | **Data tests** | `node tests/data-layer.test.mjs` — 1847 assertions, **no dependencies**. ⚠️ Since 2026-08-30 it also holds the **EXERCISE-PICTURE manifest**: that it matches `img/exercises/` on disk (a forgotten `tools/build-exercise-images.mjs` fails here, because the drift is otherwise silent — a filename typed wrong shows no picture, and no picture is this feature's normal state), that every picture is in the sw precache (**D6**), and 🚨 that a picture given to one "Cable Kickback" is not given to the other. ⚠️ Since 2026-08-30 it also holds the **MOVEMENT FAMILIES** — that all 271 members resolve to exactly one exercise (the `preset-systems` by-name lesson on a second table), that no exercise is in two families, that a leg press offers four kinds of EQUIPMENT rather than five barbell squats, and 🚨 that Hip Adduction, Neck Curl and Tibialis Raise have **no family on purpose** because each is the opposite movement to its lookalike. And **the Research tab's content**: that every claim on that screen cites a source that is actually defined, that every topic states its own limit, and the **WORD BUDGETS** — 45 words an answer, 48 a bullet, 260 a topic. That last group is the point of this section: every other assertion anybody would write about educational text checks it is PRESENT, and none of them can catch prose piling back up. It also pins the three sentences whose popular version is the OPPOSITE of the finding (stretching not preventing injury, "not to failure" not meaning stop early, no best time of day). ⚠️ Since 2026-08-27 it also holds the **profile-photo crop maths** (the crop square never leaves the image — 1,925 combinations, zero escapes) and the **file-import parser**: the date order, the weight unit and the distance unit are each REFUSED rather than guessed, and a re-import upserts instead of doubling. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 175 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
@@ -1119,7 +1065,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Demo tests** | `node tests/demo.test.mjs` — 58 assertions, **no dependencies**. That the generated year is DETERMINISTIC (the same day is byte-identical, so "resets to the default" is literal), PLAUSIBLE against the app's own modules, and that **the backend serving it is single-flight** |
 | **Accessibility tests** | `node tests/a11y.test.mjs` — 102 assertions, **no dependencies**. Pins **all four PALETTES**: every text token against every surface it can be painted on, in both themes, plus the three-step hierarchy and the two fixes that are invisible when they break. ⚠️ **Not a substitute for the audit** — it caught a latent light-theme pair no screen currently paints, and the audit caught an accent-coloured number on one cell in the month. Neither could have found the other's |
 | **The accessibility AUDIT** | `tools/a11y-audit.mjs` — drives Chrome over **100** screen/width/theme combinations as of 2026-09-02 (**11,365** text nodes, zero below 4.5:1, zero overflow, zero unnamed controls), and since 2026-08-27 takes a `PALETTE` env var (gold/teal/indigo/ember) so all four can be swept. 🆕 **Three routes joined on 2026-09-02 and two of them are firsts**: a friend's workout and the comparison sheet over it are **the first screens behind `#/friend` this audit has ever measured** — a friend's uid is generated, so there was no hash to put in the list until the feed card's own link existed to click; and `#/benchmark` now runs **with an exercise picked and a weight typed**, because everything added to that screen only exists after that. *(Earlier figure, kept for the shape of the growth: gold over 76 × **7,566** nodes on 2026-08-30: zero below 4.5:1, zero overflow, zero unnamed controls; ⚠️ **the SWAP SHEET joined on 2026-08-30 and it is the first SHEET this audit has ever measured** — a sheet only exists after an interaction, so the exercise picker and the visibility sheet have never been in it either; the last all-four sweep was 240 combinations and 23,496 nodes on 2026-08-27). 🚨 **TWO THINGS THE TOOL ITSELF HAD WRONG, both fixed 2026-08-30 and both found by measuring the Research topics.** (1) **A closed `<details>` still reports a box for its contents in this Chrome** — it hides them with content-visibility, not `display:none` — so the collapsed pane and the opened one measured an identical 328 text nodes. Never a false pass (those colours do get painted on open) but a **false coverage claim**, and the research TABLE had been counted that way since 2026-08-28. (2) **`summary` matched nothing in the control selector** — natively focusable, no `tabindex` — so **every disclosure control in the app had been unmeasured for touch target and accessible name since the first one shipped**; the topic summaries measure 49–78 px by 332/362. ⚠️ **THE SESSION RUNNER JOINED IT ON 2026-08-29 and had never been measured before that** — the one screen the app exists for, skipped because a session needs a workout id and the route list only held static hashes. It is reached by driving Record → Weightlifting → the next workout, and **the step asserts it landed** (`.set-list` must exist): the first version matched `/^Start/` against the chooser's rows, whose text begins with the workout NAME, and silently filed four route-instances of the picker under the runner's name. A failed step is now **printed rather than swallowed**, for the same reason. Set through the ATTRIBUTE, because the demo backend reseeds on every reload. ⚠️ **Until 2026-08-24 two of its routes (`#/data`, `#/muscles`) did not exist and silently rendered Home**, so Home was measured three times and the Data screen and body map never once. Fixed: the real route is `#/graphs` and a route row can now carry a step to run after navigating, which is how the four in-page data modes and a selected muscle are reached. Needs a scratch copy with the config blanked; the header has the commands. ⚠️ **Its `hit44` flag is a TRIPWIRE, NOT A VERDICT** — it fails 1616 of 2068 controls on long-audited screens, because anything under 44px in either dimension fails by construction. **The only thing that can measure contrast against the colour actually painted, or hit-test a touch target** |
-| **Render tests** | `npm i --no-save jsdom` then `node tests/render.test.mjs` — 1,004 assertions, mounts every screen. 🆕 **Since 2026-09-07 it holds LEAVING A WORKOUT OPEN**: that the runner's corner control keeps the session rather than ending it, that the bar names the workout and the exercise the WALK points at (asserted at step 3 of a superset, where `entries[index]` would read nothing), that yesterday's draft is not a live one — and 🚨 **that starting a second workout no longer deletes the first**, which it did silently until that day. 🚨 **Since 2026-08-30 its first picture assertion is about ABSENCE**: with no art bought, NOTHING renders a thumbnail and no name becomes a button — the screen is what it was before the feature existed. That is the only thing making it safe to ship ahead of the art, and it is mutation-checked. It then injects one picture and drives the rest: the name opens a full-screen viewer, the ✕ and Escape both close it, and a thumbnail inside a row is never itself a button. ⚠️ **Since 2026-08-30 it pins the SWAP SHORTLIST and REMOVING A PERSON**: five alternatives rather than 275, spanning three or more kinds of equipment, tapping one swaps straight to it (asserted by CLICKING, the only version that catches an inert row), the full picker still one tap under it — and 🚨 that the lead does NOT promise "different equipment" for a deadlift, whose family is barbell-only. For people: exactly ONE remove control, on the ACTIVE person, **asserted with two guests on the bar because with one it passes however the code is written**. ⚠️ **Since 2026-08-30 it pins that the Research topics arrive COLLAPSED** — eleven of them open at once is the wall that content exists not to be — that each is a real `<details>`/`<summary>` rather than a hand-rolled control that would drop off the accessibility tree, and that opening one reveals an answer, a stated limit and a live link. Mutation-checked: making them open by default flips exactly the collapsed assertion. ⚠️ **Since 2026-08-29 it holds the two SAFETY assertions for the first-time prefill**: tapping Finish having touched nothing records NOTHING, asserted separately for the derived weight because that is the number that would otherwise be most convincing. Both mutation-checked. It also pins that a request is an ASK rather than a connection, that a QR is hard-coded black-on-white, and that the finish screen's back button actually goes somewhere — **asserted by CLICKING it, which is the only version that would have caught the five inert back buttons it did catch.** ⚠️ **Since 2026-08-29 it pins WHERE THE STEPPERS ARE**: exactly one `.steppers` on the screen, inside `.set-list`, directly under the open row — and opening set 3 MOVES it there. Plus the one that would otherwise have shipped as a bug: a nudge must update the row **in place**, asserted by holding the row NODE across the change, because a rebuild would destroy the input being typed into. Both mutation-checked, each flipping only itself. ⚠️ Since 2026-08-27 it pins three things a browser could not: that the **Friends screen renders while the network is still hanging** (it is handed a read that never resolves — re-adding the `await` fails it), that **a workout offered by a friend writes NOTHING into your training until you tap Add**, and that the disconnect sheet says both that they are told and that it is eventual. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
+| **Render tests** | `npm i --no-save jsdom` then `node tests/render.test.mjs` — 1,046 assertions, mounts every screen. 🆕 **Since 2026-09-07 it holds LEAVING A WORKOUT OPEN**: that the runner's corner control keeps the session rather than ending it, that the bar names the workout and the exercise the WALK points at (asserted at step 3 of a superset, where `entries[index]` would read nothing), that yesterday's draft is not a live one, that the bin asks only when sets are recorded — and 🚨 **that starting a second workout no longer deletes the first**, which it did silently until that day. 🆕 **The SAVE SCREEN too**: 🚨 that **Finish saves nothing**, that the draft survives every path off it, and that a failed save says so **on the screen the user is looking at**. 🆕 **And the "?"** — a real button with an accessible name, Escape and outside-tap close it, one open at a time. 🔒 **The six assertions that guard the Volume and Goals caveats now OPEN the ? and read the words back**, which is stricter than the presence checks they replaced. 🚨 **Since 2026-08-30 its first picture assertion is about ABSENCE**: with no art bought, NOTHING renders a thumbnail and no name becomes a button — the screen is what it was before the feature existed. That is the only thing making it safe to ship ahead of the art, and it is mutation-checked. It then injects one picture and drives the rest: the name opens a full-screen viewer, the ✕ and Escape both close it, and a thumbnail inside a row is never itself a button. ⚠️ **Since 2026-08-30 it pins the SWAP SHORTLIST and REMOVING A PERSON**: five alternatives rather than 275, spanning three or more kinds of equipment, tapping one swaps straight to it (asserted by CLICKING, the only version that catches an inert row), the full picker still one tap under it — and 🚨 that the lead does NOT promise "different equipment" for a deadlift, whose family is barbell-only. For people: exactly ONE remove control, on the ACTIVE person, **asserted with two guests on the bar because with one it passes however the code is written**. ⚠️ **Since 2026-08-30 it pins that the Research topics arrive COLLAPSED** — eleven of them open at once is the wall that content exists not to be — that each is a real `<details>`/`<summary>` rather than a hand-rolled control that would drop off the accessibility tree, and that opening one reveals an answer, a stated limit and a live link. Mutation-checked: making them open by default flips exactly the collapsed assertion. ⚠️ **Since 2026-08-29 it holds the two SAFETY assertions for the first-time prefill**: tapping Finish having touched nothing records NOTHING, asserted separately for the derived weight because that is the number that would otherwise be most convincing. Both mutation-checked. It also pins that a request is an ASK rather than a connection, that a QR is hard-coded black-on-white, and that the finish screen's back button actually goes somewhere — **asserted by CLICKING it, which is the only version that would have caught the five inert back buttons it did catch.** ⚠️ **Since 2026-08-29 it pins WHERE THE STEPPERS ARE**: exactly one `.steppers` on the screen, inside `.set-list`, directly under the open row — and opening set 3 MOVES it there. Plus the one that would otherwise have shipped as a bug: a nudge must update the row **in place**, asserted by holding the row NODE across the change, because a rebuild would destroy the input being typed into. Both mutation-checked, each flipping only itself. ⚠️ Since 2026-08-27 it pins three things a browser could not: that the **Friends screen renders while the network is still hanging** (it is handed a read that never resolves — re-adding the `await` fails it), that **a workout offered by a friend writes NOTHING into your training until you tap Add**, and that the disconnect sheet says both that they are told and that it is eventual. ⚠️ Since 2026-08-25 it pins the three things Tim's second gym session changed: that **clicking the weight and reps of a set opens that set** (the numbered square was the only live part), that every Record row **says Start and wears no chevron**, and that the programme's name is on Record **even when there is only one system**. ⚠️ Since 2026-08-24 it also drives `cloudFullWarning()` directly — the only way that wording gets read, because no test can stand up a Firestore backend and `cloudUsage()` correctly returns null on every backend one can. It pins that an account with room is told **nothing**, and that the "full" branch keys off room for one more row rather than the fraction reaching 1. ⚠️ Since 2026-08-24 it holds the two runner assertions that stopped a convenience becoming a lie: that opening set 2 for the first time arrives pre-filled from set 1, and that **a set nobody opened is still not saved** — the eager version of that fill recorded work the lifter had not done, and these tests are what caught it. ⚠️ Since 2026-08-21 it also pins the **view/edit split**: that opening a system is reading it, that a workout can be STARTED from its own screen, that Delete is not in either pinned footer, and that Settings renders inside the demo account. It also holds the one assertion in this project that is a **budget rather than a presence check** — a muscle panel is capped at 40 words, because every other assertion here checks something is THERE and no such check can catch words piling back up |
 | **Deploy-notice test** | `node tests/sw-update.test.mjs` — 12 assertions, needs Chrome, **no other dependencies**. Copies the app to a temp dir, serves it, installs the worker, then EDITS A FILE and asserts the page offers a refresh. The one test that cannot be faked |
 | **QR tests** | `node tests/qr.test.mjs` — 33 assertions. Needs `npm i --no-save jsqr` for the strongest layer: the encoder's output is rendered to pixels and **decoded by an independent implementation**, which validates format-info, masking, placement, interleaving and ECC in one assertion. Also carries ZXing's published Reed-Solomon vectors. ⚠️ **It does NOT assert which mask a payload gets** — ZXing, Nayuki and the ISO text disagree on penalty-rule-3 details, so a correct implementation can legitimately pick a different one |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — 159 assertions, who may READ your data — and since 2026-08-27 who may OFFER you a workout and who may announce a disconnection, and since 2026-08-29 who may ASK to connect. 🚨 **One assertion in here is deliberately an `allow` that records a cost rather than a guarantee** — "any signed-in account can list the whole directory" — because a suite that pinned only the good news would describe a feature this app does not have. **It is the line that flips to a denial when the handle version lands.** ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
