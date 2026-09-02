@@ -21,3 +21,9 @@ package-lock.json
 # sets.png, ~200 KB) were committed the same way and served to the world for
 # no reason. Real app art lives in img/ and is committed deliberately.
 /*.png
+
+# Python's bytecode cache, left behind by tools/build-body-art.py. Same rule as
+# the two above: this site is served from the repo, so anything tracked here is
+# published, and a cache directory is not part of the app.
+__pycache__/
+*.pyc

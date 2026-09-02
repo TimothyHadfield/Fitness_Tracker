@@ -27,7 +27,7 @@ import { store, auth, social } from './store.js';
 import {
   el, icon, iconBtn, screenShell, emptyState, openSheet, confirmSheet, toast,
   fmtDateLong, relativeDay, chevron, setChildren, fmtSet, youFriendsTabs, personFace,
-  refreshRoute,
+  refreshRoute, helpDot,
 } from './ui.js';
 import {
   PRIVATE_ACCOUNT, PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL,
@@ -123,17 +123,31 @@ export function visibilitySheet(current, onPick) {
     title: 'Who can see your account',
     body: el('div', { class: 'pick-list' },
       ...options.map(row),
+      /* 🚨 A 48-WORD SENTENCE BECAME A LIST — 2026-09-07, and nothing was cut.
+       *
+       * ⚠️ THIS IS THE ONE SCREEN WHERE THE DETAIL IS THE POINT, so none of it
+       * went behind a ?: what a stranger can see about you is WHAT, never WHY,
+       * and a reader deciding whether to be public has to be able to see the
+       * whole answer without asking for it. What changed is the SHAPE — seven
+       * things buried in one sentence are seven things nobody counts. A list is
+       * the same facts in a form somebody can actually check themselves
+       * against, which is the "less intimidating to read" half of the ask
+       * rather than the shorter half. */
       el('p', { class: 'note', text:
-        'Public means anyone signed in who searches your name or scans your code — not just '
-        + 'friends. They see your workouts with their weights, the time of day you trained, the '
-        + 'gym you typed, anything you wrote about a session, your benchmarks, your muscle map and '
-        + 'your volume.' }),
-      el('p', { class: 'note', text:
-        'Your body weight is never in that. It stays with friends you have accepted, and only if '
-        + 'you switched it on.' }),
-      el('p', { class: 'note', text:
-        'Changing this takes effect straight away. It cannot un-see anything somebody has already '
-        + 'looked at.' }),
+        'Public means anyone signed in who finds you — not only friends. They see:' }),
+      el('ul', { class: 'note vis-list' },
+        el('li', { text: 'your workouts, with the weights' }),
+        el('li', { text: 'the time of day you trained' }),
+        el('li', { text: 'the gym you typed' }),
+        el('li', { text: 'anything you wrote about a session' }),
+        el('li', { text: 'your benchmarks, muscle map and volume' }),
+      ),
+      el('p', { class: 'note' }, el('b', { text: 'Never your body weight.' }),
+        ' That stays with friends you accept, and only if you switched it on.'),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'note', text: 'Changing this takes effect straight away.' }),
+        helpDot('It cannot un-see anything somebody has already looked at.',
+          { label: 'What changing this does not do' })),
     ),
   });
 }

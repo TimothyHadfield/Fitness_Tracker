@@ -3215,9 +3215,42 @@ something about the machine, not the app. Recorded, not chased.
 Added. It's on the right of the bar with a divider between it and the rest, so the tap that opens the
 workout and the tap that deletes it can't be confused.
 
-One thing I did differently from what you said, and I want to be upfront about it: it asks you first,
+One thing I did differently from what you said, and I want to be upfront about it (bin version): it asks you first,
 but only when there's something to lose. If you've recorded sets it says how many and waits; if you
 started a workout and haven't typed anything, it just goes. That's the same rule as removing a person
 from a workout and the Discard on the save screen, and it matters most here because this button lives
 a few pixels from the Home tab for the whole workout. Say the word if you want it to delete
 immediately either way.
+
+---
+
+## 2026-09-07 (fourth pass) — the wordiness, measured
+
+I measured it rather than guessing. The app has **18,631 words** a user can read, **304 sentences
+over 15 words**, and **63 blocks of 40 words or more**. Worst files, in order: the research topics,
+the ready-made programmes' exercise notes, Goals, the Data screens, Friends, Account.
+
+The useful finding: **almost none of it is padding.** Nearly every long block is the app explaining
+itself. There's a rule here that every caveat gets said on screen — that's right and I didn't delete
+any — but it never said *where*, so the Volume screen ended up as a body map, your numbers, and then
+five paragraphs of about 150 words underneath. Same prose every visit, sitting under the only thing
+that changes.
+
+So the question mark you described is exactly the right fix, and I've built it. The rule I've written
+down for it: **the ? holds the *why*, never the *what*.** If a sentence changes what you think a
+number is, it stays on the screen. If it explains where the number came from or what it can't see, it
+goes behind the ?.
+
+Converted so far: Volume's notes (five paragraphs down to one line), Volume's short-window caveat,
+Goals' "on track?" and its stalls note, Settings' findable-by-name, and the Research heading.
+
+Two things worth flagging. The visibility sheet — who can see your account — got **no** question
+mark: what a stranger can see about you is a *what*, so nothing should be hidden. I turned its
+48-word sentence into a list instead. Same facts, much easier to read. Not everything wordy wants a ?.
+
+And six of my own tests failed, which was correct — they exist to stop a caveat being quietly
+deleted. I didn't relax them; they now tap the ? and check the words are still there. That's a
+stricter test than before, because the words have to be reachable, not just present.
+
+That's seven places done out of about three hundred. The mechanism and the pattern are in, and I'd
+rather you point at the screens that bother you than have me sweep the lot.

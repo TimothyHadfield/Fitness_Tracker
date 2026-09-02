@@ -22,8 +22,40 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-07 — three passes: leaving a workout open, the save screen and the cost of
-photos, then the bin on the bar.
+**Last updated:** 2026-09-07 — four passes: leaving a workout open, the save screen and the cost of
+photos, the bin on the bar, then the wordiness measured and the "?".
+
+## What changed on 2026-09-07 (fourth pass), in one line each
+
+**Tim opened the wordiness topic `docs/direction.md` §4 had parked.** 🛑 **"Do not shorten copy
+globally" is lifted BY HIM on this topic** — but he asked for the analysis first, and that is the
+deliverable. Full write-up at the top of `docs/history.md`.
+
+1. 📊 **MEASURED FOR THE FIRST TIME: 18,631 user-facing words, 304 sentences over 15 words, 63 blocks
+   of 40+.** Worst first: `research-topics.js` 54 · `preset-systems.js` 37 · `views-goals.js` 30 ·
+   `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19. ⚠️ **The top two are not the
+   app's voice** — transcribed coaching notes and teaching content that already has word budgets.
+2. 🚨 **THE FINDING: THE COPY IS NOT PADDED, IT IS MIS-PLACED.** Almost every offender is an
+   *explanation*. The standing rule that every caveat is stated on screen never said WHERE, so Volume
+   ended as a body map, your numbers, and **five paragraphs of ~150 words** — identical every visit,
+   under the only thing that changes.
+3. 🆕 **`helpDot()` IN `js/ui.js` — Tim's "?"**. 26px dot in a 44px target, a popover positioned
+   against it and clamped to the screen. **A popover, not a sheet**: a sheet covers the thing being
+   explained. 🔒 **THE RULE IT INTRODUCES: THE ? MAY HOLD *WHY*, NEVER *WHAT*.**
+4. ✅ **SEVEN PLACES CONVERTED** — Volume's notes (5 paragraphs → one 18-word line), Volume's short
+   window, Goals' no-verdict and its stalls note, Settings' findable-by-name, the Research blurb.
+5. 🚨 **THE VISIBILITY SHEET GOT NO ? AND THAT IS THE INSTRUCTIVE ONE** — what a stranger can see is
+   WHAT, so nothing was hidden. A 48-word sentence became **a list**. Not every wordy thing wants a ?.
+6. ⚠️ **SIX CAVEAT-GUARDING ASSERTIONS FAILED AND WERE RIGHT TO.** 🔒 **They were not relaxed — they
+   now OPEN the ?**, which is stronger: the words must be reachable by the control, not merely
+   present somewhere in the pane.
+7. 🆕 **Research's FRAMING shrank; its topics did not** — Tim, mid-session: *"we should allow it to
+   describe that section sufficiently."*
+8. ✅ **1,046 render assertions**, sixteen suites green, driven at 393×852. ⚠️ The dot moved off
+   `--ink-faint` (4.52:1 measured in light gold — a pass with nothing spare) and the box is capped at
+   62dvh after measuring 525px on the Volume screen.
+9. 🛑 **SEVEN DOWN, ~300 TO GO — AND DO NOT SWEEP IT.** The mechanism, the rule and the test pattern
+   exist; the ranked list above is the queue and Tim points.
 
 ## What changed on 2026-09-07 (third pass), in one line each
 

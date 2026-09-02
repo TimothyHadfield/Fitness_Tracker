@@ -650,6 +650,117 @@ export function openSheet({ title, body, footer, onClose }) {
   return { close, sheet };
 }
 
+/* ------------------------------------------------------------------ *
+ * The "?" — an explanation you can ask for
+ *
+ * Tim, 2026-09-07: *"If it's explaining something, I think it's best to have a
+ * little question mark somewhere near the thing that it's explaining … when you
+ * touch it it opens a mini box that shares what it's trying to say."*
+ *
+ * 🚨 THE POINT IS NOT THAT THE WORDS ARE HIDDEN. It is that a screen states the
+ * fact and the ? carries the reason. This app's copy was written under a
+ * standing rule that every caveat is stated on screen — which is right, and is
+ * why nothing here deletes a caveat. What it got wrong is that a caveat and a
+ * number were given the same weight and the same position, so a Volume screen
+ * read as three paragraphs with some figures in them. **A caveat behind a ? is
+ * still stated**; it is one tap away instead of in front of the thing it
+ * qualifies.
+ *
+ * ⚠️ SO THE RULE FOR USING IT: the ? may hold WHY, never WHAT. If a sentence
+ * changes what the reader thinks the number IS, it stays on the screen. If it
+ * explains where the number came from, what it cannot see, or why it is drawn
+ * that way, it goes in here.
+ *
+ * ⚠️ A popover rather than a bottom sheet, deliberately: a sheet covers the
+ * screen and takes the thing being explained with it, which is precisely the
+ * context somebody tapping "?" is trying to keep.
+ * ------------------------------------------------------------------ */
+
+let openHelp = null;
+
+export function helpDot(body, { label = 'What does this mean?', title = null } = {}) {
+  const dot = el('button', {
+    class: 'help-dot',
+    type: 'button',
+    'aria-label': label,
+    'aria-expanded': 'false',
+    onClick: (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (openHelp && openHelp.owner === dot) { openHelp.close(); return; }
+      showHelp(dot, body, title, label);
+    },
+  }, '?');
+  return dot;
+}
+
+function showHelp(dot, body, title, label) {
+  if (openHelp) openHelp.close();
+
+  const close = () => {
+    document.removeEventListener('keydown', onKey, true);
+    document.removeEventListener('pointerdown', onOutside, true);
+    window.removeEventListener('resize', close);
+    leave(pop);
+    dot.setAttribute('aria-expanded', 'false');
+    openHelp = null;
+    // ⚠️ Focus goes back to the ? that opened it. Without this a keyboard user
+    // is returned to the top of the document every time they ask a question.
+    if (typeof dot.focus === 'function') dot.focus();
+  };
+  const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  const onOutside = (e) => { if (!pop.contains(e.target) && e.target !== dot) close(); };
+
+  const pop = el('div', {
+    class: 'help-pop',
+    role: 'dialog',
+    'aria-label': title || label,
+  },
+    title ? el('div', { class: 'help-pop-title', text: title }) : null,
+    // A string or a node — a couple of these explanations want a list.
+    typeof body === 'string' ? el('p', { class: 'help-pop-body', text: body }) : body,
+  );
+
+  document.body.append(pop);
+  position(pop, dot);
+  dot.setAttribute('aria-expanded', 'true');
+  openHelp = { owner: dot, close };
+
+  // ⚠️ `true` on both — capture, so a tap that would otherwise be swallowed by a
+  // row's own click handler still closes this first.
+  document.addEventListener('keydown', onKey, true);
+  document.addEventListener('pointerdown', onOutside, true);
+  window.addEventListener('resize', close);
+  if (typeof pop.focus === 'function') { pop.tabIndex = -1; pop.focus(); }
+}
+
+/**
+ * Under the dot, clamped to the screen.
+ *
+ * ⚠️ Measured rather than placed by CSS, because the dot can be anywhere — in a
+ * header, at the end of a row, beside a legend chip — and a popover that runs
+ * off the right edge of a 360px phone is the whole failure mode of this pattern.
+ */
+function position(pop, dot) {
+  const r = dot.getBoundingClientRect();
+  const vw = window.innerWidth || 360;
+  const vh = window.innerHeight || 640;
+  const w = Math.min(pop.offsetWidth || 280, vw - 16);
+  pop.style.width = w + 'px';
+  let left = r.left + r.width / 2 - w / 2;
+  left = Math.max(8, Math.min(left, vw - w - 8));
+  const h = pop.offsetHeight || 120;
+  // Below the dot where there is room, above it where there is not.
+  const below = r.bottom + 8;
+  const top = (below + h > vh - 8 && r.top - h - 8 > 8) ? r.top - h - 8 : below;
+  pop.style.left = Math.round(left) + 'px';
+  pop.style.top = Math.round(Math.min(top, Math.max(8, vh - h - 8))) + 'px';
+  // Where the little arrow points, so the box is visibly attached to the ? that
+  // opened it rather than appearing from nowhere (Rule 7).
+  pop.style.setProperty('--arrow-x', Math.round(r.left + r.width / 2 - left) + 'px');
+  pop.classList.toggle('is-above', top < r.top);
+}
+
 export function confirmSheet({ title, message, confirmLabel = 'Delete', danger = true, onConfirm }) {
   const { close } = openSheet({
     title,

@@ -17,6 +17,117 @@
 
 ---
 
+## 2026-09-07 (fourth pass) — THE WORDINESS, MEASURED, AND THE "?"
+
+Tim opened the topic `docs/direction.md` §4 had parked (*"the app's voice and wordiness … he would
+talk about it later"*): *"analyze everywhere in the cite where it has sentences longer than maybe
+10-15 words and really think about if every single word in that sentence is important … With
+paragraphs, if it's explaining something, I think it's best to have a little question mark somewhere
+near the thing that it's explaining … when you touch it it opens a mini box."*
+
+🛑 **THE STANDING "DO NOT SHORTEN COPY GLOBALLY" IS THEREFORE LIFTED — BY HIM, ON THIS TOPIC.** It is
+not a licence to sweep: he asked for the analysis first, and the analysis is the deliverable this
+section exists to record.
+
+### A. 🚨 THE MEASUREMENT, BECAUSE NOBODY HAD EVER TAKEN ONE
+
+A scanner over `js/*.js` that strips comments (this codebase is more comment than code and none of it
+is user-facing), pulls the string literals that are prose, **joins the ones built by `+`
+concatenation** — most long copy here is written that way, and measuring the halves separately
+reports every paragraph as a set of short lines — and ranks by longest sentence.
+
+| | |
+|---|---|
+| User-facing words in the app | **18,631** |
+| Sentences over 15 words | **304** |
+| Blocks of 40+ words | **63** |
+| Longest single sentence | **46 words** (`views-import.js`, the weight-unit refusal) |
+
+**Where they are, worst first:** `research-topics.js` 54 · `preset-systems.js` 37 · `views-goals.js`
+30 · `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19 · `progression.js` 16 ·
+`goals.js` 16 · `views-workouts.js` 13 · `compare.js` 12 · `views-session.js` 11.
+
+⚠️ **THE TOP TWO ARE A DIFFERENT KIND OF THING AND MOST OF THE LIST IS NOT THE APP'S VOICE.**
+`preset-systems.js` is per-exercise coaching notes transcribed from other people's programmes —
+shortening those edits somebody else's writing. `research-topics.js` is teaching content that already
+has word budgets asserted in `tests/data-layer.test.mjs` (45 words an answer, 48 a bullet, 260 a
+topic). 🆕 **Tim said so himself, mid-session**: *"the research section is extreamly wordy and while
+I do think we need to make the descriptions in that section more clear, we should allow it to
+describe that section sufficiently."* So Research's framing was shortened and its topics were not
+touched.
+
+### B. 🚨 THE FINDING: THE PROBLEM IS NOT LENGTH, IT IS THAT CAVEATS AND NUMBERS HAVE EQUAL BILLING
+
+Reading the worst offenders back, almost none of them are padded. They are *explanations* — and this
+app has a standing rule that every caveat is stated on screen, which is right and is why nothing here
+deletes one. What the rule never said is **where**. So the Volume screen ended as a body map, the
+reader's own numbers, and then **five stacked paragraphs of ~150 words** explaining them — prose that
+is identical on every visit sitting under numbers that are the only thing that changes.
+
+**The ? is the answer to that, and the rule it introduces is one line:**
+
+> 🔒 **THE ? MAY HOLD *WHY*, NEVER *WHAT*.** If a sentence changes what the reader thinks the number
+> IS, it stays on the screen. If it explains where the number came from, what it cannot see, or why
+> it is drawn that way, it goes behind the ?.
+
+`helpDot()` in `js/ui.js`: a 26px dot in a 44px target, opening a popover positioned against it and
+clamped to the screen. **A popover rather than a sheet, deliberately** — a sheet covers the thing
+being explained, which is the context somebody tapping "?" is trying to keep. Escape closes it, a tap
+anywhere closes it, opening a second closes the first, focus returns to the dot.
+
+### C. What was converted, and what it cost
+
+| Screen | Before | After |
+|---|---|---|
+| **Data → Volume**, the notes | 5 paragraphs, ~150 words | one 18-word line + ? |
+| **Data → Volume**, short window | 56 words | 12 words + ? |
+| **Goals**, the on-track refusal | 3 sentences, 45 words | 8 words + ? |
+| **Goals**, why stalls are invisible | 2 paragraphs, 79 words | 22 words + ? |
+| **Settings**, findable by name | 51 words | 14 words + ? |
+| **Research**, the section blurb | 48 words | 10 words + ? |
+| **Friends**, who can see you | a 48-word sentence | **a list** — see below |
+
+🚨 **THE VISIBILITY SHEET GOT NO ? AND THAT IS THE INTERESTING ONE.** What a stranger can see about
+you is WHAT, not WHY, and a reader deciding whether to be public must see the whole answer without
+asking for it. What changed there is the **shape**: seven things buried in one sentence became seven
+list items. Same facts, none hidden, far less to read — the *"formatting it in a way that is improved
+and less intimidating"* half of the ask rather than the shorter half. **Not every wordy thing wants
+a ?**, and this is the example that proves it.
+
+### D. ⚠️ THE TESTS THAT GUARD THE CAVEATS ALL FAILED, AND THEY WERE RIGHT TO
+
+Six assertions exist precisely to stop a caveat being deleted — warm-ups counted, "not a measured
+fact", "no target line", Core understated, no verdict, "bad Tuesday". Moving the words behind a ?
+broke every one.
+
+🔒 **THEY WERE NOT RELAXED. THEY NOW OPEN THE ?.** That is a *stronger* check than the one it
+replaced: it used to be enough for the words to exist somewhere in the pane, and now they have to be
+reachable by the control a reader would actually use. **A ? that stopped opening would fail here,
+where before it could not.** The facts that stayed on the screen are asserted unopened, first,
+because the split between the two is the whole design.
+
+### E. What was checked
+
+- **1,046 render assertions** (was 1,033), sixteen suites green. Eleven of the new ones pin the
+  control itself: it is a real `<button>` with an accessible name (a bare "?" reads as nothing to a
+  screen reader), Escape closes it, an outside tap closes it, a second ? closes the first, and
+  tapping the same one twice closes rather than reopens.
+- **Driven at 393×852**: the box opens **above** the dot when there is no room below, its arrow
+  points back at it, and it stays on screen.
+- ⚠️ **The dot was measured at 4.52:1 in the light gold palette** — a pass with nothing spare, on a
+  13px glyph that is a control's entire label. Moved from `--ink-faint` to `--ink-soft`.
+- ⚠️ **The Volume box measures 525px tall** on an 852px phone — fine, and one paragraph from not
+  being. It is now capped at 62dvh and scrolls inside itself.
+
+### F. What is left, and it is most of it
+
+**Seven places converted out of ~63 paragraphs and ~300 long sentences.** The mechanism, the rule and
+the test pattern exist; the rest is a screen at a time and Tim should point. The ranked list in §A is
+the queue. 🛑 **Do not sweep it** — he asked for the analysis first, and the two files at the top of
+the list are the two that should not be swept at all.
+
+---
+
 ## 2026-09-07 (third pass) — THE BIN ON THE BAR
 
 Tim, having read the flag raised when the bar shipped: *"right now the workout pull down is perfect.

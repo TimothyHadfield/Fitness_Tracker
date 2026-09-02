@@ -1211,7 +1211,8 @@ eventually earn the app an opinion here.
 ### Rule 8 — back means the screen you were just on
 
 *⚠️ Printed before Rule 7 rather than after it, because Rule 7 (motion) is long and ends the section.
-There are **eight** rules; do not stop reading at the highest number you happen to reach first.*
+There are **nine** rules — Rule 9 is below this one and Rule 7 is last; do not stop reading at the
+highest number you happen to reach first.*
 
 Added 2026-09-02 on Tim's report: *"When you click back on something it should always go to what you
 were on right before. Currently when you click on someone else's workout and then go back, it takes
@@ -1237,6 +1238,34 @@ link still lands somewhere sensible instead of stepping off the site.
   history entries — so under this rule the back arrow landed on a route that deliberately renders
   nothing. `refreshRoute()` re-renders in place and pushes nothing. The router still guards `blank`
   for tabs open from before.
+
+### Rule 9 — the "?" holds WHY, never WHAT
+
+*⚠️ Added 2026-09-07, when Tim opened the wordiness topic §4 of `docs/direction.md` had parked.
+**There are NINE rules; do not stop reading at the highest number you happen to reach first.***
+
+Tim: *"If it's explaining something, I think it's best to have a little question mark somewhere near
+the thing that it's explaining … when you touch it it opens a mini box that shares what it's trying
+to say."*
+
+`helpDot()` in `js/ui.js`. The rule that governs what goes in it:
+
+> **If a sentence changes what the reader thinks the number IS, it stays on the screen. If it
+> explains where the number came from, what it cannot see, or why it is drawn that way, it goes
+> behind the ?.**
+
+- 🚨 **NOTHING IS DELETED BY MOVING IT.** This app states every caveat on screen and that rule
+  stands; what it never said is *where*. The measurement that produced this rule found the Volume
+  screen carrying **five paragraphs of ~150 words** under the reader's own numbers — prose identical
+  on every visit beneath the only thing that changes.
+- ⚠️ **A POPOVER, NOT A SHEET.** A sheet covers the thing being explained, which is precisely the
+  context somebody tapping "?" is trying to keep.
+- ⚠️ **NOT EVERY WORDY THING WANTS ONE.** The visibility sheet's 48-word sentence became a LIST and
+  hid nothing: what a stranger can see about you is WHAT, and a reader deciding whether to be public
+  must see the whole answer without asking. **Re-shaping is as often the fix as hiding.**
+- 🔒 **A TEST THAT GUARDED A CAVEAT MUST OPEN THE ?, NEVER BE RELAXED.** Six assertions failed when
+  the words moved; they now click the dot and read the popover, which is a stronger check than the
+  one it replaced — the words have to be *reachable*, not merely present somewhere in the pane.
 
 ### Rule 7 — motion states a relationship, or it does not ship
 

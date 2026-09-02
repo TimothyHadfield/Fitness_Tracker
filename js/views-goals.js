@@ -53,7 +53,7 @@ import { INDIRECT_NOTE_SETS } from './volume-map.js';
 import { STRENGTH_CAVEAT } from './optimal.js';
 import {
   el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, trimNum,
-  refreshRoute,
+  refreshRoute, helpDot,
 } from './ui.js';
 import * as units from './units.js';
 
@@ -438,23 +438,29 @@ const ESTIMATE_NOISE_PCT = 12;
  */
 function verdictBlock(goal, p, m) {
   return el('div', { class: 'goal-verdict' },
-    el('div', { class: 'section-label', text: 'On track?' }),
-    el('p', { class: 'goal-verdict-body', text:
-      'The app will not tell you yet, and that is deliberate. A day-to-day strength estimate '
-      + 'swings several percent on sleep, food and what time you trained, so a verdict built on it '
-      + 'would tell you that you were behind because you had a bad Tuesday.' }),
+    /* 🚨 THREE SENTENCES OF REASONING BECAME SIX WORDS AND A "?" (2026-09-07).
+     *
+     * ⚠️ THE REFUSAL ITSELF IS STILL ON THE SCREEN, because it is WHAT rather
+     * than WHY: a reader who does not know the app is declining to judge will
+     * read the numbers below as a verdict. What went behind the ? is why it
+     * declines and what would change that. */
+    el('div', { class: 'help-line' },
+      el('div', { class: 'section-label', text: 'On track?' }),
+      helpDot(el('div', {},
+        el('p', { text: 'A day-to-day strength estimate swings several percent on sleep, food and '
+          + 'what time you trained. A verdict built on that would tell you that you were behind '
+          + 'because you had a bad Tuesday.' }),
+        // ⚠️ "when it arrives" — this block moved down the screen on 2026-08-21
+        // and the sentence used to point at what followed it. A caveat that
+        // survives being moved but stops describing anything is worse than one
+        // that was never written.
+        el('p', { text: 'When a verdict does arrive it will only say you are behind if the goal has '
+          + 'genuinely become unlikely — never on one flat week.' }),
+      ), { label: 'Why there is no verdict', title: 'Why not' })),
+    el('p', { class: 'goal-verdict-body', text: 'Not yet — every number here is measured, not judged.' }),
 
     // What it CAN say: the measured change, and the size a change has to beat.
     ...movedSince(goal, p, m),
-
-    el('p', { class: 'goal-verdict-body', text:
-      // ⚠️ "everything ABOVE", not "below" — this block moved down the screen on
-      // 2026-08-21 and the sentence pointed at what used to follow it. A caveat
-      // that survives being moved but stops describing anything is worse than
-      // one that was never written.
-      'When it does arrive it will only say you are behind if reaching the goal has genuinely '
-      + 'become unlikely — never on one flat week. Until then, every number on this screen is '
-      + 'measured rather than judged.' }),
     p.expired
       ? el('div', { class: 'field-help', text:
           'This goal has run its twelve weeks. Ending it keeps the record.' })
@@ -930,17 +936,17 @@ async function GoalStallsView() {
       el('h2', { class: 'section-head', text: 'What it cannot see' }),
       el('div', { class: 'list' }, unseen.map(stallRow)),
 
-      // ⚠️ The point of the section, said outright. It is also the answer to
-      // goals-plan §3.2 — the invisible levers are named here rather than
-      // quietly excluded from a verdict that would then blame your training.
-      el('div', { class: 'field-help', text:
-        'That split is the honest version of this screen. Four of the six things most likely to '
-        + 'stall you are invisible to any training log, so nothing here will ever tell you that '
-        + 'your training is the problem when it might be your sleep.' }),
-      el('div', { class: 'field-help', text:
-        'The app has no reps-in-reserve field and does not track food, and neither is an '
-        + 'oversight — both are decisions, and both are why two of these rows say "invisible" '
-        + 'rather than showing a number.' }),
+      /* ⚠️ The point of the section, said outright — and it is the answer to
+       * goals-plan §3.2, so the SPLIT stays on screen. What went behind the ?
+       * is why two rows can never fill in. */
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          'Most of what stalls you is invisible to any training log — so this screen will never '
+          + 'blame your training.' }),
+        helpDot('The app has no reps-in-reserve field and does not track food. Neither is an '
+          + 'oversight: both are deliberate, and both are why two of these rows say "invisible" '
+          + 'rather than showing a number.',
+        { label: 'Why two rows say invisible' })),
     ],
   });
 }

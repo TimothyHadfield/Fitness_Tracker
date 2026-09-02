@@ -17,7 +17,7 @@ import {
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge, exerciseLabel,
-  refreshRoute,
+  refreshRoute, helpDot,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
@@ -2036,11 +2036,19 @@ export async function SettingsView() {
             text: 'On', onClick: (e) => setListed(true, e),
           }),
         ),
-        el('div', { class: 'field-help', text:
-          'On lets somebody who knows your name search for you and send a request — which '
-          + 'you still have to accept. Off takes your name out of that search; your code '
-          + 'and invite links keep working. Only your display name is ever listed, never '
-          + 'your email or anything about your training.' }),
+        /* ⚠️ WHAT THE SWITCH DOES STAYS ON THE SCREEN; the reassurance about
+         * what is listed moved behind the ? (2026-09-07). "You still have to
+         * accept" is load-bearing — it is the difference between being findable
+         * and being connected — so it survives, in five words. */
+        el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text:
+            'On: people can find you by name and ask to connect. You still accept.' }),
+          helpDot(el('div', {},
+            el('p', { text: 'Off takes your name out of that search. Your code and invite '
+              + 'links keep working.' }),
+            el('p', { text: 'Only your display name is ever listed — never your email, and '
+              + 'nothing about your training.' }),
+          ), { label: 'What being findable means' })),
       ),
 
       el('div', { class: 'section-label', text: 'You' }),
@@ -2509,11 +2517,16 @@ export async function renderVolumePane(host, top, opts = {}) {
          * history — and on a friend's page the document is only their last sixty
          * sessions either way. The span is a fact about the measurement; history
          * would be a claim about the person. */
-        data.enough ? null : el('div', { class: 'field-help', text:
-          `⚠️ Measured over ${span}, not the fortnight a weekly rate settles over. Every figure `
-          + `here is the sets actually recorded, spread across those ${span} and stated per week `
-          + '— a best effort, not a settled rate. One session more or less moves it a long way at '
-          + 'this length, and it steadies as the window fills.' }),
+        /* ⚠️ SHORTENED, NOT DROPPED (2026-09-07). The span and "not a settled
+         * rate" are WHAT the number is and stay on the screen; the arithmetic
+         * behind why one session moves it is WHY and went behind the ?. */
+        data.enough ? null : el('div', { class: 'help-line'},
+          el('span', { class: 'field-help', text:
+            `⚠️ Measured over ${span} — a best effort, not a settled rate.` }),
+          helpDot(`These are the sets you really recorded over ${span}, stated per week. `
+            + 'A rate settles over a fortnight, so at this length one session more or less moves it '
+            + 'a long way. It steadies as the window fills.',
+          { label: 'Why this is not a settled rate' })),
       ),
 
       el('div', { class: 'vol-figure', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` }, figure),
@@ -2523,28 +2536,46 @@ export async function renderVolumePane(host, top, opts = {}) {
 
       list,
 
+      /* 🚨 FIVE PARAGRAPHS BECAME ONE LINE AND A "?" — 2026-09-07, Tim's ask.
+       *
+       * ⚠️ NOT ONE WORD OF THE CAVEATS WAS DELETED; they moved. What was on
+       * screen was five stacked `.field-help` blocks totalling ~150 words under
+       * a body map — the reader's own numbers were above a wall of prose that
+       * explained them, and the prose was the same every visit while the
+       * numbers were the thing that changed.
+       *
+       * The line that stays is the four facts a reader needs to READ the
+       * screen: the unit, that warm-ups are in, that indirect work is halved,
+       * and where the tick is. Everything behind the ? is WHY — why the bands
+       * do not move with the window, why there is no target line, why warm-ups
+       * cannot be separated, why Core is understated. That is the split the
+       * helpDot header describes, and this screen is what it was written for. */
       el('div', { class: 'vol-notes' },
-        el('div', { class: 'field-help', text:
-          'Hard sets per muscle per week is the thing growth responds to most directly. ⚠️ Every '
-          + 'number here is a rate — sets a WEEK — so the bands are the same at every window: '
-          + 'picking 12 weeks measures a longer stretch, it does not ask more of you.' }),
-        el('div', { class: 'field-help', text:
-          'The bar’s tick is 4 sets a week — the point below which no detectable change is '
-          + 'expected. There is no target line above it: the labels say what another set buys at '
-          + 'that volume, not how much you ought to be doing.' }),
-        el('div', { class: 'field-help', text: INDIRECT_NOTE_WEEKLY }),
-        el('div', { class: 'field-help', text:
-          '⚠️ Every recorded set is counted, warm-ups included. The app has no way to tell a '
-          + 'warm-up from a back-off set, and throwing away the light ones would throw away real '
-          + 'work with them — so these counts run a little high for anyone who logs their warm-ups.' }),
-        el('div', { class: 'field-help', text:
-          'Core is counted honestly and is understated for everyone: squats, deadlifts, carries and '
-          + 'overhead pressing all train it hard and none of them log a set against it.' }),
-        data.clamped
-          ? el('div', { class: 'field-help', text:
-              `One session went past ${SESSION_CEILING} sets on a single muscle. Above that nobody `
-              + 'has measured anything, so nothing further was counted for that day.' })
-          : null,
+        el('div', { class: 'help-line'},
+          el('span', { class: 'field-help', text:
+            'Sets a week per muscle. Warm-ups counted, indirect work counts half, '
+            + `the tick is 4 a week.` }),
+          helpDot(el('div', {},
+            el('p', {}, el('b', { text: 'Always a rate. ' }),
+              'Sets a week, so the bands are the same at every window — 12 weeks measures longer, '
+              + 'it does not ask more of you.'),
+            el('p', {}, el('b', { text: 'No target line. ' }),
+              `The tick at 4 is where change starts being detectable. Above it the `
+              + 'labels say what another set buys, not what you ought to do.'),
+            el('p', {}, el('b', { text: 'Warm-ups. ' }),
+              'The app cannot tell a warm-up from a back-off set, and dropping the light ones would '
+              + 'drop real work too — so these run a little high if you log warm-ups.'),
+            el('p', {}, el('b', { text: 'Half a set. ' }), INDIRECT_NOTE_WEEKLY),
+            el('p', {}, el('b', { text: 'Core. ' }),
+              'Understated for everyone — squats, deadlifts, carries and overhead work all train it '
+              + 'and none of them log a set against it.'),
+            data.clamped
+              ? el('p', {}, el('b', { text: 'One big session. ' }),
+                  `A day went past ${SESSION_CEILING} sets on one muscle. Nothing above that has `
+                  + 'been measured, so the rest of that day was not counted.')
+              : null,
+          ), { label: 'How these numbers are counted', title: 'How this is counted' }),
+        ),
       ),
     ));
 }
@@ -2740,10 +2771,19 @@ function topicBlock(topic) {
 function basicsSection() {
   return el('div', { class: 'rt-section' },
     el('h2', { class: 'research-title', text: 'The basics, and how sure anyone is' }),
-    el('div', { class: 'field-help research-sub', text:
-      'Answers to the questions people actually ask, limited to what the research supports. '
-      + 'Every topic says how much to believe it and links what it came from — and every one '
-      + 'names its own weak spot, because a finding with nothing to admit usually has not been checked.' }),
+    /* ⚠️ THE FRAMING SHRANK; THE TEACHING DID NOT — Tim, 2026-09-07: *"the
+     * research section is extreamly wordy and while I do think we need to make
+     * the descriptions in that section more clear, we should allow it to
+     * describe that section sufficiently."* So this heading blurb is one line
+     * and a ?, and the topics below it are untouched: their length is the
+     * feature, and `tests/data-layer.test.mjs` already caps it at 45 words an
+     * answer and 260 a topic. */
+    el('div', { class: 'help-line research-sub' },
+      el('span', { class: 'field-help', text:
+        'What the research actually supports — with how sure anyone is.' }),
+      helpDot('Every topic says how much to believe it and links what it came from. Every one '
+        + 'also names its own weak spot: a finding with nothing to admit usually has not been '
+        + 'checked.', { label: 'How to read these' })),
     el('div', { class: 'rt-list' }, ...TOPICS.map(topicBlock)),
   );
 }

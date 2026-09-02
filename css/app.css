@@ -1688,6 +1688,122 @@ select.input {
 .pane-bottom .save-error { margin-inline: 0; margin-bottom: 9px; }
 
 /* ==========================================================================
+   The "?" and its mini box (2026-09-07)
+
+   Tim: *"have a little question mark somewhere near the thing that it's
+   explaining … when you touch it it opens a mini box that shares what it's
+   trying to say."*
+
+   ⚠️ 26px of paint inside a 44px target. The dot must read as a footnote rather
+   than a control competing with the thing it sits beside — but a 26px tap
+   target would fail WCAG 2.5.8, so the button carries transparent padding and
+   a negative margin, which keeps the layout tight and the target legal.
+   ========================================================================== */
+
+.help-dot {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 26px; height: 26px;
+  padding: 0;
+  margin: -9px;              /* cancels the halo below, so rows do not grow */
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: none;
+  /* ⚠️ --ink-soft, not --ink-faint. Measured in the browser at 4.52:1 on the
+     light gold palette — a pass, with nothing to spare, on a 13px glyph that is
+     the entire label of a control. --ink-soft is the same quiet register with
+     roughly half again the margin. */
+  color: var(--ink-soft);
+  font-size: 13px; font-weight: 700; line-height: 1;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+}
+/* The invisible half of the touch target — 44px in both directions. */
+.help-dot::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+}
+.help-dot[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+
+/* The mini box. Positioned in JS against the dot, because the dot can be in a
+   header, at the end of a row or beside a legend chip, and a box that runs off
+   a 360px screen is the whole failure mode of this pattern. */
+.help-pop {
+  position: fixed;
+  z-index: 70;
+  max-width: 300px;
+  /* ⚠️ A box taller than the screen is a broken box. Measured at 525px on the
+     Volume screen's six explanations against an 852px phone — fine there and
+     one more paragraph from not being. It scrolls inside itself rather than
+     running off the top, which is the only failure mode this pattern has that
+     the reader cannot recover from. */
+  max-height: 62dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 11px 13px;
+  border-radius: var(--r);
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.help-pop:focus { outline: none; }
+.help-pop-title { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.help-pop-body { margin: 0; }
+.help-pop p { margin: 0 0 7px; }
+.help-pop p:last-child { margin-bottom: 0; }
+.help-pop b, .help-pop strong { color: var(--ink); font-weight: 650; }
+
+/* The arrow, so the box is visibly attached to the ? that opened it rather than
+   appearing from nowhere — Rule 7's "a thing that moves says where it came
+   from", applied to a thing that appears. */
+.help-pop::before {
+  content: '';
+  position: absolute;
+  left: var(--arrow-x, 50%);
+  top: -5px;
+  margin-left: -5px;
+  width: 9px; height: 9px;
+  background: var(--raised);
+  border-left: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+  transform: rotate(45deg);
+}
+.help-pop.is-above::before { top: auto; bottom: -5px; transform: rotate(225deg); }
+
+/* It grows out of the dot. --t-fast, because this is a footnote and nobody
+   should wait for one. */
+.help-pop { animation: help-in var(--t-fast) var(--ease-out); }
+@keyframes help-in { from { opacity: 0; transform: translateY(-4px) } }
+.help-pop-x {
+  position: fixed; z-index: 70; pointer-events: none;
+  animation: help-out var(--t-fast) var(--ease-in) forwards;
+}
+@keyframes help-out { to { opacity: 0 } }
+
+/* A line of help text with its ? at the end of it. `align-items: baseline` so
+   the dot sits on the text's own line rather than centring against a wrapped
+   paragraph, which reads as a bullet floating in the margin. */
+.help-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.help-line > .field-help,
+.help-line > .note,
+.help-line > .section-label { flex: 1; min-width: 0; margin: 0; }
+
+/* Seven things in one sentence are seven things nobody counts. */
+.vis-list { margin: 4px 0 0; padding-left: 18px; }
+.vis-list li { margin: 2px 0; }
+
+/* ==========================================================================
    The save screen — everything about the session, asked at the end (2026-09-07)
 
    Tim's ask: the description and the gym come off the runner's header and are

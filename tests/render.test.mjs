@@ -820,19 +820,36 @@ for (const mode of ['Graph', 'Bars']) {
     && !data.querySelector('.vol-hint').hidden,
      'and picking it again clears everything back');
 
-  // ⚠️ THE CAVEATS TRAVEL WITH THE NUMBERS. Every one of these is a thing the
-  // count is doing that a reader would otherwise have to guess at.
-  const pane = data.querySelector('.vol-pane').textContent;
-  ok(/warm-ups included/.test(pane),
-     '⚠️ it admits it counts every logged set, warm-ups included — the open question, said rather '
-     + 'than silently resolved');
-  ok(/not a measured fact/.test(pane),
+  /* ⚠️ THE CAVEATS TRAVEL WITH THE NUMBERS. Every one of these is a thing the
+     count is doing that a reader would otherwise have to guess at.
+
+     🚨 SINCE 2026-09-07 MOST OF THEM LIVE BEHIND THE "?" AND THESE ASSERTIONS
+     OPEN IT. That is a STRONGER check than the one it replaced, not a weaker
+     one: it used to be enough for the words to exist somewhere in the pane, and
+     now they have to be reachable by the control a reader would actually use.
+     A ? that stopped opening would fail here, where before it could not.
+     ⚠️ The four facts that stayed on the screen are asserted unopened, first,
+     because the split between them is the whole design. */
+  const paneText = () => data.querySelector('.vol-pane').textContent;
+  ok(/Warm-ups counted/.test(paneText()),
+     '⚠️ the screen itself still says warm-ups are counted — the open question, said rather than '
+     + 'silently resolved, and short enough to read at a glance');
+  ok(/indirect work counts half/.test(paneText()),
+     'and that indirect work counts half');
+  data.querySelector('.vol-notes .help-dot').click();
+  await settle();
+  const helpText = document.querySelector('.help-pop').textContent;
+  ok(/warm-up from a back-off set/.test(helpText),
+     '⚠️ and the ? explains WHY a warm-up cannot be told apart');
+  ok(/not a measured fact/.test(helpText),
      'the half-a-set rule is named as a modelling choice, in the words that ship beside the constant');
-  ok(/no target line/.test(pane),
+  ok(/No target line/.test(helpText),
      '🚨 and it says outright that there is no target — the tiers describe what another set buys, '
      + 'and an app that painted 20 sets "good" would be forming an opinion the evidence has not earned');
-  ok(/Core is counted honestly and is understated/.test(pane),
+  ok(/Understated for everyone/.test(helpText),
      'Core says why its own number is low for everyone');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
 
   // The window is a control, and changing it redraws rather than dead-ends.
   [...data.querySelectorAll('.chip')].find((c) => c.textContent === '12 weeks').click();
@@ -3105,9 +3122,18 @@ ok(!data.querySelector('.rep-target'),
   // ⚠️ THE ONE THAT MATTERS. The verdict is gated on the estimator, and the
   // screen has to say so — a silent gap where "on track" belongs reads as a
   // broken feature, and a guess would be worse than either.
-  ok(/will not tell you yet/i.test(live),
-     'it states outright that it will not give an on-track verdict yet');
-  ok(/bad Tuesday/i.test(live), 'and why — a day-to-day estimate swings several percent');
+  /* ⚠️ SPLIT ACROSS THE "?" SINCE 2026-09-07, and the split is the assertion:
+     the REFUSAL stays on the screen, because a reader who does not know the app
+     is declining to judge will read the numbers under it as a verdict; the
+     reasoning is one tap away. Both are still required to exist. */
+  ok(/measured, not judged/i.test(live),
+     'it states outright on the screen that it will not give an on-track verdict yet');
+  goals.querySelector('.goal-verdict .help-dot').click();
+  await settle();
+  ok(/bad Tuesday/i.test(document.querySelector('.help-pop').textContent),
+     'and the ? still gives the reason — a day-to-day estimate swings several percent');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
 
   /* 🆕 AND SINCE 2026-09-06 IT SAYS WHAT HAS MOVED. The refusal above was always
      right and the BLANK under it was not (docs/direction.md §3.1) — so the
@@ -6591,6 +6617,72 @@ ok(!data.querySelector('.rep-target'),
 
   clearDraft();
   await store.clearAll();
+}
+
+/* ====== the "?" and its mini box (2026-09-07) ======
+ *
+ * Tim: *"have a little question mark somewhere near the thing that it's
+ * explaining … when you touch it it opens a mini box that shares what it's
+ * trying to say."*
+ *
+ * 🚨 THE RISK THIS CONTROL CARRIES IS THAT A CAVEAT BECOMES UNREACHABLE. Every
+ * screen that adopts it has an assertion that opens the ? and reads the words
+ * back; these pin the control itself. */
+{
+  const { helpDot, el: mk } = await import(BASE + 'ui.js');
+  const host = document.getElementById('app');
+
+  const dot = helpDot('Because the numbers move.', { label: 'Why not', title: 'Why not' });
+  host.replaceChildren(mk('div', {}, dot));
+  await settle();
+
+  ok(dot.tagName === 'BUTTON' && dot.getAttribute('aria-label') === 'Why not',
+     '⚠️ the ? is a real button with an accessible name — "?" alone reads as nothing to a screen '
+     + 'reader, which is the whole population this pattern could otherwise fail');
+  ok(dot.getAttribute('aria-expanded') === 'false', 'and it says it is closed');
+  ok(!document.querySelector('.help-pop'), 'with nothing open yet');
+
+  dot.click();
+  await settle();
+  const pop = document.querySelector('.help-pop');
+  ok(Boolean(pop), 'tapping it opens the mini box');
+  ok(/Because the numbers move/.test(pop.textContent), 'with the explanation in it');
+  ok(dot.getAttribute('aria-expanded') === 'true', 'and the button says so');
+
+  // Escape closes it — the keyboard path, which nothing else in this pattern has.
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
+  ok(!document.querySelector('.help-pop'), 'Escape closes it');
+
+  // ⚠️ ONE AT A TIME. Two open boxes is two overlapping explanations and no way
+  // to tell which ? either belongs to.
+  const dotB = helpDot('The second one.', { label: 'B' });
+  host.replaceChildren(mk('div', {}, dot, dotB));
+  await settle();
+  dot.click();
+  await settle();
+  dotB.click();
+  await settle();
+  ok(document.querySelectorAll('.help-pop').length === 1,
+     '⚠️ opening a second ? closes the first — two boxes at once is two explanations with no way '
+     + 'to tell which one belongs to which control');
+  ok(/The second one/.test(document.querySelector('.help-pop').textContent),
+     'and the one left open is the one just tapped');
+
+  // Tapping the same ? again closes it, rather than reopening it in place.
+  dotB.click();
+  await settle();
+  ok(!document.querySelector('.help-pop'), 'tapping the same ? again closes it');
+
+  // ⚠️ Tapping ANYWHERE else closes it. Captured on the document, so a row with
+  // its own click handler underneath cannot swallow the dismissal.
+  dot.click();
+  await settle();
+  document.dispatchEvent(new window.MouseEvent('pointerdown', { bubbles: true }));
+  await settle();
+  ok(!document.querySelector('.help-pop'), 'and a tap anywhere else closes it');
+
+  host.replaceChildren();
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
