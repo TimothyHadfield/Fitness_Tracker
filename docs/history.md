@@ -17,6 +17,142 @@
 
 ---
 
+## 2026-09-09 — 🚨 A FRIEND'S PAGE ON A LAPTOP, AND THEIR BODY READ AGAINST THEIR OWN SEX
+
+Tim, in one message with two things in it:
+
+> *"Right now viewing another person's profile (specifically on a laptop) is a mess. Everything is
+> formated for an iphone instead of a laptop. The formating and design on an iphone works great.*
+>
+> *The second note is that when you click on another person's profile, their muscle map is being
+> compared against people like YOU, not people like THEM. Make this changed so that the details match
+> them, not like you. That's what the compare section is for."*
+
+And, while that was being built:
+
+> *"Right now the 'compared to' (like me, everyone) menu is pretty wordy and it really doesn't need
+> any words at all. I think it could do with some question marks or extream cuts to descriptions."*
+
+### A. THE LAPTOP LAYOUT WAS ONE CLASS, AND IT WAS DOING EXACTLY WHAT IT SAYS
+
+**Measured before touching anything, at 1280×800 in the demo account.** `.friend-body` — the figure —
+rendered **122 px wide**. The comparison caption wrapped to **one word per line**. The section
+headings printed as vertical strips two characters across. Their recent workouts ran off the
+right-hand edge behind a **horizontal scrollbar inside the pane**, which no phone had ever shown.
+
+🚨 **THE CAUSE IS ONE LINE IN `views-data.js` AND IT IS NOT A BUG IN THAT LINE.**
+`host.classList.toggle('is-muscles', mode === 'muscles')` — and `.graph-host.is-muscles` is
+`flex-direction: row` at 860 px, which is **right** for the two children your own map puts in that
+host (the figure and its panel, side by side since 2026-08-21) and catastrophic for the **seven** a
+friend's page puts in it: their face, the map, their body weight, two headings, their recent workouts
+and the disconnect footer, each becoming a column.
+
+⚠️ **NOBODY BROKE THIS; IT ARRIVED.** The friend page had its own screen until **2026-09-05**, when
+Tim asked for it to *"look nearly exactly like how a user views their own data section"* and its
+sections were handed to `GraphView`'s pane. That change was correct and it inherited a desktop rule
+written for a different pane's contents. **A layout rule keyed to a mode rather than to the shape of
+what is in it is inherited by the next thing that mode draws.**
+
+✅ **THE FIX IS THE SPLIT MOVED INSIDE.** The host is a plain column for a shared map
+(`is-shared-muscles`, its own class so the two layouts cannot be styled by accident), and the figure
+and its panel are siblings in one **`.map-split`** which becomes the two-column layout at the **same
+860 px breakpoint, with the same `clamp(260px, 32%, 340px)` panel and the same hairline** your own map
+uses. Everything else on the page is full width underneath, which is what a stack of sections wants.
+
+🔒 **AND THE PHONE LAYOUT HE CALLED GREAT IS BYTE-FOR-BYTE THE ONE THAT WAS THERE.** `.map-split` is a
+plain block below 860 px — every new rule is inside the media query — and it was **measured on both
+sides of the change**: `.friend-body` 297×439 at (47, 253) and `.body-foot` at (14, 696) before and
+after, at 390 px. Nothing about the DOM branches on width, so nothing changes on a resize either.
+
+**Measured after, no horizontal overflow at any of them:** 844 px stacked (246×364 figure) · 860 px
+split (303×448 figure, 260 px panel) · 1024 px (332×492, 262) · 1280 px (346×512, 301) · 1440 px
+(389×576, 301).
+
+### B. THE MAP WAS READING THE READER'S SEX, AND THE CAPTION SAID SO OUT LOUD
+
+`friendBody()` opened on `normalizeCompare(settings.compare)` — **the viewer's own saved group**. That
+carries a **concrete sex** the moment anybody presses "Like me", so a woman's map was painted against
+men because the person looking at it is one. In the demo, Priya Raman's caption read **"vs. men who
+lift"**.
+
+🚨 **THIS IS THE 2026-09-05 FIX ARRIVING AT THE SECOND DOOR.** The two-body compare screen had the
+identical fault and was moved to `comparePreset('each')` then. This screen was not — and the reason it
+survived is worth keeping: **with one body on screen the wrong answer and the right answer are the
+same string for half the population.** Every existing test fixture published
+`defaultCompare: 'lifters|male|own|own'` and every test reader was male.
+
+⚠️ **WEIGHT AND AGE WERE ALREADY THEIRS.** `own` on those two axes is resolved by the **owner** when
+they publish their grid, so they have always meant "their body weight, their age" — which is why the
+sub-caption was correct while the main caption was wrong, and why nothing on the screen disagreed
+with itself.
+
+✅ It opens on **`comparePreset('each')`** now: `sex: 'own'`, resolved per document by `compareKey()`
+against that document's own `defaultCompare`. One object, a different key per body.
+
+🚨 **AND THE WORDS NEEDED A SECOND, SEPARATE FIX — this is the half that would have shipped wrong.**
+`compareKey()` resolves `sex: 'own'` against **the document**; `comparisonLabel()` resolves the same
+value against **`profile.gender`**, which this screen passed as `null`, which falls back to male. So
+the colours would have been hers and the caption would still have said "men who lift" — the exact
+fault the label exists to prevent, and invisible in any test whose friend is male. `ownSexOf(strength)`
+is now handed to both.
+
+🚨 **A LIVE BUG FOUND WHILE MOVING IT: THE CAPTION WAS BUILT ONCE AND NEVER REPAINTED.** `label` was a
+`const` computed before the button; changing the group from the sheet re-ranked the body and left the
+words naming the population it had just left. One `paintControls()` draws both halves now.
+
+### C. THE "COMPARED TO" SHEET, CUT
+
+Under **Rule 9** (`docs/handbook.md` §5) — the ? holds WHY, never WHAT:
+
+- **Four axis paragraphs went behind four dots**, beside their labels rather than out at the right
+  margin (Tim's own correction of 2026-09-08). They qualify on the rule's own test: not one says what
+  a chip *does* — "Men" and "Any age" say that themselves — they say what changes if you pick it.
+- 🛑 **THE UNTRAINED-ADULT CAVEAT WAS SHORTENED AND NOT SOFTENED**, and there is an assertion that
+  **opens the dot and reads it back**. It is the weakest number in the file (D21).
+- 🚨 **THE PRESET HINTS WERE DELETED RATHER THAN HIDDEN** — Rule 9's own first question is what else
+  on the screen already says it, and **two things do, both live**: pressing a preset lights the four
+  axis chips below, which is literally what it means, and the line at the foot names the group in
+  words and changes with it. A hint under every chip was a third copy on a sheet whose whole job is
+  four choices. `.preset` min-height 52 → 44 with the second line gone; `.preset-hint` deleted.
+- ⚠️ **THE SEX AXIS'S EMPTY-STATE SENTENCE STAYED ON THE SCREEN.** With "Relative to each" active no
+  chip is lit, and an axis with nothing selected reads as broken until it says why. That is WHAT.
+- *"Now comparing you against"* → *"Now:"* — the verb was doing no work under a sheet titled
+  **Compared to**.
+
+### D. THREE MORE PRONOUNS THAT NAMED THE WRONG PERSON
+
+The same instruction, one screen in. **`own` has always meant "the person this map is about"**, so on
+somebody else's page: **"Like me" → "Like them"**, **"My body weight" → "Their body weight"**,
+**"My age" → "Their age"**. On the two-body screen they read **"Own body weight" / "Own age"** — that
+sheet's own footer says *"each against their own sex, body weight and age"*, and a chip saying "My"
+directly above it contradicted the sentence describing it. **Keys unchanged; only the words.**
+
+### E. WHAT WAS CHECKED
+
+✅ **1,105 render assertions** (was 1,090), every runnable suite green, **1,915 data-layer**.
+🔒 **Mutation-checked**: restoring the reader's own group to `friendBody()` flips exactly three
+assertions — the caption naming women, the caption not naming men, and her level moving when men are
+asked for — and **the mutant reads "Beginner" where the fixture reads "Expert"**, which is Tim's
+report reproduced in a test. ⚠️ **The mutation was confirmed to have landed on the code** (§0.14) by
+grepping the line back out of the file before running anything.
+
+⚠️ **THE FIRST VERSION OF THAT TEST READ ITS CHIPS OFF A STALE SHEET.** A sheet mounts on
+`document.body`, the block above had left one open, and `.sheet .chip` matched both — so "pick Men"
+picked nothing and the vacuity guard failed while the code was correct. It closes what is open and
+addresses the live sheet by position now. **§0.14's other half: an assertion that fails is not
+automatically telling you about the code.**
+
+✅ **The compare sheet measured at 360 px in a browser**: no horizontal overflow, zero unnamed
+controls, presets over 44 px. ⚠️ **The chips are 31 px tall and the close button 36** — unchanged by
+this work, and the audit's own note says `hit44` is a tripwire rather than a verdict.
+
+⚠️ **`tools/a11y-audit.mjs` STILL RUNS AT PHONE WIDTHS ONLY** (360 and 390), so the laptop layout this
+session fixed is measured by the driver in the scratchpad rather than by the audit. **That is a real
+coverage hole and it is now written down**: the app has a desktop layout on every screen and nothing
+sweeps it.
+
+---
+
 ## 2026-09-08 (third pass) — THE NAVIGATION RESTRUCTURED: A PROFILE TAB, AND HOME LOSES ITS SWITCH
 
 Tim, opening with *"I'm giving you some more assignments so you really should deploy many

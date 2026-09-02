@@ -2220,25 +2220,62 @@ function entryLine(entry, exMap) {
  * a question about the body in front of you; writing it into `settings.compare`
  * would silently re-rank your own map from somebody else's page.
  *
+ * 🚨 AND IT OPENS ON PEOPLE LIKE **THEM** SINCE 2026-09-09 — Tim: *"when you
+ * click on another person's profile, their muscle map is being compared against
+ * people like YOU, not people like THEM. Make this changed so that the details
+ * match them, not like you. That's what the compare section is for."*
+ *
+ * ~~It opened on `settings.compare`~~ — the viewer's own saved group, which
+ * carries a CONCRETE sex once anybody has pressed "Like me" — so a woman's map
+ * was painted against men because the reader is one. ⚠️ **THIS IS THE 2026-09-05
+ * FIX ARRIVING AT THE SECOND DOOR**: the two-body compare screen had the
+ * identical fault and was moved to `comparePreset('each')` then; this screen was
+ * not, because it has only one body on it and the fault is invisible until the
+ * body belongs to somebody of the other sex.
+ *
+ * ⚠️ WEIGHT AND AGE WERE ALREADY THEIRS. `own` on those two axes is resolved by
+ * the OWNER when they publish their grid, so they have always meant "their body
+ * weight, their age". Sex is the only axis the READER resolves — which is why
+ * the caption could say "vs. men who lift" over a woman's body and nothing else
+ * on the screen disagreed with it.
+ *
+ * ⚠️ THE OLD REASONING, KEPT BECAUSE IT IS WHY THE CODE WAS WRONG: *"somebody who
+ * reads every screen as 'everyone' should not have this one screen quietly answer
+ * a different question."* True of the POOL axis and false of sex — carrying the
+ * reader's sex onto somebody else's body is not continuity, it is the wrong
+ * population. The viewer can still ask any other question here; it is just not
+ * the one the screen opens on.
+ *
  * ⚠️ AND THE COMPARE BUTTON PUTS TWO BODIES SIDE BY SIDE — his other ask in the
  * same message. It lives on this map and on your own, and it is the same screen
  * either way (`#/compare/...`).
  */
 async function friendBody(strength, who) {
-  const [{ bodySvg, setSelected, BODY_ASPECT }, { ratingsFromShared, levelMapFrom }, muscles] =
-    await Promise.all([
-      import('./body-map.js'), import('./shared-map.js'), import('./views-muscles.js'),
-    ]);
-  const [settings, { comparisonLabel, normalizeCompare }] = await Promise.all([
+  const [
+    { bodySvg, setSelected, BODY_ASPECT },
+    { ratingsFromShared, levelMapFrom, ownSexOf },
+    muscles,
+  ] = await Promise.all([
+    import('./body-map.js'), import('./shared-map.js'), import('./views-muscles.js'),
+  ]);
+  const [settings, { comparisonLabel, comparePreset }] = await Promise.all([
     store.getSettings(), import('./strength-standards.js'),
   ]);
 
-  // ⚠️ THE VIEWER'S OWN CHOICE IS THE STARTING POINT, not a fixed default:
-  // somebody who reads every screen as "everyone" should not have this one
-  // screen quietly answer a different question. It is a copy from here on.
-  let compare = normalizeCompare(settings.compare);
+  let compare = comparePreset('each');
   const more = settings.moreDetails === true;
   let selected = null;
+
+  /* 🚨 THEIR SEX, FOR THE WORDS ONLY — and it has to be handed in separately.
+   * `compareKey()` resolves `sex: 'own'` against the document's own
+   * `defaultCompare`, so the COLOURS are already theirs; `comparisonLabel()`
+   * resolves the same value against `profile.gender`, which was null here and
+   * therefore fell back to male. That is the exact failure this label exists to
+   * prevent — a caption naming a population the map was not painted against —
+   * and it was reading correctly only for male friends. One value, read the same
+   * way by both, is what keeps the sentence and the colours in step. */
+  const theirSex = ownSexOf(strength);
+  const asThem = { gender: theirSex, whose: 'their' };
 
   // The drawing's own ratio, so the capped box is the picture's shape at every
   // width and the figure never letterboxes inside it.
@@ -2258,6 +2295,7 @@ async function friendBody(strength, who) {
     }, { label: `${who.name}'s muscle groups, coloured by strength level` });
     setChildren(wrap, body);
     paintFoot(rated, missing);
+    paintControls();
   };
 
   function paintFoot(rated, missing) {
@@ -2272,10 +2310,10 @@ async function friendBody(strength, who) {
         ? el('div', { class: 'card' },
             el('div', { class: 'field-help', text:
               `${who.name} has not published a map for that comparison. Their app publishes one when `
-              + 'they next open it — try "Like me", which every version publishes.' }))
+              + 'they next open it — try "Like them", which every version publishes.' }))
         : selected
           ? muscles.musclePanel(rated.get(selected), selected,
-              { compare, gender: null, whose: 'their' }, null, more)
+              { compare, ...asThem }, null, more)
           : el('div', { class: 'card' },
               el('div', { class: 'field-help', text: 'Tap a muscle for their numbers.' }),
               el('div', { class: 'field-help', text:
@@ -2284,36 +2322,68 @@ async function friendBody(strength, who) {
     );
   }
 
-  const label = comparisonLabel({ compare, gender: null, whose: 'their' });
-  const controls = el('div', { class: 'control-row' },
-    el('button', {
-      class: 'basis basis-btn', 'aria-haspopup': 'dialog',
-      onClick: () => muscles.openCompareSheet(
-        // ⚠️ A THROWAWAY PROFILE. `comparisonLabel` prints a body weight when the
-        // axis is "own" — and it is THEIR body weight, which this device does not
-        // have and is not supposed to. With no `bodyWeight` on the object the
-        // label says "their body weight" instead of a number nobody published.
-        { compare, gender: null, whose: 'their' },
-        (next) => { compare = next; draw(); },
-        // Not saved. See the header.
-        async () => {},
+  /* 🚨 THE CAPTION IS REPAINTED, NOT BUILT ONCE — fixed 2026-09-09 while moving
+   * the default. It was a `const` computed before the button and nothing rewrote
+   * it, so changing the group from the sheet re-ranked the body and left the
+   * words naming the population it had been painted against a moment earlier.
+   * ⚠️ ONE FUNCTION DRAWS BOTH HALVES for that reason: a caption that can drift
+   * from its own colours is the fault this control exists to prevent, and here it
+   * was the control itself doing the drifting. */
+  const controls = el('div', { class: 'control-row' });
+
+  function paintControls() {
+    const label = comparisonLabel({ compare, ...asThem });
+    setChildren(controls,
+      el('button', {
+        class: 'basis basis-btn', 'aria-haspopup': 'dialog',
+        onClick: () => muscles.openCompareSheet(
+          // ⚠️ A THROWAWAY PROFILE. `comparisonLabel` prints a body weight when the
+          // axis is "own" — and it is THEIR body weight, which this device does not
+          // have and is not supposed to. With no `bodyWeight` on the object the
+          // label says "their body weight" instead of a number nobody published.
+          // `gender` IS carried, because it is the only thing that makes "own"
+          // read as their sex rather than as the reader's.
+          { compare, ...asThem },
+          (next) => { compare = next; draw(); },
+          // Not saved. See the header.
+          async () => {},
+          // "Like me" is the wrong noun over somebody else's body — see the
+          // preset list in views-muscles.js.
+          { subject: 'their' },
+        ),
+      },
+        el('span', { class: 'basis-main' }, label.main, icon('down', 15)),
+        el('span', { class: 'basis-sub', text: label.sub }),
       ),
-    },
-      el('span', { class: 'basis-main' }, label.main, icon('down', 15)),
-      el('span', { class: 'basis-sub', text: label.sub }),
-    ),
-    /* 🚨 THE COMPARE BUTTON — Tim, 2026-09-03: *"whenever you're on a muscle
-     * group display of someone… make a compare button somewhere that allows that
-     * user to display another person's body side by side to the current
-     * displayed body."* */
-    el('a', {
-      class: 'btn small', href: `#/compare/${encodeURIComponent(who.uid)}`,
-      text: 'Compare',
-    }),
-  );
+      /* 🚨 THE COMPARE BUTTON — Tim, 2026-09-03: *"whenever you're on a muscle
+       * group display of someone… make a compare button somewhere that allows that
+       * user to display another person's body side by side to the current
+       * displayed body."* */
+      el('a', {
+        class: 'btn small', href: `#/compare/${encodeURIComponent(who.uid)}`,
+        text: 'Compare',
+      }),
+    );
+  }
 
   draw();
-  return el('div', null, controls, wrap, foot);
+
+  /* 🚨 THE FIGURE AND THE PANEL ARE ONE BLOCK, so a laptop can put them side by
+   * side — 2026-09-09, Tim: *"viewing another person's profile (specifically on
+   * a laptop) is a mess. Everything is formated for an iphone instead of a
+   * laptop."*
+   *
+   * ⚠️ `.map-split` IS A PLAIN BLOCK UNTIL 860px, so the phone layout he called
+   * great is byte-for-byte the one that was there: the children simply stack.
+   * The row is entirely inside the media query.
+   *
+   * ⚠️ AND THE CONTROL ROW STAYS OUTSIDE IT, full width above both columns —
+   * which is where your own Data screen puts it, and it is a question about the
+   * whole screen rather than about either column. */
+  return el('div', { class: 'map-block' },
+    controls,
+    el('div', { class: 'map-split' }, wrap, foot),
+  );
 }
 
 /* ================================================================== *

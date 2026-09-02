@@ -17,7 +17,9 @@ import {
   COMPARE_OPTIONS, normalizeCompare, comparisonLabel, comparePreset, matchesPreset,
 } from './strength-standards.js';
 import { bodySvg, setSelected } from './body-map.js';
-import { setChildren, el, emptyState, trimNum, fmtDateShort, icon, openSheet } from './ui.js';
+import {
+  setChildren, el, emptyState, trimNum, fmtDateShort, icon, openSheet, helpDot,
+} from './ui.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -379,22 +381,63 @@ export function legend(moreDetails, anyTrainedUnrankable = false) {
 // population it refers to can never drift apart. That rule got stricter here,
 // not looser — ranking against people who do not lift is now genuinely on
 // offer, so the caption has to carry the difference every single time.
+/* 🚨 EVERY ONE OF THESE IS BEHIND A "?" SINCE 2026-09-09 — Tim: *"the 'compared
+ * to' (like me, everyone) menu is pretty wordy and it really doesn't need any
+ * words at all. I think it could do with some question marks or extream cuts to
+ * descriptions."*
+ *
+ * ⚠️ THEY QUALIFY FOR THE DOT ON RULE 9's OWN TEST, which is why this is a move
+ * rather than a deletion: not one of them says what a chip DOES — "Men" and "Any
+ * age" say that themselves — they say what changes if you pick it and how far it
+ * can be trusted. That is WHY, and the untrained-adult sentence is a caveat on
+ * an estimate, so it may be shortened and may never be softened.
+ */
 const COMPARE_AXES = [
   { key: 'pool', title: 'Population',
-    help: 'Most adults do not lift at all, so including them raises every level. '
-      + 'What an untrained adult can lift has never been properly measured — that option is a rough estimate.' },
+    help: 'Including people who do not lift raises every level. Nobody has properly measured what '
+      + 'an untrained adult lifts, so that option is a rough estimate.' },
   { key: 'sex', title: 'Sex',
-    help: 'Men and women are held to different standards, so this changes every level.' },
+    help: 'Men and women are held to different standards, so this moves every level.' },
   { key: 'weight', title: 'Body weight',
-    help: 'Standards scale with body weight. Ignoring it compares you against people of every size.' },
+    help: 'Standards scale with body weight. Ignoring it compares against lifters of every size.' },
   { key: 'age', title: 'Age',
-    help: 'Strength peaks around 23–40. Ignoring age drops the correction that keeps an older lifter from reading as permanently weak.' },
+    help: 'Strength peaks around 23–40. Ignoring age drops the correction that keeps an older '
+      + 'lifter from reading as permanently weak.' },
 ];
 
+/* 🚨 A PRESET IS A NAME AND NOTHING ELSE SINCE 2026-09-09, and this one is a
+ * DELETE rather than a move — Rule 9's own first question is what else on the
+ * screen already says it. Two things do, and both are live: pressing a preset
+ * lights the four axis chips below, which is literally what it means; and the
+ * line at the foot of the sheet names the group in words and changes with it.
+ * ~~`hint`~~ was a third copy, printed under every chip, on the screen whose
+ * whole job is four choices.
+ */
 const PRESETS = [
-  { key: 'like-me', name: 'Like me', hint: 'Lifters of my sex, weight and age' },
-  { key: 'everyone', name: 'Everyone', hint: 'All adults, any sex, weight or age' },
+  { key: 'like-me', name: 'Like me' },
+  { key: 'everyone', name: 'Everyone' },
 ];
+
+/* ⚠️ "LIKE ME" IS THE WRONG NOUN OVER SOMEBODY ELSE'S BODY — 2026-09-09. The
+ * key is unchanged, so it still resolves through `comparePreset('like-me',
+ * profile)` and still means "of this person's sex, weight and age"; only the
+ * word changes, and it changes because on a friend's page the person it is
+ * about is not the person reading it. */
+const PRESETS_THEIRS = PRESETS.map((p) =>
+  (p.key === 'like-me' ? { ...p, name: 'Like them' } : p));
+
+/* ⚠️ AND THE SAME WORD IS WRONG ON TWO CHIPS. `own` on the weight and age axes
+ * has ALWAYS meant "the person this map is about" — the owner resolves both when
+ * they publish their grid (strength-standards.js) — so "My body weight" over
+ * somebody else's body names the wrong person as the basis of the whole screen.
+ * Only the label moves; the key stays `own` and the arithmetic is untouched. */
+const THEIR_OWN_LABEL = { weight: 'Their body weight', age: 'Their age' };
+
+/* ⚠️ AND ON THE TWO-BODY SCREEN IT IS NEITHER "my" NOR "their" — that sheet's
+ * own footer says *"each against their own sex, body weight and age"*, so a chip
+ * reading "My body weight" directly above it contradicted the sentence it was
+ * being described by. Same key, same arithmetic, third word. */
+const EACH_OWN_LABEL = { weight: 'Own body weight', age: 'Own age' };
 
 /* 🚨 THE THIRD PRESET, AND IT ONLY EXISTS WHERE TWO BODIES DO — 2026-09-05.
  *
@@ -407,10 +450,7 @@ const PRESETS = [
  * wonder which is which. It is meaningful only when there is more than one
  * person for "each" to range over.
  */
-const EACH_PRESET = {
-  key: 'each', name: 'Relative to each',
-  hint: 'Every body against people like them',
-};
+const EACH_PRESET = { key: 'each', name: 'Relative to each' };
 
 /**
  * Which preset chip is lit.
@@ -439,13 +479,18 @@ function pressedPreset(current, offered, profile) {
  *   about that screen, not changing the standard their own body is ranked
  *   against, and silently rewriting their setting from another person's page is
  *   the kind of thing nobody would ever find.
+ * @param {object}   [opts]
+ * @param {boolean}  [opts.perPerson]  offer "Relative to each" — two bodies only
+ * @param {string}   [opts.subject]    'their' where the map is somebody else's,
+ *   which changes one word on one chip and nothing else
  */
 export function openCompareSheet(profile, onChange, save, opts = {}) {
   let current = normalizeCompare(profile.compare);
   const body = el('div', { class: 'compare-sheet' });
   /* ⚠️ OPT-IN, not inferred from `profile.whose`. The caller knows whether there
    * is more than one body on its screen; this function would be guessing. */
-  const presets = opts.perPerson ? [EACH_PRESET, ...PRESETS] : PRESETS;
+  const base = opts.subject === 'their' ? PRESETS_THEIRS : PRESETS;
+  const presets = opts.perPerson ? [EACH_PRESET, ...base] : base;
   const persist = save || ((next) => store.saveSettings({ compare: { ...next } }));
 
   const apply = async (next) => {
@@ -476,14 +521,18 @@ export function openCompareSheet(profile, onChange, save, opts = {}) {
               onClick: () => apply(comparePreset(p.key, profile)),
             },
               el('span', { class: 'preset-name', text: p.name }),
-              el('span', { class: 'preset-hint', text: p.hint }),
             );
           })),
       ),
 
       ...COMPARE_AXES.map((axis) =>
         el('div', { class: 'compare-axis' },
-          el('div', { class: 'section-label', text: axis.title }),
+          /* The dot sits against the words, not out at the right margin — Rule 9,
+             and Tim's own correction of where it goes (2026-09-08). */
+          el('div', { class: 'help-line' },
+            el('div', { class: 'section-label', text: axis.title }),
+            helpDot(axis.help, { title: axis.title, label: `What ${axis.title.toLowerCase()} changes` }),
+          ),
           el('div', { class: 'compare-opts' },
             ...COMPARE_OPTIONS[axis.key].filter((o) => !o.hidden).map((opt) =>
               el('button', {
@@ -492,22 +541,29 @@ export function openCompareSheet(profile, onChange, save, opts = {}) {
                 // rather than in a second class that could disagree with it.
                 class: 'chip',
                 'aria-pressed': String(isChosen(axis.key, opt.key, current, profile, opts.perPerson)),
-                text: opt.name,
+                text: (opt.key === 'own'
+                  && (opts.perPerson ? EACH_OWN_LABEL[axis.key]
+                    : opts.subject === 'their' ? THEIR_OWN_LABEL[axis.key] : null))
+                  || opt.name,
                 onClick: () => apply({ ...current, [axis.key]: opt.key }),
               }))),
-          el('div', { class: 'field-help', text:
-            /* ⚠️ THE SEX AXIS EXPLAINS ITS OWN EMPTY STATE, and only when it has
-               one. With "Relative to each" active no chip below is lit, because
-               no single sex is in use — and an axis with nothing selected reads
-               as broken unless it says why. */
-            axis.key === 'sex' && opts.perPerson && current.sex === 'own'
-              ? 'Each body is using its own — pick one here to hold both to the same standard instead.'
-              : axis.help }),
+          /* ⚠️ THE SEX AXIS'S EMPTY STATE STAYS ON THE SCREEN AND DID NOT GO
+             BEHIND THE DOT. With "Relative to each" active no chip below is lit,
+             because no single sex is in use — that is a fact about what you are
+             looking at right now, and an axis with nothing selected reads as
+             broken until it says so. Rule 9: WHAT stays, WHY moves. */
+          axis.key === 'sex' && opts.perPerson && current.sex === 'own'
+            ? el('div', { class: 'field-help', text:
+                'Each body is using its own — pick one here to hold both to the same standard instead.' })
+            : null,
         )),
 
+      /* The one sentence that survived the cut, because it is the ANSWER rather
+         than an explanation: it names the group in words and it changes as the
+         chips do. ~~"Now comparing you against"~~ — the verb was doing no work
+         under a sheet titled "Compared to". */
       el('div', { class: 'field-help' },
-        // "you" is wrong where the sheet governs two other people's bodies.
-        opts.perPerson ? 'Now comparing against ' : 'Now comparing you against ',
+        'Now: ',
         el('b', { text: comparisonLabel(live).main.replace(/^vs\. /, '') }),
         ` — ${comparisonLabel(live).sub}.`),
     );

@@ -1393,10 +1393,26 @@ export async function GraphView(opts = {}) {
     // leave the selected state pointing at the wrong one.
     modeSwitch.querySelectorAll('.seg').forEach((b, i) =>
       b.setAttribute('aria-selected', String(tabs[i][0] === mode)));
-    // Muscles is the one mode with a side panel on a wide screen, so it is the
-    // one mode that lays out as a row. The class carries that; the CSS decides
-    // at which width it actually applies.
-    host.classList.toggle('is-muscles', mode === 'muscles');
+    /* Muscles is the one mode with a side panel on a wide screen, so it is the
+     * one mode that lays out as a row. The class carries that; the CSS decides
+     * at which width it actually applies.
+     *
+     * 🚨 AND A FRIEND'S MAP MUST NOT TAKE THAT CLASS — 2026-09-09, Tim: *"right
+     * now viewing another person's profile (specifically on a laptop) is a
+     * mess."* It was, and this line was the whole of it. `is-muscles` makes the
+     * host a ROW at 860px, which is right for the two children your own map puts
+     * in it (the figure and its panel) and catastrophic for the SEVEN a friend's
+     * page does — their face, the map, their body weight, two headings, their
+     * recent workouts and the disconnect footer all became columns side by side,
+     * each squeezed to a word or two wide, with the workouts running off the
+     * right-hand edge behind a horizontal scrollbar.
+     *
+     * ⚠️ THE SIDE-BY-SIDE LAYOUT IS NOT LOST, it moved INSIDE the pane where the
+     * two things that belong beside each other are: `.map-split` in
+     * views-social.js. The host is a plain column either way, which is what a
+     * page of stacked sections has always wanted. */
+    host.classList.toggle('is-muscles', mode === 'muscles' && !opts.musclesPane);
+    host.classList.toggle('is-shared-muscles', mode === 'muscles' && Boolean(opts.musclesPane));
     if (mode === 'muscles') {
       /* 🚨 A FRIEND'S MAP IS NOT `muscleGroupsPane` WITH ROWS, AND CANNOT BE.
        * Their percentile was computed on THEIR device against their body weight

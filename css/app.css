@@ -3474,15 +3474,19 @@ a.seg {
 .compare-axis { display: flex; flex-direction: column; gap: 6px; }
 .compare-opts { display: flex; flex-wrap: wrap; gap: 6px; }
 /* The two presets. Bigger than the chips below them because they are what most
-   people want; the four axes are the escape hatch, not the main event. */
+   people want; the four axes are the escape hatch, not the main event.
+
+   ⚠️ SHORTER SINCE 2026-09-09 BECAUSE THERE IS ONE LINE IN IT NOW — the hint
+   under each name went (see PRESETS in views-muscles.js). 52px was two lines of
+   type plus padding; a single 14.5px name wants 44, which is also the floor a
+   touch target may not go below. ~~`.preset-hint`~~ went with it. */
 .preset {
-  flex: 1 1 140px; min-height: 52px;
+  flex: 1 1 140px; min-height: 44px;
   flex-direction: column; gap: 1px;
   align-items: flex-start; justify-content: center;
   padding: 8px 13px;
 }
 .preset-name { font-size: 14.5px; font-weight: 700; }
-.preset-hint { font-size: 11px; font-weight: 500; opacity: .72; text-align: left; }
 .btn.preset[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 .muscle-head { display: flex; align-items: baseline; gap: 8px; }
@@ -3719,8 +3723,46 @@ a.row { text-decoration: none; }
   display: flex; align-items: center; justify-content: center;
 }
 .friend-body .body-map { width: 100%; height: 100%; }
+
+/* ==========================================================================
+   A FRIEND'S MAP ON A LAPTOP — 2026-09-09
+
+   Tim: *"right now viewing another person's profile (specifically on a laptop)
+   is a mess. Everything is formated for an iphone instead of a laptop. The
+   formating and design on an iphone works great."*
+
+   ⚠️ NOTHING HERE APPLIES BELOW 860px, and that is deliberate rather than
+   incidental: the phone layout is the one he called great, so `.map-block` and
+   `.map-split` are a plain block and a plain block until the media query. The
+   children stack exactly as they did when they were loose in the pane.
+
+   The desktop half gives the figure and its panel the same two-column shape your
+   OWN map has had since 2026-08-21 — same breakpoint, same clamp, same hairline
+   — and leaves everything else on the page (their workouts, their body weight,
+   the disconnect) full width underneath, which is where a stack of sections
+   belongs. Rule 3's corollary is why the split is here rather than on the host:
+   the figure must not shrink because you tapped a muscle, and a panel BESIDE it
+   costs width once where a panel UNDER it costs half the height.
+   ========================================================================== */
 @media (min-width: 860px) {
   .friend-body { max-height: 64dvh; max-width: calc(64dvh * var(--body-ar, 1)); }
+
+  .map-split { display: flex; align-items: stretch; gap: 18px; }
+  /* ⚠️ `align-self: flex-start` — the aspect box governs its own height, and
+     stretching it would drive the height from the panel beside it and hand the
+     figure whatever shape was left over. */
+  .map-split > .friend-body { flex: 1; min-width: 0; align-self: flex-start; }
+  .map-split > .body-foot {
+    width: clamp(260px, 32%, 340px);
+    flex: none;
+    padding-left: 18px;
+    /* A hairline, not a card — the panel is a column of this screen, not a box
+       floating on it (Rule 2). The same rule your own map uses. */
+    border-left: 1px solid var(--rule-soft);
+  }
+  /* Vertical room is not scarce beside a figure, so the legend can breathe —
+     the same relaxation `.graph-host.is-muscles` makes. */
+  .map-split .lv-key { gap: 6px 12px; }
 }
 
 /* ==========================================================================

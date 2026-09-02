@@ -6025,6 +6025,151 @@ ok(!data.querySelector('.rep-target'),
        + 'from somebody else\'s page is the kind of thing nobody would ever find');
   }
 
+  /* ---- 🚨 THEIR MAP IS READ AGAINST PEOPLE LIKE **THEM** — 2026-09-09 ----
+   *
+   * Tim: *"when you click on another person's profile, their muscle map is being
+   * compared against people like YOU, not people like THEM."*
+   *
+   * ⚠️ THE FIXTURE ABOVE COULD NOT HAVE CAUGHT THIS AND THAT IS THE LESSON. Its
+   * friend publishes `defaultCompare: 'lifters|male|own|own'` and the reader is
+   * male, so the wrong answer and the right answer are the same string. The fault
+   * only exists where the two people differ, so the fixture has to differ:
+   * SHE is female, the viewer's saved group names MALE outright, and the two grid
+   * rows give levels far enough apart to be told apart by name.
+   */
+  {
+    /* ⚠️ THE BLOCK ABOVE LEFT ITS SHEET OPEN, and a sheet is mounted on
+     * `document.body` rather than inside the screen — so `.sheet .chip` would
+     * match TWO sheets and the first version of this read its chips off the
+     * stale one, which is how "pick Men" silently picked nothing. Close what is
+     * open, and address the live sheet by position rather than by class. */
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+    const liveSheet = () => [...document.querySelectorAll('.sheet')].pop();
+
+    const prevSettings = await store.getSettings();
+    // The state the bug needs: a viewer who has pressed "Like me" at some point,
+    // which is what writes a CONCRETE sex into their own settings.
+    await store.saveSettings({ compare: { pool: 'lifters', sex: 'male', weight: 'own', age: 'own' } });
+
+    const HER = {
+      muscles: [
+        { muscle: 'Chest', lift: 'Barbell Bench Press', estimate: 120, confidence: 0.7,
+          band: 'Good', basis: 'direct', contributorCount: 5, exerciseCount: 2,
+          contributors: [{ exerciseName: 'Barbell Bench Press', weight: 110, reps: 5,
+            date: '2026-08-10', loadType: 'total', source: 'benchmark' }],
+          hint: null, confident: true },
+      ],
+      grid: {
+        // The same lift, read against two populations: unremarkable among men,
+        // near the top among women. Exactly the case Tim described.
+        'lifters|male|own|own': { Chest: [18, 30] },
+        'lifters|female|own|own': { Chest: [93, 6] },
+      },
+      defaultCompare: 'lifters|female|own|own',
+    };
+    social.friend = async () => ({
+      audience: 'friends',
+      doc: { audience: 'friends', isPublic: false, profile: { name: 'Autumn' },
+             activity: [theirSession], benchmarks: [], strength: HER },
+    });
+
+    const her = await mount(FriendView('u1'));
+    for (let i = 0; i < 12; i++) await settle();
+
+    ok(/women who lift/.test(her.querySelector('.basis-main').textContent),
+       '🚨 HER MAP OPENS ON WOMEN WHO LIFT, not on the reader\'s own sex — the whole of Tim\'s '
+       + 'instruction, and it fails the moment this screen starts from settings.compare again');
+    ok(!/men who lift/.test(her.querySelector('.basis-main').textContent.replace('women who lift', '')),
+       '⚠️ and does not say "men" anywhere in that caption — the caption naming a population the '
+       + 'colours were not computed against is the exact fault this control exists to prevent');
+
+    const chest = her.querySelector('.body-map [data-muscle="Chest"]');
+    chest.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 8; i++) await settle();
+    const herLevel = her.querySelector('.muscle-level').textContent.trim();
+
+    /* 🔒 THE VACUITY GUARD, and it is what makes the assertion above mean
+     * something: pick MEN by hand and the level must MOVE. Without it, a screen
+     * that ignored the grid entirely and printed one level for everything would
+     * pass the caption check and this one. */
+    her.querySelector('.basis-btn').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 8; i++) await settle();
+    const sheet = liveSheet();
+    const sheetText = sheet.textContent.replace(/\s+/g, ' ');
+
+    /* 🚨 THE SHEET SAYS "THEM", NOT "ME" — the same instruction, one screen in.
+     * `own` on the weight and age axes has always meant the person the map is
+     * about, so "My body weight" over her body named the wrong person as the
+     * basis of everything on screen. */
+    ok(/Like them/.test(sheetText) && !/Like me/.test(sheetText),
+       '🚨 the preset on somebody else\'s page reads "Like them"');
+    ok(/Their body weight/.test(sheetText) && !/My body weight/.test(sheetText),
+       'and the body-weight chip says THEIR body weight');
+    ok(/Their age/.test(sheetText) && !/My age/.test(sheetText),
+       'and the age chip says THEIR age');
+
+    /* 🚨 THE WORDINESS CUT — Tim, 2026-09-09: *"the 'compared to' (like me,
+     * everyone) menu is pretty wordy and it really doesn't need any words at
+     * all. I think it could do with some question marks or extream cuts."*
+     *
+     * ⚠️ ASSERTED AS AN ABSENCE **PLUS** A REACHABILITY, never as an absence
+     * alone. A sheet that had simply deleted its explanations would pass the
+     * first of these and fail the second, and that is the difference between
+     * Rule 9 and losing a caveat. */
+    ok(sheet.querySelectorAll('.preset-hint').length === 0,
+       '🚨 no preset carries a hint under its name any more — the axis chips below light up to show '
+       + 'what a preset means, and the line at the foot names it in words');
+    const dots = [...sheet.querySelectorAll('.compare-axis .help-dot')];
+    ok(dots.length === 4,
+       `🚨 every one of the four axes has a ? instead of a paragraph (${dots.length})`);
+
+    const poolDot = dots.find((d) => /population/i.test(d.getAttribute('aria-label') || ''));
+    poolDot.click();
+    await settle();
+    const pop = document.querySelector('.help-pop').textContent;
+    ok(/rough estimate/.test(pop) && /untrained adult/.test(pop),
+       '🔒 AND THE UNTRAINED-ADULT CAVEAT IS STILL REACHABLE, word for word — it is the weakest '
+       + 'number on this screen (D21) and moving it behind a ? may never soften it');
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+
+    const men = [...sheet.querySelectorAll('.chip')].find((b) => b.textContent === 'Men');
+    men.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 10; i++) await settle();
+    const asMen = her.querySelector('.muscle-level').textContent.trim();
+    ok(herLevel !== asMen,
+       `🔒 asking for men instead moves her level (${herLevel} → ${asMen}), so the row really is `
+       + 'being read — the default is a choice rather than the only thing this screen can draw');
+    ok(/men who lift/.test(her.querySelector('.basis-main').textContent),
+       '🚨 AND THE CAPTION FOLLOWS IT. It was built once and never repainted, so changing the group '
+       + 're-ranked the body and left the words naming the population it had just left');
+
+    /* 🚨 THE LAPTOP LAYOUT — Tim, 2026-09-09: *"viewing another person's profile
+     * (specifically on a laptop) is a mess. Everything is formated for an iphone
+     * instead of a laptop."*
+     *
+     * ⚠️ jsdom HAS NO LAYOUT, so this pins the STRUCTURE the CSS needs rather
+     * than any measurement: the figure and the panel are siblings inside one
+     * `.map-split`, and the pane host does NOT take `is-muscles` — the class that
+     * makes a host a ROW at 860px, which turned a friend's seven stacked sections
+     * into seven columns. The browser audit measures the pixels; this stops the
+     * shape being refactored out from under them. */
+    ok(Boolean(her.querySelector('.map-split > .friend-body'))
+       && Boolean(her.querySelector('.map-split > .body-foot')),
+       '🚨 their figure and their panel are siblings in one .map-split, which is what lets a laptop '
+       + 'put them side by side');
+    const host = her.querySelector('.graph-host');
+    ok(host && !host.classList.contains('is-muscles'),
+       '🚨 and their pane is NOT `is-muscles` — that class makes the host a row, and a friend\'s '
+       + 'page puts SEVEN sections in it, not the two your own map does');
+    ok(host && host.classList.contains('is-shared-muscles'),
+       'it carries its own class instead, so the two layouts cannot be styled by accident');
+
+    social.friend = async () => ({ audience: 'friends', doc: theirDoc });
+    await store.saveSettings({ compare: prevSettings.compare || {} });
+  }
+
   /* ---- two bodies, side by side ---- */
   {
     // My own map needs a profile and a set before it can be ranked at all.
@@ -6073,6 +6218,22 @@ ok(!data.querySelector('.rep-target'),
        + 'a population the colours were not computed against is the fault this label exists to prevent');
     ok(/never "who lifts more"|who is lifting more/.test(text),
        'and points at the estimate as the number that does answer who lifts more');
+
+    /* ⚠️ AND THE CHIPS AGREE WITH THAT CAPTION — 2026-09-09. They read "My body
+     * weight" directly above a sentence saying each body is on its OWN, which is
+     * the same wrong pronoun Tim named on a friend's page, one screen over. The
+     * key is still `own`; only the word changed. */
+    cmp.querySelector('.basis-btn').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    for (let i = 0; i < 8; i++) await settle();
+    const eachSheet = [...document.querySelectorAll('.sheet')].pop().textContent.replace(/\s+/g, ' ');
+    ok(/Own body weight/.test(eachSheet) && !/My body weight/.test(eachSheet),
+       '🚨 with two bodies on screen the chip says "Own body weight", not "My" — the sheet may not '
+       + 'contradict the sentence printed at the foot of itself');
+    ok(!/Like them/.test(eachSheet),
+       '⚠️ and "Like them" is NOT offered here — with two people, "them" names nobody in particular; '
+       + 'that word belongs on the screen with one body on it');
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
 
     /* ================= 🚨 EACH BODY GETS ITS OWN POPULATION =================
      *

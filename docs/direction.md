@@ -173,6 +173,13 @@ logistics behind the top-left icon; a view of what your account amounts to in th
    ⚠️ **He also sent a SCREENSHOT OF ANOTHER APP'S UI, which does not go in the repo** — the
    standing rule from `docs/social-plan.md` §12.12. What it showed is written down in
    `docs/history.md`, 2026-09-08.
+   🆕 **AND HE POINTED AGAIN, 2026-09-09 — THE "COMPARED TO" SHEET.** *"Right now the 'compared to'
+   (like me, everyone) menu is pretty wordy and it really doesn't need any words at all. I think it
+   could do with some question marks or extream cuts to descriptions."* **Both halves of that were
+   taken literally**: four axis paragraphs went behind four dots, and the preset hints were *deleted*,
+   because the chips below and the live line at the foot already say what a preset means.
+   ⚠️ **"Extreme cuts" is not licence to drop a caveat** — the untrained-adult sentence (D21, the
+   weakest number in the file) was shortened and is asserted by **opening** its dot.
    🆕 **Design Rule 9 came out of it — the ? holds WHY, never WHAT** (`docs/handbook.md` §5).
    🛑 **AND ONE CARVE-OUT IS HIS, VERBATIM**: *"the research section is extreamly wordy and while I
    do think we need to make the descriptions in that section more clear, we should allow it to

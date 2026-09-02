@@ -1890,3 +1890,45 @@ next.
 **And the notes are ready for a reset.** `chat.md` had reached 216 KB of its 220 KB limit, so its
 older half (21st to 26th August) moved into the archive; it now starts on the 29th. Nothing was
 edited in the move and every line was checked into its new home.
+
+---
+
+## 2026-09-09 — a friend's page on a laptop, and whose standard their body is held to
+
+**You:** viewing someone else's profile on a laptop is a mess and formatted for a phone; and their
+muscle map is being compared against people like *you* rather than people like *them*. Then, partway
+through: the "compared to" menu is wordy and doesn't need any words at all.
+
+**The laptop layout was one line, and it was doing exactly what it says.** Your own muscle map puts
+two things in its pane — the figure and the panel beside it — and there's a rule that lays that pane
+out in two columns on a wide screen. A friend's page puts *seven* things in the same pane, so all
+seven became columns: the body drew 122 pixels wide, the caption wrapped one word per line, and their
+workouts ran off the right-hand edge. Their page got its own layout in September when you asked for it
+to look like your Data screen, and it inherited a rule written for different contents.
+
+Now the two-column split lives around the figure and its panel specifically, so a laptop puts them
+side by side the way your own map does and everything else runs full width underneath. **The phone
+layout is untouched** — I measured the same boxes before and after, and every new rule is inside the
+wide-screen branch.
+
+**On the comparison: you were right, and it was worse than it looked.** Their map opened on *your*
+saved setting, which carries a specific sex the moment you've pressed "Like me" — so a woman's body
+was being ranked against men because you're one. It now opens on their own, resolved from their
+document per person.
+
+Their body weight and age were always theirs, which is why this was easy to miss: the small print
+under the caption said "their body weight · their age" and was correct, while the headline said "men
+who lift" and was not. Fixing the colours alone would have left that headline wrong, because the words
+and the colours worked it out from two different places. They read the same one now.
+
+One thing I found on the way: changing the comparison on their page re-coloured the body and left the
+caption naming the population you'd just switched away from. Fixed.
+
+**And the menu is cut.** The four paragraphs under Population, Sex, Body weight and Age are behind
+question marks next to their labels. The little descriptions under "Like me" and "Everyone" are gone
+altogether — pressing one lights up the four rows below it, which is exactly what it means, and the
+line at the bottom names the result in words. Two things I deliberately left visible: that bottom
+line, and the sentence explaining why nothing is selected under Sex when you're comparing two people.
+
+Some words also named the wrong person: on someone else's page the chips now read "Like them", "Their
+body weight" and "Their age", and on the two-body screen "Own body weight".
