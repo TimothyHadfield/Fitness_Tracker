@@ -47,7 +47,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
-  personFace, helpDot,
+  personFace, helpDot, parkScreen,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -695,8 +695,38 @@ export async function RecordChooserView() {
       el('span', { class: 'row-chev' }, chevron()),
     );
 
+  /* 🚨 IT COMES UP FROM THE BOTTOM AND THE ARROW PUTS IT BACK DOWN — 2026-09-09.
+   *
+   * Tim: *"To make the record section feel more like a button that actually
+   * activates something, I want the screen to pull up the record section from the
+   * bottom (which covers over the main section display). The only change is that
+   * we'll add a down arrow in the upper left which will push the record section
+   * back down, showing the main section display and automatically being selected
+   * on 'home'."*
+   *
+   * ⚠️ IT IS STILL A ROUTE AND STILL A TAB. `#/record` resolves exactly as it
+   * did, the tab bar stays visible under it, and nothing that links here — the
+   * Profile tab's button, the session runner's back, a bookmark — knows anything
+   * changed. What changed is how it ARRIVES; the rise is in app.js and the CSS.
+   *
+   * 🚨 THE ARROW GOES HOME, NOT BACK, AND THAT IS TIM'S INSTRUCTION RATHER THAN
+   * AN OVERSIGHT. Rule 8 says a back arrow returns to the screen you were just
+   * on; this is not one. *"showing the main section display and automatically
+   * being selected on 'home'"* — a panel you put away leaves you at the top of
+   * the app, not wherever you happened to be standing when you opened it. It is
+   * `down`, a different slot in screenShell, so nobody later "fixes" it into a
+   * back arrow.
+   *
+   * ⚠️ IT TAKES THE PROFILE BUTTON'S PLACE, and that corner may only hold one
+   * thing (screenShell says why). The avatar is on every other tab.
+   */
   return screenShell({
-    profile: true,
+    down: () => {
+      // The screen slides away over the one the router is drawing underneath it;
+      // with no way to animate, this is a plain navigation and nothing is lost.
+      parkScreen(document.querySelector('#app > .screen'), { falls: true });
+      go('#/home');
+    },
     title: 'Record',
     sub: 'What kind of training?',
     scroll: [

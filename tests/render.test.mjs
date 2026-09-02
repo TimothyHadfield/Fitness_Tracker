@@ -4334,6 +4334,48 @@ ok(!data.querySelector('.rep-target'),
   }
   ok(/never rated|ratings still come from lifting/i.test(chooser.textContent),
      'and says plainly that activities are recorded, not rated');
+
+  /* ================= 🚨 IT COMES UP, AND THE ARROW PUTS IT BACK DOWN ==========
+   *
+   * Tim, 2026-09-09: *"To make the record section feel more like a button that
+   * actually activates something, I want the screen to pull up the record
+   * section from the bottom (which covers over the main section display). The
+   * only change is that we'll add a down arrow in the upper left which will push
+   * the record section back down, showing the main section display and
+   * automatically being selected on 'home'."*
+   *
+   * ⚠️ jsdom CANNOT SEE THE MOVEMENT and is not asked to. What it can hold is
+   * everything that would still be wrong if the animation were perfect: which
+   * control is in the corner, what it is called, and where it goes.
+   */
+  {
+    const corner = chooser.querySelector('.topbar button');
+    ok(corner && corner.getAttribute('aria-label') === 'Close',
+       '🚨 the top-left of Record is a DOWN arrow, not the avatar — the corner holds one thing, and '
+       + 'on a panel that came up over something the thing it holds is the way back down');
+    ok(!chooser.querySelector('.topbar .avatar-btn'),
+       '⚠️ and the profile button is genuinely gone from it rather than sitting behind the arrow — '
+       + 'two controls in one corner is how somebody taps the wrong one');
+
+    window.location.hash = '#/graphs';
+    await settle();
+    corner.click();
+    await settle();
+    ok(window.location.hash === '#/home',
+       '🚨 AND IT LANDS ON HOME, NOT WHERE YOU CAME FROM. That is Tim\'s instruction and it is why '
+       + 'this is `down` rather than `back`: Rule 8 says a back arrow returns to the screen you were '
+       + 'just on, and a panel you put away leaves you at the top of the app');
+
+    /* 🔒 THE GUARD THAT KEEPS EVERY OTHER TEST IN THIS FILE HONEST. `parkScreen()`
+     * builds a second, whole `.screen` on `document.body` for the length of the
+     * animation — so in a harness it would double every selector in the suite,
+     * silently, from whichever block ran next. It refuses to build one where
+     * nothing can animate, and this is the assertion that says so. */
+    ok(!document.querySelector('.screen-ghost'),
+       '🔒 and NO parked screen is ever built in jsdom — a ghost here would be a second copy of a '
+       + 'whole screen that every later selector would match');
+  }
+
   lift.click();
   await settle();
   ok(window.location.hash === '#/start', 'Weightlifting leads to the full recorder');

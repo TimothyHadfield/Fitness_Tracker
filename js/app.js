@@ -4,7 +4,7 @@ import { store, demo, warmReadCache, social, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
-  markRoute,
+  markRoute, parkScreen,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -274,6 +274,11 @@ function demoBar() {
 }
 
 let rendering = false;
+/* ⚠️ WHICH HASH THE LAST RENDER DREW, and it is not the same question as
+ * `markRoute()`'s history position. That one answers "where does back go"; this
+ * one answers "is this an arrival or a repaint", which is what decides whether
+ * the Record panel plays its rise. A re-render in place must not replay it. */
+let prevHash = '';
 
 async function render() {
   if (rendering) return;
@@ -293,9 +298,40 @@ async function render() {
   // than to a hard-coded parent. See markRoute() in ui.js.
   markRoute();
 
+  /* 🚨 RECORD RISES OVER WHAT YOU WERE LOOKING AT — 2026-09-09, Tim: *"I want the
+   * screen to pull up the record section from the bottom (which covers over the
+   * main section display)."*
+   *
+   * ⚠️ THE OUTGOING SCREEN IS PARKED **BEFORE** `resolve()` IS AWAITED, and the
+   * order is the whole trick. `resolve()` reads the store, which may take a
+   * frame or fifty; clearing after it and animating the new screen alone would
+   * mean the panel rose over an empty ground, and on a slow read the old screen
+   * would sit there frozen and then vanish under a panel that had not started
+   * moving. Parked first, it is a still picture of where you were for exactly as
+   * long as the rise takes, and it is on `document.body`, so `clear(app)` below
+   * is untouched and still clears everything it owns.
+   *
+   * ⚠️ ONLY ON THE WAY IN. Re-rendering Record while already on it — a
+   * `refreshRoute()`, a demo toggle — must not replay the animation, or the
+   * screen appears to bounce for no reason anybody made happen.
+   *
+   * 🛑 AND NOTHING AT ALL WITHOUT A BROWSER: `parkScreen()` returns null under
+   * reduced motion and in jsdom, so this is dead weight in every test and the
+   * router behaves exactly as it did. */
+  /* ⚠️ AND NOT ON A COLD OPEN. Landing on `#/record` from a bookmark or a
+   * refresh has nothing behind it, and a panel rising over an empty ground
+   * claims a screen was covered that never existed — Rule 7's last line, that a
+   * movement must not assert something the app does not know. The presence of an
+   * outgoing screen IS the question, so it is the condition. */
+  const leaving = document.querySelector('#app > .screen');
+  const rising = route.name === 'record' && parse(prevHash).name !== 'record' && Boolean(leaving);
+  prevHash = location.hash;
+  if (rising) parkScreen(leaving);
+
   try {
     const screen = await resolve(route);
     clear(app);
+    if (rising) screen.classList.add('rises');
     if (FULLSCREEN.includes(route.name)) {
       // No bottom nav on these, so the screen itself owes the safe-area padding.
       screen.classList.add('no-nav');

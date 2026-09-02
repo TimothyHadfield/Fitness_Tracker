@@ -2979,6 +2979,66 @@ a.seg {
 @keyframes sheet-in { from { transform: translateY(22px) } }
 @keyframes sheet-out { to { transform: translateY(20px); opacity: 0 } }
 
+/* ---- RECORD COMES UP FROM THE BOTTOM (2026-09-09) ---------------------- */
+/* 🚨 Tim: *"To make the record section feel more like a button that actually
+   activates something, I want the screen to pull up the record section from the
+   bottom (which covers over the main section display). The only change is that
+   we'll add a down arrow in the upper left which will push the record section
+   back down."*
+
+   ⚠️ THIS IS THE ONE PLACE IN THE APP WHERE A WHOLE SCREEN MOVES, and it earns
+   it on Rule 7's own test — a movement has to say where a thing came from. The
+   big middle + is the one control in the product that is an ACTION rather than a
+   destination (D4), and a tab swap said nothing about that. It rises from the
+   edge its own button sits on.
+
+   ⚠️ IT TRAVELS OVER THE TAB BAR ON THE WAY, deliberately: the panel comes from
+   below the bar, which is where the finger that summoned it is. `--t-slow` is
+   the duration for a whole surface and the ceiling is 250ms (a11y.test.mjs
+   fails past it).
+
+   🚨 AND NOTHING ON THE LOGGING PATH MOVES. Rule 7's own exception is that the
+   set list, the steppers and the timer stay instant; this is the screen BEFORE a
+   workout starts, not one you use with a bar in your hand. */
+/* 🚨 AND IT NEEDS ITS OWN GROUND, which is the thing that turns two screens
+   painted at once from a slide into a mess. A `.screen` has never had a
+   background — it inherits the app's, which is fine when it is the only one on
+   screen and is the whole problem for the 240ms when it is not: the first
+   version of this had the Record panel and the screen behind it legible THROUGH
+   each other, and it looked like a rendering bug rather than a movement.
+   ⚠️ Both the panel and the parked screen need it, for the two directions. */
+.screen.rises { animation: screen-up var(--t-slow) var(--ease-out) both; background: var(--ground); }
+@keyframes screen-up { from { transform: translateY(100%) } }
+
+/* The screen it rose over, parked outside the router for the length of the
+   animation — see parkScreen() in ui.js. Positioned from its measured box, so
+   the only thing this rule owes is the layer and the fact that it is inert. */
+.screen-ghost {
+  position: fixed;
+  z-index: 50;          /* over #app, under sheets (60) and toasts (90) */
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  background: var(--ground);
+}
+/* 🚨 `animation: none` IS LOAD-BEARING, not tidiness. Moving a node in the DOM
+   RESTARTS its CSS animations in Chrome — so the parked screen would replay
+   `screen-in`, fading up from transparent, at the exact moment it is meant to be
+   a still picture of where you just were. A picture of the previous screen that
+   fades in as the new one rises over it reads as a flash, and it would be
+   invisible in every test, because jsdom never builds a ghost at all. */
+.screen-ghost > .screen { flex: 1; min-width: 0; animation: none; }
+/* ⚠️ FAR ENOUGH TO CLEAR THE TAB BAR, not just its own height. At exactly 100%
+   the panel's top edge lands on the bar's top edge and the last frame before it
+   is removed has the bar covered — a flicker, at the one moment the eye is on
+   the bar to see Home light up. */
+.screen-ghost.is-falling {
+  animation: screen-down var(--t-slow) var(--ease-in) both;
+}
+@keyframes screen-down {
+  to { transform: translateY(calc(100% + var(--bar-h) + var(--safe-b))) }
+}
+
 /* ⚠️ THE TOAST HAD ITS OWN TRANSFORM AND THE ENTRY ANIMATION WAS EATING IT.
    `.toast` is centred with `translateX(-50%)`, and it borrowed the shared
    `rise` keyframe — whose `from` sets `transform: translateY(18px)` and so

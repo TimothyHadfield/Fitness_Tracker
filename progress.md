@@ -25,10 +25,46 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-09 — a friend's page on a laptop, their body read against their own sex,
-and the "Compared to" sheet cut.
+**Last updated:** 2026-09-09 — two passes: a friend's page on a laptop and their body read against
+their own sex; then **Record comes up from the bottom**.
 
-## What changed on 2026-09-09, in one line each
+## What changed on 2026-09-09 (second pass), in one line each
+
+**What Tim asked for:** *"To make the record section feel more like a button that actually activates
+something, I want the screen to pull up the record section from the bottom (which covers over the main
+section display) … a down arrow in the upper left which will push the record section back down."* Full
+write-up at the top of `docs/history.md`.
+
+1. 🆕 **THE RECORD TAB RISES OVER WHAT YOU WERE LOOKING AT**, and the reason is his first clause:
+   the big middle **+** is the one control in the app that is an ACTION rather than a destination (D4)
+   and it behaved exactly like Data. **The movement is what says they are different kinds of thing.**
+2. 🚨 **THE ROUTER COULD NOT DO IT AND WAS NOT MADE TO.** `render()` clears `#app`, so two screens
+   never coexist. ✅ **The outgoing screen is MOVED onto `document.body`** for 240ms — where sheets
+   and toasts already live — and removed by a timer that always runs (`parkScreen()` in `ui.js`).
+   ⚠️ **Parked BEFORE `resolve()` is awaited**, or the panel rises over an empty ground while the
+   store is read: measured, at 60ms the panel is still at its start position.
+3. 🔒 **NO GHOST IS EVER BUILT IN jsdom OR UNDER REDUCED MOTION, AND THAT IS A TEST.** A parked screen
+   is a second whole `.screen` in the document; in a harness it would double every selector in the
+   suite from the next block onwards.
+4. 🚨 **TWO FAULTS ONLY A BROWSER COULD SHOW, BOTH SHIPPED WRONG FIRST**: a `.screen` carries no
+   background, so the two were **legible through each other** — it read as a rendering fault rather
+   than a movement; and **moving a node RESTARTS its CSS animations in Chrome**, so the parked picture
+   faded up from transparent. `background: var(--ground)` on both, `animation: none` on the ghost.
+   ⚠️ **Neither is visible to any test in this project.**
+5. 🆕 **`screenShell` HAS A THIRD TOP-LEFT SLOT — `down`** — beside `back` and `profile`. 🛑 **It is
+   NOT a back arrow**: Rule 8 says back returns to the screen you were just on, and this lands on
+   **Home** whatever you came from, which is Tim's instruction. Naming it differently is what stops
+   somebody later "fixing" it.
+6. ⚠️ **NOT ON A COLD OPEN AND NOT ON A RE-RENDER.** A bookmark straight to `#/record` has nothing
+   behind it, and a panel rising over nothing claims a screen was covered that never existed (Rule 7).
+   `prevHash` is new router state answering "arrival or repaint", which is a different question from
+   `markRoute()`'s "where does back go".
+7. ✅ **1,109 render assertions** (was 1,105), every runnable suite green, **driven with real mouse
+   events at 390 and 1280** — ghost inert and `aria-hidden` mid-rise, Home drawn and lit underneath
+   mid-fall, no overflow. 🔒 **Mutation-checked**: `profile: true` instead of `down` flips exactly the
+   two corner assertions.
+
+## What changed on 2026-09-09 (first pass), in one line each
 
 **What Tim asked for:** a friend's profile is *"a mess"* on a laptop and *"formated for an iphone"* ·
 their muscle map is compared *"against people like YOU, not people like THEM"* · and the "Compared to"
@@ -550,7 +586,7 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
-**Everything is pushed and every runnable suite was green on 2026-09-09** — including **1,105 render
+**Everything is pushed and every runnable suite was green on 2026-09-09** — including **1,109 render
 assertions** and **1,915 data-layer**. **No half-finished job to pick up.**
 
 ⚠️ **THERE ARE TWENTY SUITE FILES, NOT SEVENTEEN, AND NINETEEN OF THEM RUN HERE UNAIDED** — recounted
@@ -558,7 +594,12 @@ assertions** and **1,915 data-layer**. **No half-finished job to pick up.**
 `npm i --no-save @firebase/rules-unit-testing` plus the emulator (§0.9), so it is not in that green.
 🛑 **Do not report "all twenty green" off a run that skipped it.**
 
-✅ **A FRIEND'S PAGE IS THE LAST THING DONE** — 2026-09-09, on Tim's instruction: it has a real laptop
+✅ **THE RECORD PULL-UP IS THE LAST THING DONE** — 2026-09-09's second pass, on Tim's instruction:
+the Record tab rises from the bottom over the screen you were on, and a **down arrow** in the top-left
+pushes it back down onto Home. 🛑 **That arrow is `down`, not `back`** — it lands on Home whatever you
+came from, which is what he asked for and why it has its own slot in `screenShell`.
+
+✅ **AND BEFORE IT, A FRIEND'S PAGE** — 2026-09-09's first pass, also on his instruction: it has a real laptop
 layout (figure and panel side by side, the same shape your own map has had since 2026-08-21), **their
 muscle map is read against people like THEM rather than like the reader**, and the "Compared to" sheet
 lost its paragraphs to four "?" dots. Before it, 2026-09-08's third pass restructured the navigation:

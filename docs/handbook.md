@@ -586,6 +586,16 @@ Fitness_Tracker/
 │   │                           ⚠️ AND helpDot() SINCE 2026-09-07 — Tim's "?"
 │   │                           and its popover. Design Rule 9 governs what may
 │   │                           go in one: WHY, never WHAT
+│   │                           ⚠️ AND parkScreen() SINCE 2026-09-09 — the one
+│   │                           thing in this app that puts two screens on the
+│   │                           display at once. The outgoing screen is MOVED
+│   │                           out of #app onto document.body for 240ms so the
+│   │                           Record panel has something to rise over, and a
+│   │                           timer that always runs takes it away. 🔒 It
+│   │                           builds NOTHING where nothing can animate
+│   │                           (reduced motion, jsdom): a parked screen is a
+│   │                           second whole .screen, and in a harness every
+│   │                           selector in the suite would match two
 │   ├── views-workouts.js       home, the RECORD tab (StartPickerView — the
 │   │                           workout list plus the benchmark action),
 │   │                           SYSTEMS list, one system, workout builder,
@@ -1058,6 +1068,15 @@ in** — which is also the whole of "only when appropriate".
 - ⚠️ **A movement must not claim something the app does not know.** A screen arrives with a rise
   rather than a sideways push, because a horizontal slide asserts a direction of travel this router
   cannot know.
+- 🆕 **ONE WHOLE SCREEN MOVES, AND ONLY ONE — Record, since 2026-09-09.** Tim: *"to make the record
+  section feel more like a button that actually activates something."* It earns the exception on this
+  rule's own test: the big middle **+** is the one control in the app that is an **action** rather
+  than a destination (D4), and a tab swap said nothing about that. It rises from the edge its own
+  button sits on. ⚠️ **The same clause that permits it forbids the obvious next step**: it does not
+  rise on a cold open or on a re-render, because there is nothing it came up over — see
+  `parkScreen()` in `ui.js` for how the screen it covers is kept on screen for the length of it, and
+  🚨 **for the two faults that only a browser could show** (two screens legible through each other,
+  and Chrome restarting a moved node's animations).
 
 ### Colour — validate, never eyeball
 

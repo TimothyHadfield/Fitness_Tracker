@@ -1932,3 +1932,32 @@ line, and the sentence explaining why nothing is selected under Sex when you're 
 
 Some words also named the wrong person: on someone else's page the chips now read "Like them", "Their
 body weight" and "Their age", and on the two-body screen "Own body weight".
+
+---
+
+## 2026-09-09, second pass — Record comes up from the bottom
+
+**You:** the record section should feel like a button that activates something — pull it up from the
+bottom over whatever's on screen, with a down arrow in the top left that pushes it back down and
+leaves you on Home.
+
+**Done.** Tapping the middle **+** now slides the Record screen up over the one you were looking at,
+and the arrow in the top-left slides it back down onto Home.
+
+The interesting part was that the app had no way to show two screens at once — it clears one and
+builds the next, which is why nothing in it has ever needed to know what came before. So the screen
+you're leaving gets lifted out and parked on top of the page for a quarter of a second while the new
+one comes up over it, then removed. The router itself didn't change.
+
+Two things went wrong first and only showed up in a browser. Screens here have never had their own
+background — they just sit on the app's — which is fine when there's one of them and looks like a
+rendering fault when there are two: you could read both through each other. And moving an element
+makes Chrome restart its animations, so the parked screen faded in from nothing at the exact moment
+it was meant to be a still picture. Both fixed, neither visible to any test.
+
+**The arrow goes to Home rather than back to where you came from**, as you asked. It's deliberately a
+different control from the back arrow everywhere else — that one always returns to the previous
+screen, and this one doesn't, so it's kept separate to stop it being "corrected" later.
+
+It doesn't animate when you open the app straight onto Record from a link, because then there's
+nothing underneath for it to have come up over.

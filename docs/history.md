@@ -17,6 +17,98 @@
 
 ---
 
+## 2026-09-09 (second pass) — RECORD COMES UP FROM THE BOTTOM
+
+Tim:
+
+> *"To make the record section feel more like a button that actually activates something, I want the
+> screen to pull up the record section from the bottom (which covers over the main section display).
+> The only change is that we'll add a down arrow in the upper left which will push the record section
+> back down, showing the main section display and automatically being selected on 'home'."*
+
+**The reason is in his first clause and it is the whole brief: *"feel more like a button that actually
+activates something."*** The big middle **+** is the one control in this app that is an ACTION rather
+than a destination — D4 is why it is the largest target on every screen — and tapping it did exactly
+what tapping Data does. **The movement is what says the two are different kinds of thing.**
+
+### A. THE ROUTER COULD NOT DO THIS AND WAS NOT MADE TO
+
+`render()` clears `#app` and builds the next screen, so **at no moment do two screens exist**. That is
+right, and it is why every screen in this app is stateless about the one before it. A slide needs
+exactly one frame where both are painted.
+
+✅ **So the outgoing screen is MOVED OUT of `#app` onto `document.body`** — where sheets and toasts
+already live — for the length of the animation, and removed by a timer that always runs
+(`parkScreen()` in `ui.js`). The router then does what it always did, underneath. **Nothing about
+`render()` changed except that it is handed a screen that has already left.**
+
+⚠️ **PARKED BEFORE `resolve()` IS AWAITED, AND THE ORDER IS THE TRICK.** `resolve()` reads the store
+and may take a frame or fifty. Clearing after it would mean the panel rose over an empty ground — and
+on a slow read the old screen would sit frozen and then vanish under a panel that had not started
+moving. **Measured: at 60 ms the panel is still at `translateY(790)`, its start position** — the whole
+of that gap is the parked picture doing its job.
+
+⚠️ **MOVED, NOT CLONED.** The node is thrown away either way: moving costs nothing, cannot duplicate
+an `id` that `associateLabels()` generated, and the listeners that travel with it are unreachable
+behind `pointer-events: none`.
+
+🔒 **AND NOTHING IS BUILT WHERE NOTHING CAN ANIMATE — reduced motion, or jsdom.** A ghost is a whole
+second `.screen` in the document, and in a harness it would silently double every selector in the
+suite from whichever block ran next. `canAnimate()` is false in both, `parkScreen()` returns null, and
+**there is an assertion that no ghost is ever built in jsdom.** `leave()` makes the same call for the
+same reason, and the note on it records what a lingering ghost cost when it was addressable.
+
+### B. TWO THINGS THAT ONLY A BROWSER COULD HAVE TOLD ME, AND BOTH SHIPPED WRONG FIRST
+
+🚨 **THE TWO SCREENS WERE LEGIBLE THROUGH EACH OTHER.** A `.screen` has never carried a background —
+it inherits the app's ground, which is correct while it is the only one on screen and is the whole
+problem for the 240 ms when it is not. The first version had the Record panel and the Data screen
+behind it painted over one another: **it read as a rendering fault, not as a movement.** Both the
+rising panel and the parked ghost take `background: var(--ground)` now.
+
+🚨 **AND MOVING A NODE RESTARTS ITS CSS ANIMATIONS IN CHROME**, so the parked screen replayed
+`screen-in` — fading up from transparent at the exact moment it is meant to be a still picture of
+where you just were. `.screen-ghost > .screen { animation: none }`. ⚠️ **Neither of these is visible
+to any test in this project**, because jsdom never builds a ghost. They were found by driving it and
+photographing it mid-flight.
+
+### C. THE ARROW GOES HOME, AND IT IS NOT A BACK ARROW
+
+`screenShell` grew a third thing that can sit in the top-left: **`down`**, beside `back` and
+`profile`. It is a separate slot on purpose. **Rule 8 says a back arrow returns to the screen you were
+just on; this one lands on Home whatever you came from**, which is Tim's instruction —
+*"showing the main section display and automatically being selected on 'home'"* — and naming it
+differently is what stops somebody later "fixing" it into a back arrow.
+
+⚠️ **IT TAKES THE PROFILE BUTTON'S PLACE.** That corner may hold exactly one thing (screenShell's own
+note says why), and the avatar is on every other tab.
+
+⚠️ **NOT ON A COLD OPEN.** Landing on `#/record` from a bookmark has nothing behind it, and a panel
+rising over an empty ground claims a screen was covered that never existed — Rule 7's last line. The
+presence of an outgoing screen IS the question, so it is the condition.
+
+⚠️ **AND NOT ON A RE-RENDER.** `prevHash` is a new piece of router state and it answers a different
+question from `markRoute()`'s: that one is "where does back go", this one is "is this an arrival or a
+repaint". A `refreshRoute()` on Record must not make the screen bounce for no reason anybody caused.
+
+### D. WHAT WAS MEASURED
+
+Driven with real mouse events at **390×844 and 1280×800**, hit-testing the nav's own **+**:
+
+| | |
+|---|---|
+| mid-rise | ghost present · `pointer-events: none` · `aria-hidden="true"` · panel at `translateY(790)` · **two screens** · tab bar still visible |
+| open | ghost gone · one screen · `translateY(0)` · corner button labelled **Close** · Record tab lit · no overflow |
+| mid-fall | ghost `is-falling` at `translateY(60)` · **Home already drawn underneath** · **Home already lit in the tab bar** |
+| after | ghost gone · one screen · `#/home` |
+
+✅ **1,109 render assertions** (was 1,105), every runnable suite green. 🔒 **Mutation-checked**: giving
+the screen `profile: true` instead of `down` flips exactly the two corner assertions.
+⚠️ **The durations are `--t-slow` (240 ms), so `tests/a11y.test.mjs`'s 250 ms ceiling still holds
+without being touched.**
+
+---
+
 ## 2026-09-09 — 🚨 A FRIEND'S PAGE ON A LAPTOP, AND THEIR BODY READ AGAINST THEIR OWN SEX
 
 Tim, in one message with two things in it:

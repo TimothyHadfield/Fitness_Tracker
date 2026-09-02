@@ -437,6 +437,69 @@ export function leave(node, ms = LEAVE_MS) {
   setTimeout(() => node.remove(), ms);
 }
 
+/* ------------------------------------------------------------------ *
+ * A SCREEN THAT RISES, AND ONE THAT DROPS AWAY — 2026-09-09
+ *
+ * Tim: *"To make the record section feel more like a button that actually
+ * activates something, I want the screen to pull up the record section from the
+ * bottom (which covers over the main section display). The only change is that
+ * we'll add a down arrow in the upper left which will push the record section
+ * back down, showing the main section display and automatically being selected
+ * on 'home'."*
+ *
+ * 🚨 THE ROUTER CANNOT DO THIS ON ITS OWN AND MUST NOT BE MADE TO. `render()`
+ * clears `#app` and builds the next screen, so at no point do two screens exist
+ * — which is right, and is why every screen in this app is stateless about the
+ * one before it. What a slide needs is exactly one frame where both are painted.
+ *
+ * ⚠️ SO THE OUTGOING SCREEN IS MOVED OUT OF `#app` AND PARKED ON `document.body`
+ * — the same place sheets and toasts live — for the length of the animation, and
+ * removed by a timer that always runs. The router then does what it always does,
+ * underneath. Nothing about `render()` changes except that it is handed a screen
+ * that has already left.
+ *
+ * ⚠️ MOVED, NOT CLONED. The node is being thrown away either way: moving costs
+ * nothing, cannot duplicate an `id` that `associateLabels()` generated, and the
+ * listeners that come with it are unreachable behind `pointer-events: none`.
+ *
+ * 🚨 AND NOTHING HAPPENS AT ALL WHERE NOTHING CAN ANIMATE — reduced motion, or
+ * jsdom. That is not tidiness: a ghost is a whole second screen in the document,
+ * and every selector in every test would suddenly match two of things there is
+ * meant to be one of. `canAnimate()` is false in both, so a test never sees one.
+ * (`leave()` above makes the same call for the same reason, and the note on it
+ * records what a lingering ghost cost when it was addressable.)
+ * ------------------------------------------------------------------ */
+
+/** Matches `--t-slow`; a whole surface, per Rule 7. */
+const SCREEN_MS = 240;
+
+/**
+ * Park `node` where it is drawn, outside the router, and take it away.
+ *
+ * @param {Element} node    the `.screen` about to be replaced
+ * @param {boolean} falls   true to slide it off the bottom (the down arrow),
+ *   false to hold it still while something else rises over it (arriving)
+ */
+export function parkScreen(node, { falls = false } = {}) {
+  if (!canAnimate() || !node || !node.isConnected) return null;
+  // A second tap before the first finished: the older ghost goes now rather
+  // than stacking. Idempotent, like leave().
+  document.querySelectorAll('.screen-ghost').forEach((g) => g.remove());
+
+  // ⚠️ MEASURED, NOT `inset: 0`. The screen is a flex child of `#app` — above the
+  // tab bar on a phone, beside the sidebar on a desktop — so a full-viewport
+  // ghost would relayout its own contents on the first frame and read as a jump
+  // before the movement even starts.
+  const r = node.getBoundingClientRect();
+  const ghost = el('div', { class: 'screen-ghost' + (falls ? ' is-falling' : '') });
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+  ghost.append(node);
+  document.body.append(ghost);
+  setTimeout(() => ghost.remove(), SCREEN_MS);
+  return ghost;
+}
+
 let toastTimer = null;
 export function toast(message) {
   // ⚠️ The one already on screen LEAVES rather than vanishing under the new
@@ -1166,7 +1229,7 @@ export function refreshRoute(hash) {
   window.dispatchEvent(new Ev('hashchange'));
 }
 
-export function screenShell({ title, sub, back, backExact, actions, top, scroll, bottom, body, noNav, profile }) {
+export function screenShell({ title, sub, back, backExact, actions, top, scroll, bottom, body, noNav, profile, down }) {
   const heading = title instanceof Node
     ? el('div', { class: 'topbar-slot' }, title)
     : el('div', { style: 'flex:1;min-width:0' },
@@ -1184,9 +1247,19 @@ export function screenShell({ title, sub, back, backExact, actions, top, scroll,
        * goes back through history and only uses this handler when there is no
        * history to go back through. `backExact` opts out for the one screen
        * where the arrow is not a back at all — see the finish screen. */
+      /* 🚨 AND SINCE 2026-09-09 THERE IS A THIRD THING THAT CAN SIT THERE: a
+       * DOWN arrow, for a screen that arrived by rising over what you were
+       * looking at. Tim asked for it on Record — *"a down arrow in the upper
+       * left which will push the record section back down"* — and it is not a
+       * back arrow wearing a different glyph: back means the screen you were
+       * just on (Rule 8), and this one means "put this away", which lands on
+       * Home whatever you came from. Naming it `down` rather than reusing
+       * `back` is what keeps those two from being confused later. */
       back
         ? iconBtn('left', 'Back', backExact ? back : () => goBack(back))
-        : (profile ? profileButton() : null),
+        : down
+          ? iconBtn('down', 'Close', down)
+          : (profile ? profileButton() : null),
       heading,
       ...(actions || []),
     ),
