@@ -7,7 +7,10 @@ import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel, goBack, refreshRoute,
 } from './ui.js';
-import { saveDraft, loadDraft, clearDraft, liveDraft } from './session-draft.js';
+import {
+  saveDraft, loadDraft, clearDraft, liveDraft,
+  hasNumbers, setIsRecorded, draftRecordedSets,
+} from './session-draft.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
   DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
@@ -118,20 +121,11 @@ export async function SessionView(workoutId) {
     for (const f of fields) s[f] = typeof src[f] === 'number' ? src[f] : 0;
     return s;
   }
-  // ⚠️ Filter on the exercise's OWN FIELDS, not on Object.values(set). A set
-  // carries a `minis` array, and `Number([{…}])` is NaN — so the old blanket
-  // check happened to work, but only by accident, and it would have thrown away
-  // a set whose numbers were all in its drops. Hoisted out of finish() on
-  // 2026-08-24 because the exercise swap asks the same question: has this
-  // exercise actually been done yet?
-  const hasNumbers = (s, fields) => fields.some((f) => Number(s[f]) > 0);
-  const setIsRecorded = (s, fields) =>
-    // ⚠️ A SET STILL MARKED `prefilled` IS NOT RECORDED, whatever numbers are
-    // in it. Everything else in this app treats "has a number" as "was
-    // performed", which is true of a number somebody typed and false of one
-    // the app worked out for them. See DEFAULT_REPS and startingSet().
-    !s.prefilled
-    && (hasNumbers(s, fields) || minisOf(s).some((d) => hasNumbers(d, fields)));
+  /* ⚠️ `hasNumbers` and `setIsRecorded` MOVED TO js/session-draft.js on
+   * 2026-09-07 and are imported at the top of this file. They were closures
+   * here — hoisted out of finish() on 2026-08-24 because the exercise swap asks
+   * the same question — and they left when a third and fourth caller appeared
+   * outside the runner. The rule is unchanged; there is now one copy of it. */
 
   /* 10 reps: the app's OWN default, not a guess. `repRangeFor()` in
    * progression.js falls back to the 8-12 band for an unknown rep count, and 10
@@ -278,13 +272,6 @@ export async function SessionView(workoutId) {
   // Yesterday's. Cleared without asking, exactly as before: it cannot be
   // resumed, and leaving it on disk would only make tomorrow's ask about it.
   if (!open && loadDraft()) clearDraft();
-
-  /** Every set a person really typed into this draft, guests included. */
-  function draftRecordedSets(d) {
-    const walk = (entries) => (entries || []).reduce(
-      (n, e) => n + (e.sets || []).filter((s) => setIsRecorded(s, e.fields || [])).length, 0);
-    return walk(d.entries) + (d.others || []).reduce((n, o) => n + walk(o.entries), 0);
-  }
 
   /**
    * "You already have one open." The screen that stands between a second

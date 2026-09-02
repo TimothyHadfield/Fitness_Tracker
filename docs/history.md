@@ -17,6 +17,48 @@
 
 ---
 
+## 2026-09-07 (third pass) — THE BIN ON THE BAR
+
+Tim, having read the flag raised when the bar shipped: *"right now the workout pull down is perfect.
+Just add a trash can on the right side of the box that delets the workout if the user clicks on it."*
+
+**Built.** 52 × 56 px on the right of the bar, behind its own hairline, `aria-label` naming the
+workout.
+
+⚠️ **IT ASKS FIRST WHEN THERE IS SOMETHING TO LOSE, AND ONLY THEN — and that is the rule the app
+already had rather than a hedge on the instruction.** Removing a person from a workout confirms when
+sets are recorded for them and goes quietly when none are; the save screen's Discard does the same.
+A one-tap delete here would have been **the only unconfirmed destructive control in the app**, and
+the one that sits a few pixels from the Home tab for the length of a workout. **With nothing recorded
+it simply goes** — that half is asserted too, because a bin that always asked would pass every
+assertion about the confirm and be worse to use.
+
+🚨 **THE BIN IS A SIBLING OF THE LINK, NEVER INSIDE IT.** The bar was one `<a>`; a `<button>` inside
+an `<a>` is invalid HTML that browsers recover from differently, and the one thing that must never be
+ambiguous on this control is whether a tap opens the workout or deletes it. It is now a `<div>`
+holding an `<a class="session-mini-open">` and the button, with an assertion pinning that
+relationship. **Measured: 52 × 56, not inside the link, and the link keeps 341 px of the 393.**
+
+### ⚠️ AND THE RECORDED-SET RULE FINALLY HAS ONE HOME
+
+`setIsRecorded` — *was this set really performed, or is it a number the app filled in* — was a
+closure inside `SessionView`, which was right while the runner was the only thing that had to answer
+it. **Four callers now do**: the save screen (how much is about to be written), the conflict screen
+(how much starting another workout would destroy), this bin (how much a tap would delete), and the
+save path's own filter. It lives in `js/session-draft.js` with `hasNumbers` and a
+`draftRecordedSets(draft)` that walks guests too. **Three copies of "was this set performed" is the
+shape of thing this project deletes functions over** — the same argument that killed
+`benchmarkComparison()` on 2026-09-06.
+
+**Checked:** 1,033 render assertions (was 1,025), sixteen suites green. Mutation-checked — forcing
+the bin to skip the confirm flips exactly the three assertions about it. Driven at 393×852; contrast
+on the bar re-measured in both themes and all four palettes, unchanged at worst 9.25:1. ⚠️ **A 4px
+right padding left the elapsed time reading as though it touched the bin's hairline**; it is 12px.
+🚨 **`tests/sw-update.test.mjs` is still the flaky one from the second pass** and was not re-run
+against this change — it is unrelated and pre-existing, and the control for it is recorded there.
+
+---
+
 ## 2026-09-07 (second pass) — THE SAVE SCREEN, AND WHAT A PHOTO WOULD COST
 
 Tim, with Hevy's save screen: *"Instead of putting the description and location at the top of the

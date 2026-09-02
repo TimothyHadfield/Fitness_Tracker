@@ -6321,14 +6321,41 @@ ok(!data.querySelector('.rep-target'),
   /* ---- the bar that says so ---- */
   const bar = liveSessionBar({ route: 'home', today });
   ok(Boolean(bar), 'a workout in progress puts a bar on every other screen');
-  ok(bar.getAttribute('href') === '#/session/' + wA.id,
-     '⚠️ and the WHOLE bar is the way back, not just the arrow inside it — 56px of pill that does '
-     + 'nothing but hold a 34px button is the touch-target complaint (0i) built on purpose');
+  const opener = bar.querySelector('.session-mini-open');
+  ok(opener && opener.getAttribute('href') === '#/session/' + wA.id,
+     '⚠️ and ALL of it except the bin is the way back, not just the arrow inside it — 56px of pill '
+     + 'that does nothing but hold a 34px button is the touch-target complaint (0i) built on purpose');
+  ok(bar.querySelector('.mini-del') && !opener.querySelector('.mini-del'),
+     '🚨 THE BIN IS A SIBLING OF THE LINK, NEVER INSIDE IT. A <button> inside an <a> is invalid HTML '
+     + 'that browsers recover from differently, and the one thing that must never be ambiguous on '
+     + 'this bar is whether a tap opens the workout or deletes it');
   ok(/Push A/.test(bar.textContent), 'it names the workout');
   ok(/Bench Press/.test(bar.textContent),
      'and the exercise you are on, so it is a place rather than a notification');
   ok(!liveSessionBar({ route: 'session', today }),
      '⚠️ never on the runner itself — a way back to the screen you are already looking at');
+
+  /* ---- the bin (Tim, 2026-09-07) ----
+     *"add a trash can on the right side of the box that delets the workout if
+     the user clicks on it."* ⚠️ It asks first when there is something to lose
+     and only then, which is the rule every other destructive control in this
+     app already follows — and it matters most here, because this is the one
+     that sits a few pixels from the Home tab for the length of a workout. */
+  {
+    const sheetsBefore = document.querySelectorAll('.sheet').length;
+    bar.querySelector('.mini-del').click();
+    await settle();
+    const sheets = document.querySelectorAll('.sheet');
+    ok(sheets.length === sheetsBefore + 1,
+       '🚨 the bin ASKS before deleting a workout with sets in it');
+    ok(/1 recorded set/.test(sheets[sheets.length - 1].textContent),
+       '⚠️ and names what it is about to destroy');
+    ok(Boolean(loadDraft()), '⚠️ and nothing is gone while the question is on screen');
+    [...sheets[sheets.length - 1].querySelectorAll('button')]
+      .find((b) => /^Cancel$/.test(b.textContent)).click();
+    await settle();
+    ok(Boolean(loadDraft()), 'cancelling leaves the workout exactly where it was');
+  }
 
   /* ---- the same-day rule, applied by ONE function ----
      The runner and the bar disagreeing here would put a workout on screen that
@@ -6536,6 +6563,31 @@ ok(!data.querySelector('.rep-target'),
   await settle();
   ok(!loadDraft() && (await store.getSessions()).length === countBefore,
      'confirming throws the workout away and writes nothing');
+
+  /* ---- and the bin goes quietly when there is nothing to lose ----
+     ⚠️ THE VACUITY GUARD FOR THE CONFIRM ABOVE, and the half that keeps it from
+     being a nag: a workout started and never typed into has nothing to warn
+     about, so the bin simply empties it. Without this, a bin that always asked
+     would pass every assertion above and be worse to use. */
+  {
+    const { liveSessionBar: makeBar } = await import(BASE + 'live-session.js');
+    const { todayISO: today2 } = await import(BASE + 'store.js');
+    clearDraft();
+    const fresh = await store.saveWorkout({
+      name: 'Untouched day',
+      exercises: [{ exerciseId: byName('Barbell Row').id, sets: 2, notes: '' }],
+    });
+    await mount(SessionView(fresh.id));
+    ok(Boolean(loadDraft()), 'a workout is open');
+    const quietBar = makeBar({ route: 'home', today: today2() });
+    const sheetsBefore = document.querySelectorAll('.sheet').length;
+    quietBar.querySelector('.mini-del').click();
+    await settle();
+    ok(document.querySelectorAll('.sheet').length === sheetsBefore,
+       '⚠️ nothing recorded, nothing asked — a question about nothing is how people learn to tap '
+       + 'through questions');
+    ok(!loadDraft(), 'and it is gone');
+  }
 
   clearDraft();
   await store.clearAll();

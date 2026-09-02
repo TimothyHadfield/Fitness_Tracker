@@ -22,8 +22,27 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-07 — two passes: leaving a workout open, then the save screen and the cost
-of photos.
+**Last updated:** 2026-09-07 — three passes: leaving a workout open, the save screen and the cost of
+photos, then the bin on the bar.
+
+## What changed on 2026-09-07 (third pass), in one line each
+
+**Tim:** *"right now the workout pull down is perfect. Just add a trash can on the right side of the
+box that delets the workout if the user clicks on it."* — the control flagged when the bar shipped,
+now authorised.
+
+1. 🆕 **A BIN ON THE RIGHT OF THE BAR**, 52 × 56 px behind its own hairline. ⚠️ **It asks first when
+   there is something to lose, and only then** — the rule every other destructive control here
+   already follows (removing a person, the save screen's Discard), and it matters most on the one
+   that sits a few pixels from the Home tab for a whole workout. Nothing recorded, nothing asked.
+2. 🚨 **THE BIN IS A SIBLING OF THE LINK, NEVER INSIDE IT** — a `<button>` inside an `<a>` is invalid
+   HTML that browsers recover from differently, and whether a tap opens or deletes must never be
+   ambiguous. Pinned by an assertion.
+3. ✅ **`setIsRecorded` NOW HAS ONE HOME** — `js/session-draft.js`, with `hasNumbers` and
+   `draftRecordedSets()`. It was a closure in the runner; **four callers** now ask the same question,
+   and three copies of it is what this project deletes functions over.
+4. ✅ **1,033 render assertions**, sixteen suites green, mutation-checked, driven at 393×852,
+   contrast re-measured across both themes and all four palettes (worst 9.25:1).
 
 ## What changed on 2026-09-07 (second pass), in one line each
 

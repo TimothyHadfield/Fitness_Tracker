@@ -535,15 +535,24 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .session-mini {
   flex: none;
   display: flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 56px;
-  padding: 8px var(--pad);
+  align-items: stretch;
   /* --raised, not --raised-hi: every text token in the app is proved against
      --raised in both themes and all four palettes (tests/a11y.test.mjs), and
      --raised-hi is not in that matrix. */
   background: var(--raised);
   border-top: 1px solid var(--rule);
+}
+/* The way back in — everything except the bin. */
+.session-mini-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 56px;
+  /* 12px on the right rather than the usual --pad: the elapsed time is pushed
+     to that edge, and against the bin's hairline it read as touching it. */
+  padding: 8px 12px 8px var(--pad);
   color: inherit;
   text-decoration: none;
 }
@@ -556,7 +565,26 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    as `.demo-bar + .topbar` at the other end. */
 .screen.no-nav.has-mini .pane-bottom { padding-bottom: 10px; }
 
-.session-mini:active { background: var(--rule-soft); }
+.session-mini-open:active { background: var(--rule-soft); }
+
+/* Tim's bin, 2026-09-07. ⚠️ 52px wide against the 44px minimum, and separated
+   from the rest of the bar by its own hairline: this is the one control on the
+   phone that destroys a workout, and it lives permanently a few pixels from the
+   Home tab. The margin is what stops a thumb travelling to the nav from
+   clipping it, and the rule is what says it is a different thing from the pill
+   it sits in rather than the right-hand end of it. */
+.mini-del {
+  flex: none;
+  width: 52px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--rule);
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.mini-del:active { color: var(--danger); background: var(--rule-soft); }
 
 /* The arrow points UP, at the workout the ▾ in the runner put down here. */
 .mini-arrow {
@@ -2666,7 +2694,8 @@ a.seg {
   /* The workout bar keeps its full-width surface — it is the bottom edge of the
      content area, like the navbar is the left edge — but its CONTENTS line up
      with the 820px column above them rather than sitting out at the margin. */
-  .session-mini { padding-inline: max(var(--pad), calc((100% - 820px) / 2)); }
+  .session-mini-open { padding-left: max(var(--pad), calc((100% - 820px) / 2)); }
+  .mini-del { margin-right: max(0px, calc((100% - 820px) / 2 - 52px)); }
   .list > * { padding-inline: 0; }
 
   .steppers { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }

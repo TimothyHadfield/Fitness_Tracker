@@ -23,8 +23,8 @@
 // height instead, on the phone's column layout and the desktop's sidebar layout
 // alike, and nothing is ever underneath it.
 
-import { el, icon, fmtTime } from './ui.js';
-import { liveDraft } from './session-draft.js';
+import { el, icon, fmtTime, confirmSheet, refreshRoute } from './ui.js';
+import { liveDraft, clearDraft, draftRecordedSets } from './session-draft.js';
 import { stepsFor } from './set-types.js';
 
 /**
@@ -74,14 +74,19 @@ export function liveSessionBar({ route, today, now = Date.now() }) {
   const clock = el('span', { class: 'mini-clock mono', text: secs === null ? '' : fmtTime(secs) });
   const where = currentExercise(draft);
 
-  /* ⚠️ THE WHOLE BAR IS THE CONTROL, not the arrow inside it. Hevy draws a
-   * circular button on the left and the app's own touch-target rule (0i) is why
-   * ours does not stop there: a 44px circle at the edge of a 56px bar means the
-   * other 250px of an obviously-tappable pill does nothing. An anchor also gets
-   * the browser's own focus ring and middle-click for free, which a div with an
-   * onClick does not. */
-  const bar = el('a', {
-    class: 'session-mini',
+  /* ⚠️ ALL OF THE BAR EXCEPT THE BIN IS THE WAY BACK, not just the arrow. Hevy
+   * draws a circular button on the left and the app's own touch-target rule
+   * (0i) is why ours does not stop there: a 44px circle at the edge of a 56px
+   * bar means the other 250px of an obviously-tappable pill does nothing. An
+   * anchor also gets the browser's own focus ring and middle-click for free,
+   * which a div with an onClick does not.
+   *
+   * ⚠️ AND THE BIN IS ITS SIBLING, NOT ITS CHILD. A <button> inside an <a> is
+   * invalid HTML and browsers recover from it differently — the one thing that
+   * must never be ambiguous here is whether a tap opens the workout or deletes
+   * it. */
+  const open = el('a', {
+    class: 'session-mini-open',
     href: '#/session/' + encodeURIComponent(draft.workoutId),
     'aria-label': `Back to ${draft.workoutName || 'your workout'}`,
   },
@@ -99,6 +104,42 @@ export function liveSessionBar({ route, today, now = Date.now() }) {
       where ? el('span', { class: 'mini-now', text: where }) : null,
     ),
   );
+
+  /**
+   * The bin — Tim, 2026-09-07: *"add a trash can on the right side of the box
+   * that delets the workout if the user clicks on it."*
+   *
+   * ⚠️ IT ASKS FIRST WHEN THERE IS SOMETHING TO LOSE, AND ONLY THEN. That is
+   * not a hedge on the instruction, it is the rule this app already applies to
+   * every other destructive control: removing a person from a workout confirms
+   * when sets are recorded for them and goes quietly when none are, and the
+   * save screen's Discard does the same. **A one-tap delete would be the only
+   * unconfirmed destructive control in the app, and it would be the one that
+   * sits under the thumb on every screen for the length of a workout** — beside
+   * the nav, where the next tap is usually Home. With nothing recorded there is
+   * nothing to warn about and it simply goes.
+   */
+  const bin = el('button', {
+    class: 'mini-del',
+    'aria-label': `Discard ${draft.workoutName || 'this workout'}`,
+    onClick: () => {
+      const lost = draftRecordedSets(draft);
+      if (!lost) { clearDraft(); refreshRoute(); return; }
+      confirmSheet({
+        title: `Discard ${draft.workoutName || 'this workout'}?`,
+        message: `${lost} recorded set${lost === 1 ? '' : 's'} will be deleted. This cannot be undone.`,
+        confirmLabel: 'Discard',
+        danger: true,
+        // ⚠️ `refreshRoute`, so the screen behind the bar redraws without it and
+        // without pushing a history entry — the bar is built by the router, and
+        // clearing the draft under it would otherwise leave a control on screen
+        // pointing at a workout that no longer exists.
+        onConfirm: () => { clearDraft(); refreshRoute(); },
+      });
+    },
+  }, icon('trash', 17));
+
+  const bar = el('div', { class: 'session-mini' }, open, bin);
 
   /* The clock ticks from the TIMESTAMP on every tick, never accumulated — the
    * rest timer's rule, and for the same reason: a backgrounded tab throttles

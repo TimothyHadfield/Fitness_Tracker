@@ -3207,3 +3207,17 @@ Nothing built on the photo side. Your call.
 One honest note: the service-worker update test is failing on my machine today. I checked it against
 your committed code with my changes stashed and it fails there too, so it isn't from this work —
 something about the machine, not the app. Recorded, not chased.
+
+---
+
+## 2026-09-07 (third pass) — the bin on the bar
+
+Added. It's on the right of the bar with a divider between it and the rest, so the tap that opens the
+workout and the tap that deletes it can't be confused.
+
+One thing I did differently from what you said, and I want to be upfront about it: it asks you first,
+but only when there's something to lose. If you've recorded sets it says how many and waits; if you
+started a workout and haven't typed anything, it just goes. That's the same rule as removing a person
+from a workout and the Discard on the save screen, and it matters most here because this button lives
+a few pixels from the Home tab for the whole workout. Say the word if you want it to delete
+immediately either way.

@@ -15,6 +15,7 @@
 // workout on screen that opening it then throws away.
 
 import { demo } from './store.js';
+import { minisOf } from './set-types.js';
 
 const DRAFT_KEY = 'ftrack:v1:draftSession';
 
@@ -81,4 +82,45 @@ export function liveDraft(today) {
   const d = loadDraft();
   if (!d || !d.workoutId) return null;
   return (d.startedOn || d.date) === today ? d : null;
+}
+
+/* ------------------------------------------------------------------ *
+ * What counts as a set somebody actually did
+ *
+ * ⚠️ MOVED HERE FROM INSIDE SessionView ON 2026-09-07, WHEN THE THIRD CALLER
+ * APPEARED. It was a closure in the runner, which was right while the runner
+ * was the only thing that had to answer the question. It is now asked by the
+ * save screen (how much is about to be written), by the conflict screen (how
+ * much starting another workout would destroy) and by the bar's own bin (how
+ * much this tap is about to delete) — and three copies of "was this set really
+ * performed" is precisely the shape of thing this project deletes functions
+ * over. One definition, and every screen that talks about a count is quoting
+ * the same rule the save path filters on.
+ * ------------------------------------------------------------------ */
+
+/** Any of the exercise's own fields carrying a real number. */
+export function hasNumbers(set, fields) {
+  // ⚠️ The exercise's OWN FIELDS, not Object.values(set). A set carries a
+  // `minis` array and `Number([{…}])` is NaN — so a blanket check happens to
+  // work and would throw away a set whose numbers were all in its drops.
+  return (fields || []).some((f) => Number(set[f]) > 0);
+}
+
+/**
+ * ⚠️ A SET STILL MARKED `prefilled` IS NOT RECORDED, whatever numbers are in
+ * it. Everything else in this app treats "has a number" as "was performed",
+ * which is true of a number somebody typed and false of one the app worked out
+ * for them.
+ */
+export function setIsRecorded(set, fields) {
+  return !set.prefilled
+    && (hasNumbers(set, fields) || minisOf(set).some((d) => hasNumbers(d, fields)));
+}
+
+/** Every set a person really typed into this draft — guests included. */
+export function draftRecordedSets(d) {
+  const walk = (entries) => (entries || []).reduce(
+    (n, e) => n + (e.sets || []).filter((s) => setIsRecorded(s, e.fields || [])).length, 0);
+  if (!d) return 0;
+  return walk(d.entries) + (d.others || []).reduce((n, o) => n + walk(o.entries), 0);
 }
