@@ -3773,6 +3773,47 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'preset ids are unique');
   ok(presetById('does-not-exist') === null, 'an unknown preset id returns null, not a throw');
 
+  /* 🚨 THE DISCLAIMER IS ASSERTED WHERE IT IS PRINTED, NOT IN `notes` — 2026-09-09.
+   *
+   * These checks used to read `p.notes` for "not from" / "transcribed", and they
+   * were right to when they were written: `notes` was the only field that said
+   * it. `warning` now says it, LOUDER — a --danger hairline above the notes, the
+   * shape this app reserves for what must not be skimmed — so the old assertions
+   * were pinning a SECOND copy on the same screen, inches below the first.
+   *
+   * ⚠️ SO THEY MOVED RATHER THAN RELAXED, and got stricter on the way: what has
+   * to carry the disclaimer is the text a reader actually meets, which for a
+   * system with no `warning` of its own is the DEFAULT one the detail screen
+   * supplies. `onScreenWarning()` resolves that the same way `views-workouts.js`
+   * does, so a system cannot pass here by relying on a default that screen no
+   * longer applies.
+   *
+   * 🔒 AND THE DUPLICATE IS NOW ITSELF A TEST — see the shared-run check below.
+   * Deleting a duplicate without pinning its absence is how it comes back on the
+   * next person to write a system by copying an existing one.
+   */
+  const DEFAULT_WARNING = 'Not official. Transcribed from published write-ups of the free videos, '
+    + 'not from the author or their paid programme. Sets and reps are as reported — '
+    + 'check the source before you trust a number.';
+  const onScreenWarning = (p) => (p.unofficial ? (p.warning || DEFAULT_WARNING) : (p.warning || ''));
+
+  /* The longest run of consecutive words two strings share, ignoring case and
+   * punctuation. A restatement shows up as a long run; two texts that merely
+   * discuss the same subject do not. */
+  const sharedRun = (a, b) => {
+    const w = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9% ]/g, ' ').split(/\s+/).filter(Boolean);
+    const A = w(a), B = w(b);
+    let best = 0;
+    for (let i = 0; i < A.length; i++) {
+      for (let j = 0; j < B.length; j++) {
+        let k = 0;
+        while (A[i + k] !== undefined && A[i + k] === B[j + k]) k++;
+        if (k > best) best = k;
+      }
+    }
+    return best;
+  };
+
   // A third-party system must never be able to look like one the app wrote, so
   // the fields that carry attribution have to exist even when empty.
   for (const p of PRESET_SYSTEMS) {
@@ -3784,8 +3825,25 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     if (p.author && p.author !== 'Fitness Tracker') {
       ok(Boolean(p.sourceUrl), `"${p.name}" is credited to ${p.author} and links to the source`);
       ok(p.unofficial === true, `"${p.name}" is flagged as an unofficial transcription`);
-      ok(/not from|transcribed/i.test(p.notes || ''),
-         `"${p.name}" says in its own notes that it is not the author's own writing`);
+      ok(/not from|transcribed/i.test(onScreenWarning(p)),
+         `"${p.name}" says on screen that it is not the author's own writing`);
+    }
+
+    /* 🔒 AND IT SAYS IT ONCE. Every transcribed system's notes used to open by
+     * restating its own warning — the same claim, in almost the same words, a
+     * few pixels below it. Flagged on 2026-09-08 as the biggest duplicate left
+     * in the app and cut on 2026-09-09.
+     *
+     * ⚠️ THE THRESHOLD IS MEASURED, NOT CHOSEN. Before the cut the worst pair
+     * shared FOURTEEN consecutive words (Dr. Mike's Floating Split) and the
+     * others 9, 7, 7 and 4. Four is what a system that merely discusses its own
+     * subject twice comes out at, so five is where a restatement begins. */
+    if (p.notes && onScreenWarning(p)) {
+      const run = sharedRun(p.notes, onScreenWarning(p));
+      ok(run < 5,
+         `"${p.name}" does not restate its own warning in its notes (longest shared run ${run} `
+         + 'words) — the warning is printed directly above them, and saying it twice on one screen '
+         + 'is the wordiness Tim asked to stop');
     }
 
     // A METHOD system is the harder case to get right: the workouts are OURS,
@@ -3799,9 +3857,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       ok(Boolean(p.basedOn.person && p.basedOn.sourceUrl),
          `"${p.name}" names whose method it follows and links to it`);
       ok(p.unofficial === true, `"${p.name}" is flagged unofficial`);
-      ok(/not written by|not .*(their|his|her)|are not theirs/i.test(p.notes || '')
-         || /not\b[^.]*\b(transcribed|programme|program)\b/i.test(p.notes || ''),
-         `"${p.name}" says in its notes that the workouts are not the named person's`);
+      // ⚠️ Moved off `notes` with the check above, and to the harder field: a
+      // METHOD system's warning is the one that has to disown the workouts,
+      // because borrowing a reputation is easier to do by accident than
+      // plagiarising a programme.
+      ok(/not written by|not .*(their|his|her)|are not theirs|NOT Dr|not by him/i.test(p.warning || ''),
+         `"${p.name}" says in its warning that the workouts are not the named person's`);
       ok(/NOT|not/.test(p.warning || ''),
          `"${p.name}" carries its own warning rather than the transcription default`);
     }

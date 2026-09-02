@@ -17,6 +17,111 @@
 
 ---
 
+## 2026-09-09 (third pass) — ONE COUNT CALLED FRIENDS, AND THE DUPLICATE THAT WAS FLAGGED AND NOT FIXED
+
+Tim, asked what was next and given a ranked answer, picked and disposed of four things in one message:
+
+> *"do 3 and just combine the 2 and call them 'friends' instead. We might change it to
+> following/folowers later. I'll do 4 myself sometime this week, but I'll come to you about it. If the
+> wordiness fix isn't complete yet, then keep working on it."*
+
+### A. OPEN WORK 28 IS CLOSED, THE CHEAP WAY, AND HE SAID SO EXPLICITLY
+
+The question raised when the Profile tab shipped was **which way to resolve it**: change the words to
+match the model, or build a real follow model to match the words. **He took the words**, and left the
+other door open — *"we might change it to following/folowers later."*
+
+🚨 **THE THING THAT KEEPS THAT DOOR CHEAP IS THAT THERE IS NO MIGRATION.** Nothing was deleted and no
+model was built: `social.state().connections` is the same list it always was, and this is a rename of
+two labels over one number.
+
+- **Workouts · Friends**, where there were three figures.
+- 🔒 **`#/me/followers` and `#/me/following` still resolve**, onto the one list, which is titled
+  **Friends** however you arrive — asserted, because a screen still headed "Followers" would be the
+  rename half-done, which is worse than either state.
+- ✂️ **The "?" went with the second number.** It existed to explain why two figures were always equal;
+  with one figure there is nothing to explain, and there is an assertion that **a private account gets
+  no dot at all.**
+- 🚨 **WHAT SURVIVED IS THE HARD HALF, AND IT IS ON THE SCREEN RATHER THAN BEHIND A DOT**: D29 makes an
+  account public by default, and a public account is readable by anybody signed in — none of whom are
+  in the graph. *"Your account is public, so people can see your training without being friends."*
+  **One sentence, only where it is true.** It stays visible on Rule 9's own test: without it, "2
+  Friends" reads as who can see you.
+- `.me-stats` is `repeat(auto-fit, minmax(0, 1fr))` now rather than a hard-coded three, because he
+  named going back as a possibility and a column count is a second place to remember.
+
+### B. THE WORDINESS: THE TWO THINGS THAT WERE ALREADY IDENTIFIED AND NOT DONE
+
+**Measured first rather than guessed at**, with a counter in the scratchpad over every user-facing
+string in `js/`. That ranked what was actually left, and the top two were both already written down as
+open.
+
+#### 1. 🚨 EVERY TRANSCRIBED SYSTEM RESTATED ITS OWN WARNING IN ITS NOTES
+
+Flagged on 2026-09-08 as *"the biggest duplicate left, reported not fixed"* — a `preset-systems.js`
+content change rather than a presentation one, which is why it waited for him to say so.
+
+**Measured before touching it, as the longest run of consecutive words the two shared:** Dr. Mike's
+Floating Split **14**, Thurston **9**, Golden Six **7**, Bumstead **7**, Volume Landmarks **4**,
+Nippard **0** by wording and a straight duplicate by meaning. The warning is printed **directly above**
+the notes, in the shape this app reserves for what must not be skimmed.
+
+✅ **Cut: 23 insertions, 32 deletions, ~240 words off six screens.** The notes now open on what the
+warning does not say — how to run it, what the second source agrees about, the modernisation.
+
+🚨 **AND A TEST CAUGHT A REAL HOLE THE MOMENT THE DUPLICATE WENT.** The assertions that required
+*"not from | transcribed"* were reading `p.notes`, so they went red — and one of them was not a false
+alarm: **The Golden Six's warning had never said it.** Of the six credited systems it was the only one
+whose disclaimer lived exclusively in the copy I had just deleted. `warning` carries it now, which is
+where it belonged.
+
+🔒 **THE ASSERTIONS MOVED RATHER THAN RELAXED, AND GOT STRICTER**: they now read the text a reader
+actually meets — `p.warning`, falling back to the DEFAULT warning the detail screen supplies, resolved
+the same way `views-workouts.js` resolves it. **Plus a new one that pins the absence**: the longest
+shared run between a system's notes and its warning must be **under five words**. ⚠️ **That threshold
+is measured, not chosen** — four is where a system that merely discusses its own subject twice comes
+out, and five is where restatement begins.
+
+#### 2. THE GOALS SCREEN'S WEIGHTS BLOCK: 182 WORDS → 30
+
+Four paragraphs, permanently under numbers that change, explaining double progression.
+
+🚨 **WHAT STAYED ON THE SCREEN IS THE SAFETY CLAIM, and Rule 9 is what says so rather than my
+judgement.** Somebody who set a goal and then watches the runner pre-fill a heavier weight has every
+reason to think the two are connected — and that belief is the only thing in this app that could get
+somebody hurt (`docs/goals-plan.md` §3.1). Three short sentences, in front of them:
+*"Your goal never touches that number. Nothing gets heavier because a deadline is close. The
+suggestion reads your last two sessions of that exercise — and nothing about your goal."*
+
+⚠️ **WHAT MOVED IS THE MECHANISM** — the rep ladder, the 2–10 % ACSM band, why reading the calendar
+would be backwards, what a lay-off does, and that every number is only ever a proposal.
+🛑 **THE LAY-OFF REFUSAL MOVED WORD FOR WORD**: *"it will not tell you to go lighter either, because
+nobody has measured by how much."* A refusal behind a ? is still stated; a refusal **reworded** is not
+the same refusal, and there is an assertion reading it back out of the popover.
+
+#### 3. ONE PARAGRAPH OFF THE RESEARCH TAB, AND ONLY ONE
+
+🛑 **THAT SECTION IS CARVED OUT BY NAME** (`docs/direction.md` §4.1) — *"we should allow it to describe
+that section sufficiently"* — so the three paragraphs saying what the age chart **is**, what it cannot
+cover, and what its dashed line assumes were left whole. **The fourth was not about that chart at
+all**: it listed where the ratings, standards and estimated 1RM on *other* screens come from. That is
+the 2026-09-07 finding in miniature — **the copy is not padded, it is mis-placed** — and a reader
+looking at an age chart is not asking it. Behind a "?" beside a short label; every source still there.
+
+### C. WHAT WAS CHECKED
+
+✅ **1,123 render assertions** (was 1,115 after the rename, 1,109 before this pass), every runnable
+suite green, and the Golden Six screen read in a browser to confirm the warning now carries the
+attribution and the notes go straight to how to run it.
+
+⚠️ **THE WORD TOTAL BARELY MOVED AND THAT IS THE POINT.** 25,976 → 25,756 in the source, because a ?
+holds words rather than deleting them; the only outright deletion was the preset duplication. **What
+changed is what is in front of somebody**, and that is not a number this repo has ever measured — see
+the note in `progress.md` about the audit never having run at a desktop width, which is the same shape
+of gap.
+
+---
+
 ## 2026-09-09 (second pass) — RECORD COMES UP FROM THE BOTTOM
 
 Tim:

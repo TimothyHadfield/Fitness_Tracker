@@ -119,9 +119,8 @@ export const PRESET_SYSTEMS = [
     summary: 'The whole of Jeff Nippard’s 2023 YouTube series — six workouts, two of each '
       + 'day. Heavy top sets, then high-rep isolation work chosen for stretch and peak '
       + 'contraction.',
-    notes: 'Transcribed from published write-ups of the free YouTube videos, not from Jeff '
-      + 'Nippard’s paid programme and not by him. Watch the series for his form cues and '
-      + 'reasoning — they are most of the value and none of it fits in a workout log.\n\n'
+    notes: 'Watch the series for his form cues and reasoning — they are most of the value and '
+      + 'none of it fits in a workout log.\n\n'
       + 'Six days a week, one pass through all six workouts. The second Push, Pull and Legs '
       + 'are not repeats of the first — same muscles, different exercises, different rep '
       + 'emphasis — so each muscle is trained twice a week without doing the same session '
@@ -260,11 +259,8 @@ export const PRESET_SYSTEMS = [
     summary: 'The split Dr. Mike Israetel actually trained to reach 6 % body fat — Pull, Legs, '
       + 'Push, twice through, with no fixed days. Written up on Renaissance Periodization’s own '
       + 'site.',
-    notes: 'Transcribed from the write-up on Renaissance Periodization’s own site — not from him, '
-      + 'and not from anything RP sells. A second write-up (BoxLife) agrees with it exercise for '
-      + 'exercise, which is a firmer footing than most creator programmes get.\n\n'
-      + 'Read this before you run it. It is a CUTTING split: this is what he did while dieting '
-      + 'down to 6 % body fat, so it is built to hold muscle under fatigue rather than to add it. '
+    notes: 'A second write-up (BoxLife) agrees with it exercise for exercise, which is a firmer '
+      + 'footing than most creator programmes get.\n\n'
       + 'Run it to grow and you are running the wrong programme.\n\n'
       + 'Almost every set he does is a MYO-REP — take the set close to failure, rest ten or fifteen '
       + 'seconds, then squeeze out short mini-sets at the same weight. Those are marked as myo-reps '
@@ -352,18 +348,23 @@ export const PRESET_SYSTEMS = [
     // "as many as possible". The version here follows Fitness Volt's. Nobody
     // involved has a primary source, and there may not be one.
     unofficial: true,
-    warning: 'Not official. A routine from Arnold’s early years, republished for sixty years — '
-      + 'the versions disagree with each other on at least two exercises, and nobody here has a '
-      + 'primary source. Treat the numbers as the shape of the thing, not as his prescription.',
+    /* ⚠️ "TRANSCRIBED … NOT FROM HIM" JOINED THIS WARNING ON 2026-09-09, and it
+     * is not a new claim — it is one that was only ever in `notes`, which now
+     * carries how to RUN the thing and nothing about where it came from. A test
+     * caught the gap the moment the duplicate was cut: of the six credited
+     * systems this was the one whose warning had never said it. */
+    warning: 'Not official. Transcribed from published write-ups of a routine from Arnold’s early '
+      + 'years, not from him. Republished for sixty years, so the versions disagree with each '
+      + 'other on at least two exercises and nobody here has a primary source. Treat the numbers '
+      + 'as the shape of the thing, not as his prescription.',
     goal: 'Mass and strength',
     daysPerWeek: 3,
     minutes: 65,
     level: 'Beginner',
     summary: 'Six exercises, three times a week, everything trained every time. The oldest '
       + 'programme in this list and still a completely reasonable way to start.',
-    notes: 'Transcribed from published write-ups of a routine from Arnold’s early years — not '
-      + 'from him, and not from anything he sells. Run it three times a week on non-consecutive '
-      + 'days: Monday, Wednesday, Friday, or whatever spaces out the same way.\n\n'
+    notes: 'Run it three times a week on non-consecutive days: Monday, Wednesday, Friday, or '
+      + 'whatever spaces out the same way.\n\n'
       + 'The progression rule is the whole programme. When you can beat the target reps by two or '
       + 'three on every set, put the weight up. Nothing else changes for three months.\n\n'
       + 'Rest two to three minutes after squats and about ninety seconds after everything else.\n\n'
@@ -405,10 +406,7 @@ export const PRESET_SYSTEMS = [
     level: 'Intermediate',
     summary: 'One muscle group a day across five lifting days, plus a conditioning day. '
       + 'The classic bodybuilding split, done with modern exercise selection.',
-    notes: 'Transcribed from a published write-up of Mike Thurston’s training — not from him. '
-      + 'He changes his own programme every four to six weeks, so treat this as one block rather '
-      + 'than something to run forever.\n\n'
-      + 'Chest, Back, Shoulders, Legs, Arms, Conditioning, rest. Each muscle gets one long '
+    notes: 'Chest, Back, Shoulders, Legs, Arms, Conditioning, rest. Each muscle gets one long '
       + 'session a week, which is the opposite trade to the other systems here: more volume in a '
       + 'sitting, less frequency. Mostly 8–12 reps, three to four sets, with the first exercise '
       + 'of a day taken heavier.\n\n'
@@ -509,20 +507,16 @@ export const PRESET_SYSTEMS = [
     level: 'Advanced',
     summary: 'Six training days in an eight-day cycle from the four-time Mr. Olympia — three on, '
       + 'one off, twice through. Built on drop sets, with a tri-set and a superset.',
-    notes: 'Transcribed from published write-ups of Chris Bumstead’s training — not from him, and '
-      + 'not from anything he sells. Two sources were used and they agree exercise for exercise, '
-      + 'on the same drop sets and the same superset.\n\n'
-      + 'It runs on an EIGHT-day cycle, not a week: three days on, one off, then three on and one '
-      + 'off again. That means it will not line up with your calendar and is not supposed to — '
-      + 'follow the order, not the days.\n\n'
+    notes: 'The two sources agree exercise for exercise, on the same drop sets and the same '
+      + 'superset.\n\n'
+      + 'Three days on, one off, then three on and one off again. Follow the order, not the '
+      + 'days.\n\n'
       + 'The set types are the programme. Eight exercises are drop sets, day one finishes on a '
       + 'tri-set and day five on a superset, and this app could not have represented any of that '
       + 'before set types were built. Where a source just said "drop set" without a count, one '
       + 'drop is planned — change it in the workout if you know better.\n\n'
-      + 'What it is honestly for: this is an elite bodybuilder’s programme. The volume, the machine '
-      + 'selection and the sheer number of drop sets assume somebody whose job is recovering from '
-      + 'them. Run it because you want to see how he trains, not because it is the optimal way for '
-      + 'you to train.',
+      + 'Run it because you want to see how he trains, not because it is the optimal way for you '
+      + 'to train.',
     workouts: [
       { name: 'Quads & Calves', notes: 'Opens on a drop set and closes on a tri-set. '
           + 'Reported: leg extensions 2×20, squats 6–10, then the tri-set 8–15.',
@@ -622,10 +616,7 @@ export const PRESET_SYSTEMS = [
       + 'each week for four weeks, then deload — the mesocycle Dr. Mike Israetel’s volume '
       + 'landmarks describe, written out as workouts you can log. Not his own training: for that, '
       + 'see Dr. Mike’s Floating Split.',
-    notes: 'Not written by Dr. Mike Israetel, and not transcribed from a programme of his. The '
-      + 'idea underneath is his and is published free by Renaissance Periodization; the exercises '
-      + 'and set counts here are this app’s reading of it.\n\n'
-      + 'If you want what he actually does, that is a separate system here — Dr. Mike’s Floating '
+    notes: 'If you want what he actually does, that is a separate system here — Dr. Mike’s Floating '
       + 'Split. It is a cutting programme built almost entirely from myo-reps, so this app can only '
       + 'record part of it. This one is the runnable programme; that one is the real one.\n\n'
       + 'The idea in one paragraph: for each muscle there is a weekly set count below which it '

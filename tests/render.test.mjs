@@ -588,6 +588,28 @@ ok(data.querySelectorAll('.seg').length === 6, 'Bars mode keeps the mode switch 
   const doi = data.querySelector('.research-notes a');
   ok(doi && /doi\.org/.test(doi.href), 'the study is linked, not just name-dropped');
 
+  /* 🔄 ONE PARAGRAPH OF THE NOTES WENT BEHIND A "?" ON 2026-09-09 — the one
+   * listing where the ratings, the standards and the estimated 1RM on OTHER
+   * screens come from. It is the 2026-09-07 finding in miniature: the copy is
+   * not padded, it is mis-placed, and a reader looking at an age chart is not
+   * asking it.
+   *
+   * 🛑 THE THREE PARAGRAPHS ABOUT THIS CHART STAY WHOLE, and the assertions
+   * above are what hold them there — Tim carved this section out by name
+   * (`docs/direction.md` §4.1), so the tab is still allowed to describe itself
+   * sufficiently. What moved is the part that describes something else. */
+  ok(!/Marzagão’s 2026 formula/.test(data.textContent),
+     '⚠️ the sources for the app\'s OTHER numbers are no longer printed under this chart');
+  const srcDot = [...data.querySelectorAll('.research-notes .help-dot')][0];
+  ok(Boolean(srcDot), 'a ? beside a short label carries them instead');
+  srcDot.click();
+  await settle();
+  const srcHelp = document.querySelector('.help-pop').textContent;
+  ok(/Marzagão/.test(srcHelp) && /Strength Level/.test(srcHelp),
+     '🔒 and every source is still there, one tap away — a ? holds words, it does not delete them');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
+
   // The table view — the relief the light-mode contrast WARN obligates.
   const rows = data.querySelectorAll('.research-table tbody tr');
   ok(rows.length === 8, `the table carries all eight groups (${rows.length})`);
@@ -3164,6 +3186,37 @@ ok(!data.querySelector('.rep-target'),
   await settle();
   ok(/bad Tuesday/i.test(document.querySelector('.help-pop').textContent),
      'and the ? still gives the reason — a day-to-day estimate swings several percent');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
+
+  /* 🚨 AND THE WEIGHTS BLOCK SPLIT THE SAME WAY ON 2026-09-09 — four paragraphs
+   * and ~150 words down to three short sentences, with the mechanism behind a ?.
+   *
+   * ⚠️ THE HALF THAT STAYED IS THE SAFETY CLAIM, and it is asserted ON the pane
+   * rather than through the dot: somebody who set a goal and then sees the runner
+   * pre-fill a heavier weight has every reason to think the two are connected,
+   * and that belief is the only thing in this app that could get somebody hurt
+   * (docs/goals-plan.md §3.1). It may not be one tap away. */
+  ok(/never touches that number/i.test(live)
+     && /Nothing gets heavier because a deadline is close/i.test(live),
+     '🚨 the weights block still says on the screen that the goal does not set the weights, and '
+     + 'that nothing gets heavier because a deadline is close');
+  ok(!/ACSM position stand recommends/.test(live),
+     '⚠️ while the mechanism — the rep ladder and the 2–10 % band — is no longer printed in front '
+     + 'of somebody reading their own progress');
+
+  const weightsDot = [...goals.querySelectorAll('.help-dot')]
+    .find((d) => /weight suggestion/i.test(d.getAttribute('aria-label') || ''));
+  ok(Boolean(weightsDot), 'with a ? beside the label instead');
+  weightsDot.click();
+  await settle();
+  const wHelp = document.querySelector('.help-pop').textContent;
+  ok(/2–10 %/.test(wHelp) && /ACSM/.test(wHelp),
+     'which carries the band a step has to land inside, and whose it is');
+  ok(/only ever take a step away/.test(wHelp)
+     && /nobody has measured by how much/.test(wHelp),
+     '🛑 AND THE LAY-OFF REFUSAL WORD FOR WORD — a refusal behind a ? is still stated, and a '
+     + 'refusal reworded is not the same refusal');
   document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   await settle();
 
@@ -7010,32 +7063,43 @@ ok(!data.querySelector('.rep-target'),
   ok(/Tim/.test(text(me)), 'the Profile tab shows your display name');
   ok(Boolean(me.querySelector('.me-face')), 'and a slot for your photo');
 
+  /* 🔄 ~~THREE FIGURES~~ TWO SINCE 2026-09-09 — Tim: *"just combine the 2 and
+   * call them 'friends' instead."* The two social counts were always the same
+   * number, because a connection here is mutual; one figure with the word the
+   * rest of the app uses needs no "?" to explain itself.
+   *
+   * ⚠️ THE ABSENCE OF THE DOT IS ASSERTED BELOW, and it is the half that says
+   * this was a simplification rather than a rename with the old explanation
+   * left lying underneath it. */
   const tiles = [...me.querySelectorAll('.me-stat')];
-  ok(tiles.length === 3, `three figures across the top (${tiles.length})`);
+  ok(tiles.length === 2, `two figures across the top (${tiles.length})`);
   const tileText = tiles.map((t) => t.textContent.replace(/\s+/g, ' ').trim());
   ok(/^3\s*Workouts$/i.test(tileText[0]), `Workouts counts the sessions (${tileText[0]})`);
-  ok(/^2\s*Followers$/i.test(tileText[1]), `Followers counts the connections (${tileText[1]})`);
-  ok(/^2\s*Following$/i.test(tileText[2]), `and Following the same (${tileText[2]})`);
+  ok(/^2\s*Friends$/i.test(tileText[1]),
+     `🚨 and one FRIENDS figure counts the connections (${tileText[1]})`);
+  ok(!/Followers|Following/i.test(text(me)),
+     '🚨 and neither word is anywhere on the screen — they describe a one-way graph this app does '
+     + 'not have, which is the whole reason they went');
 
   const hrefs = tiles.map((t) => t.getAttribute('href'));
-  ok(hrefs[0] === '#/me/workouts' && hrefs[1] === '#/me/followers' && hrefs[2] === '#/me/following',
+  ok(hrefs[0] === '#/me/workouts' && hrefs[1] === '#/me/friends',
      `each figure opens its own list (${hrefs.join(' ')})`);
 
-  /* 🔒 AND THE "?" CARRIES WHY THE TWO NUMBERS ARE ALWAYS EQUAL. Two identical
-     counts read as a bug until somebody says connecting is mutual, and Rule 9
-     is exactly the control for that. Opened, not read off the pane. */
-  const dot = me.querySelector('.help-dot');
-  ok(Boolean(dot), 'with a ? beside the line about them');
-  dot.click();
-  await settle();
-  const help = document.querySelector('.help-pop').textContent;
-  ok(/mutual/i.test(help), 'saying that connecting here is mutual');
-  ok(/same names|same people/i.test(help), 'so both lists hold the same people');
-  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  await settle();
+  /* 🔒 AND NO "?" SURVIVED ON A PRIVATE ACCOUNT. The old one existed to explain
+     why two numbers were equal; with one number there is nothing to explain, and
+     leaving the dot would be the app talking about itself for the sake of it —
+     the exact thing Tim asked to stop. The public-account caveat is a different
+     sentence and is checked further down, ON the screen rather than behind a
+     dot, because it changes what the number IS (Rule 9). */
+  ok(!me.querySelector('.help-dot'),
+     '🔒 and a private account gets no ? at all — the count is a complete answer and there is '
+     + 'nothing left to say about it');
+  ok(!/mutual/i.test(text(me)),
+     '⚠️ nor a line explaining that connecting is mutual, which was only ever there to account for '
+     + 'the second number');
 
-  /* ---- the two people lists ---- */
-  for (const which of ['followers', 'following']) {
+  /* ---- one people list, under three names ---- */
+  for (const which of ['friends', 'followers', 'following']) {
     const list = await mount(MeRouteView(which));
     await settle();
     const rows = [...list.querySelectorAll('a.row')];
@@ -7043,6 +7107,12 @@ ok(!data.querySelector('.rep-target'),
     ok(rows.every((r) => /^#\/friend\//.test(r.getAttribute('href'))),
        `and every row opens that person's page (${which})`);
     ok(/Autumn/.test(text(list)) && /Alex/.test(text(list)), `by name (${which})`);
+    /* ⚠️ THE OLD ROUTES RESOLVE AND THEY SAY "FRIENDS" WHEN THEY DO. A live URL
+       may not 404 because a word changed (`#/calendar` kept its route through
+       three moves) — and a screen still titled "Followers" would be the rename
+       half-done, which is worse than either state. */
+    ok(/Friends/.test(text(list)) && !/Followers|Following/.test(text(list)),
+       `🚨 and it is titled Friends however you got to it (${which})`);
   }
 
   /* ---- the workouts list ---- */
@@ -7062,11 +7132,11 @@ ok(!data.querySelector('.rep-target'),
     await settle();
     const offTiles = [...off.querySelectorAll('.me-stat')];
     const social2 = offTiles.slice(1);
-    ok(social2.every((t) => /—/.test(t.textContent)),
-       `🚨 with no cloud (${reason}) the two social figures are a DASH, never 0 — the app cannot `
-       + 'count them, and a zero would be a claim where the truth is an absence');
+    ok(social2.length === 1 && social2.every((t) => /—/.test(t.textContent)),
+       `🚨 with no cloud (${reason}) the Friends figure is a DASH, never 0 — the app cannot `
+       + 'count it, and a zero would be a claim where the truth is an absence');
     ok(social2.every((t) => t.tagName !== 'A' && !t.getAttribute('href')),
-       `…and neither is a link, because there is no list behind them (${reason})`);
+       `…and it is not a link, because there is no list behind it (${reason})`);
     ok(/^3\s*Workouts$/i.test(offTiles[0].textContent.replace(/\s+/g, ' ').trim()),
        `while Workouts still counts, because that one is on this device (${reason})`);
   }
@@ -7083,20 +7153,22 @@ ok(!data.querySelector('.rep-target'),
   ok(!/—/.test([...back.querySelectorAll('.me-stat')].map((t) => t.textContent).join(' ')),
      'and with the cloud back they are numbers again — the vacuity guard');
 
-  /* 🚨 A PUBLIC ACCOUNT SAYS THE COUNT IS A FLOOR. D29 makes public the
-     default, and a public account is readable by anybody signed in who finds
-     it — none of whom are in the graph. Printing a follower count that
-     undercounts by an unbounded amount without saying so is exactly what this
-     app does not do. */
-  const pubDot = back.querySelector('.help-dot');
-  pubDot.click();
-  await settle();
-  const pubHelp = document.querySelector('.help-pop').textContent;
-  ok(/public/i.test(pubHelp) && /without connecting|not in this count/i.test(pubHelp),
-     '🚨 on a public account the ? says people can see you without connecting, so the number is '
-     + 'the people you are connected to rather than an audience');
-  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  await settle();
+  /* 🚨 A PUBLIC ACCOUNT SAYS THE COUNT IS A FLOOR, AND IT SAYS IT ON THE SCREEN.
+     D29 makes public the default, and a public account is readable by anybody
+     signed in who finds it — none of whom are in the graph. Printing a number
+     that undercounts its own audience by an unbounded amount without saying so
+     is exactly what this app does not do.
+
+     ⚠️ IT DID NOT FOLLOW THE OTHER HALF BEHIND A "?" ON 2026-09-09. Rule 9's
+     test is whether a sentence changes what the reader thinks the number IS,
+     and this one does: with it, "2 Friends" is a connection count; without it,
+     somebody reads it as who can see them. */
+  ok(/public/i.test(text(back)) && /without being friends/i.test(text(back)),
+     '🚨 on a public account the screen says people can see your training without being friends, so '
+     + 'the number is who you are connected to rather than who is reading you');
+  ok(!back.querySelector('.help-dot'),
+     '⚠️ and it is said outright rather than behind a dot — one sentence, on the screen, only where '
+     + 'it is true');
 
   social.state = realState;
   await store.clearAll();

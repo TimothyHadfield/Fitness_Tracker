@@ -180,6 +180,12 @@ logistics behind the top-left icon; a view of what your account amounts to in th
    because the chips below and the live line at the foot already say what a preset means.
    ⚠️ **"Extreme cuts" is not licence to drop a caveat** — the untrained-adult sentence (D21, the
    weakest number in the file) was shortened and is asserted by **opening** its dot.
+   🆕 **AND HE WIDENED IT ON 2026-09-09, WITHOUT NAMING A SCREEN**: *"if the wordiness fix isn't
+   complete yet, then keep working on it."* ⚠️ **That is not a licence to sweep** — the carve-out
+   below still holds and so does §3.1's *"I think I'll notice the places that show blanks"*. What it
+   authorises is the work already **measured and written down as open**: on that day, the transcribed
+   systems restating their own warnings, and the Goals weights block (182 words → 30). **Measure
+   before cutting**; the ranked list is what says where to go next.
    🆕 **Design Rule 9 came out of it — the ? holds WHY, never WHAT** (`docs/handbook.md` §5).
    🛑 **AND ONE CARVE-OUT IS HIS, VERBATIM**: *"the research section is extreamly wordy and while I
    do think we need to make the descriptions in that section more clear, we should allow it to

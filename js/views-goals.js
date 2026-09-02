@@ -44,7 +44,7 @@ import {
   candidateGoals, buildGoal, goalProgress, requirementsFor, stallReasons,
   rankSystems, FIT_LABEL,
 } from './goals.js';
-import { PROGRESSION_EXPLAINER } from './progression.js';
+import { PROGRESSION_EXPLAINER, PROGRESSION_WHY } from './progression.js';
 // ⚠️ Static, not a dynamic import, for the reason views-workouts.js states at
 // its own top: a caveat that can arrive late or not at all is the one kind of
 // caveat that must not exist. The rating these qualify is loaded dynamically
@@ -643,7 +643,14 @@ function movedSince(goal, p, m) {
  */
 function progressionBlock() {
   return el('div', { class: 'goal-verdict' },
-    el('div', { class: 'section-label', text: 'And the weights themselves' }),
+    /* 🔄 THE MECHANISM WENT BEHIND A "?" ON 2026-09-09 and the safety claim did
+     * not — see PROGRESSION_EXPLAINER's own note. The dot sits against the
+     * label, which is where Tim asked for it (2026-09-08). */
+    el('div', { class: 'help-line' },
+      el('div', { class: 'section-label', text: 'And the weights themselves' }),
+      helpDot(el('div', {}, ...PROGRESSION_WHY.map((t) => el('p', { class: 'help-pop-body', text: t }))),
+        { label: 'How the weight suggestion works', title: 'How a step is chosen' }),
+    ),
     ...PROGRESSION_EXPLAINER.map((t) => el('p', { class: 'goal-verdict-body', text: t })),
     el('div', { class: 'req-source', text: 'ACSM position stand 2009 · research.md §12' }),
   );

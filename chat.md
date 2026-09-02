@@ -1961,3 +1961,45 @@ screen, and this one doesn't, so it's kept separate to stop it being "corrected"
 
 It doesn't animate when you open the app straight onto Record from a link, because then there's
 nothing underneath for it to have come up over.
+
+---
+
+## 2026-09-09, third pass — one count called friends, and the duplicate that was flagged
+
+**You:** combine the two counts and call them friends; you'll check the estimator yourself; and keep
+going on the wordiness if it isn't done.
+
+**The Profile tab has two numbers now: Workouts and Friends.** Nothing was built or deleted to do it
+— the list of people is the same list it always was, so going back to followers/following later stays
+cheap. The old links still work and land on the same list, which is titled Friends however you get to
+it. The little "?" went with the second number: it only existed to explain why two figures were always
+the same. One thing stayed on the screen, and only when it's true: if your account is public, people
+can see your training without being friends, so the number is who you're connected to rather than who
+is reading you.
+
+**On the wordiness, I measured first rather than guessing** and then did the two things already
+written down as unfinished.
+
+The first was the one I flagged last session and didn't fix: every transcribed programme's notes
+opened by repeating its own warning, a couple of centimetres below it. Worst case the two shared
+fourteen words in a row. That's ~240 words gone from six screens.
+
+Cutting it exposed something. The tests that checked "this says it isn't the author's own writing"
+were reading the notes — so when I deleted the repeat, they went red, and one of them was right to:
+**Arnold's Golden Six was the only programme whose warning had never said it.** The disclaimer had
+been living solely in the copy I'd just removed. It's in the warning now, where it belongs, and the
+tests read the text that's actually printed rather than one particular field.
+
+The second was the Goals screen's block about weights: four paragraphs, 182 words, permanently sitting
+under your numbers. It's three short sentences now — that your goal never sets the weights, that
+nothing gets heavier because a deadline is near, and that the suggestion only reads your last two
+sessions. That part stays visible on purpose; it's the one thing in the app that could get somebody
+hurt if they believed the opposite. The mechanics moved behind a "?", including the line about not
+telling you to go lighter after a layoff, word for word.
+
+I also took one paragraph off the Research tab — the one listing where *other* screens' numbers come
+from, which isn't about the age chart it was sitting under. The three that describe that chart stayed
+whole, as you asked.
+
+**And the notes are ready for a reset.** Both of the last two days had grown three separate sections
+in the catch-up file; each is one section now, with the full write-ups in the history file.

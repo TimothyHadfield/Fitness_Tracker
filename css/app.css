@@ -3671,12 +3671,14 @@ a.seg {
    Tim: *"this section will only show the user's profile picture and their
    username, as well as the number of workouts, followers, and following at the
    top."* Distinct from `#/account`, which is where things are CHANGED.
+   🔄 **THE TWO SOCIAL FIGURES BECAME ONE, CALLED FRIENDS, ON 2026-09-09** —
+   *"just combine the 2 and call them 'friends' instead."*
 
-   ⚠️ THE THREE FIGURES ARE A GRID OF EQUAL THIRDS, not a flex row, and that is
-   the whole of the layout decision. Equal columns keep the numbers on a shared
+   ⚠️ THE FIGURES ARE A GRID OF EQUAL COLUMNS, not a flex row, and that is the
+   whole of the layout decision. Equal columns keep the numbers on a shared
    baseline whatever their width, so "6" and "142" do not sit at different
    heights — and a 3-year account's four-digit workout count cannot squeeze the
-   other two into their own labels.
+   others into their own labels.
    ========================================================================== */
 
 .me-body { display: flex; flex-direction: column; gap: 16px; padding-inline: var(--pad); }
@@ -3693,7 +3695,13 @@ a.seg {
    unbroken run of them must wrap rather than push the page sideways. */
 .me-name { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 
-.me-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* ⚠️ `auto-fit` RATHER THAN A NUMBER, SINCE 2026-09-09. It was `repeat(3, 1fr)`
+   and there are two tiles now (Followers and Following became one, called
+   Friends) — and Tim left the door open to going back to three. A hard-coded
+   column count is a second place to remember, and the equal-thirds argument
+   below is really an equal-COLUMNS argument: whatever the count, the numbers
+   share a baseline and a wide one cannot squeeze a narrow one into its label. */
+.me-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; }
 .me-stat {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 12px 4px;

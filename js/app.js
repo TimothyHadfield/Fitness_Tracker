@@ -126,8 +126,9 @@ const NAV = [
 // same practical reason it always was: it is a LIST you browse, and keeping the
 // bar means you can leave it for another tab without going back first. The
 // screens you reach from a list are the ones that take the screen over.
-// `me` is the tab itself; `#/me/followers`, `#/me/following` and `#/me/workouts`
-// share its route name, so they keep the bar too and carry their own back arrow.
+// `me` is the tab itself; `#/me/friends` and `#/me/workouts` share its route
+// name, so they keep the bar too and carry their own back arrow. (`#/me/followers`
+// and `#/me/following` are the same list under their old names — 2026-09-09.)
 // `goal` and `goals` are the same pair.
 // ⚠️ `record` is NOT here — it is a tab now, and a tab that hides the bar it
 // lives in cannot be tapped twice. `start` stays: it is the old deep link and
@@ -198,8 +199,8 @@ async function resolve(route) {
     /* ⚠️ `me` IS THE PROFILE TAB AND `profile` IS THE DETAILS FORM. Both keep
      * their own name because both are linked from elsewhere and neither may
      * 404 — see the NAV comment. One route owns the whole section so that
-     * #/me/followers, #/me/following and #/me/workouts are sub-screens rather
-     * than four entries in this table. */
+     * #/me/friends and #/me/workouts are sub-screens rather than entries in
+     * this table — as are the two names #/me/friends used to have. */
     case 'me':        return MeRouteView(route.param);
     case 'social':    return SocialView();
     case 'goals':     return GoalsView();

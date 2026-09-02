@@ -789,17 +789,43 @@ export function applySuggestion(sets, suggestion) {
  * ⚠️ The second line is the one that matters. A goals screen that also talked
  * about weights would read as though the goal were driving them.
  */
+/* 🔄 SPLIT ACROSS THE "?" ON 2026-09-09 (Design Rule 9), and the split is the
+ * interesting part rather than the cut. This was four paragraphs and about 150
+ * words, permanently on the Goals screen, under numbers that change.
+ *
+ * 🚨 WHAT STAYS ON THE SCREEN IS THE SAFETY CLAIM, not a summary of the rest.
+ * Rule 9's test is whether a sentence changes what the reader thinks a number
+ * IS — and somebody who set a goal and then watches the runner pre-fill a
+ * heavier weight has every reason to assume the two are connected. That belief
+ * is the one this app cannot allow (docs/goals-plan.md §3.1 is the only thing in
+ * here that could cause physical harm), so it is said in three short sentences
+ * in front of them and never behind a tap.
+ *
+ * ⚠️ WHAT MOVES IS THE MECHANISM: how a step is chosen, the ACSM band it has to
+ * fit inside, why reading the calendar would be backwards, what a lay-off does,
+ * and that every number is only ever a proposal. All of it is WHY.
+ *
+ * 🛑 AND THE LAY-OFF REFUSAL MOVED WITHOUT BEING SOFTENED — *"it will not tell
+ * you to go lighter either, because nobody has measured by how much"*, word for
+ * word. A refusal behind a ? is still stated; a refusal reworded is not the same
+ * refusal. `tests/goals.test.mjs` reads it out of the new field.
+ */
 export const PROGRESSION_EXPLAINER = [
-  'In a workout the app pre-fills last time\'s numbers and suggests the next step: hold the weight '
-  + 'and add a rep until you reach the top of the range twice in a row, then add the smallest load '
-  + 'that lands inside the 2–10 % the ACSM position stand recommends, and drop the reps back down.',
-  'Your goal never touches that number. Nothing gets heavier because a deadline is close — a '
-  + 'suggestion that read the calendar would push hardest on somebody coming back from two weeks '
-  + 'off, which is exactly backwards. It reads your last two sessions of that exercise, and nothing '
-  + 'about your goal at all.',
-  // ⚠️ Said outright rather than left as a footnote, because it is the one place
-  // a clock touches a weight and the reader deserves to know which direction it
-  // can push. See rule 2 in this file's header.
+  'Your goal never touches that number.',
+  'Nothing gets heavier because a deadline is close.',
+  'The suggestion reads your last two sessions of that exercise — and nothing about your goal.',
+];
+
+/** The mechanism, behind the "?" beside the block above. */
+export const PROGRESSION_WHY = [
+  'How a step is chosen. Hold the weight and add a rep until you hit the top of the range twice '
+  + 'in a row. Then the weight takes the smallest step that still lands inside the 2–10 % the ACSM '
+  + 'position stand recommends, and the reps drop back to the bottom.',
+  'Why the calendar is kept out of it. A suggestion that read your deadline would push hardest on '
+  + 'somebody coming back from two weeks off, which is exactly backwards.',
+  // ⚠️ Word for word as it was on the screen. It is the one place a clock
+  // touches a weight, and the reader deserves to know which direction it can
+  // push. See rule 2 in this file's header.
   'Time can only ever take a step away. If it has been weeks since you last did a lift, the app '
   + 'offers what you last did instead of a step up — and it will not tell you to go lighter either, '
   + 'because nobody has measured by how much.',

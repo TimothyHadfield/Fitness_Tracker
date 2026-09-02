@@ -41,7 +41,7 @@ const {
   LOAD_BAND, ISOLATION_MAX, LAYOFF_DAYS, REP_BANDS, repRangeFor, trainingRange,
   isCompound, loadCeiling,
   smallestHonestIncrement, sessionSummary, historyFor, lastSessionDate,
-  suggestProgression, applySuggestion, PROGRESSION_EXPLAINER,
+  suggestProgression, applySuggestion, PROGRESSION_EXPLAINER, PROGRESSION_WHY,
 } = await import('../js/progression.js');
 const { LEVELS, weightForPercentile, percentileFor } = await import('../js/strength-standards.js');
 const { totalResistance } = await import('../js/e1rm.js');
@@ -1216,16 +1216,38 @@ ok(lastSessionDate(DATED, { exerciseId: 'nothing', workoutId: 'w1' }) === null,
 
 /* ---- what the goals screen is allowed to say about weights ---- */
 
+/* 🔄 SPLIT ACROSS THE "?" ON 2026-09-09, and these assertions split with it
+ * rather than being relaxed — which is the same discipline the Volume and
+ * Goals caveats got when they moved (Rule 9).
+ *
+ * 🚨 THE FIRST TWO MUST STAY ON THE SCREEN. Somebody who set a goal and then
+ * watches the runner pre-fill a heavier weight has every reason to think the two
+ * are connected, and that belief is the one thing in this app that could get
+ * somebody hurt (docs/goals-plan.md §3.1). A caveat one tap away is still
+ * stated; this one may not be one tap away.
+ */
 ok(PROGRESSION_EXPLAINER.some((t) => /never touches that number/.test(t)),
-   'the goals screen states outright that the goal does not set the weights');
-ok(PROGRESSION_EXPLAINER.some((t) => /deadline/.test(t) && /backwards/.test(t)),
-   'and says why — a deadline-driven suggestion would push hardest on somebody coming back');
-ok(PROGRESSION_EXPLAINER.some((t) => /only ever proposes/.test(t)),
+   'the goals screen states outright, ON the screen, that the goal does not set the weights');
+ok(PROGRESSION_EXPLAINER.some((t) => /Nothing gets heavier because a deadline is close/.test(t)),
+   '🚨 and that nothing gets heavier because a deadline is close — the safety claim, in front of '
+   + 'the numbers rather than behind a tap');
+ok(PROGRESSION_EXPLAINER.every((t) => t.split(/\s+/).length <= 16),
+   `⚠️ in short sentences — the block was four paragraphs and ~150 words (longest now `
+   + `${Math.max(...PROGRESSION_EXPLAINER.map((t) => t.split(/\s+/).length))} words)`);
+
+/* The mechanism moved, and every sentence of it is still SOMEWHERE — a ? holds
+ * words, it does not delete them. */
+ok(PROGRESSION_WHY.some((t) => /deadline/.test(t) && /backwards/.test(t)),
+   'the ? says why — a deadline-driven suggestion would push hardest on somebody coming back');
+ok(PROGRESSION_WHY.some((t) => /only ever proposes/.test(t)),
    'and that it proposes rather than imposes, which is the other half of §8.2');
-ok(PROGRESSION_EXPLAINER.some((t) => /only ever take a step away/.test(t)
+ok(PROGRESSION_WHY.some((t) => /only ever take a step away/.test(t)
    && /nobody has measured by how much/.test(t)),
-   'and that time can only withhold — including that it will not tell you to go lighter, because '
-   + 'that would be a number nobody has measured');
+   '🛑 and that time can only withhold — including that it will not tell you to go lighter, because '
+   + 'that would be a number nobody has measured. WORD FOR WORD: a refusal reworded is not the '
+   + 'same refusal');
+ok(PROGRESSION_WHY.some((t) => /2–10 %/.test(t) && /ACSM/.test(t)),
+   'and the band a step has to land inside, with whose it is');
 
 console.log(`\n${fails === 0 ? 'All checks passed.' : fails + ' FAILED'}`);
 process.exit(fails === 0 ? 0 : 1);

@@ -3116,11 +3116,27 @@ async function renderResearchPane(host, top) {
           + 'published age-grading tables (McCulloch and Foster coefficients), used to place your '
           + 'lifts against people your own age. One curve for all muscles is a simplification — '
           + 'this chart is what the measured groups actually did.'),
-        el('p', {}, el('b', { text: 'Where the app’s other numbers come from. ' }),
-          'Strength standards and lift-to-lift ratios: Strength Level’s published standards, '
-          + 'derived at a fixed body weight. Estimated one-rep max: Marzagão’s 2026 formula. '
-          + 'Muscle ratings: your recorded sets, converted through those ratios — every screen '
-          + 'that shows a rating names the set it came from.')),
+        /* 🔄 BEHIND A "?" ON 2026-09-09, and it is the ONE paragraph on this tab
+         * that qualifies. Tim carved this section out by name when he opened the
+         * wordiness topic — *"the research section is extreamly wordy and while I
+         * do think we need to make the descriptions in that section more clear,
+         * we should allow it to describe that section sufficiently"* — so the
+         * three paragraphs above it stay whole: they say what THIS chart is,
+         * what it cannot cover, and what the dashed line on it assumes. That is
+         * the tab describing itself, which is its entire job.
+         *
+         * 🚨 THIS ONE IS NOT ABOUT THIS CHART. It lists where the ratings, the
+         * standards and the estimated 1RM on OTHER screens come from — the
+         * 2026-09-07 finding exactly: the copy is not padded, it is mis-placed.
+         * A reader looking at an age chart is not asking it. */
+        el('div', { class: 'help-line' },
+          el('div', { class: 'section-label', text: 'Where the app’s other numbers come from' }),
+          helpDot(
+            'Strength standards and lift-to-lift ratios: Strength Level’s published standards, '
+            + 'derived at a fixed body weight. Estimated one-rep max: Marzagão’s 2026 formula. '
+            + 'Muscle ratings: your recorded sets, converted through those ratios — every screen '
+            + 'that shows a rating names the set it came from.',
+            { label: 'Where the app’s other numbers come from', title: 'Sources' }))),
     ));
 
   drawChart();
