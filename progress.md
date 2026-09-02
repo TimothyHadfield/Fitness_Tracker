@@ -32,7 +32,7 @@ Each has its own dated section in `docs/history.md` (2026-09-07, first through f
 
 **What Tim asked for, in order:** leave a workout and come back to it → the screen after a workout
 finishes, plus *"how would that change storage"* about photos → a bin on the bar → the app's
-wordiness.
+wordiness → **the bumpy muscle outlines** (done by a sub-agent, verified here).
 
 1. 🚨 **THE DRAFT ALWAYS SURVIVED LEAVING — THERE WAS NO WAY BACK.** Every set has gone to
    `ftrack:v1:draftSession` since the runner shipped and the same workout has always resumed the
@@ -77,7 +77,14 @@ wordiness.
    PowerShell read-modify-write double-encoded a whole new file. 🚨 **A mutation check is the most
    dangerous place in this workflow to reach for a script**: the edit is designed to be thrown away,
    so nobody diffs it, and putting the line back leaves the damage in every other line. §0.11 updated.
-10. ✅ **1,046 render assertions** (was 982), mutation-checked throughout, driven at 393×852, contrast
+10. 🚨 **THE MUSCLE-MAP OUTLINES WERE BUMPY BECAUSE THE MASK WAS, NOT THE TRACE.** `segment()`
+    thresholds a JPEG; the threshold wobbles 1–3 px per row (compression ringing, plus the drawing's
+    own striations biting into the edge) and potrace followed it. **Chest looked right only because
+    its striations run PARALLEL to its outline.** `smooth_fills()` low-passes each fill **per
+    connected component** before tracing — the max across components is what stops a blur fusing the
+    two glutes, which the first attempt did at sigma 1.1. Wobble −20 %, path data −37 %, ink layer
+    byte-identical. 🔒 **A build-time guard on every muscle's piece count, and it was MADE TO FIRE.**
+11. ✅ **1,046 render assertions** (was 982), mutation-checked throughout, driven at 393×852, contrast
     re-measured across both themes and all four palettes. 🚨 **`tests/sw-update.test.mjs` is flaky on
     this machine and it is NOT this work** — see START HERE.
 
@@ -330,22 +337,19 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
    Full write-up in `docs/history.md`. ⚠️ **The demo cannot show this state and a fix for that was
    deliberately reverted** — see Open work 25.
 
-# 🟢 START HERE: CHECK `git status` FIRST, THEN NOTHING IS HALF-BUILT
+# 🟢 START HERE: NOTHING IS HALF-BUILT
 
 **Everything of mine is pushed, and sixteen of the seventeen suites are green** — including **1,046
 render assertions**, plus a browser audit at **128 routes / 11,912 text nodes / zero contrast
 failures / zero overflow**. **No half-finished job to pick up.**
 
-⏸️ **ONE THING MAY BE SITTING IN THE WORKING TREE, AND IT IS NOT MINE: THE MUSCLE-MAP OUTLINES.**
-Tim, 2026-09-07: *"the lines that outline and define where a muscle is are very bumpy and don't
-perfectly outline where the muscle truely is … Is there any way you can make it smoother?"* — he sent
-five screenshots (Lats worst, then Glutes and Hamstrings; Chest is the standard to reach). **A
-sub-agent was working on `tools/build-body-art.py` and the generated `js/body-art.js` /
-`img/ink-*.webp` when this file was written, and it was told not to commit.** 🚨 **SO CHECK
-`git status` FIRST.** If those files are modified, that is the outline work: read the 2026-09-07
-section of `docs/history.md`, re-run `node tests/data-layer.test.mjs` (the art↔standards invariant
-lives there) and `node tests/render.test.mjs`, look at the map in a browser, and only then decide
-whether to keep it. **If the tree is clean, the job was never landed and Tim will raise it again.**
+✅ **THE MUSCLE OUTLINES ARE FIXED AND LANDED** — 2026-09-07's fifth pass, the last thing done. 🚨
+**The cause was the MASK, not the trace**: `segment()` thresholds a JPEG and the threshold wobbles a
+pixel or two per row, so potrace faithfully drew a staircase. **Chest looked right only because its
+striations run parallel to its outline.** Fills are now low-passed per connected component before
+tracing (`smooth_fills`, `SMOOTH = 2.0`) — wobble down 20 %, path data down 37 %, **every muscle's
+piece count guarded by a build-time `sys.exit` that was made to fire**. The ink layer is untouched
+and regenerates byte-identical.
 
 🚨 **THE SEVENTEENTH, `tests/sw-update.test.mjs`, IS FLAKY ON THIS MACHINE AS OF 2026-09-07 AND IT IS
 NOT A REGRESSION.** It fails most runs on *"the service worker takes control on the second load"*,

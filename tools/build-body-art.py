@@ -17,7 +17,10 @@ whatever colour it is given.
 So the artwork is split into two layers:
 
   FILL  one traced vector path per muscle group per view. Carries colour and
-        nothing else, and is the tap target.
+        nothing else, and is the tap target. Its mask is low-passed before
+        tracing (see smooth_fills) — a threshold on a JPEG wobbles by a pixel
+        or two along every edge, and potrace follows that faithfully into a
+        crenellated outline.
   INK   one greyscale image per view, used as an SVG luminance mask over a
         rectangle of ink colour. Carries every black keyline, every striation
         and all the shading, and is never recoloured.
@@ -63,6 +66,7 @@ BASE_Q = 80     # luminance percentile of a muscle that counts as unshaded
 FLOOR = 0.06
 TURD = 24       # drop traced specks below this area
 OPTTOL = 0.35
+SMOOTH = 2.0    # px of boundary wobble to iron out of a fill before tracing
 GAP = 40        # px between the two figures in the emitted viewBox
 QUALITY = 90    # webp quality for the ink layer
 
@@ -254,6 +258,64 @@ def ink_layer(a, seg, lab, body):
     return alpha, seg, base
 
 
+def smooth_fills(seg, ids):
+    """Low-pass every fill's boundary before it is traced.
+
+    ⚠️ THE TRACE WAS NEVER THE PROBLEM — THE MASK WAS. `segment()` decides where
+    a muscle ends by thresholding a JPEG, and along an edge that threshold
+    wobbles by a pixel or two from one row to the next: compression ringing
+    against the keyline, and the drawing's own fibre striations biting into the
+    edge wherever one runs out to it. potrace then follows that faithfully, so
+    the selection ring came out crenellated — a visible staircase down the lats
+    and the hamstrings, scallops along the glutes, a stray blob at the groin.
+    Chest escaped only because its striations run parallel to its outline and
+    never cross it, which is why it was the one muscle that looked right.
+
+    So the fix is upstream of potrace: convolve each fill's indicator with a
+    Gaussian and take the half level. Wobble shorter than SMOOTH averages away;
+    anything larger keeps its shape, because a low-pass filter removes an
+    amplitude, not a feature.
+
+    🚨 PER CONNECTED COMPONENT, AND THAT IS THE WHOLE DESIGN OF THIS FUNCTION.
+    Blurring a muscle's two halves together SUMS them across the gap between,
+    and at sigma as low as 1.1 that fused the left and right glutes into one
+    blob — exactly the anatomy this must not lose. Competing components take the
+    MAX instead: a component's own blurred indicator is below the half level
+    everywhere outside itself, so no amount of blur carries one across a gap.
+    Measured — the glutes stay two pieces out to sigma 16, where the union blur
+    has them as one at 1.1. The V between the two hamstring heads, the channels
+    between the ab blocks and the sternum gap all ride on this.
+
+    The winner-takes-all across every id also keeps the result a PARTITION.
+    Smoothing each muscle on its own would let two neighbours both claim a
+    boundary pixel — one would paint over the other — or both give it up and
+    leave a sliver of bare paper between them.
+    """
+    best = np.zeros(seg.shape, np.float32)
+    who = np.zeros(seg.shape, np.int16)
+    for i in ids:
+        # Open first, same as the trace used to: it drops single-pixel specks
+        # and hairline bridges, and a bridge left in would be smoothed into a
+        # real one — that is how two ab blocks merged on the first attempt.
+        m = ndi.binary_opening(seg == i, np.ones((3, 3)))
+        if not m.any():
+            continue
+        lab, n = ndi.label(m)
+        for k in range(1, n + 1):
+            f = ndi.gaussian_filter((lab == k).astype(np.float32), SMOOTH)
+            take = f > best
+            who[take] = i
+            best[take] = f[take]
+    who[best <= 0.5] = 0
+    return who
+
+
+def pieces(m):
+    """How many separate lumps of this mask the trace would actually emit."""
+    lb, n = ndi.label(m)
+    return int((np.bincount(lb.ravel(), minlength=n + 1)[1:] >= TURD).sum())
+
+
 def fmt(v):
     s = f"{v:.1f}"
     return s[:-2] if s.endswith(".0") else s
@@ -304,11 +366,45 @@ def main():
               f"p90 {np.percentile(err[paper], 90):5.1f}  "
               f"p99 {np.percentile(err[paper], 99):5.1f} / 255")
 
+        # Smoothed for the TRACE only. `seg` itself is left alone, so the ink
+        # layer above is still solved against the pixels the drawing actually
+        # has and the reconstruction error is unchanged.
+        fills = smooth_fills(seg, [idx[nm] for nm in names])
+
+        # 🚨 THE GUARD ON SMOOTH. A muscle drawn in two pieces has to stay in
+        # two pieces: the left and right glutes, the two hamstring heads, the
+        # ab blocks.
+        #
+        # ⚠️ IT IS NOT GUARDING AGAINST FUSION — smooth_fills cannot fuse two
+        # pieces at any sigma, which was checked out to 16 while the union blur
+        # it replaced fuses the glutes at 1.1. What it catches is the opposite
+        # end: a piece pinched IN TWO at its waist, or eroded below the trace's
+        # own floor and silently dropped. Measured: SMOOTH 4.0 splits a back
+        # forearm into three, and 6.0 shrinks one of the three away again — so
+        # the count is not even monotonic in sigma and is worth asserting.
+        #
+        # Counted at TURD, because that is the trace's own floor — smaller
+        # pieces never reach the SVG either way, and counting them made this
+        # fire on two sub-24px specks beside the chest that nothing has ever
+        # drawn.
+        for nm in names:
+            was = pieces(ndi.binary_opening(seg == idx[nm], np.ones((3, 3))))
+            now = pieces(fills == idx[nm])
+            if was != now:
+                sys.exit(f"{view}: smoothing changed {nm} from {was} pieces to {now}. "
+                         f"SMOOTH={SMOOTH} is reshaping the drawing rather than "
+                         f"tidying it — lower it rather than accepting this.")
+
         paths = {}
         for nm in names:
-            m = ndi.binary_opening(seg == idx[nm], np.ones((3, 3)))
+            m = fills == idx[nm]
             if m.sum() >= 200:
                 paths[nm] = trace(m)
+        # NOT smoothed, and deliberately. The silhouette is the paper the whole
+        # figure is printed on: it is never stroked, it sits behind the ink, and
+        # nothing about it reads as bumpy. Smoothing it is safe enough — at
+        # SMOOTH it stays one piece and loses 72px of 386,000 — but it buys
+        # nothing visible, and the fills are the only thing Tim was looking at.
         silhouette = trace(ndi.binary_closing(body, np.ones((5, 5))))
 
         ink_path = os.path.join(ROOT, "img", f"ink-{view}.webp")

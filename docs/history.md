@@ -17,6 +17,108 @@
 
 ---
 
+## 2026-09-07 (fifth pass) — THE MUSCLE OUTLINES: IT WAS THE MASK, NOT THE TRACE
+
+Tim, with five screenshots: *"the lines that outline and define where a muscle is are very bumpy and
+don't perfectly outline where the muscle truely is … Some muscle groups are 95% good with tiny
+errors, while some others are pretty bad. Is there any way you can make it smoother?"* Lats worst,
+then Glutes and Hamstrings; **Chest was near-perfect and was the standard to reach.**
+
+**Run by a sub-agent** on Tim's *"deploy another agent"*, against a named file list, and then
+**verified here rather than taken on trust** — see §D.
+
+### A. 🚨 THE CAUSE: `segment()` THRESHOLDS A JPEG, AND THE THRESHOLD WOBBLES
+
+The trace was never the problem. `segment()` decides a muscle's edge with `painted & (rel >= 0.65)`
+over a **JPEG**, and that threshold moves one to three pixels row to row — compression ringing
+against the black keyline, plus the illustration's **own fibre striations** biting into the edge
+wherever one runs out to it. potrace then followed it faithfully.
+
+**The evidence is the masks, dumped before potrace ever runs**: `mask-front-Chest` is a pair of clean
+ovals; `mask-back-Back` has a literal staircase down the lower-left of each lat. 🚨 **So Chest was
+never better-drawn — its striations run PARALLEL to its outline and never cross it.** That is the
+whole explanation for the one muscle that looked right, and it is why no amount of potrace tuning was
+going to fix the others.
+
+⚠️ **Two plausible causes were ruled out by measurement rather than argument.** `turdsize` was
+already 24 and **no muscle had a stray island** (0 sub-200px components anywhere). `alphamax` was a
+real but *secondary* factor: on its own it moved wobble 0.398 → 0.331; the mask fix alone got 0.306,
+and adding alphamax on top changed nothing measurable (0.305) or visible. **It was therefore left
+alone**, which keeps the diff to one idea.
+
+### B. The fix — `smooth_fills()`, and the one design decision in it
+
+Convolve each fill's indicator with a Gaussian (`SMOOTH = 2.0`) and take the half level. Wobble
+shorter than SMOOTH averages away; anything larger keeps its shape, because a low-pass removes an
+*amplitude*, not a feature.
+
+🚨 **PER CONNECTED COMPONENT, AND THAT IS THE WHOLE THING.** Blurring a muscle's two halves together
+**sums** them across the gap — at sigma 1.1 that fused the left and right glutes into one blob, which
+is exactly the anatomy this was forbidden to lose. Taking the **max** across components never can:
+measured, the glutes stay two pieces out to sigma 16. The hamstring knee notch, the ab channels and
+the sternum gap all ride on this. Winner-takes-all across ids also keeps the result a **partition**,
+so neighbours cannot overlap or leave a sliver of bare paper between them.
+
+⚠️ **`seg` ITSELF IS UNTOUCHED, so the ink layer is unchanged** — `img/ink-front.webp` and
+`ink-back.webp` regenerate **byte-identical**, and the reconstruction error is identical to the digit.
+The fills are smoothed for the trace only.
+
+🔒 **AND THERE IS A GUARD**: each muscle's piece count must be unchanged, counted at `TURD` (the
+trace's own floor), or the build exits. ⚠️ **It is not guarding against fusion** — that is
+structurally impossible above — **it catches the opposite end**: a piece pinched in two at its waist,
+or eroded away entirely.
+
+### C. Measured
+
+| | before | after |
+|---|---|---|
+| path points, 18 muscles | 1838 | **1160** (−37 %) |
+| `js/body-art.js` | 72.8 KB | **52.3 KB** |
+| curvature reversals per 100px | 5.90 | **3.68** |
+| mean wobble (px from own low-pass) | 0.398 | **0.317** |
+
+Per muscle: Hamstrings 0.516→0.311 · Calves 0.511→0.368 · Quads 0.449→0.320 · Back 0.379→0.271 ·
+Glutes 0.409→0.321 · Chest 0.389→0.286. **Whole-render pixel diff: 6,288 of 10,045,970 (0.06 %)**,
+every cluster on a boundary.
+
+⚠️ **ONE WENT UP AND IT IS A FIX, NOT A REGRESSION.** back/Traps 0.311→0.318: it used to emit a
+single closed curve because a 2,900px region was joined to the outside by a hairline slot, which
+potrace traced as a deep inlet. Smoothing closed the slot, the region is now a proper hole, **and a
+1–2px stripe of bare paper across the traps is gone.** The hole's boundary is what raised the number.
+
+### D. ⚠️ VERIFIED HERE, NOT TAKEN ON TRUST
+
+- **`git status` shows only `tools/build-body-art.py` and `js/body-art.js`** — the ink webps really
+  are unchanged, and nothing was committed by the agent.
+- **The tool was re-run from this session and `js/body-art.js` came back byte-identical** (hashed).
+  So the file is genuinely generated output and the build is deterministic — the property the demo
+  account depends on, applied to the art.
+- 🔒 **THE GUARD WAS MADE TO FIRE.** `SMOOTH` set to 4.0 → *"back: smoothing changed Forearms from 2
+  pieces to 3. SMOOTH=4.0 is reshaping the drawing rather than tidying it — lower it rather than
+  accepting this."* Restored to 2.0 and regenerated back to the identical hash. **A safety rail that
+  has never been seen to fire is not a safety rail.**
+- **All sixteen runnable suites green** including the art↔standards invariant (every drawn muscle
+  rankable or declared unrankable, every rankable muscle drawn with real geometry) — 1,046 render,
+  1,870 data-layer, 107 a11y.
+- **The before/after screenshots were looked at**, not just the numbers: the lat staircase is gone,
+  the hamstring outer edges are smooth **and the knee notch survives**, the traps slot is closed.
+
+### E. Two near-misses the agent reported, and both are worth keeping
+
+🚨 **IT NEARLY SHIPPED THE GLUTE FUSION.** The first smoother blurred each muscle's mask as a whole
+and silently merged the left and right glutes at sigma 1.1 — the exact regression the brief named.
+**Caught only because it was counting components rather than eyeballing.**
+
+⚠️ **AND IT MEASURED AGAINST THE WRONG `seg` FOR MOST OF THE INVESTIGATION.** `main()` does
+`alpha, seg, base = ink_layer(a, seg, lab, body)` — it **rebinds** `seg`, so the traced mask has never
+been the raw segmentation. A scratch harness had cached the pre-ink copy, so early "topology
+unchanged" results described a different mask from the one the tool traces. **The new guard is what
+caught it**, by firing on the real pipeline while the cache said nothing was wrong. Every number
+above was re-derived from the real generated file afterwards. **This is the §0.14 lesson in another
+costume: a check that passes is only evidence once you know what it ran against.**
+
+---
+
 ## 2026-09-07 (fourth pass) — THE WORDINESS, MEASURED, AND THE "?"
 
 Tim opened the topic `docs/direction.md` §4 had parked (*"the app's voice and wordiness … he would

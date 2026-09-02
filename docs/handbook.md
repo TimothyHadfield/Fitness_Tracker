@@ -669,6 +669,16 @@ Fitness_Tracker/
 │   └── ink-back.webp           the only binary assets in the app
 ├── tools/build-body-art.py     regenerates js/body-art.js + img/ink-*.webp from the
 │                               JPG. Dev-only; needs pillow/numpy/scipy/potracer
+│                               ⚠️ SINCE 2026-09-07 IT LOW-PASSES EACH FILL
+│                               BEFORE TRACING (smooth_fills, SMOOTH=2.0). The
+│                               outlines were bumpy because segment() thresholds
+│                               a JPEG and the threshold wobbles per row — not
+│                               because of any potrace setting. PER CONNECTED
+│                               COMPONENT: a whole-mask blur SUMS across a gap
+│                               and fused the two glutes at sigma 1.1. A
+│                               build-time guard exits if any muscle's piece
+│                               count changes; seg itself is untouched, so the
+│                               ink layer regenerates byte-identical
 ├── tools/strength-sim.mjs      THE SIMULATOR. A virtual lifter with a KNOWN 1RM
 │                               curve, logging realistically. Deterministic —
 │                               mulberry32, never Math.random()

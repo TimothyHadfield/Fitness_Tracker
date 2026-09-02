@@ -3275,3 +3275,28 @@ because the muscle-outline work may be sitting uncommitted in the tree.
 Recorded in direction.md that you've opened the wordiness topic — it was on the deferred list with
 "don't shorten copy globally" next to it, and that's no longer right. Your carve-out for the research
 section is written in there word for word.
+
+---
+
+## 2026-09-07 (fifth pass) — the muscle outlines
+
+Fixed, and you were right that some are much worse than others. The cause turned out not to be the
+outline drawing at all — it's the step before it, where the app works out which pixels belong to a
+muscle by reading the source JPEG. That reading wobbles a pixel or two from one row to the next,
+partly from JPEG compression and partly because the illustration's own fibre lines cut into the edge
+where they run out to it. The tracer then followed that wobble exactly, which is your staircase.
+
+The reason Chest looked nearly perfect is neat: its fibre lines run *along* its outline instead of
+across it, so nothing bites into the edge.
+
+So the fix is upstream — smooth the shape before tracing it. Lats, hamstrings, glutes and quads are
+all visibly cleaner now, and the whole map got 37% smaller as a bonus. The bits that must stay
+separate did: the notch between the hamstring heads, the gap between the glutes, the ab channels.
+There's a build-time check that stops the smoothing if it ever changes a muscle's shape rather than
+tidying it, and I made that check fire on purpose to be sure it works.
+
+One incidental fix: the traps had a 1–2px stripe of unpainted paper across them, caused by the same
+problem. That's gone too.
+
+An agent did the work; I re-ran the generator myself and got a byte-identical file, so it's genuinely
+reproducible rather than hand-edited.
