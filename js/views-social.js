@@ -1282,25 +1282,45 @@ export async function CompareBodiesView(param) {
       muscles.legend(more),
       selected
         ? el('div', { class: 'cmp-grid' }, ...panels)
+        /* ⚠️ ONE INVITATION, NOT TWO — 2026-09-08. A second `.field-help` under
+         * the caption below opened *"Tap a muscle to see both estimated one-rep
+         * maxes … and the recorded sets each was worked out from"*, so with
+         * nothing selected the screen asked twice, a few pixels apart; with
+         * something selected it described the panel already open above it. What
+         * that sentence said and this one did not — that the estimate and the
+         * sets behind it are what a tap opens — is folded in here, where the tap
+         * has not happened yet. Nothing about it is lost once it has: the panel
+         * prints "Estimated 1-rep max in <lift>" over the number and names every
+         * recorded set under it. */
         : el('div', { class: 'card' },
-            el('div', { class: 'field-help', text: 'Tap a muscle on either body — both open it.' })),
+            el('div', { class: 'field-help', text:
+              'Tap a muscle on either body — both open it, with each person\'s estimated '
+              + 'one-rep max and the recorded sets behind it.' })),
       el('div', { class: 'vol-notes' },
         /* ⚠️ THIS SENTENCE USED TO NAME ONLY WEIGHT AND AGE, AND THAT WAS THE
            TELL. Both were per-person from the start; sex was not, and the
            caption's silence about it read as completeness. It now states which
            standard each body is on and changes when that changes — so the
            screen can never claim per-person ranking while a single sex is
-           selected, or the reverse. */
+           selected, or the reverse.
+
+           🚨 AND ALL OF IT IS STILL ON THE SCREEN AFTER 2026-09-08's Rule 9
+           pass. Every clause changes what the reader thinks a LEVEL is: which
+           population it was read against, that the same word can sit over two
+           very different lifts, and that it is not a claim about who lifts more.
+           On a screen with two bodies on it, "Advanced vs Advanced" read as "the
+           same lift" is the one misreading this caption exists to prevent — so
+           none of it may go behind a "?". What was two blocks is one because the
+           SECOND block was an invitation to tap, which the card above already
+           makes; its one unique clause is the last one here. */
         el('div', { class: 'field-help', text:
           (compare.sex === 'own'
             ? 'Each body is ranked against people of its own sex, body weight and age'
             : 'Each body is ranked against people of its own body weight and age, but both '
               + 'against the one sex you picked')
           + ', so two people can read the same level at very different weights. The level answers '
-          + '"how far along is this person", never "who lifts more".' }),
-        el('div', { class: 'field-help', text:
-          'Tap a muscle to see both estimated one-rep maxes, which is the number that does answer '
-          + 'who is lifting more — and the recorded sets each was worked out from.' }),
+          + '"how far along is this person", never "who lifts more" — the estimated one-rep max '
+          + 'behind a tap is the number that does.' }),
       ),
     );
   }
@@ -1734,11 +1754,28 @@ async function muscleSplit(entries, exMap) {
           `${unknown} exercise${unknown === 1 ? ' is' : 's are'} not in your library, so `
           + `${unknown === 1 ? 'it is' : 'they are'} left out of this split.` })
       : null,
-    // ⚠️ FINE PRINT, NOT A PARAGRAPH. It has to be here — a fractional set count
-    // is a modelling choice and this app states them where they are used — but
-    // set at body size it was six lines of caveat sitting between the split and
-    // the workout, louder than either. Small and quiet still says it.
-    el('p', { class: 'note ws-fine', text: INDIRECT_NOTE_SESSION }),
+    /* ⚠️ FINE PRINT, NOT A PARAGRAPH. It has to be here — a fractional set count
+     * is a modelling choice and this app states them where they are used — but
+     * set at body size it was six lines of caveat sitting between the split and
+     * the workout, louder than either. Small and quiet still says it.
+     *
+     * 🚨 SHORTENED, NOT DROPPED — 2026-09-08, Rule 9. What stays on the screen
+     * is what these percentages ARE: the unit, what they are a share OF, and
+     * that a helping muscle counts half a set. A reader who does not know the
+     * basis cannot read the bars at all, and until today the screen never said
+     * it in the open — the basis was a clause buried in the caveat. What went
+     * behind the ? is the argument: that the half is a modelling choice rather
+     * than a measured fact, and which way the shares would move if it were
+     * counted lower. That is WHY, and it was the six lines.
+     *
+     * ⚠️ The screen line says "counts half" and INDIRECT_NOTE_SESSION says it
+     * again in full behind the dot, exactly as the Volume tab does with
+     * INDIRECT_NOTE_WEEKLY. The fact belongs beside the number; the argument for
+     * it belongs one tap away. */
+    el('div', { class: 'help-line' },
+      el('span', { class: 'note ws-fine', text:
+        'Share of this workout\'s sets — a muscle an exercise only helps with counts half.' }),
+      helpDot(INDIRECT_NOTE_SESSION, { label: 'Why a helping muscle counts half a set' })),
   );
 }
 
@@ -1828,6 +1865,12 @@ function workoutEntries(entries, exMap, ctx) {
  * sixty sessions and mine is my whole life, so an unwindowed comparison
  * flatters me every single time, in the same direction. The module cuts both
  * sides to the overlap and names the window; this sheet prints that name.
+ *
+ * ⚠️ AND SINCE 2026-09-08 IT PRINTS THE NAME AND HIDES THE ARGUMENT (Rule 9).
+ * "Both sides cover the last 4 weeks — 2026-02-02 to 2026-03-01" is WHAT is
+ * being compared and stays where the numbers are; the paragraph about their
+ * sixty published sessions flattering me is WHY the window exists, and sits
+ * behind the "?" at the end of that line. See CAVEAT_WHY.
  */
 /**
  * An estimated 1RM for each of us on one lift, for the sides that have never
@@ -1875,6 +1918,50 @@ async function friendEstimates(ex, theirActivity, theirDoc) {
     // perfectly good one. It must never be the reason the sheet fails to open.
     return null;
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * A caveat, split into the half that is WHAT and the half that is WHY
+ *
+ * 🚨 KEYED ON `c.key`, NEVER ON THE PROSE, and it fails towards the screen.
+ * Rule 9 says the fact stays and the reason goes behind the ?, and two of
+ * `compare.js`'s caveats are exactly one of each: the window names the period
+ * both sides cover and then argues for why the period exists; the rep gate
+ * names the sets it left out and then argues for why a burnout set cannot carry
+ * a maximum. The marker is the first words of the argument.
+ *
+ * ⚠️ THE SPLIT IS A PRESENTATION RULE, NOT A SECOND COPY OF THE SENTENCE. The
+ * words stay `compare.js`'s own, unedited — the comment above `compareSheet`
+ * says why this screen must not write its own version of them — and if that
+ * module rewords a caveat the marker simply stops matching and the whole caveat
+ * prints on the screen as it did before. The failure direction is the point: a
+ * missed marker shows too much, never too little, so no fact can go quiet
+ * because prose moved somewhere else.
+ *
+ * 🚨 NOTHING ELSE IS SPLIT, AND THAT IS THE DELIBERATE HALF. Every other caveat
+ * this module emits says what a number IS — estimated rather than lifted,
+ * converted from a different lift, totalled across both hands, or missing
+ * because a body weight was never published — and Rule 5 keeps all of those in
+ * front of the reader, beside the numbers they qualify.
+ * ------------------------------------------------------------------ */
+const CAVEAT_WHY = {
+  window: {
+    at: 'That is as far back as',
+    label: 'Why the comparison is cut to a shared period',
+  },
+  'rep-gate': {
+    at: 'This app does not read a maximum',
+    label: 'Why high-rep sets are left out',
+  },
+};
+
+function caveatNode(c) {
+  const rule = CAVEAT_WHY[c.key];
+  const cut = rule ? String(c.text).indexOf(rule.at) : -1;
+  if (cut <= 0) return el('p', { class: 'note ws-fine', text: c.text });
+  return el('div', { class: 'help-line' },
+    el('span', { class: 'note ws-fine', text: c.text.slice(0, cut).trim() }),
+    helpDot(c.text.slice(cut).trim(), { label: rule.label }));
 }
 
 async function compareSheet(entry, exMap, ctx) {
@@ -1955,7 +2042,14 @@ async function compareSheet(entry, exMap, ctx) {
         // ⚠️ The window is NOT restated here. `compare.js` already emits it as
         // a caveat, in more detail and with the dates — and two sentences about
         // the same rule, written in two places, is how one of them goes stale.
-        ...(r.caveats || []).map((c) => el('p', { class: 'note ws-fine', text: c.text })),
+        // `caveatNode` splits that caveat rather than rewriting it, for exactly
+        // this reason: the period stays on the screen in the module's own words.
+        ...(r.caveats || []).map(caveatNode),
+        /* 🚨 THE REFUSAL IS NOT FINE PRINT BEHIND A DOT, AND IT IS NOT
+         * PARAPHRASED. `compare.js` declines to name a winner (Rule 6) and
+         * prints that refusal as its own sentence; a reader who does not know
+         * the app is declining to judge reads the numbers above it as a verdict.
+         * It is the one thing on this sheet a "?" may never hold. */
         el('p', { class: 'note ws-fine', text: r.header || NO_VERDICT_HEADER }),
       ));
   } catch (err) {

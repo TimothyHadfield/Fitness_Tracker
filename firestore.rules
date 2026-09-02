@@ -90,6 +90,12 @@ service cloud.firestore {
           && request.resource.data.updatedAt is timestamp;
     }
 
+    // ⚠️ `read` HERE MEANS `get` AND `list`, AND SINCE 2026-09-08 IT ALSO
+    // CARRIES AN AGGREGATION QUERY. The client asks `where updatedAt > cursor`
+    // plus `getCountFromServer` on every sync so that opening the app costs
+    // what CHANGED rather than a whole training history — the cost finding in
+    // docs/running-costs.html. Narrowing this to `get` would not merely break
+    // the count; it would break every read of a sharded collection.
     match /users/{userId}/sessions/{rowId} {
       allow read: if isOwner(userId);
       allow create, update: if isOwner(userId) && validShardPayload();

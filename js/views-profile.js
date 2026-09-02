@@ -173,10 +173,7 @@ export async function ProfileView() {
         profile.age ? el('div', { class: 'field-help', text: `You’re ${profile.age}.` }) : null,
       ),
 
-      // ⚠️ `by-label`, because this heading names a FIELD and the two above it
-      // are `<label>`s that never stretched — without it one of the three dots
-      // sits at the right edge and the other two beside their words.
-      el('div', { class: 'help-line by-label' },
+      el('div', { class: 'help-line' },
         el('div', { class: 'section-label', text: `Body weight (${units.units()})` }),
         helpDot(WHY.weight, { label: 'Why we ask for your body weight' })),
       el('div', { class: 'card' },

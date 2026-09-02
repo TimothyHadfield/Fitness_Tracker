@@ -5418,7 +5418,25 @@ ok(!data.querySelector('.rep-target'),
   ok(total >= 97 && total <= 103, `and the shares total 100 (${total})`);
   ok(/1 exercise is not in your library/.test(t),
      '⚠️ and it names what it could not count rather than quietly renormalising over the rest');
-  ok(/modelling choice/.test(t), 'the half-set rule travels with the number that used it');
+  /* 🔒 THE HALF-SET RULE, NOW BEHIND THE "?" — 2026-09-08, Rule 9, and this
+     assertion was STRENGTHENED rather than relaxed. It used to read the words
+     off the pane; it now has to find the control, open it and read them back,
+     which also asserts they are REACHABLE. And the basis of the percentages —
+     what they are a share OF, and that a helping muscle counts half — is
+     checked separately, in the open, because that is WHAT rather than WHY and
+     it was buried inside the caveat before. */
+  ok(/Share of this workout|counts half/.test(t),
+     '🚨 the basis of the percentages is stated ON the screen, which it was not before');
+  {
+    const splitDot = ws.querySelector('.ws-split .help-dot');
+    ok(Boolean(splitDot), 'with a ? beside it rather than sixty words under it');
+    splitDot.click();
+    await settle();
+    ok(/modelling choice/.test(document.querySelector('.help-pop').textContent),
+       'and the half-set rule still travels with the number that used it');
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+  }
 
   /* ---- copying their workout into one of mine (§13 step 7) ---- */
   {

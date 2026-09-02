@@ -1131,6 +1131,9 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   function fakeFirestore() {
     const docs = new Map();          // 'users/u1/sessions/a' → data
     const log = [];
+    // The server's clock. Advanced by hand so a test can say "and then, later,
+    // another device wrote this".
+    const clock = { now: 1_700_000_000_000 };
     const path = (ref) => ref.__path;
     const fs = {
       doc: (...args) => {
@@ -1150,17 +1153,62 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
         return { exists: () => data !== undefined, data: () => data };
       },
       async getDocs(ref) {
-        const prefix = path(ref) + '/';
-        log.push(['getDocs', path(ref)]);
-        const hits = [...docs.entries()].filter(([k]) => k.startsWith(prefix));
+        // A query ref carries its filter; a plain collection ref does not.
+        const target = ref.__query || ref;
+        const prefix = path(target) + '/';
+        let hits = [...docs.entries()].filter(([k]) => k.startsWith(prefix));
+        if (ref.__since) {
+          const after = (a, b) => (a.seconds !== b.seconds
+            ? a.seconds > b.seconds : a.nanoseconds > b.nanoseconds);
+          hits = hits.filter(([, v]) => {
+            const at = v && v.updatedAt;
+            return at && typeof at.seconds === 'number' && after(at, ref.__since);
+          });
+        }
+        // 💷 THE LOG RECORDS THE COST, and the assertions read it: an
+        // incremental sync must show up here as a query returning a handful of
+        // documents rather than a sweep of the whole collection.
+        log.push([ref.__since ? 'query' : 'getDocs', path(target), hits.length]);
         return {
           forEach(fn) {
             for (const [k, v] of hits) fn({ id: k.slice(prefix.length), data: () => v });
           },
         };
       },
+      /* The aggregation query. Billed at one read per 1,000 documents, which is
+         the whole reason the delete check can afford to run on every sync. */
+      async getCountFromServer(ref) {
+        const prefix = path(ref) + '/';
+        const n = [...docs.keys()].filter((k) => k.startsWith(prefix)).length;
+        log.push(['count', path(ref), n]);
+        return { data: () => ({ count: n }) };
+      },
+      query: (ref, ...clauses) => ({
+        __query: ref,
+        __since: clauses.find((cl) => cl && cl.__since)?.__since,
+      }),
+      where: (field, op, value) => ({
+        // ⚠️ ONLY `>` IS MODELLED, deliberately. The first version of this
+        // feature used `>=` on a millisecond cursor and re-read the whole
+        // collection for ever; a double that quietly accepted either operator
+        // would have let that back in unnoticed.
+        __since: field === 'updatedAt' && op === '>' ? value : null,
+      }),
+      Timestamp: class {
+        constructor(seconds, nanoseconds) { this.seconds = seconds; this.nanoseconds = nanoseconds; }
+        toMillis() { return this.seconds * 1000 + Math.floor(this.nanoseconds / 1e6); }
+      },
       async setDoc(ref, data) { log.push(['setDoc', path(ref)]); docs.set(path(ref), data); },
-      serverTimestamp: () => 'TS',
+      /* ⚠️ A MOVING SERVER CLOCK, not the string 'TS' the rest of this double
+         used, and 🚨 IT SHARES ONE INSTANT ACROSS A BATCH exactly as Firestore
+         does. That is the property that caught the millisecond cursor: a
+         restore or an adoption stamps a whole collection identically, and the
+         cursor has to be able to get past it. */
+      serverTimestamp: () => ({
+        seconds: Math.floor(clock.now / 1000),
+        nanoseconds: (clock.now % 1000) * 1e6,
+        toMillis() { return clock.now; },
+      }),
       writeBatch() {
         const ops = [];
         return {
@@ -1176,7 +1224,20 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
         };
       },
     };
-    return { c: { fs, db: {} }, docs, log };
+    return { c: { fs, db: {} }, docs, log, clock };
+  }
+
+  /* A localStorage double for the between-sessions read snapshot. Kept out of
+     the Firestore double on purpose: the two fail independently, and several
+     assertions below turn one off while leaving the other on. */
+  function fakeStorage() {
+    const items = new Map();
+    return {
+      getItem: (k) => (items.has(k) ? items.get(k) : null),
+      setItem: (k, v) => { items.set(k, String(v)); },
+      removeItem: (k) => { items.delete(k); },
+      __items: items,
+    };
   }
 
   const LEGACY = 'users/u1/collections/sessions';
@@ -1359,6 +1420,259 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        `in ${commits.length} batches, none over Firestore's limit of ${fb.BATCH_LIMIT}`);
     ok(docs.get(LEGACY).rows.length === 1200,
        '⚠️ and the legacy document still holds all 1,200 — nothing empties it, ever');
+  }
+
+  /* ================= 💷 READING ONLY WHAT CHANGED (2026-09-08) =============
+     The cost fix. `readShard()` used to sweep the whole collection on every
+     cold open, so the bill scaled with how LONG somebody had trained rather
+     than how much — a three-year user cost 3× a one-year user for the same
+     exercise, forever. Reads were 81 % of the bill at 10 k users.
+
+     🚨 WHAT MAKES THIS SAFE IS THAT EVERY UNCERTAIN PATH FALLS BACK TO THE
+     FULL READ. These assertions are therefore in two halves: that the cheap
+     path is genuinely cheap, and — the half that matters — that it is
+     ABANDONED the moment it cannot prove it has the whole collection.
+
+     ⚠️ The double's `serverTimestamp()` moves. A constant would make every
+     assertion here pass while measuring nothing.                            */
+  {
+    // A server stamp in the shape Firestore really hands back, for the tests
+    // below that plant a document as though another device had written it.
+    const stamp = (ms) => ({
+      seconds: Math.floor(ms / 1000), nanoseconds: (ms % 1000) * 1e6,
+      toMillis() { return ms; },
+    });
+
+    const counts = (log) => ({
+      sweeps: log.filter((e) => e[0] === 'getDocs').length,
+      queries: log.filter((e) => e[0] === 'query').length,
+      docsRead: log.filter((e) => e[0] === 'getDocs' || e[0] === 'query')
+        .reduce((n, e) => n + (e[2] || 0), 0),
+    });
+
+    /* ---- the headline: a second open pays for what changed, not for a year ---- */
+    {
+      const { c, docs, log, clock } = fakeFirestore();
+      const cache = fb.localShardCache(fakeStorage());
+      const io = fb.createShardIO(c, 'u1', cache);
+
+      const year = Array.from({ length: 200 }, (_, i) => sess('s' + i, 100));
+      await io.write('sessions', year, { wholesale: true });
+
+      // A cold open: nothing cached yet, so this is the old behaviour.
+      const io2 = fb.createShardIO(c, 'u1', cache);
+      const first = await io2.read('sessions', []);
+      ok(first.length === 200, `the first read gets all 200 sessions (${first.length})`);
+
+      // The next cold open, with nothing changed anywhere.
+      const before = log.length;
+      const io3 = fb.createShardIO(c, 'u1', cache);
+      const second = await io3.read('sessions', []);
+      const after = counts(log.slice(before));
+      ok(second.length === 200, `the second read still returns all 200 (${second.length})`);
+      ok(after.sweeps === 0,
+         '🚨 and it does NOT sweep the collection — that sweep is the whole cost finding');
+      ok(after.docsRead === 0,
+         `💷 zero documents came back, against 200 before (${after.docsRead}) — this is the ~20×`);
+      ok(log.slice(before).some((e) => e[0] === 'count'),
+         '⚠️ and a COUNT was asked for, because a `where >=` query is blind to deletes');
+    }
+
+    /* ---- another device's new session arrives ---- */
+    {
+      const { c, docs, log, clock } = fakeFirestore();
+      const cache = fb.localShardCache(fakeStorage());
+      await fb.createShardIO(c, 'u1', cache).write('sessions', [sess('s1', 100), sess('s2', 200)], { wholesale: true });
+      await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+
+      // Somebody's other phone records a workout, later.
+      clock.now += 60_000;
+      docs.set('users/u1/sessions/s3', { row: sess('s3', 300), updatedAt: stamp(clock.now) });
+
+      const before = log.length;
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 3 && rows.some((r) => r.id === 's3'),
+         `a session written on another device arrives (${rows.length} rows)`);
+      ok(counts(log.slice(before)).docsRead === 1,
+         `and cost ONE document read, not three (${counts(log.slice(before)).docsRead})`);
+    }
+
+    /* ---- 🚨 THE DELETE, WHICH THE QUERY CANNOT SEE ---- */
+    {
+      const { c, docs, log } = fakeFirestore();
+      const cache = fb.localShardCache(fakeStorage());
+      await fb.createShardIO(c, 'u1', cache).write('sessions', [sess('s1', 100), sess('s2', 200), sess('s3', 300)], { wholesale: true });
+      await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+
+      docs.delete('users/u1/sessions/s2');          // deleted on another device
+
+      const before = log.length;
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 2 && !rows.some((r) => r.id === 's2'),
+         `🚨 a session deleted elsewhere is GONE here too (${rows.length} rows)`);
+      ok(counts(log.slice(before)).sweeps === 1,
+         '⚠️ by falling back to the full read — the only honest answer, because a deleted document '
+         + 'does not come back changed, it does not come back at all');
+    }
+
+    /* ---- 🚨 AND THE CASE THAT LOOKS IDENTICAL TO NO CHANGE AT ALL ----
+       Delete one session, add another: the collection COUNT is unmoved, so a
+       check asking "did the number of documents change?" sees nothing and a
+       workout somebody deleted sits on their calendar for ever. What fires
+       here is that the MERGE is one row bigger than the server: the deleted
+       row is still in it, because a delete does not come back changed, it does
+       not come back at all. */
+    {
+      const { c, docs, log, clock } = fakeFirestore();
+      const cache = fb.localShardCache(fakeStorage());
+      await fb.createShardIO(c, 'u1', cache).write('sessions', [sess('s1', 100), sess('s2', 200), sess('s3', 300)], { wholesale: true });
+      await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+
+      clock.now += 60_000;
+      docs.delete('users/u1/sessions/s2');
+      docs.set('users/u1/sessions/s4', { row: sess('s4', 400), updatedAt: stamp(clock.now) });
+      ok([...docs.keys()].filter((k) => k.startsWith('users/u1/sessions/')).length === 3,
+         'the collection still holds exactly three documents — the count has not moved');
+
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 3, `still three rows (${rows.length})`);
+      ok(!rows.some((r) => r.id === 's2'),
+         '🚨 THE DELETED ONE IS GONE, even though the count alone could not tell');
+      ok(rows.some((r) => r.id === 's4'), 'and the new one is here');
+    }
+
+    /* ---- a local write refreshes the snapshot and does NOT move the cursor ----
+       We never learn what timestamp the server gave our own document, so
+       inventing one is the one way this design could skip somebody's change. */
+    {
+      const { c, log } = fakeFirestore();
+      const storage = fakeStorage();
+      const cache = fb.localShardCache(storage);
+      const io = fb.createShardIO(c, 'u1', cache);
+      await io.write('sessions', [sess('s1', 100)], { wholesale: true });
+      await io.read('sessions', []);
+      const cursorAfterRead = cache.get('u1', 'sessions').cursor;
+
+      await io.write('sessions', [sess('s1', 100), sess('s2', 200)]);
+      const snap = cache.get('u1', 'sessions');
+      ok(snap.rows.length === 2, 'the snapshot follows a local write, so the next open starts from it');
+      ok(snap.cursor.seconds === cursorAfterRead.seconds
+         && snap.cursor.nanoseconds === cursorAfterRead.nanoseconds,
+         '⚠️ but the cursor does NOT move — our own document is re-read once rather than assumed');
+
+      // And the proof that costs nothing: the next read still returns both.
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 2, `both sessions come back after the local write (${rows.length})`);
+    }
+
+    /* ---- every degraded path ends in a full read, which is the old behaviour ---- */
+    {
+      // 1. An SDK with no aggregation query at all.
+      const { c, log } = fakeFirestore();
+      const cache = fb.localShardCache(fakeStorage());
+      await fb.createShardIO(c, 'u1', cache).write('sessions', [sess('s1', 100)], { wholesale: true });
+      await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      delete c.fs.getCountFromServer;
+      const before = log.length;
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 1 && counts(log.slice(before)).sweeps === 1,
+         '⚠️ a Firestore surface without getCountFromServer falls back to the full read');
+    }
+    {
+      // 2. The count throws — offline, or a rules change.
+      const { c, log } = fakeFirestore();
+      const cache = fb.localShardCache(fakeStorage());
+      await fb.createShardIO(c, 'u1', cache).write('sessions', [sess('s1', 100)], { wholesale: true });
+      await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      c.fs.getCountFromServer = async () => { throw new Error('offline'); };
+      const before = log.length;
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 1 && counts(log.slice(before)).sweeps === 1,
+         '⚠️ and so does a count that will not come back');
+    }
+    {
+      // 3. Storage denied entirely (private browsing). Nothing is ever cached,
+      //    so every read is a full read and the app is exactly as it was.
+      const { c, log } = fakeFirestore();
+      const deaf = { getItem: () => { throw new Error('denied'); },
+                     setItem: () => { throw new Error('denied'); },
+                     removeItem: () => { throw new Error('denied'); } };
+      const cache = fb.localShardCache(deaf);
+      const io = fb.createShardIO(c, 'u1', cache);
+      await io.write('sessions', [sess('s1', 100), sess('s2', 200)], { wholesale: true });
+      const rows = await fb.createShardIO(c, 'u1', cache).read('sessions', []);
+      ok(rows.length === 2,
+         '⚠️ a browser that refuses storage still reads correctly — it just pays what it used to');
+    }
+    {
+      // 4. A corrupted or foreign snapshot is refused rather than trusted. It
+      //    would otherwise be handed to the diff that decides what to DELETE.
+      const storage = fakeStorage();
+      storage.setItem('ftrack:v1:shardCache:u1:sessions',
+        '{"rows":"not an array","cursor":{"seconds":1,"nanoseconds":0}}');
+      ok(fb.localShardCache(storage).get('u1', 'sessions') === null,
+         '🚨 a snapshot whose `rows` is not an array is refused — this feeds a delete diff');
+      storage.setItem('ftrack:v1:shardCache:u1:sessions', 'not json at all');
+      ok(fb.localShardCache(storage).get('u1', 'sessions') === null, 'and so is one that will not parse');
+      storage.setItem('ftrack:v1:shardCache:u1:sessions', '{"rows":[],"cursorMs":1700000000000}');
+      ok(fb.localShardCache(storage).get('u1', 'sessions') === null,
+         '⚠️ and so is a snapshot written by the MILLISECOND version of this feature — an old '
+         + 'cursor read as a new one would ask the wrong question of the server');
+    }
+    {
+      // 5. Two accounts never read each other's snapshot.
+      const storage = fakeStorage();
+      const cache = fb.localShardCache(storage);
+      cache.set('u1', 'sessions', { rows: [sess('s1', 100)], cursor: { seconds: 5, nanoseconds: 0 } });
+      ok(cache.get('u2', 'sessions') === null,
+         '🚨 a snapshot is keyed by uid — the account that signs in next never sees it');
+    }
+
+    /* ---- the arithmetic on its own, where the edge cases live ---- */
+    {
+      const row = (id) => ({ id });
+      const ts = (s, n = 0) => ({ seconds: s, nanoseconds: n });
+      const m = fb.mergeIncremental;
+      const C = ts(10);
+
+      ok(m([row('a'), row('b')], [], 2, C).full === false,
+         'nothing changed and the count agrees: the snapshot stands');
+      ok(m([row('a'), row('b')], [], 1, C).full === true,
+         '🚨 a count SHORT of what we hold means a delete happened — full read');
+      ok(m([row('a')], [{ row: row('b'), at: ts(20) }], 2, C).cursor.seconds === 20,
+         'the cursor advances to the newest timestamp actually seen');
+      ok(m([row('a')], [{ row: row('a'), at: ts(20) }], 1, C).full === false,
+         'an UPDATE to a row we already had is not a new row, so the count still agrees');
+      ok(m([row('a'), row('b')], [{ row: row('c'), at: ts(20) }], 2, C).full === true,
+         '🚨 one delete and one add leaves the collection count unmoved and is STILL caught — the '
+         + 'merge holds three rows against a server holding two, because the deleted row survives '
+         + 'a query that can only ever return what CHANGED');
+      ok(m([row('a')], [], null, C).full === true,
+         'and an unknown count is never treated as agreement');
+      ok(m([row('a')], [{ row: row('b'), at: null }], 2, C).cursor === C,
+         '⚠️ a document with no server timestamp yet cannot drag the cursor forward');
+    }
+
+    /* ---- 🚨 THE NANOSECONDS, which is where the first version was wrong ---- */
+    {
+      const a = { seconds: 1700, nanoseconds: 500 };
+      const b = { seconds: 1700, nanoseconds: 400 };
+      ok(fb.tsAfter(a, b) === true && fb.tsAfter(b, a) === false,
+         '🚨 two stamps in the SAME SECOND are ordered by nanoseconds — at millisecond resolution '
+         + 'these are equal, which is exactly how a bulk-written collection pinned the cursor and '
+         + 'got re-read in full on every single sync');
+      ok(fb.tsAfter({ seconds: 1701, nanoseconds: 0 }, a) === true, 'seconds win when they differ');
+      ok(fb.tsAfter(a, null) === true, 'anything is after nothing — an empty cursor reads everything');
+      ok(fb.tsAfter(null, a) === false, 'and nothing is never after something');
+
+      ok(fb.timestampParts({ seconds: 5, nanoseconds: 999_999_999 }).nanoseconds === 999_999_999,
+         '⚠️ the nanoseconds survive the round trip into storage — truncating them here would put '
+         + 'the bug straight back');
+      ok(fb.timestampParts({ toMillis: () => 5999 }).seconds === 5,
+         'a Timestamp that only offers milliseconds still converts');
+      ok(fb.timestampParts(null) === null && fb.timestampParts({}) === null,
+         'and a missing timestamp is null rather than zero, which would mean "the beginning of time"');
+    }
   }
 
   /* ---- the backup layer, pinned where it can be pinned ----

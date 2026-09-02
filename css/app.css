@@ -1795,18 +1795,20 @@ select.input {
   align-items: baseline;
   gap: 10px;
 }
+/* A SENTENCE and its dot: the text takes the row and the ? follows it. */
 .help-line > .field-help,
-.help-line > .note,
-.help-line > .section-label { flex: 1; min-width: 0; margin: 0; }
+.help-line > .note { flex: 1; min-width: 0; margin: 0; }
 
-/* ⚠️ A "?" THAT BELONGS TO THE LABEL RATHER THAN TO THE SECTION — 2026-09-08.
-   The rule above pushes the dot to the far edge, which is right above a body
-   map or a paragraph: the ? explains the block, and the block is the width of
-   the screen. It is wrong beside a two-word field label, where it strands the
-   dot 300px from the word it answers for. Profile has both shapes stacked and
-   the mismatch was visible; `<label>` never stretched, so this makes the one
-   .section-label among them behave the same way. */
-.help-line.by-label > .section-label { flex: none; }
+/* 🚨 A LABEL AND ITS DOT SIT TOGETHER — Tim, 2026-09-08: *"If something has a
+   label like 'Just looking around' above demo account button, the question mark
+   should be right next to the just looking around text, not on the right side.
+   this way it's easy to know where to get information."*
+   ⚠️ `0 1 auto`, NOT `none`. The dot must not grow away from the words, but a
+   long label ("Your data — only in this browser") on a 360px screen still has
+   to be allowed to SHRINK — `flex: none` would size it to max-content and push
+   it off the side, which is the one thing the browser audit exists to catch. */
+.help-line > .section-label,
+.help-line > label { flex: 0 1 auto; min-width: 0; margin: 0; }
 
 /* Seven things in one sentence are seven things nobody counts. */
 .vis-list { margin: 4px 0 0; padding-left: 18px; }

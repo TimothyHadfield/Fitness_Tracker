@@ -22,7 +22,43 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-08 — the profile menu simplified, and the upload button deleted.
+**Last updated:** 2026-09-08 — two passes: the profile menu simplified and the upload button deleted,
+then **the read pattern** and more of the wordiness.
+
+## What changed on 2026-09-08 (second pass), in one line each
+
+**Tim was asked what was next, gave a ranked answer, and picked two of the three** — the read pattern
+and more wordiness. (The third, asking about public/private on first sign-in, **he is doing himself
+"along with some other things later"**.) He then named four more wordy screens. Full write-up at the
+top of `docs/history.md`.
+
+1. 💷 **OPENING THE APP NO LONGER RE-DOWNLOADS A TRAINING HISTORY — Open work 26 is closed.**
+   `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open
+   pays for what CHANGED. **Worth ~20× at every scale**: free servers to ~1,894 users instead of ~94.
+   ⚠️ **Offline persistence never helped and that is the counter-intuitive part** — Firestore bills a
+   query by the documents it returns whether or not they are already on the device.
+2. 🚨 **THE FIRST VERSION WAS WRONG AND A TEST CAUGHT IT DEAD.** A **millisecond** cursor with `>=`:
+   Firestore stamps a whole batch with one instant, so a restore or a 1,200-row adoption gave a
+   collection one timestamp, the query matched all of it every sync, and **the cursor could never get
+   past it**. The cheap path became the expensive path *for the accounts with the most data in them*.
+   Fixed with real `{seconds, nanoseconds}` and `>`.
+3. 🔒 **EVERY UNCERTAIN PATH ENDS IN THE FULL READ** — no snapshot, an old-format snapshot, a count
+   that will not come back, an SDK without `getCountFromServer`, storage denied, a snapshot whose
+   `rows` is not an array. **Slower and right is the only acceptable failure mode** for code that
+   decides what somebody's training history contains.
+4. 🚨 **A MUTATION CHECK CORRECTED A COMMENT RATHER THAN THE CODE** (§0.14's other half). The header
+   claimed the delete check compared against *cached + new* "not `rows.length`" — swapping them
+   changed nothing, because they are the same number. The check is right; the stated mechanism was
+   invented, and both are rewritten to the real one.
+5. 🚨 **THE "?" SITS AGAINST ITS LABEL NOW — Tim: *"not on the right side. this way it's easy to know
+   where to get information."*** A `.section-label` or `<label>` in a `.help-line` no longer
+   stretches. ⚠️ **`flex: 0 1 auto`, never `flex: none`** — a long label must keep the right to shrink
+   or it goes off the side of a 360px screen.
+6. 🆕 **`firestore.rules` gained a comment, not a rule** — `allow read` already covers `list`, and the
+   line now says narrowing it to `get` would break every read of a sharded collection.
+7. ✅ **1,911 data-layer assertions** (was 1,874). The Firestore double grew queries, counts and **a
+   moving server clock that shares one instant across a batch** — the property that caught the
+   millisecond cursor. Its `where()` models **only `>`**, so the original bug cannot come back quietly.
 
 ## What changed on 2026-09-08, in one line each
 
@@ -48,9 +84,12 @@ Full write-up at the top of `docs/history.md`.
 5. 🛑 **TWO THINGS STAYED IN THE OPEN AND THEY ARE THE INTERESTING ONES** — **who can see your photo**
    (visibility is WHAT, same call the visibility sheet got) and **"only in this browser"**, which is
    now the section heading itself rather than a paragraph under it.
-6. 🆕 **`.help-line.by-label`** — one scoped CSS rule so a ? beside a two-word field label sits
-   against the words instead of 300px away at the right edge. 🛑 **Not applied app-wide**; Volume and
-   Goals are the shape the original rule was written for.
+6. 🚨 **THE "?" SITS AGAINST ITS LABEL, APP-WIDE — Tim corrected this the same day**: *"the question
+   mark should be right next to the just looking around text, not on the right side. this way it's
+   easy to know where to get information."* A `.section-label` or `<label>` in a `.help-line` no
+   longer stretches; a `.field-help` still does, because there the dot follows a sentence that fills
+   the row. ⚠️ **`flex: 0 1 auto`, never `flex: none`** — a long label has to keep the right to
+   shrink or it goes off the side of a 360px screen.
 7. 🔒 **Six caveat assertions now OPEN the ?** rather than being relaxed, plus two new ones for the
    thing Tim asked for (no "Left on this device", no `/^Upload /` button). ⚠️ **One could not be
    converted and was replaced honestly** — its sentence was deleted rather than moved.
@@ -408,9 +447,10 @@ this file has broken most often. Shipped is working unless Tim says otherwise.
 
 **Four things sit unbuilt on purpose, and none is a loose end:**
 
-- 🛑 **The read-pattern change** — worth ~20× on running cost and the clearest single improvement
-  left in this codebase. **Nobody asked for it**, and it changes how the app talks to Firestore. See
-  the cost section above.
+- ✅ ~~**The read-pattern change**~~ **BUILT 2026-09-08** — Tim picked it when asked what was next.
+  Open work 26.
+- 🛑 **Asking about public/private on first sign-in** — offered in the same ranked answer and **he
+  took it himself**: *"I'll work on #2 along with some other things later."* Do not build it.
 - 🛑 **The abs ranking** — his, and open. Below.
 - 🛑 **The rest of the wordiness** — the mechanism, the rule (Design Rule 9) and the test pattern all
   exist. Volume and Goals went on 2026-09-07; **the whole of `#/account` and `#/profile` went on
@@ -630,7 +670,7 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
-| **26** | 🆕 **the read pattern — the running cost of this app, quantified 2026-09-06** | 🛑 **RECORDED, NOT AUTHORISED. Nobody asked for it, and it changes how the app talks to Firestore.** `readShard()` does `getDocs()` on the whole sessions collection **every cold open**, so cost scales with how LONG somebody has trained rather than how much — a three-year user costs 3× a one-year user for the same exercise, forever, and **reads are 81 % of the bill at 10 k users**. Reading only what changed since last sync is worth **~20× at every scale** (free to ~1,894 users against ~94). ⚠️ **Offline persistence is already enabled and does not help** — a plain `getDoc` is billed even when the data is on the device. ⚠️ **It is also the unfinished half of the 2026-08-22 nav-lag fix**, which said this out loud and stopped at an in-memory cache. `docs/running-costs.html` |
+| **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ⚠️ **What is NOT done**: this has never run against real Firestore — the aggregation query, the `>` on a real server timestamp and the rules' `list` on an aggregation are all reviewed rather than executed, exactly like the rest of this file's network paths. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass |
 | **25b** | 🆕 **the demo has no TIME-based strength set** | ⚠️ Left over from 25. The generator writes every set as `{weight, reps}`, so there is no plank, L-sit or dead hang anywhere in the demo year — a shape the app supports and the demo cannot show. Small; nobody has asked |
 | **25** | ✅ ~~the demo cannot show a trained-but-unrankable muscle~~ **FIXED 2026-09-04** | Cable Crunch (Core ranks) and Neck Curl (Neck hatches) — one of each, because the two states cannot sit on one muscle now Core is rankable. Tim authorised the re-baseline it forced. ⚠️ **Still open, and smaller**: the generator writes every set as `{weight, reps}`, so the demo has no TIME-based strength set anywhere — no plank, no L-sit, no dead hang. ~~ ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |
 | **23** | ✅ ~~a note to the developer~~ **BUILT 2026-09-04** | Form on Account, inbox at `#/notes`, `js/feedback.js` + a `feedback/{noteId}` collection. 🚨 **The developer is a hard-coded uid in `firestore.rules`** and the screen protects nothing; the author cannot read their own note back and nobody can edit one. Rules deployed and proved on the live project. 🛑 **TEMPORARY — take it out when the first users stop being new**, or it becomes a support inbox nobody is staffing. ~~ 🟢 **AUTHORISED, and he said to build it once questioning finished.** *"adding a temporary section to the app that allows the user to write a note or idea straight to the developer (me) would be nice to have. Then, make my account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas straight on the app."* ⚠️ **DELIBERATELY TEMPORARY** — it exists to catch fresh opinions while the first users are new, not forever. 🚨 **The developer role has to be enforced by `firestore.rules`, not by hiding a screen**: these are other people's words about their own training, and "only Tim can read them" has to be true on the wire. ⚠️ **It is also the first user-submitted free text this app has ever stored**, which is the moderation surface he parked the same day — worth one sentence to him if a decision here would be expensive to undo, and nothing more (that is the single exception he granted to staying quiet) |

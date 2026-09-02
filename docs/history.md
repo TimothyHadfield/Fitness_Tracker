@@ -17,6 +17,95 @@
 
 ---
 
+## 2026-09-08 (second pass) — 💷 THE READ PATTERN, AND THE "?" MOVED TO WHERE IT POINTS
+
+Tim asked *"what do you think is next?"* — a direct question, so a ranked answer was owed. He took
+**1 and 3** of the three offered: the read pattern, and more of the wordiness. (**2 was asking about
+public/private on first sign-in**, which he is doing himself *"along with some other things later."*)
+Then, on the pass before this one: *"some of the question marks were located far away or on the
+opposite side of the screen as the thing they were refering to … the question mark should be right
+next to the just looking around text, not on the right side. this way it's easy to know where to get
+information."*
+
+### A. 💷 OPENING THE APP NO LONGER RE-DOWNLOADS A TRAINING HISTORY
+
+**The finding is from 2026-09-06 and it was recorded rather than queued** (`docs/running-costs.html`,
+Open work 26): `readShard()` did `getDocs()` over the whole sessions collection on **every cold
+open**, so the bill scaled with how LONG somebody had trained rather than how much. A three-year user
+cost 3× a one-year user for the same exercise, and it never levelled off. **Reads were 81 % of the
+bill at 10 k users.** Measured worth of fixing it: **~20× at every scale** — free servers to ~1,894
+users instead of ~94.
+
+⚠️ **AND OFFLINE PERSISTENCE NEVER HELPED**, which is the part that makes this counter-intuitive: it
+is already switched on, and Firestore bills a one-shot query by the documents it returns whether or
+not they are sitting on the device. **Only asking for fewer documents changes the number.**
+
+**The mechanism, and it needs both halves:**
+
+1. **`where('updatedAt', '>', cursor)`** returns only what changed since this device last looked; the
+   rest comes out of a snapshot in `localStorage`.
+2. 🚨 **A COUNT CATCHES THE DELETES**, because a `where >` query is structurally blind to them — a
+   deleted document does not come back changed, it does not come back at all. `getCountFromServer` is
+   billed at **one read per 1,000 documents**, so it is affordable on every single sync.
+
+**What fires on a delete** is that the merged set is one row bigger than the server says the
+collection is. ⚠️ **The subtle case is delete-one-add-one**, where the raw document count is
+completely unmoved — the merge still holds the deleted row, so the sizes disagree anyway and it falls
+back to the full read.
+
+🚨 **THE FIRST VERSION OF THIS WAS WRONG AND A TEST CAUGHT IT DEAD.** The cursor was a **millisecond**
+compared with `>=`. Firestore stamps every document in a batch with one instant, so a
+restore-from-backup — or the adoption of a 1,200-session legacy history — gives a whole collection a
+single timestamp. The query then matched all 1,200 on every sync, and because re-reading them could
+not produce a *newer* maximum, **the cursor was pinned there for ever.** The cheap path silently
+became the expensive path *for exactly the accounts with the most data in them*, which is the failure
+the whole feature exists to prevent. Fixed by storing the real `{seconds, nanoseconds}` and comparing
+with `>`. ⚠️ **`tsAfter()` compares the pair rather than `seconds * 1e9 + nanos`** — that arithmetic
+is ~1.7e18 today against a `MAX_SAFE_INTEGER` of 9e15, so the obvious version silently discards the
+nanoseconds the function exists to keep.
+
+🔒 **EVERY UNCERTAIN PATH ENDS IN THE FULL READ, which is exactly the old behaviour** — no snapshot,
+a snapshot from the millisecond version, a count that will not come back, an SDK without
+`getCountFromServer`, storage denied, a snapshot whose `rows` is not an array. That last one is a
+shape check rather than trust: it is parsed out of a store any script on the origin can write to, and
+it is handed to the diff that decides what to **delete**.
+
+⚠️ **A LOCAL WRITE REFRESHES THE SNAPSHOT AND DELIBERATELY DOES NOT MOVE THE CURSOR.** We never learn
+what `serverTimestamp()` resolved to on our own documents, so the next sync re-reads them — a handful
+of billed reads, once, against inventing a timestamp and skipping somebody's change.
+
+🚨 **AND A MUTATION CHECK CORRECTED A COMMENT RATHER THAN THE CODE — §0.14's other half.** The header
+claimed the count was compared against *cached + genuinely-new* "not `rows.length`", and that the
+distinction was what caught delete-plus-add. Swapping one for the other changed **nothing**: the
+merge is the union of exactly those two sets, so they are the same number. The check is right and the
+stated mechanism was invented. Both are rewritten to say the real reason. **A false mechanism in a
+comment is how the next person simplifies the true one away.**
+
+- 🆕 **`firestore.rules` gained a comment, not a rule.** `allow read` already covers `list`, so the
+  query and the count need nothing — but the line now says that narrowing it to `get` would break
+  every read of a sharded collection, not merely the count.
+- 🆕 **Deleting an account clears its snapshots**, which are keyed by uid and would otherwise sit in
+  `localStorage` describing an account that no longer exists.
+- ✅ **1,911 data-layer assertions** (was 1,874). The Firestore double grew queries, aggregation
+  counts and a **moving server clock that shares one instant across a batch** — the property that
+  caught the millisecond cursor. Its `where()` models **only `>`**, deliberately: a double that
+  quietly accepted either operator would let the original bug back in unnoticed.
+
+### B. THE "?" SITS AGAINST ITS LABEL NOW
+
+The first version right-aligned every dot, because `.help-line > .section-label { flex: 1 }` was
+written for a caption above a body map. Tim is right that it is wrong for a two-word heading — the
+dot ended up 300px from the words it answers for. A `.section-label` or `<label>` in a `.help-line`
+no longer stretches; a `.field-help` or `.note` still does, because there the dot follows a sentence
+that already fills the row.
+
+⚠️ **`flex: 0 1 auto`, NOT `flex: none`.** A long label — *"Your data — only in this browser"* — has
+to keep the right to shrink on a 360px screen, or it is pushed off the side, which is the one thing
+the browser audit exists to catch. `.by-label`, added an hour earlier as a scoped exception, is
+deleted: it was the general case all along.
+
+---
+
 ## 2026-09-08 — THE PROFILE MENU, SIMPLIFIED, AND A BUTTON THAT SHOULD NEVER HAVE EXISTED
 
 Tim, with a screenshot of Hevy's **Edit Profile** screen: *"right now the profile menu is really

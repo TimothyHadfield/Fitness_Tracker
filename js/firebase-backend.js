@@ -42,9 +42,14 @@
 // that is 520 reads to fill the cache on a cold open, against a 50,000/day free
 // allowance — about 96 cold opens a day before it bites, and the read cache
 // means a session of ordinary use is one fill plus a revalidation every 30
-// seconds. If that ever becomes the constraint, the fix is an incremental
-// revalidation (`where updatedAt > lastSeen`, plus a count to catch deletes),
-// not a return to one big document.
+// seconds.
+//
+// 💷 ✅ AND ON 2026-09-08 THAT CONSTRAINT WAS REMOVED — by exactly the fix this
+// paragraph used to predict: `where updatedAt > cursor` plus an aggregation
+// count to catch deletes, so a cold open pays for what CHANGED rather than for
+// a whole training history. Worth ~20× at every scale. The reasoning, and the
+// millisecond version that a test caught being worse than useless, are in the
+// block above createShardIO().
 //
 // Account model (chosen 2026-08-15): anonymous first, upgrade later. A visitor
 // starts logging immediately with an anonymous account, then adds email or
@@ -199,7 +204,188 @@ function docRef(c, collection) {
 // one at a time; two leaves room for a same-write edge nobody has met yet.
 export const MASS_DELETE_MAX = 2;
 
-export function createShardIO(c, uid) {
+/* ------------------------------------------------------------------ *
+ * 💷 READING ONLY WHAT CHANGED — 2026-09-08, and it is a COST fix
+ *
+ * 🚨 THE FINDING IT ANSWERS, from `docs/running-costs.html` (2026-09-06):
+ * `readShard()` did `getDocs()` over the WHOLE sessions collection on every
+ * cold open, so the bill scaled with how LONG somebody had trained rather than
+ * how much. A three-year user cost 3× a one-year user for the same exercise,
+ * forever, and it never levelled off. Reads were 81 % of the bill at 10 k
+ * users. Measured worth: **~20× at every scale** — free servers to ~1,894
+ * users instead of ~94.
+ *
+ * ⚠️ OFFLINE PERSISTENCE DOES NOT HELP AND NEVER DID. Firestore bills a
+ * one-shot query by the documents it returns whether or not they are already
+ * on the device; only asking for fewer documents changes the number.
+ *
+ * THE MECHANISM, and both halves are needed:
+ *
+ *   1. **`where('updatedAt', '>=', cursor)`** returns only what changed. The
+ *      rest of the collection is served out of a local snapshot.
+ *   2. **A COUNT catches the deletes**, because a `where >=` query is
+ *      structurally blind to them — a deleted document does not come back
+ *      changed, it does not come back at all. `getCountFromServer` is billed
+ *      at one read per 1,000 documents, so it is nearly free.
+ *
+ * 🚨 THE COUNT IS COMPARED AGAINST THE SIZE OF THE **MERGED** SET, and the
+ * subtle case is worth stating: deleting one session and adding another leaves
+ * the collection count unmoved, so a check against "did the count change?"
+ * would see nothing and a deleted workout would sit on the calendar for ever.
+ * The merge still holds the deleted row — a delete does not come back changed,
+ * it does not come back at all — so it comes out one row bigger than the
+ * server, and that is what fires. Any mismatch falls back to the full read,
+ * which is exactly the old behaviour.
+ *
+ * ⚠️ THE CURSOR IS A SERVER VALUE, NEVER A DEVICE CLOCK — the maximum
+ * `updatedAt` actually seen. A device clock running fast would skip a write
+ * permanently.
+ *
+ * 🚨 AND IT IS KEPT TO THE NANOSECOND, WHICH IS NOT FUSSINESS — THE FIRST
+ * VERSION USED MILLISECONDS AND A TEST CAUGHT IT DEAD. Firestore stamps every
+ * document in a batch with the same instant, so a restore-from-backup or the
+ * adoption of a 1,200-session history gives a whole collection one timestamp.
+ * A millisecond cursor compared with `>=` then matched all 1,200 on every
+ * sync — and because re-reading them could not produce a NEWER maximum, the
+ * cursor was pinned there for ever. **The cheap path silently became the
+ * expensive path for exactly the accounts with the most data in them**, which
+ * is the failure this whole feature exists to prevent. Storing the real
+ * `{seconds, nanoseconds}` and comparing with `>` fixes both halves: the
+ * documents we already hold are excluded, and anything committed afterwards
+ * has a strictly later stamp because Firestore assigns it at commit.
+ *
+ * ⚠️ A LOCAL WRITE NEVER ADVANCES THE CURSOR. We do not know what timestamp
+ * the server gave our own document, so the next sync re-reads it — a handful
+ * of reads once, against inventing a timestamp and skipping a real change.
+ * ------------------------------------------------------------------ */
+
+const SHARD_CACHE_PREFIX = 'ftrack:v1:shardCache:';
+
+// Past this a collection is not worth caching in localStorage — the quota is
+// ~5 MB shared with everything else in the app, and losing the whole store to
+// a QuotaExceededError would cost more than the reads it saves.
+const SHARD_CACHE_MAX_BYTES = 1_500_000;
+
+/**
+ * Where a shard snapshot is kept between sessions. Injectable so the tests can
+ * drive it, and so a browser with storage denied degrades to full reads rather
+ * than failing — every method swallows, because a cache that cannot be read is
+ * a slower app and a cache that throws is a broken one.
+ */
+export function localShardCache(storage) {
+  const store = storage || (typeof localStorage === 'undefined' ? null : localStorage);
+  const key = (uid, collection) => `${SHARD_CACHE_PREFIX}${uid}:${collection}`;
+  return {
+    get(uid, collection) {
+      if (!store) return null;
+      try {
+        const raw = store.getItem(key(uid, collection));
+        if (!raw) return null;
+        const v = JSON.parse(raw);
+        // A shape check rather than trust: this is parsed from a store any
+        // other script on the origin can write to, and a bad `rows` would be
+        // handed to the diff that decides what to DELETE.
+        if (!v || !Array.isArray(v.rows)) return null;
+        if (!v.cursor || typeof v.cursor.seconds !== 'number'
+            || typeof v.cursor.nanoseconds !== 'number') return null;
+        return v;
+      } catch { return null; }
+    },
+    set(uid, collection, value) {
+      if (!store) return;
+      try {
+        const raw = JSON.stringify(value);
+        if (raw.length > SHARD_CACHE_MAX_BYTES) { this.clear(uid, collection); return; }
+        store.setItem(key(uid, collection), raw);
+      } catch {
+        // Out of quota, or private browsing. Drop this collection's copy so a
+        // half-written one can never be read back as whole.
+        this.clear(uid, collection);
+      }
+    },
+    clear(uid, collection) {
+      if (!store) return;
+      try { store.removeItem(key(uid, collection)); } catch { /* nothing to do */ }
+    },
+  };
+}
+
+/**
+ * Firestore Timestamp | {seconds,nanoseconds} | null → `{seconds, nanoseconds}`.
+ *
+ * ⚠️ SECONDS AND NANOSECONDS, NOT MILLISECONDS — see the header. A whole
+ * collection written in one batch shares one instant, and at millisecond
+ * resolution the cursor could never get past it.
+ */
+export function timestampParts(ts) {
+  if (!ts) return null;
+  if (typeof ts.seconds === 'number') {
+    return { seconds: ts.seconds, nanoseconds: ts.nanoseconds || 0 };
+  }
+  if (typeof ts.toMillis === 'function') {
+    const ms = ts.toMillis();
+    return { seconds: Math.floor(ms / 1000), nanoseconds: (ms % 1000) * 1e6 };
+  }
+  return null;
+}
+
+/**
+ * Is `a` strictly after `b`?
+ *
+ * ⚠️ Compared as a PAIR rather than as one number: `seconds * 1e9 + nanos` is
+ * about 1.7e18 today and `Number.MAX_SAFE_INTEGER` is 9e15, so the obvious
+ * arithmetic silently loses the nanoseconds this function exists to keep.
+ */
+export function tsAfter(a, b) {
+  if (!a) return false;
+  if (!b) return true;
+  return a.seconds !== b.seconds ? a.seconds > b.seconds : a.nanoseconds > b.nanoseconds;
+}
+
+/**
+ * The arithmetic of an incremental sync, with no Firestore in it.
+ *
+ * @param cachedRows  what this device already had
+ * @param changed     [{ row, at }] the documents the `updatedAt` query returned
+ * @param serverCount what the collection really holds, or null if unknown
+ * @returns {{rows, cursorMs, full}} — `full: true` means "do not trust this,
+ *          read the whole collection", which is the old behaviour.
+ */
+export function mergeIncremental(cachedRows, changed, serverCount, cursor) {
+  const byId = new Map((cachedRows || []).map((r) => [String(r.id), r]));
+  let fresh = 0;
+  let newest = cursor;
+  for (const { row, at } of changed) {
+    const id = String(row.id);
+    if (!byId.has(id)) fresh++;
+    byId.set(id, row);
+    if (tsAfter(at, newest)) newest = at;
+  }
+  const rows = [...byId.values()];
+
+  /* 🚨 THE MERGED SET MUST BE EXACTLY AS BIG AS THE SERVER SAYS THE COLLECTION
+   * IS, and that one line is what makes the whole scheme safe against deletes.
+   * A deleted document does not come back changed — it does not come back at
+   * all — so it survives in the merge, and the merged set is then one bigger
+   * than the collection. Delete one session and add another and the raw count
+   * is unmoved, but the merge holds four rows against a server holding three,
+   * so it is still caught.
+   *
+   * ⚠️ `cached + genuinely-new` IS `rows.length`. A mutation check proved it:
+   * swapping one for the other changed nothing, because the merge is the union
+   * of exactly those two sets. This comment previously claimed the two were
+   * different and that the distinction was what caught delete-plus-add. It was
+   * wrong; the reason above is the real one. Written out because a false
+   * mechanism in a comment is how the next person "simplifies" the true one
+   * away. */
+  const expected = (cachedRows || []).length + fresh;
+  if (serverCount === null || serverCount !== expected) {
+    return { rows: [], cursor, full: true };
+  }
+  return { rows, cursor: newest, full: false };
+}
+
+export function createShardIO(c, uid, cache = localShardCache()) {
   // id → JSON of the row as this tab last saw it, per collection. What makes a
   // write cost one document instead of five hundred.
   //
@@ -215,18 +401,89 @@ export function createShardIO(c, uid) {
   // factory. The sharded path has no way to address the legacy document, so
   // no future edit here can write to it by accident. See the prohibition below.
 
-  async function readShard(collection) {
+  /** The whole collection, and the newest `updatedAt` in it. */
+  async function readShardAll(collection) {
     const snap = await c.fs.getDocs(col(collection));
     const rows = [];
+    let cursor = null;
     snap.forEach((d) => {
       const data = d.data();
       // ⚠️ The document NAME is the row id, and it overrides whatever is in
       // the payload. They are written together and cannot disagree — but if
       // they ever did, the name is the one the delete path addresses, so
       // trusting the other one would leave a row that cannot be removed.
-      if (data && data.row) rows.push({ ...data.row, id: d.id });
+      if (data && data.row) {
+        rows.push({ ...data.row, id: d.id });
+        const at = timestampParts(data.updatedAt);
+        if (tsAfter(at, cursor)) cursor = at;
+      }
     });
+    return { rows, cursor };
+  }
+
+  async function readShard(collection) {
+    return (await readShardAll(collection)).rows;
+  }
+
+  /**
+   * The whole collection, but paying only for what changed. Falls back to
+   * `readShard()` — the old behaviour — on anything it cannot prove.
+   *
+   * ⚠️ EVERY FAILURE PATH HERE ENDS IN A FULL READ, and that is the property
+   * to preserve if this is ever edited: no cache, an old build's cache, a
+   * count that will not come back, a count that disagrees, a Firestore surface
+   * without `query`/`getCountFromServer`. Being slower and right is the only
+   * acceptable failure mode for the code that decides what somebody's training
+   * history contains.
+   */
+  /**
+   * A full read, and the snapshot that lets the NEXT one be incremental.
+   *
+   * ⚠️ No cursor means no cache written. A collection whose documents carry no
+   * server timestamp yet (every write in the same tick, or a fixture) would
+   * otherwise be cached against a null cursor and every later sync would ask
+   * for everything anyway — slower than not caching, and harder to reason about.
+   */
+  async function fullReadAndSeed(collection) {
+    const { rows, cursor } = await readShardAll(collection);
+    if (!cursor) cache.clear(uid, collection);
+    else cache.set(uid, collection, { rows, cursor });
     return rows;
+  }
+
+  async function readShardIncremental(collection) {
+    const cached = cache.get(uid, collection);
+    const canQuery = c.fs.query && c.fs.where && c.fs.getCountFromServer && c.fs.Timestamp;
+    if (!cached || !canQuery) return fullReadAndSeed(collection);
+
+    const changed = [];
+    let serverCount = null;
+    try {
+      // ⚠️ `>`, against the exact stamp of the newest document we hold. See the
+      // header: `>=` on a millisecond cursor pinned a bulk-written collection
+      // in place and re-read all of it, forever.
+      const since = new c.fs.Timestamp(cached.cursor.seconds, cached.cursor.nanoseconds);
+      const snap = await c.fs.getDocs(
+        c.fs.query(col(collection), c.fs.where('updatedAt', '>', since)));
+      snap.forEach((d) => {
+        const data = d.data();
+        if (data && data.row) {
+          changed.push({ row: { ...data.row, id: d.id }, at: timestampParts(data.updatedAt) });
+        }
+      });
+      const agg = await c.fs.getCountFromServer(col(collection));
+      const n = agg && agg.data ? agg.data().count : null;
+      serverCount = typeof n === 'number' ? n : null;
+    } catch (err) {
+      // Offline, a missing index, a rules change — anything at all.
+      console.warn('Incremental sync unavailable; reading the whole collection.', err);
+      return fullReadAndSeed(collection);
+    }
+
+    const out = mergeIncremental(cached.rows, changed, serverCount, cached.cursor);
+    if (out.full) return fullReadAndSeed(collection);
+    cache.set(uid, collection, { rows: out.rows, cursor: out.cursor });
+    return out.rows;
   }
 
   async function commitOps(ops) {
@@ -275,6 +532,11 @@ export function createShardIO(c, uid) {
       await commitOps(writes.map((row) => ({
         kind: 'set', ref: c.fs.doc(col(collection), String(row.id)), row,
       })));
+      // 💷 Documents just appeared with timestamps we did not see. Throwing the
+      // snapshot away costs one full read next time and removes the whole
+      // question of whether a cursor from before an adoption still means
+      // anything.
+      cache.clear(uid, collection);
     }
     return merged;
   }
@@ -291,9 +553,14 @@ export function createShardIO(c, uid) {
       // writes recoverable rather than a silent divergence: whatever it wrote
       // gets adopted into the shard on the next read here. Once everything is
       // adopted, adopt() computes zero writes and this is read-only.
+      // 💷 The incremental path is the ordinary one and the whole point of the
+      // cost work; adoption stays a full read because it is comparing the shard
+      // against a legacy document and has to see all of both. Once everything
+      // is adopted, `legacyRows` for a new account is empty forever and this
+      // never runs again.
       const rows = legacyRows.length
         ? await adopt(collection, legacyRows)
-        : await readShard(collection);
+        : await readShardIncremental(collection);
       memo.set(collection, shardSnapshot(rows));
       return rows;
     },
@@ -346,6 +613,17 @@ export function createShardIO(c, uid) {
       // commit that threw has changed nothing, and recording what we hoped to
       // store is a lie the next diff reads back as fact.
       memo.set(collection, shardSnapshot(rows));
+
+      /* 💷 The between-sessions snapshot follows the write, and ⚠️ THE CURSOR
+       * DELIBERATELY DOES NOT MOVE. We do not know what `serverTimestamp()`
+       * resolved to on our own documents, so the next sync re-reads them — a
+       * handful of billed reads, once, against the alternative of inventing a
+       * timestamp and skipping somebody's change. This is also what keeps
+       * `clearAll()` and Restore from backup honest: they land here like any
+       * other write, so the snapshot is replaced rather than left describing
+       * an account that no longer looks like that. */
+      const prior = cache.get(uid, collection);
+      if (prior) cache.set(uid, collection, { rows, cursor: prior.cursor });
       return true;
     },
   };
@@ -836,6 +1114,11 @@ export const FirebaseBackend = {
     for (const name of ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings']) {
       try { await this.write(name, []); } catch (err) { console.error('clearing ' + name, err); }
     }
+    // 💷 And the between-sessions read snapshots, which are keyed by this uid
+    // and would otherwise sit in localStorage describing an account that no
+    // longer exists.
+    const gone = localShardCache();
+    for (const name of SHARDED_COLLECTIONS) gone.clear(u.uid, name);
     await c.auth.deleteUser(u);
 
     // Leave a working anonymous account behind so the app still runs.

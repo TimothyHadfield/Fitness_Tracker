@@ -69,8 +69,12 @@ const go = (hash) => { location.hash = hash; };
 function needsProfile(profile) {
   return emptyState(
     'Tell us about you first',
-    `A goal is a strength level, and a level needs your ${profile.missing.join(' and ')} — every `
-    + 'standard is a ratio to body weight, and they differ between men and women.',
+    // ⚠️ RE-SHAPED, NOT HIDDEN (Rule 9). `emptyState()` takes a STRING, so
+    // there is nowhere to hang a ? here — and the reason is WHAT anyway: a
+    // person being asked for their sex and weight is owed why in the same
+    // breath. One 28-word sentence became two.
+    `A goal is a strength level, and a level needs your ${profile.missing.join(' and ')}. `
+    + 'Every standard is a ratio to body weight, and they differ between men and women.',
     el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' }),
   );
 }
@@ -78,7 +82,10 @@ function needsProfile(profile) {
 function needsHistory() {
   return emptyState(
     'Nothing to aim at yet',
-    'A goal starts from where a muscle is now, so there has to be something recorded for it. '
+    // ⚠️ ONE CLAUSE DELETED, NOT MOVED — "so there has to be something recorded
+    // for it" is said twice more on this same empty state: by the sentence
+    // after it and by the button under it, which reads "Record a benchmark".
+    'A goal starts from where a muscle is now. '
     + 'Log a workout or record a benchmark and the goals appear.',
     el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
   );
@@ -212,16 +219,28 @@ async function noGoalScreen(muscles) {
 
       el('div', { class: 'goal-intro' },
         el('h2', { class: 'goal-intro-title', text: 'Pick something to aim at' }),
+        /* ⚠️ RE-SHAPED, NOT HIDDEN. Every word of this paragraph is WHAT a goal
+         * is and what the feature then does — none of it explains where a
+         * number came from — so Rule 9 says it stays in the open. One 33-word
+         * sentence became two. */
         el('p', { class: 'goal-intro-body', text:
-          'A goal is one muscle moving up a strength level, over twelve weeks. The app then tells '
-          + 'you what that costs — how many hard sets a week, how often, how much protein — and '
-          + 'shows you what you are actually doing against it.' }),
-        // Said before anything is chosen, not after. The whole design rests on
-        // it: a level makes no prediction, so nothing here is a promise.
-        el('p', { class: 'goal-intro-body', text:
-          'It is a target, not a promise. Almost everybody who trains gets stronger, but how much '
-          + 'anyone gains in three months varies enormously, so the app will never tell you what '
-          + 'you are going to lift.' }),
+          'A goal is one muscle moving up a strength level, over twelve weeks. '
+          + 'The app says what that costs: hard sets a week, how often, how much protein. '
+          + 'Then it shows what you are actually doing against it.' }),
+        /* Said before anything is chosen, not after. The whole design rests on
+         * it: a level makes no prediction, so nothing here is a promise.
+         *
+         * 🚨 THE REFUSAL STAYS ON THE SCREEN — same call verdictBlock() got.
+         * "It is a target, not a promise" and "the app will never tell you what
+         * you are going to lift" are the two things a reader must not have to
+         * ask for; WHY individual gains cannot be predicted is one tap away. */
+        el('div', { class: 'help-line' },
+          el('p', { class: 'goal-intro-body', text:
+            'It is a target, not a promise. The app will never tell you what you are going to '
+            + 'lift.' }),
+          helpDot('Almost everybody who trains gets stronger, but how much anyone gains in three '
+            + 'months varies enormously — so a level is something to aim at, never a forecast.',
+          { label: 'Why the app will not predict what you will lift' })),
       ),
 
       muscles.size
@@ -325,9 +344,11 @@ function goalHero(goal, p) {
 function progressBlock(goal, p, m) {
   if (p.currentWeight === null) {
     return el('div', { class: 'card' },
+      // ⚠️ RE-SHAPED. Both halves are WHAT — the fact that there is no current
+      // estimate, and the one action that fixes it — so nothing goes behind a ?.
       el('div', { class: 'field-help', text:
-        `Nothing has been recorded for ${goal.muscle} since this goal was set, so there is no `
-        + 'current estimate to compare against. Log a set of anything that trains it.' }),
+        `Nothing has trained ${goal.muscle} since this goal was set, so there is no current `
+        + 'estimate. Log a set of anything that trains it.' }),
     );
   }
 
@@ -354,11 +375,16 @@ function progressBlock(goal, p, m) {
 
     // Going backwards is a real outcome and the screen has to be able to say it
     // without dressing it up. Rule 6 keeps it factual: no judgement, no advice.
+    // ⚠️ THE FACT STAYS, THE MECHANISM MOVES (Rule 9). "You are below where you
+    // started" changes what the reader thinks the number is and must not be
+    // asked for; why an estimate can fall without anybody getting weaker is WHY.
     gained < 0
-      ? el('div', { class: 'field-help', text:
-          `The current estimate is ${units.withUnit(Math.round(-gained))} below where this goal `
-          + 'started. Estimates move on how recently and how heavily you have trained, so a '
-          + 'single light week can do this.' })
+      ? el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text:
+            `The current estimate is ${units.withUnit(Math.round(-gained))} below where this goal `
+            + 'started.' }),
+          helpDot('Estimates move on how recently and how heavily you have trained, so a single '
+            + 'light week can do this.', { label: 'Why an estimate can go down' }))
       : null,
 
     // Where the number came from, every time (Rule 5). An estimate must never
@@ -497,10 +523,14 @@ function movedSince(goal, p, m) {
   // a blank here would read as the second. progressBlock() says what to do about
   // it; this says what it costs, which is this measurement.
   if (p.currentWeight === null || !(p.startWeight > 0)) {
+    // ⚠️ "Log a set of anything that trains it" WAS DELETED HERE, NOT MOVED —
+    // progressBlock() prints that exact instruction four blocks up the same
+    // screen, on the identical `currentWeight === null` branch. What this block
+    // says that the other does not is what the missing rating COSTS, which is
+    // this measurement, and that survives in the second sentence.
     return [el('p', { class: 'goal-verdict-body', text:
-      `There is nothing to measure yet: ${goal.muscle} has no current rating, so there is no `
-      + 'estimate to subtract the starting one from. Log a set of anything that trains it and the '
-      + 'change since this goal was set appears here.' })];
+      `Nothing to measure yet: ${goal.muscle} has no current rating. There is nothing to subtract `
+      + 'the starting one from. The change appears here once one arrives.' })];
   }
 
   const delta = p.gained;
@@ -536,25 +566,40 @@ function movedSince(goal, p, m) {
   // ⚠️ The comparison against the yardstick is arithmetic, not a judgement:
   // "smaller than 12 %" is a fact about resolution, and the sentence stops
   // there rather than turning it into good news or bad news (Rule 6).
+  /* ⚠️ "Read it as the measurement it is, not as a result either way" WAS
+   * DELETED, NOT MOVED. The section label six lines above this block reads
+   * *"On track?"* and the line under it reads *"Not yet — every number here is
+   * measured, not judged"* — the same sentence, on the same screen, in the
+   * position the reader meets first. Rule 9: ask what else already says it. */
   const scale = step === 0
-    ? 'A flat reading and a small real change look identical at that resolution, so this is not '
-      + 'evidence either way.'
+    ? 'A flat reading and a small real change look identical at that resolution.'
     : pct < ESTIMATE_NOISE_PCT
-      ? `A move of ${pctText} is inside that, so it is not yet something the app can tell apart `
-        + 'from an ordinary swing. Read it as the measurement it is, not as a result either way.'
-      : `A move of ${pctText} is larger than that. It is still built from your best recorded sets `
-        + 'rather than a tested max, so it is the estimate that has moved, not a max you have hit.';
+      ? `A move of ${pctText} is inside that. The app cannot tell it apart from an ordinary swing.`
+      : `A move of ${pctText} is larger than that — so the estimate has moved, not a max you have `
+        + 'hit.';
 
   return [
+    // ⚠️ "from your recorded sets" is dropped from this sentence and not from
+    // the screen: progressBlock() prints "Estimated from <exercise>, <weight>×<reps>"
+    // above it, and the dated line at the bottom of this block names the set
+    // again. What must not be lost — neither end is a tested max (Rule 5) —
+    // stays exactly where it was.
     el('p', { class: 'goal-verdict-body', text:
       `What has moved: this goal was set on ${fmtDateLong(goal.startDate)}${ago}. ${moved} `
-      + "Both ends of that are this app's own estimate from your recorded sets, and neither is a "
-      + 'tested max.' }),
+      + "Both ends are this app's own estimate, and neither is a tested max." }),
 
-    el('p', { class: 'goal-verdict-body', text:
-      `For scale: this project's own simulation of a strength estimate puts the uncertainty on one `
-      + `at about ±${ESTIMATE_NOISE_PCT} %, and the figure above carries no band of its own. `
-      + scale }),
+    /* 🚨 THE YARDSTICK STAYS, ITS PROVENANCE MOVES (Rule 9). ±12 % is WHAT —
+     * without it the sentence under it cannot be read at all — but where the
+     * number came from, and that the estimate above carries no band of its
+     * own, is WHY. The `.req-source` line below still names the source in the
+     * open, so nothing here depends on the ? being opened. */
+    el('div', { class: 'help-line' },
+      el('p', { class: 'goal-verdict-body', text:
+        `For scale: the app's uncertainty on a strength estimate is about `
+        + `±${ESTIMATE_NOISE_PCT} %. ${scale}` }),
+      helpDot(`That ±${ESTIMATE_NOISE_PCT} % is this project's own simulation of a strength `
+        + 'estimate, not a measurement of you — and the figure above carries no band of its own.',
+      { label: 'Where the ± figure comes from' })),
 
     // Rule 5 — the yardstick names what it came from, and says it is not a
     // measurement of this reader. Same pattern as progressionBlock's citation.
@@ -629,10 +674,18 @@ function requirementsBlock(goal, req) {
     el('div', { class: 'field-help', text:
       'All of this assumes you are eating and sleeping enough. The app cannot see either, so '
       + 'neither will ever be counted for or against you.' }),
-    el('div', { class: 'field-help', text:
-      'Which of these grow with a bigger goal is not a matter of taste — sets, sessions, time and '
-      + 'consistency each have a measured dose response. Protein is a bar to clear rather than a '
-      + 'dial, and nothing measures how many hours of sleep a goal needs.' }),
+    /* 🚨 47 WORDS BECAME ELEVEN AND A "?" (Rule 9). Every row above already
+     * wears its own tag — "grows with the goal" or "a bar, not a dial" — so
+     * WHAT this paragraph told the reader is on the screen already, in the
+     * rows it describes. What only the paragraph had is WHY those tags are not
+     * a matter of taste, and that is what is behind the dot. Nothing deleted. */
+    el('div', { class: 'help-line' },
+      el('span', { class: 'field-help', text:
+        'The tags say which of these grow with a bigger goal.' }),
+      helpDot('Sets, sessions, time and consistency each have a measured dose response, so they '
+        + 'scale. Protein is a bar to clear rather than a dial, and nothing measures how many '
+        + 'hours of sleep a goal needs.',
+      { label: 'Why only some of these grow with the goal' })),
   );
 }
 
@@ -667,6 +720,7 @@ function reqRow(r, req) {
 function measuredBlock(goal, req, measured) {
   const rows = stallReasons({ requirements: req, measured, muscle: goal.muscle })
     .filter((r) => r.visible);
+  const why = measuredFooterWhy(measured);
 
   return el('div', { class: 'card' },
     el('h2', { class: 'section-head', text: 'What you are actually doing' }),
@@ -685,25 +739,41 @@ function measuredBlock(goal, req, measured) {
     // window too short to divide into weeks, or no sessions at all. The middle
     // one used to be folded into the last, which is how a lifter eight days in
     // was told the app had nothing rather than being shown what they had done.
-    el('div', { class: 'field-help', text: measuredFooter(measured) }),
+    //
+    // 🚨 THE UNIT STAYS IN THE OPEN, THE ARITHMETIC GOES BEHIND THE ? (Rule 9).
+    // "These are totals, not rates per week" changes what the reader thinks the
+    // numbers above ARE, so it is never something to ask for; why a total and a
+    // weekly requirement cannot be compared yet is WHY, and only the short
+    // window has any.
+    el('div', { class: 'help-line' },
+      el('span', { class: 'field-help', text: measuredFooter(measured) }),
+      why ? helpDot(why, { label: 'Why these are totals rather than a weekly rate' }) : null,
+    ),
   );
 }
 
 function measuredFooter(measured) {
   if (!measured) {
-    return `No sessions logged in the last ${WINDOW_DAYS / 7} weeks, so there is nothing here to `
-      + 'measure from yet.';
+    return `No sessions logged in the last ${WINDOW_DAYS / 7} weeks — nothing to measure from yet.`;
   }
   const days = measured.spanDays;
   if (measured.enough === false) {
-    return `Counted over the ${days} day${days === 1 ? '' : 's'} since your first session in the `
-      + `last ${WINDOW_DAYS / 7} weeks — ${measured.sessions} `
-      + `session${measured.sessions === 1 ? '' : 's'}. Under two weeks, so these are totals of `
-      + 'what you have done, not rates per week; the goal is stated per week, so the two cannot be '
-      + 'compared until there is a fortnight to divide by.';
+    return `Counted over the ${days} day${days === 1 ? '' : 's'} since your first session — `
+      + `${measured.sessions} session${measured.sessions === 1 ? '' : 's'}. `
+      + 'Under two weeks, so these are totals, not rates per week.';
   }
   return `Measured from the last ${Math.round(days / 7)} weeks of logged sessions — `
     + `${measured.sessions} of them.`;
+}
+
+// ⚠️ NOTHING WAS DROPPED FROM THE SENTENCE ABOVE — the window it counts inside
+// moved here with the reason, because both are facts about the measurement
+// rather than about the reader's training.
+function measuredFooterWhy(measured) {
+  if (!measured || measured.enough !== false) return null;
+  return `The window is the last ${WINDOW_DAYS / 7} weeks, counted from your first session inside `
+    + 'it. The goal is stated per week, so the two cannot be compared until there is a fortnight '
+    + 'to divide by.';
 }
 
 function moreRows() {
@@ -732,7 +802,10 @@ function endSheet(goal, p) {
     title: 'End this goal?',
     message: p.reached
       ? 'You reached it. Ending it keeps the record and lets you set the next one.'
-      : 'It is kept in your history either way, and you can set a new one straight after. '
+      // ⚠️ BOTH SENTENCES ARE SAFETY STATEMENTS — what happens to the record —
+      // so neither may go behind a ?, and a confirmSheet message is a plain
+      // string with nowhere to put one anyway. Trimmed, not moved.
+      : 'It is kept in your history, and you can set a new one straight after. '
         + 'Nothing about your training or your records changes.',
     confirmLabel: 'End it',
     danger: !p.reached,
@@ -784,8 +857,8 @@ async function GoalMuscleView() {
     back: () => go('#/goals'),
     scroll: [
       el('div', { class: 'field-help', text:
-        'Pick the muscle you want to move. The next screen shows the levels above where it is now '
-        + 'and what each would cost you.' }),
+        'Pick the muscle you want to move. The next screen shows the levels above it, and what '
+        + 'each would cost.' }),
 
       el('div', { class: 'list' }, rated.filter((m) => m.next).map((m) =>
         el('button', { class: 'row', onClick: () => go('#/goal/new/' + encodeURIComponent(m.muscle)) },
@@ -802,13 +875,17 @@ async function GoalMuscleView() {
       atTop.length
         ? el('div', { class: 'field-help', text:
             `${atTop.map((m) => m.muscle).join(', ')} ${atTop.length === 1 ? 'is' : 'are'} already `
-            + 'at the top level, so there is no next one to aim at.' })
+            + 'at the top level — nothing above to aim at.' })
         : null,
 
+      // ⚠️ RE-SHAPED, NOT HIDDEN. That the target freezes is WHAT — a reader
+      // about to commit to a number has to know the number will not move
+      // underneath them (D20) — so it stays in the open. One 27-word sentence
+      // became two.
       el('div', { class: 'field-help', text:
         `${comparisonLabel(profile).main.replace(/^vs\. /, 'Levels are measured against ')} — `
         + `${comparisonLabel(profile).sub}. A goal freezes the weight behind the level when you `
-        + 'set it, so changing that comparison later will not move a goal you are already running.' }),
+        + 'set it. Changing that comparison later will not move a goal you are already running.' }),
     ],
   });
 }
@@ -839,16 +916,31 @@ async function GoalLevelView(muscle) {
 
       el('div', { class: 'list' }, options.map((o) => goalOption(o, m, profile, goal))),
 
-      el('div', { class: 'field-help', text:
-        'The percentage beside each is how much you would have to add to your estimated maximum. '
-        + 'That is what decides how much the goal asks of you — the bands are ours, but everything '
-        + 'each one then asks for comes from the research.' }),
+      // ⚠️ WHAT THE PERCENTAGE IS STAYS; WHERE THE BANDS CAME FROM MOVES.
+      // A reader cannot read the "+18%" beside a level without the first
+      // sentence, so it is never something to ask for. Whose judgement drew the
+      // bands is provenance — Rule 9's "where the number came from" exactly.
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          'The percentage beside each is what you would have to add to your estimated max.' }),
+        helpDot('That is what decides how much the goal asks of you. The bands are ours, but '
+          + 'everything each one then asks for comes from the research.',
+        { label: 'Where these bands come from' })),
 
-      // Said here as well as on the tab, because this is the screen where
-      // somebody commits to a number and it is the moment the claim matters.
-      el('div', { class: 'field-help', text:
-        'None of these is a prediction. Individual gains over twelve weeks vary enormously, so the '
-        + 'app is telling you what would count as hitting the target, not what you will lift.' }),
+      /* Said here as well as on the tab, because this is the screen where
+       * somebody commits to a number and it is the moment the claim matters.
+       *
+       * 🚨 THE REFUSAL STAYS ON THE SCREEN — the same call the tab's intro and
+       * verdictBlock() got. "None of these is a prediction" is the sentence
+       * that stops a target being read as a forecast; why nobody can predict a
+       * twelve-week gain is one tap away. */
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          'None of these is a prediction. It is what would count as hitting the target, not what '
+          + 'you will lift.' }),
+        helpDot('Individual gains over twelve weeks vary enormously, so no app can tell you where '
+          + 'you will be in three months.',
+        { label: 'Why none of these is a prediction' })),
     ],
   });
 }
@@ -925,10 +1017,15 @@ async function GoalStallsView() {
     sub: goal.liftName || goal.muscle,
     back: () => go('#/goals'),
     scroll: [
+      // ⚠️ ONE CLAUSE DELETED, NOT MOVED — "knowing which of them this app can
+      // see and which it cannot" is the two headings immediately below it,
+      // *What the app can measure* and *What it cannot see*, and the help line
+      // at the foot of the screen says it a third time. A sentence describing
+      // the layout of the screen it is printed on is the cheapest kind of
+      // duplicate there is.
       el('p', { class: 'goal-intro-body', text:
         'Almost everybody who trains gets stronger. When somebody does not, there are usually '
-        + 'practical reasons — and the useful thing is knowing which of them this app can see and '
-        + 'which it cannot.' }),
+        + 'practical reasons.' }),
 
       el('h2', { class: 'section-head', text: 'What the app can measure' }),
       el('div', { class: 'list' }, seen.map(stallRow)),
@@ -994,10 +1091,16 @@ async function GoalSystemsView() {
     sub: `${goal.muscle} · ${req.sets[0]}–${req.sets[1]} sets a week`,
     back: () => go('#/goals'),
     scroll: [
-      el('div', { class: 'field-help', text:
-        `Sorted by how many hard sets each one actually gives ${goal.muscle} in a week, against `
-        + `the ${req.sets[0]}–${req.sets[1]} this goal asks for. A programme with a high overall `
-        + 'rating is the wrong answer if it barely trains the muscle you care about.' }),
+      // ⚠️ WHAT THE SORT IS STAYS; WHY IT IS NOT THE HEADLINE RATING MOVES.
+      // Every row below prints a strength and a growth percentage, so a reader
+      // has to be told what the ORDER means — that is WHAT. The argument for
+      // ignoring the headline score is Rule 9's "why it is drawn that way".
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          `Sorted by hard sets for ${goal.muscle} a week, against the `
+          + `${req.sets[0]}–${req.sets[1]} this goal asks for.` }),
+        helpDot('A programme with a high overall rating is the wrong answer if it barely trains '
+          + 'the muscle you care about.', { label: 'Why not the headline rating' })),
 
       el('div', { class: 'list' }, ranked.map((r) => systemRow(r, goal))),
 

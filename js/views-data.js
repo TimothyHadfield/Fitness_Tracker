@@ -1037,12 +1037,28 @@ export async function GraphView(opts = {}) {
               + (opt.loadType ? ` · ${LOAD_LABEL[opt.loadType]}` : ''),
           }),
         ),
+        /* ⚠️ THE VERDICT ON THE CHART STAYS; THE PHYSIOLOGY GOES BEHIND THE ?
+         * (Rule 9). "Unreliable above 15 reps" changes what the reader thinks
+         * every point on this chart is, so it can never be something to ask
+         * for. WHY a high-rep set stops measuring strength is the classic case
+         * for the dot.
+         *
+         * ⚠️ NO `.help-line` HERE, DELIBERATELY. `.chart-caption` is already a
+         * baseline flex row with the same 7px gap, and `.help-dot` is
+         * `flex: none` — wrapping it would have meant re-classing the caption
+         * to `.field-help` and changing its size and colour, which is a visual
+         * change nobody asked for. The dot still sits against the words. */
         conf !== 'good'
-          ? el('div', { class: 'chart-caption warn' }, el('span', {
-              text: conf === 'poor'
-                ? `Above 15 reps a set is limited by breathing and grip more than strength — estimates here are unreliable.`
-                : `Estimates get looser above 10 reps.`,
-            }))
+          ? el('div', { class: 'chart-caption warn' },
+              el('span', { text: conf === 'poor'
+                ? 'Estimates above 15 reps are unreliable.'
+                : 'Estimates get looser above 10 reps.' }),
+              conf === 'poor'
+                ? helpDot('Above 15 reps a set is limited by breathing and grip more than by '
+                    + 'strength, so what it converts to says less about a one-rep max.',
+                  { label: 'Why high-rep estimates are unreliable' })
+                : null,
+            )
           : null,
       ),
     );
@@ -1436,8 +1452,10 @@ function barChart(rows, field) {
   // lift stands is worth more than a sentence about what to record next.
   if (!rows || !rows.length) {
     return emptyState('Nothing to compare yet',
-      'Record the same exercise on two different days — as a benchmark or in a workout — and it '
-      + 'will appear here.');
+      // ⚠️ RE-SHAPED, NOT HIDDEN — an empty state is an instruction, and an
+      // instruction is WHAT. `emptyState()` takes a string in any case.
+      'Record the same exercise on two different days, as a benchmark or in a workout. '
+      + 'It will then appear here.');
   }
 
   const max = Math.max(...rows.flatMap((r) => [r.start, r.now])) || 1;
@@ -1921,7 +1939,10 @@ export async function SettingsView() {
       ),
 
       el('div', { class: 'field' },
-        el('label', { text: 'Colour' }),
+        el('div', { class: 'help-line' },
+          el('label', { text: 'Colour' }),
+          helpDot('Gold is the original. Teal and Indigo cool the whole app down; Ember keeps the '
+            + 'gold and warms everything around it.', { label: 'What each colour does' })),
         el('div', { class: 'chips' },
           ...PALETTES.map(([key, name, swatch]) =>
             el('button', {
@@ -1932,9 +1953,13 @@ export async function SettingsView() {
               el('span', { class: 'palette-dot', style: `background:${swatch}` }),
               name)),
         ),
-        el('div', { class: 'field-help', text:
-          'Gold is the original. Teal and Indigo cool the whole app down; Ember keeps the gold '
-          + 'and warms everything around it. Works with both Dark and Light.' }),
+        /* ⚠️ WHAT SURVIVED THE SPLIT ABOVE (Rule 9). The one thing a reader
+         * needs before tapping is that this is NOT a second theme switch — a
+         * person who thinks it is will avoid it — and that is five words. Which
+         * of the four is warm and which is cool describes options whose
+         * swatches are already drawn on the chips, so it went behind the ? on
+         * the label rather than sitting here as a paragraph. */
+        el('div', { class: 'field-help', text: 'Works with both Dark and Light.' }),
       ),
 
       el('div', { class: 'field' },
@@ -1949,9 +1974,16 @@ export async function SettingsView() {
             text: 'kg', onClick: (e) => setUnits('kg', e),
           }),
         ),
-        el('div', { class: 'field-help', text:
-          'Display only. Weights are stored the same way either way, so switching '
-          + 'back and forth never changes anything you have recorded.' }),
+        /* ⚠️ THE SAFETY HALF STAYS IN THE OPEN. "Switching never changes
+         * anything you have recorded" is a statement about the reader's data
+         * and Rule 9 keeps those on the screen; HOW that is true — one stored
+         * unit, converted for display — is WHY. */
+        el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text:
+            'Display only. Switching never changes anything you have recorded.' }),
+          helpDot('Weights are stored the same way either way, so switching back and forth as '
+            + 'often as you like changes nothing but the label.',
+          { label: 'Why switching is safe' })),
       ),
 
       /* ⚠️ MORE DETAILS — OFF BY DEFAULT, and the default is the point.
@@ -1984,10 +2016,19 @@ export async function SettingsView() {
             text: 'On', onClick: (e) => setMoreDetails(true, e),
           }),
         ),
-        el('div', { class: 'field-help', text:
-          'Off shows your ranking — Beginner, Intermediate, Elite — and nothing else. '
-          + 'On also shows the percentile behind it. The rankings are worked out the same '
-          + 'way either way; this only decides how much of the working you see.' }),
+        /* 🚨 "THE RANKING IS THE SAME EITHER WAY" DOES NOT GO BEHIND THE ?, and
+         * that is the whole reason this switch is honest. It changes what the
+         * reader thinks the ranking IS — somebody who believes turning this off
+         * gives them a gentler level has been misled by a setting. What moved
+         * is the naming of the levels (the muscle map prints them) and the
+         * phrasing about seeing the working. */
+        el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text:
+            'Off shows your ranking and nothing else. On adds the percentile behind it — the '
+            + 'ranking is the same either way.' }),
+          helpDot('The rankings are Beginner through Elite, and they are worked out from the same '
+            + 'percentile whichever way this is set. It only decides how much of the working you '
+            + 'see.', { label: 'What more details actually changes' })),
       ),
 
       /* ⚠️ REST TIMER — OFF BY DEFAULT, and the default is Tim's own read of
@@ -2014,9 +2055,12 @@ export async function SettingsView() {
             text: 'On', onClick: (e) => setRestTimer(true, e),
           }),
         ),
+        // ⚠️ RE-SHAPED, NOT HIDDEN. Every word here is what the switch DOES,
+        // and a person deciding whether to turn something on must not have to
+        // open a ? to find out what it turns on. One 22-word sentence became two.
         el('div', { class: 'field-help', text:
-          'On shows a rest clock at the bottom of the workout screen. It starts when you '
-          + 'log a set, and you can give it a target to count against.' }),
+          'On shows a rest clock at the bottom of the workout screen. It starts when you log a '
+          + 'set. You can give it a target to count against.' }),
       ),
 
       /* ⚠️ FINDABLE BY NAME — the opt-out for the directory added 2026-08-29.
@@ -2196,11 +2240,17 @@ function volDetail(m, weeks) {
   const shown = (sets) => fmtSets(sets / weeks);
 
   if (!m.contributors.length) {
+    /* ⚠️ THE ZERO IS THE FACT; "that is the finding, not a gap" IS WHY.
+     * A reader who has just tapped a muscle and been given nothing needs to
+     * know the app looked and found nothing — that is WHAT, and it is one
+     * sentence. The argument for why an empty answer is the point of the screen
+     * is exactly the kind of reasoning Rule 9 puts one tap away. */
     return el('div', { class: 'vol-detail' },
-      el('div', { class: 'field-help', text:
-        `Nothing in this window trained ${m.muscle}, directly or as part of another lift. `
-        + 'That is the finding rather than a gap in the app — a muscle with no work is what this '
-        + 'screen exists to make visible.' }),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          `Nothing in this window trained ${m.muscle}, directly or through another lift.` }),
+        helpDot('That is the finding rather than a gap in the app — a muscle with no work is what '
+          + 'this screen exists to make visible.', { label: 'Why this is not a missing number' })),
     );
   }
 
@@ -2382,8 +2432,11 @@ export async function renderVolumePane(host, top, opts = {}) {
         `${who} has not published a session in the last ${volDays} days. Try a longer window.`)
       : emptyState(
         'Nothing recorded in this window',
-        'Weekly sets per muscle is counted from workouts you have logged, so it fills in as you '
-        + 'train. It counts every set — including the ones you got through a compound, at half.',
+        // ⚠️ RE-SHAPED, NOT HIDDEN. `emptyState()` takes a plain string, so
+        // there is nowhere to hang a ? — and what this says is the UNIT and
+        // what it counts, which Rule 9 keeps on the screen anyway.
+        'Weekly sets per muscle, counted from the workouts you log. It fills in as you train. '
+        + 'Every set counts — the ones you got through a compound at half.',
         el('a', { class: 'btn primary', href: '#/start', text: 'Record a workout' }),
       ));
     return;
@@ -2461,8 +2514,7 @@ export async function renderVolumePane(host, top, opts = {}) {
     setChildren(legendHost, volumeLegend(m ? volumeShade(m.weeklySets).key : null));
     pickedWrap.classList.toggle('is-open', Boolean(m));
     hint.hidden = Boolean(m);
-    hint.textContent = 'Tap a muscle on the figure — or a row below it — to see the exercises '
-      + 'behind its number.';
+    hint.textContent = 'Tap a muscle, or a row below it, to see the exercises behind its number.';
     if (!m) return;
     setChildren(picked,
       el('div', { class: 'vol-picked-head' },
@@ -2496,9 +2548,17 @@ export async function renderVolumePane(host, top, opts = {}) {
          * over a busy account can be measuring a shorter stretch than it says.
          * Silence here would let this screen quietly claim to be the same
          * measurement as the one on their own phone. */
-        who ? el('div', { class: 'field-help', text:
-          `Counted from the sessions ${who} publishes — their most recent sixty. If they train a `
-          + 'lot, a long window here may reach further back than what they share.' }) : null,
+        /* ⚠️ WHAT IT IS COUNTED FROM STAYS; THE CONSEQUENCE FOR A BUSY ACCOUNT
+         * GOES BEHIND THE ? (Rule 9). "Their most recent sixty sessions" is
+         * what this number IS, and without it the reader thinks they are
+         * looking at the same figure that friend sees on their own phone. Why a
+         * long window can then measure a shorter stretch is the arithmetic. */
+        who ? el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text:
+            `Counted from the sessions ${who} publishes — their most recent sixty.` }),
+          helpDot(`If ${who} trains a lot, a long window here may reach further back than what `
+            + 'they share, so it can measure a shorter stretch than the chip says.',
+          { label: 'Why a long window can measure less' })) : null,
         /* ⚠️ ONE LINE ABOVE THE FIGURE, AND ONLY WHEN IT IS EARNED. The sentence
          * that used to sit here — why weekly sets is the metric — moved to the
          * notes at the bottom: every pixel above the drawing is a pixel off the
