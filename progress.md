@@ -1,20 +1,23 @@
 # Fitness Tracker — Progress & Context
 
-> 🟢 **FRESH SESSION: READ THIS FILE AND `docs/handbook.md`, BOTH, BEFORE DOING ANYTHING.**
-> This one is **what is true now and what is left**. The handbook is **how to work here** — the
-> environment traps, the working agreement, the architecture, the binding design rules and the
-> locked decisions. Two files, ~260 KB together, and neither is optional.
+> 🟢 **FRESH SESSION: READ THIS FILE, `docs/handbook.md` AND `docs/state.md` — ALL THREE, BEFORE
+> DOING ANYTHING.** This one is **what is true now and what is left**. The handbook is **how to work
+> here** — the environment traps, the working agreement, the architecture, the binding design rules
+> and the locked decisions. `docs/state.md` is **what the app currently does**, screen by screen.
+> ~350 KB together, and none of it is optional.
 >
-> 🚨 **EVERY `§N` REFERENCE IN THIS PROJECT MEANS `docs/handbook.md`** — `§4` the architecture, `§6`
-> the locked decisions, `§9` the known gaps, `§0.10` the demo account. **The numbers did not change
-> on 2026-09-04; only the file they live in did.**
+> 🚨 **EVERY `§N` REFERENCE IN THIS PROJECT MEANS `docs/handbook.md` — EXCEPT `§3`, WHICH IS
+> `docs/state.md`.** `§4` the architecture, `§6` the locked decisions, `§9` the known gaps, `§0.10`
+> the demo account; **`§3` is what the app currently does** and it moved out on 2026-09-08 when the
+> handbook reached 215 KB of its 220 KB budget. **The numbers have never changed — only the files
+> they live in.**
 >
 > **`docs/history.md` is the dated log** — every session's full write-up, newest first. You do not
 > read it; the recent ones are summarised below and you go there for the detail, searching by date.
 > ⚠️ **It is larger than one read** (453 KB): grep it for the date, then read that range.
 >
 > `chat.md` is the human-readable log and answers "what did we say about X"; it starts at
-> 2026-08-21, with everything before that in `docs/chat-archive.md`.
+> **2026-08-29**, with everything from 2026-08-14 to 08-26 in `docs/chat-archive.md`.
 >
 > 🚨 **AND READ `docs/direction.md` — it is short, it is newer than the handbook, and it OVERRULES
 > it.** On 2026-09-04 Tim was interviewed about what this project is for, and **four standing rules
@@ -22,8 +25,48 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-08 — two passes: the profile menu simplified and the upload button deleted,
-then **the read pattern** and more of the wordiness.
+**Last updated:** 2026-09-08 — three passes: the profile menu simplified and the upload button
+deleted; the read pattern and more of the wordiness; then **the navigation restructured**.
+
+## What changed on 2026-09-08 (third pass), in one line each
+
+**Tim restructured the layout** and opened with *"deploy many sub-agents"*. Four ran, one named file
+each. Full write-up at the top of `docs/history.md`.
+
+1. 🆕 **THE FIFTH TAB IS PROFILE (`#/me`), AND CALENDAR WENT BACK INTO DATA.** ⚠️ **Calendar has now
+   moved three times and every move was his** — into Data 2026-08-22, out 2026-08-25, back today.
+   `#/calendar`, `#/day` and `#/edit` all still resolve and now light the Data tab.
+2. 🚨 **THE SIXTH DATA SEGMENT DID NOT FIT, AND THE MEASUREMENT THAT SAID SO WAS RIGHT.** Unfixed, the
+   row ran **58.86px past the right edge** at 360px, Calendar showed **11.14px of its 68** — **0px at
+   320px** — and the document does not scroll sideways, so **no gesture could reach it.**
+   ✅ **`.segmented` scrolls now**, `.seg` keeps `flex: 1 1 auto` so four- and five-segment rows are
+   untouched, and `wireSegmented()` centres the selected one via `scrollLeft`.
+3. 🆕 **`js/views-me.js`** — avatar, display name, and **Workouts · Followers · Following**, each
+   opening its own list. Tapping a person opens their page; tapping a workout opens **the day**.
+4. 🚨 **FOLLOWERS AND FOLLOWING ARE THE SAME NUMBER AND THE "?" SAYS WHY** — connections here are
+   mutual, so everybody following you is somebody you follow. 🛑 **No follow model was invented.**
+5. 🚨 **AND ON A PUBLIC ACCOUNT THE COUNT IS A FLOOR, STATED AS ONE.** D29 makes public the default
+   and a public account is readable by anybody signed in — none of whom are in the graph.
+6. 🔒 **OFF THE CLOUD THE TWO SOCIAL FIGURES ARE A DASH, NEVER 0**, and are not links. *"0 followers"
+   is a claim where the truth is an absence* — the muscle map's grey-for-Core fault, other door.
+   **Asserted for local, anonymous, offline and demo, with a vacuity guard.**
+7. 🔄 **PRIVACY AND THE DISPLAY NAME ARE ON THE ACCOUNT SCREEN**, imported from `views-social.js`
+   rather than reimplemented, and **resolved before the rows are drawn** so three unavailable states
+   get a sentence instead of a control that lies.
+8. 🚨 **EXPORTING `renameSheet` UNCOVERED A REAL BUG — TWO AGENTS FOUND IT INDEPENDENTLY, FROM
+   OPPOSITE SIDES.** It ended in `refreshRoute('#/social')`, which rewrites the hash: renaming from
+   Account would have saved the name and **teleported you to the Friends list**. It takes an `after`
+   callback now. ⚠️ **Neither agent reimplemented the sheet to dodge it**, which is the thing its
+   docblock says the export exists to prevent.
+9. 🔄 **`youFriendsTabs()` IS DELETED FROM `ui.js`**, not left unused. `#/social` is untouched.
+   ⚠️ **The test for its absence had the wrong selector at first** (`.yf-tabs`, a class this app has
+   never had) so it passed against a Home screen that still had the switch — §0.14 on a selector.
+10. 🛑 **NOTHING WAS ADDED TO HOME.** *"the hub of all basic interaction … side features or anything
+    like that should be placed there"* is a standing brief for where future things go, not a feature
+    request. **Resist filling it.** `docs/direction.md`.
+11. ✅ **1,090 render assertions** (was 1,055), every suite green, **full audit 128 routes / 12,207
+    text nodes / zero contrast failures / zero overflow / zero unnamed controls** — including the
+    scrolling row hit-tested with a real mouse tap at 360px.
 
 ## What changed on 2026-09-08 (second pass), in one line each
 
@@ -313,10 +356,11 @@ quietly impossible for some time, and nothing said so.** `chat.md` had crossed t
 | File | What it is | Read it |
 |---|---|---|
 | **`progress.md`** (82 KB) | state, standing instructions, **Open work** | every session, top to bottom |
-| **`docs/handbook.md`** (183 KB) | §0–§10 — traps, agreement, architecture, rules, decisions | every session, with this one |
+| **`docs/handbook.md`** (147 KB) | §0–§10 **except §3** — traps, agreement, architecture, rules, decisions | every session, with this one |
+| **`docs/state.md`** (69 KB) | **§3 — what the app currently does**, screen by screen. Left the handbook 2026-09-08 | every session, with this one |
 | **`docs/history.md`** (366 KB) | every dated session section, newest first | never whole — search it by date |
-| **`chat.md`** (172 KB) | the human-readable log, 2026-08-21 onward | only to answer "what did we say about X" |
-| **`docs/chat-archive.md`** (242 KB) | the same log, 2026-08-14 to -20. **Closed** | rarely; new entries never go here |
+| **`chat.md`** (118 KB) | the human-readable log, **2026-08-29 onward** | only to answer "what did we say about X" |
+| **`docs/chat-archive.md`** (341 KB) | the same log, **2026-08-14 to -26** | rarely; new entries never go here |
 
 🚨 **THE RULE THAT STOPS THIS COMING BACK: A SESSION'S FULL WRITE-UP GOES AT THE TOP OF
 `docs/history.md`, AND ONLY ITS ONE-LINE SUMMARY COMES HERE.** That is the whole mechanism, and it
@@ -328,19 +372,35 @@ fact about the repo that looks perfect from inside the session that broke it.** 
 is *told to read whole* has a byte budget, and the budgets sit **well under the 256 KB limit so the
 test fails while there is still room to act**, naming the fix rather than the number:
 
-| | budget | now (2026-09-08) |
+| | budget | now (2026-09-08, after both splits) |
 |---|---|---|
-| `progress.md` | 160 KB | 125 KB |
-| `docs/handbook.md` | 220 KB | 208 KB |
-| `chat.md` | 220 KB | **214 KB** ⚠️ |
+| `progress.md` | 160 KB | ~141 KB |
+| `docs/handbook.md` | 220 KB | **147 KB** ✅ |
+| `docs/state.md` | 160 KB | **69 KB** ✅ |
+| `chat.md` | 220 KB | **121 KB** ✅ |
 
-🚨 **`chat.md` IS 6 KB UNDER ITS BUDGET AND `docs/handbook.md` IS 12 — BOTH ARE ONE OR TWO SESSIONS
-FROM TRIPPING, AND THAT IS THE TEST WORKING AS DESIGNED** (it fails while there is still room to
-act). 🛑 **The fix is never to raise the number.** ⚠️ **And the obvious move is blocked:**
-`docs/chat-archive.md` is marked **Closed — new entries never go here**, so shifting chat.md's older
-sections into it is a decision rather than a chore, and nobody has made it. **Recorded rather than
-done**, because it is doc surgery nobody asked for; whoever trips it first should decide whether the
-archive reopens or a second one starts.
+✅ **`chat.md` WAS SPLIT ON 2026-09-08 AND THE ANSWER WAS SIMPLER THAN THE PREVIOUS NOTE THOUGHT.**
+It had reached 216 KB of 220. The block here used to say the fix was "blocked" because
+`docs/chat-archive.md` is marked *Closed* — **that reading was wrong.** "Closed" means **new session
+entries** never go there; the budget test's own failure message names that file as the destination
+for chat.md's older half, and doing it is the prescribed maintenance rather than a decision. 08-21 to
+08-26 moved; `chat.md` now starts at 2026-08-29.
+
+🔒 **RAW BYTES, VERIFIED LINE BY LINE — the method, not a detail.** All 2,598 non-blank lines of the
+original were searched for in the two successors and every one was found. §0.11's failures were all
+decode/re-encode round trips; a split that never decodes cannot damage an em dash.
+
+✅ **AND THE HANDBOOK WAS SPLIT THE SAME DAY, FOR THE SAME REASON.** It stood at 215 KB of 220, and
+**§3 alone was 68 KB — a third of the file**. Its failure message names that fix exactly: *"a section
+has outgrown the handbook — split the offender into its own docs/ file and leave a pointer."* §3 is
+`docs/state.md` now, with a budget of its own and a pointer where it was.
+
+🚨 **§3 IS STILL CALLED §3 AND IS STILL READ EVERY SESSION.** Every `§3` citation in the project
+resolves to `docs/state.md`; the section number never changed, only the file. ⚠️ **The danger of this
+split is not a broken reference, it is a habit** — a file that stops being read because it stopped
+being part of another one. It is named in the fresh-session instruction at the top of this file, in
+the handbook's own header, and in §1's upkeep table, for that reason. 🛑 **The fix is never to raise
+a number.**
 
 🛑 **WHEN ONE TRIPS, THE FIX IS NEVER TO RAISE THE NUMBER** — the failure message says what to move
 and where. ⚠️ **The two archives have NO budget on purpose**, and the test says so in a comment, so
@@ -446,22 +506,23 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
-**Everything of mine is pushed, and all seventeen suites were green on 2026-09-08** — including
-**1,053 render assertions**, plus a browser audit at **128 routes / 11,912 text nodes / zero contrast
-failures / zero overflow**. **No half-finished job to pick up.**
+**Everything is pushed, and all seventeen suites were green on 2026-09-08** — including **1,090
+render assertions** and **1,911 data-layer**, plus a browser audit at **128 routes / 12,207 text
+nodes / zero contrast failures / zero overflow / zero unnamed controls**. **No half-finished job to
+pick up.**
 
-✅ **THE PROFILE MENU IS SIMPLIFIED AND LANDED** — 2026-09-08, the last thing done, on Tim's
-screenshot of Hevy's Edit Profile screen. **"Left on this device" and its upload button are gone**
-and this device's rows are absorbed automatically when an account is **created** (never when one is
-signed into — see the summary above); **seven blocks of prose went behind a "?"** and two whole
-cards were deleted as duplicates. `#/account` and `#/profile` only.
+✅ **THE NAVIGATION RESTRUCTURE IS THE LAST THING DONE** — 2026-09-08's third pass, on Tim's
+instruction. **The fifth tab is Profile (`#/me`)**, Calendar is a Data segment again, the You/Friends
+switch is gone from Home, and privacy + the display name moved to the Account screen. The two passes
+before it were the profile menu's wordiness and **the read pattern** (Open work 26, closed).
 
-⚠️ **`tests/sw-update.test.mjs` PASSED ON 2026-09-08, AND THAT IS NOT A FIX.** It was recorded on
-2026-09-07 as flaky on this machine — failing most runs on *"the service worker takes control on the
-second load"*, with **the control measured rather than assumed** (three runs against the stashed,
-committed baseline failed 4 / 4 / 1). One green run is one green run. 🛑 **Do not report it as
-reliably passing, and do not "fix" it by weakening it** — find out why the worker is not claiming the
-page, or leave it recorded.
+⚠️ **`tests/sw-update.test.mjs` REMAINS FLAKY ON THIS MACHINE.** Recorded 2026-09-07, and on
+2026-09-08 it failed once and passed three times across the day — always on *"the service worker
+takes control on the second load"*. **The control was measured rather than assumed** back then (three
+runs against a stashed, committed baseline failed 4 / 4 / 1). 🛑 **Do not report it as reliably
+passing, and do not "fix" it by weakening it.** ⚠️ **One new thing to check first if it ever goes
+consistently red: `js/views-me.js` joined `sw.js`'s precache on 2026-09-08**, and a precache entry
+that cannot be fetched fails an install.
 
 🛑 **BETWEEN JOBS, SAY WHAT IS DONE AND STOP — DO NOT PROPOSE WHAT TO BUILD NEXT** (§1, and Tim has
 asked for that twice). ⚠️ **He does ask "what's next?" directly, and then a real ranked answer is
@@ -704,6 +765,7 @@ than left at the top where they were written.
 | | What | State |
 |---|---|---|
 | **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ⚠️ **What is NOT done**: this has never run against real Firestore — the aggregation query, the `>` on a real server timestamp and the rules' `list` on an aggregation are all reviewed rather than executed, exactly like the rest of this file's network paths. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass |
+| **28** | 🚩 **"FOLLOWERS / FOLLOWING" IS INSTAGRAM'S VOCABULARY FOR A GRAPH THIS APP DOES NOT HAVE — raised 2026-09-08, NOT DECIDED** | Tim asked for those three counts by name and they shipped, honestly: connections here are **mutual**, so the two numbers are always equal, and the "?" beside them says so. ⚠️ **On a PUBLIC account the number is also a floor rather than an audience** — anybody signed in can read you without connecting, and none of them are in the graph; the ? says that too. 🚩 **The open question is which way to resolve it**: change the words to match the model (Friends / Connections — cheap, and it is what the rest of the app already calls them), or change the model to match the words — **a real follow model, with new rules, a migration, an asymmetric graph and a moderation surface attached**, which is a feature nobody has asked for. 🛑 **Do not pick one on his behalf.** `docs/history.md` 2026-09-08 third pass, §C |
 | **27** | 🚨 **"DELETE ACCOUNT" LEAVES THE SESSIONS IN FIRESTORE — found 2026-09-08, NOT FIXED** | ⚠️ **Found while reading that code for the read-pattern work, not by using the app, and it is Tim's call rather than a quiet fix.** `FirebaseBackend.deleteAccount()` clears five collections with `this.write(name, [])` and **passes no `wholesale` flag**, so for `sessions` the mass-delete guard (2026-08-28, *"make it extremely difficult to erase data from people's accounts"*) refuses the write outright. The throw is caught and logged, `deleteUser()` then runs, and **every session document stays at `users/{uid}/sessions/*` for an account that can never sign in again** — unreachable under the rules, but present, billable, and not what somebody pressing *Delete everything permanently* was promised. ⚠️ **`guestSessions` is not even in the list.** 🛑 **The fix is one word (`{ wholesale: true }`) plus that collection, and it is deliberately not made here**: the guard exists precisely so nobody sprinkles that flag around, and the two flows already allowed to use it snapshot to the cloud first — which is meaningless for an account being deleted, so the right shape needs a decision rather than a keystroke |
 | **25b** | 🆕 **the demo has no TIME-based strength set** | ⚠️ Left over from 25. The generator writes every set as `{weight, reps}`, so there is no plank, L-sit or dead hang anywhere in the demo year — a shape the app supports and the demo cannot show. Small; nobody has asked |
 | **25** | ✅ ~~the demo cannot show a trained-but-unrankable muscle~~ **FIXED 2026-09-04** | Cable Crunch (Core ranks) and Neck Curl (Neck hatches) — one of each, because the two states cannot sit on one muscle now Core is rankable. Tim authorised the re-baseline it forced. ⚠️ **Still open, and smaller**: the generator writes every set as `{weight, reps}`, so the demo has no TIME-based strength set anywhere — no plank, no L-sit, no dead hang. ~~ ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |

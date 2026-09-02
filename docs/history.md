@@ -17,7 +17,174 @@
 
 ---
 
-## 2026-09-08 (second pass) — 💷 THE READ PATTERN, AND THE "?" MOVED TO WHERE IT POINTS
+## 2026-09-08 (third pass) — THE NAVIGATION RESTRUCTURED: A PROFILE TAB, AND HOME LOSES ITS SWITCH
+
+Tim, opening with *"I'm giving you some more assignments so you really should deploy many
+sub-agents"*:
+
+> *"I want to change some things with the layout of the cite, especially the home page. Any details
+> that don't go in any of the other main sections (data, workouts, etc) go into the home page, so we
+> want to make it really nice. It's going to be the hub of all basic interaction. Side features or
+> anything like that should be placed there.*
+>
+> *First, I want to get rid of the "You" and "Friends" tab in the home page. To do this, move the
+> privacy changes and display name into the account menu. Additionally, I think we should move the
+> calendar section back to being a tab in the data section, and add replace it with a profile
+> section. For now, this section will only show the user's profile picture and their username, as
+> well as the number of workouts, followers, and following at the top…*
+>
+> *To clarify this profile section on the main sections is different than the profile section when
+> you click on your profile icon in the top left, because that section is mostly used to make
+> setting adjustments and do logistics, where this new section is broad information and view of your
+> account and your own profile."*
+
+**Four agents, one named file each**, plus the router, the new screen, the stylesheet and the tests
+here. Nobody but this session went near `css/app.css` or `tests/`.
+
+### A. THE TAB BAR: CALENDAR OUT, PROFILE IN
+
+⚠️ **CALENDAR HAS NOW MOVED THREE TIMES AND EVERY MOVE WAS HIS** — into Data on 2026-08-22 (both are
+the past), out to its own tab on 2026-08-25 (*"I want to remove the Goals section and replace it with
+the Calendar details"*), back into Data today. The 2026-08-25 note said *"that argument was about what
+the two screens ARE; his is about how often he opens them."* What changed now is neither: **a Profile
+section wants the slot more.**
+
+🔒 **THE PROPERTY THE OLD TEST GUARDED SURVIVED THE REVERSAL, AND THAT IS THE POINT.** Three
+assertions in `data-layer.test.mjs` and three in `render.test.mjs` encoded the *previous*
+instruction. They were rewritten to today's layout **with the same three-part discipline**: a tab bar
+being redesigned must not 404 a URL, and a route with no way in is deleted in every sense that
+matters. So `#/calendar`, `#/day` and `#/edit` all still resolve, the Data tab now claims those
+routes so nothing goes dark while you are inside it, and there is an assertion that the calendar is a
+segment of **your own** Data screen.
+
+⚠️ **THAT LAST ONE HAD TO BE SCOPED TO `DATA_TABS` BY NAME.** `FRIEND_TABS` has carried a Calendar
+entry since 2026-09-05, so a bare search of the file for one would have passed while your own Data
+screen had no calendar at all — a vacuous assertion dressed as a guarantee.
+
+### B. 🚨 THE SIXTH SEGMENT DID NOT FIT, AND THE MEASUREMENT THAT SAID SO WAS RIGHT
+
+`render.test.mjs` has carried this since Volume shipped: at 360px the row is 293px against labels of
+63+60+51+39+68 = 281px, **"a sixth does not fit in the 12px left over."** An agent re-measured it
+over CDP before changing anything and found the unfixed state was worse than clipping: the bar ran
+**58.86px past the right edge**, Calendar showed **11.14px of its 68** at 360px and **0px at 320px**,
+and the document does not scroll sideways — **so there was no gesture that could reach it.**
+
+**`.segmented` scrolls now.** ⚠️ **`.seg` keeps `flex: 1 1 auto`, which is what makes this cost
+nothing where it is not needed** — with room to spare the segments still grow to fill the row exactly
+as they did with five, and only content wider than the box scrolls. Every four- and five-segment
+control in the app is untouched. The scrollbar is hidden because this is a tab bar rather than a
+document; the partly-visible last segment is the affordance.
+
+🆕 **AND `wireSegmented()` CENTRES THE SELECTED ONE**, or opening Data on Calendar would show five
+tabs with none of them lit and the chosen one off-screen — a screen that looks broken rather than
+scrolled. ⚠️ **`bar.scrollLeft`, not `scrollIntoView()`**: the latter walks every scrollable ancestor
+and would drag the pane about, which on a screen whose content is a full-height body map is very
+visible. ⚠️ **And `offsetLeft` for the pill became load-bearing rather than incidental** — it is
+measured against the bar, so the indicator stays on its segment as the row moves; a viewport-relative
+measurement would have drifted the moment anybody flicked it.
+
+🛑 **WHAT WAS NOT DONE, and the reasoning is worth keeping**: shortening the labels needs ~73px of
+text cut — roughly *Body / Sets / Line / Bars / Study / Days* — which renames five labels Tim did not
+ask about to make room for a sixth. And `.segmented.sub` at 12.5px still wants ~342px of a 286px
+slot, so it does not fit either and it would demote the app's primary control.
+
+### C. 🆕 THE PROFILE TAB — `js/views-me.js`, and the honest part is the counts
+
+Avatar, display name, and three figures: **Workouts · Followers · Following**, each opening its own
+list. Followers and following open the people you are connected to; tapping one opens their page.
+Workouts opens your sessions newest-first, and each row opens **the day** rather than an edit form.
+
+🚨 **"FOLLOWERS" AND "FOLLOWING" ARE THE SAME NUMBER, AND THE SCREEN SAYS WHY.** This app has no
+follow model — a connection is **mutual**, which was settled as an open question long before this
+screen existed. So everybody following you is somebody you follow. Two identical counts read as a bug
+until somebody says that, which is exactly what a "?" is for. 🛑 **No follow model was invented**;
+that is a different feature and nobody asked for one.
+
+🚨 **AND THE HARDER HALF: ON A PUBLIC ACCOUNT, "FOLLOWERS" IS NOT KNOWABLE.** D29 makes an account
+public by default, and a public account is readable by anybody signed in who finds it — none of whom
+are in the graph. So the number is **the people you are connected to**: a complete answer on a
+private account and a floor on a public one, and the ? says so in those words. A follower count that
+undercounts by an unbounded amount without saying so is not a number this app prints.
+
+🔒 **OFF THE CLOUD THE TWO SOCIAL FIGURES ARE A DASH AND ARE NOT LINKS.** Local, anonymous, offline
+and the demo all have no graph to count, and **"0 followers" would be a claim where the truth is an
+absence** — the same fault the muscle map's grey-for-Core had, arriving through a different door.
+Workouts still counts, because that one is on this device. **Asserted for all four states, with a
+vacuity guard** that they become numbers again when the cloud is back.
+
+### D. WHAT MOVED, AND THE BUG THE MOVE UNCOVERED
+
+**Privacy and the display name are on the Account screen**, imported rather than reimplemented — a
+second copy of a visibility picker is a second place for the words about who can see somebody's
+training to drift. ⚠️ **Both are resolved from `social.state()` BEFORE the rows are drawn**, so the
+three unavailable states get one honest sentence instead of a control that lies. Two details in that
+copy are deliberate: **no sentence claims nothing is published** (an anonymous account is a real
+cloud uid and `republish()` does not refuse it), and **the offline sentence names no setting**,
+because the stored value is only the last one this device saw.
+
+🚨 **AND EXPORTING `renameSheet` UNCOVERED A REAL BUG, CAUGHT BEFORE IT SHIPPED — BY TWO AGENTS
+INDEPENDENTLY, FROM OPPOSITE SIDES.** It ended in `views-social.js`'s private `refresh()`, which is
+`refreshRoute('#/social')`, and **`refreshRoute` rewrites the hash when it differs.** Renaming
+yourself from the Account screen would have saved the name and then **teleported you to the Friends
+list**, with a back arrow pointing at a screen you never opened. Neither agent fixed it — both
+correctly reported it as a change to a shared function in a file they did not own — and it took an
+`after` callback here. ⚠️ **Neither reimplemented the sheet to dodge it either**, which is the thing
+its own docblock says the export exists to prevent.
+
+**`youFriendsTabs()` is deleted from `ui.js`**, not left unused: a control nobody renders is a second
+answer to a question the app has stopped asking. `#/social` is untouched and still resolves.
+
+⚠️ **AND THE TEST FOR ITS ABSENCE HAD THE WRONG SELECTOR AT FIRST** — it looked for `.yf-tabs`, a
+class this app has never had, so it passed against a Home screen that still carried the switch.
+§0.14's trap on a selector rather than on a mutation. It reads `.segmented` now, which is what the
+control actually was.
+
+### E. Measured
+
+- ✅ **1,090 render assertions** (was 1,055), **1,911 data-layer**, every suite green.
+- ✅ **Full browser audit: 128 routes, 12,207 text nodes, zero below 4.5:1, zero horizontal overflow,
+  zero unnamed controls** — including the scrolling segment row, hit-tested with a real mouse tap at
+  360px: a 290px window over a 363px row, the pill lands on Calendar at 293px, and re-entering
+  `#/graphs` arrives already scrolled to it. **The document never scrolls sideways at any width.**
+- ⚠️ **`tests/sw-update.test.mjs` failed once on the run before last and passed twice after**, on the
+  assertion `progress.md` already records as flaky on this machine. Not a regression — but a
+  new module joined `sw.js`'s precache today, so if it starts failing consistently, look there first.
+
+### F. 📄 THE NOTES WERE SPLIT TWICE, AND BOTH TIMES A TEST NAMED THE FIX
+
+Tim closed the message with *"prepare md files for chat reset"*, and two of the four byte budgets
+were about to fire — which is the budget test working exactly as designed: **it fails while there is
+still room to act.**
+
+- **`chat.md` was 216 KB of 220.** 2026-08-21 to 08-26 moved into `docs/chat-archive.md`; it starts
+  at 2026-08-29 now. 🚨 **A NOTE IN `progress.md` HAD CALLED THIS FIX "BLOCKED" AND THAT READING WAS
+  WRONG.** The archive is marked *Closed*, which means **new session entries** never go there — and
+  the budget test's own failure message names that file as the destination for chat.md's older half.
+  Prescribed maintenance, not a decision. The stale note is corrected in place.
+- **`docs/handbook.md` was 215 KB of 220, and §3 alone was 68 KB of it** — a third of the file. Its
+  failure message says *"a section has outgrown the handbook — split the offender into its own docs/
+  file and leave a pointer."* **§3 is `docs/state.md` now**, with a budget of its own (160 KB, at 69)
+  and a pointer where it was. 🚨 **It is still called §3, every `§3` citation still resolves, and it
+  is still read at the start of every session** — named in three places for that reason, because the
+  risk here is not a broken reference but a file that stops being read once it stops being part of
+  another one.
+
+🔒 **BOTH SPLITS WERE RAW-BYTE OPERATIONS, VERIFIED LINE BY LINE — 2,598 lines and 1,787 lines, zero
+missing.** Nothing decoded, re-encoded or reflowed. §0.11's four failures were all decode/re-encode
+round trips, and a split that never decodes cannot damage an em dash — which is why this is the one
+kind of bulk edit a script is the *right* tool for, and the verification is what makes it sayable.
+
+### G. What was NOT built, and one thing to raise
+
+🛑 **NOTHING WAS ADDED TO HOME.** He described what it is *for* — *"the hub of all basic interaction …
+side features or anything like that should be placed there"* — which is a standing brief for where
+future things go, not a feature request. Home is the feed with the switch removed. **Resist filling
+it.** Recorded in `docs/direction.md`.
+
+🚩 **AND ONE THING TO PUT TO HIM.** The three counts are honest, but "Followers / Following" is
+Instagram's vocabulary for an asymmetric graph and this one is symmetric. Either the words change to
+match the model, or the model changes to match the words — the second is a real feature with rules,
+migration and a moderation surface attached. **Nothing was decided; it is on the Open work list.**
 
 Tim asked *"what do you think is next?"* — a direct question, so a ranked answer was owed. He took
 **1 and 3** of the three offered: the read pattern, and more of the wordiness. (**2 was asking about

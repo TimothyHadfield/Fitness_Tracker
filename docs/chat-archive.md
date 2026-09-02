@@ -1,14 +1,22 @@
-# Conversation Log — archive, 2026-08-14 to 2026-08-20
+# Conversation Log — archive, 2026-08-14 to 2026-08-26
 
-> **The older half of `chat.md`, moved here on 2026-09-04 and not otherwise touched.** `chat.md` had
-> reached 424 KB, past the point where it can be opened in one read; it now holds 2026-08-21 onward
-> and this file holds everything before it. **Oldest first in both, as it always was.**
+> **The older half of `chat.md`, in two moves, neither of which touched a word of it.** 2026-08-14
+> to 08-20 came here on **2026-09-04**, when `chat.md` hit 424 KB and stopped being openable in one
+> read. 2026-08-21 to 08-26 came here on **2026-09-08**, when it reached 216 KB of its 220 KB budget.
+> `chat.md` now holds **2026-08-29 onward**. **Oldest first in both, as it always was.**
+>
+> ⚠️ **BOTH MOVES WERE RAW-BYTE SPLITS, VERIFIED LINE BY LINE.** The second checked all 2,598
+> non-blank lines of the original against the two successors and found every one. Nothing was
+> decoded, re-encoded or reflowed — which is the whole method, because §0.11's failures were all
+> decode/re-encode round trips.
 >
 > **You do not need either file to work.** `progress.md` is the catch-up file and carries everything
 > operative, with `docs/handbook.md` beside it. Come here only to answer *"what did we actually say
 > about X"*, or to recover reasoning that never made it into a decision.
 >
-> ⚠️ **New entries never come here.** They go at the bottom of `chat.md`. This file is closed.
+> ⚠️ **New entries never come here.** They go at the bottom of `chat.md`. What DOES come here is
+> `chat.md`'s older half when its budget test fires — that is the fix the test names, and it has now
+> been done twice. **This file has no budget of its own, on purpose**: it is a grep-then-read file.
 
 ---
 
@@ -3989,4 +3997,1534 @@ accent number on one cell in the month.
 **Four reviews still open:** UX / human behaviour, competitive, edge cases / data integrity, and the
 live social round trip — still the most valuable, because it is the only one that turns a large
 built feature from reviewed code into verified behaviour.
+
+## 2026-08-21 — "make it really good on the iPhone": the first phone-shaped look
+
+Tim opened the phone work and asked for an in-depth look before he starts judging it himself, with
+formatting, design and usability emphasised. The 2026-08-17 deferral is over.
+
+A survey, not a build. Driven over CDP at **393×852 and 375×667**, `mobile: true`, touch emulation,
+demo account, scratch copy with the config blanked and then pointed at a project that does not exist.
+Nothing was fixed.
+
+### The one that blocks the rest
+
+**`#/settings` crashes in the demo account** — `impl.currentUser is not a function`. `auth.state()`
+branches on `impl === LocalBackend`, and `MemoryBackend` is neither that nor a remote impl, so it
+falls into the cloud branch and calls a method it has never had. Reproduced with the config blanked
+and with it present; `#/account`, `#/profile`, `#/social` and `#/goals` are all fine. The demo is the
+instrument for looking at every other screen, so a crash inside it is first in the queue.
+
+### The structural one
+
+**Nothing in the app reads `window.visualViewport`.** `#app` is `100dvh` under `overflow: hidden`,
+and the iOS keyboard does not shrink that — it covers it. Measured on a 393×852 iPhone with a 336px
+keyboard: the visible area ends at **y = 516**, and the session runner's **Next exercise** sits at
+789–852. Every *Save changes* and every *Done* is in the same place. The picker is the sharpest case
+— 16 filter chips take 142px, and with the keyboard up **3 of 272 exercises are visible**, in a sheet
+that auto-focuses its own search box.
+
+One fix, once, in the shell — not per screen.
+
+### The design one
+
+**View and edit are the same screen, and the edit form wins.** Opening a programme lands in the
+system EDITOR: name field and notes pinned above (184px), *Save changes* and *Delete system* pinned
+below (119px), a 445px pane between them — and **the first workout is 468px down it**. The workouts
+you opened the programme to reach are more than a screenful below the fold, behind the rating and
+~350 words of caveat. The workout screen repeats it: *Add exercise* ~500px down, last row sliced by
+the bottom bar. And a full-width **Delete** sits in the thumb zone of a screen you came to read.
+
+### Smaller, measured
+
+- **"Bar Chart" is clipped** in the Data mode switch (65 vs 62), and with no divider between the two
+  unselected segments it reads as *"Graph | Bar Chart Muscles"* — two options where there are three.
+- **The calendar cannot land on the current month.** It asks for 4363 and the browser clamps to
+  4076, because the current month is the last section and nothing sits below it to scroll against.
+  287px short, every visit. The arithmetic is right; the scroller has no room. Trailing space fixes
+  it, not new maths.
+- The system **Notes textarea clips its own text** (66 vs 90) with no cue under touch.
+- **A kg user cannot type a decimal.** Weight gets `inputmode="numeric"` — the digits-only iOS
+  keypad — while kg display carries one decimal and steps by 2.5.
+- **Two `:hover` rules stick after a tap on iOS.** `.body-region:hover { opacity: .82 }` is the bad
+  one: a fade left on a tapped muscle is exactly this app's own encoding for *less sure*.
+- The **demo bar takes no `safe-area-inset-top`** — it is prepended above the one element that pads.
+- Explore's badge takes ~40% of each row and cuts every description to ~28 characters over 5–6 lines.
+- Goals opens on two paragraphs of prose that fill a 667px screen before any number.
+- The graph's y-axis carries one decimal — 279.9, 248.1. False precision on a barbell.
+
+### Reasoned, not measured — and marked that way
+
+`navigator.vibrate` (the app's only haptic) does nothing on iOS. No `-webkit-touch-callout` on the
+press-and-hold steppers. The picker focuses its search inside a `setTimeout`, which breaks the
+gesture chain and probably shows a caret with no keyboard. The runner's `<input type="date">` is
+styled with a dashed underline iOS will not honour. **None of these were seen happening**, and a
+desktop engine at phone metrics cannot show them.
+
+### What was already right
+
+`viewport-fit=cover` plus the apple meta tags, transparent tap highlight, `touch-action:
+manipulation`, `overscroll-behavior: none`, 16px on every control so iOS cannot zoom on focus,
+`--safe-b` on the navbar and sheets, and the 44px hit areas from yesterday's audit. The session
+runner reads well at both widths.
+
+---
+
+## 2026-08-21, second pass — the phone fixes
+
+Tim asked whether I knew what to do or needed help. Answer was: nine of eleven I could just do, one
+needed a phone in his hand afterwards, and one was his call. He took the call.
+
+### His decision: reading is the screen, editing is behind the pencil
+
+Offered three shapes for the system screen and he picked the recommended one. It applies to workouts
+as well, so two screens where there was one:
+
+```
+#/system/<id>        the programme — its workouts first, then notes, then how it rates
+#/system/<id>/edit   name, notes, Save, Delete
+#/workout/<id>       what the workout is, and START it
+#/workout/<id>/edit  the builder
+```
+
+Measured either side of the change on the same phone and the same demo account: **the first workout
+inside a programme moved from 468px down a 445px pane to 38px down a 748px one.**
+
+The workout screen gained something it never had — **a way to start the workout**. `#/workout/<id>`
+was the builder, so Workouts → my programme → today was the one obvious path that could not begin a
+session. And **Delete came out of both pinned footers**; a destructive control under the thumb of
+somebody rearranging exercises is a slip, past the end of a list it is a journey.
+
+⚠️ **The first version of the new workout screen printed "Unknown exercise · undefined sets" six
+times.** `blocksOf()` yields `{ item, index }` wrappers and I mapped the wrapper straight into a row.
+Every assertion I had written for that screen passed over it — they checked that things were present,
+not what they said. **A screenshot caught it.** There is now a test that reads the rows.
+
+### The keyboard
+
+`--kb` from `visualViewport`, subtracted by `#app` and the sheet backdrop. One fix, every screen.
+Verified by driving the value by hand: the session footer moves 789–852 → **453–516**, exactly
+clearing a 336px keyboard, *Next exercise* reachable. The picker sheet ends at the keyboard edge with
+Done visible, and its 16 filter chips became one scrolling row instead of four wrapped ones —
+**3 → 7 exercises visible with the keyboard up.**
+
+⚠️ **Cannot be verified from here and is not claimed to be.** Headless Chrome has no software
+keyboard. Tim has to open the runner on his phone and tap the weight.
+
+### The rest
+
+- Settings crashed in the demo because `auth.state()` knew of two backends and there are three.
+  Fixed in `auth.state()`, not with a fourth `demo.active()` guard at the call site — `AccountView`
+  and `social.state()` already carry their own, which is exactly why this one went unnoticed. Returns
+  `mode: 'demo'`, not `'local'`: a demo session is not saving to this device either. Mutation-checked.
+- The mode switch says three options again — content-sized segments, a hairline between the
+  unselected pair, 44px tall. Painted 44 rather than the audit's pseudo-element trick, because an
+  `overflow: hidden` box clips a pseudo-element grown past its own height and it would have measured
+  36 while the rule claimed 44.
+- The calendar lands on the current month. It was never bad arithmetic — the current month is the
+  last section, so the scroll was **clamped**. It gets exactly the trailing room the shortfall needs.
+- Textareas grow to their content, app-wide, from the same mount points as `associateLabels()`.
+- kg can be typed — `inputmode="decimal"` on weight.
+- Both `:hover` rules behind `@media (hover: hover)`.
+- The demo bar pays the top safe-area inset, and the topbar stops paying it twice.
+- Axis precision follows the gridline gap, so 279.9 became 280 without a body-weight chart printing
+  the same number twice.
+- The rating prose has paragraph gaps and sits below the workout list. Nothing hidden or shortened —
+  on a phone those caveats are load-bearing, and a disclosure is how a caveat stops being read.
+
+2141 assertions green, plus the service-worker test.
+
+**Left:** the device confirmations, Explore's badge squeezing descriptions to ~28 characters, and
+Goals opening on prose instead of a number.
+
+### And the last two, same session
+
+**Explore's badge dropped to its own line** below 700px. Usable text width 200px → **338px of 393**,
+and the summaries went from five or six 28-character stubs to three real sentences. The 2×2 grid was
+right when the alternative was four cells beside a name; there is just no arrangement of four numbers
+that leaves a sentence room on a 393px screen while sitting next to it.
+
+**Goals leads with the goal.** The two paragraphs about the missing verdict sat third and filled an
+SE screen — a goal opening on an explanation of what the screen does *not* say. Moved down to sit
+with the other honest limit, the one about weights. Not hidden, not shortened, no disclosure. *What
+this asks of you* now starts 325px into a 445px pane on the smallest phone. Its closing line said
+"everything below is measured rather than judged" and now says "every number on this screen" — a
+caveat that survives a move but stops describing anything is worse than one never written.
+
+---
+
+## 2026-08-21, third pass — Google sign-in on the iPhone
+
+Tim, from a real device: *"when I try signing in with google, it opens a popup for a second, and then
+quickly closes it and nothing happens."* The first bug report this project has had from hardware, and
+it landed on the exact path §9 has called the riskiest untested one.
+
+### The root cause is not code
+
+The app is served from `timothyhadfield.github.io`; `authDomain` is `fitness-tracker-th.firebaseapp.com`.
+Different origins — and Firebase's own guidance says the auth handler needs cross-origin storage that
+**Safari 16.1+, Firefox 109+ and Chrome M115+ all block**. Safari 16.1 is from 2022, so that is every
+iPhone there is. All five of Firebase's remedies are outside this repo, and the project is already on
+the one they recommend (popup).
+
+The real fix is awkward and I have not started it: the auth handler has to live at the domain ROOT,
+and the app is a GitHub *project* page, so `/__/auth/handler` belongs to the `timothyhadfield.github.io`
+user-page repo — a different repository, shared with every other project on that domain, plus a
+`.nojekyll`. Worth doing only if Tim wants Google specifically; **email sign-in works on iOS today**.
+
+### Three code faults met at that symptom, and all three are fixed
+
+Only the first is about Google.
+
+1. **A hung promise left a dead button.** The popup's promise on iOS can simply never settle. No
+   throw means no catch, so `run()` awaited for ever and the button sat on "Opening…" with no toast
+   and no fallback. That is the literal "nothing happens". There is a patience timer now — and it
+   **races the UI, never the sign-in**, because a real sign-in behind two-factor takes minutes and
+   cancelling one on a timer would be worse than the bug. Mutation-checked.
+2. **Every failure was a 2.4-second toast**, which on a phone is indistinguishable from nothing. It
+   is a permanent line now, and it prints the Firebase error code — everything above is inference
+   about a device I cannot run, and the code is the only fact available.
+3. **The escape hatch could not work.** "Continue in this window instead" is `signInWithRedirect`,
+   the exact flow the cross-origin authDomain breaks. The route this file called "the one that always
+   works" was the one guaranteed to fail on his phone. It is offered only where it can finish now,
+   and `prefersRedirect()` no longer sends an installed iOS app to it — that was choosing between a
+   route that might fail and one that cannot, and picking the second.
+
+Asserted on origins, never on a browser sniff: the list of browsers that partition third-party
+storage only grows.
+
+⚠️ **None of this makes Google sign-in work on the iPhone.** It makes it fail honestly and makes the
+next report diagnostic. 2145 assertions green.
+
+---
+
+## 2026-08-21, fourth pass — the first run
+
+Tim asked what to work on. Recommended the first-run path and took it: it is the one thing standing
+between this app and anybody who is not him, it is squarely the phone thread he opened, and the
+morning's restructure had already built most of what it needed.
+
+**The defect:** an empty account said *"Create your first workout"* and landed on a screen whose
+actions are *"New system"* and *"Explore ready-made systems"*. Promised a workout, delivered a
+system — the app's own word for its own convenience — and a stranger had to learn it before logging
+a set.
+
+**The fix is not to remove systems, it is to stop making anybody read about one.** Explore leads on a
+first run, so a programme is one tap and it teaches the idea by example rather than by explanation.
+Everything downstream already worked: copy a programme in and `suggestNext()` returns `isStart`, so
+Home's next paint says "▶ Push 1 · First workout in Ultimate Push Pull Legs".
+
+Walked on a brand-new account at 393×852 with real mouse events:
+
+```
+1  Pick a programme          → Explore
+2  Ultimate Push Pull Legs   → the programme
+3  Add to my systems         → the copied system
+4  Push 1                    → the workout
+5  Start workout             → the runner, steppers live
+```
+
+**Five taps from cold install to a loggable set**, against about a dozen.
+
+Also: "Record a benchmark" is gone from the first run — it asks somebody who has never trained to
+record a maximum — and so is the "Recent activity" heading, which was standing over an empty list.
+
+⚠️ **The old test was green over this the whole time**, because it asserted the screen said "Create
+your first workout" — the exact string that was wrong. It pins the property now: one tap from a real
+programme, the word "system" absent from the first screen, and the destination asserted by driving
+the tap rather than reading a label.
+
+---
+
+## 2026-08-21, fifth pass — the body map stops moving
+
+Tim, from the phone: tapping a muscle shrank the figure and pulled it upward to make room for the
+words, disconnecting the arms from the body. "I don't want to ever move the body (in direction or
+size), so to make room for the words, just make way less words on the bottom."
+
+**Rule 3's corollary already said this, and the phone never obeyed it.** "Content must not shrink
+because you asked it a question" was written for this exact screen. The desktop honoured it — a side
+column, so the figure keeps its size. On a phone the panel stacks underneath and `.body-wrap` was
+`flex: 1`, which is the instruction *give up whatever the thing below you needs*. A rule kept in one
+layout and broken in the other is not a rule, and nothing was comparing the two.
+
+Fixed 57 % for the figure; the panel takes what is left and scrolls inside it. Measured tapping
+Quads: 393×852 `{x:14, y:176, w:365, h:348.3}` before and byte-identical after; same on the SE.
+⚠️ jsdom cannot check this — no layout, so every rect is zero. It needed a browser.
+
+### 18 words
+
+Cut entirely: the seven-row per-level target table (six rows are levels nobody is near, the seventh
+is what the to-next bar already says), the confidence bar (D19 already paints confidence as the
+muscle's own fade — a second bar drew it twice and competed with the to-next bar), the confidence
+percentage, and "newest N days ago".
+
+Cut as a repetition rather than a claim: the panel's restatement of the comparison group. D15 still
+holds and is still said — by the header, which is fixed and on screen whenever the panel is.
+
+⚠️ Kept, one line each: every caveat, the corroboration and the source set. **Shortening a caveat is
+allowed; softening one is not.** None of them lost a claim.
+
+There is a word count in the tests now. Everything else asserts something is present; the failure
+being guarded is accumulation, which no presence check catches. Cap 40, currently 18.
+
+333 render assertions green.
+
+---
+
+## 2026-08-22 — end of session, prepared for a chat reset
+
+Swept the docs for staleness and contradiction rather than appending to them. What was wrong:
+
+- **Test counts were stale in five places** — 2141 total against a real **2156**, data-layer 1098
+  against **1103**, render 316 against **333**. The two new `redirectCanComplete`/`prefersRedirect`
+  assertions and the muscle-panel ones had never been counted back into the table.
+- **The header and Open work contradicted each other on the reviews.** The header said three had run
+  and four were outstanding; Open work still said two ran and five were outstanding, listing
+  accessibility as unaudited — which the 2026-08-20 audit had already disproved in the same file.
+- **§3's Muscles row described the panel that was deleted the day before** — "tap → level,
+  percentile, progress bar, all seven per-level weight targets" — and claimed picking a muscle never
+  resizes the body **only on desktop**, which was the exact defect Tim reported.
+- **§10 item 2 still read "DEFERRED — Tim, 2026-08-17"** for the phone work Tim reopened, and told a
+  fresh session it "should stop being offered as the next job". It is the live thread.
+- **§10 item 1 called the simulator's Phase 0 the highest-value thing left.** Phase 0 is done.
+- The Muscles row had two copies of the same sentence about credible evidence, from separate edits.
+- `docs/strength-map-plan.md` Phase 4 still specified the per-level target table as work to do. It
+  was built and then cut; the row now says so, so nobody rebuilds it from the plan.
+
+**The README was the worst of it, and it is the public front door.** It said *"no accounts"* and
+*"your data stays in your browser"* — both untrue since Firebase went in, and the second is a claim
+about privacy, which is the kind you do not get to be casually wrong about. It also still described
+Firestore as *"written and waiting"*, listed 265 exercises against a real 272, and did not mention
+systems, the body map, Goals, Social, set types or the demo account — most of the app. Rewritten,
+with a **Your data** section that says plainly what leaves the browser and when.
+
+Promoted into §3 NOT verified, because it was only living in Open work: **the keyboard fix is
+shipped and unproven.** It is the largest structural change the phone work made, no test in this
+repo can see a software keyboard, and green tests must not be allowed to launder it.
+
+Added a second **open question for Tim** — whether the auth handler may go in his user-page repo,
+which is the only real fix for Google sign-in on the iPhone and the reason it has not been started.
+
+State at close: **2156 assertions green across ten suites**, everything pushed and live. Two
+questions waiting on Tim, and one ask that is not a question: **tap the weight in the session runner
+on your phone and see whether "Next exercise" is still reachable.**
+
+---
+
+## 2026-08-22 — a real iPhone, and both open questions answered
+
+Tim, catching a fresh session up, brought the two answers this project has been waiting on:
+
+> *"next exercise is still reachable, as well as the exercise picker. Google sign-in actually works
+> now."*
+
+Asked which surface, since the claim depends on it. **The app installed to his home screen** — he
+has no native build, so that is the installed PWA, which is the path the docs have called the
+riskiest untested one in the project.
+
+**Both closed, and one of them says this file was wrong.**
+
+The **keyboard fix is verified**. `--kb` shipped unproven because headless Chrome has no software
+keyboard and `100dvh` does not shrink for one, so it had only ever been checked by driving the
+variable by hand. A phone confirmed both cases the survey named — the session runner's *Next
+exercise* and the exercise picker, which was the sharpest case in the whole survey.
+
+**Google sign-in works, and the 2026-08-21 write-up got two things wrong.** It said in capitals that
+none of the three fixes would make it work. It did work, and the mechanism is the part that was
+filed as a footnote: `prefersRedirect()` used to return true for an installed iOS app, so the PWA
+went straight to `signInWithRedirect` — the one route a cross-origin `authDomain` genuinely cannot
+finish. Taking that away left it on the **popup**, and the popup works there. The false premise
+underneath it — *"popups are blocked in an iOS home-screen app"* — was written in three places and
+is what made the code choose the broken route in the first place.
+
+What did **not** change, and was corrected carefully rather than relaxed: the storage-partitioning
+analysis still holds, `redirectCanComplete()` is still right, and *"Continue in this window
+instead"* still must not be offered where it cannot finish.
+
+Swept it through `progress.md`, `docs/firebase-setup.md`, `js/firebase-backend.js` and
+`js/views-account.js`. The wrong reasoning is struck through and kept beside the correction rather
+than deleted, because the wrong premise is why the code did the wrong thing for months.
+
+One behaviour change fell out of it. After a failed Google sign-in the screen said *"Google sign-in
+does not complete in this browser"* — a **prediction**, and now a demonstrably wrong one. It says
+*"That did not complete"* instead. Telling somebody their browser cannot do the thing it just failed
+at once is a worse error than telling them it failed.
+
+Two things deliberately **not** promoted on the back of one good report. Whether the picker's
+`setTimeout` focus raises the keyboard **by itself** is still unknown — the picker was judged with a
+keyboard up, but nobody recorded whether it rose unprompted or after a tap, and those are different
+findings. And an ordinary **Safari tab** has not been retried since the fixes, which is probably
+where the original bug report came from.
+
+**The auth-handler question is withdrawn.** It was the only real fix for a redirect flow nobody
+needs any more, and it would have meant touching the `timothyhadfield.github.io` user-page repo.
+
+State at close: **2156 assertions green** (data-layer and render re-run after the edits), everything
+pushed. **No questions and no asks outstanding for Tim** for the first time in a while.
+
+---
+
+## 2026-08-22, second pass — the years view, and three reviews at once
+
+Tim, with a screenshot of another app's workout-history grid: *"I want another way to display the
+workout days in Calendar so each day is a tiny box and is colored or not colored depending on if you
+worked out that day. This will show years of data in one screen."* Plus: *"if you're confident you
+know what to improve then just start working on it, feel free to deploy as many sub-agents as you
+need."*
+
+### The years view
+
+`#/calendar` now has a **Months / Years** switch. Years draws one square per day, one row per year,
+newest first, with "141 days trained" beside each. Two years of the demo fit in the top half of a
+375×667 phone.
+
+It is **binary**, which is what he asked for and also what the numbers allow: the month view's
+workout and benchmark colours are ΔE 6.5 apart under protanopia, which the data-viz guidance permits
+only alongside a label or a texture, and a 5.7px square has room for neither. The two arguments
+agreeing is why it needed no compromise.
+
+Tapping a square **selects** rather than navigates. At 5.7px a tap that navigated would open the
+wrong day about as often as the right one, so it fills a readout that holds its row whether or not
+anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met
+by equivalence — every day is still reachable at 40px in Months.
+
+**Two bugs came out of building it and neither was visible to a test.** A bare `1fr` is
+`minmax(auto,1fr)`, so the month strip sized itself to its own labels, came out a third wider than
+the grid it labels, and put **"Nov" over the 20th of August** — found by asking the browser what
+date sat under each label, because nothing about a row of month names over a grid of squares looks
+wrong. It was hiding a second fault: the grid was overflowing its pane and clipping ten weeks off
+every year. And the mode switch first rebuilt the screen and swapped the node in, which silently
+threw away the demo account's "nothing is saved" strip, because `app.js` prepends that into the node
+a view returns. **A view does not own the node it returned.**
+
+### Three reviews at once, against this file's own advice
+
+progress.md has said "serially, never an agent wave" since seven parallel reviews died to a usage
+limit on 2026-08-19. Tim authorised a wave; three worked, each with a written brief and a list of
+files it must not touch. The narrower lesson is now recorded: **seven is what failed, and file
+conflicts are the thing to plan for.**
+
+**Edge cases** found a day index floored from local midnight, which collapses a day across DST in any
+zone sitting at UTC+0 in winter — two logged sessions counted as one, a 28-day window measured 27.
+Fixed. It also found the progression rule ratcheting reps forever on two branches, and a completely
+silent failure if a save fails at the end of a workout.
+
+**The social round trip** finally ran against the live project — two accounts, two separate Chrome
+profiles. It works, and tier enforcement holds on the wire rather than only in the UI. Expired
+invites read as open, because `expiresAt` comes back as a Timestamp and `NaN <= now` is false; fixed.
+Disconnect is one-sided while the sheet promises otherwise; reported rather than guessed at. It also
+corrected this repo's own docs — the project does not hold zero users and zero documents, it holds
+seven and nineteen, two of them Tim's real accounts, and that stale sentence had gone into a brief
+for an agent that was deleting things.
+
+**UX** found the best single thing on the list: Goals told a user doing 10.9 sets against a 7–10
+target, in bold, **"Not enough sets on this muscle"** — number green beside it, row class already
+`is-ok`. The code knew; only the headline had not been told. Rule 6 forbids unearned opinions, and an
+unearned negative one is the same fault, on the one screen holding measured proof somebody was doing
+the work.
+
+### Fixed after the reviews
+
+The rep ratchet (a ceiling that refuses rather than stepping smaller — and its first version told a
+man holding two dumbbells to weigh himself and buy a belt, caught by its own test). The silent save
+(said on screen, draft kept, tap again works). The Goals headline. And the demo account writing
+drafts into real localStorage — near-harmless, except that a strip on every demo screen says
+"nothing is saved", which makes it a false claim rather than a stray key.
+
+State at close: **2252 assertions green across eleven suites**, everything pushed. Six of the seven
+reviews have now run and every one found something real. The UX list is the open work, and it is
+judgement rather than bugs — the headline item being that **nothing a user can see on Home ever
+grows**.
+
+---
+
+## 2026-08-22, third pass — "I can't see where the setting is"
+
+Tim, hours after the years view shipped: *"I can't see where the setting is within the calendar
+section that displays every single day like how we talked about. did you get interupted?"*
+
+Not interrupted — and nothing was wrong with the feature. Checked the live site directly rather than
+guessing: `js/year-grid.js` answers 200 with the right MIME type, the deployed `views-data.js`
+carries the switch, and a clean browser profile pointed at the live URL shows **Months / Years** on
+the very first load. His phone was running an older copy and had never been told a newer one existed.
+
+**The update machinery was working perfectly and was never being asked.** Every check hangs off the
+service worker's `fetch` handler — it notices a deploy while *serving a request*, which means on a
+real page load. An installed home-screen app is **resumed, not reloaded**: iOS hands back the
+document that was already open, nothing is fetched, and the worker has no reason to look. The app
+can sit weeks behind the live site with every part of the mechanism behaving as designed.
+
+That is the second time a claim about the app updating itself has had a hole in the one case nobody
+drove, and both were found by Tim reporting shipped work as missing — the first was the stale load
+right after a deploy, back on 2026-08-18. The pattern worth keeping: **a self-healing mechanism needs
+to be asked when it heals, not only whether it can.**
+
+Fixed: the page now asks on `visibilitychange` and on `online`, the worker revalidates the shell
+against ETag/Last-Modified, throttled to five minutes and silent when offline. It still only offers a
+refresh — nothing reloads a page that might have unsaved numbers on it. Tested by deploying a change
+to a page that is just sitting there and firing what a resume fires, with **no navigation at all**,
+which is the whole point. Mutation-checked.
+
+Told him plainly that none of this reaches the build already on his phone — that copy has no
+listener to fire, so he has to pick the new version up once by hand. After that it should never be
+necessary again.
+
+---
+
+## 2026-08-22, fourth pass — "it's pretty laggy when I click the bars at the bottom"
+
+Tim asked whether the nav lag was Firebase's free tier or his phone. **Neither**, and the measurement
+said so before anything was changed. At 4× CPU throttling in a real browser, building a screen costs
+11–72 ms. What each tab actually did was ask the backend for whole collections it had already been
+handed: **Workouts 5 reads, Goals 7**, and `sessions` re-fetched by four of the six tabs.
+
+On Firestore every one of those is a `getDoc`, and a `getDoc` **waits for the server even with
+offline persistence turned on** — persistence is a fallback for being offline, not a fast path. So a
+tab tap cost a network round trip per collection, some serialised: about 400 ms on good wifi and over
+a second on cellular, for data already in the page.
+
+`store.js` now keeps each collection in memory. Every tab does **zero blocking reads** after the
+first visit, re-measured the same way.
+
+The interesting part was the line the cache may not cross. This store does read-modify-write
+everywhere, so serving *those* reads from a cache would mean writing a stale list back over storage
+and erasing anything changed on another device. Getters are cached; mutations still read straight
+from the backend. `saveSettings` was the single exception and now reads fresh — with an assertion
+that flips the moment the hazard is put back, which is what proves it is load-bearing rather than
+decorative.
+
+Two things surfaced on the way. `ensureSystems()` was re-reading two collections on *every* call to
+re-answer a migration question settled months ago — and it runs on both `getSystems()` and
+`getWorkouts()`, so the Workouts tab was paying two round trips for it. A latch was the obvious fix
+and the tests rejected it inside a minute: "no orphans, so never look again" is true of a running app
+and false of a restored backup, a different account, or a test seeding storage directly. Routing the
+*check* through the cache while the *fix-up* still reads fresh is the honest version of the same
+saving.
+
+Also warmed all eight collections in one parallel batch after the first paint, so the whole app costs
+one round trip of latency instead of one per collection per tab.
+
+2257 assertions green, plus a browser smoke test that walks every tab twice and fails on any console
+error.
+
+---
+
+## 2026-08-22, fifth pass — six tabs became five
+
+Tim's design call: five tabs, the middle one bigger and labelled **Record**, Social folded into Home
+on the left, Calendar folded into Data on the right, Goals unchanged.
+
+Told him the shape is right, and that the middle button is the part the app's own rules had been
+arguing for all along — **D4** says the logging loop is the one thing this beats a spreadsheet at, so
+recording training should be the biggest, most central target on every screen. It was two ordinary
+buttons partway down Home.
+
+**Record** is the old start picker with the benchmark action folded in and pinned underneath.
+`#/start` and `#/benchmark` both still resolve, because "Choose another workout" has linked to one of
+them for months and a bookmarked hash must not start 404ing because a tab bar was redesigned.
+
+**Social → Home** behind a You / Friends switch, built as two real links across two routes rather
+than a state machine inside one screen — so the back button, a bookmark and a shared invite link all
+keep working, and neither screen had to be nested in the other. The screen is titled **Friends** now:
+`social.js` is the code's word for the feature, and a person has friends. Five user-facing strings
+went with it, because "Social is off in the demo" under a tab labelled Friends is exactly the
+"system" vs "programme" fault the UX review found last time.
+
+**Calendar → Data**, so the Data switch is Calendar · Graph · Bars · Muscles. "Bar Chart" lost a word
+on purpose: the survey measured the three-segment version clipping that exact label at 393px, and a
+fourth segment takes another quarter of the row.
+
+**Three defects, every one found by looking at a screenshot rather than by a test.** The Record label
+was clipped by its own circle. The five labels did not share a baseline — every tab centred its own
+stack, which is identical while all the icons are the same size and falls apart the moment one is
+bigger, sitting the middle word 7px low and making the bigger tab read as a mistake instead of as
+emphasis; bottom-aligning them fixed it and it is now measured at three widths. And the You / Friends
+switch rendered as two underlined links in an oversized box, because `.seg` was written for buttons
+and an anchor is inline. That last one turned out to be live on `.btn` as well, unnoticed — "Leave
+the demo" was underlined. Third time this project has met anchor-styled-as-button.
+
+Measured at 360 / 375 / 393: no clipping, no overflow, tabs 72–79 × 54, middle icon 30 against 21,
+and every merged tab stays lit on the routes it now owns.
+
+2261 assertions green. Tim said he will keep working on the design, Home especially.
+
+---
+
+## 2026-08-22, sixth pass — "missing initial state" on the iPhone
+
+Tim opened the app and got Firebase's `auth/missing-initial-state` page: *"…2) Using
+signInWithRedirect in a storage-partitioned browser environment."*
+
+Checked rather than guessed where that text could come from. **This app never contains that string** —
+`requireRemote()` says "Not connected to your account right now", and the router's error box prints
+`err.message`. So a raw SDK sentence in front of a user means either the SDK threw into a view, or he
+is looking at Firebase's own auth-handler page instead of at the app.
+
+One thing was genuinely wrong on our side. `init()` called **`getRedirectResult()` on every boot**,
+and calling it is exactly what asks for the "initial state" the error names. On iOS the sessionStorage
+that the redirect flow keeps its state in is partitioned away from this origin, so the question cannot
+be answered — and in this configuration it should never be asked, because `redirectCanComplete()` is
+already false: the app is on github.io, the authDomain is not, so a redirect could never legitimately
+have started and there was never a result to collect. The boot path was asking a question the sign-in
+path already knew was meaningless. Guarded on that same predicate, so if the app ever moves to a
+domain where redirect works, both halves start working together.
+
+Asserted on the source, because `init()` cannot be unit-tested without the live SDK, a network and a
+browser — the same shape as the sw.js precache check. Mutation-checked.
+
+Said plainly what this does **not** fix: a guard added today cannot reach a build already on his
+phone, and the likeliest reason he is seeing that page at all is his installed app resuming onto the
+auth handler URL from a redirect an older build started. `start_url` is `./index.html#/home`, so a
+cold launch goes to the app; a resumed one returns to whatever was last open. Told him to fully close
+and reopen, and to re-add the home-screen icon if that fails — and that his training is safe because
+he signs in with email, which would not have been true of an anonymous account.
+
+---
+
+## 2026-08-22, close of session — prepared for a chat reset
+
+Tim asked for the md files to be prepared for a reset. Nine passes ran today, so the job was a
+staleness sweep rather than a summary — the failure mode this file exists to prevent is a fresh
+session reading something that stopped being true hours ago.
+
+**Swept and corrected:** the assertion count in three places (2156 → **2263**, and the README still
+said "Ten suites"); the README's calendar line, which predated the years grid; `views-social.js` and
+the Social phase-6 note, both still calling Friends "the Social tab"; the architecture tree, which did
+not know about the Record tab or that `store.js` now holds a read cache; and the §3 rows for Calendar
+and Data, which still described Calendar as its own tab with a three-way switch.
+
+**Rewrote the two things a fresh session actually acts on.** The header block now leads with the fact
+that **Tim may still be locked out** — his installed app was sitting on Firebase's auth handler page
+and nobody knows whether the recovery worked — and with the fact that **he has never confirmed seeing
+any of today's work**, because his phone served a cached build all day and he reported the years grid
+as missing hours after it shipped. Both are things a next session would otherwise waste an hour
+rediscovering, and one of them changes how to read his next bug report.
+
+**Open work was restructured** into 0a (is he unstuck and up to date — ask before writing code),
+0 (the iPhone thread), 0b (the edge-case review's two remaining findings), 0c (the UX review's list,
+with Home at the top and a note that Tim has claimed the design half himself). Reordered so the
+numbering matches the reading order, which it did not.
+
+**Two operational lessons appended to §0**, both earned today: the read cache's one contract — the
+store is the only writer, so anything seeding storage directly must call `clearReadCache()` and
+mutations must read fresh — and *check the live site before reading code*, with the one-line curl that
+settled it twice.
+
+Everything pushed. 2263 assertions green across eleven suites.
+
+---
+
+## 2026-08-24 — both blockers closed, by Tim in one sentence
+
+Asked to catch up on `progress.md`, reported where things stood, and asked the one question the file
+said to ask before writing any code: is he able to use the app, and is he on the current build.
+
+**Tim:** *"I'm not locked out, I think I just had the wrong URL. I can see the year view now."*
+
+That closes the two things that were blocking every open item — he is not stuck on Firebase's
+"missing initial state" page, and he is on a build that has 2026-08-22's work in it.
+
+**What was recorded, and what was deliberately not.** Two claims in the docs were about to be
+promoted on the strength of this and neither survives a close reading:
+
+- The **stuck-auth-handler diagnosis** in the ninth pass was never checked against the URL his phone
+  actually had. It is a plausible account of a real screenshot and it stays, marked as an
+  unfalsified hypothesis rather than a finding. The code fix it came with keeps its own argument —
+  asking for redirect state in a configuration where a redirect cannot start was wrong regardless.
+- The **resume update check** from the sixth pass is still unverified in the field. He had the wrong
+  URL, so opening the right one explains the years view completely on its own; nobody watched a
+  resume produce the update offer on a device. It has been seen working only in
+  `tests/sw-update.test.mjs`. The first deploy he notices without being told is the real evidence.
+
+The standing rule that came out of the 22nd survives its own trigger and is kept in Open work: **do
+not read "I can't see X" as X being broken** — check the live site first.
+
+`progress.md`'s header block is now three items rather than five, with the two closed ones struck
+through in place instead of deleted, and Open work 0a is closed.
+
+---
+
+## 2026-08-24, second pass — the app went to a gym, and came back with a bug
+
+Tim trained with a friend and logged the session on his phone. *"For the most part it worked great,
+but I did find some areas of improvement."* Four asks. Two shipped the same day; two are design work
+with his decisions recorded.
+
+### The one that was a bug
+
+He did assisted pull-ups at 70 lb, at a body weight of 180. Two more good sessions and the app would
+have suggested **"+5 lb and back to 6 reps"** — more assistance, an easier set, printed as progress.
+
+The guard against exactly this had been in `progression.js` for weeks, with a comment saying nothing
+in the table was flagged assisted yet. True — and `Assisted Pull-Up` was in the library the whole
+time, with no fraction entry, so the flag could never be set and the machine fell through to the
+ordinary weighted rule. Two green assertions pinned the guard's existence by reading the source.
+
+Recorded as a lesson because it generalises: **a branch no accepted input can reach is not defensive
+code, it is a comment that reads like defensive code** — and it stopped both the person who wrote it
+and the person who tested it from looking. Six reviews and 2300 assertions had passed over it. Only
+using the app in a gym found it.
+
+### The design call, and what it costs
+
+Asked him how far the real number should go. His answer: treat an assisted pull-up as a pull-up with
+the assistance subtracted. Said once, plainly, that this means accepting the machine's plate number
+as pounds actually taken off him — nothing published maps a stack setting to load relief, and the
+linkage is not standardised across brands — then built it under that assumption. The assumption is
+priced as the lowest confidence in the fraction table (0.65, below the push-up's 0.70) rather than
+written as a disclaimer, so an assisted set desaturates its own colour on the body map and loses to
+a real pull-up as evidence. Noted as a known limitation that the error scales with how much help is
+taken, and a single confidence number cannot express that.
+
+Admitting it took two lines — a table entry and reading the flag instead of hardcoding false —
+because everything else already keyed off that one flag. Adding an Assisted Dip is now a one-liner.
+
+### The convenience that nearly invented training
+
+His second ask was that the first set's numbers carry into the next. The first version filled every
+set below on the first keystroke, and two render tests killed it: the app keeps any set with numbers
+in it, so logging one set and stopping would have recorded three, inflating volume and the muscle map
+with work he had not done. It now fills a set when that set is opened, which is the same thing from
+his side and cannot credit anybody for a set they never looked at.
+
+### Two more found by looking at a screenshot
+
+Neither reachable by a test. Every set opens at zero assistance, so the readout's first state was
+"your 180 less 0 of help" — arithmetic on nothing, in the one place the app is trying to make an
+unintuitive number clear. And the stepper label read "Weight of help", because that slot exists to
+say what kind of weight the number is ("total", "per side"). Now "no help set, so this is a pull-up"
+and "Weight · assistance".
+
+### The two that are not built
+
+**Swapping an exercise mid-workout** — his call: today only, the saved plan unchanged. Told him where
+the cost actually is: supersets, fetching history for an exercise the session did not start with, and
+keeping the sets already recorded on the original.
+
+**Joint workouts** — the biggest idea in the list, and built differently from how he described it.
+He asked for one phone writing into both accounts; that needs a rule letting one account write into
+another's private data, and sessions are one document, so a bad write replaces a whole history rather
+than a row. He chose the version where the friend's half is sent and their own app saves it on
+accept. Also flagged that switching names has to switch the whole suggestion — two people on the same
+workout are not on the same weights — and offered logging a guest with no account, which is the case
+he actually hit, because his friend could not sign in.
+
+His friend's sign-in failure is recorded and not chased; he asked to investigate it himself first.
+Noted that an ordinary Safari tab is still the one surface no working device has confirmed.
+
+---
+
+## 2026-08-24, third pass — fatigue, and a finding neither of us expected
+
+Tim, from the same gym session: he did assisted pull-ups, then dumbbell rows, then lat pulldowns, and
+suspected the app rated his back off the pulldown he was too worn out to load. He proposed weighting
+later exercises less, or multiplying their load up, or some combination, and asked for a plan.
+
+Measured his session through the real modules before designing anything. **He is right that
+something is wrong and right about which lift led.** Adding the fatigued third exercise moves his
+Back rating from 212 lb to 145 lb — down 32 % — and moves his confidence *up*, 0.40 to 0.44. Being
+more certain because of a reading you have reason to distrust is indefensible on any view.
+
+**The mechanism is the opposite of the obvious one.** Credibility is `quality × repFactor(reps) ×
+recency`, and `repFactor` rewards low reps, because a near-max set is good evidence of a max. A spent
+lifter also does few reps. His pulldown scored 0.50 × 0.85 = 0.425; his dumbbell row 0.60 × 0.70 =
+0.420. **The fatigued lift led by 0.005, entirely because fatigue held him to 8 reps instead of 10.**
+Fatigue does not merely depress a reading — it promotes it. Also corrected two things in his mental
+model: the app rates `Back` (keyed on Barbell Row), not "Lats", and it does not consider a pulldown
+the most reliable read on his back — the row family outranks it.
+
+**Then every fix I proposed failed on his actual data, which was worth more than the plan.** Dropping
+fatigued readings outright gives 115 lb — worse than today — because his only completely fresh lift
+was the assisted pull-up, his weakest evidence. So fatigue has to be graded, not a flag. And every
+re-weighting variant moves his rating by under 5 lb, while doing the same pulldown *first* moves it by
+60. **A fatigued set is missing information, not corrupted information — you cannot re-weight your way
+to a number nobody recorded.** That reordered the whole plan: the highest-value item is the app
+telling him to do that lift first once, not any correction factor.
+
+Checked the scale before recommending anything be built: across the demo year, **0 of 11 muscles** are
+led by a lift that was not that muscle's first of the day, and a graded fatigue term moves all of them
+under 2 %. A well-ordered programme never hits this. So it is a safety rail, not a rewrite.
+
+Told him the load multiplier he suggested should not be built: it needs a published decrement in
+maximal strength per unit of prior volume, the order literature reports reps at a fixed load rather
+than 1RM, and it is the only option that can make a number *bigger* than what was observed. Same wall
+as the ACSM order finding — graded 88 %, no effect size — hit from the other side.
+
+And said plainly that the plan does not prove he is stronger than 145. His three lifts imply 115, 229
+and 136 lb of barbell row, and the competing explanation is that doubling a one-arm dumbbell row onto
+a two-arm barbell row is generous — which has never been checked against anything.
+
+Plan in `docs/fatigue-plan.md`, three tiers, nothing built.
+
+---
+
+## 2026-08-24, fourth pass — the fatigue plan, built and deployed
+
+Tim: *"make a plan and test it out and once you feel good about it deploy it now."* Tiers 1 and 2
+shipped; Tier 3, the load multiplier, deliberately not built.
+
+Every observation now carries how much work that muscle had already taken earlier in the same
+session, counted with volume-map's own direct/indirect weights and tallied **after** each exercise's
+own sets — an exercise does not fatigue itself, and charging it for its own volume would discount the
+first exercise of every session. A graded factor discounts it, and the muscle panel says which lift
+led and that doing it earlier would read better.
+
+**Tim's session now reads 141 lb led by the dumbbell row at 0.36 confidence**, against 145 lb led by
+the fatigued pulldown at 0.44. The check that mattered was the demo year: every muscle moves under
+3.5 %, eight of eleven are still led by the same fresh lift, and confidence falls only on the four
+muscles trained after compounds. A safety rail, not a rewrite, which is what the plan said it had to
+be.
+
+**One rule in my own plan was wrong and its test caught it.** I had written "confidence must not rise
+because of a fatigued reading" as an absolute, asserted it, and it failed. A third reading landing
+*between* two that disagree genuinely does tighten the picture — his three imply 115, 229 and 136, and
+the 136 sits in the middle. A fatigued reading is weaker evidence, not anti-evidence. Replaced with
+the property that is actually provable: the same reading taken tired yields less confidence than taken
+fresh. The end-to-end rise is now +0.01 against +0.04, recorded as measured rather than legislated.
+
+Both halves mutation-checked: removing the fatigue term flips five assertions, counting prior volume
+before an exercise's own sets rather than after flips four.
+
+**Found while driving the browser to look at it:** `#/muscles` is not a route and silently renders
+Home — the map is a mode on `#/graphs`. `tools/a11y-audit.mjs` lists `#/muscles` in its ROUTES, so
+the accessibility audit has been measuring Home twice and **the body map's panel has never been
+audited**. Recorded, not chased.
+
+Told Tim plainly that this does not establish he is stronger than 145 lb — his three lifts still
+disagree two-fold, and the competing explanation, that doubling a one-arm dumbbell row onto a two-arm
+barbell row is generous, is untouched.
+
+---
+
+## 2026-08-24, fifth pass — the batch
+
+Tim: *"deploy everything you just mentioned and are ready to work on."* Three shipped in one pass;
+the exercise swap follows separately.
+
+**The dumbbell row was flattering everyone by 15 %,** and this is the other half of his lat question
+— running the opposite way from the fatigue finding. The ratio was 0.85, a reasoned estimate. Derived
+properly from published standards, the way the dip and pull-up entries in the same file already are,
+it is 0.98. A smaller ratio makes the estimate bigger, so every dumbbell row in the app read about
+15 % too strong. His three back readings go from 229/115/136 to 199/115/136: same 141 lb rating,
+confidence up from 0.36 to 0.41, because better-calibrated inputs agree better.
+
+Fixed exactly one entry on purpose. Dumbbell bench press is wrong the same way — 0.72 against a
+published 0.81 — and moving it alone would leave incline and decline relatively more generous than
+flat. The family needs one pass; filed as open work. The wider point is filed with it: a *reasoned*
+ratio in that table has now been shown to be 15 % out in the flattering direction, so every entry
+without a derivation is suspect.
+
+**Restore from backup could take the app down and asked nobody first.** `{sessions:[{id:'s1'}]}`
+stored fine and then killed every screen but Settings. Now every row is checked before any row is
+written, so there is no half-restore; `{foo:1}` is refused rather than toasting "Backup restored"
+over nothing; and it replaces every collection including the ones the file does not carry, which is
+what kills the dangling `systemId` that used to hide a workout forever. It has a confirmation now,
+which "Delete all data" two lines below it has had all along, and the sheet names what is in the file.
+
+**The Firestore ceiling doc was wrong by 3×** — ~1,100 bytes a session, not 300, so ~950 sessions
+rather than 3,000. Corrected. The "fails silently" half turned out to be half-closed already, because
+`finish()` has caught save failures since the 22nd whichever backend threw; what is still open is
+that nothing warns as the limit approaches.
+
+---
+
+## 2026-08-24, sixth pass — swapping an exercise mid-workout
+
+The last of Tim's gym asks that was buildable. A quiet **Swap** button beside the exercise name opens
+the picker; the saved workout is untouched, which was his call.
+
+The half that mattered was the sets already done. If the machine was taken after two sets, two sets
+were done — on the original exercise. So a swap with work logged splits: the original keeps exactly
+what was really recorded, and the new exercise is inserted directly after it. A swap with nothing
+logged replaces in place, because an empty entry is not a record of anything. Mutation-checked:
+making it always replace flips the two assertions about the kept sets.
+
+Inserted after rather than appended, and that stopped being cosmetic the same day — muscleStrength()
+now reads entry order to score fatigue, so an exercise dropped at the end of the list would be scored
+as though it came last. The kept half leaves a superset, because a group's rounds are walked by
+membership and three exercises in a two-exercise round would desynchronise the walker mid-workout.
+
+Two things the tests caught in my own test rather than the code: I asserted "Leg Press" was gone from
+a header where the feature itself prints "Swapped in for Leg Press", and I finished a workout without
+walking to the end, so nothing saved and four assertions failed on an empty list.
+
+Measured at 360/375/393: the button is 71x44, clear of the library's longest exercise name, no
+horizontal overflow.
+
+---
+
+## 2026-08-24, seventh pass — "hard sets", said rather than silently corrected
+
+The last of the batch. "Hard set" is the unit the whole volume model rests on, it was never defined
+anywhere in the app, and the app counts something slightly different from what the research counted:
+the target is in hard sets, `weeklyVolume()` credits every logged set with no warm-up exclusion.
+
+The requirement row now defines it — *a working set taken close to failure, roughly one to three reps
+left, warm-ups excluded* — and every measured volume row admits the app counts every set you logged.
+
+**Deliberately not corrected**, and the reason is the direction of the error. The available fix is a
+load threshold: exclude sets below some fraction of the day's top set. That catches warm-ups and also
+throws away genuine back-off work, which is often the hardest set of the session. Every other judged
+constant in this project — LAYOFF_DAYS, FATIGUE_HALF_SETS, the rep ladder — is acceptable *because it
+can only withhold*. This one errs both ways, so it is not a call to make quietly. Left as Tim's.
+
+The caveat matters most on the OK branch and that is not obvious: on the short branches an inflated
+count only softens bad news, but there the app is saying the work IS being done, so warm-up padding
+would be an unearned positive verdict — the same fault the headline fix corrected from the other side
+on the 22nd. Mutation-checked: emptying the caveat flips both assertions.
+
+---
+
+## 2026-08-24, eighth pass — the ratio sweep, a sheet that lied, two dead routes
+
+**Three more ratios derived**, all reasoned too low and therefore flattering: dumbbell bench
+0.72 → 0.81, dumbbell shoulder press 0.88 → 1.01, dumbbell curl 0.88 → 0.94. With the row from
+earlier that is 15, 12, 15 and 7 per cent — **not a constant**, which is the finding that matters:
+no blanket factor fixes that table, every remaining reasoned entry has to be derived on its own.
+Four neighbours moved with their anchors and are labelled as still-reasoned; decline dumbbell bench
+*had* to move or it would have claimed a decline is harder to load than a flat press. On the demo's
+barbell-led year this is Chest −1.6 % and Shoulders −1.3 %; on a dumbbell-led history it is far
+bigger, which is exactly who it was mis-rating.
+
+**The disconnect sheet promised something false** — "and you will not see theirs" — when
+`social.remove()` only edits your own graph. Corrected first and separately from building the real
+mutual disconnect, because a half-built feature is a known gap and a screen stating the opposite of
+what the code does is a lie the user acts on.
+
+**`#/data` and `#/muscles` are not routes**, and the accessibility audit listed both, so it had been
+measuring Home twice and the Data screen and body map had never been audited at all. Fixed the tool
+to use `#/graphs` plus in-page mode steps, including one that selects a muscle so the panel exists.
+Re-ran: 52 combinations, 16 never measured before. **Contrast is clean — zero text below 4.5:1.**
+The real finding is the map's own targets: Traps 42x11, Glutes 39x16 at 360px, and the figure is the
+only way to select a muscle, so the year grid's equivalence argument does not apply. Left for Tim,
+because it lands on his illustration.
+
+Recorded a warning with it: the tool's `hit44` flag fails 1616 of 2068 controls on already-audited
+screens, so it is a tripwire for finding candidates and not a defect count.
+
+---
+
+## 2026-08-24, close of session — prepared for a chat reset
+
+Tim asked for the md files to be prepared for a reset. Eight passes ran today, so this was a
+staleness sweep rather than a summary — the failure mode this file exists to prevent is a fresh
+session acting on something that stopped being true a few hours ago.
+
+**Four stale claims found and corrected**, all of them things a fresh session reads early:
+"Two accounts have never actually connected" in the status block and again in the architecture tree
+(closed on the 22nd); "a phone has opened the app exactly once" (three times now, and trained with);
+and the accessibility section's "44 screen/width/theme combinations", which was never true — two of
+those eleven routes did not exist, so Home was measured three times and the Data screen and body map
+never once. The historical section keeps its original numbers with a correction beside them, because
+rewriting what a past run measured would hide the fault rather than record it.
+
+**Open work got an INDEX rather than a renumbering.** The letters had drifted out of reading order
+again as items were inserted, and the 2026-08-22 fix for that was to reorder — which cannot be
+repeated now, because items elsewhere in the file and in `docs/` cite them by letter. A ten-row index
+in priority order sits at the top instead, saying which are open, which closed today, and which two
+questions are waiting on Tim rather than on the next session.
+
+**The header block leads with what changed.** One gym session produced four defects that six
+commissioned reviews and 2300 assertions had all missed, and every one was diagnosed wrongly on the
+first guess — including by this file. That is now the third thing a fresh session reads, because it
+is the most useful thing anybody could know before picking work up.
+
+Architecture tree updated for the fatigue term, the exercise swap, the assist flag and the set fill.
+Assertion counts recounted across progress.md and README. Everything pushed, 2369 green.
+
+---
+
+## 2026-08-24, ninth pass — "build whatever is solidly planned"
+
+Tim, after the reset: *"catch up with progress.md"*, then *"if something is solidly planned and
+ready to build, go ahead and build it."* Two items on the index were decided and genuinely
+unblocked, and everything above them was not: 0e needs a plan doc before code, 0h needs published
+standards derived per entry, 0c is Tim's design half, 0j needs a new rules path.
+
+### The two touch targets from 0i
+
+The comparison button on the muscle screen and the chart's exercise picker, which the audit had
+measured at 332x38 and 156x36. Both to 44, both re-measured at 360 / 375 / 393 with no horizontal
+overflow. The eight pixels came off the chart, which had 501. **The body map's own targets were left
+alone** — those land on Tim's illustration, so 0i is now the illustration only.
+
+### The cloud warning, and what building it turned up
+
+0b(c) said "nothing warns as the limit approaches". Built: `store.cloudUsage()` sizes every one of
+the account's collection documents and Settings warns above *Download backup* from 80 %, naming both
+the percentage and how many more workouts fit.
+
+**And the limit it was built to warn about turned out to be wrong by 1.66x** — three commits after
+that same number was corrected. The morning's fix measured `JSON.stringify` length. Firestore does
+not charge JSON length: it charges a flat 32 bytes per map and 8 per number, so one recorded set
+`{weight:205,reps:6}` is 23 bytes of JSON and **60** to Firestore. A session is ~17 of those, and
+`entries` is 88 % of the collection. **The real ceiling is ~520 sessions, not ~950** — two and a half
+years at four a week rather than four and a half.
+
+Checked before believing it: the demo year's sessions are 1,216 JSON bytes each against the review's
+~1,100, so the two measurements agree on the data and only one of them is measuring the thing
+Firestore bills. There is an assertion for that agreement.
+
+`js/firebase-backend.js` was still carrying the *first* wrong figure — the morning's fix corrected
+the doc and missed the source comment two files away. So the answer is not a third number written
+down: both prose copies now point at the function that computes it from the account's own rows.
+
+Two things the warning deliberately refuses to do. It says **nothing below 80 %**, because the UX
+review's fifth finding is that an always-on warning is wallpaper by the time it comes true. And it
+says **nothing at all unless the data really is in Firestore** — on this device the limit is
+localStorage's and in the demo there is none, and a confident number about the wrong storage is the
+fault this project keeps meeting. Both have assertions that flip if the guard goes.
+
+Not verified against a real rejection, and the docs say so: confirming it means writing a megabyte
+to the live project and watching it fail.
+
+2406 green across eleven suites, four mutation checks, pushed.
+
+---
+
+## 2026-08-25 — a second gym session
+
+Four reports. Three were real and shipped; the first was not a bug.
+
+**"The joint workout system isn't working."** It does not exist. One grep across `js/` for
+joint/partner/guest/recordFor returns nothing — joint workouts are Open work 0e, designed on
+2026-08-24 and never built. Told him plainly rather than going hunting. The standing rule in
+progress.md is "do not read 'X is broken' as X being broken, check first"; this is its mirror image,
+a report that a feature is faulty where the honest answer is that there is no feature. He has now
+asked for it twice, so it is the top item — and the half to build first is the **guest** case, a
+name with no account kept in the recorder's own data, because it needs no rules change and it is the
+case he keeps hitting (his friend could not sign in).
+
+**Record looked like a list of things to read about.** A chevron means "go and look at that"
+everywhere else in the app, and this row starts a session. The rows say **Start** now, with a play
+glyph, and no chevron. The word rather than the bare triangle: a triangle could mean "expand", and
+this is the tap whose cost of being misread is highest.
+
+**The programme's name was the one thing not shown.** With one system it was not rendered at all;
+with several it was an 11.5px grey caption, quieter than the workout names beneath it. That reverses
+a call from 2026-08-22 ("a sole heading is decoration") and he is right — nobody arrives at Record
+hunting for "Push", they arrive knowing which programme they are running. It is a 15px full-ink
+heading now, always shown. Looking at it turned up that the pane's even gap put a second system's
+name exactly halfway between two groups, so it was ambiguous which one it headed; more space above,
+none below.
+
+**Only the 21x21 numbered square selected a set.** Now the whole row does — 298x44 at 360px. Built
+as a real button rather than a click handler on the div, because a div would satisfy the request and
+quietly drop the set list out of the keyboard order, which is the fault the 2026-08-20 audit found
+in nineteen labels. Delete is a sibling of that button rather than a child, so no stopPropagation is
+needed and none can be forgotten later. Cost stated: four sets are 179px against 143, so a 4-set
+exercise now makes the pane scroll where it just fit; the footer is pinned and all four sets stay on
+screen.
+
+2419 green, three mutation checks, pushed.
+
+---
+
+## 2026-08-25, later — his colour key, and the grey that was too grey
+
+**The level palette is Tim's now.** He sent a screenshot of another app's key and asked for the exact
+same colours in order plus one more. Sampled off the image they are Material Design 500s. Five of his
+six level names are ours, so keeping each on its reference colour left exactly one hole — Proficient,
+between green and blue — and the hue sweep has its only gap in the same place. Cyan.
+
+Which cyan was measured rather than picked: Cyan 500 is the family-perfect tone and is the one a
+full-colour reader cannot tell from Advanced (ΔE 12.6, FAIL). Cyan 300 #4DD0E1 passes at 17.6.
+
+Told him what it costs rather than burying it: the ramp it replaces had strictly monotone lightness,
+which is what made it read as a scale, and Material's tones do not — so the ordinal lightness cue is
+gone, and the palette fails the CVD adjacency check on green↔orange. Three of the four failures are
+inherited from his six; the added cyan makes nothing worse, which is why every other candidate was
+rejected. The mitigation is the thing he asked for in the same message: the key's chips ARE the
+"direct labels" the validator demands as the price of that failure.
+
+One thing his reference gets wrong and this does not: it puts white text on all six chips, 2.16:1 on
+its orange. Ink here is chosen per chip from the chip's own luminance — worst of seven is 4.95:1.
+
+**The audit earned its keep again.** Converting to one palette across both themes broke `.lv-text-*`,
+which painted the level word in the ramp colour: "Advanced" measured 2.83:1 on Goals in the light
+theme, the only sub-4.5 node in 4,970. There is no assignment of these seven to text that clears AA
+in both themes — they are fills. So the level word became a chip too, which also means a level looks
+identical everywhere it appears.
+
+**"More details", off by default.** Percentiles surfaced in exactly two places, both on the muscle
+screen, and both are behind it now. It hides a readout, not a calculation, and the help text says so.
+
+**The grey was passing AA and still too grey.** The numbers say why nobody caught it: the two most
+common type sizes in the stylesheet are 12.5px and 11.5px, and 71 rules paint --ink-faint. Faint went
+5.44 -> 8.52 dark and 5.24 -> 8.53 light; the worst cell in the table is now above what the best
+faint cell managed before. The a11y test rejected the first attempt for letting the themes drift 1.9
+apart. Re-audited: 52 combinations, zero below 4.5:1, zero overflow, median 9.19.
+
+The colour DIRECTION — his "everything is black and white" point — is left open as Open work 0k,
+because he asked for options rather than a decision.
+
+2428 green, pushed.
+
+---
+
+## 2026-08-25, evening — Home became a feed
+
+Big batch. Tim authorised subagents, so two ran: one researching Strava's feed anatomy (read-only),
+one adding a start time to the social projection (scoped to js/social.js + its tests, so it could not
+collide with the view work I was doing).
+
+**Home is a Strava-style feed of friends' workouts** and nothing on it starts a workout any more —
+that all moved to Record, on "so we don't double dip". "Choose another workout" died rather than
+moved: on Record it would point at the list it is sitting on top of. This also answers, from the
+other side, the UX review's sharpest open finding — "nothing a user can see on Home ever grows".
+
+He asked for Strava AND for "no panels on any page" in the same message, and Strava's feed is
+literally elevated cards with drop shadows. Took the anatomy and not the chrome: the order and
+content of a card is copied exactly, separation stays hairline-and-space. If he wants the boxes it is
+one background and one radius.
+
+Chronological, deliberately — the research turned up that Strava switched to a personalised ranking,
+got a petition, and now ships "Latest Activities" as a toggle.
+
+Kudos and Comment cannot work: writing one means a path the other person's client can read, which is
+the same wall joint workouts and mutual disconnect both hit. They are rendered and say so when
+pressed, because a button that silently does nothing is a fault this project has shipped once and
+fixed twice. Share is real.
+
+**The demo has friends now.** social.state() refuses in the demo, which would have made the most
+important new screen unjudgeable in the one account built for judging screens — including to the a11y
+audit, which drives the demo. Reading invented friends is not the hazard; publishing is, and that
+stays refused. One of the three shares at the lowest tier, with no entries and no startedAt, because
+that is what the wire really returns — the expired-invite bug lived in exactly that gap once already.
+
+**The projection agent found a hole I had not asked about**: assertTierClean() only checked numeric
+leaves below a session, so a string field like a start time would have sailed through the guard
+silently. It checks keys against an allow-list now and fails closed.
+
+**Goals left the tab bar and Calendar took its slot.** Off the bar is not deleted — the route
+resolves, Settings links to it, all three screens gained a back button, and the test checks all three
+halves together, because a route with no way in is deleted in every sense that matters.
+
+**Two regressions, both caught by machines.** The first-run onboarding lived on Home's empty state and
+the feed destroyed it; a render test failed and the property moved to Record with the test. And the
+new "Start" pill measured 4.08:1 in the light theme — the a11y audit found it, not me.
+
+2474 green, 56 audit combinations, zero below 4.5:1.
+
+---
+
+## 2026-08-25, close of session — prepared for a chat reset
+
+Tim asked for the md files to be prepared for a reset. The app was restructured three times today, so
+this was a staleness sweep rather than a summary — the failure this file exists to prevent is a fresh
+session acting on something that stopped being true a few hours ago, and today produced more of that
+than any previous day.
+
+**Twenty-one stale claims found and corrected in progress.md**, each replacement asserted to match
+exactly once so a silent no-op was impossible. The dangerous ones were all in the block a fresh
+session reads first:
+
+- **"Do not redesign Home unasked."** That instruction had been point 1 of "three things a fresh
+  session must know" since 2026-08-22, and Home was rebuilt as a feed today on Tim's own detailed
+  instruction. A fresh session would have read a prohibition over the thing it had just been asked to
+  do. What replaced it is more useful: he sends screenshots and specific instructions, and he has now
+  twice reversed a call this file argued for and been right both times — because his argument was
+  about how a screen is USED and this file's was about what the screen IS.
+- **"Five nav tabs: Home, Workouts, RECORD, Data, Goals"** — it ends in Calendar now, and Goals is off
+  the bar entirely.
+- **"Home opens on the next workout in your rotation"** — that is Record's job; Home starts nothing.
+- The Calendar row still said it was the first segment of Data; the Data row still listed four
+  segments starting with Calendar; Goals was still "the far-right tab".
+- The architecture tree's test counts had drifted badly — 1103/153/73/88 against real figures of
+  1199/170/106/232 — and "22 JS modules" is 32.
+
+Added a banner at the top saying outright that the nav, Home and the muscle colours all changed on
+the 25th, and that any sentence below about the old shape is history rather than the app. That is
+cheaper than trusting a reader to notice the contradiction.
+
+Historical dated sections keep their original wording, per the convention set at the last reset:
+rewriting what a past run measured would hide the fault rather than record it. The Calendar row was
+the one place that needed a strike-through instead, because it is current-state and was left
+self-contradictory by a half-edit.
+
+README picked up the feed and the Record change; docs/social-plan.md's tier table now mentions the
+start time the mid tier began publishing today.
+
+Every claim in the new header was verified against the code rather than from memory — the nav array,
+the Data segments, the default mode, the feed's existence, the Goals route and its link, and that
+More details defaults off. 2474 green, pushed.
+
+---
+
+## 2026-08-26 — Tim confirms the full backlog; guest workouts ship
+
+Tim asked for a fresh read of what deployed most needs improving. Plan presented: ratio table,
+PRs on the finish screen, body-map tap targets, polish sweep — with joint workouts, kudos/comments,
+location and colour options listed as out of scope ("new features, not improvements"). Tim's reply:
+add them all — "I wanted them deployed in the last session, and I'm confident I want them" — and
+start coding.
+
+First piece built and deployed: THE GUEST HALF OF JOINT WORKOUTS (the case he hit twice in the
+gym — his friend could not sign in). A people bar in the session runner: You / guest chips / "Add a
+person". A guest is a name with no account; their sets save to a new `guestSessions` collection on
+the recorder's own account. Switching chips switches the whole per-person state — entries, history,
+progression suggestion, walk position, body weight — so two people on the same bar never share a
+prescription. Day view shows "Recorded for others" with the full set-by-set body and delete.
+
+The design calls worth remembering: a separate collection rather than a flag on sessions (a
+forgotten filter would count a guest's training as the owner's and publish it to friends — a
+collection nothing else reads cannot be mis-counted); finish() minting its save ids once on the
+draft, because multi-row saves made the old "failed = nothing landed" retry unsafe; and the owner
+saving nothing when they only coached.
+
+Firestore rules updated and deployed (knownCollection carries guestSessions; the store↔rules
+agreement test pins the pair). Backups carry guests; restore gatekeeps a dateless guest row.
+data-layer 1199→1208, render 430→443, all eleven suites green. Pushed.
+
+Still queued from the confirmed plan: kudos/comments rules path, location on feed cards, the ratio
+table, PRs on finish, body-map targets, polish sweep, colour options.
+
+Second piece the same day: KUDOS AND COMMENTS WORK (0l closed). New rules path — a reaction is one
+create-only document at users/{owner}/reactions/{id}; a viewer of any published tier may write one,
+`from` is proven to be the caller, no update path exists at all, sender and owner can delete. One
+kudos per person by construction (deterministic doc id). The feed buttons show live counts, your
+own kudos reads as a state, a comments sheet holds the thread, and a quiet "On your workouts" strip
+above the feed shows what landed on yours — the receiving half, without which kudos would be
+write-only. Demo refuses with a sentence. Rules tests 46→66 (run in the emulator as four different
+callers), social tests 106→121, rules deployed, all suites green, pushed.
+
+Third piece: LOCATION ON FEED CARDS (0m closed). The privacy decision: a hand-typed label, never
+GPS — the owner chooses the granularity, so nothing more precise than what they wrote can leak.
+A quiet pin chip beside the date in the runner, carried forward from the last session (one gym =
+zero taps forever), editable on the edit-record screen, published at the "My workouts" tier and
+above only — sixty times-and-places describe where a person reliably is, so the lowest tier stays
+the minimum. Demo friends carry locations on some cards. A render test caught the carry-forward
+reading the wrong same-day session (getSessions sorts on date alone; the startedAt tie-break fixed
+it). Social tests 121→128, render 443→448, all green, pushed.
+
+Fourth piece: THE RATIO SWEEP (0h substantially closed). 28 lifts pulled from Strength Level's
+published 180 lb male standards, every remaining reasoned entry with a source derived the
+established way. Mostly the errors flattered again — pec deck 0.55→0.90 was the worst (~60%
+inflation), concentration curl 0.62→0.92, good morning 0.60→0.95, the deadlift family 13–30% — but
+three ran the OTHER way (leg press, hip thrust, dumbbell shrug had been under-crediting) and hack
+squat's guess turned out exactly right. The face pull split out of the raise family at 0.75, which
+retires §9's 50-lb-face-pull-as-167-lb-press example the honest way. Where no standard exists the
+table now says so by name. Demo-year effect: Back −8.7%, Triceps −9.7%, Shoulders confidence
+0.53→0.79. 23 sourced ratios + 7 orderings pinned (data-layer 1208→1235). All suites green, pushed.
+
+Fifth piece: PERSONAL BESTS ON THE FINISH SCREEN. The UX review's sharpest finding — nothing
+anywhere celebrates anything — answered the Rule-5-safe way: the finish screen compares the number
+just typed against the biggest number ever recorded for that lift (benchmarks included) and leads
+with "Personal best: Overhead Press — 105 lbs, up from 100". Recorded vs recorded only, no
+estimates; weight where the lift has one, reps where it does not, time and distance left alone
+(Rule 6). First-ever lifts are not congratulated — a trophy for showing up would make the trophy
+noise. Three render tests pin beaten / not beaten / nothing-to-beat. 452 render assertions green.
+
+Sixth piece: BODY-MAP HIT HALOS (0i's cheap half). Every muscle path gets an invisible duplicate
+with a fat transparent stroke — the tappable region grows ~10px in every direction and the
+illustration doesn't change by a pixel. All halos render before all fills, so a halo can only win
+where no real muscle is painted: enlargement never steals a tap from a neighbour. Verified over
+CDP at 360px — probes 3/6/9px outside the Traps lobe hit its halo, a real click 5px off the art
+selects Traps (the first probe used the bbox centre and "found" it broken; that centre is the
+spine gap between the lobes, §0.6's exact trap). Also drove the demo feed, the location chip and
+the people bar at 360 — no overflow anywhere, screenshots eyeballed. What's still under 44px is
+the art itself, which stays Tim's call.
+
+Seventh piece: THE POLISH SWEEP. Explore now explains its percentages in one line ABOVE the nine
+cards (full caveats still below); the screen is titled "Ready-made programmes" and its first
+sentence bridges the word swap — "a system is just a programme you own" — right where a stranger
+lands from "Pick a programme"; and the red not-backed-up dot finally waits for there to be
+something to lose: empty account, no dot; data plus no backup, dot; check fails, dot stays because
+unknown is not safe. Render 457→462, all green, pushed.
+
+Eighth piece: COLOUR OPTIONS BUILT, TIM'S PICK PENDING (0k). Three whole-app directions — teal,
+indigo, ember — implemented as real token overrides, applied to the actual app and screenshotted
+at 360px, contrast-measured (all clear AA with room), and published as a comparison page:
+https://claude.ai/code/artifact/ca7bfddd-28e8-463b-a06a-9339931ba64d. Candidate CSS parked in
+docs/colour-options/ with the fold-in checklist. The app's stylesheet is untouched until he says
+"teal", "indigo", "ember", or "keep today".
+
+Mid-session Tim also said to feel free to use as many sub-agents as I'd like — saved to memory as
+standing permission.
+
+End of day: seven of the eight authorised pieces shipped and deployed, the eighth waits on his
+taste. 2,564 assertions across eleven suites, plus 66 rules assertions in the emulator, all green.
+
+Tim's pick came back: ALL THREE. Built the same hour — Settings gained a "Colour" row (Gold ·
+Teal · Indigo · Ember), each chip wearing its accent as a dot. Gold is bare :root (an untouched
+account renders exactly as before); a palette is data-palette on <html>, applied instantly and
+re-applied by boot. Each palette got a DESIGNED light theme, not an inversion — ember's gold had
+to darken to clear AA on its warmer ground — and every token a palette touches is defined in both
+its blocks, because the dark-palette and plain-light selectors tie on specificity and source order
+must never decide a colour. The a11y suite now sweeps all four palettes in both themes (22→85
+assertions); the two gold-assuming literals (.row-start, .cal-tag.b) were found and handled; the
+demo carries the palette in like units and theme. Verified over CDP with real clicks: computed
+--accent changes per pick, teal+light composes, gold clears, reload re-applies. Render 462→470,
+2,635 assertions green, docs/colour-options deleted (superseded), artifact page marked decided.
+Pushed.
+
+---
+
+## 2026-08-26, second wave — six items from Tim, then three more mid-build
+
+All shipped except the AirPods work, which he said to plan and not deploy.
+
+RECORD IS A CATEGORY CHOOSER (D2 narrowed to D27). Weightlifting first and biggest, leading to
+the unchanged full recorder; Run/Walk/Swim/Cycle/Climb/Something-else each open a quick log that
+saves a real session — calendar, feed, backups all see it, the muscle map and ratings never do.
+Library gained Walking, Rock Climbing, Bouldering. docs/activities-plan.md holds the plan.
+
+THE ROTATION BUG HE REPORTED: his self-built system has no order, so "next in rotation" was
+alphabetical — after Legs came Pull, not Push. The rule is least-recently-done now (never-done
+counts as longest-waiting; rotation order is the tie-break so ordered programmes lose nothing).
+His exact Pull-Monday/Legs-Tuesday scenario is a pinned regression test.
+
+DURATIONS: the hidden timer he asked for has existed all along (startedAt/finishedAt on every
+session). Record rows now show ~N min — the median of that workout's own recordings, sets×3min
+until any exist, rounded to 5. Feed cards say "· 45 min ·" at the my-workouts tier and above;
+finishedAt itself is still never published, and overnight-draft garbage is guarded out.
+
+ACCOUNT: profile photo (client-resized, worn by the top-left button, not shared to friends),
+profile row + backup/restore + delete-all moved out of Settings onto the Account screen, and back
+from Account goes Home. Settings keeps a pointer row.
+
+THE "Friend"/"Autumn Dossey" BUG: accepting an invite happens before the other side accepts back,
+so her name was unreadable at accept time and the placeholder stuck. healConnectionName() now
+persists the published name whenever a screen can read it; unverified in the field until Tim's
+phone opens Friends.
+
+AIRPODS (docs/airpods-plan.md, NOT deployed): head-motion is native-only — impossible for a web
+app, verified with sources. Stem presses ARE buildable via MediaSession with a silent looped
+track; costs owning Now Playing (no Spotify at the same time), so opt-in only. Waiting on his go.
+
+2,683 assertions across eleven suites, all green. Docs swept for a chat reset; the outstanding
+verifications (CDP pass on the new screens, palette audit beyond Gold, two field checks) are
+Open work item 14.
+
+────────────────────────────────────────────────────────────────────────────
+2026-08-27 — the cropper, two iPhone bugs, activities phase 2, the palette audit
+
+Tim asked me to finish the items I'd said were fully specified, then sent two phone reports and
+two research questions while I was building.
+
+PROFILE PHOTO CROPPER — his ask: "sometimes the user's face isn't centered and large in the
+middle... display the image with a circle in the middle showing what their profile icon is
+actually going to look like, and let them move it and zoom it." Built: a "Position your photo"
+sheet, square stage with the circle inscribed, drag to move, slider/pinch/wheel to zoom.
+js/image-crop.js is a new pure module — the crop is a square in SOURCE pixels, so the same photo
+crops the same way whatever phone it was done on. What the circle frames is literally what the
+canvas cuts (both derive from one state, and there's an assertion that they agree). The invariant
+that matters: the crop square can never leave the image, so an avatar can never save with a blank
+wedge. Swept 1,925 combinations, zero escapes; mutation-checked both ways.
+
+HIS IPHONE BUG 1 — the profile photo rendering huge in the top-left with no circle. Chrome at
+390px would NOT reproduce it (34x34, circular), so I can't claim to have seen it. But there was a
+real latent fault: .avatar-glyph had no size of its own, and its parent sizes itself to its
+content, so the photo's width:100% was a cyclic percentage — and an engine is free to break that
+cycle by using the image's intrinsic 256px. Blink picks 34, WebKit apparently picks 256. Fixed by
+pinning everything to a definite box (position:absolute; inset:0). NEEDS TIM TO LOOK — I can't
+verify a fix for a bug I can't reproduce.
+
+FOUND WHILE LOOKING: a CSS comment was never closed (217 opens, 218 closes), and the parser was
+swallowing the .seg + .seg::after rule with it. That's the hairline between unselected segments —
+the thing that stops "Graph | Bar Chart Muscles" reading as two choices. It has never rendered.
+Mutation-checked.
+
+HIS IPHONE BUG 2 — "clicking friends in the home menu has a long delay and lag that's alarming."
+Four causes, all fixed: the router awaits the view before swapping the DOM (so the old screen sat
+under his thumb — Friends now paints immediately and fills in after); the invite list was fetched
+TWICE per visit; a friend's three visibility tiers were probed one at a time, paying a round trip
+per refusal, times every friend; and the cloud reads weren't cached at all — they are now, same
+30-second discipline as everything else. Pinned by a test that hands the screen a network which
+never answers.
+
+ACTIVITIES PHASE 2 (items 1-4): activities got their own group instead of being filed under
+Cardio, and it's unrankable and produces no volume — both asserted, because that's D27 failing
+quietly if it's wrong. Pace shown on anything with a distance and a time, never coloured good or
+bad. Feed cards now carry a dumbbell or a route glyph, and stopped printing "Running" under
+"Running".
+
+PALETTE AUDIT CLOSED: the full browser audit had only ever run on Gold. It now runs on all four —
+240 combinations, 23,496 text nodes, zero below 4.5:1, zero overflow. Plus the queued screenshot
+pass over the second wave: no horizontal overflow anywhere.
+
+AIRPODS ANSWER — his question: would head motion work if it were an App Store app? Yes.
+CMHeadphoneMotionManager is a real public API (AirPods Pro/Max/3rd gen/Beats Fit Pro, NOT AirPods
+2). But a WKWebView wrapper doesn't get it — needs a native Swift bridge, $99/yr, and review,
+where guideline 4.2 rejects repackaged websites. Head motion alone isn't worth a native app;
+HealthKit might be.
+
+INTEGRATIONS RESEARCH (docs/integrations-plan.md, nothing built) — his question about pulling from
+Strava/Cronometer/Apple Fitness/MacroFactor. The finding that reorders it: the blocker is not
+"website vs app", it's the missing SERVER. Strava's token exchange needs a client secret and has
+no PKCE, and a native app is just as public a client. Also: Strava's 2026 agreement forbids
+showing one user's Strava data to another user, which lands straight on the Home feed. Apple
+Health has no web or server API at all — native only. Cronometer and MacroFactor have no public
+API but both export files. So: FILE IMPORT works today as a website and needs nothing from
+anybody; live sync needs Firebase Blaze turned on; importing food would narrow D1/D26 and is his
+call.
+
+2,738 assertions across eleven suites, all green.
+
+RATIO SWEEP REMAINDER (same session): derived the raise family and the incline dumbbell press.
+Lateral raise 0.30->0.53, front raise 0.30->0.54, rear delt fly 0.30->0.56, incline DB bench
+0.70->0.80. The raises had been flattering by ~80 % — a 40 lb-per-hand lateral raise was
+converting to a 267 lb overhead press. It reads 151 now. The three raise medians agree within
+0.03, so the family shape was right and only the number was wrong. q does NOT rise on the raises
+(they drift 2-4x across the levels, so there's no constant to find) but DOES rise on the incline
+press (1.1x, flattest in the table). Also found a wrong note: Machine Triceps Extension claimed
+Strength Level publish a standard for it — they don't, they publish a machine pushdown, which is a
+different exercise. Labelled honestly now. Still open and small: decline DB bench, Seated/Arnold
+offsets, spider curl.
+
+────────────────────────────────────────────────────────────────────────────
+2026-08-27, second pass — photo editing, file import, Blaze priced
+
+Tim confirmed the profile picture is fixed on his phone (that was the last field check
+outstanding), then asked for four things: edit an existing photo, build file import, price the
+Firebase paid tier, and do items 3-4 from the next-steps list. AirPods and food import are on hold
+at his instruction.
+
+EDIT AN EXISTING PHOTO. The saved avatar is a 256px square with everything outside the circle
+already thrown away, so editing THAT would only ever let you zoom further in. A re-editable source
+is now kept at 768px — three times the output, which is exactly the cropper's max zoom, so
+re-cropping never upscales. Edit reopens where you left it. Remove clears the face, the source and
+the crop together.
+
+Found by driving it: setPointerCapture was the first line of the pointerdown handler and it throws
+when the pointer id isn't active — which threw before the pointer was recorded, so dragging did
+nothing at all. Capture is an optimisation, tracking is the mechanism. Reordered.
+
+FILE IMPORT — the Phase 1 from the research doc. #/import, off the Account screen. Drop in a CSV
+from Strava, MacroFactor, Cronometer, Apple Health or your own spreadsheet. Activities become
+sessions with no workoutId (same shape as the quick log, so the calendar and feed see them and the
+muscle map never does); weigh-ins join the body-weight series.
+
+Three things it refuses to guess, because all three would be wrong silently and forever:
+- 03/04/2026 is 3 April or 4 March. The whole column is checked first (one date above the 12th
+  settles it) and only a genuinely ambiguous column asks.
+- A weight column with no unit in its name imports nothing. 75 kg read as 75 lb records somebody
+  at a third of their weight.
+- A distance column likewise — AND THIS ONE WAS A REAL BUG. It used to fall back to miles, and
+  Strava exports kilometres, so a 5.02 km run came in as 5.02 miles. The weight hazard had been
+  thought about; its identical twin had not.
+
+Re-importing the same file is safe — every row gets a deterministic id from its own content, so an
+overlapping monthly export upserts instead of doubling training. Verified in a browser: same file
+twice, still three sessions, "nothing new to bring in".
+
+FIREBASE BLAZE, PRICED. Effectively free: the allowance is 2 million function calls a month and
+ten users on Strava sync would be about 1,500. Plus $300 credit for new accounts. The real cost is
+that it needs a card on file and there is no hard spending cap — only budget alerts. That's the
+reason to leave it off until live sync is actually wanted, not the money.
+
+2,799 assertions, all eleven suites green.
+
+────────────────────────────────────────────────────────────────────────────
+2026-08-27, third pass — joint workouts closed, disconnect finally mutual
+
+Items 3 and 4 from the list. Both needed a new rules path and both reused the kudos pattern, which
+is why they were quick.
+
+JOINT WORKOUTS (0e) — the friend-accept half. The guest half already kept a session under the
+recorder's account for someone with no account; now that they have one, it can be handed over. One
+create-only document per offer under the recipient, they see "Recorded for you" on Friends with who
+sent it and what's in it, and tap Add or No. Tim's decision was that the other person accepts it
+rather than it being written straight in — and there was never an alternative, because a direct
+write needs permission on their sessions document and that one document holds their whole training
+history. Accepting is THEIR app writing to THEIR account under rules that didn't change at all.
+
+MUTUAL DISCONNECT (0j) — it used to cut only your side, so after pressing Disconnect you could
+still read their training. Now the leaver drops a note under the other person's account and their
+app removes you and republishes. The document id IS the caller's uid, so you can only ever
+announce your own departure — otherwise anyone connected could evict anyone else. It's EVENTUAL
+though, and the sheet says so: nothing happens on their side until their app next opens, because
+their published document is theirs and I can't edit myself out of it. Anything better needs a
+server.
+
+Rules tests 66 → 92, all against the real engine. The denials are the point: a stranger can't offer
+a workout to someone who hasn't published to them, an offer can't be forged in someone else's name,
+there's no update path at all, even the sender can't list the recipient's offers, and Alex can't
+announce Sam's departure.
+
+One thing recorded rather than fixed: the emulator logs "evaluation errors" on several denials even
+after every field is guarded — and so does the reactions block that shipped before it. It's the
+get() inside the viewer check on documents that don't exist. Every denial is still a denial; I've
+noted in the rules file not to chase a quiet log, because it won't go quiet.
+
+Rules deployed. 2,813 assertions plus 92 in the emulator, all green.
+
+════════════════════════════════════════════════════════════════════════════
+PREPARED FOR A CHAT RESET — 2026-08-27
+
+Where things stand. The app is live and working; nothing is blocking. 2,813 assertions across
+eleven suites plus 92 rules assertions in the emulator, all green. Rules deployed. Four commits
+pushed today.
+
+What Tim asked for today and got: the profile photo cropper (and then the ability to re-edit a
+saved one), his two iPhone bugs fixed, activities Phase 2 items 1-4, the palette audit finally run
+on all four palettes, the ratio table's raise family corrected, file import built, Firebase Blaze
+priced, and the last two open social items (joint workouts and mutual disconnect) closed.
+
+What he's waiting on / parked: AirPods stem presses and food import — both "wait" at his
+instruction. Warm-ups in the volume count is still his call. His friend's sign-in he's
+investigating himself. And docs/activities-plan.md wants to know which activities his circle
+actually logs before per-activity extras get built.
+
+The honest gaps, which progress.md's "NOT verified" section spells out: file import has never seen
+a real export file from any of those services, the handoff and disconnect paths have never run
+between two real accounts, and the profile-photo fix was reasoned rather than observed (his phone
+confirms it works, which isn't the same as confirming why).
+
+progress.md is the file to read. Its index was rebuilt today so open work sits at the top and
+closed work is collected at the bottom — more than half of it is closed now.
+
+════════════════════════════════════════════════════════════════════════════
+PREPARED FOR A CHAT RESET — 2026-08-28 (session day; every git date says 08-26)
+
+The biggest session this project has had, and the scariest. Seven passes, all on Tim's
+instructions, ending with an emergency handled and closed.
+
+What happened, in order:
+
+1. Tim asked which open items needed no instruction, then which were genuinely good, then said to
+   do the good ones and PIN the rest ("don't bring them up as the 'next thing to do' later"). Three
+   shipped: the duplicate-exercise read bug, one-document-per-session (the cloud ceiling removed),
+   and the ratio sweep finished (0h closed — the reasoned entries were the worst ones). Four items
+   pinned with reasoning recorded. One recommendation was withdrawn as wrong (the estimator's
+   setIndex "urgency" — the data was always derivable).
+
+2. A usability drive of the gym loop at iPhone metrics — first time in a real browser. Tim's
+   response to the rest-timer findings: he doesn't love the timer, it's a sub-feature — OFF by
+   default behind a setting now, improvement list DECLINED (don't resurface). Four findings stand
+   waiting on his pick: wake lock, prefill-counts-as-recorded at Finish, the Record chooser tap,
+   "28" parsing as seconds in the Run log.
+
+3. THE EMERGENCY. "I think something you did erased the workout sessions I recorded." True cause:
+   the migration emptied the legacy sessions document as its migrated-flag; his phone, on the old
+   cached build, reads only that document. His two sessions were safe in the shard docs and were
+   restored via REST. PITR is off, so the stale-cache scenario can't be disproved — if he ever says
+   more than Pull 08-24 + Legs 08-25 existed, believe him and check his phone's localStorage. The
+   rework: the shard path cannot address the legacy document at all any more, mass deletes are
+   refused without a declared wholesale flag, a failed pre-wipe snapshot aborts the wipe, and every
+   account keeps a 7-day rolling cloud backup. "A flag that destroys information is not a flag."
+
+4. The Research tab (Data · Research): strength-vs-age per muscle group from Harbo 2012's measured
+   age bands — eight honest lines, Chest/Back/Traps named as unmeasured rather than invented,
+   after finding Strength Level's by-age tables are one curve wearing eleven names.
+
+5. Autumn's "lost" data: never lost, never touched. Her published muscle map was an empty
+   pre-training snapshot because NOTHING republished after recording a workout — publish was wired
+   to social actions only. Fixed both ways: publish follows the data now, and a boot heal
+   republishes stale projections (hers fixes itself next time she opens the app). All five
+   accounts got immutable server-side snapshots the same day. PITR needs the Blaze card — first
+   thing to buy with it if Tim ever says yes.
+
+6. Remove-an-exercise beside Swap: today only, saved workout untouched, recorded sets confirm
+   with a count, a group of one stops being a group, the last exercise is refused.
+
+2,943 assertions across eleven suites + 12 sw-update + 117 rules in the emulator, all green.
+Rules deployed twice. Everything pushed. sw-update has a load-sensitivity flake (fixed sleeps vs
+real Chrome), noted in progress.md rather than hidden.
+
+progress.md is the file to read, top to bottom of the 2026-08-28 sections. The PINNED table and
+the DECLINED rest-timer list are standing instructions that survive this reset.
+
+---
 

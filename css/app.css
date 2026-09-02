@@ -2159,13 +2159,42 @@ select.input {
 
 .chart-foot { flex: none; display: flex; flex-direction: column; gap: 5px; }
 
+/* ⚠️ IT SCROLLS SIDEWAYS WHEN IT HAS TO — 2026-09-08, when Calendar became the
+   SIXTH Data segment on Tim's instruction.
+
+   The measurement that governs this row has been in `render.test.mjs` since
+   Volume shipped: at 360px it is 293px wide against labels of 63+60+51+39+68 =
+   281px, so five fit with 12px spare and **a sixth does not fit at all**. That
+   measurement is still true. What changed is that a sixth segment now has to
+   exist anyway, and the alternatives were worse: shrinking the labels below
+   their content clips words, and wrapping to a second row grows the fixed
+   header on the one screen whose content is a full-height body map.
+
+   ⚠️ `.seg` KEEPS `flex: 1 1 auto`, WHICH IS WHAT MAKES THIS COST NOTHING WHEN
+   IT IS NOT NEEDED. With room to spare the segments still grow to fill the row
+   exactly as they did with five; only when their content is wider than the box
+   does anything scroll. Every screen with four or five segments is untouched.
+
+   ⚠️ The scrollbar is hidden because this is a tab bar, not a document — the
+   partly-visible last segment is the affordance, which is why nothing here
+   clips a label to fit. `ui.js` scrolls the selected one into view on render,
+   so opening Data on Calendar does not look like an empty row. */
 .segmented {
   display: flex;
   gap: 2px;
   background: var(--raised);
   border-radius: var(--r);
   padding: 2px;
+  overflow-x: auto;
+  /* Firefox and Chrome 121+. Safari is covered by the ::-webkit-scrollbar rule
+     below, and older Chrome by both. ⚠️ `-webkit-overflow-scrolling: touch` is
+     deliberately NOT here — it has been a no-op since iOS 13 and every current
+     engine ignores it. */
+  scrollbar-width: none;
+  /* A sideways flick on the tab row must not drag the page behind it. */
+  overscroll-behavior-x: contain;
 }
+.segmented::-webkit-scrollbar { display: none; }
 .seg {
   position: relative;
   flex: 1 1 auto;
@@ -3571,6 +3600,57 @@ a.seg {
 .friend-face { display: flex; align-items: center; gap: 11px; padding-block: 4px; }
 .friend-face .face-img { width: 54px; height: 54px; flex: none; }
 .friend-face .row-title { font-size: 17px; }
+
+/* ==========================================================================
+   THE PROFILE TAB (2026-09-08) — your own account as a place to look at
+
+   Tim: *"this section will only show the user's profile picture and their
+   username, as well as the number of workouts, followers, and following at the
+   top."* Distinct from `#/account`, which is where things are CHANGED.
+
+   ⚠️ THE THREE FIGURES ARE A GRID OF EQUAL THIRDS, not a flex row, and that is
+   the whole of the layout decision. Equal columns keep the numbers on a shared
+   baseline whatever their width, so "6" and "142" do not sit at different
+   heights — and a 3-year account's four-digit workout count cannot squeeze the
+   other two into their own labels.
+   ========================================================================== */
+
+.me-body { display: flex; flex-direction: column; gap: 16px; padding-inline: var(--pad); }
+
+.me-head { display: flex; align-items: center; gap: 14px; }
+.me-face {
+  flex: none; width: 72px; height: 72px; border-radius: 50%;
+  background: var(--raised); color: var(--ink-soft);
+  display: grid; place-items: center; overflow: hidden;
+}
+.me-who { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+/* Their name, at the size a name deserves on the screen that is about them.
+   `overflow-wrap` because a display name is 60 characters of free text and one
+   unbroken run of them must wrap rather than push the page sideways. */
+.me-name { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+
+.me-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.me-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 4px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  color: inherit; text-decoration: none;
+  /* 44px minimum in both directions without saying so in pixels: the padding
+     plus two lines of type clears it, and the grid gives it the width. */
+}
+.me-stat-n { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+.me-stat-l { font-size: 11.5px; font-weight: 650; letter-spacing: 0.04em;
+             text-transform: uppercase; color: var(--ink-faint); }
+/* ⚠️ A count the app cannot know is a DASH and is not a link — see the comment
+   above `countsHelp()` in views-me.js. Off the cloud there is no graph to count,
+   and printing 0 would be a claim rather than an absence. */
+.me-stat.is-off { opacity: 0.55; }
+
+/* A face beside a name in a plain list row. Sized to match `.row-icon`'s. */
+.row-face { flex: none; width: 26px; height: 26px; display: grid; place-items: center;
+            border-radius: 50%; overflow: hidden; background: var(--raised);
+            color: var(--ink-soft); }
 
 /* Most rows in this app are buttons; a friend row is a real link, so you can
    open somebody in a new tab. That means undoing the underline the browser

@@ -694,17 +694,36 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
   const appSrc = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   const navBlock = appSrc.slice(appSrc.indexOf('const NAV = ['), appSrc.indexOf('];', appSrc.indexOf('const NAV = [')));
 
-  ok(/hash: '#\/calendar'/.test(navBlock), 'Calendar has a nav tab of its own');
-  ok(!/hash: '#\/goals'/.test(navBlock), 'and Goals no longer has one');
+  /* 🔄 REWRITTEN 2026-09-08, AND THE RULE IT GUARDS IS UNCHANGED. Tim moved
+     Calendar back into Data and put a PROFILE section in the slot it left:
+     *"move the calendar section back to being a tab in the data section, and
+     replace it with a profile section."* So the specific tab this block names
+     has changed twice now — and the property it exists to protect has not:
+     **a tab bar being redesigned must not 404 a URL, and a route with no way in
+     is deleted in every sense that matters to a user.** Both features below are
+     asserted in all three halves for that reason. */
+  ok(/hash: '#\/me'/.test(navBlock), 'the Profile section has a nav tab');
+  ok(!/hash: '#\/calendar'/.test(navBlock), 'and Calendar no longer has one — it is a Data tab again');
+  ok(!/hash: '#\/goals'/.test(navBlock), 'nor does Goals');
   ok((navBlock.match(/hash: '#\//g) || []).length === 5,
-     'still five tabs — the bar did not grow, Calendar took the slot Goals left');
+     'still five tabs — the bar did not grow, Profile took the slot Calendar left');
 
-  // Half two: the route still resolves.
-  ok(/case 'goals':/.test(appSrc), '⚠️ but #/goals STILL RESOLVES — a bookmarked hash must not start 404ing');
-  // Half three: something on screen still points at it.
+  // Half two: both routes still resolve.
+  ok(/case 'goals':/.test(appSrc), '⚠️ #/goals STILL RESOLVES — a bookmarked hash must not start 404ing');
+  ok(/case 'calendar':/.test(appSrc), '⚠️ and so does #/calendar, which day and edit links hang off');
+
+  // Half three: something on screen still points at each of them.
   const settingsSrc = readFileSync(new URL('../js/views-data.js', import.meta.url), 'utf8');
   ok(/href: '#\/goals'/.test(settingsSrc),
-     '⚠️ and something LINKS to it — a route nobody can reach is deleted in every sense that matters');
+     '⚠️ and something LINKS to Goals — a route nobody can reach is deleted in every sense that matters');
+  /* ⚠️ ASSERTED ON `DATA_TABS` BY NAME, NOT ON THE FILE. `FRIEND_TABS` has
+     carried a Calendar entry since 2026-09-05, so a bare search for one would
+     pass while your OWN Data screen had no calendar at all — a vacuous
+     assertion of exactly the kind §0.14 is about. */
+  const dataTabsBlock = settingsSrc.slice(settingsSrc.indexOf('const DATA_TABS = ['),
+    settingsSrc.indexOf('];', settingsSrc.indexOf('const DATA_TABS = [')));
+  ok(/'calendar'/.test(dataTabsBlock),
+     '🚨 and the calendar is a segment of YOUR OWN Data screen, which is where the tab went');
   // And it can be got out of again.
   const goalsSrc = readFileSync(new URL('../js/views-goals.js', import.meta.url), 'utf8');
   ok((goalsSrc.match(/back: \(\) => go\('#\/settings'\)/g) || []).length === 3,
@@ -2282,8 +2301,16 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'move the dated section to the TOP of docs/history.md and leave only its one-line summary here'],
     ['docs/handbook.md', 220 * KB,
      'a section has outgrown the handbook — split the offender into its own docs/ file and leave a pointer'],
+    /* 🆕 §3 LEFT THE HANDBOOK ON 2026-09-08 and brought its budget with it. The
+       handbook was at 215 KB of 220 and §3 alone was 68 KB of that, so this is
+       the fix the row above names, taken. ⚠️ IT IS A READ-WHOLE FILE LIKE THE
+       OTHERS — a session reads it at the start with progress.md and the
+       handbook — which is exactly why it needs a budget rather than being
+       filed with the grep-then-read archives. */
+    ['docs/state.md', 160 * KB,
+     'move a feature area into its own docs/ file and leave a pointer, the way §3 itself was moved'],
     ['chat.md', 220 * KB,
-     'move its older half into docs/chat-archive.md, the way 2026-08-14..20 was moved on 2026-09-04'],
+     'move its older half into docs/chat-archive.md, the way 2026-08-14..26 was moved on 2026-09-04 and -08'],
   ];
   for (const [rel, budget, fix] of READ_WHOLE) {
     const bytes = fsMod.statSync(pathMod.join(up, rel)).size;

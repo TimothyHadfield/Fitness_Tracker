@@ -21,6 +21,7 @@ import {
   CompareBodiesView,
 } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
+import { MeRouteView } from './views-me.js';
 import { setUnits } from './units.js';
 
 /**
@@ -54,8 +55,30 @@ import { setUnits } from './units.js';
  * one route, and the alternative — a tab that goes dark when you are plainly
  * still inside it — is how a merge starts feeling like a dead end.
  */
+/* 🔄 2026-09-08 — THE FIFTH TAB IS PROFILE, AND CALENDAR WENT BACK INTO DATA.
+ *
+ * Tim: *"I think we should move the calendar section back to being a tab in the
+ * data section, and replace it with a profile section … this section will only
+ * show the user's profile picture and their username, as well as the number of
+ * workouts, followers, and following at the top."* Plus: *"I want to get rid of
+ * the 'You' and 'Friends' tab in the home page."*
+ *
+ * ⚠️ CALENDAR HAS NOW MOVED THREE TIMES AND EVERY MOVE WAS HIS. Into Data on
+ * 2026-08-22 (both are the past), out to its own tab on 2026-08-25 (he opens it
+ * often), back into Data today. The 2026-08-25 note said *"that argument was
+ * about what the two screens ARE; his is about how often he opens them"* — and
+ * what changed today is not the calendar, it is that a Profile section now wants
+ * the slot more. `#/calendar` still resolves throughout, which is the rule a tab
+ * bar redesign may not break.
+ *
+ * 🚨 AND HOME LOST ITS SWITCH RATHER THAN LOSING A SCREEN. The You / Friends
+ * tabs are gone; Home is the feed, and the Friends list is reached from Profile,
+ * where the followers and following counts already point at it. What moved OUT
+ * of Friends is the pair of controls that were never about other people at all —
+ * your display name and who can see your account — and they are on the Account
+ * screen now, with the rest of the logistics. */
 const NAV = [
-  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home', 'social', 'friend', 'invite', 'find', 'add', 'compare'] },
+  { hash: '#/home',     label: 'Home',     icon: 'home',     match: ['home'] },
   { hash: '#/workouts', label: 'Workouts', icon: 'dumbbell', match: ['workouts', 'system', 'workout', 'explore'] },
   // ⚠️ The hash is #/record and the view is the old start picker with the
   // benchmark action folded in. Both #/start and #/benchmark still resolve, so
@@ -72,8 +95,18 @@ const NAV = [
   // argument that both are the past, one drawn as squares and one as lines.
   // That argument was about what the two screens ARE; his is about how often he
   // opens them, and he is the one using it in a gym. Frequency wins.
-  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs'] },
-  { hash: '#/calendar', label: 'Calendar', icon: 'calendar', match: ['calendar', 'day', 'edit'] },
+  // ⚠️ Calendar's routes light DATA up now, because that is where the calendar
+  // lives again. A tab that goes dark while you are plainly still inside it is
+  // how a merge starts feeling like a dead end — the same reason Home used to
+  // own `social` and `friend`.
+  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs', 'calendar', 'day', 'edit'] },
+  // ⚠️ `#/me`, not `#/profile`. `#/profile` is the gender/birth-year/body-weight
+  // form and has been for months; it is reached from Account and every link to
+  // it still works. Two different screens called Profile is the "system" vs
+  // "programme" fault the UX review found, so the ROUTE names are kept distinct
+  // even though this tab is the one a person calls their profile.
+  { hash: '#/me',       label: 'Profile',  icon: 'person',
+    match: ['me', 'social', 'friend', 'invite', 'find', 'add', 'compare'] },
 ];
 
 // ⚠️ GOALS IS OFF THE TAB BAR, NOT DELETED, and the distinction matters. The
@@ -86,8 +119,16 @@ const NAV = [
 // the Settings link went in at the same time as this line came out.
 
 // Routes that take over the whole screen (no bottom nav).
-// `friend` and `invite` are here but `social` is NOT: Social is a tab, and the
-// two screens you reach FROM it are not. `goal` and `goals` are the same pair.
+// ⚠️ `friend` and `invite` are here but `social` and `me` are NOT, and the line
+// moved on 2026-09-08 without moving: it used to read "Social is a tab, and the
+// two screens you reach FROM it are not." Social is no longer a tab — PROFILE
+// is, and Social is one tap inside it — but it stays out of this list for the
+// same practical reason it always was: it is a LIST you browse, and keeping the
+// bar means you can leave it for another tab without going back first. The
+// screens you reach from a list are the ones that take the screen over.
+// `me` is the tab itself; `#/me/followers`, `#/me/following` and `#/me/workouts`
+// share its route name, so they keep the bar too and carry their own back arrow.
+// `goal` and `goals` are the same pair.
 // ⚠️ `record` is NOT here — it is a tab now, and a tab that hides the bar it
 // lives in cannot be tapped twice. `start` stays: it is the old deep link and
 // still opens the picker as a pushed screen with a back button.
@@ -154,6 +195,12 @@ async function resolve(route) {
     case 'import':    return ImportView();
     case 'signin':    return SignInView();
     case 'profile':   return ProfileView();
+    /* ⚠️ `me` IS THE PROFILE TAB AND `profile` IS THE DETAILS FORM. Both keep
+     * their own name because both are linked from elsewhere and neither may
+     * 404 — see the NAV comment. One route owns the whole section so that
+     * #/me/followers, #/me/following and #/me/workouts are sub-screens rather
+     * than four entries in this table. */
+    case 'me':        return MeRouteView(route.param);
     case 'social':    return SocialView();
     case 'goals':     return GoalsView();
     // #/goal/new, #/goal/new/<muscle>, #/goal/stalls, #/goal/systems — the

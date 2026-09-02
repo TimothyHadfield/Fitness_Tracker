@@ -83,6 +83,7 @@ const SHELL = [
   './js/views-account.js',
   './js/views-data.js',
   './js/views-edit-session.js',
+  './js/views-me.js',
   './js/views-muscles.js',
   './js/views-profile.js',
   './js/views-session.js',

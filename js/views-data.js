@@ -17,7 +17,7 @@ import {
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge, exerciseLabel,
-  refreshRoute, helpDot,
+  refreshRoute, helpDot, wireSegmented,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
@@ -231,9 +231,30 @@ function yearsPane(activity, today, onPick) {
   });
 }
 
-export async function CalendarView() {
-  const activity = await activityByDate();
-  const today = todayISO();
+/**
+ * MY OWN CALENDAR, BUILT ONCE AND SHOWN IN TWO PLACES — 2026-09-08, Tim: *"I
+ * think we should move the calendar section back to being a tab in the data
+ * section."*
+ *
+ * 🚨 IT RETURNS ITS CONTROLS AND A PAINTER RATHER THAN A SCREEN, and that is
+ * what lets the same calendar be a nav tab (`#/calendar`, still a route, still
+ * bookmarkable) and the sixth segment of the Data screen without a second copy
+ * of Months, Years, the readout and the day links. The rule this project keeps
+ * relearning — see the note above `GraphView` — is that two subjects share one
+ * function or they drift apart; two PLACES are no different.
+ *
+ * The caller supplies the node the grids are painted into: the Calendar tab
+ * hands over its `.pane-scroll`, the Data screen its `.graph-host`. Everything
+ * else — which mode is on, where a day goes, what the readout says — lives here.
+ *
+ * ⚠️ `calMode` STAYS MODULE STATE and is deliberately shared by both places. It
+ * is "how I read a calendar", not "how this screen was left": somebody who
+ * prefers Years should not have to re-pick it because they arrived through the
+ * other door. Unlike `graphMode` there is no second subject to keep apart — a
+ * friend's calendar is `renderCalendarPane`'s other branch and never comes
+ * through here.
+ */
+function ownCalendar(activity, today) {
   const months = monthRange(activity);
 
   // ⚠️ RESERVED, NEVER REVEALED. The readout holds its row whether or not a day
@@ -277,20 +298,14 @@ export async function CalendarView() {
       onClick: () => { if (calMode !== m) { calMode = m; paint(); } },
     }));
 
-  const screen = screenShell({
-    profile: true,
-    // ⚠️ ITS OWN TITLE AGAIN, since 2026-08-25. This carried the four-way Data
-    // switch while Calendar was a mode of that tab; it is a tab in its own right
-    // now, so borrowing another tab's control would light up a segment for a
-    // screen that is no longer in it.
-    title: 'Calendar',
-    top: el('div', { class: 'cal-modes' },
-      el('div', { class: 'segmented sub', role: 'tablist' }, tabs), legend, readout),
-    scroll: [],
-  });
+  const top = el('div', { class: 'cal-modes' },
+    el('div', { class: 'segmented sub', role: 'tablist' }, tabs), legend, readout);
+
+  // The node the grids go in, handed over by whoever is showing this.
+  let host = null;
 
   /**
-   * ⚠️ THE SCREEN NODE IS NEVER REPLACED, only repainted — and that is not a
+   * ⚠️ THE CONTAINER IS NEVER REPLACED, only repainted — and that is not a
    * performance choice.
    *
    * `app.js` PREPENDS things into the node a view returns: in the demo account
@@ -301,7 +316,9 @@ export async function CalendarView() {
    *
    * The general rule, which is worth more than this instance: **a view does not
    * own the node it returned.** Anything re-rendering itself in place must
-   * repaint its own contents and leave the container alone.
+   * repaint its own contents and leave the container alone. On the Data screen
+   * that matters twice over: the node here is the shared `.graph-host` every
+   * other segment paints into, and it belongs to `GraphView`.
    */
   function paint() {
     const isYears = calMode === 'years';
@@ -309,24 +326,53 @@ export async function CalendarView() {
     legend.hidden = isYears;
     readout.hidden = !isYears;
 
-    const pane = screen.querySelector('.pane-scroll');
+    if (!host) return;
     if (isYears) {
-      setChildren(pane, ...(activity.size
+      setChildren(host, ...(activity.size
         ? yearsPane(activity, today, pickDay)
         : [emptyState('No training recorded yet',
           'Every day you finish a workout fills in a square here. A year fits on one screen.')]));
-      pane.scrollTop = 0;
+      // The scroller is the pane, which is the host itself on the Calendar tab
+      // and its parent on the Data screen.
+      const pane = host.closest('.pane-scroll');
+      if (pane) pane.scrollTop = 0;
     } else {
-      setChildren(pane, ...months.map(({ year, month }) => monthBlock(year, month, activity, today)));
-      landOnCurrentMonth(screen);
+      setChildren(host, ...months.map(({ year, month }) => monthBlock(year, month, activity, today)));
+      landOnCurrentMonth(host);
     }
   }
 
-  paint();
+  return {
+    top,
+    paint(node) { host = node; paint(); },
+  };
+}
+
+export async function CalendarView() {
+  const cal = ownCalendar(await activityByDate(), todayISO());
+
+  const screen = screenShell({
+    profile: true,
+    // ⚠️ ITS OWN TITLE, and it keeps it even though Calendar is a Data segment
+    // again since 2026-09-08. `#/calendar` is a route in its own right —
+    // `#/day/<date>` and `#/edit/<id>` hang off it — so this screen still has to
+    // stand up alone. Wearing the Data switch here would light a segment for a
+    // screen that is not the Data screen.
+    title: 'Calendar',
+    top: cal.top,
+    scroll: [],
+  });
+
+  cal.paint(screen.querySelector('.pane-scroll'));
   return screen;
 }
 
-function landOnCurrentMonth(screen) {
+/**
+ * @param {Node} container  where the month sections were painted — the scroller
+ *   itself on the Calendar tab, the `.graph-host` inside it on the Data screen.
+ *   `closest()` starts at the element itself, so one call resolves both.
+ */
+function landOnCurrentMonth(container) {
 
   // Land on the current month once the screen is in the document.
   //
@@ -344,11 +390,14 @@ function landOnCurrentMonth(screen) {
   // padding it by a fixed fraction of the viewport would work too and would put
   // half a screen of void under December for the sake of August.
   setTimeout(() => {
-    const pane = screen.querySelector('.pane-scroll');
-    const current = screen.querySelector('[data-current-month]');
+    const pane = container.closest ? container.closest('.pane-scroll') : null;
+    const current = container.querySelector('[data-current-month]');
     if (!pane || !current) return;
 
-    const last = pane.lastElementChild;
+    // ⚠️ THE LAST MONTH, not the pane's last child. On the Data screen the pane
+    // holds one element — the host every segment paints into — so asking the
+    // pane would pad the host itself and move nothing.
+    const last = container.lastElementChild;
     if (last) {
       const shortfall = pane.clientHeight - last.getBoundingClientRect().height;
       last.style.paddingBottom = shortfall > 0 ? `${Math.ceil(shortfall)}px` : '';
@@ -359,8 +408,6 @@ function landOnCurrentMonth(screen) {
     // subtracting one from the other only works by coincidence of layout.
     pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top;
   }, 0);
-
-  return screen;
 }
 
 /**
@@ -376,6 +423,13 @@ function landOnCurrentMonth(screen) {
  * are now the same kind of thing: in-page state on `#/graphs`. Calendar was the
  * only one that navigated, which is why this function needed a special case and
  * an `onChartMode` fallback for "arriving from the calendar". Both are gone.
+ *
+ * 🔄 CALENDAR CAME BACK ON 2026-09-08 AND THE ODDITY DID NOT. It is a mode like
+ * every other one now — `renderCalendarPane` paints the shared `.graph-host`,
+ * nothing here navigates, and the special case and the `onChartMode` fallback
+ * stayed deleted. `#/calendar` is still a route, but it is a route the tab does
+ * not use; that is why this reversal costs one entry in the list rather than
+ * bringing the 2026-08-22 shape back with it.
  *
  * ⚠️ MUSCLES IS FIRST AND IS THE DEFAULT — Tim, 2026-08-25: *"In the Data
  * section, the muscle group should be the first tab and the default tab for when
@@ -394,13 +448,61 @@ function landOnCurrentMonth(screen) {
 // 281px, `scrollWidth === clientWidth` on the row and on every segment, and the
 // four that were already there are the SAME width they were with four segments —
 // nothing was squeezed. ⚠️ THAT LEAVES 12px, so a SIXTH does not fit and this is
-// the last one that can be added without shortening a label.
+// the last one that can be added without shortening a label. 🔄 **STILL TRUE,
+// NO LONGER THE RULING** — a sixth arrived on 2026-09-08 and the row was made to
+// scroll instead of being squeezed. Read the block below before this one.
 //
 // ⚠️ Volume sits SECOND, beside Muscles, because they are two readings of the
 // same body — "how strong is it" and "how much work is it getting" — and the two
 // chart modes belong together after them.
+/* 🚨 SIX SEGMENTS SINCE 2026-09-08 — Calendar is back in this control, Tim: *"I
+ * think we should move the calendar section back to being a tab in the data
+ * section."* That reverses the 2026-08-25 split, which itself reversed the
+ * 2026-08-22 merge. His call all three times; the note above is left standing
+ * because the argument it records has not changed, only the ruling.
+ *
+ * 🚨 IT STILL DOES NOT FIT — THE MEASUREMENT ABOVE WAS RIGHT — SO THE ROW
+ * SCROLLS. Re-driven over CDP on 2026-09-08 at 320 / 360 / 375 / 390 / 393 /
+ * 430 / 768px, both themes (identical to the 0.01px; the labels are the same
+ * font either way):
+ *
+ *   Muscles 62.59 · Volume 60.08 · Graph 50.73 · Bars 39.23 · Research 68.22 ·
+ *   Calendar 68.00 = 348.85px of segment, + 5 gaps × 2px + 4px of padding =
+ *   **362.86px of row against a 290px slot at 360px** — the profile button and
+ *   the header's padding take the other 70. It needs ~433px to fit outright.
+ *
+ * ⚠️ NO LABEL IS EVER ELLIPSISED, and that is what makes scrolling the right
+ * answer rather than a dodge. `.seg` carries `min-width: fit-content`, so a
+ * segment cannot be squeezed below its own text: `scrollWidth === clientWidth`
+ * on all six at every width tested. Without a scroller the overflow lands on the
+ * ROW instead — measured before the CSS landed, the bar ran 58.86px past the
+ * right edge of a 360px screen and Calendar showed **11.14px of its 68**, the
+ * "C" and nothing else, with 0px visible at 320px and no sideways gesture on the
+ * document to bring it back. An 11px sliver at the screen edge is worse than an
+ * ellipsis, which is why neither was shipped.
+ *
+ * 🚨 THE FIT IS SOLVED IN TWO FILES THAT ARE NOT THIS ONE, and if either is
+ * reverted this control breaks rather than degrades:
+ *   • `css/app.css` — `.segmented { overflow-x: auto }`, scrollbar hidden,
+ *     `overscroll-behavior-x: contain` so a flick along the tabs does not drag
+ *     the page behind it.
+ *   • `js/ui.js` — `wireSegmented()` centres the SELECTED segment by setting
+ *     `bar.scrollLeft` (never `scrollIntoView`, which would walk up and drag the
+ *     pane). Without it, opening the app on Calendar would show five tabs with
+ *     none of them lit.
+ * Verified at 360px with a real hit-tested tap: the row is a 290px window over
+ * 363px of content, tapping Calendar selects it and the pill lands at 293px, and
+ * re-entering `#/graphs` on Calendar arrives already scrolled to it
+ * (`scrollLeft` 73, the segment fully visible). The document never scrolls
+ * sideways at any width — Rule 1 holds.
+ *
+ * ⚠️ CALENDAR GOES LAST, not back in front. It was the FIRST segment during the
+ * 2026-08-22 merge, but Muscles has been the first tab and the default since
+ * 2026-08-25 and moving it now would move every tab somebody already knows —
+ * for a segment that is also still reachable at `#/calendar`. Appending costs
+ * nobody their muscle map. */
 const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Graph'],
-  ['compare', 'Bars'], ['research', 'Research']];
+  ['compare', 'Bars'], ['research', 'Research'], ['calendar', 'Calendar']];
 
 /* 🚨 A FRIEND'S FIFTH TAB IS THEIR CALENDAR, NOT RESEARCH — Tim, 2026-09-05:
  * *"with the 'research' tab replaced with that user's 'calendar' data."*
@@ -413,7 +515,13 @@ const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Grap
  *
  * ⚠️ THE POSITION IS KEPT. Swapping in place rather than appending means the
  * four tabs somebody already knows do not move when they open another person's
- * page: the muscle map is still first, the calendar is where Research was. */
+ * page: the muscle map is still first, the calendar is where Research was.
+ *
+ * 🚨 `slice(0, 4)` IS LOAD-BEARING NOW THAT MY OWN LIST ENDS IN CALENDAR TOO
+ * (2026-09-08). Taking the whole list and swapping Research out would give a
+ * friend's page two Calendar segments — the fifth from the swap and the sixth
+ * from mine — both selecting the same mode, which is the "two ways in light two
+ * things at once" fault from the other direction. Five stays five. */
 const FRIEND_TABS = [...DATA_TABS.slice(0, 4), ['calendar', 'Calendar']];
 
 /**
@@ -421,10 +529,15 @@ const FRIEND_TABS = [...DATA_TABS.slice(0, 4), ['calendar', 'Calendar']];
  *   parameter for the same reason `openCompareSheet`'s `save` is. `graphMode` is
  *   MODULE state — the tab you left your own Data screen on — and a friend's
  *   page must not write it. Browsing somebody else would otherwise change which
- *   tab your own screen opens on, and picking their Calendar would leave
- *   `graphMode` holding a key that does not exist in `DATA_TABS`, so your next
- *   visit would silently fall through to the trend chart. One control, two
- *   memories.
+ *   tab your own screen opens on. One control, two memories.
+ *
+ *   ⚠️ AND THE HARM CHANGED SHAPE ON 2026-09-08 WITHOUT GETTING SMALLER. It
+ *   used to be that picking their Calendar left `graphMode` holding a key not in
+ *   `DATA_TABS`, so my next visit fell through to the trend chart. `calendar` is
+ *   now a real key of mine, so the same tap would instead open MY Data screen on
+ *   MY calendar — no longer a broken value, still a screen I did not choose,
+ *   and now indistinguishable from having chosen it. The guard is unchanged and
+ *   the reason to keep it is not weaker.
  */
 function dataTabs(active, onChartMode, tabs = DATA_TABS, setMode = null) {
   return el('div', { class: 'segmented', role: 'tablist' },
@@ -704,7 +817,8 @@ let graphChoice = { exerciseId: null, field: null };
 // two points before it can draw anything. This is module-level, so it survives
 // leaving the screen and comes back where you left it; 'muscles' is only the
 // value the session STARTS at.
-let graphMode = 'muscles'; // 'muscles' | 'trend' | 'compare'
+// 'muscles' | 'volume' | 'trend' | 'compare' | 'research' | 'calendar'
+let graphMode = 'muscles';
 let compareField = null;
 // exerciseId -> rep count everything is compared at. Seeded from the most
 // frequently recorded rep count, then whatever the user steps it to.
@@ -2363,10 +2477,19 @@ function volumeLegend(selectedKey) {
  *   name a person. Absent means yours.
  */
 /**
- * A CALENDAR PANE — a friend's fifth tab, where Research is on yours.
+ * A CALENDAR PANE — a friend's fifth tab, and since 2026-09-08 my own sixth.
  *
  * Tim, 2026-09-05: *"with the 'research' tab replaced with that user's
  * 'calendar' data."*
+ *
+ * 🚨 TWO SUBJECTS, TWO DIFFERENT CALENDARS, AND THAT IS NOT THE USUAL DRIFT
+ * THIS FILE WARNS ABOUT. Everywhere else one function serves both because the
+ * screens must be identical; here three things genuinely differ and each has
+ * already been argued out below — a friend gets Months only, inert cells, and a
+ * sentence saying it is a sixty-session window. Mine gets Months AND Years, days
+ * that open `#/day/<iso>`, and no window caveat because it is my whole history.
+ * Forcing one body to serve both would mean three flags; the split is one `if`
+ * and the shared parts (`monthBlock`, `monthRange`) are still shared.
  *
  * ⚠️ MONTHS ONLY, AND THE YEARS VIEW IS LEFT OFF DELIBERATELY. Years exists to
  * fit a whole training history on one screen; a friend publishes their most
@@ -2385,6 +2508,24 @@ export async function renderCalendarPane(host, top, opts = {}) {
   const who = opts.subject || 'They';
   const activity = await activityByDate(rows);
   const today = todayISO();
+
+  /* MY OWN: the whole Calendar screen, minus its header. Same builder the
+   * `#/calendar` route uses, so Months, Years, the readout and the day links
+   * cannot differ between the two doors into it.
+   *
+   * ⚠️ `wireSegmented` IS CALLED HERE and it has to be. `screenShell` wires the
+   * controls a screen was BUILT with; this control is built later, every time
+   * somebody taps back onto this segment, so nothing else would ever see it and
+   * the Months/Years pill would be the one segmented control in the app that
+   * does not slide. It is idempotent — it marks the bar it has done — so the
+   * first render, where the shell wires it too, still gets exactly one pill. */
+  if (!rows) {
+    const cal = ownCalendar(activity, today);
+    setChildren(top, cal.top);
+    cal.paint(host);
+    wireSegmented(top);
+    return;
+  }
 
   setChildren(top);
 

@@ -208,29 +208,31 @@ export function iconBtn(name, label, onClick, cls = 'icon-btn') {
 }
 
 /**
- * The You / Friends switch — the seam where Social was folded into Home.
+ * 🔄 THE YOU / FRIENDS SWITCH IS DELETED — 2026-09-08, Tim: *"I want to get rid
+ * of the 'You' and 'Friends' tab in the home page."* It was the seam where
+ * Social got folded into Home on 2026-08-22, and it is gone because the seam
+ * is: Home is the feed, and the Friends list is reached from the Profile tab,
+ * where the followers and following counts point straight at it.
  *
- * ⚠️ REAL LINKS ACROSS TWO ROUTES, not a state machine inside one screen.
- * `#/home` and `#/social` stay separate views that each render this control,
- * so the back button, a bookmark and a shared invite link all keep working
- * exactly as they did, and neither screen had to be nested inside the other.
- * The nav bar lights the same tab for both (see `NAV[].match` in app.js).
+ * ⚠️ THE FUNCTION IS DELETED RATHER THAN LEFT UNUSED, and `#/social` is
+ * untouched. A control nobody renders is not a feature kept warm, it is a
+ * second answer to a question the app has stopped asking — and this file's own
+ * rule is that a route with no way in is deleted in every sense that matters,
+ * which cuts the other way too: the route has a way in, so it lives; the widget
+ * has no caller, so it does not.
  *
- * ⚠️ "Friends" rather than "Social". `js/social.js` calls the feature social
- * because that is what it is; a person has friends. The app's own rule about
- * saying the thing rather than the term (D8) applies to its own vocabulary
- * first — this is the same fault the UX review found in "system" vs
- * "programme", caught before it shipped rather than after.
+ * Two things it recorded are worth keeping, because both outlived it:
+ *
+ *   ⚠️ IT WAS REAL LINKS ACROSS TWO ROUTES, not a state machine inside one
+ *   screen — which is why `#/home` and `#/social` are still separate views and
+ *   nothing had to be unpicked to remove the switch.
+ *
+ *   ⚠️ "FRIENDS" RATHER THAN "SOCIAL". `js/social.js` calls the feature social
+ *   because that is what it is; a person has friends. Saying the thing rather
+ *   than the term (D8) applies to the app's own vocabulary first — the same
+ *   fault the UX review found in "system" vs "programme". The Friends screen is
+ *   still titled Friends for exactly that reason.
  */
-export function youFriendsTabs(active) {
-  return el('div', { class: 'segmented', role: 'tablist' },
-    [['you', 'You', '#/home'], ['friends', 'Friends', '#/social']].map(([key, label, href]) =>
-      el('a', {
-        class: 'seg', role: 'tab', href,
-        'aria-selected': String(key === active),
-      }, label)),
-  );
-}
 
 /**
  * Somebody's face — theirs if they have published one, the person glyph if not.
@@ -487,7 +489,29 @@ export function wireSegmented(root) {
       if (!on) return;
       ind.style.width = `${on.offsetWidth}px`;
       ind.style.height = `${on.offsetHeight}px`;
+      /* ⚠️ `offsetLeft`, NOT a bounding-rect difference, and since 2026-09-08
+       * that is load-bearing rather than incidental: this row can SCROLL now
+       * that Data has six segments, and `offsetLeft` is measured against the
+       * bar itself, so the pill stays on its segment as the row moves. A
+       * viewport-relative measurement would have drifted the moment anybody
+       * flicked it sideways. */
       ind.style.transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`;
+
+      /* 🚨 AND THE SELECTED SEGMENT IS SCROLLED INTO VIEW. Data's sixth segment
+       * is off-screen at 360px, so opening the app on Calendar would otherwise
+       * show a row of five tabs with none of them lit and the chosen one out of
+       * sight — a screen that looks broken rather than scrolled.
+       *
+       * ⚠️ `scrollLeft` rather than `scrollIntoView()`: the latter walks every
+       * scrollable ancestor and would drag the whole pane about, which on a
+       * screen whose content is a full-height body map is very visible. This
+       * moves one element's own scroll offset and nothing else. Guarded because
+       * jsdom lays nothing out, so every offset here is 0 and the arithmetic
+       * would centre on nothing. */
+      if (bar.scrollWidth > bar.clientWidth + 1) {
+        const target = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2;
+        bar.scrollLeft = Math.max(0, target);
+      }
     };
 
     // ⚠️ The FIRST placement must not slide. Without this every screen would

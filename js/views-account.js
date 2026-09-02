@@ -14,6 +14,15 @@ import {
   setChildren, fmtDateShort, helpDot,
 } from './ui.js';
 import { cloudFullWarning } from './views-data.js';
+/* ⚠️ THE SHEETS ARE IMPORTED, NEVER RE-DRAWN HERE. Both of these are the same
+ * control the Friends screen offers, and a second copy of a visibility picker is
+ * a second place for the words about who can see somebody's training to drift.
+ * `visibilitySheet()` in particular carries the list Rule 9 says must stay in
+ * the open; reimplementing it here would be reimplementing that decision. */
+import { visibilitySheet, renameSheet } from './views-social.js';
+import {
+  PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL, normalizeVisibility,
+} from './social.js';
 import * as units from './units.js';
 import * as crop from './image-crop.js';
 
@@ -556,10 +565,135 @@ function renderCrop(img, rect, size) {
   return canvas.toDataURL('image/jpeg', 0.82);
 }
 
+/* ------------------------------------------------------------------ *
+ * Who can see you, and the name they see
+ *
+ * Tim, 2026-09-08: *"I want to get rid of the 'You' and 'Friends' tab in the
+ * home page. To do this, move the privacy changes and display name into the
+ * account menu."* Both controls already existed on the Friends screen; this is
+ * the same two sheets opened from the screen that owns the person.
+ *
+ * 🚨 THE CURRENT SETTING AND WHAT IT MEANS ARE ON THE SCREEN, NOT BEHIND A "?".
+ * Rule 9's own worked example is this control: what a stranger can see about you
+ * is WHAT, and somebody deciding whether to be public has to be able to read the
+ * whole answer without asking for it. So the row carries VISIBILITY_DETAIL in
+ * full — the same sentence the Friends screen shows — and the ? on this screen
+ * is spent on things that explain rather than state.
+ *
+ * ⚠️ IT NORMALISES RATHER THAN CARRYING ITS OWN FALLBACK. `views-social.js`'s
+ * `visibilityRow()` records the bug: written as `LABEL[visibility] ||
+ * LABEL[PRIVATE]`, it went on saying "Private" for an account with no stored
+ * choice after the default flipped to public, while the publisher treated the
+ * same account as public. A screen and a database disagreeing about who can see
+ * somebody's training is the worst version of that there is. One definition of
+ * the default, in social.js.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Why there is nothing to set, in the person's words — one sentence each,
+ * because "private" and "there is no account" are not the same answer and they
+ * send somebody to two different next steps.
+ *
+ * ⚠️ NONE OF THEM CLAIMS NOTHING IS PUBLISHED. An anonymous account is a real
+ * cloud uid and `republish()` does not refuse it, so "nobody can see you" would
+ * be a reassurance this screen cannot back. They say what is missing and what
+ * to do about it, and nothing more.
+ *
+ * ⚠️ AND `offline` NAMES NO SETTING. The stored value is the last one this
+ * device saw; an account switched to private on a phone would still read
+ * "Public" here, which is precisely the screen-and-database disagreement the
+ * comment above exists to prevent.
+ */
+const SHARING_UNAVAILABLE = {
+  local: 'This copy of the app keeps everything in this browser, so there is no account for '
+    + 'anybody to find or follow.',
+  offline: 'You are offline. Who can see your account is a setting on the account itself, so it '
+    + 'cannot be checked or changed until you are back online.',
+  anonymous: 'Choosing who can see you needs a real account. Add an email or Google sign-in and '
+    + 'you can set it here.',
+};
+
+/**
+ * The two rows, or the sentence saying why there are none.
+ *
+ * ⚠️ AVAILABILITY IS RESOLVED BEFORE ANYTHING IS DRAWN — the same shape as
+ * `noteToDeveloper()` above, and for the same reason. A visibility row on an
+ * account with no cloud is a control that lies: tapping it would offer a choice
+ * `social.setVisibility()` cannot store.
+ */
+async function sharingRows() {
+  let state;
+  // `social.state()` reads the graph over the network, so a dead connection
+  // arrives as a throw rather than as a reason. Treat it as the reason it is.
+  try { state = await social.state(); }
+  catch (_) { state = { available: false, reason: 'offline' }; }
+
+  const heading = el('div', { class: 'section-label', text: 'Who can see you' });
+
+  if (!state.available) {
+    // The demo says nothing at all, exactly as the note-to-developer card does:
+    // nobody enters an invented account in order to adjust its privacy, and a
+    // paragraph explaining that would be noise on a screen being looked around.
+    const why = SHARING_UNAVAILABLE[state.reason];
+    if (!why) return [];
+    return [heading, el('div', { class: 'field-help', text: why })];
+  }
+
+  const visibility = normalizeVisibility(state.visibility);
+
+  return [
+    heading,
+
+    el('button', {
+      class: 'row as-button',
+      onClick: () => visibilitySheet(visibility, async (next) => {
+        try {
+          await social.setVisibility(next);
+          toast(next === PUBLIC_ACCOUNT ? 'Your account is public.' : 'Your account is private.');
+          refresh();
+        } catch (err) { toast(err.message); }
+      }),
+    },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: VISIBILITY_LABEL[visibility] }),
+        // `.wrap`, because this is a sentence rather than a value — an
+        // ellipsised consequence is a consequence nobody reads.
+        el('div', { class: 'row-sub wrap', text: VISIBILITY_DETAIL[visibility] }),
+      ),
+      chevron(),
+    ),
+
+    /* The name, on the row that shows it. ⚠️ The row states the name rather
+     * than describing what a display name is: it is the one thing every person
+     * who can see you sees, and "Not set yet" is the case worth spotting from
+     * across the screen. */
+    /* 🚨 THE SECOND ARGUMENT IS NOT OPTIONAL HERE, AND IT WAS A REAL BUG CAUGHT
+     * BEFORE IT SHIPPED. `renameSheet` used to end in `views-social.js`'s own
+     * `refresh()` — `refreshRoute('#/social')` — and `refreshRoute` rewrites the
+     * hash when it differs. Renaming yourself from this screen would have saved
+     * the name and then dropped you on the Friends list, with a back arrow
+     * pointing at a screen you never opened. It takes an `after` callback now,
+     * so the caller says where it is. ⚠️ Reimplementing the sheet here instead
+     * would have been a second way for a published name to disagree with the
+     * stored one, which is what its own docblock says the export exists to
+     * prevent. */
+    el('button', {
+      class: 'row as-button',
+      onClick: () => renameSheet(state.name, refresh),
+    },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: 'Your display name' }),
+        el('div', { class: 'row-sub', text: state.name || 'Not set yet' }),
+      ),
+      chevron(),
+    ),
+  ];
+}
+
 /** Everything personal that used to live in Settings: profile, data, delete. */
 async function personalSections({ mode }) {
-  const [settings, profile, cloud] = await Promise.all([
-    store.getSettings(), store.getProfile(), store.cloudUsage(),
+  const [settings, profile, cloud, sharing] = await Promise.all([
+    store.getSettings(), store.getProfile(), store.cloudUsage(), sharingRows(),
   ]);
 
   // Say what is missing rather than just "Profile" — this gates the muscle
@@ -636,6 +770,13 @@ async function personalSections({ mode }) {
       ),
       el('span', { class: 'row-chev' }, chevron()),
     ),
+
+    /* ⚠️ WITH THE PERSON, NOT WITH THE DATA CONTROLS — directly under "Your
+     * details" and far from "Delete all data". Who can see you and what they
+     * call you are facts about the person this screen is now the home of; the
+     * comment on the note-to-developer card below says why the irreversible
+     * button is kept away from anything people scan past on the way down. */
+    ...sharing,
 
     /* ⚠️ THE HEADING KEEPS THE ONE FACT THAT CHANGES WHAT THE DATA IS, and the
      * ? takes the rest — 2026-09-08, Rule 9. "Only in this browser" is not a

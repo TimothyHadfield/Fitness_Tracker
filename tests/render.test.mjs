@@ -119,16 +119,21 @@ for (const [name, view] of [
 // Empty account, no chartable data at all.
 let data = await mount(GraphView());
 let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
-/* ⚠️ FIVE since 2026-08-31: Volume joined (D3's headline metric). Four from
-   2026-08-28 when Research joined; three from 2026-08-25, when Calendar left
-   this control and became its own nav tab. The count is asserted rather than
+/* ⚠️ SIX since 2026-09-08, when Tim moved the calendar back in: *"move the
+   calendar section back to being a tab in the data section."* Five from
+   2026-08-31 (Volume joined, D3's headline metric); four from 2026-08-28
+   (Research); three from 2026-08-25, when Calendar left this control for a nav
+   tab of its own. **The calendar has now been in this control, out of it, and
+   back in — every move on his instruction.** The count is asserted rather than
    just the contents, because a segment silently disappearing is exactly the
-   class of bug this block was written for — and this note has twice demanded the
-   360px clipping measurement before a new segment ships. It was run for Volume,
-   over CDP in both themes: a 293px row, labels 63+60+51+39+68 = 281px, nothing
-   clipped, and the four that were already there came out the same width they
-   were with four segments. A SIXTH does not fit in the 12px left over. */
-ok(tabs.length === 5, `mode switch shows five tabs with NO data (${JSON.stringify(tabs)})`);
+   class of bug this block was written for.
+
+   🚨 AND THIS NOTE USED TO END *"A SIXTH does not fit in the 12px left over"* —
+   measured over CDP at 360px, a 293px row against labels 63+60+51+39+68 = 281px.
+   That measurement was and is correct, which is why the sixth segment could not
+   simply be appended: the row had to be able to SCROLL. The measurement stands
+   as the reason for the mechanism rather than as a ban on the tab. */
+ok(tabs.length === 6, `mode switch shows six tabs with NO data (${JSON.stringify(tabs)})`);
 ok(tabs[1] === 'Volume',
    '⚠️ Volume sits beside Muscles — two readings of the same body, not a chart mode');
 ok(tabs.includes('Research'),
@@ -136,8 +141,15 @@ ok(tabs.includes('Research'),
 ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
 ok(tabs[0] === 'Muscles',
    '⚠️ and Muscles is FIRST — it is the mode that works with the least history, where a line chart needs two points');
-ok(!tabs.includes('Calendar'),
-   '⚠️ and the calendar is NOT in here any more — it has its own tab, and two ways in would light two things at once');
+/* 🔄 THIS ASSERTION USED TO BE ITS OWN OPPOSITE — *"the calendar is NOT in here
+   any more — it has its own tab, and two ways in would light two things at
+   once"* — and it is kept as an inversion rather than deleted, because the
+   reasoning it carried is still the live constraint: **there must be exactly
+   ONE way in.** Tim moved it back on 2026-09-08, so the one way in is here
+   again, and `app.js`'s Data tab now claims the `calendar`, `day` and `edit`
+   routes so nothing else lights up beside it. */
+ok(tabs.includes('Calendar'),
+   '🚨 the calendar is a Data segment again, and this is the ONLY way in — no second nav tab');
 ok([...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles')
      .getAttribute('aria-selected') === 'true',
    '⚠️ and the Data screen OPENS on Muscles rather than on a chart');
@@ -550,7 +562,7 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
-ok(data.querySelectorAll('.seg').length === 5, 'Bars mode keeps the mode switch (five segments since Volume)');
+ok(data.querySelectorAll('.seg').length === 6, 'Bars mode keeps the mode switch (six segments since Calendar came back)');
 
 /* ================= the Research mode (2026-08-28) ================= */
 // Tim: "I want to add a 'Research' tab in the data section… a graph that
@@ -6752,6 +6764,163 @@ ok(!data.querySelector('.rep-target'),
   ok(!document.querySelector('.help-pop'), 'and a tap anywhere else closes it');
 
   host.replaceChildren();
+}
+
+/* ====== THE PROFILE TAB (2026-09-08) ======
+ *
+ * Tim restructured the navigation: the You / Friends switch left Home, the
+ * calendar went back into Data, and the slot it vacated is a Profile section —
+ * *"the user's profile picture and their username, as well as the number of
+ * workouts, followers, and following at the top."*
+ *
+ * 🚨 THE ASSERTION THAT MATTERS IS NOT THAT THE NUMBERS RENDER. It is that the
+ * two social ones are NOT PRINTED AS ZERO when the app has no way to know them.
+ * Off the cloud there is no graph to count, and "0 followers" is a claim where
+ * the truth is an absence — the same fault the muscle map's grey-for-Core had,
+ * arriving through a different door.
+ */
+{
+  const { MeRouteView } = await import(BASE + 'views-me.js');
+  const { social } = await import(BASE + 'store.js');
+  const realState = social.state;
+  const text = (n) => n.textContent.replace(/\s+/g, ' ');
+
+  await store.clearAll();
+  await store.saveSettings({ displayName: 'Tim', avatar: '' });
+
+  /* ---- signed in, with connections ---- */
+  social.state = async () => ({
+    available: true, reason: null, uid: 'me-1', name: 'Tim',
+    visibility: 'private',
+    connections: [{ uid: 'u-autumn', name: 'Autumn' }, { uid: 'u-alex', name: 'Alex' }],
+  });
+
+  // Two sessions so the workout count is not the same number as the friends.
+  const sysId = (await store.saveSystem({ name: 'PPL' })).id;
+  const wk = await store.saveWorkout({ name: 'Push', systemId: sysId, exercises: [] });
+  for (const d of ['2026-08-01', '2026-08-03', '2026-08-05']) {
+    await store.saveSession({ workoutId: wk.id, workoutName: 'Push', date: d, entries: [] });
+  }
+
+  const me = await mount(MeRouteView(''));
+  await settle();
+  ok(/Tim/.test(text(me)), 'the Profile tab shows your display name');
+  ok(Boolean(me.querySelector('.me-face')), 'and a slot for your photo');
+
+  const tiles = [...me.querySelectorAll('.me-stat')];
+  ok(tiles.length === 3, `three figures across the top (${tiles.length})`);
+  const tileText = tiles.map((t) => t.textContent.replace(/\s+/g, ' ').trim());
+  ok(/^3\s*Workouts$/i.test(tileText[0]), `Workouts counts the sessions (${tileText[0]})`);
+  ok(/^2\s*Followers$/i.test(tileText[1]), `Followers counts the connections (${tileText[1]})`);
+  ok(/^2\s*Following$/i.test(tileText[2]), `and Following the same (${tileText[2]})`);
+
+  const hrefs = tiles.map((t) => t.getAttribute('href'));
+  ok(hrefs[0] === '#/me/workouts' && hrefs[1] === '#/me/followers' && hrefs[2] === '#/me/following',
+     `each figure opens its own list (${hrefs.join(' ')})`);
+
+  /* 🔒 AND THE "?" CARRIES WHY THE TWO NUMBERS ARE ALWAYS EQUAL. Two identical
+     counts read as a bug until somebody says connecting is mutual, and Rule 9
+     is exactly the control for that. Opened, not read off the pane. */
+  const dot = me.querySelector('.help-dot');
+  ok(Boolean(dot), 'with a ? beside the line about them');
+  dot.click();
+  await settle();
+  const help = document.querySelector('.help-pop').textContent;
+  ok(/mutual/i.test(help), 'saying that connecting here is mutual');
+  ok(/same names|same people/i.test(help), 'so both lists hold the same people');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
+
+  /* ---- the two people lists ---- */
+  for (const which of ['followers', 'following']) {
+    const list = await mount(MeRouteView(which));
+    await settle();
+    const rows = [...list.querySelectorAll('a.row')];
+    ok(rows.length === 2, `${which} lists both connections (${rows.length})`);
+    ok(rows.every((r) => /^#\/friend\//.test(r.getAttribute('href'))),
+       `and every row opens that person's page (${which})`);
+    ok(/Autumn/.test(text(list)) && /Alex/.test(text(list)), `by name (${which})`);
+  }
+
+  /* ---- the workouts list ---- */
+  {
+    const list = await mount(MeRouteView('workouts'));
+    await settle();
+    const rows = [...list.querySelectorAll('a.row')];
+    ok(rows.length === 3, `the workouts list shows all three (${rows.length})`);
+    ok(rows[0].getAttribute('href') === '#/day/2026-08-05',
+       `⚠️ newest first, and it opens the DAY rather than an edit form (${rows[0].getAttribute('href')})`);
+  }
+
+  /* ---- 🚨 THE ONE THAT MATTERS: no cloud, no invented zeros ---- */
+  for (const reason of ['local', 'anonymous', 'offline', 'demo']) {
+    social.state = async () => ({ available: false, reason });
+    const off = await mount(MeRouteView(''));
+    await settle();
+    const offTiles = [...off.querySelectorAll('.me-stat')];
+    const social2 = offTiles.slice(1);
+    ok(social2.every((t) => /—/.test(t.textContent)),
+       `🚨 with no cloud (${reason}) the two social figures are a DASH, never 0 — the app cannot `
+       + 'count them, and a zero would be a claim where the truth is an absence');
+    ok(social2.every((t) => t.tagName !== 'A' && !t.getAttribute('href')),
+       `…and neither is a link, because there is no list behind them (${reason})`);
+    ok(/^3\s*Workouts$/i.test(offTiles[0].textContent.replace(/\s+/g, ' ').trim()),
+       `while Workouts still counts, because that one is on this device (${reason})`);
+  }
+
+  /* Vacuity guard for the block above: with the cloud back, they are numbers
+     again. Without this, a MeView broken into always rendering a dash would
+     pass every assertion in that loop. */
+  social.state = async () => ({
+    available: true, reason: null, uid: 'me-1', name: 'Tim', visibility: 'public',
+    connections: [{ uid: 'u-autumn', name: 'Autumn' }],
+  });
+  const back = await mount(MeRouteView(''));
+  await settle();
+  ok(!/—/.test([...back.querySelectorAll('.me-stat')].map((t) => t.textContent).join(' ')),
+     'and with the cloud back they are numbers again — the vacuity guard');
+
+  /* 🚨 A PUBLIC ACCOUNT SAYS THE COUNT IS A FLOOR. D29 makes public the
+     default, and a public account is readable by anybody signed in who finds
+     it — none of whom are in the graph. Printing a follower count that
+     undercounts by an unbounded amount without saying so is exactly what this
+     app does not do. */
+  const pubDot = back.querySelector('.help-dot');
+  pubDot.click();
+  await settle();
+  const pubHelp = document.querySelector('.help-pop').textContent;
+  ok(/public/i.test(pubHelp) && /without connecting|not in this count/i.test(pubHelp),
+     '🚨 on a public account the ? says people can see you without connecting, so the number is '
+     + 'the people you are connected to rather than an audience');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
+
+  social.state = realState;
+  await store.clearAll();
+}
+
+/* ====== HOME LOST ITS SWITCH (2026-09-08) ======
+   Tim: *"I want to get rid of the 'You' and 'Friends' tab in the home page."*
+   ⚠️ THE SCREEN BEHIND IT DID NOT GO — asserted separately, because "the switch
+   is gone" is satisfiable by deleting the friends list too. */
+{
+  const { SocialView } = await import(BASE + 'views-social.js');
+  const home = await mount(HomeView());
+  await settle();
+  /* ⚠️ `.segmented` IS THE REAL SELECTOR AND THE FIRST VERSION OF THIS
+     ASSERTION HAD THE WRONG ONE. It looked for `.yf-tabs`, a class this app has
+     never had, so it passed against a Home screen that still carried the switch
+     — a vacuous check dressed as a guarantee, which is §0.14's trap on a
+     selector rather than on a mutation. `youFriendsTabs()` built a
+     `div.segmented` of two `a.seg`, and Home has no other segmented control. */
+  ok(!home.querySelector('.segmented'),
+     'Home no longer carries the You / Friends switch');
+  ok(![...home.querySelectorAll('a.seg')].some((a) => a.getAttribute('href') === '#/social'),
+     'and nothing on it is a tab pointing at the Friends screen');
+
+  const friends = await mount(SocialView());
+  await settle();
+  ok(Boolean(friends), '🚨 while the Friends screen itself still renders — the switch went, not the screen');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

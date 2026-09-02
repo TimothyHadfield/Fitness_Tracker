@@ -25,8 +25,8 @@
 
 import { store, auth, social } from './store.js';
 import {
-  el, icon, iconBtn, screenShell, emptyState, openSheet, confirmSheet, toast,
-  fmtDateLong, relativeDay, chevron, setChildren, fmtSet, youFriendsTabs, personFace,
+  el, icon, screenShell, emptyState, openSheet, confirmSheet, toast,
+  fmtDateLong, relativeDay, chevron, setChildren, fmtSet, personFace,
   refreshRoute, helpDot,
 } from './ui.js';
 import {
@@ -189,6 +189,17 @@ function visibilityRow(value, after) {
  * ------------------------------------------------------------------ */
 
 export async function SocialView() {
+  /* ⚠️ A SCREEN YOU ARRIVE AT, NOT HALF OF A SWITCH (2026-09-08). The You /
+   * Friends segmented control is gone from Home — the feed is Home now — and
+   * this screen is reached from the Profile section instead. So it needs the
+   * one thing a tab never did: somewhere to go back to.
+   *
+   * ⚠️ THE FALLBACK, NOT THE DESTINATION (Rule 8). The arrow goes back through
+   * history first, so arriving here from a friend's page, from `#/find` or from
+   * an invite still returns you where you were; `#/me` is only what happens when
+   * there is no history — a bookmark, a shared `#/social` link, a cold start. */
+  const back = () => { location.hash = '#/me'; };
+
   let state;
   try {
     state = await social.state();
@@ -198,8 +209,7 @@ export async function SocialView() {
 
   if (!state.available) {
     return screenShell({
-      title: 'Friends', profile: true,
-      top: youFriendsTabs('friends'),
+      title: 'Friends', back,
       scroll: unavailable(state.reason),
     });
   }
@@ -208,15 +218,21 @@ export async function SocialView() {
 
   const body = el('div', { class: 'list' });
   const screen = screenShell({
-    // ⚠️ "Friends", not "Social" — this is half of the Home tab now, and the
-    // switch above it says Friends. Two names for one screen is the "system"
-    // vs "programme" fault the UX review found, and it is cheaper to not
-    // introduce it than to go back and unpick it.
+    // ⚠️ "Friends", not "Social". `js/social.js` calls the feature social
+    // because that is what it is; a person has friends. Two names for one
+    // screen is the "system" vs "programme" fault the UX review found, and it
+    // is cheaper to not introduce it than to go back and unpick it. The name
+    // outlived the switch that used to sit above it and is unchanged by its
+    // going — the Profile row that leads here says Friends too.
     title: 'Friends',
+    /* ⚠️ THE `sub` STAYS, THE PENCIL GOES (2026-09-08). Changing your display
+     * name is an ACCOUNT action and now lives on the account screen with the
+     * rest of them, next to the visibility setting it belongs beside. But
+     * WHICH NAME these particular people see you under is a fact about this
+     * screen — every row below is somebody reading that name — so it goes on
+     * being stated here rather than following the control that edits it. */
     sub: `You appear as ${state.name}`,
-    profile: true,
-    top: youFriendsTabs('friends'),
-    actions: [iconBtn('edit', 'Change your display name', () => renameSheet(state.name))],
+    back,
     scroll: body,
     // ⚠️ "Add a friend", not "Invite a friend" — there are three ways in now
     // (search, code, link) and naming the button after one of them would hide
@@ -513,7 +529,32 @@ function nameSetupScreen() {
   });
 }
 
-function renameSheet(current) {
+/**
+ * Change your display name — 🚨 EXPORTED SINCE 2026-09-08, and the export is
+ * the point. The pencil that used to open it lived in the Friends header; the
+ * control now lives on the ACCOUNT screen, which imports this by name.
+ *
+ * ⚠️ THE SHEET ITSELF DID NOT CHANGE, deliberately. It is the only path that
+ * sets a display name — `nameSetupScreen()` above uses the same
+ * `social.setDisplayName()`, and setting one REPUBLISHES, so every friend's
+ * copy of your name is downstream of this one call. A second implementation on
+ * the account screen would be a second way for those to disagree.
+ *
+ * 🚨 AND IT NO LONGER HARD-CODES WHERE IT LANDS — the flaw the export uncovered,
+ * caught before it shipped. It ended in this module's private `refresh()`, which
+ * is `refreshRoute('#/social')`, and `refreshRoute` REWRITES the hash when it
+ * differs. So renaming yourself from the Account screen would have saved the
+ * name and then **teleported you to the Friends list**, with the back arrow
+ * pointing at a screen you never opened. The caller says where it is instead;
+ * the default is this screen, so nothing here changed behaviour.
+ *
+ * ⚠️ WHAT IT DOES IS OTHERWISE UNTOUCHED, deliberately — see above.
+ *
+ * @param {string} current  the name to open the field on.
+ * @param {Function} [after]  what to do once the name is saved. Defaults to
+ *   re-rendering the Friends screen, which is where this sheet used to live.
+ */
+export function renameSheet(current, after) {
   const input = el('input', { class: 'input', maxlength: '60', value: current });
   const { close } = openSheet({
     title: 'Your display name',
@@ -526,8 +567,11 @@ function renameSheet(current) {
       el('button', {
         class: 'btn primary', text: 'Save',
         onClick: async () => {
-          try { await social.setDisplayName(input.value); close(); refresh(); }
-          catch (err) { toast(err.message); }
+          try {
+            await social.setDisplayName(input.value);
+            close();
+            if (after) after(); else refresh();
+          } catch (err) { toast(err.message); }
         },
       }),
     ),

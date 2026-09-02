@@ -131,6 +131,28 @@ which safety may be raised unprompted.
 | 📄 **The docs are for you, not him** | *"Purely for you."* He does not read `progress.md` or the handbook. Write them for whatever makes a fresh session effective; do not optimise them for a human reader. |
 | 👤 **It is only ever you and him** | *"Just us."* No second contributor to write for. |
 | ⏱️ **Steady, most days. No deadline.** | Nothing needs to be sequenced backwards from a date. |
+| 🟢 **Deploy sub-agents** | *"I'm giving you some more assignments so you really should deploy many sub-agents to help you out."* (2026-09-08 — the third time he has asked.) **One named file each**; see `progress.md`'s standing-instructions entry for the rules that make it work. |
+
+## 4a. 🆕 WHAT HOME IS FOR — 2026-09-08, and it is a brief rather than a feature
+
+> **Tim:** *"I want to change some things with the layout of the cite, especially the home page. Any
+> details that don't go in any of the other main sections (data, workouts, etc) go into the home
+> page, so we want to make it really nice. **It's going to be the hub of all basic interaction.**
+> Side features or anything like that should be placed there."*
+
+🚨 **THIS IS A PLACEMENT RULE, NOT A REQUEST.** It answers "where does this go?" for everything
+built from here on: if a thing does not belong to Data, Workouts, Record or Profile, **it belongs on
+Home**. It is not an instruction to put something there now.
+
+🛑 **NOTHING WAS ADDED TO HOME ON THE DAY HE SAID IT**, deliberately. The same message removed the
+You / Friends switch from it, so Home is currently the friends' feed and nothing else — and a screen
+described as *"going to be"* the hub is a screen waiting for him to name what goes on it. **Resist
+filling it.**
+
+⚠️ **AND HE DREW A LINE THROUGH THE TWO PROFILE SCREENS IN THE SAME MESSAGE**, which is worth
+keeping because it generalises: *"that section is mostly used to make setting adjustments and do
+logistics, where this new section is broad information and view of your account."* **Settings and
+logistics behind the top-left icon; a view of what your account amounts to in the tab bar.**
 
 **Three topics he deferred with "I'll talk about it later" — 🛑 do not pre-empt any of them:**
 

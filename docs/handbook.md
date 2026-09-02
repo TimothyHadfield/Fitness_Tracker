@@ -8,11 +8,14 @@
 > `progress.md` cite sections by number — `§4` for the architecture, `§6` for the locked decisions,
 > `§9` for the known gaps, `§0.10` for the demo account. Every one of them resolves here.
 >
-> 🟢 **READ THIS WITH `progress.md` AT THE START OF A SESSION — both, not one.** `progress.md` is
-> what is TRUE NOW and what is LEFT. **This is how to work here**: the environment traps that have
-> each cost real time (§0), the working agreement (§1), what the app currently does (§3), the
-> architecture (§4), the binding design rules (§5), and the decisions that are locked (§6).
-> ⚠️ **Skipping it is how a rule that was learned expensively gets re-learned expensively.**
+> 🟢 **READ THIS WITH `progress.md` AND `docs/state.md` AT THE START OF A SESSION — all three.**
+> `progress.md` is what is TRUE NOW and what is LEFT. **This is how to work here**: the environment
+> traps that have each cost real time (§0), the working agreement (§1), the architecture (§4), the
+> binding design rules (§5), and the decisions that are locked (§6).
+> 🚨 **§3 — WHAT THE APP CURRENTLY DOES — LIVES IN `docs/state.md` SINCE 2026-09-08**, because this
+> file hit 215 KB of its 220 KB budget and §3 was 68 KB of it. **It is still called §3 and it is
+> still read every session**; only the file changed.
+> ⚠️ **Skipping any of them is how a rule that was learned expensively gets re-learned expensively.**
 >
 > 🚨 **`docs/direction.md` IS NEWER THAN THIS FILE AND OVERRULES IT WHERE THEY DISAGREE.** On
 > 2026-09-04 Tim answered a long interview about what this project is for, and **four rules written
@@ -50,6 +53,9 @@
      standing instructions or **Open work**. Nothing long.
    - **`docs/handbook.md`** (this file) ← only when a RULE changed: a new trap in §0, an
      architectural move in §4, a design rule in §5, a decision locked in §6.
+   - **`docs/state.md`** ← 🚨 **§3, and it is the one most often forgotten**: whenever a SCREEN
+     changes what it does. It left this file on 2026-09-08 and a section that lives elsewhere is a
+     section that quietly stops being updated. If you built or changed a feature, its row is here.
    - **`docs/direction.md`** ← only when **Tim says something about what the project IS** — who it
      is for, what it competes on, what he wants loosened, how he wants to be worked with. ⚠️ **A
      feature request is not direction**; that is `docs/vision.md` or Open work.
@@ -61,7 +67,10 @@
 
    🚨 **THERE IS A TEST, AND IT IS IN THE `sw.js` PRECACHE BLOCK OF `tests/data-layer.test.mjs`
    BECAUSE IT IS THE SAME KIND OF FAULT.** Every file you are told to read whole has a byte budget
-   — progress.md 160 KB, this file 220 KB, chat.md 220 KB — set **well under the 256 KB read limit
+   — progress.md 160 KB, this file 220 KB, `docs/state.md` 160 KB, chat.md 220 KB. ✅ **It fired
+   usefully twice on 2026-09-08** — chat.md's older half went to the archive and §3 came out of this
+   file, both while there was still headroom, and each time the failure message named the fix. Set
+   **well under the 256 KB read limit
    so it fails while there is still room to act.** 🛑 **When one trips, the fix is never to raise the
    number**; the failure message names what to move and where. The archives (`docs/history.md`,
    `docs/chat-archive.md`) have no budget by design, and the test says so in a comment so nobody
@@ -272,7 +281,8 @@ Tim is the **manager**; Claude is the **builder**.
 |---|---|
 | `progress.md` | **The catch-up file.** What is true now, the standing instructions, and **Open work** |
 | `docs/direction.md` | 🚨 **What Tim wants this to BE** — the 2026-09-04 interview, and the four rules it reversed. **Newer than this file and overrules it** |
-| `docs/handbook.md` | **This file — §0 to §10.** Every `§N` citation in the project resolves here |
+| `docs/handbook.md` | **This file — §0 to §10, except §3.** Every `§N` citation in the project resolves here |
+| `docs/state.md` | 🚨 **§3 — what the app currently does**, screen by screen. Left this file on 2026-09-08 when the handbook hit its byte budget. **Still §3, still read every session** |
 | `docs/history.md` | **The dated log**, newest first. Searched by date, never read whole |
 | `chat.md` | Chronological human-readable log, appended after each substantive exchange |
 | `docs/vision.md` | **Tim's running list of what he wants this to become.** A capture, not a schedule: nothing starts off it without him saying so. ⚠️ **SIX ideas, and this row undercounted them and misreported four until 2026-09-02.** §1.1 (social), §1.3 (ready-made systems AND its "% optimal" number), §1.4, §1.5 and §1.6 are **BUILT**; **§1.2 is half built** — Home suggests which workout, and the weight/rep half waits on the estimator. ~~"§1.1 is untouched"~~ is the worst of it: §1.1 is the most-built idea in the file and the whole of 2026-09-02's first pass. §8 of this file already said "all six are started and five are finished", so the two contradicted each other. Entries are marked BUILT in place and never deleted — the superseded reasoning above them is the point of the file |
@@ -346,309 +356,17 @@ progressive disclosure is core architecture, the dashboard reconfigures around t
 
 ## 3. Current state
 
-| Area | State |
-|---|---|
-| **Workout systems** | A **system** is a programme — a named group of workouts (Push Pull Legs holding Push, Pull, Legs). The Workouts tab lists systems; open one to see and add its workouts. A workout belongs to exactly ONE system. Workouts saved before systems existed are migrated into **My Workouts** on first read. Deleting a system deletes its workouts but never recorded history |
-| **Seeing a deploy** | ⚠️ `sw.js` is stale-while-revalidate, so **the load right after a deploy serves the OLD app** and the change appears on the one after. That is deliberate (a hand-maintained cache version can freeze someone forever; this self-heals) but it is indistinguishable from a broken feature — Tim hit it and reported a rating as missing when it had shipped. Since 2026-08-18 the worker compares ETag/Last-Modified on revalidation and the page shows **"A new version is ready · Refresh"**. It OFFERS, never reloads: reloading unasked is right almost always and catastrophic once, mid-set with numbers unsaved. ⚠️ **AND SINCE 2026-08-22 IT ASKS ON RESUME, which is the case that had been missing entirely.** Every check above hangs off the `fetch` handler, so an update was only ever spotted while the page was requesting assets — that is, on a real page load. **An installed home-screen app is RESUMED, not reloaded**: iOS hands back the document that was already there, nothing is fetched, and the worker is never consulted. So the app could sit weeks behind the live site with the update machinery working perfectly and never once asked. Tim reported it as a missing feature — the years view had been live for hours and his phone had simply never asked. `visibilitychange` and `online` now post `check-assets`, the worker revalidates the shell (throttled to five minutes, silent when offline), and the same offer appears. Proved by a test that finds a deploy **with no navigation at all**, mutation-checked |
-| **The system badge** | **Four numbers beside every system, in a 2×2 grid** — on Explore, on the Workouts list and on a system's own screen. **Growth and strength**, separately and never blended, because a programme good for one is often not good for the other (the Golden Six is the clearest case: 35 % growth, 55 % strength); banded to 5, never a point, because the source models explain about a quarter of the variance. Plus, since 2026-08-19 on Tim's ask, **days a week and minutes a session** — the percentages say how *good* a programme is and nothing about what it *costs*, which is the first thing you want before opening it, and "80 % strength" reads very differently at three days a week than at six. A ready-made system states its own minutes; one you typed has them **estimated** from the set count at ~3 min a set, and the cell's `title` says which — "because the author said so" and "because we multiplied" are not the same claim. **Your own systems are rated too**, and the days-per-week the maths needs is MEASURED from your logged sessions rather than asked for; under two weeks of history it assumes one pass a week and says so. A system with no workouts shows no badge rather than a 0 %. The Explore row summary no longer repeats days/minutes now the badge carries them. `js/optimal.js` + `js/volume-map.js`, `docs/optimal-rating-plan.md` |
-| **Ready-made systems** | Workouts → **Explore ready-made systems**. Browse, read the whole programme with its per-exercise notes, and copy it into your account. A COPY, not a link — once added it is yours to edit, and it can never change under you, **and it arrives in programme order** (workouts carry an `order`; ones you add yourself have none and land at the end). `js/preset-systems.js` holds **nine**: Jeff Nippard's *Ultimate Push Pull Legs (2023)*, *Dr. Mike's Floating Split*, *Chris Bumstead's 8-Day Split*, Arnold's *Golden Six*, *Mike Thurston's Six-Day Split*, *Volume Landmarks Hypertrophy* (follows Israetel's method — see below), plus three of the app's own (PPL, Upper/Lower, Full Body). Exercises are referenced BY NAME and a test asserts every one resolves. **Nippard's is complete as of 2026-08-19** — all six workouts, Push 1 / Pull 1 / Legs 1 / Push 2 / Pull 2 / Legs 2, in the order the videos were published |
-| **⚠️ Half a programme reads exactly like a whole one** | The Nippard system shipped for two days as three workouts declaring **six days a week**, so the rating ran the same three twice and the rotation repeated a day that should have alternated. Nothing failed: the badge was plausible, every test passed, and the screen looked finished. **Tim caught it by reading the sentence** — "why would a push/pull/legs need six workouts?" Two lessons. A count a system *declares* and a count it can *fill* are different numbers and nothing was comparing them; there is now a test that does. And the one shipped as "Pull" was **the second pull, not the first** — the write-ups carry no episode number in their own text, so the order had to be recovered from the video dates. Anything transcribed from a series wants its episode number pinned down before its content is |
-| **Three kinds of system, and the line between them** | **OURS** (`author: 'Fitness Tracker'`). **TRANSCRIBED** — `author` is the real person, `unofficial: true`, `sourceUrl` to the write-up; the workouts are genuinely theirs. **METHOD** — `author` stays `'Fitness Tracker'` and a `basedOn: {person, what, sourceUrl}` credits whose idea it is; the screen renders "Follows **X**'s … The workouts below are not theirs." **A person's name never goes in `author` unless they chose the exercises** — "By Dr. Mike Israetel" over a routine he has never seen is a lie no warning underneath can undo. Tests enforce all three, including that the string "By Dr. Mike Israetel" never renders. **Israetel has one of each, deliberately:** *Dr. Mike's Floating Split* is kind 2 — his real training, transcribed — and *Volume Landmarks Hypertrophy* is kind 3, a runnable programme built on the method he publishes for everyone else. Neither substitutes for the other and each says so on screen |
-| **⚠️ "No honest source exists" was wrong once** | The Israetel method system was built on the conclusion that no transcribable programme of his existed. Tim said to search harder for reposts and summaries, and he was right: **Renaissance Periodization publish his own split on their own site, free**, and a second write-up agrees with it exercise for exercise. Before inventing a category to work around a missing source, search past the first four queries |
-| **Record** (nav) | ⚠️ **A CATEGORY CHOOSER since 2026-08-26** — Weightlifting (first, biggest, carries the next-in-rotation name, leads to the full recorder at `#/start`) plus Run / Walk-or-hike / Swim / Cycle / Climb / Something else, each a quick activity log saving a real session (D27: recorded, never modelled). The lifting picker’s rows each show **`~N min`** — the median of that workout’s own recorded durations, sets × 3 min before any exist, rounded to 5. ⚠️ **The suggestion is LEAST-RECENTLY-DONE since 2026-08-26** (`js/next-workout.js`) — the old next-in-list rule read alphabetical order on self-built systems and told Tim to repeat Monday’s Pull; never-done counts as longest-waiting, rotation order survives as the tie-break, and the caption says what was read. Still a LOOKUP, never advice; silent when it would have to guess; skips sessions whose workout was deleted **and** activity sessions (no workoutId). **§1.2’s other half — suggesting weights and reps — still waits on the estimator** |
-| **Set types** | **Supersets, tri-sets, giant sets, drop sets and myo-reps** — `js/set-types.js`, `docs/vision.md` §1.5, D23. **In the builder**: a chip on each exercise opens a sheet naming all three set types *and explaining what each one is* (D8 — "myo-reps" is jargon), with a mini-set count under whichever is picked; and a **link control sits in the GAP between two exercises** — "Superset with next" / "No rest — tap to separate" — because a superset is a statement about the space between them, not about either one. A joined block is bracketed by an accent hairline and named for its size. **In the runner**: a superset is walked round by round (A, B, rest, A, B) and the banner sits above the exercise name saying which round and whether to rest; the forward button reads "Straight into Overhead Cable Extension" or "Round 2 of 3". **The rest timer does not start mid-round**, nor after the top set of a drop set — those are the two places where the old "log a number → start resting" rule would have told you the opposite of what the set type means. A nested set's button IS the instruction — "Strip the weight — add a drop" or "Rest 10–15 seconds — add a mini-set" — not the name of a technique. **Drop sets and myo-reps are the same nesting shape**, differing only in what changes between mini-sets, and are stored under `minis` |
-| Workout builder | Name, add exercises, reorder, planned set count, per-exercise notes, edit, delete. Lives inside a system — `#/workout/new/<systemId>` to create |
-| Exercise library | **319 exercises** (318 until 2026-09-06, 275 until 2026-08-31), searchable, filterable by muscle group (16 groups incl. Full Body, Cardio and Activity; **13 are real muscles**). ⚠️ **A new row needs three things or it is inert**: the tuple here, a ratio rule in `muscle-evidence.js`, and a movement family in `exercise-families.js`. Tests assert all three |
-| Custom exercises | User-created; choose tracked fields and how weight is counted. 🚨 **THEY DO NOT SET A STRENGTH LEVEL since 2026-08-31** — the conversion used to be guessed from the equipment dropdown, and one 60×10 set on a made-up "Dip Machine" rated a beginner's triceps Advanced. They are still logged, charted and counted in weekly volume, the create form says so before you make one, and the muscle panel says so if you go looking. 🔄 **UNLESS THE PERSON NAMES WHAT IT IS CLOSEST TO — 2026-09-06.** An optional `standInId` on the create form points at a real library exercise and the sets convert through it. ⚠️ **That is not a reversal of 2026-08-31**: the app stopped INFERRING and started being TOLD, which is a different claim. Four things hold the line — the match decides the **muscle** (her dip machine was filed under Triceps and a chest press lands on Chest), the quality is knocked to **`STAND_IN_QUALITY` 0.40** of the target's so a stand-in can never out-rank what it points at, **1.00 × 0.40 = 0.40 sits below `FALLBACK_MIN_QUALITY` (0.45)** so a match can never chain onward into a cross-muscle inference even if that filter were deleted, and **bodyweight/assisted targets are refused** because their ratios convert a resistance derived from a weigh-in while a custom exercise's number is read as plain load. Labelled on the panel — *"rated as X because you matched them — your own match, not a published conversion."* **Tim's plan is still to fold the good ones into the library periodically** |
-| **The save screen** | 🆕 **2026-09-07, Tim's ask, modelled on Hevy.** **Finish no longer saves** — it opens a screen carrying the workout's name, **Duration · Sets · Exercises**, a **description**, a **gym**, the **day**, and a **discard**; the *Save workout* button there is what writes. 🚨 **The order is the change**: the description used to live in the runner's header *because the finish screen renders after the save has landed*, and moving the boundary is what fixed that — these fields describe a **draft**, and Finish is still one write. ⚠️ **`saveError` moved with the button**, or a failed save would explain itself on a screen nobody is looking at (the 2026-08-22 bug). 🛑 **Three deliberate departures from Hevy's screen**: sets and exercises rather than **volume in pounds** (`session-stats.js`'s argument, and Tim asked for a set count); **no Visibility row**, because visibility is account-wide (D29) and a per-workout flag is a decision he owes; **no title field and no Apple Health row**. ⚠️ **The day is editable here AND in the runner's header on purpose** — one state, both re-render, never on screen together; the header one exists to say NOT TODAY the whole way through a back-dated workout |
-| Session runner | Builds planned sets, pre-fills last time's numbers, ±steppers, next/back, finish → **the save screen** (2026-09-07) → calendar. ⚠️ **RECORDS FOR OTHER PEOPLE since 2026-08-29 in two different ways, and the difference is on screen**: pick a **friend** and their half is offered to **their own account** at Finish (their suggestion read from the training they share with you); pick or type a **saved person** and their sets stay here, under their name, never mixed into your own. ⚠️ **Anybody can be taken back OUT since 2026-08-30** (Tim: *"in case it was just a test, or an accident"*) — a ✕ that exists **only on the person you are already recording for**, so a destructive control is never next to a chip you are aiming at to switch. Quiet with nothing recorded, a confirm naming the count if there is; a friend's confirm says their workout will no longer reach their account; the saved identity is never deleted. ⚠️ **Swap opens on FIVE ALTERNATIVES since 2026-08-30** (`js/exercise-families.js`), with the full 319-exercise picker one tap underneath. ⚠️ **THE SET LIST IS THE SCREEN SINCE 2026-08-29** (Tim's instruction): there is no detached block of steppers any more — **the ± controls sit inside whichever set is open**, exactly one is always open, and tapping another set moves the controls to it. The digits and targets are unchanged (30px, 46×52); what went was the ~200px spent showing a copy of row one. A nudge repaints the row **in place**, because rebuilding the list would now destroy the input under the user's finger. **Add set** is a small pill on the right of the "Sets" heading, not a full-width button under the list — under the list it was as loud as the sets and, once the list outgrew the pane, drawn on top of them. **Records for today by default, and the day is editable in the header** for the workout you forgot to log. Future dates refused. The header says NOT TODAY the whole way through rather than springing it on you at the end |
-| Load type | Every weighted exercise labelled **PER SIDE** or **TOTAL** |
-| Draft recovery | In-progress workout survives an app switch; expires end of day. Expiry is keyed to `startedOn`, **not** the session's date, so back-dating a workout doesn't discard its own draft. 🆕 **AND IT IS VISIBLE SINCE 2026-09-07** — see the row below |
-| **Leaving a workout open** | 🆕 **2026-09-07, Tim's ask, modelled on Hevy.** The runner's corner is a **▾** rather than an ✕ and **asks nothing**: it goes back through history (Rule 8) and the workout stays open. A **bar above the nav on every other screen** then carries the workout's name, the elapsed time, the exercise you are on and an up arrow back in — `js/live-session.js`. 🚨 **None of the persistence is new; the visibility is.** The draft has always survived and the same workout has always resumed the same day, but the only door was that workout's row in the Record picker and the only statement that it existed was one sentence in the sheet you got on the way out — so the app kept the workout and looked exactly as though it had not. 🚨 **AND STARTING A SECOND WORKOUT NO LONGER DELETES THE FIRST**: `SessionView` opened with `if (rawDraft && !existingDraft) clearDraft()`, which was defensible while leaving took a deliberate tap through a sheet and is not once a bar advertises the open workout on every screen. A second workout now meets a screen naming the open one and the sets in it. ⚠️ **One workout open at a time**, said on that screen rather than implied. 🆕 **A BIN ON THE RIGHT OF THE BAR SINCE 2026-09-07** (Tim asked for it after it was flagged). ⚠️ **It asks first when there is something to lose and only then** — the rule removing a person and the save screen's Discard already follow — and 🚨 **it is a SIBLING of the link, never inside it**: a `<button>` in an `<a>` is invalid HTML, and whether a tap opens the workout or deletes it may never be ambiguous |
-| Benchmarks | Any date, any exercise → feeds Data + calendar. A **workout can be marked a benchmark**, and then every exercise it records files the best set of that exercise as a benchmark for the day (D17) |
-| Calendar | ⚠️ **ITS OWN TAB AGAIN SINCE 2026-08-25**, reversing the 2026-08-22 merge on Tim's instruction — that argument was about what the two screens *are*, his is about how often he opens them. Its header is its own title, not the Data switch. **Month cells are filled by the workout's name** beside the day number, 8px → 12px, wrapping to two lines rather than clipping. ~~Not its own tab since 2026-08-22 — it is the first segment of DATA, and its header IS the four-way Data switch.~~ `#/calendar` has been its route throughout, so a day stays deep-linkable and nothing anybody bookmarked broke in either direction. **Two ways to read it, on a Months / Years switch below that.** **Months** is the original: continuous vertical month scroll, sticky headings, opens on the current month, active days filled and named. Open a day → **Edit** a record to change anything about it: its day, its name, its exercises, every set, and whether it counts as benchmarks. **Years** (2026-08-22, Tim's ask with a reference image) draws **one tiny square per day**, one row per year, newest first, with "141 days trained" beside each — years of training on a single screen, and two years fit in the top half of a 375×667 phone. ⚠️ **It is BINARY** — coloured or not — where Months distinguishes workouts from benchmarks, because those two tokens measure ΔE 6.5 apart under protanopia and a 5.7px square has no room for the label or texture that would make a second colour legal. ⚠️ **Tapping a square SELECTS it and does not navigate**: at 5.7px a tap that navigated would open the wrong day about as often as the right one, so it fills a readout line that holds its row whether or not anything is picked, and the readout is the full-width control that opens the day. WCAG 2.5.8 is met by **equivalence** — every day is reachable at 40px in Months, one tap away. `js/year-grid.js` |
-| **Data** (nav) | **FIVE segments — Muscles · Volume · Graph · Bars · Research** (Volume joined 2026-09-01, Research 2026-08-28), and it **opens on Muscles** — Tim's call, and it is also the mode that works with the least history, since one benchmark colours the map where a line chart needs two points. ⚠️ **Calendar left this control** and is its own tab again, which took the switch's one oddity with it: it was the only entry that navigated rather than setting in-page state. All five are now the same kind of thing — in-page state on `#/graphs`. ⚠️ **"Bar Chart" lost a word**: the 2026-08-21 survey measured the three-segment version clipping that exact label to "Bar Char" at 393px. ⚠️ **The five-segment row was MEASURED at 360px before Volume shipped** — 293px of row, labels 63+60+51+39+68 = 281px, nothing clipped, the existing four unchanged in width, **12px left, so a sixth does not fit**. **Graph** (measured SVG line + hover crosshair), **Bars** (paired bars), **Muscles** (body map), **Volume** — 🚨 **D3's headline metric, weekly sets per muscle from what you RECORDED** (2026-09-01): **the SAME body map the Muscles tab draws, painted red-to-green by sets** (Tim's ask, same afternoon), a five-band legend under it, the picked muscle's working under that, and the bar list still below — every muscle listed including the ones on zero, sets a week against the published efficiency tiers, tap one on the body or in the list to see which exercises fed it and whether each counted whole or half. ⚠️ **The ramp is generated by `tools/volume-ramp.mjs` and a test holds the stylesheet to its hexes**; red-to-green survives colour blindness only through strictly monotone lightness plus the words in the legend and labels — read that tool's header before touching a colour. ⚠️ **No grey anywhere: zero sets is a number**, which is the one thing this map can do that the strength map cannot. **The tiers are not targets and it says so**; the only threshold drawn is 4 sets a week. ~~Under a fortnight of history it shows totals and refuses to state a rate.~~ 🔄 **IT STATES A RATE AT ANY WINDOW SINCE 2026-09-06** and names the span it measured over — and that removed a latent bug rather than adding risk: under a fortnight the body map was painting window TOTALS against `volumeShade()`, whose bands are *weekly* doses, so a nine-day beginner with 21 sets wore the colour of somebody training hard. ⚠️ **The `perWeek` flag was DELETED, not pinned true** — a boolean threaded through five call sites is five chances to print a total under a rate's heading. Warm-ups are counted and admitted (Open work 0c, still Tim's call). **Research** — which since 2026-08-30 opens on **eleven collapsed topics teaching the basics**, each carrying a confidence label in words and its own stated weak spot, over the age chart that shipped with the tab. `js/research-topics.js` holds the content and the rules it was written under; `docs/research.md` §13 holds the pull. **No chart mode is ever a dead end**: a chart needs the same lift on two different days, so where it cannot draw a line it lists **where every lift stands right now** — best set, estimated max, how long ago — instead of an empty state. No tab is disabled and no mode is force-switched away from. Charts show **one source at a time**, benchmarks by default — an exercise with only workout sets charts those, so graphs already work with no benchmarks at all. What is NOT built is the confidence-weighted estimator and the evidence setting Tim asked for; see `docs/strength-estimate-plan.md` |
-| Body weight | Charts through the Graph picker, in a **You** optgroup after the exercises, so it takes no fourth tab and is never the default. Needs two weigh-ins. Direction is **not** judged good or bad |
-| Rest timer | Counts **up** from the last set, started by logging a number rather than by a button. Optional target (60/90/120/180s) that only then says the rest is over. Read from a timestamp every tick, never accumulated — a backgrounded tab throttles timers, which is exactly when it matters. Survives an app switch in the draft |
-| Units | **lbs or kg**, a display choice only. Everything is STORED in pounds, so switching back and forth is lossless — asserted to the 1e-9 |
-| Rep normalisation | Y-axis is always weight; every point converted to equivalent load at one rep count (D11). Target defaults to the most-recorded count, adjustable with arrows. Markers mean measured |
-| **Muscles** | **Tim's illustration**, front + back, 18 tappable muscle paths covering 13 groups. **Rated from EVERY exercise that trains the muscle**, not one named lift (2026-08-17) — hammer curls rate biceps, dumbbell rows rate back, seated calf raises rate calves. ⚠️ **Since 2026-08-19 the rating is led by the most CREDIBLE evidence rather than the largest number it produces** — at most three exercises, one seat each, ranked by how much each is worth believing. Before that it picked its top three by converted weight, so a 15-rep face pull outvoted an overhead press benchmark and rated an ordinary lifter Elite; §9 has the write-up and the residuals. Each rating carries a **confidence**, and the muscle's colour is desaturated in proportion: same level, less vivid. The panel says how many sessions AND how many different exercises fed it, because "40 sessions, all of one exercise" is a different claim from "40 sessions across four". See `js/muscle-evidence.js`. Split into a **fill layer** (vector, recolourable, the tap target) and an **ink layer** (greyscale luminance mask carrying every keyline, fibre striation and shadow) — so recolouring a muscle cannot touch its texture. Head, hands, feet and knees have ink but no fill, so they stay unpainted. ⚠️ **Picking a muscle never moves or resizes the body, in either layout** (2026-08-21). On a screen ≥ 860px the detail opens in a **side column beside the figures**; below that it stacks underneath, and the figure holds a fixed 57 % of the pane while the panel takes what is left and scrolls inside itself. Before that fix the phone's figure shrank and rose by however many words the panel happened to have. 🚨 **IT RANKS WITHOUT A PROFILE SINCE 2026-09-06**, where it used to replace the whole body with *"Tell us about you first"* over an account holding a year of sets. **No body weight is ever invented**: a missing weigh-in widens the comparison to **lifters of every size** (a real group, named on screen), and a missing sex assumes male — stated, never silent. 🚨 **An assumed map is NEVER published to a friend** (`buildStrengthShare()` refuses): `shared-map.js` cannot recompute a percentile, so a reader would get 24 rows with no way to check any of them. Each group filled by where it ranks among a comparison group **the user chooses** — "Compared to" in the header opens two presets (**Like me** / **Everyone**) over four axes: population (people who lift / everyone), sex (men / women / both), body weight (mine / any) and age (mine / any). The caption always states the group in words, and says "all adults" rather than "who lift" when the comparison includes people who do not; grey only when that lift has never been recorded. **Ranks from workout sets as well as benchmarks** — source named in the panel — with a hard rep gate: a set above 15 reps is not evidence of a maximum (D5). ⚠️ **Tap → five lines and no more** (2026-08-21, Tim: "we want it to be easy to understand, not a paragraph"): level, estimate + percentile, the bar to the next level, the confidence line, and the set the number came from. The seven-row table of per-level weight targets, the confidence bar and the confidence percentage were cut. **Every caveat survived, one line each** — shortening a caveat is allowed, softening one is not — and a **40-word cap is a test**, because every other assertion on this panel checks something is present and none of them can catch words piling back up. Selection is an accent outline following the muscle's own shape, and the browser's own focus ring is replaced — Chrome draws `outline:auto` around an SVG element's **bounding box**, which put a white rectangle around the selected muscle. |
-| **Who can see you** | 🚨 **PRIVATE OR PUBLIC, ONE SETTING FOR THE WHOLE ACCOUNT (2026-09-03)**, replacing the four per-person levels, and 🚨 **PUBLIC IS THE DEFAULT** — Tim's call the same day, and an account that has never opened the sheet is public. **Private:** only friends you accept, and they see everything — workouts, benchmarks, muscle map, graphs, volume. **Public:** anybody **signed in** who finds you sees all of that too. ⚠️ **Body weight is never in the public copy** and keeps its own opt-in switch for friends; the photo, the time of day and the gym name DO go public, which is Tim's explicit answer to the question. ⚠️ **Reacting stayed friends-only** — a stranger reads a public account and leaves nothing on it, because writing into somebody's subtree is a moderation surface and this project has no moderation story. Set on the Friends screen and on any friend's page; `docs/social-plan.md` §15 |
-| **Friends** (was Social) | 🚨 **THREE WAYS IN SINCE 2026-08-29, and one of them reversed a locked decision.** *Add a friend* (`#/find`) offers **search by name**, **your own permanent QR code** (`#/add/<uid>`, scanned by their camera app — nothing to install) and the original **invite link**. Somebody found by search or code gets a **friend request** they accept; ⚠️ **accepting needs no new permission** — it republishes with them in `viewers`, so the asker learns by an existing read succeeding, eventually, and the screen says when it happens. ⚠️ **The name search needs Firestore `list` on a public `directory` collection, which IS enumeration and cannot be narrowed by a rule** — Tim's explicit call at fewer than five users; the handle replacement is Open work 16. **Settings → Findable by name** takes your row out, and is described as a courtesy rather than a protection because the rules cannot enforce it. ⚠️ **No longer its own tab — it is the Friends half of HOME** since 2026-08-22, and since 2026-08-25 the **You** half is a feed of those same friends' workouts rather than a place to start one. reached by a You / Friends switch, and the screen is titled **Friends** rather than Social because that is what a person has. `#/social` is still its route. **Mutual friends.** ⚠️ ~~a list you VISIT — there is no feed~~ **CORRECTED 2026-09-02, and it had been wrong here since 2026-08-25**: the **You/Friends** switch on Home IS a feed of their sessions, and since 2026-09-02 it is a Hevy-shaped one — each card carries the description they wrote, a **Time · Sets** row and one line per exercise with its set count, and **tapping it opens their workout on its own screen** at `#/friend/<uid>/<sessionId>`: an absolute date, a muscle split as percentages of that session, typed bests, and set tables whose header adapts to the lift. From there you can **compare a lift against your own** (rep-normalised, windowed to what you both have, and refusing to name a winner), **save their workout as one of yours** (set counts carry, weights cannot) or **share a picture of it**. **D7 was never narrowed** — what it still refuses is the **discovery** feed of strangers (Open work 18). Connect by **invite link** (no user directory, so nothing can be enumerated); links work once and expire in 7 days, and the sender can cancel one before it is used. ⚠️ ~~**You choose per person what they see** — Everything / My workouts / Just that I trained / Nothing~~ **GONE 2026-09-03 (D29): visibility is one setting for the whole ACCOUNT** — see the "Who can see you" row above. Every accepted friend sees the same thing, and a new connection is not started at a "least visible setting" any more because there is no longer one to start at. A friend's page shows **their body map in the app's own art and colour ramp — tappable since 2026-09-03, with the same panel your own map has** — their volume, their graphs, and their recent workouts as one line each, opening to the real structure with supersets and drop sets intact. **What THEY can see of yours sits at the top of their page**, above anything of theirs — the thing you most want to check is what you are giving away, and it now leads to the account setting rather than to a dial on that one person. Requires a real account (D25 proposed): an anonymous uid is a browser profile that will be lost, so a connection to one is a connection to nobody |
-| **Goals** (no longer a nav tab) | ⚠️ **Off the bar since 2026-08-25, reached from Settings**; the route and all its deep links still resolve. A goal is **one muscle moving up a strength LEVEL over twelve weeks** — never "+30 lb on your bench", because individual change over 12 weeks runs 0–250 % and no app can promise a number. Pick a muscle, pick a level above it, and the screen states **what it costs** (hard sets a week on that muscle, sessions, minutes, protein, effort, sleep) with a citation on every line, **what your logged sessions are actually delivering** against it, **why progress stalls** — two causes measured, four admitted invisible — and **which programmes fit**, ranked on what they give THAT muscle rather than on their headline rating. ⚠️ **No on-track verdict, and the screen says why**: a day-to-day estimate swings several percent, so a verdict off raw numbers would call a bad Tuesday a failure. 🆕 **BUT SINCE 2026-09-06 IT SAYS WHAT HAS MOVED** — the two estimated 1RMs subtracted, with the ±12 % yardstick in the same breath and still not one verdict word (Rule 6: report the measurement, withhold the opinion). ⚠️ **Built from 1RMs and NOT from the frozen percentiles**, which move with the comparison group — subtracting those would report a change in the STANDARDS as a change in the lifter. 🛑 **And this screen KEEPS the profile gate the muscle map gave up**, because a goal freezes its target weight (D20) and an assumption frozen in outlives every screen that would have relabelled it. The target weight is **frozen** when the goal is set, because the weight behind a level moves with body weight, age and the comparison group. One goal at a time; old ones kept. `js/goals.js`, `docs/goals-plan.md` |
-| **Bodyweight lifts rank** | **Pull-ups, chin-ups, dips and push-ups rate a muscle** (2026-08-19). Their resistance is a fraction of body weight plus whatever was added, and the fraction is per exercise. ⚠️ **The pull-up and the dip are 1.00 by STATICS, not by citation** — nothing but the hands is in contact, so the hands carry all of it, and the research confirmed no published %BM figure exists for either. A push-up is 0.75 from two independent force-plate studies half a percent apart (Suprak 2011, Mier 2014); the familiar 64 % and 66 % figures measure *different quantities* and mixing them would be worse than choosing one. ⚠️ **Body weight is read from the DATE OF THE SET**, never today's — otherwise losing twenty pounds would rewrite last year's pull-ups. What has no honest fraction stays refused, permanently and by name: an inverted row is 37–79 % depending on a bar height the app does not record. The panel distinguishes the two kinds of "can't", because "log a weigh-in" is actionable and "nobody has measured this" is not. `js/exercises.js` `BODY_WEIGHT_FRACTION`, `totalResistance()` in `js/e1rm.js` |
-| **The map says what it is IGNORING** | A muscle no longer claims "nothing recorded" over work you did. Sets the rating had to discard are listed with the reason — three sets of inverted rows show as uncounted rather than vanishing. Rendered on rated muscles too, not just grey ones: a Back rating built on rows while silently dropping every chin-up is under-reporting its own evidence while looking complete |
-| **Progression** (Goals Phase 4) | **Double progression, in the session runner** — hold the load and add reps; at the top of the range on **two consecutive sessions** take the smallest increment inside **2–10 %** and drop to the bottom of the range. Says so when **no honest increment exists** (5 lb on 30 lb is a 17 % jump), and distinguishes "past the band" from "inside the band but bigger than we allow for isolation work". ⚠️ **`js/progression.js` has NO CLOCK and imports nothing from `goals.js`** — §3.1's refusal is structural, not a promise. Time enters as one day count and **may only SUPPRESS a suggestion, never raise one**: after a long gap it offers last time's numbers and says why, prescribing no deload because nobody has measured one. Swept over 10,692 calls — a gap never yields a heavier suggestion than the same history without one. Weighted pull-ups get the full rule via total resistance (5 lb on a 25 lb belt is 2.4 % of ~205 lb, not 20 % of 25); reps-only movements get "one more rep". ⚠️ **The rep range is read across the recent history, NOT from the last session alone** — `trainingRange()`, fixed 2026-08-20. Read from one session, the app's own "back to 8 reps" came back next time as the top of 6–8, and an obedient lifter was moved out of 8–12 for good and given weight every second session. History may only ever widen the range *upward*, so the fix is structurally incapable of proposing a heavier weight than the old code did — the same asymmetry the lay-off rule has |
-| **What the strength score cannot see** | ⚠️ **On screen, in words, not in a tooltip.** A planned workout stores a set count and no weight or rep range, so **3×20 and 3×5 get the same strength percentage** — and load is the single biggest thing there is for strength (SMD 0.60 vs 0.12 for growth). Stated on the system screen and under the Explore list, because `title` does nothing on a phone and a phone is where this app is read. The same treatment for the **0.5 indirect-set weight**: kept, because it is the best-supported method actually tested, but the screen says it is a modelling choice and that counting indirect work lower would drop several percentages a band. 🔄 **SPLIT BY RULE 9 ON 2026-09-08 AND THE ROW'S CLAIM STILL HOLDS, narrowly**: *"3 sets of 20 and 3 sets of 5 get the same strength percentage"* and *"Indirect work counts half a set"* are still **on the screen**, because they are what the number IS; only the reasoning behind each moved behind a "?". ⚠️ **A "?" is not the tooltip this row warns about** — it is a named control that works on a phone, which `title` is not. 🚩 **AND ONE THING IS STILL ONLY IN A `title` AND SHOULD NOT BE**: whether a system's minutes were *stated by its author* or *estimated from the set count*. That is two different claims wearing one number, and on a phone nobody can tell which they are reading |
-| Profile | Gender, birth year, **body weight as a dated series**. Names what is still missing rather than failing silently. ⚠️ **ITS THREE `WHY` PARAGRAPHS ARE BEHIND A "?" SINCE 2026-09-08** — a dot beside each field label, which is where Hevy puts its one explanation too |
-| Offline UX | When the cloud is unreachable the app says **why**: `navigator.onLine` for the obvious case, plus a cache-busted same-origin **probe** because onLine is true for a captive portal or a dead upstream. It names the last signed-in account so an offline session doesn't look logged out, retries in place rather than reloading, and reconnects by itself on the browser's `online` event. Raw errors live behind a collapsed disclosure, never in the headline |
-| **Demo account** | Account → **View demo account**. A generated year — two programmes, ~200 sessions, 20 benchmarks, 53 weigh-ins, a goal 16 % of the way through — so every screen has something in it. ⚠️ **In-memory only.** `store.js` swaps its backend for a Map, so there is no tap sequence — editing, deleting, importing, "delete all data" — that can reach a real record. The flag is in **sessionStorage**, so the demo cannot follow you into a new tab or survive closing the browser; that is the safety decision, because "opens the app tomorrow and sees a year they did not do" would be far worse than the feature is worth. A reload reseeds from the same default. **Social is refused** at `republish()`, not just on the screen. `js/demo.js` |
-| Accounts | Anonymous-first; email upgrade preserves uid *and* data; sign-in, password reset, change password, delete account, sign-out, automatic adoption of local data. Falls back to local storage if the cloud is unreachable |
-| **Creating an account absorbs this device** | 🆕 **2026-09-08, Tim: *"there should be no button for it."*** `absorbThisDevice()` in `store.js` merges anything in this browser's localStorage into the account, on the two paths that CREATE one. 🚨 **CREATED, NEVER SIGNED IN, and that is the whole safety argument** — somebody making an account is turning the session they have been using into a permanent one, so this device's rows are theirs; somebody signing IN is reaching an account with its own history, possibly from a phone that is not theirs. `signInGoogle` therefore reports **`created`**, because its three branches are indistinguishable from outside (all return `{ user }`) and ⚠️ **the `signInWithCredential` recovery after `credential-already-in-use` is NOT a creation** — it is reached precisely because that account already exists. ⚠️ **Most people never touch this**: an anonymous account is already a *cloud* account (D12), so linking carries the data for free. What it covers is rows written by `LocalBackend` while the cloud was unreachable or unconfigured — which `adoptLocalData()` only ever carried up **into a completely empty account, once**, so anyone whose account had held a single row kept the old "Upload from this device" button forever. ⚠️ **Merge, never replace** (`mergeRows` keys by id, keeps the newer), and **failure is swallowed** — the account exists by then, so throwing would report a successful sign-up as a failure |
-| Google sign-in | **Exactly one popup, ever.** Recovering from "that account already exists" reuses the credential from the failed link (`signInWithCredential`) instead of opening a second window the browser would block. A cancelled sign-in never dead-ends: it says so, and offers **Continue in this window instead** — but ⚠️ **only where that redirect can actually finish**, which this configuration is not, so here it names **email** instead. ✅ **Works on a real iPhone in the installed home-screen app** (2026-08-22), which is the path this file spent months calling the riskiest untested one; the popup is what runs there, and the belief that an installed iOS app blocks popups was simply wrong |
-| Profile button | True top-left — beside "Fitness Tracker" in the desktop sidebar, in the header on mobile, never both. Red dot when data is not backed up |
-| Settings | Dark/light, **Colour** (Gold/Teal/Indigo/Ember since 2026-08-26, all four fully audited 2026-08-27), **lbs/kg**, More details, **Rest timer** (off by default), **Findable by name** (on by default — 2026-08-29, and it is a courtesy rather than a protection: the rules cannot enforce it), Goals link. ⚠️ **Profile, backup/restore and delete-all MOVED to the Account screen 2026-08-26** (Tim's ask); one pointer row remains |
-| Account | 🚨 **SIMPLIFIED ON TIM'S INSTRUCTION, 2026-09-08** — *"right now the profile menu is really wordy and complex, when it really should be quite simple"*, with a screenshot of Hevy's Edit Profile screen. **Seven blocks of prose went behind a "?"** (Rule 9) and **two whole cards were deleted rather than hidden**: "Signed in", whose email is on the avatar card directly above it, and — on the demo screen — a card restating the demo bar `app.js` prepends to every screen. 🛑 **Two things stayed in the open and they are the ones to understand**: who can see your photo (visibility is WHAT, the same call the visibility sheet got) and *"only in this browser"*, which became the section heading rather than a paragraph under it. 🚨 **AND "LEFT ON THIS DEVICE" IS GONE** — *"there should be no button for it"* — see the row below. ⚠️ **The person, since 2026-08-26**: profile photo — ⚠️ **POSITIONED AND RE-EDITABLE since 2026-08-27** (Edit reopens the cropper where it was left, on a 768px source kept for exactly that), a square stage with the circle inscribed in it, drag to move and a slider/pinch/wheel to zoom, and what the circle frames is literally what gets cut (`js/image-crop.js`); client-resized to a 256px JPEG (~4 KB measured), `settings.avatar`, worn by the top-left button, NOT published to friends, profile row, backup/restore + cloud warning, delete-all, sign in/out — in every account state. **Back goes Home**, not Settings |
-
-**Stepper increments:** reps ±1 · weight **±5 lbs or ±2.5 kg** · time ±10 sec · distance ±0.1 mi.
-Press-and-hold repeats.
-
-### Verified
-
-- ✅ **ON A REAL IPHONE, 2026-08-22 — the only two things in this list a device has ever confirmed.**
-  In the app **installed to the home screen**: the **keyboard fix** holds (*Next exercise* reachable
-  in the session runner with the keyboard up, and the exercise picker usable), and **Google sign-in
-  completes**. ⚠️ **Read the scope narrowly.** This was one person, one phone, one surface, and two
-  questions — it says nothing about touch targets, about a Safari tab, or about any of the three
-  survey items still marked reasoned-not-measured. **Everything else in this list is still a
-  desktop engine, jsdom, or an emulator**
-- All **32 JS modules** pass syntax check; the whole import graph resolves under a stub DOM
-- **The ranking model's five new regression assertions** (`tests/data-layer.test.mjs`) — the ones
-  that were missing. ⚠️ **1051 assertions ran green over this bug for two months**, and the reason is
-  worth knowing: every multi-observation test used three DIFFERENT exercise ids with estimates a
-  couple of pounds apart, so neither half of the fault could show — not one exercise filling every
-  slot, and not a flattering conversion outvoting a credible one. The new ones use the shapes real
-  data produces: a low-quality high-rep observation beside a high-quality benchmark, and one exercise
-  logged on more days than another. **Mutation-checked** — reverting the sort line flips exactly
-  those five and nothing else
-- **53 demo assertions** (`tests/demo.test.mjs`, no dependencies) — and the two that matter are
-  **determinism** and **plausibility**. The same day must build a byte-identical year, with a
-  companion check that a different day *does* move it so the first is not vacuous; that is what makes
-  "resets to the default" literal rather than approximate. Plausibility is checked against the app's
-  OWN modules rather than by eye — the bench estimate ranks somewhere with room above and below, the
-  logged volume lands in a believable band, and the goal's starting figure equals what the muscle map
-  said on the day it was set. That last one is a regression test: the first version built the goal
-  from the bench press alone while the map rates Chest from every chest exercise, so the demo opened
-  on a goal already reading "Target reached" with the map beside it disagreeing
-- **The demo driven end to end in a real browser** — 2026-08-19. Real data seeded first, then the
-  button clicked: the demo could not see it (`demoSeesRealSystem: false`), it was still on disk
-  (`realStillOnDisk: true`), renaming a system inside the demo wrote nothing to localStorage
-  (`wroteToDisk: false`), a reload restored the default, and leaving brought the real account back
-  intact. Every tab screenshotted at 390 px plus the muscle map and the desktop layout
-- **88 goals assertions** (`tests/goals.test.mjs`, no dependencies) — and the two that matter are
-  **refusals**, the same shape as `optimal.test.mjs`'s three. ⚠️ **Nothing reads the calendar to
-  decide what is asked of you**: two goals with identical numbers and start dates eleven weeks apart
-  must produce byte-identical requirements, with a companion assertion that a bigger *jump* does move
-  the band, so the first cannot pass vacuously. That test fails the moment anything scales a
-  requirement by how far behind schedule somebody is — which is `docs/goals-plan.md` §3.1, the only
-  thing in this app that could cause physical harm. ⚠️ **And no verdict**: `goalProgress()` for
-  somebody four days from the end having added nothing carries no key matching
-  `verdict|behind|ahead|status`. Also pinned: 0.73 g/lb converts to the published 1.62 g/kg and 1.0
-  to 2.2; protein is the SAME at Steady and Committed, which is what proves it is a threshold rather
-  than a dial; the sleep and effort text is byte-identical across every band; and the stall walk has
-  a **vacuity guard** — the same walk over adequate training must read OK
-- **1,847 data-layer assertions** (`tests/data-layer.test.mjs`, no dependencies) — including both
-  directions of the art↔standards invariant: every drawn muscle is rankable or declared unrankable,
-  **and** every rankable muscle is actually drawn with real geometry. A regeneration that dropped a
-  muscle group would otherwise fail silently on a screen nobody re-checks
-- **⚠️ `COLLECTIONS` in `store.js` is now checked against `knownCollection()` in `firestore.rules`.**
-  This file has warned in prose since the beginning that adding a collection to one and not the other
-  has every cloud write DENIED while localStorage keeps working — perfect on the machine it was
-  written on, silently lossy for anyone signed in. It was never a test until `goals` was added on
-  2026-08-19. **Mutation-checked**: removing `'goals'` from the rules flips exactly that assertion
-- **911 render assertions** (`tests/render.test.mjs`, jsdom) — every screen mounts, tapping a muscle
-  opens its detail, the SVG line chart genuinely runs (gridlines, one marker per measured point,
-  correct aria label), and **every ink mask reference resolves to a mask in the same SVG**. That last
-  one matters: if the mask or its image goes missing the figure renders as flat silhouettes with no
-  detail at all, which is the one failure that would not look like a bug in a screenshot
-- **Screenshots, headless Chrome** — Home, Workouts, Calendar, Settings, Muscles and the line chart
-  at 360 / 390 / 880 / 1180 / 1280 px in dark and light. Layout holds, nothing overflows, the legend
-  wraps, and the Muscles side column holds its figure size whether or not a muscle is selected
-- **Driven over CDP with real mouse events**, not synthetic ones — 2026-08-17: the session screen's
-  Add set pill (hit-tested, 6 sets → 7), the Compared-to sheet (picking Women moved Chest
-  Intermediate → Elite and the caption followed; the Everyone preset set all four axes), the systems
-  list and one system, and Explore → a preset → Add, landing in the copied system with its notes
-  intact. Confidence was checked from **computed styles**, not by eye: two muscles at one level and
-  different confidences differ only in chroma, with identical lightness and hue.
-  Later the same day: Explore → Thurston → **Add** → the copied system → its Conditioning workout
-  (the first preset workout made of cardio rather than lifts), and the same for the 8-exercise
-  Upper B. **This is what caught the alphabetical-order bug** — every test passed, every screenshot
-  looked right, and the programme was still arriving shuffled
-- **Home's "what's next" driven through all four of its states** at 390 and 1180 px — empty account,
-  programme added with no history, one workout recorded two days ago, and the end of the rotation
-  wrapping back to the first. The button and the caption moved together every time
-- **Set types driven end to end with real mouse events** at 360 / 390 / 1180 px: link two exercises
-  in the builder, tap an exercise into a drop set, save, run the workout, confirm **the rest timer
-  stays at `--:--` mid-round and starts only after the last exercise of the round**, walk into round
-  two, add a drop, then read the record back on the calendar day and through the edit form. Saving
-  the edit form unchanged preserves groups, set types, set counts and drops exactly. **This pass is
-  what caught the builder writing into a copy** — every control looked right on screen and none of
-  them saved anything
-- Every class referenced in JS has a matching CSS rule
-- All assets serve 200 with correct MIME types from Pages
-- **46 rating assertions** (`tests/optimal.test.mjs`, no dependencies) — the curves are checked
-  against the PUBLISHED FIGURES, not just against their own slopes: a curve fitted to a slope can
-  match it perfectly and still be the wrong curve, so the hypertrophy model must also reproduce the
-  ~5-6 % at 12 sets and ~10.5 % at 42 that the paper plots, and the strength frequency model must hit
-  12.72 % and 17.32 % exactly. The three refusals are asserted directly — **the same 12 sets spread
-  over 3 days scores identically for growth and higher for strength**, 100 sets scores as 42, and 83
-  and 87 both band to 85
-- **49 volume-mapping assertions** (`tests/volume-map.test.mjs`, no dependencies) — the direct/
-  indirect classifications the source paper states outright are pinned as tests, the conservative
-  fallback is proved conservative, and the published efficiency tiers are asserted at their
-  boundaries. **Two guards worth keeping**: a fabricated 60-sets-a-week programme must land in
-  "beyond the evidence" rather than in a better tier (the "more is always better" failure this
-  rating exists to avoid), and Bumstead's 8-day cycle must produce *lower* weekly volume than the
-  same workouts counted as a week. Sanity-checked against all nine shipped systems — the 1960s
-  Golden Six totals 29 fractional sets a week against Thurston's 147, and the programme built on
-  volume landmarks reaches the minimum effective dose in 10 of 11 scored muscles
-- **73 social assertions** (`tests/social.test.mjs`, no dependencies) — what a person SHARES. The
-  load-bearing one is an **absence** check: the light projection is walked and required to contain no
-  numeric leaf below the workout name, run against a session carrying a superset, a drop set and a
-  myo-rep still stored under the legacy `drops` key. It has a **vacuity guard** — the identical walk
-  over the identical sessions at mid must find numbers (it finds 18), so "none at light" is a result
-  rather than a walk looking in the wrong place. Also asserted: an email address handed straight to
-  the builder never reaches the output, body weight stays out even at full unless separately enabled,
-  and a stored tier that is not recognised degrades to the *safest* value rather than the nearest
-- **The Goals screens driven in a real browser over CDP** — 2026-08-19, at 360 / 390 / 1180 px in
-  both themes, against a scratch copy with the config blanked. Seen: the empty state, both picker
-  steps, a goal set with a **real mouse click** on a level, all four scroll positions of the goal
-  screen, the stalls screen and the programme matcher. **Two defects came out of it and neither was
-  visible to jsdom.** A multi-word `.tag` **split into two pills** — the background and both rounded
-  ends are painted per line box, so "grows with the goal" rendered as a chip reading GROWS above a
-  chip reading WITH THE GOAL, reading as two unrelated labels; fixed with `white-space: nowrap` on
-  `.tag` app-wide and confirmed from `getClientRects()`, which is the only thing that tells you a
-  chip occupies two line boxes. And a **phrase dropped into the numeric column** — "Within 1–2 reps
-  of failure" in a column sized for "7–10" took 300 px and squeezed the label beside it into a
-  five-word-tall stripe. Also confirmed here: the nav fit at 360 px with no label clipped — six tabs
-  then, five since 2026-08-22
-- **The Social screens driven in a real browser over CDP** — 2026-08-18, at 390 and 1180 px in both
-  themes, against a scratch copy whose `social` facade is stubbed, so nothing touched the live
-  project and no account was created. Seen: the friends list with all four visibility settings, the
-  waiting-to-be-added row, an unused invite link with its Cancel, a friend's page with **their body
-  map rendering in the app's own art**, and the visibility sheet with its four explained options.
-  **Two real defects came out of it and neither was visible to jsdom**: friend rows were underlined
-  (they are anchors, and the app's other lists are buttons), and the visibility description clipped
-  to *"…your muscle map and your pr…"* on a phone — the one row on that screen where the detail is
-  the point. Both fixed and re-checked from **computed styles**, not by eye
-- ⚠️ **And the trap that nearly hid the fix:** the scratch copy ships the service worker, so the
-  second screenshot run was served the FIRST run's CSS out of cache and showed the bug as still
-  present. A screenshot of a stale cache looks exactly like a fix that did not work. Use a fresh
-  `--user-data-dir` per run
-- **46 rules assertions against the real rules engine** (`tests/rules.test.mjs`, Firestore emulator)
-  — **the first tests in this project that run as somebody who is not you.** Everything else asserts
-  a number; a permission can only be tested by attempting it as another user and being refused, which
-  nothing here could do before. The suite leads with denials on purpose: *a rule that permits
-  everything passes every positive test*. The load-bearing one is a regression test rather than a new
-  feature — **a full-tier friend still cannot read the private sessions document** — because the one
-  unacceptable outcome of adding social was that it widened the old paths. Also refused: a stranger
-  adding themselves to a viewers list, a viewer listing which tiers exist, anyone listing another
-  person's invites, and a claimer extending an invite's expiry on the way past.
-  **Mutation-checked:** deleting the `diff().affectedKeys()` line flipped exactly one assertion from
-  denied to allowed and left the rest passing, so that test is not vacuous and that rule line is
-  provably load-bearing
-- **Firebase, 45 checks against the live project.** `js/firebase-backend.js` itself was exercised —
-  its gstatic imports redirected to a local SDK — not a lookalike: anonymous sign-in, read/write
-  round-trip, `serverTimestamp()` satisfying the rules, anonymous→email linking preserving uid and
-  data, sign-out, sign-back-in, password change, account deletion leaving no data, error mapping.
-  Seven rule violations all refused. Test users and documents deleted.
-  ⚠️ **This line used to end "the project holds zero users and zero documents", and that stopped
-  being true the moment Tim signed in.** On 2026-08-22 it held **7 users and 19 documents**,
-  including his two real accounts and their training. It was still being quoted as "zero" in a brief
-  handed to an agent whose job involved deleting things — so **snapshot the real baseline and diff
-  against it; never clean up to an absolute.** A true statement about a live project has a date on
-  it or it is a trap.
-
-### NOT verified
-
-- **⚠️ THE TWO NEWEST FEATURES HAVE NEVER MET REAL DATA, and both are the kind that look fine
-  until they do.** **File import** has never parsed an actual export from Strava, MacroFactor,
-  Cronometer or Apple Health — every column name in `js/import-file.js` comes from published
-  documentation rather than from a file this project has opened. That is exactly why the screen
-  detects columns by name, shows a preview and makes the user confirm before writing anything, and
-  why the date order, the weight unit and the distance unit are refused rather than guessed. ⚠️
-  **One of those three was a real shipped bug caught only by driving it** — distance defaulted to
-  miles and Strava exports kilometres — so treat the other guesses in that file as equally
-  untested. **The handoff and disconnect paths** are proved against the real rules engine and in
-  jsdom; **they have never run between two real accounts.**
-- **⚠️ AND THE PROFILE-PHOTO FIX WAS REASONED, NOT OBSERVED** — headless Chrome never reproduced
-  the bug Tim reported, so the diagnosis (a cyclic percentage resolved differently by WebKit) is the
-  best account of a real symptom rather than something this project measured. ✅ **His phone
-  confirms the fix works**, which is not the same as confirming the cause.
-
-- **⚠️ ACCESSIBILITY IS PART-AUDITED as of 2026-08-20, and the part that ran FAILED.** Contrast,
-  touch targets, accessible names and horizontal overflow have now been measured in a real browser
-  across 44 screen/width/theme combinations — see the section above; `--ink-faint` failed AA
-  everywhere it was used and every label in the app named nothing. Both fixed and re-measured.
-  ⚠️ **AND THE 44 COMBINATIONS WERE NOT WHAT THEY LOOKED LIKE.** Two of the tool's routes —
-  `#/data` and `#/muscles` — **are not routes at all** and silently rendered Home, so until
-  2026-08-24 the Data screen and the body map had **never been audited** and Home was measured three
-  times. Fixed in the tool, re-run over **52** combinations: **contrast is clean on all sixteen
-  newly covered ones**, and the map's own targets were hit-tested for the first time — Traps 42×11
-  at 360 px, with no larger equivalent, which is Open work 0i.
-  ✅ **Re-run again 2026-08-27 over 60 combinations × all four palettes — 240 in total, 23,496
-  text nodes, zero below 4.5:1, zero horizontal overflow.** The activity log joined the route list
-  then too; it had shipped unaudited.
-  ✅ **Re-run 2026-09-06 — 128 gold routes, 11,912 text nodes, zero below 4.5:1, zero overflow.**
-  🚨 **That run started as EIGHT failures and they were real.** `.load-badge.per-side` — the 9px
-  "PER SIDE" chip in `js/ui.js:897` — measured **3.96:1 in the LIGHT theme** on the session runner's
-  swap and exercises sheets. Tim was told, asked for it fixed, and it is: a scoped
-  `#82570B` at **5.02:1**.
-  ⚠️ **IT WAS FIXED FOR THE DEFAULT PALETTE ONLY, AND THAT IS THE INTERESTING PART.** Gold is the
-  palette with no `data-palette` attribute; teal, indigo and ember already cleared AA on that pair
-  (4.56–5.02). The obvious selector — the shape `.row-start` uses — would have painted gold's hex
-  over all four, **breaking three that passed in order to fix one.** The rule is therefore
-  `:root[data-theme="light"]:not([data-palette]) .load-badge.per-side`.
-  🚨 **AND `tests/a11y.test.mjs` COULD NOT HAVE CAUGHT IT, FOR A STRUCTURAL REASON WORTH KEEPING.**
-  That suite walks tokens out of `:root` blocks, and `--accent` on `--accent-dim` is a pair no
-  `:root` rule declares — it exists only because one CLASS puts one on the other. It now asserts this
-  pair directly, in every palette, and **mutation-checking it reproduced the browser's own 3.96:1**,
-  so the audit does not have to find it a second time.
-  ⚠️ **The eight were NOT a regression from that day's work, and that was MEASURED rather than
-  assumed** — the same audit was run against a scratch copy built from `git archive HEAD` and
-  returned the identical eight. When an audit finds something after a change, run the control;
-  *"it was probably already there"* is exactly the sentence this file exists to stop.
-  🚨 **AND A TRAP THAT COST THE FIRST RUN OF THAT AUDIT: A STALE `python -m http.server` WAS ALREADY
-  BOUND TO PORT 8791.** The tool's own "nothing is serving" guard passed — something *was* serving —
-  and every one of the 128 routes measured an *"Error code: 404"* page: **zero contrast failures, zero
-  overflow, and a clean-looking sweep.** What gave it away was that every interactive step failed with
-  a plausible message about the demo. ⚠️ **A green audit with a ZERO TEXT-NODE COUNT is not a pass,
-  and the node count is the only number that says so** — check it before reading anything else, and
-  pass `PORT=` a fresh port if in doubt.
-  ⚠️ **Three things are still completely unknown: no keyboard path has been walked, no screen reader
-  has ever been run against this app, and nothing has been tested at larger text.** **Do not let
-  "contrast passes" stand in for "accessible"** — they are different claims, and this file's whole
-  discipline is not confusing them.
-- **⚠️ The 2026-08-19 code is PART-reviewed as of 2026-08-20.** `js/progression.js` — the one that
-  matters, because it is the only part of this app that can cause physical harm — **has now been
-  attacked, and it broke**: the rep range collapsed under the module's own advice (see the 2026-08-20
-  section). Fixed, swept and mutation-checked. **`js/strength-estimate.js` and the body-weight work
-  across four modules have still not been attacked by anybody trying to break them.** They pass every
-  assertion in the suite and each was driven in a browser by its author, which is exactly what progression had
-  too the day before it turned out to be wrong. **The count is not the point** — passing a suite its
-  own author wrote is not the same as surviving somebody trying to break it.
-- **Almost everything about a real device.** ⚠️ **A phone has now opened the app three times and,
-  on 2026-08-24, been TRAINED with for a whole session.** What that settled is the keyboard fix,
-  Google sign-in in the installed PWA, and — far more valuable — four defects no review had found
-  (see `docs/history.md`, 2026-08-24). **What it did NOT settle is everything on this line:** touch targets,
-  `adoptLocalData()` against real local data, and how the app behaves in an ordinary **Safari tab**,
-  which is now the *less* tested of the two surfaces. Headless Chrome covers desktop-engine layout
-  only. Of the four survey items that are reasoned rather than measured, **three are still
-  reasoned** — haptics (iOS has no Vibration API), the long-press callout, and the native date
-  control — plus the open half of the fourth: whether the picker's `setTimeout` focus raises the
-  keyboard **by itself**, which the device visit did not record either way.
-- ~~**⚠️ THE KEYBOARD FIX IS SHIPPED AND UNPROVEN.**~~ ✅ **CLOSED 2026-08-22 — see Verified.**
-  `--kb`, written from `window.visualViewport`, was the largest structural change the phone work
-  made, and it was verified only by driving the variable by hand until a real iPhone confirmed both
-  cases the survey named.
-- ~~**⚠️ NO TWO ACCOUNTS HAVE EVER CONNECTED.**~~ ✅ **CLOSED 2026-08-22.** Two throwaway accounts in
-  two separate Chrome profiles ran the whole round trip against the live project — invite, claim,
-  accept, tier, publish, read, downgrade, disconnect — with enforcement checked **on the wire**
-  rather than in the UI, then both accounts and all eleven of their documents deleted. Two defects
-  came out of it: expired invites read as open (**fixed**), and disconnect is one-sided while the
-  sheet said otherwise (**sheet corrected 2026-08-24; the feature is still one-sided — Open work
-  0j**). ⚠️ **The brief claimed the project held zero users. It does not** — it holds Tim's two real
-  accounts. Snapshot the baseline before touching it.
-- ~~**⚠️ GOOGLE SIGN-IN DOES NOT WORK ON IOS**~~ ✅ **IT WORKS — installed PWA, 2026-08-22.** Broken
-  when reported on 2026-08-21 (popup opens, closes, nothing happens) and fixed by the third pass
-  moving the installed PWA off `signInWithRedirect`, which a cross-origin `authDomain` genuinely
-  cannot finish, onto the popup, which a device now says works. ⚠️ **Two narrower things are still
-  NOT verified and are easy to over-read:** Google sign-in in an **ordinary Safari tab** since the
-  fixes shipped — the surface the original report probably came from — and the **redirect** path,
-  which remains unusable in this configuration on any current browser and is deliberately not
-  offered where it cannot complete.
-
----
+> 🚨 **MOVED TO `docs/state.md` ON 2026-09-08 — IT IS STILL §3.** The handbook had reached 215 KB of
+> its 220 KB budget and this section was 68 KB of it, a third of the file. The budget test names
+> exactly this fix: *"split the offender into its own docs/ file and leave a pointer."*
+>
+> **Every `§3` citation in this project still resolves — to `docs/state.md`.** The section number did
+> not change; only the file did. Same cut, same reason, as the dated log leaving `progress.md` on
+> 2026-09-04.
+>
+> 🟢 **IT IS STILL READ AT THE START OF EVERY SESSION.** It is what the app currently does, screen by
+> screen, and it is where a feature's reasoning lives. Do not treat it as an appendix because it is
+> now a separate file — that is precisely how the split turns into rot.
 
 ## 4. Architecture
 
@@ -899,6 +617,12 @@ Fitness_Tracker/
 │   ├── views-data.js           calendar (its OWN tab again since 2026-08-25),
 │   │                           day detail, Data screen (opens on Muscles),
 │   │                           settings incl. the More details toggle
+│   ├── views-me.js            🆕 THE PROFILE TAB (#/me), 2026-09-08 — your
+│   │                           account as a place to LOOK at, where #/account
+│   │                           is where things are CHANGED. Nothing here
+│   │                           writes. ⚠️ Followers and Following are the same
+│   │                           number (connections are mutual) and the ? says
+│   │                           so; off the cloud both are a DASH, never 0
 │   ├── views-muscles.js        the Muscles pane
 │   ├── views-social.js         the FRIENDS half of Home, a friend's page,
 │   │                           accepting an invite — and since 2026-09-02

@@ -46,7 +46,7 @@ import {
 import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
-  emptyState, relativeDay, miniStepper, loadBadge, trimNum, youFriendsTabs, exerciseLabel,
+  emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
   personFace, helpDot,
 } from './ui.js';
 
@@ -97,13 +97,30 @@ const totalSets = (w) => w.exercises.reduce((n, e) => n + e.sets, 0);
  * published projection to carry it, and a privacy decision to take before there
  * is. Open work 0m.
  */
+/* 🔄 2026-09-08 — THE YOU / FRIENDS SWITCH IS GONE, AND HOME IS BECOMING THE HUB.
+ *
+ * Tim: *"I want to get rid of the 'You' and 'Friends' tab in the home page …
+ * Any details that don't go in any of the other main sections (data, workouts,
+ * etc) go into the home page, so we want to make it really nice. It's going to
+ * be the hub of all basic interaction. Side features or anything like that
+ * should be placed there."*
+ *
+ * ⚠️ THE SWITCH WENT; THE SCREEN BEHIND IT DID NOT. The Friends list is still
+ * `#/social`, reached from the Profile tab — where the followers and following
+ * counts point straight at it, which is a better door than a switch that made
+ * Home two screens wearing one name. What actually left Friends is the pair of
+ * controls that were never about other people: your display name and who can see
+ * your account, both now on the Account screen with the rest of the logistics.
+ *
+ * 🛑 AND WHAT HOME IS *FOR* IS NOW A STANDING BRIEF RATHER THAN A LAYOUT: it is
+ * where anything that belongs to no other tab goes. Nothing was added here today
+ * — he described the destination, not a feature — so resist filling it. */
 export async function HomeView() {
   const body = el('div', { class: 'feed' });
 
   const screen = screenShell({
     profile: true,
     title: 'Home',
-    top: youFriendsTabs('you'),
     actions: [iconBtn('sliders', 'Settings', () => go('#/settings'))],
     scroll: body,
   });
