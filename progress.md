@@ -22,10 +22,44 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-07 — leaving a workout open and coming back to it. One instruction from
-Tim, modelled on Hevy.
+**Last updated:** 2026-09-07 — two passes: leaving a workout open, then the save screen and the cost
+of photos.
 
-## What changed on 2026-09-07, in one line each
+## What changed on 2026-09-07 (second pass), in one line each
+
+**Tim:** *"Instead of putting the description and location at the top of the cite During a workout,
+put all that information as an option after the workout is finished, and then the user can post the
+workout."* Plus a question about photos. Full write-up at the top of `docs/history.md`.
+
+1. 🚨 **FINISH NO LONGER SAVES — IT OPENS A SAVE SCREEN**, and the button there is what writes.
+   Duration · Sets · Exercises, a description, a gym, the day, and a discard. **The order is the
+   whole change**: the old code argued the description had to live in the runner *because the finish
+   screen renders after the save has landed*, which was true and is what moving the boundary fixed.
+   The fields now describe a draft, and Finish is still one write.
+2. ⚠️ **`saveError` MOVED WITH THE BUTTON** — left in the runner it would have re-created the
+   2026-08-22 bug: a failed save writing its explanation into a screen nobody is looking at. There is
+   an assertion that the message lands on the save screen.
+3. 🛑 **THREE DELIBERATE DEPARTURES FROM HEVY'S SCREEN**: **sets and exercises, not volume in pounds**
+   (`session-stats.js`'s own argument, and Tim asked for a set count); **no Visibility row**, because
+   visibility is account-wide (D29) and a per-workout flag is a decision he owes rather than one to
+   build; **no title field and no Apple Health row**, neither of which exists here.
+4. ⚠️ **THE DAY IS EDITABLE IN BOTH PLACES ON PURPOSE** — the objection to two controls is drift and
+   there is none (one state, both re-render, never on screen together). The header one says NOT TODAY
+   the whole way through a back-dated workout; this one makes the screen a true summary.
+5. 💷 **PHOTOS: YES, BUT NOT FREE, AND THE BILL IS EGRESS RATHER THAN STORAGE.** It needs **Blaze**
+   (already the parked decision in `docs/social-plan.md` §13 step 9). At ~200 KB a photo, storage is
+   ~$1/month at 1,000 users; **people LOOKING is ~$100/year at 1,000 users and ~$2,500/year at
+   10,000** — against a $110/year app today. 🚨 **And D29 makes accounts public by default, so the
+   audience has no ceiling**, with no hard spending cap on Firebase. 🛑 **Nothing built.**
+6. ✅ **RAISED UNPROMPTED, AND IT IS THE ONE EXCEPTION HE GRANTED** (`direction.md` §3.4): photos are
+   user-uploaded content on public-by-default accounts with **no blocking, reporting or moderation**.
+   Not an argument against photos — an argument that those land first.
+7. 🚨 **`tests/sw-update.test.mjs` IS FLAKY ON THIS MACHINE AND IT IS NOT THIS CHANGE** — 5 of 6 runs
+   failed, and **the control was measured**: three runs on the stashed baseline failed 4 / 4 / 1.
+   ⚠️ **Do not read today's suite list as including it.** 1,025 render assertions; the other sixteen
+   suites green.
+
+## What changed on 2026-09-07 (first pass), in one line each
 
 **Tim asked for one thing:** *"I want the user to be able to 'leave' a workout and interact with the
 rest of the cite and then come back to the workout at any time."* Full write-up at the top of
@@ -318,13 +352,16 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT, AND ONE THING IS WAITING ON TIM
 
-**The working tree is clean, everything is pushed, and every suite is green** — seventeen of them,
-including 1,004 render assertions, plus a browser audit at **128 routes / 11,912 text nodes / zero
+**The working tree is clean, everything is pushed, and sixteen of the seventeen suites are green** —
+including 1,025 render assertions, plus a browser audit at **128 routes / 11,912 text nodes / zero
 contrast failures / zero overflow**. **No half-finished job to pick up.**
 
-⏸️ **ONE THING IS QUEUED BY TIM AND NOT STARTED: what happens when a workout FINISHES.** He sent
-Hevy's save screen on 2026-09-07 and said *"I'll talk to you about that afterwards."* **Do not
-pre-empt it** — wait for him, then read the 2026-09-07 section for the screenshot's contents.
+🚨 **THE SEVENTEENTH, `tests/sw-update.test.mjs`, IS FLAKY ON THIS MACHINE AS OF 2026-09-07 AND IT IS
+NOT A REGRESSION.** It fails most runs on *"the service worker takes control on the second load"*,
+and **the control was measured rather than assumed**: three runs against the stashed, committed
+baseline failed 4 / 4 / 1. It passed twice earlier the same day. ⚠️ **Do not report a green suite
+list that includes it, and do not "fix" it by weakening it** — find out why the worker is not
+claiming the page, or leave it recorded.
 
 🛑 **BETWEEN JOBS, SAY WHAT IS DONE AND STOP — DO NOT PROPOSE WHAT TO BUILD NEXT** (§1, and Tim has
 asked for that twice). ⚠️ **He does ask "what's next?" directly, and then a real ranked answer is

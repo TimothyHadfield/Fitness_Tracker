@@ -17,6 +17,130 @@
 
 ---
 
+## 2026-09-07 (second pass) — THE SAVE SCREEN, AND WHAT A PHOTO WOULD COST
+
+Tim, with Hevy's save screen: *"Instead of putting the description and location at the top of the
+cite During a workout, put all that information as an option after the workout is finished, and then
+the user can post the workout."* And a question beside it: *"I also want to come back to adding a
+picture to the cite. Is that a possibility? How would that change storage with our free system if
+every user posted a pic for every workout?"*
+
+### A. What shipped
+
+**Finish no longer saves.** It opens a save screen — the workout's name, **Duration · Sets ·
+Exercises**, a description box, a gym box, the day, and a discard — and the **Save workout** button
+there is what writes. The description and location chips are gone from the runner's header.
+
+🚨 **THE ORDER IS THE WHOLE CHANGE, AND IT IS WHAT MAKES THE FEATURE POSSIBLE.** The old note in
+`views-session.js` argued the description had to live in the runner *because the finish screen
+renders after `store.saveSession()` has already landed* — a box there would be describing a row that
+was already on disk and would need a second write to attach itself. That reasoning was correct and
+the fix was to move the boundary rather than the box: the save screen renders **before** anything is
+written, so the fields describe a draft, and Finish is still one write.
+
+⚠️ **The draft is untouched the whole time**, so the safety story is exactly what it was — asserted
+directly, because "when does this app write to disk" is not a thing to change on a promise.
+
+⚠️ **AND `saveError` MOVED WITH THE BUTTON.** It lived in the runner's DOM, which was right while
+Finish was tapped from the runner and would have re-created the 2026-08-22 bug from here: a save that
+failed would have written its explanation into a screen nobody was looking at, and Save would have
+appeared to do nothing. There is now an assertion that the message lands **on the save screen**.
+
+**Three deliberate departures from Hevy's screen, each for a reason this project already had:**
+
+- **Sets and Exercises where Hevy has Volume in pounds.** `js/session-stats.js` already argues it for
+  the feed card — a session of pull-ups has no external load to total — and Tim asked for a set count
+  instead of volume in so many words.
+- **No Visibility row.** Visibility is a property of the ACCOUNT (D29) and a per-workout flag is an
+  open question Tim owes a decision on; putting the row here would decide it by building it.
+- **No workout-title field and no Apple Health row.** Neither exists in this app.
+
+⚠️ **The day is editable in BOTH places, which is normally this project's definition of a bug.** The
+objection to two controls is drift and there is none — both read and write `state.date`, both
+re-render from it, and they are never on screen together. The header one earns its place by saying
+NOT TODAY the whole way through a back-dated workout rather than at the end of it; this one earns its
+place by making the screen a true summary of what is about to be written.
+
+**Discard** is the first "throw a workout away" control on the normal path. It is below everything
+and **not** in `.pane-bottom`, because that is where the thumb already is on every other screen, and
+it confirms with the count it is about to delete.
+
+### B. 💷 CAN WE ADD PHOTOS, AND WHAT WOULD THEY COST
+
+**Yes, but not on the free plan, and the binding number is not storage — it is EGRESS.**
+
+⚠️ **Everything below is arithmetic on stated assumptions.** The per-photo size is a property of what
+the app would choose to upload; the prices are Google's and were last confirmed **2026-09-01**.
+🛑 **Re-confirm before re-quoting any of them.**
+
+**1. It needs Blaze.** Cloud Storage for Firebase requires a billing account — `docs/social-plan.md`
+§13 step 9 already said photos were the one step blocked on it, and Open work 10 says the same about
+Cloud Functions. **This is the same decision Tim has already parked twice**, and it is his.
+
+**2. Firestore is not a way round it.** The app already stores an image in Firestore — the 256px
+avatar, ~4 KB in the settings document. A workout photo is 30–50× that; a Firestore document is
+capped at **1 MiB**, base64 adds ~33 %, and `readShard()` re-reads collections on every cold open, so
+photos in Firestore would multiply the one cost the 2026-09-06 analysis identified as 81 % of the
+bill. **Not a shortcut — a much worse version of the existing problem.**
+
+**3. The numbers, at ~200 KB a photo** (1080px longest edge, quality ~0.75 — the app already
+client-resizes avatars, so the machinery exists):
+
+| | storage | what actually bills |
+|---|---|---|
+| One user, one photo per workout, 4/week | **41 MB a year**, forever | — |
+| 1,000 users | 41 GB/yr → **~$1/month and rising** | see below |
+| 10,000 users | 416 GB/yr → **~$11/month and rising** | see below |
+
+🚨 **STORAGE IS THE CHEAP HALF. THE BILL IS PEOPLE LOOKING.** Egress is ~$0.12/GB, and a photo is
+downloaded once per person who sees it. With long cache headers (photos never change, so this is
+free to do):
+
+- **1,000 users, ~20 friends each**: 1,000 × 208 photos × 20 viewers × 200 KB ≈ **832 GB/yr ≈
+  $100/yr** — about what the whole app costs today.
+- **10,000 users, ~50 friends each**: ≈ **20 TB/yr ≈ $2,500/yr.**
+
+🚨 **AND THE AUDIENCE IS NOT BOUNDED BY THE FRIEND LIST, BECAUSE OF D29.** Accounts are **public by
+default** — anybody signed in can read them — so "how many people see this photo" has no ceiling in
+the model above. One post that circulates is the case where this stops being predictable, and
+⚠️ **the 2026-09-06 analysis found there is no hard spending cap for Firebase**: alerts lag up to
+days and the only true stop deletes the project.
+
+**4. What would keep it cheap, if he wants it:** resize hard on the client (the crop machinery in
+`js/image-crop.js` already does this for avatars), one photo per workout, long `Cache-Control`, and
+thumbnails on the feed with the full image only on the workout screen — that last one alone is most
+of the saving, because the feed is where the views are.
+
+✅ **THE ONE THING RAISED UNPROMPTED, AND IT IS THE EXCEPTION TIM GRANTED** (`docs/direction.md`
+§3.4 — say so when a decision now would be expensive to undo once moderation exists): **photos are
+user-uploaded content on an app whose accounts are public by default, and this project has no
+reporting, no blocking and no moderation.** Text notes are already that, but a picture is the version
+that gets an app removed from the App Store. **Not an argument against photos — an argument that
+blocking and reporting land first.** Nothing was built either way.
+
+### C. What was checked
+
+- **1,025 render assertions** (was 1,004), sixteen suites green.
+- 🚨 **`tests/sw-update.test.mjs` IS FLAKY ON THIS MACHINE RIGHT NOW, AND IT IS NOT THIS CHANGE.**
+  It failed 5 of 6 runs, the root failure always *"the service worker takes control on the second
+  load"* with everything downstream falling with it. ⚠️ **The control was run**: `git stash`, three
+  runs on the committed baseline, **4 / 4 / 1 failures** — so it fails identically without any of
+  today's work. It passed cleanly twice earlier in the same session, no stray Chrome or python
+  process was holding a port, and nothing in this change touches `sw.js` beyond the two module names
+  added in the first pass. **Recorded rather than chased**; do not read a green suite list today as
+  including it. *"It was probably already there"* is the sentence this project bans, which is why the
+  control was measured rather than assumed.
+- **Mutation-checked**: pointing Finish back at `finish()` takes the save-failure assertions down
+  with it, and inverting the count assertion proves it is measuring a real before/after.
+- **Driven in headless Chrome at 393×852**: walk a demo workout to the end, Finish, read the summary
+  (Duration · Sets · Exercises), type a description and a gym, Save, land on the finish screen with
+  the draft cleared. Nothing overflows.
+- ⚠️ **The duration read "0 min" for a sub-minute session** in that run and now reads seconds. A
+  number saying nothing happened, on the screen summarising what did, is the kind of small wrongness
+  that makes a reader distrust the figures beside it.
+
+---
+
 ## 2026-09-07 — PUT A WORKOUT DOWN AND PICK IT BACK UP
 
 Tim, with three Hevy screenshots: *"I want the user to be able to 'leave' a workout and interact with

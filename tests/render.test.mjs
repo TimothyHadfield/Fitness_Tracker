@@ -78,6 +78,30 @@ async function mount(viewPromise) {
   return node;
 }
 
+/* ⚠️ FINISHING IS TWO TAPS SINCE 2026-09-07. "Finish workout" opens the save
+   screen — the description, the gym and the day, over a summary of what is about
+   to be written — and the "Save workout" button there is what calls the store.
+   Every block below that used to click Finish and read the result goes through
+   here, so each one keeps asserting exactly what it was written to assert.
+
+   ⚠️ It looks for Save on the DOCUMENT rather than in the node it was handed:
+   the save screen replaces `#app` outright, so the runner node the caller holds
+   is no longer in the page by the time this runs. */
+async function saveNow() {
+  const save = [...document.querySelectorAll('button')]
+    .find((b) => /^Save workout$/.test(b.textContent.trim()));
+  if (save) save.click();
+  await settle();
+  await settle();
+}
+async function finishAndSave(node) {
+  const fin = [...(node || document).querySelectorAll('button')]
+    .find((b) => /Finish workout/.test(b.textContent));
+  if (fin) fin.click();
+  await settle();
+  await saveNow();
+}
+
 /* ================= every screen renders at all ================= */
 for (const [name, view] of [
   ['Home', HomeView], ['Workouts', WorkoutsView], ['Calendar', CalendarView],
@@ -972,7 +996,7 @@ ok(!data.querySelector('.rep-target'),
   const finishBtn = [...resumed.querySelectorAll('button')]
     .find((b) => /Finish workout/.test(b.textContent));
   ok(Boolean(finishBtn), 'the session offers a finish button');
-  if (finishBtn) { finishBtn.click(); await settle(); await settle(); }
+  if (finishBtn) { finishBtn.click(); await settle(); await saveNow(); }
 
   const sessions = await store.getSessions();
   const saved = sessions.find((s) => s.workoutId === w.id);
@@ -1025,10 +1049,19 @@ ok(!data.querySelector('.rep-target'),
     const real = store.saveSession;
     store.saveSession = async () => { throw new Error('Could not save. Your browser storage may be full.'); };
     const countBefore = (await store.getSessions()).length;
-    fin.click(); await settle(); await settle();
+    fin.click(); await settle();
+    await saveNow();
 
-    const err = screen.querySelector('.save-error');
+    /* ⚠️ ON THE DOCUMENT, NOT ON THE RUNNER NODE, AND THAT IS THE POINT SINCE
+       2026-09-07. The save now happens from the save screen, which replaces
+       `#app` — so an error element left behind in the runner's DOM would be a
+       message written to a screen nobody is looking at, which is the 2026-08-22
+       bug exactly: a tap on Save that appears to do nothing. */
+    const err = document.querySelector('.save-error');
     ok(err && !err.hidden, 'a save that fails SAYS SO on the screen rather than doing nothing');
+    ok(Boolean(err && err.closest('.screen')
+       && err.closest('.screen').contains(document.querySelector('.save-screen'))),
+       '⚠️ and it says so ON THE SAVE SCREEN — the one the user is looking at when they tap Save');
     ok(/storage may be full/i.test(err.textContent),
        'and it passes on the reason the backend actually gave, not a generic apology');
     // ⚠️ THE LOAD-BEARING ONE. The draft is the only remaining copy of the
@@ -1039,11 +1072,13 @@ ok(!data.querySelector('.rep-target'),
     ok(document.querySelector('.finish-hero') === null,
        'and it does not claim the workout was saved');
 
-    // Recovery: the same tap works once the store does.
+    // Recovery: the same tap works once the store does. ⚠️ The same tap is now
+    // Save on the screen the error is on, not Finish back in the runner —
+    // a retry that made you walk the workout again would be its own defect.
     store.saveSession = real;
-    fin.click(); await settle(); await settle();
+    await saveNow();
     ok((await store.getSessions()).length === countBefore + 1,
-       'tapping Finish again after the problem clears saves it, with nothing lost');
+       'tapping Save again after the problem clears saves it, with nothing lost');
   }
 
   /* ⚠️ CLICKING ANYWHERE ON A SET SELECTS IT — Tim, 2026-08-25.
@@ -2189,7 +2224,7 @@ ok(!data.querySelector('.rep-target'),
     const finish = btn(s, /Finish workout/) || (btn(s, /Straight into|Round/) && null);
     if (!finish) { btn(s, /Straight into|Round/).click(); await settle(); }
     const f2 = btn(s, /Finish workout/);
-    if (f2) { f2.click(); await settle(); await settle(); }
+    if (f2) { f2.click(); await settle(); await saveNow(); }
 
     const saved = (await store.getSessions()).find((x) => x.workoutName === 'Half super');
     ok(saved && saved.entries.length === 1, 'the unlogged half of the superset is not saved');
@@ -2234,7 +2269,7 @@ ok(!data.querySelector('.rep-target'),
        'the set list still shows two sets, not three');
 
     const finish = btn(s, /Finish workout/);
-    if (finish) { finish.click(); await settle(); await settle(); }
+    if (finish) { finish.click(); await settle(); await saveNow(); }
     const saved = (await store.getSessions()).find((x) => x.workoutName === 'Drop day');
     ok(Boolean(saved), 'the drop session saves');
     ok(saved && saved.entries[0].sets.length === 1,
@@ -2279,7 +2314,7 @@ ok(!data.querySelector('.rep-target'),
     ok(Boolean(btn(s, /Another mini-set/)), 'with the button now offering another');
 
     const finish = btn(s, /Finish workout/);
-    if (finish) { finish.click(); await settle(); await settle(); }
+    if (finish) { finish.click(); await settle(); await saveNow(); }
     const saved = (await store.getSessions()).find((x) => x.workoutName === 'Myo day');
     ok(saved && saved.entries[0].sets.length === 1, 'a myo-rep saves as ONE hard set');
     ok(saved && (saved.entries[0].sets[0].minis || []).length === 1,
@@ -2331,7 +2366,7 @@ ok(!data.querySelector('.rep-target'),
     await settle();
 
     const finish = btn(s, /Finish workout/);
-    if (finish) { finish.click(); await settle(); await settle(); }
+    if (finish) { finish.click(); await settle(); await saveNow(); }
     const saved = (await store.getSessions()).find((x) => x.workoutName === 'Fill day');
     ok(saved && saved.entries[0].sets.length === 2,
        `⚠️ set 3 was never opened, so it is NOT saved — two sets, not three (${saved && saved.entries[0].sets.length})`);
@@ -2461,7 +2496,7 @@ ok(!data.querySelector('.rep-target'),
     }
     const finish = btn(s, /Finish workout/);
     ok(Boolean(finish), 'the walk reaches the end of the swapped workout');
-    if (finish) { finish.click(); await settle(); await settle(); }
+    if (finish) { finish.click(); await settle(); await saveNow(); }
     const saved = (await store.getSessions()).find((x) => x.workoutName === 'Swap day');
     const names = saved ? saved.entries.map((e) => e.exerciseName) : [];
     ok(names.includes('Hack Squat'),
@@ -3396,7 +3431,7 @@ ok(!data.querySelector('.rep-target'),
   oWeight.value = '185';
   oWeight.dispatchEvent(new window.Event('blur', { bubbles: false }));
   await settle();
-  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await finishAndSave(s);
   await settle(); await settle();
 
   const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
@@ -3673,7 +3708,7 @@ ok(!data.querySelector('.rep-target'),
   ow.value = '185';
   ow.dispatchEvent(new window.Event('blur', { bubbles: false }));
   await settle();
-  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await finishAndSave(s);
   await settle(); await settle();
   const rows = (await store.getGuestSessions()).filter((g) => g.workoutId === w.id);
   ok(rows.length === 0,
@@ -3757,8 +3792,8 @@ ok(!data.querySelector('.rep-target'),
   ow.value = '185';
   ow.dispatchEvent(new window.Event('blur', { bubbles: false }));
   await settle();
-  [...s2.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
-  await settle(); await settle(); await settle();
+  await finishAndSave(s2);
+  await settle();
 
   ok(offers.length === 1 && offers[0].uid === 'u-autumn',
      '⚠️ finishing OFFERS her half to her account, addressed by uid rather than by her name');
@@ -3794,8 +3829,8 @@ ok(!data.querySelector('.rep-target'),
   fw3.value = '125';
   fw3.dispatchEvent(new window.Event('blur', { bubbles: false }));
   await settle();
-  [...s3.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
-  await settle(); await settle(); await settle();
+  await finishAndSave(s3);
+  await settle();
 
   const failRow = (await store.getGuestSessions()).find((g) => g.workoutId === w3.id);
   ok(Boolean(failRow) && failRow.entries[0].sets[0].weight === 125,
@@ -3868,21 +3903,32 @@ ok(!data.querySelector('.rep-target'),
       sets: [{ weight: 100, reps: 5 }] }],
   });
 
+  /* ⚠️ THE LOCATION IS ASKED AT THE END SINCE 2026-09-07, not in the runner's
+     header — Tim's instruction. Everything below it is unchanged behaviour
+     asserted through the new control: it still carries forward, still saves on
+     the row, still writes ABSENT rather than "" when cleared, and a workout
+     logged without one still does not wipe the default. */
+  const gymBox = () => document.querySelector('[aria-label="Where this workout happened"]');
+
   localStorage.removeItem(DRAFT);
   const s = await mount(SessionView(w.id));
-  const chip = s.querySelector('.session-loc');
-  ok(Boolean(chip), 'the runner offers a location');
-  ok(/The garage/.test(chip.textContent),
-     'and it carries forward from the last session — one gym costs zero taps forever');
+  ok(!s.querySelector('.session-loc'),
+     '⚠️ the runner no longer asks where you are mid-workout');
   const draft = JSON.parse(localStorage.getItem(DRAFT));
-  ok(draft && draft.location === 'The garage', 'the carried label is on the draft');
+  ok(draft && draft.location === 'The garage', 'the carried label is on the draft from the start');
 
   const wv = s.querySelector('.step-value');
   wv.value = '105';
   wv.dispatchEvent(new window.Event('blur', { bubbles: false }));
   await settle();
+
   [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
-  await settle(); await settle();
+  await settle();
+  ok(Boolean(gymBox()), 'the save screen asks where it was');
+  ok(gymBox().value === 'The garage',
+     'and it carries forward from the last session — one gym costs zero taps forever');
+  await saveNow();
+  await settle();
 
   const rows = (await store.getSessions()).filter((x) => x.workoutId === w.id);
   const saved = rows.find((x) => x.entries[0].sets[0].weight === 105);
@@ -3899,8 +3945,7 @@ ok(!data.querySelector('.rep-target'),
   wv3.value = '110';
   wv3.dispatchEvent(new window.Event('blur', { bubbles: false }));
   await settle();
-  [...s3.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
-  await settle(); await settle();
+  await finishAndSave(s3);
   const saved2 = (await store.getSessions()).find((x) => x.workoutId === w.id
     && x.entries[0].sets[0].weight === 110);
   ok(saved2 && !('location' in saved2), 'a cleared location saves NO key — absent, never ""');
@@ -3915,7 +3960,7 @@ ok(!data.querySelector('.rep-target'),
    * A default that any single omission erases is not a default. */
   localStorage.removeItem(DRAFT);
   const s4 = await mount(SessionView(w.id));
-  ok(/The garage/.test(s4.querySelector('.session-loc').textContent),
+  ok(JSON.parse(localStorage.getItem(DRAFT)).location === 'The garage',
      '⚠️ the next workout still opens at The garage, even though the one before it was '
      + 'saved with no location at all — blank is "not this one", never "forget where I train"');
 
@@ -3926,8 +3971,9 @@ ok(!data.querySelector('.rep-target'),
   await st.store.saveSettings({ defaultLocation: 'Iron Works' });
   localStorage.removeItem(DRAFT);
   const s5 = await mount(SessionView(w.id));
-  ok(/Iron Works/.test(s5.querySelector('.session-loc').textContent),
+  ok(JSON.parse(localStorage.getItem(DRAFT)).location === 'Iron Works',
      'and changing it is one edit that sticks from then on');
+  void s5;
   await st.store.saveSettings({ defaultLocation: '' });
 }
 
@@ -3952,7 +3998,7 @@ ok(!data.querySelector('.rep-target'),
     wv.value = String(weight);
     wv.dispatchEvent(new window.Event('blur', { bubbles: false }));
     await settle();
-    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await finishAndSave(s);
     await settle(); await settle();
     return document.getElementById('app');
   };
@@ -4654,7 +4700,7 @@ ok(!data.querySelector('.rep-target'),
   await settle();
   type(s.querySelectorAll('.step-value')[0], 60);
   await settle();
-  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await finishAndSave(s);
   await settle(); await settle();
 
   const app = document.getElementById('app');
@@ -4752,7 +4798,7 @@ ok(!data.querySelector('.rep-target'),
 
     // Walk straight to Finish without touching anything — the exact path that
     // would record a workout nobody did.
-    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await finishAndSave(s);
     await settle(); await settle();
     ok(/Nothing recorded/i.test(document.getElementById('app').textContent)
        || !(await store.getSessions()).some((x) => x.workoutId === w.id),
@@ -4778,7 +4824,7 @@ ok(!data.querySelector('.rep-target'),
     ok(draft.entries[0].sets[0].prefilled === undefined,
        '⚠️ one keystroke clears the flag — touching a number is what makes the set theirs');
 
-    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await finishAndSave(s);
     await settle(); await settle();
     const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
     ok(saved && saved.entries[0].sets[0].weight === 45,
@@ -4833,7 +4879,7 @@ ok(!data.querySelector('.rep-target'),
        + 'what carries the guarantee now');
 
     // Untouched, it still records nothing.
-    [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+    await finishAndSave(s);
     await settle(); await settle();
     ok(!(await store.getSessions()).some((x) => x.workoutId === w.id),
        '🚨 and a DERIVED WEIGHT untouched is still not a record — the guard covers the number '
@@ -5024,7 +5070,8 @@ ok(!data.querySelector('.rep-target'),
     await settle();
   }
   finishBtn().click();
-  await settle(); await settle();
+  await settle();
+  await saveNow();
   const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
   ok(Boolean(saved), 'the reordered session saves');
   ok(saved && saved.entries.length === 1 && saved.entries[0].exerciseName === 'Zercher Squat',
@@ -6361,6 +6408,134 @@ ok(!data.querySelector('.rep-target'),
      '🚨 AND STEP 3 IS THE FIRST EXERCISE AGAIN — round two, member one. `entries[2]` does not '
      + 'exist, so a bar reading the entry list would have printed nothing here and looked fine on '
      + 'every workout without a superset in it');
+
+  clearDraft();
+  await store.clearAll();
+}
+
+/* ====== the save screen (2026-09-07) ======
+ *
+ * Tim: *"Instead of putting the description and location at the top of the cite
+ * During a workout, put all that information as an option after the workout is
+ * finished, and then the user can post the workout."*
+ *
+ * 🚨 THE LOAD-BEARING ONE IS THAT FINISH NO LONGER SAVES. Everything else here
+ * is a field moving; that is a change to when the app writes to disk, and the
+ * draft has to survive every path off this screen. */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { loadDraft, clearDraft } = await import(BASE + 'session-draft.js');
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const app = () => document.getElementById('app');
+  const findBtn = (re) => [...app().querySelectorAll('button')].find((b) => re.test(b.textContent));
+  // Finish only exists on the last step of the walk.
+  const walkToEnd = async () => {
+    for (let i = 0; i < 8 && !findBtn(/Finish workout/); i++) {
+      const next = findBtn(/Next exercise|Straight into|Round/);
+      if (!next) break;
+      next.click();
+      await settle();
+    }
+  };
+
+  clearDraft();
+  await store.clearAll();
+  const w = await store.saveWorkout({
+    name: 'Save day',
+    exercises: [
+      { exerciseId: byName('Barbell Bench Press').id, sets: 2, notes: '' },
+      { exerciseId: byName('Barbell Curl').id, sets: 1, notes: '' },
+    ],
+  });
+
+  const runner = await mount(SessionView(w.id));
+  type(runner.querySelectorAll('.step-value')[0], 155);
+  await settle();
+  type(runner.querySelectorAll('.step-value')[1], 6);
+  await settle();
+
+  const before = (await store.getSessions()).length;
+  await walkToEnd();
+  findBtn(/Finish workout/).click();
+  await settle();
+
+  ok(Boolean(app().querySelector('.save-screen')), 'Finish opens the save screen');
+  ok((await store.getSessions()).length === before,
+     '🚨 AND IT SAVES NOTHING. Finish used to BE the save; the write happens from the button on '
+     + 'this screen, so the description and the gym describe a session that is still a draft');
+  ok(Boolean(loadDraft()), '⚠️ and the draft is untouched — still the only copy, exactly as before');
+
+  const stats = [...app().querySelectorAll('.save-stat-value')].map((n) => n.textContent);
+  ok(stats.length === 3, `three stats across the top (${stats.join(' / ')})`);
+  ok(stats[1] === '1' && stats[2] === '1',
+     `⚠️ SETS and EXERCISES, counting only what was RECORDED — one set typed of the three planned, `
+     + `on one of the two exercises (${stats.join(' / ')})`);
+  ok(!/lbs/.test(app().querySelector('.save-stats').textContent),
+     '⚠️ and no volume figure in pounds, where Hevy has one — a session of pull-ups has no external '
+     + 'load to total, and Tim asked for a set count instead');
+
+  /* ---- back goes into the workout, which never stopped ---- */
+  app().querySelector('[aria-label="Back"]').click();
+  await settle();
+  ok(Boolean(app().querySelector('.set-list')), 'back goes into the runner');
+  ok((await store.getSessions()).length === before && Boolean(loadDraft()),
+     '⚠️ and nothing was written on the way through — the workout is simply still open');
+
+  /* ---- the fields, and what they write ---- */
+  await walkToEnd();
+  findBtn(/Finish workout/).click();
+  await settle();
+  const noteBox = app().querySelector('[aria-label="Description of this workout"]');
+  const gymBox = app().querySelector('[aria-label="Where this workout happened"]');
+  ok(Boolean(noteBox) && Boolean(gymBox),
+     'the description and the gym are asked here, once, at the end');
+  noteBox.value = 'Felt strong.';
+  noteBox.dispatchEvent(new window.Event('input', { bubbles: true }));
+  gymBox.value = 'The garage';
+  gymBox.dispatchEvent(new window.Event('input', { bubbles: true }));
+  await settle();
+  ok(loadDraft().note === 'Felt strong.' && loadDraft().location === 'The garage',
+     '⚠️ typed straight onto the draft, so closing the app on this screen loses neither');
+
+  await saveNow();
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  ok(Boolean(saved), 'Save writes the session');
+  ok(saved && saved.note === 'Felt strong.' && saved.location === 'The garage',
+     '🚨 with the description and the gym on the row');
+  ok(!loadDraft(), 'and the draft is cleared only once the save has landed');
+  ok(/Nice work|Workout complete/i.test(app().textContent),
+     'and it lands on the finish screen, which is unchanged');
+
+  /* ---- discard ---- */
+  clearDraft();
+  const again = await mount(SessionView(w.id));
+  type(again.querySelectorAll('.step-value')[0], 165);
+  await settle();
+  const countBefore = (await store.getSessions()).length;
+  await walkToEnd();
+  findBtn(/Finish workout/).click();
+  await settle();
+  const discard = findBtn(/^Discard workout$/);
+  ok(Boolean(discard), 'the save screen offers a discard');
+  ok(!discard.closest('.pane-bottom'),
+     '⚠️ and NOT in the footer beside Save — that is where the thumb already is on every other '
+     + 'screen in the app');
+  const sheetsBefore = document.querySelectorAll('.sheet').length;
+  discard.click();
+  await settle();
+  const sheets = document.querySelectorAll('.sheet');
+  ok(sheets.length === sheetsBefore + 1, 'and it asks first');
+  /* ⚠️ A COUNT, not a specific number. What counts as "recorded" is the save
+     path's own rule, prefill and all — which is Open work 15 and Tim's call —
+     so pinning an exact figure here would be pinning that open question by
+     accident. What this screen owes the user is the number it is about to
+     delete, whatever the rule says it is. */
+  ok(/\d+ recorded sets? will be deleted/.test(sheets[sheets.length - 1].textContent),
+     '⚠️ naming the count rather than asking abstractly');
+  [...sheets[sheets.length - 1].querySelectorAll('button')].find((b) => /^Discard$/.test(b.textContent)).click();
+  await settle();
+  ok(!loadDraft() && (await store.getSessions()).length === countBefore,
+     'confirming throws the workout away and writes nothing');
 
   clearDraft();
   await store.clearAll();

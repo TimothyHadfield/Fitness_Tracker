@@ -1654,6 +1654,41 @@ select.input {
 }
 .save-error[hidden] { display: none; }
 .save-error strong { color: var(--danger); }
+/* Since 2026-09-07 it sits inside the save screen's pinned footer, which pays
+   its own horizontal padding — the margins above are for a bar that is a direct
+   child of `.screen`, which is where this used to live. */
+.pane-bottom .save-error { margin-inline: 0; margin-bottom: 9px; }
+
+/* ==========================================================================
+   The save screen — everything about the session, asked at the end (2026-09-07)
+
+   Tim's ask: the description and the gym come off the runner's header and are
+   asked once, after the workout, over a summary of what is about to be written.
+   ========================================================================== */
+
+.save-screen { display: flex; flex-direction: column; gap: 16px; }
+.save-title { margin: 2px 0 0; font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+
+/* Three facts across the top, the shape Hevy uses. ⚠️ Not a bordered card
+   (Rule 2) — a hairline under the row is what separates it from the fields. */
+.save-stats {
+  display: flex;
+  gap: var(--gap);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.save-stat { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.save-stat-label {
+  font-size: 11px; font-weight: 750; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.save-stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ⚠️ Below everything, and nowhere near Save. It is the only control on the
+   normal recording path that destroys a workout, so it is deliberately not in
+   the footer where the thumb rests, and it is separated by enough space that it
+   cannot be the thing you meant to tap. */
+.save-discard { margin-top: 6px; align-self: flex-start; }
 
 /* The cloud running out of room. Third borrower of `.preset-warning`'s shape —
    a --danger hairline and full-strength ink, no fill and no box (Rule 2) — for

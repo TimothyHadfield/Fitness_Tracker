@@ -3164,3 +3164,46 @@ something I wanted to add on my own. Say the word if you want it. And I left the
 since you said the third screenshot is a separate conversation.
 
 Checked in a browser at phone size, both themes, all four colours.
+
+---
+
+## 2026-09-07 (second pass) — the save screen, and what photos would cost
+
+Done. Finish now opens a save screen instead of saving: the workout's name, how long it took, sets
+and exercises, then the description, the gym and the date, and a discard at the bottom. Save is what
+writes it. The description and location chips are off the runner's header.
+
+Worth knowing why it works now and didn't before: the old finish screen only appeared *after* the
+workout was already saved, so a description box on it would have been describing something already on
+disk and would have needed a second write. Moving the boundary is the fix — the new screen comes
+before anything is written, so it's still one save.
+
+Three things on Hevy's screen I deliberately didn't copy. Volume in pounds — a session of pull-ups
+has no weight to total, and you'd asked for set counts instead. The visibility row — that's an
+account-wide setting here and a per-workout one is a decision you haven't made. And the title field
+and Apple Health, which don't exist in this app.
+
+**On photos.** Yes, it's possible, but not on the free plan and the cost isn't where you'd expect.
+
+Storing them is cheap. At about 200 KB a photo, a thousand users posting one per workout is around
+$1 a month of storage. What costs money is people *looking* — every view downloads the picture. A
+thousand users with twenty friends each is roughly $100 a year, which is about what the whole app
+costs today. Ten thousand users with fifty friends each is roughly $2,500 a year.
+
+Two things make that number less predictable than it looks. Accounts are public by default now, so
+"how many people see this photo" has no ceiling. And Firebase has no hard spending cap — you can set
+alerts, but they lag by up to a day.
+
+If you want them, the things that keep it cheap are: shrink the photo on the phone before uploading
+(the app already does this for profile pictures), one per workout, and thumbnails in the feed with
+the full picture only when someone opens the workout. That last one is most of the saving.
+
+One thing I'd flag, and it's the case you told me to speak up about: photos are user-uploaded
+pictures on an app where accounts are public by default, and there's still no blocking, reporting or
+moderation. Not a reason to skip photos — a reason those come first.
+
+Nothing built on the photo side. Your call.
+
+One honest note: the service-worker update test is failing on my machine today. I checked it against
+your committed code with my changes stashed and it fails there too, so it isn't from this work —
+something about the machine, not the app. Recorded, not chased.

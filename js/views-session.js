@@ -1122,7 +1122,11 @@ export async function SessionView(workoutId) {
         onClick: () => goToStep(state.index - 1),
       }, icon('left')),
       isLast
-        ? el('button', { class: 'btn good', onClick: finish }, icon('check'), 'Finish workout')
+        /* ⚠️ FINISH OPENS THE SAVE SCREEN; IT NO LONGER SAVES (2026-09-07).
+         * The write happens from the button there, so the description, the gym
+         * and the day are asked once, at the end, over a summary of what is
+         * about to be recorded. The draft is untouched until that tap. */
+        ? el('button', { class: 'btn good', onClick: openSaveScreen }, icon('check'), 'Finish workout')
         : el('button', {
             class: 'btn primary' + (label === 'Next exercise' ? '' : ' is-linked'),
             onClick: () => goToStep(state.index + 1),
@@ -2535,6 +2539,203 @@ export async function SessionView(workoutId) {
     showFinished(cleaned, guests, prs);
   }
 
+  /* ================================================================== *
+   * THE SAVE SCREEN — everything about the session, asked at the end
+   *
+   * Tim, 2026-09-07: *"Instead of putting the description and location at the
+   * top of the cite During a workout, put all that information as an option
+   * after the workout is finished, and then the user can post the workout."*
+   *
+   * ⚠️ NOTHING IS WRITTEN UNTIL SAVE IS TAPPED, which is the half of this that
+   * had to be got right. Finish used to BE the save; it now opens this screen
+   * and `finish()` runs from the button here. The draft is untouched the whole
+   * time, so the safety story is exactly what it was — the numbers are on disk,
+   * and the only copy stays there until `store.saveSession()` has landed.
+   *
+   * ⚠️ AND THE FAILURE MESSAGE MOVED WITH IT. `saveError` used to live in the
+   * runner's DOM, which was right while Finish was tapped from the runner and
+   * would have been the 2026-08-22 bug all over again from here: a save that
+   * failed would have written its explanation into a screen nobody was looking
+   * at, and the button would have appeared to do nothing.
+   *
+   * ⚠️ Rendered by replacing `#app` rather than as a route, the same way
+   * `showFinished()` is, so the hash stays on the session — a workout being
+   * described is still a workout in progress, and navigating away and back must
+   * land in the runner rather than on a form about a session that never saved.
+   * ================================================================== */
+  function openSaveScreen() {
+    const own = cleanedEntriesOf(state.entries);
+    const sets = own.reduce((n, e) => n + e.sets.length, 0);
+    const guestNames = state.guestNames.slice();
+    const started = Date.parse(state.startedAt);
+    const secs = Number.isFinite(started)
+      ? Math.max(0, Math.round((Date.now() - started) / 1000)) : null;
+    /* ⚠️ SECONDS UNDER A MINUTE, rather than rounding to "0 min". A number that
+     * says nothing happened, on the screen that summarises what did, is the
+     * kind of small wrongness that makes somebody distrust the rest of the
+     * figures — and a workout can genuinely be short. */
+    const duration = secs === null ? '—'
+      : secs < 60 ? `${secs}s`
+      : secs < 3600 ? `${Math.round(secs / 60)} min`
+      : `${Math.floor(secs / 3600)}h ${Math.round((secs % 3600) / 60)}min`;
+
+    /* ⚠️ SETS AND EXERCISES, WHERE HEVY PUTS VOLUME IN POUNDS. Not an oversight
+     * and not a shortcut: `js/session-stats.js` already argues it for the feed
+     * card — a session of pull-ups has no external load to total, so a pounds
+     * figure reads a hard workout as nothing — and Tim asked for a set count
+     * instead of volume in so many words (*"Replace Volume for # of sets"*).
+     * The same three-stat shape, counting something that is true of every
+     * session this app can record. */
+    const stat = (label, value) => el('div', { class: 'save-stat' },
+      el('div', { class: 'save-stat-label', text: label }),
+      el('div', { class: 'save-stat-value', text: value }),
+    );
+
+    const noteBox = el('textarea', {
+      class: 'input', rows: '3', maxlength: '280',
+      placeholder: 'How did it go? What felt strong, what you changed, what hurt…',
+      'aria-label': 'Description of this workout',
+      onInput: (e) => {
+        state.note = String(e.target.value || '').slice(0, 280);
+        saveDraft(state);
+      },
+    });
+    noteBox.value = state.note || '';
+
+    const locBox = el('input', {
+      class: 'input', type: 'text', maxlength: '80', autocomplete: 'off',
+      placeholder: 'Gold’s Gym, home, the park…',
+      'aria-label': 'Where this workout happened',
+      onInput: (e) => {
+        state.location = String(e.target.value || '').slice(0, 80);
+        saveDraft(state);
+      },
+      /* ⚠️ THE DEFAULT IS SET ON BLUR, NOT ON EVERY KEYSTROKE. Tim's rule is
+       * *"if the user ever sets a location, have that be the default"*, and it
+       * survived the move off the header intact — but a settings write per
+       * character would be one per letter of "Gold's Gym". Removing it still
+       * does not clear the default: blank is "not this one". */
+      onBlur: () => {
+        if (state.location.trim()) {
+          store.saveSettings({ defaultLocation: state.location.trim() }).catch(() => {});
+        }
+      },
+    });
+    locBox.value = state.location || '';
+
+    /* ⚠️ THE DATE IS EDITABLE IN BOTH PLACES, AND THAT IS DELIBERATE RATHER
+     * THAN AN OVERSIGHT. Two controls for one value is normally this project's
+     * definition of a bug — the objection is drift, and there is none here:
+     * both read and write `state.date` and both re-render from it, and they are
+     * never on screen together. Keeping the header one is what preserves the
+     * reason it was put there in the first place — *a workout being logged for
+     * another day says so the whole way through, rather than springing it on
+     * you at the end* — and this one is what makes the screen a true summary of
+     * what is about to be written. */
+    const saveDate = el('input', {
+      class: 'session-date', type: 'date', value: state.date, max: todayISO(),
+      'aria-label': 'Day this workout is recorded for',
+      onChange: (e) => {
+        state.date = e.target.value || todayISO();
+        saveDraft(state);
+        renderDate();
+        paintDayNote();
+      },
+    });
+    const dayNote = el('div', { class: 'field-help' });
+    function paintDayNote() {
+      dayNote.textContent = state.date === todayISO()
+        ? 'Today.'
+        : `Not today — this is being recorded for ${fmtDateLong(state.date)}.`;
+    }
+    paintDayNote();
+
+    const saveBtn = el('button', {
+      class: 'btn primary block',
+      onClick: async () => {
+        // ⚠️ Disabled for the duration. A second tap while the first save is in
+        // flight is two saves of the same rows; the ids are stable so it could
+        // not double anybody's training, but it can double a guest's OFFER.
+        saveBtn.disabled = true;
+        try { await finish(); } finally { saveBtn.disabled = false; }
+      },
+    }, icon('check'), 'Save workout');
+
+    document.getElementById('app').replaceChildren(screenShell({
+      title: 'Save workout',
+      /* Back into the RUNNER, not into history. The save screen is drawn by
+       * replacing `#app` without touching the hash, so the entry behind it is
+       * whatever came before the session — the same reason the finish screen
+       * opts out (Rule 8). Here the arrow plainly means "back to the workout",
+       * which is still open and still on disk. */
+      back: () => backToRunner(),
+      backExact: true,
+      scroll: el('div', { class: 'save-screen' },
+        el('h2', { class: 'save-title', text: state.workoutName }),
+        el('div', { class: 'save-stats' },
+          stat('Duration', duration),
+          stat('Sets', String(sets)),
+          stat('Exercises', String(own.length)),
+        ),
+        /* ⚠️ NOTHING IS SAID HERE ABOUT WHO WILL SEE IT. Hevy's screen carries a
+         * per-workout Visibility row; ours cannot, because visibility is a
+         * property of the ACCOUNT (D29) and a per-workout flag is an open
+         * question Tim owes a decision on — putting the row here would decide
+         * it by building it. The Friends screen and Settings own that setting. */
+        el('div', { class: 'field' },
+          el('label', { text: 'Description' }),
+          noteBox,
+          el('div', { class: 'field-help', text:
+            'Friends see this on your card. People who can only see that you trained do not.' }),
+        ),
+        el('div', { class: 'field' },
+          el('label', { text: 'Gym' }),
+          locBox,
+          el('div', { class: 'field-help', text:
+            'Whatever you type is the whole location — the app never reads GPS. '
+            + 'It becomes the default for your next workout until you type a different one.' }),
+        ),
+        el('div', { class: 'field' },
+          el('label', { text: 'Date' }),
+          saveDate,
+          dayNote,
+        ),
+        guestNames.length
+          ? el('p', { class: 'field-help', text:
+              `${guestNames.join(' and ')} saved with this too — their sets go under their own `
+              + 'names, and a friend gets theirs offered to their account.' })
+          : null,
+        /* ⚠️ THE ONE DESTRUCTIVE CONTROL IN THIS FLOW, AND IT IS DOWN HERE
+         * BELOW EVERYTHING, not beside Save. Hevy puts Discard at the bottom of
+         * this screen too. It is the first "throw a workout away" control the
+         * app has had anywhere near the normal path, so it confirms, and the
+         * confirmation names the count rather than asking abstractly. */
+        el('button', {
+          class: 'btn danger save-discard',
+          text: 'Discard workout',
+          onClick: () => confirmSheet({
+            title: 'Discard this workout?',
+            message: sets
+              ? `${sets} recorded set${sets === 1 ? '' : 's'} will be deleted. This cannot be undone.`
+              : 'Nothing was recorded in it, so nothing is lost.',
+            confirmLabel: 'Discard',
+            danger: true,
+            onConfirm: () => { clearDraft(); go('#/home'); },
+          }),
+        }),
+      ),
+      bottom: el('div', {}, saveError, saveBtn),
+    }));
+    // A description is the thing this screen exists to ask for, but focusing it
+    // would raise the keyboard over the summary somebody just came here to read.
+  }
+
+  /** Back out of the save screen into the workout, which never stopped running. */
+  function backToRunner() {
+    renderDate();
+    document.getElementById('app').replaceChildren(screen);
+  }
+
   // Said on the screen, not in a toast, and it stays until the save works.
   function saveFailed(err) {
     const msg = (err && err.message) || 'Could not save this workout.';
@@ -2863,140 +3064,27 @@ export async function SessionView(workoutId) {
   }
   renderDate();
 
-  /* ---- location (0m): a typed label, remembered, one tap to change ---- */
-  const locationBtn = el('button', { class: 'session-loc' });
-  function renderLocation() {
-    setChildren(locationBtn, icon('pin', 12),
-      el('span', { class: 'session-loc-name', text: state.location || 'Add location' }));
-    locationBtn.classList.toggle('is-empty', !state.location);
-    locationBtn.setAttribute('aria-label', state.location
-      ? `Location: ${state.location}. Change it` : 'Add a location for this workout');
-  }
-  renderLocation();
-  locationBtn.addEventListener('click', () => {
-    const input = el('input', {
-      class: 'input', type: 'text', value: state.location,
-      placeholder: 'Gold’s Gym, home, the park…',
-      'aria-label': 'Where this workout happened', maxlength: '80', autocomplete: 'off',
-    });
-    const apply = (v) => {
-      state.location = String(v || '').trim().slice(0, 80);
-      saveDraft(state);
-      renderLocation();
-      /* ⚠️ TYPING A GYM SETS THE DEFAULT FOR EVERY WORKOUT AFTER THIS ONE, and
-       * it happens HERE rather than at Finish — Tim's instruction is *"if the
-       * user ever sets a location"*, and somebody who types their gym and then
-       * abandons the session has still told the app where they train.
-       *
-       * ⚠️ REMOVING IT DOES NOT CLEAR THE DEFAULT. Blank is "not this one",
-       * which is why the old carry-forward-from-the-last-session rule was the
-       * thing being fixed: one unlabelled workout wiped the default and the
-       * next three had to be typed again. Changing gyms is what changes it.
-       *
-       * Fire-and-forget: a settings write that fails must not cost somebody the
-       * label on the session they are recording, which is already in the draft.
-       */
-      if (state.location) {
-        store.saveSettings({ defaultLocation: state.location }).catch(() => {});
-      }
-      close();
-    };
-    const { close } = openSheet({
-      title: 'Where was this?',
-      body: el('div', {},
-        el('p', { class: 'field-help', style: 'margin-top:0', text:
-          'Whatever you type here is the whole location — the app never reads GPS. '
-          + 'Friends you share full workouts with see it on your card; '
-          + 'people who only see that you trained do not. '
-          + 'It becomes the default for every workout after this one, until you '
-          + 'type a different one. Removing it leaves this workout without a '
-          + 'location and keeps the default.' }),
-        el('div', { class: 'field' }, el('label', { text: 'Location' }), input),
-      ),
-      footer: el('div', { class: 'btn-row' },
-        state.location
-          ? el('button', { class: 'btn ghost', text: 'Remove', onClick: () => apply('') })
-          : el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
-        el('button', { class: 'btn primary', text: 'Save', onClick: () => apply(input.value) }),
-      ),
-    });
-    input.focus();
-  });
-
-  /* ---- description (social-plan §13 Step 2): how it went, in one line ----
+  /* ⚠️ THE LOCATION AND DESCRIPTION CHIPS LEFT THE HEADER ON 2026-09-07 —
+   * Tim: *"Instead of putting the description and location at the top of the
+   * cite During a workout, put all that information as an option after the
+   * workout is finished."* Both are fields on the save screen now; the state
+   * they write (`state.location`, `state.note`) and everything downstream of it
+   * is unchanged, including the rule that typing a gym sets the default for
+   * every workout after this one.
    *
-   * ⚠️ IT LIVES IN THE RUNNER, NOT ON THE FINISH SCREEN, and that is the one
-   * judgement call in this feature. The plan says Hevy's is written before
-   * saving and that this is right — but our finish screen renders AFTER
-   * store.saveSession() has already landed, so a box there would be describing
-   * a row that is on disk, and would need a second write to attach itself. In
-   * the header it is part of the session the whole way through, it rides the
-   * draft like everything else, and Finish stays one write.
+   * ⚠️ The note that used to sit here argued the description belonged in the
+   * runner *because our finish screen renders after the save has landed*. That
+   * was true of the OLD finish screen and is the thing this change fixed: the
+   * save screen renders BEFORE anything is written, so the box describes a
+   * session that is still a draft, and Finish is still one write.
    *
    * ⚠️ `note` IS THE SESSION'S DESCRIPTION. `entry.notes` — rendered as
    * `.note-card` on the set screen — is the per-exercise coaching note off the
-   * template. Same word, different fields; nothing here touches that one.
-   *
-   * The chip borrows `.session-loc` because it is the same kind of thing in the
-   * same sub-line: a session fact you can change, in the quiet dashed-underline
-   * voice. `session-note` carries no rules today and is there as a hook.
-   */
-  const noteBtn = el('button', { class: 'session-loc session-note' });
-  function renderNote() {
-    setChildren(noteBtn, icon('edit', 12),
-      el('span', { class: 'session-loc-name', text: state.note || 'How did it go?' }));
-    noteBtn.classList.toggle('is-empty', !state.note);
-    // The chip truncates at 15ch, so the full sentence has to be in the label
-    // or a screen reader gets the same clipped preview a sighted user does.
-    noteBtn.setAttribute('aria-label', state.note
-      ? `Description: ${state.note}. Change it` : 'Add a description for this workout');
-  }
-  renderNote();
-  noteBtn.addEventListener('click', () => {
-    // A textarea, not an input: 280 characters is three or four lines on a
-    // phone, and a single-line box that scrolls sideways hides what you wrote.
-    // `.field` + a label is all it takes — associateLabels() in ui.js wires the
-    // two together on mount, so no id is invented here.
-    const input = el('textarea', {
-      class: 'input', rows: '3', maxlength: '280',
-      placeholder: 'Felt strong. Legs were done by the last set…',
-    });
-    input.value = state.note;
-    const apply = (v) => {
-      /* ⚠️ 280 CHARACTERS, which is the plan's number and worth one line of
-       * why: this is a DESCRIPTION on a feed card, read in a glance under a
-       * workout title, not a training journal. A cap that lets it become an
-       * essay would make the card a wall of text on every reader's feed, and
-       * the app has no "read more". Enforced here AND in projectSession(), so
-       * a row that arrived from an import or an old backup cannot publish a
-       * longer one than a person could type. */
-      state.note = String(v || '').trim().slice(0, 280);
-      saveDraft(state);
-      renderNote();
-      close();
-    };
-    const { close } = openSheet({
-      title: 'How did it go?',
-      body: el('div', {},
-        el('p', { class: 'field-help', style: 'margin-top:0', text:
-          'A line about this workout — how it felt, what you changed, what hurt. '
-          + 'It is saved with the record, and friends you share full workouts with '
-          + 'see it on your card; people who only see that you trained do not.' }),
-        el('div', { class: 'field' }, el('label', { text: 'Description' }), input),
-      ),
-      footer: el('div', { class: 'btn-row' },
-        state.note
-          ? el('button', { class: 'btn ghost', text: 'Remove', onClick: () => apply('') })
-          : el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
-        el('button', { class: 'btn primary', text: 'Save', onClick: () => apply(input.value) }),
-      ),
-    });
-    input.focus();
-  });
+   * template. Same word, different fields; nothing here touches that one. */
 
   renderAll();
 
-  return el('div', { class: 'screen no-nav' },
+  const screen = el('div', { class: 'screen no-nav' },
     el('header', { class: 'topbar' },
       /* ⚠️ A DOWN ARROW, NOT AN ✕ — and the glyph is the whole message. An ✕
        * closes, and closing a workout is precisely what this does not do. Hevy
@@ -3008,13 +3096,11 @@ export async function SessionView(workoutId) {
         el('div', { class: 'topbar-sub session-sub' },
           el('span', { text: existingDraft ? 'Resumed' : 'In progress' }),
           el('span', { class: 'session-sub-dot', text: '·' }),
+          // ⚠️ THE DAY STAYS HERE as well as on the save screen, and it is the
+          // one thing that did not move: its whole job is to say NOT TODAY the
+          // way through a back-dated workout rather than at the end of it.
           dateInput,
           dateNote,
-          locationBtn,
-          // After the location, deliberately: the sub-line wraps, and the two
-          // facts that identify the session (when, where) come before the one
-          // that comments on it.
-          noteBtn,
         ),
       ),
     ),
@@ -3023,9 +3109,10 @@ export async function SessionView(workoutId) {
     pane,
     // Off by default (Tim, 2026-08-28) — the bar simply is not on the screen.
     restEnabled ? restBar : null,
-    saveError,
     footer,
   );
+
+  return screen;
 }
 
 /* ================================================================== *
