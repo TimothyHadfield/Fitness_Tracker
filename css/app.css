@@ -1799,6 +1799,15 @@ select.input {
 .help-line > .note,
 .help-line > .section-label { flex: 1; min-width: 0; margin: 0; }
 
+/* ⚠️ A "?" THAT BELONGS TO THE LABEL RATHER THAN TO THE SECTION — 2026-09-08.
+   The rule above pushes the dot to the far edge, which is right above a body
+   map or a paragraph: the ? explains the block, and the block is the width of
+   the screen. It is wrong beside a two-word field label, where it strands the
+   dot 300px from the word it answers for. Profile has both shapes stacked and
+   the mismatch was visible; `<label>` never stretched, so this makes the one
+   .section-label among them behave the same way. */
+.help-line.by-label > .section-label { flex: none; }
+
 /* Seven things in one sentence are seven things nobody counts. */
 .vis-list { margin: 4px 0 0; padding-left: 18px; }
 .vis-list li { margin: 2px 0; }

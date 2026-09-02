@@ -11,7 +11,7 @@
 import { store, auth, probeOffline, demo, todayISO, social, feedback } from './store.js';
 import {
   el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron, refreshRoute,
-  setChildren, fmtDateShort,
+  setChildren, fmtDateShort, helpDot,
 } from './ui.js';
 import { cloudFullWarning } from './views-data.js';
 import * as units from './units.js';
@@ -31,21 +31,29 @@ const go = (hash) => { location.hash = hash; };
  * where somebody most wants something to look at.
  * ------------------------------------------------------------------ */
 
+/* 🚨 THE CARD TIM POINTED AT — 2026-09-08: *"all details like the 'view demo
+ * account' descriptions should be held in a question mark that pops up when you
+ * click on it to learn more, don't display it on the main screen."*
+ *
+ * ⚠️ NOTHING WAS DELETED, and the two facts a person needs BEFORE tapping are
+ * still stated before tapping — they are one tap away instead of two paragraphs
+ * deep. That is Design Rule 9 exactly: the button says WHAT it does, the ? says
+ * what is in there and why it is safe. */
 function demoCard() {
   if (!demo.available()) return null;
 
   return el('div', { class: 'card' },
-    el('div', { class: 'section-label', text: 'Just looking around' }),
-    el('div', { class: 'field-help' },
-      'The demo account is a made-up year of training — two programmes, a few hundred sessions, '
-      + 'benchmarks, body weight and a goal in progress. Every screen fills in, so you can see what '
-      + 'the app looks like in use without logging any of it yourself.'),
-    // Said before they tap it, not after. The two facts somebody needs in
-    // advance are that their own data is safe and that theirs is not what they
-    // will be looking at.
-    el('div', { class: 'field-help' },
-      'Change anything you like in there — it only lives in this tab, nothing is saved, and it '
-      + 'starts fresh every time. Your own data is untouched and waiting when you come back.'),
+    el('div', { class: 'help-line' },
+      el('div', { class: 'section-label', text: 'Just looking around' }),
+      helpDot(el('div', {},
+        el('p', {}, el('b', { text: 'A made-up year. ' }),
+          'Two programmes, a few hundred sessions, benchmarks, body weight and a goal in progress, '
+          + 'so every screen has something in it.'),
+        el('p', {}, el('b', { text: 'Nothing is saved. ' }),
+          'It lives in this tab only, and starts fresh every time. Change anything you like.'),
+        el('p', {}, el('b', { text: 'Your own data is untouched ' }),
+          'and waiting for you when you come back.'),
+      ), { label: 'What the demo account is', title: 'The demo account' })),
     el('button', {
       class: 'btn primary block', text: 'View demo account',
       onClick: () => demo.enter(),
@@ -59,21 +67,26 @@ function demoScreen() {
     title: 'Account',
     back: () => go('#/home'),
     scroll: [
+      /* ⚠️ THREE PARAGRAPHS BECAME A LINE AND A "?" — 2026-09-08. The demo bar
+       * `app.js` prepends to EVERY screen already reads *"Demo account. Made-up
+       * data — change anything you like, nothing is saved"*, so this card was
+       * the third statement of the same sentence on the same screen. What is
+       * behind the ? is the part the bar cannot fit: that a reload starts over,
+       * and that Social is off — named rather than left to be discovered by
+       * somebody tapping it. */
       el('div', { class: 'card' },
-        el('div', { class: 'section-label', text: 'You are in the demo account' }),
-        el('div', { class: 'field-help' },
-          'None of this is real. It is a generated year of training so that every screen has '
-          + 'something in it — the systems, the calendar, the graphs, the muscle map and the goal '
-          + 'are all built from it.'),
-        el('div', { class: 'field-help' },
-          'Nothing here is saved anywhere. Edit a workout, delete a system, log a session — it '
-          + 'lives in this tab and nowhere else, and reloading the page starts it over from the '
-          + 'same beginning.'),
-        // Named rather than left to be discovered. Somebody who taps Social and
-        // finds it refused should already know why.
-        el('div', { class: 'field-help' },
-          'Social is switched off while you are in here, because publishing invented workouts to '
-          + 'real friends would be worse than not being able to try it.'),
+        el('div', { class: 'help-line' },
+          el('div', { class: 'section-label', text: 'You are in the demo account' }),
+          helpDot(el('div', {},
+            el('p', {}, 'None of this is real — it is a generated year of training, so that the '
+              + 'systems, the calendar, the graphs, the muscle map and the goal all have '
+              + 'something in them.'),
+            el('p', {}, 'Nothing here is saved anywhere. Edit a workout, delete a system, log a '
+              + 'session — it lives in this tab and nowhere else, and reloading the page '
+              + 'starts it over from the same beginning.'),
+            el('p', {}, 'Social is switched off while you are in here, because publishing '
+              + 'invented workouts to real friends would be worse than not being able to try it.'),
+          ), { label: 'What the demo account is', title: 'The demo account' })),
       ),
       el('button', {
         class: 'btn primary block', text: 'Leave the demo',
@@ -278,11 +291,16 @@ function avatarCard(settings, user) {
        * false, and a stale reassurance about who can see somebody's face is the
        * worst kind of wrong text this app could carry. Friends means the people
        * on your friends list and nobody else: the photo goes into the same
-       * published document they already read, under the same rule. */
-      el('div', { class: 'field-help', text: hasPhoto
-        ? 'Shown on your account button, and to the friends you are connected to — '
-          + 'on your workouts in their feed and on your page. Edit to move or resize the circle.'
-        : 'Shown on your account button, and to the friends you are connected to.' }),
+       * published document they already read, under the same rule.
+       *
+       * 🚨 AND IT DOES NOT GO BEHIND A "?" — 2026-09-08, when the rest of this
+       * screen did. Who can see your face is WHAT, not WHY, and Rule 9 keeps
+       * WHAT on the screen: the visibility sheet was left in the open for the
+       * same reason. Only the "Edit to move or resize" half went, and it went
+       * to nothing rather than into a popover — there is an Edit button eight
+       * pixels above it saying so. */
+      el('div', { class: 'field-help', text:
+        'Shown on your account button, and to the friends you are connected to.' }),
     ),
     fileInput,
   );
@@ -619,11 +637,23 @@ async function personalSections({ mode }) {
       el('span', { class: 'row-chev' }, chevron()),
     ),
 
-    el('div', { class: 'section-label', text: 'Your data' }),
+    /* ⚠️ THE HEADING KEEPS THE ONE FACT THAT CHANGES WHAT THE DATA IS, and the
+     * ? takes the rest — 2026-09-08, Rule 9. "Only in this browser" is not a
+     * caveat about a number, it is the difference between data that survives
+     * losing the phone and data that does not, and this module's own header
+     * says that must never be buried. So the local branch still says it in the
+     * open; what moved is the advice about what to do next. */
+    el('div', { class: 'help-line' },
+      el('div', { class: 'section-label', text: mode === 'cloud-secured'
+        ? 'Your data' : 'Your data — only in this browser' }),
+      helpDot(mode === 'cloud-secured'
+        ? 'Everything syncs to your account and is on any device you sign in on. Logging still '
+          + 'works with no signal — it uploads when you reconnect. A downloaded backup is the only '
+          + 'copy you control directly.'
+        : 'Clearing your browsing data, losing this device or switching phones erases it, and '
+          + 'nothing can recover it. An account fixes that; a downloaded backup is the other way.',
+      { label: 'What happens to your data' })),
     el('div', { class: 'card' },
-      el('div', { class: 'field-help', text: mode === 'cloud-secured'
-        ? 'Your data syncs to your account and works offline. A downloaded backup is still the only copy you control directly.'
-        : 'Your data lives only in this browser. Clearing your browsing data will erase it permanently. Add an account, or download a backup.' }),
       cloudFullWarning(cloud),
       el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
       el('button', { class: 'btn ghost block', text: 'Restore from backup', onClick: () => fileInput.click() }),
@@ -636,10 +666,12 @@ async function personalSections({ mode }) {
      * opposites, and one of them cannot be undone — putting the second inside
      * the first card is how somebody taps the wrong one. */
     el('div', { class: 'card' },
-      el('div', { class: 'section-label', text: 'Bring in data from another app' }),
-      el('div', { class: 'field-help' },
-        'Export your data from Strava, Apple Health, MacroFactor, Cronometer or a spreadsheet, '
-        + 'then bring the file in here. Nothing is sent anywhere — the file is read on this device.'),
+      el('div', { class: 'help-line' },
+        el('div', { class: 'section-label', text: 'Bring in data from another app' }),
+        helpDot('Export your data from Strava, Apple Health, MacroFactor, Cronometer or a '
+          + 'spreadsheet, then bring the file in here. Nothing is sent anywhere — the file is read '
+          + 'on this device, and the next screen says what it found before anything is written.',
+        { label: 'How importing works' })),
       el('button', {
         class: 'btn ghost block', text: 'Import from a file', onClick: () => go('#/import'),
       }),
@@ -740,10 +772,15 @@ function noteToDeveloper() {
 
     host.className = 'card';
     setChildren(host,
-      el('div', { class: 'section-label', text: 'Tell the developer something' }),
-      el('div', { class: 'field-help', text:
-        'This app is new and being worked on. If something is confusing, broken, or missing, '
-        + 'say so here — it goes straight to the person building it.' }),
+      /* ⚠️ The placeholder in the box already says WHAT to write — "an idea,
+       * something confusing, something broken". What was above it explained
+       * where the note goes and why the app is asking, which is WHY. */
+      el('div', { class: 'help-line' },
+        el('div', { class: 'section-label', text: 'Tell the developer something' }),
+        helpDot('This app is new and being worked on. Anything confusing, broken or missing goes '
+          + 'straight to the person building it. There is no reply here, so leave a way to reach '
+          + 'you in the note if you want one.',
+        { label: 'Where this note goes' })),
       box,
       send,
       // Only Tim sees this, and only because the rules let him read them.
@@ -1079,14 +1116,23 @@ function anonymousScreen(sections = [], settings = {}) {
     title: 'Account',
     back: () => go('#/home'),
     scroll: [
+      /* ⚠️ THE ONE BLOCK ON THIS SCREEN THAT DID NOT GO BEHIND A "?" — and the
+       * module header says why: this screen must never imply data is safe when
+       * it is not, so the risk is stated rather than asked for. What moved is
+       * the reassurance about what an account does with what you have already
+       * logged, which is now true without anybody being told (store.js's
+       * `absorbThisDevice`). */
       el('div', { class: 'card' },
-        el('div', { class: 'section-label', text: 'Your data is not backed up' }),
+        el('div', { class: 'help-line' },
+          el('div', { class: 'section-label', text: 'Your data is not backed up' }),
+          helpDot('Creating an account keeps everything you have already logged — it is attached '
+            + 'to the account rather than replaced by it, and it happens on its own. Signing in to '
+            + 'an account you already have is the other case, and that one shows you that '
+            + 'account\'s data instead.',
+          { label: 'What happens to what you have logged' })),
         el('div', { class: 'field-help' },
-          'Everything you have logged lives only in this browser. If you clear your browsing data, '
-          + 'switch phones, or lose this device, it is gone and cannot be recovered.'),
-        el('div', { class: 'field-help' },
-          'Adding an email or Google account keeps everything you have already logged — it is '
-          + 'attached to the account, not replaced by it.'),
+          'Everything you have logged lives only in this browser. Clear your browsing data, switch '
+          + 'phones or lose this device and it is gone.'),
       ),
 
       googleBtn,
@@ -1123,8 +1169,6 @@ function anonymousScreen(sections = [], settings = {}) {
  * ------------------------------------------------------------------ */
 
 async function signedInScreen(user, sections = [], settings = {}) {
-  const local = await auth.localRowCounts();
-  const localTotal = Object.values(local).reduce((n, v) => n + v, 0);
   // Only an email/password account has a password to change. A Google account
   // has nothing here to adjust — its details live in the Google account.
   const hasPassword = (user.providers || []).includes('password');
@@ -1167,20 +1211,17 @@ async function signedInScreen(user, sections = [], settings = {}) {
     },
   });
 
-  const uploadBtn = localTotal
-    ? el('button', {
-        class: 'btn primary block',
-        text: `Upload ${localTotal} item${localTotal === 1 ? '' : 's'} from this device`,
-        onClick: async () => {
-          const ok = await run(uploadBtn, 'Uploading…', async () => {
-            const report = await auth.uploadLocalData();
-            const added = Object.values(report).reduce((n, v) => n + v, 0);
-            toast(added ? `${added} added to your account` : 'Already up to date');
-          });
-          if (ok) refresh();
-        },
-      })
-    : null;
+  /* 🚨 "LEFT ON THIS DEVICE" IS GONE — 2026-09-08, Tim: *"the 'left on this
+   * device' part should be removed. When a user creates an account if they
+   * already have items uploaded to an empty page that they're using then that
+   * information should automatically upload to their account. there should be
+   * no button for it."*
+   *
+   * It was a card counting the rows still in this browser and a button to send
+   * them up, i.e. the app asking the user to do its filing. `absorbThisDevice()`
+   * in store.js now runs on the two paths that CREATE an account, so by the time
+   * anybody reaches this screen there is nothing left to sweep up. ⚠️ It is
+   * deliberately not automatic on SIGN-IN — see the comment there. */
 
   const signOutBtn = el('button', {
     class: 'btn ghost block',
@@ -1204,23 +1245,11 @@ async function signedInScreen(user, sections = [], settings = {}) {
     title: 'Account',
     back: () => go('#/home'),
     scroll: [
+      /* ⚠️ THE "Signed in" CARD WENT WITH IT. The email is on the avatar card
+       * directly above, which is what "signed in" was telling anybody, and the
+       * sentence about syncing is now the "Your data" ? two sections down —
+       * one place saying what happens to your data instead of two. */
       avatarCard(settings, user),
-      el('div', { class: 'card' },
-        el('div', { class: 'section-label', text: 'Signed in' }),
-        el('div', { class: 'field-help' },
-          'Your workouts sync to this account and are available on any device you sign in on. '
-          + 'Logging still works with no signal — it uploads when you reconnect.'),
-      ),
-
-      localTotal
-        ? el('div', { class: 'card' },
-            el('div', { class: 'section-label', text: 'Left on this device' }),
-            el('div', { class: 'field-help' },
-              'Some data was logged on this device before you signed in. Uploading merges it into '
-              + 'your account and never overwrites anything already there.'),
-            uploadBtn,
-          )
-        : null,
 
       ...sections,
 
@@ -1392,11 +1421,15 @@ export async function SignInView() {
       // anonymously on this device stops being reachable. Say it before, not after.
       wasAnonymous && hasLocal
         ? el('div', { class: 'card' },
-            el('div', { class: 'section-label', text: 'Before you sign in' }),
+            el('div', { class: 'help-line' },
+              el('div', { class: 'section-label', text: 'Before you sign in' }),
+              helpDot('Go back and CREATE an account instead, and everything on this device comes '
+                + 'with you automatically — there is nothing to press. Signing in is for an account '
+                + 'that already exists somewhere else, and it has its own history.',
+              { label: 'How to keep what is on this device' })),
             el('div', { class: 'field-help' },
               `This device has ${hasLocal} item${hasLocal === 1 ? '' : 's'} logged without an account. `
-              + 'Signing in to an existing account will show that account\'s data instead. To keep '
-              + 'what is on this device, go back and create an account from it rather than signing in.'),
+              + 'Signing in shows that account\'s data instead.'),
           )
         : null,
 

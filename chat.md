@@ -3300,3 +3300,38 @@ problem. That's gone too.
 
 An agent did the work; I re-ran the generator myself and got a byte-identical file, so it's genuinely
 reproducible rather than hand-edited.
+
+---
+
+## 2026-09-08 — the profile menu
+
+**You:** *"right now the profile menu is really wordy and complex, when it really should be quite
+simple"*, with a screenshot of Hevy's Edit Profile screen. Then: *"the 'left on this device' part
+should be removed … there should be no button for it"*, and *"all details like the 'view demo
+account' descriptions should be held in a question mark."*
+
+**The upload button is gone and it now happens by itself.** When someone creates an account,
+anything they logged before it comes with them — no card, no button, no count. It only does this on
+creating an account, not on signing in to one you already have: signing in reaches an account that
+already has a history, possibly from a phone that isn't yours, so quietly merging a stray browser
+into it would be wrong. The sign-in screen still warns about that case, which is the one where
+something really is left behind.
+
+Worth knowing: most people were never affected. An anonymous account is already a cloud account, so
+adding an email or Google just attaches to it and the data was always there. The button only ever
+mattered for workouts logged while the app couldn't reach the internet.
+
+**The descriptions are behind a "?" now**, on the account screen and on Your details. Two things I
+deliberately left in the open: who can see your profile photo, and "only in this browser" — both are
+what your data *is* rather than an explanation of it, and hiding either felt like the wrong kind of
+tidy.
+
+Two blocks I deleted instead of hiding, because the screen was already saying them: a "Signed in"
+card sitting under your email address, and — inside the demo — three paragraphs repeating the demo
+banner that's on every screen anyway.
+
+Your details now reads like the screen you sent: a label, a "?" next to it, and the control. The
+three paragraphs explaining why the app wants your gender, birth year and weight are one tap away.
+
+I didn't put your screenshot in the repo — it's someone else's app and the repo is public. I wrote
+down what it showed instead.

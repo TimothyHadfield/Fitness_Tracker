@@ -11,7 +11,7 @@ import { store } from './store.js';
 import {
   el, screenShell, toast, emptyState, confirmSheet, iconBtn,
   fmtDateShort, trimNum,
-  refreshRoute,
+  refreshRoute, helpDot,
 } from './ui.js';
 import * as units from './units.js';
 
@@ -25,13 +25,26 @@ function refresh() {
   refreshRoute();
 }
 
-// Why each field is asked for, said plainly at the point of asking (D8). Nobody
-// should have to guess why a fitness app wants their birth year.
+/* Why each field is asked for, said at the point of asking (D8). Nobody should
+ * have to guess why a fitness app wants their birth year.
+ *
+ * ⚠️ BEHIND A "?" SINCE 2026-09-08, not deleted — Tim pointed at the account
+ * screens and this is the same fault one tap in: three fields, three
+ * explanations, and the explanations were longer than the controls. This is
+ * exactly the split Rule 9 describes — the label says WHAT is being asked for
+ * and the ? says why it is worth answering — and Hevy's own profile screen,
+ * which is what Tim sent, marks its one explanation the same way. */
 const WHY = {
   gender: 'Strength standards differ by about 20–30 % between men and women at the same body weight.',
   age: 'Only used to compare you against people your own age. Optional — leave it blank to be compared against everyone.',
   weight: 'Every strength standard is a ratio to body weight, so this is what the comparison is built on.',
 };
+
+/** A field label with its explanation one tap away. */
+const askedFor = (label, why, what) => el('div', { class: 'help-line' },
+  el('label', { text: label }),
+  helpDot(why, { label: `Why we ask for your ${what || label.toLowerCase()}` }),
+);
 
 export async function ProfileView() {
   const profile = await store.getProfile();
@@ -147,25 +160,28 @@ export async function ProfileView() {
       status,
 
       el('div', { class: 'field' },
-        el('label', { text: 'Gender' }),
+        askedFor('Gender', WHY.gender),
         genderChips,
-        el('div', { class: 'field-help', text: WHY.gender }),
       ),
 
       el('div', { class: 'field' },
-        el('label', { text: 'Birth year' }),
+        askedFor('Birth year', WHY.age, 'birth year'),
         yearInput,
-        el('div', {
-          class: 'field-help',
-          text: profile.age ? `${WHY.age} You're ${profile.age}.` : WHY.age,
-        }),
+        // ⚠️ The age STAYS on the screen and does not go in the ?. It is the
+        // app reading back what it made of what you typed — a fact about this
+        // account rather than an explanation of the field.
+        profile.age ? el('div', { class: 'field-help', text: `You’re ${profile.age}.` }) : null,
       ),
 
-      el('div', { class: 'section-label', text: `Body weight (${units.units()})` }),
+      // ⚠️ `by-label`, because this heading names a FIELD and the two above it
+      // are `<label>`s that never stretched — without it one of the three dots
+      // sits at the right edge and the other two beside their words.
+      el('div', { class: 'help-line by-label' },
+        el('div', { class: 'section-label', text: `Body weight (${units.units()})` }),
+        helpDot(WHY.weight, { label: 'Why we ask for your body weight' })),
       el('div', { class: 'card' },
         weightInput,
         logBtn,
-        el('div', { class: 'field-help', text: WHY.weight }),
         trend,
       ),
 

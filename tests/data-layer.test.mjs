@@ -952,6 +952,26 @@ ok(await store.cloudUsage() === null,
   ok(a.calls.join() === 'linkWithPopup' && out.user,
      `an anonymous upgrade links, and does not sign in separately (${a.calls.join(' → ')})`);
 
+  /* 🚨 `created` — WHETHER THIS DEVICE'S DATA GETS CARRIED UP HANGS OFF IT
+     (2026-09-08). store.js absorbs the local rows on the paths that CREATE an
+     account and on no other, because signing in reaches an account with its own
+     history, possibly on somebody else's phone. These pin the three branches
+     that look alike from the outside — all three come back `{ user }`. */
+  ok(out.created === true,
+     '🚨 linking an anonymous session counts as CREATING the account — same uid, same data, now '
+     + 'reachable from another device');
+
+  a = fakeAuth();
+  out = await run(a, { anon: false });
+  ok(out.created === false,
+     '⚠️ a plain popup sign-in does NOT claim to have created anything when the SDK will not say '
+     + '— the safe answer, because guessing wrong here merges a stray browser into a real account');
+
+  a = fakeAuth();
+  a.getAdditionalUserInfo = () => ({ isNewUser: true });
+  out = await run(a, { anon: false });
+  ok(out.created === true, 'and a Google account nobody has used here before IS a creation');
+
   // THE BUG: anonymous user, Google account already registered.
   a = fakeAuth({ throwOn: 'linkWithPopup', code: 'auth/credential-already-in-use' });
   out = await run(a);
@@ -962,6 +982,10 @@ ok(await store.cloudUsage() === null,
   ok(a.calls.includes('signInWithCredential'),
      'it signs in with the credential from the failed link instead');
   ok(out.user && out.user.email === 'tim@example.com', 'and comes back signed in');
+  ok(out.created === false,
+     '🚨 AND IT IS NOT A CREATION — this branch is reached precisely BECAUSE that Google account '
+     + 'already exists, so the anonymous data is left behind on purpose and nothing from this '
+     + 'device may be merged into somebody\'s existing history');
 
   // Same, but Firebase gave us no credential to reuse.
   a = fakeAuth({ throwOn: 'linkWithPopup', code: 'auth/credential-already-in-use', noCredential: true });

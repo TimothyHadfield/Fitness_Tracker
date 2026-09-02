@@ -143,6 +143,14 @@ which safety may be raised unprompted.
    ⚠️ **IT IS STILL NOT A SWEEP.** He asked for the ANALYSIS first, and it is done: **18,631
    user-facing words, 304 sentences over 15 words, 63 blocks of 40+**, ranked by file in
    `progress.md`. Seven places converted, ~300 left, and **he points**.
+   🆕 **AND HE POINTED, 2026-09-08 — THE PROFILE MENU, WITH A SCREENSHOT OF HEVY'S.** *"right now
+   the profile menu is really wordy and complex, when it really should be quite simple … all details
+   like the 'view demo account' descriptions should be held in a question mark that pops up when you
+   click on it to learn more, don't display it on the main screen."* **That is the working shape of
+   this topic**: he names a screen, it gets done whole, and nothing else is touched.
+   ⚠️ **He also sent a SCREENSHOT OF ANOTHER APP'S UI, which does not go in the repo** — the
+   standing rule from `docs/social-plan.md` §12.12. What it showed is written down in
+   `docs/history.md`, 2026-09-08.
    🆕 **Design Rule 9 came out of it — the ? holds WHY, never WHAT** (`docs/handbook.md` §5).
    🛑 **AND ONE CARVE-OUT IS HIS, VERBATIM**: *"the research section is extreamly wordy and while I
    do think we need to make the descriptions in that section more clear, we should allow it to

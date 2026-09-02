@@ -17,6 +17,149 @@
 
 ---
 
+## 2026-09-08 — THE PROFILE MENU, SIMPLIFIED, AND A BUTTON THAT SHOULD NEVER HAVE EXISTED
+
+Tim, with a screenshot of Hevy's **Edit Profile** screen: *"right now the profile menu is really
+wordy and complex, when it really should be quite simple."* Then two specific instructions:
+
+> *"First, the 'left on this device' part should be removed. When a user creates an account if they
+> already have items uploaded to an empty page that they're using then that information should
+> automatically upload to their account. there should be no button for it."*
+>
+> *"all details like the 'view demo account' descriptions should be held in a question mark that
+> pops up when you click on it to learn more, don't display it on the main screen."*
+
+**This is him pointing, which `docs/direction.md` §4.1 says is how the wordiness work proceeds.**
+It is the second screen to get Design Rule 9 after Volume and Goals, and the first where a whole
+screen rather than one block was the subject.
+
+⚠️ **THE HEVY SCREENSHOT IS NOT IN THE REPOSITORY AND MUST NOT BE** — same standing rule as
+`docs/social-plan.md` §12.12. What it showed, written down instead: an avatar over a *Change
+Picture* link, then two section labels (**Public profile data** — Name, Bio, Link; **Private data**
+— Sex, Birthday) and **nothing else**. Label-and-value rows, no prose anywhere, and 🚨 **a single
+"?" beside "Private data"** — the exact control this app shipped on 2026-09-07, arrived at
+independently, which is a useful thing to know about Rule 9.
+
+### A. 🚨 "LEFT ON THIS DEVICE" WAS THE APP ASKING THE USER TO DO ITS FILING
+
+`signedInScreen()` counted the rows still in this browser's localStorage and offered
+*"Upload 12 items from this device"*. **It was correct and it should never have been a person's
+job.** Removed, and the work moved to `absorbThisDevice()` in `store.js`.
+
+🚨 **THE CONDITION IS "CREATED", NEVER "SIGNED IN", AND THAT IS THE WHOLE SAFETY ARGUMENT.**
+Somebody making an account is turning the session they have been using into a permanent one, so this
+device's rows are theirs by definition. Somebody signing IN is reaching an account that already has
+a history, **on a device that may not be theirs at all** — merging a stray browser into it is the
+opposite of what they asked for, and `SignInView` has warned about exactly that since it was
+written. So `signUpEmail` always absorbs (both of its branches create), and `signInGoogle` absorbs
+only when the backend says `created`.
+
+⚠️ **THAT WORD IS NEW AND IT HAD TO BE**, because the three Google branches are indistinguishable
+from outside — all of them return `{ user }`:
+
+| branch | what really happened | `created` |
+|---|---|---|
+| `linkWithPopup` on an anonymous session | the account came into existence | **true** |
+| `signInWithPopup`, `getAdditionalUserInfo().isNewUser` | ditto | **true** |
+| `signInWithCredential` after `credential-already-in-use` | **that account already existed** | **false** |
+
+The third is the one that matters and the one that looks most like the others: it is reached
+*precisely because* the Google account is already registered, and `googleSignInFlow`'s own comment
+has said "the anonymous data is what gets left behind" since it was written. **Mutation-checked in
+both directions** — flipping the link branch to `false` fails exactly the "linking counts as
+creating" assertion; flipping the credential branch to `true` fails exactly the "and it is NOT a
+creation" one. Nothing else moved either time.
+
+⚠️ **`getAdditionalUserInfo` is called through `typeof … === 'function'`**, because
+`googleSignInFlow` is driven in tests by a fake holding only the two functions it actually calls —
+and the safe answer when the SDK will not say is **false**, since guessing wrong merges a stray
+browser into somebody's real account.
+
+⚠️ **MOST PEOPLE NEVER COME NEAR ANY OF THIS.** An anonymous account is already a *cloud* account
+(D12), so linking preserves the uid and the data comes with it for free. What this covers is rows
+written by `LocalBackend` — logged while the cloud was unreachable, or before it was configured.
+`adoptLocalData()` already carried those up, but **only on a first connection into a completely
+empty account**, so an account that had ever held one row kept the button forever. That is the gap.
+
+⚠️ **MERGE, NEVER REPLACE, AND FAILURE IS SWALLOWED.** `mergeRows` keys by id and keeps whichever
+copy is newer, so this can only ever add; running it twice changes nothing. And the account exists
+by the time it runs, so throwing would report a successful sign-up as a failure while the local rows
+are still safely on the device either way. `auth.uploadLocalData()` is deleted with the button;
+`localRowCounts()` survives with **one caller and a different job** — the sign-in screen, where the
+rows are about to be left behind and somebody should be told.
+
+### B. THE PROSE: SEVEN BLOCKS BEHIND A "?", TWO DELIBERATELY LEFT IN THE OPEN
+
+Rule 9 is *the ? holds WHY, never WHAT*. Applied to `#/account` and `#/profile`:
+
+**Moved behind a ?** — the demo card's two paragraphs (Tim named this one), the demo *screen*'s
+three, the "your data syncs / lives only here" explanation, the import blurb, the note-to-developer
+framing, the anonymous screen's "adding an account keeps what you logged", the sign-in screen's
+"create an account instead", and Profile's three `WHY` lines.
+
+🛑 **LEFT ON THE SCREEN, AND THESE ARE THE INTERESTING ONES:**
+
+- **Who can see your photo.** *"Shown on your account button, and to the friends you are connected
+  to."* Visibility is **WHAT**, and Rule 9's own text records the visibility sheet being left alone
+  for the same reason. What went is *"Edit to move or resize the circle"* — and it went to **nothing
+  rather than into a popover**, because there is a button labelled Edit eight pixels above it.
+- **"Your data — only in this browser."** This module's header says the one thing this screen must
+  never do is imply data is safe when it is not. That is not a caveat about a number, it is the
+  difference between data that survives losing the phone and data that does not, so it is now the
+  **section heading itself** and the advice about what to do went behind the dot.
+
+**Two whole cards were deleted rather than hidden**, which is worth separating from the moves:
+
+- **"Signed in"** — a label and two sentences directly under the avatar card that already prints the
+  email. Its content is now the "Your data" ?, so one place says what happens to your data instead
+  of two.
+- **The demo screen's card** repeated the demo bar `app.js` prepends to *every* screen (*"Demo
+  account. Made-up data — change anything you like, nothing is saved"*). It was the third statement
+  of one sentence on one screen.
+
+### C. 🔒 SIX ASSERTIONS OPENED THE ? RATHER THAN BEING RELAXED
+
+The same discipline as 2026-09-07: a test guarding a caveat has to find the control, click it and
+read the words back, which is **stronger** than the presence check it replaces — the words must be
+*reachable*, not merely somewhere in the pane. Converted: the demo card's two, the demo screen's
+"starts it over" (plus a new one for "Social is switched off"), and the note's "goes straight to the
+person building it".
+
+🆕 **And two new ones for what Tim actually asked for**: no *"Left on this device"* text on a
+signed-in account, and no button matching `/^Upload /`. **Asserted on the SCREEN rather than on the
+store, because what he objected to was the card.**
+
+⚠️ **One old assertion could not be converted and was replaced honestly.** `and the help text says
+what Edit is for` read the sentence that was deleted rather than moved, so pretending it lives in a
+popover would have been a lie. It is now two assertions: that the caption still says who can see the
+photo, and that the sentence explaining the button beside it is **gone, not hidden**.
+
+### D. ONE CSS RULE, AND THE REASON IT IS SCOPED
+
+`.help-line > .section-label { flex: 1 }` pushes the dot to the right edge, which is right above a
+body map or a paragraph — the ? explains the block and the block is the width of the screen. It is
+**wrong beside a two-word field label**, where it strands the dot 300px from the word it answers
+for. Profile stacks both shapes, and a `<label>` never stretched, so the screen had a dot beside
+"GENDER", a dot beside "BIRTH YEAR" and a third at the far edge of "BODY WEIGHT". `.help-line
+.by-label` makes the odd one behave like the other two. 🛑 **Deliberately NOT applied app-wide** —
+Volume and Goals are the shape the original rule was written for, and Tim did not point at them.
+
+### E. Measured
+
+- ✅ **1,053 render assertions** (was 1,046), **all seventeen suites green** — including
+  `tests/sw-update.test.mjs`, which passed this run. ⚠️ **That is one run of a test `progress.md`
+  records as flaky on this machine; it is not evidence the flakiness is fixed.**
+- ✅ **Browser audit over `#/profile`, 360 and 390 px, both themes: 44 text nodes, zero below 4.5:1,
+  zero horizontal overflow, zero unnamed controls.** ⚠️ **The node count was checked first** — the
+  2026-09-06 trap. All three new dots come back named, at 26×26 inside the 44px halo.
+- ⚠️ **`#/account` cannot be audited in its signed-in form** and never could: the audit runs in the
+  demo account, and the demo intercepts that route. What the browser saw is the not-configured
+  branch, screenshotted at 393×852 in both themes; the other three variants are jsdom only.
+- 🔒 **§0.11 held.** Every edit went through the editing tools, including both mutations and both
+  reverts. `git diff --stat` is proportionate to the change in all six files.
+
+---
+
 ## 2026-09-07 (fifth pass) — THE MUSCLE OUTLINES: IT WAS THE MASK, NOT THE TRACE
 
 Tim, with five screenshots: *"the lines that outline and define where a muscle is are very bumpy and

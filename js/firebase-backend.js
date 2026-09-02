@@ -767,7 +767,13 @@ export const FirebaseBackend = {
   // "the page is navigating to Google" are different things and the UI has to
   // tell them apart. Collapsing both to null is what made a cancelled popup
   // look like a dead button.
-  //   { status: 'signed-in', user } · { status: 'redirecting' } · { status: 'cancelled' }
+  //   { status: 'signed-in', user, created } · { status: 'redirecting' } · { status: 'cancelled' }
+  //
+  // ⚠️ `created` IS NOT COSMETIC — store.js carries this device's local data
+  // into the account on the strength of it (2026-09-08). Creating an account
+  // means the data on this device is yours; signing in to one that already
+  // exists means it is somebody's account with its own history, and merging a
+  // stray browser into it would be the opposite of what the person asked for.
   async signInGoogle({ forceRedirect = false } = {}) {
     const c = await init();
     const out = await googleSignInFlow({
@@ -782,7 +788,7 @@ export const FirebaseBackend = {
     if (!out.user) return { status: 'redirecting' };
     user = out.user;
     notify();
-    return { status: 'signed-in', user: describeUser(user) };
+    return { status: 'signed-in', user: describeUser(user), created: Boolean(out.created) };
   },
 
   // Sign out, then take a fresh anonymous account so the app still works.
@@ -953,7 +959,14 @@ export function isUserCancelled(err) {
  * The bug that prompted this only showed up on the third branch, which is
  * exactly the branch that is hardest to reach by hand.
  *
- * Returns { user } · { redirected: true } · { cancelled: true }, or throws.
+ * Returns { user, created } · { redirected: true } · { cancelled: true }, or throws.
+ *
+ * ⚠️ `created` SEPARATES "this account came into existence just now" FROM "this
+ * account already existed and I signed into it", and the two branches that look
+ * alike are the ones that matter: linking an anonymous account CREATES, and the
+ * credential recovery below SIGNS IN. store.js decides whether to carry this
+ * device's local data up on the strength of that word, so it is a fact about
+ * the account rather than a convenience for the UI.
  */
 export async function googleSignInFlow({
   auth, authClient, provider, currentUser, anon, preferRedirect,
@@ -973,10 +986,19 @@ export async function googleSignInFlow({
   if (preferRedirect) return goRedirect();
 
   try {
-    const res = anon
-      ? await auth.linkWithPopup(currentUser, provider)
-      : await auth.signInWithPopup(authClient, provider);
-    return { user: res.user };
+    if (anon) {
+      // Linking an anonymous session IS creating the account: same uid, same
+      // data, now reachable from another device.
+      const res = await auth.linkWithPopup(currentUser, provider);
+      return { user: res.user, created: true };
+    }
+    const res = await auth.signInWithPopup(authClient, provider);
+    // A Google account nobody has used here before makes a new user. The SDK is
+    // the only thing that knows; `?.` because this flow is also driven by tests
+    // that hand it the two functions it actually calls and nothing else.
+    const info = typeof auth.getAdditionalUserInfo === 'function'
+      ? auth.getAdditionalUserInfo(res) : null;
+    return { user: res.user, created: Boolean(info && info.isNewUser) };
   } catch (err) {
     switch (planAfterGoogleFailure(err, { anon })) {
       case 'cancelled':
@@ -1000,7 +1022,10 @@ export async function googleSignInFlow({
         const cred = auth.GoogleAuthProvider.credentialFromError(err);
         if (cred) {
           const res = await auth.signInWithCredential(authClient, cred);
-          return { user: res.user };
+          // ⚠️ NOT `created`. This branch is reached precisely BECAUSE the
+          // account already exists, and its own history is the thing being
+          // signed into.
+          return { user: res.user, created: false };
         }
         // No credential on the error. Redirect rather than reopening a popup,
         // because it is the one route a popup blocker cannot touch.

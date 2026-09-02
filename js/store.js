@@ -199,6 +199,48 @@ async function adoptLocalData(mod) {
   }
 }
 
+/**
+ * The same job at the other moment: somebody has just CREATED an account, and
+ * anything logged on this device is theirs.
+ *
+ * ⚠️ THIS REPLACED A BUTTON — Tim, 2026-09-08: *"there should be no button for
+ * it."* The Account screen used to carry a card counting the rows still sitting
+ * in this browser and a control to send them up, which made the person do the
+ * app's filing. `adoptLocalData()` above could not cover it: it runs on a first
+ * cloud CONNECTION and refuses unless the account is completely empty, so an
+ * account that had ever held a single row was left with the button forever.
+ *
+ * ⚠️ MERGE, NEVER REPLACE. `mergeRows` keys by id and keeps whichever copy is
+ * newer, so this can only ever ADD to the account — running it twice changes
+ * nothing, and there is no ordering in which it can lose a row the cloud
+ * already had.
+ *
+ * ⚠️ FAILURE IS SWALLOWED, DELIBERATELY. The account has already been created
+ * by the time this runs; throwing here would report a successful sign-up as a
+ * failure, and the local rows are still on the device either way.
+ */
+async function absorbThisDevice() {
+  try {
+    const impl = remoteImpl;
+    if (!impl) return;                       // local mode: nothing to upload into
+    const { mergeRows } = await import('./firebase-backend.js');
+    for (const c of COLLECTIONS) {
+      const local = await LocalBackend.read(c);
+      if (!local.length) continue;
+      const remote = await impl.read(c);
+      // Settings is a single row and not worth fighting over — an existing
+      // cloud preference wins, because it reflects a device already signed in.
+      const merged = c === 'settings' ? (remote.length ? remote : local) : mergeRows(remote, local);
+      await impl.write(c, merged);
+    }
+    // The rows just changed underneath every getter, and the sign-up that
+    // triggered this has already cleared and possibly refilled the cache.
+    clearReadCache();
+  } catch (err) {
+    console.error('Could not carry this device’s data into the new account.', err);
+  }
+}
+
 const backend = {
   async read(collection) { return (await active()).read(collection); },
   async write(collection, rows, opts) {
@@ -1833,9 +1875,39 @@ export const auth = {
     });
   },
 
-  async signUpEmail(email, password) { return requireRemote().signUpEmail(email, password); },
+  /* ⚠️ CREATING AN ACCOUNT CARRIES THIS DEVICE UP WITH IT — 2026-09-08, Tim:
+   * *"When a user creates an account if they already have items uploaded to an
+   * empty page that they're using then that information should automatically
+   * upload to their account. there should be no button for it."*
+   *
+   * 🚨 THE CONDITION IS **CREATED**, NEVER **SIGNED IN**, and that is the whole
+   * safety argument. Somebody making an account is turning the session they
+   * have been using into a permanent one, so this device's rows are theirs by
+   * definition. Somebody signing IN is reaching an account that already has a
+   * history, on a device that may not be theirs at all — merging a stray
+   * browser into it would be the opposite of what they asked for, and
+   * `SignInView` says as much before they tap.
+   *
+   * ⚠️ Most people never come near this: an anonymous account is already a
+   * CLOUD account (D12), so linking it preserves the uid and the data comes
+   * with it for free. What this covers is rows written by LocalBackend —
+   * logged while the cloud was unreachable, or before it was configured — which
+   * `adoptLocalData()` only ever carried up on a first connection into an
+   * empty account. Those were the leftovers the old "Upload from this device"
+   * button existed to sweep up by hand. */
+  async signUpEmail(email, password) {
+    // Both branches of the backend's signUpEmail create an account: it links
+    // an anonymous session, or it makes a new user outright.
+    const out = await requireRemote().signUpEmail(email, password);
+    await absorbThisDevice();
+    return out;
+  },
   async signInEmail(email, password) { return requireRemote().signInEmail(email, password); },
-  async signInGoogle(opts) { return requireRemote().signInGoogle(opts); },
+  async signInGoogle(opts) {
+    const res = await requireRemote().signInGoogle(opts);
+    if (res && res.status === 'signed-in' && res.created) await absorbThisDevice();
+    return res;
+  },
   async sendPasswordReset(email) { return requireRemote().sendPasswordReset(email); },
   async signOut() {
     forgetLastAccount();
@@ -1858,6 +1930,11 @@ export const auth = {
 
   // Anything still sitting in this browser's local storage — data logged before
   // the cloud was switched on, or while it was unreachable.
+  //
+  // ⚠️ ONE CALLER LEFT, AND IT IS A WARNING RATHER THAN AN OFFER. Creating an
+  // account absorbs these rows without being asked (`absorbThisDevice`), so the
+  // only screen that still counts them is the one where they are about to be
+  // left behind: signing in to an account that already exists.
   async localRowCounts() {
     const out = {};
     for (const c of COLLECTIONS) {
@@ -1865,26 +1942,6 @@ export const auth = {
       if (rows.length && c !== 'settings') out[c] = rows.length;
     }
     return out;
-  },
-
-  // Merge this device's local data into the signed-in account. Merges by id and
-  // keeps whichever copy is newer, so running it twice is harmless and it can
-  // never delete something the cloud already had.
-  async uploadLocalData() {
-    const impl = requireRemote();
-    const { mergeRows } = await import('./firebase-backend.js');
-    const report = {};
-    for (const c of COLLECTIONS) {
-      const local = await LocalBackend.read(c);
-      if (!local.length) continue;
-      const remote = await impl.read(c);
-      // Settings is a single row and not worth fighting over — an existing
-      // cloud preference wins, because it reflects a device already signed in.
-      const merged = c === 'settings' ? (remote.length ? remote : local) : mergeRows(remote, local);
-      await impl.write(c, merged);
-      report[c] = merged.length - remote.length;
-    }
-    return report;
   },
 
   // Wipe the local copy after a successful upload, so one device stops being a

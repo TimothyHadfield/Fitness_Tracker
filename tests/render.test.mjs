@@ -1430,10 +1430,30 @@ ok(!data.querySelector('.rep-target'),
   ok(Boolean(box), 'a signed-in account gets a note box on the Account screen');
   ok(box && Number(box.getAttribute('maxlength')) === 1000,
      'capped in the markup as well as in the builder and the rule');
-  ok(/goes straight to the person building it/.test(screen.textContent),
-     'and says where it goes');
+  // 🔒 Behind the ? since 2026-09-08, so the assertion opens it — the sentence
+  // has to be REACHABLE, which is a stronger claim than present in the pane.
+  const noteDot = [...screen.querySelectorAll('.help-dot')]
+    .find((d) => /Where this note goes/.test(d.getAttribute('aria-label') || ''));
+  ok(Boolean(noteDot), 'with a ? beside the heading');
+  noteDot.click();
+  await settle();
+  ok(/goes\s+straight to the person building it/.test(
+       document.querySelector('.help-pop').textContent),
+     'and it says where the note goes');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
   ok(![...screen.querySelectorAll('a')].some((a) => a.getAttribute('href') === '#/notes'),
      '🚨 and an ordinary account is NOT offered the inbox link');
+
+  /* 🚨 NO "LEFT ON THIS DEVICE", AND NO BUTTON — 2026-09-08, Tim's instruction.
+     Creating an account carries this device's rows up on its own
+     (`absorbThisDevice` in store.js), so a signed-in person is never asked to
+     file their own data. Asserted on the SCREEN rather than on the store,
+     because what he objected to was the card. */
+  ok(!/Left on this device/i.test(screen.textContent),
+     '🚨 a signed-in account is never shown a "Left on this device" card');
+  ok(![...screen.querySelectorAll('button')].some((b) => /^Upload /.test(b.textContent)),
+     '…nor any button asking them to upload it themselves — creating the account did that');
 
   /* ---- the developer gets one more control ---- */
   auth.state = async () => ({
@@ -3212,10 +3232,23 @@ ok(!data.querySelector('.rep-target'),
 
   const account = await mount(AccountView());
   ok(/View demo account/.test(text(account)), 'the Account screen offers the demo account');
-  ok(/nothing is saved/i.test(text(account)),
-     'and says before you tap it that nothing in there is kept');
-  ok(/Your own data is untouched/i.test(text(account)),
+
+  /* 🔒 BEHIND THE "?" SINCE 2026-09-08 (Tim named this card), AND THESE
+     ASSERTIONS WERE STRENGTHENED RATHER THAN RELAXED — Rule 9. They used to
+     read the words off the pane; they now have to FIND the control, open it and
+     read them back, so "reachable" is asserted as well as "present". */
+  const demoDot = [...account.querySelectorAll('.help-dot')]
+    .find((d) => /What the demo account is/.test(d.getAttribute('aria-label') || ''));
+  ok(Boolean(demoDot), 'with a ? beside it rather than two paragraphs under it');
+  demoDot.click();
+  await settle();
+  const demoHelp = document.querySelector('.help-pop').textContent;
+  ok(/nothing is saved/i.test(demoHelp),
+     'and it still says before you tap it that nothing in there is kept');
+  ok(/Your own data is untouched/i.test(demoHelp),
      'and that your own data is safe, which is the other thing to say first');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
 
   // Entering for real reloads the page, which jsdom cannot do — so the flag is
   // set directly and the screens are asked what they make of it.
@@ -3229,7 +3262,18 @@ ok(!data.querySelector('.rep-target'),
   ok(!/Delete account|Sign out|Upload/i.test(demoText),
      'and offers no account controls at all — none of them would mean anything here');
   ok(/Leave the demo/i.test(demoText), 'with the way out on it');
-  ok(/starts it over/i.test(demoText), 'and it repeats that a reload starts over');
+  // Same move, same rule: the words are one tap away rather than three
+  // paragraphs deep, and the test opens the tap.
+  const inDemoDot = inDemo.querySelector('.help-dot');
+  ok(Boolean(inDemoDot), 'and a ? rather than three paragraphs restating the demo bar');
+  inDemoDot.click();
+  await settle();
+  const inDemoHelp = document.querySelector('.help-pop').textContent;
+  ok(/starts it over/i.test(inDemoHelp), 'which still says that a reload starts over');
+  ok(/Social is switched off/i.test(inDemoHelp),
+     '🚨 and that Social is off — named here rather than discovered by tapping it');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await settle();
 
   // ⚠️ THE ONE THAT MATTERS. republish() builds a friend-visible copy out of
   // store.getSessions(), which in the demo is invented — so Social has to be
@@ -4192,8 +4236,15 @@ ok(!data.querySelector('.rep-target'),
     ok(btns.includes('Remove'), 'and Remove');
     ok(btns.indexOf('Edit') < btns.indexOf('Change photo'),
        'and Edit comes before Change photo — repositioning is the common errand');
-    ok(/Edit to move or resize the circle/.test(text(withPhoto)),
-       'and the help text says what Edit is for');
+    /* ⚠️ THE CAPTION NO LONGER EXPLAINS THE BUTTON — 2026-09-08. It read
+       "Edit to move or resize the circle" directly under a button labelled
+       Edit, which is the shape of wordiness Tim pointed at. What it must
+       still carry is WHO CAN SEE THE PHOTO: that is WHAT rather than WHY, so
+       Rule 9 keeps it on the screen and out of a ?. */
+    ok(/friends you are connected to/.test(text(withPhoto)),
+       '🚨 and the caption still says who can see it — visibility never goes behind a ?');
+    ok(!/Edit to move or resize/.test(text(withPhoto)),
+       '…while the sentence explaining the button beside it is gone, not hidden');
 
     // ⚠️ REMOVE MUST CLEAR ALL THREE. Leaving the source behind would let a
     // later Edit reopen a photo the account no longer has.
