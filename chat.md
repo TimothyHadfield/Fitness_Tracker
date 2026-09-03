@@ -2003,3 +2003,72 @@ whole, as you asked.
 
 **And the notes are ready for a reset.** Both of the last two days had grown three separate sections
 in the catch-up file; each is one section now, with the full write-ups in the history file.
+
+## 2026-09-10 — delete meant delete, a rise behind its own ghost, and Profile earns its tab
+
+You started with the two items off the open list — *"you can do whatever work you think you should do
+for those two things"* — and then reported five more things from actually using the app. All of it is
+below, and the Profile reorganisation at the end is the one still in progress.
+
+**Delete account was leaving most of your account behind.** The entry said it left the sessions. It
+left much more than that: five of the ten collections were never even named, so weigh-ins,
+programmes, goals, saved people and guest workouts all stayed. The one collection it named correctly
+— sessions — failed every time, because clearing them is a mass delete and the guard we built in
+August refuses one; the error was caught and written to a console nobody reads. And the whole
+approach couldn't touch the copy your friends read at all. So a public account that deleted itself
+stayed readable by anyone signed in, permanently — after the login is gone, every rule is "only the
+owner", and there is no owner.
+
+It deletes everything now, published copies first, and then it **re-reads to check** before deleting
+your login. If anything survived, your account stays and the message says what is left. That order is
+the whole fix: keeping the account is recoverable, orphaning it is not.
+
+**The Record animation was rising behind the very thing it was meant to rise over.** You described it
+exactly — the animation gets shut down and nothing gets covered. The screenshot we keep of the old
+screen was painted *on top* of the panel coming up, so the rise ran its full quarter-second out of
+sight. The reason the down arrow looked right is that falling genuinely wants the old screen on top;
+it's the one direction where the same setting is correct. Two directions, two layers now. Measured in
+a browser, and the first two measurements I wrote disagreed with each other — both were wrong, and
+that's the only reason I caught it rather than believing the convenient one.
+
+**Then the same movement for a workout in progress**, which you asked for straight after. The ▾
+slides down, the bar's arrow brings it back up. Both measured.
+
+**A joint workout was two workouts.** You found this by recording one. Next exercise, add, remove,
+swap and reorder now reach both of you, with a **"Just for ___"** button when you want to change only
+one person. What never crosses is the numbers: if you add an exercise for both of you, each person's
+copy is built from their own history. Rae's curls open at her weight, not yours. That was the part
+worth being careful about, and a test now proves it by breaking if the code ever copies instead.
+
+**The sideways drag.** Nobody ever wrote the rule that allowed it — the browser did. Setting only a
+vertical scroll quietly turns the horizontal one on too, so every screen in the app has been
+draggable sideways since it was written. Fixed everywhere, with the Research table keeping its own
+scroller because it genuinely is wider than the screen. The root cause turned out to be the little
+"?" dot: its invisible 44px tap area overhangs the 26px button by 9px, and wherever it sits against
+an edge it pushes those pixels into whatever is scrolling.
+
+**The audit had never looked at a laptop, and the first time it did it found something.** The active
+tab label in the desktop sidebar fails the contrast standard. It's the same colour pair we fixed in
+September — but we fixed it in exactly one place, because at phone width that was the only place the
+tool could see it. Reading the stylesheet instead of waiting for a tool found four more. Fixed
+together.
+
+**A friend's calendar** got the Months/Years switch you asked for, and asking for it turned up that
+every cell of every friend's calendar has been saying just "Workout" — a published workout stores its
+name under a different key than a local one. Their Years count says "days published" rather than
+"days trained" now, because you only ever see their last sixty sessions and the old label was
+counting one thing under the name of another.
+
+**And the Profile question.** You were right that both halves were wrong, and they turned out to be
+one problem: Profile was empty *because* its content was in Data, and Data was overfull for the same
+reason — six tabs that genuinely didn't fit, only working because we made the row scroll. The line
+that sorts it is what a screen answers: **Data is what your training means, Profile is what you did.**
+Calendar has moved across, Data is back to five tabs, and Profile now shows your best lifts — the
+measured set first, the estimate underneath and labelled. Body facts, Goals and the Account tidy-up
+are still to come.
+
+**On photos**, you asked twice and then paused them. Worth keeping: per user it's 10–25¢ a year, but
+it's the one feature where the cost per user *rises* as you grow. Storage now needs a card whatever
+your usage — that changed in February and the Firebase pricing page still says otherwise. At ten
+users you'd pay nothing; the first real bill is around 145 users, and it's download *operations* that
+bind first, not bandwidth.

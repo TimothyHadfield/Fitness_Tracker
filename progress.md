@@ -25,8 +25,12 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-09 — a friend's page on a laptop, their body read against their own sex,
-Record rising from the bottom, and the counts collapsed to **Friends**.
+**Last updated:** 2026-09-10 — delete finally meant delete, a rise that ran behind its own ghost, a
+joint workout that was two workouts, and **Profile earning its tab**.
+
+🚩 **START WITH OPEN WORK 29.** It is the only half-finished job in the project and Tim authorised
+it: the **Profile/Data split**, five steps, of which **1 and 3 shipped and 2, 4 and 5 have not.**
+Everything else is green and pushed.
 
 ## What changed on 2026-09-10, in one line each
 
@@ -238,114 +242,33 @@ layout**, opening with *"deploy many sub-agents"*.
 14. ✅ **1,090 render assertions** (from 1,046), **1,911 data-layer**, **full audit 128 routes /
     12,207 text nodes / zero contrast failures / zero overflow / zero unnamed controls.**
 
-## What changed on 2026-09-07, in one line each
+## 2026-09-07 — COLLAPSED TO A POINTER, 2026-09-10
 
-⚠️ **THIS WAS FOUR PASSES AND THEY ARE COLLAPSED HERE ON PURPOSE** — the same cut 2026-09-06 needed.
-Each has its own dated section in `docs/history.md` (2026-09-07, first through fourth pass).
+⚠️ **Same routine maintenance as the two blocks below.** Four passes; each has its own dated section
+in `docs/history.md`. **What Tim asked for, in order:** leave a workout and come back to it → the
+screen after a workout finishes, plus *"how would that change storage"* about photos → a bin on the
+bar → the app's wordiness → the bumpy muscle outlines.
 
-**What Tim asked for, in order:** leave a workout and come back to it → the screen after a workout
-finishes, plus *"how would that change storage"* about photos → a bin on the bar → the app's
-wordiness → **the bumpy muscle outlines** (done by a sub-agent, verified here).
+- **Leaving a workout open.** The draft had always survived; **there was no way back**, and the app
+  looked exactly as though it had thrown the workout away. The ✕ became a **▾**, a bar above the nav
+  advertises the open workout on every screen, and **starting a second workout no longer deletes the
+  first**. 🔒 `docs/state.md`, "Leaving a workout open".
+- **Finish opens a save screen rather than saving.** 🔒 `docs/state.md`, "The save screen".
+- 🆕 **Design Rule 9 came out of that day — the "?" holds WHY, never WHAT.** 🔒 `docs/handbook.md` §5.
+- **The muscle outlines were bumpy because the MASK was, not the trace.** `smooth_fills()` low-passes
+  each fill per connected component before tracing. 🔒 `docs/handbook.md` §4, `tools/build-body-art.py`.
+- **Photos were costed.** 🔒 Now superseded by the fuller block in **START HERE**, where Tim paused
+  them on 2026-09-10.
 
-1. 🚨 **THE DRAFT ALWAYS SURVIVED LEAVING — THERE WAS NO WAY BACK.** Every set has gone to
-   `ftrack:v1:draftSession` since the runner shipped and the same workout has always resumed the
-   same day, but the only door was that workout's row in Record and **the only statement that the
-   door existed was one sentence in the sheet you got on the way out.** The app kept the workout and
-   looked exactly as though it had thrown it away. **The fix was mostly making it visible.**
-2. 🆕 **THE ✕ IS A ▾ AND ASKS NOTHING** · **a bar above the nav on every screen while a workout is
-   open** (`js/live-session.js` — name, elapsed, the exercise you are on) · **a bin on the right of
-   it**, which asks first only when sets are recorded. ⚠️ **The bar is in the LAYOUT, not fixed over
-   it** — last child of `.screen`, which is above the nav on a phone and the bottom of the content
-   column beside the desktop sidebar. ⚠️ **The bin is a SIBLING of the link, never inside it.**
-3. 🚨 **THAT UNCOVERED A WAY TO LOSE A WORKOUT, NOW SHUT.** `SessionView` opened with
-   `if (rawDraft && !existingDraft) clearDraft()` — **starting any other workout silently deleted
-   the one in progress.** Defensible while leaving took a deliberate tap through a sheet; with a bar
-   advertising the open workout it is a stroll. A second workout now meets a screen naming the open
-   one and its set count.
-4. 🚨 **FINISH NO LONGER SAVES — IT OPENS A SAVE SCREEN** (Duration · Sets · Exercises, description,
-   gym, day, discard) and the button there writes. **The order is the whole change**: the old code
-   argued the description had to live in the runner *because the finish screen renders after the save
-   has landed*. ⚠️ **`saveError` moved with the button**, or a failed save would explain itself on a
-   screen nobody is looking at. 🛑 **Three deliberate departures from Hevy**: sets not volume in
-   pounds, no per-workout Visibility row (D29 — a decision he owes), no title field.
-5. 💷 **PHOTOS: POSSIBLE, NOT FREE, AND THE BILL IS EGRESS NOT STORAGE.** Needs **Blaze**. ~200 KB a
-   photo: storage ~$1/month at 1,000 users; **people LOOKING is ~$100/yr at 1,000 users and ~$2,500/yr
-   at 10,000** against a $110/yr app. 🚨 **D29 makes accounts public by default so the audience has no
-   ceiling**, and Firebase has no hard spending cap. 🛑 **Nothing built.** ✅ **Moderation raised
-   unprompted — the one exception `direction.md` §3.4 grants.**
-6. 📊 **THE WORDINESS WAS MEASURED FOR THE FIRST TIME: 18,631 user-facing words, 304 sentences over
-   15 words, 63 blocks of 40+.** Worst first: `research-topics.js` 54 · `preset-systems.js` 37 ·
-   `views-goals.js` 30 · `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19.
-   ⚠️ **The top two are not the app's voice** — transcribed coaching notes, and teaching content that
-   already has word budgets.
-7. 🚨 **THE FINDING: THE COPY IS NOT PADDED, IT IS MIS-PLACED.** Almost every offender is the app
-   *explaining itself*. The standing rule that every caveat is stated on screen never said WHERE, so
-   Volume ended as a body map, your numbers, and **five paragraphs of ~150 words** identical on every
-   visit. 🆕 **`helpDot()` is Tim's "?"** and **Design Rule 9** is what it introduced: **the ? holds
-   WHY, never WHAT.** Seven places converted.
-8. 🚨 **THE VISIBILITY SHEET GOT NO ? AND IT IS THE INSTRUCTIVE ONE** — what a stranger can see is
-   WHAT, so nothing was hidden; a 48-word sentence became **a list**. ⚠️ **Six caveat-guarding
-   assertions failed and were right to** — 🔒 **not relaxed, they now OPEN the ?**, which is stricter.
-9. ⚠️ **I BROKE §0.11 AGAIN, ON A ONE-LINE MUTATION CHECK I MEANT TO REVERT IN NINETY SECONDS** —
-   PowerShell read-modify-write double-encoded a whole new file. 🚨 **A mutation check is the most
-   dangerous place in this workflow to reach for a script**: the edit is designed to be thrown away,
-   so nobody diffs it, and putting the line back leaves the damage in every other line. §0.11 updated.
-10. 🚨 **THE MUSCLE-MAP OUTLINES WERE BUMPY BECAUSE THE MASK WAS, NOT THE TRACE.** `segment()`
-    thresholds a JPEG; the threshold wobbles 1–3 px per row (compression ringing, plus the drawing's
-    own striations biting into the edge) and potrace followed it. **Chest looked right only because
-    its striations run PARALLEL to its outline.** `smooth_fills()` low-passes each fill **per
-    connected component** before tracing — the max across components is what stops a blur fusing the
-    two glutes, which the first attempt did at sigma 1.1. Wobble −20 %, path data −37 %, ink layer
-    byte-identical. 🔒 **A build-time guard on every muscle's piece count, and it was MADE TO FIRE.**
-11. ✅ **1,046 render assertions** (was 982), mutation-checked throughout, driven at 393×852, contrast
-    re-measured across both themes and all four palettes. 🚨 **`tests/sw-update.test.mjs` is flaky on
-    this machine and it is NOT this work** — see START HERE.
-
-## What changed on 2026-09-06, in one line each
-
-⚠️ **This was FIVE passes and they are collapsed here on purpose.** Each has its own dated section in
-`docs/history.md` (2026-09-06, second through fifth pass); go there for any of it.
-
-**What Tim asked for, in order:** the list of every blank and refusal → build the ones worth
-building → the follow-ups from that → the cost analysis.
-
-1. ✅ **OPEN WORK 24 CLOSED — every blank, empty state and permanent refusal was listed**: eight
-   where the app holds the data and says nothing, nine permanent refusals, twenty honest first-run
-   blanks a sweep would wreck. He then said to build what I thought was worth building.
-2. 🚨 **THE MUSCLE MAP RANKS WITHOUT A PROFILE.** A missing weigh-in **widens the comparison to
-   lifters of every size** rather than inventing a body weight; a missing sex assumes male **and says
-   so**. 🚨 **An assumed map is NEVER published to a friend** — `buildStrengthShare()` refuses,
-   because a reader cannot recompute a percentile and has nothing to check it against.
-3. 🛑 **GOALS KEPT ITS GATE ON PURPOSE** — it branched on the map's `ready` flag, and **a goal FREEZES
-   its target weight (D20)**, so an assumption made once would sit inside that target for twelve
-   weeks. It now reads the raw `profile.missing`.
-4. 🆕 **Goals says WHAT HAS MOVED** since the goal was set, with the ±12 % yardstick and **still no
-   verdict word** (Rule 6) · **Volume states a rate under a fortnight** · **Bars falls back to workout
-   sets**, one source per row (D14) · **one recording shows its value and estimated max**, no line ·
-   **the benchmark screen estimates through a stand-in**, capped and both hops named · **the runner
-   says why** a weight field is blank without filling it.
-5. 🔄 **CUSTOM EXERCISES CAN SET A LEVEL AGAIN — if the person NAMES the closest library exercise.**
-   Not a reversal of 2026-08-31: the app stopped INFERRING and started being TOLD. `STAND_IN_QUALITY`
-   0.40, one hop, and **1.00 × 0.40 lands below `FALLBACK_MIN_QUALITY`** so it can never chain onward.
-6. 🆕 **The knee push-up is in the library** — 319 exercises now. Same plate, same men, same static
-   position as the push-up's 0.75, so no measurement bases are mixed.
-7. 🚨 **THE WEIGHT CHART WAS ENTIRELY IN POUNDS FOR A KG USER** — the axis as well as the readout.
-   **The shape was right, which is why nobody would notice.** Fixed at the display edge; labels
-   convert, geometry does not. ⚠️ **Nothing here could have caught it: this suite has always run in
-   pounds.**
-8. ✅ **The 3.96:1 "PER SIDE" chip is fixed** and the palette test now asserts that pair, which it
-   structurally could not before. ✅ **Browser audit clean — 128 routes, 11,912 text nodes, zero below
-   4.5:1, zero overflow.**
-9. 🚨 **A THREE-HOP WEIGHT COULD REACH THE RUNNER'S FIELD** — `derivedWeights` never checked
-   `rating.kind`. **The identical bug fixed in `exercise-estimate.js` on 2026-09-02**, alive four days
-   in the one place that puts a number in a field somebody loads a bar to. Closed.
-10. ✅ **`benchmarkComparison()` deleted** — it held a **second copy** of `normalizedSeries()`'s
-    per-day rule. Its assertions moved to the surviving copy rather than dying with it.
-11. 🛑 **THE BAR-HEIGHT WORK WAS NOT BUILT, AND §9's OWN DIAGNOSIS WAS WHY** — *"adding the parameter
-    is the fix"* is true of neither exercise. `docs/research.md` §15 (🔴); §9 corrected.
-12. ✅ **THE COST ANALYSIS IS DELIVERED** — `docs/running-costs.html` in the repo, and an artifact.
-    **$110/year today, free servers to ~94 users.** See the section below; it is the one piece of
-    today a fresh session most needs.
+🚨 **THE ONE THING THAT STAYS HERE, because `docs/direction.md` §4.1 points at it by name — THE
+WORDINESS MEASUREMENT, 2026-09-07:** **18,631 user-facing words, 304 sentences over 15 words, 63
+blocks of 40+.** Ranked worst first by file: `research-topics.js` 54 · `preset-systems.js` 37 ·
+`views-goals.js` 30 · `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19.
+⚠️ **The top two are not the app's voice** — transcribed coaching notes, and teaching content that
+already has word budgets. 🚨 **The finding: the copy is not padded, it is MIS-PLACED** — almost every
+offender is the app explaining itself, and the standing rule that every caveat is stated on screen
+never said WHERE. **`views-account.js` is done** (2026-09-08); the rest is what *"if the wordiness
+fix isn't complete yet, then keep working on it"* authorises, and **he points at screens.**
 
 ## 💷 WHAT IT COSTS TO RUN — the numbers a fresh session should not re-derive
 
@@ -390,31 +313,25 @@ artifact. `docs/history.md`, 2026-09-06 fifth pass, is how it was built.
   pages end to end — a stale server on the port — and reported zero contrast failures and zero
   overflow across all 128 routes. **Check the node count before reading anything else.**
 
-## What changed on 2026-09-05, in one line each
+## 2026-09-05 and 2026-09-06 — COLLAPSED TO POINTERS, 2026-09-10
 
-**Three instructions from Tim, all about screens showing other people.** Full write-up at the top of
-`docs/history.md`.
+⚠️ **The same routine maintenance as the block below.** Full dated sections in `docs/history.md`;
+every standing consequence lives somewhere that is not a dated summary.
 
-1. 🚨 **"RELATIVE TO EACH" — the compare screen was ranking two people against ONE population.**
-   *"if there is a young woman, the girl's muscle group is compared to other young women, but if that
-   is being compared to an older man, then the man is being compared to other older men."* It is now
-   the first preset in the sheet **and the default that screen opens on**. ⚠️ **Weight and age were
-   always per-person; only SEX was not** — the owner resolves the other two when publishing their
-   grid, and the reader was resolving sex once for both bodies.
-2. 🆕 **A FRIEND'S DATA IS THE DATA SCREEN.** Muscles · Volume · Graph · Bars · **Calendar** (where
-   Research is on yours), with recent workouts still under the body. 🚨 **It is literally
-   `GraphView()` with a subject** — six store getters grew a `rows` parameter — so their Volume tab
-   cannot drift from yours. `FriendVolumeView`/`FriendGraphView` deleted; their routes still open the
-   page on that tab.
-3. 🔄 **"What they can see of yours" is gone from a friend's page.** It was a per-person dial until
-   the tiers went on 2026-09-03; after that it was an account-wide setting sitting in a per-person
-   position, which invites somebody to think they are changing what THIS friend sees. Still on the
-   Friends screen and in Settings.
-
-⚠️ **AND I EMPTIED `js/views-data.js` WITH A SCRIPT** — the §0.11 failure, for the third time in this
-project and the second in Python. Recovered with `git checkout --`. 🚨 **The rule was not forgotten,
-it was eroded**: a dozen surgical scripted edits had worked earlier in the same session, which is
-exactly what the 2026-09-03 note said would happen. See `docs/history.md`, 2026-09-05 §D.
+- **2026-09-05 — screens showing other people.** *"Relative to each"* (two bodies ranked against
+  their own populations, now the default on the compare screen); **a friend's data IS the Data
+  screen**, `GraphView()` with a subject, so their tabs cannot drift from yours; and "what they can
+  see of yours" left a friend's page because it had become an account-wide setting sitting in a
+  per-person position. 🔒 Durable half: the **Friends** and **Muscles** rows in `docs/state.md`.
+- **2026-09-06 — every blank and refusal, then building the worth-building ones.** The muscle map
+  **ranks without a profile** (a missing weigh-in widens the comparison rather than inventing a body
+  weight; an assumed map is never published to a friend); **Goals kept its gate on purpose**, because
+  a goal FREEZES its target weight; Volume states a rate at any window; custom exercises can set a
+  level again **if the person names the closest library exercise**; the weight chart was **entirely
+  in pounds for a kg user**; and a three-hop weight could reach the runner's field. 🛑 **The
+  bar-height work was NOT built and §9's own diagnosis was why** — `docs/research.md` §15.
+  🔒 Durable half: `docs/state.md`, `docs/handbook.md` §9, and the running-costs section below, which
+  is that day's other half and **stays here**.
 
 ## ⚠️ 2026-09-04 — WHY THE NOTES ARE IN FIVE FILES NOW, AND THE RULE THAT KEEPS THEM THAT WAY
 
@@ -639,8 +556,27 @@ this file has broken most often. Shipped is working unless Tim says otherwise.
   list is in the 2026-09-07 summary above.
   ⚠️ **He asked for the analysis first and it is delivered; he points at screens from here.** 🛑 **And
   Research's teaching content is carved out by name** — `docs/direction.md` §4.1.
-- 🛑 **Photos** — costed on 2026-09-07 (~$100/yr at 1,000 users, ~$2,500/yr at 10,000, and it needs
-  Blaze). **Answered, not queued.**
+- 🛑 **Photos — PAUSED BY TIM, 2026-09-10, after a second round of costing.** *"lets keep a pause on
+  the photos for now. I don't think it's necessary yet."* 🛑 **Do not raise it again; he will.**
+  Costed 2026-09-07 (~$100/yr at 1,000 users, ~$2,500/yr at 10,000) and re-examined today at the
+  scale he actually has. What that round established, so nobody re-derives it:
+  - **Per user it is 10–25¢ a year** — but the figure **RISES with scale**, uniquely in this app,
+    because the bill is people LOOKING and more users means more eyes per photo.
+  - 🔒 **STORAGE NOW NEEDS BLAZE AS A PLAN GATE, NOT A QUOTA — confirmed live 2026-09-10.** Since
+    **3 February 2026** Google aligned Cloud Storage for Firebase with standard Cloud Storage rules:
+    creating *or keeping* a bucket needs a linked billing account whatever the usage, and a Spark
+    project's Storage calls return **402/403**. 🚨 **THE FIREBASE PRICING PAGE STILL ADVERTISES SPARK
+    ALLOWANCES FOR STORAGE, so reading that page alone gives the WRONG answer** — this is written
+    down because the next session to check will land on the same page.
+  - ✅ **At his real scale the bill would be zero.** The free allowances still apply on Blaze; at 10
+    users it is ~416 MB stored against 5 GB and ~10 MB/day of egress against 1 GB/day.
+  - **Where paying actually starts, on a modern `firebasestorage.app` bucket: ~145 users**, and it is
+    **download OPERATIONS** (50K/month) that bind first, not bandwidth (~1,480 users). ⚠️ **Storage
+    is measured in USER-YEARS** — 5 GB ≈ 120 user-years, cumulative, and arrives without a single new
+    user. ⚠️ **The ~20-viewers-per-photo assumption is unmeasured** and thumbnails plus cache headers
+    could multiply the 145 several times.
+  - 💷 **WITHOUT photos the app is free to ~1,894 users** (after the 2026-09-08 read-pattern fix).
+    **Photos are what would move that ceiling to ~145.**
 
 ## ⏸️ THE OPEN THREAD THAT IS TIM'S: HOW TO RANK ABS — he asked, it was answered, HE HAS NOT PICKED
 
@@ -673,44 +609,26 @@ comparison, and both screens say so by name.
 has not updated" anywhere, that is this, and it is not a bug.** The fallback is marked for deletion
 once nobody is left on an old build.
 
-## What changed on 2026-09-03, in one line each
+## 2026-09-02 and 2026-09-03 — COLLAPSED TO POINTERS, 2026-09-10
 
-1. 🚨 **THE THREE VISIBILITY TIERS ARE GONE.** An account is **private** (accepted friends see
-   everything) or **public** (anybody signed in who finds you sees everything too). Tim's call, and
-   he was asked directly whether the per-person levels should go with them: yes. **Body weight is the
-   one field that never goes public**, and it keeps its own opt-in switch for friends.
-   🚨 **AND THE DEFAULT IS PUBLIC** — Tim, an hour after it shipped the other way round: *"I would
-   like the default to be public… for now it should definently be public… Change this now so
-   everyone's information is public."* An account that has never opened the sheet publishes to
-   anybody signed in. ⚠️ **He named the way out himself and it is the right one: ask on first
-   sign-in, so the answer is a choice rather than a default.** Not built.
-2. 🚨 **A FRIEND'S MUSCLE MAP IS TAPPABLE, WITH THE SAME PANEL AS YOUR OWN** — the estimate, what the
-   next level costs, the confidence and the recorded sets behind it. **And you can ask it any
-   comparison question the sheet offers**, because their client publishes a percentile per group
-   rather than one number.
-3. 🆕 **THEIR VOLUME AND THEIR GRAPHS**, computed on your device from what they published, by the
-   same functions that draw yours.
-4. 🆕 **TWO BODIES SIDE BY SIDE** at `#/compare/<uid>`, reached from a Compare button on any muscle
-   map — theirs or your own.
-5. 🚨 **AND A FRIEND ON THE OLD MODEL IS STILL READABLE** — reported by Tim within minutes of the
-   deploy, because Autumn's account had not migrated and she had vanished from every screen. The
-   reader falls back to the tier documents. See `docs/history.md`, 2026-09-03 §A00; it is the
-   2026-08-28 "her data is lost" incident arriving through a migration instead of through a publish.
+⚠️ **THIS IS THE ROUTINE MAINTENANCE, NOT A LOSS.** This file reached **153 KB of its 160 KB budget**
+and the rule is the one in the byte-budget block below: **the write-up lives in `docs/history.md` and
+only the summary lives here** — so the oldest summaries go once their day is no longer what a fresh
+session needs to orient on. Both days have their full dated sections in the history, and **every
+standing consequence of them is recorded somewhere that is not a dated summary**, which is the test
+for whether a day may be collapsed:
 
-## What changed on 2026-09-02, in one line each
+- **2026-09-03 — the visibility rewrite.** Three tiers became **private or public, public by
+  default**; a friend's muscle map became tappable; their volume and graphs; the two-body compare
+  screen; and the legacy-read fallback for an unmigrated friend. 🔒 **The durable half is `D29` in
+  `docs/handbook.md` §6** and the "Who can see you" row in `docs/state.md`; the unbuilt follow-up
+  (*ask on first sign-in*) is in **START HERE**, above.
+- **2026-09-02 — the Hevy-shaped feed, Rule 8 and the estimator.** The home feed, a friend's workout
+  on its own screen, comparison, copy-as-routine, the shareable picture; **back means the screen you
+  were just on** (`Rule 8`); and an estimated 1RM for every exercise. 🔒 **The durable half is Rule 8
+  in the handbook** and the Friends and Data rows in `docs/state.md`.
 
-Three passes, each with its own dated section in `docs/history.md`.
-
-1. **The home feed became a Hevy-shaped feed** — all eight steps of `docs/social-plan.md` §13. Cards
-   carry a description, a **Time · Sets** row and one line per exercise; tapping one opens **a
-   friend's workout on its own screen** (`#/friend/<uid>/<sessionId>`) with a muscle split, typed
-   bests and set tables, where you can compare a lift against your own, copy the workout into your
-   own plan, or share a picture of it.
-2. **Back means the screen you were just on** — **Design Rule 8**. Every back arrow used to go to a
-   hard-coded PARENT; it now goes back through history and the parent is only the fallback.
-3. **Every exercise has an estimated 1RM** — `js/exercise-estimate.js`. Comparisons use it where a
-   side has never done the lift, and the benchmark screen shows the estimate, what share of it a
-   typed weight is, and roughly how many reps it allows.
+**Search `docs/history.md` for the date for either of them.**
 
 ## The five things a fresh session most needs to know
 

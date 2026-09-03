@@ -44,6 +44,13 @@ important part: **donations or slight ad revenue, and never more than it costs t
 want to make the cost or ad revenue higher than the cost to maintain the servers and other
 base-costs."* ~~🛑 **He asked for the analysis ONLY IF HE ASKS.** Do not spend a session on it.~~
 
+🛑 **AND PHOTOS ARE PAUSED BY HIM, 2026-09-10** — *"lets keep a pause on the photos for now. I don't
+think it's necessary yet."* He asked twice what they cost, at 1,000 users and then at the ten he
+actually expects before launch, and paused them on the answer. **Do not raise it again; he will.**
+The numbers are in `progress.md`'s START HERE block, including the one that changed: **Cloud Storage
+now needs a billing account as a PLAN GATE rather than a quota** (3 February 2026), and the Firebase
+pricing page still says otherwise.
+
 ✅ **HE ASKED, AND IT WAS DELIVERED 2026-09-06** — published as an artifact, with the full write-up in
 `docs/history.md`. **His instinct that per-user cost is near nothing was right, with one exception
 that matters more than the rest of the analysis combined** (the read pattern, §A of that section).
@@ -153,6 +160,40 @@ filling it.**
 keeping because it generalises: *"that section is mostly used to make setting adjustments and do
 logistics, where this new section is broad information and view of your account."* **Settings and
 logistics behind the top-left icon; a view of what your account amounts to in the tab bar.**
+
+## 4b. 🆕 WHAT EACH MAIN SECTION IS FOR — 2026-09-10, and it is a placement rule like §4a
+
+> **Tim:** *"The main profile section is looking really empty right now and the settings profile
+> section is really crowded. I'd Like you to give me some advice on if we should split them up or
+> combine them. Should the profile menu even be a main section? … I think showing the calandar as a
+> main section was nice, but I think we can also display it in the data section in a good way … Take
+> in consideration additions to the cite and where we might put them."*
+>
+> Then, given a plan: **"I like all of that. Start working on it now."**
+
+🚨 **THE TWO COMPLAINTS WERE ONE PROBLEM, AND THE ANSWER IS A LINE RATHER THAN A TAB.** Profile was
+empty *because* everything belonging on it already lived in Data, and Data was overfull for the same
+reason — six segments that physically did not fit at 360px and only worked because the row was made
+to scroll. **A tab that needs a scrolling tab bar is a tab holding two jobs.**
+
+**The line, and it answers "where does this go?" for everything built from here on:**
+
+| section | answers |
+|---|---|
+| **Data** | **what your training MEANS** — Muscles, Volume, Graph, Bars, Research. Analysis. |
+| **Profile** (`#/me`) | **what you DID** — calendar, best lifts, friends, your body, goals. A record. |
+| **Account** (`#/account`) | **logistics** — identity, backup/restore/delete, the login. §4a's line. |
+| **Home** | **everything that fits nowhere else.** §4a. 🛑 Still not to be filled. |
+| **Record** | the one ACTION rather than a destination (D4). |
+
+⚠️ **NO TAB WAS ADDED OR REMOVED**, and Profile survives as a main section only because it now holds
+that content — he was right to doubt a tab that showed two numbers.
+
+⚠️ **`#/me` NEVER WRITES.** §4a's split stands: adjustments behind the top-left icon, a view of the
+account in the tab bar. So "body facts on Profile" means Profile **displays** sex, age and current
+weight and links to `#/profile`, which stays the form.
+
+🚩 **IT IS HALF BUILT — `progress.md` Open work 29 has the five steps and which are done.**
 
 **Three topics he deferred with "I'll talk about it later" — 🛑 do not pre-empt any of them:**
 

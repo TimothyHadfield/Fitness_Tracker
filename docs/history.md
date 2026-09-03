@@ -1452,6 +1452,23 @@ the app would choose to upload; the prices are Google's and were last confirmed 
 §13 step 9 already said photos were the one step blocked on it, and Open work 10 says the same about
 Cloud Functions. **This is the same decision Tim has already parked twice**, and it is his.
 
+> 🔒 **RE-CONFIRMED 2026-09-10, and the reason is now sharper than "it needs Blaze".** Tim asked
+> whether photos are realistic on the free plan at ~10 users. **Since 3 February 2026 Google aligned
+> Cloud Storage for Firebase with standard Cloud Storage rules: creating or KEEPING a bucket needs a
+> linked billing account, regardless of usage.** A Spark project has no bucket at all and its Storage
+> API calls return **402/403**. So this is a PLAN GATE, not a quota — no amount of being small gets
+> round it.
+>
+> 🚨 **AND THE FIREBASE PRICING PAGE STILL ADVERTISES SPARK ALLOWANCES FOR STORAGE** (5 GB stored,
+> 1 GB/day download on a legacy `appspot.com` bucket). **Reading that page alone gives the wrong
+> answer.** Written down because the next session to check this will land on the same page.
+>
+> ✅ **THE COST AT THIS SCALE IS ZERO, AND THAT IS THE ACTUAL ANSWER.** The free allowances still
+> apply on Blaze. At 10 users × 4 workouts a week × 200 KB: **~416 MB stored in a year against 5 GB**
+> (~12 years of headroom) and **~10 MB/day of egress against 1 GB/day** (~1 %). The card is required
+> and would not be charged. ⚠️ **The reason to hesitate is the missing spending cap, not the bill** —
+> and at 10 users there is no mechanism that could run one up.
+
 **2. Firestore is not a way round it.** The app already stores an image in Firestore — the 256px
 avatar, ~4 KB in the settings document. A workout photo is 30–50× that; a Firestore document is
 capped at **1 MiB**, base64 adds ~33 %, and `readShard()` re-reads collections on every cold open, so
