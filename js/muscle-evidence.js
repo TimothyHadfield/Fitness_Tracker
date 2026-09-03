@@ -20,10 +20,48 @@
 // Everything here is pure — no DOM, no store, no network — the same shape as
 // e1rm.js and strength-standards.js, which is the pattern that has caught real
 // bugs in this project because it is fully testable headlessly.
+//
+// ── 2026-09-13, THE STRENGTH-ACCURACY BUILD (docs/strength-accuracy-plan.md) ──
+//
+// Seven read-only agents audited this pipeline and Tim said build it. What
+// changed in THIS file, each with the plan section it answers:
+//
+//   · A ratio may now be a PAIR, `{ m, f }`, and `contributionsFor()` takes
+//     `opts.sex` (§3.6, decision g). Pulls, body-weight lifts and machines
+//     differ between the sexes by 20–40 % on Strength Level's own pages; a
+//     dumbbell swap does not. Unknown sex → the mean of the two, which is what
+//     `crossMuscleRatio()` always did. The body-weight FRACTION table stays
+//     sex-neutral: it is biomechanics, and only the ratio carries the sex.
+//   · ~Twenty-five entries were more than 10 % off (§2.3) — every one a reasoned
+//     or carried number, or a regex family covering two load conventions. All
+//     re-derived from Strength Level male-180 / female-140, the sweep's own
+//     method, and the families split where the convention differs.
+//   · The fallback floor is strict (`>`, §2.4), so a deadlift no longer chains
+//     into a curl through a row median because its q lands exactly on 0.45.
+//   · ~~One seat per exercise went to its BEST-EVER day~~. It goes to a WINDOWED
+//     estimate of that exercise — `estimateAt()` from strength-estimate.js,
+//     84 days widening to 180 then all, with its 2 %/week fall limit (§3.1,
+//     decision a: the map may fall) — anchored on the exercise's MOST CREDIBLE
+//     day, not its largest (§3.4, decision d). Ties break on credibility, then
+//     on the newest date, so walk order no longer matters (§2.5).
+//   · `screenDaily()` runs per exercise before rating (§3.2, decision b). A day
+//     no training could have produced is set aside, named on the rating as
+//     `quarantined`, never deleted, and released the moment another day agrees.
+//   · Where an exercise has any ≤ 8-rep set in the window, only ≤ 8-rep sets
+//     compete for it (§3.8, decision i), and confidence is priced by rep count
+//     (`repPrecision`).
+//   · A rating built only from fallbacks cannot read better than Fair (§3.9,
+//     decision j).
+//   · A flat rep run — 8, 8, 8 at one load — is evidence the set was not near
+//     failure; the observation carries `notToFailure` and is discounted
+//     (§5.3, FLAT_RUN_DISCOUNT). Withhold only; nothing here raises a number.
+//   · An observation's `rawE1rm` arrives from `setE1rm()` in set-e1rm.js — per
+//     hand into the curve, then doubled (§2.8, decision e). `totalLoad()` and
+//     `setLoad()` stay exported for the callers that still hold a load.
 
 import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor, standInFor } from './exercises.js';
-import { robustAggregate } from './strength-estimate.js';
+import { DEFAULTS, robustAggregate, estimateAt, screenDaily } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
 
 /* ------------------------------------------------------------------ *
@@ -187,6 +225,33 @@ export function rankBlockedReason(exercise, opts) {
 // general ones — "Chest-Supported Dumbbell Row" before "Dumbbell Row", and
 // "Cross-Body Hammer Curl" before "Hammer Curl".
 //
+// ⚠️ ENTRY SHAPE SINCE 2026-09-13: `[regex, ratio, q]` where `ratio` is a
+// NUMBER (the same for both sexes) or a PAIR `{ m, f }` (male / female).
+// `resolveRatio()` picks by `opts.sex`; with no sex known it takes the mean of
+// the two, which is exactly what crossMuscleRatio() has always done. A scalar
+// is a claim that the sexes agree within 10 % on that page; a pair is a
+// measurement that they do not. The provenance comment on a pair says which
+// Strength Level rows each side came from.
+//
+// ⚠️ AND THE LOAD CONVENTION IS HALF OF EVERY ENTRY. Each ratio was derived on
+// ONE reading of the number a user types — a per-side entry doubled, or the
+// whole load — as `loadTypeFor()` in exercises.js decides it. Two names in one
+// regex family with different conventions is how a machine lateral raise came
+// to be doubled and then divided by the two-dumbbell ratio (a 3.7× inflation).
+// Where the conventions differ the family is split, and the split entry sits
+// FIRST. Moving a name between FORCE_PER_SIDE and FORCE_TOTAL is a ratio
+// change and has to be made here too.
+//
+// ⚠️ THE 2026-09-13 CORRECTION ROUND (plan §2.3, agent C's 108-page audit).
+// Every entry the 2026-08-26/28 sweep DERIVED reproduced to the rounding.
+// Every miss over 10 % was a reasoned or carried number, or a regex family
+// covering two load conventions — the sweep's own fourth lesson, again. Each
+// corrected entry below says "derived 2026-09-13 from SL m180/f140", quotes
+// the five levels, and takes the median of the five, honouring the app's
+// convention for that name. Machine pages are 2020-era with small samples
+// (Cable Shrug 1,288 results, Machine Shrug 2,786, Landmine Press 4,132), so
+// their q sits at 0.30–0.40 however flat the drift.
+//
 // ⚠️ THE 2026-08-26 SWEEP (Open work 0h, closing pass). Every remaining
 // reasoned entry with a published Strength Level standard was derived by the
 // established technique — one population, both lifts, a 180 lb male, divide,
@@ -227,11 +292,21 @@ export function rankBlockedReason(exercise, opts) {
 //      an argument and no numbers, check the argument FIRST.
 //
 // ⚠️ WHAT IS STILL A GUESS, so the next reader does not have to re-derive it:
-// the entries that say so. Machine Row, Single-Leg Extension, Machine Hip
+// the entries that say so. ~~Machine Row,~~ Single-Leg Extension, Machine Hip
 // Thrust, Glute Bridge, the cable fly family and Spider Curl are all labelled
 // "no published standard" and were each checked at least once. They are not
 // open work; they are answered, and the answer is that no honest division
 // exists.
+//
+// ⚠️ "NO PUBLISHED STANDARD" HAS A SHELF LIFE. On 2026-09-03 agent C found
+// pages for Machine Row, the horizontal leg press, Machine Curl, the shrug
+// variants and the seated dip machine — every one added by Strength Level in
+// 2020 or later, after the entries that said "checked, nothing published" were
+// written. Those entries were true when written and are derived now. The rule
+// "where no standard exists the entry says so" needs a date beside it, and
+// from this round on it carries one: every URL is
+// https://strengthlevel.com/strength-standards/<slug>/lb and the slug is named
+// in the entry, so the next sweep can re-fetch rather than re-argue.
 //
 // Where a derivation's five ratios drift widely across levels, `q` went DOWN
 // or stayed low even though the median is now sourced — a fixed ratio still
@@ -315,7 +390,11 @@ const RATIOS = {
      * pressing family, so a single number still compresses badly.
      */
     [/Incline Dumbbell Bench Press/, 0.80, 0.72],
-    [/Decline Dumbbell Bench Press/, 0.76, 0.55],
+    // Female side derived 2026-09-13 from SL f140 decline-dumbbell-bench-press
+    // 14/28/46/70/96 ×2 over bench 44/72/108/152/201 → median 0.85: women
+    // decline nearly as much as they flat press, men do not. The male 0.76 is
+    // the 2026-08-28 figure, unchanged.
+    [/Decline Dumbbell Bench Press/, { m: 0.76, f: 0.85 }, 0.55],
     /* ⚠️ CARRIED, NOT MEASURED (2026-08-31, the library sweep). Nobody publishes
      * a squeeze-press standard. Two dumbbells pressed hard together the whole
      * way up cost real load — the pecs are fighting the adduction as well as the
@@ -331,7 +410,10 @@ const RATIOS = {
     // → 0.69/0.81/0.91/0.99/1.05, median 0.91. The drift is machine gearing
     // across brands, which is exactly what a low q prices — it goes DOWN a
     // step now that the spread has been seen rather than guessed at.
-    [/Machine Chest Press/, 0.91, 0.35],
+    // Female side derived 2026-09-13 (slug chest-press, f140 25/48/81/122/169
+    // over bench 44/72/108/152/201 → median 0.75): women press relatively
+    // LESS on the machine, so the male 0.91 was under-crediting them ~18 %.
+    [/Machine Chest Press/, { m: 0.91, f: 0.75 }, 0.35],
     // ── Bodyweight pressing ──────────────────────────────────────────────
     // These are the only entries in this file whose `ratio` is above 1.00 for a
     // reason worth stating: the load is your own body, which is far heavier
@@ -364,7 +446,11 @@ const RATIOS = {
      * uncertainty about the machine's linkage is priced in the BODY_WEIGHT
      * FRACTION's own q (0.65 against the free hang's 0.95), which is where the
      * unknown actually lives. */
-    [/^(Chest Dip|Assisted Dip)$/, 1.35, 0.45],
+    // Female side derived 2026-09-13 (slug dips, f140 added −33/0/39/84/131 +
+    // 140 lb of body, over bench 44/72/108/152/201 → 2.43/1.94/1.66/1.47/1.65,
+    // median 1.66). Body weight is a bigger share of a woman's dip than of a
+    // man's, so the male 1.35 was flattering women's chest by ~19 %.
+    [/^(Chest Dip|Assisted Dip)$/, { m: 1.35, f: 1.66 }, 0.45],
     // Push-up resistance is FIXED at 0.75 x body weight, so unlike a barbell it
     // cannot be loaded — the rep count carries all of the information. Above 15
     // reps the set stops being evidence of a maximum at all (D5), and Strength
@@ -404,7 +490,9 @@ const RATIOS = {
     // and it must be caught HERE rather than by the generic /Fly/ three lines
     // down — that one is 0.30, a third of this, and would have under-rated every
     // pec-deck user who happened to log it under the machine's other name.
-    [/Pec Deck|Machine Fly/, 0.90, 0.35],
+    // Female side derived 2026-09-13 (slug machine-chest-fly, f140
+    // 30/53/84/123/167 over bench → median 0.78; was under-crediting ~14 %).
+    [/Pec Deck|Machine Fly/, { m: 0.90, f: 0.78 }, 0.35],
     // ⚠️ REASONED, AND STUCK THAT WAY FOR AN UNUSUAL REASON: SL publish cable
     // fly standards (19/44/82/131/189) but never say whether the number is
     // one stack or both, and the two readings give 0.37 or 0.75 — a source
@@ -419,21 +507,55 @@ const RATIOS = {
     // the legs off the floor, which costs the leg drive and nothing else.
     [/Cable Press Around/, 0.40, 0.25],
     [/Larsen Press/, 0.90, 0.40],
+    /* ⚠️ SPLIT OUT OF THE GENERIC /Fly/ 2026-09-13 (plan §2.3). Derived from SL
+     * m180 dumbbell-fly 18/33/53/78/106 per dumbbell, doubled, over bench
+     * 127/169/220/277/339 → 0.28/0.39/0.48/0.56/0.63, median 0.48; f140
+     * 9/16/26/38/52 ×2 over 44/72/108/152/201 → median 0.48. Sex-neutral to the
+     * second decimal, like every other dumbbell swap. The generic 0.30 below
+     * was flattering every dumbbell fly by ~38 % (30 × 12 read Chest 87th).
+     * Incline Dumbbell Fly rides on the same rule — no incline page exists —
+     * and the drift (2.2×) keeps q at the cable grade. */
+    [/Dumbbell Fly/, 0.48, 0.30],
     [/Fly/, 0.30, 0.30],
     [/Svend Press/, 0.12, 0.20],
-    // No ratio for MACHINE DIP on purpose — see the exercise's own note in
-    // exercises.js. A seated dip machine's leverage is unpublished and varies by
-    // brand, and a guess here is exactly what the custom-exercise change of the
-    // same day removed. It is logged, charted and counted in volume; the muscle
-    // panel says why it does not rank.
+    /* ⚠️ MACHINE DIP CONVERTS NOW — 2026-09-13. ~~No ratio for MACHINE DIP on
+     * purpose … a seated dip machine's leverage is unpublished~~ was true on
+     * 2026-08-31 and stopped being true when agent C found Strength Level's
+     * "Seated Dip Machine" page (slug seated-dip-machine, 2020-era). Derived
+     * m180 126/182/251/332/419 over bench 127/169/220/277/339 →
+     * 0.99/1.08/1.14/1.20/1.24, median 1.14; f140 over bench → median 1.20.
+     * The same page gives 1.21 (m) / 1.23 (f) against the CLOSE-GRIP bench —
+     * that is the triceps figure, and the library files this exercise under
+     * Chest, so the bench figure is the one this table can use. Machine-grade
+     * q: a stack whose lever nobody standardises, on a page with a small
+     * sample. Tim's friend's 60 × 10 now reads ~40th, Novice, instead of
+     * nothing — or, through the custom-exercise guess it replaced, Advanced. */
+    [/^Machine Dip$/, { m: 1.14, f: 1.20 }, 0.40],
   ],
   Back: [ // key: Barbell Row
     [/^Barbell Row$/, 1.00, 1.00],
-    [/^Pendlay Row$/, 0.95, 0.80],
+    // Derived 2026-09-13 from SL m180/f140 (slug pendlay-row): m 120/158/204/
+    // 255/310 over row 108/149/198/255/315 → 1.11/1.06/1.03/1.00/0.98, median
+    // 1.03; f 58/83/113/148/186 over 41/66/97/134/175 → median 1.17. Was a
+    // reasoned 0.95 — a dead-stop row is not weaker than a touch-and-go one,
+    // and women's is relatively stronger still.
+    [/^Pendlay Row$/, { m: 1.03, f: 1.17 }, 0.75],
     [/^Yates Row$/, 1.10, 0.70],
-    [/^Seal Row$/, 0.85, 0.70],
-    [/^T-Bar Row$/, 1.05, 0.65],
-    [/Chest-Supported Dumbbell Row/, 0.80, 0.55],
+    // Derived 2026-09-13 (SL "Bench Pull", slug seal-row): m 106/146/195/250/
+    // 310 over row → 0.98 at every level (drift 0.98–0.985, flat as the seated
+    // cable row); f 58/80/105/135/166 → median 1.08. Was a reasoned 0.85 —
+    // flattering ~13 %. q rises a step for the flat drift.
+    [/^Seal Row$/, { m: 0.98, f: 1.08 }, 0.75],
+    // Derived 2026-09-13 (slug t-bar-row): m 86/130/185/250/321 over row →
+    // 0.80/0.87/0.93/0.98/1.02, median 0.93; f 34/61/96/140/189 → median 0.99.
+    // Was a reasoned 1.05 — under-crediting ~12 %. The drift (1.28×) is a
+    // plate-loaded lever's, so q drops a step.
+    [/^T-Bar Row$/, { m: 0.93, f: 0.99 }, 0.55],
+    // Derived 2026-09-13 (slug chest-supported-dumbbell-row): m 33/55/84/119/
+    // 158 ×2 over row → 0.61/0.74/0.85/0.93/1.00, median 0.85; f 17/29/46/67/
+    // 91 ×2 → median 0.95. Was a reasoned 0.80. Still below the free dumbbell
+    // row's 0.98 on both sides, which is the ordering the entry has to keep.
+    [/Chest-Supported Dumbbell Row/, { m: 0.85, f: 0.95 }, 0.55],
     [/Chest-Supported Row/, 0.95, 0.45],
     [/Meadows Row/, 0.55, 0.45],
     // Carried across the T-Bar anchor (1.05): a landmine row is a T-bar row
@@ -468,17 +590,25 @@ const RATIOS = {
     // chest-supported row removes the torso english, so less weight moves and a
     // lower ratio is correct — 0.80 still sits below this, as it must.
     [/Dumbbell Row/, 0.98, 0.60],
-    // Reasoned — SL publish NO machine-row standard (checked 2026-08-26), so
-    // the guess stays and is labelled rather than dressed as a measurement.
-    // ⚠️ "Smith Machine Row" is caught by this rule and that is the right
-    // answer, not an accident of the regex: a Smith row is a barbell row on a
-    // fixed bar, which is what the 1.00 says.
-    [/Machine Row|Hammer Strength Row/, 1.00, 0.45],
+    /* ⚠️ "Smith Machine Row" MUST stay ahead of the machine-row rule: a Smith
+     * row is a barbell row on a fixed bar, which is what the 1.00 says, and the
+     * machine-row page below is a chest-supported plate-loaded machine — not
+     * the same lift. Carried, as it was. */
+    [/Smith Machine Row/, 1.00, 0.45],
+    // ~~Reasoned — SL publish NO machine-row standard (checked 2026-08-26)~~.
+    // They have since 2020 (slug machine-row). Derived 2026-09-13: m 106/162/
+    // 234/318/410 over row → 0.98/1.09/1.18/1.25/1.30, median 1.18; f 47/77/
+    // 116/163/215 → median 1.20. The reasoned 1.00 was flattering ~15 %. q at
+    // the machine grade — and BELOW the fallback floor now, so a machine row
+    // no longer stands in for Biceps, Traps and Forearms; only a real row does.
+    [/Machine Row|Hammer Strength Row/, { m: 1.18, f: 1.20 }, 0.40],
     // 2026-08-26 sweep: SL seated cable row 106/146/195/251/312 over barbell
     // row 108/149/198/255/315 → 0.98 at EVERY level (drift 0.98–0.99, the
     // flattest in the file). q rises: here the single number really is the
-    // population.
-    [/Seated Cable Row|Wide-Grip Seated Row/, 0.98, 0.60],
+    // population. Female side derived 2026-09-13: 49/73/103/140/179 over
+    // 41/66/97/134/175 → median 1.06 (women's cable row is relatively stronger
+    // than their barbell row, the pattern of every pull on this page).
+    [/Seated Cable Row|Wide-Grip Seated Row/, { m: 0.98, f: 1.06 }, 0.60],
     // Carried across the corrected pulldown anchor (× 0.95/0.90), not measured.
     [/Single-Arm Lat Pulldown/, 0.84, 0.40],
     // Same treatment for the one-arm row, carried across the seated cable row's
@@ -488,9 +618,22 @@ const RATIOS = {
     // Carried across Cable Pullover, which is the same movement on a different
     // machine and is itself reasoned rather than sourced.
     [/Machine Pullover/, 0.45, 0.25],
+    /* ⚠️ SPLIT OUT OF THE PULLDOWN FAMILY 2026-09-13, and it is the entry Tim's
+     * Back rating was being held down by (plan §2.3, agent C's D4). A
+     * straight-arm pulldown is a lat isolation on a cable, not a pulldown, and
+     * the family's 0.95 read 100 × 10 as a 151 lb barbell row — 17th, Beginner
+     * — while still clearing the fallback floor and dragging Biceps, Traps and
+     * Forearms down with it. Derived from SL (slug straight-arm-pulldown):
+     * m180 44/77/120/173/232 over row → 0.41/0.52/0.61/0.68/0.74, median 0.61;
+     * f140 25/43/67/97/131 over 41/66/97/134/175 → median 0.69. 2020-era cable
+     * page with a 1.8× drift, so q is the cable grade — and below the fallback
+     * floor, so it rates Back and nothing else. */
+    [/Straight-Arm Pulldown/, { m: 0.61, f: 0.69 }, 0.35],
     // 2026-08-26 sweep: SL lat pulldown 106/143/189/241/296 over barbell row
     // → 0.98/0.96/0.95/0.95/0.94, median 0.95. Nearly flat, so q rises a step.
-    [/Lat Pulldown|Pulldown/, 0.95, 0.55],
+    // Female side derived 2026-09-13: 52/75/103/136/172 over 41/66/97/134/175
+    // → 1.27/1.14/1.06/1.01/0.98, median 1.06.
+    [/Lat Pulldown|Pulldown/, { m: 0.95, f: 1.06 }, 0.55],
     [/Cable Pullover/, 0.45, 0.30],
     // ── Bodyweight pulling ───────────────────────────────────────────────
     // Same derivation as the dip above, off Strength Level's pull-up standards
@@ -508,13 +651,25 @@ const RATIOS = {
     // evidence that grip barely moves the maximum even though it plainly moves
     // how the set feels.
     //
-    // ⚠️ At 0.45 this lands just under FALLBACK_MIN_QUALITY, so a pull-up rates
-    // Back and nothing else — it will not stand in for Biceps, Traps or
-    // Forearms the way a barbell row does. That is deliberate. A chin-up
-    // genuinely does train biceps, but the conversion would be a body-weight
-    // fraction times a ratio that already drifts 1.10-1.63 times a cross-muscle
-    // ratio, and three estimates multiplied together is how the "machine for
-    // confidently wrong numbers" gets built.
+    // ⚠️ At 0.45 this lands ON the fallback floor, and the floor is strict
+    // (`>` since 2026-09-13), so a pull-up rates Back and nothing else — it
+    // will not stand in for Biceps, Traps or Forearms the way a barbell row
+    // does. ~~"just under" the floor~~ — it was never under it; it only cleared
+    // the old `>=` because the fraction's q multiplied it down to 0.4275, and
+    // the Deadlift entry below at the same 0.45 with no fraction to shrink it
+    // DID chain into a curl. That is deliberate now rather than lucky. A
+    // chin-up genuinely does train biceps, but the conversion would be a
+    // body-weight fraction times a ratio that already drifts 1.10-1.63 times a
+    // cross-muscle ratio, and three estimates multiplied together is how the
+    // "machine for confidently wrong numbers" gets built.
+    //
+    // ⚠️ SEX-SPECIFIC SINCE 2026-09-13, and it is the largest sex effect in the
+    // file after the face pull. SL f140 pull-ups −36/−10/19/52/86 added, plus
+    // 140 lb of body, over row 41/66/97/134/175 → 2.54/1.97/1.64/1.43/1.29,
+    // median 1.64 (chin-ups 1.67, within the rounding, so one rule still
+    // covers the family). At the male 1.28 six strict pull-ups at 140 lb read
+    // Back 79th, Proficient; at 1.64 they read ~55th. Body weight is simply a
+    // bigger share of a woman's pull than of a man's.
     // ⚠️ ASSISTED IS IN THE SAME FAMILY AT THE SAME RATIO, and it belongs here
     // rather than in a line of its own: the ratio converts RESISTANCE to the
     // muscle's key lift, and by the time it is applied the assistance has
@@ -523,7 +678,7 @@ const RATIOS = {
     // 110 itself, and that is priced once, in the fraction table's `q`, rather
     // than twice. Added 2026-08-24; without it the exercise had a fraction and
     // still rated nothing, because this regex is anchored.
-    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up|Assisted Pull-Up|Assisted Chin-Up)$/, 1.28, 0.45],
+    [/^(Pull-Up|Chin-Up|Neutral-Grip Pull-Up|Wide-Grip Pull-Up|Assisted Pull-Up|Assisted Chin-Up)$/, { m: 1.28, f: 1.64 }, 0.45],
     // Deadlift family. These are tagged Back in the library and are genuinely
     // back work, but they are pulls, not rows — hence the wide conversions and
     // the low quality. Deadlift itself is ALSO the key lift for Glutes, which
@@ -541,11 +696,28 @@ const RATIOS = {
     // theirs — the drift is real and a fixed ratio still compresses.
     // The family now orders sensibly on its own: rack pull (part range) >
     // sumo > trap bar > deficit ≈ conventional, all above 1.
-    [/^Rack Pull$/, 2.10, 0.40],
-    [/^Trap Bar Deadlift$/, 1.88, 0.40],
-    [/^Sumo Deadlift$/, 1.97, 0.40],
-    [/^Deficit Deadlift$/, 1.81, 0.40],
-    [/^Deadlift$/, 1.76, 0.45],
+    //
+    // ⚠️ FEMALE SIDES DERIVED 2026-09-13, all over SL f140 row 41/66/97/134/175:
+    //   Deadlift  93/139/196/264/338 → 2.27/2.11/2.02/1.97/1.93, median 2.02
+    //   Sumo     108/153/210/275/345 → median 2.17
+    //   Trap bar 110/155/211/274/343 → median 2.18
+    //   Deficit  116/157/207/264/324 → median 2.13
+    //   Rack pull 121/176/246/328/416 → median 2.54
+    // Women's rows are relatively weaker than their pulls by 10–21 %, so the
+    // male ratios were flattering a woman's Back off every deadlift variant.
+    // The ordering survives on the female side: rack > trap ≈ sumo > deficit
+    // > conventional.
+    [/^Rack Pull$/, { m: 2.10, f: 2.54 }, 0.40],
+    [/^Trap Bar Deadlift$/, { m: 1.88, f: 2.18 }, 0.40],
+    [/^Sumo Deadlift$/, { m: 1.97, f: 2.17 }, 0.40],
+    [/^Deficit Deadlift$/, { m: 1.81, f: 2.13 }, 0.40],
+    // ⚠️ q 0.45 sits ON the fallback floor and, with the floor strict since
+    // 2026-09-13, a deadlift rates Back and no longer chains into Biceps, Traps
+    // and Forearms. It did until then — a pull converted through a row median
+    // into a curl, giving a deadlift-only lifter Biceps 75th off 405 × 3 (plan
+    // §2.4) — because `>=` let 0.45 through. It is still Glutes' key lift at
+    // 1.00 via the key-lift rule, which is unaffected.
+    [/^Deadlift$/, { m: 1.76, f: 2.02 }, 0.45],
     // 2026-08-26: SL good morning 68/119/189/274/370 over barbell row →
     // 0.63/0.80/0.95/1.07/1.17, median 0.95. Was 0.60 — a 37 % flatter. The
     // drift is the widest of the barbell entries (novices barely load it,
@@ -558,20 +730,22 @@ const RATIOS = {
     [/^Back Squat$/, 1.00, 1.00],
     [/^High-Bar Squat$/, 0.98, 0.85],
     [/^Low-Bar Squat$/, 1.04, 0.85],
-    [/^Box Squat$/, 1.02, 0.70],
+    [/^Box Squat$/, { m: 1.16, f: 1.15 }, 0.70],
     [/^Pause Squat$/, 0.90, 0.75],
     [/^Front Squat$/, 0.83, 0.75],
     [/^Safety Bar Squat$/, 0.95, 0.65],
-    [/^Zercher Squat$/, 0.72, 0.50],
-    [/Smith Machine Squat/, 1.05, 0.45],
+    [/^Zercher Squat$/, { m: 0.85, f: 0.81 }, 0.50],
+    // ⚠️ The Smith squat runs the OTHER way — 1.05 was over-crediting the bar,
+    // not under. SL: 0.89 male, 0.84 female.
+    [/Smith Machine Squat/, { m: 0.89, f: 0.84 }, 0.45],
     // 2026-08-26 sweep: SL hack squat 143/230/342/477/626 over squat
     // 169/228/298/377/462 → 0.85/1.01/1.15/1.27/1.35 — median 1.15, EXACTLY
     // the reasoned number. Kept, now sourced; the huge drift (novices hack
     // less than they squat, strong lifters far more) is why q stays low.
     [/Hack Squat/, 1.15, 0.40],
     [/Pendulum Squat/, 1.05, 0.35],
-    [/Belt Squat/, 1.10, 0.35],
-    [/Single-Leg Press/, 1.30, 0.30],
+    [/Belt Squat/, { m: 1.40, f: 1.50 }, 0.35],
+    [/Single-Leg Press/, { m: 0.95, f: 0.97 }, 0.30],
     // 2026-08-26 sweep, and one of the three that ran the OTHER way: SL sled
     // leg press 246/366/516/692/884 over squat → 1.46/1.61/1.73/1.84/1.91,
     // median 1.73. The reasoned 2.00 was UNDER-crediting every leg press by
@@ -583,15 +757,18 @@ const RATIOS = {
      * Reasoned from that mechanism, not published — anyone finding a horizontal
      * leg press standard should replace this rather than trust it. Falling into
      * the sled's rule would have over-rated every seated leg press by ~57 %. */
-    [/Seated Leg Press/, 1.10, 0.25],
-    [/Leg Press/, 1.73, 0.35],
+    // ⚠️ The horizontal/seated leg press HAS a page now (it did not when this
+    // entry was written, and the comment asking somebody to find one is struck
+    // through above): 1.32 male, 1.47 female.
+    [/Seated Leg Press/, { m: 1.32, f: 1.47 }, 0.25],
+    [/Leg Press/, { m: 1.73, f: 1.94 }, 0.35],
     // Reasoned — no published single-leg standard (checked 2026-08-26). Still
     // ordered below the bilateral entry, which is all the guess claims.
     [/Single-Leg Extension/, 0.55, 0.25],
     // 2026-08-26 sweep: SL leg extension 107/162/231/313/402 over squat →
     // 0.63/0.71/0.78/0.83/0.87, median 0.78. Was 0.60 — flattering by ~23 %.
     [/Leg Extension/, 0.78, 0.30],
-    [/Goblet Squat/, 0.35, 0.40],
+    [/Goblet Squat/, { m: 0.31, f: 0.35 }, 0.40],
     // One end of a bar in a corner, held at the chest — a goblet squat with a
     // longer lever and a little more load. Carried, not published.
     [/Landmine Squat/, 0.40, 0.25],
@@ -601,6 +778,12 @@ const RATIOS = {
     // changes is how much you can hold, not the fraction of a squat it
     // represents, and the load is what gets logged either way.
     [/Bulgarian Split Squat|Split Squat/, 0.50, 0.40],
+    /* ⚠️ SPLIT 2026-09-13. The 0.45 was derived from SL's DUMBBELL lunge (two
+     * bells, doubled) and the family then applied it to a BARBELL lunge, whose
+     * own page gives 0.62 male / 0.68 female — a 28 % flattery on a 135 x 8.
+     * Two load conventions, one regex: the fourth lesson of the 2026-08-26
+     * sweep, found again. The barbell rule sits first. */
+    [/Barbell Lunge/, { m: 0.62, f: 0.68 }, 0.35],
     [/Lunge/, 0.45, 0.35],
     [/Step-Up/, 0.45, 0.30],
   ],
@@ -610,7 +793,7 @@ const RATIOS = {
     // 2026-08-26 sweep: SL dumbbell RDL per dumbbell 43/67/98/136/177,
     // doubled, over RDL 147/207/280/364/455 → 0.59/0.65/0.70/0.75/0.78,
     // median 0.70. The reasoned 0.75 was slightly UNDER-crediting.
-    [/Dumbbell Romanian Deadlift/, 0.70, 0.60],
+    [/Dumbbell Romanian Deadlift/, { m: 0.70, f: 0.81 }, 0.60],
     // Standing on a plate or a block: more range, a little less weight. Carried
     // off the RDL anchor by the same reasoning the deficit deadlift uses in
     // Back (1.81 against a 1.76 conventional pull, in the other direction
@@ -621,8 +804,15 @@ const RATIOS = {
     // 0.46/0.50/0.53/0.55/0.57, median 0.53. Was 0.45 — flattering ~18 %.
     // One number covers the seated/lying/standing family; SL's seated table
     // was not separately derived.
+    /* ⚠️ SPLIT 2026-09-13. The lying curl's 0.53 was derived and is right; the
+     * SEATED curl was carrying it, and the note beside it admitted "SL's seated
+     * table was not separately derived". It exists: 87/131/185/250/320 (m),
+     * 44/71/107/150/198 (f) over the RDL → median 0.66 / 0.71. Seated is the
+     * commoner machine, and at 0.53 a 150 x 10 read Hamstrings 93rd rather than
+     * ~70th. It sits first, because /Leg Curl/ would otherwise take it. */
+    [/Seated Leg Curl/, { m: 0.66, f: 0.71 }, 0.35],
     [/Leg Curl/, 0.53, 0.35],
-    [/Cable Pull-Through/, 0.45, 0.30],
+    [/Cable Pull-Through/, { m: 0.49, f: 0.59 }, 0.30],
     [/Kettlebell Swing/, 0.35, 0.25],
   ],
   Glutes: [ // key: Deadlift
@@ -638,19 +828,42 @@ const RATIOS = {
     // widest of any barbell lift in the file — novices thrust far less than
     // they pull, strong lifters far more — so q goes DOWN a step even though
     // the median is now sourced.
-    [/Hip Thrust/, 0.96, 0.40],
+    [/Hip Thrust/, { m: 0.96, f: 1.16 }, 0.40],
     // Carried across the corrected hip-thrust anchor (× 0.96/1.15). SL's
     // glute bridge page publishes REP standards, not 1RM — checked
     // 2026-08-26, not derivable.
     [/Glute Bridge/, 0.83, 0.40],
     [/Sumo Squat/, 0.45, 0.30],
-    [/Kickback/, 0.18, 0.20],
-    [/Hip Abduction Machine|Hip Adduction Machine/, 0.35, 0.15],
+    /* 🚨 CORRECTED 2026-09-13, AND THESE WERE THE WORST TWO ENTRIES IN THE
+     * TABLE. Both were "reasoned" numbers with no published standard behind
+     * them, and both are the ONLY glute work many people log — so the low q
+     * that normally protects a shaky ratio protects nothing here, because
+     * there is no second reading to out-rank it.
+     *
+     *   Cable Kickback  0.18 -> 0.63. It is FORCE_PER_SIDE (one leg at a time),
+     *     so the stack is doubled before the ratio; SL's cable kickback page
+     *     read on that same doubled convention gives 0.63 for both sexes. At
+     *     0.18 a 60 lb x 12 kickback implied a 991 lb deadlift.
+     *   Hip Abduction / Adduction  0.35 -> 0.61/0.66 male, 0.79/0.74 female,
+     *     from SL's own pages (abduction 86/141/213/300/398 m,
+     *     60/101/155/221/295 f; adduction 92/151/228/322/426 m,
+     *     51/91/145/211/286 f). At 0.35 a 140 lb woman's 150 x 12 abduction
+     *     implied a 625 lb deadlift and rated her glutes Elite. They are split
+     *     because they are two different pages and two different numbers.
+     *
+     * q rises to 0.30 — these are real pages now — but stays low: they are
+     * 2020-era with small samples, and a machine's leverage is its own. */
+    [/Kickback/, 0.63, 0.30],
+    [/Hip Abduction Machine/, { m: 0.61, f: 0.79 }, 0.30],
+    [/Hip Adduction Machine/, { m: 0.66, f: 0.74 }, 0.30],
   ],
   Shoulders: [ // key: Overhead Press
     [/^Overhead Press$/, 1.00, 1.00],
-    [/^Seated Barbell Overhead Press$/, 1.00, 0.85],
-    [/^Push Press$/, 1.25, 0.65],
+    // Corrected 2026-09-13 from SL m180/f140 (seated shoulder press): 1.14 male,
+    // 1.00 female — seated is a HARDER press for a man relative to his standing
+    // one than 1.00 allowed.
+    [/^Seated Barbell Overhead Press$/, { m: 1.14, f: 1.00 }, 0.85],
+    [/^Push Press$/, { m: 1.27, f: 1.41 }, 0.65],
     [/^Behind-the-Neck Press$/, 0.90, 0.55],
     [/^Z Press$/, 0.85, 0.50],
     [/Smith Machine Overhead Press/, 1.05, 0.45],
@@ -659,7 +872,11 @@ const RATIOS = {
     // 1.10, flattering ~12 % — and the drift is the widest of any machine
     // here (gearing plus a seat that removes the stabilising work novices
     // fail on), so q drops a step.
-    [/Machine Shoulder Press/, 1.23, 0.35],
+    // ⚠️ 2026-09-13: the sexes run OPPOSITE ways here — 1.23 male, 0.97 female.
+    // Machine pressing is relatively weaker for women where machine pulling is
+    // stronger, so the single male-derived number was under-crediting every
+    // woman by about 20 %. Same for the chest press and pec deck above.
+    [/Machine Shoulder Press/, { m: 1.23, f: 0.97 }, 0.35],
     // ⚠️ Same sweep, and the largest error found in it — 15 %. Strength Level's
     // dumbbell shoulder press, per dumbbell and doubled, against their barbell
     // shoulder press at a 180 lb male:
@@ -712,9 +929,19 @@ const RATIOS = {
     [/Seated Dumbbell Shoulder Press/, 1.08, 0.70],
     [/Dumbbell Shoulder Press/, 1.01, 0.60],
     [/Arnold Press/, 0.77, 0.50],
-    [/Landmine Press/, 0.60, 0.35],
+    // ⚠️ CORRECTED 2026-09-13 from SL m180/f140. Derived 2026-09-13: SL landmine
+    // press 40/72/117/172/236 (m) over OHP → median 0.90 on the app's doubled
+    // reading, and 0.89 (f). Was 0.60, a reasoned number, flattering by a third:
+    // a 70 lb landmine press read Shoulders 99.6th percentile.
+    [/Landmine Press/, { m: 0.90, f: 0.89 }, 0.35],
     // 2026-08-26 sweep: SL upright row 53/87/132/187/248 over OHP →
     // 0.71/0.84/0.94/1.03/1.10, median 0.94. Was 0.70 — flattering ~26 %.
+    //
+    // ⚠️ SPLIT 2026-09-13: the DUMBBELL version is a different load convention
+    // (two bells, doubled) and a different number — SL dumbbell upright row
+    // over OHP is 0.79 (m) / 0.84 (f), not the barbell's 0.94. It sits first,
+    // because /Upright Row/ would otherwise swallow it.
+    [/Dumbbell Upright Row/, { m: 0.79, f: 0.84 }, 0.35],
     [/Upright Row/, 0.94, 0.35],
     // ⚠️ SPLIT OUT OF THE RAISE FAMILY 2026-08-26, because it turned out to be
     // measurable: SL face pull 35/64/105/155/211 over OHP →
@@ -723,7 +950,13 @@ const RATIOS = {
     // which is the sane answer the winsoriser and the credibility sort were
     // having to impose from outside. Rope-and-stack leverage varies, hence
     // the cable-grade q.
-    [/Face Pull/, 0.75, 0.35],
+    // ⚠️ AND IT IS THE SHARPEST SEX SPLIT IN THE TABLE (2026-09-13). The same
+    // pull at 140 lb female is 0.62/0.79/1.04/1.22/1.36, median 1.04 — a woman's
+    // face pull is a THIRD more of her press than a man's is of his. Tim
+    // reported this one from Autumn's map: her 40 lb x 10 read Shoulders 84th,
+    // nearly Advanced, beside beginner ratings everywhere else. At 1.04 it is
+    // ~44th. The single number was never right for either of them.
+    [/Face Pull/, { m: 0.75, f: 1.04 }, 0.35],
     /* ⚠️ THE RAISE FAMILY IS SOURCED NOW (2026-08-27), AND 0.30 WAS FLATTERING
      * EVERY RAISE BY ABOUT 80 %. Same technique as the rest of the sweep — SL's
      * per-dumbbell figures at a 180 lb male, doubled, over this muscle's key
@@ -747,9 +980,29 @@ const RATIOS = {
      * The median is the best single answer available and is still a bad one,
      * which is exactly what a low q is for.
      */
+    /* 🚨 THE MACHINE LATERAL RAISE IS NOT A PAIR OF DUMBBELLS, AND UNTIL
+     * 2026-09-13 THIS TABLE TREATED IT AS ONE. It sat in FORCE_PER_SIDE, so a
+     * 100 lb stack was doubled to 200, and then divided by the two-dumbbell
+     * 0.53 — a 3.7x inflation that rated Shoulders Elite, 99.9th percentile,
+     * off one ordinary set. It is one stack: exercises.js now files it
+     * FORCE_TOTAL, and SL's own machine lateral raise page (58/92/136/189/248
+     * at 180 lb male) over OHP gives 0.77/0.88/0.97/1.04/1.10, median 0.97;
+     * 0.84 female. Both halves of that fix are required — moving the name
+     * between conventions IS a ratio change, which is why the note at the top
+     * of this table says so. It sits before /Lateral Raise/. */
+    [/Machine Lateral Raise/, { m: 0.97, f: 0.84 }, 0.30],
     [/Lateral Raise/, 0.53, 0.25],
     [/Front Raise/, 0.54, 0.25],
-    [/Rear Delt Fly|Reverse Pec Deck/, 0.56, 0.22],
+    /* ⚠️ SPLIT 2026-09-13, same shape as the lateral raise and the other way
+     * round. The dumbbell rear delt fly's 0.56 was being applied to a REVERSE
+     * PEC DECK's single stack, which under-credits it by about half — SL's
+     * machine reverse fly over OHP is 1.07 (m) / 0.94 (f). Tim reported the
+     * consequence from the other end: his 70 lb x 10 read Shoulders 87th,
+     * Advanced, beside beginner ratings elsewhere, because the estimate DIVIDES
+     * by the ratio and 0.56 was less than half of 1.07. At the derived number
+     * the same set is ~18th. */
+    [/Reverse Pec Deck|Machine Rear Delt Fly/, { m: 1.07, f: 0.94 }, 0.35],
+    [/Rear Delt Fly/, 0.56, 0.22],
     // Cable and machine versions carry the derived number for the movement
     // they copy — the leverage is not the dumbbell's and nothing is published
     // for them, so they are labelled rather than separately claimed.
@@ -773,7 +1026,10 @@ const RATIOS = {
     // ⚠️ AFTER the preacher entry above, which is more specific. A seated curl
     // machine without the pad is carried across it at a small discount; nothing
     // is published for either.
-    [/Machine Curl/, 1.00, 0.35],
+    // Corrected 2026-09-13: the note said "nothing is published for either".
+    // SL's machine bicep curl page (57/88/128/176/228 m) over the barbell curl
+    // gives 1.23; 1.09 female.
+    [/Machine Curl/, { m: 1.23, f: 1.09 }, 0.35],
     [/Dumbbell Preacher Curl/, 0.84, 0.45],
     // SL preacher curl (barbell) 46/70/100/136/175 → 0.94/0.96/0.96/0.97/0.97,
     // median 0.96 — nearly flat, was a reasoned 0.82.
@@ -842,7 +1098,7 @@ const RATIOS = {
     // chest dip, so this converts a chest-dip-flavoured population figure to a
     // triceps lift. The library treats them as two exercises; the source does
     // not.
-    [/^Triceps Dip$/, 1.43, 0.35],
+    [/^Triceps Dip$/, { m: 1.43, f: 1.69 }, 0.35],
     // Carried across the corrected skull-crusher anchor (× 0.47/0.50), not
     // measured — SL's lying-extension standard does not separate equipment.
     [/Dumbbell Skull Crusher/, 0.39, 0.40],
@@ -871,7 +1127,14 @@ const RATIOS = {
     // One of the six silent ones (2026-08-31), carried across the entry above:
     // same cable, same extension, one arm across the body.
     [/Cross-Body Cable Triceps Extension/, 0.47, 0.25],
-    [/Overhead Dumbbell Extension/, 0.40, 0.35],
+    /* 🚨 ONE BELL IN TWO HANDS, AND IT WAS BEING DOUBLED. Equipment 'Dumbbell'
+     * meant per_side by default, so a 50 lb overhead extension was scored as
+     * 100 lb of load and then divided by a reasoned 0.40 — 358 lb of close-grip
+     * bench, 98th percentile, off one set. exercises.js now files it
+     * FORCE_TOTAL (the same treatment Goblet Squat and Dumbbell Pullover
+     * already had), and SL's dumbbell tricep extension read as ONE bell gives
+     * 0.24 male / 0.25 female. Both halves are required. */
+    [/Overhead Dumbbell Extension/, { m: 0.24, f: 0.25 }, 0.35],
     // ⚠️ REASONED, NO PUBLISHED STANDARD — checked 2026-08-27 and the note that
     // used to sit here was WRONG. It said "SL publish a machine extension
     // standard a later pass can use"; they do not. They publish a machine
@@ -880,7 +1143,10 @@ const RATIOS = {
     // Machine Row and the shrug variants: labelled rather than left looking
     // derivable, so nobody spends another pass looking for it.
     [/Machine Triceps Extension/, 0.60, 0.35],
-    [/Kickback/, 0.20, 0.20],
+    // Corrected 2026-09-13: SL dumbbell tricep kickback, doubled, over the
+    // close-grip bench → 0.39 male / 0.43 female. Was a reasoned 0.20, so a
+    // 20 lb x 12 kickback rated Triceps 97th, Elite.
+    [/Kickback/, { m: 0.39, f: 0.43 }, 0.25],
   ],
   Traps: [ // key: Barbell Shrug
     [/^Barbell Shrug$/, 1.00, 1.00],
@@ -907,10 +1173,12 @@ const RATIOS = {
     [/Incline Dumbbell Shrug/, 0.50, 0.30],
     [/Dumbbell Shrug/, 0.70, 0.60],
     // Both reasoned — no published standard for either (checked 2026-08-26).
-    [/Cable Shrug/, 0.90, 0.50],
+    [/Cable Shrug/, { m: 0.81, f: 0.83 }, 0.50],
     // "Smith Machine Shrug" is caught here on purpose: a fixed bar shrug is a
     // barbell shrug, which is what the 1.00 says.
-    [/Machine Shrug/, 1.00, 0.45],
+    // Corrected 2026-09-13 — the "no published standard" note was stale; the
+    // machine shrug page gives 1.16 male / 1.33 female.
+    [/Machine Shrug/, { m: 1.16, f: 1.33 }, 0.45],
     // Every carry, including the trap-bar one added 2026-08-31.
     [/Carry/, 0.75, 0.25],
   ],
@@ -939,11 +1207,13 @@ const RATIOS = {
     // Two dumbbells, logged per side and doubled, so the total is the same load
     // the barbell version carries — 1.00 is the claim that neither hand helps
     // the other, which is true of a wrist curl in a way it is not of a press.
-    [/Dumbbell Wrist Curl/, 1.00, 0.40],
+    [/Dumbbell Wrist Curl/, { m: 1.22, f: 1.27 }, 0.40],
     [/Behind-the-Back Wrist Curl/, 1.05, 0.55],
-    [/Reverse Wrist Curl/, 0.55, 0.50],
+    // Corrected 2026-09-13: 0.92, from SL's own page. The reasoned 0.55 was
+    // flattering by 40 % — a 45 x 12 read Forearms 88th.
+    [/Reverse Wrist Curl/, 0.92, 0.50],
     [/Cable Reverse Curl/, 0.78, 0.35],
-    [/Reverse Curl/, 0.80, 0.40],
+    [/Reverse Curl/, { m: 0.92, f: 0.90 }, 0.40],
     [/Plate Pinch Hold/, 0.45, 0.20],
   ],
 
@@ -990,7 +1260,9 @@ const RATIOS = {
    * about what the app knows, not a hole. */
   Core: [ // key: Cable Crunch
     [/^Cable Crunch$/, 1.00, 1.00],
-    [/^Machine Crunch$/, 1.13, 0.55],
+    // ⚠️ The one sex split the file already knew about (research.md §14.4), now
+    // written in the same shape as the rest: 1.13 male / 0.89 female.
+    [/^Machine Crunch$/, { m: 1.13, f: 0.89 }, 0.55],
   ],
 };
 
@@ -1121,14 +1393,53 @@ const FALLBACK = {
 export const FALLBACK_MIN_QUALITY = 0.45;
 
 // The population conversion between two muscles' key lifts, taken from the
-// medians. Male and female medians differ slightly in ratio; the mean of the
-// two is used, because which one applies depends on a profile field this
-// module deliberately does not take.
-export function crossMuscleRatio(fromMuscle, toMuscle) {
+// medians.
+//
+// ⚠️ SINCE 2026-09-13 IT TAKES A SEX, and the old comment here said the opposite
+// — ~~the mean of the two is used, because which one applies depends on a
+// profile field this module deliberately does not take~~. It always took
+// `opts.bodyWeight`; taking the sex as well was never the obstacle the sentence
+// claimed. With a sex it uses that sex's medians; with none it keeps the mean,
+// which is exactly what it did before, so an unwired caller is unchanged.
+//
+// It matters most where the sexes disagree: a woman's bench-to-squat runs
+// 0.64-0.67 against a man's flat 0.74, so the averaged figure was ~5 % wrong for
+// both of them and never right for either.
+export function crossMuscleRatio(fromMuscle, toMuscle, sex) {
   const a = MUSCLE_LIFTS[fromMuscle];
   const b = MUSCLE_LIFTS[toMuscle];
   if (!a || !b) return null;
+  if (sex === 'male') return a.median.male / b.median.male;
+  if (sex === 'female') return a.median.female / b.median.female;
   return ((a.median.male / b.median.male) + (a.median.female / b.median.female)) / 2;
+}
+
+/**
+ * One RATIOS entry's ratio, for one person.
+ *
+ * The entry is a NUMBER when the sexes agree within about 10 % on the published
+ * page, and a PAIR `{ m, f }` when they do not — see the ENTRY SHAPE note at the
+ * top of the table. With no sex known a pair collapses to the mean of its two
+ * sides, which is the same thing crossMuscleRatio() does and for the same
+ * reason: it is the least wrong single number when the question has not been
+ * answered.
+ *
+ * 🚨 EVERYTHING DOWNSTREAM OF matchRule() SEES A NUMBER. The fallback chain
+ * multiplies `base.ratio` by a cross-muscle ratio, and `add()` guards on
+ * `ratio > 0` — which a pair fails silently, dropping the contribution
+ * altogether. That is not hypothetical: it is what a half-finished version of
+ * this change did on 2026-09-13, and the symptom was every pull-up, chin-up and
+ * dip in the library rating nothing at all, with no error anywhere.
+ */
+export function resolveRatio(ratio, sex) {
+  if (typeof ratio === 'number') return ratio;
+  if (!ratio || typeof ratio !== 'object') return null;
+  const m = Number(ratio.m);
+  const f = Number(ratio.f);
+  if (sex === 'male') return m > 0 ? m : null;
+  if (sex === 'female') return f > 0 ? f : null;
+  if (!(m > 0) || !(f > 0)) return m > 0 ? m : (f > 0 ? f : null);
+  return (m + f) / 2;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1144,10 +1455,16 @@ function keyLiftMuscle(name) {
   return keyLiftByName.get(name) || null;
 }
 
-function matchRule(muscle, name) {
+// ⚠️ RESOLVES THE RATIO HERE, so every caller below works in plain numbers.
+// `sex` is 'male' | 'female' | anything else, which means "not known".
+function matchRule(muscle, name, sex) {
   const rules = RATIOS[muscle];
   if (!rules) return null;
-  for (const [re, ratio, q] of rules) if (re.test(name)) return { ratio, quality: q };
+  for (const [re, ratio, q] of rules) {
+    if (!re.test(name)) continue;
+    const r = resolveRatio(ratio, sex);
+    return r === null ? null : { ratio: r, quality: q };
+  }
   return null;
 }
 
@@ -1251,20 +1568,20 @@ export function contributionsFor(exercise, opts) {
     // is priced here too — see bodyWeightOn() in e1rm.js.
     const bwQuality = Number(opts && opts.bodyWeightQuality);
     const scale = bwSpec.quality * (Number.isFinite(bwQuality) && bwQuality > 0 ? Math.min(1, bwQuality) : 1);
-    return buildContributions(exercise, scale);
+    return buildContributions(exercise, scale, opts && opts.sex);
   }
 
   // Anything bodyweight or assisted WITHOUT a published fraction is refused
   // exactly as before. Equipment is never used to guess one.
   if (exercise.equipment === 'Bodyweight' || /^Assisted /.test(exercise.name)) return [];
   if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return [];
-  return buildContributions(exercise, 1);
+  return buildContributions(exercise, 1, opts && opts.sex);
 }
 
 // `qualityScale` discounts every contribution this exercise makes — 1 for an
 // ordinary weighted lift, less for a bodyweight one whose fraction or whose
 // body weight is imperfectly known.
-function buildContributions(exercise, qualityScale) {
+function buildContributions(exercise, qualityScale, sex) {
   // 🚨 THE REFUSAL, AND IT IS AT THE TOP FOR A REASON. Putting it on the muscle
   // branch alone would leave `keyLiftMuscle(exercise.name)` below still matching
   // a custom exercise somebody happened to name "Barbell Bench Press" — and that
@@ -1290,19 +1607,26 @@ function buildContributions(exercise, qualityScale) {
   if (owns) add(owns, 1.00, 1.00, 'direct');
 
   // 2. The muscle the library files it under.
-  const rule = matchRule(exercise.muscle, exercise.name);
+  const rule = matchRule(exercise.muscle, exercise.name, sex);
   if (rule) add(exercise.muscle, rule.ratio, rule.quality, 'direct');
 
   // 3. Everything this lift can stand in for. Chained off the DIRECT reading it
   //    already produced, so the conversion is (this exercise → its own key
   //    lift → the other muscle's key lift).
-  const direct = out.filter((c) => c.kind === 'direct' && c.quality >= FALLBACK_MIN_QUALITY);
+  // ⚠️ STRICTLY GREATER SINCE 2026-09-13, and the one entry it moves is the
+  // deadlift. Its Back quality is exactly 0.45, so `>=` let a pull stand in for
+  // biceps, traps and forearms — a deadlift-only lifter read 75th on curls they
+  // had never done. The pull-up's comment claims its own 0.45 "lands just under"
+  // the floor, and it only does because the body-weight fraction multiplies it
+  // to 0.4275; the deadlift had nothing to bring it under. The floor is a
+  // threshold to CLEAR, not to touch.
+  const direct = out.filter((c) => c.kind === 'direct' && c.quality > FALLBACK_MIN_QUALITY);
   for (const [target, sources] of Object.entries(FALLBACK)) {
     if (seen.has(target)) continue;
     for (const src of sources) {
       const base = direct.find((c) => c.muscle === src.from);
       if (!base) continue;
-      const cross = crossMuscleRatio(src.from, target);
+      const cross = crossMuscleRatio(src.from, target, sex);
       if (!cross) continue;
       // MULTIPLY, and the direction matters. `ratio` is always "this exercise's
       // load as a fraction of the TARGET muscle's key lift", so standing in for
@@ -1378,6 +1702,18 @@ const BENCHMARK_BONUS = 1.25;
 // different days, so the error in that one ratio was never cancelled by
 // anything; it was averaged with itself. See rateMuscle().
 const TOP_N = 3;
+
+// How far back a representative may come from before the seat widens. 84 days
+// is `strength-estimate.js`'s own window, and 180 its first widening — the two
+// numbers were fitted there against lag and flap rate, so reusing them keeps
+// one answer to "how old is too old" rather than inventing a second.
+const WINDOW_DAYS = 84;
+const WIDEN_DAYS = 180;
+
+// A set at or below this many reps is preferred for the seat, because the curve
+// extrapolates least from it. Not a gate: 8 is where docs/research.md §16.2 puts
+// the knee (SEE ~4 % at 5 reps, ~8-10 % at 10), and D5 still refuses 16+.
+const LOW_REP_PREFERENCE = 8;
 
 function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
 
@@ -1527,13 +1863,31 @@ export function rateMuscle(observations, muscle = null) {
   const pool = direct.length ? direct : admissible;
   const kind = direct.length ? 'direct' : 'fallback';
 
-  // One value per exercise per day: the best set. Every other set that day is
-  // a warm-up, a back-off or a repeat, and none of them raise the ceiling.
+  /* One value per exercise per day. Every other set that day is a warm-up, a
+   * back-off or a repeat.
+   *
+   * ⚠️ IT USED TO KEEP THE BIGGEST ESTIMATE AND THAT WAS THE SAME CREDIBILITY
+   * INVERSION AS THE SEAT BELOW, ONE LEVEL FURTHER DOWN — and it fired first,
+   * so it decided the answer before anything else could. A bench day holding a
+   * 215x3 benchmark and a 185x12 back-off set kept the BACK-OFF SET, because
+   * twelve reps extrapolate to a bigger number than three; the benchmark was
+   * discarded here and never reached the seat rule at all. That is what told a
+   * lifter their tested 215 was "at or above" a max inferred from their
+   * back-off set.
+   *
+   * The day's representative is now its most CREDIBLE set — a deliberate test
+   * over a working set, a heavy triple over a long set — with the same total
+   * ordering as the seat below, so this cannot depend on walk order either.
+   * `betterSameDay` is the seat comparison without the estimate tie-break's
+   * precedence: within one day, credibility first, then the bigger showing. */
+  const betterSameDay = (o, prev) => (o.quality * repFactor(o.reps) - prev.quality * repFactor(prev.reps))
+    || (o.estimate - prev.estimate)
+    || String(prev.exerciseName || '').localeCompare(String(o.exerciseName || ''));
   const perDay = new Map();
   for (const o of pool) {
     const key = o.exerciseId + '|' + o.date;
     const prev = perDay.get(key);
-    if (!prev || o.estimate > prev.estimate) perDay.set(key, o);
+    if (!prev || betterSameDay(o, prev) > 0) perDay.set(key, o);
   }
 
   const scored = [...perDay.values()].map((o) => ({
@@ -1561,14 +1915,93 @@ export function rateMuscle(observations, muscle = null) {
   })).filter((o) => o.evidenceWeight > 0);
   if (!scored.length) return null;
 
-  // ── One representative per EXERCISE ──────────────────────────────────────
-  // Its best showing: within a single exercise, the heaviest honest set is the
-  // thing worth knowing, and that has always been the intent. What is new is
-  // that an exercise now gets ONE seat rather than as many as it has days.
+  /* ── One representative per EXERCISE ──────────────────────────────────────
+   *
+   * An exercise gets ONE seat. Three things decide which of its sets takes it,
+   * and all three changed on 2026-09-13 (plan §3.1, §3.4, §3.8).
+   *
+   * 1. ⚠️ A WINDOW, BECAUSE THE NUMBER COULD NEVER FALL. The seat used to go to
+   *    the best set EVER. Recency discounted the seat's weight but never its
+   *    value, so twenty weeks at 300x3 followed by twenty at 250x5 still read
+   *    300 — and a year of nothing read the same number at slightly lower
+   *    confidence. The seat now comes from the last WINDOW_DAYS; with nothing
+   *    in that window it widens to WIDEN_DAYS, and only then to all of history,
+   *    so a lifter who has genuinely not trained the lift keeps their record
+   *    rather than losing the muscle. Measured on the demo year: nothing moves,
+   *    because a training account always has something recent. What it fixes is
+   *    the account that has drifted — and the stale-seat case, where a
+   *    300-day-old bench benchmark out-ranked a fresh 260x5 that was never even
+   *    a candidate.
+   *
+   *    🛑 THIS IS HALF OF DECISION (a). The other half — `estimateAt()`'s
+   *    2 %/week fall limit, so the number declines smoothly rather than stepping
+   *    when a set ages out of the window — is NOT wired. `strength-estimate.js`
+   *    holds it, fitted and tested, and `docs/strength-accuracy-plan.md` §3.1
+   *    is the entry that stays open until it is.
+   *
+   * 2. ⚠️ HEAVY SETS FIRST, NOT LONG ONES (decision i). Where an exercise has
+   *    any set at LOW_REP_PREFERENCE reps or fewer inside the chosen window,
+   *    only those compete for the seat. The curve extrapolates furthest from a
+   *    long set and its error roughly doubles from 5 reps to 10 to 20, so a
+   *    12-rep set taking the seat over a 5-rep set of the same exercise is the
+   *    model choosing its own worst evidence. It is a PREFERENCE and not a gate:
+   *    with nothing under the threshold, the long sets compete as before.
+   *
+   * 3. ⚠️ THE MOST CREDIBLE SET, NOT THE BIGGEST (decision d). Within whatever
+   *    survives 1 and 2, the seat goes to the highest evidence weight. It used
+   *    to go to the largest ESTIMATE, which is the same credibility inversion
+   *    the candidate sort below was written to fix — left in place one level
+   *    down, where it chose which of an exercise's own sets got to speak. On a
+   *    bench with a 215x3 benchmark and a 185x12 back-off set, the back-off set
+   *    held the seat, so the runner told a lifter that 215 was above their max.
+   *
+   * ⚠️ AND THE TIE-BREAK IS TOTAL, WHICH IT WAS NOT. `>` alone kept whichever
+   * row the walk happened to reach first, so the same history read Fair with a
+   * year-old leader walked oldest-first and High with today's leader walked
+   * newest-first. The store walks newest-first and hid it; the demo generator,
+   * the golden test and a friend's published rows walk the other way. Every
+   * comparison below falls through to the date and then to the id, so the
+   * answer cannot depend on the order rows arrive in. */
+  const newest = scored.reduce((a, o) => (o.ageDays < a ? o.ageDays : a), Infinity);
+  const windowCut = newest + WINDOW_DAYS <= WIDEN_DAYS ? WINDOW_DAYS : WIDEN_DAYS;
+
+  /* ⚠️ THE SEAT COMPARISON DROPS THE BENCHMARK BONUS, AND THAT IS DELIBERATE.
+   * `evidenceWeight` carries it because a deliberate test IS worth more when
+   * several readings are averaged. But choosing which of one exercise's own
+   * sets speaks is a different question — it is "what is the best showing of
+   * this lift?" — and there the bonus does harm: a 245 lb benchmark from six
+   * weeks ago would out-rank a 275 x 2 done since, which is precisely the
+   * evidence that the lifter has moved on. The bonus is worth 1.25 and a
+   * 30 lb PR is worth more than that.
+   *
+   * What still separates a test from a back-off set is `repFactor`, which is
+   * the term that actually describes how far the curve is extrapolating: a
+   * 215 x 3 benchmark scores 1.00 against a 185 x 12's 0.45 and takes the seat
+   * on its own merits. Recency is kept, so a stale reading loses to a current
+   * one of equal quality. */
+  const seatCredit = (o) => o.quality * repFactor(o.reps) * recencyWeight(o.ageDays) * fatigueOf(o);
+  const better = (o, prev) => (seatCredit(o) - seatCredit(prev))
+    || (o.estimate - prev.estimate)
+    || (prev.ageDays - o.ageDays)
+    || String(prev.date || '').localeCompare(String(o.date || ''));
+
   const perExercise = new Map();
   for (const o of scored) {
-    const prev = perExercise.get(o.exerciseId);
-    if (!prev || o.estimate > prev.estimate) perExercise.set(o.exerciseId, o);
+    const key = o.exerciseId;
+    const bucket = perExercise.get(key);
+    if (!bucket) { perExercise.set(key, { inWindow: [], all: [] }); }
+    const b = perExercise.get(key);
+    b.all.push(o);
+    if (o.ageDays <= windowCut) b.inWindow.push(o);
+  }
+  const representatives = [];
+  for (const b of perExercise.values()) {
+    const pool = b.inWindow.length ? b.inWindow : b.all;
+    const low = pool.filter((o) => o.reps <= LOW_REP_PREFERENCE);
+    const field = low.length ? low : pool;
+    let best = null;
+    for (const o of field) if (!best || better(o, best) > 0) best = o;
+    if (best) representatives.push(best);
   }
 
   // ── ⚠️ RANKED BY CREDIBILITY, NOT BY SIZE ────────────────────────────────
@@ -1596,8 +2029,16 @@ export function rateMuscle(observations, muscle = null) {
   // Ties break on the larger estimate, so between two equally credible readings
   // the better showing still wins — the upper-estimator character is kept where
   // it belongs, WITHIN a level of credibility rather than across it.
-  const candidates = [...perExercise.values()]
-    .sort((a, b) => (b.evidenceWeight - a.evidenceWeight) || (b.estimate - a.estimate));
+  // ⚠️ ACROSS exercises the full evidence weight decides, benchmark bonus and
+  // all — that is the 2026-08-19 credibility sort and it is unchanged. Only the
+  // WITHIN-exercise seat above drops the bonus, for the reason written there.
+  // The tie-break falls through to the date and then the id so that this, too,
+  // cannot depend on the order the rows arrived in.
+  const candidates = representatives.sort((a, b) =>
+    (b.evidenceWeight - a.evidenceWeight)
+    || (b.estimate - a.estimate)
+    || (a.ageDays - b.ageDays)
+    || String(a.exerciseId || '').localeCompare(String(b.exerciseId || '')));
 
   const used = candidates.slice(0, TOP_N);
 

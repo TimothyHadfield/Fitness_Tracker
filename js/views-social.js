@@ -1316,7 +1316,7 @@ export async function CompareBodiesView(param) {
           s.missing
             ? el('div', { class: 'card' }, el('div', { class: 'field-help', text:
                 `${s.name} has not published a map for that comparison.` }))
-            : muscles.musclePanel(s.muscles.get(selected), selected,
+            : muscles.musclePanel(publishedRating(s.muscles, s.strength, selected), selected,
                 { compare, gender: null, whose: 'their' }, null, more),
         ))
       : [];
@@ -1690,7 +1690,7 @@ function fmtDuration(mins) {
 async function friendRecords(a, acts, exMap) {
   if (!a.entries || !a.entries.length) return null;
   const { personalBests, PB_LABEL } = await import('./personal-bests.js');
-  const { withUnit } = await import('./units.js');
+  const { withUnit, withUnitRounded } = await import('./units.js');
 
   // `personalBests` reads the store's own key names; the projection renames
   // exerciseName to name. Translate rather than teaching the pure module about
@@ -1718,8 +1718,10 @@ async function friendRecords(a, acts, exMap) {
         + `, up from ${withUnit(p.was)}`;
     }
     if (p.kind === 'e1rm') {
-      return `${withUnit(Math.round(p.now))} from ${withUnit(p.weight)} × ${p.reps}`
-        + `, up from ${withUnit(Math.round(p.was))}`;
+      // The two maxes are estimates and round in the reader's unit; the set
+      // between them was lifted and prints as recorded (plan §2.7).
+      return `${withUnitRounded(p.now)} from ${withUnit(p.weight)} × ${p.reps}`
+        + `, up from ${withUnitRounded(p.was)}`;
     }
     return `${withUnit(p.now)}, up from ${withUnit(p.was)}`;
   };
@@ -2069,11 +2071,11 @@ async function compareSheet(entry, exMap, ctx) {
           el('div', { class: 'cmp-pair' },
             el('span', { class: 'cmp-num' + (m.mineConverted ? ' is-converted' : '') },
               el('b', { text: 'You ' }),
-              m.mine == null ? '—' : `${trimNumber(m.mine)}${m.unit ? ` ${m.unit}` : ''}`,
+              cmpValue(m, m.mine),
               m.mineConverted ? el('span', { class: 'cmp-mark', text: 'converted' }) : null),
             el('span', { class: 'cmp-num' + (m.theirsConverted ? ' is-converted' : '') },
               el('b', { text: `${ctx.who} ` }),
-              m.theirs == null ? '—' : `${trimNumber(m.theirs)}${m.unit ? ` ${m.unit}` : ''}`,
+              cmpValue(m, m.theirs),
               m.theirsConverted ? el('span', { class: 'cmp-mark', text: 'converted' }) : null),
           ),
           m.note ? el('div', { class: 'note ws-fine', text: m.note }) : null,
@@ -2107,6 +2109,30 @@ function trimNumber(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return '—';
   return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+/**
+ * One number on the compare sheet, in the reader's unit.
+ *
+ * 🚨 THE SHEET PRINTED POUNDS LABELLED "lb" TO KILOGRAM USERS UNTIL 2026-09-13
+ * (docs/strength-accuracy-plan.md §2.7). `compare.js` hard-coded the suffix and
+ * this screen printed it verbatim, so a kg user read "185 lb" here beside numbers
+ * every other screen shows them in kg. The module now says only what KIND of
+ * number a row holds — 'weight' is stored pounds, 'reps' and 'sets' are counts
+ * — and this is where the conversion happens, through units.js like every
+ * other weight in this file (see the import note at the top).
+ *
+ * ⚠️ AN ESTIMATE IS ROUNDED IN THE DISPLAY UNIT; A MEASUREMENT KEEPS ITS
+ * DECIMALS. The 1RM row is an inference with no decimals worth keeping, so it
+ * goes through `withUnitRounded` — round where it is read, not in pounds and
+ * then converted (210.59 lb is 95.5 kg, not "95.7 kg"). The heaviest-set row is
+ * a number somebody put on a bar, and `withUnit` prints it as this app prints
+ * any recorded weight.
+ */
+function cmpValue(m, v) {
+  if (v == null) return '—';
+  if (m.unit === 'weight') return m.estimate ? units.withUnitRounded(v) : units.withUnit(v);
+  return `${trimNumber(v)}${m.unit ? ` ${m.unit}` : ''}`;
 }
 
 // One workout. A row with nothing inside it — an activity, or a session that
@@ -2250,6 +2276,31 @@ function entryLine(entry, exMap) {
  * same message. It lives on this map and on your own, and it is the same screen
  * either way (`#/compare/...`).
  */
+/**
+ * One published rating, with the muscle's OWN caveat on it.
+ *
+ * 🚨 CORE'S CAVEAT WAS LOST ON PUBLISH UNTIL 2026-09-13 (docs/strength-accuracy-
+ * plan.md §2.7). store.js said the sentence travels with the number; the
+ * projection never copied it and `ratingsFromShared()` never set it, so a
+ * friend's Core read as ranked with nothing saying its standards are thinner
+ * than every other muscle's (docs/research.md §14). The publisher now copies
+ * `caveat` onto each muscle row.
+ *
+ * ⚠️ THIS IS A BRIDGE, NOT A SECOND TRANSLATION. `shared-map.js` is the one
+ * place a published map is turned into the panel's shape, and the rating it
+ * hands back is used as-is whenever it already carries `caveat`. Only when it
+ * does not is the sentence read straight off the published row — the same
+ * field, the same string, the same panel line — so a document published with
+ * the caveat can never render without it whichever of the two modules ships
+ * first. Delete the fallback once `ratingsFromShared()` passes `caveat`.
+ */
+function publishedRating(rated, strength, muscle) {
+  const m = rated && rated.get ? rated.get(muscle) : null;
+  if (!m || typeof m.caveat === 'string') return m;
+  const row = ((strength && strength.muscles) || []).find((x) => x && x.muscle === muscle);
+  return row && typeof row.caveat === 'string' && row.caveat ? { ...m, caveat: row.caveat } : m;
+}
+
 async function friendBody(strength, who) {
   const [
     { bodySvg, setSelected, BODY_ASPECT },
@@ -2312,7 +2363,7 @@ async function friendBody(strength, who) {
               `${who.name} has not published a map for that comparison. Their app publishes one when `
               + 'they next open it — try "Like them", which every version publishes.' }))
         : selected
-          ? muscles.musclePanel(rated.get(selected), selected,
+          ? muscles.musclePanel(publishedRating(rated, strength, selected), selected,
               { compare, ...asThem }, null, more)
           : el('div', { class: 'card' },
               el('div', { class: 'field-help', text: 'Tap a muscle for their numbers.' }),

@@ -52,10 +52,11 @@
    🚨 `source` SAYS WHICH, AND THE SCREEN MUST PRINT IT (Rule 5).
 
      'recorded'   The lift's OWN best set through the app's own rep curve —
-                  the `estimatedMax` that `bestLifts()` already computes, in
-                  total load. This is what "your best lifts" means: the number
-                  rests on sets of THIS exercise that really happened, and
-                  `best` carries the set so it can be checked.
+                  the `estimatedMax` that `bestLifts()` already computes
+                  (`set-e1rm.js`: per hand then doubled, body included, assist
+                  inverted), in total load. This is what "your best lifts"
+                  means: the number rests on sets of THIS exercise that really
+                  happened, and `best` carries THAT SET so it can be checked.
 
      'converted'  Nothing rankable of this lift on record, so the number is the
                   muscle's rating multiplied back out through the ratio table
@@ -78,6 +79,37 @@
    against a fat-finger typo (§9: the winsoriser does not catch a ×10 either).
    What holds the line is Rule 5 done properly: `best` carries the weight, the
    reps and the day, and `days` says how much history stands behind it.
+
+   🔄 2026-09-13 — `best` IS THE SET THAT PRODUCED THE NUMBER (plan §2.6). Until
+   today `best` was the HEAVIEST set while `oneRM` came off the best-ESTIMATE
+   set, and the screen printed "265 lbs · Proficient" over "215 × 3" when the
+   265 belonged to a hidden 185 × 12 (e1rm(215, 3) is 236). `sameSet: false`
+   existed for exactly this and was ignored. Now the anchor is `estimatedMax`'s
+   own set — the number and its set agree — and the heaviest set survives as
+   `heaviest` for a screen that wants both. The other reading (print the
+   heaviest set and ITS e1RM) was rejected because it would silently change
+   which number "your best lift" is: `bestLifts()` chooses the best estimate,
+   and this file's argument above is that a recorded lift shows the set it
+   rests on, not the set that looks best.
+
+   🔄 2026-09-13 — BODY-WEIGHT LIFTS TAKE THE RECORDED BRANCH TOO. `bestLifts()`
+   now prices a pull-up with the lifter's body at the weigh-in of the set's
+   day, so `estimatedMax` for one is a real max of the movement and
+   `bodyIncluded` tells the screen so. They were diverted to the converted
+   branch only because the old estimate was e1rm(the plate on the belt).
+
+   🔄 2026-09-13 — `ageDays` (plan §2.7 / the audit's D14). This list never
+   decays — a best is a best — where the muscle map's weight halves every 120
+   days. The honest version of that difference is information: every recorded
+   row says how old its set is, and past `STALE_SET_DAYS` the screen prints it.
+
+   🔄 2026-09-13 — THE DUMBBELL CONVENTION (plan §2.8, Tim's §4.e): per hand
+   into the curve, then doubled. ~~This file argued for the total — "the curve
+   has to see the load the body saw"~~ — struck: Marzagão was fitted with
+   dumbbells logged PER HAND (research.md §1.3), and the ratio table was derived
+   from Strength Level's per-dumbbell tables doubled, so the per-hand number is
+   the one the coefficients and the ratios both mean. `setE1rm()` owns it;
+   nothing here calls `e1rm()` any more.
 
    ── THE LEVEL, FOR A LIFT THAT IS NOT A KEY LIFT ────────────────────────────
 
@@ -137,12 +169,32 @@
 
 import { bestLifts } from './profile-records.js';
 import { estimateOneRM } from './exercise-estimate.js';
-import { e1rm } from './e1rm.js';
 import { contributionsFor, confidenceBand, repFactor } from './muscle-evidence.js';
 import {
   MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, withAssumptions,
 } from './strength-standards.js';
 import { bodyWeightFractionFor } from './exercises.js';
+
+/**
+ * Past this many days a recorded row's set is old enough that the screen says
+ * so. It is the muscle map's WEIGHT half-life (`WEIGHT_HALF_LIFE_DAYS` in
+ * muscle-evidence.js, 120): the day the map would be trusting that set at half
+ * strength is the day this list — which never discounts — owes the reader a
+ * date.
+ */
+export const STALE_SET_DAYS = 120;
+
+function dayNumber(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  return m ? Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000 : null;
+}
+
+/** Whole days from `date` to `today`; null when either is not a calendar day. */
+function ageDaysOf(date, today) {
+  const a = dayNumber(date), b = dayNumber(today);
+  if (a === null || b === null) return null;
+  return Math.max(0, Math.round(b - a));
+}
 
 /**
  * The muscles whose key lifts summarise whole-body strength — see the header
@@ -168,40 +220,38 @@ export const CORE_LIFTS = CORE_MUSCLES.map((muscle) => ({ muscle, name: MUSCLE_L
  * by the same rule `estimateOneRM()` picks its conversion. Null when the
  * library has no published way to convert this lift.
  *
- * ⚠️ NO `bodyWeight` IS PASSED, deliberately: this is only ever asked of a lift
- * whose own e1RM is a plain external load (bodyweight movements take the
- * converted branch instead, see `rowFor`), and a body-weight-fraction lift
- * asked without a weigh-in returns [] here, which is the refusal wanted.
+ * @param {object} opts  { sex, bodyWeight, bodyWeightQuality }
+ *   `sex` — the ratios are sex-specific (plan §3.6): a woman's pull-up is a
+ *   different fraction of her row than a man's is of his. It is the sex the
+ *   PERCENTILE is computed against (`withAssumptions()`'s overlay), so the two
+ *   hops of one row read one population; when it was assumed, `assumed` says.
+ *   `bodyWeight` — for a body-weight lift, the weigh-in the SET was priced at
+ *   (`estimatedMax.bodyWeight`), so `contributionsFor()` admits it and prices
+ *   the fraction and the weigh-in into `quality`. A plain lift ignores it.
  */
-function ratioFor(exercise) {
-  const best = contributionsFor(exercise)
+function ratioFor(exercise, opts) {
+  const o = {};
+  if (opts && opts.sex) o.sex = opts.sex;
+  if (opts && Number(opts.bodyWeight) > 0) {
+    o.bodyWeight = Number(opts.bodyWeight);
+    if (Number(opts.bodyWeightQuality) > 0) o.bodyWeightQuality = Number(opts.bodyWeightQuality);
+  }
+  const best = contributionsFor(exercise, Object.keys(o).length ? o : undefined)
     .filter((c) => c.kind === 'direct' && c.ratio > 0 && c.quality > 0)
     .sort((a, b) => b.quality - a.quality)[0];
   return best || null;
 }
 
 /**
- * A recorded best as a 1RM in TOTAL load.
- *
- * 🚨 NOT `estimatedMax.value × 2` FOR A PER-SIDE LIFT, and the difference is
- * real rather than cosmetic. `bestLifts()` scores the number in the box — 50
- * for a 50/side dumbbell — because that is the figure the lifter recognises.
- * But the rep curve's k-factor grows with the LOG OF THE WEIGHT (`kFactor` in
- * e1rm.js), so e1rm(50 × 6) doubled is 133 while e1rm(100 × 6) is 126: the
- * curve has to see the load the body saw. That is the order the rating
- * pipeline uses (`setLoad()` then `e1rm()` in strength-observations.js), and
- * ranking through a ratio measured on total load needs the same order here.
- *
- * ⚠️ The SET is the one `bestLifts()` chose by per-side e1RM. Scoring on total
- * load favours the heavier, lower-rep set slightly more, so on a near tie a
- * different set could have won by a fraction of a percent — under the grain
- * either number is printed at, and never a level. Re-walking every set to
- * find out would be a second copy of what a maximum is.
+ * The measured set a recorded row rests on — `estimatedMax`'s own set, which
+ * is the set that PRODUCED the number (plan §2.6). Measured, so `estimated` is
+ * false; `weight` is null for a body-weight rep with nothing added.
  */
-function totalOneRM(own, perSide) {
-  if (!perSide) return own.value;
-  const v = e1rm(own.weight * 2, own.reps);
-  return v === null ? own.value * 2 : v;
+function anchorOf(own) {
+  return {
+    weight: own.weight, reps: own.reps, date: own.date, source: own.source,
+    assisted: Boolean(own.assisted), estimated: false,
+  };
 }
 
 /**
@@ -210,15 +260,17 @@ function totalOneRM(own, perSide) {
  * @param {object|null} exercise  library entry, or null when the history names
  *   an exercise the library cannot resolve (an import, a deleted custom one)
  * @param {object|null} rec       the `bestLifts()` entry for it, if trained
- * @param {Map}    muscles        muscle -> rating, from `muscleRatings()`
- * @param {object} ranked         the profile AFTER `withAssumptions()`
- * @param {number} bodyWeight     latest weigh-in, for bodyweight lifts
+ * @param {object} ctx            { muscles (muscle -> rating), ranked (the
+ *   profile AFTER `withAssumptions()`), bodyWeight (latest weigh-in, for the
+ *   converted branch), sex, today }
  * @param {string|null} muscle    the core muscle this row stands for, or null
  */
-function rowFor(exercise, rec, muscles, ranked, bodyWeight, muscle) {
+function rowFor(exercise, rec, ctx, muscle) {
+  const { muscles, ranked, bodyWeight, sex, today } = ctx;
   const name = (rec && rec.name) || (exercise && exercise.name) || 'Exercise';
-  const perSide = Boolean(exercise && exercise.loadType === 'per_side');
-  const bodyIncluded = Boolean(exercise && bodyWeightFractionFor(exercise));
+  const own = rec && rec.estimatedMax;
+  const perSide = own ? Boolean(own.perSide) : Boolean(exercise && exercise.loadType === 'per_side');
+  const bodyIncluded = own ? Boolean(own.bodyIncluded) : Boolean(exercise && bodyWeightFractionFor(exercise));
 
   const row = {
     exerciseId: (rec && rec.exerciseId) || (exercise && exercise.id) || null,
@@ -231,13 +283,18 @@ function rowFor(exercise, rec, muscles, ranked, bodyWeight, muscle) {
     shown: null,
     perSide,
     bodyIncluded,
+    assisted: Boolean(own && own.assisted),
     confidence: null,
     band: null,
     percentile: null,
     level: null,
     days: rec ? rec.days : 0,
     lastDate: rec ? rec.lastDate : null,
-    best: rec ? rec.best : null,
+    // `best` is the set the NUMBER came off (see the header, §2.6); `heaviest`
+    // is the heaviest set ever held, which may be a different afternoon.
+    best: own ? anchorOf(own) : null,
+    heaviest: rec ? rec.best : null,
+    ageDays: own ? ageDaysOf(own.date, today) : null,
     source: null,
     from: [],
     ratio: null,
@@ -248,33 +305,33 @@ function rowFor(exercise, rec, muscles, ranked, bodyWeight, muscle) {
 
   /* ── RECORDED: the lift's own best set, through the app's own curve ──────
    *
-   * ⚠️ NOT for a body-weight movement, even one logged with added load.
-   * `bestLifts()` measures the number in the box, and on a pull-up the box
-   * holds what was ADDED — e1rm(25 × 5) is not a pull-up max and dividing it
-   * by a ratio measured on total resistance would rank somebody's back off
-   * the plate on their belt. Those go through the converted branch, which
-   * `contributionsFor()` prices with the body-weight fraction and the
-   * weigh-in, and `bodyIncluded` tells the screen the pounds include a body. */
-  const own = rec && rec.estimatedMax;
-  if (exercise && own && !bodyIncluded) {
-    const total = totalOneRM(own, perSide);
-    const via = ratioFor(exercise);
-    row.oneRM = total;
-    row.shown = perSide ? total / 2 : total;
+   * `own.total` is the whole load's max (both dumbbells, body included) and
+   * `own.value` is the figure the lifter recognises (one hand's, for a
+   * per-side lift). A body-weight lift lands here too since 2026-09-13: its
+   * `estimatedMax` now has the body in it, at the weigh-in of the set's day,
+   * so the ratio — measured on total resistance — is applied to a total. */
+  if (own) {
+    row.oneRM = own.total;
+    row.shown = own.value;
     row.source = 'recorded';
     row.from = [name];
+    const via = exercise
+      ? ratioFor(exercise, { sex, bodyWeight: own.bodyWeight, bodyWeightQuality: own.bodyWeightQuality })
+      : null;
     if (via) {
       row.muscle = via.muscle;
       row.ratio = via.ratio;
       // ⚠️ Two doubts multiplied — see the header. A key lift at three reps is
-      // 1.00 × 1.00; a machine at twelve reps is 0.35 × 0.45.
+      // 1.00 × 1.00; a machine at twelve reps is 0.35 × 0.45. On a pull-up the
+      // ratio's quality already carries the fraction's and the weigh-in's.
       row.confidence = Math.max(0, Math.min(1, repFactor(own.reps) * via.quality));
-      row.percentile = percentileFor(total / via.ratio, via.muscle, ranked);
+      row.percentile = percentileFor(own.total / via.ratio, via.muscle, ranked);
       row.level = row.percentile === null ? null : levelFor(row.percentile);
       if (row.percentile === null) row.why = 'no-standard';
     } else {
       // A number with nothing to rank it against: the pounds are theirs and
       // the rep curve is the only inference, so that is the only doubt priced.
+      // (Also the NO-LIBRARY case — an import, a deleted custom exercise.)
       row.confidence = repFactor(own.reps);
       row.why = 'no-conversion';
     }
@@ -289,9 +346,10 @@ function rowFor(exercise, rec, muscles, ranked, bodyWeight, muscle) {
    * it. A core lift whose muscle has only a stand-in rating comes back with no
    * number and `why: 'stand-in-only'`, and the screen says so — three
    * estimates multiplied is the chain exercise-estimate.js refuses by default,
-   * and a headline list of eight is the last place to quietly reopen it. */
+   * and a headline list of eight is the last place to quietly reopen it.
+   * `sex` rides along for the ratio table's sake; the module may ignore it. */
   if (exercise) {
-    const est = estimateOneRM(exercise, muscles, bodyWeight);
+    const est = estimateOneRM(exercise, muscles, bodyWeight, sex ? { sex } : undefined);
     if (est) {
       row.oneRM = est.oneRM;
       row.shown = est.shown;
@@ -311,7 +369,7 @@ function rowFor(exercise, rec, muscles, ranked, bodyWeight, muscle) {
     // No estimate. Say which of the module's refusals it was, because "log
     // something for this muscle" and "this muscle is rated only by a stand-in"
     // are different sentences and only the first is a thing to act on.
-    const via = ratioFor(exercise);
+    const via = ratioFor(exercise, { sex, bodyWeight });
     const rating = via ? muscles.get(via.muscle) : null;
     row.muscle = via ? via.muscle : muscle;
     row.why = !via ? 'no-conversion'
@@ -321,19 +379,7 @@ function rowFor(exercise, rec, muscles, ranked, bodyWeight, muscle) {
     return row;
   }
 
-  /* ── NO LIBRARY ENTRY: the history names something the app cannot place ──
-   * An imported session's exercise, or a custom exercise since deleted. The
-   * pounds are still theirs, so a recorded e1RM is still shown; nothing can
-   * rank it. */
-  if (own) {
-    const total = totalOneRM(own, perSide);
-    row.oneRM = total;
-    row.shown = perSide ? total / 2 : total;
-    row.source = 'recorded';
-    row.from = [name];
-    row.confidence = repFactor(own.reps);
-    row.band = confidenceBand(row.confidence);
-  }
+  /* ── NO LIBRARY ENTRY AND NO ESTIMATE: nothing to show, nothing to rank ── */
   row.why = 'no-conversion';
   return row;
 }
@@ -357,8 +403,12 @@ function byRank(a, b) {
  * @param {Map}    input.exMap        exerciseId -> exercise, the whole library
  * @param {Map}    input.muscles      muscle -> rating, from `muscleRatings()`
  * @param {object} input.profile      as `store.getProfile()` returns it; the
- *   comparison group is `profile.compare`
+ *   comparison group is `profile.compare`, the sex `profile.gender`
  * @param {number} [input.bodyWeight] latest weigh-in; defaults to the profile's
+ * @param {Array}  [input.bodyWeights] the dated weigh-in series, so a pull-up's
+ *   own max includes the body at the weight of the set's day
+ * @param {string} [input.today]      'YYYY-MM-DD', for `ageDays`. No clock is
+ *   read here; without it no row has an age.
  * @returns {{
  *   core: Lift[], other: Lift[],
  *   repsOnly: Array<{ exerciseId, name, reps, days, lastDate }>,
@@ -367,10 +417,15 @@ function byRank(a, b) {
  *
  *   Lift = { exerciseId, name, muscle, estimated: true,
  *            oneRM (total lb | null), shown (per-side lb | null), perSide,
- *            bodyIncluded, confidence (0..1 | null), band (CONFIDENCE_BANDS
- *            entry | null), percentile (0.1..99.9 | null), level (LEVELS entry
- *            | null — null with a percentile means below Beginner), days,
- *            lastDate, best (the measured set from bestLifts(), or null),
+ *            bodyIncluded, assisted, confidence (0..1 | null), band
+ *            (CONFIDENCE_BANDS entry | null), percentile (0.1..99.9 | null),
+ *            level (LEVELS entry | null — null with a percentile means below
+ *            Beginner), days, lastDate,
+ *            best (the measured set the number was modelled FROM — weight,
+ *              reps, date, source, assisted, estimated: false — or null),
+ *            heaviest (bestLifts()'s measured headline: the heaviest set, or
+ *              the least help; may be a different day from `best`),
+ *            ageDays (days from `best.date` to `today`, or null),
  *            source: 'recorded' | 'converted' | null, from: string[],
  *            ratio, why: null | 'no-evidence' | 'stand-in-only' |
  *            'no-conversion' | 'no-standard' }
@@ -385,13 +440,19 @@ function byRank(a, b) {
  *   the raw profile, or the caption names a group the colours were not built
  *   from.
  */
-export function rankedLifts({ sessions, benchmarks, exMap, muscles, profile, bodyWeight } = {}) {
+export function rankedLifts({
+  sessions, benchmarks, exMap, muscles, profile, bodyWeight, bodyWeights, today,
+} = {}) {
   const map = exMap && typeof exMap.get === 'function' ? exMap : new Map();
   const ratings = muscles && typeof muscles.get === 'function' ? muscles : new Map();
   const ranked = withAssumptions(profile);
   const bw = Number(bodyWeight) > 0 ? Number(bodyWeight) : Number(ranked.bodyWeight) || 0;
+  // ⚠️ THE SEX THE PERCENTILE IS COMPUTED AGAINST, assumed or not — so the ratio
+  // hop and the percentile hop of one row read the same population, and when
+  // it was assumed the screen already says so from `assumed`.
+  const ctx = { muscles: ratings, ranked, bodyWeight: bw, sex: ranked.gender || null, today: today || null };
 
-  const recorded = bestLifts(sessions, { exMap: map, benchmarks, limit: 0 }).lifts;
+  const recorded = bestLifts(sessions, { exMap: map, benchmarks, limit: 0, bodyWeights }).lifts;
 
   // Resolve by id, then by NAME — an imported session carries a name and no id
   // (import-file.js), and a Squat imported from another app is still a squat.
@@ -420,12 +481,12 @@ export function rankedLifts({ sessions, benchmarks, exMap, muscles, profile, bod
     const key = keyLiftFor(muscle);
     const ex = key && key.id ? map.get(key.id) : null;
     if (ex) coreIds.add(ex.id);
-    return rowFor(ex, ex ? recById.get(ex.id) || null : null, ratings, ranked, bw, muscle);
+    return rowFor(ex, ex ? recById.get(ex.id) || null : null, ctx, muscle);
   });
 
   const other = others
     .filter(({ ex }) => !(ex && coreIds.has(ex.id)))
-    .map(({ rec, ex }) => rowFor(ex, rec, ratings, ranked, bw, null));
+    .map(({ rec, ex }) => rowFor(ex, rec, ctx, null));
 
   core.sort(byRank);
   other.sort(byRank);

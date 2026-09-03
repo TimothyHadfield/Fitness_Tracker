@@ -66,8 +66,26 @@ ok(bodyWeightOn(WEIGH_INS, '2025-08-01').basis === 'carried',
    'a weigh-in carried forward is labelled "carried"');
 ok(bodyWeightOn(WEIGH_INS, '2025-08-01').gapDays === 52,
    'and it reports how stale it is (52 days)');
-ok(bodyWeightOn(WEIGH_INS, '2025-08-01').quality === 1,
-   'a carried-forward weigh-in is worth full quality — it is what you weighed');
+/* ⚠️ CHANGED 2026-09-13: a carried-forward weigh-in DECAYS with the gap.
+ *
+ * It used to be worth full quality at any distance, on the reasoning that it is
+ * what you weighed — true on the day it was taken, and less true every week
+ * after. Somebody who logs one weigh-in and then trains pull-ups for two years
+ * was scored at that weight with the same confidence as somebody who stood on
+ * the scales this morning. `docs/handbook.md` §9 recorded the hole and said the
+ * forward direction was "not priced at all"; it is priced now, on the same
+ * judged scale as the backward one it sits beside:
+ *
+ *     quality = max(EXTRAPOLATED_BW_QUALITY, 1 − gapDays / BW_STALE_DAYS)
+ *
+ * At 52 days that is 0.93. It can only ever WITHHOLD confidence, never add it,
+ * which is what makes a judged constant tolerable here. */
+ok(near(bodyWeightOn(WEIGH_INS, '2025-08-01').quality, 1 - 52 / 730, 1e-9),
+   'a carried-forward weigh-in decays with the gap — 52 days is worth 0.93, not 1.00');
+ok(bodyWeightOn(WEIGH_INS, '2025-06-10').quality === 1,
+   'and a weigh-in on the day of the set is still worth exactly 1');
+ok(bodyWeightOn(WEIGH_INS, '2030-01-01').quality === EXTRAPOLATED_BW_QUALITY,
+   'while a very stale one bottoms out at the same floor a backward-carried one gets, never below');
 
 // ⚠️ THE WHOLE POINT OF THE DATE RULE. Somebody who has lost 20 lb must not
 // have last year's pull-ups re-scored at today's weight: that would rewrite
@@ -377,8 +395,14 @@ const pullContribs = contributionsFor(pullUp, { bodyWeight: 180 });
 ok(pullContribs.length === 1 && pullContribs[0].muscle === 'Back',
    '⚠️ a pull-up now rates BACK — the gap this whole change exists to close');
 ok(pullContribs[0].kind === 'direct', 'and it is direct evidence, not a fallback');
-ok(near(pullContribs[0].ratio, 1.28),
-   'converted at 1.28 — Strength Level\'s median 180 lb male: (180+74) / 198');
+// ⚠️ A MALE/FEMALE PAIR SINCE 2026-09-13, so this asks for a sex. A woman's
+// pull-up is 1.64 of her barbell row where a man's is 1.28 — the biggest sex
+// split in the table, and one number for both was wrong for both.
+// `pullContribs` is built with no sex, so it carries the mean of the two.
+ok(near(contributionsFor(pullUp, { bodyWeight: 180, sex: 'male' })[0].ratio, 1.28),
+   'converted at 1.28 for a man — Strength Level\'s median 180 lb male: (180+74) / 198');
+ok(near(contributionsFor(pullUp, { bodyWeight: 140, sex: 'female' })[0].ratio, 1.64),
+   'and 1.64 for a woman, which is the same pull measured against her own row standard');
 
 // ⚠️ A ratio ABOVE 1 must DEFLATE the estimate. Getting this backwards is the
 // exact mistake that once gave a dumbbell row a 429 lb wrist curl.

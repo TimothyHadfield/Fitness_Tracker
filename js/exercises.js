@@ -3,6 +3,10 @@
 //   wr = weight + reps      r  = reps only        t  = time only
 //   dt = distance + time    wt = weight + time
 // Add to this list freely; ids are derived from the name so they stay stable.
+//
+// ⚠️ Adding a name is free; deciding how its WEIGHT is counted is not. The two
+// override sets further down (FORCE_PER_SIDE, FORCE_TOTAL) are half of every
+// strength ratio in muscle-evidence.js — see the note above them, 2026-09-13.
 
 const FIELDS = {
   wr: ['weight', 'reps'],
@@ -71,9 +75,12 @@ const RAW = [
    *     log is HELP, and `assist: true` in BODY_WEIGHT_FRACTION inverts it, so
    *     more on the stack is a lighter set. Exactly the Assisted Pull-Up path.
    *   Machine Dip — seated, pushing a handle against a stack. The number is
-   *     resistance, and how much of it reaches the triceps depends on the
+   *     resistance. ~~How much of it reaches the triceps depends on the
    *     machine's leverage, which nobody has published. It gets NO ratio and
-   *     the muscle panel says why.
+   *     the muscle panel says why.~~ Strength Level has published a "Seated Dip
+   *     Machine" table since 2020 (found 2026-09-03, agent C's ratio audit), so
+   *     it converts now — see the Chest table in muscle-evidence.js, at the
+   *     machine-grade q every stack gets.
    */
   ['Assisted Dip', 'Chest', 'Machine', 'wr'],
   ['Machine Dip', 'Chest', 'Machine', 'wr'],
@@ -445,11 +452,32 @@ export function slugify(name) {
 // Held in one hand / loaded one side at a time, despite not being a dumbbell.
 // Cable flys and crossovers each pull from their own stack, so the displayed
 // number is per side.
+//
+// ⚠️ THE LOAD CONVENTION IS HALF OF EVERY RATIO (2026-09-13). Each entry in
+// muscle-evidence.js was derived on ONE reading of the number a user types —
+// per-side doubled, or the whole load — and a name in the wrong set here
+// silently doubles or halves the lift before the ratio ever sees it. Machine
+// Lateral Raise sat in this set from 2026-08-24 to 2026-09-13 while its ratio
+// was the two-dumbbell 0.53: one stack at 100 lb was doubled to 200 and read
+// as a 512 lb overhead press (docs/strength-accuracy-plan.md §2.3, agent C's
+// D1). Moving a name between these two sets is a RATIO change and must be made
+// in both files at once.
+//
+// ⚠️ Cable Kickback stays per side ON PURPOSE. The name is shared by the Glutes
+// and the Triceps exercise (this set is keyed by name), one limb works at a
+// time on both, and every other one-limb cable movement in the app is logged
+// the same way — so its glute ratio is derived on the DOUBLED convention
+// (0.63, SL's single-leg 110 × 2 over the deadlift) rather than the stack
+// number moved to total at 0.32. Same lift, same answer; one convention for
+// one-limb cable work everywhere.
 const FORCE_PER_SIDE = new Set([
   'Cable Fly', 'Low-to-High Cable Fly', 'High-to-Low Cable Fly', 'Bent-Over Cable Fly',
   'Cable Crossover',
   'Cable Rear Delt Fly', 'Cable Lateral Raise', 'Bayesian Cable Curl', 'Cable Kickback',
-  'Machine Lateral Raise', 'Single-Arm Lat Pulldown', 'Meadows Row', 'Landmine Press',
+  // ~~'Machine Lateral Raise',~~ moved to FORCE_TOTAL 2026-09-13 — one stack,
+  // one number; Strength Level's own table reads it that way (136 lb at the
+  // median, which no pair of arms raises per side).
+  'Single-Arm Lat Pulldown', 'Meadows Row', 'Landmine Press',
   'Cable Press Around', 'Cross-Body Cable Y-Raise', 'Cross-Body Cable Triceps Extension',
   'Kroc Row',
   'Suitcase Carry', 'Farmer Carry', 'Overhead Carry', 'Plate Pinch Hold',
@@ -467,6 +495,14 @@ const FORCE_TOTAL = new Set([
   // is 'Other' (total by default). A single-leg press was already here for this
   // reason: one carriage, one number.
   'B-Stance Hip Thrust',
+  // ⚠️ TWO MORE, 2026-09-13, both found by agent C's ratio audit (plan §2.3):
+  //   Machine Lateral Raise — one carriage, one stack; it was per side AND on
+  //     the dumbbell ratio, a 3.7× inflation on the number typed.
+  //   Overhead Dumbbell Extension — ONE bell held in BOTH hands, exactly the
+  //     Goblet Squat and Dumbbell Pullover case above. 'Dumbbell' equipment
+  //     made it per side by default, so 50 lb was doubled to 100 and read as a
+  //     358 lb close-grip bench. Strength Level's table is for one dumbbell.
+  'Machine Lateral Raise', 'Overhead Dumbbell Extension',
 ]);
 
 /* ------------------------------------------------------------------ *

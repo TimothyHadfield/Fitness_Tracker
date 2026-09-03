@@ -22,8 +22,9 @@
    it must never import store.js, which imports it.
    ========================================================================== */
 
-import { e1rm, isRankableSet, bodyWeightOn } from './e1rm.js';
-import { contributionsFor, setLoad, rankBlockedReason, fatigueFactor } from './muscle-evidence.js';
+import { isRankableSet, bodyWeightOn } from './e1rm.js';
+import { setE1rm } from './set-e1rm.js';
+import { contributionsFor, rankBlockedReason, fatigueFactor } from './muscle-evidence.js';
 import { MUSCLE_LIFTS } from './strength-standards.js';
 import { volumeContributions } from './volume-map.js';
 
@@ -36,11 +37,21 @@ import { volumeContributions } from './volume-map.js';
  * @param {Map}    input.exMap        exerciseId -> exercise
  * @param {Array}  input.bodyWeights  weigh-ins, for the bodyweight movements
  * @param {string} input.today        'YYYY-MM-DD' — never a clock, so this is deterministic
+ * @param {string} [input.sex]        'male' | 'female'; anything else means not known
  * @returns {{ byMuscle: Map<string, object[]>, blocked: Map<string, object> }}
  *   `byMuscle` is what rateMuscle() consumes; `blocked` is the work the rating
  *   had to throw away, per muscle, for the panel to own up to.
+ *
+ * ⚠️ `sex` ARRIVES HERE AND GOES STRAIGHT INTO THE CONVERSION (2026-09-13).
+ * Roughly a quarter of the RATIOS table is now a male/female pair, because for
+ * pulls, body-weight lifts and machines the two sexes genuinely differ by
+ * 20-40 % — a woman's pull-up is 1.64 of her barbell row where a man's is 1.28.
+ * Omitting it is not an error and never throws: `resolveRatio()` falls back to
+ * the mean of the pair, which is what the table did for everybody until today.
+ * It is, however, the wrong answer for both sexes, so every caller that knows
+ * the profile should pass it.
  */
-export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, today }) {
+export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, today, sex }) {
   // ⚠️ Contributions are per exercise AND PER BODY WEIGHT, not per exercise
   // alone. A pull-up done at 200 lb is a different load from the same pull-up at
   // 170, so caching on exerciseId only would score a whole training history at
@@ -48,12 +59,19 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
   // rounded to the pound because that is the resolution weigh-ins are entered at
   // and an unrounded float would defeat the cache entirely.
   const contribCache = new Map();
+  // ⚠️ The sex is NOT part of the cache key, and does not need to be: one call
+  // to buildObservations() is one person, so it is constant for the life of
+  // this map. Putting it in the key would be harmless and misleading — it would
+  // suggest two sexes can share a cache, which is the bug it looks like a guard
+  // against.
   const contribFor = (exerciseId, bw) => {
     const key = `${exerciseId}@${bw ? Math.round(bw.weight) + ':' + bw.quality : 'none'}`;
     if (contribCache.has(key)) return contribCache.get(key);
     const ex = exMap.get(exerciseId);
     const c = ex
-      ? contributionsFor(ex, bw ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality } : undefined)
+      ? contributionsFor(ex, bw
+        ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality, sex }
+        : { sex })
       : [];
     contribCache.set(key, c);
     return c;
@@ -116,14 +134,31 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
     }
 
     const ex = exMap.get(exerciseId);
-    // Ratios are in TOTAL load. A dumbbell row entered as 80 is 160 on the body,
-    // and comparing the 80 against a barbell row would make every dumbbell
-    // lifter look weak. setLoad() routes a bodyweight or assisted movement
-    // through the body-weight arithmetic and everything else straight through.
-    const load = setLoad(ex, weight, bw ? { bodyWeight: bw.weight } : undefined);
-    if (load === null) return;
-    const raw = e1rm(load, reps);
-    if (raw === null) return;
+    /* Ratios are in TOTAL load. A dumbbell row entered as 80 is 160 on the body,
+     * and comparing the 80 against a barbell row would make every dumbbell
+     * lifter look weak.
+     *
+     * ⚠️ SINCE 2026-09-13 THE CURVE IS APPLIED PER HAND AND THE RESULT DOUBLED,
+     * rather than the curve being applied to the doubled load. Both give a
+     * "total", and they are not the same total: k(w) grows with the log of the
+     * weight, so e1rm(160, 8) is 209 lb where 2 x e1rm(80, 8) is 220 — five
+     * percent, on every dumbbell lift in the app. Marzagão was fitted with
+     * dumbbells logged per hand and the ratio table was derived from Strength
+     * Level's per-dumbbell rows doubled, so per-hand is the convention both of
+     * this line's inputs already speak.
+     *
+     * 🚨 IT IS `setE1rm()` RATHER THAN THE ARITHMETIC WRITTEN OUT HERE, and
+     * that is the actual fix. The old two lines were correct and were also the
+     * seventh copy of "how does a set become a 1RM" in the codebase; four of
+     * the other six had the assist sign or the doubling wrong, which is how
+     * taking MORE help off an assisted pull-up came to be a personal best. One
+     * function, one convention, one place to be wrong. */
+    const scored = setE1rm(ex, weight, reps, bw
+      ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality }
+      : undefined);
+    if (!scored) return;
+    const load = scored.load;
+    const raw = scored.e1rm;
 
     for (const c of contributions) {
       if (!byMuscle.has(c.muscle)) byMuscle.set(c.muscle, []);

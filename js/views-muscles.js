@@ -8,7 +8,7 @@
 // "of people who lift" everywhere, and the general-population figure is a
 // separate, clearly-labelled line.
 
-import { store, social, muscleStrength, weeklyVolumeByMuscle } from './store.js';
+import { store, social, muscleStrength, weeklyVolumeByMuscle, todayISO } from './store.js';
 // `weightForPercentile` and `MUSCLE_LIFTS` left with the seven-row target table
 // on 2026-08-21 — nothing on this screen asks what a level is worth in pounds
 // any more, only what the next one costs, and `m.toNext` carries that.
@@ -21,6 +21,11 @@ import {
   setChildren, el, emptyState, trimNum, fmtDateShort, icon, openSheet, helpDot,
 } from './ui.js';
 import * as units from './units.js';
+// The direct/indirect mapping, imported for the freshness line and not
+// restated — see recentDirectWork(). volume-map.js is the one answer to "which
+// muscles did a set of this exercise land on".
+import { volumeContributions } from './volume-map.js';
+import { recordedSetCount } from './session-stats.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -140,14 +145,85 @@ function assumedNote(profile) {
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * FRESHNESS, IN WORDS — 2026-09-13, docs/strength-accuracy-plan.md §5.4
+ * ------------------------------------------------------------------ *
+ *
+ * A muscle trained yesterday tests a little low today. That is the one
+ * between-session finding the literature actually supports (docs/research.md
+ * §16.7: upper body back to full by 24–48 h, lower by 48–72 h), and it is
+ * carried here as a SENTENCE and nothing else. 🛑 NEVER A NUMBER, NEVER A
+ * BONUS. Between-person recovery variance swamps the average — 0 / 40 / 80 / 80 %
+ * of trained men recovered at 24 / 48 / 72 / 96 h in one study — so a discount
+ * would be arithmetic on a spread the app cannot see, and a bonus would be
+ * the Tier 3 inflation docs/fatigue-plan.md §4 forbids. Words beat arithmetic
+ * here; Tim's call, plan §4.m.
+ *
+ * ⚠️ "DIRECT" IS volume-map.js's WORD, NOT A NEW ONE. A bench press lands on
+ * the triceps indirectly and that half-set is real volume, but it is not the
+ * triceps being trained that day (same rule `weeklyFrequency()` draws), so only
+ * a direct contribution counts as having trained the muscle.
+ *
+ * ⚠️ COUNTED IN CALENDAR DAYS, because a session carries a date and not always
+ * a clock. "Yesterday" for the upper body, "yesterday or the day before" for
+ * the four lower-body groups, is the plan's 24 h / 48 h read the way a person
+ * reads it — and nothing finer would be honest about a session that logged
+ * only its day.
+ */
+const LOWER_BODY = new Set(['Quads', 'Hamstrings', 'Glutes', 'Calves']);
+const RECENT_DAYS = { upper: 1, lower: 2 };
+
+/** Whole days from `iso` to `today`; null for garbage. Noon, so DST cannot round a day away. */
+function daysBetween(iso, today) {
+  const a = new Date(String(iso) + 'T12:00:00');
+  const b = new Date(String(today) + 'T12:00:00');
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
+  return Math.round((b - a) / 86400000);
+}
+
+/**
+ * muscle → how many days ago it last had DIRECT sets, looking back only as far
+ * as the longest window this screen cares about. Pure over the rows it is
+ * handed; the pane reads the store and passes them in.
+ */
+export function recentDirectWork(sessions, exMap, today) {
+  const out = new Map();
+  const horizon = Math.max(RECENT_DAYS.upper, RECENT_DAYS.lower);
+  for (const s of sessions || []) {
+    const gap = daysBetween(s && s.date, today);
+    if (gap === null || gap < 0 || gap > horizon) continue;
+    for (const e of (s.entries || [])) {
+      if (!recordedSetCount(e)) continue;
+      const ex = exMap && exMap.get ? exMap.get(e.exerciseId) : null;
+      if (!ex) continue;
+      for (const c of volumeContributions(ex)) {
+        if (c.kind !== 'direct') continue;
+        const prev = out.get(c.muscle);
+        if (prev === undefined || gap < prev) out.set(c.muscle, gap);
+      }
+    }
+  }
+  return out;
+}
+
+/** The sentence, or null when this muscle was not trained inside its window. */
+function freshnessLine(muscle, daysAgo) {
+  if (!Number.isFinite(daysAgo)) return null;
+  const limit = LOWER_BODY.has(muscle) ? RECENT_DAYS.lower : RECENT_DAYS.upper;
+  if (daysAgo > limit) return null;
+  const when = daysAgo === 0 ? 'Trained today' : daysAgo === 1 ? 'Trained yesterday' : 'Trained two days ago';
+  return `${when} — a reading today usually comes in a little low.`;
+}
+
 export async function muscleGroupsPane(host, top) {
-  const [{ profile, muscles, blocked }, settings] = await Promise.all([
-    muscleStrength(), store.getSettings(),
+  const [{ profile, muscles, blocked }, settings, sessions, exMap] = await Promise.all([
+    muscleStrength(), store.getSettings(), store.getSessions(), store.getExerciseMap(),
   ]);
   // Sequenced, not parallel: which muscles are "trained but unranked" is defined
   // against what actually got ranked, so it cannot be computed until that is
   // known. Costs nothing — the sessions it walks are already in the read cache.
   const trained = await trainedButUnrankable(muscles);
+  const recent = recentDirectWork(sessions, exMap, todayISO());
   // ⚠️ OFF BY DEFAULT — Tim, 2026-08-25: *"showing the percentile is a little
   // harsh for some people."* The level is the answer; the percentile is the
   // working behind it, and the working is what stings. See SettingsView.
@@ -255,7 +331,8 @@ export async function muscleGroupsPane(host, top) {
       legend(more, trained.size > 0),
       selected
         ? detail(muscles.get(selected), selected, profile,
-                 blocked ? blocked.get(selected) : null, more, trained.get(selected))
+                 blocked ? blocked.get(selected) : null, more, trained.get(selected),
+                 recent.get(selected))
         : summary(muscles, trained),
     );
   }
@@ -620,7 +697,12 @@ function confidenceLine(m) {
   const sources = m.exerciseCount > 1
     ? `${sessions}, ${m.exerciseCount} exercises`
     : sessions;
-  return `${m.band.name} confidence · ${sources}`;
+  // ⚠️ THE BAND'S OWN NAME, NEVER RE-DERIVED FROM `confidence` HERE. The rating
+  // decides its band (a reading inferred only from other lifts is capped at
+  // Fair, plan §3.9), and this line prints what it decided. Recomputing from
+  // the number would quietly undo that cap on the one screen it exists for.
+  const word = m.band && m.band.name ? `${m.band.name} confidence` : 'Confidence not rated';
+  return `${word} · ${sources}`;
 }
 
 function summary(muscles, trained = new Map()) {

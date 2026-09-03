@@ -8,8 +8,33 @@
 //
 // Everything here is pure. No DOM, no store, no network — so it is fully
 // testable headlessly, which is how the e1RM module caught a real bug.
+//
+// 🔄 2026-09-13 — THE STRENGTH-ACCURACY BUILD (docs/strength-accuracy-plan.md
+// §3.3, §3.5, §3.10; Tim's decisions c, f and k). Four things changed in here:
+//
+//   1. ONE POPULATION. Every median is now Strength Level 2026's Intermediate
+//      row at 180 lb (men) / 140 lb (women). The medians used to be Gravitus
+//      figures — 7–9 % lower on squat, deadlift and OHP, and far lower on the
+//      isolation lifts (curl 85 vs 104, shrug 225 vs 284, calf 240 vs 317,
+//      close-grip 185 vs 208) — while every ratio in muscle-evidence.js was
+//      derived by DIVIDING Strength Level rows. A converted estimate is in
+//      Strength Level's currency; ranking it against a lower median put a
+//      median Strength Level lifter at ~68th on Biceps, ~74th on Traps and
+//      ~78th on Calves. Same source on both sides, or the "one population"
+//      method behind the ratio table does not cancel.
+//   2. A TWO-PIECE SPREAD PER LIFT AND PER SEX (`sigma` below), fitted from the
+//      same five anchors. One σ = 0.32 for everything put a 140 lb woman at the
+//      published Beginner bench mark at the 0.25th percentile. She is the 5th.
+//   3. THE UNTRAINED MULTIPLIER BY CLASS, not one 0.55 (`UNTRAINED_FRACTION`).
+//   4. "Any body weight" is captioned as what the maths does — "as if 180 lb" —
+//      instead of "lifters of every size", which it never was.
+//
+// D15 (rank against people who lift), D20 (the comparison group is four axes
+// and a true mixture) and D21 (untrained adults get their own overlapping
+// distribution) all still hold; the numbers under them moved.
 
 import { BUILT_IN_EXERCISES } from './exercises.js';
+import { withUnitRounded } from './units.js';
 
 /* ------------------------------------------------------------------ *
  * Levels
@@ -33,26 +58,68 @@ export const LEVELS = [
  * The model
  * ------------------------------------------------------------------ */
 
-// Reference body weights the median lifts below are quoted at.
-const REF_BW = { male: 180, female: 140 };
+// Reference body weights the anchors below are quoted at — the rows Strength
+// Level publishes at 180 lb (men) and 140 lb (women), which are also the rows
+// every ratio in muscle-evidence.js was derived from. Exported so a test can
+// pin "as if 180 lb" to the number the maths actually uses.
+export const REF_BW = { male: 180, female: 140 };
 
 // Strength scales with roughly bodyweight^(2/3) — the surface law — not
 // linearly. A plain lb-per-lb ratio would systematically flatter light lifters
-// and punish heavy ones. Checked against published standards: 225 lb at 180 lb
-// predicts 199 at 150 lb, which matches the published figure to within a pound.
+// and punish heavy ones.
+//
+// ⚠️ NOT REVISITED ON 2026-09-13, and the old claim here ("225 at 180 lb predicts
+// 199 at 150 lb, within a pound of the published figure") went with the old
+// median. Against Strength Level's own rows the exponent looks steeper in the
+// 140–220 lb range: bench 170 / 220 / 265 at 140 / 180 / 220 lb implies ~0.9–1.0,
+// where 0.67 predicts 185 and 251. Agent G (docs/research.md §16.9) calls 0.67
+// adequate for 130–230 lb and better replaced by a GL/DOTS shape; that is plan
+// §6.3 work, not this build's.
 const ALLOMETRIC = 0.67;
 
-// Log-space spread. Fitting σ = 0.32 to a 225 lb median reproduces the published
-// tier anchors closely (see docs/research.md §11). One value for every lift is a
-// simplification — isolation work is probably wider — and is worth revisiting
-// once real data exists.
-//
-// ⚠️ 2026-09-04: THAT REVISIT ARRIVED, FOR ONE MUSCLE, AND THE DATA SAYS THE
-// SIMPLIFICATION IS REAL. Core's published tiers fit σ ≈ 0.48, not 0.32, so a
-// muscle may now override it — see `sigma` in MUSCLE_LIFTS and docs/research.md
-// §14. This stays the default for everything else because everything else fits
-// it: the bench tiers at 180 lb (127/169/220/277/339) come out at σ ≈ 0.30.
-const SIGMA = 0.32;
+/* ── THE SPREAD: A TWO-PIECE LOGNORMAL, PER LIFT AND PER SEX — 2026-09-13 ────
+ *
+ * Until today one σ = 0.32 served every lift and both sexes, with Core the one
+ * exception at 0.48. Fitting σ to Strength Level's own five anchors —
+ * σ_p = ln(anchor_p / median) / z_p — says three things, and each one is a
+ * screen being wrong (docs/research.md §16.9, agent G §d.8):
+ *
+ *   1. WOMEN'S SPREAD IS ~45 % WIDER ON EVERY LIFT. With σ = 0.32 a 140 lb woman
+ *      at the published Beginner bench mark (44 lb — the 5th percentile by
+ *      construction) read z = −2.81, the 0.25th percentile: the model called a
+ *      real beginner the weakest lifter alive. Core's §14 finding was the
+ *      general case, not a special one.
+ *   2. THE LEFT TAIL IS WIDER THAN THE RIGHT EVERYWHERE — σ at the 5th exceeds
+ *      σ at the 95th by ~0.07 (men) to ~0.17 (women). One σ over-rates the weak
+ *      end and under-rates the strong end at once.
+ *   3. ISOLATION LIFTS ARE WIDER THAN THE BIG THREE: OHP ≈ 0.37 / 0.30 (men),
+ *      cable crunch ≈ 0.55 / 0.41, and the shrug, calf and wrist-curl tables
+ *      wider still.
+ *
+ * So each lift and sex carries TWO log-spreads: `below` (the mean of the p5 and
+ * p20 fits) for values under the median, `above` (the mean of the p80 and p95
+ * fits) for values over it. The curve is continuous at the median — both halves
+ * give Φ(0) = 0.5 there — and reproduces every anchor within ~1.5 percentile
+ * points, against misses of up to 30 points under the single σ. The inverse
+ * (`weightForPercentile`) uses the same half the percentile falls in, so the
+ * targets panel and `levelFor()` round-trip exactly as they always have.
+ *
+ * ⚠️ The fits are COMPUTED from the anchors at load, not typed in, so the table
+ * cannot drift from its source; the numbers they come out to are quoted beside
+ * each row so a reader can see them without running anything.
+ */
+const Z = {
+  5: -1.6448536269514722, 20: -0.8416212335729143,
+  80: 0.8416212335729143, 95: 1.6448536269514722,
+};
+function fitSigma(anchors) {
+  const [p5, p20, p50, p80, p95] = anchors;
+  const s = (w, z) => Math.log(w / p50) / z;
+  return {
+    below: (s(p5, Z[5]) + s(p20, Z[20])) / 2,
+    above: (s(p80, Z[80]) + s(p95, Z[95])) / 2,
+  };
+}
 
 // Fraction of US adults doing muscle-strengthening activity 2+ days/week
 // (NHIS 2020). Used only for the optional general-population readout.
@@ -67,32 +134,95 @@ const TRAINING_RATE = 0.319;
 // a group grey, and it matches the "grey if no recordings" rule. The weighted
 // primary/secondary mapping is a separate, larger change (D3).
 //
-// `median` is the 50th-percentile 1RM among people who lift, at REF_BW.
+// Each row: the key lift, and Strength Level's five published anchors for it —
+// Beginner / Novice / Intermediate / Advanced / Elite, i.e. the 5th / 20th /
+// 50th / 80th / 95th percentiles of their filtered self-reports — at 180 lb
+// (men) and 140 lb (women). `median` is the middle anchor; `sigma` is the
+// two-piece spread fitted from the other four (see `fitSigma` above). Both are
+// DERIVED from the anchors by `keyLift()` so they cannot disagree with them.
+//
+// 🔄 SOURCE, 2026-09-13: every anchor is from
+//   https://strengthlevel.com/strength-standards/<slug>/lb
+// fetched 2026-09-03 (agent C's transcription, 108 pages; the slug is beside
+// each row). They replace Gravitus medians that were 7–9 % lower on the big
+// lifts and up to 30 % lower on the isolation lifts — see the file header for
+// why that mattered. Core's row is the same table it has carried since
+// 2026-09-04 (docs/research.md §14), now in the same shape as the rest.
+//
+// The fitted spreads (below / above the median), so nobody has to run it:
+//                        men            women
+//   bench               0.324 / 0.268   0.514 / 0.392
+//   bent-over row       0.353 / 0.291   0.491 / 0.371
+//   squat               0.331 / 0.273   0.463 / 0.360
+//   Romanian deadlift   0.375 / 0.303   0.440 / 0.342
+//   deadlift            0.322 / 0.267   0.431 / 0.343
+//   shoulder press      0.366 / 0.298   0.505 / 0.386
+//   barbell curl        0.439 / 0.343   0.610 / 0.443
+//   close-grip bench    0.302 / 0.258   0.462 / 0.353
+//   barbell shrug       0.492 / 0.375   0.703 / 0.482
+//   machine calf raise  0.601 / 0.433   0.755 / 0.511
+//   wrist curl          0.957 / 0.593   1.347 / 0.710
+//   cable crunch        0.548 / 0.409   0.619 / 0.447
+//
+// ⚠️ THE WRIST CURL'S SPREAD IS ENORMOUS and it is the source, not a slip:
+// Strength Level's Beginner wrist curl is 17 lb for a 180 lb man and 4 lb for a
+// 140 lb woman, against medians of 98 and 52. That is a page where the light
+// end is dominated by people logging an empty-handed movement or a single
+// plate, and where the rep-to-1RM conversion of very light sets does the rest.
+// The two-piece fit reproduces the page; whether the page deserves it is a
+// question for the ratio re-derivation (plan §6.3), and Forearms already
+// carries the lowest ratio qualities in muscle-evidence.js. The shrug and calf
+// pages are wide for the same reason at a smaller scale.
+//
+// `untrained` is the class the untrained multiplier uses (see
+// UNTRAINED_FRACTION): 'lower' for the squat, deadlift, RDL and calf raise,
+// 'upper' (the default) for everything else.
+const keyLift = (lift, male, female, extra = {}) => ({
+  lift,
+  anchors: { male, female },
+  median: { male: male[2], female: female[2] },
+  sigma: { male: fitSigma(male), female: fitSigma(female) },
+  ...extra,
+});
+
 export const MUSCLE_LIFTS = {
-  Chest:      { lift: 'Barbell Bench Press',    median: { male: 225, female: 100 } },
-  Back:       { lift: 'Barbell Row',            median: { male: 205, female: 105 } },
-  Quads:      { lift: 'Back Squat',             median: { male: 275, female: 155 } },
-  Hamstrings: { lift: 'Romanian Deadlift',      median: { male: 245, female: 140 } },
+  // bench-press
+  Chest:      keyLift('Barbell Bench Press', [127, 169, 220, 277, 339], [44, 72, 108, 152, 201]),
+  // bent-over-row
+  Back:       keyLift('Barbell Row', [108, 149, 198, 255, 315], [41, 66, 97, 134, 175]),
+  // squat
+  Quads:      keyLift('Back Squat', [169, 228, 298, 377, 462], [74, 114, 165, 226, 292], { untrained: 'lower' }),
+  // romanian-deadlift
+  Hamstrings: keyLift('Romanian Deadlift', [147, 207, 280, 364, 455], [71, 106, 151, 203, 261], { untrained: 'lower' }),
   // Deadlift belongs to glutes, hamstrings and back at once. It fills Glutes
   // because hip-thrust standards are the thinnest of the three, and because it
   // is the best-documented lift in existence. Revisit with the weighted map.
-  Glutes:     { lift: 'Deadlift',               median: { male: 320, female: 185 } },
-  Shoulders:  { lift: 'Overhead Press',         median: { male: 130, female: 65 } },
-  Biceps:     { lift: 'Barbell Curl',           median: { male: 85,  female: 45 } },
-  Triceps:    { lift: 'Close-Grip Bench Press', median: { male: 185, female: 85 } },
-  Traps:      { lift: 'Barbell Shrug',          median: { male: 225, female: 125 } },
-  Calves:     { lift: 'Standing Calf Raise',    median: { male: 240, female: 150 } },
-  Forearms:   { lift: 'Wrist Curl',             median: { male: 95,  female: 50 } },
+  // deadlift
+  Glutes:     keyLift('Deadlift', [201, 268, 348, 438, 535], [93, 139, 196, 264, 338], { untrained: 'lower' }),
+  // shoulder-press
+  Shoulders:  keyLift('Overhead Press', [75, 104, 140, 181, 226], [29, 47, 70, 98, 129]),
+  // barbell-curl
+  Biceps:     keyLift('Barbell Curl', [49, 73, 104, 140, 180], [18, 33, 53, 78, 107]),
+  // close-grip-bench-press
+  Triceps:    keyLift('Close-Grip Bench Press', [124, 163, 208, 260, 314], [48, 73, 106, 144, 186]),
+  // barbell-shrug
+  Traps:      keyLift('Barbell Shrug', [121, 192, 284, 394, 515], [41, 83, 143, 218, 306]),
+  // machine-calf-raise — Strength Level's standing (machine) calf raise page,
+  // which is the page the seated-calf ratio in muscle-evidence.js was divided
+  // by, so it is the page this key lift has always meant.
+  Calves:     keyLift('Standing Calf Raise', [110, 198, 317, 463, 629], [50, 108, 193, 303, 430], { untrained: 'lower' }),
+  // wrist-curl
+  Forearms:   keyLift('Wrist Curl', [17, 48, 98, 166, 246], [4, 20, 52, 98, 156]),
 
   /* 🚨 CORE — RANKABLE SINCE 2026-09-04, AND IT IS THE ONLY ENTRY IN THIS TABLE
-   * THAT CARRIES ITS OWN SPREAD AND ITS OWN RELIABILITY PENALTY.
+   * THAT CARRIES ITS OWN RELIABILITY PENALTY.
    *
    * Tim: *"set a good 1RM estimator for the ab muscle group for a specific
    * exercise… This makes the ab muscle group nearly identical to any other
    * muscle group and how it operates but with a little less reliability."* This
-   * is that, and the three fields below are where "a little less reliability"
-   * stops being a sentence and becomes arithmetic. docs/research.md §14 has the
-   * pull; the short version:
+   * is that, and the fields below are where "a little less reliability" stops
+   * being a sentence and becomes arithmetic. docs/research.md §14 has the pull;
+   * the short version:
    *
    * ⚠️ `median` IS MEASURED, NOT MODELLED. Strength Level's Cable Crunch table,
    * 12,596 qualifying results out of 211,507 logged lifts (Oct 2019 – Mar 2026):
@@ -106,14 +236,14 @@ export const MUSCLE_LIFTS = {
    * So: the measured source wins, and the disagreement is carried as
    * `standardQuality` rather than hidden.
    *
-   * 🚨 `sigma` — THE TIERS ARE MUCH WIDER THAN EVERY OTHER LIFT'S. Fitting the
-   * five published anchors gives 0.39–0.58 (the left tail is the wide end),
-   * mean ≈ 0.48, against ≈ 0.30 for the bench. Reusing the global 0.32 would put
-   * a lifter sitting exactly on the published *Beginner* mark at the **0.1st**
-   * percentile instead of the 5th — the model would call a real beginner the
-   * weakest person alive. This is a stack on a pulley whose leverage depends on
-   * rope length, knee position and how much of the movement is hip flexion, so a
-   * genuinely wider spread is what you would expect.
+   * 🔄 `sigma` — UNTIL 2026-09-13 THIS WAS THE ONE ROW WITH ITS OWN SPREAD, a
+   * single 0.48 fitted to these anchors, because reusing the global 0.32 put a
+   * lifter sitting exactly on the published Beginner mark at the 0.1st
+   * percentile. Every row carries its own two-piece pair now (0.548 / 0.409 for
+   * men, 0.619 / 0.447 for women here), so the special case became the rule.
+   * The spread is still genuinely wider than a barbell lift's: this is a stack
+   * on a pulley whose leverage depends on rope length, knee position and how
+   * much of the movement is hip flexion.
    *
    * ⚠️ `standardQuality` MULTIPLIES THE RATING'S CONFIDENCE, so a Core reading
    * with flawless evidence still lands below one from a bench press. That is the
@@ -121,16 +251,14 @@ export const MUSCLE_LIFTS = {
    * thin, it is the standard, and no amount of extra logging can fix it — which
    * is exactly why it belongs on the muscle and not on the observation.
    */
-  Core: {
-    lift: 'Cable Crunch',
-    median: { male: 151, female: 106 },
-    sigma: 0.48,
+  // cable-crunch
+  Core: keyLift('Cable Crunch', [58, 98, 151, 216, 288], [36, 65, 106, 157, 214], {
     standardQuality: 0.6,
     // Shown under a Core rating, every time. Not a tooltip: the one thing a
     // user must not do with this number is treat it like the bench figure.
     caveat: 'Core standards are thinner than the rest — one measured source, and '
       + 'a cable stack depends on the machine. Treat it as a rough placing.',
-  },
+  }),
   // Neck has no usable published standards — nobody publishes neck norms — so it
   // stays unranked permanently, and the UI says so rather than looking broken.
 };
@@ -146,16 +274,21 @@ export const MUSCLE_LIFTS = {
 export const UNRANKABLE = ['Neck', 'Cardio', 'Activity'];
 
 /**
- * The log-space spread to rank this muscle with.
+ * The log-space spread to rank this muscle with: one number, for the sex and
+ * the side of the median asked for.
  *
- * ⚠️ PER MUSCLE SINCE 2026-09-04, defaulting to the global value. A single σ for
- * every lift was always a stated simplification; Core is the first muscle whose
- * published tiers refuse it outright, and the override is deliberately narrow so
- * that nothing else moves by a pound.
+ * 🔄 PER LIFT, PER SEX AND PER SIDE SINCE 2026-09-13. Until 2026-09-04 there was
+ * one σ; Core then got its own; now every row carries a { below, above } pair
+ * for each sex, fitted from its anchors. The one-argument call still works —
+ * `sigmaFor('Chest')` is the men's below-median spread — so the callers and
+ * tests that only ever wanted "how wide is this lift" keep a number. Null for a
+ * muscle that has no standard.
  */
-export function sigmaFor(muscle) {
+export function sigmaFor(muscle, gender = 'male', side = 'below') {
   const spec = MUSCLE_LIFTS[muscle];
-  return spec && typeof spec.sigma === 'number' ? spec.sigma : SIGMA;
+  if (!spec) return null;
+  const g = gender === 'female' ? 'female' : 'male';
+  return spec.sigma[g][side === 'above' ? 'above' : 'below'];
 }
 
 /**
@@ -460,13 +593,21 @@ export function normalizeCompare(compare) {
  *
  * The two gaps are NOT the same kind of gap, and that is the whole design:
  *
- * 🚨 BODY WEIGHT — NOTHING IS INVENTED. A guessed body weight would be a number
- * with no source, and every percentile on the screen is a ratio to it. So the
- * weight AXIS is forced to `any` instead: `refBodyWeight()` reads that as the
- * reference median with no allometric scaling, which is a real, nameable
- * comparison group — lifters of every size — rather than a stand-in for a
- * measurement. The caption already says "any body weight" for anybody who picks
- * that option deliberately, so what is on screen is true either way.
+ * 🚨 BODY WEIGHT — NOTHING IS SAVED, AND WHAT IS ASSUMED IS SAID. A guessed
+ * body weight would be a number with no source, and every percentile on the
+ * screen is a ratio to it. So the weight AXIS is forced to `any` instead, and
+ * `refBodyWeight()` reads that as the reference body weight — 180 lb for a man,
+ * 140 lb for a woman — with no allometric scaling.
+ *
+ * ⚠️ CORRECTED 2026-09-13 (plan §3.3, decision c). This comment used to call
+ * that "a real, nameable comparison group — lifters of every size", and the
+ * caption said the same. It is not what the maths does. There is no
+ * integration over body weights anywhere in this file: `any` ranks the lift
+ * exactly as a 180 lb man's (or 140 lb woman's) would be ranked, and the demo's
+ * 232 lb bench reads p54 under it whether the lifter really weighs 150 or 250.
+ * So the sentence on screen now says "as if 180 lb". The profile field itself
+ * is still never filled — see `bodyWeight` below — which is what keeps this an
+ * assumption rather than a measurement.
  *
  * ⚠️ SEX — ASSUMED, AND IT MUST BE STATED. There is no ungraded option here to
  * fall back to: every entry in `MUSCLE_LIFTS` is a male/female PAIR, so a
@@ -514,11 +655,17 @@ export function withAssumptions(profile) {
 /**
  * What had to be assumed, in words, or null.
  *
- * ⚠️ TWO SENTENCES RATHER THAN ONE LIST, because the two gaps are answered
- * differently and merging them would flatten that: "assumed male" is a value the
- * app picked, and "lifters of every size" is a comparison group it moved to. A
- * single "Assumed: male, any body weight" would present the second as a guessed
- * measurement, which is exactly what it is not.
+ * ⚠️ TWO SENTENCES RATHER THAN ONE LIST, because the two gaps are different
+ * kinds of gap and one list would flatten that: "assumed male" is a value the
+ * app picked and will use everywhere; "as if you weigh 180 lb" is a stand-in
+ * the ranking used for this reading only, and the profile still has no weight.
+ *
+ * 🔄 2026-09-13: THE SECOND SENTENCE SAYS WHAT THE MATHS DOES. It used to read
+ * "compared against lifters of every size", which described a comparison group
+ * this file never computes — the reference weight is substituted and nothing
+ * is integrated over. The reference is the sex's own (`REF_BW`), so a woman
+ * with no weigh-in is told 140 lb, not 180. Through units.js, so a kilogram
+ * user reads "82 kg".
  *
  * It lives in `comparisonLabel()`'s return rather than on the screen so that the
  * caption naming the comparison group and the line admitting how that group was
@@ -532,7 +679,8 @@ function assumptionNote(profile) {
     bits.push('Assumed male — your sex is not on your profile.');
   }
   if (assumed.includes('body weight')) {
-    bits.push('Compared against lifters of every size — no weigh-in on record.');
+    const g = profile.gender === 'female' ? 'female' : 'male';
+    bits.push(`Ranked as if you weigh ${withUnitRounded(REF_BW[g])} — no weigh-in on record.`);
   }
   return bits.join(' ');
 }
@@ -563,9 +711,13 @@ function populations(profile) {
   return out;
 }
 
-// "Any body weight" is not a missing value — it means compare against lifters of
-// every size, which is exactly the reference median with no allometric scaling
-// applied. Same for age: "any age" is the ungraded standard, not age zero.
+// "Any body weight" is not a missing value — it is the reference body weight,
+// 180 lb for a man and 140 lb for a woman, with no allometric scaling applied.
+// ⚠️ It does NOT widen the comparison to lifters of every size (the old comment
+// here said so, and was wrong — nothing in this file integrates over body
+// weight); it ranks the lift as a 180 lb man's would be ranked, and the caption
+// says exactly that. Same for age: "any age" is the ungraded standard, not age
+// zero.
 function refBodyWeight(profile, gender) {
   const c = normalizeCompare(profile && profile.compare);
   if (c.weight === 'any') return REF_BW[gender];
@@ -578,21 +730,55 @@ function refAge(profile) {
   return profile ? profile.age : null;
 }
 
-// What the median UNTRAINED adult lifts, as a fraction of the median lifter.
+// What the median UNTRAINED adult lifts, as a fraction of the median lifter —
+// by CLASS of lift and by sex, since 2026-09-13 (plan §3.10, decision k).
 //
-// ⚠️ WEAKEST NUMBER IN THIS FILE. Nobody has measured what the median adult can
-// bench, because the median adult has never tried. It is anchored on untrained
-// baselines from training studies — first-session loads typically land around
-// half to two-thirds of a trained lifter's median — and it is one number for
-// every lift, which is certainly wrong in detail.
+// ⚠️ STILL THE WEAKEST NUMBER IN THIS FILE, but for a corrected reason. D21's
+// note used to say "nobody has measured what the median adult can bench,
+// because the median adult has never tried". That is false: untrained cohorts
+// have been measured repeatedly. What is missing is a REPRESENTATIVE sample —
+// every cohort is college students or study volunteers, and none is a random
+// draw of adults. The measured cohorts, each against the Strength Level median
+// at that cohort's body weight (docs/research.md §16.10, agent G §e):
+//
+//   Mayhew 2008 (JSCR 22(5)), 103 untrained women, bench 28.7 kg → 0.60–0.64
+//   Ribeiro 2024 (IUSCA), 62 untrained women, bench 29.4 kg   → 0.68
+//   Ribeiro 2024, 57 untrained men, bench 68.9 kg             → 0.75
+//   PMC10749963, 26 active non-lifting men: bench 71 kg → 0.70, bent-over
+//     row 69 kg → 0.75, BACK SQUAT 111 kg → 0.91
+//   PMC10630871, 22 untrained men, bench 54.8 kg              → 0.55–0.60
+//   PMC9486837, 29 male students at 63 kg, bench 44.6 kg      → 0.52
+//
+// So: men's upper-body pressing and rows 0.52–0.75 (sedentary at the bottom,
+// active non-lifters at the top) → 0.60; women's pressing 0.60–0.68 → 0.62;
+// the lower body ~0.9 on the one free-weight squat measured → 0.85, held a
+// little under the single reading. Nobody has measured an untrained deadlift,
+// RDL or calf raise; those carry the squat's class figure and say so here.
+// Biceps, triceps, traps, forearms and core have no untrained cohort at all
+// and carry the upper-body figure.
+//
+// The untrained population keeps the SAME two-piece spread as the trained one
+// for that lift and sex. There is no cohort large enough to fit a spread to,
+// and the SDs the studies report (bench ±23 % in Mayhew, ±22 % in Ribeiro) sit
+// inside the lifter spread rather than outside it.
 //
 // It exists because the alternative was worse. The previous general-population
 // readout assumed every non-lifter sits BELOW every lifter, which forced any
 // lifter at all above the 68th percentile and made the seven levels collapse
 // into the top three — the exact objection in D15. Giving untrained people their
-// own overlapping distribution lets a beginner read as a beginner. The estimate
-// is rough; the SHAPE is much closer to right.
-const UNTRAINED_FRACTION = 0.55;
+// own overlapping distribution lets a beginner read as a beginner.
+const UNTRAINED_FRACTION = {
+  upper: { male: 0.60, female: 0.62 },
+  lower: { male: 0.85, female: 0.85 },
+};
+
+/** The untrained multiplier this muscle's key lift uses, by sex. */
+export function untrainedFractionFor(muscle, gender) {
+  const spec = MUSCLE_LIFTS[muscle];
+  if (!spec) return null;
+  const g = gender === 'female' ? 'female' : 'male';
+  return UNTRAINED_FRACTION[spec.untrained === 'lower' ? 'lower' : 'upper'][g];
+}
 
 function medianForPopulation(muscle, gender, bodyWeight, age, trained = true) {
   const spec = MUSCLE_LIFTS[muscle];
@@ -604,7 +790,19 @@ function medianForPopulation(muscle, gender, bodyWeight, age, trained = true) {
   // Age grading raises the bar for people in their prime and lowers it for
   // masters — dividing, because the coefficient scales a lift UP toward a
   // 23–40-year-old equivalent.
-  return (scaled / ageCoefficient(age)) * (trained ? 1 : UNTRAINED_FRACTION);
+  return (scaled / ageCoefficient(age)) * (trained ? 1 : untrainedFractionFor(muscle, g));
+}
+
+// The two-piece lognormal, forward and back. `sigma` is a { below, above }
+// pair; the half used is the half the value (or the percentile) falls in, and
+// the two halves meet at the median, so the CDF is continuous and strictly
+// increasing — which is what lets the mixture inverse below bisect on it.
+function lognormalCdf(v, median, sigma) {
+  const z = Math.log(v / median) / (v < median ? sigma.below : sigma.above);
+  return normalCdf(z);
+}
+function lognormalInv(p, median, sigma) {
+  return median * Math.exp(normalInv(p) * (p < 0.5 ? sigma.below : sigma.above));
 }
 
 // The median 1RM for this muscle's key lift, at this person's body weight,
@@ -618,23 +816,33 @@ export function medianFor(muscle, profile = {}) {
 }
 
 // Percentile among the chosen comparison group, 0–100.
+//
+// A mixture over populations (D20): each population's share × its own CDF,
+// and each population uses ITS OWN SEX's two-piece spread — a man ranked
+// against "both" is placed under the men's curve and the women's curve
+// separately, then the two are share-weighted.
 export function percentileFor(oneRepMax, muscle, profile) {
   const v = Number(oneRepMax);
   if (!(v > 0)) return null;
+  const spec = MUSCLE_LIFTS[muscle];
+  if (!spec) return null;
   let p = 0;
   for (const pop of populations(profile)) {
     const median = medianForPopulation(muscle, pop.gender,
       refBodyWeight(profile, pop.gender), refAge(profile), pop.trained);
     if (!median) return null;
-    p += pop.share * normalCdf((Math.log(v) - Math.log(median)) / sigmaFor(muscle));
+    p += pop.share * lognormalCdf(v, median, spec.sigma[pop.gender]);
   }
   return Math.min(99.9, Math.max(0.1, p * 100));
 }
 
-// The weight needed to reach a given percentile — the "targets" panel.
+// The weight needed to reach a given percentile — the "targets" panel, and the
+// weight a goal freezes (js/goals.js).
 export function weightForPercentile(percentile, muscle, profile) {
   const p = Number(percentile);
   if (!(p > 0) || !(p < 100)) return null;
+  const spec = MUSCLE_LIFTS[muscle];
+  if (!spec) return null;
   const pops = populations(profile);
   const medians = pops.map((pop) =>
     medianForPopulation(muscle, pop.gender,
@@ -643,8 +851,9 @@ export function weightForPercentile(percentile, muscle, profile) {
 
   // One population still has a closed form, and it is kept: the targets panel
   // and levelFor() are held together by a round-trip whose error budget was
-  // measured against exactly this expression (see BOUNDARY_EPSILON).
-  if (pops.length === 1) return medians[0] * Math.exp(normalInv(p / 100) * sigmaFor(muscle));
+  // measured against exactly this expression (see BOUNDARY_EPSILON). It inverts
+  // the same half of the curve percentileFor() would read the answer under.
+  if (pops.length === 1) return lognormalInv(p / 100, medians[0], spec.sigma[pops[0].gender]);
 
   // A mixture has no closed-form inverse. Its CDF is strictly increasing in
   // weight, so bisection always converges, and 80 halvings take the bracket
@@ -655,7 +864,7 @@ export function weightForPercentile(percentile, muscle, profile) {
     const mid = (lo + hi) / 2;
     let cdf = 0;
     for (let j = 0; j < pops.length; j++) {
-      cdf += pops[j].share * normalCdf((Math.log(mid) - Math.log(medians[j])) / sigmaFor(muscle));
+      cdf += pops[j].share * lognormalCdf(mid, medians[j], spec.sigma[pops[j].gender]);
     }
     if (cdf < target) lo = mid; else hi = mid;
   }
@@ -716,8 +925,17 @@ export function comparisonLabel(profile) {
    * the basis of what is on screen. */
   const whose = (profile && profile.whose) || 'your';
   const bits = [];
-  bits.push(c.weight === 'any' ? 'any body weight'
-    : (profile && profile.bodyWeight ? `${Math.round(profile.bodyWeight)} lbs` : `${whose} body weight`));
+  /* 🔄 2026-09-13: "any body weight" SAYS WHAT IT DOES — "(as if 180 lbs)". The
+   * option keeps its name so it matches the sheet, and the bracket is the
+   * arithmetic: the reference weight is substituted, nothing is averaged over.
+   * Against both sexes it names both references, because the men's curve is
+   * read at 180 and the women's at 140 in the same mixture. Through units.js,
+   * like the body-weight figure beside it, so a kilogram user reads kilograms. */
+  const asIf = sex === 'all'
+    ? `as if ${withUnitRounded(REF_BW.male)} for men, ${withUnitRounded(REF_BW.female)} for women`
+    : `as if ${withUnitRounded(REF_BW[sex === 'female' ? 'female' : 'male'])}`;
+  bits.push(c.weight === 'any' ? `any body weight (${asIf})`
+    : (profile && profile.bodyWeight ? withUnitRounded(profile.bodyWeight) : `${whose} body weight`));
   /* ⚠️ AND THE AGE FALLBACK IS NOT THE SAME SENTENCE ON THE TWO SCREENS, which
    * looks like an inconsistency and is the opposite of one. On YOUR map, no
    * recorded age means no age grading was applied — "any age" is the literal

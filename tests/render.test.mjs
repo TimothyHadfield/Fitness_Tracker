@@ -7040,12 +7040,27 @@ ok(!data.querySelector('.rep-target'),
      + 'sentences and a button over an account holding recorded sets');
   ok(/assumed male/i.test(m),
      'and it says the sex was assumed — the label is the whole permission for the number');
-  ok(/every size/i.test(m),
-     '🚨 NO INVENTED BODY WEIGHT. A missing weigh-in widens the comparison to lifters of every '
-     + 'size, which is a real group; the alternative was standing the user beside a made-up 180 lb '
-     + 'man and never saying so');
-  ok(!/180 ?lb/.test(m),
-     '⚠️ the mutation guard for that — no reference weight is printed as if it were theirs');
+  /* 🚨 THIS ASSERTION USED TO PIN THE OPPOSITE SENTENCE, AND THE SENTENCE WAS
+   * FALSE. It read "a missing weigh-in widens the comparison to lifters of
+   * every size, which is a real group" and guarded, as a mutation check, that
+   * no reference weight was ever printed. Both halves described an intention.
+   * The arithmetic never widened anything: `weight: 'any'` resolves to the
+   * reference body weight, so the app compared the user against exactly a
+   * 180 lb man (140 lb woman) and captioned it as a group. Measured on the demo
+   * bench: a true 150 lb lifter read the 69th percentile and was shown the
+   * 54th; a 250 lb lifter read the 28th and was shown the same 54th.
+   *
+   * So the screen says what the maths does — "as if 180 lb" — and the old
+   * mutation guard is inverted: the reference weight MUST now appear, because
+   * hiding it was the bug. The honesty is unchanged in kind, only in accuracy:
+   * an assumption stated is still an assumption stated. */
+  ok(/as if .*180 ?lb/i.test(m),
+     '🚨 THE ASSUMPTION IS NAMED FOR WHAT IT IS. With no weigh-in the app ranks the user as if they '
+     + 'weighed 180 lb, and now says so — it never widened the comparison to "every size", it just '
+     + 'described itself that way');
+  ok(!/every size/i.test(m),
+     '⚠️ and the old sentence is gone rather than sitting beside the new one — two descriptions of '
+     + 'one number is how the wrong one survives');
   ok(Boolean(d.querySelector('a[href="#/profile"]')),
      'and the way to replace the assumption with the truth is still one tap away');
 
@@ -7907,8 +7922,18 @@ ok(!data.querySelector('.rep-target'),
        `🚨 coloured by LEVEL through the ramp's own chip class, exactly one (${lvClasses.join(',')})`);
     ok(/confidence/.test(text(benchRow)) && /Intermediate|Novice|Proficient|Beginner|Advanced|Expert|Elite/.test(text(benchRow)),
        '🚨 with the confidence band AND the level NAME in words under it — colour is never the only carrier');
-    ok(/185 lbs × 5/.test(text(benchRow)),
-       '🚨 and the measured set it rests on is printed in the sub-line — Rule 5\'s anchor stays on the row');
+    /* 🔄 THE ANCHOR IS THE SET THAT PRODUCED THE NUMBER, CHANGED 2026-09-13.
+     * This used to require "185 lbs × 5" — the HEAVIEST set — while the 227 lb
+     * figure above it came off the 165 × 10. Two numbers on one row, describing
+     * two different sets, with nothing saying so: Rule 5's anchor pointing at
+     * something that was not the anchor. `sameSet: false` existed to flag it
+     * and nothing read the flag.
+     *
+     * The heaviest set is still available to the row as `heaviest`; what the
+     * sub-line prints is the one the estimate rests on. */
+    ok(/165 lbs × 10/.test(text(benchRow)),
+       '🚨 and the measured set it rests on is printed in the sub-line — the set that PRODUCED the '
+       + 'number, not the heaviest one, so Rule 5\'s anchor really anchors it');
     ok(/Estimated one-rep maxes/.test(text(me)) && /who lift/.test(text(me)),
        'the section says once that every figure is an estimate, and names the comparison group');
     ok(!/\b(weak|strong)\b/i.test(text(me.querySelector('.me-bests'))),

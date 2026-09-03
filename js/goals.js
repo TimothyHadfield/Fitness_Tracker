@@ -49,11 +49,26 @@
 // uncertainty band and not a point. Until that exists this module reports the
 // MEASURED gap and says nothing about whether it is good or bad.
 //
+// ── A FROZEN WEIGHT REMEMBERS THE MODEL IT WAS FROZEN UNDER (2026-09-13) ─────
+//
+// ⚠️ docs/strength-accuracy-plan.md §2.9. The target is frozen in pounds, and
+// pounds do not carry the ratio table, medians and spreads they were computed
+// from. When those change — and on 2026-09-13 all three did — two things go
+// quietly wrong at once: the frozen weight no longer means the level it was
+// named for, and "gained N lb" reports the revision as training, because the
+// start was rated one way and today is rated another. Neither is visible from
+// the goal itself. So every goal is stamped with MODEL_VERSION when it is
+// built, `modelChangedSince()` says whether the stamp still matches, and
+// `refreezeGoal()` is the ONE way a target moves — on the user's own tap,
+// never silently. A goal with no stamp at all was set before stamping existed,
+// which is the same thing as an older model, and is treated as one.
+//
 // Pure: no DOM, no store, no clock of its own — `today` is passed in. Same shape
 // as e1rm.js, next-workout.js, optimal.js and volume-map.js.
 
 import { LEVELS, weightForPercentile } from './strength-standards.js';
 import { MINUTES_PER_SET } from './optimal.js';
+import { MODEL_VERSION } from './model-version.js';
 
 /* ------------------------------------------------------------------ *
  * Dates
@@ -427,7 +442,74 @@ export function buildGoal({
     gainPct: gain * 100,
     comparison: comparison || null,
     status: 'active',
+    // Which ratio table, medians and spreads the target above was computed
+    // from. See the header — a frozen weight with no stamp cannot say whether
+    // it still means its level.
+    modelVersion: MODEL_VERSION,
   };
+}
+
+/**
+ * Has the strength model changed since this goal was frozen?
+ *
+ * A missing stamp is TRUE, not unknown: every goal saved before 2026-09-13 has
+ * none, and every one of them was computed under an older model. Treating the
+ * absence as "probably fine" would leave exactly the goals this exists for
+ * unflagged.
+ */
+export function modelChangedSince(goal) {
+  if (!goal) return false;
+  return goal.modelVersion !== MODEL_VERSION;
+}
+
+/**
+ * Re-freeze the target under today's model, on the user's say-so.
+ *
+ * ⚠️ ONLY THE TARGET WEIGHT MOVES, and only here. The level, the start date,
+ * the deadline, the start weight, the ambition and the requirements it carries
+ * all stay what they were — the goal you agreed to is still the goal you
+ * agreed to; what changes is that "Proficient" is once again the weight that
+ * clears Proficient. `profile` is today's, so the weight is computed against
+ * the comparison the user has set NOW; the caller re-stamps `comparison` from
+ * the same profile so the screen never states a group the weight was not
+ * computed against.
+ *
+ * ⚠️ NOTHING HERE READS THE DEADLINE. `endDate` is copied through untouched.
+ *
+ * Returns null when no weight can be computed (an incomplete profile), so a
+ * caller cannot half-refreeze a goal by accident.
+ */
+export function refreezeGoal(goal, profile, { comparison } = {}) {
+  if (!goal) return null;
+  const target = weightForPercentile(goal.targetPercentile, goal.muscle, profile);
+  if (!(target > 0)) return null;
+  return {
+    ...goal,
+    targetWeight: target,
+    comparison: comparison || goal.comparison || null,
+    modelVersion: MODEL_VERSION,
+  };
+}
+
+/**
+ * Why a muscle rating may not be the START of a goal — or null if it may.
+ *
+ * ⚠️ A FALLBACK RATING IS A GUESS ABOUT A MUSCLE NOBODY HAS TRAINED. It is
+ * inferred from the big lifts that also work it, capped at Fair confidence, and
+ * the map says so beside it. A goal freezes a start weight and a target off
+ * that number and then measures twelve weeks of training against it; freezing
+ * a guess makes every later figure a comparison with a guess. The picker
+ * already refuses to set a goal on an assumed sex or body weight for the same
+ * reason (views-goals.js, `context()`); this is the same refusal one layer
+ * down, and it is a sentence rather than a boolean so the screen can say why.
+ */
+export function goalSourceRefusal(rating) {
+  if (!rating) return 'Nothing recorded for this muscle yet.';
+  if (rating.basis === 'fallback' || rating.kind === 'fallback') {
+    return 'Only inferred from the big lifts that also work it. Log an exercise that trains it '
+      + 'directly and a goal can start from that.';
+  }
+  return null;
 }
 
 /**

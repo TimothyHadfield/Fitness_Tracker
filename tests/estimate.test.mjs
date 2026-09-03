@@ -58,7 +58,31 @@ const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
 
 /* ---------- what may go on a screen ---------- */
 {
-  ok(repPrediction(225, 180).reps === 7, 'the screen figure is the rounded curve');
+  /* ⚠️ THE SCREEN FIGURE STOPPED BEING THE CURVE ON 2026-09-13, ON TIM'S CALL.
+   *
+   * `repsForWeight()` above still inverts Marzagão and is still what every
+   * e1RM in the app is consistent with. But the CAPTION now reads the Nuzzo
+   * 2024 table directly (research.md §16.4), because the caption is the one
+   * place the two literatures are answering the identical question — how many
+   * reps will this weight allow — and the lab table measured exactly that in
+   * 7,289 people, where the curve infers it from sets whose effort nobody
+   * recorded.
+   *
+   * The old argument for using the curve here was internal consistency, made
+   * when the lab literature was thought to be the smaller of the two. It is the
+   * larger one. What the curve is consistent with is the app's own 1RM, and the
+   * app's own 1RM is not what "maybe 8 to failure" is a claim about.
+   *
+   * So: ~10 at 80 %, not ~7, and it carries a band from the between-person SD
+   * rather than pretending to a single number. */
+  const at80shown = repPrediction(225, 180);
+  ok(at80shown.reps === 10, 'the screen figure comes from the measured table, not the curve');
+  ok(at80shown.low === 7 && at80shown.high === 12,
+     '⚠️ and it carries the spread between people (±1 SD, 7–12) — at 80 % that band is as wide as '
+     + 'the fatigue correction on a third set, so a bare integer was always overstating what is known');
+  ok(repsForWeight(225, 180) < at80shown.reps,
+     'the curve still says fewer than the table does — the disagreement did not go away, the caption '
+     + 'just stopped being the place it was resolved in the app\'s favour');
   ok(repPrediction(225, 225).over === true && repPrediction(225, 225).reps === null,
      'at the max it says so instead of printing a rep count');
 

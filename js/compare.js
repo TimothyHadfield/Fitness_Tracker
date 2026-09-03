@@ -31,11 +31,29 @@
    footnoted comparisons still adds up to a consistently flattering picture of
    me. A footnote describes a wrong number. Restricting the window makes the
    number right, and then says what it covers.
+
+   ── UNITS, 2026-09-13 (docs/strength-accuracy-plan.md §2.7) ────────────────
+   ⚠️ EVERY LOAD IN THE RESULT IS POUNDS, AND NO ROW NAMES A UNIT TO PRINT.
+   The two load rows used to carry `unit: 'lb'` and the screen printed it
+   verbatim, so a kilogram user read "185 lb" beside numbers every other screen
+   showed them in kg. A row now says what KIND of number it holds — 'weight'
+   (stored pounds; the screen converts through units.js), 'reps' or 'sets'
+   (counts, printed as they are) — and never the suffix. This module has no
+   idea what the reader's unit is and must not pretend to.
+
+   ── THE 1RM CONVENTION IS set-e1rm.js's, NOT A LOCAL ONE (plan §2.8, §4.e) ──
+   A dumbbell set used to be doubled and THEN put through the curve —
+   e1rm(100, 12) for 50 in each hand — which is a different number from the
+   2 × e1rm(50, 12) every other screen prints, because k in e1rm.js depends on
+   the weight. Both sides are the same exercise, so `better` never turned on
+   it; the printed figure did, by ~9 % on a 12-rep set. setE1rm() is the one
+   place a logged set becomes a maximum, and this row reads from it.
    ========================================================================== */
 
 import {
-  e1rm, isRankableSet, MAX_EVIDENCE_REPS, canNormalize, normalizeBlockedReason,
+  isRankableSet, MAX_EVIDENCE_REPS, canNormalize, normalizeBlockedReason,
 } from './e1rm.js';
+import { setE1rm } from './set-e1rm.js';
 import { totalLoad } from './muscle-evidence.js';
 import { bodyWeightFractionFor } from './exercises.js';
 
@@ -135,17 +153,24 @@ function observations(sessions, exerciseId, exerciseName) {
  * ------------------------------------------------------------------ */
 
 /**
- * ⚠️ A DUMBBELL SET AT 50 LBS IS NOT 50 LBS OF WORK. Every load number below
+ * ⚠️ A DUMBBELL SET AT 50 LBS IS NOT 50 LBS OF WORK. The HEAVIEST-SET row
  * goes through totalLoad() from muscle-evidence.js, which doubles `per_side`
  * — the app's single existing rule for this, imported rather than restated so
  * there cannot be two of them.
  *
  * Both sides are the SAME exercise, so both get the same doubling and no
  * `better` verdict can ever turn on it. What it changes is the number printed
- * beside the bar, and the e1RM: k(w) in e1rm.js varies with the weight, so
- * estimating from 50 rather than 100 does not merely halve the answer, it puts
- * the lift on a different part of the curve. Converting first is the only way
- * the estimate lands where every other e1RM in the app lands.
+ * beside the bar.
+ *
+ * 🔄 THE ESTIMATED-1RM ROW NO LONGER READS THIS — 2026-09-13. ~~k(w) in
+ * e1rm.js varies with the weight, so estimating from 50 rather than 100 does
+ * not merely halve the answer … Converting first is the only way the estimate
+ * lands where every other e1RM in the app lands.~~ True about k, wrong about
+ * where the others land: the rating pipeline, the finish-screen bests and the
+ * Data tab all put the PER-HAND weight through the curve and double the result
+ * (Tim's call, plan §4.e; Marzagão's dumbbell rows were logged per hand). This
+ * screen was the one doing it the other way. setE1rm() now holds the
+ * convention for every caller, and the row below reads its total.
  *
  * The caller is told which convention is in force via `result.loadType` and a
  * caveat, so the screen can print "100 lb (50 / side)" rather than a number
@@ -217,6 +242,10 @@ function betterOf(mine, theirs) {
  * One row. `judged` is the Rule 6 flag — the same idea as summaryStats()'s —
  * and `better` is null wherever bigger is not genuinely better, so a caller
  * that colours by `better` cannot accidentally colour something neutral.
+ *
+ * `unit` is the KIND of number, never a suffix: 'weight' means pounds in
+ * storage and the reader's own unit on the screen; 'reps' and 'sets' are
+ * counts. See the header.
  */
 function metric({
   key, label, unit, mine, theirs, judged = true, estimate = false, note = null,
@@ -501,9 +530,12 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
   // 185 × 10 are not orderable as raw weight, and whichever of us trains in
   // the lower rep range wins every time. e1rm() puts both on one axis.
   if (loadIsComparable(exercise)) {
+    // The TOTAL estimated maximum — both dumbbells — from the one convention
+    // (set-e1rm.js). No body weight is handed in, and none is needed: a lift
+    // carried by body weight never reaches this branch (loadIsComparable).
     const score = (o) => {
-      const load = loadOf(o, loadType);
-      return load === null ? NaN : e1rm(load, o.reps);
+      const r = setE1rm(exercise, o.weight, o.reps);
+      return r ? r.e1rm : NaN;
     };
     const mineBest = bestBy(myRank, score);
     const theirsBest = bestBy(theirRank, score);
@@ -522,7 +554,7 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
       metrics.push(metric({
         key: 'e1rm',
         label: 'Best estimated 1RM',
-        unit: 'lb',
+        unit: 'weight',
         mine: mineValue,
         theirs: theirsValue,
         estimate: true,
@@ -597,7 +629,7 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
       metrics.push(metric({
         key: 'top-weight',
         label: 'Heaviest set recorded',
-        unit: 'lb',
+        unit: 'weight',
         mine: mineBest && mineBest.score,
         theirs: theirsBest && theirsBest.score,
         note: loadType === 'per_side'

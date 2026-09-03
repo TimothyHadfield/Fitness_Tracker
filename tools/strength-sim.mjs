@@ -43,6 +43,16 @@
 //      the high-rep shrinkage) is reported here as a SENSITIVITY, never as a
 //      fitted value.
 //
+// ⚠️ AND ASSUMPTION 1 IS NOW MEASURABLE HERE (2026-09-13, strength-accuracy-plan
+// §3.11 / §6.2). `simulateLifter` takes a `repMap` — the TRUE reps↔%1RM curve
+// the lifter's body follows, expressed as "true reps n → the Marzagão rep count
+// with the same %1RM". Identity is the shipped simulator; TRUE_CURVES below
+// carries the alternatives the literature actually documents (Nuzzo's bench and
+// general tables, Epley, and a mirror-steep lifter). `tools/strength-fit.mjs`
+// prints the error each one produces, which is the honest error budget for any
+// absolute claim: about ±8 % of bias, on top of the ±4.6 % RMSE measured under
+// the curve the estimator assumes.
+//
 // Deterministic throughout. Never Math.random(), for the same reason js/demo.js
 // never uses it: a fit you cannot reproduce is a fit you cannot check.
 
@@ -82,6 +92,14 @@ export function rng(seed) {
 // still while the truth does), a DELOAD catches an estimator that reads a light
 // week as a regression, and a REBUILD catches one that has smoothed so hard it
 // can no longer move.
+//
+// ⚠️ THESE SLOPES ARE WRITTEN, NOT MEASURED, AND ONE CONSTANT IN THE APP IS
+// DERIVED FROM THEM: `PLAUSIBLE_GAIN.perDay` in js/strength-estimate.js is the
+// build phase's slope, ln(1.14)/98 = 0.00134 per day, widened to 0.0019. The
+// fit tool's Q3(a) "fastest 28-day stretch" is that number read back off this
+// table — it cannot come out any other way, because every curve in the ensemble
+// is built from these phases. A published gain rate for a novice would replace
+// it; nothing here measures one.
 export const DEFAULT_PHASES = [
   { days: 98, to: 1.14 },   // build   — +14 % over fourteen weeks
   { days: 84, to: 1.14 },   // plateau — twelve weeks of exactly nothing
@@ -130,9 +148,61 @@ export function repCurveSpread(reps, sigma15 = REP_CURVE_SIGMA) {
   return sigma15 * (Math.log(r) / Math.log(15));
 }
 
+/* ------------------------------------------------------------------ *
+ * The TRUE rep curve — what the lifter's body does, which need not be Marzagão
+ * ------------------------------------------------------------------ */
+
+// Each entry maps TRUE reps n to the Marzagão rep count at the same %1RM, so
+// the generator can keep using weightForReps() and still produce a lifter whose
+// body follows a different curve. The estimator never sees any of this; it
+// reads every set through e1rm() exactly as it does in the app.
+//
+// Where the constants come from (docs/research.md §16.5, agent D 2026-09-13):
+//   · at 80 % of a 225 lb bench Marzagão predicts 6.72 reps to failure. Nuzzo
+//     2024's 7,289-person bench table puts the mean at ~9, the all-exercise
+//     table at ~8. A flatter curve — more reps per percent — is modelled as
+//     n → 1 + (n − 1)·s with s < 1; 9 true reps ≙ 6.45 Marzagão reps gives
+//     s = 5.45/8 (the 6.45 rather than 6.72 is agent D's rounding, kept so the
+//     table in strength-accuracy-plan §3.11 reproduces exactly).
+//   · Epley (1RM = w·(1 + r/30)) is the fixed-factor formula most sites use;
+//     the map is solved by bisection at a 200 lb load, where the two curves
+//     differ least in shape, so it is a mild mismatch by construction.
+//   · mirror-steep is the same departure as Nuzzo bench in the other direction
+//     — a lifter who gets FEWER reps per percent than the population. Nobody
+//     has published that lifter's table; it is here because a curve fitted on
+//     AMRAP-flagged sets (Marzagão's) could be wrong either way.
+//
+// ⚠️ The map is linear in (n − 1). That is a modelling choice, not a fact about
+// any of the tables; the magnitude of the bias it produces would move under a
+// spline through the published cells, the direction would not.
+function epleyToMarzagao(n) {
+  const w = 200, target = w * (1 + n / 30);
+  let lo = 1, hi = 60;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    if (e1rm(w, mid) < target) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+export const TRUE_CURVES = Object.freeze({
+  marzagao: { label: 'Marzagão (as shipped)', repMap: (n) => n },
+  nuzzoBench: { label: 'Nuzzo bench (9 reps at 80 %)', repMap: (n) => 1 + (n - 1) * (5.45 / 8) },
+  nuzzoGeneral: { label: 'Nuzzo general (8 reps at 80 %)', repMap: (n) => 1 + (n - 1) * 0.80 },
+  epley: { label: 'Epley (1RM = w·(1 + r/30))', repMap: epleyToMarzagao },
+  mirrorSteep: { label: 'mirror-steep lifter', repMap: (n) => 1 + (n - 1) * (8 / 5.45) },
+});
+
 // Reps in reserve on an ordinary working set. Skewed toward 1–2: most people
 // leave a rep or two most of the time, occasionally grind one out, occasionally
 // have a bad day and stop early. Mean 1.79.
+//
+// ⚠️ A GUESS. No study in docs/research.md reports the distribution of reps in
+// reserve on self-selected working sets, and the app has no RIR field (D28) to
+// measure its own users'. Halperin 2022 (§16) says self-reported RIR is only
+// accurate within ~2 reps of failure, which bounds what could ever be measured
+// here. Every winsorK figure quoted from this simulator moves with this table
+// (the floor runs 0.18–0.29 across the plausible range — see the fit tool).
 const RIR_DISTRIBUTION = [
   [0, 0.12], [1, 0.30], [2, 0.33], [3, 0.17], [4, 0.08],
 ];
@@ -141,6 +211,14 @@ function drawRir(rand) {
   let u = rand();
   for (const [v, p] of RIR_DISTRIBUTION) { u -= p; if (u <= 0) return v; }
   return 2;
+}
+
+// What a lifter leaves in the tank on a DELIBERATE test. Not zero: even an
+// honest "nothing left" hides about two reps on average (Armes 2020, research.md
+// §16), and a benchmark day is still a day. 0 or 1, equally likely — a guess
+// like RIR_DISTRIBUTION, but a smaller one, because it only has two values.
+function drawBenchmarkRir(rand) {
+  return rand() < 0.5 ? 0 : 1;
 }
 
 export const LIFTER_DEFAULTS = Object.freeze({
@@ -153,11 +231,20 @@ export const LIFTER_DEFAULTS = Object.freeze({
   backoffMax: 3,
   warmupFractions: [0.45, 0.62, 0.80],
   warmupReps: [8, 5, 3],
-  readinessSigma: 0.035,   // sleep, food, stress — day to day
+  // Sleep, food, stress — day-to-day departure of today's capability from the
+  // true curve, as a log-SD. ⚠️ A GUESS: the repo has no within-person
+  // day-to-day source for it (docs/research.md §16 has between-person SDs
+  // only). 3.5 % is "a bad night costs you a rep on a five". The fit tool
+  // sweeps 0.035 against 0.06 and the winsorK floor moves 0.20 → 0.29, so
+  // anything quoted off that floor carries this guess with it.
+  readinessSigma: 0.035,
   benchmarkEvery: 0,       // 0 = this lifter never tests; 56 = every 8 weeks
   sigma15: REP_CURVE_SIGMA,
   secondExerciseRate: 0.25, // how often the lift is not first in the session
   roundTo: 5,
+  // The TRUE reps↔%1RM curve this body follows, as a map to Marzagão reps.
+  // Identity = the estimator's own curve is correct by construction.
+  repMap: null,
 });
 
 /**
@@ -174,7 +261,10 @@ export function simulateLifter(seed, overrides = {}) {
   const eps = rand.normal();
   const round = (w) => Math.max(45, Math.round(w / o.roundTo) * o.roundTo);
   // The weight this person can actually do for n reps, given today's capability.
-  const canDo = (cap, n) => weightForReps(cap, n) * Math.exp(eps * repCurveSpread(n, o.sigma15));
+  // `repMap` is the systematic departure (the whole body follows another
+  // curve); `eps` is the personal scatter around whichever curve that is.
+  const repMap = typeof o.repMap === 'function' ? o.repMap : (n) => n;
+  const canDo = (cap, n) => weightForReps(cap, repMap(n)) * Math.exp(eps * repCurveSpread(n, o.sigma15));
 
   const sets = [];
   let scheme = 0;
@@ -225,12 +315,24 @@ export function simulateLifter(seed, overrides = {}) {
     }
   }
 
-  // Benchmarks: a deliberate test, fresh, low reps, no reps in reserve.
+  // Benchmarks: a deliberate test, fresh, low reps — but still a human on a day.
+  //
+  // ⚠️ UNTIL 2026-09-13 THESE WERE IDEALISED: taken off the true curve with no
+  // readiness draw and exactly zero reps in reserve, so a simulated benchmark
+  // was the truth itself, rounded to 5 lb. That flattered every figure a
+  // benchmark touches (bias, coverage, the winsor floor, the benchmark bonus).
+  // A real test day has the same sleep-and-stress noise as any other, and an
+  // honest "nothing left" still hides a rep or two (research.md §16). So: the
+  // same readiness draw as a training day, and RIR 0 or 1. The draws come
+  // AFTER the training-day loop, so a lifter with `benchmarkEvery: 0` — most
+  // of the ensemble — produces a byte-identical log to the one they did before.
   if (o.benchmarkEvery > 0) {
     for (let day = o.benchmarkEvery; day < days; day += o.benchmarkEvery) {
       const reps = 1 + Math.floor(rand() * 3);
+      const readiness = Math.exp(rand.normal() * o.readinessSigma - (o.readinessSigma ** 2) / 2);
+      const rir = drawBenchmarkRir(rand);
       sets.push({
-        day, exerciseId: 'main', weight: round(canDo(trueMax(day), reps)),
+        day, exerciseId: 'main', weight: round(canDo(trueMax(day) * readiness, reps + rir)),
         reps, setIndex: 0, exerciseIndex: 0, isBenchmark: true,
       });
     }

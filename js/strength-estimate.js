@@ -178,7 +178,7 @@ export const DEFAULTS = Object.freeze({
   // 95 % rather than 90 % is a deliberate lean in that direction; it is still
   // certainly too narrow, and §11.2's backtest is the only thing that can say
   // by how much.
-  uBase: 0.10,
+  uBase: 0.13,
 
   // Staleness, applied only past the window: 0.4 % per week beyond 42 days
   // since the newest contributing observation, capped at 10 %.
@@ -571,10 +571,13 @@ export function estimateAt(daily, at, opts = {}) {
     windowDays,
     widened: windowDays !== P.windowDays,
     newestAgeDays,
-    // §5: nothing admissible for six weeks and the estimate stops claiming to
-    // describe today. It keeps its value and gets labelled "as of <date>" —
+    // §5: nothing admissible for a whole window and the estimate stops claiming
+    // to describe today. It keeps its value and gets labelled "as of <date>" —
     // never silently dropped, never silently held forever either.
-    stale: newestAgeDays > 42,
+    // ⚠️ P.windowDays, not a literal: until 2026-09-13 this said `> 42` while
+    // uStale above read the parameter, so a swept window would have moved one
+    // and not the other.
+    stale: newestAgeDays > P.windowDays,
     meanRepLoad,
   };
 }

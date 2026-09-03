@@ -2,11 +2,11 @@
 
 import { store, social, muscleStrength, muscleRatings, todayISO, uid, DEFAULT_SETS } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
-import { totalResistance } from './e1rm.js';
+import { totalResistance, bodyWeightOn } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel, goBack, refreshRoute,
-  parkScreen,
+  parkScreen, helpDot,
 } from './ui.js';
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
@@ -21,7 +21,8 @@ import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
 } from './progression.js';
 import { personalBests, PB_LABEL } from './personal-bests.js';
-import { estimateOneRM, percentOfMax, repPrediction } from './exercise-estimate.js';
+import { estimateOneRM, percentOfMax, repPrediction, ownBestSet } from './exercise-estimate.js';
+import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -175,11 +176,33 @@ export async function SessionView(workoutId) {
    * one muscle standing in for another, the weakest reading in the table, and
    * the second door was open until the check below closed it.
    *
+   * 🚨 TWO MORE GATES SINCE 2026-09-13 (plan §2.7, agent E's D9). One assisted
+   * pull-up set used to prefill a 75 lb barbell row: the confidence gate reads
+   * a fourth-root number, so a single set at quality 0.29 rated Back 0.39 and
+   * walked through. Now the CONTRIBUTION QUALITY × MUSCLE CONFIDENCE product
+   * must clear 0.35 as well — the same two credences `estimateOneRM()`
+   * multiplies, and the honest figure for "how much do we believe THIS
+   * number" — and the muscle must have been rated from at least TWO different
+   * exercises. One exercise is fine for a reading somebody looks at; it is not
+   * enough to put a weight in a field somebody loads a bar to.
+   *
+   * ⚠️ AND IT IS THE OWNER'S, ONLY. `muscleStrength()` is the owner's training,
+   * so `startingSet()` reads this map only when it is building the owner's
+   * entry — a guest or a friend on the same phone never inherits it. Before
+   * today a guest with an exercise missing from the library was handed the
+   * owner's opening weight through `entriesFor()`'s fallback path.
+   *
+   * ⚠️ ON DEMAND, NOT ONLY UP FRONT. `deriveOpening()` is run for every planned
+   * exercise now and for any exercise SWAPPED OR ADDED mid-session later, so an
+   * exercise that arrives by a different door opens the same way (the rule
+   * `buildEntry()` states) — before this a swapped-in lift got neither a weight
+   * nor the "no opening weight" note.
+   *
    * Fire-and-forget: every failure yields an empty map and the runner opens on
    * reps alone, which is exactly what it did before this existed.
    */
   const derivedWeights = new Map();
-  /* Exercises the block below LOOKED AT and declined to put a weight on.
+  /* Exercises `deriveOpening()` LOOKED AT and declined to put a weight on.
    *
    * ⚠️ IT IS NOT "everything missing from `derivedWeights`", and the difference
    * is the whole point of the second map. An exercise with no weight field was
@@ -189,6 +212,9 @@ export async function SessionView(workoutId) {
    * stays as silent as it was before. Only the paths below the weight check
    * add to it, and every one of them is the app declining. */
   const openingWithheld = new Set();
+  /** The minimum believed-this-much for a number that goes on a bar. */
+  const OPENING_MIN_BELIEF = 0.35;
+  let derivCtx = null;
   try {
     const [{ muscles }, ev, e1] = await Promise.all([
       muscleStrength(),
@@ -196,47 +222,78 @@ export async function SessionView(workoutId) {
       import('./e1rm.js'),
     ]);
     const bw = await store.latestBodyWeight().catch(() => null);
-    for (const { ex } of planned) {
-      if (!Array.isArray(ex.fields) || !ex.fields.includes('weight')) continue;
-      const contribs = ev.contributionsFor(ex, { bodyWeight: bw ? bw.weight : undefined });
-      const best = contribs
+    derivCtx = { muscles, ev, e1, bodyWeight: bw ? bw.weight : undefined };
+  } catch (_) { /* no estimate is a quieter screen, never an error */ }
+
+  function deriveOpening(ex) {
+    if (!derivCtx || !ex) return null;
+    if (derivedWeights.has(ex.id)) return derivedWeights.get(ex.id);
+    if (openingWithheld.has(ex.id)) return null;
+    if (!Array.isArray(ex.fields) || !ex.fields.includes('weight')) return null;
+    const { muscles, ev, e1, bodyWeight } = derivCtx;
+    const decline = () => { openingWithheld.add(ex.id); return null; };
+    let best;
+    try {
+      const contribs = ev.contributionsFor(ex, { bodyWeight });
+      best = contribs
         .filter((c) => c.kind === 'direct' && c.quality >= ev.FALLBACK_MIN_QUALITY)
         .sort((a, b) => b.quality - a.quality)[0];
-      if (!best) { openingWithheld.add(ex.id); continue; }
-      const rating = muscles.get(best.muscle);
-      if (!rating || !(rating.estimate > 0) || !(rating.confidence >= 0.35)) {
-        openingWithheld.add(ex.id); continue;
-      }
-      /* 🚨 AND THE RATING ITSELF MUST NOT BE A STAND-IN — closed 2026-09-06,
-       * and it was open on the ONE path where it mattered most.
-       *
-       * The filter above refuses a fallback CONTRIBUTION: this exercise may not
-       * reach its muscle through one. But `rateMuscle()` has a fallback of its
-       * own — `kind: 'fallback'` means that muscle had no direct evidence at all
-       * and a compound stood in for it, converted across by a published
-       * cross-muscle ratio. Reading `rating.estimate` without looking at
-       * `rating.kind` let the whole chain through the back door: an observation,
-       * times a cross-muscle ratio, times this exercise's ratio.
-       *
-       * ⚠️ THIS IS THE IDENTICAL BUG FIXED IN `exercise-estimate.js` ON
-       * 2026-09-02, and it survived here for four days because the two files
-       * look like they do different jobs and do the same arithmetic. That one
-       * puts a number on a screen somebody READS. This one puts a number in a
-       * field somebody LOADS A BAR TO — so of the two places to have missed it,
-       * this was the worse one. Found by an agent reading the two side by side.
-       *
-       * ⚠️ It can only ever WITHHOLD a suggestion, never raise one, which is the
-       * same asymmetry the lay-off rule and `trainingRange()` are built on. */
-      if (rating.kind === 'fallback') { openingWithheld.add(ex.id); continue; }
-      // `ratio` is this exercise's load as a fraction of the muscle's key lift,
-      // and it is in TOTAL load — so a per-side entry halves on the way out.
-      const oneRepTotal = rating.estimate * best.ratio;
-      const forTen = e1.weightForReps(oneRepTotal, DEFAULT_REPS);
-      if (!(forTen > 0)) { openingWithheld.add(ex.id); continue; }
-      const shown = ex.loadType === 'per_side' ? forTen / 2 : forTen;
-      derivedWeights.set(ex.id, { weight: shown, from: best.muscle });
-    }
-  } catch (_) { /* no estimate is a quieter screen, never an error */ }
+    } catch (_) { return null; }
+    if (!best) return decline();
+    const rating = muscles.get(best.muscle);
+    if (!rating || !(rating.estimate > 0) || !(rating.confidence >= OPENING_MIN_BELIEF)) return decline();
+    /* 🚨 AND THE RATING ITSELF MUST NOT BE A STAND-IN — closed 2026-09-06,
+     * and it was open on the ONE path where it mattered most.
+     *
+     * The filter above refuses a fallback CONTRIBUTION: this exercise may not
+     * reach its muscle through one. But `rateMuscle()` has a fallback of its
+     * own — `kind: 'fallback'` means that muscle had no direct evidence at all
+     * and a compound stood in for it, converted across by a published
+     * cross-muscle ratio. Reading `rating.estimate` without looking at
+     * `rating.kind` let the whole chain through the back door: an observation,
+     * times a cross-muscle ratio, times this exercise's ratio.
+     *
+     * ⚠️ THIS IS THE IDENTICAL BUG FIXED IN `exercise-estimate.js` ON
+     * 2026-09-02, and it survived here for four days because the two files
+     * look like they do different jobs and do the same arithmetic. That one
+     * puts a number on a screen somebody READS. This one puts a number in a
+     * field somebody LOADS A BAR TO — so of the two places to have missed it,
+     * this was the worse one. Found by an agent reading the two side by side.
+     *
+     * ⚠️ It can only ever WITHHOLD a suggestion, never raise one, which is the
+     * same asymmetry the lay-off rule and `trainingRange()` are built on. */
+    if (rating.kind === 'fallback') return decline();
+    // The two credences multiplied (the 2026-09-13 gate, header above), and a
+    // muscle rated off one exercise alone does not prescribe a weight.
+    /* The two credences MULTIPLIED, which is the 2026-09-13 gate.
+     *
+     * `rating.confidence` alone was never enough, and the reason is that it is
+     * a fourth root: a single assisted pull-up set, quality 0.29, rates Back at
+     * 0.39 — comfortably over a 0.35 bar — and the runner then prefilled 75 lb
+     * into a barbell row. What the old gate never asked is how well THIS
+     * exercise converts, which is `best.quality`, and 0.29 × 0.39 = 0.11 is the
+     * number that describes the suggestion. A bench press rating a chest is
+     * 1.00 × 0.9, and passes.
+     *
+     * ⚠️ AND THERE IS DELIBERATELY NO "TWO EXERCISES" RULE BESIDE IT. One was
+     * written here and taken out the same day: it withheld the opening weight
+     * from somebody whose chest history is nothing but barbell bench, which is
+     * the case this feature was built for and is high-quality evidence by every
+     * measure the module has. Counting exercises is a proxy for corroboration,
+     * and `confidence` already prices corroboration properly — the count only
+     * added a second, blunter opinion about the same thing. */
+    if (!(best.quality * rating.confidence >= OPENING_MIN_BELIEF)) return decline();
+    // `ratio` is this exercise's load as a fraction of the muscle's key lift,
+    // and it is in TOTAL load — so a per-side entry halves on the way out.
+    const oneRepTotal = rating.estimate * best.ratio;
+    const forTen = e1.weightForReps(oneRepTotal, DEFAULT_REPS);
+    if (!(forTen > 0)) return decline();
+    const shown = ex.loadType === 'per_side' ? forTen / 2 : forTen;
+    const derived = { weight: shown, from: best.muscle };
+    derivedWeights.set(ex.id, derived);
+    return derived;
+  }
+  for (const { ex } of planned) deriveOpening(ex);
 
   /* A draft only resumes on the same day, and that rule now lives in
    * session-draft.js because the bar above the nav applies exactly the same
@@ -328,8 +385,10 @@ export async function SessionView(workoutId) {
    * or the guest rows recorded under their name. `bodyWeight` likewise: null
    * for a guest, because nobody has weighed them, and progression already
    * degrades honestly (rep-only for bodyweight moves, no assist readout).
+   * `forName` is who this is FOR — null for the owner — and it decides whether
+   * a derived opening weight may be read at all (see `derivedWeights`).
    */
-  function entriesFor(sessions, bodyWeight, forDate) {
+  function entriesFor(sessions, bodyWeight, forDate, forName) {
     const step = units.fromDisplay(units.weightStep());
     const out = [];
     for (const { item, ex } of planned) {
@@ -337,7 +396,7 @@ export async function SessionView(workoutId) {
       const last = history[0] || null;
       // Never done before: start somewhere usable instead of at zero, and mark
       // it so nothing about it can be mistaken for a record.
-      const opening = (last && last.length) ? null : startingSet(ex, step);
+      const opening = (last && last.length) ? null : startingSet(ex, step, forName);
       // Build exactly the number of sets the workout plans for. Where history
       // runs out, repeat the last recorded set rather than dropping to zero.
       const lastSets = Array.from({ length: item.sets }, (_, i) => {
@@ -406,7 +465,7 @@ export async function SessionView(workoutId) {
          * gated on `hadHistory` as well. A draft written before this existed has
          * no key at all, which reads as false and keeps the screen silent: the
          * correct answer for a session whose suggestions were never weighed. */
-        openingWithheld: openingWithheld.has(ex.id),
+        openingWithheld: forName == null && openingWithheld.has(ex.id),
       });
     }
     return out;
@@ -418,8 +477,13 @@ export async function SessionView(workoutId) {
    * Returns a set object carrying `prefilled: true`, plus two non-stored hints
    * about where the numbers came from. Never throws — every failure to derive
    * is a quieter answer, not an error.
+   *
+   * ⚠️ A DERIVED WEIGHT IS THE OWNER'S AND IS READ FOR THE OWNER ONLY
+   * (`forName == null`). A guest or a friend on this phone gets the reps and a
+   * blank weight — their own history is what their numbers come from, and the
+   * owner's map is not it (0e).
    */
-  function startingSet(ex, step) {
+  function startingSet(ex, step, forName) {
     const set = blankSet(ex.fields);
     let how = null;
     let from = null;
@@ -427,7 +491,7 @@ export async function SessionView(workoutId) {
     // Reps first, because they cost nothing to be right about.
     if (ex.fields.includes('reps')) { set.reps = DEFAULT_REPS; how = 'reps'; }
 
-    const derived = derivedWeights.get(ex.id);
+    const derived = forName == null ? deriveOpening(ex) : null;
     if (derived && derived.weight > 0 && ex.fields.includes('weight')) {
       // Down to a real increment, never up: the smallest plate in the room is
       // the resolution this number can honestly claim, and rounding up hands
@@ -575,7 +639,7 @@ export async function SessionView(workoutId) {
       state.location = withLoc ? withLoc.location : '';
     }
 
-    state.entries = entriesFor(sessions, bodyWeight, state.date);
+    state.entries = entriesFor(sessions, bodyWeight, state.date, null);
     // ⚠️ Kept on the DRAFT, not looked up again at render time, and the reason is
     // the same one bodyWeightOn() exists for: this is what the lifter weighed on
     // the day of the session. A weigh-in logged tomorrow must not retroactively
@@ -671,6 +735,19 @@ export async function SessionView(workoutId) {
     if (!uid) return null;
     let doc = null;
     try { ({ doc } = await social.friend(uid)); } catch (_) { return null; }
+    /* ⚠️ THEIR BENCHMARKS AND WEIGH-INS TRAVEL TOO (2026-09-13, plan §3.4). The
+     * runner's `ratingsFor(friend)` used to rate them from sessions alone while
+     * `friendEstimates()` in views-social.js read the same document with both —
+     * one friend, one lift, two "% of max". Same rows, same reshaping as that
+     * function: a projected benchmark names its exercise `name`, and everything
+     * downstream reads `exerciseName`. Body weight is in the document only
+     * when they chose to share it, and is empty otherwise. */
+    sharedExtras = {
+      benchmarks: ((doc && doc.benchmarks) || []).map((b) => ({
+        date: b.date, exerciseId: b.exerciseId, exerciseName: b.name, values: b.values,
+      })),
+      bodyWeights: (doc && Array.isArray(doc.bodyWeight)) ? doc.bodyWeight : [],
+    };
     const rows = (doc && Array.isArray(doc.activity) ? doc.activity : [])
       .filter((a) => a && Array.isArray(a.entries))
       .map((a) => ({
@@ -693,20 +770,32 @@ export async function SessionView(workoutId) {
     return rows.length ? rows : null;
   }
 
+  // What the last `sharedSessionsFor()` read alongside the sessions — set by it,
+  // read by `historyForPerson()` on the next line, never kept longer.
+  let sharedExtras = null;
+
   /**
    * One person's history, and WHERE IT CAME FROM — the caller puts that on the
    * screen, because "no suggestion" for a reason you cannot see reads as broken.
+   * Since 2026-09-13 it also carries their `benchmarks` and `bodyWeights` where
+   * the source has them (a friend's shared document), so the captions rate them
+   * from the same rows every other screen does.
    */
   async function historyForPerson(name) {
     const meta = metaFor(name) || {};
     if (meta.uid) {
+      sharedExtras = null;
       const shared = await sharedSessionsFor(meta.uid);
-      if (shared) return { sessions: shared, source: 'theirs' };
+      if (shared) {
+        const extras = sharedExtras || { benchmarks: [], bodyWeights: [] };
+        sharedExtras = null;
+        return { sessions: shared, source: 'theirs', ...extras };
+      }
       const all = await store.getGuestSessions().catch(() => []);
-      return { sessions: guestRowsFor(all, name), source: 'mine-only' };
+      return { sessions: guestRowsFor(all, name), source: 'mine-only', benchmarks: [], bodyWeights: [] };
     }
     const all = await store.getGuestSessions().catch(() => []);
-    return { sessions: guestRowsFor(all, name), source: 'mine' };
+    return { sessions: guestRowsFor(all, name), source: 'mine', benchmarks: [], bodyWeights: [] };
   }
 
   // The active person's history, for the exercise swap. A guest's swap must
@@ -825,7 +914,7 @@ export async function SessionView(workoutId) {
   async function entryFor(name, newEx, shape = {}) {
     if (name === state.forName) return entryFromExercise(newEx, shape);
     const sessions = await sessionsForName(name);
-    return buildEntry(newEx, shape, sessions, null);
+    return buildEntry(newEx, shape, sessions, null, name);
   }
 
   function switchTo(name) {
@@ -901,11 +990,11 @@ export async function SessionView(workoutId) {
         setType: e.setType,
         plannedMinis: e.plannedMinis,
         ...(e.addedToday ? { addedToday: true } : {}),
-      }, sessions, null) : null;
+      }, sessions, null, name) : null;
     });
     const theirEntries = state.entries.length && shaped.every(Boolean)
       ? shaped
-      : entriesFor(sessions, null, state.date);
+      : entriesFor(sessions, null, state.date, name);
     /* 🚨 THEY JOIN WHERE THE WORKOUT IS, not at the top — 2026-09-10, and it
      * follows from the same instruction as the shared walk. Somebody added at
      * exercise four is doing exercise four; starting them at zero puts the one
@@ -1490,6 +1579,48 @@ export async function SessionView(workoutId) {
     return ratingsByPerson.get(key);
   }
 
+  /* The same walk, kept for the SETS THEMSELVES rather than the ratings built
+   * from them (2026-09-13). `ownBestSet()` needs this person's own rows to
+   * answer "what is your best showing on THIS lift", and `personalDecrement()`
+   * needs them to answer "how do YOUR reps fall across a run of sets". Both are
+   * per person for the reason the ratings are: a guest reading the owner's
+   * numbers under their own name is 0e's cross-prescription with extra steps.
+   *
+   * ⚠️ THE OWNER GETS THEIR BENCHMARKS AND A REAL WEIGH-IN SERIES; a guest gets
+   * neither, because neither exists for them in this account. That is not a
+   * degraded path, it is the true state — and it is why a guest's caption falls
+   * back to their converted rating or to nothing at all. */
+  // ⚠️ NOT `historyFor` — that name is taken, by the per-exercise walk this
+  // runner uses to prefill sets from last time. Two different questions about
+  // the word "history": what did you do on THIS exercise in THIS workout, and
+  // what rows does this person own. Colliding them cost a crash on the first
+  // run, which is the cheap version of the bug.
+  const ownRowsByPerson = new Map();
+  const historyReady = new Map();
+  function ownRowsFor(name) {
+    const key = personKey(name);
+    if (!ownRowsByPerson.has(key)) {
+      const p = (name == null
+        ? Promise.all([store.getSessions(), store.getBenchmarks(), store.getBodyWeights()])
+          .then(([sessions, benchmarks, bodyWeights]) => ({
+            sessions: sessions || [], benchmarks: benchmarks || [], bodyWeights: bodyWeights || [],
+          }))
+        : sessionsForName(name).then((sessions) => ({
+            sessions: sessions || [],
+            benchmarks: [],
+            bodyWeights: state.bodyWeight > 0 ? [{ date: state.date, weight: state.bodyWeight }] : [],
+          })))
+        .then((rows) => { historyReady.set(key, rows); return rows; })
+        .catch(() => {
+          const empty = { sessions: [], benchmarks: [], bodyWeights: [] };
+          historyReady.set(key, empty);
+          return empty;
+        });
+      ownRowsByPerson.set(key, p);
+    }
+    return ownRowsByPerson.get(key);
+  }
+
   function renderPane(opts) {
     const keepScroll = Boolean(opts && opts.keepScroll);
     const wasAt = pane.scrollTop;
@@ -1923,8 +2054,28 @@ export async function SessionView(workoutId) {
     function renderCaptions() {
       if (!wantsCaptions) return;
       const ratings = ratingsReady.get(personKey(state.forName));
+      /* 🚨 THIS LIFT'S OWN BEST SET FIRST, THE MUSCLE RATING ONLY AFTER
+       * (2026-09-13, plan §3.4, Tim's decision d).
+       *
+       * The caption used to read the muscle rating converted back out through
+       * the ratio table — always, even for somebody who had tested this exact
+       * lift two days ago. With a 215 x 3 bench benchmark on record the runner
+       * said "102 % — at or above what we think your max is" at 215, and
+       * "maybe 1 to failure" at 205 where the lifter had just done five,
+       * because the muscle's seat had gone to a 185 x 12 back-off set.
+       *
+       * Profile has argued since 2026-09-10 that a lift you have done shows
+       * YOUR OWN best set. The argument is stronger here: this is the screen
+       * where the number is acted on, with a bar already loaded.
+       *
+       * The rating is still the answer for a lift never performed — that is the
+       * whole point of the conversion — and the caption says which it is, so
+       * "from your 215 x 3" and "from your other lifts" are never confused. */
+      const rows = historyReady.get(personKey(state.forName));
+      const own = rows ? ownBestSet(ex, rows, state.date) : null;
       const est = ratings ? estimateOneRM(ex, ratings, state.bodyWeight) : null;
-      const oneRM = est ? est.oneRM : 0;
+      const oneRM = own && own.e1rm > 0 ? own.e1rm : (est ? est.oneRM : 0);
+      const fromOwn = Boolean(own && own.e1rm > 0);
       const w = Number(target.weight) || 0;
       /* ⚠️ THE LOAD, NOT THE NUMBER IN THE BOX. On a bodyweight or assisted lift
        * the box holds what was ADDED or how much HELP was taken, and the rating
@@ -1947,18 +2098,81 @@ export async function SessionView(workoutId) {
       const live = oneRM > 0 && totalW > 0;
       if (capSlots.weight) {
         const pct = live ? percentOfMax(oneRM, totalW) : null;
+        // ⚠️ Capped at 100. Above the max the honest words are the rep
+        // caption's, and "133 % of your estimated max" is a number pretending
+        // to a precision the thing it divides by does not have.
         setChildren(capSlots.weight, pct === null
           ? ''
-          : el('span', {}, el('b', { text: `${Math.round(pct)}%` }), ' of your estimated max'));
+          : el('span', {}, el('b', { text: `${Math.min(100, Math.round(pct))}%` }),
+              ' of your estimated max',
+              // Rule 5's anchor, in four words: which set this rests on.
+              fromOwn && own.reps
+                ? ` (from your ${units.fmtWeight(own.perSide ? own.perSideWeight : own.weight)}`
+                  + `${own.perSide ? '/side' : ''} × ${own.reps})`
+                : (fromOwn ? '' : ' (from your other lifts)')));
       }
       if (capSlots.reps) {
         const p = live ? repPrediction(oneRM, totalW) : null;
+        /* ⚠️ AND THE PREDICTION FALLS ACROSS A RUN OF SETS (2026-09-13, plan
+         * §5.1-5.2). "maybe 8 to failure" was printed identically on set 1 and
+         * set 4, and the literature is unambiguous that it should not be: at
+         * two minutes' rest a set to failure returns about 72 % of set 1's reps
+         * on set 2 and 55 % on set 3, PROPORTIONALLY — the same fraction at
+         * 50 % of a max as at 80 %, which is what makes it a multiplier on the
+         * fresh number rather than a second model.
+         *
+         * `blendedMultipliers()` shrinks the published column toward this
+         * lifter's own decrement as soon as they have run three sets at one
+         * load, and every multiplier is <= 1, so a wrong constant can only make
+         * the caption easier to beat.
+         *
+         * The set index is its position in the LEADING RUN at this weight: a
+         * weight change means a fresh effort and resets it, which is what
+         * `leadingRun` measures. Drops and myo-reps are excluded — a ten-second
+         * rest is a different regime and the table says nothing about it. */
+        let mult = null;
+        let setIdx = 0;
+        // `entry.active` is the set the steppers point at — the one this
+        // caption is about. A drop or mini-set is never the subject: those sit
+        // inside a set and follow a ten-second rest, which the table does not
+        // describe (`entry.activeDrop` non-null means the editor is on one).
+        if (p && !p.over && !entry.setType && entry.group == null && entry.activeDrop == null) {
+          const run = leadingRun(entry.sets);
+          const active = Number(entry.active) || 0;
+          if (active < run.length) {
+            setIdx = active;
+            if (setIdx > 0) {
+              const personal = rows
+                ? personalDecrement(rows.sessions, entry.exerciseId)
+                : null;
+              // ⚠️ The rest TARGET, not a measured rest — the app records no
+              // per-set timing, and this is the only signal it has about how
+              // long this lifter takes. Zero (the default, timer off) means
+              // "unknown", and rep-decrement.js answers that with the two-minute
+              // column, which is the defensible central assumption.
+              mult = blendedMultipliers(personal, Number(settings.restTarget) || 0);
+            }
+          }
+        }
+        const fresh = p && !p.over ? p.reps : null;
+        const here = mult ? repsAtSet(fresh, setIdx, mult) : fresh;
+        const freshLow = p && p.low ? p.low : null;
+        const freshHigh = p && p.high ? p.high : null;
+        const hereLow = mult && freshLow ? repsAtSet(freshLow, setIdx, mult) : freshLow;
+        const hereHigh = mult && freshHigh ? repsAtSet(freshHigh, setIdx, mult) : freshHigh;
         setChildren(capSlots.reps, !p
           ? ''
           : p.over
             ? el('span', { text: 'at or above what we think your max is' })
             : el('span', {},
-                'maybe ', el('b', { text: `${p.reps}${p.atLeast ? '+' : ''}` }), ' to failure'));
+                'maybe ',
+                el('b', { text: hereLow && hereHigh && hereLow !== hereHigh
+                  ? `${hereLow}–${hereHigh}${p.atLeast ? '+' : ''}`
+                  : `${here}${p.atLeast ? '+' : ''}` }),
+                ' to failure',
+                // The fresh figure stays visible, so a lower number on set 3
+                // reads as fatigue rather than as the app changing its mind.
+                mult && here !== fresh ? ` on this set (${fresh} fresh)` : ''));
       }
     }
 
@@ -2017,6 +2231,15 @@ export async function SessionView(workoutId) {
     renderCaptions();
     if (wantsCaptions && !ratingsReady.has(personKey(state.forName))) {
       ratingsFor(state.forName).then(() => {
+        if (capSlots.weight && capSlots.weight.isConnected) renderCaptions();
+      });
+    }
+    // The same lazy fill for this person's own sets, which the caption prefers
+    // over the muscle rating. Two independent awaits rather than one combined
+    // promise: whichever lands first paints what it can, and neither can be
+    // held up by the other failing.
+    if (wantsCaptions && !historyReady.has(personKey(state.forName))) {
+      ownRowsFor(state.forName).then(() => {
         if (capSlots.weight && capSlots.weight.isConnected) renderCaptions();
       });
     }
@@ -2453,7 +2676,7 @@ export async function SessionView(workoutId) {
    * every field of it is optional here.
    */
   async function entryFromExercise(newEx, shape = {}) {
-    return buildEntry(newEx, shape, await sessionsForActive(), state.bodyWeight);
+    return buildEntry(newEx, shape, await sessionsForActive(), state.bodyWeight, state.forName);
   }
 
   /**
@@ -2464,15 +2687,29 @@ export async function SessionView(workoutId) {
    * Every caller still goes through `entryFromExercise` or `entryFor`, so
    * "an exercise that arrives by a different door must not arrive with a
    * different shape" is still true by construction.
+   *
+   * ⚠️ AND SINCE 2026-09-13 A NEVER-DONE EXERCISE OPENS HERE EXACTLY AS IT DOES
+   * AT SESSION START (agent E's D9c): `startingSet()` — ten reps, a derived
+   * weight for the owner where the gates pass, `prefilled` so nothing is saved
+   * untouched, and `openingWithheld` when the app looked and declined. Before
+   * this a swapped-in or added lift opened on a column of zeros with no note,
+   * the one entry on the screen with no numbers and no explanation for it.
+   * `forName` is who it is for; null is the owner.
    */
-  function buildEntry(newEx, shape, sessions, bodyWeight) {
+  function buildEntry(newEx, shape, sessions, bodyWeight, forName) {
     const { last, suggestion } = readingFrom(newEx, sessions, bodyWeight);
     const plannedSets = Number(shape.plannedSets) > 0 ? Number(shape.plannedSets) : DEFAULT_SETS;
+    const opening = (last && last.length)
+      ? null
+      : startingSet(newEx, units.fromDisplay(units.weightStep()), forName);
 
     const lastSets = Array.from({ length: plannedSets }, (_, i) => {
-      if (!last || !last.length) return blankSet(newEx.fields);
+      if (!last || !last.length) return opening ? { ...opening.set } : blankSet(newEx.fields);
       return pickFields(last[Math.min(i, last.length - 1)], newEx.fields);
     });
+    const sets = applySuggestion(lastSets, suggestion);
+    // Re-stamped after applySuggestion, for the reason entriesFor() gives.
+    if (opening && opening.how) for (const s of sets) s.prefilled = true;
 
     return {
       lastSets,
@@ -2486,11 +2723,14 @@ export async function SessionView(workoutId) {
       group: shape.group == null ? null : shape.group,
       setType: shape.setType || null,
       plannedMinis: shape.plannedMinis || 0,
-      sets: applySuggestion(lastSets, suggestion),
+      sets,
       active: 0,
       activeDrop: null,
       hadHistory: Boolean(last && last.length),
       lastSummary: last && last.length ? fmtSet(last[0], newEx.fields, newEx.loadType) : null,
+      opening: opening ? opening.how : null,
+      openingFrom: opening ? opening.from : null,
+      openingWithheld: forName == null && openingWithheld.has(newEx.id),
       ...(shape.swappedFrom ? { swappedFrom: shape.swappedFrom } : {}),
       ...(shape.addedToday ? { addedToday: true } : {}),
     };

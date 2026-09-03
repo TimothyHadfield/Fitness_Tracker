@@ -35,6 +35,26 @@
 // progression follows your last session, never the calendar, because a deadline
 // that raises loads would push hardest on somebody who has just missed two
 // weeks. That is the one thing in this app that could hurt a person.
+//
+// ── SINCE 2026-09-13 THE SCREEN KNOWS WHEN THE MODEL MOVED UNDER A GOAL ──────
+//
+// docs/strength-accuracy-plan.md §2.9. A goal freezes pounds; pounds do not
+// remember the ratios, medians and spreads they came from. When those change,
+// the frozen target stops meaning its level and the start-to-now subtraction
+// mixes a model change with a training change. So:
+//
+//   · staleNotice() says so ABOVE the progress figures, on screen, and offers
+//     ONE button that re-freezes the target under today's model. The tap goes
+//     through a sheet showing the old and new weight; nothing is re-frozen
+//     silently, ever.
+//   · Until then the pounds still show (they are real), but the "to go", the
+//     bar and the "N higher, or P %" sentences are SUPPRESSED, not prefixed.
+//     "Before the change" would be untrue of a subtraction whose two ends sit
+//     on different sides of the change — so the honest version is no figure
+//     and one sentence saying why there is none (Rule 5).
+//   · A goal may not be SET from a fallback rating — a muscle inferred from the
+//     big lifts that also work it. The picker lists the muscle and refuses it
+//     with the reason, the same way it refuses an incomplete profile.
 
 import {
   store, muscleStrength, trainingForMuscle, weeklyVolumeByMuscle, todayISO,
@@ -42,7 +62,7 @@ import {
 import { comparisonLabel } from './strength-standards.js';
 import {
   candidateGoals, buildGoal, goalProgress, requirementsFor, stallReasons,
-  rankSystems, FIT_LABEL,
+  rankSystems, FIT_LABEL, modelChangedSince, refreezeGoal, goalSourceRefusal,
 } from './goals.js';
 import { PROGRESSION_EXPLAINER, PROGRESSION_WHY } from './progression.js';
 // ⚠️ Static, not a dynamic import, for the reason views-workouts.js states at
@@ -186,6 +206,29 @@ function proteinRate(perLb) {
     : `${perLb} g per lb`;
 }
 
+/**
+ * A TARGET for display: rounded UP to a whole number in the unit the reader
+ * uses, then the unit.
+ *
+ * ⚠️ UP, NOT NEAREST, and in the DISPLAY unit. A target that rounds down is a
+ * weight that does not clear the level, so every target on this screen has
+ * always been ceiled. It used to be ceiled in pounds and then converted, which
+ * for a kilo reader printed "102.3 kg" — a decimal on a figure that has none
+ * to keep, and the wrong side of the kilo half the time (plan §2.7). Every
+ * ESTIMATE on the screen goes through `units.withUnitRounded()` for the same
+ * reason; this is its ceiling twin, local because targets are the only thing
+ * here that must never round down.
+ */
+function ceilUnit(lb) {
+  return `${Math.ceil(units.toDisplay(lb))} ${units.units()}`;
+}
+
+/** The label the picker freezes onto a goal — one place, so both writers agree. */
+function comparisonText(profile) {
+  const label = comparisonLabel(profile);
+  return `${label.main.replace(/^vs\. /, '')} — ${label.sub}`;
+}
+
 /* ================================================================== *
  * The Goals tab
  * ================================================================== */
@@ -281,6 +324,10 @@ async function activeGoalScreen(goal, profile, muscles) {
   const current = m ? m.estimate : null;
   const p = goalProgress(goal, current, todayISO());
   const req = requirementsFor(goal.ambition, { bodyWeight: profile.bodyWeight });
+  // Was the target frozen under the model that is rating "now"? Decided once,
+  // here, and handed to every block that prints a subtraction — so the notice
+  // and the suppressed figures can never disagree about which goal is stale.
+  const stale = modelChangedSince(goal);
 
   const body = el('div', { class: 'goal-screen' });
 
@@ -306,7 +353,11 @@ async function activeGoalScreen(goal, profile, muscles) {
   // which is where progressionBlock's own note already argues these belong.
   body.append(
     goalHero(goal, p),
-    progressBlock(goal, p, m),
+    // ⚠️ ABOVE the figures, not below them. A reader meets the numbers first
+    // and the notice is what changes what those numbers are (Rule 9: WHAT on
+    // the screen, in front of the thing it qualifies).
+    stale ? staleNotice(goal, profile) : null,
+    progressBlock(goal, p, m, stale),
     requirementsBlock(goal, req),
   );
 
@@ -319,7 +370,7 @@ async function activeGoalScreen(goal, profile, muscles) {
   // a pair and a digression about weights in the middle of them reads as part of
   // the requirement. It also puts the sentence that matters most — the goal does
   // not set your weights — next to the screen's other honest limits.
-  body.append(measuredHost, verdictBlock(goal, p, m), progressionBlock(), moreRows());
+  body.append(measuredHost, verdictBlock(goal, p, m, stale), progressionBlock(), moreRows());
 
   trainingOrShortWindow(goal.muscle)
     .then((measured) => measuredHost.append(measuredBlock(goal, req, measured)))
@@ -339,7 +390,7 @@ function goalHero(goal, p) {
     el('div', { class: 'goal-hero-level lv-text-' + goal.targetLevel, text: goal.targetLevelName }),
     el('div', { class: 'goal-hero-lift', text: goal.liftName || goal.muscle }),
     el('div', { class: 'goal-hero-meta' },
-      el('span', { class: 'mono', text: units.withUnit(Math.ceil(goal.targetWeight)) }),
+      el('span', { class: 'mono', text: ceilUnit(goal.targetWeight) }),
       el('span', { class: 'goal-hero-dot', text: '·' }),
       el('span', { text: when }),
     ),
@@ -347,7 +398,65 @@ function goalHero(goal, p) {
   );
 }
 
-function progressBlock(goal, p, m) {
+/**
+ * The model moved under this goal. Say so, above the figures, and offer the one
+ * way out — on a tap, through a sheet, never silently.
+ *
+ * ⚠️ WHAT ON THE SCREEN, WHY BEHIND THE "?" (Rule 9). That the target may no
+ * longer mean its level changes what every number below it IS, so it cannot be
+ * one tap away. What changed inside the model on which date is provenance.
+ *
+ * ⚠️ THE BUTTON RE-FREEZES THE TARGET AND NOTHING ELSE. Start date, deadline,
+ * start weight, level and the requirements all stay — see refreezeGoal(). The
+ * sheet prints the old and new weight so the reader agrees to a number, not to
+ * a verb.
+ */
+function staleNotice(goal, profile) {
+  const next = refreezeGoal(goal, profile, { comparison: comparisonText(profile) });
+
+  return el('div', { class: 'card goal-stale' },
+    el('div', { class: 'help-line' },
+      el('div', { class: 'muscle-warn', text:
+        `Since you set this goal the way the app rates strength changed, so the target below `
+        + `may no longer mean ${goal.targetLevelName}. Re-set it to refresh the target.` }),
+      helpDot('The ratios that convert one lift to another, and the medians and spreads behind '
+        + 'each level, were corrected on 2026-09-13. A weight frozen before that was computed '
+        + 'from the old ones.',
+      { label: 'What changed in the way strength is rated' })),
+    next
+      ? el('button', {
+          class: 'btn primary block', text: 'Re-set the target',
+          onClick: () => refreezeSheet(goal, next),
+        })
+      : el('div', { class: 'field-help', text:
+          'The target cannot be recomputed until your profile has a sex and a body weight.' }),
+  );
+}
+
+function refreezeSheet(goal, next) {
+  const same = ceilUnit(goal.targetWeight) === ceilUnit(next.targetWeight);
+  confirmSheet({
+    title: 'Re-set the target?',
+    message: (same
+      ? `${goal.targetLevelName} ${goal.liftName || goal.muscle} still comes to `
+        + `${ceilUnit(next.targetWeight)} under the corrected model.`
+      : `${goal.targetLevelName} ${goal.liftName || goal.muscle} moves from `
+        + `${ceilUnit(goal.targetWeight)} to ${ceilUnit(next.targetWeight)} under the corrected `
+        + 'model.')
+      + '\nThe start date, the deadline and what the goal asks of you do not change.',
+    confirmLabel: 'Re-set it',
+    danger: false,
+    onConfirm: async () => {
+      // Same id, so the store updates the row in place — no "replaced" record,
+      // no second goal. The stamp travels on `next`.
+      await store.setGoal(next);
+      toast('Target re-set.');
+      refreshRoute('#/goals');
+    },
+  });
+}
+
+function progressBlock(goal, p, m, stale) {
   if (p.currentWeight === null) {
     return el('div', { class: 'card' },
       // ⚠️ RE-SHAPED. Both halves are WHAT — the fact that there is no current
@@ -362,36 +471,53 @@ function progressBlock(goal, p, m) {
   const needed = p.targetWeight - p.startWeight;
 
   return el('div', { class: 'card goal-progress' },
+    // The pounds themselves are real whichever model rated them, so all three
+    // stay on the screen even when the goal is stale. It is the SUBTRACTIONS
+    // between them that stop meaning anything, and those are below.
     el('div', { class: 'goal-nums' },
-      stat('Now', units.withUnit(Math.round(p.currentWeight))),
-      stat('Started at', units.withUnit(Math.round(p.startWeight))),
-      stat('Target', units.withUnit(Math.ceil(p.targetWeight))),
+      stat('Now', units.withUnitRounded(p.currentWeight)),
+      stat('Started at', units.withUnitRounded(p.startWeight)),
+      stat('Target', ceilUnit(p.targetWeight)),
     ),
 
-    el('div', { class: 'to-next-bar' },
-      el('div', {
-        class: 'to-next-fill',
-        style: `width:${((p.fraction || 0) * 100).toFixed(1)}%`,
-      })),
+    /* ⚠️ SUPPRESSED, NOT PREFIXED, while the goal is stale. The bar is "N % of
+     * the way" drawn rather than written, and "to go" is the same fraction in
+     * pounds; both divide a start rated one way into a now rated another.
+     * There is no honest prefix for that — "before the change" is untrue of a
+     * figure with one foot on each side of the change — so the figure goes and
+     * one sentence says why (Rule 5: an inference must never look like a
+     * measurement, and this one has stopped being either). */
+    stale
+      ? el('div', { class: 'field-help', text:
+          'How far along you are is not shown: the start figure was rated the old way and '
+          + 'today\'s the new way, so the gap between them is not a measure of training.' })
+      : [
+          el('div', { class: 'to-next-bar' },
+            el('div', {
+              class: 'to-next-fill',
+              style: `width:${((p.fraction || 0) * 100).toFixed(1)}%`,
+            })),
 
-    el('div', { class: 'to-next-label', text: p.reached
-      ? 'Target reached.'
-      : `${units.withUnit(Math.ceil(p.remaining))} to go of the `
-        + `${units.withUnit(Math.ceil(needed))} this goal asks for.` }),
+          el('div', { class: 'to-next-label', text: p.reached
+            ? 'Target reached.'
+            : `${ceilUnit(p.remaining)} to go of the ${ceilUnit(needed)} this goal asks for.` }),
 
-    // Going backwards is a real outcome and the screen has to be able to say it
-    // without dressing it up. Rule 6 keeps it factual: no judgement, no advice.
-    // ⚠️ THE FACT STAYS, THE MECHANISM MOVES (Rule 9). "You are below where you
-    // started" changes what the reader thinks the number is and must not be
-    // asked for; why an estimate can fall without anybody getting weaker is WHY.
-    gained < 0
-      ? el('div', { class: 'help-line' },
-          el('span', { class: 'field-help', text:
-            `The current estimate is ${units.withUnit(Math.round(-gained))} below where this goal `
-            + 'started.' }),
-          helpDot('Estimates move on how recently and how heavily you have trained, so a single '
-            + 'light week can do this.', { label: 'Why an estimate can go down' }))
-      : null,
+          // Going backwards is a real outcome and the screen has to be able to
+          // say it without dressing it up. Rule 6 keeps it factual: no
+          // judgement, no advice.
+          // ⚠️ THE FACT STAYS, THE MECHANISM MOVES (Rule 9). "You are below
+          // where you started" changes what the reader thinks the number is
+          // and must not be asked for; why an estimate can fall without anybody
+          // getting weaker is WHY.
+          gained < 0
+            ? el('div', { class: 'help-line' },
+                el('span', { class: 'field-help', text:
+                  `The current estimate is ${units.withUnitRounded(-gained)} below where this `
+                  + 'goal started.' }),
+                helpDot('Estimates move on how recently and how heavily you have trained, so a '
+                  + 'single light week can do this.', { label: 'Why an estimate can go down' }))
+            : null,
+        ],
 
     // Where the number came from, every time (Rule 5). An estimate must never
     // look like a measurement, and this one is converted from whatever exercise
@@ -468,7 +594,7 @@ const ESTIMATE_NOISE_PCT = 12;
  * report a change in the STANDARDS as a change in the lifter. Two estimated
  * 1RMs for the same muscle subtract cleanly; two percentiles do not.
  */
-function verdictBlock(goal, p, m) {
+function verdictBlock(goal, p, m, stale) {
   return el('div', { class: 'goal-verdict' },
     /* 🚨 THREE SENTENCES OF REASONING BECAME SIX WORDS AND A "?" (2026-09-07).
      *
@@ -492,7 +618,7 @@ function verdictBlock(goal, p, m) {
     el('p', { class: 'goal-verdict-body', text: 'Not yet — every number here is measured, not judged.' }),
 
     // What it CAN say: the measured change, and the size a change has to beat.
-    ...movedSince(goal, p, m),
+    ...movedSince(goal, p, m, stale),
     p.expired
       ? el('div', { class: 'field-help', text:
           'This goal has run its twelve weeks. Ending it keeps the record.' })
@@ -521,7 +647,7 @@ function verdictBlock(goal, p, m) {
  * stray element, and a block that renders nothing at all is what this change
  * exists to remove.
  */
-function movedSince(goal, p, m) {
+function movedSince(goal, p, m, stale) {
   const lift = goal.liftName || `${goal.muscle} key lift`;
 
   // ⚠️ SAID SPECIFICALLY, not left blank. "There is no current estimate" and
@@ -539,11 +665,25 @@ function movedSince(goal, p, m) {
       + 'the starting one from. The change appears here once one arrives.' })];
   }
 
+  /* ⚠️ A THIRD CASE SINCE 2026-09-13, and it is neither of the two above. The
+   * start was rated under the old model and "now" under the new one, so the
+   * subtraction exists and is NOT a measurement of training (plan §2.9: a 4 %
+   * ratio revision with no training read "gained 8.4 lb"). The number is
+   * withheld rather than prefixed, for the reason progressBlock() gives, and
+   * the sentence names the two ends so the reader knows what is missing and
+   * why. The notice above the figures says how to end this state. */
+  if (stale) {
+    return [el('p', { class: 'goal-verdict-body', text:
+      `What has moved since ${fmtDateLong(goal.startDate)} is not shown: the ${lift} estimate `
+      + 'this goal started from was rated the old way and today\'s is rated the new way, so the '
+      + 'difference would mix the correction with your training.' })];
+  }
+
   const delta = p.gained;
   const pct = Math.abs(delta) / p.startWeight * 100;
   const pctText = `${trimNum(Math.round(pct * 10) / 10)} %`;
-  const from = units.withUnit(Math.round(p.startWeight));
-  const to = units.withUnit(Math.round(p.currentWeight));
+  const from = units.withUnitRounded(p.startWeight);
+  const to = units.withUnitRounded(p.currentWeight);
 
   /* ⚠️ FLAT IS DECIDED BY WHAT GETS PRINTED, NOT BY `delta === 0`. The two ends
    * are estimates carrying decimals, so a goal set the same day reads as a
@@ -551,13 +691,20 @@ function movedSince(goal, p, m) {
    * which is a sentence saying two contradictory things at once. Rounding
    * first and asking whether anything survived is the fix, and it also gives
    * the honest wording: unchanged TO THE NEAREST POUND, which is all the
-   * screen ever claimed. */
-  const step = Math.round(Math.abs(delta));
+   * screen ever claimed.
+   *
+   * ⚠️ AND SINCE 2026-09-13 THE ROUNDING IS IN THE UNIT THE READER SEES. It
+   * used to round the pound delta, so "unchanged to the nearest kilo" was true
+   * to the nearest pound — 0.4 kg apart printed as unchanged, 0.3 kg apart as
+   * "1 kg higher". The step is now the gap between the two figures AS PRINTED,
+   * so the sentence can never disagree with the numbers beside it (§2.7). */
+  const step = Math.abs(Math.round(units.toDisplay(p.currentWeight))
+    - Math.round(units.toDisplay(p.startWeight)));
   const unitWord = units.units() === 'kg' ? 'kilo' : 'pound';
   const moved = step === 0
     ? `The ${lift} estimate is where it started, ${from} — unchanged to the nearest ${unitWord}.`
     : `The ${lift} estimate has gone from ${from} then to ${to} now — `
-      + `${units.withUnit(step)} ${delta > 0 ? 'higher' : 'lower'}, or ${pctText}.`;
+      + `${step} ${units.units()} ${delta > 0 ? 'higher' : 'lower'}, or ${pctText}.`;
 
   // ⚠️ ELAPSED, NEVER REMAINING. See the note above — `p.daysLeft` is right
   // there and is deliberately not read. Days under a fortnight, weeks after
@@ -873,17 +1020,39 @@ async function GoalMuscleView() {
         'Pick the muscle you want to move. The next screen shows the levels above it, and what '
         + 'each would cost.' }),
 
-      el('div', { class: 'list' }, rated.filter((m) => m.next).map((m) =>
-        el('button', { class: 'row', onClick: () => go('#/goal/new/' + encodeURIComponent(m.muscle)) },
+      el('div', { class: 'list' }, rated.filter((m) => m.next).map((m) => {
+        /* ⚠️ A FALLBACK RATING IS LISTED AND REFUSED, WITH THE REASON, not
+         * hidden. Hiding it would read as "this muscle has nothing recorded",
+         * which is a different fact from "this muscle has a guess" (Rule 5),
+         * and the map beside it is showing that guess with a level on it. So
+         * the row stays where the reader expects it, is not a button, and says
+         * in one sentence what would make it one — the same shape as the
+         * profile gate at the top of this screen. goalSourceRefusal() in
+         * goals.js holds the rule; this is only its rendering. */
+        const refusal = goalSourceRefusal(m);
+        if (refusal) {
+          return el('div', { class: 'row goal-refused' },
+            el('div', { class: 'row-main' },
+              el('div', { class: 'row-title', text: m.muscle }),
+              el('div', { class: 'row-sub wrap', text:
+                `${m.lift.name} · ${units.withUnitRounded(m.estimate)} estimated` }),
+              el('div', { class: 'muscle-warn', text: `Not available for a goal. ${refusal}` }),
+            ),
+            el('span', { class: 'muscle-level lv-text-' + (m.level ? m.level.key : 'below'),
+              text: m.level ? m.level.name : 'Below Beginner' }),
+          );
+        }
+        return el('button', { class: 'row', onClick: () => go('#/goal/new/' + encodeURIComponent(m.muscle)) },
           el('div', { class: 'row-main' },
             el('div', { class: 'row-title', text: m.muscle }),
             el('div', { class: 'row-sub wrap', text:
-              `${m.lift.name} · ${units.withUnit(Math.round(m.estimate))} estimated` }),
+              `${m.lift.name} · ${units.withUnitRounded(m.estimate)} estimated` }),
           ),
           el('span', { class: 'muscle-level lv-text-' + (m.level ? m.level.key : 'below'),
             text: m.level ? m.level.name : 'Below Beginner' }),
           chevron(),
-        ))),
+        );
+      })),
 
       atTop.length
         ? el('div', { class: 'field-help', text:
@@ -916,6 +1085,21 @@ async function GoalLevelView(muscle) {
   }
 
   const m = muscles.get(muscle);
+
+  // The picker already refuses this row; a deep link or a stale tab must not
+  // get past it. Same reason, same sentence, one more place.
+  const refusal = goalSourceRefusal(m);
+  if (refusal) {
+    return screenShell({
+      title: muscle, back: () => go('#/goal/new'),
+      scroll: emptyState(
+        'Not available for a goal yet',
+        refusal,
+        el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
+      ),
+    });
+  }
+
   const options = candidateGoals(muscle, m.estimate, m.percentile, profile);
 
   return screenShell({
@@ -925,7 +1109,7 @@ async function GoalLevelView(muscle) {
     scroll: [
       el('div', { class: 'field-help', text:
         `${m.lift.name} is the standard ${muscle} is measured against. Every exercise that trains `
-        + `it counts toward the estimate — right now that is ${units.withUnit(Math.round(m.estimate))}.` }),
+        + `it counts toward the estimate — right now that is ${units.withUnitRounded(m.estimate)}.` }),
 
       el('div', { class: 'list' }, options.map((o) => goalOption(o, m, profile, goal))),
 
@@ -965,7 +1149,7 @@ function goalOption(o, m, profile, existing) {
         el('span', { class: 'lv-text-' + o.level.key, text: o.level.name }),
       ),
       el('div', { class: 'row-sub wrap', text:
-        `${units.withUnit(Math.ceil(o.targetWeight))} ${m.lift.name} · `
+        `${ceilUnit(o.targetWeight)} ${m.lift.name} · `
         + `${o.ambition.name} — ${o.ambition.blurb.charAt(0).toLowerCase()}`
         + o.ambition.blurb.slice(1) }),
     ),
@@ -975,7 +1159,6 @@ function goalOption(o, m, profile, existing) {
 }
 
 function confirmGoal(o, m, profile, existing) {
-  const label = comparisonLabel(profile);
   const start = todayISO();
 
   const set = async () => {
@@ -988,7 +1171,7 @@ function confirmGoal(o, m, profile, existing) {
       startLevelKey: m.level ? m.level.key : null,
       startDate: start,
       liftName: m.lift.name,
-      comparison: `${label.main.replace(/^vs\. /, '')} — ${label.sub}`,
+      comparison: comparisonText(profile),
     });
     await store.setGoal(goal);
     toast('Goal set.');

@@ -7,11 +7,20 @@
 // To switch to Firebase: fill in js/firebase-config.js and set BACKEND = 'firebase' below.
 // See docs/firebase-setup.md.
 
-import { BUILT_IN_EXERCISES } from './exercises.js';
-// ⚠️ isRankableSet moved out with the observation walk — it now lives beside
-// the D5 gate it guards, in strength-observations.js. Nothing else here rated
-// a set.
-import { e1rm, normalizeWeight, modalReps, canNormalize, clampReps } from './e1rm.js';
+import { BUILT_IN_EXERCISES, bodyWeightFractionFor } from './exercises.js';
+// ⚠️ NO `e1rm` IMPORT, AND THAT IS DELIBERATE — 2026-09-13, docs/strength-accuracy-plan.md
+// §2.1. Three functions in this file (currentBests, pickBenchmarkSet,
+// normalizedSeries) used to call e1rm() on the number typed into the box, so an
+// assisted pull-up with MORE help scored higher, a weighted pull-up was scored
+// on the plate alone, and a 25-rep burnout set beat a real 205×5. Every logged
+// set now becomes a maximum through setE1rm() in js/set-e1rm.js, with the
+// weigh-in of the set's own date, and D5 (nothing above MAX_EVIDENCE_REPS) is
+// enforced there. isRankableSet is imported only to COUNT what was dropped, so
+// a caption can say so.
+import {
+  normalizeWeight, modalReps, canNormalize, clampReps, bodyWeightOn, isRankableSet,
+} from './e1rm.js';
+import { setE1rm, shownMax } from './set-e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
 import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
@@ -698,30 +707,70 @@ export const DEFAULT_SETS = 3;
  * furthest set and breaking ties on the fastest time, which gets a fixed-
  * distance run right. A time-ONLY exercise assumes longer is better, which is
  * right for a hold and wrong for a sprint — record those by hand.
+ *
+ * ⚠️ THE SET IS SCORED THE WAY THE RATING SCORES IT — 2026-09-13, plan §2.1.
+ * `opts.exercise` and `opts.bodyWeight` (the weigh-in of the SESSION'S date, in
+ * pounds) go to setE1rm(), so an assisted pull-up ranks on body weight MINUS
+ * the help, a weighted one on body weight PLUS the plate, and a dumbbell on
+ * both hands. Before this it was e1rm(box number, reps): 70 lb of help beat
+ * 30 lb of help, and a +25 pull-up was a 25 lb lift. A set above 15 reps scores
+ * nothing (D5) — the benchmark row it would have made was the burnout set.
+ *
+ * ⚠️ WHAT IS STORED DOES NOT CHANGE: the set as typed. A benchmark row carries
+ * the box number, and every reader of one already knows what the box number
+ * means for that exercise (the load convention lives in the reader, in
+ * js/set-e1rm.js). Storing a total here would be a second convention on disk.
+ *
+ * When NOTHING can be scored — every set over 15 reps, or a body-weight lift
+ * with no weigh-in on record — the tie-break is what a person would pick by
+ * eye: less help on an assist machine, otherwise more weight, then more reps.
+ * Old sets still get a benchmark; they just are not ranked by a formula that
+ * cannot honestly rank them.
+ *
+ * @param {object} [opts] { exercise, bodyWeight, bodyWeightQuality }
  */
-export function pickBenchmarkSet(sets, fields) {
+export function pickBenchmarkSet(sets, fields, opts) {
   const usable = (sets || []).filter((s) => s && Object.values(s).some((v) => Number(v) > 0));
   if (!usable.length) return null;
   const has = (f) => fields && fields.includes(f);
   const num = (s, f) => Number(s[f]) || 0;
+  const exercise = opts && opts.exercise ? opts.exercise : null;
+  const bwOpts = opts && Number(opts.bodyWeight) > 0
+    ? { bodyWeight: Number(opts.bodyWeight), bodyWeightQuality: opts.bodyWeightQuality }
+    : undefined;
+  const spec = bodyWeightFractionFor(exercise);
 
   const rank = (s) => {
-    if (has('weight') && has('reps')) return e1rm(num(s, 'weight'), num(s, 'reps')) || 0;
+    if (has('weight') && has('reps')) {
+      const r = setE1rm(exercise, num(s, 'weight'), num(s, 'reps'), bwOpts);
+      return r ? r.e1rm : 0;
+    }
     if (has('distance')) return num(s, 'distance');
     if (has('reps')) return num(s, 'reps');
     if (has('time')) return num(s, 'time');
     return 0;
+  };
+  // Only consulted between two sets neither of which could be scored. Less
+  // help is the harder set on an assist machine; everywhere else more weight
+  // is, and at equal weight more reps.
+  const byEye = (s, b) => {
+    const ws = num(s, 'weight'), wb = num(b, 'weight');
+    if (ws !== wb) return spec && spec.assist ? ws < wb : ws > wb;
+    return num(s, 'reps') > num(b, 'reps');
   };
 
   let best = usable[0];
   for (const s of usable.slice(1)) {
     const d = rank(s) - rank(best);
     if (d > 0) { best = s; continue; }
+    if (d !== 0) continue;
     // Same distance, quicker time wins — that is a faster mile, not a longer one.
-    if (d === 0 && has('distance') && has('time')
+    if (has('distance') && has('time')
         && num(s, 'time') > 0 && (num(best, 'time') === 0 || num(s, 'time') < num(best, 'time'))) {
       best = s;
+      continue;
     }
+    if (has('weight') && has('reps') && rank(s) === 0 && byEye(s, best)) best = s;
   }
   return { ...best };
 }
@@ -741,11 +790,20 @@ async function syncSessionBenchmarks(session) {
 
   const made = [];
   if (session.isBenchmark) {
-    const exMap = await store.getExerciseMap();
+    const [exMap, bodyWeights] = await Promise.all([store.getExerciseMap(), store.getBodyWeights()]);
+    // The weigh-in of the SESSION'S day, never today's — the same rule the
+    // rating walk keeps (strength-observations.js), so the set this picks is
+    // the set the map would have picked. Read through the cache: weigh-ins are
+    // not the collection being written here.
+    const bw = bodyWeightOn(bodyWeights, session.date);
     for (const entry of session.entries || []) {
       const ex = exMap.get(entry.exerciseId);
       const fields = ex ? ex.fields : ['weight', 'reps'];
-      const values = pickBenchmarkSet(entry.sets, fields);
+      const values = pickBenchmarkSet(entry.sets, fields, {
+        exercise: ex || null,
+        bodyWeight: bw ? bw.weight : null,
+        bodyWeightQuality: bw ? bw.quality : null,
+      });
       if (!values) continue;
       made.push({
         // Deterministic, so re-saving updates the same row instead of piling up
@@ -3165,15 +3223,24 @@ export async function weightRepObservations(exerciseId, source = null, rows = nu
    * `entries[].name`, not `exerciseName`, and benchmark rows publish `name` too.
    * Only `exerciseId` is used for matching here, which both shapes carry, and the
    * label is read defensively below for the same reason. */
-  const [sessions, benchmarks] = rows
-    ? [rows.sessions || [], rows.benchmarks || []]
-    : await Promise.all([store.getSessions(), store.getBenchmarks()]);
+  const [sessions, benchmarks, exMap] = rows
+    ? [rows.sessions || [], rows.benchmarks || [], await store.getExerciseMap()]
+    : await Promise.all([store.getSessions(), store.getBenchmarks(), store.getExerciseMap()]);
   const out = [];
+
+  // ⚠️ A BODY-WEIGHT LIFT WITH NOTHING IN THE WEIGHT BOX IS STILL A SET —
+  // 2026-09-13, plan §2.7. A pull-up logged as 0 × 12 used to be no observation
+  // at all, because "weight > 0" was the test for a real set. For an exercise
+  // with a published body-weight fraction the resistance is the body, and the
+  // box is the ADDED part, which is legitimately nothing. Everything else keeps
+  // the old rule: no weight, no observation.
+  const bodyLift = Boolean(bodyWeightFractionFor(exMap.get(exerciseId)));
 
   const push = (date, weight, reps, src, label) => {
     const w = Number(weight), r = Number(reps);
-    if (!(w > 0) || !(r >= 1) || Number.isNaN(w) || Number.isNaN(r)) return;
-    out.push({ date, weight: w, reps: Math.round(r), source: src, label });
+    if (!(r >= 1) || Number.isNaN(r)) return;
+    if (!(w > 0) && !bodyLift) return;
+    out.push({ date, weight: w > 0 ? w : 0, reps: Math.round(r), source: src, label });
   };
 
   if (source !== 'benchmark') {
@@ -3203,8 +3270,16 @@ export async function weightRepObservations(exerciseId, source = null, rows = nu
 }
 
 // The rep count everything gets compared at, by default.
+//
+// ⚠️ ONLY SETS THE CHART CAN DRAW GET A VOTE — 2026-09-13, plan §2.2. Three
+// 25-rep sets beside one 205 × 5 used to make the target 20 (the ceiling), and
+// the chart then opened on the one set it could draw, restated at 20 reps. A
+// set over 15 reps is dropped from the series (D5), so letting it choose the
+// rep count the survivors are compared at was the burnout set steering a chart
+// it is not on.
 export async function defaultTargetReps(exerciseId, source = null, rows = null) {
-  return modalReps(await weightRepObservations(exerciseId, source, rows));
+  const obs = await weightRepObservations(exerciseId, source, rows);
+  return modalReps(obs.filter((o) => isRankableSet(o.reps)));
 }
 
 // One point per day, every point expressed as the weight you would have lifted
@@ -3214,14 +3289,65 @@ export async function defaultTargetReps(exerciseId, source = null, rows = null) 
 // that set wins (heaviest of them) and the point is marked `actual` — a real
 // measurement always beats an estimate. Otherwise the set with the highest
 // estimated 1RM wins and the point is marked as an estimate.
+//
+// ⚠️ D5 IS ENFORCED HERE TOO — 2026-09-13, plan §2.2. A set above 15 reps is
+// not a source for a point: the formula restates 135 × 25 as 189.7 lb at ten
+// reps, which beat a real 205 × 5 on the same day, and three 25-rep sets used
+// to push the chart's own target past the app's ceiling. What was dropped is
+// COUNTED rather than hidden, on the returned array itself: `dropped` (sets)
+// and `droppedMaxReps` (the highest rep count among them), so the caption can
+// say "3 sets over 15 reps not used" without a second walk. An array with two
+// named properties rather than a `{ points, dropped }` object, because every
+// caller and twenty assertions read this as a list and nothing about the list
+// changed.
+//
+// ⚠️ WHAT IS PLOTTED FOR A BODY-WEIGHT LIFT IS THE TOTAL RESISTANCE — plan §2.7.
+// A pull-up at +25 with a 180 lb weigh-in on the day is a 205 lb lift and is
+// charted as one; an assisted pull-up at 70 lb of help is 110 lb and RISES as
+// the help falls, which the added-load number had exactly backwards (see
+// e1rm.js, canNormalize). Each such point carries `bodyIncluded: true` and
+// `load` so the screen can say "body weight included". With no weigh-in on
+// record the lift is not chartable at all — chartableExercises() refuses it
+// and this returns nothing for it — which is the old behaviour, and the
+// sentence "log a weigh-in and this becomes chartable" is finally true.
+// `weight` on a point is still the number that was TYPED (per hand for a
+// dumbbell), because that is what the hover readout prints beside the reps.
 export async function normalizedSeries(exerciseId, targetReps, source = null, rows = null) {
   const target = clampReps(targetReps);
-  if (target === null) return [];
+  const out = [];
+  out.dropped = 0;
+  out.droppedMaxReps = 0;
+  if (target === null) return out;
+
+  const [exMap, bodyWeights] = rows
+    ? [await store.getExerciseMap(), rows.bodyWeights || rows.bodyWeight || []]
+    : await Promise.all([store.getExerciseMap(), store.getBodyWeights()]);
+  const exercise = exMap.get(exerciseId) || null;
+  const bodyLift = Boolean(bodyWeightFractionFor(exercise));
+  // Weigh-in of the SET'S date, resolved once per day rather than once per set.
+  const bwCache = new Map();
+  const bodyWeightFor = (date) => {
+    if (!bwCache.has(date)) bwCache.set(date, bodyWeightOn(bodyWeights, date));
+    return bwCache.get(date);
+  };
 
   const byDate = new Map();
   for (const o of await weightRepObservations(exerciseId, source, rows)) {
+    if (!isRankableSet(o.reps)) {
+      out.dropped += 1;
+      out.droppedMaxReps = Math.max(out.droppedMaxReps, o.reps);
+      continue;
+    }
+    const bw = bodyLift ? bodyWeightFor(o.date) : null;
+    const est = setE1rm(exercise, o.weight, o.reps,
+      bw ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality } : undefined);
+    if (!est) continue;
+    // The weight this chart is in: per hand for a dumbbell (what was typed and
+    // what the "/side" badge promises), the total resistance for a body-weight
+    // lift, the bar for everything else.
+    const plotted = est.perSide ? est.perSideWeight : est.load;
     const isActual = o.reps === target;
-    const value = isActual ? o.weight : normalizeWeight(o.weight, o.reps, target);
+    const value = isActual ? plotted : normalizeWeight(plotted, o.reps, target);
     if (!(value > 0)) continue;
 
     const cand = {
@@ -3232,7 +3358,11 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
       reps: o.reps,
       source: o.source,
       label: o.label,
-      rank: e1rm(o.weight, o.reps) || 0,
+      rank: est.e1rm,
+      load: est.load,
+      perSide: est.perSide,
+      bodyIncluded: est.bodyIncluded,
+      assist: est.assist,
     };
 
     const prev = byDate.get(o.date);
@@ -3242,7 +3372,8 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
     if (cand.actual ? cand.value > prev.value : cand.rank > prev.rank) byDate.set(o.date, cand);
   }
 
-  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  out.push(...[...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)));
+  return out;
 }
 
 /* ------------------------------------------------------------------ *
@@ -3320,14 +3451,26 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
  * has never heard of cannot be converted by it — which is a true statement
  * about what this app can work out, and is reported as such.
  *
- * @param {object} [rows] { sessions, benchmarks, bodyWeights } — theirs
+ * ⚠️ AND THE PERSON'S SEX GOES INTO THE CONVERSION — 2026-09-13, plan §3.6.
+ * The ratio between a pull-up and a barbell row is not the same for a woman as
+ * for a man (Strength Level's own pages differ by 20–40 % on pulls, body-weight
+ * lifts and machines), so `contributionsFor()` reads `opts.sex` and the walk
+ * has to be told whose sets these are. Your own comes off the profile; a
+ * friend's is `rows.sex`, the sex their published map was built for
+ * (`ownSexOf()` in js/shared-map.js), because their profile is not on this
+ * device. Null means "not known", and the conversion picks its own default —
+ * the same one the percentile assumes, and says so on the screen.
+ *
+ * @param {object} [rows] { sessions, benchmarks, bodyWeights, sex } — theirs
  * @returns {Promise<Map<string, object>>} muscle -> rateMuscle() result
  */
 export async function muscleRatings(rows) {
-  const [benchmarks, sessions, exMap, bodyWeights] = rows
-    ? [rows.benchmarks || [], rows.sessions || [], await store.getExerciseMap(), rows.bodyWeights || []]
+  const [benchmarks, sessions, exMap, bodyWeights, sex] = rows
+    ? [rows.benchmarks || [], rows.sessions || [], await store.getExerciseMap(), rows.bodyWeights || [],
+      rows.sex || null]
     : await Promise.all([
       store.getBenchmarks(), store.getSessions(), store.getExerciseMap(), store.getBodyWeights(),
+      store.getProfile().then((p) => p.gender || null),
     ]);
   const [{ rateMuscle }, { buildObservations }, { MUSCLE_LIFTS }] = await Promise.all([
     import('./muscle-evidence.js'),
@@ -3338,7 +3481,7 @@ export async function muscleRatings(rows) {
   // Same walk, same rules, same `today`-passed-in discipline as the rating
   // screen. Two callers, one definition of what a set is worth.
   const { byMuscle } = buildObservations({
-    sessions, benchmarks, exMap, bodyWeights, today: todayISO(),
+    sessions, benchmarks, exMap, bodyWeights, sex, today: todayISO(),
   });
 
   const out = new Map();
@@ -3385,7 +3528,10 @@ async function ratedFromRows(rows, profile) {
     keyLiftFor, percentileFor, levelFor, nextLevelAfter, levelProgress, weightForPercentile,
     standardCaveatFor,
   }, { confidenceBand, tintFor, raiseConfidenceHint }] = await Promise.all([
-    muscleRatings(rows), import('./strength-standards.js'), import('./muscle-evidence.js'),
+    // Their sex rides in with their rows: the profile handed in is theirs, and
+    // the ratios are sex-specific (plan §3.6).
+    muscleRatings({ ...rows, sex: rows.sex || profile.gender || null }),
+    import('./strength-standards.js'), import('./muscle-evidence.js'),
   ]);
 
   const out = new Map();
@@ -3415,6 +3561,9 @@ async function ratedFromRows(rows, profile) {
        * rating and the published projection — so a caveat cannot be lost by
        * being read on somebody else's phone. Null for every other muscle. */
       caveat: standardCaveatFor(muscle),
+      // Sets the typo screen set aside (plan §3.2), unchanged, so the panel can
+      // say what it did not count. Absent until rateMuscle() reports them.
+      quarantined: rating.quarantined || null,
       best: top ? { ...top } : null,
       percentile,
       level,
@@ -3522,6 +3671,16 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
       })),
       hint: m.hint || null,
       confident: m.confident === true,
+      /* ⚠️ THE CAVEAT TRAVELS — 2026-09-13, plan §2.7. The comment on this field
+       * where it is set (muscleStrength) has promised since 2026-09-04 that it
+       * is "set on BOTH the local rating and the published projection", and the
+       * projection never carried it: a friend's Core read as ranked with no
+       * word about its thinner standards. Published as the sentence itself,
+       * not a flag — the reader's copy of the app may word it differently one
+       * day, and the caveat that applies is the one the number was rated
+       * under. Null for every muscle but Core, and js/shared-map.js reads it
+       * back into the same field. */
+      caveat: m.caveat || null,
     })),
     grid,
     // Which row is THEIR "like me" — the combination their own screen opens on.
@@ -3587,8 +3746,14 @@ export async function muscleStrength() {
   // whether the rows came from my store or from a friend's published feed.
   // `today` is handed in rather than read there, so the ages this rating leans
   // on are the ones this call decided.
+  //
+  // ⚠️ `sex` IS THE ASSUMED ONE, ON PURPOSE (plan §3.6). The ratios are
+  // sex-specific now, and the sex the sets are converted under must be the sex
+  // the percentile is then read against — `ranked.gender` is that, and when it
+  // was assumed the screen already says so. Handing the walk the raw profile
+  // would let the two halves of one number disagree about who it belongs to.
   const { byMuscle, blocked } = buildObservations({
-    sessions, benchmarks, exMap, bodyWeights, today: todayISO(),
+    sessions, benchmarks, exMap, bodyWeights, sex: ranked.gender || null, today: todayISO(),
   });
 
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
@@ -3630,6 +3795,14 @@ export async function muscleStrength() {
        * rating and the published projection — so a caveat cannot be lost by
        * being read on somebody else's phone. Null for every other muscle. */
       caveat: standardCaveatFor(muscle),
+      /* ⚠️ WHAT THE TYPO SCREEN SET ASIDE — plan §3.2. rateMuscle() quarantines
+       * a set that is implausibly far above everything around it (a ×10 slip
+       * on a bench set rated Chest at 1,958 lb before this) and reports the
+       * list; it is passed through UNCHANGED so the panel can name the set and
+       * say it is waiting for a second one to confirm it. Null until the rating
+       * reports any — a missing field must read as "nothing set aside", not as
+       * an error. */
+      quarantined: rating.quarantined || null,
       // Kept for the panel, which still wants to show a real recorded set
       // rather than only a derived number.
       best: {
@@ -3661,14 +3834,31 @@ export async function muscleStrength() {
 
 // Every exercise that has at least `min` recorded data points, per field.
 export async function chartableExercises(min = 2, rows = null) {
-  // See the note on activityByDate() for what `rows` is.
-  const [sessions, benchmarks, exMap] = rows
-    ? [rows.sessions || [], rows.benchmarks || [], await store.getExerciseMap()]
+  // See the note on activityByDate() for what `rows` is. A friend's document
+  // names its weigh-ins `bodyWeight`; the rating path names them `bodyWeights`.
+  // Both are read, so a lift that is chartable on your screen is chartable on
+  // theirs when they have shared a weigh-in.
+  const [sessions, benchmarks, exMap, bodyWeights] = rows
+    ? [rows.sessions || [], rows.benchmarks || [], await store.getExerciseMap(),
+      rows.bodyWeights || rows.bodyWeight || []]
     : await Promise.all([
       store.getSessions(),
       store.getBenchmarks(),
       store.getExerciseMap(),
+      store.getBodyWeights(),
     ]);
+  /* ⚠️ THE WEIGH-IN PROMISE IS KEPT — 2026-09-13, plan §2.7. `canNormalize()`
+   * called with one argument is false for every body-weight lift, and the
+   * caption under the chart has said since 2026-08-24 "log a weigh-in and this
+   * becomes chartable" — a promise this function never honoured. The LATEST
+   * weigh-in decides whether the lift is offered at all (one weigh-in is enough
+   * to normalise a pull-up); normalizedSeries() then scores each set at the
+   * weigh-in of ITS OWN day. With no weigh-in nothing changes: not chartable,
+   * and the same sentence. */
+  const latestWeighIn = (bodyWeights || []).reduce((best, r) => (
+    r && Number(r.weight) > 0 && r.date && (!best || r.date > best.date) ? r : best
+  ), null);
+  const normOpts = latestWeighIn ? { bodyWeight: Number(latestWeighIn.weight) } : undefined;
 
   // Everything is tracked PER SOURCE. A benchmark is a deliberate test; a set
   // logged mid-workout is whatever the session called for. Mixing them into one
@@ -3688,8 +3878,12 @@ export async function chartableExercises(min = 2, rows = null) {
   };
   const bumpPair = (exId, src, date, values) => {
     const w = values.weight, r = values.reps;
-    if (typeof w !== 'number' || Number.isNaN(w) || !(w > 0)) return;
     if (typeof r !== 'number' || Number.isNaN(r) || !(r >= 1)) return;
+    // A body-weight lift's pair is (body, reps): the box may be empty or 0 and
+    // the set is still a resistance and a rep count. Same rule as
+    // weightRepObservations(), which is what the chart will actually read.
+    const bodyLift = Boolean(bodyWeightFractionFor(exMap.get(exId)));
+    if (!bodyLift && (typeof w !== 'number' || Number.isNaN(w) || !(w > 0))) return;
     const rr = rec(exId)[src];
     if (!rr.__paired) rr.__paired = new Set();
     rr.__paired.add(date);
@@ -3716,7 +3910,7 @@ export async function chartableExercises(min = 2, rows = null) {
   const out = [];
   for (const [exId, perSource] of counts) {
     const ex = exMap.get(exId);
-    const canNorm = canNormalize(ex);
+    const canNorm = canNormalize(ex, normOpts);
 
     const sources = {};
     for (const src of SOURCES) {
@@ -3769,6 +3963,34 @@ export async function chartableExercises(min = 2, rows = null) {
  * Returns rows sorted by most recent, each:
  *   { id, name, muscle, best{ weight, reps, date, source, ... }, e1rm,
  *     latestDate, days, sessions }
+ *
+ * ⚠️ HOW A SET IS SCORED CHANGED ON 2026-09-13 (plan §2.1, §2.2), and what the
+ * row carries grew with it:
+ *   `e1rm`          the number the screen prints as this lift's max — PER SIDE
+ *                   for a dumbbell (what was typed, doubled into the curve and
+ *                   halved back: shownMax), body weight INCLUDED for a
+ *                   pull-up or a dip, the bar for everything else.
+ *   `e1rmTotal`     the same set as a total: both dumbbells, body included.
+ *   `perSide`, `bodyIncluded`, `assist`, `load`
+ *                   what the screen needs to say "per side" or "body weight
+ *                   included" next to the number, so an inference never looks
+ *                   like a measurement (Rule 5).
+ *   `dropped`, `droppedMaxReps`
+ *                   sets over 15 reps that could not be scored (D5). Before
+ *                   this a 135 × 25 burnout set printed "~258 max" over a real
+ *                   205 × 5; now the 205 × 5 wins and the caption can say the
+ *                   burnout was not used.
+ *   `needsWeighIn`  a body-weight lift with no weigh-in on record: the set is
+ *                   still listed, without a max, and a weigh-in would give it one.
+ * Before this an assisted pull-up scored the HELP as the load, so more help was
+ * a bigger "~max"; a +25 pull-up read "~34 max"; a 0 × 12 pull-up was not a
+ * set at all. Every set now goes through setE1rm() with the weigh-in of its
+ * own date, the way the muscle map has always scored it.
+ *
+ * A lift whose only sets cannot be scored (all over 15 reps, or a weighted
+ * body-weight lift with no weigh-in) still gets a row — it is where the lift
+ * stands, which is the question — but `e1rm` stays null and `best` is picked by
+ * eye: less help on an assist machine, otherwise more weight, then more reps.
  */
 /* ⚠️ THE PARAMETER IS `from`, NOT `rows`, AND THAT IS FORCED. This function
  * already has a local `rows` — the Map it is building — so naming the parameter
@@ -3778,11 +4000,19 @@ export async function chartableExercises(min = 2, rows = null) {
  * back into line finds out why they were not. */
 export async function currentBests(from = null) {
   // See the note on activityByDate() for what `from` is.
-  const [sessions, benchmarks, exMap] = from
-    ? [from.sessions || [], from.benchmarks || [], await store.getExerciseMap()]
+  const [sessions, benchmarks, exMap, bodyWeights] = from
+    ? [from.sessions || [], from.benchmarks || [], await store.getExerciseMap(),
+      from.bodyWeights || from.bodyWeight || []]
     : await Promise.all([
-      store.getSessions(), store.getBenchmarks(), store.getExerciseMap(),
+      store.getSessions(), store.getBenchmarks(), store.getExerciseMap(), store.getBodyWeights(),
     ]);
+
+  // Weigh-in of the SET'S date, once per day — the rule every other scorer keeps.
+  const bwCache = new Map();
+  const bodyWeightFor = (date) => {
+    if (!bwCache.has(date)) bwCache.set(date, bodyWeightOn(bodyWeights, date));
+    return bwCache.get(date);
+  };
 
   const rows = new Map();
   const row = (exId) => {
@@ -3796,6 +4026,14 @@ export async function currentBests(from = null) {
         fields: ex ? ex.fields : ['weight', 'reps'],
         best: null,
         e1rm: null,
+        e1rmTotal: null,
+        load: null,
+        perSide: false,
+        bodyIncluded: false,
+        assist: false,
+        dropped: 0,
+        droppedMaxReps: 0,
+        needsWeighIn: false,
         latestDate: null,
         days: new Set(),
       });
@@ -3808,18 +4046,54 @@ export async function currentBests(from = null) {
     r.days.add(date);
     if (!r.latestDate || date > r.latestDate) r.latestDate = date;
 
+    const ex = exMap.get(exId);
+    const spec = bodyWeightFractionFor(ex);
     const w = Number(values.weight);
     const reps = Number(values.reps);
-    const hasLoad = w > 0 && reps >= 1;
+    // A body-weight lift with nothing in the box is still a loaded set — the
+    // load is the body. Everything else needs a weight to be one.
+    const hasLoad = reps >= 1 && (w > 0 || Boolean(spec));
+
+    // A set that cannot be scored still stands for the lift while nothing
+    // scorable has been seen: what a person would pick by eye. Never over a
+    // scored set, and never from an empty box — a 0 × 12 pull-up with no
+    // weigh-in is neither a number nor a row, exactly as before.
+    const byEye = () => {
+      if (r.e1rmTotal !== null || !(w > 0)) return;
+      const b = r.best;
+      const better = !b || !(b.weight > 0)
+        || (spec && spec.assist ? w < b.weight : w > b.weight)
+        || (w === b.weight && reps > b.reps);
+      if (better) r.best = { weight: w, reps: Math.round(reps), date, source };
+    };
 
     // Rank by estimated 1RM where there is one, so 185×8 correctly beats 205×3
     // only if it really does. Everything else — a time, a distance — keeps its
     // own best by raw value, and "best" for a time means FASTEST.
     if (hasLoad) {
-      const est = e1rm(w, reps);
-      if (est !== null && (r.e1rm === null || est > r.e1rm)) {
-        r.e1rm = est;
-        r.best = { weight: w, reps: Math.round(reps), date, source };
+      if (!isRankableSet(reps)) {
+        // D5: a maximum is not inferred from a set above 15 reps, here either.
+        r.dropped += 1;
+        r.droppedMaxReps = Math.max(r.droppedMaxReps, Math.round(reps));
+        byEye();
+        return;
+      }
+      const bw = spec ? bodyWeightFor(date) : null;
+      const est = setE1rm(ex, w > 0 ? w : 0, reps,
+        bw ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality } : undefined);
+      if (!est) {
+        if (spec && !bw) r.needsWeighIn = true;
+        byEye();
+        return;
+      }
+      if (r.e1rmTotal === null || est.e1rm > r.e1rmTotal) {
+        r.e1rmTotal = est.e1rm;
+        r.e1rm = shownMax(est);
+        r.load = est.load;
+        r.perSide = est.perSide;
+        r.bodyIncluded = est.bodyIncluded;
+        r.assist = est.assist;
+        r.best = { weight: w > 0 ? w : 0, reps: Math.round(reps), date, source };
       }
       return;
     }

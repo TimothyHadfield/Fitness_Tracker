@@ -320,9 +320,23 @@ ok(near(positionFactor(0, 0), 1, 1e-12) && positionFactor(4, 1) < positionFactor
   // 0.62 ratio muscle-evidence.js uses. It currently reads Elite off one set.
   const estimate = e1rm(180, 12) / 0.62;
   const boundaries = sim.levelBoundaries('Calves');
-  ok(estimate > boundaries[6],
-     `the unshrunk conversion is ${estimate.toFixed(0)} lb, above the Elite boundary of `
-     + `${boundaries[6].toFixed(0)} — reproduced exactly as docs/handbook.md §9 describes it`);
+  /* ⚠️ THE §9 CASE NO LONGER REACHES ELITE, AND NOT BECAUSE THIS MODULE FIXED
+   * IT. The conversion is the same 417 lb it always was — a high-rep isolation
+   * set extrapolating a long way is exactly what this section exists to price.
+   * What moved is the STANDARD underneath it: the calf-raise median went from a
+   * Gravitus figure to Strength Level's 317 lb on 2026-09-13, so the Elite
+   * boundary is 647 rather than the ~400 that made 417 an Elite reading.
+   *
+   * Worth keeping rather than deleting, because the §9 story is now two
+   * separate faults that happened to compound: a conversion that extrapolates
+   * too far, and a population it was being measured against that was too weak.
+   * The first is still real and is what the band below prices. The second was
+   * invisible until the ratios and the medians were forced to come from one
+   * source. */
+  ok(estimate > boundaries[3] && estimate < boundaries[6],
+     `the unshrunk conversion is ${estimate.toFixed(0)} lb — still far up the scale, but no longer `
+     + `past the Elite boundary of ${boundaries[6].toFixed(0)} now the calf standard comes from the `
+     + 'same population as the ratio that converts into it');
 
   const one = estimateAt(dailyValues([
     { day: 0, exerciseId: 'calf', weight: estimate * 0.62 / 1, reps: 12, setIndex: 0 },
@@ -419,7 +433,21 @@ ok(base.bias > 0 && base.bias < 0.015,
 ok(base.rmse < 0.06, `RMSE ${pc(base.rmse)} against a known truth`);
 ok(base.lagDays < 15,
    `LAG ${base.lagDays.toFixed(1)} days to recognise a genuine gain (mean over +3/+6/+9 % thresholds)`);
-ok(base.coverage > 0.93 && base.coverage < 0.97,
+/* ⚠️ THE BAND WAS WIDENED ON 2026-09-13 AND THE COVERAGE ROSE WITH IT, ON
+ * PURPOSE. `uBase` went 0.10 → 0.13 because the old ±12 % was a claim
+ * CONDITIONAL on Marzagão being the true rep curve — the simulator generates
+ * its ground truth with the very curve the estimator inverts, so the 95 %
+ * it reported was the model agreeing with itself. Re-run with the lab table as
+ * truth instead, the bias goes +0.7 % → +7.9 % and coverage falls to 91 %;
+ * with a steeper-than-average lifter it falls to 82 %.
+ *
+ * So the honest range for THIS simulation is now deliberately above nominal:
+ * the extra width is paying for a curve error this simulation cannot see, and
+ * over-covering here is what under-covering out there costs. The upper bound
+ * stays, because a band wide enough to contain everything says nothing.
+ * docs/strength-accuracy-plan.md §3.11 and §6.2; it narrows again the day the
+ * backtest runs on real held-out benchmarks. */
+ok(base.coverage > 0.93 && base.coverage < 0.99,
    `BAND COVERAGE ${pc(base.coverage)} — the ±${pc(base.meanU)} band contains the truth about `
    + '95 % of the time, which is what makes it a claim rather than decoration');
 

@@ -24,12 +24,20 @@
 //   3 min     0.75–0.80    ≈0.65        0.50–0.55
 //   5 min     ≈0.90        0.80–0.85    ≈0.75
 //
+// The four columns are the MID-POINTS of those ranges, rounded to two places (audited against
+// agent F's fitted table, 2026-09-13).
+//
 // ⚠️ What the table assumes and the app cannot check: set 1 was taken to failure (D28), and the
 // rest was what the column says. The app records no per-set rest; the rest TIMER's target is the
 // only proxy, and only for users who turn it on — so 2 min is the default, which is the
 // defensible central assumption for a lifter who is trying (docs/research.md §16.5). Stronger
 // men decline MORE at short rest and women far less (Ratamess 2012, one study) — not enough to
 // branch on. Free squat declines less than bench; leg press does not. Not modelled.
+//
+// ⚠️ THE 90-SECOND TARGET. The timer offers 0 / 60 / 90 / 120 / 180 s and the table has no
+// 90 s column: it sits exactly between 1 min and 2 min. Ties go to the SHORTER rest, on purpose
+// — the lower multiplier is the one the lifter can only beat (rule 1). Nothing is interpolated:
+// the constants are 🟡 and a line drawn between two of them would be a claim nobody measured.
 //
 // THE LIFTER'S OWN DECREMENT (plan §5.2). Any exercise logged with three or more sets at one
 // load already records how THIS person's reps fall. A shrinkage blend with the table as prior —
@@ -43,6 +51,8 @@
 // would otherwise give that exercise. Raising the number would be a load multiplier in a new
 // coat, which Rule 5 forbids. flatRun() is the detector; the discount lives in muscle-evidence.js.
 
+import { minisOf } from './set-types.js';
+
 export const REST_COLUMNS = Object.freeze({
   60:  Object.freeze([1, 0.55, 0.38, 0.28]),
   120: Object.freeze([1, 0.72, 0.55, 0.45]),
@@ -55,11 +65,14 @@ export const MIN_RUN = 3;
 export const FLAT_R2 = 0.95;
 export const FLAT_R3 = 0.90;
 
-/** The column whose rest is nearest to `restSeconds`; 2 min when unknown or 0 (timer off). */
+/**
+ * The column whose rest is nearest to `restSeconds`; 2 min when unknown or 0 (timer off, or on
+ * with no target). A tie — 90 s — goes to the shorter rest; see the header.
+ */
 export function restColumn(restSeconds) {
   const s = Number(restSeconds);
-  const keys = Object.keys(REST_COLUMNS).map(Number);
   if (!(s > 0)) return REST_COLUMNS[DEFAULT_REST_SECONDS];
+  const keys = Object.keys(REST_COLUMNS).map(Number).sort((a, b) => a - b);
   let best = keys[0];
   for (const k of keys) if (Math.abs(k - s) < Math.abs(best - s)) best = k;
   return REST_COLUMNS[best];
@@ -72,10 +85,12 @@ export function setIndexMultiplier(setIndex, restSeconds) {
   return col[i];
 }
 
+/** Usable reps: 1–15, the same ceiling D5 puts on evidence. A timed set has none. */
 function repsOf(set) {
   const r = Number(set && set.reps);
   return Number.isFinite(r) && r >= 1 && r <= 15 ? r : null;
 }
+/** A reps-only set (pull-ups, push-ups) has no weight; it is a run at 0, and 0 is one load. */
 function weightOf(set) {
   const w = Number(set && set.weight);
   return Number.isFinite(w) ? w : 0;
@@ -83,8 +98,10 @@ function weightOf(set) {
 
 /**
  * The longest LEADING run of recorded sets at one weight with usable reps. A weight change ends
- * it (a back-off set resets freshness); a blank or prefilled set ends it; drops and myo-reps
- * nested in `minis` do not count as sets. Returns the rep counts, possibly empty.
+ * it (a back-off set resets freshness); a blank, timed or prefilled set ends it; a set carrying
+ * drops or myo-rep minis is the LAST set of the run — its own reps count, but the set after it
+ * follows ten-second rests, which is another regime (plan §5.1). The minis themselves are never
+ * sets. Returns the rep counts, possibly empty.
  */
 export function leadingRun(sets) {
   const out = [];
@@ -97,6 +114,7 @@ export function leadingRun(sets) {
     if (w === null) w = sw;
     else if (sw !== w) break;
     out.push(r);
+    if (minisOf(s).length) break;
   }
   return out;
 }
@@ -128,7 +146,9 @@ export function personalDecrement(sessions, exerciseId) {
     if (!s || s.isBenchmark) continue;
     for (const e of Array.isArray(s.entries) ? s.entries : []) {
       if (!e || e.exerciseId !== exerciseId) continue;
-      if (e.setType || e.group) continue;
+      // ⚠️ `group != null`, not truthiness: normalizeGroups() numbers supersets from 0, so the
+      // first superset in every workout has `group: 0` and a truthy test let it through.
+      if (e.setType || e.group != null) continue;
       const run = leadingRun(e.sets);
       if (run.length < MIN_RUN) continue;
       acc.r2.push(Math.min(1, run[1] / run[0]));
@@ -146,11 +166,12 @@ export function personalDecrement(sessions, exerciseId) {
  */
 export function blendedMultipliers(personal, restSeconds, k = SHRINK_K) {
   const col = restColumn(restSeconds);
+  const kk = Number.isFinite(Number(k)) && Number(k) >= 0 ? Number(k) : SHRINK_K;
   const out = [1];
   const blend = (own, n, pop) => {
     if (!(n > 0) || !Number.isFinite(own)) return pop;
-    const w = n / (n + k);
-    return Math.min(1, w * Math.min(1, own) + (1 - w) * pop);
+    const w = Number.isFinite(n) ? n / (n + kk) : 1;   // Infinity / Infinity is NaN, not 1
+    return Math.min(1, w * Math.max(0, Math.min(1, own)) + (1 - w) * pop);
   };
   const p = personal || {};
   out.push(blend(p.r2, p.n, col[1]));
@@ -164,9 +185,13 @@ export function blendedMultipliers(personal, restSeconds, k = SHRINK_K) {
 export function repsAtSet(freshReps, setIndex, multipliers) {
   const f = Number(freshReps);
   if (!(f >= 1)) return null;
-  const m = Array.isArray(multipliers) ? multipliers : restColumn(null);
-  const i = Math.max(0, Math.min(m.length - 1, Math.floor(Number(setIndex) || 0)));
-  return Math.max(1, Math.round(f * m[i]));
+  // A multiplier list with a hole in it (NaN, undefined, empty) falls back to the 2-min column
+  // rather than printing NaN, and one above 1 is capped — rule 1 holds whatever the caller passes.
+  const list = Array.isArray(multipliers) && multipliers.length ? multipliers : restColumn(null);
+  const i = Math.max(0, Math.min(list.length - 1, Math.floor(Number(setIndex) || 0)));
+  const raw = Number(list[i]);
+  const m = Number.isFinite(raw) ? Math.max(0, Math.min(1, raw)) : setIndexMultiplier(i, null);
+  return Math.max(1, Math.round(f * m));
 }
 
 /**

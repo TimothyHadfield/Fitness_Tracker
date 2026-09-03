@@ -17,11 +17,27 @@
    So every rule that decides what a maximum is stays in that file and is
    imported from it: `allSetsOf` (a drop off a drop set is a set that really
    happened, and counts), `kindsFor` (a loaded lift is judged on weight, a
-   bodyweight lift on reps, and time/distance are left alone under Rule 6), and
-   `measure` (which is where the D5 rep ceiling lives, and where a per-side lift
-   doubles volume and nothing else). Three of those were made exports for this
-   module. Copying any of them here would be two answers to "what is a maximum"
-   the first day one of them changed.
+   bodyweight lift on reps, and time/distance are left alone under Rule 6),
+   `measure` (which is where the D5 rep ceiling lives, where a per-side lift
+   doubles volume and nothing else, and — since 2026-09-13 — where an assisted
+   lift's Weight is inverted and its 1RM is body-inclusive through
+   `setE1rm()`), and `contextFor` (the weigh-in on the date of the set). Copying
+   any of them here would be two answers to "what is a maximum" the first day
+   one of them changed.
+
+   🔄 2026-09-13: `opts.bodyWeights` is the dated weigh-in series. With it a
+   pull-up's `estimatedMax` is the lifter's body plus the plate, at the weight
+   they were THAT day (`bodyWeightOn`), and `estimatedMax.bodyIncluded` says so;
+   without it a body-weight lift has a `best` and no estimate, which is the
+   honest state. A per-side lift's `estimatedMax.value` is one hand's figure
+   (the curve saw one dumbbell, was doubled, and `value` is half of that — plan
+   §4.e); `estimatedMax.total` is both.
+
+   ⚠️ A D17 BENCHMARK IS ALSO A SESSION SET, and until today it was counted
+   twice in `sets` (the audit's D15). A benchmark row that matches a workout row
+   of the same lift on (date, weight, reps) now RELABELS that row `benchmark`
+   rather than adding a second one — the number was never affected, the count
+   was.
 
    ── ⚠️ THE ONE RULE THIS MODULE DELIBERATELY DOES NOT INHERIT ───────────────
 
@@ -47,8 +63,10 @@
    worse — so:
 
      `best`          the heaviest single weight ever recorded (or, for a
-                     bodyweight lift, the most reps). MEASURED. Always present.
-     `estimatedMax`  the best e1RM, from `e1rm.js`. AN ESTIMATE. May be null.
+                     bodyweight lift, the most reps; for an assisted lift, the
+                     LEAST help). MEASURED. Always present.
+     `estimatedMax`  the best e1RM, through `set-e1rm.js`. AN ESTIMATE. May be
+                     null — always null for a body-weight lift with no weigh-in.
      `sameSet`       whether the two came off the same set.
 
    🚨 RULE 5 IS THE REASON THEY ARE TWO FIELDS RATHER THAN A SORTED LIST. A
@@ -93,7 +111,7 @@
    history always produces the same list.
    ========================================================================== */
 
-import { allSetsOf, kindsFor, measure } from './personal-bests.js';
+import { allSetsOf, kindsFor, measure, contextFor } from './personal-bests.js';
 
 /** How many lifts a profile shows before it stops being a readout. */
 export const DEFAULT_LIMIT = 6;
@@ -122,25 +140,39 @@ const keyOf = (exerciseId, name) =>
  * the last time it is matched — somebody who has benched 225 four times set
  * that record on the first of those days, and re-dating it every time they
  * repeat it would quietly claim they are still improving.
+ *
+ * @param ctxOn  `contextFor(exercise, bodyWeights)` — the measure context for
+ *   a date, so each row is priced at the weigh-in of ITS day.
  */
-function bestOf(rows, kind, factor) {
+function bestOf(rows, kind, ctxOn) {
   let best = null;
   for (const row of rows) {
-    const m = measure(kind, row.set, factor);
+    const m = measure(kind, row.set, ctxOn(row.date));
     if (!m) continue;
     if (!best || m.value > best.value
         || (m.value === best.value && isEarlier(row.date, best.date))) {
       best = {
         kind,
-        value: m.value,
+        // ⚠️ For an assisted lift's Weight, `measure()` keys on MINUS the help
+        // so the least-assisted set wins; what is reported is the help itself.
+        value: kind === 'weight' && m.assisted ? m.weight : m.value,
         weight: m.weight,
         reps: m.reps,
         date: row.date,
         source: row.source,
+        assisted: Boolean(m.assisted),
         // ⚠️ THE RULE 5 FLAG, and it rides out of `personal-bests.js`'s own
         // discriminator rather than being decided here, so the two modules
         // cannot end up disagreeing about which kinds are modelled.
         estimated: kind === 'e1rm',
+        // The 1RM kind's own facts — what the number IS. Absent on the others.
+        ...(kind === 'e1rm' ? {
+          total: m.total,
+          perSide: Boolean(m.perSide),
+          bodyIncluded: Boolean(m.bodyIncluded),
+          bodyWeight: m.bodyWeight,
+          bodyWeightQuality: m.bodyWeightQuality,
+        } : {}),
       };
     }
   }
@@ -174,6 +206,10 @@ const sameRow = (a, b) =>
  *   they have never said a tested max is not a maximum, and `personalBests()`
  *   has counted them as history since it shipped. `source` says which is which
  *   so a screen may still label it.
+ * @param {Array} [opts.bodyWeights]  [{ date, weight }] the weigh-in series, so
+ *   a body-weight lift's estimate can include the body it lifted, at the
+ *   weight of the set's own day. Optional: without it those lifts have a
+ *   `best` and no `estimatedMax`.
  * @param {number} [opts.limit]       how many lifts to return. 0 means all.
  * @returns {{
  *   lifts: Array<{
@@ -181,9 +217,11 @@ const sameRow = (a, b) =>
  *     days: number, sets: number, firstDate: string|null, lastDate: string|null,
  *     best: { kind: 'weight'|'reps', value: number, weight: number|null,
  *             reps: number|null, date: string|null,
- *             source: 'workout'|'benchmark', estimated: false },
- *     estimatedMax: { kind: 'e1rm', value, weight, reps, date, source,
- *                     estimated: true } | null,
+ *             source: 'workout'|'benchmark', assisted: boolean,
+ *             estimated: false },
+ *     estimatedMax: { kind: 'e1rm', value, total, weight, reps, date, source,
+ *                     perSide, bodyIncluded, assisted, bodyWeight,
+ *                     bodyWeightQuality, estimated: true } | null,
  *     sameSet: boolean|null,
  *   }>,
  *   total: number, shown: number, empty: boolean,
@@ -194,13 +232,19 @@ const sameRow = (a, b) =>
  *
  *   ⚠️ `days` is distinct CALENDAR DAYS the lift was trained (a benchmark day
  *   counts) and `sets` is every row a maximum could have been read off, drops
- *   and benchmarks included. They are the thin-history disclosure: a lift with
- *   `days: 1` has a true best and one afternoon behind it, and the screen is
- *   the thing that has to say so.
+ *   and benchmarks included — a benchmark that IS one of the workout's sets
+ *   (D17) is one row, not two. They are the thin-history disclosure: a lift
+ *   with `days: 1` has a true best and one afternoon behind it, and the screen
+ *   is the thing that has to say so.
+ *
+ *   ⚠️ `best` on an ASSISTED lift is the LEAST help ever used — `assisted: true`
+ *   and `value` is that help. `estimatedMax` on a body-weight or assisted lift
+ *   is body-inclusive (`bodyIncluded: true`, `bodyWeight` the weigh-in used).
  */
 export function bestLifts(sessions, opts = {}) {
   const exMap = opts.exMap && typeof opts.exMap.get === 'function' ? opts.exMap : null;
   const limit = opts.limit === undefined ? DEFAULT_LIMIT : Number(opts.limit);
+  const bodyWeights = Array.isArray(opts.bodyWeights) ? opts.bodyWeights : [];
 
   // key → { exerciseId, name, nameDate, days:Set, rows: [{ set, date, source }] }
   const byExercise = new Map();
@@ -246,7 +290,15 @@ export function bestLifts(sessions, opts = {}) {
     const b = bucket(bm.exerciseId, named, date);
     if (!b) continue;
     if (date !== null) b.days.add(date);
-    b.rows.push({ set: bm.values, date, source: 'benchmark' });
+    // ⚠️ D17: a benchmark derived from a workout is ALSO one of that workout's
+    // sets, already in `rows`. Relabel the row rather than count it twice —
+    // the benchmark is the more deliberate name for the same set.
+    const twin = date === null ? null : b.rows.find((r) =>
+      r.source === 'workout' && r.date === date
+      && Number(r.set.weight) === Number(bm.values.weight)
+      && Number(r.set.reps) === Number(bm.values.reps));
+    if (twin) twin.source = 'benchmark';
+    else b.rows.push({ set: bm.values, date, source: 'benchmark' });
   }
 
   const lifts = [];
@@ -256,24 +308,27 @@ export function bestLifts(sessions, opts = {}) {
     const kinds = kindsFor(b.rows.map((r) => r.set));
     if (!kinds.length) continue;
 
-    const ex = exMap ? exMap.get(b.exerciseId) : null;
-    const factor = ex && ex.loadType === 'per_side' ? 2 : 1;
+    const ex = (exMap ? exMap.get(b.exerciseId) : null) || null;
+    // The measure context per date — the per-side factor once, the weigh-in
+    // per day — from personal-bests.js, so both screens price a body alike.
+    const ctxOn = contextFor(ex, bodyWeights);
+    const factor = ctxOn(null).factor;
 
     // 'weight' and 'reps' are mutually exclusive upstream, so exactly one of
     // them is in `kinds` and it is the headline. Neither is modelled.
     const headKind = kinds.includes('weight') ? 'weight' : 'reps';
-    const best = bestOf(b.rows, headKind, factor);
+    const best = bestOf(b.rows, headKind, ctxOn);
     if (!best) continue;
 
-    const estimatedMax = kinds.includes('e1rm') ? bestOf(b.rows, 'e1rm', factor) : null;
+    const estimatedMax = kinds.includes('e1rm') ? bestOf(b.rows, 'e1rm', ctxOn) : null;
 
     const dates = [...b.days].sort();
     lifts.push({
       exerciseId: b.exerciseId,
       name: b.name || (ex ? ex.name : '') || 'Exercise',
-      // ⚠️ So the screen can print "50/side". Nothing returned here is doubled
-      // — `measure()` doubles volume alone and volume is not returned — but a
-      // reader still has to be told which number they are looking at.
+      // ⚠️ So the screen can print "50/side". `best` is one hand's weight and
+      // `estimatedMax.value` one hand's max (`.total` is both) — a reader
+      // still has to be told which number they are looking at.
       perSide: factor === 2,
       days: b.days.size,
       sets: b.rows.length,

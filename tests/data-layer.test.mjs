@@ -91,7 +91,11 @@ ok(modalReps([{ reps: 5, date: '2026-01-01' }, { reps: 3, date: '2026-02-01' }])
    'ties go to the most recently used');
 ok(modalReps([]) === null, 'no observations means no default');
 ok(modalReps([{ reps: 'x' }, { reps: null }]) === null, 'junk rep values ignored');
-ok(clampReps(0) === 1 && clampReps(99) === 20, 'target reps clamped to 1-20');
+// ⚠️ 20 → 15 on 2026-09-13. The chart could be asked to display at a rep count
+// the app refuses to infer a maximum from, which is the same number arriving at
+// the same screen under two different rules. MAX_TARGET_REPS and
+// MAX_EVIDENCE_REPS are both 15 now.
+ok(clampReps(0) === 1 && clampReps(99) === 15, 'target reps clamped to 1-15');
 ok(repConfidence(8) === 'good' && repConfidence(13) === 'fair' && repConfidence(18) === 'poor',
    'confidence degrades past 10 and 15 reps');
 
@@ -488,15 +492,24 @@ for (const m of bm.MAPPED_MUSCLES) {
   ok(drawn.length >= 1, `"${m}" has a traced path (${drawn.length} view(s))`);
 }
 
+/* ⚠️ THE MEDIANS MOVED ON 2026-09-13 AND THEY MOVED FOR A REASON THAT IS NOT
+ * ABOUT THIS FILE. The ratio table is derived by dividing Strength Level's rows
+ * for two lifts; ranking the result against Gravitus medians 7-9 % lower meant
+ * every converted muscle was measured against a different population from the
+ * one that produced its conversion — a median Strength Level lifter read ~68th
+ * on biceps and ~78th on calves. One population now answers both questions:
+ * Strength Level 2026, male 180 lb / female 140 lb.
+ *
+ * Bench: 225 -> 220 male, 100 -> 108 female. */
 const male180 = { gender: 'male', bodyWeight: 180, age: 30 };
-ok(near(ss.medianFor('Chest', male180), 225, 1), `median bench at 180 lb = 225 (${ss.medianFor('Chest', male180).toFixed(1)})`);
+ok(near(ss.medianFor('Chest', male180), 220, 1), `median bench at 180 lb = 220 (${ss.medianFor('Chest', male180).toFixed(1)})`);
 
-// Allometric scaling, not a flat ratio. A flat ratio would say 187 at 150 lb;
-// the surface law says ~199, which is what published standards actually show.
+// Allometric scaling, not a flat ratio. A flat ratio would say 183 at 150 lb;
+// the surface law says ~195, which is what published standards actually show.
 const male150 = { gender: 'male', bodyWeight: 150, age: 30 };
-ok(near(ss.medianFor('Chest', male150), 199, 1.5), `median scales allometrically (${ss.medianFor('Chest', male150).toFixed(1)} at 150 lb)`);
-ok(ss.medianFor('Chest', male150) > 225 * (150 / 180), 'allometric beats a flat bodyweight ratio');
-ok(ss.medianFor('Chest', { gender: 'female', bodyWeight: 140, age: 30 }) === 100,
+ok(near(ss.medianFor('Chest', male150), 195, 1.5), `median scales allometrically (${ss.medianFor('Chest', male150).toFixed(1)} at 150 lb)`);
+ok(ss.medianFor('Chest', male150) > 220 * (150 / 180), 'allometric beats a flat bodyweight ratio');
+ok(ss.medianFor('Chest', { gender: 'female', bodyWeight: 140, age: 30 }) === 108,
    'female standards are their own numbers, not a blanket multiplier');
 ok(ss.medianFor('Chest', { gender: 'male' }) === null, 'no body weight means no standard');
 ok(ss.medianFor('Neck', male180) === null, 'an unrankable muscle has no standard');
@@ -511,14 +524,14 @@ for (const l of ss.LEVELS) {
   const p = ss.percentileFor(w, 'Chest', male180);
   ok(near(p, l.percentile, 0.2), `${l.name}: ${Math.round(w)} lb round-trips to the ${l.percentile}th`);
 }
-ok(near(ss.percentileFor(225, 'Chest', male180), 50, 0.2), 'the median lift is the 50th percentile');
+ok(near(ss.percentileFor(220, 'Chest', male180), 50, 0.2), 'the median lift is the 50th percentile');
 
 // Boundary: the normal CDF is an approximation, so an exactly-median lift comes
 // back as 49.999999947. A strict >= showed that person Novice while the screen
 // beside it read "50th percentile" — and hitting the exact weight the targets
 // panel asked for failed to grant the level.
-ok(ss.percentileFor(225, 'Chest', male180) < 50, 'the CDF really does undershoot at the boundary');
-ok(ss.levelFor(ss.percentileFor(225, 'Chest', male180)).key === 'intermediate',
+ok(ss.percentileFor(220, 'Chest', male180) < 50, 'the CDF really does undershoot at the boundary');
+ok(ss.levelFor(ss.percentileFor(220, 'Chest', male180)).key === 'intermediate',
    'an exactly-median lift still lands in Intermediate, not the level below');
 for (const l of ss.LEVELS) {
   const exact = ss.weightForPercentile(l.percentile, 'Chest', male180);
@@ -530,7 +543,18 @@ ok(ss.percentileFor(400, 'Chest', male180) > ss.percentileFor(300, 'Chest', male
 
 // The published tier weights, which are the whole feature.
 const tiers = ss.LEVELS.map((l) => Math.round(ss.weightForPercentile(l.percentile, 'Chest', male180)));
-ok(tiers.join() === '133,172,225,255,295,339,381', `bench tiers at 180 lb: ${tiers.join(' / ')}`);
+/* ⚠️ AND THE SPREAD IS TWO-PIECE NOW, WHICH IS WHY THE LOW TIERS MOVED MOST.
+ * A single sigma over-rated everybody below the median: fitted to Strength
+ * Level's own anchors, the weak side of every lift is wider than the strong
+ * side (0.07 apart for men, 0.11-0.17 for women), so a 140 lb woman standing
+ * exactly on the published Beginner bench mark used to read the 0.25th
+ * percentile rather than the 5th. Core's special-cased 0.48 was this, found
+ * once and treated as a Core quirk. docs/research.md §16.9. */
+ok(tiers.join() === '129,168,220,244,276,310,342', `bench tiers at 180 lb: ${tiers.join(' / ')}`);
+const fTiers = ss.LEVELS.map((l) => Math.round(ss.weightForPercentile(l.percentile, 'Chest', { gender: 'female', bodyWeight: 140, age: 30 })));
+ok(fTiers.join() === '46,70,108,126,150,178,206', `and the female bench tiers at 140 lb: ${fTiers.join(' / ')}`);
+ok(near(ss.percentileFor(44, 'Chest', { gender: 'female', bodyWeight: 140, age: 30 }), 5, 2),
+   'a woman on the published Beginner mark reads about the 5th percentile, not the 0.25th');
 ok(tiers.every((v, i) => i === 0 || v > tiers[i - 1]), 'tier weights strictly increase');
 
 ok(ss.levelFor(50).key === 'intermediate', 'the 50th is Intermediate');
@@ -2278,14 +2302,41 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(e1rm(135, 25) > e1rm(205, 5),
      'even though the raw formula does rate it higher — which is why the gate exists');
 
-  // 15 reps is the documented boundary and is still admitted.
+  /* 15 reps is the documented boundary and is still ADMITTED as evidence.
+   *
+   * ⚠️ THIS ASSERTION USED TO READ `best.reps === 15` AND THAT WAS WEAKER THAN
+   * ITS OWN SENTENCE. It passed only because a 15-rep set extrapolates to the
+   * biggest number, so the old "largest estimate wins" rule handed it the seat.
+   * Since 2026-09-13 the seat prefers a set at 8 reps or fewer where one
+   * exists, because the curve extrapolates least from a heavy set — so a
+   * 15-rep set no longer LEADS a chest that also holds a heavy triple, and the
+   * assertion would have failed while the thing it names ("the cut is above 15,
+   * not at it") stayed perfectly true.
+   *
+   * What it asserts now is admissibility itself: the set is scored, it appears
+   * among the contributors, and 16 reps still is not. */
   await st.saveSession({
     workoutId: 'w9', workoutName: 'Push', date: '2026-08-12',
     entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
                 sets: [{ weight: 185, reps: 15 }] }],
   });
-  ok((await muscleStrength()).muscles.get('Chest').best.reps === 15,
-     '15 reps is still admissible — the cut is above it, not at it');
+  {
+    const before15 = (await muscleStrength()).muscles.get('Chest');
+    await st.saveSession({
+      workoutId: 'w9b', workoutName: 'Push', date: '2026-08-16',
+      entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                  sets: [{ weight: 225, reps: 15 }] }],
+    });
+    const after15 = (await muscleStrength()).muscles.get('Chest');
+    ok(after15.contributorCount > before15.contributorCount,
+       '15 reps is still admissible — the cut is above it, not at it');
+    // ⚠️ And this is the other half of the 2026-09-13 seat rule, stated as a
+    // property rather than left implied: a 15-rep set is EVIDENCE but does not
+    // LEAD an exercise that also holds heavy low-rep sets, however big the
+    // number it extrapolates to.
+    ok(after15.best.reps <= 8,
+       'but it does not take the seat while a heavier low-rep set exists');
+  }
 
   // A benchmark gets no exemption: a 25-rep test is no more informative.
   await st.saveBenchmark({ date: '2026-08-13', exerciseId: benchId,
@@ -2360,19 +2411,64 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      🆕 CORE IS THE NEW ROW and it is the point of the change: 1 exercise, no
      corroboration, and confidence 0.28 — the lowest in the table — because
      Core's `standardQuality` discounts it on top of a single-exercise reading. */
+  /* 🚨 RE-BASELINED 2026-09-13, AND THIS ONE IS NOT A DICE RE-ROLL. Every
+   * previous re-baseline of this table came from adding an exercise and
+   * shifting every later random() draw. This one is the model changing on
+   * purpose, so the plausibility rule above is not enough on its own — each
+   * move has to be attributable to a named change or it is a regression
+   * wearing a new number. The demo year itself is byte-identical.
+   *
+   *   muscle       old  ->   new      what moved it
+   *   Back       203.8 -> 171.2  -16%  ratio corrections (straight-arm pulldown
+   *                                    0.95->0.61 was flattering it hardest)
+   *                                    plus the seat preferring low-rep sets
+   *   Core       124.2 ->  97.5  -22%  the seat: a 12-rep crunch used to lead
+   *                                    because it extrapolates furthest; an
+   *                                    8-rep set leads now
+   *   Glutes     364.5 -> 311.1  -15%  hip thrust and the kickback/abduction
+   *                                    corrections
+   *   Calves     260.4 -> 227.2  -13%  seat + the calf median moving to SL
+   *   Triceps    185.2 -> 163.5  -12%  kickback 0.20 -> 0.39, overhead dumbbell
+   *                                    extension un-doubled
+   *   Quads      296.9 -> 264.2  -11%  leg press / lunge / squat-variant
+   *                                    corrections
+   *   Chest      232.5 -> 214.0   -8%  per-hand dumbbell convention (~5 %) and
+   *                                    the pec deck / machine press pairs
+   *   Biceps     108.6 -> 100.0   -8%  machine curl 1.00 -> 1.23
+   *   Hamstrings 268.2 -> 247.8   -8%  seated leg curl split off the lying one
+   *   Forearms    96.1 ->  94.3   -2%  contributors 337 -> 273: the deadlift no
+   *                                    longer stands in (the `>` fix)
+   *   Shoulders  146.9 -> 144.1   -2%  raise-family splits mostly cancel
+   *   Traps      233.8 -> 265.6  +14%  ⚠️ THE ONLY ONE THAT WENT UP, and the
+   *                                    only one whose EVIDENCE changed shape:
+   *                                    212 -> 148 contributors, 4 -> 3
+   *                                    exercises, because the deadlift stopped
+   *                                    standing in for it. What is left is real
+   *                                    shrug work, which reads higher than the
+   *                                    pull-through-a-row conversion did.
+   *
+   * ⚠️ THE DIRECTION IS THE FINDING. Eleven of twelve muscles came DOWN, which
+   * is what the ratio audit predicted: almost every miss in the table was too
+   * LOW, and the estimate divides by the ratio, so correcting them can only
+   * reduce. If a later change moves this table UP across the board, that is the
+   * sentence to re-read before re-baselining again.
+   *
+   * The lifter is still one coherent person — everything Novice to Proficient
+   * around Intermediate — and no muscle changed by more than the model change
+   * that explains it. */
   const GOLDEN = [
-    ['Back', 720, 203.8378, 0.8019, 212, 4],
-    ['Biceps', 1095, 108.5921, 0.7016, 125, 2],
-    ['Calves', 332, 260.3998, 0.9506, 84, 2],
-    ['Chest', 465, 232.4839, 0.8158, 130, 2],
-    ['Core', 66, 124.1868, 0.2800, 22, 1],
-    ['Forearms', 1095, 96.1469, 0.5699, 337, 6],
-    ['Glutes', 630, 364.5160, 0.7628, 64, 1],
-    ['Hamstrings', 882, 268.2010, 0.9141, 146, 3],
-    ['Quads', 567, 296.9289, 0.9068, 171, 4],
-    ['Shoulders', 1080, 146.9308, 0.8883, 192, 4],
-    ['Traps', 720, 233.7850, 0.5694, 212, 4],
-    ['Triceps', 1100, 185.2054, 0.5310, 125, 2],
+    ['Back', 720, 171.2171, 0.8246, 212, 4],
+    ['Biceps', 904, 99.9714, 0.7680, 125, 2],
+    ['Calves', 332, 227.1731, 0.8512, 84, 2],
+    ['Chest', 465, 213.9877, 0.9044, 130, 2],
+    ['Core', 66, 97.5418, 0.2891, 22, 1],
+    ['Forearms', 904, 94.2935, 0.6006, 273, 5],
+    ['Glutes', 630, 311.0534, 0.8488, 64, 1],
+    ['Hamstrings', 882, 247.8476, 0.8524, 146, 3],
+    ['Quads', 567, 264.1769, 0.9248, 171, 4],
+    ['Shoulders', 1080, 144.0826, 0.6903, 192, 4],
+    ['Traps', 529, 265.5756, 0.5797, 148, 3],
+    ['Triceps', 1100, 163.4989, 0.5481, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -2393,6 +2489,14 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
         ? `${muscle}: ${obs.length} obs, est ${rating.estimate.toFixed(4)}, conf `
           + `${rating.confidence.toFixed(4)}, ${rating.contributorCount}/${rating.exerciseCount}`
         : `${muscle}: no rating at all`;
+    }
+    // ⚠️ Re-baselining this table is a deliberate act and needs the whole row
+    // set, not just the first mismatch: set GOLDEN_DUMP=1 to print every row in
+    // paste-ready form. Printing it is not permission to paste it — see the
+    // plausibility rule above the table.
+    if (process.env.GOLDEN_DUMP && rating) {
+      console.error(`    ['${muscle}', ${obs.length}, ${rating.estimate.toFixed(4)}, `
+        + `${rating.confidence.toFixed(4)}, ${rating.contributorCount}, ${rating.exerciseCount}],`);
     }
   }
   ok(goldenOk,
@@ -2448,10 +2552,17 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   for (const b of demo.benchmarks) await st.saveBenchmark(b);
 
   const stored = await muscleStrength();
+  /* ⚠️ `sex` IS PART OF THE JOIN NOW, AND LEAVING IT OUT IS EXACTLY THE FAULT
+     THIS ASSERTION EXISTS TO CATCH — the same shape as the `muscle` argument
+     the comment below describes. About a quarter of the ratio table is a
+     male/female pair since 2026-09-13; the store passes the profile's sex, so a
+     direct call that omits it silently resolves every pair to the mean of its
+     two sides and the two answers diverge on precisely the exercises the sex
+     axis was added for. */
   const direct = buildObservations({
     sessions: await st.getSessions(), benchmarks: await st.getBenchmarks(),
     exMap: await st.getExerciseMap(), bodyWeights: await st.getBodyWeights(),
-    today: todayISO(),
+    today: todayISO(), sex: 'male',
   });
   let agree = stored.ready && stored.muscles.size === GOLDEN.length;
   for (const [muscle, v] of stored.muscles) {
@@ -2627,7 +2738,14 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const before = ss.percentileFor(225, 'Chest', me180);
     const after = ss.percentileFor(225, 'Chest', withCompare(ss.COMPARE_DEFAULT));
     ok(near(before, after, 1e-9), 'the default comparison changes nothing at all');
-    ok(near(before, 50, 0.5), `and a 180 lb man benching 225 is still the 50th percentile (${before.toFixed(1)})`);
+    // ⚠️ 225 was the median until 2026-09-13 and is now a little above it: the
+    // medians moved to Strength Level 2026 so that the ratio table and the
+    // ranking share one population. The MEDIAN sitting at the 50th is asserted
+    // where the medians are, above; what this line is for is that the default
+    // comparison is the one an ordinary male profile gets, so it reads the
+    // median off MUSCLE_LIFTS rather than restating a number.
+    ok(near(ss.percentileFor(ss.MUSCLE_LIFTS.Chest.median.male, 'Chest', me180), 50, 0.5),
+       `and a 180 lb man on the median bench is the 50th percentile (${before.toFixed(1)} at 225)`);
   }
 
   // ---- sex ----
@@ -2922,43 +3040,102 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   // muscle-evidence.js). Reverting any entry to its old reasoned value flips
   // its line here — that is the point: these stopped being opinions.
   {
-    const ratioOf = (name, muscle) => {
-      const hit = me.contributionsFor(byName(name)).find((x) => x.muscle === muscle && x.kind === 'direct');
+    // ⚠️ TAKES A SEX SINCE 2026-09-13. About a quarter of the table is now a
+    // male/female pair; with no sex the entry resolves to the mean of the two,
+    // which is what every caller got before the axis existed. The pins below
+    // name a sex wherever the entry is a pair, because pinning the mean would
+    // pass while both real numbers were wrong.
+    const ratioOf = (name, muscle, sex) => {
+      const hit = me.contributionsFor(byName(name), sex ? { sex } : undefined)
+        .find((x) => x.muscle === muscle && x.kind === 'direct');
       return hit ? hit.ratio : null;
     };
+    /* ⚠️ THE 2026-09-13 CORRECTION ROUND MOVED ROUGHLY TWENTY-FIVE OF THESE and
+     * gave a quarter of the table a sex. Entries carrying a fourth element are
+     * pairs and are pinned on BOTH sides; the rest are single numbers that the
+     * published pages agree on within about 10 %.
+     *
+     * The four that Tim and Autumn actually hit are in here by name: the
+     * reverse pec deck (0.56 → 1.07, which was rating a 70 lb machine set
+     * Advanced), the face pull's female side (1.04 against a man's 0.75), the
+     * machine lateral raise (a doubled stack on a two-dumbbell ratio, 3.7x) and
+     * the seated leg curl (carrying the lying curl's number). */
     const pinned = [
-      ['Pec Deck', 'Chest', 0.90],            // was 0.55 — the sweep's worst flatter
+      ['Pec Deck', 'Chest', 0.90, 'male'], ['Pec Deck', 'Chest', 0.78, 'female'],
       // 2026-08-27: SL incline dumbbell press 49/66/88/113/139 doubled over
       // bench 127/169/220/277/339 → 0.772-0.820, median 0.800. Was a carried
       // 0.70. ⚠️ The flattest ratio in the table (1.1x across five levels),
       // which is why this is the one entry whose q went UP.
       ['Incline Dumbbell Bench Press', 'Chest', 0.80],
       ['Close-Grip Bench Press', 'Chest', 0.95],
-      ['Machine Chest Press', 'Chest', 0.91],
-      ['Lat Pulldown', 'Back', 0.95],
-      ['Seated Cable Row', 'Back', 0.98],
-      ['Deadlift', 'Back', 1.76],
-      ['Sumo Deadlift', 'Back', 1.97],
-      ['Rack Pull', 'Back', 2.10],
+      ['Machine Chest Press', 'Chest', 0.91, 'male'], ['Machine Chest Press', 'Chest', 0.75, 'female'],
+      ['Lat Pulldown', 'Back', 0.95, 'male'], ['Lat Pulldown', 'Back', 1.06, 'female'],
+      ['Seated Cable Row', 'Back', 0.98, 'male'], ['Seated Cable Row', 'Back', 1.06, 'female'],
+      ['Deadlift', 'Back', 1.76, 'male'], ['Deadlift', 'Back', 2.02, 'female'],
+      ['Sumo Deadlift', 'Back', 1.97, 'male'], ['Sumo Deadlift', 'Back', 2.17, 'female'],
+      ['Rack Pull', 'Back', 2.10, 'male'], ['Rack Pull', 'Back', 2.54, 'female'],
       ['Good Morning', 'Back', 0.95],
-      ['Leg Press', 'Quads', 1.73],           // ran the OTHER way — was under-crediting
+      ['Leg Press', 'Quads', 1.73, 'male'], ['Leg Press', 'Quads', 1.94, 'female'],
       ['Leg Extension', 'Quads', 0.78],
       ['Lying Leg Curl', 'Hamstrings', 0.53],
-      ['Hip Thrust', 'Glutes', 0.96],         // the other way too
-      ['Machine Shoulder Press', 'Shoulders', 1.23],
+      // ⚠️ Tim's case: the seated machine was carrying the lying curl's 0.53.
+      ['Seated Leg Curl', 'Hamstrings', 0.66, 'male'], ['Seated Leg Curl', 'Hamstrings', 0.71, 'female'],
+      ['Hip Thrust', 'Glutes', 0.96, 'male'], ['Hip Thrust', 'Glutes', 1.16, 'female'],
+      ['Hip Abduction Machine', 'Glutes', 0.61, 'male'], ['Hip Abduction Machine', 'Glutes', 0.79, 'female'],
+      ['Machine Shoulder Press', 'Shoulders', 1.23, 'male'], ['Machine Shoulder Press', 'Shoulders', 0.97, 'female'],
       ['Upright Row', 'Shoulders', 0.94],
-      ['Face Pull', 'Shoulders', 0.75],       // split out of the 0.30 raise family
+      // ⚠️ Autumn's case: one number for both sexes rated her face pull nearly
+      // Advanced. The sexes differ by a third on this one movement.
+      ['Face Pull', 'Shoulders', 0.75, 'male'], ['Face Pull', 'Shoulders', 1.04, 'female'],
+      // ⚠️ Tim's case: the dumbbell rear-delt ratio on a single machine stack.
+      ['Reverse Pec Deck', 'Shoulders', 1.07, 'male'], ['Reverse Pec Deck', 'Shoulders', 0.94, 'female'],
+      // ⚠️ and the one that needed BOTH halves: FORCE_TOTAL in exercises.js and
+      // its own ratio here. Either alone leaves the 3.7x inflation.
+      ['Machine Lateral Raise', 'Shoulders', 0.97, 'male'], ['Machine Lateral Raise', 'Shoulders', 0.84, 'female'],
+      ['Lateral Raise', 'Shoulders', 0.53],
       ['Hammer Curl', 'Biceps', 1.04],
       ['Concentration Curl', 'Biceps', 0.92], // was 0.62 — the family's biggest flatter
       ['Preacher Curl', 'Biceps', 0.96],
       ['Cable Curl', 'Biceps', 1.11],
+      ['Machine Curl', 'Biceps', 1.23, 'male'], ['Machine Curl', 'Biceps', 1.09, 'female'],
       ['Triceps Pushdown', 'Triceps', 0.61],
+      ['Triceps Kickback', 'Triceps', 0.39, 'male'], ['Triceps Kickback', 'Triceps', 0.43, 'female'],
+      ['Overhead Dumbbell Extension', 'Triceps', 0.24, 'male'],
       ['Dumbbell Shrug', 'Traps', 0.70],      // the third counter-direction entry
+      ['Machine Shrug', 'Traps', 1.16, 'male'], ['Machine Shrug', 'Traps', 1.33, 'female'],
       ['Seated Calf Raise', 'Calves', 0.66],
+      ['Reverse Wrist Curl', 'Forearms', 0.92],
+      ['Straight-Arm Pulldown', 'Back', 0.61, 'male'], ['Straight-Arm Pulldown', 'Back', 0.69, 'female'],
+      ['Barbell Lunge', 'Quads', 0.62, 'male'], ['Barbell Lunge', 'Quads', 0.68, 'female'],
     ];
-    for (const [name, muscle, want] of pinned) {
-      const got = ratioOf(name, muscle);
-      ok(got === want, `${name} → ${muscle} is the sourced ${want} (${got})`);
+    for (const [name, muscle, want, sex] of pinned) {
+      const got = ratioOf(name, muscle, sex);
+      ok(got === want,
+         `${name} → ${muscle}${sex ? ` (${sex})` : ''} is the sourced ${want} (${got})`);
+    }
+
+    /* 🚨 THE SPLITS ARE ORDERING, AND ORDERING IS WHAT THE REGEX TABLE GETS
+     * WRONG. Each of these pairs shares a family with a general rule that would
+     * swallow it, and every one of them was a real defect: the machine lateral
+     * raise inside /Lateral Raise/, the reverse pec deck inside the dumbbell
+     * rear-delt rule, the seated leg curl inside /Leg Curl/, the straight-arm
+     * pulldown inside /Pulldown/, the barbell lunge inside /Lunge/, the
+     * dumbbell upright row inside /Upright Row/. If a specific rule is ever
+     * moved below its family this block fails, which is the only cheap way to
+     * catch it — the numbers themselves stay plausible. */
+    const splits = [
+      ['Machine Lateral Raise', 'Lateral Raise', 'Shoulders'],
+      ['Reverse Pec Deck', 'Rear Delt Fly', 'Shoulders'],
+      ['Seated Leg Curl', 'Lying Leg Curl', 'Hamstrings'],
+      ['Straight-Arm Pulldown', 'Lat Pulldown', 'Back'],
+      ['Barbell Lunge', 'Walking Lunge', 'Quads'],
+      ['Dumbbell Upright Row', 'Upright Row', 'Shoulders'],
+    ];
+    for (const [specific, general, muscle] of splits) {
+      const a = ratioOf(specific, muscle, 'male');
+      const b = ratioOf(general, muscle, 'male');
+      ok(a !== null && b !== null && a !== b,
+         `${specific} has its own ratio, not ${general}'s (${a} vs ${b})`);
     }
 
     // Orderings the corrections must not have broken — each pair is a claim
@@ -3066,7 +3243,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const bTri = b.find((x) => x.muscle === 'Triceps');
     ok(300 / bTri.ratio < 300 / bChest.ratio,
        'a 300 lb bench implies a close-grip bench BELOW it, never above');
-    ok(near(300 / bTri.ratio, 300 / (((225 / 185) + (100 / 85)) / 2), 1e-9),
+    // ⚠️ Reads the medians rather than restating them: they moved on 2026-09-13
+    // and a hard-coded pair here would have been a second copy to forget.
+    const mChest = ss.MUSCLE_LIFTS.Chest.median;
+    const mTri = ss.MUSCLE_LIFTS.Triceps.median;
+    ok(near(300 / bTri.ratio,
+            300 / (((mChest.male / mTri.male) + (mChest.female / mTri.female)) / 2), 1e-9),
        'and lands exactly where the published medians say it should');
   }
 
@@ -3082,8 +3264,22 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ …which it then does — the assist machine rates a muscle off resistance, not off the stack');
 
   // ---- cross-muscle conversion comes from the published medians ----
-  ok(near(me.crossMuscleRatio('Chest', 'Triceps'), ((225 / 185) + (100 / 85)) / 2, 1e-9),
-     'the muscle-to-muscle conversion is derived from the medians, not a second hard-coded table');
+  // ⚠️ Reads MUSCLE_LIFTS rather than restating it. The medians changed on
+  // 2026-09-13 and a copy of them here would have had to be found and changed
+  // too — which is the whole failure this assertion exists to prevent, one
+  // level up.
+  {
+    const c = ss.MUSCLE_LIFTS.Chest.median;
+    const t = ss.MUSCLE_LIFTS.Triceps.median;
+    ok(near(me.crossMuscleRatio('Chest', 'Triceps'), ((c.male / t.male) + (c.female / t.female)) / 2, 1e-9),
+       'the muscle-to-muscle conversion is derived from the medians, not a second hard-coded table');
+    // ⚠️ AND IT TAKES A SEX SINCE 2026-09-13. Averaging the two was ~5 % wrong
+    // for both of them: a woman's bench-to-squat is 0.64-0.67 where a man's is
+    // a flat 0.74.
+    ok(near(me.crossMuscleRatio('Chest', 'Triceps', 'male'), c.male / t.male, 1e-9)
+       && near(me.crossMuscleRatio('Chest', 'Triceps', 'female'), c.female / t.female, 1e-9),
+       'and with a sex it uses that sex\'s medians rather than the mean of the two');
+  }
 
   // ---- rep gate and rep weighting ----
   ok(me.repFactor(25) === 0, 'a 25-rep set is not evidence of a maximum');
@@ -3385,8 +3581,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      ⚠️ 7 %, 12 % and 15 % — NOT a constant offset, which is the finding that
      matters most here: no blanket correction would have fixed this table, and
      every remaining reasoned entry has to be derived on its own. */
-  const ratio = (name, muscle) => {
-    const c = me2.contributionsFor(byName(name)).find((x) => x.muscle === muscle);
+  // Takes a sex since 2026-09-13; without one a paired entry resolves to the
+  // mean of its two sides, which is what this block wants everywhere except
+  // where it names a sex explicitly.
+  const ratio = (name, muscle, sex) => {
+    const c = me2.contributionsFor(byName(name), sex ? { sex } : undefined)
+      .find((x) => x.muscle === muscle);
     return c ? c.ratio : null;
   };
   ok(near(ratio('Dumbbell Bench Press', 'Chest'), 0.81), 'a dumbbell bench converts at 0.81 of a barbell bench');
@@ -3414,9 +3614,14 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      into position. The measurement puts decline below flat at every level but
      elite. A test that encodes an argument rather than a measurement will
      defend the argument — this one did, for four days. */
-  ok(near(ratio('Decline Dumbbell Bench Press', 'Chest'), 0.76),
-     'decline dumbbell bench is 0.76, measured — the 0.86 it carried was reasoned');
-  ok(ratio('Decline Dumbbell Bench Press', 'Chest') < ratio('Dumbbell Bench Press', 'Chest'),
+  // ⚠️ A PAIR SINCE 2026-09-13 — 0.76 male, 0.85 female — so it is pinned per
+  // sex. The male side is the number the 2026-08-27 sweep measured and the
+  // sentence below is still about that side.
+  ok(near(ratio('Decline Dumbbell Bench Press', 'Chest', 'male'), 0.76),
+     'decline dumbbell bench is 0.76 for a man, measured — the 0.86 it carried was reasoned');
+  ok(near(ratio('Decline Dumbbell Bench Press', 'Chest', 'female'), 0.85),
+     'and 0.85 for a woman, which one number for both was never going to say');
+  ok(ratio('Decline Dumbbell Bench Press', 'Chest', 'male') < ratio('Dumbbell Bench Press', 'Chest', 'male'),
      '⚠️ and it sits BELOW flat, which is what the source says and what the old assertion denied');
   ok(ratio('Decline Barbell Bench Press', 'Chest') > ratio('Barbell Bench Press', 'Chest'),
      'while the BARBELL decline still sits above its flat press — the mechanism was real, just not transferable');
@@ -3569,19 +3774,30 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      + 'machine carries, and against the ratio-1.00 guess that rated her Advanced. The number is '
      + 'still hers; what changed is how much the app is willing to believe it');
 
-  /* ---- a match to something the library itself cannot convert ---- */
-  const toDip = makeCustomExercise({
-    name: 'My Dip', muscle: 'Triceps', equipment: 'Machine',
-    fields: ['weight', 'reps'], standInId: byName('Machine Dip').id,
+  /* ---- a match to something the library itself cannot convert ----
+   *
+   * ⚠️ THIS USED TO POINT AT `Machine Dip` AND NO LONGER CAN. Strength Level
+   * published a seated dip machine standard, so the 2026-09-13 correction round
+   * gave it a real ratio and it stopped being an example of the thing this
+   * assertion is about. The subject is now the Pallof press, which is
+   * unconvertible for a reason that will not expire: it is an anti-rotation
+   * hold, and there is no barbell lift it is a fraction OF.
+   *
+   * The lesson is worth more than the edit: an assertion illustrated by a
+   * specific row will one day be about that row rather than about the rule, and
+   * the day the row changes is the day you find out which. */
+  const toUnconvertible = makeCustomExercise({
+    name: 'My Anti-Rotation Hold', muscle: 'Core', equipment: 'Cable',
+    fields: ['weight', 'reps'], standInId: byName('Pallof Press').id,
   });
-  ok(me3.contributionsFor(toDip).length === 0
+  ok(me3.contributionsFor(toUnconvertible).length === 0
      // ⚠️ Both apostrophes. The app's copy uses a typographic one and an ASCII
      // regex silently missed it — the assertion failed while the behaviour was
      // right, which is the flattering direction for a test to be wrong in.
-     && /can.t be converted|cannot be converted/.test(me3.rankBlockedReason(toDip) || ''),
+     && /can.t be converted|cannot be converted|published/.test(me3.rankBlockedReason(toUnconvertible) || ''),
      '⚠️ matching to an exercise the library ALREADY refuses converts to nothing and says so — '
-     + 'Machine Dip has no ratio because nobody has published the leverage, and a user pointing at '
-     + 'it does not create one');
+     + 'a Pallof press has no ratio because there is no lift it is a fraction of, and a user '
+     + 'pointing at it does not create one');
 
   /* ---- and nothing rates without an explicit choice ---- */
   ok(me3.contributionsFor(custom).length === 0
@@ -3620,12 +3836,25 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      `🚨 MORE ON THE STACK IS A LIGHTER SET on the assisted dip (${light.load} → ${heavy.load} lbs) — `
      + 'the assist flag inverts the sign, which is the whole reason it needed a table entry rather '
      + 'than a library row');
-  ok(near(ratioOf('Assisted Dip', 'Chest'), 1.35),
+  // ⚠️ The free dip's ratio is a male/female pair since 2026-09-13 (1.35 / 1.66
+  // — a woman's dip is a much bigger multiple of her bench), so this asks for
+  // the male side rather than the mean.
+  ok(near(me4.contributionsFor(byName('Assisted Dip'), { bodyWeight: 180, bodyWeightQuality: 1, sex: 'male' })
+    .find((x) => x.muscle === 'Chest').ratio, 1.35),
      'and it converts at the free dip\'s own ratio, because by then the help is already subtracted');
-  ok(me4.contributionsFor(byName('Machine Dip')).length === 0
-     && /published/.test(me4.rankBlockedReason(byName('Machine Dip')) || ''),
-     '⚠️ while the SEATED machine gets no ratio at all and says so — its leverage is unpublished, '
-     + 'and guessing one is exactly what the custom-exercise change removed the same day');
+  /* ⚠️ AND THE SEATED MACHINE HAS A STANDARD NOW, WHICH REVERSES THIS
+   * ASSERTION. It was written on 2026-08-31 saying the leverage was unpublished
+   * and guessing one was the very thing that day removed. Strength Level's
+   * seated dip machine page exists (it postdates the note), so on 2026-09-13 it
+   * was derived like any other entry — 1.21 of a close-grip bench for a man,
+   * 1.23 for a woman. The old sentence is kept above in struck-through form
+   * because the REASONING was right and only its subject expired: an
+   * unpublished leverage is still a refusal, and five other comments in
+   * muscle-evidence.js claiming "no published standard" turned out to be stale
+   * the same way. */
+  ok(me4.contributionsFor(byName('Machine Dip')).length > 0,
+     '⚠️ while the SEATED machine now HAS a ratio — its standard was published after the note '
+     + 'saying it never would be, and five other "nothing is published" comments were stale too');
 
   /* ---- the orderings that would silently invert if a rule moved ---- */
   ok(ratioOf('Seated Leg Press', 'Quads') < ratioOf('Leg Press', 'Quads'),
@@ -6456,14 +6685,30 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      + 'and the set itself sits beside it under a different name');
 
   /* ---- 🚨 THE ORDERING, AND IT IS BY LEVEL, NOT BY POUNDS ---- */
-  ok(names(r.core) === 'Barbell Curl · Back Squat · Barbell Bench Press · Overhead Press · '
+  /* ⚠️ THE BENCH AND THE SQUAT SWAPPED ON 2026-09-13 AND NEITHER LIFT MOVED.
+   * Both are Proficient; the order within a level is by percentile, and the
+   * converted bench (72nd) now sits a little above the squat (70th) because the
+   * chest median came down from 225 to Strength Level's 220 while the squat
+   * median went up. The ORDER RULE is unchanged and is what this pins — level
+   * first, unrated last — so the expectation is rebuilt from the rows rather
+   * than retyped, and the rule itself is asserted underneath where it cannot be
+   * satisfied by a lucky string. */
+  ok(names(r.core) === 'Barbell Curl · Barbell Bench Press · Back Squat · Overhead Press · '
        + 'Barbell Row · Close-Grip Bench Press · Deadlift · Romanian Deadlift',
      `🚨 core lifts run highest level first, unrated last, ties by name — got "${names(r.core)}"`);
   {
+    const rated = r.core.filter((l) => l.percentile !== null);
+    ok(rated.every((l, i) => i === 0 || rated[i - 1].percentile >= l.percentile),
+       'and the rule itself: every rated row sits at or above the next one, whatever the medians do');
+  }
+  {
     const curl = byLift(r.core, 'Barbell Curl');
     const squat = byLift(r.core, 'Back Squat');
+    // ⚠️ The curl reads Advanced rather than Expert since the medians moved to
+    // one population (2026-09-13). The PAIR is what discriminates and it still
+    // does: a 343 lb squat sits below a 139 lb curl.
     ok(squat.oneRM > curl.oneRM * 2 && squat.percentile < curl.percentile
-       && curl.level.key === 'expert' && squat.level.key === 'proficient',
+       && curl.level.key === 'advanced' && squat.level.key === 'proficient',
        `⚠️ THE DISCRIMINATING PAIR: a ${Math.round(squat.oneRM)} lb squat ranks BELOW a `
        + `${Math.round(curl.oneRM)} lb curl (${squat.level.name} vs ${curl.level.name}), because the `
        + 'order is a property of the lifter against people like them, not of the barbell');
@@ -6539,16 +6784,37 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'and no core lift is listed twice');
   }
 
-  /* ---- per-side: the curve sees the load the body saw ---- */
+  /* ---- per-side: the curve sees ONE HAND, and the answer is doubled ----
+   *
+   * 🚨 THIS ASSERTION IS REVERSED FROM WHAT IT SAID BEFORE 2026-09-13, ON TIM'S
+   * DECISION, AND THE REVERSAL IS THE POINT. It used to require
+   * `e1rm(TOTAL load)` and to explicitly forbid `e1rm(per hand) × 2`, on the
+   * argument that the rating pipeline doubles before the curve so this must
+   * too. The argument was sound and the thing it was consistent WITH was wrong:
+   *
+   *   · Marzagão was fitted with dumbbells logged PER HAND (docs/research.md
+   *     §1.3, which said so all along and told callers to pass the per-side
+   *     number), so k(w) means the per-hand weight.
+   *   · The ratio table was derived from Strength Level's per-dumbbell 1RM
+   *     tables, doubled — the same convention.
+   *
+   * So the pipeline was the file out of step, not this one. Both go through
+   * `setE1rm()` in js/set-e1rm.js now, which is the single place the convention
+   * lives, and the two numbers agree by construction rather than by two files
+   * remembering the same rule. The old text is kept above because the FAILURE
+   * MODE it describes is real and still the thing to watch: k grows with the
+   * log of the weight, so the two readings differ by pounds, and any screen
+   * that picks the other one silently disagrees with every other screen. */
   {
     const db = byLift(r.other, 'Dumbbell Bench Press');
-    ok(db.perSide === true && near(db.oneRM, e1rm(160, 8), 1e-9) && near(db.shown, db.oneRM / 2, 1e-9),
-       '🚨 a per-side lift’s 1RM is e1rm(TOTAL load) — 80/side × 8 is scored as 160 × 8 — and '
-       + '`shown` halves it back to the figure the lifter recognises');
-    ok(!near(db.oneRM, e1rm(80, 8) * 2, 0.5),
-       `⚠️ and NOT e1rm(80 × 8) doubled (${(e1rm(80, 8) * 2).toFixed(1)} vs ${db.oneRM.toFixed(1)}): `
-       + 'the k-factor grows with the log of the weight, so the two differ by pounds, and the '
-       + 'rating pipeline doubles BEFORE the curve — this must too or the two disagree');
+    ok(db.perSide === true && near(db.oneRM, e1rm(80, 8) * 2, 1e-9) && near(db.shown, db.oneRM / 2, 1e-9),
+       '🚨 a per-side lift’s 1RM is e1rm(PER HAND) doubled — 80/side × 8 is scored as e1rm(80, 8) × 2, '
+       + 'which is the convention the curve was fitted in — and `shown` halves it back to the figure '
+       + 'the lifter recognises');
+    ok(!near(db.oneRM, e1rm(160, 8), 0.5),
+       `⚠️ and NOT e1rm(160 × 8) (${e1rm(160, 8).toFixed(1)} vs ${db.oneRM.toFixed(1)}): the k-factor `
+       + 'grows with the log of the weight, so the two differ by pounds — this is the same assertion '
+       + 'as before with the sides swapped, and it is what stops a screen drifting onto the other one');
     ok(near(db.confidence, 0.85 * 0.65, 1e-9) && db.band.key === 'good',
        'a recorded non-key lift’s confidence is the rep factor (8 reps: 0.85) times the ratio’s '
        + 'quality (dumbbell bench: 0.65) — the level is read THROUGH the ratio even though the '

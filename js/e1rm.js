@@ -24,6 +24,11 @@
 // exercise, which is why they misfire across a 265-exercise library.
 //
 // See docs/research.md section 1 for the evidence and the limits.
+//
+// 2026-09-13 (docs/strength-accuracy-plan.md §2.2, §2.7): the chart's rep
+// ceiling is 15 like the evidence gate; a burnout set no longer votes for the
+// chart's rep target; a weigh-in carried forward ages (BW_STALE_DAYS); and the
+// "any unit" claim on e1rm() is corrected — it is pounds, and always was.
 
 import { bodyWeightFractionFor } from './exercises.js';
 
@@ -45,8 +50,17 @@ export function kFactor(weightKg) {
   return Math.max(K_FLOOR, A + B * Math.log(weightKg));
 }
 
-// Estimated 1RM, in whatever unit `weight` came in — the conversion to kg is
-// internal to k(w), and the result scales linearly with the input.
+// Estimated 1RM, in POUNDS. ~~in whatever unit `weight` came in — the
+// conversion to kg is internal to k(w), and the result scales linearly with the
+// input~~ — that was wrong (docs/strength-accuracy-plan.md §2.7): the result
+// is linear in `weight` but k(w) is NOT, so a kilogram fed in here is read as a
+// pound and lands on the wrong part of the curve. Every caller passes pounds;
+// `repsForWeight()` below says so too, and now the two comments agree.
+//
+// ⚠️ A LOGGED SET DOES NOT COME HERE DIRECTLY ANY MORE (2026-09-13). The load
+// convention — per hand then doubled, body weight in, help subtracted — is
+// decided once in js/set-e1rm.js, and `setE1rm()` is what a set goes through.
+// This stays the bare curve for callers that already hold a total load.
 export function e1rm(weight, reps) {
   const w = Number(weight);
   const r = Number(reps);
@@ -179,6 +193,30 @@ export function normalizeWeight(weight, fromReps, toReps) {
 // BACKWARD is an assumption. Both are usable, one is worth less.
 export const EXTRAPOLATED_BW_QUALITY = 0.70;
 
+/**
+ * How fast a weigh-in carried FORWARD loses its worth — 2026-09-13
+ * (docs/strength-accuracy-plan.md §2.7, agent C's D10).
+ *
+ * ~~A carried-forward weigh-in was worth full quality whatever the gap~~: a
+ * single weigh-in two years old scored every pull-up since at that weight, with
+ * the same q as one taken that morning. Now
+ *
+ *     quality = max(EXTRAPOLATED_BW_QUALITY, 1 − gapDays / BW_STALE_DAYS)
+ *
+ * so a weigh-in from this morning is worth 1, one from a year ago 0.5 of the
+ * way to the floor, and one older than two years is worth exactly what a
+ * backward-carried assumption is — never less, because a weight you DID have
+ * is never worse evidence than one you are assumed to have had.
+ *
+ * ⚠️ 730 DAYS IS JUDGED, NOT MEASURED. Nothing published says how fast an
+ * adult's weight drifts from a stale reading; what is known is that it drifts,
+ * and that the floor here can only ever WITHHOLD credibility from a
+ * body-weight lift — it cannot raise one. That asymmetry is what lets a judged
+ * constant stand in for a measured one, the same argument FATIGUE_HALF_SETS
+ * makes in muscle-evidence.js.
+ */
+export const BW_STALE_DAYS = 730;
+
 function dayNumber(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
   if (!m) return null;
@@ -194,7 +232,9 @@ function dayNumber(iso) {
  * @param {string} date the day of the SET, not today
  * @returns null if there is not a single weigh-in on record, else
  *   { weight, date, basis, gapDays, quality }
- *     basis 'carried'      — the newest weigh-in at or before that day
+ *     basis 'carried'      — the newest weigh-in at or before that day. Its
+ *                            quality falls with the gap (BW_STALE_DAYS), never
+ *                            below the extrapolated floor.
  *     basis 'extrapolated' — every weigh-in is LATER, so the earliest one is
  *                            carried backward. An assumption, and priced as one.
  *
@@ -214,9 +254,12 @@ export function bodyWeightOn(rows, date) {
   let best = null;
   for (const r of usable) { if (r.day <= day) best = r; else break; }
   if (best) {
+    const gapDays = day - best.day;
     return {
       weight: best.weight, date: best.date, basis: 'carried',
-      gapDays: day - best.day, quality: 1,
+      gapDays,
+      // Ages with the gap — see BW_STALE_DAYS. A same-day weigh-in is worth 1.
+      quality: Math.max(EXTRAPOLATED_BW_QUALITY, 1 - gapDays / BW_STALE_DAYS),
     };
   }
   const first = usable[0];
@@ -336,7 +379,13 @@ export function normalizeBlockedReason(exercise, opts) {
  * ------------------------------------------------------------------ */
 
 export const MIN_TARGET_REPS = 1;
-export const MAX_TARGET_REPS = 20;
+// ~~20~~ 15 since 2026-09-13 (docs/strength-accuracy-plan.md §2.2, decision l).
+// The chart's rep target used to be allowed five reps PAST the point where the
+// app refuses to read a maximum from a set, so three 25-rep sets could set the
+// chart to 20 and plot every real set normalised to a rep count the curve is
+// not trusted at. The ceiling is now the same number as the evidence gate
+// below, and it is declared as that number so the two cannot drift apart.
+export const MAX_TARGET_REPS = 15;
 
 /**
  * The most reps a set may have and still count as EVIDENCE of a maximum (D5:
@@ -344,7 +393,9 @@ export const MAX_TARGET_REPS = 20;
  *
  * MAX_TARGET_REPS is a different thing — it caps the rep count a chart may be
  * *displayed* at, where the user has asked for it explicitly. This caps what
- * the app is willing to infer a 1RM from on its own.
+ * the app is willing to infer a 1RM from on its own. ~~They differ~~ Since
+ * 2026-09-13 they are the same number: a target the curve cannot be trusted at
+ * is not a target worth offering.
  *
  * Worth stating why it matters, because leaving it unenforced was a real bug:
  * the formula happily extrapolates 135x25 to 258 lb, which beat a genuine
@@ -377,9 +428,17 @@ export function clampReps(n) {
 // Deliberately computed over ALL observations, never over the plotted series:
 // the plotted series depends on the target, so deriving the target from it
 // would be circular and the chart could not settle.
+//
+// ⚠️ A SET ABOVE MAX_EVIDENCE_REPS DOES NOT VOTE (2026-09-13, plan §2.2).
+// Before this, clampReps() folded a 25-rep burnout set down to the ceiling, so
+// three of them elected a target at the very top of the range — the rep count
+// the curve is least trusted at, chosen by the sets that are not evidence of a
+// maximum at all. D5 says those sets are not read for a max; they do not get
+// to pick the rep count everything else is normalised to either.
 export function modalReps(observations) {
   const tally = new Map();
   for (const o of observations || []) {
+    if (!isRankableSet(o && o.reps)) continue;
     const r = clampReps(o && o.reps);
     if (r === null) continue;
     const prev = tally.get(r);
