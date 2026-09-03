@@ -23,7 +23,7 @@
 // height instead, on the phone's column layout and the desktop's sidebar layout
 // alike, and nothing is ever underneath it.
 
-import { el, icon, fmtTime, confirmSheet, refreshRoute } from './ui.js';
+import { el, icon, fmtTime, confirmSheet, refreshRoute, requestRise } from './ui.js';
 import { liveDraft, clearDraft, draftRecordedSets } from './session-draft.js';
 import { stepsFor } from './set-types.js';
 
@@ -85,10 +85,21 @@ export function liveSessionBar({ route, today, now = Date.now() }) {
    * invalid HTML and browsers recover from it differently — the one thing that
    * must never be ambiguous here is whether a tap opens the workout or deletes
    * it. */
+  /* 🆕 IT COMES BACK UP THE WAY IT WENT DOWN — 2026-09-10, Tim's ask. The
+   * runner's ▾ slides the workout off the bottom; this is the other half, and
+   * asking here rather than in the router is what keeps STARTING a workout an
+   * ordinary navigation (`requestRise()` in ui.js has the full argument).
+   *
+   * ⚠️ ON THE ANCHOR'S CLICK, NOT ON A `go()` — the whole pill is a real `<a>`
+   * so it keeps the browser's focus ring and middle-click, and a plain left
+   * click still navigates by hash exactly as it did. The request is a one-shot
+   * the router consumes, so a middle-click that opens a new tab sets a flag
+   * nothing ever reads and no animation happens anywhere. */
   const open = el('a', {
     class: 'session-mini-open',
     href: '#/session/' + encodeURIComponent(draft.workoutId),
     'aria-label': `Back to ${draft.workoutName || 'your workout'}`,
+    onClick: (e) => { if (!e.metaKey && !e.ctrlKey && e.button === 0) requestRise(); },
   },
     el('span', { class: 'mini-arrow' }, icon('up', 18)),
     el('span', { class: 'mini-text' },

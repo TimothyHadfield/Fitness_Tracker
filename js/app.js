@@ -4,7 +4,7 @@ import { store, demo, warmReadCache, social, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
-  markRoute, parkScreen,
+  markRoute, parkScreen, takeRiseRequest,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -95,18 +95,27 @@ const NAV = [
   // argument that both are the past, one drawn as squares and one as lines.
   // That argument was about what the two screens ARE; his is about how often he
   // opens them, and he is the one using it in a gym. Frequency wins.
-  // ⚠️ Calendar's routes light DATA up now, because that is where the calendar
-  // lives again. A tab that goes dark while you are plainly still inside it is
-  // how a merge starts feeling like a dead end — the same reason Home used to
-  // own `social` and `friend`.
-  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs', 'calendar', 'day', 'edit'] },
+  // 🔄 AND CALENDAR LEFT AGAIN ON 2026-09-10 — its FOURTH move, all four Tim's.
+  // Data now answers "what does my training MEAN" (Muscles, Volume, Graph,
+  // Bars, Research) and Profile answers "what did I DO", which is where a
+  // calendar belongs. See DATA_TABS in views-data.js for the measurement that
+  // decided it: six segments physically did not fit and only worked because the
+  // row was made to scroll.
+  { hash: '#/graphs',   label: 'Data',     icon: 'chart',    match: ['graphs'] },
   // ⚠️ `#/me`, not `#/profile`. `#/profile` is the gender/birth-year/body-weight
   // form and has been for months; it is reached from Account and every link to
   // it still works. Two different screens called Profile is the "system" vs
   // "programme" fault the UX review found, so the ROUTE names are kept distinct
   // even though this tab is the one a person calls their profile.
+  // ⚠️ `calendar`, `day` and `edit` LIGHT PROFILE now, for the reason the Data
+  // entry above used to give about itself: a tab that goes dark while you are
+  // plainly still inside it is how a move starts feeling like a dead end. The
+  // calendar's own routes all still resolve — `#/calendar` has survived four
+  // moves without breaking a link, which is the rule a tab bar being redesigned
+  // may not break.
   { hash: '#/me',       label: 'Profile',  icon: 'person',
-    match: ['me', 'social', 'friend', 'invite', 'find', 'add', 'compare'] },
+    match: ['me', 'social', 'friend', 'invite', 'find', 'add', 'compare',
+            'calendar', 'day', 'edit'] },
 ];
 
 // ⚠️ GOALS IS OFF THE TAB BAR, NOT DELETED, and the distinction matters. The
@@ -324,8 +333,21 @@ async function render() {
    * claims a screen was covered that never existed — Rule 7's last line, that a
    * movement must not assert something the app does not know. The presence of an
    * outgoing screen IS the question, so it is the condition. */
+  /* 🆕 AND THE SAME FOR A WORKOUT COMING BACK UP — 2026-09-10, Tim: *"I want to
+   * have this similar animation for when you're in the middle of a workout and
+   * you click down on it to the main page or click up to resume the workout."*
+   *
+   * ⚠️ ASKED FOR BY THE DOOR, NOT INFERRED FROM THE ROUTE, and `requestRise()`
+   * in ui.js has the reasoning: the runner is reached from the live bar (the
+   * resume he described), from the Record picker (starting one) and from a deep
+   * link, and only the first is a panel returning over what you were reading.
+   * The route alone cannot tell those apart. `takeRiseRequest()` is a one-shot,
+   * so a re-render can never replay it. */
   const leaving = document.querySelector('#app > .screen');
-  const rising = route.name === 'record' && parse(prevHash).name !== 'record' && Boolean(leaving);
+  const asked = takeRiseRequest();
+  const rising = Boolean(leaving)
+    && ((route.name === 'record' && parse(prevHash).name !== 'record')
+        || (asked && route.name === 'session'));
   prevHash = location.hash;
   if (rising) parkScreen(leaving);
 

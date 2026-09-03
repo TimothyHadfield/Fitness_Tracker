@@ -216,6 +216,69 @@ for (const t of TEXT) {
        + `(${contrast(pal.accent, pal['accent-dim'])}:1) — the vacuity guard, because the fix above `
        + 'only covers the default palette and the other three have to pass on their own');
   }
+
+  /* ---------- EVERY OTHER ELEMENT PAINTING THE SAME PAIR (2026-09-10) ----------
+   *
+   * 🚨 THE PAIR IS A PROPERTY OF THE TWO TOKENS, NOT OF ONE CLASS, AND THAT IS
+   * WHAT THE 2026-09-06 FIX GOT WRONG. It scoped itself to `.load-badge.per-side`
+   * because at phone width that was the only element the audit could reach. The
+   * desktop sweep added on 2026-09-10 found the nav label immediately, and
+   * reading the stylesheet for the pair — rather than waiting for an instrument
+   * to trip over it — found three more. "Every element that paints this today"
+   * means "every element the tool I happened to run can see".
+   *
+   * ⚠️ NONE OF THE THREE IS LARGE TEXT under WCAG (`.bench-badge` is 9.5px/800;
+   * the other two are small controls), so 4.5:1 is the bar for all of them. */
+  for (const sel of ['\\.bench-badge', '\\.btn\\.primary\\.is-linked', '\\.set-type\\.is-on']) {
+    const re = new RegExp(`:root\\[data-theme="light"\\]:not\\(\\[data-palette\\]\\) ${sel}`);
+    ok(re.test(CSS),
+       `⚠️ ${sel.replace(/\\\\/g, '')} carries the same default-palette-only light fix — it paints `
+       + '--accent on --accent-dim exactly as the PER SIDE chip does');
+  }
+  /* 🔒 And the number, read out of the rule those three share, so the group
+     cannot drift from the chip above it. Anchored on `.set-type.is-on` because
+     it is the last selector in the list and therefore the one sitting against
+     the declaration block. */
+  const groupHex = (CSS.match(/:root\[data-theme="light"\]:not\(\[data-palette\]\) \.set-type\.is-on\s*\{[^}]*color:\s*(#[0-9a-fA-F]{6})/) || [])[1];
+  ok(Boolean(groupHex) && contrast(groupHex, lightOnly['accent-dim'] || light['accent-dim']) >= AA,
+     `🚨 and the group clears AA on the same fill (${groupHex} on --accent-dim = `
+     + `${groupHex ? contrast(groupHex, lightOnly['accent-dim'] || light['accent-dim']) : 'no rule found'}:1)`);
+
+  /* ---------- the DESKTOP SIDEBAR's active label (2026-09-02) ----------
+   *
+   * 🚨 THE SAME PAIR, THE SECOND ELEMENT, AND A DESKTOP-ONLY BROWSER SWEEP IS
+   * WHAT FOUND IT. `@media (min-width: 860px)` puts `--accent-dim` behind the
+   * active nav link, so its `--accent` label measures the same 3.96:1 in gold
+   * light. On a phone that label sits on the plain navbar surface (4.99:1), so
+   * every audit this project ran before 2026-09-02 — all of them phone-width —
+   * structurally could not see it.
+   *
+   * ⚠️ This file could not have caught it either, for the reason the PER SIDE
+   * block above gives: `--accent` on `--accent-dim` is a pair no `:root` rule
+   * declares. It exists only because one class puts one token on the other, so
+   * it has to be asserted by name, twice now.
+   *
+   * The assertion is on the SELECTOR as well as the number, again: an unscoped
+   * light rule would repaint teal, indigo and ember, which pass already. */
+  ok(/:root\[data-theme="light"\]:not\(\[data-palette\]\) \.navbar a\[aria-current="page"\]/.test(CSS),
+     '⚠️ the desktop sidebar\'s ACTIVE nav label has a light fix scoped to the DEFAULT palette only '
+     + '— it is --accent on --accent-dim there, the same failing pair as the PER SIDE chip');
+  const navActive = (CSS.match(
+    /:root\[data-theme="light"\]:not\(\[data-palette\]\) \.navbar a\[aria-current="page"\]\s*\{[^}]*color:\s*(#[0-9a-fA-F]{6})/,
+  ) || [])[1];
+  ok(Boolean(navActive) && contrast(navActive, light['accent-dim']) >= AA,
+     `🚨 and it clears AA on the pill behind it (${navActive} on --accent-dim = `
+     + `${navActive ? contrast(navActive, light['accent-dim']) : 'n/a'}:1) — the desktop sweep `
+     + 'measured the un-fixed pair at 3.96:1');
+  // The vacuity guard: the thing being fixed really is broken without the fix.
+  ok(contrast(light.accent, light['accent-dim']) < AA,
+     `and the guard that keeps both of the above meaningful — bare --accent on --accent-dim in gold `
+     + `light is ${contrast(light.accent, light['accent-dim'])}:1, which is why a scoped override is needed at all`);
+  // 🚨 The pill is painted ONLY on desktop. If that ever moves to the phone
+  // navbar, the label needs the fix at every width and this scoping is wrong.
+  ok(/@media \(min-width: 860px\)[\s\S]*?\.navbar a\[aria-current="page"\] \{ background: var\(--accent-dim\); \}/.test(CSS),
+     'and the --accent-dim pill behind that label is still desktop-only, which is what the '
+     + 'measurement above assumed');
 }
 
 /* ---------- the accent is not asked to carry text it cannot ---------- */
@@ -328,6 +391,93 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
   // And the map has a fill rule for each, or a band would paint as nothing.
   ok(VOLUME_HEX.every(({ key }) => new RegExp(`\\.body-region\\.lv-vol-${key}\\s*\\{`).test(CSS)),
      'and each one is wired to the body map');
+}
+
+/* ================================================================== *
+ * NO SCROLLING SURFACE LEAVES AN AXIS TO THE BROWSER (2026-09-02)
+ *
+ * 🚨 THE BUG THIS PINS WAS NEVER WRITTEN DOWN BY ANYBODY. Tim: *"when the user
+ * scrolls, it allows the user to drag the screen left and right which covers up
+ * a lot of stuff and doesn't show anything new."* `.pane-scroll` set only
+ * `overflow-y: auto` — and CSS says that when one axis is a non-`visible`
+ * overflow value and the other is left `visible`, the `visible` one computes to
+ * `auto`. So every pane in the app had been horizontally draggable since it was
+ * written, and a browser drag confirmed it: 3px of bleed on Data → Volume,
+ * Research, Goals, Settings and a friend's workout at 360 and 390px.
+ *
+ * ⚠️ AND `scrollWidth > clientWidth` CANNOT BE THE ASSERTION. A clipped box
+ * still reports content wider than itself and is still scrollable from script;
+ * what `hidden` removes is the USER's ability to drag it. That is a fact about
+ * input, which only a browser can measure. What a stylesheet CAN be held to is
+ * the property underneath it: **a rule that sets one overflow axis states the
+ * other**, so the browser is never left to choose.
+ *
+ * 🔒 The four names below are the deliberate horizontal scrollers — content
+ * genuinely wider than its box, reachable only by dragging. They are allowed to
+ * set `overflow-x` alone. Adding a fifth name here is a claim that something is
+ * really wider than the screen; adding one to silence this test is how the
+ * sixth Data segment became unreachable on 2026-09-08.
+ * ================================================================== */
+{
+  const H_SCROLLERS = ['.segmented', '.research-scroll', '.chips-scroll', '.people-bar'];
+
+  // Comments stripped first: this sheet quotes `overflow-x: auto` in prose all
+  // over the place, including in the block that explains this very bug.
+  const bare = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
+  /* ⚠️ PER SELECTOR, NOT PER RULE, and the difference matters. The browser
+     resolves overflow from the whole cascade, so a sheet that declares
+     `overflow-y` on a box in one rule and `overflow-x` on it in another is
+     CORRECT — and a per-rule test would call it broken and push the fix into a
+     shape nobody chose for a reason. Selector lists are split on commas so a
+     grouped rule counts for each of its selectors.
+     The one approximation: declarations are unioned across media queries. Only
+     `.navbar` is written in two contexts and it states both axes in the same
+     block, so nothing here relies on it. */
+  const axes = new Map();
+  let blocks = 0;
+  for (const [, sels, body] of bare.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!/overflow(-x|-y)?\s*:/.test(body)) continue;
+    blocks++;
+    for (const s of sels.split(',')) {
+      const sel = s.trim().replace(/\s+/g, ' ');
+      if (!sel || sel.startsWith('@') || /^(from|to|\d+%)$/.test(sel)) continue;
+      const a = axes.get(sel) || { x: false, y: false, sel };
+      if (/overflow-x\s*:/.test(body)) a.x = true;
+      if (/overflow-y\s*:/.test(body)) a.y = true;
+      if (/(^|[;{\s])overflow\s*:/.test(body)) { a.x = true; a.y = true; }
+      axes.set(sel, a);
+    }
+  }
+
+  ok(blocks >= 20 && axes.size >= 20,
+     `the overflow rules parse out of css/app.css (${blocks} blocks, ${axes.size} selectors) — a `
+     + 'parser that matched nothing would make every assertion below vacuous');
+
+  const named = (list) => list.map((a) => a.sel).join(', ');
+
+  const yOnly = [...axes.values()].filter((a) => a.y && !a.x);
+  ok(yOnly.length === 0,
+     '🚨 every selector that sets overflow-y also states overflow-x — otherwise the browser '
+     + `computes the free axis to auto and the surface drags sideways${yOnly.length ? ': ' + named(yOnly) : ''}`);
+
+  const xOnly = [...axes.values()].filter((a) => a.x && !a.y
+    && !H_SCROLLERS.some((h) => a.sel.includes(h)));
+  ok(xOnly.length === 0,
+     'and the same in the other direction, everywhere but the four deliberate horizontal '
+     + `scrollers — an unstated Y axis invents a vertical scroller just as readily${xOnly.length ? ': ' + named(xOnly) : ''}`);
+
+  // ⚠️ THE VACUITY GUARD, and it is the point of the whole block: the four
+  // scrollers must still BE scrollers. A sweep that "fixed" this test by
+  // clipping them would put real data where no gesture can reach it.
+  for (const h of H_SCROLLERS) {
+    ok(new RegExp(`\\${h}[^{}]*\\{[^}]*overflow-x:\\s*auto`).test(bare),
+       `${h} still keeps its own overflow-x: auto — it is wider than its box on purpose`);
+  }
+  // And the one whose scroller was inert until 2026-09-10, because a flex child
+  // will not shrink below its content without this.
+  ok(/\.research-scroll\s*\{[^}]*min-width:\s*0/.test(bare),
+     '⚠️ and .research-scroll still carries min-width: 0, which is what makes its overflow-x '
+     + 'do anything at all inside a column flex container');
 }
 
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');

@@ -1338,13 +1338,25 @@ async function signedInScreen(user, sections = [], settings = {}) {
         },
       });
 
+      /* ⚠️ THE LIST GOT LONGER BECAUSE THE DELETE GOT HONEST — 2026-09-10.
+       * This sentence named four things, and until today four things were
+       * roughly what came off: weigh-ins, programmes, goals, saved people and
+       * guest workouts were never touched, and neither was the published copy
+       * a friend reads. A promise this screen could not keep is now one it
+       * can, so it says the whole of what goes.
+       *
+       * 🚨 "AND WHAT FRIENDS CAN SEE" EARNS ITS PLACE ON THE SCREEN rather
+       * than behind a "?" (Rule 9): the published copy is the only part of
+       * this account that lives where somebody ELSE can read it, so whether it
+       * goes is WHAT this button does, not why. */
       handle = openSheet({
         title: 'Delete your account?',
         body: el('div', { class: 'card' },
           el('p', { class: 'field-help' },
-            'This erases every workout, record, benchmark and custom exercise from your account, '
-            + 'permanently, on every device. It cannot be undone. Download a backup first if there '
-            + 'is any chance you want this data later.'),
+            'This erases everything in your account, permanently, on every device — every workout, '
+            + 'weigh-in, benchmark, programme, goal and custom exercise, and what friends can see '
+            + 'of you. It cannot be undone. Download a backup first if there is any chance you want '
+            + 'this data later.'),
           pw ? el('div', { class: 'field' }, el('label', { text: 'Confirm your password' }), pw) : null,
         ),
         footer: confirmBtn,

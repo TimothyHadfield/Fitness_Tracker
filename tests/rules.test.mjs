@@ -712,6 +712,85 @@ await denied(deleteDoc(doc(asAlex, 'feedback', 'n1')),
 await allowed(deleteDoc(doc(asDev, 'feedback', 'n2')),
   'while the developer can clear one they have dealt with');
 
+/* ================================================================
+ * 🚨 DELETING AN ACCOUNT — every path the purge has to reach. 2026-09-10.
+ *
+ * Open work 27. "Delete everything permanently" left most of the account in
+ * Firestore, and the half of that fault this suite is the right place for is
+ * the third one: `write()` addresses `collections/{name}` and the two shards
+ * and nothing else, so it could never reach `shared/*` — the copy OTHER PEOPLE
+ * read. A public account that deleted itself left its published training
+ * readable by anybody signed in, permanently, because after `deleteUser()`
+ * every rule in this file is `isOwner` and the owner no longer exists.
+ *
+ * 🔒 SO THIS SECTION IS ABOUT A PERMISSION, WHICH IS THE ONE THING ONLY THIS
+ * SUITE CAN CHECK. `tests/data-layer.test.mjs` drives the purge against an
+ * in-memory double and proves the ARITHMETIC — what it walks, in what order,
+ * and that it re-reads before it believes itself. A double answers every
+ * request; only the emulator can say whether Firestore would.
+ *
+ * ⚠️ IT WALKS `PURGED_SUBCOLLECTIONS` RATHER THAN A LIST TYPED HERE, on
+ * purpose. A hand-typed second copy of a list of collections is precisely the
+ * bug being fixed — the old backend kept one and it held five of ten names. An
+ * eleventh subcollection added to the purge without a rule fails here.
+ * ================================================================ */
+console.log('\n--- 🚨 Deleting an account: the purge must be able to reach all of it ---\n');
+
+const { PURGED_SUBCOLLECTIONS } = await import('../js/firebase-backend.js');
+const storeSrc = readFileSync(join(here, '..', 'js', 'store.js'), 'utf8');
+const COLLECTIONS = [...storeSrc.match(/const COLLECTIONS = \[([^\]]*)\]/)[1]
+  .matchAll(/'([^']+)'/g)].map((m) => m[1]);
+
+ok(PURGED_SUBCOLLECTIONS.length === 10,
+  `the purge walks ${PURGED_SUBCOLLECTIONS.length} subcollections`);
+ok(PURGED_SUBCOLLECTIONS[0] === 'shared',
+  '🚨 starting with `shared`, the only one anybody else can read — if a purge is interrupted, '
+  + 'what has already gone is what other people could see');
+
+// Re-seed with rules OFF, so the fixture cannot itself be a test of the rules,
+// and so this section does not depend on what the sections above left behind.
+await env.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  const rows = { shared: 'friends', social: 'graph', disconnects: ALEX, requests: ALEX };
+  for (const name of PURGED_SUBCOLLECTIONS) {
+    await setDoc(doc(db, 'users', TIM, name, rows[name] || 'x1'), { seeded: true });
+  }
+  for (const name of COLLECTIONS) {
+    await setDoc(priv(db, TIM, name), { rows: [{ id: 'r1' }], updatedAt: new Date() });
+  }
+});
+
+for (const name of PURGED_SUBCOLLECTIONS) {
+  // LIST, because the purge has to find out what is there before it can remove
+  // it. A `get` on a known id is no use: it does not know the ids.
+  await allowed(getDocs(collection(asTim, 'users', TIM, name)),
+    `the owner can list their own ${name}`);
+  await denied(getDocs(collection(asStranger, 'users', TIM, name)),
+    `and a stranger still cannot (${name})`);
+}
+
+// DELETE, one real document per subcollection.
+{
+  const ids = { shared: 'friends', social: 'graph', disconnects: ALEX, requests: ALEX };
+  for (const name of PURGED_SUBCOLLECTIONS) {
+    await allowed(deleteDoc(doc(asTim, 'users', TIM, name, ids[name] || 'x1')),
+      `and delete a document out of ${name}`);
+  }
+}
+
+/* ⚠️ AND THE TEN WHOLE-LIST DOCUMENTS ARE EMPTIED, NEVER DELETED. The block at
+ * the top of firestore.rules says `allow delete: if false` on
+ * users/{uid}/collections/{name} — clearing one has always been a write of an
+ * empty list — so the purge writes `{rows: [], updatedAt}` instead, and that
+ * write has to satisfy validPayload() on every single collection name. */
+for (const name of COLLECTIONS) {
+  await allowed(setDoc(priv(asTim, TIM, name), { rows: [], updatedAt: serverTimestamp() }),
+    `${name} can be emptied to zero rows`);
+}
+await denied(deleteDoc(priv(asTim, TIM, 'sessions')),
+  '🚨 while DELETING a whole-list document is still refused outright — the purge empties '
+  + 'them because it cannot delete them, not as a matter of taste');
+
 console.log('\n--- Nothing else in the database exists ---\n');
 
 await denied(setDoc(doc(asTim, 'users', TIM, 'collections', 'invented'), { rows: [], updatedAt: serverTimestamp() }),

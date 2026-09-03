@@ -17,6 +17,320 @@
 
 ---
 
+## 2026-09-10 — DELETE MEANT DELETE, A RISE THAT ROSE BEHIND ITS OWN GHOST, AND A JOINT WORKOUT THAT WAS TWO WORKOUTS
+
+**Tim opened with two items off the Open work list** — *"idk what I can do with the desktop thing but
+you can do whatever work you think you should do for those two things. I don't think the width issue
+is super important."* — and then, over the session, reported four things from actually using the app:
+a joint workout he had just recorded, the Record animation, sideways drag in Data, and a friend's
+calendar. Each has its own section below.
+
+### A. 🚨 "DELETE EVERYTHING PERMANENTLY" LEFT MOST OF THE ACCOUNT IN FIRESTORE — Open work 27, closed
+
+The entry said the sessions were left behind and that the fix was one word (`{ wholesale: true }`)
+which was deliberately not typed. **Both halves of that were right, and the finding was bigger than
+the entry.** `deleteAccount()` cleared the account by calling `write()` with an empty list over a
+**hand-typed list of five collection names**, each wrapped in a try/catch that logged and carried on.
+Three separate things were wrong and every one of them was silent:
+
+1. 🚨 **THE LIST WAS FIVE OF TEN.** `bodyWeight`, `systems`, `goals`, `people` and `guestSessions`
+   were never named. Every weigh-in, programme, goal, saved person and guest workout stayed exactly
+   where it was, under an account that had just been told it was permanently deleted. **Open work 27
+   only knew about `guestSessions`**; the other four were found by comparing the list against
+   `COLLECTIONS`.
+2. 🚨 **`sessions` WAS NAMED AND STILL COULD NOT BE CLEARED.** A sharded write of `[]` is a mass
+   delete and the 2026-08-28 guard refuses one without `wholesale` — correctly. The throw was caught,
+   logged, and ignored, so **the one collection the list got right was the one that failed.**
+3. 🚨 **`write()` CANNOT REACH MOST OF AN ACCOUNT ANYWAY, AND THIS IS THE ONE THAT MATTERS.** It
+   addresses `collections/{name}` and the two shards. It has no way to name `shared/*`, `social/*`,
+   `invites/*`, `handoffs/*`, `disconnects/*`, `requests/*`, `reactions/*` or `backups/*` — and
+   `shared` is **the copy other people read**. A public account that deleted itself left its
+   published training readable by anybody signed in, for ever, because after `deleteUser()` every
+   rule in `firestore.rules` is `isOwner` and the owner no longer exists.
+
+✅ **THE FIX IS A PURGE, NOT A FLAG, AND THAT WAS THE DECISION THE ENTRY SAID WAS NEEDED.** The guard
+exists so nobody sprinkles `wholesale` around, and the two flows allowed to use it **snapshot to the
+cloud first** — which is worse than useless for an account about to stop existing: it writes one more
+unreachable document with a bill attached. Deleting an account is a different operation from writing
+a row list, so it got its own path (`createAccountPurge()` in `js/firebase-backend.js`) and
+`write()`'s guard is untouched and still refuses exactly as it did.
+
+- 🔒 **IT VERIFIES BEFORE THE ACCOUNT GOES.** Phase one deletes everything it can, **collecting
+  errors rather than stopping** — a blip on `backups` is no reason to leave `shared` published. Phase
+  two **re-reads** to see what actually survived. `deleteUser()` runs only if that comes back empty;
+  otherwise it throws, the account is kept, and the message names what is left. Failing towards
+  *"your account still exists, try again"* is the only acceptable direction, and the purge is
+  idempotent so a retry resumes.
+- ⚠️ **`shared` AND `reactions` GO FIRST**, and the order is the revocation order rather than
+  alphabetical: if the purge is interrupted — a closed tab, a dropped connection — what has already
+  gone is everything anybody else could read.
+- ⚠️ **THE TEN WHOLE-LIST DOCUMENTS ARE EMPTIED, NOT DELETED**, because `firestore.rules` says
+  `allow delete: if false` on `users/{uid}/collections/{name}`. That is not taste; there is no
+  permission to delete one.
+- 🚨 **THE COLLECTION LIST IS HANDED DOWN FROM `store.js`, NEVER COPIED.** A hand-typed second copy is
+  exactly what left five of ten behind, so `store.deleteAccount()` passes `COLLECTIONS` and the
+  backend **refuses rather than defaults** if it is not given one. Same shape of fault, same shape of
+  fix, as `COLLECTIONS` vs `knownCollection()`.
+- ⚠️ **The legacy whole-list documents ARE emptied here**, which is the one place that is right:
+  `createShardIO`'s prohibition against writing them protects an account that continues to exist,
+  where that document is the backup floor and old clients still read it. An account that never
+  migrated holds its whole history there.
+- ✂️ **And the confirmation sheet's copy was wrong and is now right.** It named four things because
+  four things were roughly what came off. It now names everything that goes, including **what
+  friends can see of you** — which stays on the screen rather than behind a "?" (Rule 9), because the
+  published copy is the only part of an account that lives where somebody else can read it, so
+  whether it goes is WHAT the button does.
+
+**Tested both ways it can be.** `tests/data-layer.test.mjs` drives the purge against the in-memory
+double — a 221-document account with something in every place one can own, including a **legacy tier
+document** from before 2026-09-03 whose viewers list is still a live grant. 🔒 **The load-bearing
+assertion is the one about failure**: a double whose batches commit successfully and silently drop
+their deletes must still come back reporting ten paths left, because the old code called
+`deleteUser()` on the strength of having *asked*. **Mutation-checked** — making the verification pass
+vacuous flips exactly those two assertions and nothing else, and the mutation was confirmed on the
+code line rather than in a comment (§0.14). Reversing the purge order and dropping `guestSessions`
+flips six, including one that walks the raw document store rather than the list under test, which is
+why it catches a list that shrank.
+
+🔒 **AND THE PERMISSIONS ARE PROVED ON THE EMULATOR, WHICH IS THE ONLY THING THAT CAN.**
+`tests/rules.test.mjs` gained a section that walks **`PURGED_SUBCOLLECTIONS` itself** rather than a
+list typed there, asserting the owner may `list` and `delete` each of the ten and may empty each of
+the ten whole-list documents — and that deleting a whole-list document is still refused outright.
+**218 assertions, up from 159, zero failures.** A hand-typed second copy of a collection list is the
+bug being fixed, so the test reads the real one; an eleventh subcollection added to the purge without
+a rule fails here.
+
+⚠️ **WHAT IS STILL NOT PROVED: this has never run against real Firestore.** The emulator answers the
+permission question and the double answers the arithmetic one. Neither is a live project, and this
+file's network paths have never been executed — same standing caveat as the rest of it.
+
+### B. 🚨 THE RECORD PANEL ROSE BEHIND THE THING IT WAS MEANT TO RISE OVER
+
+Tim: *"I can tell there's some sort of animation when you hit record and that section pulls up, but
+it immediately gets shut down and the screen does not cover the main section display at all. When I
+click the down arrow on the record section however, the downwards animation is good."*
+
+🚨 **THE ASYMMETRY IS THE ENTIRE DIAGNOSIS, AND IT IS WHY THIS SHIPPED.** `.screen-ghost` was
+`position: fixed; z-index: 50`, and `#app` creates no stacking context (no transform, no opacity, no
+z-index of its own) — so the parked ghost painted over **everything** in it, including the panel
+rising underneath. The rise ran its full 240ms behind a still picture of the old screen and only
+became visible in whatever was left of it after the ghost was removed. *"An animation that
+immediately gets shut down"* is exactly what that looks like, and *"does not cover the main section
+display"* is exactly right: nothing was covered, because the thing doing the covering was the wrong
+one.
+
+**Falling genuinely wants the top**, which is why that direction looked right and was never
+suspected: the down arrow slides the Record screen off the bottom to reveal Home underneath, so there
+the ghost IS the moving thing. **Two behaviours, two layers**, and the class that already
+distinguished them now carries it — `.screen-ghost` is `z-index: 40`, `.screen-ghost.is-falling`
+stays at 50, and `.screen.rises` takes 45.
+
+⚠️ **`z-index` ON A STATIC ELEMENT, DELIBERATELY.** `.screen` is a flex child of `#app`, and the
+documented exception is that a flex item with a z-index other than `auto` paints as though it created
+a stacking context. `position: relative` would work too **and would re-anchor every absolutely
+positioned descendant inside the screen for the 240ms the class is on** — a layout change in the
+middle of an animation, for nothing.
+
+🔒 **MEASURED IN CHROME, AND THE FIRST TWO MEASUREMENTS WERE WRONG.** One sampled over CDP — a round
+trip per sample, so its own timestamps were fiction and it reported the ghost vanishing at 40ms. The
+other instrumented `Element.prototype.remove` and perturbed the timing it was measuring. **Neither
+could be trusted about WHEN, and they disagreed with each other**, which is the only reason it was
+caught. The third samples in-page on `requestAnimationFrame` and hands back one array at the end:
+**the ghost holds still at top 0 while the panel travels 790 → 72, then leaves.** ⚠️ **A
+measurement that cannot be reproduced is not evidence** — the two that disagreed were both thrown
+away rather than averaged.
+
+### C. 🆕 THE SAME MOVEMENT FOR A WORKOUT IN PROGRESS
+
+Tim, straight after: *"Similarly to this downwards/upwards animation, I want to have this similar
+animation for when you're in the middle of a workout and you click down on it to the main page or
+click up to resume the workout."*
+
+- **Down** needed nothing new: `minimize()` in `views-session.js` parks its own screen with
+  `falls: true`, the same call Record's down arrow makes.
+- 🚨 **UP CANNOT BE INFERRED FROM THE ROUTE, which is the whole reason `requestRise()` exists.**
+  Record rises because arriving at `#/record` from anywhere else is unambiguous. The runner is
+  reached three ways — **the live bar** (the resume he described), **the Record picker** (starting a
+  workout) and **a deep link** — and only the first is a panel coming back up over what you were
+  reading. So the door asks and the router consumes a **one-shot**; the other two doors behave
+  exactly as they always did. ⚠️ A flag left set would make the next render rise too, which is the
+  bounce Rule 7 forbids.
+- ⚠️ **On the anchor's click, guarded on modifier keys**, so a middle-click that opens a new tab sets
+  a flag nothing ever reads.
+
+🔒 **BOTH DIRECTIONS MEASURED IN CHROME**: the ▾ parks a falling ghost that travels 0 → 857 while the
+incoming screen sits at 0 underneath, and the bar's arrow rises the runner 844 → 0 over a ghost held
+still, landing on `.set-list`. ⚠️ **The probe took three attempts to reach the runner at all** — the
+first two matched `/^Start/` against the chooser's rows, which is the identical fault
+`tools/a11y-audit.mjs` documents in its own header, and then measured an **empty local account**
+because the demo flag needs the navigate sequence that file uses. Both times the numbers looked
+plausible.
+
+### D. 🚨 A JOINT WORKOUT WAS TWO WORKOUTS, AND TIM FOUND IT BY RECORDING ONE
+
+> *"The accounts that are joint together should be more synced. When the user clicks 'next exercise',
+> it should move to the next exercise for both users, not just one. If the user deletes, swaps, adds,
+> or reorganizes the exercises, it should do the same for both users. However, make a 'just for ____
+> (the user that is currently selected)' button which makes it so if you do any of those things, it
+> just changes it for that user and not both users."*
+
+⚠️ **NOTHING WAS BROKEN — A GOOD DESIGN DECIDED SOMETHING IT WAS NEVER ASKED ABOUT.**
+`state.others` parks the **whole** per-person state (entries, walk position, body weight) so that
+switching names is a pointer swap and the walk, the steppers and the rest timer never have to know
+anybody else exists. That is right for the numbers, and it silently made the **shape** of the workout
+per-person too: two people on one phone got two independent exercise lists and two independent
+positions in them. It had simply never been used by two people at once until he did it.
+
+🔒 **WHAT STAYS PER-PERSON IS THE HALF THAT MATTERS**: the sets, the history, the suggestion and the
+body weight. 0e's load-bearing rule is that switching names switches the **whole suggestion** — two
+lifters on one bar are not on the same weights — so a shared exercise arrives at each person built
+from **their own past** (`entryFor(name, …)`), never copied across. What is shared is which exercises
+are being done, in what order, and which one everybody is on.
+
+🚨 **SO THE OPERATION IS REPLAYED, NOT BROADCAST.** A broadcast would be four lines shorter and would
+put the owner's 185 lb bench in front of somebody who has never benched — the one thing this whole
+feature is built not to do. `readingFrom()` and `buildEntry()` were split out of `readingFor()` and
+`entryFromExercise()` so a history can be handed in rather than read off `state`.
+
+- **`activeSlot` is an ADAPTER, not a copy** — getters and setters onto `state`, so `allSlots()`
+  hands back something that writes back to wherever that person actually lives. A version that spread
+  the active person into a new object would look identical, pass a shallow test, and drop every
+  change.
+- **The honest-skip branches are the interesting part**, and each is a real case rather than
+  defensive padding: a shared **swap** skips somebody whose slot at that index holds a different
+  exercise; a shared **remove** skips somebody it would leave with no exercises; a shared **add**
+  skips somebody who already has it (two entries with one exercise id is the shape that produced the
+  duplicate-exercise read bug of 2026-08-28); a shared **reorder** skips a list of a different
+  length, because a permutation of five positions means nothing applied to four. Each says who was
+  skipped rather than failing silently.
+- **`syncWalk` clamps per person**, because after a "just for" edit the lists are genuinely different
+  lengths and there is no honest shared number.
+- 🆕 **Somebody added mid-workout joins where the workout IS**, clamped to their own list. Starting
+  them at zero put the one person who just arrived out of step with everybody, which is the thing
+  being fixed. Their earlier exercises stay blank, which is true — they were not there.
+- **"Just for ___" is a MODE, not a per-action choice**, which is what he asked for and is also the
+  only version that works one-handed in a gym: the alternative is a question on top of every swap,
+  remove, add and drag. It is on the draft, so it survives leaving a workout open, and it cannot be
+  silently on — the button is lit and names whoever is selected. ⚠️ **It only exists when there is
+  somebody to be apart from**; on a solo workout it is a control that does nothing.
+- ⚠️ **Deliberately not a `.person-chip`.** Those are a radio group where exactly one is pressed and
+  pressing one SELECTS a person; this is a toggle that changes what the next tap will DO. Same pill
+  so it belongs to the bar, dashed and unfilled when off so it never reads as a fifth person waiting
+  to be picked, and pushed to the far end so a mode switch never sits between two names somebody is
+  tapping between.
+
+### E. ✂️ DRAGGING THE SCREEN SIDEWAYS, AND NOBODY EVER WROTE THE RULE THAT ALLOWED IT
+
+Tim: *"in the data section (specifically volume and research), when the user scrolls, it allows the
+user to drag the screen left and right which covers up a lot of stuff and doesn't show anything new.
+Only allow the user to drag the screen up and down, not left and right to the sides."* Then: *"The
+settings menu on the home page also has the left-right scroll issue. I might've missed some places so
+just make sure it doesn't happen across the cite."*
+
+🚨 **THE BROWSER WROTE THE RULE, WHICH IS WHY IT SURVIVED THIS LONG.** `.pane-scroll` set only
+`overflow-y: auto`. CSS says that when one axis is a non-`visible` overflow value and the other is
+left `visible`, **the `visible` one computes to `auto`** — so every pane in this app has been
+horizontally draggable since it was written, and any few pixels of bleed anywhere became a drag
+across the whole page. Measured before the change: the Research pane ran to 363px of scroll width in
+a 360px box, Volume to 393 in 390.
+
+🛑 **CLIPPING IS ONLY HALF A FIX.** Research's age-by-muscle table is genuinely **407px wide at
+360px**, so hiding the overflow without giving that table its own scroller would put two columns of
+real data where no gesture could reach them — exactly the fault the sixth Data segment had on
+2026-09-08. `.research-scroll` **already had `overflow-x: auto` and had never once scrolled**: as a
+flex child of a column flex container its default `min-width: auto` refused to shrink below its
+content, so the box grew to the full 407px and pushed the pane sideways instead. `min-width: 0` is
+what makes the scroller it already had do anything.
+
+⚠️ **`overflow-x: hidden` STILL REPORTS `scrollWidth > clientWidth`**, so that comparison is not the
+test — a hidden box remains programmatically scrollable and what it prevents is *user* scrolling.
+The first re-measurement "failed" for that reason and was the measurement's fault, not the fix's.
+
+⚠️ **ONE RESIDUAL, RECORDED AND LEFT**: a **transparent** tap-target `rect` in the Research age chart
+extends 4–7px past the plot area, so a few pixels of an invisible hit area are now clipped. Nothing
+visible is lost and the band's target is ~30px wide. Left alone because `js/views-data.js` was being
+edited in parallel and a silent collision would have been worse than the defect.
+
+### F. ⚠️ THE BROWSER AUDIT HAD NEVER MEASURED A DESKTOP WIDTH, AND THE FIRST ONE FOUND SOMETHING
+
+`tools/a11y-audit.mjs` swept 360 and 390 only, with `mobile: true` hard-coded — so the laptop layout
+of every screen was unswept. It now sweeps **four widths with a per-width `mobile` flag**: 360, 390,
+**880** and **1280**, chosen off the stylesheet rather than picked. The layout flips at 860px
+(`#app` → row, nav → sidebar, the muscle map → two columns) and the panes cap at 1200px, so 880 is
+the first width where every desktop rule is live at the *narrowest* desktop size, and 1280 is the
+only genuinely different one past the cap.
+
+🔒 **THE PHONE ROWS ARE PROVABLY UNCHANGED**: 6,071 + 6,136 = **12,207 text nodes**, byte-identical to
+the figure recorded on 2026-09-08, which also removes the need for a baseline re-run.
+
+🚨 **AND THE DESKTOP LAYOUT WAS HIDING AN AA FAILURE.** The **active nav label in the left sidebar**
+measures **3.96:1** at 14px — light theme, gold palette, both desktop widths, 14 routes each. Cause:
+`.navbar a[aria-current="page"] { background: var(--accent-dim); }` inside `@media (min-width: 860px)`.
+On a phone that label is `--accent` on the plain navbar ground (4.99:1, passes); on desktop it is
+`--accent` on `--accent-dim`.
+
+⚠️ **THIS IS A KNOWN PAIR THAT WAS FIXED IN EXACTLY ONE PLACE.** `css/app.css` already carries the
+2026-09-06 measurement of `--accent` on `--accent-dim` — *"gold dark 6.27 light 3.96 ← the only
+failure"* — and fixed it for `.load-badge.per-side` alone, because **at phone width that was the only
+element painting the pair**. The desktop sidebar is the second, and a 360/390-only audit could not
+see it. **The coverage hole and the defect were the same shape**, which is the lesson: a fix scoped
+to "every element that paints this today" is scoped to every element the instrument can see.
+
+Zero overflow, zero unnamed controls, zero contrast failures at phone widths; **teal, indigo and
+ember are clean at all four widths** (1,024 route-instances across the four palettes).
+
+### G. 🆕 A FRIEND'S CALENDAR GETS MONTHS AND YEARS — and asking for it uncovered a shipped bug
+
+Tim: *"When you view a friend's data, you can see their calendar, but can't select between months and
+years. Make it so you can."*
+
+✅ **It cost three lines, because `ownCalendar()` now serves all three doors** (`#/calendar`, the Data
+segment, a friend's Calendar tab). `renderCalendarPane()`'s friend branch was a second, thinner
+calendar and is deleted — which is the row in this file that already said one body of code sits
+behind both doors *"so Months, Years, the readout and the day links cannot drift between them"*,
+finally being true of the third.
+
+🚨 **THE REAL FINDING IS NOT THE FEATURE. A PUBLISHED SESSION CALLS ITS TITLE `name`; A LOCAL ONE
+CALLS IT `workoutName`** (`projectSession()` in `social.js`). Every friend calendar read
+`workoutName`, so **every cell of every friend's calendar has said "Workout"** whatever the workout
+was called, since the friend calendar shipped — and the cell's accessible name was built with no
+fallback, handing a screen reader **`"February 10: undefined"`**. ⚠️ **Invisible to every existing
+test because no fixture used the published shape**, which is the 2026-08-22 expired-invite lesson
+arriving again: *a pure module has to be handed the shape the network really returns.* One shared
+reader now; the two keys provably cannot collide, because local writers only ever write
+`workoutName` and `projectSession` only ever writes `name`.
+
+🚨 **AND THE YEARS COUNT IS RENAMED RATHER THAN SUPPRESSED — the decision worth keeping.** Over a
+60-session window *"60 days trained"* is not a floor wearing the wrong label, it is a count of
+**publishing** printed under the name of **training**: somebody who trained 200 days and somebody who
+trained 61 read identically. That is `direction.md` §3.1's *"a number presented as something it is
+not"*. **Deleting it would have been worse**, and the reason is structural rather than aesthetic: the
+grid is one `role="img"` carrying a single `aria-label` — deliberately, per its WCAG-2.5.8-by-
+equivalence argument — so removing the figure leaves a screen-reader user with **no reading of the
+picture at all**. It says **"N days published"**, with a Years-specific caveat in the open naming both
+hazards (the window, and that blank days are unknown rather than untrained). ⚠️ **Not behind a "?"** —
+Rule 9 keeps WHAT on the screen, and the window is what this picture *is*. **Same rule `year-grid.js`
+already applied** when it refused the reference image's "155 workouts" over 150 squares.
+
+- ⚠️ **`friendCalMode` is a SECOND module memory beside `calMode`**, and a mutation check is what
+  settled it: sharing one flips a **pre-existing** assertion on a different screen, so the two
+  genuinely contaminate each other.
+- 🔒 **Six mutation checks, each with the mutated line printed back before the result was believed**
+  — `publishedDaysLabel` appears four times in the file, so a bare string match would have been a
+  coin toss (§0.14, exactly the trap that fabricated evidence on 2026-09-06).
+- 🚨 **AND ONE OF THEM CAUGHT A VACUOUS ASSERTION OF ITS OWN** (§0.14's other half): a *"no
+  `undefined` in the aria-label"* check survived its mutation because the helper always returns a
+  string. It asks the real question now — whether the label carries the name a sighted user sees —
+  and flips.
+- ⚠️ **The 360px fit is reasoned, not measured.** Nothing new can overflow (wrapping text plus a
+  two-segment control already measured elsewhere), but no browser drove it, jsdom does no layout, and
+  **`tools/a11y-audit.mjs` does not cover a friend's page** — a friend's uid is generated, so there is
+  no static hash to put in the route list. Recorded rather than claimed.
+- 🚩 **"published" is app vocabulary where the rest of the product says "share".** A wording
+  candidate for Tim, who owns wording and is mid-pass on it. Not changed unasked.
+
+---
+
 ## 2026-09-09 (third pass) — ONE COUNT CALLED FRIENDS, AND THE DUPLICATE THAT WAS FLAGGED AND NOT FIXED
 
 Tim, asked what was next and given a ranked answer, picked and disposed of four things in one message:

@@ -149,3 +149,31 @@ export function buildYear(year, isActive, today) {
 export function daysLabel(n) {
   return n === 1 ? '1 day trained' : `${n} days trained`;
 }
+
+/**
+ * 🚨 THE SAME COUNT ON SOMEBODY ELSE'S PAGE, AND IT MAY NOT SAY "TRAINED" —
+ * 2026-09-10, when the Years view was opened up on a friend's calendar.
+ *
+ * A friend's published document carries their most recent **sixty sessions**
+ * (`MAX_ACTIVITY` in js/social.js, enforced by `validProjection()` in
+ * firestore.rules). So over a friend's grid this number can never exceed 60 and
+ * has no relationship at all to how much they trained: somebody who trained 200
+ * days last year and somebody who trained 61 both come out at "60 days trained".
+ * That is not a rounded number or a floor wearing the wrong label — it is a
+ * count of one quantity printed under the name of another.
+ *
+ * The rule is already stated above `daysLabel`, and this is the same rule
+ * applied to a different denominator: **count what is drawn, and name it.** The
+ * squares on a friend's grid are the days they have PUBLISHED, so that is what
+ * the label says. Nothing is invented, nothing is blanked, and the number stops
+ * making a claim about training this app has never seen.
+ *
+ * ⚠️ NOT SUPPRESSED, and that was the alternative. The grid is a single
+ * `role="img"` with one label — deliberately, so it is not 366 focus stops
+ * nobody can land on — so deleting the figure would leave a screen-reader user
+ * with no reading of the picture at all. Renaming removes the false claim and
+ * keeps the only accessible summary there is.
+ */
+export function publishedDaysLabel(n) {
+  return n === 1 ? '1 day published' : `${n} days published`;
+}

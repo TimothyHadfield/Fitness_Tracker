@@ -240,6 +240,27 @@
     `s.replace('#82570B', …)` is a coin toss about which one it finds. The same trap applies to any
     constant a comment repeats — a ratio, a threshold, a byte count.
 
+    🆕 **AND THE SAME SHAPE ON A MEASUREMENT, 2026-09-10: DO NOT MEASURE AN ANIMATION OVER CDP.**
+    Three probes were written for the Record rise and **the first two were both wrong, in opposite
+    directions, and disagreed with each other** — which is the only reason it was caught. One sampled
+    the page once per `Runtime.evaluate`, so every timestamp it printed was a label rather than a
+    time (a round trip here is 100ms+, and the labels said 40ms); it reported the parked ghost
+    vanishing almost immediately. The other patched `Element.prototype.remove` to log removals and
+    **perturbed the timing it existed to measure**, reporting a full clean lifetime. The third
+    samples in-page on `requestAnimationFrame`, collects into an array and returns it once at the
+    end — the clock is the page's own and the debugger is not asked anything mid-flight — and it is
+    the one that showed what actually happens.
+
+    ⚠️ **THE RULE: IF THE THING YOU ARE MEASURING HAS A CLOCK, THE MEASUREMENT MUST NOT ADD ONE.**
+    And when two measurements disagree, **throw both away and build a third** rather than believing
+    the more convenient one. Neither of the first two was averaged in; neither was "mostly right".
+
+    🆕 **AND A COROLLARY ABOUT THE THING BEING TESTED, from the same session**: `overflow-x: hidden`
+    still reports `scrollWidth > clientWidth`, because a hidden box remains *programmatically*
+    scrollable — what it prevents is USER scrolling. A test comparing those two numbers reports a
+    fixed screen as still broken. **Check that your test says PASS on a case you know is fixed
+    before you trust it on a case you do not.**
+
     🆕 **AND THE OTHER HALF, 2026-09-07: AN ASSERTION THAT SURVIVES A MUTATION IS TELLING YOU ABOUT
     THE ASSERTION.** Restoring the "starting another workout deletes the open one" bug flipped four
     tests and left a fifth green — *"nothing was thrown away while the question was being asked"*,
@@ -1068,15 +1089,28 @@ in** — which is also the whole of "only when appropriate".
 - ⚠️ **A movement must not claim something the app does not know.** A screen arrives with a rise
   rather than a sideways push, because a horizontal slide asserts a direction of travel this router
   cannot know.
-- 🆕 **ONE WHOLE SCREEN MOVES, AND ONLY ONE — Record, since 2026-09-09.** Tim: *"to make the record
-  section feel more like a button that actually activates something."* It earns the exception on this
-  rule's own test: the big middle **+** is the one control in the app that is an **action** rather
-  than a destination (D4), and a tab swap said nothing about that. It rises from the edge its own
-  button sits on. ⚠️ **The same clause that permits it forbids the obvious next step**: it does not
-  rise on a cold open or on a re-render, because there is nothing it came up over — see
-  `parkScreen()` in `ui.js` for how the screen it covers is kept on screen for the length of it, and
-  🚨 **for the two faults that only a browser could show** (two screens legible through each other,
-  and Chrome restarting a moved node's animations).
+- 🆕 **TWO WHOLE SCREENS MOVE, AND ONLY TWO — Record since 2026-09-09, the session runner since
+  2026-09-10.** Tim: *"to make the record section feel more like a button that actually activates
+  something."* Record earns the exception on this rule's own test: the big middle **+** is the one
+  control in the app that is an **action** rather than a destination (D4), and a tab swap said
+  nothing about that. It rises from the edge its own button sits on. ⚠️ **The same clause that
+  permits it forbids the obvious next step**: it does not rise on a cold open or on a re-render,
+  because there is nothing it came up over — see `parkScreen()` in `ui.js` for how the screen it
+  covers is kept on screen for the length of it, and 🚨 **for the two faults that only a browser
+  could show** (two screens legible through each other, and Chrome restarting a moved node's
+  animations).
+  🆕 **The runner is the second, and it is the same movement rather than a new one** — Tim asked for
+  it explicitly, and a workout you put down and pick up is the one other thing in this app that is a
+  surface rather than a destination. ⚠️ **THE UP HALF IS ASKED FOR BY THE DOOR, NOT INFERRED FROM THE
+  ROUTE** (`requestRise()`): the runner is reached from the live bar, from the Record picker and from
+  a deep link, and only the first is a panel returning over what you were reading. A route-based rule
+  would have animated all three. **The one-shot is consumed at the point of use**, or the next
+  re-render bounces.
+  🚨 **AND THE TWO DIRECTIONS NEED OPPOSITE STACKING, which shipped wrong on 2026-09-09 and was
+  reported by Tim.** A screen RISING must be above the parked ghost; a ghost FALLING must be above
+  the screen underneath it. One `z-index` for both means one of them plays entirely behind the other,
+  and the direction that happens to look right hides the bug. `.screen-ghost` 40, `.is-falling` 50,
+  `.screen.rises` 45.
 
 ### Colour — validate, never eyeball
 

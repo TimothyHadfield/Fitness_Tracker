@@ -28,6 +28,16 @@
 //   2. CONTRAST       — computed colour vs the colour actually painted behind it
 //   3. ACCESSIBLE NAME— every control, from the real accessibility tree
 //   4. TEXT SCALING   — the same screens at 200 % text
+//
+// ⚠️ IT SWEEPS FOUR WIDTHS, AND UNTIL 2026-09-10 IT SWEPT TWO. 360 and 390 are
+// phones (mobile viewport); 880 and 1280 are a desktop viewport. Every figure
+// this file has ever reported — 128 routes, 12,207 text nodes, zero below
+// 4.5:1 — was a PHONE-WIDTH figure, and the desktop layout is a different
+// layout rather than a wider one: `#app` flips from column-reverse to row at
+// 860px so the nav becomes a left sidebar, the muscle map splits into figure +
+// side panel at the same breakpoint, and `.pane-*` children take a 940px cap at
+// 1200px. None of that had had a painted pixel measured. See the width list at
+// the bottom of this file for why those two numbers and not others.
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
@@ -561,10 +571,46 @@ const applyPalette = () => evaluate(PALETTE === 'gold'
 
 const report = {};
 
+/* ⚠️ THE WIDTHS, AND THE DESKTOP PAIR ARRIVED 2026-09-10 — a coverage hole that
+ * had been written down before it was closed (progress.md, 2026-09-09 item 18).
+ * This list was `[[360, 640], [390, 844]]` for the life of the file, so THE
+ * LAPTOP LAYOUT OF EVERY SCREEN IN THIS APP WAS UNMEASURED: not its contrast,
+ * not its overflow, not one accessible name. That is the `#/data` fault of
+ * 2026-08-24 in a third form — a number that reads as "the app is clean" while
+ * naming only half of what the app draws.
+ *
+ * WHY THESE FOUR AND NOT OTHERS, read off css/app.css rather than picked:
+ *   360×640  — the narrow phone. The width Rule 1 is hardest at.
+ *   390×844  — the phone Tim carries.
+ *   880×800  — JUST ABOVE THE DESKTOP BREAKPOINT, and above BOTH of them: the
+ *              layout flips at `min-width: 860px` (`#app` → row, the nav → a
+ *              200px sidebar, `.graph-host.is-muscles` and `.map-split` → two
+ *              columns, `.vol-figure` → 71dvh) and the update bar moves at
+ *              `min-width: 880px`. 880 is the FIRST width where every desktop
+ *              rule in the sheet is live and none of the roomy ones are — the
+ *              sidebar has just taken 200px and the content column is at its
+ *              narrowest desktop size, which is where a two-column split is
+ *              likeliest to crush something.
+ *   1280×800 — a real laptop, and the only width here past `min-width: 1200px`,
+ *              which caps `.pane-top/.pane-scroll/.pane-bottom` children at
+ *              940px. So the wide layout is a different measurement from 880
+ *              rather than the same one with more air.
+ *
+ * 🚨 `mobile` IS PER-WIDTH AND MUST STAY THAT WAY. It is part of the metrics
+ * override, and a mobile viewport at 1280px is a THIRD STATE THAT MATCHES NO
+ * REAL DEVICE — the desktop CSS applies while the page still reports itself as
+ * a phone. Numbers out of that state would be about nothing.
+ *
+ * 🔒 The phone rows are deliberately unchanged and come FIRST, so a regression
+ * at 360 or 390 is still visible against every earlier run of this file. The
+ * report keys are `${name} ${width}px ${theme}`, which already separates them. */
 for (const [theme, dark] of [['dark', true], ['light', false]]) {
-  for (const [width, height] of [[360, 640], [390, 844]]) {
+  for (const [width, height, mobile] of [
+    [360, 640, true], [390, 844, true],
+    [880, 800, false], [1280, 800, false],
+  ]) {
     await send('Emulation.setDeviceMetricsOverride', {
-      width, height, deviceScaleFactor: 2, mobile: true,
+      width, height, deviceScaleFactor: 2, mobile,
     });
     await send('Page.navigate', { url: `${BASE}/index.html` });
     await sleep(1800);
@@ -614,7 +660,7 @@ for (const [theme, dark] of [['dark', true], ['light', false]]) {
     await sleep(300);
 
     /* ⚠️ ONLY= IS A DEV FILTER, ADDED 2026-09-03 WHILE DEBUGGING ONE SCREEN.
-     * A full run is 124 routes across two widths, two themes and four palettes,
+     * A full run is 124 routes across FOUR widths, two themes and four palettes,
      * and re-running all of it to look at one new screen is minutes per attempt
      * — which is long enough that the temptation is to stop checking. Never set
      * it for a real audit: the numbers this file reports are only meaningful

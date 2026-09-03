@@ -133,7 +133,7 @@ let tabs = [...data.querySelectorAll('.seg')].map((b) => b.textContent);
    That measurement was and is correct, which is why the sixth segment could not
    simply be appended: the row had to be able to SCROLL. The measurement stands
    as the reason for the mechanism rather than as a ban on the tab. */
-ok(tabs.length === 6, `mode switch shows six tabs with NO data (${JSON.stringify(tabs)})`);
+ok(tabs.length === 5, `mode switch shows five tabs with NO data (${JSON.stringify(tabs)})`);
 ok(tabs[1] === 'Volume',
    '⚠️ Volume sits beside Muscles — two readings of the same body, not a chart mode');
 ok(tabs.includes('Research'),
@@ -141,15 +141,16 @@ ok(tabs.includes('Research'),
 ok(tabs.includes('Muscles'), 'Muscles tab is reachable on an empty account — the reported bug');
 ok(tabs[0] === 'Muscles',
    '⚠️ and Muscles is FIRST — it is the mode that works with the least history, where a line chart needs two points');
-/* 🔄 THIS ASSERTION USED TO BE ITS OWN OPPOSITE — *"the calendar is NOT in here
-   any more — it has its own tab, and two ways in would light two things at
-   once"* — and it is kept as an inversion rather than deleted, because the
-   reasoning it carried is still the live constraint: **there must be exactly
-   ONE way in.** Tim moved it back on 2026-09-08, so the one way in is here
-   again, and `app.js`'s Data tab now claims the `calendar`, `day` and `edit`
-   routes so nothing else lights up beside it. */
-ok(tabs.includes('Calendar'),
-   '🚨 the calendar is a Data segment again, and this is the ONLY way in — no second nav tab');
+/* 🔄 THIS ASSERTION HAS NOW BEEN BOTH OF ITS OWN OPPOSITES, and it is kept
+   flipping rather than deleted because the reasoning it carries has never
+   changed across four moves: **there must be exactly ONE way in.** It read
+   "the calendar has its own tab" before 2026-09-08, "the calendar is a Data
+   segment again" after it, and since 2026-09-10 the calendar lives on Profile —
+   so Data must NOT offer a second door to it. `app.js`'s Profile tab claims the
+   `calendar`, `day` and `edit` routes; Data claims only `graphs`. */
+ok(!tabs.includes('Calendar'),
+   '🚨 the calendar is NOT a Data segment — it is on Profile, and two ways in '
+   + 'would light two tabs at once');
 ok([...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles')
      .getAttribute('aria-selected') === 'true',
    '⚠️ and the Data screen OPENS on Muscles rather than on a chart');
@@ -562,7 +563,7 @@ ok(!/THREW/.test(data.textContent), 'Graph mode still renders after the guard ch
 
 [...data.querySelectorAll('.seg')].find((b) => b.textContent === 'Bars').click();
 await settle();
-ok(data.querySelectorAll('.seg').length === 6, 'Bars mode keeps the mode switch (six segments since Calendar came back)');
+ok(data.querySelectorAll('.seg').length === 5, 'Bars mode keeps the mode switch (five segments since Calendar moved to Profile)');
 
 /* ================= the Research mode (2026-08-28) ================= */
 // Tim: "I want to add a 'Research' tab in the data section… a graph that
@@ -7196,6 +7197,887 @@ ok(!data.querySelector('.rep-target'),
   const friends = await mount(SocialView());
   await settle();
   ok(Boolean(friends), '🚨 while the Friends screen itself still renders — the switch went, not the screen');
+}
+
+/* ====== A JOINT WORKOUT IS ONE WORKOUT (2026-09-10) ======
+ *
+ * Tim, after recording one for the first time: *"The accounts that are joint
+ * together should be more synced. When the user clicks 'next exercise', it
+ * should move to the next exercise for both users, not just one. If the user
+ * deletes, swaps, adds, or reorganizes the exercises, it should do the same for
+ * both users. However, make a 'just for ____ (the user that is currently
+ * selected)' button which makes it so if you do any of those things, it just
+ * changes it for that user and not both users."*
+ *
+ * 🚨 THE LOAD-BEARING ASSERTION IN THIS WHOLE BLOCK IS THE ONE ABOUT NUMBERS,
+ * not the ones about lists. Sharing the SHAPE of a workout is the feature;
+ * sharing the WEIGHTS would be the cross-prescription 0e exists to forbid — two
+ * lifters on one bar are not on the same weights. So the fixture gives the
+ * owner and the guest genuinely different pasts on the exercises that get added
+ * and swapped in (50 vs 10 on the Zottman curl, 95 vs 25 on the preacher curl),
+ * and the assertions read each person's entry back separately. A fixture where
+ * both sides had the same history would pass against a version that built ONE
+ * entry and handed it round, which is the exact defect being guarded.
+ *
+ * ⚠️ EVERYTHING IS READ OFF THE DRAFT rather than off the screen, because only
+ * one person is on screen at a time. `state.others` parks everybody else, so
+ * the draft is the only place the two lists can be compared — and it is also
+ * what survives backgrounding the app, which is where a desync would be found.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { setIsRecorded } = await import(BASE + 'session-draft.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const daysAgo = (n) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  };
+  const ZERCHER = byName('Zercher Squat');
+  const LANDMINE = byName('Landmine Press');
+  const SPIDER = byName('Spider Curl');
+  const ZOTTMAN = byName('Zottman Curl');
+  const PREACHER = byName('Preacher Curl');
+
+  /* ⚠️ THE WORKOUT'S OWN THREE LIFTS HAVE NO HISTORY FOR ANYBODY, deliberately.
+   * An exercise with history opens with every set pre-filled from last time and
+   * a pre-filled set from a real session counts as PERFORMED — which would make
+   * every swap below take the split path and every remove raise a confirm, so
+   * the assertions would be describing the fixture rather than the feature. The
+   * divergent histories live on the two lifts that get added and swapped IN. */
+  const w = await store.saveWorkout({
+    name: 'Joint day',
+    exercises: [
+      { exerciseId: ZERCHER.id, sets: 1, notes: '' },
+      { exerciseId: LANDMINE.id, sets: 1, notes: '' },
+      { exerciseId: SPIDER.id, sets: 1, notes: '' },
+    ],
+  });
+  const armDay = await store.saveWorkout({
+    name: 'Arm day',
+    exercises: [
+      { exerciseId: ZOTTMAN.id, sets: 3, notes: '' },
+      { exerciseId: PREACHER.id, sets: 3, notes: '' },
+    ],
+  });
+  // The owner's arms.
+  await store.saveSession({
+    workoutId: armDay.id, workoutName: 'Arm day', date: daysAgo(6),
+    startedAt: new Date(Date.now() - 6 * 864e5).toISOString(),
+    entries: [
+      { exerciseId: ZOTTMAN.id, exerciseName: 'Zottman Curl', sets: [{ weight: 50, reps: 10 }] },
+      { exerciseId: PREACHER.id, exerciseName: 'Preacher Curl', sets: [{ weight: 95, reps: 8 }] },
+    ],
+  });
+  // Rae's arms, recorded on this phone under their name — a fifth of the load.
+  await store.saveGuestSession({
+    workoutId: armDay.id, workoutName: 'Arm day', date: daysAgo(5), guestName: 'Rae',
+    entries: [
+      { exerciseId: ZOTTMAN.id, exerciseName: 'Zottman Curl', sets: [{ weight: 10, reps: 12 }] },
+      { exerciseId: PREACHER.id, exerciseName: 'Preacher Curl', sets: [{ weight: 25, reps: 10 }] },
+    ],
+  });
+
+  /* ---- driving the screen ---- */
+  const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
+  const sheetRows = () => [...document.querySelectorAll('.sheet .reorder-row')];
+  const arrow = (i, dir) => sheetRows()[i].querySelectorAll('.move-btns button')[dir === 'up' ? 0 : 1];
+  const rowRemove = (i) => [...sheetRows()[i].querySelectorAll('button')]
+    .find((b) => /^Remove /.test(b.getAttribute('aria-label') || ''));
+  const showAll = () => {
+    const b = [...document.querySelectorAll('.sheet button')]
+      .find((x) => /^Show all \d+ exercises$/.test((x.textContent || '').trim()));
+    if (b) b.click();
+    return Boolean(b);
+  };
+  const pick = (name) => {
+    const box = document.querySelector('input[type="search"]');
+    if (box) { box.value = name; box.dispatchEvent(new window.Event('input', { bubbles: true })); }
+    const row = [...document.querySelectorAll('.search-results .row')]
+      .find((b) => new RegExp('^' + name).test((b.textContent || '').trim()));
+    if (row) row.click();
+    return Boolean(row);
+  };
+  const chips = (s) => [...s.querySelectorAll('.person-chip')];
+  const chip = (s, label) => chips(s).find((b) => b.textContent.trim() === label);
+  const justFor = (s) => s.querySelector('.just-for');
+  const nextBtn = (s) => [...s.querySelectorAll('button')]
+    .find((b) => /Next exercise|Straight into|Round /.test(b.textContent));
+  const actions = (s) => [...s.querySelectorAll('.session-actions .swap-btn')];
+
+  /* ⚠️ TOASTS ARE COLLECTED AS THEY ARRIVE, NEVER READ OFF THE SCREEN AFTERWARDS,
+   * and the first version of these assertions failed because of it. `toast()`
+   * makes the one already showing LEAVE, and `leave()` removes a node outright
+   * when it cannot animate — which is every jsdom run. A shared change that
+   * skips somebody says so and then immediately says what it DID do, so the
+   * skip notice is gone by the time any assertion could look for it. */
+  const toastLog = [];
+  new window.MutationObserver((recs) => {
+    for (const r of recs) {
+      for (const n of r.addedNodes) {
+        if (n.nodeType === 1 && n.classList && n.classList.contains('toast')) toastLog.push(n.textContent);
+      }
+    }
+  }).observe(document.body, { childList: true });
+  const mark = () => toastLog.length;
+  const said = (from) => toastLog.slice(from).join(' | ');
+
+  /* ---- reading everybody's copy out of the draft ----
+   * ⚠️ The OWNER'S name is `null`, both as `state.forName` and in `others`. */
+  const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
+  const slotOf = (name) => {
+    const d = draft();
+    return d.forName === name ? d : ((d.others || []).find((o) => o.name === name) || null);
+  };
+  const listOf = (name) => ((slotOf(name) || {}).entries || []).map((e) => e.exerciseName);
+  const orderOf = (name) => listOf(name).join(' > ');
+  const posOf = (name) => { const sl = slotOf(name); return sl ? sl.index : -1; };
+  const entryOf = (name, exName) =>
+    (((slotOf(name) || {}).entries) || []).find((e) => e.exerciseName === exName) || null;
+
+  async function addGuest(s, name) {
+    s.querySelector('.person-add').click();
+    await settle(); await settle();
+    [...document.querySelector('.sheet').querySelectorAll('button')]
+      .find((b) => /Someone new/.test(b.textContent)).click();
+    await settle();
+    const inner = [...document.querySelectorAll('.sheet')].pop();
+    inner.querySelector('input').value = name;
+    [...inner.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+    await settle(); await settle();
+  }
+  /** A fresh two-person workout with the OWNER selected — the ordinary case. */
+  async function joint() {
+    killSheets();
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    await addGuest(s, 'Rae');
+    chip(s, 'You').click();
+    await settle();
+    return s;
+  }
+  async function openList(s) { killSheets(); actions(s)[2].click(); await settle(); }
+  async function addToday(s, name) {
+    await openList(s);
+    [...document.querySelectorAll('.sheet button')]
+      .find((b) => /Add an exercise/.test(b.textContent)).click();
+    await settle();
+    const found = pick(name);
+    await settle(); await settle();
+    return found;
+  }
+  async function swapHere(s, name) {
+    killSheets();
+    actions(s)[0].click(); await settle();
+    showAll(); await settle();
+    const found = pick(name);
+    await settle(); await settle();
+    return found;
+  }
+  /* ⚠️ THE CONFIRM IS ANSWERED WHERE THERE IS ONE. An exercise added or swapped
+   * in mid-session is pre-filled from real history, and a pre-filled set from a
+   * real session counts as performed everywhere in this app — so removing one
+   * says the count out loud and asks first, exactly as it does for an exercise
+   * the workout started with. */
+  async function removeAt(s, i) {
+    await openList(s);
+    rowRemove(i).click();
+    await settle();
+    const top = [...document.querySelectorAll('.sheet')].pop();
+    const yes = top && !top.querySelector('.reorder-row')
+      && [...top.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Remove');
+    if (yes) { yes.click(); await settle(); }
+    await settle();
+  }
+  async function moveDown(s, i) { await openList(s); arrow(i, 'down').click(); await settle(); }
+  async function toggleJustFor(s) { justFor(s).click(); await settle(); }
+
+  /* ============ the button: it only exists where it means something ============ */
+  {
+    killSheets();
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    ok(!justFor(s),
+       '🚨 a SOLO workout has no "Just for" button — every change already applies to exactly one '
+       + 'person, and a control offering to narrow that implies the app is doing something to '
+       + 'somebody else');
+
+    await addGuest(s, 'Rae');
+    ok(Boolean(justFor(s)), 'a second person in the workout is what brings it onto the bar');
+    ok(justFor(s).textContent.trim() === 'Just for Rae',
+       '⚠️ and it names the person currently SELECTED, which is Tim\'s own wording — adding '
+       + `somebody switches to them, so it opens as theirs (${justFor(s).textContent.trim()})`);
+    ok(justFor(s).getAttribute('aria-pressed') === 'false',
+       'off by default: a joint workout is one workout unless somebody says otherwise');
+
+    chip(s, 'You').click();
+    await settle();
+    ok(justFor(s).textContent.trim() === 'Just for you',
+       `🚨 and the label FOLLOWS the switch — one mode with a moving label, not a flag per person `
+       + `(${justFor(s).textContent.trim()})`);
+
+    await toggleJustFor(s);
+    ok(justFor(s).getAttribute('aria-pressed') === 'true',
+       '⚠️ aria-pressed is what says which way it is set — the same as the person chips beside it, '
+       + 'and the only thing a screen reader has to go on');
+    ok(draft().justForActive === true,
+       'and the mode is on the DRAFT, so leaving the workout and coming back does not silently '
+       + 'flip it back');
+    await toggleJustFor(s);
+    ok(justFor(s).getAttribute('aria-pressed') === 'false' && draft().justForActive === false,
+       'and it toggles back off');
+
+    // Switching while it is ON moves the label with it, which is what makes the
+    // mode legible: it always says who "just for" currently means.
+    await toggleJustFor(s);
+    chip(s, 'Rae').click();
+    await settle();
+    ok(justFor(s).textContent.trim() === 'Just for Rae'
+       && justFor(s).getAttribute('aria-pressed') === 'true',
+       '⚠️ switching person while the mode is on re-aims it rather than clearing it — one mode, '
+       + 'and the label is what says who it is pointed at');
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ============ shared by default: everything moves for everybody ============ */
+  {
+    const s = await joint();
+    ok(orderOf(null) === 'Zercher Squat > Landmine Press > Spider Curl'
+       && orderOf('Rae') === orderOf(null),
+       `both people start on the same three exercises (${orderOf('Rae')})`);
+    ok(posOf(null) === 0 && posOf('Rae') === 0, 'and on the same one');
+
+    /* ---- 1. "Next exercise" moves everybody ---- */
+    nextBtn(s).click(); await settle();
+    ok(posOf(null) === 1 && posOf('Rae') === 1,
+       `🚨 "Next exercise" moves EVERYBODY — Tim's first clause. Without it one person walks the `
+       + `workout and the other is left standing on exercise one (you ${posOf(null)}, Rae ${posOf('Rae')})`);
+    nextBtn(s).click(); await settle();
+    ok(posOf(null) === 2 && posOf('Rae') === 2, 'and keeps doing it, step for step');
+    /* ⚠️ THE BACK CHECK IS MADE ONE STEP AT A TIME, and the first version was not.
+     * Reading only the last one — both at zero — is satisfied by somebody who
+     * never moved at all, which is exactly what a broken shared walk looks like.
+     * Asserting the middle step is what makes it a check on the walk. */
+    s.querySelector('.nav-arrow').click(); await settle();
+    ok(posOf(null) === 1 && posOf('Rae') === 1,
+       `⚠️ and BACK too — the previous arrow goes through the same walk, so a mis-tap does not `
+       + `leave the two of you one exercise apart (you ${posOf(null)}, Rae ${posOf('Rae')})`);
+    s.querySelector('.nav-arrow').click(); await settle();
+    ok(posOf(null) === 0 && posOf('Rae') === 0, 'and back to the top together');
+
+    /* ---- 2. adding reaches everybody, and 6. each from their OWN past ---- */
+    ok(await addToday(s, 'Zottman Curl'), 'an exercise can be added mid-workout');
+    ok(listOf(null).length === 4 && listOf(null)[3] === 'Zottman Curl',
+       `the owner gets it, on the end (${orderOf(null)})`);
+    ok(listOf('Rae').length === 4 && listOf('Rae')[3] === 'Zottman Curl',
+       `🚨 and so does Rae — one workout, one list of exercises (${orderOf('Rae')})`);
+
+    const mineZ = entryOf(null, 'Zottman Curl');
+    const raeZ = entryOf('Rae', 'Zottman Curl');
+    ok(mineZ && mineZ.lastSets[0].weight === 50,
+       `🔒 THE ONE THAT MATTERS: the owner's copy is built from the OWNER's history — 50 lb, which `
+       + `is what they curled (${mineZ && mineZ.lastSets[0].weight})`);
+    ok(raeZ && raeZ.lastSets[0].weight === 10,
+       `🔒 and Rae's from RAE's — 10 lb. A version that built one entry and handed it round would `
+       + `put 50 in front of somebody who has never curled it (${raeZ && raeZ.lastSets[0].weight})`);
+    ok(mineZ && raeZ && mineZ.sets[0].weight !== raeZ.sets[0].weight,
+       `🚨 so the numbers in the two people's FIELDS differ (${mineZ && mineZ.sets[0].weight} vs `
+       + `${raeZ && raeZ.sets[0].weight}) — sharing the shape of a workout must never share its `
+       + 'weights. This is decision 0e, and it is the whole safety property of the feature');
+    ok(mineZ && mineZ.sets[0].weight >= 50 && raeZ && raeZ.sets[0].weight <= 20,
+       '⚠️ and each lands on their own side of the gap rather than merely differing — a suggestion '
+       + 'can nudge a number, it can never move it to somebody else\'s');
+    ok(mineZ && mineZ.hadHistory === true && raeZ && raeZ.hadHistory === true,
+       'both are marked as having a past, so neither is told "first time logging this" wrongly');
+
+    /* ---- 4. swapping reaches everybody, again from their own past ---- */
+    ok(await swapHere(s, 'Preacher Curl'), 'the exercise you are on can be swapped');
+    ok(listOf(null)[0] === 'Preacher Curl',
+       `the owner is on the new exercise (${orderOf(null)})`);
+    ok(listOf('Rae')[0] === 'Preacher Curl',
+       `🚨 and Rae's slot 0 swapped with it — a shared swap, not a private one (${orderOf('Rae')})`);
+    const mineP = entryOf(null, 'Preacher Curl');
+    const raeP = entryOf('Rae', 'Preacher Curl');
+    ok(mineP && mineP.lastSets[0].weight === 95 && raeP && raeP.lastSets[0].weight === 25,
+       `🔒 and the swap is REPLAYED per person, not broadcast: 95 for the owner, 25 for Rae `
+       + `(${mineP && mineP.lastSets[0].weight} / ${raeP && raeP.lastSets[0].weight})`);
+    ok(mineP && raeP && mineP.sets[0].weight !== raeP.sets[0].weight,
+       'so the two swapped-in exercises arrive on different weights, which is the point');
+    ok(mineP && mineP.swappedFrom === 'Zercher Squat' && raeP && raeP.swappedFrom === 'Zercher Squat',
+       'and each says what it replaced on their own list');
+
+    /* ---- 3. removing reaches everybody ---- */
+    await removeAt(s, 3);
+    ok(listOf(null).length === 3 && !listOf(null).includes('Zottman Curl'),
+       `the owner loses it (${orderOf(null)})`);
+    ok(listOf('Rae').length === 3 && !listOf('Rae').includes('Zottman Curl'),
+       `🚨 and so does Rae — otherwise one of you is still being walked through an exercise the `
+       + `group has abandoned (${orderOf('Rae')})`);
+
+    /* ---- 5. reordering reaches everybody ---- */
+    const before = orderOf(null);
+    await moveDown(s, 0);
+    ok(orderOf(null) !== before, `the list really moved (${before} → ${orderOf(null)})`);
+    ok(orderOf('Rae') === orderOf(null),
+       `🚨 and Rae's list is in the same order — a reorder that reached one person would have the `
+       + `two of you calling out different exercises (${orderOf('Rae')})`);
+    ok(posOf(null) === posOf('Rae'),
+       '⚠️ and both are still standing on the same step after the shuffle — each re-pointed by '
+       + 'their own entry object, never by the other person\'s new index');
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ============ "Just for ___": the same five, reaching one person ============
+   *
+   * ⚠️ EVERY ASSERTION HERE IS PAIRED — what changed for the owner AND what did
+   * not change for Rae. Half of it would pass against a mode that did nothing at
+   * all, and the other half against a mode that broke the edit entirely. */
+  {
+    const s = await joint();
+    await toggleJustFor(s);
+    ok(draft().justForActive === true, 'the mode is on, and pointed at the owner');
+    const raeStart = orderOf('Rae');
+
+    nextBtn(s).click(); await settle();
+    ok(posOf(null) === 1 && posOf('Rae') === 0,
+       `🚨 with "Just for you" on, moving on moves ONLY you — the person walking their own list is `
+       + `the whole point of the button (you ${posOf(null)}, Rae ${posOf('Rae')})`);
+
+    await addToday(s, 'Zottman Curl');
+    ok(listOf(null).includes('Zottman Curl') && !listOf('Rae').includes('Zottman Curl'),
+       `an add lands on you alone (${orderOf(null)} / ${orderOf('Rae')})`);
+
+    await swapHere(s, 'Preacher Curl');
+    ok(listOf(null)[1] === 'Preacher Curl' && listOf('Rae')[1] === 'Landmine Press',
+       `a swap lands on you alone — Rae keeps the exercise they were given (${orderOf('Rae')})`);
+
+    await removeAt(s, 2);
+    ok(!listOf(null).includes('Spider Curl') && listOf('Rae').includes('Spider Curl'),
+       `🚨 and a remove takes it off YOUR list only. This is the assertion that stops the button `
+       + `deleting somebody else's exercise (${orderOf('Rae')})`);
+
+    const mine = orderOf(null);
+    await moveDown(s, 0);
+    ok(orderOf(null) !== mine, `and a reorder moves your own list (${mine} → ${orderOf(null)})`);
+    ok(orderOf('Rae') === raeStart,
+       `⚠️ while Rae's is byte-for-byte the list they started with, after all five (${orderOf('Rae')})`);
+    ok(posOf('Rae') === 0, 'and they have not been walked anywhere either');
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ============ the honest skips ============
+   *
+   * ⚠️ THESE BRANCHES EXIST BECAUSE "JUST FOR" MAKES DIVERGENCE REAL. Once two
+   * lists can differ, a shared change has cases where there is no honest answer
+   * — so it skips that person and says so, rather than changing an exercise
+   * nobody pointed at. Each fixture below diverges the lists FIRST, with the
+   * mode, and then drives the shared change over the top. */
+
+  /* ---- 11. a swap skips a slot holding a different exercise ----
+   * ⚠️ SWAPPED TO TWO LIFTS NOBODY IN THIS FIXTURE HAS EVER DONE, on purpose. A
+   * swapped-in exercise WITH history arrives with last time's numbers in it, and
+   * those count as performed — so the second swap would take the split path and
+   * the assertion would be measuring the fixture rather than the skip. */
+  {
+    const s = await joint();
+    await toggleJustFor(s);
+    await swapHere(s, 'Hammer Curl');         // owner only: slot 0 now differs
+    await toggleJustFor(s);
+    ok(listOf(null)[0] === 'Hammer Curl' && listOf('Rae')[0] === 'Zercher Squat',
+       'the two lists genuinely disagree about slot 0 before the shared swap runs');
+
+    const from = mark();
+    await swapHere(s, 'Concentration Curl');
+    ok(listOf(null)[0] === 'Concentration Curl',
+       `the owner's swap goes through (${orderOf(null)})`);
+    ok(listOf('Rae')[0] === 'Zercher Squat',
+       `🚨 and Rae is SKIPPED, because their slot 0 holds something else — swapping it would `
+       + `silently change an exercise nobody pointed at (${orderOf('Rae')})`);
+    const swapNotice = said(from);
+    ok(/Rae kept theirs/.test(swapNotice) && /Swapped to Concentration Curl/.test(swapNotice)
+       && !swapNotice.includes(' | '),
+       `⚠️ and ONE notice says both what happened and who it did not reach. A shared change that `
+       + `quietly reaches fewer people than it names is the same lie as one that reaches more — `
+       + `and a second toast would not do, because toast() sends the first away (${swapNotice})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- 12. a remove skips somebody it would leave with nothing ---- */
+  {
+    const s = await joint();
+    chip(s, 'Rae').click(); await settle();
+    await toggleJustFor(s);                    // "Just for Rae"
+    await removeAt(s, 2);
+    await removeAt(s, 1);
+    ok(orderOf('Rae') === 'Zercher Squat', `Rae is down to one exercise (${orderOf('Rae')})`);
+    chip(s, 'You').click(); await settle();
+    await toggleJustFor(s);
+    ok(draft().justForActive === false && listOf(null)[0] === 'Zercher Squat',
+       'and the shared mode is back on, with both slot 0s holding the SAME exercise — so the only '
+       + 'thing left that can skip Rae is the one being tested');
+
+    const from = mark();
+    await removeAt(s, 0);
+    ok(orderOf(null) === 'Landmine Press > Spider Curl',
+       `the owner loses the squat (${orderOf(null)})`);
+    ok(orderOf('Rae') === 'Zercher Squat',
+       '🚨 and Rae keeps it — a shared remove never empties somebody\'s workout, which is the same '
+       + 'rule the active person\'s own "this is the only exercise" guard states');
+    const removeNotice = said(from);
+    ok(/Rae kept theirs/.test(removeNotice) && /Removed Zercher Squat/.test(removeNotice)
+       && !removeNotice.includes(' | '),
+       `and one notice says so rather than leaving the divergence unexplained (${removeNotice})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- 13. an add skips somebody who already has it ---- */
+  {
+    const s = await joint();
+    chip(s, 'Rae').click(); await settle();
+    await toggleJustFor(s);
+    await addToday(s, 'Zottman Curl');         // Rae only
+    chip(s, 'You').click(); await settle();
+    await toggleJustFor(s);
+    ok(listOf('Rae').filter((n) => n === 'Zottman Curl').length === 1
+       && !listOf(null).includes('Zottman Curl'),
+       'Rae has the curl and the owner does not, before the shared add runs');
+
+    await addToday(s, 'Zottman Curl');
+    ok(listOf(null).includes('Zottman Curl') && listOf(null).length === 4,
+       `the owner gets it (${orderOf(null)})`);
+    ok(listOf('Rae').filter((n) => n === 'Zottman Curl').length === 1 && listOf('Rae').length === 4,
+       `🚨 and Rae is skipped rather than given a SECOND copy — two entries with one exercise id in `
+       + `a session is the shape that produced the duplicate-exercise read bug (${orderOf('Rae')})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- 14. a reorder skips a list of a different length ----
+   *
+   * ⚠️ BOTH DIRECTIONS, because the guard is a length comparison and the two
+   * sides of it are not symmetrical: `order` is a permutation of the ACTIVE
+   * person's indices, so applying it to a LONGER list drops the entries past the
+   * end and applying it to a SHORTER one drops the indices past the end. Only
+   * one of those changes the count the guard measures. */
+  {
+    const s = await joint();
+    chip(s, 'Rae').click(); await settle();
+    await toggleJustFor(s);
+    await addToday(s, 'Hammer Curl');          // Rae's list is now the LONGER one
+    chip(s, 'You').click(); await settle();
+    await toggleJustFor(s);
+    ok(listOf(null).length === 3 && listOf('Rae').length === 4,
+       `the owner has three exercises and Rae four (${orderOf('Rae')})`);
+
+    const raeBefore = orderOf('Rae');
+    await moveDown(s, 0);
+    ok(orderOf(null) === 'Landmine Press > Zercher Squat > Spider Curl',
+       `the owner's list reorders (${orderOf(null)})`);
+    ok(orderOf('Rae') === raeBefore,
+       `a LONGER list keeps its own order — a three-position shuffle says nothing about a fourth `
+       + `exercise, and applying it would drop one (${orderOf('Rae')})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+  {
+    const s = await joint();
+    chip(s, 'Rae').click(); await settle();
+    await toggleJustFor(s);
+    await removeAt(s, 2);                      // Rae's list is now the SHORTER one
+    chip(s, 'You').click(); await settle();
+    await toggleJustFor(s);
+    ok(listOf(null).length === 3 && listOf('Rae').length === 2,
+       `the owner has three exercises and Rae two (${orderOf('Rae')})`);
+
+    const raeBefore = orderOf('Rae');
+    await moveDown(s, 0);
+    ok(orderOf(null) === 'Landmine Press > Zercher Squat > Spider Curl',
+       `the owner's list reorders (${orderOf(null)})`);
+    /* 🚨 THIS ONE FAILS, AND IT IS THE CODE THAT IS WRONG — reported, not fixed,
+     * because js/views-session.js is being written in parallel. `reorderSlot`
+     * guards with `next.length !== slot.entries.length` AFTER a `filter(Boolean)`
+     * over the mapped indices, and that comparison can never fire for a SHORTER
+     * list: the out-of-range indices are dropped by the filter, so the count
+     * always comes back equal to the short list's own length. The guard works in
+     * exactly one direction — the assertion above it, where the other person has
+     * MORE exercises and real entries fall off the end. Comparing against
+     * `order.length` instead is what the header already says this does. */
+    ok(orderOf('Rae') === raeBefore,
+       `🚨 and a SHORTER list keeps its own order too — "a permutation of five positions means `
+       + `nothing applied to a list of four" is the rule reorderSlot states, and it has to hold `
+       + `whichever list is the short one (${raeBefore} → ${orderOf('Rae')})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- 15. the walk clamps PER PERSON rather than running off a short list ---- */
+  {
+    const s = await joint();
+    chip(s, 'Rae').click(); await settle();
+    await toggleJustFor(s);
+    await removeAt(s, 2);
+    // Back to the top of their own list first: a removal lands you on whatever
+    // took the slot, and starting this at step 1 would let a clamp that never
+    // ran look exactly like one that did.
+    s.querySelector('.nav-arrow').click(); await settle();
+    chip(s, 'You').click(); await settle();
+    await toggleJustFor(s);
+    ok(listOf(null).length === 3 && listOf('Rae').length === 2 && posOf('Rae') === 0,
+       'the owner has three steps, Rae two, and both are at the top');
+
+    nextBtn(s).click(); await settle();
+    ok(posOf(null) === 1 && posOf('Rae') === 1, 'step one is a step both of them have');
+    nextBtn(s).click(); await settle();
+    ok(posOf(null) === 2, `the owner walks to their own last step (${posOf(null)})`);
+    ok(posOf('Rae') === 1,
+       `🚨 and Rae lands on THEIR last step rather than on a step they do not have — syncWalk `
+       + `clamps per person, because after a "just for" edit there is no honest shared number, and `
+       + `"as far along as you can be" is the best available meaning (${posOf('Rae')})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ============ 16. joining a workout already in progress ============ */
+  {
+    killSheets();
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    nextBtn(s).click(); await settle();
+    nextBtn(s).click(); await settle();
+    ok(draft().index === 2, 'the owner is on exercise three, alone');
+
+    await addGuest(s, 'Rae');
+    ok(draft().forName === 'Rae' && draft().index === 2,
+       `🚨 somebody added mid-workout JOINS WHERE THE WORKOUT IS — starting them at zero puts the `
+       + `one person who just arrived out of step with everybody (${draft().index})`);
+    ok(posOf(null) === 2, 'and the owner has not been moved by their arrival');
+    ok(slotOf('Rae').entries.every((e) => (e.sets || []).every((set) => !setIsRecorded(set, e.fields))),
+       '⚠️ while the exercises they were not there for stay blank, which is true — joining at '
+       + 'exercise three is not a claim to have done one and two');
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+
+  /* ---- 🚨 AND THEY JOIN THE WORKOUT AS IT IS NOW, NOT AS THE TEMPLATE WROTE IT ----
+     This block described the OPPOSITE until 2026-09-10 and was right to: the
+     newcomer's list was built from `planned`, the saved workout, so anybody
+     added after the group had improvised arrived out of shape with everybody —
+     the exact fault the shared operations exist to fix, coming through the one
+     door that did not go through them. Found by the agent that wrote this
+     block, reported rather than asserted as correct, and fixed.
+
+     ⚠️ THE SHAPE IS COPIED AND THE NUMBERS ARE NOT, which is the half that
+     must not regress: each entry is rebuilt from THEIR OWN history, never from
+     the entry beside it. */
+  {
+    killSheets();
+    localStorage.removeItem(DRAFT);
+    const s = await mount(SessionView(w.id));
+    await addToday(s, 'Zottman Curl');
+    await addToday(s, 'Preacher Curl');
+    killSheets();
+    for (let i = 0; i < 4 && nextBtn(s); i++) { nextBtn(s).click(); await settle(); }
+    ok(draft().index === 4, `the owner is five exercises deep (${draft().index})`);
+
+    await addGuest(s, 'Rae');
+    ok(draft().forName === 'Rae' && slotOf('Rae').entries.length === 5,
+       `🚨 the newcomer gets the list the group has improvised its way to, not the template's `
+       + `three (${slotOf('Rae').entries.length} entries)`);
+    ok(orderOf('Rae') === orderOf(null),
+       `in the same order, exercise for exercise (${orderOf('Rae')})`);
+    ok(draft().index === 4,
+       `🚨 so they land where everybody else is standing rather than being clamped back to a `
+       + `shorter list of their own (${draft().index})`);
+    ok(posOf(null) === 4, 'and the owner stays where they were');
+
+    /* 🔒 The half that must never follow the shape across. Rae's history on
+       Zottman Curl is 10 lb and the owner's is 50; a newcomer built by copying
+       the group's entries rather than rebuilding them would read 50 here. */
+    const theirs = slotOf('Rae').entries.find((e) => e.exerciseName === 'Zottman Curl');
+    ok(theirs && Number(theirs.lastSets[0].weight) === 10,
+       `⚠️ and the numbers are THEIRS, not the group's — Zottman Curl opens at their own 10 lb, `
+       + `not the owner's 50 (${theirs && theirs.lastSets[0].weight})`);
+    killSheets();
+    localStorage.removeItem(DRAFT);
+  }
+}
+
+/* ==================================================================
+ * A FRIEND'S CALENDAR HAS THE MONTHS / YEARS SWITCH — 2026-09-10
+ *
+ * Tim: *"When you view a friend's data, you can see their calendar, but can't
+ * select between months and years. Make it so you can."*
+ *
+ * 🚨 THE HALF OF THIS THAT IS NOT ABOUT THE SWITCH IS THE HALF THAT MATTERS.
+ * Their document holds sixty published sessions (`MAX_ACTIVITY` in social.js,
+ * `activity.size() <= 60` in firestore.rules), and the Years grid prints a count
+ * beside every year. Over that window "141 days trained" is a count of what they
+ * SHARE wearing the name of what they DID — a number presented as something it
+ * is not, which docs/direction.md §3.1 says is still wrong however useful it
+ * looks. So the assertions below check three separate things and none of them
+ * substitutes for another: the switch exists, both views draw, and the screen
+ * never claims to know more about their training than sixty sessions.
+ * ================================================================== */
+{
+  const { FriendView } = await import(BASE + 'views-social.js');
+  const { social, todayISO } = await import(BASE + 'store.js');
+  const { CalendarView: MyCal } = await import(BASE + 'views-data.js');
+  sessionStorage.removeItem('ftrack:v1:demo');
+
+  const keep = {
+    state: social.state, friend: social.friend, invites: social.invites,
+    handoffs: social.handoffs, requests: social.requests,
+    healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    processAcceptedRequests: social.processAcceptedRequests,
+  };
+  social.invites = async () => [];
+  social.handoffs = async () => [];
+  social.requests = async () => [];
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.processAcceptedRequests = async () => 0;
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
+    shareBodyWeight: false, visibility: 'private',
+    connections: [{ uid: 'u1', name: 'Autumn', since: '2026-08-01' }],
+  });
+
+  const THIS_YEAR = Number(todayISO().slice(0, 4));
+  const LAST_YEAR = THIS_YEAR - 1;
+  /* ⚠️ TWO YEARS ON PURPOSE. `yearsToShow` runs from the earliest thing recorded
+     to today, so a fixture inside one year would draw one grid and could not
+     tell "a grid per year" from "a grid". */
+  const dates = [todayISO(), `${THIS_YEAR}-02-10`, `${THIS_YEAR}-02-11`, `${LAST_YEAR}-11-05`];
+  const theirSessions = dates.map((date, i) => ({
+    id: `fc${i}`, date, name: 'Pull', startedAt: `${date}T09:00:00.000Z`,
+    entries: [{ exerciseId: 'lat-pulldown', name: 'Lat Pulldown',
+      sets: [{ weight: 120, reps: 10 }] }],
+  }));
+  const theirDoc = {
+    audience: 'friends', isPublic: false,
+    profile: { name: 'Autumn' },
+    activity: theirSessions,
+    benchmarks: [],
+    strength: {
+      muscles: [{ muscle: 'Back', lift: 'Barbell Row', estimate: 180, confidence: 0.4,
+        band: 'Rough', basis: 'fallback', contributorCount: 2, exerciseCount: 1,
+        contributors: [{ exerciseName: 'Barbell Row', weight: 145, reps: 8,
+          date: `${THIS_YEAR}-02-10`, loadType: 'total', source: 'workout' }],
+        hint: null, confident: false }],
+      grid: { 'lifters|male|own|own': { Back: [41, 30] } },
+      defaultCompare: 'lifters|male|own|own',
+    },
+  };
+  social.friend = async () => ({ audience: 'friends', doc: theirDoc });
+
+  /* ⚠️ PIN MY OWN CALENDAR TO MONTHS FIRST, and it is not tidying up. An earlier
+     block in this file leaves `calMode` on Years, so the "browsing theirs did not
+     move mine" assertion at the bottom would be comparing Years to Years and
+     could never fail. Setting it deliberately is what gives that check something
+     to detect. */
+  {
+    const mine = await mount(MyCal());
+    for (let i = 0; i < 4; i++) await settle();
+    const m = [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months');
+    if (m && m.getAttribute('aria-selected') !== 'true') { m.click(); await settle(); }
+  }
+
+  const fr = await mount(FriendView('u1'));
+  for (let i = 0; i < 12; i++) await settle();
+  const tabBtn = (label) => [...fr.querySelectorAll('.segmented .seg')]
+    .find((b) => b.textContent === label);
+  tabBtn('Calendar').click();
+  for (let i = 0; i < 6; i++) await settle();
+
+  const calSeg = (label) => [...fr.querySelectorAll('.cal-modes .segmented .seg')]
+    .find((b) => b.textContent === label);
+
+  /* ---- 1. the switch is there, and it is the app's own switch ---- */
+  const modeLabels = [...fr.querySelectorAll('.cal-modes .segmented .seg')].map((b) => b.textContent);
+  ok(modeLabels.join('|') === 'Months|Years',
+     `🚨 a friend's calendar carries the Months / Years switch (${modeLabels.join('|') || 'none'})`);
+  /* 🚨 ONE BODY OF CODE BEHIND BOTH DOORS. The switch is a `.cal-modes` block
+     built by `ownCalendar()`; a second copy written for this page would drift
+     from mine the first time either changed, which is what docs/state.md's
+     Calendar row exists to prevent. Asserted through the SHAPE the shared
+     builder produces rather than by importing it, because a private function
+     re-implemented would still import cleanly. */
+  ok(fr.querySelectorAll('.cal-modes').length === 1
+     && fr.querySelector('.cal-modes .segmented').classList.contains('sub'),
+     '⚠️ and it is the same `.cal-modes` / `.segmented.sub` block my own calendar builds, not a '
+     + 'second switch written for this page');
+  ok(calSeg('Months').getAttribute('aria-selected') === 'true',
+     '⚠️ and their page OPENS on Months — Years is the view that draws a whole year over a '
+     + 'sixty-session window, so it is chosen rather than inherited');
+
+  /* ---- 2. Months still draws, and its cells are still inert ---- */
+  ok(fr.querySelectorAll('.cal-month').length > 0 && !fr.querySelector('.yr-grid'),
+     'Months draws their month blocks');
+  {
+    const cells = [...fr.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
+    ok(cells.length > 0 && cells.every((c) => c.tagName.toLowerCase() !== 'button'),
+       '🚨 and NOT ONE of their day cells is a button — there is still no screen for one of their '
+       + `days, and routing this switch through the shared builder must not have created one (${cells.length} cells)`);
+
+    /* 🚨 A DEFECT THIS BLOCK FOUND RATHER THAN A FEATURE IT ADDED, and it had
+       shipped with the friend calendar. `projectSession()` writes a published
+       session's title as `name`; the calendar read `s.workoutName`, which a
+       published document does not have. So every cell of every friend's
+       calendar said "Workout" whatever the workout was called — and the cell's
+       ACCESSIBLE NAME was built without the fallback, so a screen reader was
+       handed "February 10: undefined".
+       ⚠️ INVISIBLE TO EVERY EXISTING TEST because no fixture used the published
+       shape; this one does, which is why it turned up. */
+    const named = cells.find((c) => /Pull/.test(c.textContent));
+    ok(Boolean(named),
+       '🚨 and a cell carries the workout\'s real name — a published session calls it `name`, not '
+       + '`workoutName`, so reading only the latter labelled every one of their days "Workout"');
+    /* ⚠️ THE ACCESSIBLE NAME IS ASSERTED SEPARATELY AND IS NOT THE SAME CHECK.
+       The visible tag had a `|| 'Workout'` fallback behind it; the aria-label
+       was built from `rec.sessions.map((s) => s.workoutName)` with nothing
+       behind it at all, so a screen reader was handed the literal string
+       "undefined". ⚠️ An earlier version of this assertion looked for that word
+       and would have been VACUOUS — the shared reader can no longer return
+       undefined for anybody — so it asks the real question instead: does the
+       label carry the name a sighted user can see. */
+    ok(named && /Pull/.test(named.getAttribute('aria-label') || ''),
+       '🚨 and so does its accessible name — the label was the half of this bug with no fallback '
+       + 'behind it, and read "February 10: undefined"');
+  }
+
+  /* ---- 3. Years draws, and it draws THEIR days ---- */
+  calSeg('Years').click();
+  for (let i = 0; i < 4; i++) await settle();
+
+  const grids = [...fr.querySelectorAll('.yr-grid')];
+  ok(grids.length === 2,
+     `🚨 switching to Years draws a grid per year of what they published (${grids.length})`);
+  ok(!fr.querySelector('.cal-month'),
+     '⚠️ and the month blocks are gone rather than stacked underneath — the same repaint-in-place '
+     + 'my own calendar does');
+  const litThisYear = grids[0].querySelectorAll('.yr-cell.on').length;
+  ok(litThisYear === new Set(dates.filter((d) => d.startsWith(String(THIS_YEAR)))).size,
+     `⚠️ one square lit per day they published, not per session (${litThisYear})`);
+
+  /* ---- 4. 🚨 THE NUMBER BESIDE THE YEAR COUNTS WHAT IS DRAWN, AND SAYS SO ----
+     This is the load-bearing assertion of the whole change. Over sixty published
+     sessions "N days trained" is a count of publishing wearing the name of
+     training: it is capped at 60 whatever they did, so somebody who trained 200
+     days and somebody who trained 61 read identically. The figure is not blanked
+     — the grid is one `role="img"` with a single label, so blanking it would
+     leave a screen-reader user no reading of the picture at all — it is renamed
+     to the quantity it actually counts. */
+  const calText = fr.textContent.replace(/\s+/g, ' ');
+  ok(new RegExp(`${litThisYear} days published`).test(calText),
+     `🚨 the count beside their year says "${litThisYear} days published" — it counts the squares `
+     + 'drawn, which are the days they SHARED');
+  ok(!/days trained|day trained/.test(calText),
+     '🚨 AND THE WORDS "days trained" APPEAR NOWHERE ON THEIR PAGE — that number cannot exceed the '
+     + 'sixty sessions they publish, so printing it under the name of a training total is a claim '
+     + 'this app has no way to make (direction.md §3.1: a number presented as something it is not '
+     + 'is still wrong)');
+  {
+    const label = grids[0].getAttribute('aria-label') || '';
+    ok(/days published/.test(label) && !/days trained/.test(label),
+       '⚠️ including the label a screen reader is given for the picture — the visible chip and the '
+       + 'accessible name are the same claim, or one of them is a lie');
+    ok(!/Open the Months view to reach a day/.test(label),
+       '🚨 and it does NOT tell them to open Months to reach a day, which is my own grid\'s hint '
+       + 'and is an instruction that cannot be carried out here — their month cells are inert');
+  }
+
+  /* ---- 5. the caveat is ON the screen, and Years says the extra part ---- */
+  ok(/most recent sixty sessions Autumn publishes/.test(calText),
+     '🚨 the sixty-session window is stated on their calendar in both views');
+  ok(/blank whether or not they trained/.test(calText),
+     '🚨 AND YEARS SAYS THE BLANKS ARE NOT REST. It paints a whole calendar year whether or not '
+     + 'the window reaches back that far, so an empty half-year is a statement about publishing '
+     + 'that reads as a statement about training unless the screen says otherwise');
+  ok(/counts published days only/.test(calText),
+     '⚠️ and names what the figure beside each year is, rather than leaving the reader to work out '
+     + 'that a count capped at sixty is not a total');
+  ok(!fr.querySelector('.cal-modes .help-dot'),
+     '🛑 and it is NOT behind a "?" — Design Rule 9 puts WHY behind the dot and keeps WHAT on the '
+     + 'screen, and the window is WHAT this picture is');
+
+  /* ---- 6. the readout reports, and goes nowhere ---- */
+  const readout = fr.querySelector('.yr-readout');
+  ok(readout && readout.tagName.toLowerCase() !== 'button',
+     '🚨 their readout is not a button — my own opens `#/day/<iso>`, which is MY training for that '
+     + 'date, and a full-width control that can never answer is the same fault as a day cell that '
+     + `does nothing (${readout && readout.tagName.toLowerCase()})`);
+  {
+    const before = globalThis.location.hash;
+    const lit = grids[0].querySelector('.yr-cell.on');
+    lit.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(/Pull/.test(readout.textContent),
+       '⚠️ but it still names what they did that day — that is the whole value of a 6px square, and '
+       + 'withholding it would make the Years view unreadable rather than honest');
+    ok(globalThis.location.hash === before,
+       '🚨 and tapping a square navigates nowhere at all');
+    readout.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(globalThis.location.hash === before,
+       '🚨 nor does tapping the readout itself — the one control that DOES navigate on my own '
+       + 'calendar is the one that had to be neutered on theirs');
+    ok(grids[0].querySelectorAll('.yr-cell.sel').length === 1,
+       'exactly one square reads as selected');
+  }
+
+  /* ---- 7. 🚨 AND BROWSING THEIR YEARS MUST NOT MOVE MINE ----
+     The same guard `graphMode` has. `calMode` is "how I read MY calendar"; a
+     preference formed over somebody's sixty-session window is not a decision
+     about my own history, and my Calendar tab must not open somewhere I did not
+     choose. Their page keeps `friendCalMode`. */
+  {
+    const mine = await mount(MyCal());
+    for (let i = 0; i < 4; i++) await settle();
+    const sel = [...mine.querySelectorAll('.cal-modes .seg')]
+      .find((b) => b.getAttribute('aria-selected') === 'true');
+    ok(sel && sel.textContent === 'Months',
+       `🚨 my own calendar is still on Months after reading a year of theirs (${sel && sel.textContent})`);
+    ok(mine.querySelectorAll('.cal-month').length > 0,
+       'and actually draws Months rather than only claiming the segment');
+    /* ⚠️ THE OTHER DIRECTION, and it is the half a one-way check would miss:
+       mine still says "trained", because over my whole history that is exactly
+       what the squares are. The rename is about their window, not a retreat from
+       naming my own training. */
+    const m = [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years');
+    m.click();
+    for (let i = 0; i < 3; i++) await settle();
+    const mineText = mine.textContent.replace(/\s+/g, ' ');
+    ok(/days trained|day trained/.test(mineText),
+       '⚠️ and MY grid still counts days TRAINED — I publish nothing to myself, so the honest word '
+       + 'on my own calendar is unchanged');
+    ok(!/most recent sixty sessions/.test(mineText),
+       '⚠️ with no window caveat on it, because there is no window');
+    // Put my own calendar back where this block found it.
+    [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months').click();
+    await settle();
+  }
+
+  /* ⚠️ PUT THEIR SWITCH BACK ON MONTHS. `friendCalMode` is module state, so a
+     block left on Years hands every later friend-page assertion a screen with no
+     `.cal-cell` in it — the same housekeeping the comparison block above does
+     for the tab bar. */
+  {
+    const back = await mount(FriendView('u1'));
+    for (let i = 0; i < 12; i++) await settle();
+    [...back.querySelectorAll('.segmented .seg')].find((b) => b.textContent === 'Calendar').click();
+    for (let i = 0; i < 6; i++) await settle();
+    const months = [...back.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months');
+    if (months) { months.click(); await settle(); }
+  }
+
+  Object.assign(social, keep);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

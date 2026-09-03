@@ -24,7 +24,7 @@ import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './r
 import { TOPICS, CONFIDENCE, topicSources } from './research-topics.js';
 import { ageCoefficient } from './strength-standards.js';
 import { minisOf, groupLabel, miniLabel } from './set-types.js';
-import { yearsToShow, buildYear, daysLabel, DOW_LABELS } from './year-grid.js';
+import { yearsToShow, buildYear, daysLabel, publishedDaysLabel, DOW_LABELS } from './year-grid.js';
 import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -33,6 +33,25 @@ const go = (hash) => { location.hash = hash; };
 // screen and coming back — somebody who prefers the year view should not have
 // to re-pick it after every trip to a day.
 let calMode = 'months'; // 'months' | 'years'
+
+/* 🚨 ONE CONTROL, TWO MEMORIES — 2026-09-10, when a friend's calendar got the
+ * Months/Years switch (Tim: *"you can see their calendar, but can't select
+ * between months and years. Make it so you can."*).
+ *
+ * This is the same guard `graphMode` has, for the same reason and with one
+ * addition. Browsing somebody else may not silently change what MY calendar
+ * opens on; and the default matters more here than it does for a tab, because
+ * the two views make different claims. Months shows the range it holds and
+ * nothing beyond it. Years draws a whole calendar year and leaves everything
+ * outside their sixty published sessions blank — true, captioned, and still the
+ * view that most needs the reader to have chosen it. So a friend's page opens
+ * on Months and Years is one tap away, rather than inheriting a preference
+ * formed on a screen showing a whole history.
+ *
+ * ⚠️ IT IS STILL MODULE STATE, not per-render: somebody comparing two friends'
+ * years should not re-pick it on every page. It is simply not the same variable
+ * as mine. */
+let friendCalMode = 'months';
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -76,6 +95,25 @@ function monthRange(activity) {
  *   announced as a control, and it teaches a keyboard or screen-reader user to
  *   press something that will never answer.
  */
+/* 🚨 A PUBLISHED SESSION CALLS IT `name`; MINE CALLS IT `workoutName` — found
+ * 2026-09-10, while putting the Years switch on a friend's calendar.
+ *
+ * `projectSession()` in js/social.js writes `name: session.workoutName || 'Workout'`,
+ * so a friend's document has no `workoutName` on it at all. Everything below
+ * read `s.workoutName` — which meant **every cell of a friend's calendar said
+ * "Workout"**, whatever their workout was called, and worse, the cell's
+ * accessible name was built without the fallback and read literally
+ * *"February 10: undefined"*. Shipped since the friend calendar did, and
+ * invisible to every test because no fixture used the published shape.
+ *
+ * ⚠️ THE TWO KEYS CANNOT COLLIDE, which is what makes one line safe here rather
+ * than a guess. A local session is written with `workoutName` and never a
+ * `name` (store.js, views-session.js, views-edit-session.js, import-file.js,
+ * demo.js); a published one is written with `name` and never a `workoutName`.
+ * So this reads whichever key the document in hand actually has, and falls back
+ * to the same word the publisher does. */
+const sessionName = (s) => (s && (s.workoutName || s.name)) || 'Workout';
+
 function monthBlock(year, month, activity, today, onDay = null) {
   const first = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
@@ -103,7 +141,7 @@ function monthBlock(year, month, activity, today, onDay = null) {
       const tags = [];
       if (rec) {
         const shown = rec.sessions.slice(0, 2);
-        for (const s of shown) tags.push(tag('w', s.workoutName || 'Workout'));
+        for (const s of shown) tags.push(tag('w', sessionName(s)));
         if (rec.sessions.length > shown.length) {
           tags.push(el('span', { class: 'cal-tag more', text: `+${rec.sessions.length - shown.length}` }));
         }
@@ -111,7 +149,7 @@ function monthBlock(year, month, activity, today, onDay = null) {
       }
 
       const label = rec
-        ? `${MONTHS[month]} ${day}: ${rec.sessions.map((s) => s.workoutName).join(', ')}${rec.benchmarks.length ? (rec.sessions.length ? ', ' : '') + 'benchmark' : ''}`
+        ? `${MONTHS[month]} ${day}: ${rec.sessions.map(sessionName).join(', ')}${rec.benchmarks.length ? (rec.sessions.length ? ', ' : '') + 'benchmark' : ''}`
         : `${MONTHS[month]} ${day}, nothing recorded`;
 
       // Inert where there is nowhere to go — see the note on `onDay`.
@@ -163,7 +201,22 @@ function monthBlock(year, month, activity, today, onDay = null) {
  * nobody can land on.
  * ------------------------------------------------------------------ */
 
-function yearsPane(activity, today, onPick) {
+/**
+ * @param {object} [opts]
+ * @param {Function} [opts.countLabel]  🚨 WHAT THE NUMBER BESIDE A YEAR IS
+ *   CALLED, and it is a parameter since 2026-09-10 rather than a constant.
+ *   `daysLabel` says "N days trained", which is true of my own grid and false of
+ *   a friend's: their document holds sixty published sessions, so the count is
+ *   of days they PUBLISHED and cannot exceed 60 however much they trained. See
+ *   `publishedDaysLabel` in js/year-grid.js for the whole argument.
+ * @param {string} [opts.gridHint]  the second sentence of the picture's
+ *   description. Mine points at Months, where every day is a 40px control; a
+ *   friend's cannot, because their cells are inert, so it says what the picture
+ *   is instead.
+ */
+function yearsPane(activity, today, onPick, opts = {}) {
+  const countLabel = opts.countLabel || daysLabel;
+  const gridHint = opts.gridHint || 'Open the Months view to reach a day.';
   const active = (isoDate) => {
     const rec = activity.get(isoDate);
     return Boolean(rec && (rec.sessions.length || rec.benchmarks.length));
@@ -192,7 +245,7 @@ function yearsPane(activity, today, onPick) {
       class: 'yr-grid',
       style: `grid-template-columns:repeat(${g.columns.length},minmax(0,1fr))`,
       role: 'img',
-      'aria-label': `${year}: ${daysLabel(g.activeDays)}. Open the Months view to reach a day.`,
+      'aria-label': `${year}: ${countLabel(g.activeDays)}. ${gridHint}`,
       onClick: (e) => {
         const box = e.target.closest('.yr-cell');
         if (!box) return;
@@ -205,7 +258,7 @@ function yearsPane(activity, today, onPick) {
     return el('section', { class: 'yr' },
       el('div', { class: 'yr-head' },
         el('h2', { class: 'yr-title', text: String(year) }),
-        el('span', { class: 'yr-count', text: daysLabel(g.activeDays) }),
+        el('span', { class: 'yr-count', text: countLabel(g.activeDays) }),
       ),
       // The month strip lives INSIDE the two-column body so it shares the
       // grid's own column track. Sitting outside it, it would have to guess the
@@ -232,54 +285,105 @@ function yearsPane(activity, today, onPick) {
 }
 
 /**
- * MY OWN CALENDAR, BUILT ONCE AND SHOWN IN TWO PLACES — 2026-09-08, Tim: *"I
+ * THE CALENDAR, BUILT ONCE AND SHOWN IN THREE PLACES — 2026-09-08, Tim: *"I
  * think we should move the calendar section back to being a tab in the data
- * section."*
+ * section."*, and 2026-09-10: *"When you view a friend's data, you can see their
+ * calendar, but can't select between months and years. Make it so you can."*
  *
  * 🚨 IT RETURNS ITS CONTROLS AND A PAINTER RATHER THAN A SCREEN, and that is
  * what lets the same calendar be a nav tab (`#/calendar`, still a route, still
- * bookmarkable) and the sixth segment of the Data screen without a second copy
- * of Months, Years, the readout and the day links. The rule this project keeps
- * relearning — see the note above `GraphView` — is that two subjects share one
- * function or they drift apart; two PLACES are no different.
+ * bookmarkable), the sixth segment of the Data screen and a friend's fifth tab
+ * without a second copy of Months, Years, the readout and the day links. The
+ * rule this project keeps relearning — see the note above `GraphView` — is that
+ * two subjects share one function or they drift apart; two PLACES are no
+ * different, and a subject and a place together are the case that drifts fastest.
  *
  * The caller supplies the node the grids are painted into: the Calendar tab
  * hands over its `.pane-scroll`, the Data screen its `.graph-host`. Everything
  * else — which mode is on, where a day goes, what the readout says — lives here.
  *
- * ⚠️ `calMode` STAYS MODULE STATE and is deliberately shared by both places. It
+ * 🚨 A FRIEND DIFFERS IN FOUR THINGS AND EVERY ONE OF THEM IS AN HONESTY
+ * DECISION rather than a layout one. They are enumerated here because the
+ * previous answer was a second, thinner calendar in `renderCalendarPane`, and
+ * that is exactly the drift this function exists to stop:
+ *
+ *   1. **The cells are inert.** `#/day/<iso>` is MY training for that date, and
+ *      there is no screen for one of theirs. See the note on `monthBlock`.
+ *   2. **The readout does not navigate either**, and is therefore not a button.
+ *      It still names what they did on the day you tapped — that is the whole
+ *      value of a 6px square — but a control that cannot answer is worse than no
+ *      control, so it is a live region rather than a dead link.
+ *   3. **The count beside a year says "published", not "trained"** — their
+ *      document holds sixty sessions, so the figure is bounded by what they
+ *      share and says nothing about what they did. `publishedDaysLabel`.
+ *   4. **A caveat sits under the switch, in the open, and it is longer in
+ *      Years.** Rule 9 puts WHY behind a "?" and keeps WHAT on the screen; the
+ *      window IS what this picture is, so it stays in the open. Months can only
+ *      under-draw the range it holds. Years draws a whole calendar year and
+ *      leaves every day outside the window blank, which reads as rest unless the
+ *      screen says otherwise.
+ *
+ * ⚠️ `calMode` STAYS MODULE STATE and is deliberately shared by my two doors. It
  * is "how I read a calendar", not "how this screen was left": somebody who
  * prefers Years should not have to re-pick it because they arrived through the
- * other door. Unlike `graphMode` there is no second subject to keep apart — a
- * friend's calendar is `renderCalendarPane`'s other branch and never comes
- * through here.
+ * other door. A friend's page keeps `friendCalMode` instead — see the note
+ * beside those two declarations for why browsing somebody else may not move it.
+ *
+ * 🆕 **AND THE PROFILE TAB IS THE FOURTH DOOR SINCE 2026-09-10**, which is what
+ * `land` is for. On the Calendar screen and the Data screen the calendar is
+ * effectively the whole pane, so jumping the scroller to the current month is
+ * the right arrival. On Profile it sits UNDER the avatar, the stats and
+ * whatever else that screen grows, and yanking the page down past all of it to
+ * land on this month would hide the screen somebody just opened. The calendar
+ * is the same calendar; only where the pane starts is different.
+ *
+ * @param {object} [opts]
+ * @param {boolean} [opts.friend]  somebody else's page: the four differences
+ *   above, and the other mode memory.
+ * @param {string}  [opts.who]     what to call them in the caveat.
+ * @param {boolean} [opts.land]    default true. False keeps the host's own
+ *   scroller where the reader left it — see the Profile note above.
  */
-function ownCalendar(activity, today) {
+export function ownCalendar(activity, today, opts = {}) {
+  const friend = Boolean(opts.friend);
+  const who = opts.who || 'They';
+  const land = opts.land !== false;
   const months = monthRange(activity);
+
+  const readMode = () => (friend ? friendCalMode : calMode);
+  const writeMode = (m) => { if (friend) friendCalMode = m; else calMode = m; };
 
   // ⚠️ RESERVED, NEVER REVEALED. The readout holds its row whether or not a day
   // is selected, because Design Rule 3's corollary — content must not shrink
   // because you asked it a question — is exactly what a line appearing on tap
   // would break: every grid below it would jump by its height the first time
   // anybody touched a square. Empty, it says what to do instead.
-  const readout = el('button', {
-    class: 'yr-readout', 'aria-live': 'polite', disabled: true,
-    text: 'Tap a day to see what you did',
+  //
+  // 🚨 A DIV ON A FRIEND'S PAGE, NOT A DISABLED BUTTON. Their day has nowhere to
+  // go, and the same argument that makes their month cells inert applies with
+  // more force to a full-width control: it would take focus, be announced as a
+  // button, and never answer. The text it carries is the same either way.
+  const readout = el(friend ? 'div' : 'button', {
+    class: 'yr-readout', 'aria-live': 'polite',
+    ...(friend ? {} : { disabled: true }),
+    text: friend ? 'Tap a day to see what they did' : 'Tap a day to see what you did',
   });
 
   const pickDay = (isoDate) => {
     const rec = activity.get(isoDate) || { sessions: [], benchmarks: [] };
-    const names = rec.sessions.map((s) => s.workoutName || 'Workout');
+    const names = rec.sessions.map(sessionName);
     if (rec.benchmarks.length) names.push(`${rec.benchmarks.length} benchmark${rec.benchmarks.length > 1 ? 's' : ''}`);
-    readout.disabled = false;
-    readout.onclick = () => go('#/day/' + isoDate);
+    if (!friend) {
+      readout.disabled = false;
+      readout.onclick = () => go('#/day/' + isoDate);
+    }
     // ⚠️ The YEAR is part of the date here, where it is not on other screens.
     // This is the one view in the app showing several years at once, and
     // "Jul 14" over a grid holding four different July 14ths names nothing.
     setChildren(readout,
       el('span', { class: 'yr-r-date', text: `${fmtDateShort(isoDate)}, ${isoDate.slice(0, 4)}` }),
       el('span', { class: 'yr-r-what', text: names.length ? names.join(' · ') : 'Nothing recorded' }),
-      chevron(),
+      friend ? null : chevron(),
     );
   };
 
@@ -292,14 +396,47 @@ function ownCalendar(activity, today) {
     el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
   );
 
+  /* 🚨 THE SIXTY-SESSION CAVEAT, AND IT GREW A SECOND HALF FOR YEARS.
+   *
+   * The first sentence is unchanged and is the one their Volume and Graph tabs
+   * carry too — a calendar looks more like a complete history than anything else
+   * on their page, so an empty February could mean they rested or could mean it
+   * fell out of the window.
+   *
+   * ⚠️ YEARS MAKES THAT WORSE IN TWO SPECIFIC WAYS AND BOTH ARE NAMED. The grid
+   * paints a whole calendar year whether or not the window reaches back that
+   * far, so the blank half of a year is a statement about publishing that reads
+   * as a statement about training; and the figure beside the year is capped at
+   * sixty by construction. Neither is a rounding error, so neither is left to be
+   * worked out — `docs/direction.md` §3.1: a best-effort number clearly labelled
+   * beats a blank, and a number presented as something it is not is still wrong.
+   *
+   * 🛑 IT IS NOT BEHIND A "?" (Rule 9). The dot holds WHY; this is WHAT the
+   * picture is. */
+  const CAVEAT_MONTHS =
+    `From the most recent sixty sessions ${who} publishes — not their whole history.`;
+  // ⚠️ THE CLOSING CLAUSE DELIBERATELY AVOIDS THE PHRASE "days trained", and
+  // that is a test talking rather than a style note: the assertion guarding this
+  // screen is that those two words appear NOWHERE on somebody else's page, which
+  // is the only shape of check that catches `daysLabel` being wired back in by
+  // accident. A caveat that quotes the forbidden phrase to disown it would blunt
+  // the one guard that cannot be fooled.
+  const CAVEAT_YEARS = `${CAVEAT_MONTHS} Days outside that window are blank whether or `
+    + 'not they trained, and the number beside each year counts published days only.';
+  const caveat = friend ? el('div', { class: 'field-help', text: CAVEAT_MONTHS }) : null;
+
   const tabs = [['months', 'Months'], ['years', 'Years']].map(([m, label]) =>
     el('button', {
-      class: 'seg', role: 'tab', 'aria-selected': String(calMode === m), text: label,
-      onClick: () => { if (calMode !== m) { calMode = m; paint(); } },
+      class: 'seg', role: 'tab', 'aria-selected': String(readMode() === m), text: label,
+      onClick: () => { if (readMode() !== m) { writeMode(m); paint(); } },
     }));
 
+  // ⚠️ THE CAVEAT GOES DIRECTLY UNDER THE SWITCH, and the readout stays LAST.
+  // `.yr-readout` carries a hairline on its top edge and is drawn as the closing
+  // row of this block; a paragraph under that line reads as belonging to the
+  // grid below rather than to the control above it.
   const top = el('div', { class: 'cal-modes' },
-    el('div', { class: 'segmented sub', role: 'tablist' }, tabs), legend, readout);
+    el('div', { class: 'segmented sub', role: 'tablist' }, tabs), caveat, legend, readout);
 
   // The node the grids go in, handed over by whoever is showing this.
   let host = null;
@@ -321,24 +458,42 @@ function ownCalendar(activity, today) {
    * other segment paints into, and it belongs to `GraphView`.
    */
   function paint() {
-    const isYears = calMode === 'years';
+    const isYears = readMode() === 'years';
     tabs.forEach((b) => b.setAttribute('aria-selected', String(b.textContent === (isYears ? 'Years' : 'Months'))));
     legend.hidden = isYears;
     readout.hidden = !isYears;
+    // The window sentence is true in both modes; only Years needs the two extra
+    // clauses, so the text is swapped rather than a second block being revealed.
+    if (caveat) caveat.textContent = isYears ? CAVEAT_YEARS : CAVEAT_MONTHS;
 
     if (!host) return;
     if (isYears) {
+      const yearsOpts = friend ? {
+        countLabel: publishedDaysLabel,
+        // ⚠️ NOT "open the Months view to reach a day". Their month cells are
+        // inert, so pointing a screen-reader user at them would be an
+        // instruction that cannot be carried out. Describe the picture instead.
+        gridHint: `Only the sessions ${who} publishes are drawn.`,
+      } : {};
       setChildren(host, ...(activity.size
-        ? yearsPane(activity, today, pickDay)
-        : [emptyState('No training recorded yet',
-          'Every day you finish a workout fills in a square here. A year fits on one screen.')]));
+        ? yearsPane(activity, today, pickDay, yearsOpts)
+        // ⚠️ Unreachable on a friend's page today — `renderCalendarPane` returns
+        // its own empty state before building this — but the words may not be
+        // wrong if it ever is reached: "every day you finish a workout" is my
+        // voice, on somebody else's screen.
+        : [friend
+          ? emptyState('Nothing to draw yet', `${who} has not published any sessions you can read.`)
+          : emptyState('No training recorded yet',
+            'Every day you finish a workout fills in a square here. A year fits on one screen.')]));
       // The scroller is the pane, which is the host itself on the Calendar tab
-      // and its parent on the Data screen.
-      const pane = host.closest('.pane-scroll');
+      // and its parent on the Data screen. ⚠️ Not on Profile: there the pane
+      // holds the whole profile and this would scroll the avatar off the top.
+      const pane = land ? host.closest('.pane-scroll') : null;
       if (pane) pane.scrollTop = 0;
     } else {
-      setChildren(host, ...months.map(({ year, month }) => monthBlock(year, month, activity, today)));
-      landOnCurrentMonth(host);
+      setChildren(host, ...months.map(({ year, month }) =>
+        monthBlock(year, month, activity, today, friend ? false : null)));
+      if (land) landOnCurrentMonth(host);
     }
   }
 
@@ -455,54 +610,51 @@ function landOnCurrentMonth(container) {
 // ⚠️ Volume sits SECOND, beside Muscles, because they are two readings of the
 // same body — "how strong is it" and "how much work is it getting" — and the two
 // chart modes belong together after them.
-/* 🚨 SIX SEGMENTS SINCE 2026-09-08 — Calendar is back in this control, Tim: *"I
- * think we should move the calendar section back to being a tab in the data
- * section."* That reverses the 2026-08-25 split, which itself reversed the
- * 2026-08-22 merge. His call all three times; the note above is left standing
- * because the argument it records has not changed, only the ruling.
+/* 🔄 FIVE SEGMENTS AGAIN SINCE 2026-09-10 — CALENDAR MOVED TO PROFILE, and this
+ * is its FOURTH move. Every one has been Tim's, and this one came out of a
+ * question rather than an instruction: *"The main profile section is looking
+ * really empty right now and the settings profile section is really crowded …
+ * Should the profile menu even be a main section? … I think showing the
+ * calendar as a main section was nice, but I think we can also display it in the
+ * data section in a good way (although it's not in a great place right now)."*
  *
- * 🚨 IT STILL DOES NOT FIT — THE MEASUREMENT ABOVE WAS RIGHT — SO THE ROW
- * SCROLLS. Re-driven over CDP on 2026-09-08 at 320 / 360 / 375 / 390 / 393 /
- * 430 / 768px, both themes (identical to the 0.01px; the labels are the same
- * font either way):
+ * 🚨 THE TWO COMPLAINTS WERE ONE PROBLEM, AND THE MEASUREMENT IS WHAT SAID SO.
+ * Profile was empty because everything that belongs on it already lived here,
+ * and this control was simultaneously overfull — **six segments physically did
+ * not fit**, and only worked because the row was made to scroll on 2026-09-08.
+ * The measured figures are kept below because they are the evidence: a tab that
+ * needs a scrolling tab bar is a tab holding two jobs. Splitting them by what
+ * they ANSWER puts five here and fixes the overflow outright:
+ *
+ *   • **what it MEANS** — Muscles, Volume, Graph, Bars, Research. Analysis.
+ *   • **what you DID** — the calendar. A record, and Profile's job.
+ *
+ * ⚠️ THE ROW STILL SCROLLS AND THAT RULE STAYS. It is what makes any future
+ * sixth segment degrade rather than break, and `wireSegmented()` still centres
+ * the selected one. Removing it because five happen to fit today would be
+ * deleting the guard that made the overflow survivable.
+ *
+ * ⚠️ **A FRIEND'S PAGE KEEPS ITS CALENDAR SEGMENT** — `FRIEND_TABS` below is
+ * built from the first four of these plus Calendar, and it is unaffected. There
+ * is no Profile tab for somebody else, so their page is the only door to their
+ * calendar and it stays where it is.
+ *
+ * The 2026-09-08 measurement, kept as the record of why six was too many.
+ * Re-driven over CDP at 320 / 360 / 375 / 390 / 393 / 430 / 768px, both themes:
  *
  *   Muscles 62.59 · Volume 60.08 · Graph 50.73 · Bars 39.23 · Research 68.22 ·
  *   Calendar 68.00 = 348.85px of segment, + 5 gaps × 2px + 4px of padding =
  *   **362.86px of row against a 290px slot at 360px** — the profile button and
- *   the header's padding take the other 70. It needs ~433px to fit outright.
+ *   the header's padding take the other 70. It needed ~433px to fit outright.
+ *   Unfixed, the bar ran 58.86px past the right edge and Calendar showed
+ *   **11.14px of its 68** — the "C" and nothing else — with 0px at 320px and no
+ *   sideways gesture on the document to bring it back.
  *
- * ⚠️ NO LABEL IS EVER ELLIPSISED, and that is what makes scrolling the right
- * answer rather than a dodge. `.seg` carries `min-width: fit-content`, so a
- * segment cannot be squeezed below its own text: `scrollWidth === clientWidth`
- * on all six at every width tested. Without a scroller the overflow lands on the
- * ROW instead — measured before the CSS landed, the bar ran 58.86px past the
- * right edge of a 360px screen and Calendar showed **11.14px of its 68**, the
- * "C" and nothing else, with 0px visible at 320px and no sideways gesture on the
- * document to bring it back. An 11px sliver at the screen edge is worse than an
- * ellipsis, which is why neither was shipped.
- *
- * 🚨 THE FIT IS SOLVED IN TWO FILES THAT ARE NOT THIS ONE, and if either is
- * reverted this control breaks rather than degrades:
- *   • `css/app.css` — `.segmented { overflow-x: auto }`, scrollbar hidden,
- *     `overscroll-behavior-x: contain` so a flick along the tabs does not drag
- *     the page behind it.
- *   • `js/ui.js` — `wireSegmented()` centres the SELECTED segment by setting
- *     `bar.scrollLeft` (never `scrollIntoView`, which would walk up and drag the
- *     pane). Without it, opening the app on Calendar would show five tabs with
- *     none of them lit.
- * Verified at 360px with a real hit-tested tap: the row is a 290px window over
- * 363px of content, tapping Calendar selects it and the pill lands at 293px, and
- * re-entering `#/graphs` on Calendar arrives already scrolled to it
- * (`scrollLeft` 73, the segment fully visible). The document never scrolls
- * sideways at any width — Rule 1 holds.
- *
- * ⚠️ CALENDAR GOES LAST, not back in front. It was the FIRST segment during the
- * 2026-08-22 merge, but Muscles has been the first tab and the default since
- * 2026-08-25 and moving it now would move every tab somebody already knows —
- * for a segment that is also still reachable at `#/calendar`. Appending costs
- * nobody their muscle map. */
+ * ⚠️ NO LABEL IS EVER ELLIPSISED. `.seg` carries `min-width: fit-content`, so a
+ * segment cannot be squeezed below its own text. That is why scrolling was the
+ * right answer rather than a dodge, and it is still true of five. */
 const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Graph'],
-  ['compare', 'Bars'], ['research', 'Research'], ['calendar', 'Calendar']];
+  ['compare', 'Bars'], ['research', 'Research']];
 
 /* 🚨 A FRIEND'S FIFTH TAB IS THEIR CALENDAR, NOT RESEARCH — Tim, 2026-09-05:
  * *"with the 'research' tab replaced with that user's 'calendar' data."*
@@ -2498,26 +2650,31 @@ function volumeLegend(selectedKey) {
  * Tim, 2026-09-05: *"with the 'research' tab replaced with that user's
  * 'calendar' data."*
  *
- * 🚨 TWO SUBJECTS, TWO DIFFERENT CALENDARS, AND THAT IS NOT THE USUAL DRIFT
- * THIS FILE WARNS ABOUT. Everywhere else one function serves both because the
- * screens must be identical; here three things genuinely differ and each has
- * already been argued out below — a friend gets Months only, inert cells, and a
- * sentence saying it is a sixty-session window. Mine gets Months AND Years, days
- * that open `#/day/<iso>`, and no window caveat because it is my whole history.
- * Forcing one body to serve both would mean three flags; the split is one `if`
- * and the shared parts (`monthBlock`, `monthRange`) are still shared.
+ * 🔄 ~~TWO SUBJECTS, TWO DIFFERENT CALENDARS~~ — ONE CALENDAR SINCE 2026-09-10,
+ * Tim: *"When you view a friend's data, you can see their calendar, but can't
+ * select between months and years. Make it so you can."*
  *
- * ⚠️ MONTHS ONLY, AND THE YEARS VIEW IS LEFT OFF DELIBERATELY. Years exists to
- * fit a whole training history on one screen; a friend publishes their most
- * recent **sixty sessions**, so the squares would thin out and stop partway up
- * the page — a picture of what they SHARE, drawn as though it were a picture of
- * what they have DONE. Months cannot mislead that way: it shows the range it
- * actually holds and nothing beyond it.
+ * ⚠️ THE SUPERSEDED ARGUMENT IS WORTH KEEPING, because it was right about the
+ * hazard and wrong about the remedy. It read: *"Years exists to fit a whole
+ * training history on one screen; a friend publishes their most recent sixty
+ * sessions, so the squares would thin out and stop partway up the page — a
+ * picture of what they SHARE, drawn as though it were a picture of what they
+ * have DONE."* Every word of that is still true of the picture. What does not
+ * follow is that the view had to be withheld: the same objection applies to
+ * their Volume and Graph tabs, which ship with a sentence rather than a
+ * refusal, and a screen that thins out and SAYS SO is not the same object as one
+ * that thins out silently. See `ownCalendar` for the four things that differ on
+ * their page and why each one is an honesty decision.
  *
- * ⚠️ AND THE CELLS GO NOWHERE. `#/day/<iso>` is my own training for that date
- * and there is no equivalent screen for somebody else; their individual workouts
- * are already reachable from the feed and from Recent workouts. So a cell states
- * what they did and is inert, rather than going somewhere wrong.
+ * 🛑 WHAT DID NOT SURVIVE THE REVERSAL: the "N days trained" figure. A count of
+ * published days printed under the name of a training total is the one thing
+ * here that could not be fixed by a caveat, because it is a number rather than
+ * an impression — `publishedDaysLabel` in js/year-grid.js.
+ *
+ * ⚠️ AND THE CELLS STILL GO NOWHERE. `#/day/<iso>` is my own training for that
+ * date and there is no equivalent screen for somebody else; their individual
+ * workouts are already reachable from the feed and from Recent workouts. So a
+ * cell states what they did and is inert, rather than going somewhere wrong.
  */
 export async function renderCalendarPane(host, top, opts = {}) {
   const rows = opts.rows || null;
@@ -2525,9 +2682,10 @@ export async function renderCalendarPane(host, top, opts = {}) {
   const activity = await activityByDate(rows);
   const today = todayISO();
 
-  /* MY OWN: the whole Calendar screen, minus its header. Same builder the
-   * `#/calendar` route uses, so Months, Years, the readout and the day links
-   * cannot differ between the two doors into it.
+  /* 🚨 ONE BUILDER FOR BOTH SUBJECTS. Same code the `#/calendar` route uses, so
+   * Months, Years, the readout and the day links cannot differ between the three
+   * doors into it — the whole reason the switch reaching a friend's page was a
+   * three-line change rather than a second copy of it.
    *
    * ⚠️ `wireSegmented` IS CALLED HERE and it has to be. `screenShell` wires the
    * controls a screen was BUILT with; this control is built later, every time
@@ -2535,36 +2693,19 @@ export async function renderCalendarPane(host, top, opts = {}) {
    * the Months/Years pill would be the one segmented control in the app that
    * does not slide. It is idempotent — it marks the bar it has done — so the
    * first render, where the shell wires it too, still gets exactly one pill. */
-  if (!rows) {
-    const cal = ownCalendar(activity, today);
-    setChildren(top, cal.top);
-    cal.paint(host);
-    wireSegmented(top);
-    return;
-  }
-
-  setChildren(top);
-
-  if (!activity.size) {
+  if (rows && !activity.size) {
+    // Before the switch rather than after it: a Months/Years control over an
+    // empty pane offers two ways to look at nothing.
+    setChildren(top);
     setChildren(host, emptyState('Nothing recorded yet',
       `${who} has not published any sessions you can read.`));
     return;
   }
 
-  setChildren(host,
-    el('div', { class: 'legend' },
-      el('span', {}, el('i', { class: 'w' }), 'Workout'),
-      el('span', {}, el('i', { class: 'b' }), 'Benchmark'),
-    ),
-    // The same caveat their volume and graph screens carry, and this screen
-    // needs it most: a calendar looks more like a complete history than
-    // anything else here, so an empty February could mean they rested or could
-    // mean it fell out of the window.
-    el('div', { class: 'field-help', text:
-      `From the most recent sixty sessions ${who} publishes — not their whole history.` }),
-    ...monthRange(activity).map(({ year, month }) =>
-      monthBlock(year, month, activity, today, false)),
-  );
+  const cal = ownCalendar(activity, today, rows ? { friend: true, who } : {});
+  setChildren(top, cal.top);
+  cal.paint(host);
+  wireSegmented(top);
 }
 
 export async function renderVolumePane(host, top, opts = {}) {

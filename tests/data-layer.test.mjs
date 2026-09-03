@@ -718,12 +718,25 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
      '⚠️ and something LINKS to Goals — a route nobody can reach is deleted in every sense that matters');
   /* ⚠️ ASSERTED ON `DATA_TABS` BY NAME, NOT ON THE FILE. `FRIEND_TABS` has
      carried a Calendar entry since 2026-09-05, so a bare search for one would
-     pass while your OWN Data screen had no calendar at all — a vacuous
-     assertion of exactly the kind §0.14 is about. */
+     pass or fail for the wrong reason — a vacuous assertion of exactly the kind
+     §0.14 is about. It matters in both directions and this one has now been
+     read both ways.
+
+     🔄 INVERTED 2026-09-10: the calendar moved to PROFILE, so your own Data
+     screen must NOT offer a second door to it. Two doors light two tabs at
+     once, which is the constraint this pair of assertions has protected across
+     all four of the calendar's moves. */
   const dataTabsBlock = settingsSrc.slice(settingsSrc.indexOf('const DATA_TABS = ['),
     settingsSrc.indexOf('];', settingsSrc.indexOf('const DATA_TABS = [')));
-  ok(/'calendar'/.test(dataTabsBlock),
-     '🚨 and the calendar is a segment of YOUR OWN Data screen, which is where the tab went');
+  ok(!/'calendar'/.test(dataTabsBlock),
+     '🚨 the calendar is NOT a segment of your own Data screen — it moved to Profile');
+  /* 🔒 And the vacuity guard for that: a friend's page still HAS one, so the
+     assertion above is reading the right list. Without this, deleting
+     `FRIEND_TABS` entirely would leave it green. */
+  const friendTabsBlock = settingsSrc.slice(settingsSrc.indexOf('const FRIEND_TABS = ['),
+    settingsSrc.indexOf(';', settingsSrc.indexOf('const FRIEND_TABS = [')));
+  ok(/'calendar'/.test(friendTabsBlock),
+     "⚠️ while a friend's page keeps theirs — their page is the only door to it");
   // And it can be got out of again.
   const goalsSrc = readFileSync(new URL('../js/views-goals.js', import.meta.url), 'utf8');
   ok((goalsSrc.match(/back: \(\) => go\('#\/settings'\)/g) || []).length === 3,
@@ -1713,6 +1726,249 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const wipeIdx = storeSrc.indexOf("backend.write(c, [], { wholesale: true })");
     ok(clearIdx > 0 && wipeIdx > 0 && clearIdx < wipeIdx,
        'in that order — the snapshot happens before the first collection is cleared');
+  }
+
+  /* ================= 🚨 DELETING AN ACCOUNT (2026-09-10) =================
+
+     Open work 27. "Delete everything permanently" cleared FIVE of the ten
+     collections, could not clear the one it named correctly (a sharded write of
+     [] is a mass delete and the guard refuses one), and had no way at all to
+     address `shared/*` — the copy OTHER PEOPLE read. Then it deleted the auth
+     user regardless, which is the step that makes everything left over
+     permanently unreachable: every rule is isOwner, and the owner no longer
+     exists.
+
+     🔒 THE LOAD-BEARING ASSERTIONS HERE ARE THE TWO ABOUT FAILURE, not the one
+     about the happy path. A purge that works is worth little if it cannot tell
+     the difference between "everything is gone" and "I asked for it to go";
+     the old code could not, which is exactly how this shipped.             */
+  {
+    /* An account with something in every single place one can own. Built as a
+       list so the assertions can walk it rather than re-typing the paths — a
+       hand-typed second copy of a list of collections is the bug being fixed. */
+    const ACCOUNT_DOCS = (uid) => [
+      [`users/${uid}/shared/friends`, { audience: 'friends', viewers: ['u9'] }],
+      [`users/${uid}/shared/public`, { audience: 'public', isPublic: true }],
+      // A legacy tier document, from before 2026-09-03. Still readable by
+      // whoever is in its viewers list, so still a live grant.
+      [`users/${uid}/shared/full`, { audience: 'full', viewers: ['u9'] }],
+      [`users/${uid}/reactions/r1`, { kind: 'kudos', from: 'u9' }],
+      [`users/${uid}/guestSessions/g1`, { row: { id: 'g1', guestName: 'Alex' }, updatedAt: 'TS' }],
+      [`users/${uid}/social/graph`, { connections: ['u9'] }],
+      [`users/${uid}/invites/t1`, { token: 't1' }],
+      [`users/${uid}/handoffs/h1`, { from: 'u9' }],
+      [`users/${uid}/disconnects/u9`, { from: 'u9' }],
+      [`users/${uid}/requests/u9`, { from: 'u9', name: 'Alex' }],
+      [`users/${uid}/backups/rolling-mon-sessions`, { collection: 'sessions', rows: [sess('s1', 100)] }],
+    ];
+
+    // The real list, read from the module that owns it. If somebody adds an
+    // eleventh collection this fixture grows with them.
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(new URL('../js/store.js', import.meta.url), 'utf8');
+    const COLLECTIONS = [...src.match(/const COLLECTIONS = \[([^\]]*)\]/)[1]
+      .matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    ok(COLLECTIONS.length >= 10,
+       `store.js declares ${COLLECTIONS.length} collections, and the purge is handed all of them`);
+
+    /** Plant a whole account: ten legacy documents, 200 sessions, everything else. */
+    const plant = (docs, uid) => {
+      for (const name of COLLECTIONS) {
+        docs.set(`users/${uid}/collections/${name}`, { rows: [{ id: 'r1' }, { id: 'r2' }], updatedAt: 'TS' });
+      }
+      for (let i = 0; i < 200; i++) {
+        docs.set(`users/${uid}/sessions/s${i}`, { row: sess('s' + i, 100), updatedAt: 'TS' });
+      }
+      for (const [path, data] of ACCOUNT_DOCS(uid)) docs.set(path, data);
+    };
+
+    const under = (docs, uid) => [...docs.keys()].filter((k) => k.startsWith(`users/${uid}/`));
+
+    /* ---- the headline: nothing of this account is left ---- */
+    {
+      const { c, docs, log } = fakeFirestore();
+      plant(docs, 'u1');
+      plant(docs, 'u2');                       // somebody else, untouched
+      docs.set('directory/u1', { uid: 'u1', name: 'Tim' });
+
+      // ⚠️ The vacuity guard. Every assertion below is about absence, and an
+      // absence test over an empty fixture passes however the code is written.
+      ok(under(docs, 'u1').length === 221,
+         `the account starts with 221 documents (${under(docs, 'u1').length})`);
+
+      const out = await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      ok(out.left.length === 0, `nothing survives the purge (left: ${JSON.stringify(out.left)})`);
+      ok(out.errors.length === 0, 'and nothing errored');
+      ok(out.deleted === 211, `211 documents deleted (${out.deleted})`);
+
+      // The ten legacy documents cannot be deleted — firestore.rules says
+      // `allow delete: if false` — so they are emptied instead, and that is the
+      // ONLY thing left under this uid.
+      const survivors = under(docs, 'u1');
+      ok(survivors.length === COLLECTIONS.length,
+         `only the ${COLLECTIONS.length} whole-list documents remain (${survivors.length})`);
+      ok(survivors.every((k) => k.startsWith('users/u1/collections/')),
+         'and every one of them is a collections document');
+      ok(COLLECTIONS.every((n) => docs.get(`users/u1/collections/${n}`).rows.length === 0),
+         'each emptied to zero rows, which is how this app has always cleared one');
+
+      ok(under(docs, 'u2').length === 221,
+         `⚠️ and the other account is untouched — all 221 of its documents (${under(docs, 'u2').length})`);
+      ok(docs.has('directory/u1'),
+         'the directory row is NOT this function\'s job — store.js removes it first, outside users/{uid}');
+    }
+
+    /* ---- 🚨 THE FIVE COLLECTIONS THAT USED TO BE LEFT BEHIND ----
+       The old list was ['customExercises','workouts','sessions','benchmarks',
+       'settings']. These five were never named at all, so every weigh-in,
+       programme, goal, saved person and guest workout stayed in Firestore under
+       an account that had just been told it was permanently deleted.        */
+    {
+      const { c, docs } = fakeFirestore();
+      plant(docs, 'u1');
+      const FORGOTTEN = ['bodyWeight', 'systems', 'goals', 'people'];
+      ok(FORGOTTEN.every((n) => docs.get(`users/u1/collections/${n}`).rows.length === 2),
+         'the four unnamed whole-list collections start with rows in them');
+      ok(docs.has('users/u1/guestSessions/g1'), 'and a guest session exists');
+
+      await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      ok(FORGOTTEN.every((n) => docs.get(`users/u1/collections/${n}`).rows.length === 0),
+         '🚨 bodyWeight, systems, goals and people are cleared — they never were before');
+      ok(!docs.has('users/u1/guestSessions/g1'),
+         '🚨 and the guest session is gone, which was not even on the old list');
+    }
+
+    /* ---- 🚨 THE PUBLISHED COPIES GO FIRST, AND THAT IS THE ORDER ----
+       `shared` is what anybody signed in can read on a public account, and
+       `reactions` is friend-readable. If a purge is interrupted — a closed tab,
+       a dropped connection — what has already gone must be everything OTHER
+       PEOPLE could see. `write()` could never have reached either.          */
+    {
+      const { c, docs, log } = fakeFirestore();
+      plant(docs, 'u1');
+      const before = log.length;
+      await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+
+      const gone = log.slice(before)
+        .filter((e) => e[0] === 'getDocs')
+        .map((e) => e[1]);
+      ok(gone[0] === 'users/u1/shared' && gone[1] === 'users/u1/reactions',
+         `the two readable-by-others paths are swept first (${gone.slice(0, 3).join(', ')})`);
+      ok(gone.indexOf('users/u1/shared') < gone.indexOf('users/u1/backups'),
+         'well before the private ones');
+      ok(!docs.has('users/u1/shared/full'),
+         '⚠️ and a LEGACY tier document goes with them — its viewers list is still a live grant');
+    }
+
+    /* ---- 200 sessions go, and the mass-delete guard is untouched ----
+       🚨 The fix `progress.md` item 27 warned against was `{ wholesale: true }`
+       on the old write. The guard exists so nobody sprinkles that flag around,
+       and the two flows allowed to use it snapshot to the cloud first — which
+       is meaningless for an account that is about to stop existing. So the
+       purge is a different path, and `write()` still refuses exactly as it
+       did.                                                                  */
+    {
+      const { c, docs } = fakeFirestore();
+      plant(docs, 'u1');
+      await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      ok(!under(docs, 'u1').some((k) => k.startsWith('users/u1/sessions/')),
+         'all 200 sessions are deleted without any wholesale flag anywhere');
+
+      // The guard itself, on the same fixture, unchanged.
+      const { c: c2, docs: docs2 } = fakeFirestore();
+      plant(docs2, 'u1');
+      let threw = null;
+      try { await fb.createShardIO(c2, 'u1').write('sessions', []); } catch (e) { threw = e; }
+      ok(threw && /Refusing to delete/.test(threw.message),
+         '🔒 while an ordinary write of [] over those same sessions is still refused');
+      ok(docs2.has('users/u1/sessions/s0'), 'and changed nothing');
+    }
+
+    /* ---- 🔒 THE ONE THAT MATTERS: A DELETE THAT DID NOT LAND IS CAUGHT ----
+       This is the whole reason the purge re-reads. The old code called
+       `deleteUser()` on the strength of having ASKED for the deletions, and a
+       refused write was logged to a console nobody was looking at. Here the
+       batch commits successfully and quietly drops the deletes — the shape of a
+       rules change, a partial outage, or a future refactor — and the purge must
+       come back saying so rather than reporting a clean account.            */
+    {
+      const { c, docs } = fakeFirestore();
+      plant(docs, 'u1');
+      const realBatch = c.fs.writeBatch;
+      c.fs.writeBatch = (db) => {
+        const b = realBatch(db);
+        return { set: b.set, delete: () => {}, commit: b.commit };   // deletes silently ignored
+      };
+
+      const out = await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      ok(out.errors.length === 0,
+         'nothing threw — every batch committed and reported success');
+      ok(out.left.length === 10,
+         `🔒 and the purge still reports ten paths left (${out.left.length}: ${out.left.join(', ')})`);
+      ok(out.left.some((s) => s.startsWith('shared (3)')),
+         'naming what survived and how much of it, so the caller can say so');
+    }
+
+    /* ---- a path that cannot even be READ counts as left, never as clean ---- */
+    {
+      const { c, docs } = fakeFirestore();
+      plant(docs, 'u1');
+      const realGetDocs = c.fs.getDocs;
+      c.fs.getDocs = async (ref) => {
+        const path = (ref.__query || ref).__path;
+        if (path === 'users/u1/backups') throw new Error('permission-denied');
+        return realGetDocs(ref);
+      };
+
+      const out = await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      ok(out.left.length === 1 && out.left[0] === 'backups (could not check)',
+         `⚠️ unverifiable is not the same as empty (${JSON.stringify(out.left)})`);
+      ok(out.errors.some((e) => e.startsWith('backups:')), 'and the reason is carried out with it');
+      ok(!docs.has('users/u1/shared/friends'),
+         '🚨 while the other nine were still purged — one failure does not stop the rest, '
+         + 'because a blip on backups is no reason to leave a public projection published');
+    }
+
+    /* ---- idempotent, so the retry a failure asks for actually works ---- */
+    {
+      const { c, docs, log } = fakeFirestore();
+      plant(docs, 'u1');
+      await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      const before = log.length;
+      const out = await fb.createAccountPurge(c, 'u1', COLLECTIONS)();
+      ok(out.left.length === 0 && out.deleted === 0,
+         'a second purge finds nothing to do and says the account is clean');
+      ok(!log.slice(before).some((e) => e[0] === 'commit'),
+         'committing nothing at all');
+    }
+
+    /* ---- the wiring, at source level ----
+       The purge can only be as complete as the list it is handed, so the thing
+       worth pinning is that the list comes from the module that OWNS it rather
+       than from a second copy in the backend. That copy is what held five of
+       ten names. */
+    {
+      const fbSrc = readFileSync(new URL('../js/firebase-backend.js', import.meta.url), 'utf8');
+      ok(/deleteAccount\(currentPassword, COLLECTIONS\)/.test(src),
+         '🚨 store.js hands its own COLLECTIONS down to deleteAccount');
+      ok(!/'customExercises', 'workouts', 'sessions', 'benchmarks', 'settings'/.test(fbSrc),
+         'and the backend no longer keeps a hand-typed list of five of them');
+
+      // Refusing beats defaulting: a purge working from a list it invented is
+      // precisely the fault being fixed.
+      const del = fbSrc.slice(fbSrc.indexOf('async deleteAccount('));
+      ok(/Cannot delete an account without the collection list/.test(del.slice(0, 1200)),
+         'a missing list is refused rather than guessed at');
+
+      // 🔒 The order that makes the whole thing safe.
+      const purgeIdx = del.indexOf('createAccountPurge');
+      const throwIdx = del.indexOf('Your account was not deleted');
+      const userIdx = del.indexOf('deleteUser');
+      ok(purgeIdx > 0 && throwIdx > purgeIdx && userIdx > throwIdx,
+         '🔒 purge, then refuse if anything is left, and only then delete the auth user — '
+         + 'after deleteUser() every rule is isOwner and the owner is gone, so anything '
+         + 'left behind can never be reached by anybody again');
+    }
   }
 }
 
@@ -5876,6 +6132,238 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ THE VACUITY GUARD FOR THE REFUSAL ABOVE — with a real profile it publishes. Without this, '
      + 'a buildStrengthShare() that had been broken into returning null forever would pass the '
      + 'assertion above and look like a safety feature');
+}
+
+/* ================================================================== *
+ * BEST LIFTS, EVER (js/profile-records.js) — 2026-09-11
+ *
+ * `personal-bests.js` answers "did what I just did beat anything", once, on
+ * the finish screen. Nothing answered the standing question a Profile is for:
+ * "what are my best lifts, ever?" This block is that module.
+ *
+ * 🚨 THE TWO THINGS THESE ASSERTIONS EXIST TO PIN, because both are places
+ * where a plausible implementation would be quietly wrong:
+ *
+ *   1. IT DOES NOT FORK `personal-bests.js`. D5's rep ceiling, the per-side
+ *      factor, the mini-set rule and the weight/reps exclusivity are IMPORTED,
+ *      so the assertions below are also assertions that the import is real —
+ *      a copy would drift the first day one of those changed.
+ *   2. RULE 5. The measured best and the estimated max are separate fields,
+ *      only one of them carries `estimated: true`, and the estimate carries
+ *      the real set it was computed from.
+ * ================================================================== */
+{
+  const { bestLifts, DEFAULT_LIMIT } = await import('../js/profile-records.js');
+
+  const E = (id, name, sets) => ({ exerciseId: id, exerciseName: name, sets });
+  const S = (id, date, entries) => ({ id, date, entries });
+  const one = (r) => r.lifts[0];
+
+  /* ---- empty is the normal case, not an edge case ---- */
+  const none = bestLifts([]);
+  ok(none.empty === true && none.lifts.length === 0 && none.total === 0,
+     '🚨 a new account has no best lifts and the module says so in a field — `empty` is the '
+     + 'first-run state of every profile there will ever be, so the screen must not have to infer '
+     + 'it from an array length');
+  ok(bestLifts(null).empty === true && bestLifts(undefined).empty === true,
+     'and nothing about a missing history throws — the store can hand back nothing at all');
+
+  /* ---- 🚨 THE DELIBERATE DIVERGENCE FROM personalBests() ---- */
+  const once = bestLifts([S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 135, reps: 5 }])])]);
+  ok(once.lifts.length === 1 && one(once).best.value === 135,
+     '🚨 A LIFT DONE ONCE STILL HAS A BEST, and this is the one rule this module refuses to '
+     + 'inherit. personalBests() gives a first-ever log no trophy because there was nothing to '
+     + 'beat — that gate is about a CELEBRATION. Asked "what is your best bench", somebody who has '
+     + 'benched once has a true answer, and a blank there would invent an absence (direction §3.1)');
+  ok((await import('../js/personal-bests.js')).personalBests(
+       [E('a', 'Bench', [{ weight: 135, reps: 5 }])], [], []).length === 0,
+     '⚠️ and the pairing that makes the sentence above mean something: the SAME history gives '
+     + 'personalBests() nothing at all. Two questions, two answers, one set of arithmetic');
+  ok(one(once).days === 1 && one(once).sets === 1,
+     'and the upfront half Tim kept — `days` says it is one session, so the screen can print that '
+     + 'beside the number rather than dressing one afternoon as a career best');
+  ok(one(once).firstDate === '2026-01-05' && one(once).lastDate === '2026-01-05',
+     'with the day it happened on, so a record can be pointed at');
+
+  /* ---- the best is the best EVER, across the whole history ---- */
+  const history = [
+    S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 135, reps: 5 }])]),
+    S('s2', '2026-02-05', [E('a', 'Bench', [{ weight: 185, reps: 3 }])]),
+    S('s3', '2026-03-05', [E('a', 'Bench', [{ weight: 155, reps: 10 }])]),
+  ];
+  const ever = bestLifts(history);
+  ok(one(ever).best.value === 185 && one(ever).best.date === '2026-02-05',
+     'the heaviest set ever recorded is the headline, and it names the day it was set — not the '
+     + 'most recent session, which is what a "current" number would have said');
+  ok(one(ever).days === 3 && one(ever).firstDate === '2026-01-05' && one(ever).lastDate === '2026-03-05',
+     'and the span of the evidence rides with it');
+  ok(one(ever).best.kind === 'weight' && one(ever).best.estimated === false,
+     '⚠️ the headline is MEASURED and says so — `estimated: false` is not decoration, it is the '
+     + 'field a screen reads to decide whether the word "estimated" belongs beside the number');
+
+  /* ---- ⚠️ HEAVIEST AND BEST-ESTIMATE DISAGREE, WHICH IS THE POINT ---- */
+  ok(near(one(ever).estimatedMax.value, e1rm(155, 10), 1e-9),
+     '🚨 THE DISAGREEMENT IS THE INTERESTING PART: the heaviest day was 185 × 3 and the best '
+     + 'estimated max came off 155 × 10. Returning one number would have thrown that away, and '
+     + 'returning only the estimate would have put a model where a measurement belongs');
+  ok(one(ever).estimatedMax.weight === 155 && one(ever).estimatedMax.reps === 10
+     && one(ever).estimatedMax.date === '2026-03-05',
+     '🚨 RULE 5: the estimate carries the real set it was fed and the day it was performed, so the '
+     + 'guess can be checked against something that actually happened');
+  ok(one(ever).estimatedMax.estimated === true && one(ever).best.estimated === false,
+     '🚨 and exactly one of the two is flagged as an inference — an estimate may never look like a '
+     + 'measurement, and the two are reached by different NAMES so a screen cannot print one where '
+     + 'it meant the other by accident');
+  ok(one(ever).sameSet === false,
+     '⚠️ `sameSet` false is the cue that there is a second day worth naming — 185 × 3 and 155 × 10 '
+     + 'are two different afternoons and the screen has both');
+
+  const agree = bestLifts([
+    S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 135, reps: 5 }])]),
+    S('s2', '2026-02-05', [E('a', 'Bench', [{ weight: 185, reps: 5 }])]),
+  ]);
+  ok(one(agree).sameSet === true,
+     'and true where one set is both, so the screen can say it once instead of twice');
+
+  /* ---- 🚨 D5, IMPORTED RATHER THAN REIMPLEMENTED ---- */
+  const burnout = bestLifts([
+    S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 100, reps: 5 }])]),
+    S('s2', '2026-02-05', [E('a', 'Bench', [{ weight: 135, reps: 25 }])]),
+  ]);
+  ok(near(burnout.lifts[0].estimatedMax.value, e1rm(100, 5), 1e-9),
+     '🚨 D5 (MAX_EVIDENCE_REPS): the 25-rep set is refused as evidence of a maximum — the curve '
+     + 'scores it at 258 lb, which would sit at the top of somebody’s profile forever off a '
+     + 'burnout set. The gate is `measure()` in personal-bests.js, imported, not copied');
+  ok(burnout.lifts[0].best.value === 135 && burnout.lifts[0].best.date === '2026-02-05',
+     '⚠️ but the same set is still the heaviest weight they have ever held, because that half is '
+     + 'MEASURED. D5 refuses an inference, it does not delete a lift');
+
+  /* ---- ties go to the day it was first hit ---- */
+  const tied = bestLifts([
+    S('s2', '2026-05-05', [E('a', 'Bench', [{ weight: 225, reps: 1 }])]),
+    S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 225, reps: 1 }])]),
+    S('s3', '2026-09-05', [E('a', 'Bench', [{ weight: 225, reps: 1 }])]),
+  ]);
+  ok(one(tied).best.date === '2026-01-05',
+     '⚠️ a record is set the FIRST time it is hit, not the last time it is matched — re-dating 225 '
+     + 'every time somebody repeats it would quietly claim they were still improving. Note the '
+     + 'sessions are handed in out of order, as getSessions() returns them');
+
+  /* ---- bodyweight lifts, and the exclusivity rule from kindsFor() ---- */
+  const pull = bestLifts([
+    S('s1', '2026-01-05', [E('p', 'Pull-Up', [{ reps: 8 }])]),
+    S('s2', '2026-02-05', [E('p', 'Pull-Up', [{ reps: 14 }])]),
+  ]);
+  ok(one(pull).best.kind === 'reps' && one(pull).best.value === 14,
+     'a lift with no weight in it is judged on reps, or pull-ups would vanish off a profile');
+  ok(one(pull).estimatedMax === null && one(pull).sameSet === null,
+     '⚠️ and there is no estimated max to state — `sameSet` is null rather than false, because '
+     + '"they came off different sets" and "there is no estimate" are different facts');
+  ok(bestLifts([S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 100, reps: 12 }])])])
+       .lifts[0].best.kind === 'weight',
+     '⚠️ a loaded lift never gets a reps headline — "more reps at less weight" is not a bigger '
+     + 'number, and that exclusivity is kindsFor() in personal-bests.js doing the deciding');
+
+  /* ---- Rule 6: no opinion on a mile ---- */
+  ok(bestLifts([S('s1', '2026-01-05', [E('r', 'Running', [{ time: 300, distance: 2 }])])]).empty === true,
+     'time and distance produce no best at all — the app has no opinion on which direction of a '
+     + 'mile is better (Rule 6), and a profile is the worst place to invent one');
+
+  /* ---- mini-sets are sets ---- */
+  const drop = bestLifts([
+    S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 100, reps: 5 }])]),
+    S('s2', '2026-02-05', [E('a', 'Bench', [{ weight: 95, reps: 6, minis: [{ weight: 145, reps: 2 }] }])]),
+  ]);
+  ok(one(drop).best.value === 145 && one(drop).sets === 3,
+     '⚠️ a drop off a drop set was really performed and really recorded, so it is evidence — '
+     + 'allSetsOf() is imported, and `sets` counts all three rows');
+
+  /* ---- benchmarks count, and say they are benchmarks ---- */
+  const bench = bestLifts(
+    [S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 185, reps: 3 }])])],
+    { benchmarks: [{ exerciseId: 'a', date: '2026-04-05', values: { weight: 225, reps: 1 } }] });
+  ok(one(bench).best.value === 225 && one(bench).best.source === 'benchmark',
+     '⚠️ a tested max is the most deliberate record there is, so it counts — and the row says '
+     + 'which source it came from. Rule 4 / D14 forbid CHARTING the two as one line; they have '
+     + 'never said a benchmark is not a maximum');
+  ok(one(bench).days === 2,
+     'and a benchmark day is a day this lift was trained');
+  ok(one(ever).best.source === 'workout',
+     'the vacuity guard for that: an ordinary set says `workout`, so `source` is really being set '
+     + 'rather than being a constant nobody reads');
+
+  /* ---- per-side ---- */
+  const exMapPS = new Map([['d', { id: 'd', name: 'Dumbbell Press', loadType: 'per_side' }]]);
+  const ps = bestLifts(
+    [S('s1', '2026-01-05', [E('d', 'Dumbbell Press', [{ weight: 50, reps: 10 }])])],
+    { exMap: exMapPS });
+  ok(one(ps).perSide === true && one(ps).best.value === 50,
+     '⚠️ a per-side record stays in the units it was LOGGED in — 50, not 100 — because every other '
+     + 'screen prints that lift as 50/side and a record must be a number the lifter recognises. '
+     + '`perSide` is how the screen knows to say so');
+  ok(bestLifts([S('s1', '2026-01-05', [E('d', 'Dumbbell Press', [{ weight: 50, reps: 10 }])])])
+       .lifts[0].perSide === false,
+     'and with no exercise map nothing is doubled and nothing claims to be, exactly as in '
+     + 'personalBests()');
+
+  /* ---- ⚠️ ORDERING: a list of 300 exercises is not a readout ---- */
+  const many = [];
+  for (let i = 0; i < 8; i++) {
+    for (let d = 0; d < 8 - i; d++) {
+      many.push(S(`s${i}-${d}`, `2026-01-0${d + 1}`,
+        [E(`x${i}`, `Lift ${i}`, [{ weight: 100 + i, reps: 5 }])]));
+    }
+  }
+  const ranked = bestLifts(many);
+  ok(ranked.total === 8 && ranked.shown === DEFAULT_LIMIT && ranked.lifts.length === DEFAULT_LIMIT,
+     `⚠️ a profile shows a handful (${DEFAULT_LIMIT}) and reports the rest as a COUNT, so the `
+     + 'screen can say "6 of 8" without recounting — a database dump is not a readout');
+  ok(ranked.lifts.map((l) => l.name).join(' ') === 'Lift 0 Lift 1 Lift 2 Lift 3 Lift 4 Lift 5',
+     '🚨 ordered by TRAINING DAYS, most first. Not by pounds — there is no honest ranking of a 405 '
+     + 'deadlift against a 40 lateral raise, and sorting by weight sorts by which movements happen '
+     + 'to load heavy, which is a property of the barbell (Rule 6)');
+  ok(bestLifts(many, { limit: 0 }).lifts.length === 8,
+     'and `limit: 0` returns everything, for a screen that wants the full list');
+
+  const recency = bestLifts([
+    S('o1', '2026-01-01', [E('old', 'Old Lift', [{ weight: 100, reps: 5 }])]),
+    S('o2', '2026-01-02', [E('old', 'Old Lift', [{ weight: 100, reps: 5 }])]),
+    S('n1', '2026-06-01', [E('new', 'New Lift', [{ weight: 100, reps: 5 }])]),
+    S('n2', '2026-06-02', [E('new', 'New Lift', [{ weight: 100, reps: 5 }])]),
+  ]);
+  ok(recency.lifts.map((l) => l.name).join(' ') === 'New Lift Old Lift',
+     '⚠️ equal days break on the most recent — but recency is only the TIE-BREAK, never the sort. '
+     + 'One curious afternoon on a cable crossover must not push a five-year squat off a profile');
+  ok(recency.lifts[0].lastDate === '2026-06-02' && recency.lifts[1].lastDate === '2026-01-02',
+     'and the known weakness of ranking by days — an abandoned lift still ranks — is answered with '
+     + 'information rather than a decay constant nobody has measured: every row carries the day it '
+     + 'was last trained');
+
+  /* ---- imported sessions have no exerciseId ---- */
+  const imported = bestLifts([
+    { id: 'i1', date: '2026-01-05', entries: [{ exerciseName: 'Squat', sets: [{ weight: 200, reps: 5 }] }] },
+    { id: 'i2', date: '2026-02-05', entries: [{ exerciseName: 'Squat', sets: [{ weight: 225, reps: 5 }] }] },
+  ]);
+  ok(imported.lifts.length === 1 && one(imported).best.value === 225 && one(imported).days === 2,
+     '🚨 an imported session carries an exerciseName and NO id (import-file.js), so keying on the '
+     + 'id alone would drop somebody’s whole imported history off their profile without saying so');
+
+  /* ---- a renamed exercise reads as what it is called now ---- */
+  const renamed = bestLifts([
+    S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 135, reps: 5 }])]),
+    S('s2', '2026-02-05', [E('a', 'Barbell Bench Press', [{ weight: 145, reps: 5 }])]),
+  ]);
+  ok(one(renamed).name === 'Barbell Bench Press',
+     'a renamed exercise reads as whatever it is called now, not as whatever it was called the '
+     + 'first time it was logged');
+
+  /* ---- pure ---- */
+  const src = [S('s1', '2026-01-05', [E('a', 'Bench', [{ weight: 135, reps: 5 }])])];
+  const before = JSON.stringify(src);
+  bestLifts(src, { exMap: exMapPS, benchmarks: [] });
+  ok(JSON.stringify(src) === before,
+     'and it mutates nothing it was handed — this module is pure, takes no clock and must never '
+     + 'import store.js, which is the only reason any of this is testable');
 }
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);

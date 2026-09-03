@@ -28,6 +28,55 @@
 **Last updated:** 2026-09-09 — a friend's page on a laptop, their body read against their own sex,
 Record rising from the bottom, and the counts collapsed to **Friends**.
 
+## What changed on 2026-09-10, in one line each
+
+⚠️ **ONE SECTION FOR THE WHOLE DAY, as the maintenance note below now requires.** The full write-up
+is `docs/history.md`, 2026-09-10.
+
+**What Tim asked for, in order:** the two Open work items (*"you can do whatever work you think you
+should do for those two things"*) → a joint workout he had just recorded → the Record animation → the
+runner animation → sideways drag in Data, then *"across the cite"* → a friend's calendar → **the
+Profile/Data question**, answered as advice and then approved for building.
+
+1. 🚨 **"DELETE EVERYTHING PERMANENTLY" LEFT MOST OF THE ACCOUNT IN FIRESTORE — Open work 27 closed.**
+   The list was **five of ten collections**; `sessions` was named and still failed (a sharded write of
+   `[]` is a mass delete and the guard refuses one); and `write()` cannot address `shared/*` at all —
+   so **a public account that deleted itself left its published training readable by anybody signed
+   in, for ever.** ✅ `createAccountPurge()`, `shared` first, **verifies by re-reading before
+   `deleteUser()` runs** and keeps the account if anything survived. 🚨 The collection list is handed
+   down from `store.js`, never copied. **1,986 data-layer, 218 rules (was 159).**
+2. 🚨 **THE RECORD PANEL ROSE BEHIND ITS OWN GHOST** — Tim reported it. `z-index: 50` on a ghost over
+   an `#app` that creates no stacking context. **The asymmetry was the diagnosis**: falling wants the
+   top, rising wants the bottom, and one number for both hid it. Ghost 40 / falling 50 / rising 45.
+3. 🆕 **THE RUNNER GETS THE SAME MOVEMENT**, his ask. The ▾ falls; the live bar's arrow rises.
+   ⚠️ **The up half is asked for by the DOOR, not inferred from the route** — three doors reach the
+   runner and only one is a panel returning over what you were reading.
+4. 🚨 **A JOINT WORKOUT WAS TWO WORKOUTS**, found by recording one. Next/add/remove/swap/reorder now
+   reach everybody; **"Just for ___" is the opt-out**. 🔒 **The sets never follow** — each person's
+   copy is rebuilt from their own history, never broadcast. **1,224 render assertions.**
+5. ✂️ **NOBODY WROTE `overflow-x: auto` — THE BROWSER DID.** `overflow-y` alone makes the other axis
+   `auto`, so every pane had been draggable sideways since it was written. Fixed app-wide; the
+   Research table kept its own scroller (`min-width: 0` is what made it work). **Root cause is
+   `.help-dot::after`** — a 44px halo on a 26px dot, overhanging by 9px.
+6. ⚠️ **THE AUDIT NOW SWEEPS FOUR WIDTHS** (360/390/880/1280) and immediately found an **AA failure
+   only the desktop layout paints**: the active sidebar nav label at **3.96:1**. 🚨 **The same pair
+   was "fixed" on 2026-09-06 for the one element the phone-width audit could see** — reading the
+   stylesheet found **four more**. All scoped to gold-in-light; teal/indigo/ember already pass.
+7. 🆕 **A FRIEND'S CALENDAR HAS MONTHS AND YEARS**, and asking for it uncovered that **every cell of
+   every friend's calendar said "Workout"** — a published session names its title `name`, a local one
+   `workoutName`. The aria-label read *"February 10: undefined"*. 🚨 **The Years count says "days
+   published", not "days trained"** — over a 60-session window the old label was a count of
+   publishing wearing the name of training.
+8. 🆕 **THE PROFILE/DATA SPLIT IS UNDER WAY — Tim approved the plan.** *"The main profile section is
+   looking really empty right now and the settings profile section is really crowded."* 🚨 **Two
+   complaints, one problem**: Profile was empty because its content lived in Data, and Data was
+   overfull — six segments that physically did not fit. **Data = what it MEANS, Profile = what you
+   DID.** ✅ **Step 1: Calendar → Profile** (Data back to five segments; its fourth move, all four
+   his). ✅ **Step 3: `js/profile-records.js`** — *"what are my best lifts, ever?"*, a question the
+   app could not answer. **Measured best leads, estimate follows labelled** (Rule 5); ordered by days
+   trained, not pounds, because there is no honest ranking of a 405 deadlift against a 40 lateral
+   raise (Rule 6). 🚩 **Steps 2, 4 and 5 are NOT done** — see Open work 29.
+
 ## What changed on 2026-09-09, in one line each
 
 ⚠️ **THIS WAS THREE PASSES AND THEY ARE COLLAPSED HERE ON PURPOSE** — the cut 2026-09-06 and -07 both
@@ -528,8 +577,13 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
-**Everything is pushed and every runnable suite was green on 2026-09-09** — including **1,123 render
-assertions** and **1,921 data-layer**. **No half-finished job to pick up.**
+**Everything is pushed and every runnable suite was green on 2026-09-10** — including **1,224 render
+assertions**, **1,986 data-layer** and **218 rules** (up from 159; the emulator run is the twentieth
+suite and it was run).
+
+🚩 **ONE JOB IS DELIBERATELY HALF-DONE AND IT IS THE ONLY ONE: Open work 29, the Profile/Data split.**
+Tim approved a five-step plan and steps 1 and 3 shipped; **2, 4 and 5 are outstanding and authorised**.
+Read that entry before touching Profile, Data, Account or Settings.
 
 ⚠️ **THERE ARE TWENTY SUITE FILES, NOT SEVENTEEN, AND NINETEEN OF THEM RUN HERE UNAIDED** — recounted
 2026-09-09 by running every one. `tests/rules.test.mjs` is the twentieth and needs
@@ -546,10 +600,15 @@ Profile tab's two social counts became **one, called Friends**, alongside more o
 real attempt (Open work 19). *"I'll do 4 myself sometime this week, but I'll come to you about it."*
 🛑 **Do not start it and do not offer it again.**
 
-⚠️ **THE BROWSER AUDIT HAS NEVER MEASURED A DESKTOP WIDTH.** `tools/a11y-audit.mjs` sweeps 360 and
-390 only, so the laptop layout of every screen in this app is unswept — found on 2026-09-09 while
-fixing one. The figures quoted above it (128 routes / 12,207 text nodes, 2026-09-08) are phone-width
-figures and always were.
+✅ ~~**THE BROWSER AUDIT HAS NEVER MEASURED A DESKTOP WIDTH**~~ **FIXED 2026-09-10** — it sweeps
+**360 / 390 / 880 / 1280** with `mobile` set per width. 🔒 The phone rows are provably unchanged
+(6,071 + 6,136 = **12,207**, byte-identical to the 2026-09-08 figure). 🚨 **The first desktop sweep
+immediately found an AA failure** — the active sidebar nav label at 3.96:1 — which is the same
+`--accent`-on-`--accent-dim` pair "fixed" on 2026-09-06 **for the one element a phone-width audit
+could see.** Reading the stylesheet for the pair found four more. **The lesson is the scope of the
+original fix: "every element that paints this today" means "every element the tool I ran can
+reach".** ⚠️ **`tools/a11y-audit.mjs` still does not cover a friend's page** — their uid is
+generated, so there is no static hash for the route list.
 
 ⚠️ **`tests/sw-update.test.mjs` REMAINS FLAKY ON THIS MACHINE.** Recorded 2026-09-07, and on
 2026-09-08 it failed once and passed three times across the day — always on *"the service worker
@@ -801,7 +860,9 @@ than left at the top where they were written.
 |---|---|---|
 | **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ⚠️ **What is NOT done**: this has never run against real Firestore — the aggregation query, the `>` on a real server timestamp and the rules' `list` on an aggregation are all reviewed rather than executed, exactly like the rest of this file's network paths. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass |
 | **28** | ✅ ~~"followers / following" is Instagram's vocabulary for a graph this app does not have~~ **DECIDED AND DONE 2026-09-09 — THE WORDS CHANGED, NOT THE MODEL** | Tim, asked which way and given both costs: *"just combine the 2 and call them 'friends' instead. We might change it to following/folowers later."* **One count, called Friends.** ⚠️ **He kept the other door open, and the thing that keeps it cheap is that there is no migration** — nothing was built or deleted here; `connections` is the same list it always was and this is two labels over it. 🔒 **`#/me/followers` and `#/me/following` still resolve**, onto the one list, which is titled Friends however you arrive — asserted, because a screen still headed "Followers" would be the rename half-done. ✂️ **The "?" went with the second number** (it existed to explain why two figures were equal); 🚨 **the public-account caveat did NOT** — *"Your account is public, so people can see your training without being friends"* is on the screen, only where it is true, because without it the number reads as an audience. `docs/history.md` 2026-09-09 third pass ~~ Tim asked for those three counts by name and they shipped, honestly: connections here are **mutual**, so the two numbers are always equal, and the "?" beside them says so. ⚠️ **On a PUBLIC account the number is also a floor rather than an audience** — anybody signed in can read you without connecting, and none of them are in the graph; the ? says that too. 🚩 **The open question is which way to resolve it**: change the words to match the model (Friends / Connections — cheap, and it is what the rest of the app already calls them), or change the model to match the words — **a real follow model, with new rules, a migration, an asymmetric graph and a moderation surface attached**, which is a feature nobody has asked for. 🛑 **Do not pick one on his behalf.** `docs/history.md` 2026-09-08 third pass, §C |
-| **27** | 🚨 **"DELETE ACCOUNT" LEAVES THE SESSIONS IN FIRESTORE — found 2026-09-08, NOT FIXED** | ⚠️ **Found while reading that code for the read-pattern work, not by using the app, and it is Tim's call rather than a quiet fix.** `FirebaseBackend.deleteAccount()` clears five collections with `this.write(name, [])` and **passes no `wholesale` flag**, so for `sessions` the mass-delete guard (2026-08-28, *"make it extremely difficult to erase data from people's accounts"*) refuses the write outright. The throw is caught and logged, `deleteUser()` then runs, and **every session document stays at `users/{uid}/sessions/*` for an account that can never sign in again** — unreachable under the rules, but present, billable, and not what somebody pressing *Delete everything permanently* was promised. ⚠️ **`guestSessions` is not even in the list.** 🛑 **The fix is one word (`{ wholesale: true }`) plus that collection, and it is deliberately not made here**: the guard exists precisely so nobody sprinkles that flag around, and the two flows already allowed to use it snapshot to the cloud first — which is meaningless for an account being deleted, so the right shape needs a decision rather than a keystroke |
+| **29** | 🚩 **THE PROFILE/DATA SPLIT — STEPS 2, 4 AND 5 ARE OUTSTANDING** | 🟢 **AUTHORISED AND UNDER WAY**, Tim 2026-09-10: *"I like all of that. Start working on it now."* The plan he approved, in his order: **1 Calendar → Profile ✅**, **2 body facts (gender, birth year, body weight) → Profile**, **3 personal bests → Profile ✅**, **4 Goals: Settings → Profile**, **5 Account cleanup — whatever is left after 2 and 4.** 🚨 **The rule the whole thing rests on: Data answers what your training MEANS, Profile answers what you DID.** That is what fixed the segment overflow and the empty Profile in one cut. ⚠️ **Step 2 is a DISPLAY move, not a form move** — `#/me` never writes, and `#/profile` stays the form; Profile shows sex, age and current weight and links to it. ⚠️ **Every moved route must keep resolving** (`#/calendar`, `#/day`, `#/edit`, `#/profile`, `#/goals`) — asserted, and `#/calendar` has survived four moves without breaking a link. 🛑 **Nothing goes on Home** — `direction.md` §4a is a placement rule, not a request |
+| **27** | ✅ ~~**"DELETE ACCOUNT" LEAVES THE SESSIONS IN FIRESTORE**~~ **FIXED 2026-09-10** | The finding was bigger than the entry: **five of ten collections were never named** (bodyWeight, systems, goals, people, guestSessions), `sessions` was named and still failed on the mass-delete guard, and **`write()` cannot address `shared/*` at all** — so a public account that deleted itself left its published training readable by anybody signed in, permanently, because after `deleteUser()` every rule is `isOwner` and the owner is gone. ✅ `createAccountPurge()` in `js/firebase-backend.js` walks every subcollection, `shared` and `reactions` first (the revocation order), empties the ten whole-list documents that rules forbid deleting, then **RE-READS and refuses to delete the auth user if anything survived**. 🚨 **`wholesale` was deliberately not the fix** — the guard exists so nobody sprinkles it, and the flows allowed to use it snapshot to the cloud first, which for an account about to stop existing is one more unreachable billable document. Proved on the emulator (218 assertions) and against the double. ⚠️ **Still never run against real Firestore.** ~~ |
+| **27-old** | 🚨 **the original entry, kept for the reasoning** | ⚠️ **Found while reading that code for the read-pattern work, not by using the app, and it is Tim's call rather than a quiet fix.** `FirebaseBackend.deleteAccount()` clears five collections with `this.write(name, [])` and **passes no `wholesale` flag**, so for `sessions` the mass-delete guard (2026-08-28, *"make it extremely difficult to erase data from people's accounts"*) refuses the write outright. The throw is caught and logged, `deleteUser()` then runs, and **every session document stays at `users/{uid}/sessions/*` for an account that can never sign in again** — unreachable under the rules, but present, billable, and not what somebody pressing *Delete everything permanently* was promised. ⚠️ **`guestSessions` is not even in the list.** 🛑 **The fix is one word (`{ wholesale: true }`) plus that collection, and it is deliberately not made here**: the guard exists precisely so nobody sprinkles that flag around, and the two flows already allowed to use it snapshot to the cloud first — which is meaningless for an account being deleted, so the right shape needs a decision rather than a keystroke |
 | **25b** | 🆕 **the demo has no TIME-based strength set** | ⚠️ Left over from 25. The generator writes every set as `{weight, reps}`, so there is no plank, L-sit or dead hang anywhere in the demo year — a shape the app supports and the demo cannot show. Small; nobody has asked |
 | **25** | ✅ ~~the demo cannot show a trained-but-unrankable muscle~~ **FIXED 2026-09-04** | Cable Crunch (Core ranks) and Neck Curl (Neck hatches) — one of each, because the two states cannot sit on one muscle now Core is rankable. Tim authorised the re-baseline it forced. ⚠️ **Still open, and smaller**: the generator writes every set as `{weight, reps}`, so the demo has no TIME-based strength set anywhere — no plank, no L-sit, no dead hang. ~~ ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |
 | **23** | ✅ ~~a note to the developer~~ **BUILT 2026-09-04** | Form on Account, inbox at `#/notes`, `js/feedback.js` + a `feedback/{noteId}` collection. 🚨 **The developer is a hard-coded uid in `firestore.rules`** and the screen protects nothing; the author cannot read their own note back and nobody can edit one. Rules deployed and proved on the live project. 🛑 **TEMPORARY — take it out when the first users stop being new**, or it becomes a support inbox nobody is staffing. ~~ 🟢 **AUTHORISED, and he said to build it once questioning finished.** *"adding a temporary section to the app that allows the user to write a note or idea straight to the developer (me) would be nice to have. Then, make my account (timhadfield7@gmail.com) a developer account where I can read all these notes or ideas straight on the app."* ⚠️ **DELIBERATELY TEMPORARY** — it exists to catch fresh opinions while the first users are new, not forever. 🚨 **The developer role has to be enforced by `firestore.rules`, not by hiding a screen**: these are other people's words about their own training, and "only Tim can read them" has to be true on the wire. ⚠️ **It is also the first user-submitted free text this app has ever stored**, which is the moderation surface he parked the same day — worth one sentence to him if a decision here would be expensive to undo, and nothing more (that is the single exception he granted to staying quiet) |

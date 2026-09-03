@@ -645,6 +645,170 @@ function shards(c) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 🚨 DELETING AN ACCOUNT — the purge. 2026-09-10.
+ *
+ * ⚠️ WHAT THIS REPLACES, because the old shape is the whole argument for the
+ * new one. `deleteAccount()` used to clear the account by calling `write()`
+ * with an empty list, over a HAND-TYPED list of five collection names, each
+ * call wrapped in a try/catch that logged and carried on. Three separate
+ * things were wrong with that and every one of them was silent:
+ *
+ *   1. **The list was five of ten.** `bodyWeight`, `systems`, `goals`,
+ *      `people` and `guestSessions` were never named, so every weigh-in,
+ *      programme, goal, saved person and guest workout stayed exactly where it
+ *      was. Nothing said so: the loop finished, the toast said "Account
+ *      deleted".
+ *   2. **`sessions` was named and still could not be cleared.** A sharded
+ *      write of `[]` is a mass delete, and the guard above refuses one without
+ *      `wholesale` — correctly. The throw was caught, logged, and ignored, so
+ *      the ONE collection the list did get right was the one that failed.
+ *   3. **`write()` cannot reach most of an account anyway.** It addresses
+ *      `collections/{name}` and the two shards. It has no way to name
+ *      `shared/*`, `social/*`, `invites/*`, `handoffs/*`, `disconnects/*`,
+ *      `requests/*`, `reactions/*` or `backups/*` — and `shared` is the one
+ *      that matters most, because it is the copy OTHER PEOPLE read. A public
+ *      account that deleted itself left its published training readable by
+ *      anybody signed in, for ever.
+ *
+ * 🚨 SO THIS IS NOT `write()` WITH A FLAG ON IT, AND THAT IS DELIBERATE.
+ * `progress.md` item 27 said the fix looked like one word (`{ wholesale:
+ * true }`) and that the word was the wrong fix, and it was right. The guard
+ * exists so that nobody sprinkles that flag around; the two flows already
+ * allowed to use it (Clear all, Restore from backup) SNAPSHOT TO THE CLOUD
+ * FIRST, and a safety copy written into an account that is about to stop
+ * existing is not a safety copy — it is one more unreachable document with a
+ * bill attached. Deleting an account is a different operation from writing a
+ * row list, so it gets its own path and the guard goes on guarding writes.
+ *
+ * 🔒 AND IT VERIFIES BEFORE THE ACCOUNT GOES, which is the property the old
+ * code had no way to have. `deleteUser()` is the irreversible step: after it
+ * the uid is gone, every rule here is `isOwner`, and anything left behind can
+ * never be reached or removed by anyone — not by the user, not by Tim, not by
+ * a later build. So the purge deletes everything it can, then RE-READS to see
+ * what actually survived, and throws rather than deleting the user if
+ * anything did. Failing towards "your account still exists, try again" is the
+ * only acceptable direction; the purge is idempotent, so a retry resumes.
+ *
+ * ⚠️ ONE FAILURE DOES NOT STOP THE OTHERS. Phase one is best-effort over
+ * every path, collecting errors rather than throwing on the first, because a
+ * network blip on `backups` is no reason to leave `shared` published. The
+ * verification pass is what decides the outcome.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Every subcollection an account owns, in the order they are purged.
+ *
+ * 🚨 THE ORDER IS THE REVOCATION ORDER, NOT ALPHABETICAL. `shared` holds the
+ * published copies and `reactions` is friend-readable, so those two go first:
+ * if the purge is interrupted half way — a closed tab, a dropped connection —
+ * what has already gone is everything anybody else could read.
+ *
+ * ⚠️ `collections` IS NOT IN THIS LIST and cannot be. `firestore.rules` says
+ * `allow delete: if false` on `users/{uid}/collections/{name}` — clearing one
+ * has always been a write of an empty list, never a document delete — so those
+ * ten documents are emptied instead, below.
+ */
+export const PURGED_SUBCOLLECTIONS = [
+  'shared', 'reactions',
+  'sessions', 'guestSessions',
+  'social', 'invites', 'handoffs', 'disconnects', 'requests', 'backups',
+];
+
+/**
+ * Remove everything one account owns under `users/{uid}`.
+ *
+ * Dependency-injected for the reason the sharding header gives at length: this
+ * file's network paths have never been executed against Firestore, and that is
+ * tolerable for a save that might not happen and not tolerable for the function
+ * that deletes somebody's training. `tests/data-layer.test.mjs` drives the
+ * whole thing — delete, verify, survive a failure — against an in-memory double.
+ *
+ * @param {{fs: object, db: object}} c   the Firestore surface
+ * @param {string} uid                   whose account this is
+ * @param {string[]} collections         COLLECTIONS from store.js, which owns
+ *   that list. Passed in rather than copied here: a hand-typed second copy is
+ *   exactly what left five of ten collections behind, and a test now asserts
+ *   the caller hands over every one of them.
+ * @returns {Promise<{deleted: number, left: string[], errors: string[]}>}
+ *   `left` is what survived the verification pass. Empty means empty.
+ */
+export function createAccountPurge(c, uid, collections) {
+  const col = (name) => c.fs.collection(c.db, 'users', uid, name);
+  const legacyDoc = (name) => c.fs.doc(c.db, 'users', uid, 'collections', name);
+
+  async function refsIn(name) {
+    const snap = await c.fs.getDocs(col(name));
+    const refs = [];
+    snap.forEach((d) => refs.push(c.fs.doc(col(name), d.id)));
+    return refs;
+  }
+
+  return async function purge() {
+    const errors = [];
+    let deleted = 0;
+
+    // --- phase one: remove everything, best-effort ---
+    for (const name of PURGED_SUBCOLLECTIONS) {
+      try {
+        const refs = await refsIn(name);
+        for (const chunk of inBatches(refs, BATCH_LIMIT)) {
+          const batch = c.fs.writeBatch(c.db);
+          for (const ref of chunk) batch.delete(ref);
+          await batch.commit();
+        }
+        deleted += refs.length;
+      } catch (err) {
+        errors.push(`${name}: ${err && err.message ? err.message : String(err)}`);
+      }
+    }
+
+    /* ⚠️ AND THE LEGACY WHOLE-LIST DOCUMENTS, INCLUDING THE TWO SHARDED ONES.
+     * The prohibition in createShardIO() — that the legacy document is never
+     * written, because emptying it is what erased Tim's calendar on 2026-08-26
+     * — is about an account that CONTINUES TO EXIST, where that document is the
+     * backup floor and old clients still read it. This is the one case where it
+     * is the point: an account that never migrated holds its whole training
+     * history there, and leaving it would leave everything behind. */
+    for (const name of collections) {
+      try {
+        await c.fs.setDoc(legacyDoc(name), { rows: [], updatedAt: c.fs.serverTimestamp() });
+      } catch (err) {
+        errors.push(`${name}: ${err && err.message ? err.message : String(err)}`);
+      }
+    }
+
+    /* --- phase two: 🔒 re-read and see what is REALLY gone ---
+     * The cost is one billed read per empty query, which is nothing, and it
+     * buys the only thing worth having here: the caller may delete the auth
+     * user if and only if this comes back empty. A failed delete that was
+     * merely logged is what shipped the original bug. */
+    const left = [];
+    for (const name of PURGED_SUBCOLLECTIONS) {
+      try {
+        const refs = await refsIn(name);
+        if (refs.length) left.push(`${name} (${refs.length})`);
+      } catch (err) {
+        // Unverifiable is not the same as clean, and must not be treated as it.
+        left.push(`${name} (could not check)`);
+        errors.push(`${name}: ${err && err.message ? err.message : String(err)}`);
+      }
+    }
+    for (const name of collections) {
+      try {
+        const snap = await c.fs.getDoc(legacyDoc(name));
+        const rows = snap.exists() && snap.data() ? snap.data().rows : null;
+        if (Array.isArray(rows) && rows.length) left.push(`${name} (${rows.length})`);
+      } catch (err) {
+        left.push(`${name} (could not check)`);
+        errors.push(`${name}: ${err && err.message ? err.message : String(err)}`);
+      }
+    }
+
+    return { deleted, left, errors };
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * Backend API — matches LocalBackend
  * ------------------------------------------------------------------ */
 
@@ -1098,22 +1262,46 @@ export const FirebaseBackend = {
     await c.auth.updatePassword(u, newPassword);
   },
 
-  // Wipe the data first, then the account. Doing it the other way round would
-  // leave the documents orphaned with no signed-in user able to reach them —
-  // the rules scope everything to a uid that would no longer exist.
-  async deleteAccount(currentPassword) {
+  /**
+   * 🚨 THE DATA GOES FIRST, THEN THE ACCOUNT, AND THE ORDER IS NOT A
+   * PREFERENCE. `deleteUser()` is irreversible and every rule in
+   * firestore.rules is `isOwner`, so anything still under `users/{uid}` when
+   * the uid stops existing can never be read or removed by anybody again.
+   *
+   * 🔒 WHICH IS WHY A FAILED PURGE ABORTS THE DELETION RATHER THAN BEING
+   * LOGGED. The old code swallowed every error and called `deleteUser()`
+   * regardless — see the purge header above for the three ways that went
+   * wrong. Keeping the account is recoverable (the purge is idempotent, so
+   * pressing the button again resumes); orphaning it is not.
+   *
+   * @param {string[]} collections  COLLECTIONS, handed down by store.js.
+   */
+  async deleteAccount(currentPassword, collections) {
     const c = await init();
     const u = c.authClient.currentUser;
     if (!u) throw new Error('Not signed in.');
+    if (!Array.isArray(collections) || !collections.length) {
+      // Refuse rather than default. A purge working from a list it invented is
+      // precisely the fault being fixed here.
+      throw new Error('Cannot delete an account without the collection list.');
+    }
 
     if (currentPassword && u.email) {
       await c.auth.reauthenticateWithCredential(
         u, c.auth.EmailAuthProvider.credential(u.email, currentPassword));
     }
 
-    for (const name of ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings']) {
-      try { await this.write(name, []); } catch (err) { console.error('clearing ' + name, err); }
+    const { left, errors } = await createAccountPurge(c, u.uid, collections)();
+    if (left.length) {
+      if (errors.length) console.error('account purge', errors);
+      // Plain words, because this reaches the user as a toast. It says what
+      // state they are in rather than only that something went wrong: some of
+      // their data really has gone, and the account really has not.
+      throw new Error(
+        'Your account was not deleted, because some of your data could not be removed ('
+        + left.join(', ') + '). Anything already removed is gone. Try again.');
     }
+
     // 💷 And the between-sessions read snapshots, which are keyed by this uid
     // and would otherwise sit in localStorage describing an account that no
     // longer exists.

@@ -426,6 +426,28 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* 🚨 SIDEWAYS IS OFF, EXPLICITLY — 2026-09-10, Tim: *"in the data section
+     (specifically volume and research), when the user scrolls, it allows the
+     user to drag the screen left and right which covers up a lot of stuff and
+     doesn't show anything new. Only allow the user to drag the screen up and
+     down, not left and right to the sides."*
+
+     ⚠️ AND NOBODY WROTE `overflow-x: auto` — THE BROWSER DID, which is why this
+     went unnoticed for months. CSS says that when one axis is set to a
+     non-`visible` value and the other is left `visible`, the `visible` one
+     computes to `auto`. So `overflow-y: auto` on its own quietly made this pane
+     scrollable in BOTH directions, and every few pixels of bleed anywhere on a
+     screen became a drag across the whole page. Measured before it was
+     changed: the Research pane ran to 363px of scroll width in a 360px box and
+     Volume to 393 in 390.
+
+     🛑 CLIPPING IS ONLY HALF A FIX AND THE OTHER HALF IS BELOW. Research's
+     age-by-muscle table is genuinely 407px wide at 360px, so hiding the
+     overflow without giving that table its own scroller would put two columns
+     of real data somewhere no gesture could reach — which is exactly the fault
+     the sixth Data segment had on 2026-09-08. `.research-scroll` already had
+     `overflow-x: auto`; what it was missing is `min-width: 0`. See it. */
+  overflow-x: hidden;
   overscroll-behavior: contain;
   padding: 11px var(--pad);
   display: flex;
@@ -433,6 +455,38 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   gap: var(--gap);
 }
 .pane-top + .pane-scroll { padding-top: 2px; }
+
+/* 🚨 EVERY OTHER BOX IN THIS SHEET WITH `.pane-scroll`'S SHAPE, CLIPPED FOR
+   `.pane-scroll`'S REASON — 2026-09-02, the "make sure it doesn't happen across
+   the site" half of Tim's report.
+   Each of these sets `overflow-y: auto` and says nothing about the other axis,
+   so CSS computes `overflow-x: auto` for all of them and every one has been
+   silently draggable sideways since it was written. NONE of them holds anything
+   wider than itself — they are vertical lists of text, a muscle panel, a
+   footnote popover and a comment thread. Three pixels of bleed anywhere inside
+   one is a drag across the whole surface with nothing at the end of it.
+
+   🛑 THE ONE THING THAT MUST NOT BE DONE TO THIS LIST is to add a box whose
+   `overflow-y` is NOT already set. The propagation rule runs both ways: writing
+   `overflow-x: hidden` on a box with `overflow-y: visible` computes the Y axis
+   to `auto` and invents a VERTICAL scroller. `.navbar` is exactly that case —
+   it only takes `overflow-y` inside the desktop media query — so it is clipped
+   down there, beside the rule that makes it a sidebar, and not here.
+
+   🔒 What is DELIBERATELY not here, because these are real horizontal scrollers
+   and clipping them would hide content no gesture could reach:
+     .segmented       the Data tab's six segments (363px of labels in 290px)
+     .research-scroll the age-by-muscle table (407px of columns in 332px)
+     .chips-scroll    the filter chip row
+     .people-bar      the friend strip
+   All four keep their own `overflow-x: auto`. Clipping a genuinely wide thing
+   is the fault the sixth Data segment had on 2026-09-08 — see docs/state.md. */
+.bars,
+.bests-list,
+.body-foot,
+.search-results,
+.comment-list,
+.help-pop { overflow-x: hidden; }
 
 .pane-bottom {
   flex: none;
@@ -1190,6 +1244,31 @@ select.input {
   background: var(--accent); color: var(--accent-ink);
 }
 .person-del svg { width: 13px; height: 13px; display: block; }
+
+/* 🚨 "JUST FOR ____" — 2026-09-10, Tim's button. A joint workout is one
+   workout: adding, removing, swapping, reordering and moving on all reach
+   everybody, and this is how one person steps out of that.
+
+   ⚠️ IT IS DELIBERATELY NOT A `.person-chip`, and the distinction is the whole
+   readability of this bar. Those chips are a radio group — exactly one is
+   pressed, and pressing one SELECTS a person. This is a toggle that changes
+   what the next tap will DO. Same pill, so it belongs to the bar; a dashed
+   edge and no fill when off, so it never reads as a fifth person waiting to be
+   picked. `aria-pressed` carries the state for anything that cannot see either.
+
+   Pushed to the far end (`margin-left: auto`) because it is not part of the
+   roster and must not sit between two names somebody is tapping between —
+   the same argument `.person-del` makes about destructive controls and
+   mis-taps, applied to a mode switch. */
+.just-for {
+  flex: none; margin-left: auto; font-size: 12.5px;
+  background: none; color: var(--ink-soft);
+  border: 1px dashed var(--line);
+}
+.just-for.is-on {
+  background: var(--accent); color: var(--accent-ink);
+  border-style: solid; border-color: var(--accent);
+}
 
 /* ⚠️ "Sent" is GOOD-coloured and a failure is warn-coloured, but neither is
    colour ALONE: both spell out what happened and the failed one names the way
@@ -2495,7 +2574,24 @@ a.seg {
   flex: none;
 }
 .sheet-head h2 { margin: 0; font-size: 16px; font-weight: 700; flex: 1; letter-spacing: -0.015em; }
-.sheet-body { padding: var(--pad); overflow-y: auto; display: flex; flex-direction: column; gap: 11px; min-height: 0; }
+/* 🚨 `overflow-x: hidden` FOR THE SAME REASON `.pane-scroll` HAS IT — read that
+   block first; this is the same fault in the app's other scrolling surface.
+   MEASURED, not reasoned about: a real touch drag over the exercise-comparison
+   sheet (Home → a friend's workout → an exercise name) moved this box 3px
+   sideways at 360px and 3px at 390px. Three pixels of nothing, and it drags the
+   whole sheet under the reader's thumb.
+   The offender is `.help-dot::after` — the transparent halo that grows the ?
+   footnote to a legal 44px target sits 9px outside a 26px button, and on this
+   sheet that button is flush with the right-hand column edge. It is invisible
+   by design, so there is nothing behind the drag to reach. Nothing in a sheet
+   is ever wider than the sheet: the one wide thing in the app, Research's
+   age-by-muscle table, carries its own `.research-scroll`. */
+.sheet-body {
+  padding: var(--pad);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex; flex-direction: column; gap: 11px; min-height: 0;
+}
 .sheet-foot { padding: 10px var(--pad); border-top: 1px solid var(--rule); flex: none; }
 
 .search-results { display: flex; flex-direction: column; flex: 1; min-height: 120px; overflow-y: auto; }
@@ -2737,7 +2833,35 @@ a.seg {
    ember light too, and those three already clear AA on their own accents.
    #82570B is the same hue as #96660F, darkened: 5.02:1 on --accent-dim, with
    margin rather than the 4.50 that .row-start's #8B5E0D sits exactly on. */
+/* 🚨 AND THE OTHER FOUR ELEMENTS PAINTING THIS PAIR — 2026-09-10. This rule
+   fixed ONE of them on 2026-09-06 for a reason that looked sound and was not:
+   at phone width `.load-badge.per-side` was the only element the audit could
+   see painting `--accent` on `--accent-dim`. The desktop sweep added on
+   2026-09-10 immediately found a second (the active sidebar nav label, below),
+   and reading the stylesheet for the pair rather than waiting for an instrument
+   to trip over it found three more.
+
+   ⚠️ THE LESSON IS THE SCOPE OF THE ORIGINAL FIX, NOT THE COLOUR. "Every
+   element that paints this today" means "every element the tool I happened to
+   run can reach". The pair is a property of the two TOKENS; anything putting
+   one on the other fails, at any width, on any screen, whether or not a route
+   list contains it. Fixed together so the next element to paint them inherits
+   the fix instead of the bug.
+
+   ⚠️ `.bench-badge` is 9.5px/800 and `.set-type.is-on` and `.btn.primary.is-
+   linked` are small controls — none of them is large-text under WCAG, so 4.5:1
+   is the bar for all of them and 3.96 fails it. */
+/* ⚠️ KEPT AS ITS OWN RULE RATHER THAN FOLDED INTO THE GROUP BELOW, and that is
+   a note about the TEST rather than about the CSS. `tests/a11y.test.mjs` reads
+   this pair by matching the selector followed directly by its `color:`, which
+   is how it pins the hex to the element rather than to the file. Grouping the
+   four selectors made that regex miss, `perSide` came back undefined, and the
+   suite CRASHED — which through a `grep ^FAIL` looks exactly like a pass. */
 :root[data-theme="light"]:not([data-palette]) .load-badge.per-side { color: #82570B; }
+
+:root[data-theme="light"]:not([data-palette]) .bench-badge,
+:root[data-theme="light"]:not([data-palette]) .btn.primary.is-linked,
+:root[data-theme="light"]:not([data-palette]) .set-type.is-on { color: #82570B; }
 
 /* ==========================================================================
    Finish screen
@@ -2800,6 +2924,12 @@ a.seg {
     border-top: 0;
     border-right: 1px solid var(--rule);
     overflow-y: auto;
+    /* And the sideways axis off, for the reason the list beside .pane-scroll
+       gives. ⚠️ IT HAS TO BE WRITTEN HERE RATHER THAN IN THAT LIST: the line
+       above is the only `overflow-y` the navbar ever gets, so at phone width
+       the element is `visible` on both axes. Clipping X up there would compute
+       Y to `auto` and turn the bottom tab bar into a vertical scroller. */
+    overflow-x: hidden;
   }
   .navbar a {
     flex: none;
@@ -2811,6 +2941,26 @@ a.seg {
     font-size: 14px;
   }
   .navbar a[aria-current="page"] { background: var(--accent-dim); }
+  /* 🚨 --accent ON --accent-dim, THE SECOND ELEMENT IN THIS SHEET TO PAINT THAT
+     PAIR — desktop a11y sweep, 2026-09-02, 880px and 1280px, 14 routes each.
+     The active label measured **3.96:1** in gold light and fails AA.
+
+     ⚠️ IT IS A DESKTOP-ONLY FAULT AND THAT IS WHY IT SURVIVED. On a phone the
+     active tab is --accent on the plain navbar --surface (4.99:1, passes); the
+     line above is what puts --accent-dim underneath it, and until 2026-09-02
+     this audit had only ever run at phone widths. Dark is 6.27 and passes;
+     inactive labels are 9.41 / 7.94 everywhere.
+
+     Same pair, same hex, same scoping argument as `.load-badge.per-side` above
+     — read the block at its rule for the full measurement table. In short:
+     #82570B is #96660F darkened to the same hue, 5.02:1 on --accent-dim, and
+     `:not([data-palette])` is what "the default palette" means here, because
+     teal (4.64), indigo (5.02) and ember (4.56) already clear AA on their own
+     accents and an unscoped rule would repaint three that pass to fix one.
+
+     Only the letters change; the --accent-dim pill behind them is untouched, so
+     the selected tab still reads as the same shape it always did. */
+  :root[data-theme="light"]:not([data-palette]) .navbar a[aria-current="page"] { color: #82570B; }
 
   /* The app name and the account button, top of the sidebar. This replaced a
      ::before pseudo-element that held the title — a pseudo-element cannot
@@ -3007,7 +3157,21 @@ a.seg {
    version of this had the Record panel and the screen behind it legible THROUGH
    each other, and it looked like a rendering bug rather than a movement.
    ⚠️ Both the panel and the parked screen need it, for the two directions. */
-.screen.rises { animation: screen-up var(--t-slow) var(--ease-out) both; background: var(--ground); }
+/* 🚨 `z-index` ON A STATIC ELEMENT, AND IT IS NOT A MISTAKE — 2026-09-10, and
+   it is the fix for the bug below. `z-index` normally needs `position`, and the
+   documented exception is FLEX ITEMS: a flex item with a z-index other than
+   `auto` paints as though it created a stacking context, in the positioned
+   layer. `.screen` is a flex child of `#app`, so this lifts the rising panel
+   over the parked ghost — and over the tab bar it is meant to travel across —
+   WITHOUT making it a containing block. `position: relative` would do the same
+   job and would also re-anchor every absolutely-positioned descendant inside
+   the screen for the 240ms the class is on, which is a layout change nobody
+   asked for in the middle of an animation. */
+.screen.rises {
+  animation: screen-up var(--t-slow) var(--ease-out) both;
+  background: var(--ground);
+  z-index: 45;
+}
 @keyframes screen-up { from { transform: translateY(100%) } }
 
 /* The screen it rose over, parked outside the router for the length of the
@@ -3015,7 +3179,28 @@ a.seg {
    the only thing this rule owes is the layer and the fact that it is inert. */
 .screen-ghost {
   position: fixed;
-  z-index: 50;          /* over #app, under sheets (60) and toasts (90) */
+  /* 🚨 THE TWO DIRECTIONS WANT OPPOSITE STACKING, AND SHIPPING ONE NUMBER FOR
+     BOTH IS THE BUG TIM REPORTED ON 2026-09-10: *"I can tell there's some sort
+     of animation when you hit record and that section pulls up, but it
+     immediately gets shut down and the screen does not cover the main section
+     display at all. When I click the down arrow on the record section however,
+     the downwards animation is good."*
+
+     Exactly right, and the asymmetry is the diagnosis. `#app` creates no
+     stacking context (no transform, no opacity, no z-index), so a
+     `position: fixed; z-index: 50` ghost painted over EVERYTHING in it —
+     including the panel rising underneath. The rise ran for its full 240ms
+     behind a still picture of the old screen and only became visible in
+     whatever was left of it after the ghost was removed, which is precisely
+     "an animation that immediately gets shut down". Nothing was covered,
+     because the thing doing the covering was the wrong one.
+
+     ⚠️ FALLING GENUINELY WANTS THE TOP. The down arrow slides the Record
+     screen off the bottom to reveal Home underneath, so there the ghost IS the
+     moving thing and has to be above the router's output — which is why that
+     direction looked right and was never suspected. Two behaviours, two
+     layers, and the class that already distinguished them now carries it. */
+  z-index: 40;          /* under .screen.rises (45), sheets (60), toasts (90) */
   pointer-events: none;
   overflow: hidden;
   display: flex;
@@ -3718,6 +3903,33 @@ a.seg {
    above `countsHelp()` in views-me.js. Off the cloud there is no graph to count,
    and printing 0 would be a claim rather than an absence. */
 .me-stat.is-off { opacity: 0.55; }
+
+/* ================================================================== *
+ * PROFILE'S TWO NEW SECTIONS — 2026-09-10, the Data/Profile split.
+ *
+ * 🚨 NO BOXES (Rule 2). Both are a `.section-label` over content, exactly like
+ * every other grouped block in the app. `.me-stat` above is the one bordered
+ * thing on this screen and it earns it by being a row of tap targets; a
+ * bordered card round a calendar would be a box round a box.
+ * ================================================================== */
+
+/* The calendar. ⚠️ NOT its own scroller — the pane scrolls, and nesting a
+   second one inside it is how a phone ends up with two scrollbars fighting
+   over one drag. `ownCalendar` is passed `land: false` from here for the same
+   reason: see its header. */
+.me-cal { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.me-cal-host { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* Best lifts. The measured number is the loud one and the estimate sits under
+   it in the soft ink — Rule 5 carried by SIZE and WORD, never by colour alone,
+   because "estimated max" is printed in full beside it. */
+.me-bests { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.me-best-nums {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end;
+  gap: 1px; text-align: right;
+}
+.me-best-top { font-weight: 650; font-variant-numeric: tabular-nums; }
+.me-best-est { font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
 /* A face beside a name in a plain list row. Sized to match `.row-icon`'s. */
 .row-face { flex: none; width: 26px; height: 26px; display: grid; place-items: center;
@@ -4674,7 +4886,16 @@ a.row { text-decoration: none; }
 }
 
 .research-table summary { cursor: pointer; font-size: 13px; color: var(--ink-soft); padding: 4px 0; }
-.research-scroll { overflow-x: auto; }
+/* 🚨 `min-width: 0` IS WHAT MAKES THE `overflow-x` BESIDE IT DO ANYTHING —
+   2026-09-10. This is a flex child of a column flex container, whose default
+   `min-width: auto` refuses to shrink below its own content. So the box grew to
+   the table's full 407px, its scroller had nothing to scroll, and the extra
+   47px pushed the whole PANE sideways instead — which is the drag Tim reported.
+   The scroller has been here since the table shipped; it has never once been
+   the thing that scrolled. ⚠️ Same trap, opposite direction, as the `.seg`
+   note: `min-width: auto` on a flex item is the default that surprises people
+   both ways. */
+.research-scroll { overflow-x: auto; min-width: 0; }
 .research-table table { border-collapse: collapse; font-size: 12px; font-family: var(--mono); }
 .research-table th, .research-table td { padding: 4px 8px; text-align: right; white-space: nowrap; }
 .research-table thead th { color: var(--ink-faint); font-weight: 500; border-bottom: 1px solid var(--rule); }

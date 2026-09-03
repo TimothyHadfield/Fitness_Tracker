@@ -6,6 +6,7 @@ import { totalResistance } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel, goBack, refreshRoute,
+  parkScreen,
 } from './ui.js';
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
@@ -460,6 +461,11 @@ export async function SessionView(workoutId) {
     // and an empty meta is what that means. A workout in progress across the
     // deploy therefore keeps working and simply sends nothing.
     if (!state.personMeta || typeof state.personMeta !== 'object') state.personMeta = {};
+    // A draft written before 2026-09-10 has no key, and `false` — everything
+    // applies to everybody — is the right reading of one: it is the behaviour
+    // Tim asked for, and a resumed workout should not be silently in the
+    // narrower mode nobody chose.
+    state.justForActive = Boolean(state.justForActive);
   } else {
     state = {
       workoutId: workout.id,
@@ -503,6 +509,15 @@ export async function SessionView(workoutId) {
        * Keyed by name because addPerson() refuses duplicates within a session;
        * the keys that reach disk are personId and uid. */
       personMeta: {},
+      /* 🚨 WHETHER A STRUCTURAL CHANGE IS FOR ONE PERSON OR FOR EVERYBODY —
+       * Tim's "just for ____" button, 2026-09-10. FALSE is the default and
+       * that is the change: a joint workout is one workout, and adding,
+       * removing, swapping, reordering or moving on happens to everybody in it
+       * unless somebody says otherwise. The sets never follow, only the shape.
+       * ⚠️ It is one mode with a moving label, not a flag per person — the
+       * button reads "Just for Alex" and then "Just for you" as you switch,
+       * which is what he described. */
+      justForActive: false,
     };
 
     // Read once for the whole workout rather than per exercise. The runner used
@@ -698,9 +713,119 @@ export async function SessionView(workoutId) {
   // read the guest's own past sessions, or the swapped-in exercise arrives
   // wearing the OWNER's numbers — the exact cross-prescription 0e forbids.
   async function sessionsForActive() {
-    if (state.forName == null) return store.getSessions();
-    const { sessions } = await historyForPerson(state.forName);
+    return sessionsForName(state.forName);
+  }
+
+  async function sessionsForName(name) {
+    if (name == null) return store.getSessions();
+    const { sessions } = await historyForPerson(name);
     return sessions;
+  }
+
+  /* ================================================================== *
+   * 🚨 A JOINT WORKOUT IS ONE WORKOUT — 2026-09-10, and it comes from Tim
+   * MEASURING one for the first time rather than from a review.
+   *
+   * Tim: *"The accounts that are joint together should be more synced. When
+   * the user clicks 'next exercise', it should move to the next exercise for
+   * both users, not just one. If the user deletes, swaps, adds, or
+   * reorganizes the exercises, it should do the same for both users. However,
+   * make a 'just for ____ (the user that is currently selected)' button which
+   * makes it so if you do any of those things, it just changes it for that
+   * user and not both users."*
+   *
+   * ⚠️ WHAT IT WAS, AND WHY IT WAS THAT WAY. `state.others` parks the WHOLE
+   * per-person state — entries, walk position, body weight — so switching
+   * names is a pointer swap and the walk, the steppers and the rest timer
+   * never have to know anybody else exists (see switchTo()). That is a good
+   * design for the numbers and it accidentally decided something it was never
+   * asked about: it made the SHAPE of the workout per-person too. Two people
+   * doing one session on one phone got two independent exercise lists and two
+   * independent positions in them, so tapping "Next exercise" moved one of
+   * them and adding an exercise added it for one of them. Nothing was broken;
+   * it had simply never been used by two people at once until today.
+   *
+   * 🔒 WHAT STAYS PER-PERSON, AND IT IS THE HALF THAT MATTERS: the SETS, the
+   * history, the suggestion and the body weight. 0e's load-bearing rule is
+   * that switching names switches the whole suggestion — two lifters on one
+   * bar are not on the same weights — so a shared exercise arrives at each
+   * person built from THEIR OWN past (`entryFor(name, ...)` below), never
+   * copied across. What is shared is which exercises are being done, in what
+   * order, and which one everybody is on.
+   *
+   * ⚠️ SO THE OPERATION IS REPLAYED, NOT BROADCAST. Each person's copy is
+   * rebuilt against their own history rather than the active person's entry
+   * being handed round. A broadcast would be four lines shorter and would put
+   * the owner's 185 lb bench in front of somebody who has never benched, which
+   * is the one thing this whole feature is built not to do.
+   * ================================================================== */
+
+  /* Whether a structural change applies to one person or to everybody.
+   * ⚠️ ON THE DRAFT, so it survives leaving a workout open and coming back —
+   * everything else in this runner does. It cannot be silently on: the button
+   * is lit and names whoever is selected. */
+  const syncedByDefault = () => state.guestNames.length > 0 && !state.justForActive;
+
+  /**
+   * Everybody in this workout, as one uniform shape.
+   *
+   * ⚠️ THE ACTIVE PERSON IS AN ADAPTER, not a copy. Their state is hoisted
+   * onto `state` itself and the parked ones are plain `{name, entries, index}`
+   * objects, so this hands back something that WRITES BACK to wherever that
+   * person actually lives. A version that spread the active person into a new
+   * object would look identical, pass a shallow test, and drop every change.
+   */
+  const activeSlot = {
+    get name() { return state.forName; },
+    get entries() { return state.entries; },
+    set entries(v) { state.entries = v; },
+    get index() { return state.index; },
+    set index(v) { state.index = v; },
+    get isActive() { return true; },
+  };
+
+  function allSlots() {
+    return [activeSlot, ...state.others];
+  }
+
+  /** The people a structural change should reach right now. */
+  function targetSlots() {
+    return syncedByDefault() ? allSlots() : [activeSlot];
+  }
+
+  /** Everybody EXCEPT the person the active code path has already handled. */
+  function otherTargets() {
+    return targetSlots().filter((s) => !s.isActive);
+  }
+
+  const stepCountOf = (slot) =>
+    stepsFor(slot.entries.map((e) => ({ sets: e.sets.length, group: e.group }))).length;
+
+  /**
+   * Put everybody else on the same step.
+   *
+   * ⚠️ CLAMPED PER PERSON, because after a "just for" edit the lists are
+   * genuinely different lengths and there is no honest shared number. Clamping
+   * says "as far along as you can be", which is the best available meaning and
+   * is exactly right in the ordinary case where the lists match.
+   */
+  function syncWalk(i) {
+    for (const slot of otherTargets()) {
+      const n = stepCountOf(slot);
+      slot.index = n ? Math.max(0, Math.min(i, n - 1)) : 0;
+    }
+  }
+
+  /**
+   * One entry for `newEx`, built against `name`'s own history.
+   *
+   * The per-person half of every shared structural change. `entryFromExercise`
+   * reads the ACTIVE person; this reads whoever is asked for.
+   */
+  async function entryFor(name, newEx, shape = {}) {
+    if (name === state.forName) return entryFromExercise(newEx, shape);
+    const sessions = await sessionsForName(name);
+    return buildEntry(newEx, shape, sessions, null);
   }
 
   function switchTo(name) {
@@ -751,11 +876,49 @@ export async function SessionView(workoutId) {
     // Their own history, so their second session arrives with their own numbers
     // and their own suggestion — not blank, and never the owner's.
     const { sessions, source } = await historyForPerson(name);
+
+    /* 🚨 THEY JOIN THE WORKOUT AS IT IS NOW, NOT AS THE TEMPLATE WROTE IT —
+     * 2026-09-10, and this is the other half of the same instruction. This used
+     * to build from `planned`, the saved workout, so somebody added after the
+     * group had added, removed or swapped anything arrived **out of shape with
+     * everybody** — the exact fault the shared operations exist to fix,
+     * arriving through the one door that does not go through them.
+     *
+     * ⚠️ THE SHAPE IS COPIED; THE NUMBERS ARE NOT. Each entry is rebuilt from
+     * THEIR OWN history (`sessions`, read above) exactly as a shared add or
+     * swap does — never from the entry beside it, which would be the owner's
+     * weights in a newcomer's field.
+     *
+     * ⚠️ FALLS BACK TO THE TEMPLATE IF ANY EXERCISE CANNOT BE RESOLVED. A
+     * missing row would otherwise throw inside `buildEntry` and lose the whole
+     * add; a person on the template's list is merely out of date, which is
+     * where they used to start anyway. */
+    const shaped = state.entries.map((e) => {
+      const ex = exMap.get(e.exerciseId);
+      return ex ? buildEntry(ex, {
+        plannedSets: e.plannedSets,
+        group: e.group,
+        setType: e.setType,
+        plannedMinis: e.plannedMinis,
+        ...(e.addedToday ? { addedToday: true } : {}),
+      }, sessions, null) : null;
+    });
+    const theirEntries = state.entries.length && shaped.every(Boolean)
+      ? shaped
+      : entriesFor(sessions, null, state.date);
+    /* 🚨 THEY JOIN WHERE THE WORKOUT IS, not at the top — 2026-09-10, and it
+     * follows from the same instruction as the shared walk. Somebody added at
+     * exercise four is doing exercise four; starting them at zero puts the one
+     * person who just arrived out of step with everybody, which is the thing
+     * being fixed. Their earlier exercises stay blank, which is true — they
+     * were not there. Clamped, because their list is built from their own
+     * history and can be a different length. */
+    const theirSteps = stepsFor(theirEntries.map((e) => ({ sets: e.sets.length, group: e.group }))).length;
     state.guestNames.push(name);
     state.others.push({
       name,
-      entries: entriesFor(sessions, null, state.date),
-      index: 0,
+      entries: theirEntries,
+      index: theirSteps ? Math.max(0, Math.min(state.index, theirSteps - 1)) : 0,
       bodyWeight: null,
       historySource: source,
     });
@@ -1024,6 +1187,36 @@ export async function SessionView(workoutId) {
         'aria-label': 'Add a person to record for',
         onClick: openAddPerson,
       }, icon('plus', 13), solo ? 'Add a person' : ''),
+
+      /* 🚨 "JUST FOR ____" — Tim, 2026-09-10, and the label is his: it names
+       * *"the user that is currently selected"*, so it reads "Just for you" on
+       * the owner and "Just for Alex" on a guest.
+       *
+       * ⚠️ ONLY WHEN THERE IS SOMEBODY TO BE APART FROM. On a solo workout
+       * every change already applies to exactly one person, and a button
+       * offering to narrow that is a control that does nothing — worse, it
+       * implies the app is doing something to somebody else.
+       *
+       * 🛑 IT IS A MODE, NOT A PER-ACTION CHOICE, which is what he asked for
+       * and is also the only version that works one-handed in a gym: the
+       * alternative is a question on top of every swap, remove, add and drag.
+       * `aria-pressed` is what says which way it is set, the same as the
+       * person chips beside it. */
+      solo ? null : el('button', {
+        class: 'chip just-for' + (state.justForActive ? ' is-on' : ''),
+        'aria-pressed': state.justForActive ? 'true' : 'false',
+        title: state.justForActive
+          ? 'Changes apply only to ' + (state.forName || 'you')
+          : 'Changes apply to everybody in this workout',
+        onClick: () => {
+          state.justForActive = !state.justForActive;
+          saveDraft(state);
+          renderAll();
+          toast(state.justForActive
+            ? `Changes now apply to ${state.forName || 'you'} only`
+            : 'Changes now apply to everybody in this workout');
+        },
+      }, `Just for ${state.forName || 'you'}`),
     );
   }
 
@@ -1055,6 +1248,11 @@ export async function SessionView(workoutId) {
   function goToStep(i) {
     const all = steps();
     state.index = Math.max(0, Math.min(i, all.length - 1));
+    // 🚨 EVERYBODY MOVES — Tim, 2026-09-10: "when the user clicks 'next
+    // exercise', it should move to the next exercise for both users, not just
+    // one." Unless "Just for …" is on, in which case one person is walking
+    // their own list and the whole point is that they move alone.
+    syncWalk(state.index);
     const step = all[state.index];
     if (step) {
       const entry = state.entries[step.entryIndex];
@@ -1848,9 +2046,15 @@ export async function SessionView(workoutId) {
    * go and ask. `store.getSessions()` is served from the read cache, so asking
    * again mid-workout costs nothing on the wire.
    */
-  async function readingFor(ex) {
-    // The ACTIVE person's history — a guest's swap reads the guest's own past.
-    const sessions = await sessionsForActive();
+  /**
+   * ⚠️ SPLIT FROM `readingFor` ON 2026-09-10 SO A SHARED CHANGE CAN BUILD ONE
+   * PERSON'S COPY AT A TIME. The history and the body weight are arguments
+   * rather than reads off `state`, because a joint workout now adds and swaps
+   * exercises for everybody at once and each of them must be built from their
+   * OWN past. Handing the active person's reading round is the cross-
+   * prescription 0e exists to forbid.
+   */
+  function readingFrom(ex, sessions, bodyWeight) {
     const history = historyFor(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
     const last = history[0] || null;
     const lastDay = lastSessionDate(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
@@ -1859,10 +2063,15 @@ export async function SessionView(workoutId) {
       exercise: ex,
       step: units.fromDisplay(units.weightStep()),
       daysSinceLast: lastDay ? daysBetweenDays(lastDay, state.date) : null,
-      bodyWeight: state.bodyWeight,
+      bodyWeight,
       fmt: units.withUnit,
     });
     return { history, last, suggestion };
+  }
+
+  async function readingFor(ex) {
+    // The ACTIVE person's history — a guest's swap reads the guest's own past.
+    return readingFrom(ex, await sessionsForActive(), state.bodyWeight);
   }
 
   /**
@@ -1908,7 +2117,20 @@ export async function SessionView(workoutId) {
    * every field of it is optional here.
    */
   async function entryFromExercise(newEx, shape = {}) {
-    const { last, suggestion } = await readingFor(newEx);
+    return buildEntry(newEx, shape, await sessionsForActive(), state.bodyWeight);
+  }
+
+  /**
+   * The body of `entryFromExercise`, over a history handed in.
+   *
+   * ⚠️ Separated on 2026-09-10 for the reason `readingFrom` was: a shared add
+   * or swap builds one of these PER PERSON, each against their own sessions.
+   * Every caller still goes through `entryFromExercise` or `entryFor`, so
+   * "an exercise that arrives by a different door must not arrive with a
+   * different shape" is still true by construction.
+   */
+  function buildEntry(newEx, shape, sessions, bodyWeight) {
+    const { last, suggestion } = readingFrom(newEx, sessions, bodyWeight);
     const plannedSets = Number(shape.plannedSets) > 0 ? Number(shape.plannedSets) : DEFAULT_SETS;
 
     const lastSets = Array.from({ length: plannedSets }, (_, i) => {
@@ -1938,6 +2160,32 @@ export async function SessionView(workoutId) {
     };
   }
 
+  /**
+   * The swap, applied to one person's list.
+   *
+   * ⚠️ `fresh` IS BUILT PER PERSON BY THE CALLER, never shared. Two people
+   * swapping onto the same machine are not swapping onto the same weight.
+   *
+   * ⚠️ AND THE SPLIT RULE IS EVALUATED PER PERSON TOO, because whether there
+   * are recorded sets to keep is a fact about THAT lifter: the owner may have
+   * done two sets before the machine was taken while their friend had not
+   * started. So one person's list can split while the other's replaces in
+   * place, and the lists legitimately end up different lengths — which is what
+   * syncWalk() clamps for.
+   */
+  function swapIn(slot, index, newEx, fresh) {
+    const entry = slot.entries[index];
+    if (!entry) return null;
+    const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields));
+    if (!recorded.length) { slot.entries[index] = fresh; return null; }
+    entry.sets = recorded;
+    entry.active = Math.min(entry.active, recorded.length - 1);
+    entry.activeDrop = null;
+    if (entry.group != null) { entry.group = null; entry.setType = null; }
+    slot.entries.splice(index + 1, 0, fresh);
+    return index + 1;
+  }
+
   async function swapExercise(index, newEx) {
     const entry = state.entries[index];
     if (!entry || !newEx) return;
@@ -1949,6 +2197,34 @@ export async function SessionView(workoutId) {
       plannedMinis: entry.plannedMinis,
       swappedFrom: entry.exerciseName,
     });
+
+    /* 🚨 EVERYBODY ELSE SWAPS TOO (Tim, 2026-09-10), each against their own
+     * history and their own recorded sets. ⚠️ ONLY WHERE IT IS THE SAME
+     * EXERCISE: after a "just for" edit somebody's slot `index` may hold
+     * something else entirely, and swapping that would silently change an
+     * exercise nobody pointed at. Skipping is the honest answer and the
+     * footnote below says who was skipped. */
+    const skipped = [];
+    for (const slot of otherTargets()) {
+      const theirs = slot.entries[index];
+      if (!theirs || theirs.exerciseId !== entry.exerciseId) { skipped.push(slot.name); continue; }
+      const built = await entryFor(slot.name, newEx, {
+        plannedSets: theirs.plannedSets,
+        group: theirs.group,
+        setType: theirs.setType,
+        plannedMinis: theirs.plannedMinis,
+        swappedFrom: theirs.exerciseName,
+      });
+      swapIn(slot, index, newEx, built);
+    }
+    /* ⚠️ ONE TOAST, NOT TWO. `toast()` sends the one already on screen away and
+     * replaces it, so a skip notice followed by "Swapped to X" would flash the
+     * first for a frame and then hide it — the message nobody reads is the one
+     * saying somebody was left out. Same reason `removeExercise` builds its
+     * sentence the same way. */
+    const said = (what) => toast(skipped.length
+      ? `${what} — ${skipped.join(' and ')} kept theirs`
+      : what);
 
     const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields));
     if (recorded.length) {
@@ -1962,7 +2238,7 @@ export async function SessionView(workoutId) {
       // becomes what it now is — some sets you did.
       if (entry.group != null) { entry.group = null; entry.setType = null; }
       state.entries.splice(index + 1, 0, fresh);
-      toast(`Swapped to ${newEx.name}`);
+      said(`Swapped to ${newEx.name}`);
       // ⚠️ `state.index` walks STEPS, not entries, and a split rebuilds the walk
       // — a superset contributes one step per member per round, so the two
       // indices are not the same number and adding one to it lands wherever it
@@ -1975,7 +2251,7 @@ export async function SessionView(workoutId) {
     state.entries[index] = fresh;
     saveDraft(state);
     renderAll();
-    toast(`Swapped to ${newEx.name}`);
+    said(`Swapped to ${newEx.name}`);
   }
 
   /**
@@ -2005,21 +2281,46 @@ export async function SessionView(workoutId) {
       return;
     }
 
-    const doRemove = () => {
-      state.entries.splice(index, 1);
+    /** Drop entry `at` out of one person's list and dissolve any group of one. */
+    const removeFrom = (slot, at) => {
+      slot.entries.splice(at, 1);
       const counts = new Map();
-      for (const e of state.entries) {
+      for (const e of slot.entries) {
         if (e.group != null) counts.set(e.group, (counts.get(e.group) || 0) + 1);
       }
-      for (const e of state.entries) {
+      for (const e of slot.entries) {
         if (e.group != null && counts.get(e.group) < 2) e.group = null;
       }
+    };
+
+    const doRemove = () => {
+      /* 🚨 EVERYBODY ELSE LOSES IT TOO (Tim, 2026-09-10) — but only where it is
+       * the same exercise, and never where it would empty somebody's workout.
+       * The active person's own "this is the only exercise" guard is above;
+       * this is the same rule applied to each of the others, and it is why a
+       * shared remove can legitimately reach fewer people than it names. */
+      const skipped = [];
+      for (const slot of otherTargets()) {
+        const theirs = slot.entries[index];
+        if (!theirs || theirs.exerciseId !== entry.exerciseId || slot.entries.length <= 1) {
+          skipped.push(slot.name);
+          continue;
+        }
+        removeFrom(slot, index);
+        const n = stepCountOf(slot);
+        slot.index = n ? Math.max(0, Math.min(slot.index, n - 1)) : 0;
+      }
+      removeFrom(activeSlot, index);
       // Land on the exercise that now occupies this slot (or the new last one)
       // — state.index walks STEPS, not entries, for the reason the swap's
       // split path spells out. goToStep() clamps, saves and renders.
       const at = steps().findIndex((s) => s.entryIndex === Math.min(index, state.entries.length - 1));
       goToStep(at >= 0 ? at : 0);
-      toast(`Removed ${entry.exerciseName} — today only`);
+      // ⚠️ One toast, for the reason swapExercise's `said()` gives: a second
+      // call replaces the first, and the one that would be lost is the one
+      // saying somebody was left out.
+      toast(`Removed ${entry.exerciseName} — today only`
+        + (skipped.length ? ` — ${skipped.join(' and ')} kept theirs` : ''));
     };
 
     const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields)).length;
@@ -2096,11 +2397,54 @@ export async function SessionView(workoutId) {
     state.entries.forEach((e, i) => { e.group = fixed[i].group == null ? null : fixed[i].group; });
   }
 
+  /* 🚨 A REORDER IS REPLAYED ON EVERYBODY (Tim, 2026-09-10), and the guard is
+   * LENGTH: a permutation of five positions means nothing applied to a list of
+   * four. After a "just for" edit somebody's list can be a different length,
+   * and re-indexing it against a shuffle computed for another one would move
+   * the wrong exercises. So a mismatched list keeps its own order.
+   *
+   * ⚠️ AND THE WALK IS REPOINTED BY OBJECT IDENTITY PER PERSON, never by the
+   * active person's new index — `repointOn`'s own header is the reason, and it
+   * applies once per list rather than once. */
+  function reorderSlot(slot, order) {
+    /* 🚨 THE GUARD IS `order.length`, NOT THE FILTERED RESULT, AND THE FIRST
+     * VERSION HAD IT WRONG — caught by a test written against this function's
+     * own stated rule. Filtering first and then comparing lengths catches a
+     * LONGER list (five entries, four positions → 4 !== 5, refused) and lets a
+     * SHORTER one straight through: five positions over four entries maps to
+     * five slots, one of them `undefined`, which `filter(Boolean)` quietly
+     * drops back to four — so the lengths matched and a permutation computed
+     * for somebody else's list was applied to a partial one. Compare the
+     * incoming order against this list BEFORE resolving it, and refuse a hole
+     * separately. */
+    if (order.length !== slot.entries.length) return false;
+    const next = order.map((k) => slot.entries[k]);
+    if (next.some((e) => !e)) return false;
+    const here = slot.entries[stepsFor(slot.entries.map(
+      (e) => ({ sets: e.sets.length, group: e.group })))[slot.index]?.entryIndex];
+    slot.entries = next;
+    const fixed = normalizeGroups(slot.entries.map((e) => ({ group: e.group })));
+    slot.entries.forEach((e, i) => { e.group = fixed[i].group == null ? null : fixed[i].group; });
+    const at = here ? slot.entries.indexOf(here) : -1;
+    const steps2 = stepsFor(slot.entries.map((e) => ({ sets: e.sets.length, group: e.group })));
+    const to = at >= 0 ? steps2.findIndex((s) => s.entryIndex === at) : -1;
+    slot.index = to >= 0 ? to : 0;
+    return true;
+  }
+
+  /** Replay one reshuffle across everybody it should reach. */
+  function reorderOthers(order) {
+    for (const slot of otherTargets()) reorderSlot(slot, order);
+  }
+
   /** Move the entry at `from` to sit at `to`. Returns whether anything moved. */
   function moveEntry(from, to) {
     const n = state.entries.length;
     if (from === to || from < 0 || to < 0 || from >= n || to >= n) return false;
     const here = entryHere();
+    const order = state.entries.map((_, i) => i);
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    reorderOthers(order);
     const [moved] = state.entries.splice(from, 1);
     state.entries.splice(to, 0, moved);
     normalizeEntryGroups();
@@ -2114,6 +2458,7 @@ export async function SessionView(workoutId) {
     if (next.length !== state.entries.length) return false;
     if (order.every((k, i) => k === i)) return false;
     const here = entryHere();
+    reorderOthers(order);
     state.entries = next;
     normalizeEntryGroups();
     repointOn(here, 0);
@@ -2145,6 +2490,20 @@ export async function SessionView(workoutId) {
       return false;
     }
     const here = entryHere();
+
+    /* 🚨 EVERYBODY GETS IT (Tim, 2026-09-10), each built from their OWN
+     * history — `entryFor`, never a copy of the one below. ⚠️ Somebody who
+     * already has that exercise is skipped rather than given a second copy:
+     * two entries with one exercise id in a session is the shape that produced
+     * the duplicate-exercise read bug of 2026-08-28, and the active person's
+     * own guard above refuses it for exactly that reason. */
+    for (const slot of otherTargets()) {
+      if (slot.entries.some((e) => e.exerciseId === newEx.id)) continue;
+      slot.entries.push(await entryFor(slot.name, newEx, { addedToday: true }));
+      const fixed = normalizeGroups(slot.entries.map((e) => ({ group: e.group })));
+      slot.entries.forEach((e, i) => { e.group = fixed[i].group == null ? null : fixed[i].group; });
+    }
+
     state.entries.push(await entryFromExercise(newEx, { addedToday: true }));
     normalizeEntryGroups();
     repointOn(here, state.entries.length - 1);
@@ -2922,6 +3281,17 @@ export async function SessionView(workoutId) {
    * opened cold.
    */
   function minimize() {
+    /* 🆕 IT SLIDES OFF THE BOTTOM — 2026-09-10, Tim: *"Similarly to this
+     * downwards/upwards animation, I want to have this similar animation for
+     * when you're in the middle of a workout and you click down on it to the
+     * main page or click up to resume the workout."*
+     *
+     * The same call Record's down arrow makes, for the same reason: the screen
+     * you are putting down is the thing that moves, over whatever the router
+     * draws underneath it. ⚠️ `parkScreen` returns null where nothing can
+     * animate (reduced motion, jsdom), so this stays a plain navigation there
+     * and no test ever sees a second `.screen`. */
+    parkScreen(document.querySelector('#app > .screen'), { falls: true });
     goBack(() => go('#/home'));
   }
 

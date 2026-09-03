@@ -1922,10 +1922,19 @@ export const auth = {
   // leave the name and uid of a person who no longer exists in a collection the
   // whole signed-in world can list. Best-effort: a failure here must not stop
   // somebody deleting their account.
+  //
+  // 🚨 AND `COLLECTIONS` IS HANDED DOWN RATHER THAN COPIED — 2026-09-10. The
+  // backend used to keep its own hand-typed list of what to clear, and it held
+  // FIVE of these ten names: bodyWeight, systems, goals, people and
+  // guestSessions were never touched, so "Delete everything permanently" left
+  // every weigh-in, programme, goal, saved person and guest workout in
+  // Firestore. This module owns the list; anything that clears an account reads
+  // it from here, and `tests/data-layer.test.mjs` asserts the purge covers
+  // every entry. Same fault, same fix, as COLLECTIONS vs knownCollection().
   async deleteAccount(currentPassword) {
     const impl = requireRemote();
     await impl.removeDirectory().catch(() => {});
-    return impl.deleteAccount(currentPassword);
+    return impl.deleteAccount(currentPassword, COLLECTIONS);
   },
 
   // Anything still sitting in this browser's local storage — data logged before

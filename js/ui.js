@@ -500,6 +500,41 @@ export function parkScreen(node, { falls = false } = {}) {
   return ghost;
 }
 
+/* ------------------------------------------------------------------ *
+ * 🆕 THE SAME MOVEMENT FOR A WORKOUT IN PROGRESS — 2026-09-10.
+ *
+ * Tim: *"Similarly to this downwards/upwards animation, I want to have this
+ * similar animation for when you're in the middle of a workout and you click
+ * down on it to the main page or click up to resume the workout."*
+ *
+ * ⚠️ THE DOWN HALF NEEDED NOTHING NEW — `minimize()` in views-session.js parks
+ * its own screen with `falls: true`, exactly as Record's down arrow does.
+ *
+ * 🚨 THE UP HALF CANNOT BE INFERRED FROM THE ROUTE, which is why this exists.
+ * Record rises because arriving AT `#/record` from anywhere else is
+ * unambiguous. The runner is reached three ways — the live bar (a resume,
+ * which is the one he described), the Record picker (starting a workout), and
+ * a deep link — and only the first is a panel coming back up over the screen
+ * you were reading. So the door asks, rather than the router guessing, and the
+ * other two doors behave exactly as they always did.
+ *
+ * ⚠️ ONE-SHOT, AND IT IS TAKEN RATHER THAN READ. A flag left set would make
+ * the NEXT render rise too — a refresh, a demo toggle, anything — which is the
+ * bounce Rule 7 forbids (a movement must not claim something happened that
+ * did not). Consuming it at the point of use makes that impossible.
+ * ------------------------------------------------------------------ */
+let riseRequested = false;
+
+/** Ask the router to make the next screen rise. */
+export function requestRise() { riseRequested = true; }
+
+/** Consume the request. Returns whether one was pending. */
+export function takeRiseRequest() {
+  const was = riseRequested;
+  riseRequested = false;
+  return was;
+}
+
 let toastTimer = null;
 export function toast(message) {
   // ⚠️ The one already on screen LEAVES rather than vanishing under the new

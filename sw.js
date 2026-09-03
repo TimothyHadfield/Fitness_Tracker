@@ -68,6 +68,7 @@ const SHELL = [
   './js/share-image.js',
   './js/routine-from-session.js',
   './js/personal-bests.js',
+  './js/profile-records.js',
   './js/optimal.js',
   './js/qr.js',
   './js/social.js',

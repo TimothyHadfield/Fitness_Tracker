@@ -95,8 +95,12 @@ const KIND_ORDER = { weight: 0, reps: 0, volume: 1, e1rm: 2 };
  * `progress.md` §6 locks a drop set as ONE hard set, and the record here is
  * "the biggest single set", so each mini is weighed on its own — which is also
  * how the parent is weighed. Same rule on both sides.
+ *
+ * ⚠️ EXPORTED SINCE 2026-09-11, for `js/profile-records.js`. It is the one copy
+ * of "which rows of an entry are sets a maximum may be read off", and a second
+ * copy in the all-time module would be the same asymmetry bug in a new place.
  */
-function allSetsOf(sets) {
+export function allSetsOf(sets) {
   const out = [];
   for (const s of sets || []) {
     if (!s) continue;
@@ -107,14 +111,39 @@ function allSetsOf(sets) {
 }
 
 /**
+ * Which kinds of record an exercise's sets are even eligible for.
+ *
+ * `weight` and `reps` are mutually exclusive by construction — see the header.
+ * An empty array means "no opinion": time and distance only, so Rule 6 applies
+ * and nothing here is a maximum.
+ *
+ * ⚠️ EXTRACTED AND EXPORTED SINCE 2026-09-11 and it is a pure move — the two
+ * lines it replaces read identically. `js/profile-records.js` asks the same
+ * question about a whole history that this file asks about one session, and
+ * "does a loaded lift get a reps record" must have exactly one answer.
+ */
+export function kindsFor(sets) {
+  const loaded = sets.some((s) => Number(s.weight) > 0);
+  if (loaded) return ['weight', 'volume', 'e1rm'];
+  return sets.some((s) => Number(s.reps) > 0) ? ['reps'] : [];
+}
+
+/**
  * One set, measured for one kind. Null means "this set is not evidence of
  * this kind of record" — no weight logged, no reps logged, or refused by D5.
  *
  * @param factor 2 for a per-side exercise, 1 otherwise. See personalBests().
  * @returns { value, weight, reps } | null — `weight`/`reps` describe the set
  *   that produced `value`, so a screen can say what the record came off.
+ *
+ * ⚠️ EXPORTED SINCE 2026-09-11, for `js/profile-records.js`. This is where D5
+ * lives for records — the `isRankableSet` gate on the e1rm branch — and it is
+ * the single place that knows a per-side lift doubles VOLUME and nothing else.
+ * The all-time module asks the identical question of much older sets; if it
+ * asked it in its own words the two screens would disagree the first day one of
+ * these four branches changed.
  */
-function measure(kind, set, factor) {
+export function measure(kind, set, factor) {
   const w = Number(set && set.weight);
   const r = Number(set && set.reps);
   const hasW = Number.isFinite(w) && w > 0;
@@ -179,11 +208,9 @@ export function personalBests(cleaned, priorSessions, priorBenchmarks, exMap) {
 
   for (const e of cleaned || []) {
     const nowSets = allSetsOf(e.sets);
-    const loaded = nowSets.some((s) => Number(s.weight) > 0);
-    const repsOnly = !loaded && nowSets.some((s) => Number(s.reps) > 0);
-    if (!loaded && !repsOnly) continue;   // time, distance: Rule 6, no opinion
-
-    const kinds = loaded ? ['weight', 'volume', 'e1rm'] : ['reps'];
+    // Empty means time/distance only: Rule 6, the app has no opinion there.
+    const kinds = kindsFor(nowSets);
+    if (!kinds.length) continue;
 
     /* ⚠️ JUDGEMENT CALL — PER-SIDE DOUBLES VOLUME AND NOTHING ELSE.
      *

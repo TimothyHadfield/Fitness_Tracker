@@ -40,7 +40,14 @@
 // tab bar being redesigned may not 404 a URL (`#/calendar` kept its route
 // through three moves) and neither may this.
 
-import { store, social, demo } from './store.js';
+import { store, social, demo, activityByDate, todayISO } from './store.js';
+// ⚠️ ONE calendar, four doors. See `calendarSection` below and `ownCalendar`'s
+// own header — a second copy is the drift that function exists to prevent.
+import { ownCalendar } from './views-data.js';
+// 🆕 "What are my best lifts, ever?" — the question the app could not answer
+// until 2026-09-10. Pure; the screen only formats what it hands back.
+import { bestLifts } from './profile-records.js';
+import * as units from './units.js';
 import {
   el, screenShell, emptyState, chevron, setChildren, personFace, icon,
   // ⚠️ `helpDot` LEFT WITH THE SECOND COUNT on 2026-09-09. The one thing this
@@ -105,10 +112,12 @@ export async function MeView() {
 }
 
 async function fill(body) {
-  const [settings, sessions, state] = await Promise.all([
+  const [settings, sessions, state, activity] = await Promise.all([
     store.getSettings(),
     store.getSessions(),
     social.state().catch(() => ({ available: false, reason: 'offline' })),
+    // 🆕 THE CALENDAR LIVES HERE SINCE 2026-09-10 — see the block below.
+    activityByDate().catch(() => new Map()),
   ]);
 
   const workouts = sessions.length;
@@ -150,6 +159,113 @@ async function fill(body) {
       : state.visibility === 'public'
         ? el('div', { class: 'field-help', text: PUBLIC_NOTE })
         : null,
+
+    bestLiftsSection(sessions),
+    calendarSection(activity),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 YOUR BEST LIFTS — 2026-09-10, step 3 of the Data/Profile split.
+ *
+ * `js/personal-bests.js` has computed typed records since the finish screen
+ * shipped, but only ever for ONE session, answering "did this workout beat
+ * anything". Nothing in the app answered **"what are my best lifts, ever?"** —
+ * which is the most rewarding thing a profile can carry, and is exactly the
+ * kind of readout the UX review meant when it found that nothing a user can
+ * see ever grows.
+ *
+ * 🚨 THE MEASUREMENT LEADS AND THE ESTIMATE FOLLOWS, LABELLED — Rule 5, and it
+ * is the whole reason this returns two fields rather than one. The heaviest set
+ * you actually held is a fact; the best estimated 1RM is a model, and the two
+ * genuinely disagree (185×3 and 155×10 are different days). Collapsing them
+ * would throw that away; leading with the estimate would put an inference where
+ * a measurement belongs. The word "estimated" is the cue, never a colour.
+ *
+ * ⚠️ ORDERED BY DAYS TRAINED, NOT BY POUNDS. There is no honest ranking of a
+ * 405 deadlift against a 40 lateral raise — sorting by weight sorts by which
+ * movements load heavy, which is a property of the barbell rather than of the
+ * lifter (Rule 6). Days trained is what makes a lift *yours*.
+ *
+ * ⚠️ AND `days` IS PRINTED, because it is the honesty for a thin history: one
+ * afternoon on a new machine is a true best and must not read as a career one.
+ * ------------------------------------------------------------------ */
+function bestLiftsSection(sessions) {
+  const { lifts, total, shown, empty } = bestLifts(sessions);
+  if (empty) return null;
+
+  return el('div', { class: 'me-bests' },
+    el('div', { class: 'section-label', text: 'Your best lifts' }),
+    el('div', { class: 'list' }, ...lifts.map((l) => el('div', { class: 'row me-best' },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: l.name }),
+        el('div', { class: 'row-sub', text:
+          `${l.days} ${l.days === 1 ? 'day' : 'days'} · last ${fmtDateShort(l.lastDate)}` }),
+      ),
+      el('div', { class: 'me-best-nums' },
+        el('span', { class: 'me-best-top', text: bestText(l) }),
+        // 🚨 A SEPARATE LINE, AND THE WORD IS ON IT. An estimate beside a
+        // measurement with nothing to tell them apart is the one thing this
+        // app is not allowed to do.
+        l.estimatedMax && !l.sameSet
+          ? el('span', { class: 'me-best-est', text:
+              `${units.withUnit(Math.round(l.estimatedMax.value))} estimated max` })
+          : null,
+      ),
+    ))),
+    // Says what it is showing rather than implying it is everything.
+    total > shown
+      ? el('div', { class: 'field-help', text:
+          `The ${shown} lifts you have trained most, of ${total}.` })
+      : null,
+  );
+}
+
+/** The measured half, in the units the set was logged in. */
+function bestText(l) {
+  const b = l.best;
+  if (b.kind === 'reps') return `${b.reps} reps`;
+  return `${units.withUnit(b.weight)}${l.perSide ? '/side' : ''}`
+    + (b.reps ? ` × ${b.reps}` : '');
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 THE CALENDAR — 2026-09-10, and it is the first thing that made this
+ * screen worth having a tab for.
+ *
+ * Tim: *"The main profile section is looking really empty right now and the
+ * settings profile section is really crowded … I think showing the calendar as
+ * a main section was nice, but I think we can also display it in the data
+ * section in a good way (although it's not in a great place right now)."*
+ *
+ * 🚨 THE TWO HALVES OF THAT WERE ONE PROBLEM. This screen was empty because
+ * everything belonging on it already lived in Data, and Data was overfull for
+ * the same reason — six segments that physically did not fit. The line that
+ * separates them is what a screen ANSWERS: **Data is what your training MEANS**
+ * (Muscles, Volume, Graph, Bars, Research) and **Profile is what you DID**. A
+ * calendar is a record, not an analysis, so it is the first thing across.
+ *
+ * ⚠️ IT IS `ownCalendar()`, THE SAME FUNCTION THE OTHER THREE DOORS USE, and
+ * that is the whole reason this cost so little. Months, Years, the readout and
+ * the day links cannot drift from the Calendar screen's because there is only
+ * one of them. The one thing this door passes is `land: false` — see that
+ * function's header: jumping the scroller to the current month is right when
+ * the calendar IS the pane, and wrong here, where it would scroll the avatar
+ * and the stats off the top of the screen somebody just opened.
+ *
+ * ⚠️ AND `#/calendar` IS STILL A SCREEN. It has survived four moves without
+ * breaking a link and `#/day/<iso>` and `#/edit/<id>` hang off it, so a day
+ * opened from here still lands somewhere that stands up on its own.
+ * ------------------------------------------------------------------ */
+function calendarSection(activity) {
+  const host = el('div', { class: 'me-cal-host' });
+  const cal = ownCalendar(activity, todayISO(), { land: false });
+  // Painted after the node exists, exactly as the other three doors do it.
+  queueMicrotask(() => cal.paint(host));
+  return el('div', { class: 'me-cal' },
+    el('div', { class: 'section-label', text: 'Training history' }),
+    cal.top,
+    host,
   );
 }
 
