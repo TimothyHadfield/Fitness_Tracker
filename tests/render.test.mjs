@@ -1229,9 +1229,16 @@ ok(!data.querySelector('.rep-target'),
     await settle();
     ok(openAt() === 2, '⚠️ opening set 3 moves the controls into SET 3 — one set of numbers per set');
     ok(screen.querySelectorAll('.steppers').length === 1, 'and there is still only one of them');
+    /* 🔄 ROW 1 IS COMPARED, NOT ROW 0, SINCE 2026-09-12: set 1 held last time's
+       numbers, so it was RECORDED, so opening set 3 LOCKED it — and a locked
+       row's text is a <div>, not a disclosure. The lock is asserted beside it. */
     ok(rows()[2].querySelector('.set-pick').getAttribute('aria-expanded') === 'true'
-       && rows()[0].querySelector('.set-pick').getAttribute('aria-expanded') === 'false',
+       && rows()[1].querySelector('.set-pick').getAttribute('aria-expanded') === 'false',
        'the row is a disclosure, and says so — a screen reader is told which set is open');
+    ok(rows()[0].classList.contains('is-locked')
+       && rows()[0].querySelector('.set-lock').getAttribute('aria-label') === 'Unlock set 1',
+       '🔒 and set 1, which held last time\'s numbers, LOCKED when set 3 was opened — a set you '
+       + 'moved on from is shut until its padlock is tapped');
 
     /* ⚠️ A NUDGE MUST NOT REBUILD THE LIST, and this is the assertion that keeps
      * it that way. The old code re-rendered every row on every `onChange`, which
@@ -1764,14 +1771,47 @@ ok(!data.querySelector('.rep-target'),
   // which live in `.segmented.sub` — the topbar itself carries none.
   ok(dataSegs.length === 0,
      'and carries no cross-screen segments at all, so nothing here can light up for another tab');
+  /* 🔄 YEARS IS THE DEFAULT SINCE 2026-09-12, ~~"and opens on Months, which is
+     what it has always been"~~. Tim: *"make the year display the default for the
+     calendar in all scenarios."* His report was about the Profile tab, where the
+     calendar cannot be landed on arrival and Months therefore opened on the
+     earliest month drawn; the default is one variable for every door.
+
+     ⚠️ THIS IS THE FIRST TIME THE SWITCH IS TOUCHED IN THIS FILE, so this is the
+     one assertion that reads `calMode`'s INITIAL value — every later "opens on
+     Years" (the Profile block, the friend block) is reading whatever the block
+     before it left in memory. Mutation-checked 2026-09-12: flipping the
+     declaration back to 'months' fails this line and no other own-calendar line. */
+  ok(screen.querySelectorAll('.yr-grid').length >= 2 && !screen.querySelector('.cal-month'),
+     '🚨 opens on YEARS — a grid for this year and last, and no month blocks — the default on '
+     + 'every door since 2026-09-12');
+  ok(segs().find((b) => b.textContent === 'Years').getAttribute('aria-selected') === 'true',
+     'and the switch says so');
+
+  /* ---- Months, on a tap, lands on the current month ---- */
+  segs().find((b) => b.textContent === 'Months').click();
+  await settle();
   ok(screen.querySelectorAll('.cal-month').length > 0 && !screen.querySelector('.yr-grid'),
-     'and opens on Months, which is what it has always been');
+     'tapping Months draws the month blocks and drops the grids');
+  {
+    const current = screen.querySelector('.cal-month[data-current-month]');
+    ok(current && !current.nextElementSibling,
+       '⚠️ the current month is the LAST block, so earlier months are reached by scrolling UP — '
+       + 'Tim: "the viewer can scroll up for earlier months"');
+    /* ⚠️ THE STRUCTURE, NOT THE PIXELS. jsdom lays nothing out — every rect is
+       zero and `scrollTop` never moves — so whether the heading actually came to
+       rest at the top of the pane is the browser's to show (it was measured on
+       2026-08-21, when the clamp was found). What can be pinned is which section
+       the scroller was AIMED at: `landOnCurrentMonth` stamps it. */
+    ok(current && current.dataset.landed === 'true',
+       '🚨 and the scroller was aimed at it — the tap landed on the current month');
+  }
 
   segs().find((b) => b.textContent === 'Years').click();
   await settle();
 
   ok(screen.querySelectorAll('.yr-grid').length >= 2,
-     'switching to Years draws a grid for this year and last');
+     'switching back to Years draws a grid for this year and last');
   ok(!screen.querySelector('.cal-month'), 'and the month blocks are gone rather than stacked underneath');
 
   /* ⚠️ THE REGRESSION THIS EXISTS FOR. The first version of the switch rebuilt
@@ -5109,7 +5149,14 @@ ok(!data.querySelector('.rep-target'),
   const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
   const sheetRows = () => [...document.querySelectorAll('.sheet .reorder-row')];
   const sheetNames = () => sheetRows().map((r) => r.querySelector('.row-title').textContent.trim());
-  const arrow = (i, dir) => sheetRows()[i].querySelectorAll('.move-btns button')[dir === 'up' ? 0 : 1];
+  // 🔄 The ▲▼ buttons are gone (2026-09-12); the grip's ArrowUp / ArrowDown is
+  // the keyboard path. `.click()` presses the key, `.disabled` is "at an end" —
+  // so every assertion below that drove the arrows drives the keys unchanged.
+  const arrow = (i, dir) => ({
+    disabled: dir === 'up' ? i === 0 : i === sheetRows().length - 1,
+    click: () => sheetRows()[i].querySelector('.grip').dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: dir === 'up' ? 'ArrowUp' : 'ArrowDown', bubbles: true, cancelable: true })),
+  });
   const order = () => sheetNames().join(' > ');
 
   /* ⚠️ THREE LIFTS NOTHING ELSE IN THIS FILE HAS TOUCHED, and that is not
@@ -5156,13 +5203,19 @@ ok(!data.querySelector('.rep-target'),
      'and says what has been recorded against each — the thing a reorder must not lose');
   ok(sheetRows()[0].classList.contains('is-current'),
      'and marks the one you are standing on');
-  ok(arrow(0, 'up').disabled && arrow(2, 'down').disabled,
-     '⚠️ the arrows at the ends are disabled rather than absent — a control that silently does '
-     + 'nothing is the fault the five inert back buttons taught this project');
-  ok(sheetRows().every((r) => (r.querySelector('.grip').getAttribute('aria-label') || '').includes('arrows')),
-     '⚠️ and the drag handle NAMES the arrows beside it, because a drag has no keyboard '
-     + 'equivalent and a handle that only says "reorder" is a promise it cannot keep to '
-     + 'somebody who is not using a finger');
+  /* 🔄 ~~"the arrows at the ends are disabled rather than absent"~~ — THE ARROWS
+     ARE GONE, 2026-09-12, Tim: *"the up and down arrows on the right side of the
+     exercises on this display are useless now that this is a drag feature now.
+     Remove them."* The property that assertion protected — no control that
+     silently does nothing — survives in the grip, which takes the arrow KEYS and
+     says so; the `arrow()` shim above drives that path. */
+  ok(sheetRows().every((r) => !r.querySelector('.move-btns')),
+     '🔄 no ▲▼ on the rows — Tim: "the up and down arrows … are useless now that this is a '
+     + 'drag feature now. Remove them."');
+  ok(sheetRows().every((r) => (r.querySelector('.grip').getAttribute('aria-label') || '').includes('arrow keys')),
+     '⚠️ and the drag handle NAMES its keyboard path — a drag has no keyboard equivalent, so '
+     + 'the grip takes ArrowUp/ArrowDown itself and says so, rather than promising a reorder '
+     + 'it cannot give somebody who is not using a finger');
 
   /* ---- move the exercise you are ON, with a set already recorded ---- */
   arrow(0, 'down').click();
@@ -5277,6 +5330,333 @@ ok(!data.querySelector('.rep-target'),
      + 'down to');
   localStorage.removeItem(DRAFT);
   killSheets();
+}
+
+/* ============ A. a set locks when you move on from it (2026-09-12) ============
+ *
+ * Tim: *"when a user moves on from a set, automatically 'lock' the set they
+ * just finished which doesn't allow the user to change any measurements for
+ * that set until they unlock it. The lock adjustments will be a visual lock on
+ * the right side of the set which animates being locked and unlocked when you
+ * click on it."*
+ *
+ * ⚠️ TWO LIFTS NOTHING ELSE IN THE SUITE TOUCHES (Pendlay Row, Meadows Row),
+ * so every set opens PREFILLED and the first assertion — a suggestion never
+ * locks — is about the feature rather than the fixture.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
+  const w = await store.saveWorkout({
+    name: 'Lock day',
+    exercises: [
+      { exerciseId: byName('Pendlay Row').id, sets: 3, notes: '' },
+      { exerciseId: byName('Meadows Row').id, sets: 2, notes: '' },
+    ],
+  });
+  localStorage.removeItem(DRAFT);
+  let s = await mount(SessionView(w.id));
+  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  const lockOf = (i) => rows()[i].querySelector('.set-lock');
+  const openAt = () => { const o = s.querySelector('.set-open'); return o ? rows().indexOf(o.closest('.set-item')) : -1; };
+  const footer = (re) => [...s.querySelectorAll('.session-footer button')]
+    .find((b) => re.test(b.textContent) || re.test(b.getAttribute('aria-label') || ''));
+
+  /* ---- 1. a set nobody did never locks ---- */
+  ok(openAt() === 0, 'set 1 opens first, as it always has');
+  ok(Boolean(lockOf(0)) && lockOf(0).classList.contains('is-idle'),
+     '⚠️ the open row carries a padlock, INVISIBLE while nothing has been typed — a lock offered on '
+     + 'a set with nothing in it would be a control that does nothing');
+  click(rows()[1].querySelector('.set-vals'));
+  await settle();
+  ok(openAt() === 1 && !rows()[0].classList.contains('is-locked'),
+     '🚨 moving on from an UNTOUCHED set locks nothing — its 10 reps are the app\'s suggestion, and '
+     + 'locking that would put a padlock on a number nobody typed');
+
+  /* ---- 2. the first number reveals the padlock in place ---- */
+  click(rows()[0].querySelector('.set-vals'));
+  await settle();
+  const row0 = rows()[0];
+  type(s.querySelector('.set-open .step-value'), 185);
+  await settle();
+  ok(rows()[0] === row0 && !lockOf(0).classList.contains('is-idle'),
+     '⚠️ the first number typed reveals the padlock IN PLACE — same node, no rebuild, nothing torn '
+     + 'down under the finger');
+  ok(lockOf(0).getAttribute('aria-label') === 'Lock set 1',
+     'and while the set is open its padlock is the way to lock it by hand, and says so');
+
+  /* ---- 3. moving on locks ---- */
+  click(rows()[1].querySelector('.set-vals'));
+  await settle();
+  ok(rows()[0].classList.contains('is-locked') && openAt() === 1,
+     '🚨 moving on from a RECORDED set LOCKS it, and the set you moved to is open');
+  ok(lockOf(0).classList.contains('is-locked') && lockOf(0).getAttribute('aria-label') === 'Unlock set 1',
+     'the padlock is shut and named for what tapping it does');
+  ok(lockOf(0).classList.contains('lock-shuts'),
+     '⚠️ and it was rebuilt wearing the one-shot class that plays the shackle closing (Rule 7 — the '
+     + 'one movement, on the row you LEFT, beside the logging path rather than on it)');
+  ok(rows()[0].querySelector('.set-pick').tagName !== 'BUTTON',
+     '🔒 a locked row is NOT a control — not a disabled button, not aria-disabled: its text is text');
+  ok(!rows()[0].querySelector('.set-del'),
+     'and it cannot be deleted — delete is not rendered rather than rendered refusing');
+  ok(lockOf(0).parentElement === rows()[0].querySelector('.set-pick').parentElement,
+     '⚠️ the padlock is a SIBLING of .set-pick, never its child (a button in a button is invalid HTML)');
+  ok(lockOf(0).querySelectorAll('svg').length === 2 && Boolean(lockOf(0).querySelector('svg.lock-shackle')),
+     '⚠️ two <svg>s, one glyph — the shackle is its own path so CSS can swing it');
+  ok(draft().entries[0].sets[0].locked === true,
+     '🔒 the lock lives on the DRAFT set, so a workout put down and picked up keeps it');
+
+  /* ---- 4. the flash is a one-shot; a locked row ignores taps ---- */
+  click(rows()[1].querySelector('.set-pick'));       // collapse set 2 → a re-render
+  await settle();
+  ok(rows()[0].classList.contains('is-locked') && !lockOf(0).classList.contains('lock-shuts'),
+     '⚠️ the next render does NOT replay the closing — the one-shot was spent by the render that '
+     + 'painted it');
+  click(rows()[0].querySelector('.set-pick'));
+  await settle();
+  ok(openAt() === -1 && rows()[0].classList.contains('is-locked'),
+     'tapping a locked row opens nothing — the padlock is the one way in');
+
+  /* ---- 5. the padlock unlocks AND opens; and locks again by hand ---- */
+  lockOf(0).click();
+  await settle();
+  ok(openAt() === 0 && !rows()[0].classList.contains('is-locked'),
+     '🚨 tapping the padlock UNLOCKS the set and OPENS it — the only reason to unlock is to change it');
+  ok(lockOf(0).getAttribute('aria-label') === 'Lock set 1' && lockOf(0).classList.contains('lock-opens'),
+     'the open padlock is named for locking, and plays the shackle opening');
+  ok(draft().entries[0].sets[0].locked === undefined, 'and the draft no longer carries the lock');
+  lockOf(0).click();
+  await settle();
+  ok(rows()[0].classList.contains('is-locked') && openAt() === -1,
+     'tapping the open padlock locks by hand and shuts the row');
+
+  /* ---- 6. leaving the exercise locks the set you were on, and only it ---- */
+  /* ⚠️ SET 2 IS ALREADY LOCKED, and that is fill-on-open (2026-08-24) meeting
+   * the padlock: opening set 2 in step 3 copied set 1's 185 into it, a filled
+   * set is a recorded one everywhere in this app, and unlocking set 1 in step
+   * 5 was moving on from it. Nothing new is being saved that was not saved
+   * before — the padlock makes the copy VISIBLE where it used to be silent. */
+  ok(rows()[1].classList.contains('is-locked'),
+     '⚠️ set 2, filled from set 1 the moment it was opened, locked when set 1 was unlocked — a '
+     + 'filled set is a recorded set, and the padlock shows the copy that used to be saved silently');
+  lockOf(1).click();
+  await settle();
+  ok(openAt() === 1, 'its padlock opens it');
+  type(s.querySelector('.set-open .step-value'), 135);
+  await settle();
+  footer(/Next exercise/).click();
+  await settle();
+  ok(draft().entries[0].sets[1].locked === true && draft().entries[0].sets[2].locked !== true,
+     '🚨 Next locks the set you were ON and nothing else — set 3 was never done and stays free');
+  footer(/Previous/).click();
+  await settle();
+  ok(openAt() === -1 && rows()[1].classList.contains('is-locked') && rows()[0].classList.contains('is-locked'),
+     '⚠️ coming back with Previous finds both shut and NOTHING open — the one state in which "exactly '
+     + 'one set is always open" is false, and it is honest');
+
+  /* ---- 7. the locks survive leaving the workout open ---- */
+  s = await mount(SessionView(w.id));
+  ok(rows()[0].classList.contains('is-locked') && rows()[1].classList.contains('is-locked')
+     && !rows()[2].classList.contains('is-locked'),
+     '🔒 re-opening the runner from the draft keeps every lock exactly where it was');
+
+  /* ---- 8. `locked` never reaches storage ---- */
+  footer(/Next exercise/).click();
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle();
+  await saveNow();
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  ok(Boolean(saved) && saved.entries[0].sets.length === 2,
+     `the session saves with the two recorded sets (${saved && saved.entries[0].sets.length})`);
+  ok(Boolean(saved) && saved.entries.every((e) => e.sets.every((st) => !('locked' in st))),
+     '🔒 and `locked` is DROPPED at save, like `prefilled` — it is a fact about the screen, not the training');
+  localStorage.removeItem(DRAFT);
+}
+
+/* ============ B. a drop locks with its set — one hard set (2026-09-12) ============ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  const w = await store.saveWorkout({
+    name: 'Lock drop day',
+    exercises: [{ exerciseId: byName('Belt Squat').id, sets: 2, notes: '', setType: 'drop', minis: 1 }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  type(s.querySelector('.set-open .step-value'), 200);
+  await settle();
+  [...s.querySelectorAll('button')].find((b) => /Strip the weight/.test(b.textContent)).click();
+  await settle();
+  ok(rows().length === 3 && rows()[1].classList.contains('set-drop') && Boolean(rows()[1].querySelector('.set-open')),
+     'set 1 has a drop under it, and the drop is open');
+  ok(Boolean(rows()[1].querySelector('.set-lock-gap')) && !rows()[1].querySelector('.set-lock'),
+     '⚠️ a drop has no padlock of its own — a spacer keeps delete in its column');
+  ok(!rows()[0].classList.contains('is-locked'),
+     '⚠️ opening a DROP of the set you are on is not moving on — the set stays unlocked');
+  type(s.querySelector('.set-open .step-value'), 160);
+  await settle();
+  click(rows()[2].querySelector('.set-vals'));          // set 2
+  await settle();
+  ok(rows()[0].classList.contains('is-locked') && rows()[1].classList.contains('is-locked'),
+     '🚨 moving to set 2 locks set 1 AND its drop — one hard set, one lock (D23)');
+  ok(!rows()[1].querySelector('.set-del') && rows()[1].querySelector('.set-pick').tagName !== 'BUTTON',
+     'and the locked drop can be neither opened nor deleted');
+  rows()[0].querySelector('.set-lock').click();
+  await settle();
+  ok(!rows()[1].classList.contains('is-locked') && Boolean(rows()[1].querySelector('.set-pick').tagName === 'BUTTON'),
+     'unlocking the set frees its drop with it');
+  localStorage.removeItem(DRAFT);
+}
+
+/* ============ C. locks are per person and never broadcast (2026-09-12) ============ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
+  const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
+  const w = await store.saveWorkout({
+    name: 'Lock joint day',
+    exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 2, notes: '' }],
+  });
+  killSheets();
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  s.querySelector('.person-add').click();
+  await settle(); await settle();
+  [...document.querySelector('.sheet').querySelectorAll('button')].find((b) => /Someone new/.test(b.textContent)).click();
+  await settle();
+  const inner = [...document.querySelectorAll('.sheet')].pop();
+  inner.querySelector('input').value = 'Rae';
+  [...inner.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Add').click();
+  await settle(); await settle();
+  [...s.querySelectorAll('.person-chip')].find((b) => b.textContent.trim() === 'You').click();
+  await settle();
+  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  type(s.querySelector('.set-open .step-value'), 155);
+  await settle();
+  click(rows()[1].querySelector('.set-vals'));
+  await settle();
+  const rae = (draft().others || []).find((o) => o.name === 'Rae');
+  ok(draft().forName === null && draft().entries[0].sets[0].locked === true,
+     'the owner\'s set 1 locked when the owner moved on');
+  ok(Boolean(rae) && rae.entries[0].sets[0].locked !== true,
+     '🚨 and Rae\'s did NOT — a lock is per person\'s own sets and is never broadcast: the app knows '
+     + 'whose steppers moved on and knows nothing about whether Rae has finished');
+  killSheets();
+  localStorage.removeItem(DRAFT);
+}
+
+/* ============ D. the row follows the finger (2026-09-12) ============
+ *
+ * Tim: *"It automatically locks into a valid position in the list, and doesn't
+ * follow the user's finger or mouse smoothly … it should follow the exact
+ * location of the user's selection and when the user releases their finger,
+ * it will automatically take the nearest valid position. Also the up and down
+ * arrows … are useless now that this is a drag feature now. Remove them."*
+ *
+ * ⚠️ jsdom measures every rectangle as zero, so this block STUBS the rows'
+ * `getBoundingClientRect` (56px rows, stacked) before pressing. The drag reads
+ * geometry once at pointerdown, which is what makes a stub honest here: the
+ * assertions are about what the code does with a geometry it was given, and
+ * the finger itself is what the browser pass checks.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
+  const sheetRows = () => [...document.querySelectorAll('.sheet .reorder-row')];
+  const order = () => sheetRows().map((r) => r.querySelector('.row-title').textContent.trim()).join(' > ');
+  const H = 56;
+  const stubRects = () => sheetRows().forEach((r, i) => {
+    r.getBoundingClientRect = () => ({ top: i * H, bottom: i * H + H, height: H, left: 0, right: 0, width: 0 });
+  });
+  const pointer = (type, node, clientY) => node.dispatchEvent(
+    new window.PointerEvent(type, { clientY, button: 0, pointerId: 1, bubbles: true, cancelable: true }));
+
+  killSheets();
+  const w = await store.saveWorkout({
+    name: 'Drag day',
+    exercises: [
+      { exerciseId: byName('Sissy Squat').id, sets: 1, notes: '' },
+      { exerciseId: byName('Cossack Squat').id, sets: 1, notes: '' },
+      { exerciseId: byName('Meadows Row').id, sets: 1, notes: '' },
+    ],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  [...s.querySelectorAll('.session-actions .pill-action')][2].click();
+  await settle();
+  ok(order() === 'Sissy Squat > Cossack Squat > Meadows Row', `the sheet lists today's exercises (${order()})`);
+
+  /* ---- the arrows are gone; the handle names its keyboard path ---- */
+  ok(sheetRows().every((r) => !r.querySelector('.move-btns')),
+     '🔄 no ▲▼ on any row — "useless now that this is a drag feature now. Remove them."');
+  ok(sheetRows().every((r) => r.querySelector('.grip').tagName === 'BUTTON'
+       && /arrow keys/.test(r.querySelector('.grip').getAttribute('aria-label') || '')),
+     '⚠️ the grip is still a real named control, and its name says the arrow keys move the row — the '
+     + 'keyboard path the buttons used to be');
+
+  /* ---- a short drag follows the pointer exactly and moves nothing ---- */
+  stubRects();
+  let grip = sheetRows()[0].querySelector('.grip');
+  pointer('pointerdown', grip, 28);
+  pointer('pointermove', grip, 38);
+  ok(sheetRows()[0].style.transform === 'translateY(10px)' && sheetRows()[0].classList.contains('is-dragging'),
+     '🚨 the dragged row is a translateY of EXACTLY the pointer\'s travel — 10px of finger is 10px of row');
+  ok(sheetRows()[1].style.transform === '' && sheetRows()[2].style.transform === '',
+     'and ten pixels passes nobody\'s midpoint, so no other row moves');
+  pointer('pointerup', grip, 38);
+  await settle();
+  ok(order() === 'Sissy Squat > Cossack Squat > Meadows Row',
+     `letting go short of the next midpoint snaps the row back to where it was (${order()})`);
+  ok(sheetRows().every((r) => r.style.transform === '' && !r.classList.contains('is-dragging')),
+     'and every row is back at rest');
+
+  /* ---- past the next row's midpoint: that row slides out of the way ---- */
+  stubRects();
+  grip = sheetRows()[0].querySelector('.grip');
+  pointer('pointerdown', grip, 28);
+  pointer('pointermove', grip, 90);
+  ok(sheetRows()[0].style.transform === 'translateY(62px)',
+     'the row is under the finger, 62px down');
+  ok(sheetRows()[1].style.transform === `translateY(-${H}px)` && sheetRows()[2].style.transform === '',
+     '🚨 the row it passed slides UP one row height to show the gap it will take (Rule 7: the row you '
+     + 'drag pushes the rest), and the row it has not reached stays put');
+  ok(order() === 'Sissy Squat > Cossack Squat > Meadows Row',
+     '⚠️ and the DOM is UNTOUCHED mid-drag — the order is a fact about release, not about the finger');
+  pointer('pointerup', grip, 90);
+  await settle();
+  ok(order() === 'Cossack Squat > Sissy Squat > Meadows Row',
+     `on release it takes the nearest valid slot (${order()})`);
+  ok(/Sissy Squat/.test(s.querySelector('.session-ex-name').textContent),
+     '⚠️ and you are still on the exercise you were doing — the commit is the same applyOrder the '
+     + 'arrows used, re-pointed by entry object');
+  ok(sheetRows().every((r) => r.style.transform === ''),
+     'the rebuilt rows carry no transform — the settle is a transition that ends at rest');
+
+  /* ---- the keyboard path ---- */
+  sheetRows()[1].querySelector('.grip').dispatchEvent(
+    new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+  await settle();
+  ok(order() === 'Sissy Squat > Cossack Squat > Meadows Row',
+     `ArrowUp on the grip moves the row up one (${order()})`);
+  ok(document.activeElement === sheetRows()[0].querySelector('.grip'),
+     '⚠️ and focus follows the row onto its new grip — the list was rebuilt under the key');
+  sheetRows()[0].querySelector('.grip').dispatchEvent(
+    new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+  await settle();
+  ok(order() === 'Sissy Squat > Cossack Squat > Meadows Row', 'ArrowUp at the top does nothing');
+  killSheets();
+  localStorage.removeItem(DRAFT);
 }
 
 /* ============ a friend's face, everywhere they appear (2026-08-31) ============
@@ -5842,6 +6222,126 @@ ok(!data.querySelector('.rep-target'),
 }
 
 /* ================================================================== *
+ * 🆕 THE SAME TWO CAPTIONS ON EVERY SET OF A WORKOUT — 2026-09-11
+ *
+ * Tim: *"I want you to do the exact same thing for a regular workout by just
+ * displaying the tiny '_% of estimated max' and 'maybe __ reps to failure'
+ * above the weight and reps. This will help the user estimate how much weight
+ * they should put on during a set."*
+ *
+ * 🚨 THE LOAD-BEARING ASSERTION IS THE GUEST'S, and the fixture is built so it
+ * can fail: the OWNER has a rowing history and the GUEST has none, on the same
+ * bar, in the same workout. A caption computed from the owner's ratings and
+ * shown under the guest's name would be the owner's max wearing the guest's
+ * name — the cross-prescription 0e exists to forbid — and a version that read
+ * `muscleRatings()` once for everybody would pass every other assertion here.
+ * ================================================================== */
+{
+  const { store, clearReadCache } = await import(BASE + 'store.js');
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const row = byName('Barbell Row');
+  const dbRow = byName('Dumbbell Row');
+  const session = (date, ex, weight, reps) => ({
+    id: `rc-${date}-${ex.id}`, date, workoutName: 'Pull',
+    entries: [{ exerciseId: ex.id, exerciseName: ex.name, sets: [{ weight, reps }] }],
+  });
+  await store.importAll({
+    sessions: [
+      session('2026-08-10', row, 135, 8), session('2026-08-17', row, 140, 8),
+      session('2026-08-12', dbRow, 60, 8), session('2026-08-19', dbRow, 65, 8),
+    ],
+  });
+  clearReadCache('seeded rows directly through importAll');
+
+  const w = await store.saveWorkout({
+    name: 'Pull day',
+    exercises: [
+      { exerciseId: row.id, sets: 2, notes: '' },
+      { exerciseId: byName('Plank').id, sets: 1, notes: '' },
+    ],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  // The ratings walk is not awaited by the screen; poll for the caption
+  // rather than sleeping a fixed number of ticks (the benchmark block's rule).
+  const capsOf = (node) => [...node.querySelectorAll('.set-open .step-est')];
+  for (let i = 0; i < 120 && !capsOf(s).some((c) => c.textContent.trim()); i++) await settle();
+
+  const caps = capsOf(s);
+  ok(caps.length === 2, `the open set carries two caption slots, weight and reps (${caps.length})`);
+  const capText = () => capsOf(s).map((c) => c.textContent.replace(/\s+/g, ' ').trim());
+  ok(/%\s*of your estimated max/.test(capText()[0]),
+     `the weight says what share of the estimate it is (${capText()[0]})`);
+  ok(/maybe .* to failure/.test(capText()[1]),
+     `and the reps say roughly how many it allows, worded as a guess (${capText()[1]})`);
+
+  /* ⚠️ LIVE: a nudge repaints them, in place, without rebuilding the row. */
+  const before = capText()[0];
+  const weightInput = s.querySelector('.set-open .step-value');
+  weightInput.value = '95';
+  weightInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  await settle();
+  ok(capText()[0] !== before && /%/.test(capText()[0]),
+     `a lighter weight moves the percentage (${before} → ${capText()[0]})`);
+  ok(s.querySelector('.set-open .step-value') === weightInput,
+     '⚠️ and the input being typed into survived — the caption repaints, the row does not rebuild');
+
+  /* ⚠️ NO ARITHMETIC ON NOTHING: an empty field gets an empty caption. */
+  weightInput.value = '0';
+  weightInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  await settle();
+  ok(capText().every((t) => t === ''),
+     '⚠️ and at zero both are EMPTY — "0 % of your estimated max" would be a reading of nothing');
+
+  /* ⚠️ Only a lift with a weight AND reps. A plank has neither, so its open
+     set has no slot at all rather than an empty one. */
+  [...s.querySelectorAll('.session-footer button')].find((b) => /Next/.test(b.textContent)).click();
+  await settle();
+  ok(capsOf(s).length === 0, 'a timed exercise (plank) gets no caption slot at all');
+  [...s.querySelectorAll('.session-footer button')].find((b) => /Previous/.test(b.getAttribute('aria-label') || '')).click();
+  await settle();
+
+  /* 🚨 PER PERSON. The guest has no rowing history, so the guest gets nothing —
+     never the owner's number. */
+  await store.savePerson({ name: 'Nobody Yet' });
+  [...s.querySelectorAll('.person-chip')].find((b) => /Add a person/.test(b.textContent)).click();
+  await settle(); await settle();
+  [...document.querySelector('.sheet').querySelectorAll('button')]
+    .find((b) => /Nobody Yet/.test(b.textContent)).click();
+  for (let i = 0; i < 20; i++) await settle();
+  const guestWeight = s.querySelector('.set-open .step-value');
+  guestWeight.value = '135';
+  guestWeight.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  for (let i = 0; i < 20; i++) await settle();
+  ok(capsOf(s).every((c) => c.textContent.trim() === ''),
+     '🚨 the GUEST sees no caption at 135 lb — their ratings are built from THEIR history, which is '
+     + 'empty, and the owner\'s "% of max" must never appear under somebody else\'s name');
+  // Vacuity guard: back on the owner, the same weight has a caption again. The
+  // owner is always the FIRST chip on the bar (`forName === null` renders first).
+  [...s.querySelectorAll('.person-chip')][0].click();
+  for (let i = 0; i < 20; i++) await settle();
+  /* 🔒 SINCE 2026-09-12 THE OWNER'S SET 1 IS LOCKED HERE — Next/Previous above
+     moved on from it — so nothing is open until its padlock is tapped. That is
+     the lock feature doing its job in the middle of another feature's test. */
+  ok(Boolean(s.querySelector('.set-list .set-item.is-locked')),
+     '🔒 the owner\'s set 1 is locked after Next/Previous, so nothing is open until it is unlocked');
+  s.querySelector('.set-lock.is-locked').click();
+  await settle();
+  const ownerWeight = s.querySelector('.set-open .step-value');
+  ownerWeight.value = '135';
+  ownerWeight.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  for (let i = 0; i < 20; i++) await settle();
+  ok(/%/.test(capText()[0] || ''),
+     'while the OWNER, on the same bar, still gets one — the guest\'s blank is a decision, not a '
+     + 'broken caption');
+
+  localStorage.removeItem(DRAFT);
+  await store.clearAll();
+}
+
+/* ================================================================== *
  * 🚨 PRIVATE OR PUBLIC, A FRIEND'S MUSCLE PANEL, AND TWO BODIES SIDE BY SIDE
  *   — 2026-09-03
  *
@@ -6069,14 +6569,42 @@ ok(!data.querySelector('.rep-target'),
     ok(/most recent sixty sessions/.test(calText),
        '🚨 their Calendar says it is a WINDOW rather than a history — sixty published sessions, so '
        + 'an empty month may mean they rested or may mean it fell off the end');
-    /* ⚠️ AND ITS DAYS GO NOWHERE. `#/day/<iso>` is MY training for that date;
-       linking there from their calendar would open the right day for the wrong
-       person and look like it had worked. */
+    /* 🔄 THEIR CALENDAR OPENS ON YEARS SINCE 2026-09-12 — Tim: *"make the year
+       display the default for the calendar in all scenarios (including viewing
+       a friend's calendar)"*. ⚠️ THIS IS THE FIRST FRIEND CALENDAR THIS FILE
+       PAINTS, so it is the one assertion reading `friendCalMode`'s INITIAL
+       value; the friend block at the end of the file asserts the same opening,
+       but by then it is reading what this block restores before it leaves.
+       Mutation-checked 2026-09-12: flipping the declaration back to 'months'
+       fails this line. */
+    const theirSeg = (label) => [...fr.querySelectorAll('.cal-modes .seg')]
+      .find((b) => b.textContent === label);
+    ok(fr.querySelectorAll('.yr-grid').length > 0 && !fr.querySelector('.cal-month')
+       && theirSeg('Years').getAttribute('aria-selected') === 'true',
+       '🚨 and it opens on YEARS, like every other door — the sixty-session caveat is on the screen '
+       + 'in that view, which is where it is needed; opening one tap away from it was a hedge');
+
+    /* ⚠️ AND ITS DAYS GO NOWHERE — in Months, which is now the tap away.
+       `#/day/<iso>` is MY training for that date; linking there from their
+       calendar would open the right day for the wrong person and look like it
+       had worked. */
+    theirSeg('Months').click();
+    await settle();
     const calCells = [...fr.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
-    ok(calCells.length > 0, 'and it draws day cells');
+    ok(calCells.length > 0, 'and, on Months, it draws day cells');
     ok(calCells.every((c) => c.tagName.toLowerCase() !== 'button'),
        '🚨 none of which is a button — there is no screen for one of their days, and a control that '
        + 'does nothing takes focus and is announced as a control');
+    /* Same mechanism as my own calendar: the pane on their page is the Data
+       pane, `land` is on, and the tap aims it at the current month. Structure
+       only — see the Calendar block for what a browser still has to show. */
+    ok(Boolean(fr.querySelector('.cal-month[data-current-month][data-landed]')),
+       '🚨 and tapping Months aimed the scroller at the CURRENT month on their page too');
+    /* ⚠️ PUT THEIR SWITCH BACK ON YEARS, the default, before leaving:
+       `friendCalMode` is module state and the last block in this file asserts
+       their page opens on it. */
+    theirSeg('Years').click();
+    await settle();
 
     /* 🚨 AND BROWSING THEIR TABS MUST NOT MOVE MINE. `graphMode` is module state
      * — the tab my own Data screen opens on — and a friend's page keeping its
@@ -7325,10 +7853,13 @@ ok(!data.querySelector('.rep-target'),
          estimate line has something to say. */
     const bench = byName('Barbell Bench Press');
     const barbellRow = byName('Barbell Row');
+    const dbCurl = byName('Dumbbell Curl');
     const days = [
       ['2026-08-11', bench, { weight: 185, reps: 5 }],
       ['2026-08-12', bench, { weight: 165, reps: 10 }],
       ['2026-08-13', barbellRow, { weight: 225, reps: 5 }],
+      // 🔄 A NON-CORE lift, 2026-09-12, so "Other lifts" has something to hold.
+      ['2026-08-14', dbCurl, { weight: 40, reps: 10 }],
     ];
     for (const [date, ex, set] of days) {
       await store.saveSession({
@@ -7340,27 +7871,110 @@ ok(!data.querySelector('.rep-target'),
     const me = await mount(MeRouteView(''));
     await settle();
     ok(Boolean(me.querySelector('.me-bests')), 'Your best lifts renders on the Profile tab (step 3)');
-    const bests = [...me.querySelectorAll('.me-best')];
-    ok(bests.length === 2, `one row per lift trained (${bests.length})`);
-    /* ⚠️ ORDERED BY DAYS TRAINED, NOT BY POUNDS — Rule 6. There is no honest
-       ranking of a 225 row against a 185 bench, so the list is ordered by the
-       thing that makes a lift YOURS, and the heavier one-day lift does not lead
-       because it is heavier. */
-    const lead = bests.length ? text(bests[0]) : '';
-    ok(/Barbell Bench Press/.test(lead) && /2 days/.test(lead),
-       '⚠️ led by the lift trained on the most DAYS, with the day count printed beside it — the '
-       + 'heavier lift is second, which is the half a weight-sorted list would get wrong');
-    /* 🚨 RULE 5: the measured set leads and the estimate is labelled in words. */
-    ok(/185/.test(lead), '🚨 the MEASURED set leads — 185 × 5 is a fact');
-    ok(/227 lbs estimated max/.test(lead),
-       '🚨 and the modelled number is under it carrying the WORD "estimated" — off a different '
-       + 'set (165 × 10), which is the case where saying both is worth the line');
+
+    /* 🔄 RANKED SINCE 2026-09-12 — Tim: *"display the core lifts, and then have
+       'other lifts' in an expandable section below it … just show the weight of
+       an estimated 1RM for each of these, and show the confidence below it …
+       colorize the number based on where that measurement puts that user among
+       people like them … Order the core lifts from highest ranking exercise
+       (beginner-elite) to lowest."* ~~The old section led by DAYS TRAINED and
+       printed the measured set first~~ — both assertions are inverted below on
+       purpose, and the measured set survives in the sub-line (Rule 5's anchor).
+
+       ⚠️ THE FIXTURE DISCRIMINATES THE ORDERING: the bench has MORE days (2)
+       and the row is a higher LEVEL (225 × 5 on a 205 median beats 185 × 5 /
+       165 × 10 on a 225 median by a whole band), so days-first and level-first
+       put a different lift on top. */
+    const coreRows = [...me.querySelectorAll('.me-bests > .list > .me-best')];
+    ok(coreRows.length === 8, `the core EIGHT are always listed, trained or not (${coreRows.length})`);
+    const coreNames = coreRows.map((r) => (r.querySelector('.row-title') || {}).textContent || '');
+    const iRow = coreNames.findIndex((n) => /^Barbell Row$/.test(n));
+    const iBench = coreNames.findIndex((n) => /^Barbell Bench Press$/.test(n));
+    ok(iRow >= 0 && iBench >= 0 && iRow < iBench,
+       `🔄 ordered by LEVEL, highest first — the row (one day, higher band) is above the bench (two `
+       + `days, lower band), which a days-first list gets backwards (${coreNames.join(' | ')})`);
+    ok(coreRows.filter((r) => r.querySelector('.me-best-none')).every((r) =>
+         coreRows.indexOf(r) > Math.max(iRow, iBench)),
+       'and the core lifts with no number sit after every ranked one, each saying why');
+
+    const benchRow = coreRows[iBench];
+    const benchTop = benchRow.querySelector('.me-best-top');
+    ok(Boolean(benchTop) && /lbs/.test(benchTop.textContent) && /227/.test(benchTop.textContent),
+       `🚨 the number on a recorded lift is its ESTIMATED 1RM (${benchTop && benchTop.textContent}), `
+       + 'off its own best set (165 × 10 → 227) rather than the heaviest set');
+    const lvClasses = [...benchTop.classList].filter((c) => /^lv-text-/.test(c));
+    ok(lvClasses.length === 1,
+       `🚨 coloured by LEVEL through the ramp's own chip class, exactly one (${lvClasses.join(',')})`);
+    ok(/confidence/.test(text(benchRow)) && /Intermediate|Novice|Proficient|Beginner|Advanced|Expert|Elite/.test(text(benchRow)),
+       '🚨 with the confidence band AND the level NAME in words under it — colour is never the only carrier');
+    ok(/185 lbs × 5/.test(text(benchRow)),
+       '🚨 and the measured set it rests on is printed in the sub-line — Rule 5\'s anchor stays on the row');
+    ok(/Estimated one-rep maxes/.test(text(me)) && /who lift/.test(text(me)),
+       'the section says once that every figure is an estimate, and names the comparison group');
+    ok(!/\b(weak|strong)\b/i.test(text(me.querySelector('.me-bests'))),
+       '🛑 and passes no verdict — band names and level names only (Rule 6)');
+
+    /* Other lifts: a real disclosure, closed, with the count on it. */
+    const other = me.querySelector('details.me-other');
+    ok(Boolean(other) && other.querySelector('summary'),
+       'the non-core lifts sit behind a real <details>/<summary> — keyboard and screen-reader native');
+    ok(Boolean(other) && !other.open, 'closed on arrival');
+    ok(Boolean(other) && /Dumbbell Curl/.test(text(other)) && /\/side/.test(text(other)),
+       'holding the dumbbell curl, marked per side because its number is one hand\'s');
+    ok(Boolean(other) && /^1$/.test((other.querySelector('.me-other-n') || {}).textContent || ''),
+       'with the count on the summary');
 
     ok(Boolean(me.querySelector('.me-cal')), 'and the calendar is here too (step 1)');
     ok(/Training history/.test(text(me)), 'under a heading that says what it is');
     ok([...me.querySelectorAll('.seg')].some((s) => /Years/.test(s.textContent)),
        '⚠️ with the same Months / Years switch the Calendar screen has — it is `ownCalendar()`, '
        + 'one function behind four doors, so the two can never drift');
+
+    /* 🔄 OPENS ON YEARS, AND THE PANE STAYS PUT — 2026-09-12. Tim's report was
+       about THIS door: *"it automatically shows almost a full year before the
+       user's first recording, so they have to scroll down in order to see
+       anything."* The calendar sits under the avatar, the stats, the body, the
+       lifts and the goal, and cannot be landed on arrival without scrolling all
+       of that off the top — so with Months as the default the first thing under
+       "Training history" was the earliest month drawn.
+       ⚠️ `calMode` is shared with the Calendar screen, so this reads memory
+       rather than the declaration — the initial value is pinned where the
+       switch is first touched (the Calendar block). What is pinned HERE is that
+       Profile shows that memory, and that arriving lands nothing. */
+    const meSeg = (label) => [...me.querySelectorAll('.cal-modes .seg')]
+      .find((s) => s.textContent === label);
+    ok(meSeg('Years').getAttribute('aria-selected') === 'true'
+       && Boolean(me.querySelector('.yr-grid')) && !me.querySelector('.cal-month'),
+       '🚨 the Profile tab opens its calendar on YEARS — the whole history under the avatar, and no '
+       + 'year of empty months to scroll through');
+    ok(!me.querySelector('[data-landed]'),
+       '⚠️ and nothing was landed on arrival — the pane holds the avatar and the stats above this, '
+       + 'and the screen somebody just opened does not move under them');
+
+    /* 🚨 THE TAP LANDS, HERE TOO. Tim: *"when the month display is selected, the
+       current month should be the one that is being viewed to start, and then
+       the viewer can scroll up for earlier months."* `land: false` used to mean
+       "never move this pane"; since 2026-09-12 it means "not on arrival". The
+       structure is pinned — which section the pane was aimed at, and that it is
+       the last one — and the rest is the browser's: that this month's heading
+       comes to rest at the top of the pane with the switch one flick above it.
+       Mutation-checked 2026-09-12: restoring `if (land)` fails the first line
+       below and nothing else in the file — the second is structure, and holds
+       whether or not anything scrolled. */
+    meSeg('Months').click();
+    await settle();
+    {
+      const current = me.querySelector('.cal-month[data-current-month]');
+      ok(current && current.dataset.landed === 'true',
+         '🚨 tapping Months aims the Profile pane at the CURRENT month — the same `landOnCurrentMonth` '
+         + 'the Calendar screen uses, on the pane it used to be told never to touch');
+      ok(current && !current.nextElementSibling,
+         '⚠️ which is the last block, so the earlier months are above it: scroll UP');
+    }
+    // Back to the default before leaving: `calMode` is module memory and the
+    // blocks after this one read it.
+    meSeg('Years').click();
+    await settle();
 
     /* 🚨 THE PROPERTY THE WHOLE SPLIT RESTS ON: THIS SCREEN NEVER WRITES.
        Four sections now hang off it, every one of them a readout with a link;
@@ -7484,7 +8098,14 @@ ok(!data.querySelector('.rep-target'),
   /* ---- driving the screen ---- */
   const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
   const sheetRows = () => [...document.querySelectorAll('.sheet .reorder-row')];
-  const arrow = (i, dir) => sheetRows()[i].querySelectorAll('.move-btns button')[dir === 'up' ? 0 : 1];
+  // 🔄 The ▲▼ buttons are gone (2026-09-12); the grip's ArrowUp / ArrowDown is
+  // the keyboard path. `.click()` presses the key, `.disabled` is "at an end" —
+  // so every assertion below that drove the arrows drives the keys unchanged.
+  const arrow = (i, dir) => ({
+    disabled: dir === 'up' ? i === 0 : i === sheetRows().length - 1,
+    click: () => sheetRows()[i].querySelector('.grip').dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: dir === 'up' ? 'ArrowUp' : 'ArrowDown', bubbles: true, cancelable: true })),
+  });
   const rowRemove = (i) => [...sheetRows()[i].querySelectorAll('button')]
     .find((b) => /^Remove /.test(b.getAttribute('aria-label') || ''));
   const showAll = () => {
@@ -8079,16 +8700,20 @@ ok(!data.querySelector('.rep-target'),
   };
   social.friend = async () => ({ audience: 'friends', doc: theirDoc });
 
-  /* ⚠️ PIN MY OWN CALENDAR TO MONTHS FIRST, and it is not tidying up. An earlier
-     block in this file leaves `calMode` on Years, so the "browsing theirs did not
-     move mine" assertion at the bottom would be comparing Years to Years and
-     could never fail. Setting it deliberately is what gives that check something
-     to detect. */
+  /* ⚠️ PIN MY OWN CALENDAR TO YEARS FIRST, and it is not tidying up. Years is
+     the default, but earlier blocks in this file click the switch and leave
+     `calMode` wherever they finish, and the "browsing theirs did not move mine"
+     assertion below needs to KNOW where mine starts: their page is about to be
+     switched to Months, so mine on Months would be comparing Months to Months
+     and could never fail. Setting it deliberately is what gives that check
+     something to detect. (🔄 It pinned Months until 2026-09-12, when the
+     default flipped and the friend page started opening on Years — the pair of
+     checks is the same, with the two views swapped.) */
   {
     const mine = await mount(MyCal());
     for (let i = 0; i < 4; i++) await settle();
-    const m = [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months');
-    if (m && m.getAttribute('aria-selected') !== 'true') { m.click(); await settle(); }
+    const y = [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years');
+    if (y && y.getAttribute('aria-selected') !== 'true') { y.click(); await settle(); }
   }
 
   const fr = await mount(FriendView('u1'));
@@ -8115,13 +8740,101 @@ ok(!data.querySelector('.rep-target'),
      && fr.querySelector('.cal-modes .segmented').classList.contains('sub'),
      '⚠️ and it is the same `.cal-modes` / `.segmented.sub` block my own calendar builds, not a '
      + 'second switch written for this page');
-  ok(calSeg('Months').getAttribute('aria-selected') === 'true',
-     '⚠️ and their page OPENS on Months — Years is the view that draws a whole year over a '
-     + 'sixty-session window, so it is chosen rather than inherited');
+  /* 🔄 ~~their page OPENS on Months — Years is the view that draws a whole year
+     over a sixty-session window, so it is chosen rather than inherited~~ YEARS
+     SINCE 2026-09-12, Tim: *"make the year display the default for the calendar
+     in all scenarios (including viewing a friend's calendar)."* The hazard that
+     sentence named is still answered — by the caveat under the switch, which is
+     on the screen in Years and says the blanks are not rest — rather than by
+     opening one tap away from it. ⚠️ This reads `friendCalMode` as the earlier
+     friend-page block left it (it restores the default before leaving); the
+     INITIAL value is pinned there, on the first friend calendar this file
+     paints. */
+  ok(calSeg('Years').getAttribute('aria-selected') === 'true',
+     '🔄 and their page OPENS on Years, like every door');
 
-  /* ---- 2. Months still draws, and its cells are still inert ---- */
+  /* ---- 2. Years draws, and it draws THEIR days ---- */
+  const grids = [...fr.querySelectorAll('.yr-grid')];
+  ok(grids.length === 2,
+     `🚨 Years draws a grid per year of what they published (${grids.length})`);
+  ok(!fr.querySelector('.cal-month'),
+     '⚠️ and no month blocks under them — one view at a time, the same repaint-in-place my own '
+     + 'calendar does');
+  const litThisYear = grids[0].querySelectorAll('.yr-cell.on').length;
+  ok(litThisYear === new Set(dates.filter((d) => d.startsWith(String(THIS_YEAR)))).size,
+     `⚠️ one square lit per day they published, not per session (${litThisYear})`);
+
+  /* ---- 3. 🚨 THE NUMBER BESIDE THE YEAR COUNTS WHAT IS DRAWN, AND SAYS SO ----
+     This is the load-bearing assertion of the whole change. Over sixty published
+     sessions "N days trained" is a count of publishing wearing the name of
+     training: it is capped at 60 whatever they did, so somebody who trained 200
+     days and somebody who trained 61 read identically. The figure is not blanked
+     — the grid is one `role="img"` with a single label, so blanking it would
+     leave a screen-reader user no reading of the picture at all — it is renamed
+     to the quantity it actually counts. */
+  const calText = fr.textContent.replace(/\s+/g, ' ');
+  ok(new RegExp(`${litThisYear} days published`).test(calText),
+     `🚨 the count beside their year says "${litThisYear} days published" — it counts the squares `
+     + 'drawn, which are the days they SHARED');
+  ok(!/days trained|day trained/.test(calText),
+     '🚨 AND THE WORDS "days trained" APPEAR NOWHERE ON THEIR PAGE — that number cannot exceed the '
+     + 'sixty sessions they publish, so printing it under the name of a training total is a claim '
+     + 'this app has no way to make (direction.md §3.1: a number presented as something it is not '
+     + 'is still wrong)');
+  {
+    const label = grids[0].getAttribute('aria-label') || '';
+    ok(/days published/.test(label) && !/days trained/.test(label),
+       '⚠️ including the label a screen reader is given for the picture — the visible chip and the '
+       + 'accessible name are the same claim, or one of them is a lie');
+    ok(!/Open the Months view to reach a day/.test(label),
+       '🚨 and it does NOT tell them to open Months to reach a day, which is my own grid\'s hint '
+       + 'and is an instruction that cannot be carried out here — their month cells are inert');
+  }
+
+  /* ---- 4. the caveat is ON the screen, and Years says the extra part ---- */
+  ok(/most recent sixty sessions Autumn publishes/.test(calText),
+     '🚨 the sixty-session window is stated on their calendar in Years');
+  ok(/blank whether or not they trained/.test(calText),
+     '🚨 AND YEARS SAYS THE BLANKS ARE NOT REST. It paints a whole calendar year whether or not '
+     + 'the window reaches back that far, so an empty half-year is a statement about publishing '
+     + 'that reads as a statement about training unless the screen says otherwise');
+  ok(/counts published days only/.test(calText),
+     '⚠️ and names what the figure beside each year is, rather than leaving the reader to work out '
+     + 'that a count capped at sixty is not a total');
+  ok(!fr.querySelector('.cal-modes .help-dot'),
+     '🛑 and it is NOT behind a "?" — Design Rule 9 puts WHY behind the dot and keeps WHAT on the '
+     + 'screen, and the window is WHAT this picture is');
+
+  /* ---- 5. the readout reports, and goes nowhere ---- */
+  const readout = fr.querySelector('.yr-readout');
+  ok(readout && readout.tagName.toLowerCase() !== 'button',
+     '🚨 their readout is not a button — my own opens `#/day/<iso>`, which is MY training for that '
+     + 'date, and a full-width control that can never answer is the same fault as a day cell that '
+     + `does nothing (${readout && readout.tagName.toLowerCase()})`);
+  {
+    const before = globalThis.location.hash;
+    const lit = grids[0].querySelector('.yr-cell.on');
+    lit.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(/Pull/.test(readout.textContent),
+       '⚠️ but it still names what they did that day — that is the whole value of a 6px square, and '
+       + 'withholding it would make the Years view unreadable rather than honest');
+    ok(globalThis.location.hash === before,
+       '🚨 and tapping a square navigates nowhere at all');
+    readout.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await settle();
+    ok(globalThis.location.hash === before,
+       '🚨 nor does tapping the readout itself — the one control that DOES navigate on my own '
+       + 'calendar is the one that had to be neutered on theirs');
+    ok(grids[0].querySelectorAll('.yr-cell.sel').length === 1,
+       'exactly one square reads as selected');
+  }
+
+  /* ---- 6. Months, on a tap: draws, cells still inert, and it LANDS ---- */
+  calSeg('Months').click();
+  for (let i = 0; i < 4; i++) await settle();
   ok(fr.querySelectorAll('.cal-month').length > 0 && !fr.querySelector('.yr-grid'),
-     'Months draws their month blocks');
+     'tapping Months draws their month blocks, and the grids go');
   {
     const cells = [...fr.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
     ok(cells.length > 0 && cells.every((c) => c.tagName.toLowerCase() !== 'button'),
@@ -8154,129 +8867,77 @@ ok(!data.querySelector('.rep-target'),
        + 'behind it, and read "February 10: undefined"');
   }
 
-  /* ---- 3. Years draws, and it draws THEIR days ---- */
-  calSeg('Years').click();
-  for (let i = 0; i < 4; i++) await settle();
+  /* The window sentence is true in both modes and is on the screen in both;
+     Years carries the two extra clauses (asserted in section 4). */
+  ok(/most recent sixty sessions Autumn publishes/.test(fr.textContent.replace(/\s+/g, ' ')),
+     '🚨 and the sixty-session window is stated in Months as well — both views, one sentence');
+  /* 🔄 AND THE TAP LANDED — 2026-09-12. Same mechanism as my own calendar: their
+     page's pane is the Data pane, `land` is on, and the tap aims it at the
+     current month. Structure only — jsdom lays nothing out; see the Calendar
+     block for what a browser still has to show. */
+  ok(Boolean(fr.querySelector('.cal-month[data-current-month][data-landed]')),
+     '🚨 and tapping Months aimed their page\'s pane at the CURRENT month — Tim: "the current '
+     + 'month should be the one that is being viewed to start"');
 
-  const grids = [...fr.querySelectorAll('.yr-grid')];
-  ok(grids.length === 2,
-     `🚨 switching to Years draws a grid per year of what they published (${grids.length})`);
-  ok(!fr.querySelector('.cal-month'),
-     '⚠️ and the month blocks are gone rather than stacked underneath — the same repaint-in-place '
-     + 'my own calendar does');
-  const litThisYear = grids[0].querySelectorAll('.yr-cell.on').length;
-  ok(litThisYear === new Set(dates.filter((d) => d.startsWith(String(THIS_YEAR)))).size,
-     `⚠️ one square lit per day they published, not per session (${litThisYear})`);
-
-  /* ---- 4. 🚨 THE NUMBER BESIDE THE YEAR COUNTS WHAT IS DRAWN, AND SAYS SO ----
-     This is the load-bearing assertion of the whole change. Over sixty published
-     sessions "N days trained" is a count of publishing wearing the name of
-     training: it is capped at 60 whatever they did, so somebody who trained 200
-     days and somebody who trained 61 read identically. The figure is not blanked
-     — the grid is one `role="img"` with a single label, so blanking it would
-     leave a screen-reader user no reading of the picture at all — it is renamed
-     to the quantity it actually counts. */
-  const calText = fr.textContent.replace(/\s+/g, ' ');
-  ok(new RegExp(`${litThisYear} days published`).test(calText),
-     `🚨 the count beside their year says "${litThisYear} days published" — it counts the squares `
-     + 'drawn, which are the days they SHARED');
-  ok(!/days trained|day trained/.test(calText),
-     '🚨 AND THE WORDS "days trained" APPEAR NOWHERE ON THEIR PAGE — that number cannot exceed the '
-     + 'sixty sessions they publish, so printing it under the name of a training total is a claim '
-     + 'this app has no way to make (direction.md §3.1: a number presented as something it is not '
-     + 'is still wrong)');
-  {
-    const label = grids[0].getAttribute('aria-label') || '';
-    ok(/days published/.test(label) && !/days trained/.test(label),
-       '⚠️ including the label a screen reader is given for the picture — the visible chip and the '
-       + 'accessible name are the same claim, or one of them is a lie');
-    ok(!/Open the Months view to reach a day/.test(label),
-       '🚨 and it does NOT tell them to open Months to reach a day, which is my own grid\'s hint '
-       + 'and is an instruction that cannot be carried out here — their month cells are inert');
-  }
-
-  /* ---- 5. the caveat is ON the screen, and Years says the extra part ---- */
-  ok(/most recent sixty sessions Autumn publishes/.test(calText),
-     '🚨 the sixty-session window is stated on their calendar in both views');
-  ok(/blank whether or not they trained/.test(calText),
-     '🚨 AND YEARS SAYS THE BLANKS ARE NOT REST. It paints a whole calendar year whether or not '
-     + 'the window reaches back that far, so an empty half-year is a statement about publishing '
-     + 'that reads as a statement about training unless the screen says otherwise');
-  ok(/counts published days only/.test(calText),
-     '⚠️ and names what the figure beside each year is, rather than leaving the reader to work out '
-     + 'that a count capped at sixty is not a total');
-  ok(!fr.querySelector('.cal-modes .help-dot'),
-     '🛑 and it is NOT behind a "?" — Design Rule 9 puts WHY behind the dot and keeps WHAT on the '
-     + 'screen, and the window is WHAT this picture is');
-
-  /* ---- 6. the readout reports, and goes nowhere ---- */
-  const readout = fr.querySelector('.yr-readout');
-  ok(readout && readout.tagName.toLowerCase() !== 'button',
-     '🚨 their readout is not a button — my own opens `#/day/<iso>`, which is MY training for that '
-     + 'date, and a full-width control that can never answer is the same fault as a day cell that '
-     + `does nothing (${readout && readout.tagName.toLowerCase()})`);
-  {
-    const before = globalThis.location.hash;
-    const lit = grids[0].querySelector('.yr-cell.on');
-    lit.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
-    await settle();
-    ok(/Pull/.test(readout.textContent),
-       '⚠️ but it still names what they did that day — that is the whole value of a 6px square, and '
-       + 'withholding it would make the Years view unreadable rather than honest');
-    ok(globalThis.location.hash === before,
-       '🚨 and tapping a square navigates nowhere at all');
-    readout.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
-    await settle();
-    ok(globalThis.location.hash === before,
-       '🚨 nor does tapping the readout itself — the one control that DOES navigate on my own '
-       + 'calendar is the one that had to be neutered on theirs');
-    ok(grids[0].querySelectorAll('.yr-cell.sel').length === 1,
-       'exactly one square reads as selected');
-  }
-
-  /* ---- 7. 🚨 AND BROWSING THEIR YEARS MUST NOT MOVE MINE ----
+  /* ---- 7. 🚨 AND BROWSING THEIR CALENDAR MUST NOT MOVE MINE, IN EITHER DIRECTION ----
      The same guard `graphMode` has. `calMode` is "how I read MY calendar"; a
      preference formed over somebody's sixty-session window is not a decision
      about my own history, and my Calendar tab must not open somewhere I did not
-     choose. Their page keeps `friendCalMode`. */
+     choose. Their page keeps `friendCalMode`.
+
+     🔄 The views are swapped since 2026-09-12 (theirs was just switched to
+     Months; mine was pinned to Years at the top of this block), and the pair is
+     now asserted BOTH ways, each with the two memories holding DIFFERENT values
+     — the only arrangement in which one shared variable would fail. Mutation-
+     checked 2026-09-12: reading and writing `calMode` for both subjects fails
+     both 🚨 lines below, plus the two that follow the first one (mine draws
+     Months instead of Years, so "draws Years" and "days trained" go with it),
+     and nothing else in the file. */
   {
     const mine = await mount(MyCal());
     for (let i = 0; i < 4; i++) await settle();
     const sel = [...mine.querySelectorAll('.cal-modes .seg')]
       .find((b) => b.getAttribute('aria-selected') === 'true');
-    ok(sel && sel.textContent === 'Months',
-       `🚨 my own calendar is still on Months after reading a year of theirs (${sel && sel.textContent})`);
-    ok(mine.querySelectorAll('.cal-month').length > 0,
-       'and actually draws Months rather than only claiming the segment');
-    /* ⚠️ THE OTHER DIRECTION, and it is the half a one-way check would miss:
-       mine still says "trained", because over my whole history that is exactly
-       what the squares are. The rename is about their window, not a retreat from
-       naming my own training. */
-    const m = [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years');
-    m.click();
-    for (let i = 0; i < 3; i++) await settle();
+    ok(sel && sel.textContent === 'Years',
+       `🚨 my own calendar is still on Years after switching theirs to Months (${sel && sel.textContent})`);
+    ok(mine.querySelectorAll('.yr-grid').length > 0 && !mine.querySelector('.cal-month'),
+       'and actually draws Years rather than only claiming the segment');
+    /* ⚠️ THE OTHER DIRECTION OF THE WORDS, and it is the half a one-way check
+       would miss: mine still says "trained", because over my whole history that
+       is exactly what the squares are. The rename is about their window, not a
+       retreat from naming my own training. */
     const mineText = mine.textContent.replace(/\s+/g, ' ');
     ok(/days trained|day trained/.test(mineText),
        '⚠️ and MY grid still counts days TRAINED — I publish nothing to myself, so the honest word '
        + 'on my own calendar is unchanged');
     ok(!/most recent sixty sessions/.test(mineText),
        '⚠️ with no window caveat on it, because there is no window');
-    // Put my own calendar back where this block found it.
+    // Now move MINE to Months, so the two memories differ the other way round.
     [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months').click();
     await settle();
+    ok(Boolean(mine.querySelector('.cal-month[data-current-month][data-landed]')),
+       'and tapping Months on my own Calendar screen lands on the current month, as it always has');
   }
-
-  /* ⚠️ PUT THEIR SWITCH BACK ON MONTHS. `friendCalMode` is module state, so a
-     block left on Years hands every later friend-page assertion a screen with no
-     `.cal-cell` in it — the same housekeeping the comparison block above does
-     for the tab bar. */
   {
+    // Theirs is on Months from section 6; put it on Years so the two differ.
     const back = await mount(FriendView('u1'));
     for (let i = 0; i < 12; i++) await settle();
     [...back.querySelectorAll('.segmented .seg')].find((b) => b.textContent === 'Calendar').click();
     for (let i = 0; i < 6; i++) await settle();
-    const months = [...back.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months');
-    if (months) { months.click(); await settle(); }
+    [...back.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years').click();
+    await settle();
+  }
+  {
+    const mine = await mount(MyCal());
+    for (let i = 0; i < 4; i++) await settle();
+    const sel = [...mine.querySelectorAll('.cal-modes .seg')]
+      .find((b) => b.getAttribute('aria-selected') === 'true');
+    ok(sel && sel.textContent === 'Months',
+       `🚨 and my own calendar is still on Months after reading a year of theirs (${sel && sel.textContent})`);
+    /* ⚠️ PUT MINE BACK ON YEARS, the default, before leaving. `calMode` is
+       module state and outlives this block; theirs is already on Years. */
+    [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years').click();
+    await settle();
   }
 
   Object.assign(social, keep);

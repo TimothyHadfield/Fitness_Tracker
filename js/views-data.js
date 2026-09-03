@@ -32,26 +32,46 @@ const go = (hash) => { location.hash = hash; };
 // Which way the calendar is being read. Module-level so it survives leaving the
 // screen and coming back — somebody who prefers the year view should not have
 // to re-pick it after every trip to a day.
-let calMode = 'months'; // 'months' | 'years'
+//
+// 🔄 YEARS SINCE 2026-09-12, ~~Months~~. Tim: *"it automatically shows almost a
+// full year before the user's first recording, so they have to scroll down in
+// order to see anything … make the year display the default for the calendar
+// in all scenarios."* Months was the default because it was the original view;
+// what that cost is above — on the one door whose scroller cannot be landed
+// (Profile, where the calendar sits under the avatar and the stats), Months
+// opened on the earliest month drawn and a reader scrolled through a year of
+// empty grids to reach today. Years fits the whole history on one screen and
+// has no such arrival problem, and Months is one tap away — and that tap now
+// lands on the current month wherever the calendar is (see `paint`).
+let calMode = 'years'; // 'months' | 'years'
 
 /* 🚨 ONE CONTROL, TWO MEMORIES — 2026-09-10, when a friend's calendar got the
  * Months/Years switch (Tim: *"you can see their calendar, but can't select
  * between months and years. Make it so you can."*).
  *
- * This is the same guard `graphMode` has, for the same reason and with one
- * addition. Browsing somebody else may not silently change what MY calendar
- * opens on; and the default matters more here than it does for a tab, because
- * the two views make different claims. Months shows the range it holds and
- * nothing beyond it. Years draws a whole calendar year and leaves everything
- * outside their sixty published sessions blank — true, captioned, and still the
- * view that most needs the reader to have chosen it. So a friend's page opens
- * on Months and Years is one tap away, rather than inheriting a preference
- * formed on a screen showing a whole history.
+ * This is the same guard `graphMode` has, for the same reason. Browsing
+ * somebody else may not silently change what MY calendar opens on.
+ *
+ * 🔄 ~~and the default matters more here than it does for a tab, because the
+ * two views make different claims. Months shows the range it holds and nothing
+ * beyond it. Years draws a whole calendar year and leaves everything outside
+ * their sixty published sessions blank — true, captioned, and still the view
+ * that most needs the reader to have chosen it. So a friend's page opens on
+ * Months and Years is one tap away, rather than inheriting a preference formed
+ * on a screen showing a whole history.~~
+ *
+ * YEARS SINCE 2026-09-12, on Tim's instruction — *"make the year display the
+ * default for the calendar in all scenarios (including viewing a friend's
+ * calendar)"*. The hazard the struck reasoning names is real and is still
+ * answered, just not by the default: `CAVEAT_YEARS` sits in the open under the
+ * switch and says that the blanks are not rest and that the count is of
+ * published days. A caveat that is on the screen in the view that needs it is
+ * the honesty; opening one tap away from that view was only ever a hedge.
  *
  * ⚠️ IT IS STILL MODULE STATE, not per-render: somebody comparing two friends'
  * years should not re-pick it on every page. It is simply not the same variable
  * as mine. */
-let friendCalMode = 'months';
+let friendCalMode = 'years';
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -337,12 +357,26 @@ function yearsPane(activity, today, onPick, opts = {}) {
  * land on this month would hide the screen somebody just opened. The calendar
  * is the same calendar; only where the pane starts is different.
  *
+ * 🔄 **`land: false` IS ABOUT THE ARRIVAL ONLY, SINCE 2026-09-12.** Tim: *"when
+ * the month display is selected, the current month should be the one that is
+ * being viewed to start, and then the viewer can scroll up for earlier
+ * months."* A tap on Months is a request to look at the months, and the month
+ * to look at is this one — on every door, Profile included. So the first paint
+ * is the host's call (Profile says no, and Years is the default there anyway),
+ * and a tap on the switch lands wherever the calendar is. The scroller it lands
+ * is still the host's `.pane-scroll` rather than a scroller of the calendar's
+ * own: a second scrollbar nested inside the Profile pane is how a phone ends up
+ * with two of them fighting over one drag (see `.me-cal` in app.css), and Rule
+ * 1's "inner scrolling is acceptable for the calendar" is about the Calendar
+ * screen, where the calendar IS the pane.
+ *
  * @param {object} [opts]
  * @param {boolean} [opts.friend]  somebody else's page: the four differences
  *   above, and the other mode memory.
  * @param {string}  [opts.who]     what to call them in the caveat.
  * @param {boolean} [opts.land]    default true. False keeps the host's own
- *   scroller where the reader left it — see the Profile note above.
+ *   scroller where the reader left it ON THE FIRST PAINT — see the Profile
+ *   note above. A tap on the switch lands either way.
  */
 export function ownCalendar(activity, today, opts = {}) {
   const friend = Boolean(opts.friend);
@@ -440,6 +474,10 @@ export function ownCalendar(activity, today, opts = {}) {
 
   // The node the grids go in, handed over by whoever is showing this.
   let host = null;
+  // Whether the grids have been painted into it yet. The first paint is the
+  // ARRIVAL — the screen somebody just opened — and only there does `land`
+  // have a say. Every paint after it was asked for by a tap on the switch.
+  let painted = false;
 
   /**
    * ⚠️ THE CONTAINER IS NEVER REPLACED, only repainted — and that is not a
@@ -467,6 +505,15 @@ export function ownCalendar(activity, today, opts = {}) {
     if (caveat) caveat.textContent = isYears ? CAVEAT_YEARS : CAVEAT_MONTHS;
 
     if (!host) return;
+    /* 🔄 A TAP LANDS ON EVERY DOOR; ONLY THE ARRIVAL IS THE HOST'S CALL —
+     * 2026-09-12. `land: false` used to mean "never move this scroller", and
+     * with Months as the default that left the Profile tab opening on the
+     * earliest month drawn, a year of empty grids above today (Tim's report).
+     * Years is the default now, so the arrival lands nothing on Profile and
+     * shows the whole history at a glance; the tap on Months is the reader
+     * asking for the months, and the current one is where they start. */
+    const arriving = !painted;
+    painted = true;
     if (isYears) {
       const yearsOpts = friend ? {
         countLabel: publishedDaysLabel,
@@ -486,14 +533,21 @@ export function ownCalendar(activity, today, opts = {}) {
           : emptyState('No training recorded yet',
             'Every day you finish a workout fills in a square here. A year fits on one screen.')]));
       // The scroller is the pane, which is the host itself on the Calendar tab
-      // and its parent on the Data screen. ⚠️ Not on Profile: there the pane
-      // holds the whole profile and this would scroll the avatar off the top.
+      // and its parent on the Data screen. ⚠️ Not on Profile, on arrival OR on
+      // a tap: there the pane holds the whole profile and the top of it is the
+      // avatar. On a tap the switch is under the reader's finger and the grids
+      // paint directly below it, so the right scroll position is the one they
+      // already have.
       const pane = land ? host.closest('.pane-scroll') : null;
       if (pane) pane.scrollTop = 0;
     } else {
       setChildren(host, ...months.map(({ year, month }) =>
         monthBlock(year, month, activity, today, friend ? false : null)));
-      if (land) landOnCurrentMonth(host);
+      // ⚠️ `arriving` is what keeps Profile's first paint still when the
+      // reader's memory hands it Months (`calMode` is shared with the Calendar
+      // screen): the page they just opened does not move under them. A tap
+      // does — see the note above `arriving`.
+      if (land || !arriving) landOnCurrentMonth(host);
     }
   }
 
@@ -551,7 +605,10 @@ function landOnCurrentMonth(container) {
 
     // ⚠️ THE LAST MONTH, not the pane's last child. On the Data screen the pane
     // holds one element — the host every segment paints into — so asking the
-    // pane would pad the host itself and move nothing.
+    // pane would pad the host itself and move nothing. ⚠️ And on Profile the
+    // pane's last child is the whole calendar block, which is the same mistake
+    // one level up; the container is still the host, so this still finds the
+    // month.
     const last = container.lastElementChild;
     if (last) {
       const shortfall = pane.clientHeight - last.getBoundingClientRect().height;
@@ -562,6 +619,18 @@ function landOnCurrentMonth(container) {
     // do not share an offsetParent (the pane's is #app, a month's is body), so
     // subtracting one from the other only works by coincidence of layout.
     pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+
+    // ⚠️ THE MONTH THE SCROLLER WAS AIMED AT, STAMPED ON THE MONTH. jsdom lays
+    // nothing out — every rect above is zero and `scrollTop` stays 0 — so a test
+    // cannot see where the pane went, and "did a tap on Months land?" would
+    // otherwise be a question only a browser could answer. The attribute
+    // records that this section was the target; whether the heading actually
+    // came to rest at the top of the pane is still the browser's to show
+    // (measured 2026-08-21, see above). Nothing styles it. It is also a
+    // per-paint record rather than a flag on the pane, because the section is
+    // rebuilt on every paint: a Years paint after a landed Months leaves no
+    // stale claim behind.
+    current.dataset.landed = 'true';
   }, 0);
 }
 

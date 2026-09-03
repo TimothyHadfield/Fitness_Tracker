@@ -480,5 +480,33 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      + 'do anything at all inside a column flex container');
 }
 
+/* ============ the set lock and the free-following drag — the CSS half (2026-09-12) ============
+ *
+ * The behaviour is in tests/render.test.mjs; this pins the stylesheet half that
+ * jsdom cannot see. The lock's keyframes must run on the shared tokens (the
+ * duration check above already caps them), the row under a finger must carry NO
+ * transition — a transition between where the finger was and where it is now is
+ * the lag Tim reported — and an idle padlock must keep its width so delete stays
+ * in one column down the list. */
+{
+  ok(/\.reorder-row\s*\{[^}]*transition:\s*transform var\(--t\)/.test(CSS),
+     '🔄 the reorder rows transition their transform, so the rows a drag passes slide out of its way');
+  ok(/\.reorder-row\.is-dragging\s*\{\s*transition:\s*none/.test(CSS),
+     '🚨 and the row under the finger has NO transition — a transition between where the finger was '
+     + 'and where it is now is lag, which is the thing Tim reported');
+  ok(!/\.reorder-row \.move-btns/.test(CSS), 'the runner\'s ▲▼ rules are gone with the buttons');
+  ok(/\.move-btns\s*\{/.test(CSS), '⚠️ while the builder\'s .move-btns is untouched');
+  ok(/@keyframes lock-shut/.test(CSS) && /@keyframes lock-open/.test(CSS),
+     'the padlock has a closing and an opening keyframe');
+  ok(/\.set-lock\.lock-shuts \.lock-shackle\s*\{\s*animation:\s*lock-shut var\(--t\) var\(--ease-both\)/.test(CSS),
+     '⚠️ and it runs on the shared --t with --ease-both — an object with weight, under the 250ms cap the '
+     + 'duration check above already pins');
+  ok(/\.set-lock\.is-idle\s*\{[^}]*visibility:\s*hidden/.test(CSS) && !/\.set-lock\.is-idle\s*\{[^}]*display:\s*none/.test(CSS),
+     '⚠️ an idle padlock is `visibility: hidden`, never `display: none` — the slot keeps its width so '
+     + 'delete stays in one column down the list');
+  ok(/\.set-lock::before\s*\{[^}]*width:\s*44px;\s*height:\s*44px/.test(CSS),
+     'the padlock has the 44px hit halo the icon buttons carry');
+}
+
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');
 process.exit(fails ? 1 : 0);

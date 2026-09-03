@@ -51,13 +51,17 @@
 // section below is a READOUT with a door beside it. Nothing on this screen
 // writes anything, still.
 
-import { store, social, demo, activityByDate, todayISO } from './store.js';
+import { store, social, demo, activityByDate, todayISO, muscleRatings } from './store.js';
 // ⚠️ ONE calendar, four doors. See `calendarSection` below and `ownCalendar`'s
 // own header — a second copy is the drift that function exists to prevent.
 import { ownCalendar } from './views-data.js';
 // 🆕 "What are my best lifts, ever?" — the question the app could not answer
-// until 2026-09-10. Pure; the screen only formats what it hands back.
-import { bestLifts } from './profile-records.js';
+// until 2026-09-10 — 🔄 and since 2026-09-12 RANKED: the core eight and the rest,
+// each an estimated 1RM with a level and a confidence. Pure; the screen only
+// formats what it hands back. `js/profile-ranking.js` has the arithmetic and
+// the argument for which number a recorded lift shows.
+import { rankedLifts } from './profile-ranking.js';
+import { comparisonLabel } from './strength-standards.js';
 import * as units from './units.js';
 import {
   el, screenShell, emptyState, chevron, setChildren, personFace, icon,
@@ -137,6 +141,16 @@ async function fill(body) {
     store.activeGoal().catch(() => null),
   ]);
 
+  // 🔄 THE RANKED BEST LIFTS NEED THE RATINGS, 2026-09-12 — the same walk the
+  // muscle map does, handed the rows by hand so it cannot disagree with it.
+  // Every one of these fails into "no section" rather than into an error.
+  const [benchmarks, exMap, bodyWeights] = await Promise.all([
+    store.getBenchmarks().catch(() => []),
+    store.getExerciseMap().catch(() => new Map()),
+    store.getBodyWeights().catch(() => []),
+  ]);
+  const muscles = await muscleRatings({ sessions, benchmarks, bodyWeights }).catch(() => new Map());
+
   const workouts = sessions.length;
   // ⚠️ `connections` only exists on an available state. Off the cloud there is
   // no graph to count, and showing 0 would be a claim rather than an absence.
@@ -178,7 +192,7 @@ async function fill(body) {
         : null,
 
     bodySection(profile),
-    bestLiftsSection(sessions),
+    bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }),
     goalSection(goal),
     calendarSection(activity),
   );
@@ -315,43 +329,145 @@ function goalSection(goal) {
  * ⚠️ AND `days` IS PRINTED, because it is the honesty for a thin history: one
  * afternoon on a new machine is a true best and must not read as a career one.
  * ------------------------------------------------------------------ */
-function bestLiftsSection(sessions) {
-  const { lifts, total, shown, empty } = bestLifts(sessions);
-  if (empty) return null;
+/* 🔄 ~~six most-trained lifts, measured set first~~ **RANKED SINCE 2026-09-12.**
+ *
+ * Tim: *"display the core lifts, and then have 'other lifts' in an expandable
+ * section below it … just show the weight of an estimated 1RM for each of
+ * these, and show the confidence below it … colorize the number based on where
+ * that measurement puts that user among people like them … Order the core
+ * lifts from highest ranking exercise (beginner-elite) to lowest, and do the
+ * same for ordering the other lifts."*
+ *
+ * The arithmetic is `js/profile-ranking.js`. This prints it, under three rules
+ * that are all Rule 5 / Rule 6:
+ *
+ *   · EVERY figure is an estimate and the section says so ONCE, in the line
+ *     under the core list, rather than stamping "est." on eight rows. A recorded
+ *     row prints the SET it rests on in its sub-line ("315 lbs × 3 · 2 days"),
+ *     so the model is never the only number on the row.
+ *   · The COLOUR is the level ramp (`lv-text-<key>`), a chip with its own ink
+ *     validated for contrast in both themes, and the level's NAME is printed
+ *     in words beside the confidence — the colour is never the only carrier.
+ *     "Red for beginner, orange for novice" is the ramp's own low end.
+ *   · NO verdict word. Band names and level names only.
+ *
+ * ⚠️ `<details>`/`<summary>` for "Other lifts" — the disclosure the Research
+ * topics use, keyboard- and screen-reader-native without a line of code.
+ *
+ * 🔒 NO `input`, `textarea` or `select` anywhere in it — the tab's standing
+ * test. ~~The section used to say "The 6 lifts you have trained most, of 25"~~:
+ * the core eight are fixed and Other holds everything else, so the count is
+ * on the summary instead.
+ */
+function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }) {
+  const r = rankedLifts({ sessions, benchmarks, exMap, muscles, profile });
+  // Nothing trained at all: no section, as before. A core row with no number
+  // on an account WITH history is a different case and stays, saying why.
+  const trained = r.core.some((l) => l.days > 0 || l.oneRM !== null)
+    || r.other.length > 0 || r.repsOnly.length > 0;
+  if (!trained) return null;
+
+  // ⚠️ `r.profile`, never the raw one: it is the overlay `withAssumptions()`
+  // built, and the label reads what it assumed off it.
+  const label = comparisonLabel(r.profile);
+  const otherCount = r.other.length + r.repsOnly.length;
 
   return el('div', { class: 'me-bests' },
     el('div', { class: 'section-label', text: 'Your best lifts' }),
-    el('div', { class: 'list' }, ...lifts.map((l) => el('div', { class: 'row me-best' },
-      el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: l.name }),
-        el('div', { class: 'row-sub', text:
-          `${l.days} ${l.days === 1 ? 'day' : 'days'} · last ${fmtDateShort(l.lastDate)}` }),
-      ),
-      el('div', { class: 'me-best-nums' },
-        el('span', { class: 'me-best-top', text: bestText(l) }),
-        // 🚨 A SEPARATE LINE, AND THE WORD IS ON IT. An estimate beside a
-        // measurement with nothing to tell them apart is the one thing this
-        // app is not allowed to do.
-        l.estimatedMax && !l.sameSet
-          ? el('span', { class: 'me-best-est', text:
-              `${units.withUnit(Math.round(l.estimatedMax.value))} estimated max` })
-          : null,
-      ),
-    ))),
-    // Says what it is showing rather than implying it is everything.
-    total > shown
-      ? el('div', { class: 'field-help', text:
-          `The ${shown} lifts you have trained most, of ${total}.` })
+    el('div', { class: 'list' }, ...r.core.map(liftRow)),
+
+    // 🚨 ONE sentence carrying three things: that every figure is an estimate,
+    // which group the colours were computed against, and — when the app had to
+    // guess a sex or a body weight — what it guessed. `label.assumed` is the
+    // muscle map's own wording, so two screens cannot describe one assumption
+    // two ways.
+    el('div', { class: 'field-help', text:
+      `Estimated one-rep maxes, coloured by level ${label.main} · ${label.sub}.`
+      + (label.assumed ? ` ${label.assumed}` : '') }),
+
+    otherCount
+      ? el('details', { class: 'me-other' },
+          el('summary', { class: 'me-other-sum' },
+            el('span', { class: 'me-other-title', text: 'Other lifts' }),
+            el('span', { class: 'me-other-n', text: String(otherCount) }),
+            el('span', { class: 'me-other-chev' }, chevron()),
+          ),
+          el('div', { class: 'list' },
+            ...r.other.map(liftRow),
+            // Reps-only work — pull-ups with no weigh-in, push-ups — has a true
+            // best and no honest pound figure. Listed plainly, uncoloured.
+            ...r.repsOnly.map((l) => el('div', { class: 'row me-best' },
+              el('div', { class: 'row-main' },
+                el('div', { class: 'row-title', text: l.name }),
+                el('div', { class: 'row-sub wrap', text: daysText(l) }),
+              ),
+              el('div', { class: 'me-best-nums' },
+                el('span', { class: 'me-best-top', text: `${l.reps} reps` }),
+                el('span', { class: 'me-best-est', text: 'measured, not ranked' }),
+              ),
+            )),
+          ),
+        )
       : null,
   );
 }
 
-/** The measured half, in the units the set was logged in. */
-function bestText(l) {
-  const b = l.best;
-  if (b.kind === 'reps') return `${b.reps} reps`;
-  return `${units.withUnit(b.weight)}${l.perSide ? '/side' : ''}`
-    + (b.reps ? ` × ${b.reps}` : '');
+/* Why a core lift has no number, in the reader's words. The keys come from
+ * profile-ranking.js; the sentences live here so the module stays wordless. */
+const NO_NUMBER = {
+  'no-evidence':   'Nothing recorded for this muscle yet',
+  'stand-in-only': 'Only a stand-in rates this muscle — record the lift, or a close one',
+  'no-conversion': 'No published way to convert this one',
+  'no-standard':   'No standard to rank it against',
+};
+
+function liftRow(l) {
+  // `level` null WITH a percentile is "below Beginner" — plain ink, no chip,
+  // because inventing an eighth level is what `lv-text-below` refuses to do.
+  const lvKey = l.level ? l.level.key : (l.percentile !== null ? 'below' : null);
+  const lvName = l.level ? l.level.name : (l.percentile !== null ? 'Below Beginner' : null);
+
+  return el('div', { class: 'row me-best' + (l.oneRM === null ? ' is-none' : '') },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: l.name }),
+      el('div', { class: 'row-sub wrap', text: subText(l) }),
+    ),
+    el('div', { class: 'me-best-nums' },
+      l.oneRM === null
+        // No number: say why, in the number's slot, so the row is not a hole.
+        ? el('span', { class: 'me-best-none', text: NO_NUMBER[l.why] || 'No estimate' })
+        : el('span', { class: 'me-best-top' + (lvKey ? ` lv-text-${lvKey}` : ''),
+            text: units.withUnit(Math.round(l.shown)) + (l.perSide ? '/side' : '') }),
+      // The confidence in words under the number — Tim's ask — with the
+      // level's NAME beside it so the colour is never the only carrier.
+      l.oneRM === null ? null
+        : el('span', { class: 'me-best-est', text:
+            `${l.band.name} confidence` + (lvName ? ` · ${lvName}` : ' · not ranked') }),
+    ),
+  );
+}
+
+/* The sub-line: what the number rests on. A recorded row names the SET it was
+ * modelled from — Rule 5's measured anchor on the row; a converted row names
+ * what it was converted from and says the lift was never recorded. */
+function subText(l) {
+  if (l.source === 'recorded' && l.best) {
+    const set = l.best.kind === 'reps'
+      ? `${l.best.reps} reps`
+      : `${units.withUnit(l.best.weight)}${l.perSide ? '/side' : ''}${l.best.reps ? ` × ${l.best.reps}` : ''}`
+        + (l.bodyIncluded ? ' added' : '');
+    return `${set} · ${daysText(l)}`;
+  }
+  if (l.source === 'converted') {
+    return `Estimated from ${l.from.join(', ')}` + (l.days ? ` · ${daysText(l)}` : ' · never recorded')
+      + (l.bodyIncluded ? ' · body weight included' : '');
+  }
+  return l.days ? daysText(l) : 'Not trained yet';
+}
+
+function daysText(l) {
+  return `${l.days} ${l.days === 1 ? 'day' : 'days'}`
+    + (l.lastDate ? ` · last ${fmtDateShort(l.lastDate)}` : '');
 }
 
 /* ------------------------------------------------------------------ *
@@ -378,12 +494,34 @@ function bestText(l) {
  * the calendar IS the pane, and wrong here, where it would scroll the avatar
  * and the stats off the top of the screen somebody just opened.
  *
+ * 🔄 AND SINCE 2026-09-12 THAT IS ABOUT THE ARRIVAL ONLY. Tim: *"it
+ * automatically shows almost a full year before the user's first recording, so
+ * they have to scroll down in order to see anything"* — which was exactly this
+ * door: the calendar opened on Months with nothing landed, so the first thing
+ * under "Training history" was the earliest month drawn. Two things changed,
+ * both in `ownCalendar` rather than here. **Years is the default** on every
+ * door, so this screen opens on the whole history at a glance and the pane
+ * stays where it opened. And **a tap on Months lands on the current month**
+ * here too — the pane scrolls so this month's heading is at the top and the
+ * earlier months are above it, which is what he asked for: *"the current month
+ * should be the one that is being viewed to start, and then the viewer can
+ * scroll up for earlier months."* The switch goes with them; it is one flick
+ * up, and the alternative — a scroller of the calendar's own inside this pane
+ * — is two scrollbars fighting over one drag (see `.me-cal` in app.css).
+ *
+ * ⚠️ THE ONE CASE `land: false` STILL DECIDES: `calMode` is shared with the
+ * Calendar screen, so a reader who chose Months there opens this tab on
+ * Months, and that first paint does NOT land — the screen they just opened
+ * does not move under them. They are where they left the previous screen;
+ * Years then Months lands, or they scroll.
+ *
  * ⚠️ AND `#/calendar` IS STILL A SCREEN. It has survived four moves without
  * breaking a link and `#/day/<iso>` and `#/edit/<id>` hang off it, so a day
  * opened from here still lands somewhere that stands up on its own.
  * ------------------------------------------------------------------ */
 function calendarSection(activity) {
   const host = el('div', { class: 'me-cal-host' });
+  // `land: false` — the arrival only; a tap on Months lands. See the header.
   const cal = ownCalendar(activity, todayISO(), { land: false });
   // Painted after the node exists, exactly as the other three doors do it.
   queueMicrotask(() => cal.paint(host));

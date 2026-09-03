@@ -184,6 +184,18 @@ const PATHS = {
   // rather than a filled dot, so it needs no fill exception the way `play`
   // does and still reads as solid at 21px in the tab bar.
   target: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0M13.2 12a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0',
+  // A padlock in TWO PARTS, and it is one glyph — the session runner's set
+  // lock (2026-09-12). Tim asked for a lock that *"animates being locked and
+  // unlocked when you click on it"*, and Rule 7 says a movement has to be a
+  // thing going somewhere: a crossfade between a `lock` and an `unlock` glyph
+  // is two pictures swapped, which is the "instant change" he was describing
+  // the absence of. So the shackle is its own path, drawn over the body as a
+  // second <svg> in the same viewBox, and CSS rotates it about its right leg
+  // — one object, one movement. ⚠️ Neither is a whole icon on its own: draw
+  // both, or you get a box with no shackle. The body's top edge sits at y=11
+  // and the shackle's legs end there, so closed they meet exactly.
+  'lock-body': 'M5.5 11h13a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V12a1 1 0 0 1 1-1z',
+  'lock-shackle': 'M8 11V7.5a4 4 0 0 1 8 0V11',
 };
 
 export function icon(name, size) {
@@ -486,18 +498,69 @@ export function parkScreen(node, { falls = false } = {}) {
   // than stacking. Idempotent, like leave().
   document.querySelectorAll('.screen-ghost').forEach((g) => g.remove());
 
-  // ⚠️ MEASURED, NOT `inset: 0`. The screen is a flex child of `#app` — above the
-  // tab bar on a phone, beside the sidebar on a desktop — so a full-viewport
-  // ghost would relayout its own contents on the first frame and read as a jump
-  // before the movement even starts.
-  const r = node.getBoundingClientRect();
+  /* 🔄 THE WHOLE OF `#app` IS PARKED, NOT THE SCREEN ALONE — 2026-09-12, Tim:
+   * *"when the screen goes up, it doesn't cover over the main sections display
+   * (home, workouts, record, etc), like we talked about."* Record is a
+   * no-nav screen now (`FULLSCREEN` in app.js), so `clear(app)` takes the tab
+   * bar with the old screen; parking only the screen left the bar's strip
+   * EMPTY for the 240ms the panel took to reach it — a bar that vanishes a
+   * frame before it is covered, which is the opposite of covering it. So the
+   * ghost is a still picture of everything that was on screen: the screen AND
+   * its bar, in `#app`'s own flex direction (column-reverse on a phone, row on
+   * a desktop), boxed on `#app`'s measured rect.
+   *
+   * ⚠️ `node` is still what the caller hands over, and it still has to be
+   * connected — that is the "is there anything to park" question. Everything
+   * else in `#app` simply comes along, which for a no-nav screen (Record
+   * falling, the runner minimising) is nothing extra.
+   *
+   * ⚠️ MEASURED, NOT `inset: 0`, still: `#app` is `100dvh - --kb`, and a
+   * full-viewport ghost would relayout under a raised keyboard. */
+  const app = node.closest('#app') || node.parentElement;
+  const r = app.getBoundingClientRect();
   const ghost = el('div', { class: 'screen-ghost' + (falls ? ' is-falling' : '') });
   ghost.setAttribute('aria-hidden', 'true');
-  ghost.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
-  ghost.append(node);
+  ghost.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;`
+    + `flex-direction:${getComputedStyle(app).flexDirection || 'column-reverse'}`;
+  ghost.append(...app.children);
   document.body.append(ghost);
-  setTimeout(() => ghost.remove(), SCREEN_MS);
+
+  /* 🔄 REMOVED WHEN THE MOVEMENT ENDS, NOT ON A CLOCK — 2026-09-12, found by an
+   * in-page rAF probe while checking the fix above. The old `setTimeout(…,
+   * SCREEN_MS)` started HERE, before `resolve()` was awaited (app.js parks
+   * first, on purpose — see its comment). So on a read that took 220ms the
+   * ghost was gone 20ms into a 240ms rise, and the panel climbed the second
+   * half over an empty ground: measured, ghost removed at t=264 with the panel
+   * still at y=404. The fix is the same shape as the parkScreen rule itself —
+   * the thing that knows when the rise is over is the rising screen, so the
+   * CALLER releases an arriving ghost (`releaseGhost()` on `animationend`), and
+   * a falling ghost releases itself when its own `screen-down` ends.
+   *
+   * ⚠️ A TIMER STILL ALWAYS RUNS, as the header promises — as a backstop at
+   * four times the duration, for a screen whose animation never fires (a tab
+   * hidden mid-navigation does not paint, and an `animationend` that never
+   * comes must not leave a second screen in the document for ever). */
+  const done = () => ghost.remove();
+  if (falls) {
+    ghost.addEventListener('animationend', (e) => {
+      if (e.target === ghost && e.animationName === 'screen-down') done();
+    });
+  }
+  setTimeout(done, SCREEN_MS * 4);
   return ghost;
+}
+
+/**
+ * Take an arriving ghost away when the screen that rose over it has landed.
+ * Guarded on the screen's OWN `screen-up`: `animationend` bubbles, and a child
+ * with a keyframe of its own (a bar filling, a row opening) would otherwise end
+ * the ghost's life on the first frame.
+ */
+export function releaseGhost(ghost, screen) {
+  if (!ghost || !screen) return;
+  screen.addEventListener('animationend', (e) => {
+    if (e.target === screen && e.animationName === 'screen-up') ghost.remove();
+  });
 }
 
 /* ------------------------------------------------------------------ *

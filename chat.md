@@ -2108,3 +2108,38 @@ missing it still tells you, because that one is worth acting on.
 Profile tab had never been in the accessibility sweep at all — the list had a row called "Profile"
 and it was the old settings form, so the name looked taken. It's in now. The full sweep is clean:
 272 screens, 34,027 pieces of text, nothing failing.
+
+---
+
+## 2026-09-12 (same session) — six asks, three agents, and Record over the bar
+
+**You:** the benchmark's captions on every set; Years-first calendars with Months landing on now;
+lock a set when you move on; the exercises drag should follow the finger and lose its arrows; core
+lifts ranked and coloured; and "when the screen goes up, it doesn't cover over the main sections
+display". Then: "you should be deploying many sub-agents."
+
+**Captions.** Every open set now shows "_% of your estimated max" over the weight and "maybe __ to
+failure" over the reps, same arithmetic as the benchmark screen. It's a note beside a number you
+typed, never a number the app puts on the bar, and it's worked out per person — a guest sees their
+own, or nothing, never yours.
+
+**Calendar.** Years everywhere by default, including a friend's. Tap Months and the current month
+is what you're looking at; scroll up for earlier. One thing left visual and yours: the Months/Years
+pill on the Profile tab doesn't slide like the others — one line, whenever you want it.
+
+**The lock.** When you move on from a set you actually did, it locks — padlock on the right, swings
+shut — and tapping the padlock unlocks and opens it. Untouched sets never lock. One thing to look
+at: because set 2 is filled from set 1 the moment you open it, going back to set 1 locks that copy.
+It always got saved that way; the padlock just makes it visible.
+
+**The drag.** The row follows your finger exactly, the others slide out of its way, and it takes
+the nearest slot when you let go. Arrows gone; the grip still moves with the arrow keys.
+
+**Best lifts.** Eight core lifts, each an estimated one-rep max coloured by level, the level and
+the confidence in words under it, ordered highest level first; everything else under "Other lifts".
+A lift you've done shows the max off your own best set; one you haven't shows what your other
+lifts suggest and says so; one the app can't rank says why instead of guessing.
+
+**Record.** It covers the tab bar now, and the arrow is the way down. Measuring it found the
+still picture underneath was leaving partway through the rise on a slow load — fixed to leave when
+the rise ends. Everything green: 1,330 screen assertions, 2,021 data-layer, the full sweep clean.

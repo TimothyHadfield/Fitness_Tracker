@@ -1243,10 +1243,79 @@ export async function SessionView(workoutId) {
     return all[state.index];
   }
 
+  /* ================================================================== *
+   * 🆕 A SET LOCKS WHEN YOU MOVE ON FROM IT — 2026-09-12, Tim:
+   *
+   * *"Sometimes a user mixes up sets and adjusts something that doesn't need
+   * to be adjusted for a past set or something. To fix this, when a user moves
+   * on from a set, automatically 'lock' the set they just finished which
+   * doesn't allow the user to change any measurements for that set until they
+   * unlock it. The lock adjustments will be a visual lock on the right side of
+   * the set which animates being locked and unlocked when you click on it."*
+   *
+   * WHAT "MOVES ON" MEANS, decided here and nowhere else:
+   *   • opening a DIFFERENT set of the same exercise (`select`);
+   *   • leaving the exercise — next, previous, a banner member, a swap's split,
+   *     a remove — which all go through `goToStep`; inside a superset a new
+   *     ROUND on the same exercise counts too, because round 1's set is done;
+   *   • "Add set" on a solo exercise, which moves the steppers to the new set.
+   *   NOT: collapsing the open row, or tapping off it. `collapse()` leaves
+   *   `entry.active` where it was — its own header says closing is about what
+   *   is on screen, not about losing your place — and a set you have merely
+   *   stopped looking at is not a set you have finished. NOT switching person:
+   *   `switchTo` parks the whole state and you come back to the same set.
+   *
+   * 🚨 ONLY A SET THAT IS ACTUALLY RECORDED LOCKS — `setIsRecorded`, the one
+   * copy of that rule. A blank set, or one still carrying the app's `prefilled`
+   * opening numbers, was never finished; locking it would lock a suggestion the
+   * lifter never made and put a padlock on a number nobody typed.
+   *
+   * ⚠️ A DROP LOCKS WITH ITS SET. `locked` lives on the parent set object and
+   * covers every mini-set under it, for the reason the whole data model gives
+   * (D23): one drop set is one hard set. Opening a drop of the set you are on
+   * is not moving on; opening the next set is, and the padlock shuts on all of
+   * it at once.
+   *
+   * ⚠️ WHAT LOCKED MEANS ON SCREEN: the row cannot be opened and cannot be
+   * deleted — its text is not a control at all, and the padlock on the right is
+   * the one live thing on it. Tapping the padlock unlocks the set AND opens it,
+   * because the only reason to unlock is to change something.
+   *
+   * ⚠️ THE STATE IS `locked: true` ON THE DRAFT SET, so a workout you put down
+   * and pick up keeps its locks — and it is DROPPED AT SAVE the way `prefilled`
+   * is (`cleanedEntriesOf`), because it is a fact about the screen, not about
+   * the training. In a joint workout it is therefore per person by
+   * construction, and it is deliberately NOT broadcast the way a walk is: the
+   * app knows the person whose steppers these are has moved on, and knows
+   * nothing about whether Rae has.
+   *
+   * ⚠️ THE ANIMATION IS A ONE-SHOT, CONSUMED BY THE NEXT RENDER — the same
+   * shape as `requestRise()`. A lock is applied by a mutation and the row is
+   * REBUILT by the render that follows, so the movement cannot be a transition
+   * on a node that is about to be thrown away; instead the rebuilt padlock
+   * plays a keyframe from the state it left (`lock-shuts` / `lock-opens`,
+   * `--t`, `--ease-both`), and the list of sets owed one is emptied by the
+   * render that paints them so nothing replays on the render after.
+   * ================================================================== */
+  let lockFlashes = [];   // [{ set, to: 'shut' | 'open' }] — see above
+
+  /** Lock `entry.sets[i]` if it is a set somebody actually did. */
+  function lockSet(entry, i) {
+    const s = entry && entry.sets[i];
+    if (!s || s.locked || !setIsRecorded(s, entry.fields)) return false;
+    s.locked = true;
+    lockFlashes.push({ set: s, to: 'shut' });
+    return true;
+  }
+
   // Moving between steps re-points the steppers at the round you are on. Inside
   // a step you can still tap any set to fix a typo from round one.
   function goToStep(i) {
     const all = steps();
+    // Who is being LEFT — read before the index moves, so the set that locks
+    // is the one the steppers were on and not whatever the walk lands on.
+    const leaving = entryHere();
+    const leavingAt = leaving ? leaving.active : -1;
     state.index = Math.max(0, Math.min(i, all.length - 1));
     // 🚨 EVERYBODY MOVES — Tim, 2026-09-10: "when the user clicks 'next
     // exercise', it should move to the next exercise for both users, not just
@@ -1254,6 +1323,7 @@ export async function SessionView(workoutId) {
     // their own list and the whole point is that they move alone.
     syncWalk(state.index);
     const step = all[state.index];
+    let landed = null;
     if (step) {
       const entry = state.entries[step.entryIndex];
       if (entry) {
@@ -1261,7 +1331,17 @@ export async function SessionView(workoutId) {
           ? Math.min(entry.active || 0, entry.sets.length - 1)
           : Math.min(step.round, entry.sets.length - 1);
         entry.activeDrop = null;
+        landed = entry;
       }
+    }
+    // ⚠️ A different exercise, OR the same one on a different set (a superset
+    // round). Landing back on the very set you were on — a reorder's
+    // `repointOn`, a re-render — is not moving on and locks nothing. And an
+    // entry that has just been REMOVED is not in the list any more; its sets
+    // are gone with it and there is nothing to lock.
+    if (leaving && state.entries.includes(leaving)
+        && (landed !== leaving || leaving.active !== leavingAt)) {
+      lockSet(leaving, leavingAt);
     }
     saveDraft(state);
     renderAll();
@@ -1344,6 +1424,72 @@ export async function SessionView(workoutId) {
    * it. `entry.active` has always been what the steppers point at, so a
    * collapsed-to-nothing state would be a state with no way to log a number.
    */
+  /* ================================================================== *
+   * 🆕 THE BENCHMARK FORM'S TWO CAPTIONS, ON EVERY SET — 2026-09-11, Tim:
+   *
+   * *"Right now when a user is recording a benchmark, it estimates the number
+   * of reps that user could do based on the weight that is displayed, and it
+   * also shows you the percentage of your estimated max when you select a
+   * weight. I want you to do the exact same thing for a regular workout by just
+   * displaying the tiny '_% of estimated max' and 'maybe __ reps to failure'
+   * above the weight and reps. This will help the user estimate how much
+   * weight they should put on during a set."*
+   *
+   * Same arithmetic, same words, same slot in the stepper as `BenchmarkView`'s
+   * `renderCaptions()` — `percentOfMax()` and `repPrediction()` are the one
+   * definition of both numbers, so the two screens cannot disagree.
+   *
+   * 🚨 IT IS A READ, NOT A LOAD, AND THE DISTINCTION IS THE WHOLE OF
+   * `exercise-estimate.js`'s HEADER. The opening-weight suggestion above
+   * (`derivedWeights`) puts a number IN the field and is gated hard for it. A
+   * caption beside a number the lifter typed themselves changes nothing about
+   * what is on the bar: it says where the app thinks that weight sits, and
+   * "maybe 8 to failure" is the same guess the benchmark screen has printed
+   * since 2026-09-02, worded as a guess for the reason recorded there —
+   * research.md §3, people under-predict their own reps to failure by one to
+   * five and this app has no reps-in-reserve field (D28).
+   *
+   * 🛑 NO `allowFallback`. The benchmark form is that option's ONE named caller
+   * and its header says a fourth screen is a new decision, not this one. Here
+   * the refusal is the default: no direct contribution, no rating, a stand-in
+   * rating, a custom exercise → no caption, silently. A blank caption on the
+   * logging path is nothing lost; a three-hop number beside a bar is.
+   *
+   * 🚨 PER PERSON, OR IT IS THE CROSS-PRESCRIPTION 0e FORBIDS. A joint workout
+   * switches names and the whole suggestion switches with it; a "% of your
+   * estimated max" computed from the OWNER's muscle ratings and shown to a guest
+   * would be the owner's max wearing the guest's name. So the ratings are built
+   * per person from THEIR sessions — `muscleRatings(rows)` takes them by hand —
+   * exactly the walk `historyForPerson()` already does for the suggestion. A
+   * guest with no history gets no caption, which is the honest answer.
+   *
+   * ⚠️ LAZY AND CACHED. `muscleRatings()` walks a whole history, so it runs once
+   * per person per runner and the pane paints without waiting for it; the
+   * captions fill in when it lands, if the open set is still on screen.
+   * ================================================================== */
+  const ratingsByPerson = new Map();   // name (null → '') → Promise<Map|null>
+  const ratingsReady = new Map();      // the same key → the resolved Map
+  const personKey = (name) => (name == null ? '' : String(name));
+  function ratingsFor(name) {
+    const key = personKey(name);
+    if (!ratingsByPerson.has(key)) {
+      const p = (name == null
+        ? muscleRatings()
+        : sessionsForName(name).then((sessions) => muscleRatings({
+            sessions: sessions || [],
+            benchmarks: [],
+            // Their weigh-in as the runner knows it, for a bodyweight lift.
+            // One row, dated today: `bodyWeightOn()` reads the nearest earlier
+            // one, and a guest has no series to read from.
+            bodyWeights: state.bodyWeight > 0 ? [{ date: state.date, weight: state.bodyWeight }] : [],
+          })))
+        .then((m) => { ratingsReady.set(key, m || new Map()); return m; })
+        .catch(() => { ratingsReady.set(key, new Map()); return null; });
+      ratingsByPerson.set(key, p);
+    }
+    return ratingsByPerson.get(key);
+  }
+
   function renderPane(opts) {
     const keepScroll = Boolean(opts && opts.keepScroll);
     const wasAt = pane.scrollTop;
@@ -1421,6 +1567,13 @@ export async function SessionView(workoutId) {
     }
 
     function select(i, dropIndex) {
+      // A locked set has no way in but its padlock — see the lock block above
+      // `goToStep`. Its row is not a control, so this is belt and braces for a
+      // caller that reaches it another way.
+      if (!entry.sets[i] || entry.sets[i].locked) return;
+      // Opening a DIFFERENT set is moving on from this one. A drop of the same
+      // set is not: it is the same hard set, continued.
+      if (i !== entry.active) lockSet(entry, entry.active);
       if (dropIndex == null) fillOnOpen(i);
       entry.active = i;
       entry.activeDrop = dropIndex;
@@ -1482,10 +1635,60 @@ export async function SessionView(workoutId) {
     const liveRows = [];
     function syncSetValues() {
       for (const r of liveRows) {
-        const t = r.read();
-        r.vals.textContent = t;
-        r.pick.setAttribute('aria-label', r.name(t));
+        if (r.vals) {
+          const t = r.read();
+          r.vals.textContent = t;
+          r.pick.setAttribute('aria-label', r.name(t));
+        }
+        // The padlock is only offered on a set somebody has actually done, and
+        // the first number typed into a fresh set is what makes it one — so the
+        // open row's padlock appears IN PLACE on that keystroke, the same way
+        // the values do, rather than waiting for a rebuild.
+        if (r.lock) r.lock.classList.toggle('is-idle', !setIsRecorded(r.set, entry.fields));
       }
+    }
+
+    /**
+     * The padlock on the right of a set row — see the lock block above
+     * `goToStep` for what it means and when it shuts by itself.
+     *
+     * ⚠️ A SIBLING OF `.set-pick`, NEVER ITS CHILD, for the reason `.set-del`
+     * gives: a button inside a button is invalid HTML and would need a
+     * stopPropagation that holds until the next control is added. Delete and
+     * the padlock share the right of the row like this: the padlock is the
+     * OUTERMOST thing on every row, in a slot every row reserves (so delete
+     * never walks sideways between one row and the next), and delete sits to
+     * its left — until the set is locked, when delete is not rendered at all,
+     * because a locked set cannot be deleted and a control that refuses is
+     * worse than one that is absent.
+     *
+     * ⚠️ TWO <svg>s, ONE GLYPH. `icon()` draws one path per call and the
+     * shackle has to move on its own, so the body and the shackle are drawn
+     * over each other in the same viewBox and CSS rotates the second about its
+     * right leg. See the `lock-body` / `lock-shackle` note in ui.js.
+     *
+     * ⚠️ `is-idle` IS `visibility: hidden`, NOT `display: none` — the slot has
+     * to keep its width for the alignment argument above, and a hidden button
+     * leaves the accessibility tree either way.
+     *
+     * `null` draws the spacer a drop row uses: a drop has no padlock of its
+     * own because its parent's covers it (one hard set), but its delete still
+     * has to sit in delete's column.
+     */
+    function lockButton(lock) {
+      if (!lock) return el('span', { class: 'set-lock-gap' });
+      const shackle = icon('lock-shackle', 17);
+      shackle.classList.add('lock-shackle');
+      const flash = lockFlashes.find((f) => f.set === lock.set);
+      return el('button', {
+        class: 'set-lock'
+          + (lock.locked ? ' is-locked' : '')
+          + (setIsRecorded(lock.set, entry.fields) ? '' : ' is-idle')
+          + (flash ? (flash.to === 'shut' ? ' lock-shuts' : ' lock-opens') : ''),
+        'aria-label': (lock.locked ? 'Unlock ' : 'Lock ') + lock.name,
+        title: lock.locked ? 'Unlock this set to change it' : 'Lock this set so it cannot be changed',
+        onClick: lock.onToggle,
+      }, icon('lock-body', 17), shackle);
     }
 
     /* ⚠️ THE ROW BECOMES THE CONTROLS. IT DOES NOT GROW A SECOND ONE.
@@ -1508,7 +1711,22 @@ export async function SessionView(workoutId) {
      * sibling, so the row keeps its identity while it is open and `.set-del`
      * keeps the position it has had since it was pulled out of `.set-pick`.
      */
-    function setRow({ open, className, num, label, onOpen, onDelete, delLabel, valueText }) {
+    /* ⚠️ A LOCKED ROW IS NOT A CONTROL (2026-09-12). Its `.set-pick` is a
+     * <div> carrying the same number and values, not a disabled <button>: a
+     * button that is on screen and does nothing is the fault the five inert
+     * back buttons taught this project, and `aria-disabled` is the same fault
+     * with a label on it. The padlock beside it is the row's one live thing,
+     * and its name says what tapping it does. Nothing on a locked row is
+     * registered in `liveRows`, because nothing on it can change. */
+    function setRow({ open, locked, lock, className, num, label, onOpen, onDelete, delLabel, valueText }) {
+      if (locked) {
+        const row = el('div', { class: `${className} is-locked` },
+          el('div', { class: 'set-pick' }, num(), el('span', { class: 'set-vals', text: valueText() })),
+          lockButton(lock),
+        );
+        return { row, live: null };
+      }
+
       if (!open) {
         const vals = el('span', { class: 'set-vals', text: valueText() });
         const pick = el('button', {
@@ -1517,13 +1735,16 @@ export async function SessionView(workoutId) {
           'aria-expanded': 'false',
           onClick: onOpen,
         }, num(), vals);
+        const lockNode = lockButton(lock);
         const row = el('div', { class: className },
           pick,
           onDelete ? el('button', { class: 'set-del', 'aria-label': delLabel, onClick: onDelete }, icon('trash')) : null,
+          lockNode,
         );
-        return { row, live: { vals, pick, read: valueText, name: label } };
+        return { row, live: { vals, pick, read: valueText, name: label, lock: lock ? lockNode : null, set: lock ? lock.set : null } };
       }
 
+      const lockNode = lockButton(lock);
       const row = el('div', { class: `${className} active is-open` },
         el('div', { class: 'set-open-head' },
           // Tapping the open row closes it, which is the other half of "click
@@ -1537,10 +1758,13 @@ export async function SessionView(workoutId) {
             onClick: collapse,
           }, num(), el('span', { class: 'set-open-caret' }, icon('up', 15))),
           onDelete ? el('button', { class: 'set-del', 'aria-label': delLabel, onClick: onDelete }, icon('trash')) : null,
+          lockNode,
         ),
         editor,
       );
-      return { row, live: null };
+      // The open row prints no values, but its padlock is live: it has to
+      // appear the moment the first number makes this a recorded set.
+      return { row, live: lock ? { vals: null, pick: null, lock: lockNode, set: lock.set } : null };
     }
 
     function renderSets() {
@@ -1554,9 +1778,40 @@ export async function SessionView(workoutId) {
 
       entry.sets.forEach((s, i) => {
         const isHere = i === entry.active;
-        const open = isHere && entry.activeDrop == null && editing;
+        const locked = Boolean(s.locked);
+        // ⚠️ `entry.active` can point at a locked set — you came back to this
+        // exercise with Previous, or you locked the open row by hand — and then
+        // nothing is open. That is the one state in which "exactly one set is
+        // always open" is false, and it is honest: the steppers stay pointed
+        // at a set that refuses them until it is unlocked or another is tapped.
+        const open = isHere && entry.activeDrop == null && editing && !locked;
+        const lock = {
+          set: s,
+          locked,
+          name: `set ${i + 1}`,
+          onToggle: locked
+            ? () => {
+                // Unlocking is opening: the only reason to unlock a set is to
+                // change it. Goes through `select` so the set you were on
+                // locks behind you like any other move.
+                delete s.locked;
+                lockFlashes.push({ set: s, to: 'open' });
+                select(i, null);
+              }
+            : () => {
+                // Locking by hand. `lockSet` refuses a set with nothing in it,
+                // and the padlock is not visible on one, so this cannot be a
+                // tap that silently does nothing.
+                if (!lockSet(entry, i)) return;
+                if (entry.active === i) entry.activeDrop = null;
+                saveDraft(state);
+                renderPane({ keepScroll: true });
+              },
+        };
         const { row, live } = setRow({
           open,
+          locked,
+          lock,
           className: 'set-item',
           num: () => el('span', { class: 'set-num', text: String(i + 1) }),
           label: (t) => `Set ${i + 1}: ${t}`,
@@ -1579,9 +1834,13 @@ export async function SessionView(workoutId) {
         // not numbered as sets: one drop set is one hard set (docs/handbook.md §6),
         // and numbering them 1, 2, 3 would teach the opposite.
         minisOf(s).forEach((d, di) => {
-          const dOpen = isHere && entry.activeDrop === di && editing;
+          const dOpen = isHere && entry.activeDrop === di && editing && !locked;
           const { row: dRow, live: dLive } = setRow({
             open: dOpen,
+            // A drop is locked by its parent and has no padlock of its own —
+            // one hard set, one lock. `lock: null` draws the spacer.
+            locked,
+            lock: null,
             className: 'set-item set-drop',
             // Same restructure as the set row above, for the same reason: the ↳
             // is a 22px glyph and the numbers beside it are what a thumb aims at.
@@ -1602,6 +1861,10 @@ export async function SessionView(workoutId) {
           rows.push(dRow);
         });
       });
+      // The one-shot is spent by the render that painted it — every padlock
+      // owed a movement has been built by now, and one that was not (a set on
+      // an exercise that has since been removed) is owed nothing.
+      lockFlashes = [];
       setChildren(setList, ...rows);
     }
 
@@ -1651,8 +1914,56 @@ export async function SessionView(workoutId) {
     }
     renderAssist();
 
-    const steppers = entry.fields.map((f) =>
-      stepper({
+    /* The two captions — see the block above `ratingsFor()`. Only a lift with
+     * BOTH a weight and a rep count gets them: "% of max" on a plank is
+     * meaningless and a rep guess on a carry is worse. `ex` can be missing for
+     * an exercise deleted from the library since the draft was written. */
+    const capSlots = {};
+    const wantsCaptions = Boolean(ex) && entry.fields.includes('weight') && entry.fields.includes('reps');
+    function renderCaptions() {
+      if (!wantsCaptions) return;
+      const ratings = ratingsReady.get(personKey(state.forName));
+      const est = ratings ? estimateOneRM(ex, ratings, state.bodyWeight) : null;
+      const oneRM = est ? est.oneRM : 0;
+      const w = Number(target.weight) || 0;
+      /* ⚠️ THE LOAD, NOT THE NUMBER IN THE BOX. On a bodyweight or assisted lift
+       * the box holds what was ADDED or how much HELP was taken, and the rating
+       * it is being compared against was built from the total on the body —
+       * `totalResistance()` is the one copy of that sum. It returns null for
+       * more help than you weigh, which is the same "check the number" case
+       * `renderAssist()` already names, and no caption is right beside it. A
+       * plain lift is the number itself, doubled for a per-side entry because
+       * `oneRM` is total load. */
+      let totalW = 0;
+      if (assistSpec) {
+        const res = w >= 0 && state.bodyWeight > 0 ? totalResistance(ex, w, state.bodyWeight) : null;
+        totalW = res ? res.load : 0;
+      } else {
+        totalW = entry.loadType === 'per_side' ? w * 2 : w;
+      }
+      // ⚠️ NO ARITHMETIC ON NOTHING — the benchmark form's rule, and it is
+      // sharper here: every never-done set opens at a derived or blank weight,
+      // and "0 % of your estimated max" over a blank field reads as a reading.
+      const live = oneRM > 0 && totalW > 0;
+      if (capSlots.weight) {
+        const pct = live ? percentOfMax(oneRM, totalW) : null;
+        setChildren(capSlots.weight, pct === null
+          ? ''
+          : el('span', {}, el('b', { text: `${Math.round(pct)}%` }), ' of your estimated max'));
+      }
+      if (capSlots.reps) {
+        const p = live ? repPrediction(oneRM, totalW) : null;
+        setChildren(capSlots.reps, !p
+          ? ''
+          : p.over
+            ? el('span', { text: 'at or above what we think your max is' })
+            : el('span', {},
+                'maybe ', el('b', { text: `${p.reps}${p.atLeast ? '+' : ''}` }), ' to failure'));
+      }
+    }
+
+    const steppers = entry.fields.map((f) => {
+      const s = stepper({
         field: f,
         value: target[f],
         // ⚠️ "of help" read as "Weight of help" in the label, because the suffix
@@ -1672,6 +1983,7 @@ export async function SessionView(workoutId) {
           delete activeSet.prefilled;
           saveDraft(state);
           renderAssist();
+          renderCaptions();
           // In place — see `syncSetValues`. Rebuilding the list would now
           // destroy the stepper that raised this.
           syncSetValues();
@@ -1688,7 +2000,26 @@ export async function SessionView(workoutId) {
           const midNestedSet = nested && entry.activeDrop == null;
           if (!midGroup && !midNestedSet) startRest();
         },
-      }).node);
+      });
+      if (wantsCaptions && (f === 'weight' || f === 'reps')) {
+        capSlots[f] = el('div', { class: 'step-est' });
+        // Between the field's name and its big number — the benchmark form's
+        // slot, so it reads as a note about the number rather than as another
+        // number. The stepper node is the same one; only the insertion differs.
+        s.node.insertBefore(capSlots[f], s.node.querySelector('.stepper-controls'));
+      }
+      return s.node;
+    });
+
+    // Paint now if this person's ratings are in, and again when they land —
+    // guarded on the slot still being on screen, because a re-render since then
+    // built a fresh one and this closure's node is in the bin.
+    renderCaptions();
+    if (wantsCaptions && !ratingsReady.has(personKey(state.forName))) {
+      ratingsFor(state.forName).then(() => {
+        if (capSlots.weight && capSlots.weight.isConnected) renderCaptions();
+      });
+    }
 
     const miniCount = minis.length;
     const wantsMinis = nested ? entry.plannedMinis : 0;
@@ -1964,7 +2295,12 @@ export async function SessionView(workoutId) {
             // the next numbers you typed landed in a different round from the
             // one the banner said you were on — for that member only, silently
             // desynchronising the block.
-            if (step.group == null) entry.active = entry.sets.length - 1;
+            // And following it is moving on from the set you were on, which
+            // locks it (if it was done) — see the lock block above `goToStep`.
+            if (step.group == null) {
+              lockSet(entry, entry.active);
+              entry.active = entry.sets.length - 1;
+            }
             entry.activeDrop = null;
             saveDraft(state);
             renderAll();
@@ -2519,11 +2855,48 @@ export async function SessionView(workoutId) {
    * feature would have worked on Tim's laptop and done nothing on the phone
    * this app is for.
    *
-   * ⚠️ AND THE ARROWS ARE NOT A CONSOLATION PRIZE. A drag cannot be performed by
-   * a keyboard or a screen reader at all, so ▲▼ is the only version of this
+   * ~~⚠️ AND THE ARROWS ARE NOT A CONSOLATION PRIZE. A drag cannot be performed
+   * by a keyboard or a screen reader at all, so ▲▼ is the only version of this
    * control some people ever get — it is also the version the tests drive,
    * because jsdom reports every rectangle as zero and a pointer drag there
-   * measures nothing. The builder has carried the same pair since it shipped.
+   * measures nothing. The builder has carried the same pair since it shipped.~~
+   *
+   * 🔄 THE ARROWS ARE GONE — 2026-09-12, Tim: *"the up and down arrows on the
+   * right side of the exercises on this display are useless now that this is a
+   * drag feature now. Remove them."* ⚠️ What they were FOR survives, on the
+   * handle: a drag still has no keyboard equivalent, so the grip takes ArrowUp
+   * and ArrowDown itself and commits through `moveEntry`, exactly the call the
+   * buttons made, and its accessible name says so. Nothing visible was added.
+   * A keyboard and a screen reader lose no path they had, `moveEntry` keeps a
+   * caller, and jsdom — which measures every rectangle as zero — can still
+   * drive a one-step reorder without stubbing geometry. Focus is put back on
+   * the moved row's grip after the rebuild, or every keypress would land the
+   * user at the top of the document.
+   *
+   * 🔄 AND THE ROW FOLLOWS THE FINGER — same day, Tim: *"It automatically
+   * locks into a valid position in the list, and doesn't follow the user's
+   * finger or mouse smoothly while they place it in a better position which is
+   * annoying. I think that it should follow the exact location of the user's
+   * selection and when the user releases their finger, it will automatically
+   * take the nearest valid position."* The first version moved the row IN THE
+   * DOM on every pointermove — `insertBefore` past a neighbour's midpoint — so
+   * the row could only ever be in a slot, never under the finger. Now:
+   *   • the dragged row is a `translateY` of exactly the pointer's travel, with
+   *     no transition on it (a transition is a lag);
+   *   • the rows it has passed slide out of its way by one row height, with
+   *     the transition — Rule 7's "the row you drag pushes the rest", and the
+   *     gap they open is the slot it will take;
+   *   • the DOM is not touched until release. The slot is the dragged row's
+   *     CENTRE against each neighbour's midpoint, all measured once at
+   *     pointerdown — midpoints, never edges, for the reason the old code gave
+   *     (a row flickering between two places while the finger sits on a
+   *     boundary);
+   *   • on release the order is committed exactly as before (`applyOrder` →
+   *     `reorderOthers`, the superset rules untouched), the list is rebuilt,
+   *     and the rebuilt row is FLIPped from where the finger let go to its
+   *     slot, so the snap is a movement rather than a jump. Under reduced
+   *     motion the blanket makes both transitions instant and the snap still
+   *     lands.
    */
   function openWorkoutSheet() {
     const list = el('div', { class: 'reorder-list' });
@@ -2535,45 +2908,92 @@ export async function SessionView(workoutId) {
       onClose: () => { refreshWorkoutSheet = null; },
     });
 
+    /* The grip to focus after the next rebuild — a keyboard move rebuilds the
+     * list under the key that was pressed. Null unless a move was by key. */
+    let focusIndex = null;
+
     /* ---- the drag ---- */
     function startDrag(ev, rowNode) {
       if (ev.button != null && ev.button !== 0) return;
       // Stops the sheet scrolling under the finger that is moving a row.
       if (ev.preventDefault) ev.preventDefault();
       const handle = ev.currentTarget;
-      // Without capture the pointer leaves the 28px handle on the first move
-      // and the drag dies one row later. It throws in jsdom; the drag is a
-      // browser path and the arrows are what runs there.
+      // Without capture the pointer leaves the 30px handle on the first move
+      // and the drag dies one row later. It throws in jsdom; the listeners
+      // below are on the handle either way, so a harness that dispatches to
+      // it still gets a drag.
       try { handle.setPointerCapture(ev.pointerId); } catch (_) { /* still drags */ }
+
+      const rows = [...list.querySelectorAll('.reorder-row')];
+      const from = rows.indexOf(rowNode);
+      // ⚠️ Measured ONCE, here. The rows never move in the DOM during the drag
+      // and only ever carry a transform, so the boxes they were laid out in
+      // are the boxes to measure against for the whole gesture — reading them
+      // on every move would read transformed rectangles, which is precisely
+      // the thing being moved. A list nothing can measure (jsdom) is not
+      // dragged at all; the arrow keys are the path there.
+      const rects = rows.map((r) => r.getBoundingClientRect());
+      if (from < 0 || !rects.every((r) => r.height > 0)) return;
+      const startY = ev.clientY;
+      const h = rects[from].height;
+      const mids = rects.map((r) => r.top + r.height / 2);
+      let to = from;
+
       rowNode.classList.add('is-dragging');
 
       const move = (e) => {
-        const y = e.clientY;
-        for (const other of list.querySelectorAll('.reorder-row')) {
-          if (other === rowNode) continue;
-          const r = other.getBoundingClientRect();
-          if (!r.height) continue;
-          const mid = r.top + r.height / 2;
-          const isBelow = Boolean(rowNode.compareDocumentPosition(other)
-            & (typeof Node !== 'undefined' ? Node.DOCUMENT_POSITION_FOLLOWING : 4));
-          // Past the MIDPOINT of a neighbour, never its edge: swapping on first
-          // contact makes a row flicker between two places while the finger
-          // sits still on the boundary.
-          if (isBelow && y > mid) { list.insertBefore(other, rowNode); break; }
-          if (!isBelow && y < mid) { list.insertBefore(rowNode, other); break; }
-        }
+        const dy = e.clientY - startY;
+        rowNode.style.transform = `translateY(${dy}px)`;
+        // Where the dragged row's centre is now, against where every other
+        // row's centre was: the slot is the furthest neighbour it has passed.
+        const centre = mids[from] + dy;
+        let slot = from;
+        for (let i = from + 1; i < rows.length; i++) if (centre > mids[i]) slot = i;
+        for (let i = from - 1; i >= 0; i--) if (centre < mids[i]) slot = i;
+        if (slot === to) return;
+        to = slot;
+        // Everybody between the old slot and the new one steps one row the
+        // other way; everybody else goes home. One row height, the dragged
+        // row's own, which is the size of the hole it left.
+        rows.forEach((r, i) => {
+          if (i === from) return;
+          const shift = i > from && i <= to ? -h : i < from && i >= to ? h : 0;
+          r.style.transform = shift ? `translateY(${shift}px)` : '';
+        });
       };
       const end = () => {
         handle.removeEventListener('pointermove', move);
         handle.removeEventListener('pointerup', end);
         handle.removeEventListener('pointercancel', end);
+        // Where the row visibly is at the moment of release, before anything
+        // is rebuilt — the FLIP below starts the settled row from here.
+        const letGoAt = rowNode.getBoundingClientRect().top;
         rowNode.classList.remove('is-dragging');
-        // ⚠️ The DOM is the draft of the new order and nothing else — the state
-        // is only touched here, once, on release. A drag that is abandoned
-        // (the app is backgrounded, the pointer is cancelled) therefore cannot
-        // leave half a reorder in the session.
-        const order = [...list.querySelectorAll('.reorder-row')].map((r) => Number(r.dataset.index));
-        if (!applyOrder(order)) render();
+        for (const r of rows) r.style.transform = '';
+        // ⚠️ The state is only touched here, once, on release — nothing about
+        // the order changed while the finger was down, so a drag that is
+        // abandoned (the app is backgrounded, the pointer is cancelled) lands
+        // wherever the row was and cannot leave half a reorder in the session.
+        // Same contract as before; only the DOM stopped being the draft.
+        const order = rows.map((r) => Number(r.dataset.index));
+        order.splice(to, 0, order.splice(from, 1)[0]);
+        if (!applyOrder(order)) { render(); return; }
+        // `applyOrder` has already rebuilt the list (renderAll → render). The
+        // moved entry now sits at `to`: start it from under the finger and let
+        // the transition carry it the rest of the way. Reading `offsetHeight`
+        // between the two writes is what makes the first one a starting point
+        // rather than a no-op.
+        const landed = list.querySelector(`.reorder-row[data-index="${to}"]`);
+        if (!landed || typeof landed.getBoundingClientRect !== 'function') return;
+        const delta = letGoAt - landed.getBoundingClientRect().top;
+        if (!delta) return;
+        landed.classList.add('is-settling');
+        landed.style.transition = 'none';
+        landed.style.transform = `translateY(${delta}px)`;
+        void landed.offsetHeight;
+        landed.style.transition = '';
+        landed.style.transform = '';
+        landed.addEventListener('transitionend', () => landed.classList.remove('is-settling'), { once: true });
       };
       handle.addEventListener('pointermove', move);
       handle.addEventListener('pointerup', end);
@@ -2601,11 +3021,22 @@ export async function SessionView(workoutId) {
         },
           el('button', {
             class: 'grip',
-            // A drag has no keyboard equivalent, so the handle says what the
-            // arrows beside it are FOR rather than pretending to be reachable.
-            'aria-label': `Drag to move ${entry.exerciseName}. Or use the arrows`,
-            title: 'Drag to move',
+            // A drag has no keyboard equivalent, so the handle IS the keyboard
+            // path (ArrowUp / ArrowDown) and its name says so — the ▲▼ buttons
+            // that used to carry this are gone; see the sheet's header.
+            'aria-label': `Drag to move ${entry.exerciseName}, or press the arrow keys`,
+            title: 'Drag to move, or use the arrow keys',
             onPointerdown: (ev) => startDrag(ev, row),
+            onKeydown: (ev) => {
+              const dir = ev.key === 'ArrowUp' ? -1 : ev.key === 'ArrowDown' ? 1 : 0;
+              if (!dir) return;
+              ev.preventDefault();
+              // Focus follows the row: `moveEntry` rebuilds the sheet, and
+              // `render()` reads this back to put the key's owner back on the
+              // grip they were holding. Cleared if nothing moved (an end).
+              focusIndex = i + dir;
+              if (!moveEntry(i, i + dir)) focusIndex = null;
+            },
           }, icon('grip', 17)),
           el('div', { class: 'row-main' },
             // `inControl` even though this row is not a button: four controls
@@ -2618,16 +3049,8 @@ export async function SessionView(workoutId) {
             }),
             el('div', { class: 'row-sub wrap', text: bits.join(' · ') }),
           ),
-          el('div', { class: 'move-btns' },
-            el('button', {
-              type: 'button', 'aria-label': `Move ${entry.exerciseName} up`,
-              disabled: i === 0, onClick: () => moveEntry(i, i - 1),
-            }, icon('up')),
-            el('button', {
-              type: 'button', 'aria-label': `Move ${entry.exerciseName} down`,
-              disabled: i === state.entries.length - 1, onClick: () => moveEntry(i, i + 1),
-            }, icon('down')),
-          ),
+          // ~~`.move-btns` ▲▼ sat here~~ — removed 2026-09-12 on Tim's
+          // instruction; the grip's arrow keys are what a keyboard gets now.
           el('button', {
             class: 'icon-btn',
             'aria-label': `Remove ${entry.exerciseName} from today`,
@@ -2658,6 +3081,15 @@ export async function SessionView(workoutId) {
           }),
         }, icon('plus', 16), 'Add an exercise'),
       );
+      // ⚠️ AFTER `body` is rebuilt, not after `list` is. `setChildren(body…)`
+      // takes the list out and puts it back, and an element leaving the
+      // document drops focus — so a grip focused a line earlier was blurred a
+      // line later, and a keyboard user landed on the page body every move.
+      if (focusIndex != null) {
+        const g = list.querySelector(`.reorder-row[data-index="${focusIndex}"] .grip`);
+        focusIndex = null;
+        if (g) g.focus();
+      }
     }
 
     refreshWorkoutSheet = render;
@@ -2692,6 +3124,10 @@ export async function SessionView(workoutId) {
             if (kept.length) out.minis = kept; else delete out.minis;
             delete out.drops;      // legacy key, never written any more
             delete out.prefilled;  // a runtime flag; storage never sees it
+            // The padlock (2026-09-12) is a fact about the screen — "this row
+            // is shut" — not about the training, and a saved session has no
+            // rows. Same treatment as `prefilled`, and a test asserts it.
+            delete out.locked;
             return out;
           }),
       }))

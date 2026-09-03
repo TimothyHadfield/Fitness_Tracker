@@ -4,7 +4,7 @@ import { store, demo, warmReadCache, social, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
-  markRoute, parkScreen, takeRiseRequest,
+  markRoute, parkScreen, releaseGhost, takeRiseRequest,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -145,7 +145,20 @@ const NAV = [
 // ⚠️ `goals` joined this list on 2026-08-25 when it stopped being a tab. A
 // screen with no tab of its own is reached FROM somewhere, so it needs a back
 // button, which is what being fullscreen gives it — the same shape as `start`.
-const FULLSCREEN = ['session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import', 'compare', 'notes'];
+/* 🔄 `record` JOINED THIS LIST ON 2026-09-12, and it is the fix for Tim's report:
+ * *"when the screen goes up, it doesn't cover over the main sections display
+ * (home, workouts, record, etc), like we talked about."* His original ask on
+ * 2026-09-09 said it in so many words — *"pull up the record section from the
+ * bottom (which covers over the main section display)… push the record section
+ * back down, SHOWING the main section display"* — and the 09-09 build read
+ * "travels over the bar on the way" where he meant "sits over it". A panel that
+ * covers the tab bar is a screen with no tab bar: the down arrow is the way
+ * off it, which is exactly what he asked for. ⚠️ It is STILL a nav tab
+ * (`NAV` above lights it for `start`, `session`…) and still a route; only the
+ * bar under it is gone. The ghost it rises over carries the OLD screen's bar
+ * (`parkScreen()` parks everything in `#app`), so the bar is covered by the
+ * panel rather than vanishing a frame before it arrives. */
+const FULLSCREEN = ['record', 'session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import', 'compare', 'notes'];
 
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
@@ -349,7 +362,9 @@ async function render() {
     && ((route.name === 'record' && parse(prevHash).name !== 'record')
         || (asked && route.name === 'session'));
   prevHash = location.hash;
-  if (rising) parkScreen(leaving);
+  // 🔄 Held, since 2026-09-12: the ghost is released when the rise ENDS rather
+  // than on a clock that started before the store was read — see parkScreen().
+  const ghost = rising ? parkScreen(leaving) : null;
 
   try {
     const screen = await resolve(route);
@@ -383,6 +398,8 @@ async function render() {
     const mini = liveSessionBar({ route: route.name, today: todayISO() });
     if (mini) { screen.classList.add('has-mini'); screen.append(mini); }
     app.append(screen);
+    // The still picture underneath goes when this screen's rise has ended.
+    if (ghost) releaseGhost(ghost, screen);
     // ⚠️ Every screen, here rather than in screenShell, for the same reason the
     // demo bar is: no route may be reached without it. See associateLabels()
     // and autoGrowTextareas().

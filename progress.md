@@ -25,8 +25,9 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-11 — the **Profile/Data split is finished** (steps 2, 4 and 5), a tab the
-accessibility audit had never seen, and **a standing instruction about what "catch up" means.**
+**Last updated:** 2026-09-12 (the same session as -11) — the split finished, the benchmark's
+captions on every set, **the set lock, the finger-following drag, Years-first calendars, ranked best
+lifts, Record covering the tab bar**, and **a standing instruction about what "catch up" means.**
 
 🛑 **"CATCH UP WITH PROGRESS.MD" MEANS READ AND REPORT. IT IS NOT A GO-AHEAD FOR ANYTHING.** Tim,
 2026-09-11, having caught a session already building: *"When I tell you to catch up with progress.md,
@@ -38,6 +39,54 @@ lines what changed and what is open, **then stop.**
 
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Open work 29 closed on 2026-09-11; every
 other item on the list is either Tim's, pinned, or parked.
+
+## What changed on 2026-09-12, in one line each
+
+⚠️ **THE SAME CHAT SESSION AS 2026-09-11** — Tim rapid-fired five asks while the captions pass was
+still under test, then *"you should be deploying many sub-agents"*; three ran at once and stamped
+their work -12, so that is the date the code carries. Full write-up: `docs/history.md`, 2026-09-12.
+
+1. 🔄 **THE CALENDAR OPENS ON YEARS ON EVERY DOOR, AND A TAP ON MONTHS LANDS ON THE CURRENT MONTH** —
+   Profile included. `calMode` and `friendCalMode` both default to Years; `land: false` now means
+   "not on arrival" (a `painted` flag), so the Profile pane is moved by a tap and never by a paint.
+   ⚠️ Months remembered from the Calendar screen still paints Profile un-landed. 🚩 **Visual, left
+   for Tim**: the Profile tab's Months/Years pill is never `wireSegmented`, so it repaints instead
+   of sliding — one line in `calendarSection`.
+2. 🆕 **A SET LOCKS WHEN YOU MOVE ON FROM IT** — a padlock on the right that swings shut (`--t`,
+   `--ease-both`, one-shot on the rebuilt row) and unlocks-and-opens on a tap. 🚨 **Only a RECORDED
+   set** (`setIsRecorded` is the one rule); a drop locks with its set; per person, never broadcast;
+   `locked` on the draft, dropped at save. 🚩 **Flagged for Tim, not changed**: fill-on-open copies set
+   1 into set 2, a filled set is recorded, so going back to set 1 locks the copy — visible now where
+   it was silent. Previous onto a locked set finds nothing open, deliberately.
+3. 🔄 **THE EXERCISES SHEET DRAG FOLLOWS THE FINGER** — `translateY` of exactly the pointer's travel,
+   no transition on the dragged row (the transition WAS the lag), neighbours slide by a row height,
+   DOM untouched until release, then the same commit and a FLIP. **▲▼ removed** on his instruction;
+   the grip takes the arrow keys and says so, so a keyboard loses nothing.
+4. 🔄 **YOUR BEST LIFTS IS RANKED** — the core eight (Squat, Bench, Deadlift, OHP, Row, RDL, Curl,
+   Close-Grip; Cable Crunch excluded on purpose) as estimated 1RMs coloured by the `lv-text-*` ramp
+   with the band AND the level name in words, ordered by level, then **Other lifts** behind a real
+   `<details>`. 🚨 **A recorded lift shows ITS OWN best set through the curve, not the muscle
+   rating** — the rating is a blend a leg press could lead, and rating-converted numbers would put
+   every exercise of one muscle on one percentile. A never-done core lift is converted and says so; a
+   stand-in-only one shows no number and says why (no `allowFallback`). ⚠️ Per-side is
+   `e1rm(total)`, not doubled after — the agent's own draft had it backwards and its probe caught
+   it. `js/profile-ranking.js`, new, in the precache.
+5. 🚨 **RECORD COVERS THE TAB BAR** — `record` is in `FULLSCREEN`; the down arrow is the way off. 🚨
+   **And two faults under it**: `clear(app)` took the bar with the old screen, so `parkScreen()`
+   now parks **everything in `#app`** (the bar rides in the ghost); and the ghost's 240ms timer
+   started **before the store read**, so on a 220ms read it left mid-rise — measured, ghost gone at
+   t=264 with the panel at y=404. **Released on the rising screen's own `animationend` now**
+   (`releaseGhost()`), a falling ghost on its own; a 4× backstop timer still always runs. Re-probed
+   in-page on rAF: ghost with bar for the whole rise, panel 844px from y=844 to 0.
+6. 🔒 **THREE AGENTS AT ONCE ON DISJOINT FILES HELD — with one lesson.** The live suite was red for
+   everybody while anybody was mid-flight (a half-built lock crashed `render.test.mjs`); one agent
+   built an **isolated copy with the others' files at HEAD** to get its green run, and that is now
+   the standing instruction. One agent owns `tests/`; the others write blocks to the scratchpad and
+   the integrator places them — 58 assertions went in verbatim and passed first time.
+7. ✅ **1,330 render, 2,021 data-layer, 131 a11y**, every no-Chrome suite green, `sw-update` 12/12 this
+   run (still flaky by record). **Audit 272 routes / 23,327 text nodes / 0 / 0 / 0.** ⚠️ **The node
+   count fell from 34,027 and was attributed before it was accepted**: Years-default calendars
+   (−5,416, −5,336) and Record's five labels (−44).
 
 ## What changed on 2026-09-11, in one line each
 
@@ -74,6 +123,14 @@ instruction above, followed by *"You can continue working this time, but next ti
 7. 🔒 **AND THE ONE THAT GUARDS THE WHOLE SPLIT: `#/me` HOLDS NO FIELD AT ALL** — no `input`, no
    `textarea`, no `select`, anywhere on it. `direction.md` §4a's line between the two profile screens,
    asserted rather than remembered.
+8. 🆕 **THE BENCHMARK'S TWO CAPTIONS ARE ON EVERY SET OF A WORKOUT** (second pass, his ask): *"_% of
+   your estimated max"* over the weight, *"maybe __ to failure"* over the reps, same slot, same two
+   functions, repainted in place on every nudge. 🛑 **A READ, not a LOAD — no `allowFallback`**: the
+   benchmark form is that option's one named caller, and here the default refusal stands. 🚨 **PER
+   PERSON** — `ratingsFor(name)` builds ratings from each person's OWN sessions, or a guest would see
+   the owner's max under their name (0e). 🔒 The guest assertion is the load-bearing one and a
+   mutation flips exactly it. The load is `totalResistance()` on an assisted lift, doubled per side;
+   blank at zero; no slot on a timed exercise. **1,255 render.**
 
 ## What changed on 2026-09-10, in one line each
 
@@ -124,107 +181,40 @@ Profile/Data question**, answered as advice and then approved for building.
    trained, not pounds, because there is no honest ranking of a 405 deadlift against a 40 lateral
    raise (Rule 6). 🚩 **Steps 2, 4 and 5 are NOT done** — see Open work 29.
 
-## What changed on 2026-09-09, in one line each
+## 2026-09-09 — COLLAPSED TO A POINTER, 2026-09-12
 
-⚠️ **THIS WAS THREE PASSES AND THEY ARE COLLAPSED HERE ON PURPOSE** — the cut 2026-09-06 and -07 both
-needed. Each has its own dated section in `docs/history.md` (2026-09-09, first through third).
+⚠️ **The routine maintenance** — this file reached **159 KB of its 160 KB budget** and the rule is
+the one in the byte-budget block below. Three passes, each with its own dated section in
+`docs/history.md` (2026-09-09, first through third). **What Tim asked for, in order:** a friend's
+profile is *"a mess"* on a laptop and their map is compared *"against people like YOU, not people
+like THEM"* → the "Compared to" menu *"really doesn't need any words at all"* → Record should *"feel
+more like a button that actually activates something"* → *"just combine the 2 and call them
+'friends'"*, and *"if the wordiness fix isn't complete yet, then keep working on it."*
 
-**What Tim asked for, in order:** a friend's profile is *"a mess"* on a laptop and *"formated for an
-iphone"*, and their map is compared *"against people like YOU, not people like THEM"* → the "Compared
-to" menu *"really doesn't need any words at all"* → Record should *"feel more like a button that
-actually activates something"* → *"just combine the 2 and call them 'friends'"*, and *"if the
-wordiness fix isn't complete yet, then keep working on it."*
-
-1. 🚨 **A FRIEND'S PAGE ON A LAPTOP WAS ONE CLASS, AND THE CLASS WAS DOING WHAT IT SAYS.**
-   `.graph-host.is-muscles` is `flex-direction: row` at 860px — right for the **two** children your
-   own map puts there, catastrophic for the **seven** a friend's page does. Measured: the figure drew
-   at **122px**, the caption wrapped one word per line, and their workouts ran off the edge behind a
-   horizontal scrollbar. ✅ **The split moved INSIDE the pane** (`.map-split`), the host is a plain
-   column (`is-shared-muscles`), and the figure + panel get the same two columns, breakpoint, clamp
-   and hairline your own map has. ⚠️ **Nobody broke it; it arrived** — the friend page moved into that
-   pane on 2026-09-05 and inherited a rule written for different contents.
-2. 🔒 **THE PHONE LAYOUT IS BYTE-FOR-BYTE UNCHANGED AND THAT WAS MEASURED, NOT ASSERTED** — every new
-   rule is inside the media query, and `.friend-body` is 297×439 at (47,253) before and after at
-   390px. ⚠️ **Nothing branches on width in JS**, so a resize cannot land in a third state.
-3. 🚨 **THEIR MAP WAS READ AGAINST THE READER'S SEX — the 2026-09-05 fix arriving at the second
-   door.** It opened on `settings.compare`, which carries a **concrete** sex once anybody presses
-   "Like me". ✅ **`comparePreset('each')` now**, resolved per document. ⚠️ **It survived because with
-   ONE body the wrong answer and the right answer are the same string for half the population** —
-   every fixture in the suite was male.
-4. 🚨 **THE WORDS NEEDED A SEPARATE FIX AND WOULD HAVE SHIPPED WRONG.** `compareKey()` resolves
-   `sex: 'own'` against **the document**; `comparisonLabel()` resolves it against **`profile.gender`**,
-   passed as null here, which falls back to **male**. Her colours would have been right and her
-   caption would still have said *"men who lift"*. `ownSexOf(strength)` feeds both now. 🚨 **And a live
-   bug under it: the caption was built once and never repainted**, so changing the group re-ranked the
-   body and left the words naming the population it had just left.
-5. ✂️ **THE "COMPARED TO" SHEET IS CUT (Rule 9)** — four axis paragraphs behind four dots beside their
-   labels; **the preset hints DELETED rather than hidden**, because pressing a preset lights the chips
-   below and the foot line names the group live, so the hint was a third copy; *"Now comparing you
-   against"* → *"Now:"*. 🛑 **The untrained-adult caveat was shortened, never softened, and an
-   assertion OPENS the dot to read it back.**
-6. 🔄 **PRONOUNS THAT NAMED THE WRONG PERSON** — on somebody else's page **"Like me" → "Like them"**,
-   **"My body weight" → "Their body weight"**, **"My age" → "Their age"**; on the two-body screen
-   **"Own body weight" / "Own age"**, because that sheet's own footer says *"each against their own"*.
-   **Keys unchanged; only the words.**
-7. 🆕 **THE RECORD TAB RISES FROM THE BOTTOM OVER WHAT YOU WERE LOOKING AT**, and the reason is his
-   first clause: the big middle **+** is the one control in the app that is an ACTION rather than a
-   destination (D4) and it behaved exactly like Data. **The movement is what says they are different
-   kinds of thing.**
-8. 🚨 **THE ROUTER COULD NOT DO IT AND WAS NOT MADE TO.** `render()` clears `#app`, so two screens
-   never coexist. ✅ **The outgoing screen is MOVED onto `document.body`** for 240ms — where sheets
-   and toasts already live — and removed by a timer that always runs (`parkScreen()` in `ui.js`).
-   ⚠️ **Parked BEFORE `resolve()` is awaited**, or the panel rises over an empty ground while the
-   store is read: measured, at 60ms the panel is still at its start position.
-   🔒 **No ghost is ever built in jsdom or under reduced motion, and that is a test** — a parked
-   screen is a second whole `.screen`, and in a harness it would double every selector in the suite.
-9. 🚨 **TWO FAULTS ONLY A BROWSER COULD SHOW, BOTH SHIPPED WRONG FIRST**: a `.screen` carries no
-   background, so the two were **legible through each other** — it read as a rendering fault rather
-   than a movement; and **moving a node RESTARTS its CSS animations in Chrome**, so the parked picture
-   faded up from transparent. `background: var(--ground)` on both, `animation: none` on the ghost.
-   ⚠️ **Neither is visible to any test in this project.**
-10. 🆕 **`screenShell` HAS A THIRD TOP-LEFT SLOT — `down`** — beside `back` and `profile`. 🛑 **It is
-    NOT a back arrow**: Rule 8 says back returns to the screen you were just on, and this lands on
-    **Home** whatever you came from, which is Tim's instruction. ⚠️ **No rise on a cold open or a
-    re-render** — a panel rising over nothing claims a screen was covered that never existed (Rule 7).
-11. ✅ **OPEN WORK 28 IS CLOSED THE CHEAP WAY, ON HIS PICK** — *"just combine the 2 and call them
-    'friends' instead. We might change it to following/folowers later."* **Workouts · Friends**, one
-    number; `#/me/followers` and `#/me/following` still resolve onto the one list, titled Friends
-    however you arrive. 🚨 **The thing that keeps his other door cheap is that there is no
-    migration** — nothing was built or deleted, this is two labels over one existing list.
-12. ✂️ **AND THE "?" WENT WITH THE SECOND NUMBER**, because it existed to explain why two figures were
-    equal. 🚨 **What survived is the hard half and it is ON the screen**: *"Your account is public, so
-    people can see your training without being friends."* One sentence, only where it is true —
-    without it, "2 Friends" reads as who can see you.
-13. 🚩 **THE WORDINESS: THE TWO THINGS ALREADY WRITTEN DOWN AS OPEN.** Measured first with a counter
-    over every user-facing string, rather than guessed at. **(a) Every transcribed system restated its
-    own warning in its notes** — flagged 2026-09-08 as the biggest duplicate left; the warning prints
-    directly above them. Longest shared runs before the cut: **14, 9, 7, 7, 4** consecutive words.
-    ~240 words gone. **(b) The Goals weights block: 182 words in four paragraphs → 30 in three
-    sentences.**
-14. 🚨 **A TEST CAUGHT A REAL HOLE THE MOMENT THE DUPLICATE WENT.** The assertions requiring
-    *"not from | transcribed"* read `p.notes`, and one was not a false alarm: **The Golden Six's
-    warning had never said it** — of six credited systems it was the only one whose disclaimer lived
-    solely in the copy just deleted. `warning` carries it now. 🔒 **The assertions moved rather than
-    relaxed and got stricter**: they read the text a reader meets (`warning`, falling back to the
-    screen's DEFAULT), plus a new one capping the shared run at **under five words**, a threshold
-    measured rather than chosen.
-15. 🛑 **THE GOALS SAFETY CLAIM STAYED IN FRONT OF THE NUMBERS.** Somebody who set a goal and watches
-    the runner pre-fill a heavier weight has every reason to think the two are connected, and that is
-    the only thing in this app that could get somebody hurt (`goals-plan.md` §3.1). The mechanism moved
-    behind the dot; ⚠️ **the lay-off refusal moved WORD FOR WORD** — *"it will not tell you to go
-    lighter either, because nobody has measured by how much"* — with an assertion reading it back out
-    of the popover, because a refusal reworded is not the same refusal.
-16. 🛑 **ONE PARAGRAPH OFF THE RESEARCH TAB AND ONLY ONE.** That section is carved out by name
-    (`direction.md` §4.1), so the three paragraphs about the age chart stayed whole; the fourth listed
-    where **other** screens' numbers come from. **The 2026-09-07 finding in miniature: the copy is not
-    padded, it is mis-placed.**
-17. ✅ **1,123 render assertions** (was 1,090 this morning), every runnable suite green, **1,921
-    data-layer**, **4,380 across nineteen**. 🔒 **Mutation-checked twice** — the reader's own comparison group flips exactly
-    three assertions (and the mutant reads **Beginner** where the fixture reads **Expert**, which is
-    Tim's report reproduced); `profile: true` instead of `down` flips exactly the two corner ones.
-18. ⚠️ **`tools/a11y-audit.mjs` RUNS AT 360 AND 390 ONLY, SO THE DESKTOP LAYOUT OF EVERY SCREEN IS
-    UNSWEPT.** Found by needing it this session; every laptop measurement here came from a scratchpad
-    driver instead. **A real coverage hole, written down rather than fixed.**
+- **A friend's page got a laptop layout** (`.map-split` inside the pane; the host never takes
+  `is-muscles`) and **their map is read against people like THEM** — `comparePreset('each')`,
+  resolved per document, with `ownSexOf()` feeding the caption too, and the caption repainted on
+  every change. 🔒 Durable half: the **Friends** row in `docs/state.md`. ⚠️ The lesson worth
+  keeping: it survived because every fixture was male — the fixture is now female while the reader
+  is male, because with one body the right and wrong answers are the same string for half the
+  population.
+- **The "Compared to" sheet is wordless** (Rule 9; the preset hints deleted, the untrained-adult
+  caveat shortened never softened, read back by opening its dot) and **the pronouns follow the
+  body** (*Like them · Their body weight · Their age*; *Own …* on the two-body screen). 🔒
+  `docs/state.md`, Muscles row.
+- **Record rises from the bottom** with a `down` slot in `screenShell` (🛑 not a back arrow — it
+  lands on Home, Tim's instruction). `parkScreen()` in `ui.js` is the mechanism, and the two faults
+  only a browser could show (screens legible through each other; a moved node restarting its
+  animations) are in Rule 7 and the CSS. 🔄 **Superseded on 2026-09-10 and -12** — the stacking fix,
+  the bar riding in the ghost, and the ghost released on `animationend`: see the Record row.
+- **Open work 28 closed the cheap way** — one count called Friends, two routes still resolving, the
+  public-account sentence ON the screen. Its row below stays.
+- **The wordiness measured then cut**: transcribed systems' restated warnings (~240 words), the
+  Goals weights block (182 → 30), one paragraph off Research (its teaching content carved out by
+  name). 🚨 A test caught the Golden Six's warning had never carried its own disclaimer; it does now,
+  and the assertions read the text a reader meets with a **sub-five-word** shared-run cap. 🛑 The
+  Goals safety claim and the lay-off refusal moved word for word.
+- ⚠️ **The audit swept phone widths only** — fixed the next day (four widths).
 
 ## 2026-09-08 — COLLAPSED TO A POINTER, 2026-09-11
 
@@ -504,10 +494,16 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
-**Everything is pushed and every runnable suite was green on 2026-09-11** — including **1,246 render
-assertions** and **1,990 data-layer**. ⚠️ **The 218 rules assertions were last run on 2026-09-10**;
-that suite needs the emulator (§0.9) and was not re-run since, because nothing this session touched
-`firestore.rules`.
+**Everything is pushed and every runnable suite was green on 2026-09-12** — including **1,330 render
+assertions**, **2,021 data-layer** and **131 a11y**. ⚠️ **The 218 rules assertions were last run on
+2026-09-10**; that suite needs the emulator (§0.9) and was not re-run since, because nothing this
+session touched `firestore.rules`.
+
+🚩 **THREE THINGS FLAGGED FOR TIM ON 2026-09-12, NONE CHANGED**: fill-on-open meets the set lock (a
+copied set 2 locks when you go back to set 1 — visible now, was silent); the Profile tab's Months/
+Years pill is the one segmented control that repaints instead of sliding (`wireSegmented` never
+reaches it — one line, visual, his); `pointercancel` on the exercises drag commits the slot under
+the finger rather than abandoning.
 
 ✅ **THE PROFILE/DATA SPLIT IS DONE — all five steps, Open work 29 closed 2026-09-11.** Read that
 entry before touching Profile, Data, Account or Settings: it carries the line the whole thing rests
@@ -712,6 +708,15 @@ for whether a day may be collapsed:
   agents ran at once on 2026-09-08 on one named file each and none of them collided.
   ⚠️ **The 2026-08-22 note about wave size was about REVIEW agents**; four writing at once is a
   different thing and it held.
+  🆕 **AND TWO MORE RULES FROM 2026-09-12, when three wrote at once again**: (1) 🚨 **the live suite
+  is red for everybody while anybody is mid-flight** — a half-built feature in one agent's file
+  crashed `render.test.mjs` for the others — so **an agent that needs a green run builds it in an
+  isolated scratch copy with the other agents' files at HEAD**, and the brief says so; (2) **one
+  agent owns `tests/`**; the others write complete `ok(...)` blocks and the rewrites of any existing
+  assertion their change breaks to a scratchpad file, and the integrator places them afterwards —
+  58 assertions went in verbatim that way and passed first time. ⚠️ Give each agent Tim's words
+  verbatim, the files it may and may not touch by name, and the rule that CSS belongs to at most one
+  of them.
 - ⚠️ **AGENTS FLAG THEIR OWN NEAR-MISSES, AND THOSE ARE WORTH READING CLOSELY.** On 2026-09-06 one
   reported that it had nearly put two meanings in one field and asked for a second opinion — it was
   right, and the fix went in. Another found a real bug on the logging path it had been told not to

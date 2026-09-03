@@ -17,6 +17,235 @@
 
 ---
 
+## 2026-09-12 — FIVE ASKS RAPID-FIRED, THREE AGENTS AT ONCE, AND RECORD FINALLY COVERS THE BAR
+
+⚠️ **THE SAME CHAT SESSION AS 2026-09-11** — the agents stamped their work -12 and the stamps
+were left, so this section carries the date the code does. Tim sent five asks in a row while the
+captions pass (the -11 second pass) was still being tested, and then: *"you should be deploying
+many sub-agents to help you out with all this work I'm rapid-firing you."* Three ran at once on
+disjoint files; the fourth ask (the Record panel) touched files they held and was done afterwards.
+
+### A. Calendar: Years everywhere, and Months lands on the current month (agent)
+
+Tim: *"it automatically shows almost a full year before the user's first recording, so they have
+to scroll down in order to see anything. Two things: first, make the year display the default for
+the calendar in all scenarios (including viewing a friend's calendar). Second, when the month
+display is selected, the current month should be the one that is being viewed to start."*
+
+His report was one screen and the cause was two settings: `calMode` and `friendCalMode` both
+defaulted to Months, and the Profile door's `land: false` meant "never move this pane". **Both
+memories start on Years now**; `land: false` is narrowed to **the arrival only** (a `painted` flag),
+so a tap on Months runs the same `landOnCurrentMonth()` on the Profile pane it used to be forbidden
+from, and the earlier months are above. 🔒 `landOnCurrentMonth` stamps `data-landed` on the month it
+aimed at, because jsdom cannot see where a pane went; the pixels are the browser's. The friend
+page's "Months, so it is chosen rather than inherited" argument is struck through with its answer
+beside it (the caveat is on screen in Years too). Three mutations, all observable: the defaults
+(3 flip), the landing guard (1), one shared memory for both subjects (4). ⚠️ **One case still opens
+un-landed**: Months remembered from the Calendar screen paints Months on Profile without moving the
+pane — they are where they left it. ⚠️ **Not fixed, visual, Tim's**: the Profile tab's Months/Years
+pill is never `wireSegmented`, so it is the one segmented control that repaints instead of sliding.
+
+### B. A set locks when you move on from it (agent)
+
+Tim: *"Sometimes a user mixes up sets and adjusts something that doesn't need to be adjusted for a
+past set… when a user moves on from a set, automatically 'lock' the set they just finished… a
+visual lock on the right side of the set which animates being locked and unlocked when you click
+on it."*
+
+- **"Moves on" is**: opening another set, leaving the exercise or its superset round, Add set.
+  **Not**: collapsing, tapping off, switching person (`entry.active` does not move).
+- 🚨 **Only a RECORDED set locks** — `setIsRecorded` in `session-draft.js` is the one rule, so a blank
+  or still-`prefilled` set never locks: that would padlock a suggestion the lifter never made.
+- A drop locks with its set (one hard set, D23). Locks are per person's own sets, never broadcast.
+- A locked row's text is a `<div>`, not a disabled button ("a control on screen that does nothing"
+  is the fault the inert back buttons taught); no delete; the padlock is the one live thing and
+  tapping it **unlocks and opens**. Real `<button>`, named for the state, a **sibling** of
+  `.set-pick`, outermost, in a reserved slot so delete never walks sideways.
+- `locked: true` lives on the draft set — a workout put down keeps its locks — and is dropped at
+  save in `cleanedEntriesOf()` beside `prefilled` (mutation-checked: one assertion flips).
+- The glyph is two paths in `ui.js` drawn as two `<svg>`s so the shackle rotates about its right
+  leg; `lock-shut`/`lock-open` on `--t`/`--ease-both`, under the reduced-motion blanket, a
+  **one-shot class on the rebuilt node** consumed by the render that painted it (`requestRise()`'s
+  shape). The open row's padlock is `visibility: hidden` until the first number, toggled in place.
+- ⚠️ **FILL-ON-OPEN MEETS THE LOCK, and it is flagged for Tim rather than changed**: opening set 2
+  copies set 1 into it, a filled set counts as recorded everywhere, so going back to set 1 locks
+  that copy. Nothing new is saved that was not saved silently before — the padlock makes the copy
+  visible. Also: Previous onto a locked set finds nothing open (deliberate; the one state where
+  "exactly one set is always open" is false).
+
+### C. The exercises sheet drag follows the finger, and the arrows are gone (agent)
+
+Tim: *"It automatically locks into a valid position in the list, and doesn't follow the user's
+finger or mouse smoothly… it should follow the exact location of the user's selection and when the
+user releases their finger, it will automatically take the nearest valid position. Also the up and
+down arrows… are useless now that this is a drag feature now. Remove them."*
+
+Rects measured once at pointerdown; the dragged row is a `translateY` of exactly the pointer's
+travel with **no transition** (a transition between where the finger was and where it is now IS
+the lag he reported); the rows it passes slide by one row height (Rule 7 — the row you drag pushes
+the rest); **the DOM is untouched until release**; then the same `applyOrder → reorderOthers` commit
+the arrows used (superset rules unchanged) and a FLIP into the slot. ▲▼ removed; **the grip takes
+ArrowUp/ArrowDown and its name says so**, so a keyboard loses no path — and that found a bug in the
+first draft: focusing the moved row's grip before `setChildren(body…)` re-attached the list blurred
+it. Lists jsdom cannot measure are not dragged; the test stubs 56px rects and asserts what the code
+does with a geometry it was given. ⚠️ `pointercancel` still commits the slot under the finger, as
+before; abandoning is arguably more honest — noted, not changed.
+
+### D. Your best lifts, ranked (agent + wiring)
+
+Tim: *"display the core lifts, and then have 'other lifts' in an expandable section below it… just
+show the weight of an estimated 1RM for each of these, and show the confidence below it…
+colorize the number based on where that measurement puts that user among people like them (red
+for beginner, orange for novice, etc). Order the core lifts from highest ranking exercise
+(beginner-elite) to lowest, and do the same for ordering the other lifts."*
+
+`js/profile-ranking.js` (new, pure, in the precache) — `rankedLifts()` returns the **core eight**
+(the key lifts of Quads, Chest, Glutes, Shoulders, Back, Hamstrings, Biceps, Triceps; Core's Cable
+Crunch deliberately excluded — it rates a quarter of ab training) and every other trained lift,
+each with an estimated 1RM, a percentile and level against `profile.compare` through
+`withAssumptions()` (the assumptions come back as `assumed`), a confidence band, and Rule 5 fields
+on every row.
+
+- 🚨 **THE DECISION WORTH RECORDING: a recorded lift's number is ITS OWN BEST SET through the app's
+  curve, not `estimateOneRM()`.** The muscle rating is a winsorised blend a leg press could lead, so
+  a squat number off it is not "your best squat"; and converting every exercise of one muscle
+  through the same rating puts them all on one percentile, which defeats "order by rank". A core
+  lift never done is `converted` (naming what from); a core lift whose muscle has only a stand-in
+  rating shows **no number and says why** — `allowFallback` is not passed, the benchmark form stays
+  that option's one caller.
+- ⚠️ **Per-side lifts are scored as `e1rm(total load)`, not doubled afterwards** — the k-factor is
+  log-weight, and the pipeline doubles first (133 vs 126 for 50/side × 6; the agent's own first draft
+  had it wrong and the probe caught it). Body-weight lifts never take the recorded branch.
+- The screen: eight rows, number in the `lv-text-<key>` chip (the validated ramp — "red for
+  beginner, orange for novice" is its own low end), **the band and the level NAME in words under
+  it** so colour is never the only carrier, the measured set in the sub-line (Rule 5's anchor on
+  the row), one sentence saying every figure is an estimate and naming the group and any
+  assumption, then **Other lifts** behind a real `<details>` with the count on its summary.
+  Reps-only work (pull-ups with no weigh-in) is listed plainly, "measured, not ranked".
+- 33 data-layer assertions on a discriminating fixture (a 343 lb squat ranks below a 139 lb curl;
+  the heaviest "other" lift is last because unranked); flipping the comparator failed exactly the
+  three ordering assertions. Render assertions inverted from the -10 section on purpose: level-first
+  (the row above the bench though the bench has more days), the 1RM shown off the best set (227,
+  not 185), one chip class, the words, the disclosure.
+
+### E. 🚨 Record covers the tab bar — and the ghost was leaving mid-rise
+
+Tim: *"The visual of the record menu moving upwards is working much better now… The only problem
+is that when the screen goes up, it doesn't cover over the main sections display (home, workouts,
+record, etc), like we talked about."*
+
+He had said it on 2026-09-09 — *"pull up the record section from the bottom (which covers over the
+main section display)… push the record section back down, SHOWING the main section display"* —
+and the 09-09 build read "travels over the bar on the way" where he meant "sits over it". ✅
+**`record` is in `FULLSCREEN` now**: a panel that covers the bar is a screen with no bar, and the
+down arrow is the way off it. Still a route, still a lit tab for `start`/`session`.
+
+🚨 **THAT ALONE WOULD HAVE MADE IT WORSE**: `clear(app)` takes the bar with the old screen, and a
+ghost holding only the screen left the bar's strip **empty** for the 240ms the panel took to reach
+it — a bar that vanishes a frame before it is covered. So **`parkScreen()` parks everything in
+`#app`** — the screen AND its bar, in `#app`'s own flex direction, boxed on `#app`'s rect. For a
+no-nav screen falling (Record's arrow, the runner's ▾) that is nothing extra.
+
+🚨 **AND THE rAF PROBE FOUND A SECOND, OLDER FAULT.** The ghost's `setTimeout(…, SCREEN_MS)` started
+at park time — **before `resolve()` was awaited** (app.js parks first, on purpose) — so on a store
+read of 220ms the ghost was gone 20ms into the rise and the panel climbed the second half over an
+empty ground: measured, ghost removed at t=264 with the panel still at y=404. ✅ **An arriving ghost
+is released by the rising screen's own `animationend`** (`releaseGhost()`, guarded on
+`e.target === screen && animationName === 'screen-up'`, because `animationend` bubbles from any
+child keyframe); a falling ghost releases itself on its `screen-down`; a backstop timer at four
+times the duration still always runs. Re-probed: ghost present with the bar for the whole rise
+(t=219→447), panel 844px tall from y=844 to 0, `#app` bar absent on `#/record`, the fall's ghost
+removed at 312ms after passing the bottom, Home's bar back underneath. ⚠️ **Measured in-page on
+`requestAnimationFrame`, one array returned at the end** — §0.14's rule, and the reason the first
+probe of 2026-09-10 was wrong twice.
+
+### F. Method — three agents at once, what held and what did not
+
+- **Disjoint files held** (A: `views-data.js`/`views-me.js`/`tests/*` calendar blocks; B:
+  `views-session.js`/`ui.js` glyphs/`css/app.css`; C: `profile-ranking.js`/`sw.js`/a data-layer
+  block). Nobody collided; nobody ran a tree-changing git command.
+- 🚨 **BUT THE LIVE SUITE WAS RED FOR EVERYBODY WHILE ANYBODY WAS MID-FLIGHT.** B's half-built lock
+  crashed `render.test.mjs` inside the captions block; A could not get a green baseline and built
+  an **isolated copy with the other agents' files at HEAD** — the right move, and it should be the
+  brief next time: *an agent that needs a green run builds it in a scratch copy of the tree.*
+- **One agent owns `tests/`; the others write proposed blocks to the scratchpad and the integrator
+  places them** — B's 58 assertions and five rewrites went in verbatim and passed first time; C's
+  went into data-layer directly because nobody else was in that file.
+- Every agent reported its "not done" list and every item was worth reading: the per-side doubling
+  near-miss, fill-on-open meeting the lock, the un-wired pill, `pointercancel`.
+
+### G. Counts
+
+**1,330 render** (was 1,255), **2,021 data-layer** (was 1,990), **131 a11y** (was 123); every
+no-Chrome suite green; `sw-update` 12/12 this run (still recorded flaky). **Audit: 272 routes,
+23,327 text nodes, zero below 4.5:1, zero overflow, zero unnamed controls** at four widths.
+⚠️ **The node count fell from 34,027 and the drop was attributed before it was accepted**: the two
+calendars opening on Years (−5,416 and −5,336) and Record losing its five tab labels (−44). A drop
+that size unexplained would have been the stale-server trap wearing a new face.
+
+---
+
+## 2026-09-11, second pass — THE BENCHMARK'S TWO CAPTIONS ON EVERY SET, PER PERSON
+
+**Tim:** *"Right now when a user is recording a benchmark, it estimates the number of reps that user
+could do based on the weight that is displayed, and it also shows you the percentage of your
+estimated max when you select a weight. I want you to do the exact same thing for a regular workout
+by just displaying the tiny '_% of estimated max' and 'maybe __ reps to failure' above the weight
+and reps. This will help the user estimate how much weight they should put on during a set."*
+
+### A. What shipped
+
+The open set in the runner carries the same two `.step-est` slots the benchmark form has, in the
+same place — between the field's name and its big number — fed by the same two functions
+(`percentOfMax()`, `repPrediction()` in `js/exercise-estimate.js`), so the two screens cannot
+disagree about either number. They repaint **in place** on every nudge, alongside `renderAssist()`,
+because rebuilding the row would destroy the input under the lifter's thumb (the 2026-08-29 rule).
+
+- ⚠️ **ONLY A LIFT WITH BOTH A WEIGHT AND A REP COUNT.** A plank gets no slot at all rather than an
+  empty one; "% of max" on a hold is meaningless and a rep guess on a carry is worse.
+- ⚠️ **THE LOAD, NOT THE NUMBER IN THE BOX.** On an assisted or bodyweight lift the box holds the
+  help taken or the weight added, and the rating was built from the total on the body —
+  `totalResistance()` is the one copy of that sum, and it returns null for more help than you weigh,
+  which is exactly the case the assist readout already calls "check the number". A per-side entry
+  is doubled, because `oneRM` is total load.
+- ⚠️ **NO ARITHMETIC ON NOTHING** — the benchmark form's rule, sharper here because every never-done
+  set opens on a derived or blank weight. Both captions are empty at zero.
+
+### B. 🚨 It is a READ, not a LOAD, and no `allowFallback`
+
+`exercise-estimate.js`'s header draws the line: *an estimate you read is not an estimate you lift.*
+The opening-weight suggestion (`derivedWeights`) puts a number IN the field and is gated hard for it.
+A caption beside a number the lifter typed changes nothing about the bar. 🛑 **The benchmark form
+is `allowFallback`'s one named caller and its header says a fourth screen is a new decision** — so
+the runner uses the default refusal: no direct contribution, no rating, a stand-in rating, a custom
+exercise → no caption, silently. A blank caption on the logging path costs nothing; a three-hop
+number beside a bar is the machine for confidently wrong numbers.
+
+### C. 🚨 Per person, or it is the cross-prescription 0e forbids
+
+A joint workout switches names and the whole suggestion switches with it. A "% of your estimated
+max" computed from the OWNER's ratings and shown under a guest's name would be the owner's max
+wearing the guest's name. So `ratingsFor(name)` builds ratings **per person from their own
+sessions** — `muscleRatings(rows)` takes them by hand, and `sessionsForName()` is the walk
+`historyForPerson()` already does for the suggestion. Lazy and cached: one history walk per person
+per runner, the pane paints without waiting, the captions fill in when it lands if the open set is
+still on screen (guarded on `isConnected`, because a re-render since then built a fresh slot).
+
+🔒 **THE LOAD-BEARING ASSERTION IS THE GUEST'S, and the fixture is built so it can fail**: the owner
+has a rowing history and the guest has none, on the same bar, at the same 135 lb. The guest's
+captions are blank and the owner's are not. **Mutation-checked**: reading the owner's ratings for
+everybody flips exactly that one assertion and nothing else.
+
+### D. Tests
+
+**1,255 render assertions** (was 1,246). The new block also pins: two slots on the open set, the
+percentage moving when the weight does, the input node surviving the repaint, both captions empty
+at zero, and no slot on a timed exercise. ⚠️ **jsdom cannot see the layout**, so the slot's
+placement inside the stepper is asserted by structure (`insertBefore` the controls) and the pixels
+are the browser audit's — the Session runner is in its route list.
+
+---
+
 ## 2026-09-11 — THE PROFILE/DATA SPLIT FINISHED, AND A TAB THE AUDIT HAD NEVER SEEN
 
 **Tim opened with *"catch up with progress.md"* and nothing else**, which is his usual reset. This

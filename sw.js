@@ -69,6 +69,7 @@ const SHELL = [
   './js/routine-from-session.js',
   './js/personal-bests.js',
   './js/profile-records.js',
+  './js/profile-ranking.js',
   './js/optimal.js',
   './js/qr.js',
   './js/social.js',

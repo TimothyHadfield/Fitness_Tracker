@@ -6380,5 +6380,216 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      + 'import store.js, which is the only reason any of this is testable');
 }
 
+/* ================================================================== *
+ * BEST LIFTS, RANKED (js/profile-ranking.js) — 2026-09-12
+ *
+ * Tim: *"display the core lifts, and then have 'other lifts' in an
+ * expandable section below it … just show the weight of an estimated 1RM for
+ * each of these, and show the confidence below it … colorize the number based
+ * on where that measurement puts that user among people like them … Order the
+ * core lifts from highest ranking exercise (beginner-elite) to lowest, and do
+ * the same for ordering the other lifts."*
+ *
+ * 🚨 THE FIXTURE IS BUILT SO THE ORDERINGS DISCRIMINATE. A list sorted by
+ * pounds and a list sorted by level agree far too often to tell apart on an
+ * ordinary history, so this one has: a squat at 343 lb that ranks BELOW a
+ * curl at 139; a core lift never done that still gets a converted number; a
+ * core lift whose muscle has only a stand-in rating, which must come back
+ * with NO number rather than a three-hop one; a per-side dumbbell lift; a
+ * custom exercise that has a number and no standard; and a pull-up with no
+ * weigh-in, which has a best and no pound figure.
+ *
+ * Mutation-checked: flipping `byRank` to ascending fails the two ordering
+ * assertions (core and other) and nothing else — see the session notes.
+ * ================================================================== */
+{
+  const { rankedLifts, CORE_LIFTS, CORE_MUSCLES } = await import('../js/profile-ranking.js');
+  const { muscleRatings } = await import('../js/store.js');
+  const { MUSCLE_LIFTS } = await import('../js/strength-standards.js');
+
+  const E = (name, sets) => ({ exerciseId: byName(name).id, exerciseName: name, sets });
+  const custom = makeCustomExercise({ name: 'Belt Squat', muscle: 'Quads', equipment: 'Machine' });
+
+  const sessions = [
+    { id: 'r1', date: '2026-08-20', entries: [
+      E('Back Squat', [{ weight: 315, reps: 3 }]),
+      E('Barbell Curl', [{ weight: 125, reps: 3 }]),
+    ] },
+    { id: 'r2', date: '2026-08-22', entries: [
+      E('Dumbbell Bench Press', [{ weight: 80, reps: 8 }]),
+      E('Dumbbell Shoulder Press', [{ weight: 50, reps: 6 }]),
+      E('Pull-Up', [{ reps: 12 }]),
+      { exerciseId: custom.id, exerciseName: 'Belt Squat', sets: [{ weight: 200, reps: 10 }] },
+    ] },
+    { id: 'r3', date: '2026-08-24', entries: [E('Back Squat', [{ weight: 275, reps: 5 }])] },
+  ];
+  // The library plus the custom one; muscleRatings() takes the sessions by hand
+  // and reads the library from the store, which is what the app does too.
+  const exMap = new Map(await store.getExerciseMap());
+  exMap.set(custom.id, custom);
+  const muscles = await muscleRatings({ sessions, benchmarks: [], bodyWeights: [] });
+  const profile = { gender: 'male', bodyWeight: 180, age: 30, compare: null, missing: [] };
+  const before = JSON.stringify(sessions);
+
+  const r = rankedLifts({ sessions, benchmarks: [], exMap, muscles, profile });
+  const byLift = (list, name) => list.find((l) => l.name === name);
+  const names = (list) => list.map((l) => l.name).join(' · ');
+
+  /* ---- the core eight, always ---- */
+  ok(CORE_LIFTS.length === 8 && CORE_LIFTS.map((c) => c.name).join(' · ')
+       === 'Back Squat · Barbell Bench Press · Deadlift · Overhead Press · Barbell Row · '
+       + 'Romanian Deadlift · Barbell Curl · Close-Grip Bench Press',
+     'the core lifts are the key lifts of eight muscles — Tim’s four, plus the row, the RDL, the '
+     + 'curl and the close-grip bench — named from MUSCLE_LIFTS rather than typed a second time');
+  ok(CORE_LIFTS.every((c) => MUSCLE_LIFTS[c.muscle] && MUSCLE_LIFTS[c.muscle].lift === c.name),
+     'and each one really is its muscle’s standard, so the list cannot drift from the table');
+  ok(!CORE_MUSCLES.includes('Core') && !CORE_MUSCLES.includes('Traps')
+     && !CORE_MUSCLES.includes('Calves') && !CORE_MUSCLES.includes('Forearms'),
+     '⚠️ Core is NOT a core lift — Cable Crunch rests on one measured source with its own σ and a '
+     + 'standard-quality penalty, and a quarter of ab training — nor are the three assistance '
+     + 'muscles; they still rank under "other lifts" the day they are trained');
+  ok(r.core.length === CORE_LIFTS.length,
+     `🚨 every core lift gets a row, trained or not — ${r.core.length} of ${CORE_LIFTS.length}`);
+  ok(r.core.every((l) => l.estimated === true) && r.other.every((l) => l.estimated === true)
+     && r.estimated === true,
+     '🚨 RULE 5: every row carries `estimated: true` — a recorded row’s 1RM is a MODEL of a set, '
+     + 'and the set itself sits beside it under a different name');
+
+  /* ---- 🚨 THE ORDERING, AND IT IS BY LEVEL, NOT BY POUNDS ---- */
+  ok(names(r.core) === 'Barbell Curl · Back Squat · Barbell Bench Press · Overhead Press · '
+       + 'Barbell Row · Close-Grip Bench Press · Deadlift · Romanian Deadlift',
+     `🚨 core lifts run highest level first, unrated last, ties by name — got "${names(r.core)}"`);
+  {
+    const curl = byLift(r.core, 'Barbell Curl');
+    const squat = byLift(r.core, 'Back Squat');
+    ok(squat.oneRM > curl.oneRM * 2 && squat.percentile < curl.percentile
+       && curl.level.key === 'expert' && squat.level.key === 'proficient',
+       `⚠️ THE DISCRIMINATING PAIR: a ${Math.round(squat.oneRM)} lb squat ranks BELOW a `
+       + `${Math.round(curl.oneRM)} lb curl (${squat.level.name} vs ${curl.level.name}), because the `
+       + 'order is a property of the lifter against people like them, not of the barbell');
+    ok(curl.source === 'recorded' && curl.best && curl.best.weight === 125 && curl.best.reps === 3
+       && squat.best.weight === 315 && squat.best.reps === 3 && squat.days === 2,
+       '🚨 RULE 5: a recorded row carries the measured set it was modelled from (125 × 3, 315 × 3) '
+       + 'and how many days stand behind it, so the estimate can be checked against a thing that '
+       + 'happened');
+    ok(near(squat.oneRM, e1rm(315, 3), 1e-9) && squat.confidence === 1 && squat.band.key === 'high',
+       'the squat’s 1RM is its own best set through the app’s own curve — 315 × 3 beats 275 × 5 — '
+       + 'at a key lift’s 1.00 ratio and a triple’s 1.00 rep factor: High confidence, and earned');
+  }
+
+  /* ---- a core lift never done still gets a number, and says it was converted ---- */
+  {
+    const bench = byLift(r.core, 'Barbell Bench Press');
+    const db = byLift(r.other, 'Dumbbell Bench Press');
+    ok(bench.source === 'converted' && bench.days === 0 && bench.oneRM > 0
+       && bench.from.join() === 'Dumbbell Bench Press',
+       '🚨 a core lift NEVER recorded still has a row and a number — the muscle’s rating run back '
+       + 'out through the ratio table — and `source: converted` plus `from` name what it rests on');
+    ok(near(bench.oneRM, muscles.get('Chest').estimate, 1e-9) && near(bench.percentile, db.percentile, 1e-9),
+       '⚠️ the consistency check: the converted bench and the recorded dumbbell bench it came from '
+       + 'sit on the SAME percentile, because the key-lift equivalent of the recorded set is the '
+       + 'rating (total ÷ ratio) and the converted number is the rating × 1.00');
+    const ohp = byLift(r.core, 'Overhead Press');
+    ok(ohp.source === 'converted' && ohp.level && ohp.level.key === 'novice'
+       && near(ohp.percentile, byLift(r.other, 'Dumbbell Shoulder Press').percentile, 1e-9),
+       'and the same for the overhead press off the dumbbell press — Novice on both rows');
+    ok(bench.band && typeof bench.confidence === 'number' && bench.confidence < 1,
+       'a converted row carries estimateOneRM()’s own confidence and band, untouched — the rating’s '
+       + 'credence times the conversion’s quality, never a ± figure');
+  }
+
+  /* ---- 🚨 a core lift with nothing to say still appears, with no number ---- */
+  {
+    const row = byLift(r.core, 'Barbell Row');
+    const dl = byLift(r.core, 'Deadlift');
+    const rdl = byLift(r.core, 'Romanian Deadlift');
+    const cgb = byLift(r.core, 'Close-Grip Bench Press');
+    ok(row && row.oneRM === null && row.level === null && row.percentile === null && row.why === 'no-evidence',
+       '🚨 an unrated core lift is NEVER dropped: the barbell row comes back with `oneRM: null` and '
+       + 'says why — nothing recorded for its muscle — so the screen can say so rather than show '
+       + 'seven lifts and let the eighth go missing');
+    ok(muscles.get('Glutes') && muscles.get('Glutes').kind === 'fallback'
+       && dl.oneRM === null && dl.why === 'stand-in-only'
+       && rdl.oneRM === null && rdl.why === 'stand-in-only'
+       && cgb.oneRM === null && cgb.why === 'stand-in-only',
+       '🚨 A STAND-IN RATING IS NOT CONVERTED OUTWARD. The squat stands in for Glutes and '
+       + 'Hamstrings and the dumbbell bench for Triceps, so all three muscles HAVE a rating — and '
+       + 'the deadlift, the RDL and the close-grip bench still get no number, because '
+       + 'estimateOneRM() is called with default options and `allowFallback` has exactly one named '
+       + 'caller, which this is not. Three estimates multiplied is the chain that module refuses');
+    ok(r.core.slice(4).every((l) => l.percentile === null)
+       && r.core.slice(0, 4).every((l) => l.percentile !== null),
+       'the four without a percentile sit after the four with one, whatever their names');
+  }
+
+  /* ---- 🚨 OTHER LIFTS: the same ordering, and the heaviest is last ---- */
+  ok(names(r.other) === 'Dumbbell Bench Press · Dumbbell Shoulder Press · Belt Squat',
+     `🚨 other lifts run highest level first, unrated last — got "${names(r.other)}"`);
+  {
+    const belt = byLift(r.other, 'Belt Squat');
+    ok(belt.oneRM > byLift(r.other, 'Dumbbell Bench Press').oneRM && belt.percentile === null
+       && belt.level === null && belt.why === 'no-conversion' && belt.source === 'recorded',
+       `⚠️ THE OTHER DISCRIMINATING ROW: the custom belt squat is the heaviest lift in the list `
+       + `(${Math.round(belt.oneRM)} lb) and it is LAST, because there is no published way to rank `
+       + 'it — its number is still shown, its level is honestly absent');
+    ok(near(belt.confidence, 0.70, 1e-9) && belt.band.key === 'good',
+       'an unranked recorded lift prices only the doubt it has — the rep curve at ten reps (0.70) — '
+       + 'because nothing about it was converted');
+    ok(!r.other.some((l) => CORE_LIFTS.some((c) => c.name === l.name)),
+       'and no core lift is listed twice');
+  }
+
+  /* ---- per-side: the curve sees the load the body saw ---- */
+  {
+    const db = byLift(r.other, 'Dumbbell Bench Press');
+    ok(db.perSide === true && near(db.oneRM, e1rm(160, 8), 1e-9) && near(db.shown, db.oneRM / 2, 1e-9),
+       '🚨 a per-side lift’s 1RM is e1rm(TOTAL load) — 80/side × 8 is scored as 160 × 8 — and '
+       + '`shown` halves it back to the figure the lifter recognises');
+    ok(!near(db.oneRM, e1rm(80, 8) * 2, 0.5),
+       `⚠️ and NOT e1rm(80 × 8) doubled (${(e1rm(80, 8) * 2).toFixed(1)} vs ${db.oneRM.toFixed(1)}): `
+       + 'the k-factor grows with the log of the weight, so the two differ by pounds, and the '
+       + 'rating pipeline doubles BEFORE the curve — this must too or the two disagree');
+    ok(near(db.confidence, 0.85 * 0.65, 1e-9) && db.band.key === 'good',
+       'a recorded non-key lift’s confidence is the rep factor (8 reps: 0.85) times the ratio’s '
+       + 'quality (dumbbell bench: 0.65) — the level is read THROUGH the ratio even though the '
+       + 'pounds were never converted, so the band has to price it');
+  }
+
+  /* ---- reps-only work is kept, not dressed as a 1RM ---- */
+  ok(r.repsOnly.length === 1 && r.repsOnly[0].name === 'Pull-Up' && r.repsOnly[0].reps === 12
+     && !byLift(r.other, 'Pull-Up'),
+     '⚠️ a pull-up with no weigh-in has a true best (12 reps) and no honest pound figure — it is '
+     + 'returned in `repsOnly` so the screen can list it, never silently dropped and never given a '
+     + '1RM in pounds it does not have');
+
+  /* ---- "people like them" is the account’s own setting, assumptions stated ---- */
+  ok(Array.isArray(r.assumed) && r.assumed.length === 0 && r.profile.assumed.length === 0,
+     'a complete profile assumes nothing, and says so with an empty list rather than a missing one');
+  {
+    const bare = rankedLifts({ sessions, exMap, muscles,
+      profile: { gender: null, bodyWeight: null, age: null, compare: null, missing: ['gender', 'body weight'] } });
+    ok(bare.assumed.join() === 'sex,body weight' && bare.core.length === 8
+       && byLift(bare.core, 'Barbell Curl').percentile !== null,
+       '🚨 no sex and no weigh-in still RANKS — assumed male, compared against lifters of every '
+       + 'size — and `assumed` carries both so the screen must say it, exactly as the muscle map '
+       + 'has since 2026-09-06');
+    ok(!(bare.profile.bodyWeight > 0),
+       'and no body weight is invented on the way: the overlay widens the axis, it never fills the '
+       + 'number');
+    const women = rankedLifts({ sessions, exMap, muscles, profile: { ...profile, compare: { sex: 'female' } } });
+    ok(byLift(women.core, 'Back Squat').percentile > byLift(r.core, 'Back Squat').percentile,
+       '`profile.compare` is honoured — the same squat sits higher against women who lift, so the '
+       + 'comparison group really is the account’s own setting and not a hard-coded population');
+  }
+
+  /* ---- Rule 6, and purity ---- */
+  ok(!/\b(weak|strong|stronger|weaker)\b/i.test(JSON.stringify(r)),
+     'no verdict word anywhere in the return — the colour is the screen’s, and it is the level ramp');
+  ok(JSON.stringify(sessions) === before,
+     'and it mutates nothing it was handed — pure, no clock, never imports store.js');
+  ok(rankedLifts({}).core.length === 8 && rankedLifts({}).other.length === 0,
+     'handed nothing at all it still returns the eight core rows, each with `oneRM: null`');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

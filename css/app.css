@@ -1599,6 +1599,63 @@ select.input {
 .set-del { color: var(--ink-faint); padding: 3px; display: flex; }
 .set-del svg { width: 15px; height: 15px; display: block; }
 
+/* ── THE PADLOCK ON A SET (2026-09-12) ─────────────────────────────────────
+   Tim: *"when a user moves on from a set, automatically 'lock' the set they
+   just finished … a visual lock on the right side of the set which animates
+   being locked and unlocked when you click on it."* The rule for when it shuts
+   is in views-session.js above `goToStep`; this is only how it looks and moves.
+
+   ⚠️ THE OUTERMOST THING ON EVERY ROW, in a slot every row reserves — a set with
+   nothing in it carries the button invisibly (`.is-idle`) and a drop row carries
+   an empty `.set-lock-gap` of the same width — so delete, which sits to its
+   left, is in the same column on every line of the list. `visibility`, not
+   `display`, for exactly that reason.
+
+   ⚠️ 30px OF PAINT, 44px OF HIT, the icon-button convention. Unlike `.set-del`
+   this is a control you aim at on purpose and often (a typo in set 2 is the
+   whole reason it exists), and it sits at the edge of the row where the halo
+   costs nothing. The halo reaches ~7px over delete's right edge and that is the
+   intended tie-break: delete is deliberately hard to hit by accident, and a
+   near-miss between the two should unlock rather than delete. */
+.set-lock {
+  position: relative;
+  flex: none;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: 6px;
+  color: var(--ink-faint);
+}
+.set-lock::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
+.set-lock:active { background: var(--raised); }
+/* Shut reads darker than open, so the column of padlocks says which rows are
+   done at a glance without a second colour. */
+.set-lock.is-locked { color: var(--ink-soft); }
+.set-lock.is-idle { visibility: hidden; pointer-events: none; }
+.set-lock-gap { flex: none; width: 30px; }
+/* ⚠️ TWO <svg>s, ONE GLYPH: the body and the shackle are drawn over each other
+   in the same 24-unit viewBox (see `lock-body` / `lock-shackle` in ui.js), so
+   the shackle can move on its own. */
+.set-lock svg { position: absolute; inset: 0; margin: auto; width: 17px; height: 17px; }
+/* The shackle swings about the base of its RIGHT leg — (16, 11) in the viewBox,
+   which is 66.7% across and 45.8% down the 17px box — so the left leg lifts
+   clear of the body. 35° is the smallest angle that reads as open at 17px;
+   rotate, never translate, because a lifted-straight shackle looks like a lock
+   drawn slightly wrong rather than a lock that is open. */
+.set-lock .lock-shackle { transform-origin: 66.7% 45.8%; }
+.set-lock:not(.is-locked) .lock-shackle { transform: rotate(35deg); }
+
+/* A locked row is text, not a control — no press feedback, no pointer. What
+   says "locked" is the shut padlock and nothing else: the numbers stay legible,
+   because a locked set is still a set you did. */
+.set-item.is-locked .set-pick { cursor: default; }
+.set-item.is-locked .set-pick:active { opacity: 1; }
+
 /* ⚠️ THE OPEN SET'S CONTROLS, INSIDE THE LIST. It is a sibling of its row rather
    than a child, because `.set-del` has to stay a sibling of `.set-pick` (nesting
    it would be invalid HTML and would need a stopPropagation that works until the
@@ -1643,8 +1700,9 @@ select.input {
 
 /* ── Today's exercises: reorder, add, remove (2026-08-31) ──────────────────
    Rows separated by hairlines, never boxed (Rule 2) — the same treatment
-   `.list` gives every other list in the app, and `.move-btns` is the builder's
-   own pair of arrows, unchanged. */
+   `.list` gives every other list in the app. ~~and `.move-btns` is the
+   builder's own pair of arrows, unchanged~~ — no arrows here since 2026-09-12;
+   see the struck block below. */
 .workout-sheet { display: flex; flex-direction: column; gap: 11px; }
 .reorder-list { display: flex; flex-direction: column; margin-inline: calc(var(--pad) * -1); }
 .reorder-list > * { padding-inline: var(--pad); }
@@ -1686,23 +1744,38 @@ select.input {
 .grip:active { background: var(--raised); cursor: grabbing; }
 .grip svg { display: block; }
 
-/* ⚠️ THE ARROWS ARE 40×24 HERE, WIDER AND TALLER THAN THE BUILDER'S 28×21, AND
+/* ~~⚠️ THE ARROWS ARE 40×24 HERE, WIDER AND TALLER THAN THE BUILDER'S 28×21, AND
    THEY STILL DO NOT REACH 44. That is a stated trade rather than an oversight:
    two stacked targets cannot both be 44px tall inside one 56px row, and the row
    also has to carry the handle, the name and the delete. 24px is the WCAG 2.2 AA
    minimum in both directions, which they now clear with room; the comfortable
    path on a phone is the drag, and the arrows are what a keyboard and a screen
-   reader get — where a 44px thumb box is not the measure that matters. */
-.reorder-row .move-btns button { width: 40px; height: 24px; }
-.reorder-row .move-btns svg { width: 15px; height: 15px; }
+   reader get — where a 44px thumb box is not the measure that matters.~~
+   🔄 GONE 2026-09-12 — Tim: *"the up and down arrows … are useless now that
+   this is a drag feature now. Remove them."* The builder's `.move-btns` further
+   down is untouched; the keyboard path in THIS sheet is the grip's own arrow
+   keys (views-session.js). */
+/* ⚠️ THE ROW FOLLOWS THE FINGER (2026-09-12), and the CSS half of that is two
+   rules. Every row transitions its transform, so the rows a drag has passed
+   SLIDE out of its way (Rule 7: the row you drag pushes the rest) and the row
+   you let go of travels into its slot rather than appearing there — and the
+   row under the finger has NO transition, because a transition between where
+   the finger was and where it is now is lag, which is the thing Tim reported.
+   `--ease-both`: rows moving from one place to another while you watch.
+   The reduced-motion blanket at the end of the MOTION section makes both
+   instant; the snap still lands, because it is a transform that ends at 0. */
+.reorder-row { transition: transform var(--t) var(--ease-both); }
 /* Lifted off the list while it is in the air, so the row being moved is the one
-   thing that is obviously not in its place yet. */
-.reorder-row.is-dragging {
+   thing that is obviously not in its place yet — and it stays lifted while it
+   settles, because it is still in the air until it lands. */
+.reorder-row.is-dragging,
+.reorder-row.is-settling {
   background: var(--raised);
   border-radius: 8px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
   position: relative; z-index: 1;
 }
+.reorder-row.is-dragging { transition: none; }
 .set-open-label {
   font-size: 10.5px;
   font-weight: 750;
@@ -3213,6 +3286,12 @@ a.seg {
    fades in as the new one rises over it reads as a flash, and it would be
    invisible in every test, because jsdom never builds a ghost at all. */
 .screen-ghost > .screen { flex: 1; min-width: 0; animation: none; }
+/* 🔄 AND THE TAB BAR RIDES IN THE GHOST SINCE 2026-09-12 — `parkScreen()` parks
+   everything in `#app`, because Record is a no-nav screen now (Tim: it has to
+   *"cover over the main sections display"*) and a bar that vanished a frame
+   before the panel reached it was the opposite of being covered. The ghost's
+   flex-direction is copied from `#app` inline, so the bar sits where it sat. */
+.screen-ghost > .navbar { flex: none; animation: none; }
 /* ⚠️ FAR ENOUGH TO CLEAR THE TAB BAR, not just its own height. At exactly 100%
    the panel's top edge lands on the bar's top edge and the last frame before it
    is removed has the bar covered — a flicker, at the one moment the eye is on
@@ -3304,6 +3383,30 @@ a.seg {
    when a row is opened, because nothing about the data moved. */
 .vol-fill { animation: vol-grow var(--t-slow) var(--ease-out); }
 @keyframes vol-grow { from { width: 0 } }
+
+/* ---- a set locks behind you (2026-09-12) ------------------------------ */
+/* Tim asked for a padlock that *"animates being locked and unlocked"*, and it
+   passes rule 1 on its own terms: the shackle swinging shut is the one thing on
+   the screen that says "the set you just left is now closed to you", and it is
+   the same object moving from open to shut rather than two pictures swapped.
+
+   ⚠️ IT IS BESIDE THE LOGGING PATH, NOT ON IT (rule 2). It plays on the row you
+   have just LEFT, while the row you tapped is already open with its steppers —
+   nothing between a tap and a number waits for it, and there is no transition
+   on the open row at all. Chosen against the alternative of a transition on a
+   live node, which would have meant holding the old row on screen for 170ms
+   before the new one could be built.
+
+   ⚠️ KEYFRAMES WITH A `from` ONLY: the padlock is rebuilt by the render that
+   locked it, so it is born in its final state and animates FROM the state it
+   left. The class is put on by that one render and never again (views-session
+   empties `lockFlashes` as it paints), so a re-render cannot replay it.
+   `--ease-both` because a shackle is a thing with weight going from one place
+   to another while you watch. Covered by the reduced-motion blanket below. */
+.set-lock.lock-shuts .lock-shackle { animation: lock-shut var(--t) var(--ease-both); }
+.set-lock.lock-opens .lock-shackle { animation: lock-open var(--t) var(--ease-both); }
+@keyframes lock-shut { from { transform: rotate(35deg) } }
+@keyframes lock-open { from { transform: none } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
@@ -3938,6 +4041,31 @@ a.seg {
 }
 .me-best-top { font-weight: 650; font-variant-numeric: tabular-nums; }
 .me-best-est { font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+/* ── Best lifts, ranked (2026-09-12) ─────────────────────────────────────────
+   The number wears the level's chip (`lv-text-<key>`, already validated for
+   contrast in both themes) and the words under it carry the band and the
+   level, so the colour is never the only carrier. A row with no number puts
+   the reason in the number's slot rather than leaving a hole. */
+.me-best-none { font-size: 12px; color: var(--ink-faint); text-align: right; max-width: 15ch; }
+.me-best.is-none .row-title { color: var(--ink-soft); }
+
+/* "Other lifts" — a real <details>, styled like a row so it reads as part of
+   the list. Same recipe as .rt-summary: padding rather than min-height for
+   the 44px target, the native marker hidden, our own chevron turned on open.
+   `--t-fast` is the MOTION section's own token; the turn is a press answering
+   back, and reduced motion drops it with everything else. */
+.me-other { border-top: 1px solid var(--rule-soft); }
+.me-other-sum {
+  display: flex; align-items: center; gap: 8px;
+  padding: 13px 2px; cursor: pointer; list-style: none;
+  font-weight: 650; color: var(--ink);
+}
+.me-other-sum::-webkit-details-marker { display: none; }
+.me-other-title { flex: 1 1 auto; min-width: 0; }
+.me-other-n { font-size: 12px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.me-other-chev { display: flex; color: var(--ink-faint); transition: transform var(--t-fast) var(--ease-out); }
+.me-other[open] .me-other-chev { transform: rotate(90deg); }
 
 /* A face beside a name in a plain list row. Sized to match `.row-icon`'s. */
 .row-face { flex: none; width: 26px; height: 26px; display: grid; place-items: center;
