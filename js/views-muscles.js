@@ -967,6 +967,24 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
      * Core (docs/research.md §14). */
     m.caveat ? el('div', { class: 'muscle-warn', text: m.caveat }) : null,
 
+    /* A set held back as a likely typo, named (2026-09-13).
+     *
+     * 🚨 THE WORDING IS DELIBERATELY NOT AN ACCUSATION. The app cannot tell a
+     * mistyped 1,800 from a genuine jump — that is the whole reason the screen
+     * quarantines rather than deletes — so the sentence says what it DID, says
+     * the set still counts if it happens again, and leaves the judgement to the
+     * person who was there. Anything stronger would be the app calling a lifter
+     * careless on evidence that cannot support it.
+     *
+     * Read defensively: a rating built before this shipped carries no field. */
+    Array.isArray(m.quarantined) && m.quarantined.length
+      ? el('div', { class: 'muscle-meta' },
+          `Set aside for now: ${m.quarantined.map((q) =>
+            `${units.fmtWeight(q.weight)}${q.reps ? ` × ${q.reps}` : ''}`).join(', ')}`
+          + ` — ${m.quarantined.length === 1 ? 'it is' : 'they are'} far enough above `
+          + 'everything else here that it looks like a typo. Repeat it and it counts.')
+      : null,
+
     // The near goal, and the only target worth a row of its own.
     m.next
       ? el('div', { class: 'to-next' },

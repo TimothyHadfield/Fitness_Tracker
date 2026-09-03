@@ -61,7 +61,7 @@
 
 import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor, standInFor } from './exercises.js';
-import { DEFAULTS, robustAggregate, estimateAt, screenDaily } from './strength-estimate.js';
+import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
 
 /* ------------------------------------------------------------------ *
@@ -1703,6 +1703,22 @@ const BENCHMARK_BONUS = 1.25;
 // anything; it was averaged with itself. See rateMuscle().
 const TOP_N = 3;
 
+// The same calendar-day count `dailyValues()` uses, so a quarantine verdict
+// keyed on its day numbers can be matched back to an observation's date.
+// Date.UTC on both sides: a pure day count, no local/UTC mix, no DST hole.
+function dayNumberOf(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return null;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000;
+}
+
+// How far out of line a flagged reading must ALSO be before the rating will set
+// it aside — see the argument at the call site. 🛑 OURS, judged, and it can only
+// ever withhold: a mistyped number is a factor of ten out, a hard PR is a
+// fraction. Nothing between 1.0 and 2.0 is touched, which is the winsoriser's
+// territory and always was.
+const QUARANTINE_MIN_RATIO = 2.0;
+
 // How far back a representative may come from before the seat widens. 84 days
 // is `strength-estimate.js`'s own window, and 180 its first widening — the two
 // numbers were fitted there against lag and flap rate, so reusing them keeps
@@ -1854,8 +1870,128 @@ const fatigueOf = (o) => (Number.isFinite(o.fatigueFactor) ? o.fatigueFactor : 1
  * naming one, and defaulting to 1 means it gets the old behaviour exactly.
  */
 export function rateMuscle(observations, muscle = null) {
-  const admissible = (observations || []).filter((o) => o && o.estimate > 0 && repFactor(o.reps) > 0);
+  let admissible = (observations || []).filter((o) => o && o.estimate > 0 && repFactor(o.reps) > 0);
   if (!admissible.length) return null;
+
+  /* ── The typo quarantine (2026-09-13, plan §3.2, Tim's decision b) ────────
+   *
+   * `screenDaily()` was fitted on 2026-08-19, measured (a x10 slip caught 100 %
+   * of the time, +25 % 77 %, false positives 0.09 %), tested — and never
+   * called. §9 read as though it had shipped. Until today one mistyped set
+   * rated a chest 1,958 lb, p99.9, Elite, at "Good" confidence, because the
+   * winsoriser centres on the median and a single observation IS its own
+   * median.
+   *
+   * It QUARANTINES, never deletes, and releases the moment another day inside
+   * three weeks agrees — so a real PR costs at most one session of patience,
+   * and two genuine consecutive PRs release each other (the release pass takes
+   * a quarantined day as a witness for exactly that reason).
+   *
+   * ⚠️ THE CURRENCY IS PER EXERCISE AND THAT IS ALL IT NEEDS TO BE. `dailyValues`
+   * recomputes x from the logged weight, so a per-side or body-weight lift is
+   * screened in the box number rather than in total load. Within one exercise
+   * that is a constant factor, and a typo is a factor of ten — the screen
+   * compares a lift against its own past, never against another lift, so the
+   * scale cancels. It would matter if this number reached a rating; it does
+   * not. Only the (exercise, date) verdict comes back out. */
+  let quarantined = [];
+  try {
+    const screened = screenDaily(dailyValues(admissible.map((o) => ({
+      date: o.date,
+      exerciseId: o.exerciseId,
+      weight: o.weight,
+      reps: o.reps,
+      isBenchmark: o.isBenchmark,
+    }))));
+    /* ⚠️ AND A SECOND CONDITION ON TOP OF THE SCREEN'S OWN, because the screen
+     * alone is too eager HERE.
+     *
+     * `screenDaily()` was fitted to catch mistyped numbers and its ceiling sits
+     * about 12 % above the running estimate — which is right for the job it was
+     * built for (a smooth per-exercise series) and wrong as a gate on the
+     * rating, where a real 245 lb bench test followed by a real 275 x 2 a week
+     * later clears the ceiling by 19 % and is not a typo at all. Measured on
+     * the suite's own fixtures: the bare screen held back a legitimate PR, a
+     * legitimate face-pull outlier the winsoriser exists to handle, and a
+     * genuine goal-sized gain.
+     *
+     * So a reading is only held back if it ALSO stands at QUARANTINE_MIN_RATIO
+     * times the best OTHER credible reading this muscle has. A x10 slip is ten
+     * times; a hard PR is one-point-something. That is a wide, deliberately
+     * uncrossable gap, and it keeps this mechanism doing the one thing it was
+     * measured to do rather than quietly becoming a second opinion about
+     * progress. The winsoriser still handles everything below the line, which
+     * is what it is for.
+     *
+     * 🛑 The constant is OURS and it can only ever WITHHOLD — the same standing
+     * as FATIGUE_HALF_SETS and LAYOFF_DAYS, and it says so here. */
+    const bad = new Set();
+    const flaggedDays = new Set();
+    for (const r of screened) {
+      if (r && r.quarantined) flaggedDays.add(`${r.exerciseId}|${r.day}`);
+    }
+    if (flaggedDays.size) {
+      const rest = admissible
+        .filter((o) => {
+          const d = dayNumberOf(o.date);
+          return d === null || !flaggedDays.has(`${o.exerciseId}|${d}`);
+        })
+        .map((o) => Number(o.estimate) || 0)
+        .sort((a, b) => b - a);
+      const reference = rest.length ? rest[0] : 0;
+      for (const r of screened) {
+        if (!r || !r.quarantined) continue;
+        const key = `${r.exerciseId}|${r.day}`;
+        const worst = admissible
+          .filter((o) => dayNumberOf(o.date) === r.day && o.exerciseId === r.exerciseId)
+          .reduce((a, o) => Math.max(a, Number(o.estimate) || 0), 0);
+        if (reference > 0 && worst >= reference * QUARANTINE_MIN_RATIO) bad.add(key);
+      }
+    }
+    if (bad.size) {
+      /* ⚠️ THE VERDICT IS PER DAY; THE PENALTY IS PER SET, and the difference
+       * matters. `dailyValues()` collapses a day to its best reading, so a
+       * flagged day names one number — but a session holding a mistyped 1,800
+       * usually holds three perfectly good sets beside it. Holding the whole
+       * day would throw those away to punish one, and they are the evidence
+       * that would have carried the muscle anyway.
+       *
+       * So only the reading that TRIGGERED the flag is held back: the day's
+       * highest, which is the one `dailyValues()` screened. Everything lighter
+       * on that day stays in. */
+      const dayMax = new Map();
+      for (const o of admissible) {
+        const day = dayNumberOf(o.date);
+        if (day === null) continue;
+        const key = `${o.exerciseId}|${day}`;
+        if (!bad.has(key)) continue;
+        const v = Number(o.rawE1rm) || 0;
+        if (!dayMax.has(key) || v > dayMax.get(key)) dayMax.set(key, v);
+      }
+      const keep = [];
+      for (const o of admissible) {
+        const day = dayNumberOf(o.date);
+        const key = day === null ? null : `${o.exerciseId}|${day}`;
+        const top = key !== null && dayMax.has(key)
+          && (Number(o.rawE1rm) || 0) >= dayMax.get(key) - 1e-9;
+        if (top) {
+          quarantined.push({
+            exerciseId: o.exerciseId,
+            exerciseName: o.exerciseName || null,
+            date: o.date,
+            weight: o.weight,
+            reps: o.reps,
+          });
+        } else keep.push(o);
+      }
+      // 🛑 NEVER EMPTY THE POOL. If every reading a muscle has looks
+      // implausible, the honest answer is the rating it always gave plus the
+      // flag — not silence. One bad day out of one is not evidence of a typo,
+      // it is the only thing the app knows.
+      if (keep.length) admissible = keep;
+      else quarantined = [];
+    }
+  } catch (_) { quarantined = []; }
 
   // Direct evidence decides the rating. A compound only stands in when there is
   // none — Tim's call, and what keeps a grey muscle meaningful.
@@ -2096,6 +2232,12 @@ export function rateMuscle(observations, muscle = null) {
     // gets to say which it is looking at.
     exerciseCount: perExercise.size,
     newestAgeDays: Math.min(...scored.map((o) => o.ageDays)),
+    // Days held back as implausible, so the panel can say so by name. Empty on
+    // every ordinary history — measured on the demo year, which quarantines
+    // nothing. A set here is NOT deleted and NOT edited: it is waiting for a
+    // second day to agree with it, and the screen says that rather than
+    // implying the lifter mistyped.
+    quarantined,
   };
 }
 
