@@ -17,6 +17,96 @@
 
 ---
 
+## 2026-09-13 — THE STRENGTH MATHS AUDITED: SEVEN AGENTS, NOTHING BUILT, ONE PLAN
+
+⚠️ **Git date 2026-09-03; the heading keeps the session sequence.** Tim opened with *"catch up with
+progress.md"* (read and reported, nothing started), then: *"I want you to do an in-depth analysis on
+how we do the math on our ranking system and estimating 1RM's and also how we relate them to another
+exercise and estimate strength that way … Additionally, I want to start exploring fatigue … Don't do
+any building with this whatsoever, just research a lot … Make a plan on how we can fix our current
+setup once you're done, and then I'll look over it and deploy you later. Feel free to make as many
+sub-agents as you want."*
+
+🛑 **NOTHING WAS BUILT. NOTHING IS AUTHORISED.** The deliverable is `docs/strength-accuracy-plan.md`
+(the analysis and the phased plan, with every file:line), a published page for Tim to review, and
+`docs/research.md` §16 (the literature pulled, graded, with URLs). Open work 30 is the plan awaiting
+his review.
+
+### How it ran
+
+Seven read-only agents in parallel, each on one slice, each told: no edits in the repo, no git command
+that changes the tree, scratch only in the session scratchpad, and **run the app's own modules under
+`node` rather than reading code** — tag every finding CONFIRMED-BY-RUNNING / CONFIRMED-BY-SOURCE /
+REASONED. (A) the e1RM curve and rep prediction; (B) aggregation, percentile, confidence; (C) the
+ratio tables against 108 live Strength Level pages; (D) the fitted constants, simulator and the
+never-run backtest; (E) every consumer of an estimate, on one shared fixture; (F) fatigue, which
+spawned four literature children of its own (rep decrement by rest, exercise order, between-session
+recovery, RIR accuracy and variability); (G) the outside literature on 1RM equations, standards, the
+untrained multiplier and cross-lift ratios, reading the Marzagão pre-print in full. ⚠️ **Five of the
+seven could not write a report file** (the harness refuses a subagent's write on that path) and
+returned the full report as their final message; the integrator saved each to the scratchpad
+verbatim. Two of F's children reported to the integrator rather than to F because F had stopped
+while waiting; relayed by file and message. Total agent spend ≈ 2.9 M tokens.
+
+### What was found — the headline per slice (full detail in the plan)
+
+- **A (curve):** formula faithful to 0.00 %, monotone, invertible, kg exact. But four paths score an
+  assisted/body-weight lift on the box number (`currentBests`, `pickBenchmarkSet`,
+  `personal-bests.measure`, the benchmark form's captions) — more help is a bigger max; D5 is not
+  enforced in `normalizedSeries`/`currentBests`; the light-load bias is large (20 lb curl × 10 = 54 %
+  of max vs 315 squat × 10 = 76 %); the rep caption under-promises against Nuzzo at every weight.
+- **B (pipeline):** the number never falls (best-ever per exercise; the window/fall-limit/band/
+  hysteresis/typo screen in `strength-estimate.js` have **no caller**); ×10 typo → Elite at "Good";
+  "any body weight" is exactly 180/140 lb, not a widened comparison; a stale best-ever seat loses
+  to a fresh low-quality one; tie-break is walk-order dependent; fallback-only muscles read "Good"
+  through the fourth root; deadlift chains into biceps/traps/forearms at `>=` 0.45. Mixture, D21,
+  fallback direction, Core, fatigue tiers 1–2: all correct.
+- **C (ratios):** the 45 derived entries all reproduce; ~25 reasoned/carried/regex-family entries are
+  off by >10 %, three by 3× or more (Machine Lateral Raise per-side *and* dumbbell ratio → Elite off
+  a 100 lb stack; hip abduction/adduction 0.35 vs 0.61–0.79; cable kickback doubled *and* 0.18);
+  sex moves ratios 20–40 % where body weight or a pull is involved; body weight ≤ 13 %; comments
+  claiming "no published standard" are stale for five machines; the ratios were divided by Strength
+  Level's medians while `MUSCLE_LIFTS` holds Gravitus figures 7–9 % lower.
+- **D (tooling):** the fit tool reproduces every plan number; three DEFAULTS comments contradict it;
+  the simulator's truth is the same curve the estimator inverts, and with Nuzzo's bench curve as
+  truth the bias is +7.9 % (band needs ±15–18 % unconditional); `PLAUSIBLE_GAIN.perDay` is the
+  simulator's own phase slope; every muscle-evidence constant is judged with no tool. Backtest
+  designed (`tools/strength-backtest.mjs`, leakage rules, minimum n).
+- **E (consumers):** runner caption reads the muscle rating, never the lift's own sets — a 215 × 3
+  benchmark two days old reads "at or above your max" at 215; three per-side conventions on one
+  day (82.7 / 75.7 / 85.3); the Profile row prints a set that did not produce its number; Core's
+  caveat dropped on publish; compare sheet hard-codes "lb"; rounding in lb before kg; goals frozen
+  with no ratio/standards stamp so any fix reads as progress.
+- **F (fatigue):** the "written no" holds for the rating (no study measures 1RM after prior
+  same-muscle work) and fails for the caption — reps at a fixed load fall proportionally each set
+  (S2/S1 ≈ 0.70–0.75 at 2 min, 0.50–0.60 at 1 min, ≈ 0.90 at 5 min); RIR self-report good to ~1 rep
+  only within ~2 of failure (Halperin 2022 meta); upper body recovers 24–48 h, lower 48–72 h;
+  supercompensation is one 🔴 study; Banister's fatigue term is unidentifiable. Five design items
+  graded and costed; a measurement on Tim's own history first.
+- **G (literature):** Marzagão as described, but its "near-failure" is 43 % within-workout rep drop,
+  and its k is 25–50 % below lab-implied k; women's σ ≈ 0.45 vs men's 0.30 and the left tail is
+  wider everywhere (a female Beginner reads 0.25th percentile at σ 0.32); untrained bench 0.60–0.68
+  (f) / 0.52–0.75 (m), squat ~0.9; no sex term in the curve; `research.md` §2 has three wrong Nuzzo
+  cells (80 % → 9.8, 95 % → 3.3, 60 % → 19.6 — verify against PMC10933212 before editing).
+
+### Decisions handed to Tim (plan §4)
+May the map fall · wire the typo quarantine · "as if 180 lb" · captions from the lift's own set ·
+one dumbbell convention (per hand, the paper's fit) · sex-specific two-piece σ and one population ·
+sex-specific ratios · the rep caption's source · ≤ 8-rep preference · confidence cap/hysteresis ·
+untrained by class · chart ceiling 15 · which fatigue items and the RIR tap · his export for the
+backtest.
+
+### The plan (plan §7)
+Phase 0 guardrails (goal stamp, provenance test, comments) · Phase 1 the nine defects · Phase 2 the
+decisions he takes · Phase 3 fatigue, measurement first · Phase 4 backtest, honest simulator,
+systematic ratio re-derivation, σ per entry, personal ratios.
+
+### Housekeeping
+progress.md was at 157.5 KB of 160, so the 2026-09-10 summary was collapsed to a pointer (the
+routine). The doc-budget test was run after the edits. No code file changed.
+
+---
+
 ## 2026-09-12 — FIVE ASKS RAPID-FIRED, THREE AGENTS AT ONCE, AND RECORD FINALLY COVERS THE BAR
 
 ⚠️ **THE SAME CHAT SESSION AS 2026-09-11** — the agents stamped their work -12 and the stamps

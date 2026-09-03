@@ -2025,3 +2025,199 @@ give it less.
   2025, doi:10.1038/s41598-025-28012-7. ⚠️ **Feet elevated, not hands.** See §15.5.
 - OMICS Publishing Group / FTC judgment, US District Court for the District of Nevada, 2019 —
   $50,130,810. Background for the §15.3 grade: https://en.wikipedia.org/wiki/OMICS_Publishing_Group
+
+---
+
+## 16. The strength-accuracy review, 2026-09-13 — what the literature says about the model's choices 🟢/🟡
+
+*Pulled for `docs/strength-accuracy-plan.md` by two literature agents and four literature children
+of the fatigue agent. Every figure below was read from a paper that was opened; where only an abstract
+was reachable it says so. Full URL lists are in the plan's session write-up (`docs/history.md`
+2026-09-13) and in the agents' reports; the load-bearing ones are repeated here.*
+
+### 16.1 Marzagão (2026), read in full — what §1.3 omits 🟡
+
+arXiv 2603.17495. Every number §1.3 quotes is correct. Three things it does not say:
+- **"Near-failure" is an AMRAP flag OR a within-workout rep drop** (fewer reps than a preceding set at
+  the same weight): ~50 % AMRAP-only, **43 % rep-drop-only**, 7 % both. No RIR field. The author:
+  estimates "would be systematically biased downward" if sets were not at failure.
+- **The k floor is a divide-by-zero guard** (0.5, active for 173 of 303,494 sets, all under 2 kg);
+  monotonicity is never discussed. Our 4.58 floor is our own and is right.
+- **Exercise-specific k was not tried**; the author says it "would likely perform better".
+- Inverting the curve gives reps-at-%1RM **below every lab table**: 6.5 vs Nuzzo's 8.8 at 80 % bench;
+  3.7 vs ~9–10 for a 13 kg curl. Its k is 25–50 % below the lab-implied k at every weight (Nuzzo at
+  10 reps implies k ≈ 22 bench / 25 general / 40 leg press vs 17 / 18.5 / 20). The most economical
+  explanation is the rep-drop sample carrying rep-dependent reps in reserve.
+
+### 16.2 1RM prediction accuracy by rep range, exercise, sex, training status 🟢
+
+- **Mayhew 2008** (JSCR 22(5), 103 untrained women, full text): at ≤ 10 reps the SD of percent error
+  is **9–10 % of 1RM for every equation** (Brzycki −2.0 ± 10.5, O'Connor −3.7 ± 9.1, Mayhew +1.6 ± 9.4,
+  Lombardi −0.9 ± 9.2, Wathen +0.7 ± 10.6); over all reps Brzycki is +26.7 ± 101.7 %.
+- **Reynolds 2006** (JSCR 20(3), n = 70, full text): from 5RM, bench SEE 4.4 %, leg press 6.1 %; 10RM
+  8 % / 10 %; 20RM ~11 %. **Exercise-specific equations gain essentially nothing at 5 reps.** Sex, age
+  and training did not enter the models.
+- **Ribeiro 2024** (IUSCA, 57 untrained men + 62 women, full text): arm curl over-predicted in men by
+  +2–11 % by every equation; women's bench well predicted (Brzycki bias 0.0, LoA ±3.4 kg).
+- **Simonsen 2024** (Sport Sci Health, ten lower-limb machines, full text): mean error Lombardi 5.8 %,
+  O'Connor 7.9, Mayhew 9.3, Epley 11.7, Wathen 12.5, **Brzycki 16.0**; leg press worst (8.4 %,
+  under-prediction at heavy loads).
+- **Desgorces 2010** (abstract): population-specific curves matter only below 75 % 1RM.
+- **LeSuer 1997** (snippet 🔴): deadlift under-estimated by all seven equations.
+- Consequence for the app: the 10- and 15-rep thresholds are well placed; §3's "±3–5 % for 1–6 reps"
+  is one SD at 5RM in trained men, not single-set accuracy.
+
+### 16.3 Sex and age in reps-at-%1RM 🟢
+
+Nuzzo 2024: sex, age and training status — "almost all interval estimates on contrast ratios included
+1". **Ruiz-Alias 2025** (PMC11556642, n = 26): women +2–3.5 reps at every load with **3× the SD**
+(65 %: 18.4 ± 4.8 vs 15.0 ± 1.3). **No sex term belongs in the curve** — four validation studies find
+men-built equations equally accurate on women; what is justified is a wider band for women.
+
+### 16.4 Between-person variability in reps at %1RM — Nuzzo 2024's model tables 🟢
+
+⚠️ **These cells disagree with §2's** (two independent reads: general 80 % = 9.76 not ~8, 95 % = 3.28
+not ~2, 60 % = 19.6 not ~24; bench 80 % = 8.83 ✓). Nothing in the app computes from §2's cells.
+**Re-read PMC10933212's tables before editing §2.**
+
+| %1RM | general mean (SD) | bench mean (SD) | leg press mean (SD) |
+|---|---|---|---|
+| 95 | 3.28 (1.66) | 2.61 (1.25) | 7.01 (2.62) — CI 1.7–29, unusable |
+| 90 | 4.94 (1.90) | 4.12 (1.46) | 8.68 (3.07) |
+| 85 | 7.16 (2.18) | 6.24 (1.71) | 10.70 (3.61) |
+| 80 | 9.76 (2.51) | 8.83 (2.00) | 13.08 (4.23) |
+| 75 | 12.38 (2.88) | 11.52 (2.33) | 15.85 (4.96) |
+| 70 | 14.82 (3.31) | 14.12 (2.72) | 19.04 (5.82) |
+| 60 | 19.56 (4.36) | 19.47 (3.71) | 26.85 (8.00) |
+
+Relative SD ≈ 22–26 % (general), 21–24 % (bench), 30–37 % (leg press) — the CV a rep caption should
+carry, not a fixed ±N.
+
+### 16.5 Within-session rep decrement across sets, by rest interval 🟢 ordering / 🟡 constants
+
+Seven papers read in full (Richmond & Godard 2004; Rahimi 2005; Willardson & Burkett 2006; Miranda
+2009; Senna 2009; Ratamess 2012; de Salles 2009 review), six by abstract. Fitted summary, bench at
+~75–80 % 1RM, trained men, fraction of set 1:
+
+| rest | set 2 | set 3 | set 4 |
+|---|---|---|---|
+| 1 min | 0.50–0.60 (range 0.35–0.76) | 0.35–0.40 | 0.25–0.30 |
+| 2 min | 0.70–0.75 | ≈ 0.55 | 0.40–0.50 |
+| 3 min | 0.75–0.80 | ≈ 0.65 | 0.50–0.55 |
+| 5 min | ≈ 0.90 | 0.80–0.85 | ≈ 0.75 |
+
+- 🟡 **Proportional, not absolute**: W&B 2006 found the fraction identical at 50 % and 80 % 1RM
+  (p = 0.849). One direct test, consistent with the 8/10/15RM tables. This is what licenses a
+  multiplier on the fresh rep prediction.
+- 🟡 Front-loaded then plateau; free squat declines less than bench (W&B 2005) but leg press does not
+  (Senna 2009/2011) — free-compound vs machine, not upper vs lower.
+- 🟡 **Stronger men decline MORE at 1–2 min; women far less** (Ratamess 2012, n = 45). Do not assume
+  trained fatigues less. Kraemer 1997's 10/10/10 at 3 min is 🔴 (not opened).
+- 🟡 3 vs 5 min: same curve for sets 1–3, diverge from set 4.
+- 🔴 Self-selected rest: Silva 2018 (PMC6316470) 89 % report ≤ 60 s; Alonso-Aubin 2024 (PMC11503322)
+  97 ± 24 s; Mohan/Schoenfeld 2026 preprint implies > 2 min supervised. ~2 min is the defensible
+  default; casual users are probably on the 1–1.5 min curve.
+- Grgic 2018 is chronic gains only; unusable for a per-set curve (agrees with §6.14).
+Sources: paulogentil.com PDFs of W&B 2006, Richmond & Godard, Ratamess 2012; jssm.org for Rahimi,
+Miranda 2009, Senna 2009; unm.edu/~rrobergs/478RestIntervalReview.pdf (de Salles).
+
+### 16.6 Same-session prior work on the same muscle — reps, never 1RM 🟢/🟡
+
+- **Simão 2005** (18 trained, 5 exercises 3×10RM, 2 min, full text): bench 9.37 → 7.30 reps as 3-set
+  mean when last (**−22 %**); 4th exercise −8 to −14 %; set-3 curl −32 %.
+- **Augustsson 2003** (17 trained men, full text): knee extension to failure → leg press 9.3 → 7.9 reps
+  (**−15 %**, p = 0.001).
+- **Trindade 2019** (31 untrained, 9 wk, full text): leg-press volume −37 to −50 % after pre-exhaust;
+  1RM gains equal.
+- **Spreuwenberg 2006** (abstract): squat set 1 8.0 → 5.4 when after 7 exercises (−33 %); Figueiredo
+  2011 bench set 1 −30 %; with 3 min rest and 3 exercises ~−10–15 % (Monteiro 2005, Farinatti 2009).
+- 🚨 **No study measures 1RM after prior same-muscle work in the same session.** Any %1RM figure is a
+  conversion (2–3 reps lost at 10RM ≈ 5–8 % 1RM under a rep curve). **`docs/fatigue-plan.md` §4's
+  premise is confirmed; Tier 3 stays closed.**
+- **Nunes 2021** meta (PMID 32077380): strength pooled ES −0.11 n.s.; multi-joint favours MJ-first
+  (0.32), single-joint favours SJ-first (−0.58); hypertrophy 0.03. **Whatever goes first gains most;
+  net strength is unchanged.** ACSM 2026 (PMID 41843416) gives the order statement and no effect size.
+
+### 16.7 Between-session recovery, and why a fitness–fatigue model is out 🟢
+
+| finding | numbers | grade |
+|---|---|---|
+| Upper body recovers by 24–48 h | Refalo 2023 (PMC9908800): bench 6×75 % to failure, velocity −25 % post, −3 % at 24 h, 100 % at 48 h | 🟢 |
+| Lower / high-volume 48–72 h | Belcher 2019: squat velocity −9 % at 24 h, −11 % at 48 h, −9 % at 72 h; Pareja-Blanco 2019 (PMC6473797) CMJ ≈ 100 % at 48 h; Bartolomei 2017 8×10 squat MVIC 85/86/89 % at 24/48/72 h | 🟢 direction / 🔴 the 72 h |
+| Failure vs 3 RIR | acute −25 % vs −8 %; 24 h −3 % vs +2 %; 48 h nil (Refalo); volume-matched failure costs 24–48 h extra (Morán-Navarro 2017) | 🟢 / 🟡 |
+| Supercompensation | McLester 2003 only: reps +10 % at 72 h (p = 0.022); no 1RM/MVC study shows it | 🔴 |
+| Repeated-bout effect | Damas 2016 (PMC5023708): untrained MVC at 24 h 78 % wk 1 → 97 % wk 3 — a novice artefact gone in ~3 weeks; Falvo 2008 trained: no attenuation | 🟢 / 🔴 |
+| Individual variance dominates | Bishop 2008: 0 / 40 / 80 / 80 % of trained men recovered at 24 / 48 / 72 / 96 h from one session | 🟡 |
+| Banister fitness–fatigue | τ_fatigue 1.9–16.8 d across fits; **Marchal 2025** (PMC11779798), Bayesian FFM on 248 + 755 elite observations: τ not identifiable, fatigue term adds nothing to cross-validated prediction (p > 0.40); Imbach 2022: one load input cannot separate volume from intensity; fitted to resistance training once (Busso 1990, 6 weightlifters, 🔴) | 🟢 for the criticism |
+
+### 16.8 Proximity-to-failure self-report 🟢
+
+**Halperin 2022** meta-analysis (12 studies, 414 people, full text): pooled under-prediction **0.95
+reps** (0.17–1.73), between-person SD 1.45 — systematic, not noise. Proximity is the dominant
+moderator (Zourdos 2021: 5 / 3 / 1 RIR error 5.15 / 3.65 / 2.05 reps; Refalo 2024 intraset 0.65 ±
+0.78). Error flat to 12 reps then **+0.47 reps per extra rep** (supports the 15-rep cap). Training
+history: no effect once proximity is controlled. Practice does not improve it (Remmert 2023b, 🔴).
+**Armes 2020** (PMC7785525, deception): declared "0 RIR" still has ~2 reps behind it. Read-out:
+accurate to ~1 rep only within ~2 reps of failure, ≥ 70 % 1RM, ≤ 12 reps. §3's "one to five" is
+pre-set prediction on machines (Steele 2017), not a training-status effect.
+
+### 16.9 Strength standards — shape, spread, scaling 🟢 shape / 🟡 σ
+
+- **Strength Level** tiers are 5/20/50/80/95th percentiles of filtered self-reports with training ages
+  attached by assertion; filters, reps→1RM method and de-duplication undisclosed. 195.5 M lifts /
+  27.9 M users (2026). **Gravitus** uses Brzycki and no age adjustment; its medians now sit 7–9 %
+  below Strength Level 2026 on squat / deadlift / OHP. **ExRx is a classification table** ("not
+  predictive or regression derived"), so §11's "independent methods within ~3 %" is not a cross-check;
+  the real one (SL vs Gravitus) is ±5–8 %. **Isenmann 2026** (Sci Rep, n = 393): interval-based
+  classification "unsuitable" — supports continuous percentiles.
+- **σ from the anchors** (`σ = ln(anchor/median)/z`): men's big three 0.26–0.34 (mean ≈ 0.30);
+  **women 0.33–0.55 (≈ 0.45)**; OHP 0.29–0.38 (m) / 0.37–0.54 (f); cable crunch 0.39–0.58. **The left
+  tail is wider than the right on every lift** (σ₅ − σ₉₅ ≈ 0.07 men, 0.11–0.17 women). With σ = 0.32 a
+  140 lb woman at the Beginner bench mark (5th by construction) reads z = −2.81, the **0.25th
+  percentile**. A two-piece lognormal reproduces every anchor within a pound. Barbell Medicine's
+  competitor deciles (van den Hoek 2024, 809,986 entries) show the same shape.
+- **Body-weight scaling**: theoretical b = 0.67; record holders 0.57–0.60; Kopayev 2020 (IPF) ranks
+  GL best, DOTS second, Wilks/IPF worse. Our BW^0.67 is adequate for 130–230 lb; female bench from
+  SL rows is closer to 0.5.
+- **Age**: McCulloch has no published derivation (🔴 provenance); Anton 2004 linear decline; Solberg
+  2019 peak 35 ± 7 (PL); van den Hoek > 80 y bench −33 %, squat −39 % at the 90th.
+
+### 16.10 Untrained adults — D21's 0.55 measured 🟢/🟡
+
+| cohort | n | lift | 1RM | × app lifter median at that BW |
+|---|---|---|---|---|
+| Mayhew 2008, never/infrequent | 103 F, 61.6 kg | bench | 28.7 ± 6.7 kg | **0.64** (after 12 wk 0.82) |
+| Ribeiro 2024, no RT 6 mo | 62 F | bench | 29.4 ± 6.4 kg | 0.68 |
+| Ribeiro 2024 | 57 M, 70.5 kg | bench | 68.9 ± 16.1 kg | 0.75 |
+| PMC10749963, active non-lifters | 26 M, ~80 kg | bench / squat / row | 71 / 111 / 69 kg | 0.70 / **0.91** / 0.75 |
+| PMC10630871, untrained | 22 M | bench | 54.8 ± 11.8 kg | ≈ 0.55–0.60 |
+| PMC9486837 (snippet), students | 29 M, 63 kg | bench | 44.6 ± 5.5 kg | 0.52 |
+
+Untrained women's bench 0.60–0.68; men's 0.52–0.75; lower body ~0.9. **0.55 is fair for men's
+pressing, ~0.62 fits women, 0.8–0.9 fits lower body.** D21's "nobody has measured what the median
+adult can bench" is false — what is missing is a representative sample. No untrained deadlift found.
+
+### 16.11 Cross-lift ratios in the literature 🟡, and Strength Level's sex dependence 🟢
+
+- Saeterbakken 2011: dumbbell bench 17 % below barbell. Saeterbakken 2013: standing DB OHP 7 % below
+  barbell. Cotterman 2005: Smith bench < free; Smith squat > free for women only. Wong 2013
+  (PMC3761768): assistance lifts from bench 6RM carry SEE 6.5–8.5 %, R² 0.64–0.86. Hernández Ugalde
+  2023 (IUSCA, 101,546 IPF lifters): bench:squat ≈ 0.66 M / 0.58 F; deadlift:squat 1.05–1.13 M /
+  1.10–1.23 F; ratio variance 2–5× larger in the bottom decile than the top.
+- **From Strength Level's own pages** (108 ratios, male 180 / female 140): dumbbell-for-barbell swaps
+  are sex-neutral; **pulls, body-weight lifts and machines differ 20–40 %** — pull-up 1.64 (f) vs
+  1.28 (m) of a row, face pull 1.04 vs 0.75, hip thrust 1.16 vs 0.96, hip abduction 0.79 vs 0.61, and
+  the other way for machine shoulder press 0.97 vs 1.23 and machine chest press 0.75 vs 0.91. Body
+  weight moves a ratio ≤ 6 % over 140→220 lb for barbell pairs, ≤ 13 % for pulldown/row and
+  lateral raise. **Sex is first-order; body weight is second-order.**
+- **The 2026-08-26/28 sweep reproduces** (45 derived entries re-derived); the >10 % misses are all
+  reasoned/carried entries or regex families spanning two load conventions. Full table:
+  `docs/strength-accuracy-plan.md` §2.3.
+
+### 16.12 What this section contradicts elsewhere in this file
+
+§1.3 "exactly the moderation Nuzzo identified" — direction yes, magnitude no (16.1). §2 three cells
+(16.4). §3 "±3–5 %" (16.2) and "one to five" (16.8). §4 correct but numberless (16.5 supplies them).
+§11 "σ ≈ 0.32 reproduces the anchors" — men's big three only (16.9); "within ~3 %" — not a cross-check
+(16.9); SL counts stale. D21's "nobody has measured" (16.10). §6.16's order finding is
+exercise-specific, not net (16.6).

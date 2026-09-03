@@ -2143,3 +2143,45 @@ lifts suggest and says so; one the app can't rank says why instead of guessing.
 **Record.** It covers the tab bar now, and the arrow is the way down. Measuring it found the
 still picture underneath was leaving partway through the rise on a slow load — fixed to leave when
 the rise ends. Everything green: 1,330 screen assertions, 2,021 data-layer, the full sweep clean.
+
+---
+
+## 2026-09-13 — the strength math, audited; nothing built
+
+**You:** "catch up with progress.md" — then: an in-depth analysis of how we do the math on the
+ranking, the 1RM estimates and the cross-exercise conversion; start exploring fatigue; don't build
+anything; make a plan you'll look over and deploy later; use as many sub-agents as I want.
+
+**Nothing was built.** Seven agents each took one slice and ran the app's own code on fixtures and
+the demo year rather than reading it. The plan is `docs/strength-accuracy-plan.md`, and the page for
+you is published — findings ranked, fourteen decisions with what I'd do on each, and the plan in
+phases.
+
+**What's sound:** the formula, its two inverses, the kg/lb path, the percentile mixture, the ratios
+we actually derived in August (all 45 re-checked against today's pages), and the fatigue discount
+already in.
+
+**What's wrong today, worst first:** four places score an assisted pull-up on the *help* number, so
+more help is a personal best; the fifteen-rep rule isn't applied on the Data tab; about twenty-five
+ratio entries we never derived are off by more than ten percent — a 100 lb machine lateral raise
+rates Shoulders Elite, and a woman's hip abduction machine can rate her glutes Elite off one set; a
+muscle's number never goes down once earned; the typo screen exists and was never wired in; "any
+body weight" silently means 180 lb; the runner can tell you a weight you benchmarked two days ago is
+above your max; one spread for both sexes puts a woman at the Beginner mark near the bottom quarter
+of a percent; and goals have no version stamp, so any of these fixes would read as progress — that
+guardrail goes first.
+
+**Fatigue:** the literature still says no to a correction in the *rating* — nobody has measured a
+1RM after prior work on the same muscle. But it gives the caption exactly what it prints: reps at a
+fixed load fall by a known fraction each set, and the fraction is the same at any load, so "maybe 8"
+can honestly become "8, then 6, then 4" with a number that can only go down. Your own history can
+supply your own fraction after about three sessions. And a run of flat reps at one load is evidence
+the first set wasn't near failure — useful only to withhold credit, never to add it. One thing I
+stated with both sides and didn't recommend: a single opt-in "how many more could you have done?"
+tap on the last set.
+
+**The claim underneath:** "within 4.6 %" is the simulator checking the curve against itself. With
+the lab rep curve as truth the bias is about 8 %. The backtest on your own benchmarks is the first
+validation item and needs an export of your data.
+
+Everything is in the page. I'll wait for you to pick.

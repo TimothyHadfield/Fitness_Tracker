@@ -25,9 +25,8 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-12 (the same session as -11) — the split finished, the benchmark's
-captions on every set, **the set lock, the finger-following drag, Years-first calendars, ranked best
-lifts, Record covering the tab bar**, and **a standing instruction about what "catch up" means.**
+**Last updated:** 2026-09-13 (git date 2026-09-03) — **the strength maths audited by seven agents,
+nothing built, one plan awaiting Tim's review** (`docs/strength-accuracy-plan.md`, Open work 30).
 
 🛑 **"CATCH UP WITH PROGRESS.MD" MEANS READ AND REPORT. IT IS NOT A GO-AHEAD FOR ANYTHING.** Tim,
 2026-09-11, having caught a session already building: *"When I tell you to catch up with progress.md,
@@ -37,8 +36,39 @@ earlier session is not an instruction to resume it in this one** — including a
 work list, however green the light looks in these notes. Read all four files, say in a few plain
 lines what changed and what is open, **then stop.**
 
-✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Open work 29 closed on 2026-09-11; every
-other item on the list is either Tim's, pinned, or parked.
+✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Open work 29 closed on 2026-09-11; **Open
+work 30 is a PLAN awaiting Tim's review, not a job** — *"I'll look over it and deploy you later."*
+Every other item on the list is either Tim's, pinned, or parked.
+
+## What changed on 2026-09-13, in one line each
+
+**What Tim asked for:** *"catch up with progress.md"* (read and reported), then *"an in-depth
+analysis on how we do the math on our ranking system and estimating 1RM's … how we relate them to
+another exercise … start exploring fatigue … Don't do any building … Make a plan … I'll look over it
+and deploy you later. Feel free to make as many sub-agents as you want."* Full write-up:
+`docs/history.md`, 2026-09-13.
+
+1. 🛑 **NOTHING BUILT.** Seven read-only agents ran the app's own modules under `node`; every
+   finding is tagged RUN / SOURCE / REASONED. **`docs/strength-accuracy-plan.md` is the analysis and
+   the phased plan**; `docs/research.md` §16 is the literature; a published page is what Tim reviews.
+2. 🚨 **The formula, the mixture, the derived ratios and the fatigue tiers are SOUND. The errors are
+   around them**: four paths score an assisted lift on the help number (more help = a PB); D5 is not
+   enforced on the Data tab; ~25 reasoned/carried ratio entries are >10 % off, three by 3×+ (Machine
+   Lateral Raise → Elite off a 100 lb stack); a muscle's number never falls and the window, fall
+   limit, band, hysteresis and typo screen in `strength-estimate.js` have **no caller**; "any body
+   weight" is exactly 180 lb; the runner caption calls a two-day-old benchmark "above your max";
+   women's σ is ≈ 0.45 not 0.32 (a female Beginner reads 0.25th percentile); goals carry no
+   ratio/standards stamp, so **any fix reads as progress until that ships first**.
+3. 🆕 **Fatigue: the literature says no to a load multiplier in the rating (still) and YES to the
+   caption** — reps at a fixed load fall proportionally each set (≈ 0.72 / 0.55 / 0.45 at 2 min), so
+   "maybe 8" can become "8, then 6, then 4" with a constant that only lowers. Five items graded and
+   costed; the RIR tap stated, not recommended. Measure Tim's own decrement first.
+4. ⚠️ **The ±4.6 % accuracy claim is conditional on the curve** — the simulator's truth IS the curve;
+   with the lab rep curve as truth the bias is +7.9 %. The backtest (§6.1 of the plan) needs **Tim's
+   export** and is the first validation item. `research.md` §2's Nuzzo table has three wrong cells
+   (two independent reads: 9.8 at 80 %, 3.3 at 95 %, 19.6 at 60 %) — verify before editing.
+5. 🔒 **Fourteen decisions are his** (plan §4), each with a recommendation. 🛑 Do not start any
+   phase until he names it.
 
 ## What changed on 2026-09-12, in one line each
 
@@ -132,54 +162,25 @@ instruction above, followed by *"You can continue working this time, but next ti
    mutation flips exactly it. The load is `totalResistance()` on an assisted lift, doubled per side;
    blank at zero; no slot on a timed exercise. **1,255 render.**
 
-## What changed on 2026-09-10, in one line each
+## 2026-09-10 — COLLAPSED TO A POINTER, 2026-09-13
 
-⚠️ **ONE SECTION FOR THE WHOLE DAY, as the maintenance note below now requires.** The full write-up
-is `docs/history.md`, 2026-09-10.
+⚠️ **The routine maintenance** — this file was at 157.5 KB of its 160 KB budget. Full write-up:
+`docs/history.md`, 2026-09-10. **What Tim asked for, in order:** the two Open work items → a joint
+workout he had just recorded → the Record and runner animations → sideways drag → a friend's
+calendar → **the Profile/Data question**, answered as advice and then approved.
 
-**What Tim asked for, in order:** the two Open work items (*"you can do whatever work you think you
-should do for those two things"*) → a joint workout he had just recorded → the Record animation → the
-runner animation → sideways drag in Data, then *"across the cite"* → a friend's calendar → **the
-Profile/Data question**, answered as advice and then approved for building.
-
-1. 🚨 **"DELETE EVERYTHING PERMANENTLY" LEFT MOST OF THE ACCOUNT IN FIRESTORE — Open work 27 closed.**
-   The list was **five of ten collections**; `sessions` was named and still failed (a sharded write of
-   `[]` is a mass delete and the guard refuses one); and `write()` cannot address `shared/*` at all —
-   so **a public account that deleted itself left its published training readable by anybody signed
-   in, for ever.** ✅ `createAccountPurge()`, `shared` first, **verifies by re-reading before
-   `deleteUser()` runs** and keeps the account if anything survived. 🚨 The collection list is handed
-   down from `store.js`, never copied. **1,986 data-layer, 218 rules (was 159).**
-2. 🚨 **THE RECORD PANEL ROSE BEHIND ITS OWN GHOST** — Tim reported it. `z-index: 50` on a ghost over
-   an `#app` that creates no stacking context. **The asymmetry was the diagnosis**: falling wants the
-   top, rising wants the bottom, and one number for both hid it. Ghost 40 / falling 50 / rising 45.
-3. 🆕 **THE RUNNER GETS THE SAME MOVEMENT**, his ask. The ▾ falls; the live bar's arrow rises.
-   ⚠️ **The up half is asked for by the DOOR, not inferred from the route** — three doors reach the
-   runner and only one is a panel returning over what you were reading.
-4. 🚨 **A JOINT WORKOUT WAS TWO WORKOUTS**, found by recording one. Next/add/remove/swap/reorder now
-   reach everybody; **"Just for ___" is the opt-out**. 🔒 **The sets never follow** — each person's
-   copy is rebuilt from their own history, never broadcast. **1,224 render assertions.**
-5. ✂️ **NOBODY WROTE `overflow-x: auto` — THE BROWSER DID.** `overflow-y` alone makes the other axis
-   `auto`, so every pane had been draggable sideways since it was written. Fixed app-wide; the
-   Research table kept its own scroller (`min-width: 0` is what made it work). **Root cause is
-   `.help-dot::after`** — a 44px halo on a 26px dot, overhanging by 9px.
-6. ⚠️ **THE AUDIT NOW SWEEPS FOUR WIDTHS** (360/390/880/1280) and immediately found an **AA failure
-   only the desktop layout paints**: the active sidebar nav label at **3.96:1**. 🚨 **The same pair
-   was "fixed" on 2026-09-06 for the one element the phone-width audit could see** — reading the
-   stylesheet found **four more**. All scoped to gold-in-light; teal/indigo/ember already pass.
-7. 🆕 **A FRIEND'S CALENDAR HAS MONTHS AND YEARS**, and asking for it uncovered that **every cell of
-   every friend's calendar said "Workout"** — a published session names its title `name`, a local one
-   `workoutName`. The aria-label read *"February 10: undefined"*. 🚨 **The Years count says "days
-   published", not "days trained"** — over a 60-session window the old label was a count of
-   publishing wearing the name of training.
-8. 🆕 **THE PROFILE/DATA SPLIT IS UNDER WAY — Tim approved the plan.** *"The main profile section is
-   looking really empty right now and the settings profile section is really crowded."* 🚨 **Two
-   complaints, one problem**: Profile was empty because its content lived in Data, and Data was
-   overfull — six segments that physically did not fit. **Data = what it MEANS, Profile = what you
-   DID.** ✅ **Step 1: Calendar → Profile** (Data back to five segments; its fourth move, all four
-   his). ✅ **Step 3: `js/profile-records.js`** — *"what are my best lifts, ever?"*, a question the
-   app could not answer. **Measured best leads, estimate follows labelled** (Rule 5); ordered by days
-   trained, not pounds, because there is no honest ranking of a 405 deadlift against a 40 lateral
-   raise (Rule 6). 🚩 **Steps 2, 4 and 5 are NOT done** — see Open work 29.
+- **Open work 27 closed** — "Delete everything permanently" had left five of ten collections and every
+  `shared/*` document in Firestore; `createAccountPurge()` verifies by re-reading before `deleteUser()`.
+  🔒 The collection list is handed down from `store.js`, never copied.
+- **Record rose behind its own ghost** (stacking: ghost 40 / falling 50 / rising 45), the runner got
+  the same movement, **a joint workout was two workouts** (next/add/remove/swap/reorder reach
+  everybody; the sets never follow), and **nobody wrote `overflow-x: auto` — the browser did** (root
+  cause `.help-dot::after`).
+- **The audit sweeps four widths** and found an AA failure only the desktop paints; **a friend's
+  calendar** got Months and Years and every cell had said "Workout" (`name` vs `workoutName`).
+- **The Profile/Data split began** — Data = what it MEANS, Profile = what you DID; steps 1 and 3
+  that day, the rest on -11 (Open work 29). 🔒 Durable half: `docs/state.md` Profile and Data rows,
+  `docs/direction.md` §4b.
 
 ## 2026-09-09 — COLLAPSED TO A POINTER, 2026-09-12
 
@@ -802,6 +803,7 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
+| **30** | ⏸️ **THE STRENGTH-ACCURACY PLAN — awaiting Tim's review, 2026-09-13** | 🛑 **A plan, not a job.** `docs/strength-accuracy-plan.md`: nine defects wrong on a screen today (§2 — assisted lifts scored on the help number, D5 unenforced on Data, ~25 ratio entries >10 % off, the fallback `>=`, the tie-break, the Profile anchor, goals with no version stamp), fourteen decisions that are his (§4), five fatigue items (§5), and the validation work (§6 — the backtest needs his export). Phases in §7. *"I'll look over it and deploy you later."* **Do not start any phase until he names it.** ⚠️ Phase 0's goal stamp must precede any ratio or standards change |
 | **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ⚠️ **What is NOT done**: this has never run against real Firestore — the aggregation query, the `>` on a real server timestamp and the rules' `list` on an aggregation are all reviewed rather than executed, exactly like the rest of this file's network paths. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass |
 | **28** | ✅ ~~"followers / following" is Instagram's vocabulary for a graph this app does not have~~ **DECIDED AND DONE 2026-09-09 — THE WORDS CHANGED, NOT THE MODEL** | Tim, asked which way and given both costs: *"just combine the 2 and call them 'friends' instead. We might change it to following/folowers later."* **One count, called Friends.** ⚠️ **He kept the other door open, and the thing that keeps it cheap is that there is no migration** — nothing was built or deleted here; `connections` is the same list it always was and this is two labels over it. 🔒 **`#/me/followers` and `#/me/following` still resolve**, onto the one list, which is titled Friends however you arrive — asserted, because a screen still headed "Followers" would be the rename half-done. ✂️ **The "?" went with the second number** (it existed to explain why two figures were equal); 🚨 **the public-account caveat did NOT** — *"Your account is public, so people can see your training without being friends"* is on the screen, only where it is true, because without it the number reads as an audience. `docs/history.md` 2026-09-09 third pass ~~ Tim asked for those three counts by name and they shipped, honestly: connections here are **mutual**, so the two numbers are always equal, and the "?" beside them says so. ⚠️ **On a PUBLIC account the number is also a floor rather than an audience** — anybody signed in can read you without connecting, and none of them are in the graph; the ? says that too. 🚩 **The open question is which way to resolve it**: change the words to match the model (Friends / Connections — cheap, and it is what the rest of the app already calls them), or change the model to match the words — **a real follow model, with new rules, a migration, an asymmetric graph and a moderation surface attached**, which is a feature nobody has asked for. 🛑 **Do not pick one on his behalf.** `docs/history.md` 2026-09-08 third pass, §C |
 | **29** | ✅ ~~**THE PROFILE/DATA SPLIT**~~ **FINISHED 2026-09-11 — all five steps** | 🟢 Authorised 2026-09-10 (*"I like all of that. Start working on it now."*), steps 1 and 3 that day, **2, 4 and 5 on 2026-09-11**. ✅ **Step 2** — sex, age and current weight on `#/me`, ⚠️ a DISPLAY move: the row opens `#/profile`, which stays the form. ✅ **Step 4** — Goals off Settings, 🚨 the old row **deleted rather than left as a second door**, `#/goals` still resolving, and 🛑 **no verdict followed it onto the tab**. ✅ **Step 5** — the facts readout came off the Account row (Profile prints them now) and a "Profile" heading over one row went, that word having meant a TAB since 2026-09-08. 🚨 **Building it found that `#/me` had never been in the accessibility audit's route list** — the row called *Profile* is `#/profile`, the form. Fixed and swept. 🔒 **`#/me` holds no field at all, asserted** — `direction.md` §4a's line between the two profile screens. `docs/history.md` 2026-09-11 ~~ The plan he approved, in his order: **1 Calendar → Profile**, **2 body facts (gender, birth year, body weight) → Profile**, **3 personal bests → Profile**, **4 Goals: Settings → Profile**, **5 Account cleanup — whatever is left after 2 and 4.** 🚨 **The rule the whole thing rests on: Data answers what your training MEANS, Profile answers what you DID.** That is what fixed the segment overflow and the empty Profile in one cut. ⚠️ **Step 2 is a DISPLAY move, not a form move** — `#/me` never writes, and `#/profile` stays the form; Profile shows sex, age and current weight and links to it. ⚠️ **Every moved route must keep resolving** (`#/calendar`, `#/day`, `#/edit`, `#/profile`, `#/goals`) — asserted, and `#/calendar` has survived four moves without breaking a link. 🛑 **Nothing goes on Home** — `direction.md` §4a is a placement rule, not a request |
