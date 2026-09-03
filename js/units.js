@@ -58,3 +58,18 @@ export function fmtWeight(lb) {
 export function withUnit(lb) {
   return `${fmtWeight(lb)} ${current}`;
 }
+
+/**
+ * An ESTIMATE for display: rounded to a whole number IN THE DISPLAY UNIT, then the unit.
+ *
+ * Added 2026-09-13 (docs/strength-accuracy-plan.md §2.7). Five screens used to do
+ * `withUnit(Math.round(lb))` — round in pounds, then convert — so 210.59 lb printed as "95.7 kg"
+ * where the true figure is 95.5, and the Goals screen's "unchanged to the nearest kilo" was
+ * really the nearest pound. An estimate has no decimals to keep; round it where it is read.
+ */
+export function fmtRounded(lb) {
+  return String(Math.round(toDisplay(lb)));
+}
+export function withUnitRounded(lb) {
+  return `${fmtRounded(lb)} ${current}`;
+}
