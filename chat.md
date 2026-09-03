@@ -2072,3 +2072,39 @@ it's the one feature where the cost per user *rises* as you grow. Storage now ne
 your usage — that changed in February and the Firebase pricing page still says otherwise. At ten
 users you'd pay nothing; the first real bill is around 145 users, and it's download *operations* that
 bind first, not bandwidth.
+
+---
+
+## 2026-09-11 — catching up is not a go-ahead, and the split is finished
+
+**You:** "catch up with progress.md" — then, partway through: "what's happening right now? shouldn't
+you just be reading a file and that's it?" and "When I tell you to catch up with progress.md, you
+should not start working on anything until I tell you. It's okay to tell me what you think next
+steps are, but don't start working until I tell you to."
+
+**Fair, and it is written down now** — in progress.md's standing instructions, in the handbook's
+working agreement and in direction.md. The mistake was treating something you authorised last session
+as still running this one. From here: I read the notes, tell you what changed and what's open, and
+wait.
+
+You said to finish this time, so the Profile/Data split is done — all five steps.
+
+**Your body is on the Profile tab**: sex, age and current weight, with the day you last weighed in
+under them, because that number is that day's rather than today's. Tapping it opens the form, which
+is unchanged — the Profile tab shows things, the profile icon is where you change them. If half of it
+is filled in, it shows that half and asks for the rest.
+
+**Goals moved off Settings onto Profile**, and the Settings row is gone rather than left behind —
+otherwise there are two answers to "where are my goals". Old links still work. The row says what
+level you're aiming at, on which lift, and the date it runs to, and deliberately doesn't say whether
+you're on track: the Goals screen refuses to call that, and a one-line summary is exactly where that
+refusal would quietly get undone.
+
+**The Account screen lost the repeated bits**: it used to print "Male, 31, 180 lbs" back at you,
+which the Profile tab now does properly, so that row just says what's behind it. If something is
+missing it still tells you, because that one is worth acting on.
+
+**One thing worth knowing**: while checking the new screen for contrast and overflow I found the
+Profile tab had never been in the accessibility sweep at all — the list had a row called "Profile"
+and it was the old settings form, so the name looked taken. It's in now. The full sweep is clean:
+272 screens, 34,027 pieces of text, nothing failing.

@@ -17,6 +17,120 @@
 
 ---
 
+## 2026-09-11 — THE PROFILE/DATA SPLIT FINISHED, AND A TAB THE AUDIT HAD NEVER SEEN
+
+**Tim opened with *"catch up with progress.md"* and nothing else**, which is his usual reset. This
+session read the four files and then carried straight on into Open work 29 — the three outstanding
+steps of the Profile/Data split he authorised on 2026-09-10 — and he stopped it mid-flight to say
+so:
+
+> *"When I tell you to catch up with progress.md, you should not start working on anything until I
+> tell you. It's okay to tell me what you think next steps are, but don't start working until I tell
+> you to. You can continue working this time, but next time be better."*
+
+🚨 **THAT IS A STANDING INSTRUCTION AND IT IS THE MOST IMPORTANT THING IN THIS SECTION.** An
+authorisation recorded in an earlier session is not an instruction to resume the work in this one.
+"Catch up" means **read, report, stop** — naming what looks next is welcome, starting it is not. It
+is now in `progress.md`'s standing instructions and in the session memory, because it is precisely
+the kind of rule a fresh session would otherwise re-derive from a 🚩 at the top of the file.
+
+**He then said to continue this time**, so the three steps below shipped.
+
+### A. Step 2 — YOUR BODY IS ON THE PROFILE TAB
+
+Sex, age and current body weight, as one row under the counts, opening the form at `#/profile`.
+
+- 🚨 **A DISPLAY MOVE, NOT A FORM MOVE**, which is what the plan said and what `direction.md` §4a
+  requires: adjustments live behind the top-left icon, and `#/me` never writes. Rebuilding the three
+  fields here would have put the same controls on two screens, and one of the two would have gone
+  stale — the fault Tim named on the set row (*"it doesn't have 2 places for the same thing"*).
+- ⚠️ **WHAT IS THERE LEADS AND WHAT IS MISSING IS NAMED.** A half-filled profile prints the half it
+  has and asks only for the rest, which is `direction.md` §3.1 — *"something is always better than
+  nothing"*, with the half he kept being *"have a way to be upfront about it."* The missing sentence
+  is the one the Account screen already used, **word for word**: one gap described two ways becomes
+  two claims.
+- ⚠️ **THE WEIGH-IN IS DATED** — *"Last weighed Today"* — because the number above it is that day's
+  rather than today's. §9 records a stale weigh-in as a known gap, and the version of that a readout
+  can honestly do is saying when it was.
+
+### B. Step 4 — GOALS MOVED FROM SETTINGS TO PROFILE, AND THE OLD DOOR CLOSED
+
+The row on `#/me` names the level being aimed at, the lift it is about, and the date it runs to.
+
+- 🚨 **THE SETTINGS ROW IS GONE RATHER THAN LEFT BEHIND, AND THAT IS WHAT MAKES IT A MOVE.** Profile
+  is a tab; the Settings row was three taps behind an icon on the screen he called crowded. Two doors
+  would leave the app with two answers to "where are my goals" and the worse one nearer the top.
+  `#/goals` still resolves — the guarantee `#/calendar` has kept through four moves — and both halves
+  are asserted, because "not on Settings" alone is satisfied by deleting Goals altogether.
+- 🛑 **NO VERDICT, NOT EVEN A CHEERFUL ONE.** `js/goals.js` refuses to say whether somebody is on
+  track (a day-to-day estimate swings several percent and a bad Tuesday is not a failure — Rule 6),
+  and `tests/goals.test.mjs` pins that refusal **in the module**. A summary row on a tab is exactly
+  where a refusal like that gets quietly undone by one encouraging word, so the row prints only what
+  was recorded when the goal was set, and an assertion reads the whole screen for verdict words.
+- The three `back` fallbacks in `views-goals.js` point at `#/me` now. ⚠️ **Only ever fallbacks** —
+  Rule 8 sends the arrow back through history first — so what changed is where a deep link or a cold
+  start lands, and it lands on the screen that owns the feature.
+
+### C. Step 5 — THE ACCOUNT CLEANUP, WHICH IS SMALLER THAN THE OTHERS AND IS THE POINT
+
+- **The facts readout came off the Account row.** *"Male, 31, 180 lbs"* was the same three facts the
+  Profile tab now prints, on the screen nobody goes to in order to look at them. What is left is a
+  door saying what is behind it (*"Gender, birth year, body weight"*), and 🛑 **the missing-profile
+  sentence stays untouched**, because that one is an ACTION rather than a readout and an empty
+  profile is what makes the muscle map look broken.
+- ✂️ **A "Profile" HEADING OVER ONE ROW WENT.** Since 2026-09-08 that word belongs to a tab, so a
+  heading naming `#/me` directly above a row that opens `#/profile` was worse than no heading.
+- **`views-profile.js`'s back fallback is `#/account`**, where the form has actually been reached
+  from since 2026-08-26. It had said `#/settings` for a fortnight.
+
+### D. 🚨 THE PROFILE TAB HAD NEVER BEEN THROUGH THE ACCESSIBILITY AUDIT
+
+Found by running it. `tools/a11y-audit.mjs` already had a row called **Profile** — and it is
+`#/profile`, the form. `#/me` shipped as a nav tab on 2026-09-08 and was **absent from the route
+list**, so the name was taken, the gap was invisible, and four sections of new content were about to
+ship over it unmeasured.
+
+⚠️ **IT IS THE 2026-08-24 `#/data` FAULT IN ITS MILDEST FORM**: a route absent from the list looks
+exactly like a route that passed. There, two names resolved to Home and Home was measured three
+times; here one name was simply never claimed. **The lesson is the same both times — a coverage
+claim is about the LIST, not about the tool.**
+
+✅ `#/me` and `#/me/workouts` are in it now. **272 routes, 34,027 text nodes, zero below 4.5:1, zero
+overflow, zero unnamed controls**, at 360 / 390 / 880 / 1280. The Profile tab reads correctly in a
+real browser at every one of them, all four sections included.
+
+⚠️ **AND THE FIRST SUMMARY OF THAT RUN WAS WRONG IN THE REASSURING DIRECTION.** A PowerShell one-liner
+read the wrong keys out of the JSON and reported *256 routes, 0 text nodes, 256 contrast failures*.
+The zero is what gave it away — `progress.md` already says a green audit with a zero node count is
+not a pass, and the same number catches a broken READER as well as a stale server. **Check the node
+count before reading anything else** still holds, from both directions.
+
+### E. Tests
+
+- **1,246 render assertions** (was 1,224) and **1,990 data-layer** (was 1,986). Every runnable suite
+  green; `sw-update` failed its known flaky assertion (*"the service worker takes control on the
+  second load"*) once and passed the rest — unchanged since 2026-09-07 and **not** to be reported as
+  reliably passing.
+- 🔒 **MUTATION-CHECKED IN BOTH DIRECTIONS.** Disabling the two new sections flips **exactly the
+  eleven** assertions about them and nothing else; putting the Goals row back on Settings flips
+  exactly the one that says it is gone.
+- ⚠️ **AND THE FIRST MUTATION RUN TAUGHT SOMETHING ABOUT THE TEST RATHER THAN THE CODE.** The suite
+  **threw** on the second assertion, so one deliberate mutation reported one failure and hid the
+  other ten. The block's row lookups are null-safe now: *a mutation check is only evidence if the
+  suite survives the mutation far enough to say what else it broke.*
+- 🆕 **STEPS 1 AND 3 GAINED RENDER COVERAGE THEY SHIPPED WITHOUT.** `bestLifts()` had a golden
+  data-layer block on 2026-09-10 and the SECTION had nothing, so the calendar and the best-lifts list
+  are asserted here too — including that the list leads by **days trained** with the heavier one-day
+  lift second (Rule 6), and that the measured set leads with *"227 lbs estimated max"* under it off a
+  different set (Rule 5). ⚠️ **The fixture is built so both orderings and both "bests" disagree**; one
+  where they agree would pass against a screen that had either rule backwards.
+- 🚨 **THE ASSERTION THAT GUARDS THE WHOLE SPLIT: `#/me` HOLDS NO FIELD AT ALL.** Four sections hang
+  off that screen now and every one is a readout with a link. No `input`, no `textarea`, no `select`,
+  anywhere on it — which is `direction.md` §4a's line between this screen and `#/account`, asserted
+  rather than remembered.
+
+---
+
 ## 2026-09-10 — DELETE MEANT DELETE, A RISE THAT ROSE BEHIND ITS OWN GHOST, AND A JOINT WORKOUT THAT WAS TWO WORKOUTS
 
 **Tim opened with two items off the Open work list** — *"idk what I can do with the desktop thing but

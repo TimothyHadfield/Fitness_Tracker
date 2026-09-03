@@ -2378,18 +2378,18 @@ export async function SettingsView() {
       ),
 
       el('div', { class: 'section-label', text: 'You' }),
-      // ⚠️ THIS LINK IS WHY REMOVING THE GOALS TAB IS NOT DELETING GOALS.
-      // 2026-08-25 took it off the bottom bar to make room for Calendar; the
-      // feature is built and tested and `#/goals` still resolves, but a route
-      // with no way in is deleted in every sense that matters to a user. This
-      // is the way in.
-      el('a', { class: 'row', href: '#/goals' },
-        el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: 'Goals' }),
-          el('div', { class: 'row-sub', text: 'Move a muscle up a strength level' }),
-        ),
-        el('span', { class: 'row-chev' }, chevron()),
-      ),
+      /* 🔄 ~~THE GOALS ROW LIVED HERE~~ **IT IS ON PROFILE SINCE 2026-09-11**,
+       * step 4 of the Data/Profile split (`direction.md` §4b, `progress.md` Open
+       * work 29). The old comment is worth keeping because its argument is the
+       * one that moved it: *"a route with no way in is deleted in every sense
+       * that matters to a user"* — 2026-08-25 took Goals off the bottom bar for
+       * the calendar and Settings was the way in it was given.
+       *
+       * 🚨 IT IS GONE FROM HERE RATHER THAN LEFT AS A SECOND DOOR, and that is
+       * what makes this a move. `#/me` is a TAB; this row is three taps behind
+       * an icon, on the screen Tim called crowded. Two doors would leave the app
+       * with two answers to "where are my goals" and the worse one nearer the
+       * top. `#/goals` still resolves for anything bookmarked. */
       // One pointer, not the details: profile, backup and delete moved to the
       // Account screen (2026-08-26, Tim). The row survives so somebody who has
       // always found them here is redirected rather than stranded.

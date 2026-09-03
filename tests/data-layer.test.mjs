@@ -714,8 +714,17 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
 
   // Half three: something on screen still points at each of them.
   const settingsSrc = readFileSync(new URL('../js/views-data.js', import.meta.url), 'utf8');
-  ok(/href: '#\/goals'/.test(settingsSrc),
+  /* 🔄 THE DOOR MOVED 2026-09-11 — Settings → Profile, step 4 of the
+     Data/Profile split — and the property this assertion protects is the one it
+     has always protected: **something on screen still points at Goals.** Read
+     against `views-me.js` now, because that is where the row is; the pair below
+     is what makes it a MOVE rather than a second door. */
+  const meSrc = readFileSync(new URL('../js/views-me.js', import.meta.url), 'utf8');
+  ok(/href: '#\/goals'/.test(meSrc),
      '⚠️ and something LINKS to Goals — a route nobody can reach is deleted in every sense that matters');
+  ok(!/href: '#\/goals'/.test(settingsSrc),
+     '🔄 …and Settings no longer does, because a move that leaves the old door open is two answers '
+     + 'to "where are my goals"');
   /* ⚠️ ASSERTED ON `DATA_TABS` BY NAME, NOT ON THE FILE. `FRIEND_TABS` has
      carried a Calendar entry since 2026-09-05, so a bare search for one would
      pass or fail for the wrong reason — a vacuous assertion of exactly the kind
@@ -739,7 +748,12 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
      "⚠️ while a friend's page keeps theirs — their page is the only door to it");
   // And it can be got out of again.
   const goalsSrc = readFileSync(new URL('../js/views-goals.js', import.meta.url), 'utf8');
-  ok((goalsSrc.match(/back: \(\) => go\('#\/settings'\)/g) || []).length === 3,
+  /* 🔄 THE FALLBACK IS `#/me` SINCE 2026-09-11 — it points at the screen that
+     now owns Goals rather than at the one that used to. ⚠️ It is only ever the
+     FALLBACK (Rule 8 sends the arrow back through history first), so what this
+     counts is that all three screens still HAVE one: a screen with neither a tab
+     nor a back button is a trap, and that is unchanged since 2026-08-25. */
+  ok((goalsSrc.match(/back: \(\) => go\('#\/me'\)/g) || []).length === 3,
      'all three Goals screens have a way back, since none of them has a tab any more');
 }
 

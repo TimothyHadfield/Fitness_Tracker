@@ -39,6 +39,17 @@
 // ⚠️ `#/me/followers` AND `#/me/following` STILL RESOLVE, onto the one list. A
 // tab bar being redesigned may not 404 a URL (`#/calendar` kept its route
 // through three moves) and neither may this.
+//
+// 🆕 AND IT HAS CONTENT SINCE 2026-09-10/-11 — the Data/Profile split, Tim's
+// five-step plan (`docs/direction.md` §4b, `progress.md` Open work 29). In his
+// order: the CALENDAR (step 1), the BODY FACTS (step 2), the BEST LIFTS
+// (step 3) and GOALS (step 4), with the Account cleanup behind them (step 5).
+//
+// 🚨 ONE LINE DECIDES WHAT LANDS HERE AND IT IS HIS: **Data answers what your
+// training MEANS, Profile answers what you DID.** That is why the calendar and
+// the records are here and the muscle map and Volume are not — and why every
+// section below is a READOUT with a door beside it. Nothing on this screen
+// writes anything, still.
 
 import { store, social, demo, activityByDate, todayISO } from './store.js';
 // ⚠️ ONE calendar, four doors. See `calendarSection` below and `ownCalendar`'s
@@ -112,12 +123,18 @@ export async function MeView() {
 }
 
 async function fill(body) {
-  const [settings, sessions, state, activity] = await Promise.all([
+  const [settings, sessions, state, activity, profile, goal] = await Promise.all([
     store.getSettings(),
     store.getSessions(),
     social.state().catch(() => ({ available: false, reason: 'offline' })),
     // 🆕 THE CALENDAR LIVES HERE SINCE 2026-09-10 — see the block below.
     activityByDate().catch(() => new Map()),
+    // 🆕 STEPS 2 AND 4 OF THE SAME SPLIT, 2026-09-11. Both are reads and both
+    // are allowed to fail into "nothing to show": a profile that cannot be
+    // read is the same screen as a profile nobody has filled in, and this
+    // screen has no business erroring over a section.
+    store.getProfile().catch(() => null),
+    store.activeGoal().catch(() => null),
   ]);
 
   const workouts = sessions.length;
@@ -160,8 +177,116 @@ async function fill(body) {
         ? el('div', { class: 'field-help', text: PUBLIC_NOTE })
         : null,
 
+    bodySection(profile),
     bestLiftsSection(sessions),
+    goalSection(goal),
     calendarSection(activity),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 YOUR BODY — 2026-09-11, step 2 of the Data/Profile split.
+ *
+ * Tim's plan, in his order: calendar, body facts, best lifts, Goals, then the
+ * Account cleanup. This is the second, and it is the smallest of the five
+ * because it moves a READOUT rather than a feature.
+ *
+ * 🚨 IT DISPLAYS AND LINKS; IT DOES NOT ASK. `#/me` never writes (`direction.md`
+ * §4a — adjustments behind the top-left icon, a view of the account in the tab
+ * bar), so `#/profile` stays the form and this row is the door to it. Building
+ * the fields here instead would have put the same three controls on two screens,
+ * which is the fault Tim named on the set row — *"it doesn't have 2 places for
+ * the same thing"* — and one of the two would have gone stale.
+ *
+ * ⚠️ WHAT IS THERE LEADS, AND WHAT IS MISSING IS NAMED. `direction.md` §3.1:
+ * something honest beats a blank, so a half-filled profile prints the half it
+ * has and says what the other half would buy. A person with a gender and no
+ * weigh-in reads "Male" over "Add your body weight to rank your muscle groups",
+ * not an empty row and not a silent one.
+ *
+ * ⚠️ THE SENTENCE IS THE ONE THE ACCOUNT SCREEN ALREADY USES, word for word.
+ * Two screens describing the same gap in two different ways is how a caveat
+ * quietly becomes two claims.
+ * ------------------------------------------------------------------ */
+function bodySection(profile) {
+  // A profile that could not be read at all: no row rather than a wrong one.
+  if (!profile) return null;
+
+  const facts = [
+    profile.gender === 'female' ? 'Female' : profile.gender === 'male' ? 'Male' : null,
+    // ⚠️ AGE, NOT BIRTH YEAR — the store computes it from the year on every read
+    // for exactly this reason (a stored age goes stale in silence). The word is
+    // printed because a bare "31" beside "180 lbs" reads as a weight.
+    profile.age ? `${profile.age} years` : null,
+    profile.bodyWeight ? units.withUnit(profile.bodyWeight) : null,
+  ].filter(Boolean);
+
+  const missing = profile.missing.length
+    ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
+    : null;
+
+  return el('div', { class: 'me-section' },
+    el('div', { class: 'section-label', text: 'Your body' }),
+    el('div', { class: 'list' },
+      el('a', { class: 'row', href: '#/profile' },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: facts.length ? facts.join(' · ') : 'Your body' }),
+          el('div', { class: 'row-sub wrap', text: missing
+            // ⚠️ The DATE of the last weigh-in, because the number above it is
+            // that day's rather than today's — the same distinction
+            // `BODY_WEIGHT_FRACTION` makes when it reads the weight from the
+            // date of the set. A stale weigh-in is a known gap (§9) and the
+            // honest version of it here is simply saying when it was.
+            || (profile.bodyWeightDate
+              ? `Last weighed ${relativeDay(profile.bodyWeightDate)}`
+              : 'Gender, birth year and body weight') }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      ),
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 YOUR GOAL — 2026-09-11, step 4 of the split, and it is a MOVE.
+ *
+ * Goals came off the tab bar on 2026-08-25 to make room for the calendar, and
+ * has been reached from Settings ever since — a feature with a real screen, real
+ * tests and no home. `direction.md` §4b puts it on Profile by name: **Data is
+ * what your training MEANS, Profile is what you DID**, and a goal you set is a
+ * thing you did.
+ *
+ * 🚨 THE SETTINGS ROW IS GONE RATHER THAN LEFT AS A SECOND DOOR, which is the
+ * difference between moving it and adding one. Profile is a tab; Settings is
+ * three taps behind an icon. Keeping both would leave the app with two answers
+ * to "where are my goals", and `#/goals` still resolves for anything anybody
+ * bookmarked — the same guarantee `#/calendar` has kept through four moves.
+ *
+ * 🛑 NO VERDICT, NOT EVEN A CHEERFUL ONE. `js/goals.js` refuses to say whether
+ * somebody is on track, because a day-to-day estimate swings several percent and
+ * a bad Tuesday is not a failure (Rule 6, and the refusal is asserted in
+ * `tests/goals.test.mjs`). This row therefore prints only what was RECORDED when
+ * the goal was set — the level being aimed at and the date it runs to — and
+ * nothing computed from where the lifter is now. A "you're behind" here would be
+ * the one refusal in this app that the summary screen quietly undid.
+ * ------------------------------------------------------------------ */
+function goalSection(goal) {
+  return el('div', { class: 'me-section' },
+    el('div', { class: 'section-label', text: 'Your goal' }),
+    el('div', { class: 'list' },
+      el('a', { class: 'row', href: '#/goals' },
+        el('div', { class: 'row-main' },
+          goal
+            ? el('div', { class: 'row-title',
+                text: `${goal.targetLevelName} ${goal.liftName || goal.muscle}` })
+            : el('div', { class: 'row-title', text: 'Set a goal' }),
+          el('div', { class: 'row-sub wrap', text: goal
+            ? `By ${fmtDateShort(goal.endDate)}`
+            : 'Move a muscle up a strength level' }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      ),
+    ),
   );
 }
 

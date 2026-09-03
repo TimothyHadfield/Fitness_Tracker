@@ -372,6 +372,16 @@ const ROUTES = [
        return Boolean(m); })()`],
   ['#/goals', 'Goals'], ['#/social', 'Social'], ['#/settings', 'Settings'],
   ['#/account', 'Account'], ['#/profile', 'Profile'],
+  /* 🚨 THE PROFILE **TAB** — added 2026-09-11, and it had never been audited.
+   * `#/me` shipped on 2026-09-08 as a nav tab and this list already had a row
+   * called "Profile", which is `#/profile`, the gender/birth-year form — so the
+   * name was taken and the gap was invisible. It is the 2026-08-24 `#/data`
+   * fault in its mildest form: a route absent from the list looks exactly like a
+   * route that passed. It matters now because the Data/Profile split put four
+   * sections on it — the calendar, the best lifts, the body facts and the goal —
+   * and every one of them is text over a surface at four widths. */
+  ['#/me', 'Profile tab'],
+  ['#/me/workouts', 'Profile tab · workouts'],
   /* The developer's inbox — added 2026-09-04 with the note feature. ⚠️ IT IS
    * MEASURED IN ITS EMPTY STATE AND THAT IS ALL THIS CAN DO: the demo account
    * is not the developer, so the list is empty by design here. The note CARDS

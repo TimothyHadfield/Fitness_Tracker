@@ -3905,13 +3905,21 @@ a.seg {
 .me-stat.is-off { opacity: 0.55; }
 
 /* ================================================================== *
- * PROFILE'S TWO NEW SECTIONS — 2026-09-10, the Data/Profile split.
+ * PROFILE'S SECTIONS — 2026-09-10 and -11, the Data/Profile split.
  *
- * 🚨 NO BOXES (Rule 2). Both are a `.section-label` over content, exactly like
+ * 🚨 NO BOXES (Rule 2). Each is a `.section-label` over content, exactly like
  * every other grouped block in the app. `.me-stat` above is the one bordered
  * thing on this screen and it earns it by being a row of tap targets; a
  * bordered card round a calendar would be a box round a box.
  * ================================================================== */
+
+/* Your body and your goal — 2026-09-11, steps 2 and 4. One label over one
+   `.list`, and they share this rule rather than each getting their own, because
+   the only thing either needs is the gap under its label. ⚠️ `min-width: 0` for
+   the same reason every other section here has it: a long lift name in a flex
+   column must be allowed to shrink, or it widens the pane and the whole screen
+   gains a sideways drag (2026-09-10). */
+.me-section { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 
 /* The calendar. ⚠️ NOT its own scroller — the pane scrolls, and nesting a
    second one inside it is how a phone ends up with two scrollbars fighting

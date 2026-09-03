@@ -134,6 +134,7 @@ which safety may be raised unprompted.
 | 🛑 **Never touch visuals unprompted** | The app *"looks very AI-generated and not very professional… I don't want you to automatically go fixing things yourself, I think it needs a human perspective."* **Wait for him, screen by screen.** He will point; you execute. |
 | 🛑 **Do not ask about other people's opinions** | *"I don't want you to ask me about other's oppinions."* Autumn is not a design input to be polled. |
 | ✅ **Recommend only when asked** | And when asked, give a **real ranked answer**, not a shrug. Between jobs: report what is done and stop. |
+| 🛑 **"Catch up with progress.md" is not a go-ahead** | 2026-09-11, after catching a session already building: *"you should not start working on anything until I tell you. It's okay to tell me what you think next steps are, but don't start working until I tell you to."* **An authorisation from an earlier session does not carry into this one.** Read, report in a few lines, wait. |
 | ✅ **Speak up about nothing else** | The single exception is §3.4's clause — a decision now that would be expensive to reverse later. |
 | 📄 **The docs are for you, not him** | *"Purely for you."* He does not read `progress.md` or the handbook. Write them for whatever makes a fresh session effective; do not optimise them for a human reader. |
 | 👤 **It is only ever you and him** | *"Just us."* No second contributor to write for. |
@@ -193,7 +194,8 @@ that content — he was right to doubt a tab that showed two numbers.
 account in the tab bar. So "body facts on Profile" means Profile **displays** sex, age and current
 weight and links to `#/profile`, which stays the form.
 
-🚩 **IT IS HALF BUILT — `progress.md` Open work 29 has the five steps and which are done.**
+✅ **ALL FIVE STEPS SHIPPED — 1 and 3 on 2026-09-10, 2, 4 and 5 on 2026-09-11.** `progress.md` Open
+work 29 and `docs/history.md` 2026-09-11 carry what each one decided.
 
 **Three topics he deferred with "I'll talk about it later" — 🛑 do not pre-empt any of them:**
 

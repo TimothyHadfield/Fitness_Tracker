@@ -155,7 +155,14 @@ export async function ProfileView() {
 
   return screenShell({
     title: 'Profile',
-    back: () => go('#/settings'),
+    /* 🔄 THE FALLBACK IS `#/account` SINCE 2026-09-11, not Settings — where this
+     * form has actually been reached from since 2026-08-26, and now also from
+     * the Profile tab's "Your body" row (step 2 of the Data/Profile split).
+     * ⚠️ It is only ever the FALLBACK: Rule 8 sends the arrow back through
+     * history, so this is what a deep link or a cold start lands on, and both
+     * doors are one tap from `#/account`. Settings has not held this screen for
+     * a fortnight and landing there was a small lie about where you came from. */
+    back: () => go('#/account'),
     scroll: [
       status,
 

@@ -23,7 +23,8 @@ import { visibilitySheet, renameSheet } from './views-social.js';
 import {
   PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL, normalizeVisibility,
 } from './social.js';
-import * as units from './units.js';
+// ⚠️ `units` LEFT WITH THE PROFILE READOUT on 2026-09-11 — this screen prints no
+// weight of its own any more. The one on Profile does the converting.
 import * as crop from './image-crop.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -698,11 +699,24 @@ async function personalSections({ mode }) {
 
   // Say what is missing rather than just "Profile" — this gates the muscle
   // map, and a silent empty profile is why it would look broken.
+  /* 🔄 ~~IT PRINTED THE FACTS BACK~~ **IT NAMES THE FIELDS SINCE 2026-09-11**,
+   * step 5 of the Data/Profile split (`progress.md` Open work 29).
+   *
+   * 🚨 THE READOUT MOVED TO PROFILE, SO KEEPING IT HERE WOULD BE THE SAME THREE
+   * FACTS ON TWO SCREENS — and the one on `#/me` is the one somebody goes
+   * looking at, because that screen exists to be looked at. What is left here is
+   * a DOOR: `#/account` is logistics (`direction.md` §4b), and the useful thing
+   * a door can say is what is behind it.
+   *
+   * ⚠️ THE MISSING BRANCH STAYS WORD FOR WORD, and it is not the same kind of
+   * sentence as the one that went. "Male, 31, 180 lbs" is a readout; *"Add your
+   * gender and body weight to rank your muscle groups"* is an ACTION, and an
+   * empty profile is exactly what makes the muscle map look broken. `#/me`
+   * prints the identical sentence from the identical fields — one gap described
+   * one way. */
   const profileLine = profile.missing.length
     ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
-    : `${profile.gender === 'female' ? 'Female' : 'Male'}`
-      + (profile.age ? `, ${profile.age}` : '')
-      + `, ${units.withUnit(profile.bodyWeight)}`;
+    : 'Gender, birth year, body weight';
 
   async function doExport() {
     const data = await store.exportAll();
@@ -762,7 +776,11 @@ async function personalSections({ mode }) {
   });
 
   return [
-    el('div', { class: 'section-label', text: 'Profile' }),
+    /* ✂️ ~~A "Profile" HEADING SAT HERE~~ **CUT 2026-09-11**, step 5. It headed
+     * exactly one row whose own title says what it is, and since 2026-09-08 the
+     * word has belonged to something else: **Profile is a TAB** (`#/me`) and
+     * this row opens the form at `#/profile`. A heading naming the other screen
+     * directly above a row that does not go there is worse than no heading. */
     el('a', { class: 'row', href: '#/profile' },
       el('div', { class: 'row-main' },
         el('div', { class: 'row-title', text: 'Your details' }),

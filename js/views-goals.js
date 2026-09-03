@@ -194,7 +194,7 @@ export async function GoalsView() {
   const { profile, muscles, hasProfile, goal } = await context();
 
   if (!hasProfile) {
-    return screenShell({ title: 'Goals', profile: true, back: () => go('#/settings'),
+    return screenShell({ title: 'Goals', profile: true, back: () => go('#/me'),
                          scroll: needsProfile(profile) });
   }
 
@@ -211,9 +211,14 @@ async function noGoalScreen(muscles) {
     title: 'Goals',
     profile: true,
     // ⚠️ A BACK BUTTON, since 2026-08-25. Goals lost its nav tab to Calendar,
-    // so it is now reached FROM Settings and needs a way home — a screen with
+    // so it is reached from somewhere else and needs a way home — a screen with
     // neither a tab nor a back button is a trap.
-    back: () => go('#/settings'),
+    // 🔄 THAT SOMEWHERE IS PROFILE SINCE 2026-09-11, not Settings (step 4 of the
+    // Data/Profile split). ⚠️ It is only the FALLBACK either way — Rule 8 sends
+    // the arrow back through history first — so this is what a deep link or a
+    // cold start lands on, and landing on the screen that now owns Goals is
+    // better than landing on the one that used to.
+    back: () => go('#/me'),
     scroll: [
       muscles.size ? null : needsHistory(),
 
@@ -282,7 +287,8 @@ async function activeGoalScreen(goal, profile, muscles) {
   const screen = screenShell({
     title: 'Goals',
     profile: true,
-    back: () => go('#/settings'),
+    // The fallback, as above — Profile owns Goals since 2026-09-11.
+    back: () => go('#/me'),
     scroll: body,
     bottom: el('button', {
       class: 'btn block', text: 'Change or end this goal',

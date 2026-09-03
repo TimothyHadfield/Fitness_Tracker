@@ -282,6 +282,12 @@ Tim is the **manager**; Claude is the **builder**.
   going to be better than what I say 90% of the time."* Take that as licence to decide, **not** as
   licence to stop listening — he found the source-mixing bug, correctly diagnosed the level-flipping
   bug, and his percentile spacing held up under modelling. Say so when he is right.
+- 🛑 **"Catch up with progress.md" means READ AND REPORT — it authorises no work.** Tim, 2026-09-11:
+  *"When I tell you to catch up with progress.md, you should not start working on anything until I
+  tell you. It's okay to tell me what you think next steps are, but don't start working until I tell
+  you to."* 🚨 **An authorisation recorded in an earlier session is not an instruction to resume it
+  in this one** — not even an Open work item these notes mark 🟢. Read the four files, say in a few
+  plain lines what changed and what is open, then stop. `docs/direction.md` §4.
 - **Never ask Tim what to work on next.** Questions are only for clarification or a decision *inside
   a job he already gave you*. Between jobs: say what's done, say what you noticed, stop. A question
   box forces him to answer it instead of replying to what you said — and most of the time what you

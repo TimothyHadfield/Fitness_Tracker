@@ -4348,7 +4348,16 @@ ok(!data.querySelector('.rep-target'),
      'Settings no longer carries the data controls');
   ok(/Account & profile/.test(text(st)),
      'but keeps one pointer row, so nobody who always found them here is stranded');
-  ok(/Goals/.test(text(st)), 'and Goals stays — it is not an account detail');
+  /* 🔄 ~~"and Goals stays — it is not an account detail"~~ **INVERTED
+     2026-09-11**, step 4 of the Data/Profile split. Goals was here because
+     2026-08-25 took it off the tab bar and Settings was the way in it was given;
+     `direction.md` §4b puts it on Profile, and a MOVE means the old door closes.
+     ⚠️ THE PAIR IS THE POINT — "not on Settings" alone is satisfied by deleting
+     Goals altogether, which is why the row on `#/me` is asserted in the Profile
+     block below and the route is asserted to still resolve there too. */
+  ok(![...st.querySelectorAll('a.row')].some((a) => a.getAttribute('href') === '#/goals'),
+     '🔄 and Goals is NOT on Settings any more — it moved to the Profile tab, and a move that '
+     + 'leaves the old door open is two answers to "where are my goals"');
 
   // The photo: store a tiny data URL directly (the canvas resize path needs a
   // real browser) and confirm both the Account face and the top-left button
@@ -7173,6 +7182,199 @@ ok(!data.querySelector('.rep-target'),
 
   social.state = realState;
   await store.clearAll();
+}
+
+/* ====== WHAT PROFILE IS FOR — THE DATA/PROFILE SPLIT (2026-09-10/-11) ======
+ *
+ * Tim: *"The main profile section is looking really empty right now and the
+ * settings profile section is really crowded … I think showing the calendar as a
+ * main section was nice, but I think we can also display it in the data section
+ * in a good way."* Then, given the five-step plan: **"I like all of that. Start
+ * working on it now."**
+ *
+ * 🚨 THE LINE THIS BLOCK EXISTS TO PIN IS HIS: **Data answers what your training
+ * MEANS, Profile answers what you DID.** Steps 1 and 3 (calendar, best lifts)
+ * shipped on 2026-09-10 with data-layer coverage and no render coverage at all —
+ * `bestLifts()` was tested and the SECTION was not — so they are asserted here
+ * alongside steps 2 and 4, which is where they should have been.
+ *
+ * 🚨 AND THE ONE THAT GUARDS THE WHOLE SCREEN IS THE LAST: `#/me` NEVER WRITES.
+ * `direction.md` §4a splits the two profile screens by that exact property —
+ * *"adjustments behind the top-left icon, a view of the account in the tab
+ * bar"* — and every section added here is a readout with a door beside it. A
+ * field appearing on this screen would be the split half-undone, and it would
+ * look like a feature while it happened.
+ */
+{
+  const { MeRouteView } = await import(BASE + 'views-me.js');
+  const { social } = await import(BASE + 'store.js');
+  const realState = social.state;
+  const text = (n) => n.textContent.replace(/\s+/g, ' ');
+  const rowFor = (node, href) =>
+    [...node.querySelectorAll('a.row')].find((a) => a.getAttribute('href') === href);
+  /* ⚠️ NULL-SAFE ON PURPOSE, and it is not defensive noise. The first mutation
+     check run against this block deleted both sections and the suite THREW on
+     the second assertion — so one deliberate mutation reported one failure and
+     hid the other eleven. A mutation check is only evidence if the suite
+     survives the mutation far enough to say what else it broke. */
+  const rowText = (node, href) => {
+    const r = rowFor(node, href);
+    return r ? text(r) : '';
+  };
+
+  // Off the cloud throughout: the counts are a dash and none of this depends on
+  // them. What is under test is what the screen HOLDS, not who is signed in.
+  social.state = async () => ({ available: false, reason: 'local' });
+
+  await store.clearAll();
+
+  /* ---- step 2: an empty profile is NAMED, never blank ---- */
+  {
+    const blank = await mount(MeRouteView(''));
+    await settle();
+    ok(Boolean(rowFor(blank, '#/profile')),
+       'Profile carries a body row even with nothing filled in');
+    /* 🚨 `direction.md` §3.1 — *"something is always better than nothing"*, with
+       the half Tim kept: *"have a way to be upfront about it."* An empty profile
+       is the first-run case, and the honest version of it is the sentence that
+       says what filling it in buys — the SAME sentence the Account screen uses,
+       because one gap described two ways becomes two claims. */
+    ok(/Add your gender and body weight to rank your muscle groups/
+      .test(rowText(blank, '#/profile')),
+       '🚨 and it names what is missing and what that costs, rather than printing a blank');
+  }
+
+  /* ---- step 2: half a profile prints the half it has ---- */
+  {
+    await store.saveProfile({ gender: 'male' });
+    const half = await mount(MeRouteView(''));
+    await settle();
+    const t = rowText(half, '#/profile');
+    ok(/Male/.test(t),
+       '⚠️ a half-filled profile prints the half it HAS — the gender is on the screen…');
+    ok(/Add your body weight/.test(t) && !/Add your gender/.test(t),
+       '…and names only what is still missing (the body weight), not the field it already has');
+  }
+
+  /* ---- step 2: a complete profile, and the weigh-in is DATED ---- */
+  {
+    await store.saveProfile({ gender: 'male', birthYear: 1994 });
+    await store.logBodyWeight(180);
+    const full = await mount(MeRouteView(''));
+    await settle();
+    const row = rowFor(full, '#/profile');
+    const t = rowText(full, '#/profile');
+    ok(/Male/.test(t) && /years/.test(t) && /180/.test(t),
+       `🚨 a filled profile shows sex, age and current weight on the Profile tab (${t.trim()})`);
+    ok(!/Add your/.test(t), 'and says nothing about missing fields once there are none');
+    /* ⚠️ THE DATE IS THE HONESTY, and it is the same one `BODY_WEIGHT_FRACTION`
+       makes when it reads a weight from the date of the SET: the number above is
+       that day's, not today's. §9 records a stale weigh-in as a known gap, and
+       saying when it was is the version of that a readout can do. */
+    ok(/Last weighed/i.test(t),
+       '⚠️ with the day it was weighed, because the number is that day’s rather than today’s');
+    /* 🚨 IT IS A DOOR, NOT A FORM (`direction.md` §4a). */
+    ok(Boolean(row) && row.getAttribute('href') === '#/profile',
+       '🚨 and the row opens the form at #/profile rather than editing anything here');
+  }
+
+  /* ---- step 4: Goals moved to Profile ---- */
+  {
+    const noGoal = await mount(MeRouteView(''));
+    await settle();
+    ok(Boolean(rowFor(noGoal, '#/goals')),
+       '🔄 Goals is on the Profile tab since 2026-09-11 (step 4)');
+    ok(/Set a goal/.test(rowText(noGoal, '#/goals')),
+       'and with no goal running it invites one rather than showing an empty section');
+
+    await store.setGoal({
+      muscle: 'Chest', liftName: 'Barbell Bench Press',
+      targetLevel: 4, targetLevelName: 'Advanced', targetPercentile: 80,
+      targetWeight: 225, startWeight: 185, startPercentile: 60,
+      startDate: '2026-09-01', endDate: '2026-11-24', ambition: 'steady', status: 'active',
+    });
+    const withGoal = await mount(MeRouteView(''));
+    await settle();
+    const gt = rowText(withGoal, '#/goals');
+    ok(/Advanced/.test(gt) && /Barbell Bench Press/.test(gt),
+       `🔄 and a running goal reads as the level it aims at, on the lift it is about (${gt.trim()})`);
+    ok(/By /.test(gt), 'with the date it runs to');
+
+    /* 🛑 NO VERDICT, AND THIS IS THE ASSERTION THAT MATTERS IN THE WHOLE STEP.
+       `js/goals.js` refuses to say whether somebody is on track — a day-to-day
+       estimate swings several percent and a bad Tuesday is not a failure (Rule
+       6) — and `tests/goals.test.mjs` pins that refusal in the module. A
+       summary row on the most-visited screen in the app is exactly where that
+       refusal would get quietly undone by a cheerful word. */
+    ok(!/on track|behind|ahead|falling|catch up/i.test(text(withGoal)),
+       '🛑 and it passes no verdict — the module refuses one, and a summary row is where that '
+       + 'refusal would be undone without anybody noticing');
+  }
+
+  /* ---- steps 1 and 3: the sections that shipped without render coverage ---- */
+  {
+    /* ⚠️ THE FIXTURE IS BUILT SO THE TWO ORDERINGS DISAGREE AND SO THE TWO
+       "BESTS" DISAGREE — a fixture where they agree would pass against a screen
+       that got either rule backwards.
+
+       · The bench is trained on TWO days and its heaviest set is 185 × 5.
+       · The row is trained on ONE day and is HEAVIER at 225 × 5, so sorting by
+         pounds would lead with it and sorting by days trained must not (Rule 6).
+       · The bench's second day is 165 × 10, whose estimated 1RM (227) beats the
+         one from its own heaviest set (219) — so `sameSet` is false and the
+         estimate line has something to say. */
+    const bench = byName('Barbell Bench Press');
+    const barbellRow = byName('Barbell Row');
+    const days = [
+      ['2026-08-11', bench, { weight: 185, reps: 5 }],
+      ['2026-08-12', bench, { weight: 165, reps: 10 }],
+      ['2026-08-13', barbellRow, { weight: 225, reps: 5 }],
+    ];
+    for (const [date, ex, set] of days) {
+      await store.saveSession({
+        workoutName: 'Push', date, startedAt: `${date}T10:00:00.000Z`,
+        entries: [{ exerciseId: ex.id, exerciseName: ex.name, sets: [set] }],
+      });
+    }
+
+    const me = await mount(MeRouteView(''));
+    await settle();
+    ok(Boolean(me.querySelector('.me-bests')), 'Your best lifts renders on the Profile tab (step 3)');
+    const bests = [...me.querySelectorAll('.me-best')];
+    ok(bests.length === 2, `one row per lift trained (${bests.length})`);
+    /* ⚠️ ORDERED BY DAYS TRAINED, NOT BY POUNDS — Rule 6. There is no honest
+       ranking of a 225 row against a 185 bench, so the list is ordered by the
+       thing that makes a lift YOURS, and the heavier one-day lift does not lead
+       because it is heavier. */
+    const lead = bests.length ? text(bests[0]) : '';
+    ok(/Barbell Bench Press/.test(lead) && /2 days/.test(lead),
+       '⚠️ led by the lift trained on the most DAYS, with the day count printed beside it — the '
+       + 'heavier lift is second, which is the half a weight-sorted list would get wrong');
+    /* 🚨 RULE 5: the measured set leads and the estimate is labelled in words. */
+    ok(/185/.test(lead), '🚨 the MEASURED set leads — 185 × 5 is a fact');
+    ok(/227 lbs estimated max/.test(lead),
+       '🚨 and the modelled number is under it carrying the WORD "estimated" — off a different '
+       + 'set (165 × 10), which is the case where saying both is worth the line');
+
+    ok(Boolean(me.querySelector('.me-cal')), 'and the calendar is here too (step 1)');
+    ok(/Training history/.test(text(me)), 'under a heading that says what it is');
+    ok([...me.querySelectorAll('.seg')].some((s) => /Years/.test(s.textContent)),
+       '⚠️ with the same Months / Years switch the Calendar screen has — it is `ownCalendar()`, '
+       + 'one function behind four doors, so the two can never drift');
+
+    /* 🚨 THE PROPERTY THE WHOLE SPLIT RESTS ON: THIS SCREEN NEVER WRITES.
+       Four sections now hang off it, every one of them a readout with a link;
+       a text field or a chip here would mean the same control on two screens
+       and one of them going stale. Buttons are exempt because the calendar's
+       own Months/Years switch is one. */
+    ok(!me.querySelector('input') && !me.querySelector('textarea') && !me.querySelector('select'),
+       '🚨 and nothing on the Profile tab writes anything — no field, anywhere on it, which is '
+       + 'the line `direction.md` §4a draws between this screen and #/account');
+  }
+
+  social.state = realState;
+  await store.clearAll();
+  await store.saveProfile({ gender: null, birthYear: null });
 }
 
 /* ====== HOME LOST ITS SWITCH (2026-09-08) ======
