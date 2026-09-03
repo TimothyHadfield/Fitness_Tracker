@@ -6277,6 +6277,29 @@ ok(!data.querySelector('.rep-target'),
   ok(/maybe .* to failure/.test(capText()[1]),
      `and the reps say roughly how many it allows, worded as a guess (${capText()[1]})`);
 
+  /* 🚨 AND SINCE 2026-09-13 IT SAYS WHOSE NUMBER IT IS. The lifter has a barbell
+   * row history, so the caption reads THEIR OWN best set on this lift rather
+   * than their Back rating converted back out through the ratio table. That was
+   * Tim's report: with a tested set on record the runner still spoke from the
+   * muscle rating, and told him a weight he had tested two days earlier was
+   * above his max. */
+  /* ⚠️ `× \d` RATHER THAN "from your", and the difference is a mutation check.
+   * A caption falling back to the muscle rating says "(from your other lifts)",
+   * which matches "from your" perfectly well — so the loose pattern passed with
+   * the own-set lookup disabled entirely. It has to name a SET. */
+  ok(/from your .*× ?\d/.test(capText()[0]),
+     `⚠️ the caption names the set it rests on — Rule 5's anchor, on the screen where the number `
+     + `is acted on (${capText()[0]})`);
+  ok(/14?0|135/.test(capText()[0]),
+     'and the set it names is one this person actually did, not a converted figure');
+
+  /* ⚠️ THE RANGE, not a single integer (decision h). The rep table publishes a
+   * between-person spread of about ±2.5 reps at 80 % — as wide as the fatigue
+   * correction on a third set — so a bare number was always overstating what is
+   * known. */
+  ok(/maybe \d+–\d+ to failure|maybe \d+\+? to failure/.test(capText()[1]),
+     `the rep caption carries a band where it has one (${capText()[1]})`);
+
   /* ⚠️ LIVE: a nudge repaints them, in place, without rebuilding the row. */
   const before = capText()[0];
   const weightInput = s.querySelector('.set-open .step-value');

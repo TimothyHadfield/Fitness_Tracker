@@ -3281,6 +3281,106 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'and with a sex it uses that sex\'s medians rather than the mean of the two');
   }
 
+  /* ================= the 2026-09-13 rating rules =================
+   *
+   * Four changes to how one exercise's evidence is chosen, each of which used
+   * to be decided by "whichever number is biggest". They are asserted here as
+   * properties rather than as figures, because the figures depend on the demo
+   * year and the properties are what was actually decided.
+   */
+  {
+    const bench = byName('Barbell Bench Press');
+    const day = (n) => new Date(Date.UTC(2026, 8, 3) - n * 86400000).toISOString().slice(0, 10);
+    // Built the way strength-observations does, but by hand, so the fixture
+    // says exactly what it means. Ratio 1 and quality 1 throughout: this block
+    // is about which SET is chosen, and a conversion in the middle would only
+    // make the numbers harder to read.
+    const mk = (dayAgo, weight, reps, isBenchmark) => {
+      const load = weight;
+      const raw = e1rm(load, reps);
+      return {
+        estimate: raw, rawE1rm: raw, quality: 1, kind: 'direct', via: null,
+        standInName: null, ratio: 1, reps, weight, loadType: 'total',
+        date: day(dayAgo), ageDays: dayAgo, isBenchmark: Boolean(isBenchmark),
+        exerciseId: bench.id, exerciseName: bench.name, priorVolume: 0, fatigueFactor: 1,
+      };
+    };
+
+    /* 1. THE SEAT GOES TO THE MOST CREDIBLE SET, NOT THE BIGGEST. A 12-rep
+     *    back-off set extrapolates to a bigger number than a 3-rep benchmark;
+     *    it used to take the seat, and that is what told a lifter their tested
+     *    215 was above their max. */
+    {
+      const r = me.rateMuscle([mk(2, 185, 12), mk(2, 215, 3, true)], 'Chest');
+      ok(near(r.estimate, e1rm(215, 3), 0.01),
+         `🚨 the seat goes to the 3-rep benchmark, not the 12-rep set that extrapolates higher `
+         + `(${r.estimate.toFixed(1)} vs ${e1rm(185, 12).toFixed(1)})`);
+    }
+
+    /* 2. LOW-REP SETS ARE PREFERRED WHERE THEY EXIST — the curve extrapolates
+     *    least from them — but a long set still leads when it is all there is. */
+    {
+      const withLow = me.rateMuscle([mk(2, 185, 12), mk(3, 205, 5)], 'Chest');
+      ok(near(withLow.estimate, e1rm(205, 5), 0.01),
+         'a set at 8 reps or fewer takes the seat over a longer one on the same exercise');
+      const longOnly = me.rateMuscle([mk(2, 185, 12)], 'Chest');
+      ok(near(longOnly.estimate, e1rm(185, 12), 0.01),
+         '⚠️ but a preference is not a gate: with nothing shorter, the long set still rates the muscle');
+    }
+
+    /* 3. THE WINDOW — the number may now fall. Best-ever meant twenty weeks of
+     *    300 x 3 followed by twenty of 250 x 5 still read 300 for ever. */
+    {
+      const rows = [];
+      for (let i = 0; i < 20; i++) rows.push(mk(280 - i * 7, 300, 3));
+      for (let i = 0; i < 20; i++) rows.push(mk(140 - i * 7, 250, 5));
+      const r = me.rateMuscle(rows, 'Chest');
+      ok(near(r.estimate, e1rm(250, 5), 0.01),
+         `🚨 the rating reads the recent 250 x 5, not the year-old 300 x 3 — the number can fall `
+         + `(${r.estimate.toFixed(1)})`);
+      const staleOnly = me.rateMuscle([mk(400, 300, 3)], 'Chest');
+      ok(near(staleOnly.estimate, e1rm(300, 3), 0.01),
+         '⚠️ and somebody who simply has not trained keeps their record — the window widens rather '
+         + 'than emptying, so a long lay-off is not the same as getting weaker');
+    }
+
+    /* 4. WALK ORDER CANNOT CHANGE THE ANSWER. Every comparison falls through to
+     *    the date and then the id. This read Fair with a year-old leader one way
+     *    and High with today's the other, and the store's own sort hid it. */
+    {
+      const rows = [];
+      for (let i = 0; i < 53; i++) rows.push(mk(i * 7, 225, 5));
+      const asc = me.rateMuscle([...rows].reverse(), 'Chest');
+      const desc = me.rateMuscle(rows, 'Chest');
+      ok(near(asc.estimate, desc.estimate, 1e-9) && near(asc.confidence, desc.confidence, 1e-9),
+         `🚨 the same history walked in either order gives the identical rating `
+         + `(${asc.estimate.toFixed(4)}/${asc.confidence.toFixed(4)} both ways)`);
+    }
+
+    /* 5. THE TYPO QUARANTINE, and the two things that keep it honest: it holds
+     *    back the one reading that triggered it rather than the whole day, and
+     *    it does not fire on a personal best. */
+    {
+      const clean = [mk(30, 200, 5), mk(23, 205, 5), mk(16, 205, 5), mk(9, 210, 5)];
+      ok(me.rateMuscle(clean, 'Chest').quarantined.length === 0,
+         'an ordinary progression quarantines nothing');
+      const pr = [...clean, mk(2, 245, 5)];
+      ok(me.rateMuscle(pr, 'Chest').quarantined.length === 0,
+         '⚠️ and neither does a hard personal best — the screen alone would have held this back, '
+         + 'which is why a flagged reading must ALSO stand at twice the best other one');
+      const typo = [...clean, mk(2, 2050, 5)];
+      const rt = me.rateMuscle(typo, 'Chest');
+      ok(rt.quarantined.length === 1 && rt.quarantined[0].weight === 2050,
+         `🚨 a x10 slip IS held back, by name (${rt.quarantined.map((q) => q.weight).join()})`);
+      ok(near(rt.estimate, me.rateMuscle(clean, 'Chest').estimate, 0.01),
+         'and the rating reads exactly as it did before the typo was logged');
+      const sameDay = [...clean, mk(2, 2050, 5), mk(2, 205, 5)];
+      const rs = me.rateMuscle(sameDay, 'Chest');
+      ok(rs.quarantined.length === 1 && rs.quarantined[0].weight === 2050,
+         '⚠️ and only the offending set — the good sets logged beside it that day still count');
+    }
+  }
+
   // ---- rep gate and rep weighting ----
   ok(me.repFactor(25) === 0, 'a 25-rep set is not evidence of a maximum');
   ok(me.repFactor(16) === 0, 'and neither is 16');
