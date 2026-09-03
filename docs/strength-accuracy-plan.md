@@ -7,8 +7,25 @@ accuracy as much as possible. Additionally, I want to start exploring fatigue �
 with this whatsoever … Make a plan on how we can fix our current setup once you're done, and then
 I'll look over it and deploy you later."*
 
-🛑 **NOTHING IN THIS FILE IS BUILT. NOTHING IN IT IS AUTHORISED.** It is the analysis and the plan;
-Tim reviews it and says which parts go. Every §N reference below means `docs/handbook.md` unless it
+🔄 **APPROVED AND BUILT ON 2026-09-14 — PHASES 0 TO 3.** Tim: *"I like all your fixes as well as all
+of your advice for the decisions you want me to make. Start building the improvements now."* All
+fourteen decisions in §4 were taken as recommended. **What shipped is §2 (every defect), §3 (every
+model decision) and §5.1–§5.4 (fatigue); §5.5 was NOT built** — it was stated with both sides and
+not recommended, and he did not name it.
+
+⏸️ **WHAT IS STILL OPEN IS §6, AND NONE OF IT IS BLOCKING:**
+
+- **§6.1 the backtest** — designed in full, not built. It needs **Tim's own export** (decision n),
+  which has not been given. It is the only thing that turns "internally consistent" into "accurate".
+- **§6.3 the systematic re-derivation** of all ~105 ratios (~2 days, mostly transcription). What
+  landed is the ~25 entries that were more than 10 % off, not a re-derivation of the table.
+- **§6.4 σ per entry** and inverse-variance aggregation; **§6.5 personal ratios**.
+- **The fall limit** — §3.1's window shipped, `estimateAt`'s 2 %/week limit did not, so a rating
+  steps when a set ages out of the window rather than declining smoothly.
+
+**The read-back below is the analysis as written on 2026-09-13.** It is kept intact rather than
+rewritten in the past tense, because the numbers in it are the measurements that justified each
+change and a later session will want them. Every §N reference means `docs/handbook.md` unless it
 names another file.
 
 **How it was done.** Seven read-only agents, each on one slice, each running the app's own modules

@@ -2185,3 +2185,50 @@ the lab rep curve as truth the bias is about 8 %. The backtest on your own bench
 validation item and needs an export of your data.
 
 Everything is in the page. I'll wait for you to pick.
+
+---
+
+## 2026-09-14 — three readings you flagged, and the maths behind them
+
+**You:** you liked the fixes and the advice on all fourteen decisions, and said to start building.
+Then twice: deploy more sub-agents.
+
+**Your three are fixed, and they were all one thing.** The reverse pec deck was carrying the
+*dumbbell* rear-delt ratio, applied to a single machine stack. The estimate divides by that ratio,
+so half the right ratio is double the number — your 70 × 10 read Advanced and now reads 16th,
+Beginner. The lying leg curl was a mix of the same problem and a leg-curl standard taken from a
+different population; it reads 75th now. Autumn's face pull was the app using one ratio for both
+sexes: a woman's face pull is a third more of her overhead press than a man's is of his. Hers reads
+40th, Novice.
+
+**And a fourth I found while fixing them, which was worse than any you saw.** A 100 lb machine
+lateral raise rated shoulders Elite, 99.9th percentile. The app was doubling the stack (as if it were
+two dumbbells) *and* dividing by the two-dumbbell ratio.
+
+**About twenty-five ratios were more than ten percent out.** Every one the August sweep actually
+derived was right; every miss was a number someone had reasoned about, or one rule covering two
+exercises that are loaded differently. That is the third time this exact lesson has come up.
+
+**Some bigger things behind them.** Ratios now depend on sex where the published data says they
+should. There is one place in the app where a set becomes an estimated 1RM, instead of seven — four
+of which scored assisted lifts on the *help* number, so taking more help was a personal best. A
+muscle's rating can now go down: it used to keep your best set ever, so a year of lighter training
+read the same as your best day. And the rating picks your most *credible* set rather than your
+biggest number, which is what was telling you a weight you'd tested two days earlier was above your
+max.
+
+**The set captions changed too.** They read your own best set on that lift when you have one, and
+say which set. The rep guess is a range now, from the measured table rather than our own curve. And
+it drops across a run of sets — "maybe 6–9 on this set (8–13 fresh)" — because reps at a fixed load
+fall by a known amount each set. That number can only ever go down, so if it's wrong you just beat
+it.
+
+**One thing worth knowing.** Nine sub-agents were building this and a usage limit killed all nine at
+once, most of them mid-file. One had written the *comments* describing its changes and only some of
+the code, which meant pull-ups, chin-ups and dips silently rated nothing at all. Everything is
+finished and tested now, but that is the failure mode to know about: a half-finished agent leaves
+notes that describe work it didn't do.
+
+**Still to do, and none of it is urgent:** the backtest against your own benchmarks needs an export
+of your data — that's the one that would tell us how accurate any of this actually is. And a full
+re-derivation of all the ratios rather than the worst twenty-five.

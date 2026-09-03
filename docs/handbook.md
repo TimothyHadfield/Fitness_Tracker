@@ -1221,6 +1221,41 @@ row of a collection, and Firestore grants per document, so "let a friend see som
 has no permission that expresses it). D25: *social requires upgrading off an anonymous account*,
 which narrows D12 rather than breaching it. Both get locked if and when Phase 1 is built.
 
+🚨 **D30 IS RECORDED ON 2026-09-14, AND IT IS THE CONVENTION FOUR SCREENS DISAGREED ABOUT:** *one
+logged set becomes one estimated 1RM in exactly one place — `setE1rm()` in `js/set-e1rm.js` — and a
+per-side lift goes PER HAND into the curve with the result doubled.*
+
+- **Why per hand.** Marzagão was fitted with dumbbells logged per hand (`docs/research.md` §1.3,
+  which said so from the start and told callers to pass the per-side number), and the ratio table was
+  derived from Strength Level's per-dumbbell rows doubled. Both of the function's inputs already
+  spoke that convention; the rating pipeline was the one out of step, doubling first. It is not a
+  rounding difference — k grows with the log of the weight, so `e1rm(160, 8)` is 209 lb where
+  `2 × e1rm(80, 8)` is 220.
+- ⚠️ **WHAT IT REPLACES IS SEVEN COPIES OF THE SAME ARITHMETIC**, four of which were wrong in the
+  same direction: they scored an assisted or body-weight lift on the BOX number, so taking more help
+  read as a heavier lift and produced a personal best on three screens at once.
+- 🚨 **D5 LIVES IN IT.** A set above 15 reps returns null from `setE1rm()`, so the rep ceiling is
+  enforced by the function every caller has to go through rather than by each caller remembering.
+  That is what closed the Data tab's hole, where a 135 × 25 burnout set was plotted above a real
+  205 × 5 and printed as a "~258 lb max".
+
+🚨 **D31 IS RECORDED ON 2026-09-14: a conversion ratio may depend on SEX, and about a quarter of them
+do.** `[regex, ratio, q]` where `ratio` is a number or a `{ m, f }` pair; `resolveRatio()` picks, and
+falls back to the mean of the two when the sex is unknown — which is what every entry did for
+everybody until now.
+
+- **The differences are not small and not uniform.** A woman's pull-up is 1.64 of her barbell row
+  where a man's is 1.28; her face pull is 1.04 of her press where his is 0.75; machine pressing runs
+  the other way (0.97 against 1.23). ⚠️ **Dumbbell-for-barbell swaps are sex-neutral**, which is
+  exactly why the 2026-08-26 sweep's sample missed this: it checked the family where the answer is
+  "no difference".
+- 🛑 **THE BODY-WEIGHT FRACTION TABLE IS NOT SEX-DEPENDENT** and must not become so. That table is
+  biomechanics — what fraction of your mass a movement carries — and the same movement carries the
+  same fraction. Only the RATIO, which is a population comparison, has a sex.
+- ⚠️ **A half-built version of this dropped every paired entry silently.** `add()` guards on
+  `ratio > 0`, which a `{m, f}` object fails, so pull-ups, chin-ups and dips rated nothing at all
+  with no error anywhere. If a ratio ever stops contributing, look here first.
+
 🚨 **D29 IS RECORDED ON 2026-09-03, AND IT REPLACES A DESIGN RATHER THAN NARROWING ONE:** *visibility
 is a property of the ACCOUNT, not of a relationship — private (accepted friends see everything) or
 public (anybody signed in who finds you sees everything too), with body weight the single exception
@@ -1330,6 +1365,25 @@ re-examining it produces something better than either the old rule or a plain ov
 ---
 
 ## 9. Known gaps — deliberate, not bugs
+
+🔄 **READ THIS BLOCK FIRST: SIX ENTRIES BELOW WERE OVERTAKEN ON 2026-09-14.** The strength-accuracy
+build (`docs/history.md` 2026-09-14, `docs/strength-accuracy-plan.md`) closed or corrected them, and
+several of the sentences underneath are now the record of a fixed problem rather than a live one.
+
+| what §9 says below | what is true since 2026-09-14 |
+|---|---|
+| the conversion ratios are estimates and some are shaky | still true, and ~25 of the shakiest were corrected against Strength Level; a quarter of the table now carries a sex (D31). Machines are still the weak case |
+| a stale weigh-in gets no penalty | **fixed** — a carried-forward weigh-in decays with the gap, floored at the same 0.70 a backward-carried one gets |
+| the plausibility ceiling quarantines an observation | it was **built and never called** until 2026-09-14; §9 read as though it had shipped. It runs now, narrowed twice (per set rather than per day, and only when the reading also stands at twice the best other one) |
+| percentile placement leans on the e1RM formula | still true, and now stated in the band: `uBase` widened to 0.13 because the ±12 % was a Marzagão-conditional claim |
+| high-rep extrapolation is not fixed | **partly** — the rating now prefers sets at ≤ 8 reps where they exist, so the longest set no longer leads by default |
+| ~~a missing weigh-in widens the comparison~~ | **FALSE, and it always was.** "Any body weight" resolves to the reference weight; the screen says "as if 180 lb" now |
+
+⚠️ **AND ONE GAP §9 NEVER LISTED, now closed: the rating could not go DOWN.** The seat for an exercise
+was its best set ever, so twenty weeks at 300 × 3 followed by twenty at 250 × 5 still read 300. It
+comes from an 84-day window now (widening to 180, then to all of history, so a lay-off keeps its
+record). 🛑 **Half of that decision is still open** — `estimateAt`'s 2 %/week fall limit is fitted,
+tested and unwired, so the number steps when a set ages out rather than declining smoothly.
 
 - ~~**Body weight is charted but not yet wired into rep normalisation.**~~ **CLOSED 2026-08-19.**
   Pull-ups, chin-ups, dips and push-ups now rank. What remains open is narrower and is stated on

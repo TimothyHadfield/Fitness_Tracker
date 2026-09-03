@@ -17,6 +17,156 @@
 
 ---
 
+## 2026-09-14 — THE STRENGTH MATHS REBUILT, AND A SESSION LIMIT KILLED NINE AGENTS MID-FLIGHT
+
+⚠️ **Same chat session as 2026-09-13**; the audit's plan was approved in it and built immediately.
+Tim: *"I like all your fixes as well as all of your advice for the decisions you want me to make.
+Start building the improvements now."* Then, twice: *"Remember to deploy many sub-agents."*
+
+### A. 🚨 THE THING TO KNOW BEFORE ANYTHING ELSE: NINE AGENTS DIED AT ONCE
+
+Nine were launched on disjoint files with the usual brief. **All nine were killed by a session usage
+limit within a few minutes of each other**, most of them mid-file. What they left behind was 3,071
+uncommitted insertions across twenty files, every module still parsing, and a working tree that
+looked finished and was not.
+
+**The recovery is the lesson, and it is a new one for this project.** The temptation was to revert
+and start again. What the tree actually held was three kinds of work:
+
+1. **Finished and correct** — the store's load builder, Goals' version stamp end to end, the
+   standards rewrite, `personal-bests`, `compare`, the fatigue module, the Nuzzo table in
+   `exercise-estimate.js`. All of it kept.
+2. **Half-built and DANGEROUS BECAUSE IT LOOKED FINISHED** — `muscle-evidence.js` had a header
+   describing eleven changes and the body of two. The ratio table had been converted to sex pairs
+   for Chest and Back and stopped there; `resolveRatio()` was documented in the header and **never
+   written**. `add()` guards on `ratio > 0`, and a `{m, f}` object fails that silently — so **every
+   pull-up, chin-up and dip in the library rated nothing at all, with no error anywhere.**
+3. **Not started** — the runner captions, the views polish, the backtest tool.
+
+🔒 **THE RULE THAT COMES OUT OF IT: A HALF-WRITTEN AGENT LEAVES A HEADER THAT LIES.** These agents
+write the reasoning first and the code second, which is the right order for a human reader and the
+worst possible order for an interrupted one. **After any agent failure, diff the header against the
+body before trusting either.** The symptom here was silent and total: no throw, no warning, four
+whole exercise families dropping out of the rating.
+
+⚠️ **AND THE SUITE DID NOT CATCH IT.** `bodyweight.test.mjs` failed with *"a pull-up now rates BACK
+— the gap this whole change exists to close"*, which is exactly the right assertion, and it was
+buried among nineteen other failures that were all expected re-baselines. **A red suite full of
+intended failures is where an unintended one hides.**
+
+### B. What was built — the four Tim reported, first
+
+His three, all one cause (the ratio table) and all fixed:
+
+| what he saw | why | now |
+|---|---|---|
+| Reverse pec deck 70 × 10 → **Advanced** | the machine carried the DUMBBELL rear-delt ratio, 0.56, applied to a single stack; the estimate divides by the ratio, so half the ratio is double the number | 1.07, and the set reads **16th, Beginner** |
+| Lying leg curl → **Advanced** | correct ratio, but the seat went to a long set and the Hamstrings median was a Gravitus figure | 75th Proficient |
+| Autumn's face pull 40 × 10 → **nearly Advanced** | one ratio for both sexes; a woman's face pull is 1.04 of her press where a man's is 0.75 | 1.04, and it reads **40th, Novice** |
+
+And the fourth, found while fixing them: **a 100 lb machine lateral raise rated Shoulders Elite,
+99.9th percentile.** It was in `FORCE_PER_SIDE` *and* on the two-dumbbell ratio — the stack doubled
+to 200 and then divided by 0.53, a 3.7× inflation. Both halves had to move: `exercises.js` files it
+`FORCE_TOTAL` and the table gives it 0.97. 🚨 **Moving a name between load conventions IS a ratio
+change**, which the table's header now says.
+
+### C. The ratios: ~25 corrections, and a sex axis
+
+Every entry the 2026-08-26 sweep **derived** reproduced exactly against today's Strength Level pages.
+**Every miss over 10 % was a reasoned entry, a carried entry, or a regex family covering two load
+conventions** — the sweep's own fourth lesson, for the third time. Worst: cable kickback 0.18 → 0.63
+(a 60 × 12 implied a 991 lb deadlift), hip abduction/adduction 0.35 → 0.61/0.66 male and 0.79/0.74
+female (a 140 lb woman's 150 × 12 rated her glutes **Elite**), triceps kickback 0.20 → 0.39, overhead
+dumbbell extension un-doubled at 0.24, machine curl 1.00 → 1.23, seated leg curl split off the lying
+one at 0.66, straight-arm pulldown split out of `/Pulldown/` at 0.61, barbell lunge split out of
+`/Lunge/` at 0.62. **Five comments claiming "no published standard" were stale** — the pages were
+added from 2020 on.
+
+**A quarter of the table is now a `{ m, f }` pair.** Dumbbell-for-barbell swaps are sex-neutral,
+which is exactly why the sweep's sample hid this: the differences live in pulls, body-weight lifts
+and machines, where they run 20–40 %. `resolveRatio()` picks by sex and falls back to the mean of the
+two when the sex is unknown, which is what the table did for everybody until now.
+
+### D. The rating: four rules that all used to be "whichever number is biggest"
+
+- **The seat for an exercise goes to its most CREDIBLE set**, not its largest estimate. A 215 × 3
+  benchmark used to lose to a 185 × 12 back-off set. ⚠️ **There were TWO such picks and only one was
+  obvious** — a per-day collapse ran first and had already thrown the benchmark away before the seat
+  rule saw it.
+- ⚠️ **The seat comparison drops the BENCHMARK BONUS on purpose.** With it, a 245 lb benchmark from
+  six weeks ago out-ranked a 275 × 2 done since — and a 30 lb PR is worth more than a 1.25 bonus.
+  What still separates a test from a back-off set is `repFactor`, which is the term that actually
+  describes the extrapolation.
+- **Low-rep sets are preferred where they exist** (≤ 8), because the curve extrapolates least from
+  them. A preference, not a gate.
+- **A window** (84 days, widening to 180, then ever): the number can fall. Twenty weeks at 300 × 3
+  then twenty at 250 × 5 now reads 250. A lifter who has simply not trained keeps their record.
+- **Every comparison has a total tie-break.** The same history read *Fair, leader a year old* walked
+  one way and *High, leader today* the other. The store's own sort hid it; the demo generator, the
+  golden test and a friend's published rows did not.
+- **The deadlift no longer stands in for biceps, traps and forearms** — its Back quality is exactly
+  0.45 and the fallback filter was `>=`.
+
+### E. One 1RM convention, in `js/set-e1rm.js`
+
+Four paths scored an assisted or body-weight lift on the **box number**, so taking more help was a
+personal best on three screens at once. There is one function now. **Per-side goes per hand into the
+curve and doubles after** (Tim's call): Marzagão was fitted that way and the ratios were derived from
+per-dumbbell tables doubled. The rating pipeline had been doubling first — a 5 % disagreement with
+the profile on every dumbbell lift, which the store-vs-module assertion caught the moment both sides
+were forced through one function.
+
+### F. The standards, the captions, the quarantine
+
+**Medians move to Strength Level 2026** so the ratios and the ranking come from one population — the
+ratio table divides by SL's rows, and ranking the result against Gravitus medians 7–9 % lower meant a
+median SL lifter read ~68th on biceps. **The spread is two-piece, per lift and per sex**: a 140 lb
+woman standing exactly on the published Beginner bench mark used to read the **0.25th percentile**.
+Core's σ 0.48 was this, found once and treated as a Core quirk. **Untrained is by class** (~0.60
+upper, ~0.85 lower), not one 0.55. **"Any body weight" says "as if 180 lb"**, which is what the maths
+always did — §9's claim that it widened the comparison was false.
+
+**The captions read your own best set** when you have one, and name it. **Rep predictions come from
+the Nuzzo table with a band** and **fall across a run of sets** — "maybe 6–9 on this set (8–13
+fresh)" — using the published decrement blended with the lifter's own once they have three sets at
+one load. Every multiplier is ≤ 1, so a wrong constant can only make the caption easier to beat.
+
+**The typo quarantine is finally wired** — `screenDaily()` was fitted and tested in August and never
+called. Two corrections came out of wiring it: the verdict is per DAY but the penalty is per SET (it
+was throwing away three good sets to punish one typo beside them), and the ceiling alone was **too
+eager for this job** — fitted ~12 % above the running estimate, it held back a real 245 → 275 bench
+progression and a genuine goal-sized gain. A reading is only set aside if it **also** stands at twice
+the best other reading for that muscle. 🛑 That 2.0 is ours and can only withhold.
+
+### G. Testing
+
+**3,478 assertions across eighteen no-Chrome suites** (was 3,421 across seventeen), **1,333 render**.
+`tests/rep-decrement.test.mjs` is new — 57 assertions, both invariants mutation-checked with the
+mutation printed in the source first.
+
+🚨 **AND A MUTATION CAUGHT A TEST THIS SESSION, WHICH IS THE POINT OF DOING THEM.** The caption
+assertion was written as `/from your /`. Disabling the own-set lookup entirely left it PASSING,
+because the fallback wording is *"(from your other lifts)"*. It requires a set now (`× \d`).
+
+⚠️ **THE GOLDEN TABLE WAS RE-BASELINED AND THIS ONE IS NOT A DICE RE-ROLL.** Every previous
+re-baseline came from adding an exercise and shifting the seeded year. This is the model changing on
+purpose, so each move is attributed by name in a table above the rows. **Eleven of twelve muscles
+came DOWN** — which is the direction the audit predicted, because almost every ratio miss was too low
+and the estimate divides by the ratio. **Traps rose 14 %**, and it is the only one whose evidence
+changed shape: 212 → 148 contributors, because the deadlift stopped standing in for it.
+
+### H. What is NOT done
+
+- **The backtest tool** (`tools/strength-backtest.mjs`, plan §6.1) — designed in full, not built. It
+  needs Tim's own export, which is decision (n) and has not been given.
+- **The systematic ratio re-derivation** (plan §6.3, ~2 days of transcription) — the corrections
+  landed are the ~25 that were more than 10 % off, not a re-derivation of all ~105.
+- **σ per ratio entry and inverse-variance aggregation** (§6.4), **personal ratios** (§6.5).
+- **The fall limit** — the window is half of decision (a); `estimateAt`'s 2 %/week limit is still
+  unwired, so the number steps when a set ages out rather than declining smoothly.
+
+---
+
 ## 2026-09-13 — THE STRENGTH MATHS AUDITED: SEVEN AGENTS, NOTHING BUILT, ONE PLAN
 
 ⚠️ **Git date 2026-09-03; the heading keeps the session sequence.** Tim opened with *"catch up with
