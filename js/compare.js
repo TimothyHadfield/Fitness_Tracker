@@ -642,8 +642,14 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
     if (loadType === 'per_side') {
       caveats.push({
         key: 'per-side',
+        /* ⚠️ THE EXAMPLE LOST ITS UNITS ON 2026-09-13, and that is the header's rule
+         * applied to its own prose. It read "a 50 lb dumbbell in each hand counts as
+         * 100 lb" — a sentence in pounds, on a sheet whose every number now converts
+         * to the reader's own unit, so a kilogram reader got the one pounds figure on
+         * the screen and it was the one explaining the arithmetic. Doubling is the
+         * point and doubling needs no unit to state. */
         text: 'The weights here are the total of both sides, because that is what the body '
-          + 'lifted — a 50 lb dumbbell in each hand counts as 100 lb, for both of you.',
+          + 'lifted — a dumbbell in each hand counts as both of them together, for both of you.',
       });
     }
   }

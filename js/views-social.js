@@ -835,7 +835,13 @@ export async function FriendView(uid, tab) {
 
     if (seen.doc.bodyWeight && seen.doc.bodyWeight.length) {
       const last = seen.doc.bodyWeight[seen.doc.bodyWeight.length - 1];
-      parts.push(el('p', { class: 'note', text: `Body weight ${units.withUnit(Math.round(last.weight))} on ${fmtDateLong(last.date)}` }));
+      /* ⚠️ ROUNDED IN THE READER'S UNIT — 2026-09-13, plan §2.7. This said
+       * `withUnit(Math.round(lb))`: round the pounds, then convert, so a friend who
+       * weighs 180.6 lb read "82 kg" to one reader and 81.9 to the next depending only
+       * on which side of the conversion the rounding fell. The rounding is wanted — a
+       * friend's weigh-in to a tenth is a precision nobody asked to publish — so this
+       * is `withUnitRounded`, which rounds where the number is read. */
+      parts.push(el('p', { class: 'note', text: `Body weight ${units.withUnitRounded(last.weight)} on ${fmtDateLong(last.date)}` }));
     }
 
     parts.push(el('h2', { class: 'section-head', text: 'Recent workouts' }));

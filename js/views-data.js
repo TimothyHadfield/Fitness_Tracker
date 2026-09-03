@@ -12,8 +12,17 @@ import {
 import { bodySvg, setSelected, MAPPED_MUSCLES, BODY_ASPECT } from './body-map.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
-  clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS, e1rm,
+  clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
+  MAX_EVIDENCE_REPS,
 } from './e1rm.js';
+/* 🔄 ~~`e1rm` is imported above~~ IT IS NOT, SINCE 2026-09-13 (plan §2.1, §2.2, §2.8).
+ * This screen used to call the curve on the raw contents of the weight box, which meant
+ * three wrong answers at once: an assisted pull-up scored the HELP (more help, bigger
+ * "~max"), a dumbbell set was scored per hand and printed as though it were the total,
+ * and a 25-rep burnout set was scored at all — 135 × 25 printed "~258 max" over a real
+ * 205 × 5 on the same day. `setE1rm()` is the one place a logged set becomes a maximum
+ * and it settles all three; `shownMax()` is the number a screen prints beside it. */
+import { setE1rm, shownMax } from './set-e1rm.js';
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge, exerciseLabel,
@@ -1123,6 +1132,22 @@ export async function GraphView(opts = {}) {
     ? Number(bwPoints[bwPoints.length - 1].value) || 0
     : 0;
 
+  /* ⚠️ THE WEIGH-IN OF THE SET'S OWN DAY, not the latest one — 2026-09-13.
+   * `normalizedSeries()` and `currentBests()` both resolve a body-weight lift's
+   * resistance against the weigh-in nearest before the set, and this screen has to
+   * ask the same question the same way or a pull-up from March is scored at
+   * September's body weight. `latestBodyWeight` above is a different question — it
+   * asks whether the app knows the reader's weight AT ALL, which is what decides
+   * whether the lift can be charted and what the blocked caption may offer. */
+  const bodyWeightOnDate = (date) => {
+    let hit = null;
+    for (const p of bwPoints) {
+      if (!(Number(p.value) > 0) || !p.date || p.date > date) continue;
+      if (!hit || p.date > hit.date) hit = p;
+    }
+    return hit ? Number(hit.value) : 0;
+  };
+
   // Two weigh-ins to make a line, the same bar every exercise has to clear.
   const bwOption = bwPoints.length >= 2
     ? { id: BODY_WEIGHT_ID, name: 'Body weight', fields: ['weight'] }
@@ -1257,9 +1282,21 @@ export async function GraphView(opts = {}) {
        * and its day are still shown, and `est` simply stays null. */
       const sameDay = (await weightRepObservations(opt.id, source, rows))
         .filter((o) => o.date === one.date);
+      /* 🚨 EVERY CANDIDATE GOES THROUGH setE1rm(), WHICH IS THE WHOLE FIX HERE
+       * (2026-09-13, plan §2.1/§2.2/§2.8). The old walk called `e1rm(o.weight, o.reps)`
+       * on the raw box: a 25-rep burnout set could win the day (D5 was not applied on
+       * this tab at all), an assisted pull-up's HELP was scored as the load so more
+       * help was a bigger number, and a dumbbell's per-hand weight was scored and
+       * printed as if it were the whole lift. `null` back means the set cannot honestly
+       * yield a maximum, and such a set simply is not a candidate — the recording and
+       * its day are still shown, which is what this state is for. */
+      const bw = bodyWeightOnDate(one.date);
       let top = null;
+      let topEst = null;
       for (const o of sameDay) {
-        if (!top || (e1rm(o.weight, o.reps) || 0) > (e1rm(top.weight, top.reps) || 0)) top = o;
+        const est = setE1rm(opt.exercise, o.weight, o.reps, bw ? { bodyWeight: bw } : undefined);
+        if (!est) continue;
+        if (!topEst || est.e1rm > topEst.e1rm) { top = o; topEst = est; }
       }
       setChildren(host, oneRecordingState({
         /* ⚠️ THIS USED TO BRANCH, AND THE REASON IT NO LONGER HAS TO IS THE
@@ -1272,10 +1309,11 @@ export async function GraphView(opts = {}) {
         setText: fmtField(graphChoice.field, one.value),
         date: one.date,
         source,
-        est: top ? e1rm(top.weight, top.reps) : null,
+        est: shownMax(topEst),
         estFrom: top
-          ? `${units.withUnit(top.weight)}${opt.loadType === 'per_side' ? '/side' : ''} × ${top.reps} that day`
+          ? `${units.withUnit(top.weight)}${topEst.perSide ? '/side' : ''} × ${top.reps} that day`
           : '',
+        flags: estFlags(topEst),
       }));
       return;
     }
@@ -1333,6 +1371,17 @@ export async function GraphView(opts = {}) {
     );
 
     const points = await normalizedSeries(opt.id, target, source, rows);
+    /* ⚠️ READ DEFENSIVELY. `dropped` and `droppedMaxReps` are named properties hung on
+     * the returned ARRAY (store.js), so an older cached module, a friend's rows built
+     * by a build that predates them, or any future caller handing back a plain list
+     * leaves them undefined — and `undefined` must mean "nothing to say", not NaN on
+     * the screen. */
+    const droppedSets = Number(points && points.dropped) || 0;
+    const droppedNote = droppedSets
+      ? `${droppedSets} set${droppedSets === 1 ? '' : 's'} over ${MAX_EVIDENCE_REPS} reps `
+        + `${droppedSets === 1 ? "isn't" : "aren't"} used here.`
+      : '';
+
     if (points.length < 2) {
       const p = points[0];
       /* ⚠️ THE SET AS IT WAS RECORDED, NOT THE NORMALISED VALUE. Every point on
@@ -1341,18 +1390,40 @@ export async function GraphView(opts = {}) {
        * estimate. With one point there is nothing to compare it against, so
        * printing it would be an estimate standing in for the measurement —
        * Rule 5 the wrong way round. `p.weight × p.reps` is what was lifted; the
-       * estimated max beside it is the derived number, and it is labelled. */
+       * estimated max beside it is the derived number, and it is labelled.
+       *
+       * 🔄 ONE EXCEPTION SINCE 2026-09-13 (plan §2.1): a body-weight lift. There
+       * `p.weight` is the contents of the box — 0 for a plain pull-up, and the HELP
+       * on an assist machine — so "0 lbs × 8" was the one case where printing the
+       * logged number told the reader less than nothing. `p.load` is the resistance
+       * the chart actually plots for that point, and `flags` names it in words rather
+       * than letting it pass as a weight somebody put on a bar.
+       *
+       * ⚠️ AND THE MAX COMES OFF THE POINT, NOT OFF A SECOND CALCULATION. `p.rank`
+       * is the total `setE1rm()` produced in the store, with the weigh-in of the set's
+       * own day; re-deriving it here from `p.weight` was the old `e1rm(p.weight, p.reps)`
+       * and it was a different number for every dumbbell and every pull-up. */
       setChildren(host, p
         ? oneRecordingState({
-            setText: `${units.withUnit(p.weight)}${opt.loadType === 'per_side' ? '/side' : ''} × ${p.reps}`,
+            setText: p.bodyIncluded
+              ? `${units.withUnit(p.load)} × ${p.reps}`
+              : `${units.withUnit(p.weight)}${p.perSide ? '/side' : ''} × ${p.reps}`,
             date: p.date,
             source,
-            est: e1rm(p.weight, p.reps),
+            est: shownMax({ perSide: p.perSide, e1rm: p.rank }),
             estFrom: 'that set',
+            flags: estFlags(p),
+            dropped: droppedNote,
           })
         : emptyState('Nothing to chart from this source',
             `No ${SOURCE_LABEL[source].toLowerCase()} with both a weight and a rep count `
-            + 'recorded for this exercise yet.'));
+            + 'recorded for this exercise yet.'
+            /* 🚨 "NOTHING RECORDED" WOULD BE A LIE WHEN THE SETS EXIST AND WERE
+             * REFUSED. A lifter whose only pulldowns are 20-rep burnout sets has
+             * recorded plenty; the app declined to read a maximum off any of it, and
+             * saying which of the two happened is the difference between "log
+             * something" and "log a heavier set". */
+            + (droppedNote ? ` ${droppedNote}` : '')));
       return;
     }
 
@@ -1372,6 +1443,23 @@ export async function GraphView(opts = {}) {
               + (opt.loadType ? ` · ${LOAD_LABEL[opt.loadType]}` : ''),
           }),
         ),
+        /* 🚨 WHAT THE CHART REFUSED TO DRAW IS SAID ON THE CHART — 2026-09-13, plan
+         * §2.2. D5 is enforced in `normalizedSeries()` now, so a 25-rep burnout set no
+         * longer becomes a 189.7 lb point that beats a real 205 × 5 on the same day.
+         * But a set vanishing without a word is its own fault: a lifter who logged
+         * three sets and sees two points reads it as data loss, and the one thing
+         * they could do about it — take a heavier set to a lower rep count — is
+         * exactly what the sentence implies.
+         *
+         * ⚠️ IT IS A SEPARATE CAPTION FROM THE WARNING BELOW, AND THE TWO ARE NOT THE
+         * SAME CLAIM. That one is about the rep count the reader chose on the stepper
+         * ("estimates get looser above 10 reps"); this one is about the SETS the app
+         * would not read. The audit found the target warning standing in for both,
+         * which meant a chart at 8 reps built from three 25-rep sets carried no
+         * warning at all (plan §2.2). Plain, not `warn`: nothing here is wrong. */
+        droppedNote
+          ? el('div', { class: 'chart-caption' }, el('span', { text: droppedNote }))
+          : null,
         /* ⚠️ THE VERDICT ON THE CHART STAYS; THE PHYSIOLOGY GOES BEHIND THE ?
          * (Rule 9). "Unreliable above 15 reps" changes what the reader thinks
          * every point on this chart is, so it can never be something to ask
@@ -1710,6 +1798,32 @@ export function fillChart(host, points, field, label) {
 // It is a list rather than a chart on purpose. There is no trend in a single
 // recording, and drawing one would be inventing a shape out of one point —
 // Rule 5, an inference must never look like a measurement.
+/* ---- what KIND of number the "~max" is, in words ---- */
+//
+// 🚨 THE FLAGS COME FROM THE STORE; THIS ONLY TRANSLATES THEM (2026-09-13, plan §2.1).
+// `currentBests()` and `normalizedSeries()` both now return `perSide`, `bodyIncluded`
+// and `assist` beside every scored set, because the number they hand over is not always
+// the number in the weight box: a dumbbell max is per hand, a pull-up's max includes the
+// body that lifted it, and an assist machine's box holds the HELP. Until today the screen
+// printed one figure for all three and a reader had no way to tell them apart — a
+// 110 lb assisted pull-up read as though 110 lb had been on a stack.
+//
+// ⚠️ IT LABELS, IT DOES NOT COMPUTE. There is no second arithmetic here and there must
+// not be: inventing a "stack weight" from the resistance would need the machine's gearing,
+// which nobody has. The rule is Rule 5 in its narrow form — say what the number on the
+// screen IS, and never produce one that is not already there.
+//
+// ⚠️ ASSIST IS TESTED FIRST because an assisted lift is ALSO `bodyIncluded`; the help is
+// the more surprising half and the one that used to be scored backwards.
+// Read defensively: a row built before these fields existed has none of them.
+function estFlags(r) {
+  if (!r) return '';
+  if (r.assist) return 'the resistance you carried, not the weight on the stack';
+  if (r.bodyIncluded) return 'body weight included';
+  if (r.perSide) return 'per side';
+  return '';
+}
+
 function bestsPane(bests, intro) {
   if (!bests || !bests.length) {
     return emptyState(
@@ -1718,6 +1832,15 @@ function bestsPane(bests, intro) {
       el('button', { class: 'btn primary', text: 'Record a benchmark', onClick: () => go('#/benchmark') }),
     );
   }
+
+  /* ⚠️ THE EXPLANATIONS ARE COLLECTED AND SAID ONCE, UNDER THE LIST. Each row already
+   * carries the short flag ("body weight included") that says what ITS number is; the
+   * paragraph a reader needs in order to trust an assisted machine's figure — that the
+   * box holds the help and the max is what was left to carry — is the same paragraph on
+   * every such row, and repeating it twelve times would bury the list it explains.
+   * Offered only when a row on THIS screen actually has the property. */
+  const anyAssist = bests.some((b) => b.assist);
+  const droppedRows = bests.filter((b) => Number(b.dropped) > 0).length;
 
   return el('div', { class: 'bests' },
     el('div', { class: 'field-help', text: intro }),
@@ -1731,6 +1854,11 @@ function bestsPane(bests, intro) {
             b.days === 0 ? 'today' : b.days === 1 ? 'yesterday' : `${b.days} days ago`,
             b.sessions > 1 ? ` · ${b.sessions} days recorded` : '',
             b.best.source === 'benchmark' ? ' · benchmarked' : '',
+            /* The flag rides the SUB-LINE rather than the number column. `.best-nums`
+             * is `flex: none`, so a phrase there widens it and squeezes the exercise
+             * name out of `.best-main`; the sub-line is the flexible half and already
+             * the row's list of qualifiers. */
+            b.e1rm && estFlags(b) ? ` · ${estFlags(b)}` : '',
           ),
         ),
         el('div', { class: 'best-nums' },
@@ -1738,18 +1866,47 @@ function bestsPane(bests, intro) {
           // The estimated max is the comparable number across rep counts, and it
           // is explicitly labelled an estimate so it cannot be read as a lift
           // that was actually performed.
+          //
+          // ⚠️ ROUNDED IN THE READER'S UNIT (plan §2.7). `withUnit(Math.round(lb))`
+          // rounded the pounds and converted afterwards, so 210.59 lb printed as
+          // "95.7 kg" where the figure is 95.5 — a tenth of a kilo invented by the
+          // order of two operations. An estimate has no decimals worth keeping;
+          // `withUnitRounded` drops them where the number is read.
           b.e1rm
-            ? el('div', { class: 'best-e1rm mono', text: `~${units.withUnit(Math.round(b.e1rm))} max` })
+            ? el('div', { class: 'best-e1rm mono', text: `~${units.withUnitRounded(b.e1rm)} max` })
             : null,
         ),
       ))),
     el('div', { class: 'field-help', text:
-      'Best effort for each lift. "~max" is an estimate from your reps, not a weight you have lifted.' }),
+      'Best effort for each lift. "~max" is an estimate from your reps, not a weight you have lifted.'
+      + (anyAssist
+        ? ' On an assisted machine the box holds the help, so the max shown is the '
+          + 'resistance you carried — it goes UP as the help comes down.'
+        : '')
+      /* 🚨 D5, SAID RATHER THAN SILENT. A 25-rep burnout set used to produce the "~max"
+       * on this list — 135 × 25 printed "~258 max" over a real 205 × 5. It is refused
+       * now, and a reader who remembers logging that set is owed the reason: the sets
+       * are still recorded, they are just not evidence of a maximum. */
+      + (droppedRows
+        ? ` Sets over ${MAX_EVIDENCE_REPS} reps are not used for a max — they measure `
+          + `stamina more than strength. ${droppedRows === 1 ? 'One lift has' : `${droppedRows} lifts have`} `
+          + 'sets left out that way.'
+        : '') }),
   );
 }
 
 function bestSetText(b) {
   const s = b.best;
+  /* 🚨 A BODY-WEIGHT LIFT'S BOX IS NOT ITS LOAD — 2026-09-13, plan §2.1. A plain pull-up
+   * logs nothing in the weight field, so this printed "—" beside a real "~180 lbs max";
+   * an assisted one logs the HELP, so it printed "70 lbs × 8" for a set that resisted
+   * 110. `load` is the total the store scored the set at — the same number the rating
+   * pipeline and the rep-normalised chart use — and the row's flag says in words that
+   * the body is in it. Only when the store actually scored this set: `load` is null on a
+   * row picked by eye, and then the logged number is all there is and is shown as such. */
+  if (b.bodyIncluded && b.load > 0 && s.reps >= 1) {
+    return `${units.fmtWeight(b.load)} × ${s.reps}`;
+  }
   // loadType is a property of the EXERCISE, not of the set — reading it off the
   // set silently dropped "/side" from every dumbbell lift.
   if (s.weight > 0 && s.reps >= 1) {
@@ -1783,17 +1940,48 @@ function bestSetText(b) {
 // ⚠️ AND `source` IS NAMED ON IT. The caller has already picked one source and
 // this number came from that source alone; saying which is what keeps it from
 // reading as "your best, from everywhere" (Rule 4 / D14).
-function oneRecordingState({ setText, date, source, est, estFrom }) {
+//
+// ⚠️ `flags` AND `dropped` ARE OPTIONAL AND ARRIVE PRE-WORDED — 2026-09-13, plan
+// §2.1/§2.2. `flags` says what KIND of number the max is (estFlags(): per side, body
+// weight included, the resistance rather than the stack); `dropped` says how many sets
+// the app refused to read a maximum from. Both are strings rather than data because
+// the two callers know different amounts: the raw-field branch has no rep gate to
+// report at all, and passing it a count it cannot have would invite a zero on screen.
+function oneRecordingState({ setText, date, source, est, estFrom, flags = '', dropped = '' }) {
   return emptyState(
     'One recording so far',
     `${setText} on ${fmtDateShort(date)}, from ${SOURCE_LABEL[source].toLowerCase()}.`
-      + (est ? ` Estimated max ~${units.withUnit(Math.round(est))}.` : ''),
+      // ⚠️ ROUNDED IN THE READER'S UNIT, not in pounds and then converted — see the
+      // note in bestsPane() and units.js `withUnitRounded`.
+      + (est ? ` Estimated max ~${units.withUnitRounded(est)}${flags ? ` (${flags})` : ''}.` : ''),
     el('div', { class: 'field-help', text:
       (est ? `The "~" max is an estimate from ${estFrom}, not a weight you have lifted. ` : '')
+      + (dropped ? `${dropped} ` : '')
       + 'One point is not a line, so nothing here is drawn as a trend. Record this on another '
       + 'day and it becomes one.' }),
   );
 }
+
+/* ---- a charted number, in the reader's own unit ---- */
+//
+// 🚨 THE BARS AND THE SUMMARY PRINTED RAW POUNDS TO A KILOGRAM READER — found
+// 2026-09-13 while fixing the round-then-convert fault (plan §2.7), and it is the
+// older and larger half of the same family. The line chart's axis was converted on
+// 2026-09-06 with the note "nothing was wrong with the chart except the words down its
+// left-hand side"; these two were missed in that pass. Every value on this screen is
+// pounds (units.js: pounds are the only thing stored), so a reader on kg saw their
+// bench start at 185 and finish at 205 while the set list, the muscle panel and the
+// record screen all said 84 and 93.
+//
+// ⚠️ NEITHER SITE PRINTS A SUFFIX, WHICH IS WHY IT SURVIVED. There was no "lb" to be
+// wrong — just a bare number under "Start", agreeing with nothing else in the app.
+// `toDisplay` is a pure scale, so nothing about the bar lengths, the deltas or the
+// percentages moves: those are ratios, and a ratio has no unit.
+//
+// ⚠️ WEIGHT ONLY. Reps are a count, miles are miles, and `fmtTime` owns seconds — a
+// blanket conversion would have turned a 3-mile run into 1.36 of something.
+const shownValue = (field, v) =>
+  (field === 'weight' ? Math.round(units.toDisplay(v) * 100) / 100 : Math.round(v * 100) / 100);
 
 /* ---- paired horizontal bars: where a lift started, where it is now ---- */
 
@@ -1810,7 +1998,7 @@ function barChart(rows, field) {
   }
 
   const max = Math.max(...rows.flatMap((r) => [r.start, r.now])) || 1;
-  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(Math.round(v * 100) / 100));
+  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(shownValue(field, v)));
   const judged = field !== 'time';
 
   const bar = (kind, value, label, estimated) =>
@@ -2040,7 +2228,9 @@ function summaryStats(points, field, judged = field !== 'time') {
   // callers can force neutral for anything else the app has no opinion on.
   const cls = !judged || diff === 0 ? '' : diff > 0 ? ' up' : ' down';
   const sign = diff > 0 ? '+' : '';
-  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(Math.round(v * 100) / 100));
+  // In the reader's unit — see the note above `shownValue`. `pct` is deliberately
+  // computed from the stored values: a percentage is the same in either unit.
+  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(shownValue(field, v)));
 
   return el('div', { class: 'summary-grid' },
     stat('Start', fmt(first), '', fmtDateShort(points[0].date)),
