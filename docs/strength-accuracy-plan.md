@@ -126,7 +126,7 @@ derived entries are all fine. The worst, with the number a user sees today:
 | Reverse Wrist Curl | 0.55 | 0.92 | 45 × 12 → Forearms 88th |
 | Landmine Press (per-side) | 0.60 | 0.90 | 70 × 8 → Shoulders **99.6th** |
 | Barbell Lunge (dumbbell-derived) | 0.45 | 0.62 | 135 × 8 → Quads 87th |
-| Reverse Pec Deck (dumbbell-derived, stack total) | 0.56 | 1.07 | under-credits ~2× |
+| **Reverse Pec Deck** (dumbbell-derived, applied to a stack total) | 0.56 | 1.07 | **flatters ~2×** — Tim's 70 × 10 → OHP 186, Shoulders **87th Advanced**; at 1.07 it is 97, 18th Beginner. ⚠️ Agent C's row labelled this "under-credits"; the arithmetic (estimate = e1RM ÷ ratio) says the opposite, and Tim reported it on 2026-09-13 |
 | Single-Leg Press | 1.30 | 0.95 | under-credits 37 % |
 | Belt / Box / Zercher / Smith squat, Machine Row, Machine Shrug, Seal Row, Seated OHP, Wrist Curl, Reverse Curl, T-Bar, DB Upright Row, Goblet, Cable Shrug, Sumo Squat, Seated Leg Press | | 12–36 % off, both directions | full table in agent C's report §3 |
 
