@@ -84,6 +84,15 @@ want me to make. Start building the improvements now."* — everything in
 10. ⚠️ **THE GOLDEN TABLE WAS RE-BASELINED AND EVERY MOVE IS ATTRIBUTED BY NAME.** Eleven of twelve
     muscles came DOWN, the direction the audit predicted; **Traps rose 14 %** and is the only one
     whose evidence changed shape (the deadlift stopped standing in for it).
+11. 🚩 **A SIDE EFFECT WORTH TIM'S EYE, NOT A BUG: THE DEMO ACCOUNT IS NOW ALMOST ALL ONE LEVEL.**
+    Its twelve muscles read **eleven Novice and one Intermediate**, spanning the 21st to the 54th
+    percentile, where they used to spread Novice→Proficient around Intermediate. The numbers are
+    coherent — that generated lifter benches 198, squats 266 and deadlifts 311 against SL medians of
+    220/298/348, which really is a novice — so this is the correction working rather than a fault.
+    ⚠️ **But the demo is the account this project looks at every screen through**, and a map that is
+    one colour shows less of the level ramp than it used to. Fixing it means re-rolling the seeded
+    year, which is **Open work 25's standing rule: a re-baseline of the regression pin is Tim's call,
+    not a side effect.** Nothing was touched.
 
 ## What changed on 2026-09-13, in one line each
 
