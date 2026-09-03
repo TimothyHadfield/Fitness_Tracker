@@ -124,53 +124,24 @@ and deploy you later. Feel free to make as many sub-agents as you want."* Full w
 5. 🔒 **Fourteen decisions are his** (plan §4), each with a recommendation. 🛑 Do not start any
    phase until he names it.
 
-## What changed on 2026-09-12, in one line each
+## 2026-09-12 — COLLAPSED TO A POINTER, 2026-09-14
 
-⚠️ **THE SAME CHAT SESSION AS 2026-09-11** — Tim rapid-fired five asks while the captions pass was
-still under test, then *"you should be deploying many sub-agents"*; three ran at once and stamped
-their work -12, so that is the date the code carries. Full write-up: `docs/history.md`, 2026-09-12.
+⚠️ **The routine maintenance** — the budget test fired at 162 KB and the fix is never to raise the
+number. Full write-up: `docs/history.md`, 2026-09-12. Same chat session as -11; Tim rapid-fired five
+asks and said *"you should be deploying many sub-agents"*, and three ran at once.
 
-1. 🔄 **THE CALENDAR OPENS ON YEARS ON EVERY DOOR, AND A TAP ON MONTHS LANDS ON THE CURRENT MONTH** —
-   Profile included. `calMode` and `friendCalMode` both default to Years; `land: false` now means
-   "not on arrival" (a `painted` flag), so the Profile pane is moved by a tap and never by a paint.
-   ⚠️ Months remembered from the Calendar screen still paints Profile un-landed. 🚩 **Visual, left
-   for Tim**: the Profile tab's Months/Years pill is never `wireSegmented`, so it repaints instead
-   of sliding — one line in `calendarSection`.
-2. 🆕 **A SET LOCKS WHEN YOU MOVE ON FROM IT** — a padlock on the right that swings shut (`--t`,
-   `--ease-both`, one-shot on the rebuilt row) and unlocks-and-opens on a tap. 🚨 **Only a RECORDED
-   set** (`setIsRecorded` is the one rule); a drop locks with its set; per person, never broadcast;
-   `locked` on the draft, dropped at save. 🚩 **Flagged for Tim, not changed**: fill-on-open copies set
-   1 into set 2, a filled set is recorded, so going back to set 1 locks the copy — visible now where
-   it was silent. Previous onto a locked set finds nothing open, deliberately.
-3. 🔄 **THE EXERCISES SHEET DRAG FOLLOWS THE FINGER** — `translateY` of exactly the pointer's travel,
-   no transition on the dragged row (the transition WAS the lag), neighbours slide by a row height,
-   DOM untouched until release, then the same commit and a FLIP. **▲▼ removed** on his instruction;
-   the grip takes the arrow keys and says so, so a keyboard loses nothing.
-4. 🔄 **YOUR BEST LIFTS IS RANKED** — the core eight (Squat, Bench, Deadlift, OHP, Row, RDL, Curl,
-   Close-Grip; Cable Crunch excluded on purpose) as estimated 1RMs coloured by the `lv-text-*` ramp
-   with the band AND the level name in words, ordered by level, then **Other lifts** behind a real
-   `<details>`. 🚨 **A recorded lift shows ITS OWN best set through the curve, not the muscle
-   rating** — the rating is a blend a leg press could lead, and rating-converted numbers would put
-   every exercise of one muscle on one percentile. A never-done core lift is converted and says so; a
-   stand-in-only one shows no number and says why (no `allowFallback`). ⚠️ Per-side is
-   `e1rm(total)`, not doubled after — the agent's own draft had it backwards and its probe caught
-   it. `js/profile-ranking.js`, new, in the precache.
-5. 🚨 **RECORD COVERS THE TAB BAR** — `record` is in `FULLSCREEN`; the down arrow is the way off. 🚨
-   **And two faults under it**: `clear(app)` took the bar with the old screen, so `parkScreen()`
-   now parks **everything in `#app`** (the bar rides in the ghost); and the ghost's 240ms timer
-   started **before the store read**, so on a 220ms read it left mid-rise — measured, ghost gone at
-   t=264 with the panel at y=404. **Released on the rising screen's own `animationend` now**
-   (`releaseGhost()`), a falling ghost on its own; a 4× backstop timer still always runs. Re-probed
-   in-page on rAF: ghost with bar for the whole rise, panel 844px from y=844 to 0.
-6. 🔒 **THREE AGENTS AT ONCE ON DISJOINT FILES HELD — with one lesson.** The live suite was red for
-   everybody while anybody was mid-flight (a half-built lock crashed `render.test.mjs`); one agent
-   built an **isolated copy with the others' files at HEAD** to get its green run, and that is now
-   the standing instruction. One agent owns `tests/`; the others write blocks to the scratchpad and
-   the integrator places them — 58 assertions went in verbatim and passed first time.
-7. ✅ **1,330 render, 2,021 data-layer, 131 a11y**, every no-Chrome suite green, `sw-update` 12/12 this
-   run (still flaky by record). **Audit 272 routes / 23,327 text nodes / 0 / 0 / 0.** ⚠️ **The node
-   count fell from 34,027 and was attributed before it was accepted**: Years-default calendars
-   (−5,416, −5,336) and Record's five labels (−44).
+- **Years-first calendars on every door**, Months landing on the current month. 🚩 **Still visual and
+  still Tim's**: the Profile tab's Months/Years pill never gets `wireSegmented`, so it repaints
+  instead of sliding.
+- **A set locks when you move on from it** — only a RECORDED set, a drop locks with its set, per
+  person. 🚩 **Flagged, unchanged**: fill-on-open copies set 1 into set 2, so going back to set 1
+  locks the copy.
+- **The exercises drag follows the finger** (▲▼ removed, the grip takes the arrow keys), and
+  **Record covers the tab bar** — two faults under it, both only a browser could show.
+- **Your best lifts became ranked.** ⚠️ **Its per-side arithmetic was `e1rm(total)` and 2026-09-14
+  reversed that to `2 × e1rm(per hand)`** — the convention the curve was fitted in (D30).
+- 🔒 **THREE AGENTS AT ONCE ON DISJOINT FILES HELD**, and the standing instructions it produced (an
+  isolated copy at HEAD for a green run; one agent owns `tests/`) are in the sub-agent entry below.
 
 ## 2026-09-11 — COLLAPSED TO A POINTER, 2026-09-14
 
@@ -192,52 +163,28 @@ standing instruction about what that means, then *"You can continue working this
 
 ## 2026-09-10 — COLLAPSED TO A POINTER, 2026-09-13
 
-⚠️ **The routine maintenance** — this file was at 157.5 KB of its 160 KB budget. Full write-up:
-`docs/history.md`, 2026-09-10. **What Tim asked for, in order:** the two Open work items → a joint
-workout he had just recorded → the Record and runner animations → sideways drag → a friend's
-calendar → **the Profile/Data question**, answered as advice and then approved.
-
-- **Open work 27 closed** — "Delete everything permanently" had left five of ten collections and every
-  `shared/*` document in Firestore; `createAccountPurge()` verifies by re-reading before `deleteUser()`.
-  🔒 The collection list is handed down from `store.js`, never copied.
-- **Record rose behind its own ghost** (stacking: ghost 40 / falling 50 / rising 45), the runner got
-  the same movement, **a joint workout was two workouts** (next/add/remove/swap/reorder reach
-  everybody; the sets never follow), and **nobody wrote `overflow-x: auto` — the browser did** (root
-  cause `.help-dot::after`).
-- **The audit sweeps four widths** and found an AA failure only the desktop paints; **a friend's
-  calendar** got Months and Years and every cell had said "Workout" (`name` vs `workoutName`).
-- **The Profile/Data split began** — Data = what it MEANS, Profile = what you DID; steps 1 and 3
-  that day, the rest on -11 (Open work 29). 🔒 Durable half: `docs/state.md` Profile and Data rows,
-  `docs/direction.md` §4b.
+⚠️ Full write-up: `docs/history.md`, 2026-09-10. **Open work 27 closed** ("delete everything" had
+left five of ten collections and every `shared/*` document; `createAccountPurge()` re-reads before
+`deleteUser()`). Record rose behind its own ghost; a joint workout was two workouts; **nobody wrote
+`overflow-x: auto` — the browser did**; the audit gained four widths; a friend's calendar got
+Months/Years. **The Profile/Data split began** — Data = what it MEANS, Profile = what you DID.
+🔒 Durable halves: `docs/state.md`'s Profile and Data rows, `docs/direction.md` §4b.
 
 ## 2026-09-09 — COLLAPSED TO A POINTER, 2026-09-12
 
-⚠️ **The routine maintenance** — this file reached **159 KB of its 160 KB budget** and the rule is
-the one in the byte-budget block below. Three passes, each with its own dated section in
-`docs/history.md` (2026-09-09, first through third). **What Tim asked for, in order:** a friend's
-profile is *"a mess"* on a laptop and their map is compared *"against people like YOU, not people
-like THEM"* → the "Compared to" menu *"really doesn't need any words at all"* → Record should *"feel
-more like a button that actually activates something"* → *"just combine the 2 and call them
-'friends'"*, and *"if the wordiness fix isn't complete yet, then keep working on it."*
+⚠️ Three passes, each with its own dated section in `docs/history.md` (2026-09-09, first through
+third). **What Tim asked for:** a friend's profile is *"a mess"* on a laptop and their map is
+compared *"against people like YOU, not people like THEM"* → the "Compared to" menu *"really doesn't
+need any words at all"* → Record should *"feel more like a button that actually activates
+something"* → *"just combine the 2 and call them 'friends'"*.
 
-- **A friend's page got a laptop layout** (`.map-split` inside the pane; the host never takes
-  `is-muscles`) and **their map is read against people like THEM** — `comparePreset('each')`,
-  resolved per document, with `ownSexOf()` feeding the caption too, and the caption repainted on
-  every change. 🔒 Durable half: the **Friends** row in `docs/state.md`. ⚠️ The lesson worth
-  keeping: it survived because every fixture was male — the fixture is now female while the reader
-  is male, because with one body the right and wrong answers are the same string for half the
-  population.
-- **The "Compared to" sheet is wordless** (Rule 9; the preset hints deleted, the untrained-adult
-  caveat shortened never softened, read back by opening its dot) and **the pronouns follow the
-  body** (*Like them · Their body weight · Their age*; *Own …* on the two-body screen). 🔒
-  `docs/state.md`, Muscles row.
-- **Record rises from the bottom** with a `down` slot in `screenShell` (🛑 not a back arrow — it
-  lands on Home, Tim's instruction). `parkScreen()` in `ui.js` is the mechanism, and the two faults
-  only a browser could show (screens legible through each other; a moved node restarting its
-  animations) are in Rule 7 and the CSS. 🔄 **Superseded on 2026-09-10 and -12** — the stacking fix,
-  the bar riding in the ghost, and the ghost released on `animationend`: see the Record row.
-- **Open work 28 closed the cheap way** — one count called Friends, two routes still resolving, the
-  public-account sentence ON the screen. Its row below stays.
+- **A friend's page got a laptop layout** and **their map is read against people like THEM**.
+  🔒 `docs/state.md`, Friends row. ⚠️ **The lesson worth keeping**: the bug survived because every
+  fixture was male — with one body, the right and wrong answers are the same string for half the
+  population. The fixture is female now.
+- **The "Compared to" sheet is wordless** and **the pronouns follow the body**. 🔒 `docs/state.md`,
+  Muscles row. **Record rises from the bottom** (🛑 `down`, not a back arrow — it lands on Home);
+  🔄 superseded on -10 and -12. **Open work 28 closed the cheap way.**
 - **The wordiness measured then cut**: transcribed systems' restated warnings (~240 words), the
   Goals weights block (182 → 30), one paragraph off Research (its teaching content carved out by
   name). 🚨 A test caught the Golden Six's warning had never carried its own disclaimer; it does now,
@@ -523,16 +470,51 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
-**Everything is pushed and every runnable suite was green on 2026-09-12** — including **1,330 render
-assertions**, **2,021 data-layer** and **131 a11y**. ⚠️ **The 218 rules assertions were last run on
-2026-09-10**; that suite needs the emulator (§0.9) and was not re-run since, because nothing this
-session touched `firestore.rules`.
+**Everything is committed and pushed, the working tree is clean, and every runnable suite was green
+at the end of 2026-09-14** — **3,489 assertions across EIGHTEEN no-Chrome suites** and **1,333
+render**. ⚠️ **The 218 rules assertions were last run on 2026-09-10** (emulator, §0.9) and nothing
+since has touched `firestore.rules`.
 
-🚩 **THREE THINGS FLAGGED FOR TIM ON 2026-09-12, NONE CHANGED**: fill-on-open meets the set lock (a
-copied set 2 locks when you go back to set 1 — visible now, was silent); the Profile tab's Months/
-Years pill is the one segmented control that repaints instead of sliding (`wireSegmented` never
-reaches it — one line, visual, his); `pointercancel` on the exercises drag commits the slot under
-the finger rather than abandoning.
+## 🛑 READ THIS BEFORE PICKING ANYTHING UP — where 2026-09-14 actually stopped
+
+**Tim ended the session with:** *"stop working now. Prepare md files for chat reset. Make sure the
+new chat is ready to pick off exactly what you're doing right now."* So this block is that handover,
+and **the honest answer is that the build finished but two follow-up jobs were cut off mid-flight.**
+
+🚨 **TWO AGENTS WERE STOPPED BY ME, DELIBERATELY, AND THEIR OUTPUT WAS NEVER READ:**
+
+1. **The accessibility audit never ran.** It was launched and killed before it produced anything.
+   🚨 **THE STRENGTH WORK CHANGED USER-FACING TEXT ON FIVE SCREENS** — the runner's captions are
+   LONGER now (a range plus a "from your 215 lbs × 3" clause), the muscle panel has two new lines,
+   the Data tab has a new dropped-sets caption, Goals may show a stale-model notice, and every
+   estimate rounds differently. **Longer text is the overflow risk and none of it has been measured
+   at any width.** Running `tools/a11y-audit.mjs` at 360/390/880/1280 is the first thing worth doing.
+   ⚠️ **Check the node count before reading anything else** — the last good sweep was 272 routes /
+   23,327 text nodes / 0 / 0 / 0, and a stale server reports a clean zero.
+2. **The views agent's REPORT was never read.** Its code work IS in (commit `d973fd1`, green, and I
+   reviewed the diff myself), but it was killed during its mutation checks, so **its mutation
+   evidence and its "what I decided not to do / near-misses" section are lost.** ⚠️ This project has
+   twice had an agent's near-miss note turn out to be the most valuable thing it produced. Its
+   scratchpad is `…\6036fccc-…\scratchpad\views2\` if that session is still on disk.
+
+⚠️ **AND ONE THING I CHOSE NOT TO DO, so nobody re-derives the decision:** `tests/render.test.mjs`
+has **no assertion for the per-set fatigue caption** (the "maybe 6–9 on this set (8–13 fresh)" half).
+The own-set half IS asserted and mutation-checked. The fatigue half is covered at module level by
+`tests/rep-decrement.test.mjs` (57 assertions) but never through a mounted screen, so **the wiring
+between them is unowned** — the failure it would catch is the caption silently never applying the
+multiplier. That is the single most valuable test to write next.
+
+🚩 **AND THE DEMO ACCOUNT NARROWED TO ONE LEVEL** — see item 11 of 2026-09-14 above. Eleven of its
+twelve muscles now read Novice. The numbers are right; the demo just shows less of the ramp than it
+used to, and widening it means re-rolling the seeded year, which is **Tim's call** (Open work 25).
+
+🚩 **FOUR THINGS FLAGGED FOR TIM AND STILL UNCHANGED** — three from 2026-09-12: fill-on-open meets
+the set lock (a copied set 2 locks when you go back to set 1 — visible now, was silent); the Profile
+tab's Months/Years pill is the one segmented control that repaints instead of sliding
+(`wireSegmented` never reaches it — one line, visual, his); `pointercancel` on the exercises drag
+commits the slot under the finger rather than abandoning. **And one from 2026-09-14**: the demo
+account now reads eleven Novice and one Intermediate, which is correct arithmetic and a narrower
+demo than it was.
 
 ✅ **THE PROFILE/DATA SPLIT IS DONE — all five steps, Open work 29 closed 2026-09-11.** Read that
 entry before touching Profile, Data, Account or Settings: it carries the line the whole thing rests
@@ -737,6 +719,22 @@ for whether a day may be collapsed:
   agents ran at once on 2026-09-08 on one named file each and none of them collided.
   ⚠️ **The 2026-08-22 note about wave size was about REVIEW agents**; four writing at once is a
   different thing and it held.
+  🆕 **AND THE RULE FROM 2026-09-14, WHICH IS THE MOST IMPORTANT ONE ON THIS LIST IF AN AGENT EVER
+  DIES: A HALF-WRITTEN AGENT LEAVES A HEADER THAT LIES.** Nine agents were killed by a session usage
+  limit within minutes of each other, most of them mid-file. They left 3,071 uncommitted insertions
+  that **looked finished**. `muscle-evidence.js` had a header describing eleven changes and the body
+  of two: `resolveRatio()` was documented in the header and **never written**, and because `add()`
+  guards on `ratio > 0` — which the new `{m, f}` object fails — **every pull-up, chin-up and dip in
+  the library silently rated nothing at all, with no error anywhere.**
+  🚨 **These agents write the reasoning FIRST and the code second**, which is right for a reader and
+  the worst possible order for an interrupted one. **After any agent failure, diff the header against
+  the body before trusting either.** ⚠️ **And the suite's own catch was buried**: `bodyweight.test.mjs`
+  failed with exactly the right sentence, among nineteen other failures that were all expected
+  re-baselines — **a red suite full of intended failures is where an unintended one hides**, so read
+  every line of it rather than the count.
+  ⚠️ **Recovery is usually worth more than reverting.** Of the nine, roughly a third was finished and
+  correct, a third was half-built, and a third never started; sorting them took one pass and saved
+  the finished two-thirds.
   🆕 **AND TWO MORE RULES FROM 2026-09-12, when three wrote at once again**: (1) 🚨 **the live suite
   is red for everybody while anybody is mid-flight** — a half-built feature in one agent's file
   crashed `render.test.mjs` for the others — so **an agent that needs a green run builds it in an
@@ -1301,9 +1299,10 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 🆕 **4,699 across the EIGHTEEN that need no Chrome, re-counted 2026-09-12 by running every one** — `sw-update` (12, needs Chrome) and `rules` (218, needs the emulator) are the other two of the twenty. The three that moved on 2026-09-11/-12 are **data-layer 2,021**, **render 1,330** and **a11y 131**; every other per-suite figure below is unchanged. 🚨 **4,380 assertions across NINETEEN suites, recounted 2026-09-09 by running every one** — plus **159 in `rules`**, which needs the emulator and is the twentieth file. ⚠️ **"SEVENTEEN suites" WAS WRONG FOR WEEKS AND THE MISSING TWO ARE THE INTERESTING PART**: `core-rating` (41) and `feedback` (26) shipped on 2026-09-04, were never added to this row, and so were absent from every total quoted since — a hand-maintained list of files, which is the same shape of fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row is not one yet.** The count: data-layer 1921, render 1123, goals 235, bodyweight 184, social 162, a11y 107, share-image 91, optimal 76, strength-estimate 72, volume-map 64, demo 58, compare 53, year-grid 45, routine 42, core-rating 41, estimate 35, qr 33, feedback 26, sw-update 12. **Counted as lines matching `^PASS`, which is what `render`'s own tally agrees with exactly (1105 = 1105).** *(The comparable 2026-09-06 figure, on the same seventeen, was 4,193.)* ⚠️ **`social` went DOWN (181 → 162) and that is not a loss of coverage** — the tier model it tested no longer exists, and one absence check over three tiers replaced a walk over every leaf of a light projection. ⚠️ **Four suites are new on 2026-09-02** — `compare`, `routine`, `share-image` and `estimate` — and the per-suite rows below are the recount too. ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | 🆕 **4,822 across the NINETEEN that need no Chrome, re-counted 2026-09-14 by running every one** — 3,489 in the eighteen data suites plus **1,333 render** (jsdom, which is not Chrome). `sw-update` (12, needs Chrome) and `rules` (218, needs the emulator) are the other two of the **twenty-one** files. 🆕 **`rep-decrement` (57) is new on 2026-09-14** and is the nineteenth. The four that moved that day: **data-layer 2,076**, **render 1,333**, **bodyweight 187**, **core-rating 44**, **estimate 37**, **strength-estimate 72**. ⚠️ **The old figure below counted eighteen and said 4,699**; it excluded render from its own total, which is the hand-maintained-list fault this row keeps warning about. ~~4,699 across the EIGHTEEN that need no Chrome, re-counted 2026-09-12~~ — `sw-update` (12, needs Chrome) and `rules` (218, needs the emulator) are the other two of the twenty. The three that moved on 2026-09-11/-12 are **data-layer 2,021**, **render 1,330** and **a11y 131**; every other per-suite figure below is unchanged. 🚨 **4,380 assertions across NINETEEN suites, recounted 2026-09-09 by running every one** — plus **159 in `rules`**, which needs the emulator and is the twentieth file. ⚠️ **"SEVENTEEN suites" WAS WRONG FOR WEEKS AND THE MISSING TWO ARE THE INTERESTING PART**: `core-rating` (41) and `feedback` (26) shipped on 2026-09-04, were never added to this row, and so were absent from every total quoted since — a hand-maintained list of files, which is the same shape of fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row is not one yet.** The count: data-layer 1921, render 1123, goals 235, bodyweight 184, social 162, a11y 107, share-image 91, optimal 76, strength-estimate 72, volume-map 64, demo 58, compare 53, year-grid 45, routine 42, core-rating 41, estimate 35, qr 33, feedback 26, sw-update 12. **Counted as lines matching `^PASS`, which is what `render`'s own tally agrees with exactly (1105 = 1105).** *(The comparable 2026-09-06 figure, on the same seventeen, was 4,193.)* ⚠️ **`social` went DOWN (181 → 162) and that is not a loss of coverage** — the tier model it tested no longer exists, and one absence check over three tiers replaced a walk over every leaf of a light projection. ⚠️ **Four suites are new on 2026-09-02** — `compare`, `routine`, `share-image` and `estimate` — and the per-suite rows below are the recount too. ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
-| **Data tests** | `node tests/data-layer.test.mjs` — **2,021 assertions** (2026-09-12), **no dependencies**. 🆕 **Since 2026-09-12 it holds the RANKED BEST LIFTS** (`js/profile-ranking.js`) on a discriminating fixture — a 343 lb squat below a 139 lb curl, a never-done core lift converted, a stand-in-only one with no number, the heaviest "other" lift last because unranked; flipping the comparator fails exactly the three ordering assertions. 🆕 **Since 2026-09-08 the Google flow's `created` flag**, which decides whether creating an account absorbs this device's local rows: linking an anonymous session counts, and 🚨 `signInWithCredential` after `credential-already-in-use` does NOT — that branch is reached precisely because the account already exists. **Mutation-checked in both directions.** ⚠️ Since 2026-08-30 it also holds the **EXERCISE-PICTURE manifest**: that it matches `img/exercises/` on disk (a forgotten `tools/build-exercise-images.mjs` fails here, because the drift is otherwise silent — a filename typed wrong shows no picture, and no picture is this feature's normal state), that every picture is in the sw precache (**D6**), and 🚨 that a picture given to one "Cable Kickback" is not given to the other. ⚠️ Since 2026-08-30 it also holds the **MOVEMENT FAMILIES** — that all 271 members resolve to exactly one exercise (the `preset-systems` by-name lesson on a second table), that no exercise is in two families, that a leg press offers four kinds of EQUIPMENT rather than five barbell squats, and 🚨 that Hip Adduction, Neck Curl and Tibialis Raise have **no family on purpose** because each is the opposite movement to its lookalike. And **the Research tab's content**: that every claim on that screen cites a source that is actually defined, that every topic states its own limit, and the **WORD BUDGETS** — 45 words an answer, 48 a bullet, 260 a topic. That last group is the point of this section: every other assertion anybody would write about educational text checks it is PRESENT, and none of them can catch prose piling back up. It also pins the three sentences whose popular version is the OPPOSITE of the finding (stretching not preventing injury, "not to failure" not meaning stop early, no best time of day). ⚠️ Since 2026-08-27 it also holds the **profile-photo crop maths** (the crop square never leaves the image — 1,925 combinations, zero escapes) and the **file-import parser**: the date order, the weight unit and the distance unit are each REFUSED rather than guessed, and a re-import upserts instead of doubling. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
+| 🆕 **Fatigue tests** | `node tests/rep-decrement.test.mjs` — **57 assertions** (2026-09-14), **no dependencies**. The per-set rep decrement that reaches the runner's caption. 🚨 **The two load-bearing ones are the invariants, and both are mutation-checked with the mutation printed in the source first**: every multiplier is ≤ 1 (so a wrong constant can only make the caption easier to beat), and a lifter whose reps RISE across a run is **clamped** rather than handed a bigger number. Also: a weight change ends a run, a prefilled set is not a set, drops/supersets/benchmarks contribute nothing (`group != null`, because a truthy test let the first superset of every workout through), 90 s ties to the SHORTER rest column, and the caption never prints "maybe 0". ⚠️ **What it does NOT cover is the wiring** — no mounted screen asserts the multiplier actually reaches the caption; see START HERE |
+| **Data tests** | `node tests/data-layer.test.mjs` — **2,076 assertions** (2026-09-14), **no dependencies**. 🆕 **Since 2026-09-14 it holds THE FOUR SEAT RULES AND THE QUARANTINE**: a 3-rep benchmark beats a 12-rep back-off set on the same day (which is what told Tim a tested 215 was "above his max"), a set at ≤ 8 reps is preferred but not required, the 84-day window lets a rating FALL while a lay-off keeps its record, the same history walked in either order gives an identical rating (it read Fair one way and High the other), and the typo screen holds back a ×10 slip **by name** while leaving a personal best and the good sets logged beside it alone. Plus the ratio pins **per sex** on both sides of every pair, and six **split-ordering** checks (a specific rule must not fall below its family — the machine lateral raise inside `/Lateral Raise/` was a 3.7× inflation). ⚠️ **The GOLDEN table was re-baselined on 2026-09-14 with every move attributed by name** — eleven of twelve muscles down, Traps up 14 % because the deadlift stopped standing in for it. 🆕 **Since 2026-09-12 it holds the RANKED BEST LIFTS** (`js/profile-ranking.js`) on a discriminating fixture — a 343 lb squat below a 139 lb curl, a never-done core lift converted, a stand-in-only one with no number, the heaviest "other" lift last because unranked; flipping the comparator fails exactly the three ordering assertions. 🆕 **Since 2026-09-08 the Google flow's `created` flag**, which decides whether creating an account absorbs this device's local rows: linking an anonymous session counts, and 🚨 `signInWithCredential` after `credential-already-in-use` does NOT — that branch is reached precisely because the account already exists. **Mutation-checked in both directions.** ⚠️ Since 2026-08-30 it also holds the **EXERCISE-PICTURE manifest**: that it matches `img/exercises/` on disk (a forgotten `tools/build-exercise-images.mjs` fails here, because the drift is otherwise silent — a filename typed wrong shows no picture, and no picture is this feature's normal state), that every picture is in the sw precache (**D6**), and 🚨 that a picture given to one "Cable Kickback" is not given to the other. ⚠️ Since 2026-08-30 it also holds the **MOVEMENT FAMILIES** — that all 271 members resolve to exactly one exercise (the `preset-systems` by-name lesson on a second table), that no exercise is in two families, that a leg press offers four kinds of EQUIPMENT rather than five barbell squats, and 🚨 that Hip Adduction, Neck Curl and Tibialis Raise have **no family on purpose** because each is the opposite movement to its lookalike. And **the Research tab's content**: that every claim on that screen cites a source that is actually defined, that every topic states its own limit, and the **WORD BUDGETS** — 45 words an answer, 48 a bullet, 260 a topic. That last group is the point of this section: every other assertion anybody would write about educational text checks it is PRESENT, and none of them can catch prose piling back up. It also pins the three sentences whose popular version is the OPPOSITE of the finding (stretching not preventing injury, "not to failure" not meaning stop early, no best time of day). ⚠️ Since 2026-08-27 it also holds the **profile-photo crop maths** (the crop square never leaves the image — 1,925 combinations, zero escapes) and the **file-import parser**: the date order, the weight unit and the distance unit are each REFUSED rather than guessed, and a re-import upserts instead of doubling. ⚠️ Since 2026-08-24 it also carries **how full the cloud is**: Firestore's published per-type charges, that a number costs 8 bytes against 3 as JSON so a size check built on `JSON.stringify` would fire too late, that the demo year agrees with the review's ~1,100 JSON bytes a session (so the 1.66× is Firestore's accounting and not an unusual fixture), and **that `cloudUsage()` says nothing at all unless the data really is in Firestore**. ⚠️ Since 2026-08-24 it carries the **within-session fatigue** section: Tim's real back session driven end to end, that the lift he did third no longer leads it, that the first exercise is never discounted, that the same three exercises **in a different order now rate differently** — which they did not before — and that a benchmark is never fatigued |
 | **Body-weight tests** | `node tests/bodyweight.test.mjs` — 175 assertions, **no dependencies**. What fraction of your body weight each movement carries, that it is read from the DATE OF THE SET, and **which exercises are refused and why**. ⚠️ Since 2026-08-24 it also pins the **assist** branch — that 70 lbs of help at 180 lbs is 110 lbs of resistance, that more help than you weigh is refused rather than reported as a negative load, and that an assisted set is discounted **below a real pull-up muscle for muscle**. The exclusion list it guards lost one entry that day and the reason is written into the list itself |
 | **Estimator tests** | `node tests/strength-estimate.test.mjs` — 72 assertions, **no dependencies**. Most assert MEASURED simulator outcomes, each with a vacuity guard. `node tools/strength-fit.mjs` re-derives every constant rather than trusting it |
 | **Social tests** | `node tests/social.test.mjs` — 181 assertions, **no dependencies**. What a person SHARES. ⚠️ Since 2026-08-29 it also pins the **name matching** (prefix of the whole name OR of any word, never a substring inside one — "nn" finding "Anna" is how a list of strangers starts looking like a list of matches) and the graph's **`pending`** list, including that somebody already CONNECTED is never also pending. ⚠️ Since 2026-08-22 the invite block is fed **the shape the network really returns** — a Firestore Timestamp, not the tidy ISO string the old fixtures used. That gap is where the expired-invite bug lived |
