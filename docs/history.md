@@ -17,6 +17,307 @@
 
 ---
 
+## 2026-09-16 — A FRIEND'S PAGE BECAME THEIR PROFILE, AND THREE FIELDS HAD TO BE PUBLISHED FOR IT
+
+**What Tim asked for**, in one message: *"I'm going to rattle off a list of small things I want you
+to do and for each one, you should probably deploy a sub-agent to do the work so we can get them all
+done quick."* Then, in order: the friends list showing no faces; a friend's page becoming their
+profile with a "view data" screen behind a button and friend-of-friend walking; and systems that
+fold open and closed in the Workouts and Record lists. Two further asks arrived while the agents
+were mid-flight and are **queued, not built** — see the end of this section.
+
+⚠️ **"Small things" was true of one of the three.** The friend profile could not be built at all
+without changing what every account publishes, which is D32 and the largest thing in this session.
+
+### A. Three agents, disjoint files, and the integration that was not free
+
+The standing arrangement held: one agent per named file set, nobody near `css/app.css` or `tests/`
+but the integrator, each running its suites in an isolated copy with the other agents' files at
+HEAD. Three ran at once and none collided. What was **not** free is written up in §F — the parts
+worth knowing are that a shared scratchpad let one agent wipe another's run directory twice, and
+that all three stamped their new comments with a **different date**.
+
+### B. The avatar bug, and why it could never have worked
+
+Tim: *"in the profile section, if you click on frineds, the friend's profile icon does not show
+their image that is normally showed."*
+
+`MePeopleView()` rendered `personFace(p.avatar, 20)` over `social.state().connections`, whose rows
+are `{uid, name, since}`. **`normalizeGraph()` has never carried an avatar** — correctly: a photo is
+a fact about the person, published in **their** document, and a copy in my graph would go stale the
+day they change it. So the row was asking for a field that has never existed and getting the glyph
+every time.
+
+Each row now fills its face from `social.friend(uid).doc.profile.avatar` **after** the list paints,
+guarded on `isConnected`, failing silently to the glyph — the same read the friend page and the feed
+card already do, so the cost is one that was already being paid elsewhere. ⚠️ **`FindView`'s search
+results were left alone deliberately**: `searchPeople()` returns no avatar, and a document read per
+result per keystroke lands on the one screen already reported as laggy.
+
+### C. Their page is a profile now, and the data screen is behind a button
+
+Tim: *"instead of going straight to the muscle map and data section, I want you to view their
+profile display, like how they see it for themselves, with their profile picture big at the top, the
+workouts and frineds, the core lifts and weights (with other lifts aswell) and their training
+history (calendar). Intentionally leave out the goals. Display the 'your body' details, but leave out
+the weight (only show gendar and age)."*
+
+`js/profile-shape.js` is new and is the reason this did not become a second copy of `#/me`: the
+sections are built once and drawn for two people. `views-me.js`'s own builders were **deleted**
+rather than duplicated. 🚨 **The shape is shared and the row data is built per subject on purpose** —
+"where did this number come from" is a genuinely different question about somebody else, and
+flattening that behind a `friend` flag is how a caveat gets printed over the wrong person. The module
+carries two `NO_NUMBER` sentence maps for exactly that reason.
+
+**Three honesty problems had to be answered rather than styled around:**
+
+1. 🚨 **The workout count is a window, not a career.** A published document holds the most recent 60
+   sessions at most, so a tile reading "4" under **Workouts** is a claim about their training and a
+   claim this device cannot make. It says **Workouts shared**, and the window is named under the
+   pair — the same call the friend calendar already made when it renamed its figure to "N days
+   published". "Shared" alone says the number is bounded without saying by how much.
+2. 🚨 **Their best lifts are read from their published grid, never recomputed.** A percentile needs a
+   body weight and theirs is not ours to have; `js/shared-map.js` says in as many words that
+   recomputing one is the thing it cannot do. So the core eight show the level **their** owner
+   published for that muscle, and everything else is numbered but **not ranked**, with the reason on
+   screen: their app publishes a level per muscle rather than per lift. ⚠️ **The tempting alternative
+   was rejected explicitly** — ranking the rest here whenever they happen to publish a weigh-in would
+   put two rankings of one person on one screen, computed on two devices against two comparison
+   groups, and on the day they disagreed nobody could tell which was which.
+3. 🚨 **A lift needing a weigh-in they do not publish says so** — *"cannot be priced"* — rather than
+   being dropped, or given the plate-only figure, which would read as a 25 lb pull-up max.
+
+**"View data" pulls the Data screen up** the way Record's panel comes up: the same `parkScreen()` /
+`requestRise()` / `releaseGhost()`, the same three-layer stacking (ghost 40, falling 50, rising 45),
+and a **down** arrow rather than a back arrow, because it means "put the panel away" and lands on
+that friend's profile whatever route opened it. Measured in Chrome, sampled in-page on
+`requestAnimationFrame`: the panel travels 844 → 0 over 236ms of movement and the ghost is released
+exactly as it lands, so the 2026-09-12 `animationend` fix carries to this door. **Muscles · Volume ·
+Graph · Bars · Calendar, and no Research** — Tim: *"exclude research because it doesn't share
+anything new"*, which is right in a way worth keeping: eleven topics identical on every screen are
+not about this person. `GraphView` takes its segments as an **explicit ask** now rather than
+inferring them, because the caller is the one that has the reason.
+
+**Walking on, and the back rule.** Their Workouts and Friends tiles open, so a reader can go friend →
+their friend → theirs. 🚨 **Tim overruled Rule 8 for that walk and the override is written into the
+rule itself** — *"if you go back after going inside a frined's friend, it doesn't go back to your
+friend, it goes back to your main profile menu"* — implemented with `backExact: true`, the existing
+opt-out and its second user after the finish screen. ⚠️ **Depth is stamped on the history entry**
+(`markFriendTrail()`, beside `markRoute()`), never counted: a counter cannot tell a forward
+navigation from the browser's own back button, which is the trap `markRoute()` was written to avoid.
+A cold arrival at a friend is depth 1; their own sub-screens do not deepen it.
+
+⚠️ **Two deliberate reversals, both recorded rather than done quietly.** A friend with no photo now
+gets the person glyph, where 2026-08-31 skipped the block entirely — that was right when the page was
+a list under a title bar carrying their name, and wrong on a profile, where the face has a slot and
+leaving it out reads as a page that failed to load. And **their last weigh-in was deleted from the
+page rather than moved**: their page is a profile now, and moving it into the data panel would put
+their body weight somewhere Tim did not ask to see it.
+
+### D. 🚨 What had to be published for any of that to exist — D32
+
+None of the profile was renderable from what an account publishes. A shared document carried
+`profile{name, avatar}`, `activity`, `benchmarks`, `strength` and (friends-only, opt-in)
+`bodyWeight`. **No gender, no age, no friends list.** So the ask was not a screen change:
+
+- `profile.gender`, `profile.age` — absent when unknown, in the avatar's own style, never `null`.
+- `connections` — `[{uid, name}]`, capped, no faces, no `since`.
+
+🚨 **`connections` is the genuinely new kind of field and it does not follow from D29.** D29 is about
+the owner's own training; this is the first field that names **other people**, so on a public account
+the whole signed-in world can read who somebody is connected to. Taken deliberately, argued on both
+sides in `js/social.js`, and the reversal is one line. ⚠️ **The age is published, never the birth
+year** — a stored age goes stale in silence, which is why `getProfile()` derives one on every read,
+and a birth year is the more identifying of the two.
+
+🔒 **The guard was extended rather than worked around.** `assertAudienceClean()` now looks *inside*
+`profile` and inside every connection row, because `getProfile()` returns body weight in the **same
+object** as gender and age — the leak was one spread operator away at the call site. `republish()`
+therefore forwards gender and age **named one at a time**, never spread.
+
+🚨 **AND `firestore.rules` HAD TO SHIP WITH IT, WHICH THE AGENT CAUGHT AND NOTHING ELSE WOULD HAVE.**
+`validProjection()` pins the document with `hasOnly`, so a client publishing a key the rules do not
+name has **every publish denied** — silently, because `republish()` is fire-and-forget and its throw
+is swallowed at every call site. The symptom would have been "nobody's page updates any more", with
+nothing on any screen saying so, and the rules suite would have stayed green **because its own
+fixture was thinner than the wire** — the `projection()` fixture carried no `connections`. Both are
+fixed: the rule names the field with a type and a ceiling, and the fixture now carries every field
+the real builder writes. **Mutation-checked**: removing `connections` from `hasOnly` turns the
+publish assertions red with exactly the right symptom (`the owner publishes their public document`
+→ denied). Rules: **221 assertions**, up from 218.
+
+⚠️ **Existing accounts catch up on their own and it is worth knowing how.** `healStalePublish()`
+gained a fourth trigger — a live document whose `connections` is not an array was written before this
+build — detected for free while those documents are already being read for their timestamp. One
+republish per account, on its owner's next open. **So a friend's age and friends list appear to you
+only after THEY next open the app**, which is the same propagation shape everything social here has:
+nobody's client may write into anybody else's account.
+
+### E. A system folds open and closed, on both screens
+
+Tim: *"In the workouts section as well as the record section, it shows the list of systems you have
+as well as the workouts within each of them. I want you to be able to click on the system in order to
+close or open the display of the workouts within them in both sections."*
+
+One helper builds a real `<details>` on both screens, so they cannot drift. State is written from the
+element's own `toggle` event rather than a click listener, because a `<details>` also opens from the
+keyboard, from find-in-page and from a screen reader, and a click listener misses all three.
+
+- ⚠️ **It remembers what is CLOSED, never what is open** — which is what makes "open" the default
+  with nothing to seed: an untouched system, a system created ten seconds ago and a fresh install are
+  all simply absent from the set.
+- **Two memories, not one.** A mutation check proved a shared one lets each screen contaminate the
+  other, the same fault `friendCalMode` exists to avoid in `views-data.js`.
+- 🚨 **Everything arrives open**, decided by the one-system case (a closed door to your own workouts)
+  and settled by Record, which is one tap from a workout in a gym (D4).
+- ⚠️ **The rating badge rides on the summary, not inside the fold**, or a folded system would show
+  none of its four numbers — the state most of a long list is in.
+- ⚠️ **Only the chevron moves** (`--t-fast`). Rule 7 allows one thing on the logging path, a press
+  answering back; and a sliding height on a native `<details>` has to be JS-driven, which is how a
+  disclosure ends up with a state its own element disagrees with.
+- 🛑 **An empty system is not a disclosure** — a chevron that turns to reveal nothing is a control
+  lying about having something — and **`#/system/<id>` survives as the last row of each group**,
+  because the summary can no longer navigate and that screen holds Edit, Notes, New workout and the
+  full rating. A feature that quietly deleted a screen would not be a feature.
+
+Five mutations, each proved to have landed on **code** (the harness read the file back off disk,
+printed the mutated line and aborted if it turned out to be a comment — §0.14, and this project has
+had a mutation land on a comment and look like a pass). Each failed the assertion it was aimed at and
+almost nothing else.
+
+### E2. A system's optional plan — and the function that was written and then deleted
+
+Tim, mid-session: *"I want to add an optional weekly scheduling to every workout system if the user
+wants to make it… day 1: push, day 2: pull, day 3: legs, day 4: rest, repeat"* or *"monday: push…
+sunday: rest, repeat"*, shown *"as boxes at the top of the workout system"*.
+
+**One decision was put to him before anything was built**, because the two readings are materially
+different work: does the plan also decide what the app suggests next? He chose **display only**. So
+Home and the Record picker are untouched, and `js/next-workout.js` was never opened.
+
+- **Two kinds, because they are two claims about time.** `week` is seven slots that ARE Monday to
+  Sunday; `cycle` is N slots that repeat, where Day 1 is not any particular day. The week is not
+  locale-derived — a plan whose first column moved because of a browser setting would disagree with
+  the one its author typed.
+- 🚨 **Rest and "nothing planned" are different words**, and that is the decision the rest hangs off.
+  Collapsing them was the easy build and would have had the app inventing rest days (Rule 6) — and
+  it is what makes the dangling-slot answer honest: **deleting a workout EMPTIES the day that named
+  it, never rests it.** The repair is *written*, not applied on read, so a backup taken afterwards
+  does not carry the dead id. That is `dropOrphanGroups()`'s lesson one collection up.
+- ⚠️ **The trap named in the brief did not bite, and its opposite did.** `normalizeSystem()`
+  **spreads** the row rather than rebuilding it field by field, so a schedule would have persisted
+  without being named. It is named anyway — for the reverse reason: to throw a malformed plan away
+  before it reaches a view.
+- 🛑 **A function was written and then deleted**, which is the part worth keeping. `trainingDays()`
+  had exactly one plausible caller — the programme rating — and feeding the plan into that is the
+  thing Tim said no to. **An unused export sitting beside that refusal is the missing half of the
+  feature, pre-built**; a comment records why it is not there.
+- **Two real bugs found by driving it, both invisible to a single press**: the cycle stepper closed
+  over a stale plan (grow 3→5, shrink to 4, and everything typed in between vanished), and the
+  stepper was rebuilt by its own press, destroying the focused node — one press for a keyboard user
+  and no second one.
+- 🚨 **And a §0.14 catch worth recording: a mutation marker must not name the thing it removes.** One
+  mutation survived, and the reason was that the assertion matched the marker comment announcing the
+  removal (`/* MUTANT — min-width: 0 removed */`) rather than the CSS. Re-run with a silent marker it
+  goes red. This is §0.14's fault in a new costume: there, a mutation that never landed; here, one
+  that landed and left its own evidence behind for the test to find.
+
+### E3. An empty month is one line, and six months earn a bar chart
+
+Tim: *"if a month has no recordings in it, just say the month and say no recordings, don't show an
+entire month of empty boxes. Additionally, if the user has more than 5 months of recordings in it,
+show a bar chart…"*
+
+- ⚠️ **The collapse is the 2026-09-12 complaint from the other side** — that day it was *"almost a
+  full year before the user's first recording"*. The risk was undoing that fix: `landOnCurrentMonth`
+  finds its month by `data-current-month` and pads `lastElementChild`, so a collapsed section that
+  dropped either would have silently stopped the Months tap landing. It keeps both, and **dropping
+  the attribute fails three pre-existing assertions as well as the two new ones** — the suite was
+  already guarding it, which is the reassuring direction.
+- ⚠️ **A month is counted active by the grid's own predicate**, so a month can never collapse while
+  the Years grid beside it shows lit squares for the same days.
+- **The chart**: Months view only, above the months, drawn past five months of recordings. The
+  x-axis is **time**, so an interior empty month is a **zero column with its own label** — dropping
+  it would draw a continuous run over a history that stopped — while months before the first
+  recording are trimmed, because there was no history yet to have a gap in. The y-axis counts
+  **days, not sessions**, the same rule the year grid states.
+- 🚨 **On a friend's calendar it says PUBLISHED, and this is the third place that rule has had to be
+  applied** (after the per-year count and the profile's workout tile). Their document holds sixty
+  sessions at most, so a bar drawn under the name of *training* would be a count of one quantity
+  wearing the name of another.
+- **The `dataviz` skill was loaded before any chart code and its validator run rather than
+  eyeballed.** One honest failure recorded rather than swept up: the validator's *lightness band*
+  check fails on the dark accent — it fails identically on teal and indigo — because that check is
+  about keeping several categorical slots apart and there is one slot here.
+- 🔒 **One `role="img"` carrying the whole reading**, the `year-grid.js` shape, which is what lets
+  the bars carry no numerals; every exact figure is in the label. No tooltip, because a tap on a
+  calendar already means "select a day" and a second tap grammar on one screen is what the Years
+  view refused.
+- ⚠️ **And the overflow was measured as the rightmost element edge, not `scrollWidth`** — §0.14's
+  corollary, since `.pane-scroll` clips and `scrollWidth` reads clean over a broken layout.
+
+### F. 🔒 The integration lessons, which are about running five agents rather than about this app
+
+1. 🚨 **THREE AGENTS DATED THE SAME SESSION THREE DIFFERENT WAYS.** Two stamped their comments
+   `2026-09-04` (the system clock) and one `2026-09-14` (the previous session's neighbour); the
+   sequence this project actually navigates by had reached `2026-09-15`. Forty-seven stamps across
+   eleven files, every one of them pointing a future reader at the wrong section of this file.
+   **Normalised to 2026-09-16 by hand** — `git show HEAD:<file> | grep -c` per file first, because
+   several files legitimately mention both of those dates already and a blanket replace would have
+   rewritten history that was correctly dated. 🔒 **The rule this earns: a sub-agent brief must name
+   the session's date, because an agent cannot know it** — the notes' dates are a sequence and the
+   clock is not.
+2. 🔒 **A fixture thinner than the wire passes a suite while the app is broken.** §D's rules fixture
+   is the third instance recorded here (after the expired-invite `Timestamp` and the demo friend
+   document). The general form: **a fixture built by hand from what a test needs, rather than from
+   what the code writes, tests the fixture.**
+3. ⚠️ **A shared scratchpad is a shared mutable directory.** One agent twice wiped another's run
+   directory mid-check; it recovered and reported it unprompted. Give each agent its own path.
+4. ⚠️ **An agent's "proposed tests" file is not the same thing as its verified tests.** The first
+   patch handed over carried only the rewrites needed to make the suite green; the new honesty guards
+   — the ones that were the point — were written but unrun, and several asserted exact sentences
+   nothing had checked against the code. They were sent back to be run before being placed.
+
+### G. The two asks that arrived mid-session, and why they waited a while
+
+Tim sent both while the first three agents were mid-flight **in the very files they land in**, so
+nothing was started rather than started badly; they went out as two more agents the moment those
+files were free, on his own reminder to keep deploying them. Both are §E2 and §E3 above.
+
+⚠️ **One sequencing mistake of mine, worth writing down**: the second pair was launched **before the
+first batch was committed**, so three finished features and two in-progress ones shared four files
+and the whole session had to become one commit rather than two. A snapshot of the finished state was
+taken as insurance and never needed. **Commit the finished batch before opening the same files
+again** — the cost here was only the loss of an intermediate commit, and it could as easily have
+been a half-built feature deployed to Pages.
+
+### H. What is NOT verified
+
+- **The accessibility audit does not reach any of this.** `tools/a11y-audit.mjs` has never covered a
+  friend's page — their uid is generated, so there is no static hash for the route list — and the
+  friend profile, the data panel and both new lists are all behind `#/friend/<uid>`. ⚠️ **The demo's
+  friend uid is deterministic**, because the demo year is; that is a real opening and nobody has
+  taken it.
+- **The three published fields have never been written to real Firestore.** The rules are proved on
+  the emulator and the builder is proved headlessly; the deploy is the first time a real document
+  carries them.
+- The estimator behind a friend's core-lift figures is the same one no human has ever checked against
+  an actual attempt (Open work 19, Tim's).
+- **Two pre-existing faults were found and deliberately not fixed**, both reported by agents told to
+  report rather than expand scope: `ensureSystems()` adopts a workout with **no** `systemId` but
+  never one pointing at a **deleted** system, so such a workout is returned by `getWorkouts()` and
+  rendered by no screen — invisible for ever; and `liftRow` rounds pounds and *then* converts, so a
+  kg reader gets a doubly-rounded estimate (`docs/strength-accuracy-plan.md` §2.7 says round in the
+  unit it is read in). Neither is in the scope of anything Tim asked for.
+
+### I. The numbers
+
+**5,168 assertions across the nineteen suites that need no Chrome** (from 4,944), every one green:
+`data-layer` 2,140 · `render` 1,515 · `goals` 278 · `social` 203 · `bodyweight` 187 · `a11y` 137 ·
+and the thirteen smaller ones unchanged. **`rules` is 221 on the emulator** (from 218) and **the
+rules are deployed**. `sw-update` needs Chrome and is unchanged. Across the five agents: **41
+mutations, each proved to have landed on code**, and the one that did not is written up in §E2.
+
 ## 2026-09-15 — WHAT THE KILLED AGENTS ACTUALLY LEFT, AND FOUR CLAIMS THAT WERE NOT TRUE
 
 **What Tim asked for**, in order: *"catch up with progress.md"* (read and reported, nothing started)

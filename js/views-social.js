@@ -23,15 +23,36 @@
 // anybody's private collections. This file cannot read another person's real
 // data even if it tries — the rules refuse it.
 
-import { store, auth, social } from './store.js';
+import { store, auth, social, activityByDate, todayISO } from './store.js';
 import {
   el, icon, screenShell, emptyState, openSheet, confirmSheet, toast,
-  fmtDateLong, relativeDay, chevron, setChildren, fmtSet, personFace,
+  fmtDateLong, fmtDateShort, relativeDay, chevron, setChildren, fmtSet, personFace,
   refreshRoute, helpDot,
+  // 🆕 THE DATA SCREEN IS PULLED UP OVER THE PROFILE — 2026-09-16. Record's
+  // mechanics exactly: the door asks for the rise, the panel's own arrow parks
+  // itself falling. See `parkScreen()`'s header for the two faults that only a
+  // browser could show, and for why nothing is parked where nothing can move.
+  parkScreen, requestRise,
+  // How far into somebody else's friends this reader has walked. Tim's explicit
+  // override of Rule 8 — see `friendBackFor()` below.
+  friendTrailDepth,
 } from './ui.js';
+/* 🆕 A FRIEND'S PAGE IS A PROFILE SINCE 2026-09-16, and it is the SAME profile
+ * `#/me` is. Tim: *"I want you to view their profile display, like how they see
+ * it for themselves."* The sections come from `js/profile-shape.js`, which both
+ * screens call; what this file owns is where a friend's numbers come from,
+ * which is a published document rather than the store. That file's header has
+ * the argument for the split. */
+import {
+  profileHead, statTile, statTileFlat, statRow, bodyBlock, bestLiftsBlock,
+  calendarBlock, NO_NUMBER_THEIRS,
+} from './profile-shape.js';
 import {
   PRIVATE_ACCOUNT, PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL,
   normalizeVisibility, FRIENDS, parseInviteRoute, profileLink,
+  // How many sessions a published document can hold. Printed on their profile
+  // because a bounded figure that does not say its bound reads as a total.
+  MAX_ACTIVITY,
 } from './social.js';
 import { encodeQR } from './qr.js';
 // ⚠️ A STATIC IMPORT, because a friend's body weight and every weight on their
@@ -697,15 +718,33 @@ export async function InviteView(param) {
  * One friend  —  #/friend/<uid>
  * ------------------------------------------------------------------ */
 
-/**
- * @param {string} uid
- * @param {string} [tab]  which Data tab to open on. ⚠️ IT EXISTS SO THE OLD
- *   ROUTES STILL WORK: `#/friend/<uid>/volume` and `/graph` were their own
- *   screens until 2026-09-05 and are now tabs of this one, so they resolve here
- *   instead of 404-ing. This project has broken no deep link yet and this is not
- *   the place to start — `#/calendar` kept its route through two redesigns.
+/* 🔄 **THIS IS A PROFILE SINCE 2026-09-16, AND THE DATA SCREEN MOVED BEHIND A
+ * BUTTON.** Tim: *"When you view a friend's profile, instead of going straight
+ * to the muscle map and data section, I want you to view their profile display,
+ * like how they see it for themselves, with their profile picture big at the
+ * top, the workouts and frineds, the core lifts and weights (with other lifts
+ * aswell) and their training history (calendar). Intentionally leave out the
+ * goals. Display the 'your body' details, but leave out the weight (only show
+ * gendar and age). Add a 'view data' button on the top right side of this
+ * profile display that pulls up a screen (similar to how the 'record' screen is
+ * pulled up) and it looks EXACTLY like how it looks when you view your own data
+ * (muscle, volume, graph, bars), except exclude research because it doesn't
+ * share anything new."*
+ *
+ * ⚠️ WHAT THIS PAGE WAS UNTIL TODAY: their Data screen, with their map and
+ * their recent workouts as its Muscles pane. Nothing about that is deleted —
+ * it is `FriendDataView` now, one tap away, and every route that opened it
+ * still opens it. What changed is what you land on.
+ *
+ * 🚨 "LIKE HOW THEY SEE IT FOR THEMSELVES" IS TAKEN LITERALLY. The sections are
+ * `#/me`'s own builders (`js/profile-shape.js`), so their head, their tiles,
+ * their body block, their best-lift rows and their calendar are the same code
+ * as mine and cannot drift from it. The three differences are all his and all
+ * passed in: no goals, no body weight, and — mine — every figure that is
+ * bounded by what they PUBLISH says so, because a published document is a
+ * window and my own store is not.
  */
-export async function FriendView(uid, tab) {
+export async function FriendView(uid) {
   const back = () => { location.hash = '#/social'; };
 
   /* ⚠️ THE DEMO GOES THROUGH friendDoc(), WHICH BUILDS AN INVENTED FRIEND. Until
@@ -713,7 +752,7 @@ export async function FriendView(uid, tab) {
    * was defensible while it listed workouts and is not now that it carries the
    * body map, the volume, the graphs and the way into the compare screen. */
   const pre = await friendDoc(uid);
-  if (pre.demo) return friendScreen(uid, pre, back, tab);
+  if (pre.demo) return friendScreen(uid, pre, back);
 
   let state;
   try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
@@ -752,52 +791,83 @@ export async function FriendView(uid, tab) {
   if (isFriend && (!conn.name || conn.name === 'Friend')) {
     social.healConnectionName(uid).catch(() => {});
   }
-  const body = el('div', { class: 'list' });
+  return friendProfileScreen({ uid, name, seen, conn, isFriend, state, back });
+}
 
-  const screen = screenShell({
-    title: name,
-    // ⚠️ SAY WHICH DOCUMENT THIS IS, because the two are different promises. A
-    // friend's page is what they share with people they accepted; a public page
-    // is what anybody signed in can read, and somebody looking at one should
-    // know which they are looking at without working it out.
-    sub: !seen.doc
-      ? 'They share nothing with you'
-      : seen.audience === FRIENDS ? 'Friends' : 'Public account',
-    back, noNav: true,
-    scroll: body,
-  });
+/* ================================================================== *
+ * THEIR DATA, PULLED UP OVER THEIR PROFILE  —  #/friend/<uid>/data
+ *
+ * 🚨 Tim, 2026-09-16: *"Add a 'view data' button on the top right side of this
+ * profile display that pulls up a screen (similar to how the 'record' screen is
+ * pulled up) and it looks EXACTLY like how it looks when you view your own data
+ * (muscle, volume, graph, bars), except exclude research because it doesn't
+ * share anything new. Then if the user clicks the arrow again, it brings them
+ * back to the profile menu for that user."*
+ *
+ * ⚠️ THE SCREEN IS NOT NEW — it is the page a friend's route landed on until
+ * today, unchanged, with a different arrow on it. Every old address still opens
+ * it (`#/friend/<uid>/volume`, `/graph`, and now `/muscles` and `/bars` too),
+ * so nothing anybody bookmarked moved; what moved is the DEFAULT, which is now
+ * their profile.
+ *
+ * 🛑 THE ARROW IS `down`, NOT `back`, and that is the same argument Record's
+ * carries. Rule 8 says a back arrow returns to the screen you were just on;
+ * this one means "put this panel away", and it lands on THIS friend's profile
+ * whatever route the reader arrived by — a deep link, a reload, or the button.
+ * Naming it `down` is what stops somebody later "fixing" it into a back arrow
+ * and quietly making a cold-opened panel step off the site.
+ *
+ * ⚠️ THE SEGMENTS ARE PASSED IN BY NAME rather than being inferred from the
+ * subject. Research is eleven topics about training in general, identical on
+ * everybody's screen, so on somebody else's page it is a tab that is not about
+ * them — Tim's reason, and it has been the rule here since 2026-09-05. Saying
+ * which five this screen wants, out loud, is what makes the reason readable at
+ * the call site instead of hidden inside `GraphView`.
+ * ================================================================== */
 
-  const parts = [];
+/** The five segments a friend's data screen shows. Research is not among them. */
+const FRIEND_SEGMENTS = ['muscles', 'volume', 'trend', 'compare', 'calendar'];
 
-  /* ⚠️ THEIR FACE, ONCE, AT THE TOP — and only where there is one (2026-08-31).
-   * The screen already says the name in the title bar, so a circle with the
-   * person glyph in it would be an empty ornament on every account that has not
-   * added a photo, which is most of them. With a photo it is the one thing on
-   * this screen that says whose page this is at a glance. */
-  if (seen.doc && seen.doc.profile && seen.doc.profile.avatar) {
-    parts.push(el('div', { class: 'friend-face' },
-      personFace(seen.doc.profile.avatar, 40),
-      el('div', { class: 'row-title', text: name }),
-    ));
+export async function FriendDataView(uid, tab) {
+  /* The panel slides away over the profile the router is drawing underneath it;
+   * with no way to animate (reduced motion, jsdom) `parkScreen` does nothing
+   * and this is a plain navigation, which loses nothing. */
+  const down = () => {
+    parkScreen(document.querySelector('#app > .screen'), { falls: true });
+    location.hash = `#/friend/${encodeURIComponent(uid)}`;
+  };
+
+  const pre = await friendDoc(uid);
+  if (pre.fail) {
+    return screenShell({ title: 'Data', down, noNav: true, scroll: pre.fail });
   }
 
-  /* 🔄 ~~"What they can see of yours"~~ REMOVED 2026-09-05, on Tim's
-   * instruction: *"Since we talked about how that single option is only
-   * changeable in the profile section for now and all friends can see
-   * everything, please remove this choice from the user display."*
-   *
-   * ⚠️ IT WAS RIGHT WHEN IT WAS BUILT AND WRONG BY THE TIME IT WAS REMOVED, and
-   * the difference is 2026-09-03. It was a PER-PERSON dial — four visibility
-   * levels, set on this screen, for this one friend — and putting it at the top
-   * of their page was the whole point: the thing you most want to check is what
-   * you are giving away. When the tiers went, it became one ACCOUNT setting that
-   * happened to be duplicated here, and a per-person position for an account-wide
-   * control reads as though it were still per person. **Somebody could reasonably
-   * have believed they were changing what THIS friend sees.**
-   *
-   * ⚠️ NOTHING WAS LOST. The setting still lives on the Friends screen and in
-   * Settings, which is where an account-wide choice belongs, and the sentence
-   * that mattered — friends see everything either way — is true without it. */
+  const seen = pre.seen || { audience: null, doc: pre.doc, legacy: pre.legacy };
+  const parts = await musclesParts({ uid, name: pre.name, seen });
+  return dataScreenFor({ uid, name: pre.name, doc: pre.doc, down, tab, parts });
+}
+
+/**
+ * The Muscles pane of that screen: their body map and, under it, their recent
+ * workouts.
+ *
+ * ⚠️ IT IS A FUNCTION NOW RATHER THAN A BLOCK INSIDE `FriendView`, and nothing
+ * inside it changed when it moved — the map, the legacy fallback and the
+ * workout list are the same code they were, still assembled into the array the
+ * Data screen hands to its Muscles tab. Tim asked in 2026-09-05 to *"keep the
+ * 'recent workouts' display below that user's body view as it is now"*, and it
+ * is still there rather than being promoted to a tab.
+ *
+ * 🔄 ~~Their last weigh-in, as a note under the map~~ **GONE 2026-09-16.** Tim,
+ * about their profile: *"leave out the weight (only show gendar and age)."* The
+ * line was on their PAGE, and their page is a profile now — so keeping it would
+ * have meant moving somebody's body weight onto a panel he did not ask to see
+ * it on, in order to avoid deleting it. ⚠️ It is not lost information: a friend
+ * who publishes two weigh-ins still has a body-weight line on their Graph tab,
+ * which is where this app puts a weigh-in for every other subject.
+ */
+async function musclesParts({ uid, name, seen }) {
+  const parts = [];
 
   if (!seen.doc) {
     parts.push(el('h2', { class: 'section-head', text: 'What they share' }));
@@ -833,16 +903,12 @@ export async function FriendView(uid, tab) {
      * still resolve and simply open the page on that tab, so nothing anybody
      * bookmarked broke. */
 
-    if (seen.doc.bodyWeight && seen.doc.bodyWeight.length) {
-      const last = seen.doc.bodyWeight[seen.doc.bodyWeight.length - 1];
-      /* ⚠️ ROUNDED IN THE READER'S UNIT — 2026-09-13, plan §2.7. This said
-       * `withUnit(Math.round(lb))`: round the pounds, then convert, so a friend who
-       * weighs 180.6 lb read "82 kg" to one reader and 81.9 to the next depending only
-       * on which side of the conversion the rounding fell. The rounding is wanted — a
-       * friend's weigh-in to a tenth is a precision nobody asked to publish — so this
-       * is `withUnitRounded`, which rounds where the number is read. */
-      parts.push(el('p', { class: 'note', text: `Body weight ${units.withUnitRounded(last.weight)} on ${fmtDateLong(last.date)}` }));
-    }
+    /* 🔄 ~~`Body weight … on …`~~ deleted here on 2026-09-16 — see the header
+     * above this function for why it went rather than moving. ⚠️ The unit note
+     * it carried is not lost: `withUnitRounded` is still the rule for a friend's
+     * published weight everywhere one is printed, because rounding pounds and
+     * then converting makes 180.6 lb read as 82 kg to one reader and 81.9 to the
+     * next (plan §2.7). */
 
     parts.push(el('h2', { class: 'section-head', text: 'Recent workouts' }));
     const acts = seen.doc.activity || [];
@@ -853,22 +919,475 @@ export async function FriendView(uid, tab) {
     }
   }
 
-  /* ⚠️ THE BOTTOM OF THIS SCREEN DEPENDS ON WHETHER THEY ARE A FRIEND, and both
-   * halves have to exist: a public account you are only reading has nothing to
-   * disconnect FROM, and offering a red Disconnect button on it would be a
-   * control that either does nothing or does something nobody asked for. */
+  return parts;
+}
+
+/* ------------------------------------------------------------------ *
+ * 🚨 THE BACK ARROW INSIDE SOMEBODY ELSE'S FRIENDS — TIM'S OVERRIDE OF RULE 8,
+ * AND IT IS WRITTEN DOWN HERE AS ONE.
+ *
+ * Tim, 2026-09-16: *"allow the user to click on the friend's 'workouts' button
+ * and 'friends' button to view that friend's friend's and that friend's
+ * workouts, and so on if they want. However, if you go back after going inside
+ * a frined's friend, it doesn't go back to your friend, it goes back to your
+ * main profile menu."*
+ *
+ * ⚠️ RULE 8 SAYS THE ARROW GOES THROUGH HISTORY, and it is right about
+ * everything except this. Walking friend → their friend → their friend is a
+ * walk somebody can take four steps down without meaning to, and history would
+ * make the way out four taps. His instruction is that one tap gets you home.
+ * `backExact: true` is the existing opt-out for an arrow that is not a back —
+ * until today the finish screen was its only user, and this is the second.
+ *
+ * 🚨 A COLD ARRIVAL IS DEPTH 1 AND BEHAVES NORMALLY. A deep link, a reload, a
+ * tap from my own friends list, a shared `#/friend/<uid>` — none of those is
+ * "inside another friend", and an arrow that jumped to `#/me` from one would be
+ * moving somebody sideways for no reason they could see. The depth is stamped
+ * on the history entry rather than counted (`markFriendTrail()` in ui.js): a
+ * counter cannot tell a forward navigation from the browser's own back button,
+ * which is the trap `markRoute()` was written to avoid and the same one here.
+ * ------------------------------------------------------------------ */
+function friendBackFor(fallback) {
+  if (friendTrailDepth() < 2) return { back: fallback, backExact: false };
+  return { back: () => { location.hash = '#/me'; }, backExact: true };
+}
+
+/**
+ * The control Tim asked for on the top right — *"a 'view data' button on the
+ * top right side of this profile display"*.
+ *
+ * ⚠️ IT SAYS WHAT IT DOES rather than being a glyph. Every other thing in a
+ * topbar corner in this app is an icon with an aria-label, which is right for
+ * an action whose picture is unambiguous (back, close, edit); "the muscle map,
+ * the volume, the graph and the bars for this person" has no such picture, and
+ * a chart glyph here would be a guess the reader has to tap to check.
+ *
+ * ⚠️ THE DOOR ASKS FOR THE RISE — `requestRise()`, the one-shot consumed by the
+ * router. The panel is reached three ways (this button, an old `/volume` link,
+ * a reload) and only this one is a panel coming up over what you were reading,
+ * so the route alone cannot decide it. Exactly the argument the session runner's
+ * live bar makes.
+ */
+function viewDataButton(uid) {
+  return el('button', {
+    class: 'btn small topbar-btn', text: 'View data',
+    onClick: () => {
+      requestRise();
+      location.hash = `#/friend/${encodeURIComponent(uid)}/data`;
+    },
+  });
+}
+
+/**
+ * Their profile — the screen `#/friend/<uid>` is, as of 2026-09-16.
+ *
+ * ⚠️ THE SHELL GOES UP AND THE SECTIONS FILL IN, not awaited. Their document is
+ * already in hand by the time this is called, but their best lifts want the
+ * exercise library and their calendar wants a walk over sixty sessions — and
+ * the router awaits a view before it swaps the DOM, so every millisecond spent
+ * here is a tap that visibly does nothing while the previous screen sits under
+ * the thumb. The same shape Home's feed, the Friends list and `#/me` all use,
+ * and for the same reported reason.
+ */
+function friendProfileScreen({ uid, name, seen, conn, isFriend, state, back, demo = false }) {
+  const body = el('div', { class: 'me-body' });
+  const doc = seen.doc;
+  /* The panel is offered wherever there is anything to put in it. With no map
+   * AND no sessions it would be five tabs onto five empty rooms, which is the
+   * same call the old page made about becoming a Data screen at all. */
+  const hasData = Boolean(doc && (
+    (doc.strength && doc.strength.muscles && doc.strength.muscles.length)
+    || (doc.activity && doc.activity.length)));
+
+  const arrow = friendBackFor(back);
+  const screen = screenShell({
+    title: name,
+    // ⚠️ SAY WHICH DOCUMENT THIS IS, because the two are different promises. A
+    // friend's page is what they share with people they accepted; a public page
+    // is what anybody signed in can read, and somebody looking at one should
+    // know which they are looking at without working it out.
+    sub: demo
+      ? 'In the demo account'
+      : !doc
+        ? 'They share nothing with you'
+        : seen.audience === FRIENDS ? 'Friends' : 'Public account',
+    back: arrow.back,
+    backExact: arrow.backExact,
+    noNav: true,
+    actions: hasData ? [viewDataButton(uid)] : [],
+    scroll: body,
+  });
+
+  fillFriendProfile(body, { uid, name, seen, conn, isFriend, state, demo }).catch(() => {
+    setChildren(body, emptyState('Could not load their profile',
+      'Their page could not be built just now. Nothing of yours is affected, and everything you '
+      + 'have recorded is safe on this device.'));
+  });
+  return screen;
+}
+
+async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state, demo }) {
+  const doc = seen.doc;
+  const profile = (doc && doc.profile) || {};
+  const link = (sub) => `#/friend/${encodeURIComponent(uid)}/${sub}`;
+
+  /* ⚠️ THEIR FACE, BIG, WITH A GLYPH WHERE THERE IS NO PHOTO — and that last
+   * clause reverses 2026-08-31 deliberately. `friend-face` skipped the entire
+   * block for an account with no picture, which was right when this page was a
+   * list under a title bar carrying their name: a bare circle would have been an
+   * ornament on most accounts. A profile has a SLOT for the face — the name sits
+   * beside it and the tiles sit under it — so leaving it out now moves the whole
+   * screen up and reads as a page that failed to load. */
+  const parts = [profileHead({ avatar: profile.avatar || null, name, large: true })];
+
+  /* 🔄 ~~"What they can see of yours"~~ REMOVED 2026-09-05, on Tim's
+   * instruction: *"Since we talked about how that single option is only
+   * changeable in the profile section for now and all friends can see
+   * everything, please remove this choice from the user display."* The note is
+   * kept here, at the top of their page, because that is where the control sat.
+   *
+   * ⚠️ IT WAS RIGHT WHEN IT WAS BUILT AND WRONG BY THE TIME IT WAS REMOVED, and
+   * the difference is 2026-09-03. It was a PER-PERSON dial — four visibility
+   * levels, set on this screen, for this one friend — and putting it at the top
+   * of their page was the whole point: the thing you most want to check is what
+   * you are giving away. When the tiers went, it became one ACCOUNT setting that
+   * happened to be duplicated here, and a per-person position for an account-wide
+   * control reads as though it were still per person. **Somebody could reasonably
+   * have believed they were changing what THIS friend sees.**
+   *
+   * ⚠️ NOTHING WAS LOST. The setting still lives on the Friends screen and in
+   * Settings, which is where an account-wide choice belongs, and the sentence
+   * that mattered — friends see everything either way — is true without it. */
+
+  if (!doc) {
+    parts.push(el('h2', { class: 'section-head', text: 'What they share' }));
+    parts.push(el('p', { class: 'note', text:
+      'Nothing yet. They have not published anything since you connected.' }));
+    parts.push(relationshipFooter({ uid, conn, isFriend, state, demo }));
+    setChildren(body, ...parts.filter(Boolean));
+    return;
+  }
+
+  /* ── THE TWO FIGURES ──────────────────────────────────────────────────────
+   *
+   * 🚨 THE WORKOUT COUNT IS RENAMED, NOT CAVEATED, and the precedent is this
+   * app's own. A published document carries at most `MAX_ACTIVITY` sessions, so
+   * this figure is a count of what somebody has PUBLISHED and not of what they
+   * have trained — and their calendar met exactly this problem and solved it by
+   * renaming the number ("N days published", `docs/state.md`) rather than by
+   * printing a career total with a footnote. A tile reading "12" under the word
+   * WORKOUTS is a claim about their training; under WORKOUTS SHARED it is a
+   * claim about their document, which is the only thing this device knows.
+   *
+   * ⚠️ AND THE WINDOW IS NAMED UNDER THE PAIR AS WELL, because "shared" tells a
+   * reader the figure is bounded without telling them by how much. Sixty is a
+   * number they can check their expectations against; "some" is not. */
+  const acts = doc.activity || [];
+  /* 🚨 `connections` IS ABSENT ON EVERY DOCUMENT PUBLISHED BEFORE 2026-09-16 and
+   * `[]` for somebody with no friends, and the two may not look alike. Absent is
+   * a DASH with no link and a sentence saying their app has not published it —
+   * printing 0 there would be this app inventing a fact about somebody else's
+   * social life out of a field that does not exist yet. */
+  const connections = Array.isArray(doc.connections) ? doc.connections : null;
+  parts.push(statRow(
+    statTile('Workouts shared', acts.length, link('workouts')),
+    connections === null
+      ? statTileFlat('Friends', null, { off: true })
+      : connections.length
+        ? statTile('Friends', connections.length, link('friends'))
+        // A real zero, in full ink, and not a link: "they have none" is a
+        // complete answer, and a list of nobody is a screen with nothing on it.
+        : statTileFlat('Friends', 0),
+  ));
+  parts.push(el('div', { class: 'field-help', text:
+    `Workouts shared is what ${name} publishes — their most recent ${MAX_ACTIVITY} sessions at most, `
+    + 'not everything they have trained.' }));
+  if (connections === null) {
+    parts.push(el('div', { class: 'field-help', text:
+      `${name}'s app has not published their friends list yet. It will the next time they open it.` }));
+  }
+
+  /* ── THEIR BODY: SEX AND AGE, NEVER WEIGHT ────────────────────────────────
+   *
+   * 🚨 Tim: *"Display the 'your body' details, but leave out the weight (only
+   * show gendar and age)."* Their weigh-in IS published to friends who switched
+   * it on, and this page printed it as a note until today — so the absence here
+   * is a decision rather than a gap, and the code does not have a flag that
+   * could be passed the other way round: body weight is simply never put in
+   * `facts`.
+   *
+   * ⚠️ IT IS A READOUT AND NOT A DOOR. `#/me`'s version links to `#/profile`,
+   * the form that sets these; there is no such screen for somebody else's body,
+   * and a row that opens nothing is the "control that cannot answer" this file
+   * already refuses on their calendar's cells.
+   *
+   * ⚠️ WITH NEITHER FIELD THE SECTION IS OMITTED rather than printing an empty
+   * row — which is every document published before today, so it is the common
+   * case and not an edge one. */
+  const facts = [
+    profile.gender === 'female' ? 'Female' : profile.gender === 'male' ? 'Male' : null,
+    profile.age ? `${profile.age} years` : null,
+  ].filter(Boolean);
+  const gaps = [!profile.gender && 'sex', !profile.age && 'age'].filter(Boolean);
+  parts.push(bodyBlock({
+    label: `${name}'s body`,
+    facts,
+    sub: gaps.length
+      ? `Their ${gaps.join(' and ')} ${gaps.length === 1 ? 'is' : 'are'} not in what they publish.`
+      : null,
+  }));
+
+  /* 🚨 THE TWO SLOW SECTIONS GET SLOTS AND THE SCREEN PAINTS WITHOUT THEM.
+   *
+   * Their best lifts want the exercise library and three modules; their
+   * calendar wants a walk over sixty sessions. Both are awaits, and everything
+   * above is already in hand — so holding the whole page for them would leave a
+   * face, a name and nothing else for as long as the slowest of them takes,
+   * which is the "long delay and lag that's alarming" Tim reported on the
+   * Friends list in 2026-08-26 and the reason every filled screen in this app
+   * is shaped this way.
+   *
+   * ⚠️ `display: contents` ON THE SLOT, so an empty one costs nothing. `.me-body`
+   * is a flex column with a gap; a real wrapper would add a gap either side of a
+   * section that never arrived, and the page would have two mystery holes in it.
+   * The slot also holds the ORDER: filling it later cannot move the calendar
+   * above the lifts or either of them under the footer.
+   *
+   * 🛑 NO GOALS SECTION, AND THE ABSENCE IS TIM'S: *"Intentionally leave out the
+   * goals."* Nothing about a goal is in a published document either, so there is
+   * no version of it that could have been built honestly. */
+  const bestsSlot = el('div', { class: 'me-slot' });
+  const calSlot = el('div', { class: 'me-slot' });
+  parts.push(bestsSlot, calSlot, relationshipFooter({ uid, conn, isFriend, state, demo }));
+  setChildren(body, ...parts.filter(Boolean));
+
+  const bests = await theirBestLifts(doc, name, Boolean(seen.legacy)).catch(() => null);
+  if (bests && bestsSlot.isConnected) setChildren(bestsSlot, bests);
+
+  /* ── THEIR TRAINING HISTORY ───────────────────────────────────────────────
+   *
+   * ⚠️ `ownCalendar()`, THE SAME FUNCTION ALL FOUR OTHER DOORS USE — the rule
+   * this project keeps relearning, and the reason this section cost three
+   * lines. `friend: true` is what makes the cells inert, the readout a live
+   * region rather than a dead button, the count beside a year read "published"
+   * rather than "trained", and the sixty-session caveat appear under the
+   * switch. `land: false` is `#/me`'s own argument arriving at a fifth door:
+   * jumping the scroller to this month would pull their face off the top of the
+   * screen somebody has just opened. */
+  const activity = await activityByDate({
+    sessions: acts, benchmarks: doc.benchmarks || [],
+  }).catch(() => new Map());
+  if (activity.size && calSlot.isConnected) {
+    const { ownCalendar } = await import('./views-data.js');
+    setChildren(calSlot, calendarBlock(
+      ownCalendar(activity, todayISO(), { friend: true, who: name, land: false }),
+      'Training history'));
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 🚨 THEIR BEST LIFTS, AND WHICH HALF OF IT THIS DEVICE IS ALLOWED TO WORK OUT
+ *
+ * Tim asked for *"the core lifts and weights (with other lifts aswell)"* on a
+ * friend's profile, the same section `#/me` has carried since 2026-09-12. The
+ * rows are drawn by `js/profile-shape.js`, exactly as mine are. What is
+ * different — and it is the whole of the honesty problem on this screen — is
+ * where a RANKING may come from.
+ *
+ * 🚨 A PERCENTILE NEEDS A BODY WEIGHT, AND THEIRS IS NOT OURS TO HAVE. Their
+ * levels were computed on THEIR device against THEIR weigh-in and THEIR age,
+ * and published as a grid (`js/shared-map.js`, whose header says in so many
+ * words that recomputing a percentile is the one thing it cannot do). So:
+ *
+ *   · THE CORE EIGHT ARE READ, NOT COMPUTED. Each core lift is the key lift of
+ *     a muscle, and the muscle's published row already carries that lift's
+ *     estimated one-rep max, its level, its confidence band and the recorded set
+ *     it was led by. That is the honest ranked list, and it is theirs.
+ *   · A MUSCLE MISSING FROM THE GRID GETS A REASON IN THE NUMBER'S SLOT rather
+ *     than a number — the `NO_NUMBER` pattern from `#/me`, with its own
+ *     sentences because "nothing recorded for this muscle yet" is an instruction
+ *     on my page and a statement about somebody else on theirs.
+ *   · EVERYTHING ELSE IS NUMBERED BUT NOT RANKED. Their published sets are real,
+ *     so an estimated one-rep max off one of them is arithmetic on their own
+ *     numbers and stands up. The LEVEL does not: their app publishes a level per
+ *     MUSCLE, not per lift, and one worked out here would be read against a
+ *     different body from the one theirs was. ⚠️ **This holds even for a friend
+ *     who publishes their weigh-in.** The tempting version — rank the rest
+ *     ourselves when the weight happens to be there — would put two rankings of
+ *     the same person on one screen, computed on two devices against two
+ *     comparison groups, and the day they disagreed the reader would have no way
+ *     to tell which was which. One source of truth per screen.
+ *   · A LIFT THIS DEVICE CANNOT PRICE AT ALL — a pull-up or a dip from somebody
+ *     whose weigh-in is not published — says so in the number's slot. It is NOT
+ *     silently dropped and NOT quietly given the plate-only figure, which would
+ *     read as a pull-up max of twenty-five pounds.
+ *
+ * ⚠️ `rankedLifts()` IS STILL THE ARITHMETIC, handed their rows and their
+ * published ratings, because a second walk over somebody's sets is a second set
+ * of answers about what a maximum is. Its percentiles are discarded rather than
+ * printed: `withAssumptions()` substitutes a reference weight for a missing
+ * weigh-in, which is right on my own screen — where the profile is mine and the
+ * assumption is stated — and would be a number about a body nobody measured
+ * here. Nothing assumed ever reaches the page.
+ * ------------------------------------------------------------------ */
+
+/** Highest level first; no percentile last; ties by name. */
+function byPercentile(a, b) {
+  const pa = a.percentile === null || a.percentile === undefined ? -1 : a.percentile;
+  const pb = b.percentile === null || b.percentile === undefined ? -1 : b.percentile;
+  return (pb - pa) || a.name.localeCompare(b.name);
+}
+
+/** The measured set their published rating was led by — Rule 5's anchor. */
+function publishedSub(m) {
+  const b = m.best;
+  if (!b || !(Number(b.weight) > 0)) return 'From the rating their app published';
+  return `${b.exerciseName || 'Their training'} ${units.withUnit(b.weight)}`
+    + (b.loadType === 'per_side' ? '/side' : '')
+    + (b.reps ? ` × ${b.reps}` : '')
+    + (b.date ? ` · ${fmtDateShort(b.date)}` : '');
+}
+
+async function theirBestLifts(doc, name, legacy) {
+  const [
+    { ratingsFromShared, ownSexOf },
+    { comparePreset, comparisonLabel, keyLiftFor },
+    { CORE_MUSCLES, rankedLifts },
+    exMap,
+  ] = await Promise.all([
+    import('./shared-map.js'),
+    import('./strength-standards.js'),
+    import('./profile-ranking.js'),
+    store.getExerciseMap().catch(() => new Map()),
+  ]);
+
+  // ⚠️ A LEGACY DOCUMENT'S `strength` IS AN ARRAY, not the grid shape. Reading
+  // it as one would silently produce an empty map rather than a stated absence.
+  const strength = doc.strength && typeof doc.strength === 'object' && !Array.isArray(doc.strength)
+    ? doc.strength
+    : null;
+
+  /* ⚠️ `comparePreset('each')` — the unresolved form, which `compareKey()`
+   * answers against THEIR document's own `defaultCompare`. It is what their
+   * muscle map opens on (2026-09-09, Tim: *"their muscle map is being compared
+   * against people like YOU, not people like THEM"*), and these are the same
+   * numbers off the same grid, so they must be read under the same key. */
+  const compare = comparePreset('each');
+  const read = strength
+    ? ratingsFromShared(strength, compare)
+    : { muscles: new Map(), missing: false };
+  const rated = read.muscles;
+  const theirSex = strength ? ownSexOf(strength) : 'male';
+
+  const core = CORE_MUSCLES.map((muscle) => {
+    const key = keyLiftFor(muscle);
+    const liftName = key ? key.name : muscle;
+    const m = rated.get(muscle);
+    const blank = {
+      name: liftName, muscle, oneRM: null, shown: null, perSide: false,
+      level: null, percentile: null, band: null, days: 0, lastDate: null,
+      best: null, source: 'published', from: [], bodyIncluded: false,
+      sub: 'Not in what they publish',
+    };
+    if (!m || !(Number(m.estimate) > 0)) {
+      return { ...blank,
+        why: legacy ? 'legacy' : read.missing ? 'not-in-group' : 'not-rated' };
+    }
+    return {
+      ...blank,
+      oneRM: m.estimate, shown: m.estimate,
+      level: m.level || null,
+      percentile: m.percentile === undefined ? null : m.percentile,
+      band: m.band || null,
+      why: null,
+      sub: publishedSub(m),
+    };
+  }).sort(byPercentile);
+
+  /* ⚠️ THEIR SESSIONS ARE RESHAPED, NOT REINTERPRETED — the same boundary
+   * `friendEstimates()` draws further down this file. A projected entry names
+   * the exercise with `name`; every module downstream reads `exerciseName`,
+   * because that is what a stored session carries. */
+  const sessions = (doc.activity || []).map((a) => ({
+    date: a.date,
+    entries: (a.entries || []).map((e) => ({
+      exerciseId: e.exerciseId, exerciseName: e.name, sets: e.sets || [],
+    })),
+  }));
+  const benchmarks = (doc.benchmarks || []).map((b) => ({
+    date: b.date, exerciseId: b.exerciseId, exerciseName: b.name, values: b.values,
+  }));
+  const weights = Array.isArray(doc.bodyWeight) ? doc.bodyWeight : [];
+
+  const r = rankedLifts({
+    sessions, benchmarks, exMap, muscles: rated,
+    profile: {
+      gender: theirSex,
+      age: doc.profile ? doc.profile.age || null : null,
+      bodyWeight: weights.length ? weights[weights.length - 1].weight : null,
+    },
+    bodyWeights: weights,
+    today: todayISO(),
+  });
+
+  /* Their lifts, stripped of any ranking this device worked out. A row that
+   * came back CONVERTED is one `bestLifts()` could not price from their own
+   * sets — a body-weight lift with no published weigh-in — and its number would
+   * be their muscle rating multiplied back out here, so it says why instead. */
+  const other = r.other.map((l) => (l.source === 'recorded'
+    ? { ...l, level: null, percentile: null }
+    : {
+      ...l, oneRM: null, shown: null, level: null, percentile: null, band: null,
+      source: null, why: 'not-priced',
+    }))
+    // ⚠️ ORDERED BY DAYS TRAINED, because there is no rank to order by here and
+    // sorting by pounds sorts by which movements load heavy — a property of the
+    // barbell rather than of the lifter (Rule 6, and `profile-ranking.js`'s own
+    // argument for the list it replaced).
+    .sort((a, b) => (b.days - a.days) || a.name.localeCompare(b.name));
+
+  const anyCore = core.some((l) => l.oneRM !== null);
+  if (!anyCore && !other.length && !r.repsOnly.length) return null;
+
+  const label = comparisonLabel({ compare, gender: theirSex, whose: 'their' });
+  return bestLiftsBlock({
+    label: `${name}'s best lifts`,
+    core,
+    other,
+    repsOnly: r.repsOnly,
+    caption: anyCore
+      ? `Estimated one-rep maxes. The core eight are ${name}'s own app's ranking, `
+        + `coloured by level ${label.main} · ${label.sub}.`
+      : `Estimated one-rep maxes, worked out here from the sets ${name} publishes.`,
+    note: 'The other lifts are worked out on this device from the sets they publish, and are not '
+      + 'ranked: their app publishes a level per muscle rather than per lift, and one worked out '
+      + 'here would be read against a different body from the one theirs was.',
+  }, { noNumber: NO_NUMBER_THEIRS });
+}
+
+/* ------------------------------------------------------------------ *
+ * What you can do about the relationship — the bottom of their profile.
+ *
+ * ⚠️ BOTH HALVES HAVE TO EXIST: a public account you are only reading has
+ * nothing to disconnect FROM, and offering a red Disconnect button on it would
+ * be a control that either does nothing or does something nobody asked for.
+ *
+ * ⚠️ AND NEITHER EXISTS IN THE DEMO. Both act on a real account, and a control
+ * that cannot do what it says is worse than an absent one.
+ * ------------------------------------------------------------------ */
+function relationshipFooter({ uid, conn, isFriend, state, demo }) {
+  if (demo) return null;
+
   if (!isFriend) {
-    parts.push(el('div', { class: 'danger-zone' },
+    return el('div', { class: 'danger-zone' },
       el('a', { class: 'btn primary block', href: `#/add/${encodeURIComponent(uid)}`,
         text: 'Send a friend request' }),
       el('p', { class: 'note', text:
         'You are reading their public page. Becoming friends is what lets them see yours.' }),
-    ));
-    setChildren(body, ...parts);
-    return screen;
+    );
   }
 
-  parts.push(el('div', { class: 'danger-zone' },
+  return el('div', { class: 'danger-zone' },
     el('button', {
       class: 'btn danger block', text: 'Disconnect',
       onClick: () => confirmSheet({
@@ -915,29 +1434,7 @@ export async function FriendView(uid, tab) {
         },
       }),
     }),
-  ));
-
-  /* 🚨 THE PAGE BECOMES THE DATA SCREEN WHERE THERE IS DATA TO TAB THROUGH.
-   *
-   * Everything gathered into `parts` above — their face, their map, their body
-   * weight, their recent workouts and the disconnect footer — becomes the
-   * MUSCLES pane, which is what Tim asked for: *"keep the 'recent workouts'
-   * display below that user's body view as it is now."* The other four tabs are
-   * their volume, their graph, their bars and their calendar, drawn by the same
-   * code that draws yours.
-   *
-   * ⚠️ ONLY WHERE THEY HAVE PUBLISHED A MAP. With nothing to show, tabs would be
-   * five doors onto four empty rooms; the plain list says what is missing and is
-   * the better screen. */
-  const hasMap = seen.doc && seen.doc.strength
-    && seen.doc.strength.muscles && seen.doc.strength.muscles.length;
-
-  if (!hasMap) {
-    setChildren(body, ...parts);
-    return screen;
-  }
-
-  return dataScreenFor({ uid, name, doc: seen.doc, back, tab, parts });
+  );
 }
 
 /**
@@ -947,13 +1444,21 @@ export async function FriendView(uid, tab) {
  * was worked out on their device against their body weight and age, neither of
  * which is in a published document — so `GraphView` cannot recompute it and
  * this passes `friendBody()`, which reads the published grid instead.
+ *
+ * 🔄 IT TAKES `down` RATHER THAN `back` SINCE 2026-09-16 — see `FriendDataView`.
+ * And it names its five segments out loud rather than letting `GraphView` infer
+ * them from having been given rows: Research is excluded for a reason about
+ * CONTENT (it is the same eleven topics on everybody's screen) rather than a
+ * reason about subjects, and a reason belongs at the call site that has it.
  */
-async function dataScreenFor({ uid, name, doc, back, tab, parts }) {
+async function dataScreenFor({ uid, name, doc, back, down, tab, parts }) {
   const { GraphView } = await import('./views-data.js');
   return GraphView({
     subject: name,
     tab,
     back,
+    down,
+    segments: FRIEND_SEGMENTS,
     rows: {
       sessions: doc.activity || [],
       benchmarks: doc.benchmarks || [],
@@ -976,36 +1481,134 @@ async function dataScreenFor({ uid, name, doc, back, tab, parts }) {
  * a control that cannot do what it says is worse than an absent one. What is
  * kept is exactly what the demo exists to show: the map, the numbers, and the
  * screens they lead to.
+ *
+ * 🚨 THE DEMO RENDERS THE SAME PROFILE AS A REAL FRIEND — 2026-09-16, and this
+ * is the third time that rule has had to be applied to this one function. It
+ * was a near-duplicate of `FriendView`'s body; when the real page grew a Data
+ * tab bar on 2026-09-05, leaving this on rows would have meant the demo showing
+ * the old layout, and **the demo is where every screen in this app gets looked
+ * at, measured and audited** (§0.10). ⚠️ It is not a near-duplicate any more:
+ * `friendProfileScreen()` draws both, and `demo: true` is the only difference —
+ * so the layout physically cannot fall behind again.
  */
-async function friendScreen(uid, pre, back, tab) {
-  const body = el('div', { class: 'list' });
-  const screen = screenShell({
-    title: pre.name, sub: 'In the demo account', back, noNav: true, scroll: body,
+async function friendScreen(uid, pre, back) {
+  return friendProfileScreen({
+    uid, name: pre.name, seen: pre.seen, conn: null, isFriend: false,
+    state: pre.state, back, demo: true,
   });
-  const parts = [];
-  const strength = pre.doc.strength;
-  if (strength && strength.muscles && strength.muscles.length) {
-    parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
-    parts.push(await friendBody(strength, { name: pre.name, uid }));
-  }
-  parts.push(el('h2', { class: 'section-head', text: 'Recent workouts' }));
-  for (const a of pre.doc.activity || []) parts.push(activityRow(a, uid));
+}
 
-  /* 🚨 THE DEMO GETS THE SAME TABS AS A REAL FRIEND — 2026-09-05, and it had to.
-   *
-   * This function is a near-duplicate of FriendView's body, kept because the
-   * demo has no relationship to show. When the real page grew a Data tab bar,
-   * leaving this one on rows would have meant **the demo showed the old layout**
-   * — and the demo is where every screen in this app gets looked at, measured
-   * and audited (§0.10). A fixture that renders a screen the app no longer has
-   * is the `sets: []` fault in a different costume. */
-  if (strength && strength.muscles && strength.muscles.length) {
-    return dataScreenFor({
-      uid, name: pre.name, doc: pre.doc, back, tab, parts,
-    });
-  }
+/* ================================================================== *
+ * WHAT IS BEHIND THEIR TWO FIGURES — #/friend/<uid>/workouts and /friends
+ *
+ * 🚨 Tim, 2026-09-16: *"allow the user to click on the friend's 'workouts'
+ * button and 'friends' button to view that friend's friend's and that friend's
+ * workouts, and so on if they want."*
+ *
+ * ⚠️ "AND SO ON" IS THE WHOLE FEATURE and it costs nothing to allow: a row in
+ * their friends list opens `#/friend/<thatUid>`, which is this same page. What
+ * it does cost is a rule about the way OUT, and that rule is Tim's override of
+ * Rule 8 — see `friendBackFor()`.
+ *
+ * ⚠️ NEITHER LIST COSTS A NEW READ. Both are already in the document their
+ * profile read, and `social.friend()` serves it from the same 30-second cache.
+ * ================================================================== */
 
-  setChildren(body, ...parts);
+/** Their workouts — what they have PUBLISHED, said in those words. */
+export async function FriendWorkoutsView(uid) {
+  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
+  const body = el('div', { class: 'list' });
+  const screen = screenShell({ title: 'Workouts', back, noNav: true, scroll: body });
+
+  (async () => {
+    const pre = await friendDoc(uid);
+    if (pre.fail) { setChildren(body, pre.fail); return; }
+    const acts = (pre.doc && pre.doc.activity) || [];
+    if (!acts.length) {
+      setChildren(body, emptyState('Nothing published yet',
+        `${pre.name} has not published a workout you can read.`));
+      return;
+    }
+    /* ⚠️ THE COUNT SAYS "PUBLISHED", exactly as the tile that opened this screen
+     * says "shared" and their calendar says "days published". One figure, three
+     * places, and none of them may read as a career total — see the tile's own
+     * comment for the precedent. */
+    setChildren(body,
+      el('div', { class: 'field-help', text:
+        `${acts.length} workout${acts.length === 1 ? '' : 's'} ${pre.name} has published, newest `
+        + `first — their most recent ${MAX_ACTIVITY} sessions at most.` }),
+      // ⚠️ `activityRow` rather than a second row shape. It is what their page
+      // has always used for one of their workouts, it opens `#/friend/<uid>/<id>`,
+      // and it already answers a session with no entries and one published
+      // before ids existed. A near-copy here is the drift this whole job is about.
+      ...acts.map((a) => activityRow(a, uid)),
+    );
+  })().catch(() => {
+    setChildren(body, emptyState('Could not load their workouts',
+      'The connection dropped. It will be here when it is back.'));
+  });
+
+  return screen;
+}
+
+/** Their friends — from the `connections` field their app publishes. */
+export async function FriendPeopleView(uid) {
+  const back = () => { location.hash = `#/friend/${encodeURIComponent(uid)}`; };
+  const body = el('div', { class: 'list' });
+  const screen = screenShell({ title: 'Friends', back, noNav: true, scroll: body });
+
+  (async () => {
+    const pre = await friendDoc(uid);
+    if (pre.fail) { setChildren(body, pre.fail); return; }
+    const people = pre.doc && Array.isArray(pre.doc.connections) ? pre.doc.connections : null;
+
+    /* 🚨 NOT PUBLISHED IS NOT THE SAME AS NONE, and this is the screen where the
+     * difference is loudest. `connections` is absent on every document written
+     * before 2026-09-16, so "No friends yet" here would be this app stating
+     * something false about somebody's social life on the strength of a field
+     * that did not exist when their app last ran. */
+    if (people === null) {
+      setChildren(body, emptyState('Not published yet',
+        `${pre.name}'s app has not published their friends list. It will the next time they open `
+        + 'the app — until then this is a gap in what they share, not a statement about them.'));
+      return;
+    }
+    if (!people.length) {
+      setChildren(body, emptyState('No friends yet',
+        `${pre.name} is not connected to anybody.`));
+      return;
+    }
+
+    setChildren(body, ...people.map((p) => {
+      /* ⚠️ THE FACE ARRIVES AFTER THE ROW, the same shape as every other list of
+       * people in this app: their photo lives in the document THEY published, so
+       * it costs a read each, and this list can be dozens long.
+       *
+       * ⚠️ A FRIEND-OF-A-FRIEND MAY BE UNREADABLE FROM HERE and that is an
+       * ORDINARY outcome, not an error — they are private and not my friend, so
+       * the read is refused, the glyph stays, and nothing is said about it. The
+       * row still opens their page, which already answers "not connected and
+       * private" with a real sentence rather than a blank screen. */
+      const faceSlot = el('span', { class: 'row-face' }, personFace(null, 20));
+      social.friend(p.uid)
+        .then(({ doc }) => {
+          const avatar = doc && doc.profile ? doc.profile.avatar : null;
+          if (avatar && faceSlot.isConnected) setChildren(faceSlot, personFace(avatar, 20));
+        })
+        .catch(() => {});
+      return el('a', { class: 'row', href: `#/friend/${encodeURIComponent(p.uid)}` },
+        faceSlot,
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: p.name || 'Someone' }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      );
+    }));
+  })().catch(() => {
+    setChildren(body, emptyState('Could not load this list',
+      'The connection dropped. It will be here when it is back.'));
+  });
+
   return screen;
 }
 

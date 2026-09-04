@@ -508,5 +508,40 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      'the padlock has the 44px hit halo the icon buttons carry');
 }
 
+/* ============ a system's plan boxes — the CSS half (2026-09-16) ============
+ *
+ * The boxes are the one thing in this feature that jsdom cannot judge: it does
+ * no layout, so every structural assertion in render.test.mjs would pass just as
+ * happily on a grid that runs 1426px off the side of a phone. Measured in a real
+ * browser at 360px (7 boxes -> 3 rows of 107px, 14 -> 5 rows, worst overhang
+ * 0.00px, page scrollWidth 360 = clientWidth 360); these pin the declarations
+ * that made it true, because a browser run is not a test that fires on its own.
+ *
+ * ⚠️ AND NOT BY COMPARING scrollWidth TO clientWidth — §0.14's corollary. On the
+ * deliberately broken control grid the document's scrollWidth still read 360,
+ * because `.pane-scroll` clips; the fault was only visible in the boxes' own
+ * right edges. A test built the obvious way would have called that layout fine.
+ */
+{
+  ok(/\.plan-grid\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fill,\s*minmax\(92px,\s*1fr\)\)/.test(CSS),
+     '⚠️ the plan boxes WRAP onto a floor width rather than sitting in one fixed row — fourteen of them '
+     + 'is the case that breaks a 360px screen, and a fixed 14-column track is a page that scrolls sideways');
+  ok(!/\.plan-grid\s*\{[^}]*overflow-x/.test(CSS),
+     '🚨 and the grid is NOT a horizontal scroller — a week you cannot see all of is a filmstrip rather '
+     + 'than a plan, and taking in the shape of the programme at a glance is the whole point of boxes');
+  ok(/\.plan-grid\s*\{[^}]*min-width:\s*0/.test(CSS),
+     '⚠️ min-width: 0, which is the thing .research-scroll was missing — without it a long workout name '
+     + 'sets the floor of a flex item in .pane-scroll and pushes the grid past the viewport');
+  ok(!/\.plan-day\s*\{[^}]*border:/.test(CSS),
+     '⚠️ a day box is a FILL, never a border. Rule 2 forbids the bordered card used to group things '
+     + 'spacing could group; a day slot is not that — the box IS the day, and .cal-cell is the shape '
+     + 'this borrows, down to painting on --rule-soft');
+  ok(/\.plan-slot\s*\{[^}]*overflow-wrap:\s*anywhere/.test(CSS),
+     'a workout name too long for its box wraps inside it rather than widening it');
+  ok(/\.plan-row \.input\s*\{[^}]*flex:\s*1 1 0;\s*min-width:\s*0/.test(CSS),
+     '⚠️ and on the form, each day\'s select is allowed to SHRINK rather than sized to its longest '
+     + 'workout name — `flex: none` there is how a row gets pushed off the side of a 360px screen');
+}
+
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');
 process.exit(fails ? 1 : 0);

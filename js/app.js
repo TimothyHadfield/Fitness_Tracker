@@ -4,7 +4,7 @@ import { store, demo, warmReadCache, social, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
-  markRoute, parkScreen, releaseGhost, takeRiseRequest,
+  markRoute, markFriendTrail, parkScreen, releaseGhost, takeRiseRequest,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -17,8 +17,8 @@ import { ImportView } from './views-import.js';
 import { ProfileView } from './views-profile.js';
 import { EditSessionView } from './views-edit-session.js';
 import {
-  SocialView, FriendView, FriendSessionView, InviteView, FindView, AddView,
-  CompareBodiesView,
+  SocialView, FriendView, FriendDataView, FriendPeopleView, FriendWorkoutsView,
+  FriendSessionView, InviteView, FindView, AddView, CompareBodiesView,
 } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { MeRouteView } from './views-me.js';
@@ -160,6 +160,16 @@ const NAV = [
  * panel rather than vanishing a frame before it arrives. */
 const FULLSCREEN = ['record', 'session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import', 'compare', 'notes'];
 
+/* The second segments of `#/friend/<uid>/…` that open their DATA panel, and
+ * which tab each opens it on. `data` is the button's own address and opens the
+ * panel on whichever tab is the default; the other four are addresses that were
+ * live before the panel existed, or that read exactly like ones that were.
+ * ⚠️ `null` IS A MEANINGFUL VALUE HERE — "the panel, no particular tab" — which
+ * is why the lookup below tests for `undefined` rather than for truthiness. */
+const FRIEND_DATA_TABS = {
+  data: null, volume: 'volume', graph: 'trend', muscles: 'muscles', bars: 'compare',
+};
+
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
   const [name, ...rest] = clean.split('/');
@@ -253,12 +263,30 @@ async function resolve(route) {
        * routes were live and this project has not broken a deep link yet
        * (`#/calendar` kept its own through two redesigns). ⚠️ `graph` maps to
        * the tab key `trend`, which is what the Data screen has always called
-       * that mode internally. */
-      if (sid === 'volume') return FriendView(decodeURIComponent(fuid), 'volume');
-      if (sid === 'graph') return FriendView(decodeURIComponent(fuid), 'trend');
+       * that mode internally.
+       *
+       * 🔄 AND THEY OPEN THE **PANEL** SINCE 2026-09-16, not the page. Tim's
+       * `#/friend/<uid>` is a profile now and the tabs live behind its "View
+       * data" button, so every one of these addresses lands on the same five
+       * segments it always did — one screen further in than it used to be, and
+       * with a down arrow back to the profile rather than a back arrow off the
+       * site. `muscles` and `bars` join the reserved list: they are the two
+       * remaining tab keys, they read exactly like the two that were already
+       * reserved, and leaving them unreserved meant a link somebody could
+       * reasonably type resolved to "that workout is not here".
+       *
+       * ⚠️ RESERVED SECOND SEGMENTS ARE CHECKED BEFORE THE SESSION BRANCH,
+       * because a session id is opaque. Ids are generated, so a workout called
+       * `friends` is not possible — but reading the check in the other order
+       * would make that a question somebody has to answer. */
+      const uid = decodeURIComponent(fuid || '');
+      if (sid === 'friends') return FriendPeopleView(uid);
+      if (sid === 'workouts') return FriendWorkoutsView(uid);
+      const tab = FRIEND_DATA_TABS[sid];
+      if (tab !== undefined) return FriendDataView(uid, tab);
       return sid
-        ? FriendSessionView(decodeURIComponent(fuid), decodeURIComponent(sid))
-        : FriendView(route.param);
+        ? FriendSessionView(uid, decodeURIComponent(sid))
+        : FriendView(uid);
     }
     /* Two bodies, side by side — #/compare/<uid> against yourself, or
      * #/compare/<uid>/<uid> for two other people. Tim, 2026-09-03. */
@@ -321,6 +349,23 @@ async function render() {
   // than to a hard-coded parent. See markRoute() in ui.js.
   markRoute();
 
+  /* 🆕 AND HOW DEEP INTO SOMEBODY ELSE'S FRIENDS THIS IS — 2026-09-16, for
+   * Tim's override of Rule 8: a friend reached from inside ANOTHER friend goes
+   * back to `#/me` rather than to the intermediate person. See
+   * `markFriendTrail()` in ui.js for why it is stamped on the history entry
+   * rather than counted, and `friendBackFor()` in views-social.js for the arrow.
+   *
+   * ⚠️ CALLED ON EVERY ROUTE, with `null` for the ones that are not a friend —
+   * that null is what RESETS the trail, so walking out to Home and back in
+   * through my own friends list starts again at depth 1.
+   *
+   * ⚠️ ALL of `#/friend/<uid>/…` counts as the SAME person: their workouts,
+   * their friends list, their data panel and one of their sessions are all
+   * still them, so the depth is carried across them rather than incremented. */
+  markFriendTrail(route.name === 'friend'
+    ? decodeURIComponent((route.param || '').split('/')[0] || '')
+    : null);
+
   /* 🚨 RECORD RISES OVER WHAT YOU WERE LOOKING AT — 2026-09-09, Tim: *"I want the
    * screen to pull up the record section from the bottom (which covers over the
    * main section display)."*
@@ -358,9 +403,20 @@ async function render() {
    * so a re-render can never replay it. */
   const leaving = document.querySelector('#app > .screen');
   const asked = takeRiseRequest();
+  /* 🆕 AND A FRIEND'S DATA PANEL IS THE THIRD THING THAT RISES — 2026-09-16,
+   * Tim: *"a 'view data' button … that pulls up a screen (similar to how the
+   * 'record' screen is pulled up)."*
+   *
+   * ⚠️ IT IS `asked`, LIKE THE RUNNER, AND NOT ROUTE-BASED LIKE RECORD, for the
+   * identical reason: `#/friend/<uid>/data` is reached three ways — the button
+   * on their profile, an old `/volume` or `/graph` link, and a reload — and only
+   * the first is a panel coming up over what somebody was reading. Record can be
+   * inferred because arriving at `#/record` from anywhere else is unambiguous;
+   * this cannot, so the DOOR asks (`requestRise()` in views-social.js) and the
+   * other two behave exactly as any other screen does. */
   const rising = Boolean(leaving)
     && ((route.name === 'record' && parse(prevHash).name !== 'record')
-        || (asked && route.name === 'session'));
+        || (asked && (route.name === 'session' || route.name === 'friend')));
   prevHash = location.hash;
   // 🔄 Held, since 2026-09-12: the ghost is released when the rise ENDS rather
   // than on a clock that started before the store was read — see parkScreen().

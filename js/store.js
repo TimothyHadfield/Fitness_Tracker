@@ -22,6 +22,7 @@ import {
 } from './e1rm.js';
 import { setE1rm, shownMax } from './set-e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
+import { normalizeSchedule, pruneSchedule } from './schedule.js';
 import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 
@@ -841,12 +842,32 @@ const DEFAULT_SYSTEM_NAME = 'My Workouts';
 // In-flight migration, shared by concurrent callers. See ensureSystems().
 let systemsMigration = null;
 
+/**
+ * ⚠️ THIS ONE SPREADS, AND normalizeWorkout() BELOW DOES NOT — the difference is
+ * worth knowing before adding a field to either. A workout's EXERCISES are
+ * rebuilt name by name, so a field not listed there is lost on every read; a
+ * system's own row is spread whole, so `presetId`, `daysPerWeek` and the rest
+ * ride along without being named. Checked before the schedule was added, because
+ * a saved plan silently vanishing on read is exactly the failure the warning on
+ * normalizeWorkout() describes.
+ *
+ * `schedule` is nonetheless named here, for the opposite reason: not to KEEP it,
+ * but to be able to throw it away. The spread would happily carry a half-written
+ * plan, a plan of some third kind, or eleven slots on a seven-day week straight
+ * into the view. Destructuring it out and putting back only what
+ * normalizeSchedule() accepts means a malformed plan reaches nothing — and
+ * `absent` is the shape for "no plan", so a system without one is spread exactly
+ * as it was and no screen changes (2026-09-16).
+ */
 export function normalizeSystem(sys) {
   if (!sys) return sys;
+  const { schedule, ...rest } = sys;
+  const plan = normalizeSchedule(schedule);
   return {
-    ...sys,
+    ...rest,
     name: (sys.name || '').trim() || 'Untitled system',
     notes: sys.notes || '',
+    ...(plan ? { schedule: plan } : {}),
   };
 }
 
@@ -1129,9 +1150,47 @@ export const store = {
     return row;
   },
 
+  /**
+   * ⚠️ AND IT EMPTIES ANY PLAN SLOT THAT NAMED IT — 2026-09-16.
+   *
+   * A system's schedule holds workout IDs, and this is the one call that can
+   * make one of them dangle. It is the same lesson dropOrphanGroups() paid for
+   * in js/set-types.js: a foreign key into a set of rows is only valid while the
+   * rest of that set still exists, and nothing else in this store was going to
+   * notice. Repaired at the point of damage rather than patched over on read,
+   * because a plan that still names a deleted workout is wrong on disk, not just
+   * wrong on screen — a backup taken afterwards would carry the dangling id.
+   *
+   * ⚠️ EMPTIED, NOT RESTED. See the note on REST in js/schedule.js: the user
+   * planned something there and it is gone, which is not them choosing a rest
+   * day. The boxes draw it as unset and they can say what they meant.
+   *
+   * ⚠️ Reads fresh, per §0.12 — this is a mutation doing read-modify-write on
+   * two collections, and a cached copy of `systems` would put back whatever was
+   * saved elsewhere since. Systems are only written when a slot actually
+   * changed, so the ordinary delete still costs one write.
+   *
+   * 🛑 deleteSystem() needs none of this: it takes the schedule down with the
+   * row that holds it, and D22 means no OTHER system's plan could name a workout
+   * that lived in this one.
+   */
   async deleteWorkout(id) {
-    const rows = await backend.read('workouts');
-    await backend.write('workouts', rows.filter((r) => r.id !== id));
+    const [rows, systems] = await Promise.all([
+      backend.read('workouts'), backend.read('systems'),
+    ]);
+    const left = rows.filter((r) => r.id !== id);
+    await backend.write('workouts', left);
+
+    const live = new Set(left.map((r) => r.id));
+    let touched = false;
+    const repaired = systems.map((s) => {
+      if (!s || !s.schedule) return s;
+      const { schedule, dropped } = pruneSchedule(s.schedule, live);
+      if (!dropped) return s;
+      touched = true;
+      return { ...s, schedule, updatedAt: new Date().toISOString() };
+    });
+    if (touched) await backend.write('systems', repaired);
   },
 
   /* --- completed sessions --- */
@@ -2099,7 +2158,32 @@ async function republish() {
     console.warn('Muscle map not included in this publish.', err);
   }
 
+  /* ⚠️ THE SAME SHAPE AS buildStrengthShare() ABOVE, AND FOR THE SAME REASON
+   * (2026-09-16). getProfile() reads the settings row and the weigh-in
+   * collection; either can fail, and a profile that cannot be read must not stop
+   * the sessions, the benchmarks and the map from publishing. `{}` then makes
+   * gender and age ABSENT from this publish rather than wrong — social.js
+   * treats missing exactly as "not told", which is what it is.
+   *
+   * 🚨 ONLY TWO FIELDS ARE FORWARDED. getProfile() also returns `bodyWeight` and
+   * `bodyWeightDate` — the most personal number the app stores, sitting in the
+   * same object as the two Tim asked to publish — so they are named one at a
+   * time here rather than spread. Body weight reaches the projection by ONE
+   * route only, `bodyWeights` below, which is gated on the opt-in and on the
+   * audience; assertAudienceClean() refuses a `profile` carrying anything else. */
+  let mine = {};
+  try {
+    mine = await store.getProfile();
+  } catch (err) {
+    console.warn('Profile not included in this publish.', err);
+  }
+
   const viewers = S.allViewers(graph);
+  // ⚠️ THE SAME PEOPLE AS `viewers`, IN THE OTHER SHAPE — uids for the rule to
+  // check, uid-and-name rows for a screen to render. Derived beside it and from
+  // the same graph so the two lists cannot drift into disagreeing about who a
+  // friend is; buildProjection re-whitelists the rows to {uid, name} on top.
+  const connections = S.normalizeGraph(graph).connections;
   const wantPublic = S.isPublicAccount(settings.visibility);
   const publishedAt = new Date().toISOString();
 
@@ -2111,7 +2195,23 @@ async function republish() {
     // testing it here, so there is exactly one rule about what a published
     // face may be (2026-08-31, Tim's report that friends only ever saw the
     // blank humanoid).
-    profile: { name: settings.displayName || '', avatar: settings.avatar },
+    profile: {
+      name: settings.displayName || '',
+      avatar: settings.avatar,
+      // ⚠️ THE AGE, NOT THE BIRTH YEAR. getProfile() derives it from
+      // `birthYear` on every read because a stored age goes stale in silence
+      // (see ageFromBirthYear() above), and a birth year is the more
+      // identifying of the two to hand to a stranger. What is published here
+      // is therefore a snapshot that drifts by up to a year between
+      // republishes; social.js safeAge() carries the full trade-off.
+      gender: mine.gender,
+      age: mine.age,
+    },
+    // The friends list, so a friend's page can open a friend's friends. 🚨 It
+    // goes into BOTH documents, which means a public account's connections are
+    // readable by anybody signed in — the decision, and the one-line way to
+    // narrow it again, are written out in js/social.js above buildProjection.
+    connections,
     sessions, benchmarks, strength, bodyWeights,
     shareBodyWeight: Boolean(settings.shareBodyWeight),
     publishedAt,
@@ -3077,6 +3177,9 @@ export const social = {
 
       let newest = null;
       const present = new Set();
+      // 2026-09-16 — see the block below the loop. Set when a document that IS
+      // published was written before `connections` existed.
+      let preConnections = false;
       // ⚠️ The legacy tier documents are read too, and on purpose: an account
       // that has not published since the model changed has its newest timestamp
       // in one of them, and skipping them would make every such account look
@@ -3085,6 +3188,11 @@ export const social = {
         const d = await impl.readShared(impl.currentUid(), audience).catch(() => null);
         if (!d) continue;
         present.add(audience);
+        // Only the two live audiences are asked the shape question. A legacy
+        // tier document has never had `connections` and never will — it is
+        // deleted on the next publish, and `sharedTiersCleared` below is what
+        // makes that publish happen.
+        if (S.AUDIENCES.includes(audience) && !Array.isArray(d.connections)) preConnections = true;
         if (typeof d.publishedAt === 'string'
             && (!newest || Date.parse(d.publishedAt) > Date.parse(newest))) {
           newest = d.publishedAt;
@@ -3112,6 +3220,33 @@ export const social = {
       const hasPublic = present.has(S.PUBLIC);
       const wantFriends = graph.connections.length > 0;
       if (wantPublic !== hasPublic || (wantFriends && !present.has(S.FRIENDS))) {
+        await republish();
+        return true;
+      }
+      /* 🚨 AND SO IS A DOCUMENT WRITTEN BEFORE A FIELD EXISTED — 2026-09-16, the
+       * publish that carries `profile.gender`, `profile.age` and `connections`.
+       *
+       * ⚠️ EVERY ACCOUNT HAS A PUBLISHED DOCUMENT WITHOUT THEM, and nothing
+       * else here would ever notice: the timestamp comparison below asks whether
+       * training is newer than the last publish, and for somebody who has not
+       * trained since, the answer is no, forever. Their friends would see a
+       * profile page with no age, no sex and — worse — an EMPTY friends list
+       * that is indistinguishable from having no friends. That is the exact
+       * shape of the 2026-08-28 incident: nothing lost, nothing re-shared.
+       *
+       * ⚠️ IT IS A COMPARISON, NOT A ONE-OFF FLAG, for the reason spelled out
+       * in the block above: a flag fires once and is spent, where this asks
+       * "does what is published have the shape this build writes?" on every
+       * boot, so it also repairs a publish that half-failed and an account that
+       * has been rolled back and forward. `connections` is the marker because it
+       * is ALWAYS written — `[]` for somebody with no friends — where gender and
+       * age are legitimately absent on an account that never filled the profile
+       * in, and a marker that is allowed to be missing cannot mark anything.
+       *
+       * It costs no reads: the documents were already fetched for the timestamp
+       * above. Once every account has republished, this is permanently false and
+       * can be deleted along with the reader's handling of a missing list. */
+      if (preConnections) {
         await republish();
         return true;
       }

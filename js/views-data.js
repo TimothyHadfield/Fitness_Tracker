@@ -112,6 +112,41 @@ function monthRange(activity) {
   return out;
 }
 
+// The 'YYYY-MM' key a month object answers to. One place, because three things
+// read this map and a key built twice is a key built two ways eventually.
+const monthKey = ({ year, month }) => `${year}-${String(month + 1).padStart(2, '0')}`;
+
+/**
+ * 🆕 HOW MANY DAYS OF EACH MONTH CARRY ANYTHING — 2026-09-16, and it feeds both
+ * halves of Tim's ask: *"if a month has no recordings in it, just say the month
+ * and say no recordings"* and *"show a bar chart … the number of days workouts
+ * recorded in that month"*.
+ *
+ * 🚨 THE PREDICATE IS THE GRID'S OWN, DELIBERATELY. A cell fills when the day
+ * holds a session or a benchmark (`monthBlock`), and `yearsPane`'s `active()`
+ * lights a square on exactly the same test — activities are logged as sessions,
+ * so they are already inside the first half of it. If "no recordings" meant
+ * anything narrower, a month would collapse to one line while the Years grid
+ * beside it showed lit squares for the same days, and only one of the two could
+ * be right. Nothing here decides afresh what counts as a trained day; it counts
+ * what the calendar already draws.
+ *
+ * ⚠️ ONE ENTRY PER DAY, so counting entries counts DAYS and not sessions — the
+ * same rule `daysLabel` states over the year grid, for the same reason: two
+ * workouts on a Tuesday are one square there and must be one unit of bar here,
+ * or the chart's y-axis stops describing the picture beside it. `activityByDate`
+ * keys its map by date, which is what makes that true by construction.
+ */
+function activeDaysByMonth(activity) {
+  const out = new Map();
+  for (const [isoDate, rec] of activity) {
+    if (!rec || !(rec.sessions.length || rec.benchmarks.length)) continue;
+    const key = String(isoDate).slice(0, 7);
+    out.set(key, (out.get(key) || 0) + 1);
+  }
+  return out;
+}
+
 /**
  * @param {Function|false} [onDay]  ⚠️ WHERE A DAY GOES, and it is a parameter
  *   since 2026-09-05 because `#/day/<iso>` is MY day. On a friend's calendar
@@ -143,10 +178,54 @@ function monthRange(activity) {
  * to the same word the publisher does. */
 const sessionName = (s) => (s && (s.workoutName || s.name)) || 'Workout';
 
-function monthBlock(year, month, activity, today, onDay = null) {
+/**
+ * @param {number} [activeDays]  how many days of this month hold anything, from
+ *   `activeDaysByMonth`. Zero collapses the month to one line — see below.
+ */
+function monthBlock(year, month, activity, today, onDay = null, activeDays = null) {
   const first = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
   const isCurrent = today.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`);
+
+  /* 🆕 A MONTH WITH NOTHING IN IT IS ONE LINE — 2026-09-16. Tim: *"when you go
+   * in the months display, if a month has no recordings in it, just say the
+   * month and say no recordings, don't show an entire month of empty boxes."*
+   *
+   * 🚨 THIS IS THE 2026-09-12 COMPLAINT FROM THE OTHER SIDE, and reading it that
+   * way is what makes the two fixes agree instead of fight. Then: *"it
+   * automatically shows almost a full year before the user's first recording, so
+   * they have to scroll down in order to see anything."* That was answered by
+   * moving the ARRIVAL — Years became the default on every door and a tap on
+   * Months lands on the current month — which is why the empty grids stopped
+   * being the first thing anybody met. It never made them cost less to scroll
+   * past, and thirty-one blank 66px boxes is about 350px of nothing per month.
+   * Landing fixed where you start; this fixes what is between you and the rest.
+   *
+   * ⚠️ WHAT IT KEEPS IS AS LOAD-BEARING AS WHAT IT DROPS. The section is still a
+   * `.cal-month`, still carries `data-current-month` when it is this month, and
+   * is still the last block when it is: `landOnCurrentMonth` finds its target by
+   * that attribute and pads `lastElementChild`, so a collapsed current month —
+   * an ordinary state on the 1st of a month — must stay findable and paddable or
+   * a tap on Months would stop landing on exactly the day it matters most.
+   *
+   * 🛑 AND THE MONTH IS NOT SKIPPED. A month that is not drawn at all reads as a
+   * month that does not exist; a named month saying "No recordings" is a
+   * measurement. That is the same distinction the bar chart's zero columns make
+   * (see `monthsChart`) — one is a list item, the other is a reading. */
+  if (activeDays === 0) {
+    return el('section', {
+      class: 'cal-month is-empty' + (isCurrent ? ' is-current' : ''),
+      dataset: isCurrent ? { currentMonth: 'true' } : {},
+    },
+      el('div', { class: 'cal-month-head' },
+        el('h2', { class: 'cal-title', text: `${MONTHS[month]} ${year}` }),
+        // Plain text rather than an `emptyState`: that block is a headline, a
+        // paragraph and usually a button, and thirteen of them stacked down a
+        // scroller would cost more height than the grids they replaced.
+        el('span', { class: 'cal-none', text: 'No recordings' }),
+      ),
+    );
+  }
 
   const cells = [
     ...Array.from({ length: first }, () => el('div', { class: 'cal-cell blank' })),
@@ -205,6 +284,186 @@ function monthBlock(year, month, activity, today, onDay = null) {
         ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => el('div', { class: 'cal-dow', text: d }))),
     ),
     el('div', { class: 'cal-grid' }, cells),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * The month bar chart — 2026-09-16
+ *
+ * Tim: *"if the user has more than 5 months of recordings in it, show a bar
+ * chart that has the months as the x axis and the number of days workouts
+ * recorded in that month as the y axis."*
+ *
+ * 🚨 MONTHS ONLY, AND THAT IS A DECISION RATHER THAN A PLACE IT HAPPENED TO
+ * LAND. Years already shows the whole history at a glance — one square a day,
+ * every year on one screen — so a second summary over it would be two pictures
+ * of the same claim, and the reader would have to work out which one to believe.
+ * The Months view is the one that cannot see a shape: it is a list you scroll,
+ * and after this change a run of quiet months is a run of one-line rows. The
+ * chart is what gives that list a shape again.
+ *
+ * 🚨 ON A FRIEND'S CALENDAR THE Y-AXIS SAYS **PUBLISHED**, NOT TRAINED, and this
+ * is the third place in this file that rule is applied rather than the first —
+ * `publishedDaysLabel` over their year grid and "N days published" beside each
+ * year are the same sentence. Their document holds their most recent sixty
+ * sessions, so a bar of 12 is twelve days they SHARED and is bounded by sixty
+ * however much they trained: a count of publishing printed under the name of
+ * training (docs/state.md's Calendar row, direction.md §3.1). ⚠️ It is renamed
+ * rather than withheld, for the reason `year-grid.js` gives at length — the
+ * picture is one `role="img"` with one label, so blanking the figure leaves a
+ * screen-reader user nothing at all.
+ *
+ * 🛑 NO VERDICT AND NO TREND LINE (Rule 6). There is no line of best fit, no
+ * "your best month", no arrow and no colour that means good: a bar is taller or
+ * it is shorter, and what that is worth is not something this app knows. The one
+ * superlative on screen is the y-axis maximum, which is a scale and not a
+ * compliment.
+ *
+ * ⚠️ AN INTERIOR EMPTY MONTH GETS A ZERO COLUMN, WHICH IS THE EXACT OPPOSITE OF
+ * WHAT THE LIST DOES ABOVE, AND BOTH ARE RIGHT. A collapsed row is a list item —
+ * it says "nothing here" and costs a line. A column is a MEASUREMENT: the x-axis
+ * is time, evenly spaced, so dropping February would put January next to March
+ * and draw a continuous eight months over a history that stopped for one. A gap
+ * has to read as a gap, and on this picture that means an empty column standing
+ * in its own place with its own label.
+ *
+ * ⚠️ THE ZERO COLUMN DRAWS NO STUB, and that was measured rather than felt. A
+ * 2px mark at the baseline would have to be a colour: `--rule` sits at 1.29:1 on
+ * `--ground` and cannot be seen at all, and anything visible enough to see reads
+ * as a small quantity rather than as none. So a zero month is an empty column
+ * over the baseline hairline that runs the full width of the plot, with its
+ * month label under it like every other — present, placed, and unmistakably
+ * nothing. The exact figure is in the picture's reading either way.
+ *
+ * ⚠️ LEADING EMPTY MONTHS ARE TRIMMED; TRAILING ONES ARE NOT. `monthRange`
+ * always reaches back at least twelve months, so somebody who started in June
+ * would otherwise open on nine zero columns before their first recording —
+ * which is precisely the "a year of nothing before you get to anything" Tim
+ * reported on 2026-09-12, redrawn as a chart. Months before the first thing
+ * recorded are not a gap in training; there was no history yet. The CURRENT
+ * month stays even at zero, because "this month so far" is a reading somebody
+ * came for and its absence would be read as the chart being out of date.
+ *
+ * ⚠️ 36 BARS AT 360px: THE PLOT SCROLLS SIDEWAYS INSIDE ITS OWN BOX AND OPENS AT
+ * THE RIGHT-HAND END. Rule 1 forbids the window scrolling, not a wide picture
+ * scrolling inside its container, and the alternative — squeezing 36 months into
+ * ~300px — gives an 8px column and no room for a month label, which is a chart
+ * that has stopped being readable in order to avoid a gesture. The slot is fixed
+ * at 22px + 3px so **twelve months fit without scrolling at 360px** and anything
+ * longer scrolls; it opens scrolled to the most recent month for the same reason
+ * the list below it lands on the current one. The y-axis sits OUTSIDE the
+ * scroller so the scale cannot be scrolled away from the bars it measures.
+ *
+ * ⚠️ COLOUR IS `--accent`, THE COLOUR A TRAINED DAY IS ALREADY PAINTED IN
+ * (`.yr-cell.on`, `.cal-tag.w`), so the chart is not introducing a fifth meaning
+ * for a fourth colour. Validated with the `dataviz` skill's validator rather
+ * than by eye, per handbook §Colour: one series, so the categorical CVD checks
+ * are n/a; chroma floor passes; contrast against `--ground` is **7.74:1 dark**
+ * and **4.52:1 light**, against the 3:1 WCAG 1.4.11 needs for a non-text mark.
+ * ⚠️ The validator's *lightness band* check FAILS on the dark accent (L 0.731
+ * against a 0.43–0.77 band) — and it fails identically on the teal and indigo
+ * palettes' accents, because that check is about keeping several categorical
+ * slots discriminable from each other and there is only one slot here. It is
+ * recorded rather than silently passed over.
+ *
+ * ⚠️ NO NUMBER ON EVERY BAR. The skill's own anti-pattern list names it, and at
+ * 36 columns it is thirty-six 9px numerals over 14px bars. The y-axis carries
+ * the scale, and every exact figure is in the `aria-label` — which is also why
+ * the label enumerates rather than summarising: on a chart the values ARE the
+ * content, and a summary would be the one reading that cannot be checked.
+ * ------------------------------------------------------------------ */
+
+// "more than five months of recordings", Tim's own threshold. Months WITH
+// something in them, not months drawn: six months of training spread over three
+// years is six, and the chart it earns is 36 columns of which 30 are zero.
+const CHART_MIN_MONTHS = 5;
+
+/**
+ * @param {Array}  months   the same `monthRange` the list below is built from.
+ * @param {Map}    counts   'YYYY-MM' → active days, from `activeDaysByMonth`.
+ * @param {boolean} friend  somebody else's calendar: the y-axis counts what
+ *   they PUBLISHED. See the block above.
+ * @returns {Node|null}  null when there is nothing to draw or too little to be
+ *   worth drawing — the caller renders no chart at all rather than an empty one.
+ */
+function monthsChart(months, counts, friend) {
+  const at = (m) => counts.get(monthKey(m)) || 0;
+
+  const first = months.findIndex((m) => at(m) > 0);
+  if (first < 0) return null;
+  const span = months.slice(first);
+  if (span.filter((m) => at(m) > 0).length <= CHART_MIN_MONTHS) return null;
+
+  const max = Math.max(...span.map(at));
+  const title = friend ? 'Days published each month' : 'Days trained each month';
+
+  /* The picture's whole reading, month by month. The year is repeated only when
+   * it changes, which is how the visible axis is labelled too — a screen reader
+   * and a pair of eyes get the same chart or one of them is being told a
+   * different story. */
+  const reading = [];
+  let saidYear = null;
+  for (const m of span) {
+    const name = MONTHS[m.month].slice(0, 3);
+    reading.push(`${m.year === saidYear ? name : `${name} ${m.year}`}: ${at(m)}`);
+    saidYear = m.year;
+  }
+  const a = span[0];
+  const z = span[span.length - 1];
+  const aria = `${title}, ${MONTHS[a.month]} ${a.year} to ${MONTHS[z.month]} ${z.year}. `
+    + `${reading.join('; ')}.`;
+
+  const bars = el('div', { class: 'mchart-bars' }, span.map((m) => {
+    const v = at(m);
+    return el('div', { class: 'mchart-slot' },
+      el('div', {
+        class: 'mchart-bar' + (v ? '' : ' is-zero'),
+        // ⚠️ The height is inline because it is DATA, not style — the same
+        // reason `yr-grid` writes its column count inline. A zero column is
+        // given no height at all rather than `height:0%`, so the stylesheet
+        // owns what "nothing" looks like in one place.
+        ...(v ? { style: `height:${((v / max) * 100).toFixed(2)}%` } : {}),
+      }));
+  }));
+
+  let shownYear = null;
+  const labels = el('div', { class: 'mchart-labels' }, span.map((m) => {
+    const newYear = m.year !== shownYear;
+    shownYear = m.year;
+    return el('div', { class: 'mchart-slot' },
+      el('span', { class: 'mchart-x', text: MONTHS[m.month].slice(0, 3) }),
+      // ⚠️ ALWAYS RENDERED, EVEN EMPTY. The two rows keep their columns in line
+      // by having identical slots; a year label that exists on some slots and
+      // not others would make those slots taller and tilt the month names
+      // against the bars they belong to.
+      el('span', { class: 'mchart-yr', text: newYear ? String(m.year) : '' }),
+    );
+  }));
+
+  const scroller = el('div', { class: 'mchart-scroll' },
+    /* 🚨 ONE `role="img"` WITH ONE LABEL, which is the shape `js/year-grid.js`
+     * settled on and for its reason: the alternative is a focus stop per column
+     * that announces a number with no scale beside it. The bars are not
+     * separately focusable and carry no names of their own. */
+    el('div', { class: 'mchart-plot', role: 'img', 'aria-label': aria }, bars, labels));
+
+  // ⚠️ Deferred, because the node is not in the document yet and `scrollWidth`
+  // of a detached element is 0. jsdom lays nothing out, so this is a no-op
+  // there and the arrival is the browser's to show — the same split
+  // `landOnCurrentMonth` documents at length.
+  setTimeout(() => { scroller.scrollLeft = scroller.scrollWidth; }, 0);
+
+  return el('section', { class: 'mchart' },
+    el('div', { class: 'section-label', text: title }),
+    el('div', { class: 'mchart-body' },
+      // Two ticks, not a ladder: the top of the scale and the floor. A month
+      // count runs 0–31 and the bars are read against each other, so extra
+      // gridlines would be chrome bought with height this screen does not have.
+      el('div', { class: 'mchart-y' },
+        el('span', { class: 'mchart-tick mono', text: String(max) }),
+        el('span', { class: 'mchart-tick mono', text: '0' })),
+      scroller,
+    ),
   );
 }
 
@@ -392,6 +651,10 @@ export function ownCalendar(activity, today, opts = {}) {
   const who = opts.who || 'They';
   const land = opts.land !== false;
   const months = monthRange(activity);
+  // 🆕 2026-09-16. Counted once for the whole calendar rather than per paint:
+  // the answer cannot change while this object is alive, and both the collapsed
+  // rows and the chart above them have to be counting the same thing.
+  const monthCounts = activeDaysByMonth(activity);
 
   const readMode = () => (friend ? friendCalMode : calMode);
   const writeMode = (m) => { if (friend) friendCalMode = m; else calMode = m; };
@@ -550,8 +813,23 @@ export function ownCalendar(activity, today, opts = {}) {
       const pane = land ? host.closest('.pane-scroll') : null;
       if (pane) pane.scrollTop = 0;
     } else {
-      setChildren(host, ...months.map(({ year, month }) =>
-        monthBlock(year, month, activity, today, friend ? false : null)));
+      /* 🆕 THE CHART GOES ABOVE THE MONTHS AND INSIDE THE HOST — 2026-09-16.
+       * Inside, so switching to Years takes it away with them: it is a reading
+       * of the Months view, not a second header. Above, because it is the
+       * summary the list underneath cannot show.
+       *
+       * ⚠️ IT DOES NOT DISTURB THE LANDING. `landOnCurrentMonth` finds its
+       * target by `[data-current-month]` and pads `lastElementChild`, and the
+       * chart is neither — it is the FIRST child and carries no month
+       * attribute. Adding height above the current month is exactly what the
+       * scroller was written to absorb (it measures against the pane's own
+       * rect rather than through `offsetTop`), and the padding still lands on
+       * the last month rather than on the chart. */
+      setChildren(host,
+        monthsChart(months, monthCounts, friend),
+        ...months.map(({ year, month }) => monthBlock(
+          year, month, activity, today, friend ? false : null,
+          monthCounts.get(monthKey({ year, month })) || 0)));
       // ⚠️ `arriving` is what keeps Profile's first paint still when the
       // reader's memory hands it Months (`calMode` is shared with the Calendar
       // screen): the page they just opened does not move under them. A tap
@@ -753,6 +1031,26 @@ const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Grap
  * from mine — both selecting the same mode, which is the "two ways in light two
  * things at once" fault from the other direction. Five stays five. */
 const FRIEND_TABS = [...DATA_TABS.slice(0, 4), ['calendar', 'Calendar']];
+
+/* 🆕 EVERY SEGMENT THIS SCREEN CAN DRAW, BY KEY — 2026-09-16, so a caller can
+ * ASK for a set of tabs instead of being inferred into one.
+ *
+ * 🚨 WHY A CALLER SHOULD BE ABLE TO. Research is left off a friend's page for a
+ * reason about CONTENT — Tim: *"exclude research because it doesn't share
+ * anything new"*, it being eleven topics about training in general, identical on
+ * everybody's screen — and until today that reason was expressed as "this
+ * screen was given rows, therefore it is somebody else's, therefore four tabs
+ * and a calendar". That works exactly as long as those two things stay the same
+ * question. `opts.segments` lets the caller that HAS the reason state it, and
+ * `FRIEND_TABS` stays as the default so nothing that does not pass one changes.
+ *
+ * ⚠️ ORDER COMES FROM THE CALLER'S LIST, not from this map — a caller asking
+ * for a set of tabs is entitled to their order, and reading it out of an object
+ * would silently impose this file's. */
+const TAB_LABEL = {
+  muscles: 'Muscles', volume: 'Volume', trend: 'Graph', compare: 'Bars',
+  research: 'Research', calendar: 'Calendar',
+};
 
 /**
  * @param {Function} [setMode]  🚨 HOW THE CHOSEN TAB IS REMEMBERED, and it is a
@@ -1106,7 +1404,12 @@ function pickSource(opt) {
  *   published training. Absent means mine, read from the store.
  * @param {string} [opts.subject]  whose it is, for titles and captions.
  * @param {string} [opts.tab]      which tab to open on.
+ * @param {string[]} [opts.segments]  which tabs to show, by key, in this order.
+ *   Absent means the default for the subject. See TAB_LABEL for why a caller
+ *   should be able to say rather than be inferred.
  * @param {Function} [opts.back]   where the arrow goes; only for a friend.
+ * @param {Function} [opts.down]   a DOWN arrow instead — "put this panel away".
+ *   Only for a screen that arrived by rising; see the shell call at the bottom.
  * @param {Function} [opts.musclesPane]  renders the Muscles tab. A friend's map
  *   comes from their published grid and cannot be recomputed here.
  * @param {Node} [opts.musclesExtra]  appended under the Muscles pane — the
@@ -1169,8 +1472,12 @@ export async function GraphView(opts = {}) {
   const host = el('div', { class: 'graph-host' });
 
   /* Which tabs, and whose memory of the chosen one. ⚠️ A friend's page keeps its
-   * own `mode` rather than writing the module-level `graphMode` — see dataTabs. */
-  const tabs = rows ? FRIEND_TABS : DATA_TABS;
+   * own `mode` rather than writing the module-level `graphMode` — see dataTabs.
+   * ⚠️ `opts.segments` is an explicit ask and wins; the two defaults are what
+   * every existing caller already got. See TAB_LABEL for why it exists. */
+  const tabs = Array.isArray(opts.segments) && opts.segments.length
+    ? opts.segments.filter((k) => TAB_LABEL[k]).map((k) => [k, TAB_LABEL[k]])
+    : (rows ? FRIEND_TABS : DATA_TABS);
   let mode = rows
     ? (tabs.some(([k]) => k === opts.tab) ? opts.tab : 'muscles')
     : graphMode;
@@ -1752,6 +2059,17 @@ export async function GraphView(opts = {}) {
     profile: !rows,
     noNav: Boolean(rows),
     back: opts.back,
+    /* 🆕 …OR A DOWN ARROW, SINCE 2026-09-16. A friend's data screen is PULLED UP
+     * over their profile now (Tim: *"similar to how the 'record' screen is
+     * pulled up … then if the user clicks the arrow again, it brings them back
+     * to the profile menu for that user"*), and `down` is the third slot in
+     * `screenShell` for exactly that: it means "put this panel away" rather than
+     * "go back", so it lands on that person's profile whatever route the reader
+     * arrived by — a deep link and a reload included. ⚠️ Passed straight
+     * through: this screen does not decide which of the two arrows it wears, the
+     * door that opened it does, and `screenShell` prefers `back` when both are
+     * given, so a caller supplying only `down` gets only `down`. */
+    down: opts.down,
     title: rows ? subject : modeSwitch,
     top: rows ? el('div', {}, modeSwitch, top) : top,
     scroll: host,

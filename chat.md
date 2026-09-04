@@ -2279,3 +2279,65 @@ contradicts a claim in two places. They are listed at the top of `progress.md`.
 
 **Not started, and ranked first if you want it:** nobody has ever walked this app with a keyboard,
 run a screen reader against it, or tested it at larger text.
+
+## 2026-09-16 — a friend's page became their profile, and what that made every account share
+
+**You asked for three things and said to use sub-agents.** Three ran at once on separate files.
+
+**The friends list showing blank faces.** It never could have worked: the row was asking for a photo
+from your own friends list, and a photo lives in the other person's published copy, not in yours. It
+reads that now, after the list paints, and falls back to the grey figure if their account can't be
+reached.
+
+**A friend's page is their profile now.** Their picture at the top, workouts and friends, their core
+lifts and the rest, their calendar — no goals, and their body row shows sex and age only, as you
+asked. "View data" in the top right pulls their data screen up the way Record comes up, with the
+muscle map, volume, graph and bars but no research, and the arrow puts it back down. You can open
+their workouts and their friends and keep walking from there; going back from a friend's friend
+takes you to your own profile, not to the person in between.
+
+**The part that wasn't small.** None of that could be shown, because accounts don't publish any of
+it. Your app has never shared your sex, your age or your friends list — so all three now go into
+what people can read of you. Two things worth knowing about that. Your friends list is readable by
+anyone who can read your account, which on a public account means anyone signed in; it's the first
+thing we publish that names other people, and it's one line to reverse if you'd rather it didn't.
+And your body weight did **not** join them — it stays friends-only and off by default, as before.
+
+**One thing that would have broken quietly.** The security rules pin exactly which fields a shared
+copy may contain, so adding a field without updating them would have made every publish fail —
+silently, with no error on any screen. It would have looked like everyone's page freezing. The rules
+went out with it, and the test that should have caught it was itself using a fake document thinner
+than the real one, which is now fixed.
+
+**Systems fold open and closed** in both the Workouts and Record lists. They start open, remember
+what you closed, and remember it separately per screen. Tapping the system name opens and closes it
+rather than going in — "Open this system" is the last row inside each one.
+
+**Expect one oddity:** a friend's age and friends list only show up after *they* next open the app,
+because only their app can publish their own details. Until then their page says so rather than
+pretending they have no friends.
+
+**Three things you asked for are queued and not started** — the weekly/cycle schedule boxes on a
+system, months with nothing in them collapsing to a line, and the bar chart of months once there are
+more than five. All three land in files that were being rewritten while you asked, so I left them.
+
+**And the two you added while that was running, both done.**
+
+**A system can have a plan.** Optional, on any system: either seven weekdays or an N-day repeating
+cycle up to 14, each day holding one of that system's workouts or Rest. It shows as boxes at the top
+of the system's own screen, and you build it on the edit form behind the pencil. As you decided, it
+only displays — Home and Record still suggest whichever workout you've gone longest without doing,
+and the "?" on the screen says so outright. Two details worth knowing: "Rest" and "nothing planned"
+are deliberately different, and if you delete a workout the day that named it goes back to empty
+rather than turning into a rest day you never chose.
+
+**Empty months collapse, and there's a bar chart.** A month with nothing in it is now one line saying
+the month and "No recordings". Once you have more than five months with recordings, a bar chart sits
+above the months — one bar per month, height = days trained. A month with nothing *between* two months
+that have something still gets a column at zero, so a gap in your training reads as a gap; months
+before you ever recorded anything aren't drawn at all. On a friend's calendar it says days
+*published*, not days trained, because you only ever see the sessions they've shared.
+
+One thing I left for you: on the 1st of a month with nothing in it yet, the months view lands on that
+one-line row with a screen of empty space under it. That space is the "open on the current month" fix
+you asked for doing its job — capping it would stop it landing — so I didn't touch it.

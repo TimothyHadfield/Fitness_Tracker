@@ -16,9 +16,10 @@ const {
   FRIENDS, PUBLIC, AUDIENCES, PROBE_ORDER,
   PRIVATE_ACCOUNT, PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL,
   normalizeVisibility, isPublicAccount, isAudience,
-  normalizeGraph, isConnected, allViewers,
+  normalizeGraph, isConnected, allViewers, projectConnections,
   projectSession, projectStrength, buildProjection, assertAudienceClean, leaves,
-  MAX_VIEWERS, MAX_ACTIVITY, MAX_AVATAR_CHARS, MAX_SHARED_CONTRIBUTORS,
+  MAX_VIEWERS, MAX_ACTIVITY, MAX_AVATAR_CHARS, MAX_SHARED_CONTRIBUTORS, MAX_CONNECTIONS,
+  safeGender, safeAge,
   newInviteToken, inviteExpiry, inviteState, INVITE_TTL_DAYS,
 } = await import('../js/social.js');
 
@@ -288,6 +289,33 @@ ok(JSON.stringify(pub).indexOf('178') === -1,
 ok(base(FRIENDS).bodyWeight === undefined,
    'and it is off even for friends until the owner turns it on separately');
 
+/* ⚠️ THE ABSENCE CHECK ABOVE, RE-RUN WITH THE 2026-09-16 FIELDS POPULATED. The
+ * `indexOf('178')` assertion is the load-bearing one in this file, and it is
+ * true of `pub` only because that fixture leaves gender, age and connections
+ * empty. Three new fields is three new places for a number to be smuggled, so
+ * the same check runs against a document that actually carries them. */
+{
+  const withNew = {
+    shareBodyWeight: true,
+    profile: { name: 'Tim', gender: 'male', age: 34 },
+    connections: [{ uid: 'alex', name: 'Alex' }, { uid: 'sam', name: 'Sam' }],
+  };
+  const fullPub = base(PUBLIC, withNew);
+  const fullFriends = base(FRIENDS, withNew);
+
+  ok(fullFriends.bodyWeight.length === 1 && fullFriends.bodyWeight[0].weight === 178,
+     'the friends document still carries the weigh-ins once the owner switches them on — the '
+     + 'vacuity guard for the two lines below');
+  ok(fullPub.bodyWeight === undefined && JSON.stringify(fullPub).indexOf('178') === -1,
+     '🚨 and 178 reaches NO part of the public document, with gender, age and a friends list all '
+     + 'populated — the three fields added on 2026-09-16 are not a second route for it');
+  ok(fullPub.profile.gender === 'male' && fullPub.profile.age === 34
+     && fullPub.connections.length === 2,
+     '⚠️ and the three really are in there, so the line above is an absence and not an empty document');
+  ok(assertAudienceClean(fullPub, PUBLIC) === true && assertAudienceClean(fullFriends, FRIENDS) === true,
+     'and the guard passes both');
+}
+
 ok(pub.isPublic === true && pub.audience === PUBLIC,
    'the public document is marked public — 🚨 this flag IS the read permission, firestore.rules '
    + 'grants any signed-in caller a read when it is true');
@@ -395,6 +423,142 @@ ok(withEmail.profile.name === 'Tim', 'the display name is what is shared');
      'and the guard passes a document carrying a face — identity is not training');
 }
 
+/* ---- gender and age (2026-09-16) ----
+ *
+ * Tim asked that a friend's page show what he sees on his own, including *"the
+ * 'your body' details, but leave out the weight (only show gendar and age)"*.
+ * They sit under `profile` for the reason the photo does: `profile` is IDENTITY
+ * and the audiences cut TRAINING. The map's `defaultCompare` has encoded the
+ * owner's sex since the grid shipped, so the sex was already in the document,
+ * spelled as a comparison key rather than as a word.
+ *
+ * 🚨 THE AGE IS PUBLISHED, NEVER THE BIRTH YEAR — store.getProfile() derives an
+ * age on every read because a stored one goes stale in silence, and a birth year
+ * is the more identifying of the two to hand a stranger. The cost, accepted
+ * deliberately, is that this figure drifts by up to a year between republishes.
+ */
+{
+  const who = (profile, audience = FRIENDS) => buildProjection({
+    audience, viewers: ['alex'], profile, sessions: [],
+    publishedAt: '2026-09-16T12:00:00.000Z',
+  });
+
+  ok(who({ name: 'Tim', gender: 'male', age: 34 }).profile.gender === 'male',
+     'gender is published beside the name, to a friend');
+  ok(who({ name: 'Tim', gender: 'male', age: 34 }, PUBLIC).profile.gender === 'male'
+     && who({ name: 'Tim', gender: 'female', age: 34 }, PUBLIC).profile.age === 34,
+     '⚠️ and to the public — these are identity, and the body map already published the sex as a '
+     + 'comparison key before anybody spelled it as a word');
+  ok(who({ name: 'Tim', age: 34 }).profile.age === 34,
+     'the AGE is what travels — an integer number of years, computed at publish time');
+
+  // ⚠️ Vacuity guard for the absences below: the calls above are the same shape
+  // with real values, and they must produce something.
+  const blank = who({ name: 'Tim' }).profile;
+  ok(!('gender' in blank) && !('age' in blank),
+     '⚠️ and BOTH ARE ABSENT rather than null on an account that never opened the profile sheet, '
+     + 'which is most of them — the same shape as the avatar, so a reader has one case, not two');
+  ok(blank.gender === undefined && blank.age === undefined,
+     'absent means undefined on the way out, so `x ?? fallback` and `if (x)` agree with each other');
+
+  ok(who({ gender: 'Male' }).profile.gender === undefined
+     && who({ gender: 'other' }).profile.gender === undefined
+     && who({ gender: null }).profile.gender === undefined,
+     '🚨 ONLY THE EXACT TWO STRINGS. An unrecognised or hand-edited value is UNKNOWN rather than '
+     + 'guessed — nothing here claims what a person is, only what this app was told');
+  ok(who({ age: 3 }).profile.age === undefined && who({ age: 200 }).profile.age === undefined,
+     'an age under 5 or over 120 is a typo or a hand-edited row, not a person — and a nonsense age '
+     + "on somebody else's screen is worse than no age");
+  ok(who({ age: '34' }).profile.age === undefined,
+     '⚠️ and a STRING is not coaxed into a number — Number("") is 0, and the only writer of this '
+     + 'field is arithmetic (ageFromBirthYear), so a non-number means something is wrong');
+  ok(who({ age: NaN }).profile.age === undefined && who({ age: Infinity }).profile.age === undefined,
+     'NaN and Infinity are not JSON and Firestore rejects them — a publish that throws never happens');
+
+  ok(safeGender('male') === 'male' && safeGender('MALE') === null && safeGender(undefined) === null,
+     'safeGender is the one rule, so the builder and any future reader cannot disagree');
+  ok(safeAge(34) === 34 && safeAge(34.6) === 35 && safeAge(0) === null,
+     'and safeAge rounds to a whole year within the same bounds ageFromBirthYear() uses');
+
+  // 🚨 THE FIELD THAT MUST NOT FOLLOW THEM. store.getProfile() returns
+  // `bodyWeight` in the SAME OBJECT as gender and age, so this is the mistake
+  // that is one spread operator away at the call site.
+  const smuggled = who({ name: 'Tim', gender: 'male', age: 34, bodyWeight: 178, email: 'tim@example.com' });
+  ok(smuggled.profile.bodyWeight === undefined && smuggled.profile.email === undefined,
+     '🚨 body weight and the email address handed to the builder INSIDE the profile reach nothing — '
+     + 'the profile is a whitelist too, not just the document');
+  ok(JSON.stringify(smuggled).indexOf('178') === -1
+     && JSON.stringify(smuggled).indexOf('example.com') === -1,
+     'and neither survives anywhere in the document as text');
+}
+
+/* ---- the friends list (2026-09-16) ----
+ *
+ * Tim asked to be able to open a friend's friends list and walk on from there,
+ * which nothing could render because the document did not carry one.
+ *
+ * 🚨 IT IS IN BOTH DOCUMENTS, AND THAT IS A DECISION. An account's friends list
+ * becomes readable by everyone who can read that account — on a public account,
+ * anybody signed in. It follows D29, but it is a WIDENING of what "everything"
+ * contains: it is the first field naming OTHER PEOPLE rather than the owner's
+ * own facts. Nobody is added to a grant by it; `viewers` is untouched.
+ */
+{
+  const GRAPH2 = { connections: [
+    { uid: 'alex', name: 'Alex', since: '2026-08-01', tier: 'full' },
+    { uid: 'sam', name: '' },
+  ] };
+  const withFriends = (audience, connections = normalizeGraph(GRAPH2).connections) =>
+    buildProjection({
+      audience, viewers: ['alex'], profile: { name: 'Tim' }, connections,
+      sessions: [], publishedAt: '2026-09-16T12:00:00.000Z',
+    });
+
+  ok(withFriends(FRIENDS).connections.length === 2,
+     'the accepted friends travel with the document, so a friend\'s page can list them');
+  ok(withFriends(PUBLIC).connections.length === 2,
+     '🚨 IN THE PUBLIC DOCUMENT TOO — anybody signed in reading a public account sees who it is '
+     + 'connected to. That is D29 applied to a genuinely new kind of field, not a consequence of it');
+  ok(JSON.stringify(withFriends(FRIENDS).connections[0]) === '{"uid":"alex","name":"Alex"}',
+     '⚠️ a row is a uid and a name and NOTHING else — the whitelist runs again at the publish '
+     + 'boundary, so a graph field invented next year (`since` today, `tier` yesterday) stays out');
+  ok(withFriends(FRIENDS).connections[0].since === undefined
+     && withFriends(FRIENDS).connections[0].tier === undefined,
+     'named individually, because `since` is a date about a relationship the reader is not part of');
+  ok(withFriends(FRIENDS).connections[0].avatar === undefined
+     && JSON.stringify(withFriends(FRIENDS)).indexOf('data:image') === -1,
+     '⚠️ AND NO FACES. Each row\'s photo is read from that person\'s OWN published document, which '
+     + 'is how the rest of the app draws one — fifty avatars is ~4.5 MB against a 1 MB ceiling, and '
+     + 'a document that outgrows it stops publishing');
+  ok(withFriends(FRIENDS).connections[1].name === '',
+     'a connection stored without a name publishes an EMPTY name, which is a real state a reader '
+     + 'has to render, not a reason to drop the person');
+
+  // 🚨 The half of the contract the reader depends on: absent means "not
+  // published yet", empty means "nobody". Collapsing them would put "no friends"
+  // on the screen of every account that has simply not republished.
+  ok(Array.isArray(withFriends(FRIENDS, []).connections)
+     && withFriends(FRIENDS, []).connections.length === 0,
+     '🚨 somebody with no friends publishes an EMPTY LIST, never a missing key — a reader must be '
+     + 'able to tell "nobody" from "their app has not published this yet"');
+  ok('connections' in withFriends(FRIENDS, []),
+     'the key is present, which is the whole of what makes those two states distinguishable');
+  ok(withFriends(FRIENDS, null).connections.length === 0
+     && withFriends(FRIENDS, 'garbage').connections.length === 0
+     && withFriends(FRIENDS, [null, {}, { name: 'no uid' }, 42]).connections.length === 0,
+     'a malformed list becomes an empty one rather than throwing mid-publish, and a row with no '
+     + 'uid is dropped — a name a reader cannot open is not a friend, it is a dead end');
+  ok(withFriends(FRIENDS, [{ uid: 'a', name: 'A' }, { uid: 'a', name: 'A again' }])
+       .connections.length === 1,
+     'a duplicated uid appears once, as it does in the graph itself');
+  ok(withFriends(FRIENDS, [{ uid: 'a', name: 'x'.repeat(200) }]).connections[0].name.length === 60,
+     'a name is cut to 60 like the display name — one of them trimmed and the other not is how a '
+     + 'row becomes a layout bug on a phone');
+
+  ok(projectConnections([{ uid: 'a', name: '  Ann  ' }])[0].name === 'Ann',
+     'projectConnections is the one rule, and it trims');
+}
+
 /* ------------------------------------------------------------------ *
  * Caps
  * ------------------------------------------------------------------ */
@@ -412,6 +576,12 @@ ok(buildProjection({ audience: FRIENDS, viewers: manyViewers, sessions: [] }).vi
    `viewers are capped at ${MAX_VIEWERS} — a document that quietly outgrows 1 MB stops publishing`);
 ok(buildProjection({ audience: FRIENDS, viewers: ['a', 'a', 'b', '', null], sessions: [] }).viewers.join() === 'a,b',
    'viewers are de-duplicated and empties dropped');
+
+const manyFriends = Array.from({ length: MAX_CONNECTIONS + 40 }, (_, i) => ({ uid: `f${i}`, name: `F${i}` }));
+ok(buildProjection({ audience: FRIENDS, viewers: [], connections: manyFriends, sessions: [] })
+     .connections.length === MAX_CONNECTIONS,
+   `the friends list is capped at ${MAX_CONNECTIONS} — a runaway guard, not a product limit, and the `
+   + 'same number as MAX_VIEWERS so nobody inside the read grant is outside the rendered list');
 
 /* ------------------------------------------------------------------ *
  * The guard itself
@@ -437,6 +607,51 @@ throws(() => assertAudienceClean({ isPublic: true, viewers: [] }, FRIENDS),
        + 'and nothing else');
 throws(() => assertAudienceClean({ isPublic: false, secretPlans: 'x' }, FRIENDS),
        'and a top-level field nobody has invented yet — the guard fails closed, not open');
+
+/* ⚠️ THE GUARD WAS EXTENDED RATHER THAN WORKED AROUND (2026-09-16). The easy
+ * version of the change was three more names in DOC_FIELDS: that teaches the
+ * guard the fields are ALLOWED without teaching it what they may contain, and
+ * `connections` is the first structure in this document that is neither a
+ * session nor a number — the first new place a private figure could ride. */
+throws(() => assertAudienceClean({ isPublic: false, profile: { name: 'Tim', email: 'tim@example.com' } }, FRIENDS),
+       '🚨 `profile` is checked INSIDE now — the email address is refused at the publish site '
+       + 'however it got there, not only dropped by the builder (social-plan.md §3.5)');
+throws(() => assertAudienceClean({ isPublic: false, profile: { name: 'Tim', bodyWeight: 178 } }, FRIENDS),
+       '🚨 AND SO IS BODY WEIGHT UNDER `profile` — store.getProfile() returns it in the same object '
+       + 'as gender and age, so this is the leak that is one spread operator away at the call site');
+throws(() => assertAudienceClean({ isPublic: false, profile: { gender: null } }, FRIENDS),
+       'a NULL gender is refused, not tolerated — the contract is absent-when-unknown, and a reader '
+       + 'written against it has one case to handle');
+throws(() => assertAudienceClean({ isPublic: false, profile: { age: null } }, FRIENDS),
+       'and a null age');
+throws(() => assertAudienceClean({ isPublic: false, profile: { age: 34.5 } }, FRIENDS),
+       'and half a year — the published figure is a whole number of years');
+throws(() => assertAudienceClean({ isPublic: false, connections: [{ uid: 'a', name: 'A', bodyWeight: 178 }] }, FRIENDS),
+       '🚨 THE ONE THAT MATTERS: a connection row carrying anything but {uid, name} is refused, so a '
+       + 'new field cannot become a second route for a private number');
+throws(() => assertAudienceClean({ isPublic: false, connections: [{ uid: 'a', name: 'A', since: '2026-08-01' }] }, FRIENDS),
+       'including `since`, which the graph really does carry and the projection really does drop');
+throws(() => assertAudienceClean({ isPublic: false, connections: 'alex,sam' }, FRIENDS),
+       'a connections field that is not a list at all');
+throws(() => assertAudienceClean({ isPublic: false, connections: [{ name: 'nameless' }] }, FRIENDS),
+       'and a row with no uid — a name a reader cannot open');
+throws(() => assertAudienceClean({
+         isPublic: false,
+         connections: Array.from({ length: MAX_CONNECTIONS + 1 }, (_, i) => ({ uid: `f${i}`, name: '' })),
+       }, FRIENDS),
+       `and more than ${MAX_CONNECTIONS} rows — uncapped, this is the field that quietly pushes a `
+       + 'document past 1 MB, which presents as "my friend\'s page stopped updating"');
+
+// ⚠️ Vacuity guard for the ten refusals above: a guard that threw on everything
+// would pass every one of them and publish nothing.
+ok(assertAudienceClean({
+     isPublic: false, viewers: ['alex'], audience: FRIENDS,
+     profile: { name: 'Tim', gender: 'female', age: 34 },
+     connections: [{ uid: 'alex', name: 'Alex' }, { uid: 'sam', name: '' }],
+   }, FRIENDS) === true,
+   'and a real document carrying all three new fields PASSES — so "refused" above is a result, '
+   + 'not a guard that says no to everything');
+
 ok(assertAudienceClean(mid, FRIENDS) && assertAudienceClean(pub, PUBLIC)
    && assertAudienceClean(friendsBw, FRIENDS),
    'and passes every real document, including the one carrying weigh-ins');

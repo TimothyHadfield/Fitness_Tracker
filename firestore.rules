@@ -201,13 +201,31 @@ service cloud.firestore {
     }
 
     function validProjection() {
+      // 🚨 `connections` JOINED THIS LIST ON 2026-09-16 AND THE ORDER OF DEPLOY
+      // IS THE WHOLE POINT. `hasOnly` refuses a document carrying a key it does
+      // not name, so shipping the client that publishes a friends list while
+      // this line still said nine fields would have denied EVERY publish —
+      // silently, because republish() is called fire-and-forget and its throw is
+      // swallowed at every call site. The symptom would have been "nobody's page
+      // updates any more" with nothing on any screen saying so. Rules go out
+      // with the client, never after it.
       return request.resource.data.keys().hasOnly(
                ['audience', 'isPublic', 'viewers', 'profile', 'publishedAt', 'activity',
-                'benchmarks', 'strength', 'bodyWeight'])
+                'benchmarks', 'strength', 'bodyWeight', 'connections'])
           && request.resource.data.viewers is list
           && request.resource.data.viewers.size() <= 500
           && request.resource.data.activity is list
           && request.resource.data.activity.size() <= 60
+          // The same treatment `viewers` and `activity` get: a type and a
+          // ceiling, so a runaway write is refused on the wire rather than
+          // trusted to the builder's own cap (MAX_CONNECTIONS, js/social.js).
+          // ⚠️ It is checked only where present: an account that has not
+          // republished since this shipped has no such key, and a rule that
+          // required one would refuse the delete-and-rewrite path those
+          // documents still need.
+          && (!('connections' in request.resource.data)
+              || (request.resource.data.connections is list
+                  && request.resource.data.connections.size() <= 500))
           // ⚠️ THE ONE FIELD THE PUBLIC DOCUMENT MAY NOT HOLD, enforced on the
           // wire as well as in the builder. Body weight reaches accepted friends
           // only (Tim, 2026-09-03), and this is the gate that survives a bug in

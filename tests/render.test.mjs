@@ -2130,8 +2130,284 @@ ok(!data.querySelector('.rep-target'),
   ok(!start.querySelector('.section-label.sub'),
      'and the name is a heading rather than the 11.5px grey caption it used to be — it was quieter '
      + 'than the workout names underneath it, so the thing being searched for was the least visible text');
+
+  /* ── 🚨 A SYSTEM OPENS AND CLOSES, ON BOTH SCREENS (2026-09-16) ───────────
+   *
+   * Tim: *"In the workouts section as well as the record section, it shows the
+   * list of systems you have as well as the workouts within each of them. I
+   * want you to be able to click on the system in order to close or open the
+   * display of the workouts within them in both sections."*
+   *
+   * ⚠️ `details.open` IS THE ONLY HONEST READING OF "CLOSED" HERE, and this
+   * project has already written down why: a closed `<details>` still reports a
+   * box for its contents in the audit's Chrome — it hides them with
+   * `content-visibility`, not `display: none` — and jsdom lays nothing out at
+   * all, so a rect proves nothing in either engine. The element's own state is
+   * the one thing both agree on.
+   *
+   * ⚠️ AND EVERY FOLD BELOW IS DRIVEN BY A CLICK ON THE SUMMARY, never by
+   * setting `.open`. A test that sets the property itself passes happily over a
+   * summary nobody can actually reach with a finger.
+   */
+  {
+    const recGroups = (root) => [...root.querySelectorAll('details.sys-group')];
+    const groups0 = recGroups(start);
+
+    ok(groups0.length === heads.length,
+       `⚠️ every system on Record is a disclosure, one per heading (${groups0.length} of ${heads.length})`);
+    ok(groups0.every((d) => d.querySelector('summary.sys-head')),
+       '⚠️ and the control IS the heading — the same `.sys-head` the 2026-08-25 note put there, now a '
+       + '<summary>, rather than a second thing beside it to aim at');
+    ok(groups0.every((d) => d.open),
+       '🚨 and every one of them ARRIVES OPEN. Record is one tap from a workout in a gym (D4) and most '
+       + 'people have one system: a fold on arrival adds a tap to the most consequential path in the app '
+       + 'and hands a one-system user a closed door to their own workouts');
+    ok(groups0.every((d) => d.querySelectorAll('.list .row').length > 0),
+       'each group still holds its workout rows');
+    ok(groups0.every((d) => [...d.querySelectorAll('.list .row')].every((r) => /Start/.test(r.textContent))),
+       '⚠️ and every row inside still SAYS Start — wrapping the list in a disclosure did not swallow the '
+       + 'one word that says this begins a session');
+
+    /* Tapping the heading opens and shuts it, and that is the whole request. */
+    const closedId = groups0[0].dataset.sys;
+    groups0[0].querySelector('summary').click();
+    await settle();
+    ok(recGroups(start)[0].open === false,
+       '🚨 tapping a system on Record CLOSES the workouts under it');
+    recGroups(start)[0].querySelector('summary').click();
+    await settle();
+    ok(recGroups(start)[0].open === true, 'and tapping it again opens them back up');
+
+    /* ⚠️ IT SURVIVES A RE-RENDER, which is the half of this that is not free.
+     * The state lives outside the view; without that, any unrelated repaint
+     * springs every system back open and the person folds the same programme
+     * away over and over. */
+    recGroups(start)[0].querySelector('summary').click();
+    await settle();
+    const start2 = await mount(StartPickerView());
+    const g2 = recGroups(start2).find((d) => d.dataset.sys === closedId);
+    ok(g2 && g2.open === false,
+       '🚨 and the fold SURVIVES A RE-RENDER — the memory is outside the view, or every unrelated repaint '
+       + 'undoes the choice');
+
+    /* 🚨 AND THE TWO SCREENS DO NOT SHARE ONE MEMORY. Which programmes I have
+     * folded away while browsing my library says nothing about what I want in
+     * front of me mid-gym. `friendCalMode` exists in views-data.js for exactly
+     * this reason, and a mutation check is what proved one shared memory let
+     * one screen contaminate the other. */
+    const wlist = await mount(WorkoutsView());
+    const wGroups = recGroups(wlist);
+    ok(wGroups.length > 0, `the Workouts tab lists its systems as disclosures too (${wGroups.length})`);
+    const twin = wGroups.find((d) => d.dataset.sys === closedId);
+    ok(twin && twin.open,
+       '🚨 and the system folded away on RECORD is still open on the Workouts tab — two memories, not one');
+
+    // Now the same journey in the other direction.
+    twin.querySelector('summary').click();
+    await settle();
+    ok(twin.open === false, 'tapping a system on the Workouts tab closes it as well — one mechanism, both screens');
+    const wlist2 = await mount(WorkoutsView());
+    const twin2 = recGroups(wlist2).find((d) => d.dataset.sys === closedId);
+    ok(twin2 && twin2.open === false, 'and that fold survives a re-render of the Workouts tab');
+
+    /* ⚠️ THE ROW STILL SAYS EVERYTHING IT SAID, and the workouts are REAL ROWS
+     * now rather than only names in a subtitle. */
+    const sumText = twin2.querySelector('summary').textContent.replace(/\s+/g, ' ');
+    ok(/Push/.test(sumText) && /Legs/.test(sumText) && /·/.test(sumText),
+       '⚠️ the row still previews its workouts in the subtitle — a collapsed system must not say LESS '
+       + 'than the row said before the fold existed');
+    twin2.querySelector('summary').click();
+    await settle();
+    const kidText = twin2.textContent.replace(/\s+/g, ' ');
+    ok(/\d+ exercises?/.test(kidText) && /\d+ sets?/.test(kidText),
+       '⚠️ and opening it gives each workout the exercise and set counts the system screen gives it — '
+       + 'one workout described one way, wherever it appears');
+
+    /* 🚨 THE ROUTE THE ROW USED TO BE IS STILL REACHABLE. The summary opens and
+     * closes now, so it cannot also navigate; `#/system/<id>` is where Edit,
+     * Notes, New workout and the full rating live. A feature that quietly
+     * deleted a screen would not be a feature. */
+    const hashBefore = window.location.hash;
+    twin2.querySelector('summary').click();
+    await settle();
+    ok(window.location.hash === hashBefore,
+       '⚠️ tapping the system itself navigates NOWHERE — it opens and closes, which is the whole change');
+    twin2.querySelector('summary').click();
+    await settle();
+    const opener = [...twin2.querySelectorAll('.list .row')]
+      .find((r) => /Open this system/.test(r.textContent));
+    ok(Boolean(opener),
+       '🚨 and `#/system/<id>` survives as the last row of the group rather than being dropped with the tap');
+    opener.click();
+    await settle();
+    ok(window.location.hash === '#/system/' + closedId,
+       `and it really goes there (${window.location.hash})`);
+    window.location.hash = '#/workouts';
+    await settle();
+  }
 }
 
+
+/* ================= a system's weekly plan, as boxes ================= */
+/* 2026-09-16, Tim: *"If the workout system does have this daily planner then
+   show it as boxes at the top of the workout system when you click on it in the
+   'workouts' section."* Two kinds — seven weekdays, or N repeating cycle days —
+   each slot holding one of that system's workouts or Rest.
+
+   ⚠️ THE POSITION TEST ABOVE ("the workouts are the first thing in the pane")
+   IS NOT RELAXED BY ANY OF THIS AND MUST NOT BE. It runs on a system with no
+   plan, which is every system that existed yesterday, and it still passes
+   unchanged. The plan takes first position ONLY when there is one. */
+{
+  const { REST } = await import(BASE + 'schedule.js');
+  const sys = await store.saveSystem({ name: 'Plan test' });
+  const mk = (name, ex) => store.saveWorkout({
+    name, systemId: sys.id, exercises: [{ exerciseId: byName(ex).id, sets: 3 }],
+  });
+  const push = await mk('Push', 'Barbell Bench Press');
+  const pull = await mk('Pull', 'Barbell Row');
+  const legs = await mk('Legs', 'Back Squat');
+
+  /* ---- a system with no plan is completely unchanged ---- */
+  {
+    const node = await mount(SystemRouteView(sys.id));
+    ok(!node.querySelector('.plan-grid'),
+       'a system with no plan draws no boxes — nothing prompts for one');
+    const first = node.querySelector('.pane-scroll .section-label');
+    ok(first && /workout/i.test(first.textContent),
+       'and its workouts are still the first thing in the pane');
+  }
+
+  /* ---- the boxes ---- */
+  await store.saveSystem({ ...sys, schedule: { kind: 'week',
+    slots: [push.id, pull.id, legs.id, REST, push.id, null, REST] } });
+  {
+    const node = await mount(SystemRouteView(sys.id));
+    const boxes = [...node.querySelectorAll('.plan-day')];
+    ok(boxes.length === 7, `a weekly plan draws a box for every day (${boxes.length})`);
+    ok(node.querySelector('.pane-scroll > *').classList.contains('plan'),
+       '🚨 and the plan is the FIRST thing in the pane — "boxes at the top of the workout system" '
+       + 'is the position Tim asked for, and on a phone first is the only position that means anything');
+    ok(/Weekly plan/.test(node.textContent), 'headed as a weekly plan');
+    ok(boxes.map((b) => b.querySelector('.plan-dow').textContent).join(' ')
+         === 'Mon Tue Wed Thu Fri Sat Sun',
+       'labelled Monday through Sunday, in that order');
+    ok(boxes[0].querySelector('.plan-slot').textContent === 'Push',
+       'a training day names the workout it holds');
+
+    const rest = boxes[3].querySelector('.plan-slot');
+    ok(rest.textContent === 'Rest' && rest.classList.contains('is-rest'),
+       '⚠️ a REST day is a box that is present and says Rest — "visibly empty rather than missing". '
+       + 'A grid that skipped its rest days would make a 6-day split read as a 6-day week');
+    const none = boxes[5].querySelector('.plan-slot');
+    ok(none.textContent === '—' && none.classList.contains('is-none'),
+       '🛑 and a day nothing has been said about is a DIFFERENT box from a rest day. Printing "Rest" '
+       + 'for both would be the app inventing a rest day nobody chose (Rule 6)');
+    ok(boxes[5].getAttribute('aria-label') === 'Saturday: nothing planned'
+       && boxes[3].getAttribute('aria-label') === 'Thursday: rest'
+       && boxes[0].getAttribute('aria-label') === 'Monday: Push',
+       '⚠️ each box is ONE phrase to a screen reader — read as two nodes a grid says "Mon" and "Push" '
+       + 'as unrelated things, and "—" is not a word at all');
+
+    ok(!/today|day \d+ of|behind|on track|streak/i.test(node.textContent),
+       '🛑 NOTHING on the screen says what day it is today, how far through the cycle you are, or '
+       + 'whether the plan was followed. Tim chose display-only and Rule 6 forbids the verdict');
+
+    const dot = [...node.querySelectorAll('.help-dot')]
+      .find((d) => /plan/i.test(d.getAttribute('aria-label') || ''));
+    ok(Boolean(dot), 'the plan carries a ? beside its own label, not off on the right (Rule 9)');
+    dot.click();
+    await settle();
+    const pop = document.querySelector('.help-pop');
+    ok(pop && /longest without doing/.test(pop.textContent),
+       '🚨 and behind it, in words, that the plan does NOT drive what the app suggests next — a reader '
+       + 'is entitled to assume the opposite, so the one thing it cannot do is the thing that is said');
+    dot.click();
+    await settle();
+  }
+
+  /* ---- a slot naming a workout that is gone reads as unset, never throws ---- */
+  await store.saveSystem({ ...sys, schedule: { kind: 'week',
+    slots: ['w-does-not-exist', pull.id, null, REST, null, null, null] } });
+  {
+    const node = await mount(SystemRouteView(sys.id));
+    const boxes = [...node.querySelectorAll('.plan-day')];
+    ok(boxes.length === 7 && boxes[0].querySelector('.plan-slot').textContent === '—',
+       '⚠️ a slot naming a workout that no longer exists reads as unset rather than blanking the '
+       + 'screen — the store repairs the row on deletion, but a restored backup can still arrive here');
+    ok(boxes[0].getAttribute('aria-label') === 'Monday: nothing planned',
+       'and says so rather than reading out a dead id');
+  }
+
+  /* ---- fourteen days, the case that breaks a phone ---- */
+  await store.saveSystem({ ...sys, schedule: { kind: 'cycle',
+    slots: new Array(14).fill(null).map((_, i) => (i % 4 === 3 ? REST : [push.id, pull.id, legs.id][i % 3])) } });
+  {
+    const node = await mount(SystemRouteView(sys.id));
+    const boxes = [...node.querySelectorAll('.plan-day')];
+    ok(boxes.length === 14, `a 14-day cycle draws fourteen boxes (${boxes.length})`);
+    ok(/14-day cycle/.test(node.textContent), 'headed by its own length rather than "cycle"');
+    ok(/Repeats every 14 days/.test(node.textContent),
+       'and says it repeats — "repeat" is the word in Tim\'s own example and it is the whole of what '
+       + 'a cycle means');
+    ok(boxes[13].querySelector('.plan-dow').textContent === 'Day 14',
+       'counting to Day 14');
+    ok(!node.querySelector('.plan-grid').className.includes('scroll'),
+       '⚠️ and it is a WRAPPING grid, not a sideways scroller — jsdom cannot measure it, so the widths '
+       + 'are pinned in tests/a11y.test.mjs and the 360px case is driven in a browser');
+  }
+
+  /* ---- the form behind the pencil is where it is built ---- */
+  {
+    const ed = await mount(SystemRouteView(sys.id + '/edit'));
+    const kind = [...ed.querySelectorAll('select')]
+      .find((s) => s.getAttribute('aria-label') === 'Kind of plan');
+    ok(Boolean(kind), 'the plan is edited on the FORM behind the pencil, not on the screen it is drawn on');
+    ok(kind.value === 'cycle', 'and it opens showing the plan that is saved');
+    ok(ed.querySelectorAll('.plan-row').length === 14,
+       `one row per day, all fourteen of them (${ed.querySelectorAll('.plan-row').length})`);
+
+    const opts = [...ed.querySelector('.plan-row select').options].map((o) => o.textContent);
+    ok(opts[0] === 'Nothing planned' && opts[1] === 'Rest'
+       && opts.includes('Push') && opts.includes('Pull') && opts.includes('Legs'),
+       `⚠️ every day offers THREE kinds of answer — nothing, Rest, or one of this system's workouts — `
+       + `for the same reason the boxes print two different words (${opts.join(', ')})`);
+
+    const grow = [...ed.querySelectorAll('button')]
+      .find((b) => b.getAttribute('aria-label') === 'One more day in the cycle');
+    ok(Boolean(grow), 'a cycle\'s length is a stepper, and it reads in the singular');
+    const sel0 = ed.querySelector('.plan-row select');
+    const before = sel0.value;
+    grow.click();
+    await settle();
+    ok(ed.querySelectorAll('.plan-row').length === 14,
+       'which is already at the 14-day ceiling, so pressing + changes nothing');
+    ok(ed.contains(grow),
+       '🚨 and the stepper itself is not rebuilt by its own press — replacing the node holding focus '
+       + 'gives a keyboard user exactly one press and no second one');
+    ok(ed.querySelector('.plan-row select').value === before,
+       '⚠️ and resizing reads the CURRENT plan, not the one this handler was built with. A handler '
+       + 'created once and pressed many times that resizes a captured copy throws away everything '
+       + 'typed between the first press and the second');
+
+    // Turning the plan off must actually take it off the row.
+    kind.value = '';
+    kind.dispatchEvent(new window.Event('change'));
+    await settle();
+    ok(!ed.querySelector('.plan-row'), 'choosing "No plan" clears the day rows');
+    const save = [...document.querySelectorAll('button')].find((b) => /Save changes/.test(b.textContent));
+    save.click();
+    await settle();
+    await settle();
+    ok(!('schedule' in (await store.getSystem(sys.id))),
+       '🚨 and saving REMOVES the schedule from the row rather than leaving an empty one behind — '
+       + 'absent is the shape that means "no plan", so a switched-off plan has to reach it');
+    ok(!(await mount(SystemRouteView(sys.id))).querySelector('.plan-grid'),
+       'so the boxes are gone from the system screen too');
+  }
+
+  await store.deleteSystem(sys.id);
+}
 
 /* ================= ready-made systems ================= */
 {
@@ -3102,6 +3378,22 @@ ok(!data.querySelector('.rep-target'),
      'and the cost beside them, so the list says what a programme asks before you open it');
   ok(/Upper · Lower|Lower · Upper/.test(listText),
      'and the workout names still show in full — the rating did not clip them away');
+
+  /* ⚠️ THE BADGE RIDES ON THE SUMMARY, NOT INSIDE THE FOLD (2026-09-16). It
+     describes the whole programme and it is what Tim asked to see on the list
+     before opening anything — pushed inside the disclosure, a folded system
+     would show none of its four numbers, which is the state most of a long
+     list will be in. */
+  ok(Boolean(list.querySelector('details.sys-group > summary .rating')),
+     'the rating badge sits on the row that opens and closes, not in what it hides');
+
+  /* ⚠️ AN EMPTY SYSTEM IS NOT A DISCLOSURE. There is nothing under it to
+     unfold, and a chevron that turns to reveal nothing is a control lying about
+     having something. It stays the plain link it has always been — which is
+     also the only place to add the workouts it is missing. */
+  const emptyRow = [...list.querySelectorAll('.row')].find((r) => /Nothing here/.test(r.textContent));
+  ok(emptyRow && emptyRow.tagName === 'BUTTON' && !emptyRow.closest('details'),
+     'a system with no workouts in it is still a row that goes into the system, not an empty fold');
 
   await store.clearAll();
 }
@@ -5743,14 +6035,21 @@ ok(!data.querySelector('.rep-target'),
   /* ---- their own page ---- */
   const fr = await mount(FriendView('u1'));
   for (let i = 0; i < 8; i++) await settle();
-  ok(Boolean(fr.querySelector('.friend-face .face-img')), 'and their page leads with it');
+  ok(Boolean(fr.querySelector('.me-head .me-face .face-img')),
+     '🔄 and their PROFILE leads with it — the same `.me-face` head `#/me` uses, at the bigger '
+     + 'radius Tim asked for on 2026-09-16 ("their profile picture big at the top")');
 
   social.friend = withFace(null);
   const bare = await mount(FriendView('u1'));
   for (let i = 0; i < 8; i++) await settle();
-  ok(!bare.querySelector('.friend-face'),
-     '⚠️ while a friend with no photo gets NO empty circle — the title bar already says whose '
-     + 'page this is, so a glyph here would be an ornament on most accounts');
+  ok(Boolean(bare.querySelector('.me-head .me-face'))
+     && !bare.querySelector('.me-face .face-img'),
+     '🔄 while a friend with no photo now gets the PERSON GLYPH, reversing 2026-08-31 on purpose. '
+     + '~~a friend with no photo gets NO empty circle~~ was right when this page was a list under '
+     + 'a title bar carrying their name — a bare circle would have been an ornament on most '
+     + 'accounts. A PROFILE has a slot for the face: the name sits beside it and the two figures '
+     + 'sit under it, so leaving it out moves the whole screen up and reads as a page that failed '
+     + 'to load');
 
   /* ---- taking it down has to take it down from where people are looking ---- *
    *
@@ -5794,6 +6093,42 @@ ok(!data.querySelector('.rep-target'),
   ok(!nasty.querySelector('.face-img'),
      '🚨 AN SVG IS NOT PAINTED. It is a document that can carry script rather than a picture, '
      + 'and this string was written by somebody else\'s account');
+
+  /* ---- and the fourth list of people, which never showed a face at all ----
+   *
+   * 🚨 THE BUG TIM REPORTED ON 2026-09-16: *"in the profile section, if you click
+   * on frineds, the friend's profile icon does not show their image that is
+   * normally showed."* `MePeopleView` rendered `personFace(p.avatar, 20)` and a
+   * row of `social.state().connections` is `{ uid, name, since }` —
+   * `normalizeGraph()` has never carried an avatar and should not: a photo is a
+   * fact about the person, published in THEIR document, and a copy of it in my
+   * graph is a copy that goes stale the day they change it. So `p.avatar` was
+   * always `undefined`, `safeAvatar()` correctly refused it, and every row on
+   * that screen showed the default humanoid. */
+  {
+    const { MePeopleView } = await import(BASE + 'views-me.js');
+
+    social.friend = withFace(FACE);
+    const list = await mount(MePeopleView());
+    for (let i = 0; i < 8; i++) await settle();
+    ok(Boolean(list.querySelector('.row-face .face-img')),
+       '🚨 the Profile tab\'s friends list shows their published photo, read from the document '
+       + 'THEY published rather than from a stale copy in my graph');
+
+    /* ⚠️ AND A FRIEND WHOSE DOCUMENT CANNOT BE READ KEEPS THE GLYPH, SILENTLY.
+     * That is an ordinary outcome — they are private and the read is refused —
+     * and it is what every account without a photo looks like anyway. The row
+     * still paints from the graph immediately rather than waiting on a read per
+     * person, which is the screen Tim once reported as alarmingly laggy. */
+    social.friend = async () => { throw new Error('private'); };
+    const refused = await mount(MePeopleView());
+    for (let i = 0; i < 8; i++) await settle();
+    ok(Boolean(refused.querySelector('.row-face svg')) && !refused.querySelector('.row-face img'),
+       '⚠️ while a friend whose document is unreadable keeps the person glyph and says nothing');
+    ok(/Autumn/.test(refused.textContent),
+       '🔒 and the ROW is still there — the name comes from the graph, so a refused photo read '
+       + 'may never cost the reader the person');
+  }
 
   restore();
 }
@@ -6505,7 +6840,7 @@ ok(!data.querySelector('.rep-target'),
  * allows that user to display another person's body side by side."*
  * ================================================================== */
 {
-  const { FriendView, CompareBodiesView, SocialView } =
+  const { FriendView, FriendDataView, CompareBodiesView, SocialView } =
     await import(BASE + 'views-social.js');
   const { social, store, todayISO } = await import(BASE + 'store.js');
   sessionStorage.removeItem('ftrack:v1:demo');
@@ -6642,8 +6977,34 @@ ok(!data.querySelector('.rep-target'),
   /* ---- their body map is tappable now ---- */
   {
     social.state = state('private');
-    const fr = await mount(FriendView('u1'));
+
+    /* 🔄 THE MAP IS BEHIND "VIEW DATA" SINCE 2026-09-16, and that is Tim's own
+     * sentence: *"instead of going straight to the muscle map and data section,
+     * I want you to view their profile display … Add a 'view data' button on the
+     * top right side of this profile display that pulls up a screen."* So the
+     * two halves are asserted separately — the profile does NOT carry the map,
+     * and the panel does — because a rewrite that only followed the map to its
+     * new screen would still pass if the profile had never been built. */
+    const prof = await mount(FriendView('u1'));
     for (let i = 0; i < 10; i++) await settle();
+    ok(!prof.querySelector('.body-map'),
+       '🚨 their PROFILE does not carry the muscle map — it is a profile now, not a Data screen');
+    ok(Boolean([...prof.querySelectorAll('.topbar button')]
+      .find((b) => /View data/.test(b.textContent))),
+       '⚠️ and carries a "View data" control in the top-right corner instead, labelled in words: '
+       + 'a chart glyph would be a guess the reader has to tap to check');
+
+    const fr = await mount(FriendDataView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+
+    /* 🛑 THE ARROW ON THE PANEL IS A DOWN ARROW, NOT A BACK ARROW, and the
+     * distinction is the same one Record's carries: Rule 8's back means the
+     * screen you were just on, and this means "put the panel away", which lands
+     * on that friend's profile whatever route opened it — a deep link and a
+     * reload included. `screenShell`'s `down` slot renders `aria-label="Close"`. */
+    ok(Boolean(fr.querySelector('.topbar .icon-btn[aria-label="Close"]'))
+       && !fr.querySelector('.topbar .icon-btn[aria-label="Back"]'),
+       '🛑 and the panel wears the DOWN arrow rather than a back arrow');
 
     const map = fr.querySelector('.friend-body .body-map');
     ok(Boolean(map), 'their muscle map is drawn');
@@ -6860,7 +7221,8 @@ ok(!data.querySelector('.rep-target'),
              activity: [theirSession], benchmarks: [], strength: HER },
     });
 
-    const her = await mount(FriendView('u1'));
+    // 🔄 Her MAP, so the panel rather than the profile — see the block above.
+    const her = await mount(FriendDataView('u1'));
     for (let i = 0; i < 12; i++) await settle();
 
     ok(/women who lift/.test(her.querySelector('.basis-main').textContent),
@@ -7098,7 +7460,11 @@ ok(!data.querySelector('.rep-target'),
     };
     social.friend = async () => ({ audience: 'full', doc: legacyDoc, legacy: true });
 
-    const fr = await mount(FriendView('u1'));
+    /* 🔄 The map is on the panel since 2026-09-16. ⚠️ The legacy PROFILE is
+     * asserted too, further down this block: a friend whose app has not updated
+     * must still render a sensible profile and say what is missing, which is the
+     * same promise `legacyBody` makes about their map. */
+    const fr = await mount(FriendDataView('u1'));
     for (let i = 0; i < 10; i++) await settle();
     const t = fr.textContent.replace(/\s+/g, ' ');
 
@@ -7132,7 +7498,7 @@ ok(!data.querySelector('.rep-target'),
    * screens went; the addresses did not.
    */
   {
-    const vol = await mount(FriendView('u1', 'volume'));
+    const vol = await mount(FriendDataView('u1', 'volume'));
     for (let i = 0; i < 12; i++) await settle();
     const v = vol.textContent.replace(/\s+/g, ' ');
     ok(/Autumn/.test(v), 'their volume tab names whose it is');
@@ -7145,7 +7511,7 @@ ok(!data.querySelector('.rep-target'),
        '⚠️ and the old /volume route opens the page ON that tab rather than 404-ing or landing on '
        + 'Muscles — a deep link that resolves to the wrong screen is worse than one that fails');
 
-    const gr = await mount(FriendView('u1', 'trend'));
+    const gr = await mount(FriendDataView('u1', 'trend'));
     for (let i = 0; i < 12; i++) await settle();
     const g = gr.textContent.replace(/\s+/g, ' ');
     ok(/Autumn/.test(g), 'and so does their graph');
@@ -7154,6 +7520,452 @@ ok(!data.querySelector('.rep-target'),
   }
 
   Object.assign(social, original);
+  await store.clearAll();
+}
+
+/* ================================================================== *
+ * A FRIEND'S PROFILE — 2026-09-16, and what it refuses to claim
+ *
+ * 🚨 Tim: *"When you view a friend's profile, instead of going straight to the
+ * muscle map and data section, I want you to view their profile display, like
+ * how they see it for themselves, with their profile picture big at the top,
+ * the workouts and frineds, the core lifts and weights (with other lifts
+ * aswell) and their training history (calendar). Intentionally leave out the
+ * goals. Display the 'your body' details, but leave out the weight (only show
+ * gendar and age). Add a 'view data' button on the top right side … Then if the
+ * user clicks the arrow again, it brings them back to the profile menu for that
+ * user. Additionally allow the user to click on the friend's 'workouts' button
+ * and 'friends' button … However, if you go back after going inside a frined's
+ * friend, it doesn't go back to your friend, it goes back to your main profile
+ * menu."*
+ *
+ * ⚠️ THE FIXTURE PUBLISHES THE 2026-09-16 CONTRACT FIELDS — `profile.gender`,
+ * `profile.age` and `connections` — because every assertion about them is
+ * otherwise asserting an absence, and an absence passes for a screen that was
+ * never built. The block below it publishes NONE of them, which is every
+ * document written before the fields existed and therefore the common case.
+ *
+ * 🚨 AND IT PUBLISHES A WEIGH-IN, which is the only way to prove the removal
+ * Tim asked for. Their body weight IS shared with friends who opted in, and this
+ * page printed it as a note until today — so a check that their profile never
+ * shows it has to be run against a document that HAS one, or it proves nothing.
+ * ================================================================== */
+{
+  const { FriendView, FriendDataView, FriendPeopleView, FriendWorkoutsView } =
+    await import(BASE + 'views-social.js');
+  const { GraphView } = await import(BASE + 'views-data.js');
+  const { markFriendTrail, friendTrailDepth } = await import(BASE + 'ui.js');
+  const { social, store, todayISO } = await import(BASE + 'store.js');
+  sessionStorage.removeItem('ftrack:v1:demo');
+  await store.clearAll();
+
+  const keep = {
+    state: social.state, friend: social.friend, invites: social.invites,
+    handoffs: social.handoffs, requests: social.requests,
+    healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    processAcceptedRequests: social.processAcceptedRequests,
+  };
+  social.invites = async () => [];
+  social.handoffs = async () => [];
+  social.requests = async () => [];
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.processAcceptedRequests = async () => 0;
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
+    shareBodyWeight: false, visibility: 'private',
+    connections: [{ uid: 'u1', name: 'Autumn', since: '2026-08-01' }],
+  });
+
+  const TODAY = todayISO();
+  const YEAR = Number(TODAY.slice(0, 4));
+  /* ⚠️ A DISTINCTIVE WEIGH-IN. 197.3 lb is a number that appears nowhere else on
+     this screen, in either unit, so "their body weight is not printed" is a
+     check on the weight rather than on a coincidence. */
+  const THEIR_WEIGHT = 197.3;
+
+  const hersDoc = (extra = {}) => ({
+    audience: 'friends', isPublic: false,
+    profile: { name: 'Autumn', gender: 'female', age: 28 },
+    activity: [
+      { id: 'fp1', date: TODAY, name: 'Pull', startedAt: `${TODAY}T09:00:00.000Z`,
+        entries: [
+          { exerciseId: 'lat-pulldown--back', name: 'Lat Pulldown',
+            sets: [{ weight: 120, reps: 10 }] },
+          // 🚨 A BODY-WEIGHT LIFT. With their weigh-in published it prices; with
+          // it absent nothing on this device can price it, and the row has to
+          // say so rather than being dropped or given the plate-only figure.
+          { exerciseId: 'pull-up--back', name: 'Pull-Up',
+            sets: [{ weight: 25, reps: 6 }] },
+        ] },
+      { id: 'fp2', date: `${YEAR}-02-10`, name: 'Push', startedAt: `${YEAR}-02-10T09:00:00.000Z`,
+        entries: [{ exerciseId: 'lat-pulldown--back', name: 'Lat Pulldown',
+          sets: [{ weight: 110, reps: 12 }] }] },
+    ],
+    benchmarks: [],
+    strength: {
+      muscles: [
+        { muscle: 'Chest', lift: 'Barbell Bench Press', estimate: 120, confidence: 0.7,
+          band: 'Good', basis: 'direct', contributorCount: 5, exerciseCount: 2,
+          contributors: [{ exerciseName: 'Barbell Bench Press', weight: 110, reps: 5,
+            date: `${YEAR}-02-10`, loadType: 'total', source: 'benchmark' }],
+          hint: null, confident: true },
+        { muscle: 'Back', lift: 'Barbell Row', estimate: 150, confidence: 0.5,
+          band: 'Fair', basis: 'direct', contributorCount: 3, exerciseCount: 1,
+          contributors: [{ exerciseName: 'Barbell Row', weight: 115, reps: 6,
+            date: `${YEAR}-02-10`, loadType: 'total', source: 'workout' }],
+          hint: null, confident: true },
+      ],
+      grid: { 'lifters|female|own|own': { Chest: [93, 6], Back: [58, 21] } },
+      defaultCompare: 'lifters|female|own|own',
+    },
+    ...extra,
+  });
+
+  const FULL = hersDoc({
+    bodyWeight: [{ date: `${YEAR}-02-10`, weight: THEIR_WEIGHT }],
+    connections: [{ uid: 'u2', name: 'Marco' }, { uid: 'u3', name: '' }],
+  });
+  social.friend = async () => ({ audience: 'friends', doc: FULL });
+
+  const flat = (n) => n.textContent.replace(/\s+/g, ' ');
+
+  /* ---- 1. the two figures, and what each of them may claim ---- */
+  {
+    const prof = await mount(FriendView('u1'));
+    for (let i = 0; i < 14; i++) await settle();
+    const t = flat(prof);
+
+    /* 🚨 THE WORKOUT FIGURE IS RENAMED, NOT FOOTNOTED. A published document
+     * carries at most MAX_ACTIVITY sessions, so this counts what they PUBLISH
+     * and not what they have trained — the same problem their calendar met and
+     * solved by renaming the number ("N days published"), which docs/state.md
+     * records as the right call. A tile reading "2" under WORKOUTS is a claim
+     * about their training; under WORKOUTS SHARED it is a claim about their
+     * document, which is the only thing this device knows. */
+    const tiles = [...prof.querySelectorAll('.me-stat')].map((n) => flat(n));
+    ok(tiles.some((x) => /Workouts shared/.test(x)),
+       `🚨 the workout tile is labelled "Workouts shared", never bare "Workouts" (${tiles.join(' / ')})`);
+    ok(!tiles.some((x) => /^\s*\d+\s*Workouts\s*$/.test(x)),
+       '🔒 and there is no bare "Workouts" tile beside it that could be read as a career total');
+    ok(/most recent 60 sessions at most/.test(t),
+       '⚠️ and the window is NAMED under the pair — "shared" says the figure is bounded without '
+       + 'saying by how much, and sixty is a number a reader can check an expectation against');
+
+    ok(tiles.some((x) => /2 ?Friends/.test(x.replace(/\s+/g, ' '))),
+       `🚨 the friends figure counts the list their app published (${tiles.join(' / ')})`);
+    ok([...prof.querySelectorAll('a.me-stat')].map((a) => a.getAttribute('href'))
+      .includes('#/friend/u1/friends'),
+       '⚠️ and links to it, which is what makes "and so on if they want" possible');
+    ok(!/has not published their friends list/.test(t),
+       '🔒 with no "not published" line, because it IS published — the sentence below has to be '
+       + 'able to be absent or its presence proves nothing');
+
+    /* 🚨 NEVER THEIR BODY WEIGHT, EVEN THOUGH THIS DOCUMENT PUBLISHES ONE. Tim:
+     * "Display the 'your body' details, but leave out the weight (only show
+     * gendar and age)." This page printed their last weigh-in as a note until
+     * today, so the absence is a removal rather than a gap. */
+    ok(!/197/.test(t),
+       '🚨 their profile never prints their body weight — not even for a friend who publishes it, '
+       + 'and this fixture publishes one so the check is on the weight and not on a coincidence');
+
+    ok(/Autumn's body/.test(t) && /Female · 28 years/.test(t),
+       `⚠️ their body reads sex and age, from the published fields, and stops there (${t.slice(t.indexOf("Autumn's body"), t.indexOf("Autumn's body") + 60)})`);
+    ok(!prof.querySelector('a[href="#/profile"]'),
+       '🚨 and it is a READOUT, not a door — `#/profile` is MY form, there is no screen for '
+       + 'somebody else\'s body, and a row that opened nothing would be the "control that cannot '
+       + 'answer" this file already refuses on their calendar cells');
+
+    /* 🛑 NO GOALS SECTION. Tim: "Intentionally leave out the goals." Nothing
+     * about a goal is in a published document either, so there is no version of
+     * it that could have been built honestly. */
+    ok(!/Your goal|Set a goal/.test(t), '🛑 and the profile carries no goal section at all');
+
+    /* ---- their best lifts, and which half this device may rank ---- */
+    const coreRows = [...prof.querySelectorAll('.me-bests > .list > .me-best')];
+    ok(coreRows.length === 8,
+       `🚨 the core eight are always drawn, ranked or not (${coreRows.length})`);
+
+    const bench = coreRows.find((r) => /Barbell Bench Press/.test(r.querySelector('.row-title').textContent));
+    const benchNum = bench && bench.querySelector('.me-best-top');
+    ok(Boolean(benchNum) && /lv-text-/.test(benchNum.className),
+       '🚨 a core lift wears the level ramp its OWNER published for that muscle — a percentile '
+       + 'needs a body weight and theirs is not ours to have (js/shared-map.js says recomputing '
+       + 'one is the thing it cannot do)');
+    // ⚠️ THE SEVEN LEVELS AND THE EIGHTH NON-LEVEL, from strength-standards.js's
+    // own list. "Below Beginner" is what a percentile under the first band reads
+    // as — `lv-text-below` refuses to invent an eighth level and neither does this.
+    ok(bench && /confidence · (Below Beginner|Beginner|Novice|Intermediate|Proficient|Advanced|Expert|Elite)/
+      .test(flat(bench.querySelector('.me-best-est'))),
+       `⚠️ with the band and the LEVEL NAME in words beside it, so the colour is never the only carrier (${bench && flat(bench.querySelector('.me-best-est'))})`);
+    ok(bench && /Barbell Bench Press 110 lbs × 5/.test(flat(bench)),
+       '⚠️ and the recorded set their rating was led by, on the row — Rule 5\'s measured anchor');
+
+    ok(/their body weight/.test(t) && /their age/.test(t),
+       '⚠️ the comparison line names THEIR body and THEIR age — "people like you" over their '
+       + 'figures is the exact fault the 2026-09-09 default change was made to stop');
+    ok(/women who lift/.test(t),
+       '🚨 and THEIR population, resolved from their own published defaultCompare');
+    ok(!/people like you|your body weight|My body weight/i.test(t),
+       '🔒 and never the reader\'s');
+
+    /* 🚨 A MUSCLE THE GRID DOES NOT CARRY GETS A REASON, NOT A NUMBER — the
+     * NO_NUMBER pattern from #/me, with its own sentences because "nothing
+     * recorded for this muscle yet" is an instruction on my page and a
+     * statement about somebody else on theirs. Six of the eight are unrated in
+     * this fixture, which is what a thin published grid really looks like. */
+    ok(/have not published a rating for this muscle/.test(t),
+       '🚨 an unrated core muscle says why, in the number\'s slot, rather than leaving a hole');
+    const noneRows = coreRows.filter((r) => r.querySelector('.me-best-none'));
+    ok(noneRows.length === 6,
+       `⚠️ and all six of them do, rather than being silently dropped (${noneRows.length})`);
+
+    /* 🚨 EVERYTHING ELSE IS NUMBERED BUT NOT RANKED, with the reason said once.
+     * Their app publishes a level per MUSCLE, not per lift; one worked out here
+     * would be read against a different body from the one theirs was. */
+    const otherRows = [...prof.querySelectorAll('.me-other .me-best')];
+    ok(otherRows.length >= 2,
+       `⚠️ their other lifts are listed (${otherRows.length})`);
+    ok(otherRows.some((r) => /Lat Pulldown/.test(flat(r))),
+       'including a lift only their published sets know about');
+    ok(otherRows.every((r) => {
+      const top = r.querySelector('.me-best-top');
+      return !top || !/lv-text-/.test(top.className);
+    }), '🔒 and NOT ONE of them wears a level chip — the colour half of the same refusal');
+    ok(otherRows.filter((r) => r.querySelector('.me-best-top'))
+      .every((r) => /not ranked|measured, not ranked/.test(flat(r.querySelector('.me-best-est')))),
+       '⚠️ every numbered "other" row says "not ranked" in words beside its estimate');
+    ok(/level per muscle rather than per lift/.test(t),
+       '🚨 and the section says WHY nothing but the core eight is ranked — a list of unranked '
+       + 'numbers with no reason reads as a feature that half-failed');
+
+    /* ---- their calendar, from ownCalendar(), counting the honest thing ---- */
+    ok(Boolean(prof.querySelector('.me-cal .cal-modes')),
+       '🚨 their training history is on the profile, drawn by the same ownCalendar() as mine');
+    ok(/day published|days published/.test(t),
+       '⚠️ counting days PUBLISHED, never days trained — their document holds sixty sessions, so '
+       + 'the figure is bounded by what they share and says nothing about what they did');
+    ok(!/days trained|day trained/.test(t),
+       '🔒 and the word "trained" appears nowhere on somebody else\'s page');
+  }
+
+  /* ---- 2. the same document with none of the new fields ---- */
+  {
+    const bare = hersDoc();
+    delete bare.profile.gender;
+    delete bare.profile.age;
+    social.friend = async () => ({ audience: 'friends', doc: bare });
+    const prof = await mount(FriendView('u1'));
+    for (let i = 0; i < 14; i++) await settle();
+    const t = flat(prof);
+
+    ok(!/Autumn's body/.test(t),
+       '⚠️ with NEITHER field the body section is omitted rather than printing an empty row — '
+       + 'which is every document published before the fields existed, so it is the common case');
+
+    /* 🚨 ABSENT IS NOT ZERO. `connections` does not exist on a document written
+     * before 2026-09-16, and printing 0 there would invent a fact about somebody
+     * else's social life out of a field that has never been written. */
+    const friendTile = [...prof.querySelectorAll('.me-stat')]
+      .find((n) => /Friends/.test(n.textContent));
+    ok(friendTile && /—/.test(friendTile.textContent) && friendTile.tagName !== 'A',
+       '🚨 and the friends figure is a DASH with no link, never 0');
+    ok(/has not published their friends list yet/.test(t),
+       '⚠️ with one line saying their app has not published it — the difference between "they '
+       + 'have none" and "we have not been told" is visible to the reader, so it is stated');
+
+    /* 🚨 A BODY-WEIGHT LIFT NOBODY CAN PRICE. `bestLifts()` returns no
+     * `estimatedMax` for a pull-up with no weigh-in in the document, so the row
+     * would otherwise fall to the converted branch and print their muscle rating
+     * multiplied back out on this device. */
+    ok(/cannot be priced/.test(t),
+       '🚨 a pull-up from somebody who publishes no weigh-in says so, rather than being silently '
+       + 'dropped OR given the plate-only figure — which would read as a 25 lb pull-up max');
+    ok(/Pull-Up/.test(t),
+       '⚠️ and the lift is still LISTED, with the days they trained it — a refusal about a number '
+       + 'is not a reason to lose the lift');
+  }
+
+  /* ---- 3. their friends list: "none" is not "not published" ---- */
+  {
+    social.friend = async () => ({ audience: 'friends',
+      doc: hersDoc({ connections: [{ uid: 'u2', name: 'Marco' }, { uid: 'u3', name: '' }] }) });
+    const list = await mount(FriendPeopleView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+    ok(/Marco/.test(list.textContent), 'their friends list renders the published rows');
+    ok(/Someone/.test(list.textContent),
+       '⚠️ and a row whose published name is empty still says something rather than nothing');
+    ok([...list.querySelectorAll('a.row')].map((a) => a.getAttribute('href'))
+      .includes('#/friend/u2'),
+       '🚨 each row opens THAT person\'s page, which is the whole of "and so on if they want"');
+
+    social.friend = async () => ({ audience: 'friends', doc: hersDoc({ connections: [] }) });
+    const none = await mount(FriendPeopleView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+    ok(/No friends yet/.test(none.textContent),
+       'an empty PUBLISHED list says they are not connected to anybody');
+
+    social.friend = async () => ({ audience: 'friends', doc: hersDoc() });
+    const gap = await mount(FriendPeopleView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+    ok(/has not published/.test(gap.textContent) && !/No friends yet/.test(gap.textContent),
+       '🚨 while an ABSENT field says their app has not published it — "No friends yet" there '
+       + 'would be this app stating something false about somebody\'s social life on the strength '
+       + 'of a field that did not exist when their app last ran');
+  }
+
+  /* ---- 4. their workouts ---- */
+  {
+    social.friend = async () => ({ audience: 'friends', doc: FULL });
+    const wk = await mount(FriendWorkoutsView('u1'));
+    for (let i = 0; i < 10; i++) await settle();
+    const t = flat(wk);
+    ok(/2 workouts Autumn has published/.test(t),
+       `⚠️ the count says PUBLISHED, the third place this one figure is stated and the third time it may not read as a career total (${t.slice(0, 90)})`);
+    ok(/most recent 60 sessions at most/.test(t), 'and names the window, as the tile does');
+    ok(wk.querySelectorAll('.act').length === 2,
+       'with one row per published workout, from the same activityRow() their page has always used');
+  }
+
+  /* ---- 5. every old address still resolves, onto the panel ---- *
+   *
+   * 🚨 THIS PROJECT HAS NOT BROKEN A DEEP LINK YET. `#/friend/<uid>/volume` and
+   * `/graph` were live screens until 2026-09-05 and tabs until 2026-09-16;
+   * `muscles` and `bars` read exactly like them and were reserved at the same
+   * time, because a link somebody could reasonably type otherwise resolved to
+   * "that workout is not here".
+   *
+   * ⚠️ THE MAP IS WRITTEN OUT HERE because `js/app.js` cannot be imported into a
+   * DOM test — it boots on import. This mirrors `FRIEND_DATA_TABS`; if the two
+   * ever disagree, the browser is where that shows, and the tab each segment
+   * lands on is what this pins. */
+  {
+    const ROUTES = [['data', null, 'Muscles'], ['volume', 'volume', 'Volume'],
+      ['graph', 'trend', 'Graph'], ['muscles', 'muscles', 'Muscles'],
+      ['bars', 'compare', 'Bars']];
+    for (const [seg, tab, label] of ROUTES) {
+      const v = await mount(FriendDataView('u1', tab));
+      for (let i = 0; i < 12; i++) await settle();
+      const on = [...v.querySelectorAll('.segmented .seg')]
+        .find((b) => b.getAttribute('aria-selected') === 'true');
+      ok(on && on.textContent === label,
+         `⚠️ #/friend/<uid>/${seg} opens the panel on ${label} (${on && on.textContent})`);
+      ok(Boolean(v.querySelector('.topbar .icon-btn[aria-label="Close"]'))
+         && !v.querySelector('.topbar .icon-btn[aria-label="Back"]'),
+         `🛑 and /${seg} carries the DOWN arrow even opened cold — it means "put this away", which `
+         + 'lands on their profile whatever route arrived at it, where a back arrow on a cold '
+         + 'open would step off the site');
+    }
+  }
+
+  /* ---- 6. the segments are an explicit ask, not an inference ---- *
+   *
+   * 🚨 Research is left off a friend's page for a reason about CONTENT — Tim:
+   * "exclude research because it doesn't share anything new", it being eleven
+   * topics about training in general, identical on everybody's screen — and
+   * until 2026-09-16 that reason was expressed as "this screen was given rows,
+   * therefore four tabs and a calendar". `opts.segments` lets the caller that
+   * HAS the reason state it. */
+  {
+    const only = await mount(GraphView({ segments: ['muscles', 'volume'] }));
+    for (let i = 0; i < 10; i++) await settle();
+    ok([...only.querySelectorAll('.segmented .seg')].map((b) => b.textContent).join('|')
+       === 'Muscles|Volume',
+       '⚠️ GraphView draws exactly the segments it is asked for, in the order it is asked for');
+    const rev = await mount(GraphView({ segments: ['volume', 'muscles'] }));
+    for (let i = 0; i < 10; i++) await settle();
+    ok([...rev.querySelectorAll('.segmented .seg')].map((b) => b.textContent).join('|')
+       === 'Volume|Muscles',
+       '🔒 including the order, which is the caller\'s and not this file\'s — reading it out of a '
+       + 'label map would silently impose one');
+  }
+
+  /* ---- 7. the back rule, and it is Tim's override of Rule 8 ---- *
+   *
+   * 🚨 *"if you go back after going inside a frined's friend, it doesn't go back
+   * to your friend, it goes back to your main profile menu."* Rule 8's arrow
+   * goes through history; `backExact: true` is the existing opt-out and this is
+   * its second user after the finish screen. It is written down as an override
+   * so the next person to read Rule 8 does not "fix" it.
+   *
+   * ⚠️ THE DEPTH IS STAMPED ON THE HISTORY ENTRY, NOT COUNTED — a counter cannot
+   * tell a forward navigation from the browser's own back button, which is the
+   * trap markRoute() was written to avoid. These drive the stamping function
+   * itself, because that is where the trap is. */
+  {
+    markFriendTrail(null);
+
+    history.replaceState({}, '', '#/friend/a');
+    ok(markFriendTrail('a') === 1,
+       '🔒 a friend reached from anywhere that is not another friend is depth 1 — a deep link, a '
+       + 'reload, a tap from my own friends list');
+
+    history.replaceState({}, '', '#/friend/a/workouts');
+    ok(markFriendTrail('a') === 1,
+       '⚠️ and their own workouts, friends, data panel and sessions do not deepen it — walking '
+       + 'into a friend\'s own workout and back must not strand the reader at #/me');
+
+    history.replaceState({}, '', '#/friend/b');
+    ok(markFriendTrail('b') === 2,
+       '🚨 a friend reached from INSIDE another friend is depth 2, which is what sends the arrow '
+       + 'to #/me instead of to the intermediate person');
+    ok(friendTrailDepth() === 2, 'and the view can read it while it builds itself');
+
+    // 🔒 THE TRAP: coming BACK to that entry must READ the same depth, not count again.
+    const stamped = history.state;
+    ok(stamped && stamped.friendDepth === 2, 'the depth really is on the entry, not in a variable');
+    history.replaceState({}, '', '#/home');
+    markFriendTrail(null);
+    history.replaceState(stamped, '', '#/friend/b');
+    ok(markFriendTrail('b') === 2,
+       '🔒 and an entry that has been visited already knows its own depth, whichever direction it '
+       + 'is reached from — the whole reason this is a stamp and not a counter');
+
+    markFriendTrail(null);
+    ok(friendTrailDepth() === 0,
+       '⚠️ walking out to another tab resets the trail, so coming back in through my own friends '
+       + 'list starts at depth 1 again');
+    history.replaceState({}, '', '#/home');
+  }
+
+  /* ---- 8. the demo renders the same profile, not a fixture of its own ---- *
+   *
+   * 🚨 THIRD TIME THIS RULE HAS HAD TO BE APPLIED TO `friendScreen()`. It was a
+   * near-duplicate of the real page's body, and when the real page grew a Data
+   * tab bar on 2026-09-05 the demo nearly kept the old layout — and the demo is
+   * where every screen in this app gets looked at, measured and audited (§0.10).
+   * It is not a near-duplicate any more: `friendProfileScreen()` draws both and
+   * `demo: true` is the only difference, so the layout cannot fall behind. */
+  {
+    sessionStorage.setItem('ftrack:v1:demo', '1');
+    const { demo } = await import(BASE + 'store.js');
+    /* 🔒 AND THE REAL `social.state` AND `social.friend` GO BACK FIRST. The stubs
+     * above answer `{ available: true, reason: null }`, and `friendDoc()` reaches
+     * its demo branch on `state.reason === 'demo'` — so with them in place this
+     * block would have driven the REAL path against a stubbed document and
+     * asserted the demo's behaviour without ever entering the demo. It did,
+     * until the assertion below caught it. */
+    Object.assign(social, { state: keep.state, friend: keep.friend });
+    ok(demo.active(), 'the demo flag is on, so this is not passing vacuously');
+    ok((await social.state()).reason === 'demo',
+       '🔒 and the app really is IN the demo — a stubbed social state would send this down the '
+       + 'real path and prove nothing about the demo at all');
+
+    const d = await mount(FriendView('demo-friend-1'));
+    for (let i = 0; i < 16; i++) await settle();
+    ok(Boolean(d.querySelector('.me-head .me-face')) && Boolean(d.querySelector('.me-stats')),
+       '🚨 the demo friend renders the SAME profile shape as a real one — a fixture rendering a '
+       + 'layout the app no longer has is a known failure mode here');
+    ok(Boolean(d.querySelector('.me-bests')) && Boolean(d.querySelector('.me-cal')),
+       'with their best lifts and their training history on it');
+    ok(!d.querySelector('.danger-zone'),
+       '⚠️ minus the relationship footer: Disconnect and Send a friend request act on a real '
+       + 'account, and a control that cannot do what it says is worse than an absent one');
+    sessionStorage.removeItem('ftrack:v1:demo');
+  }
+
+  Object.assign(social, keep);
   await store.clearAll();
 }
 
@@ -9051,7 +9863,7 @@ ok(!data.querySelector('.rep-target'),
  * never claims to know more about their training than sixty sessions.
  * ================================================================== */
 {
-  const { FriendView } = await import(BASE + 'views-social.js');
+  const { FriendView, FriendDataView } = await import(BASE + 'views-social.js');
   const { social, todayISO } = await import(BASE + 'store.js');
   const { CalendarView: MyCal } = await import(BASE + 'views-data.js');
   sessionStorage.removeItem('ftrack:v1:demo');
@@ -9119,7 +9931,23 @@ ok(!data.querySelector('.rep-target'),
     if (y && y.getAttribute('aria-selected') !== 'true') { y.click(); await settle(); }
   }
 
-  const fr = await mount(FriendView('u1'));
+  /* 🔄 THEIR CALENDAR HAS TWO DOORS SINCE 2026-09-16 and this asserts both. It
+   * is a segment of their DATA PANEL, as it has been since 2026-09-05 — that is
+   * the one carrying the Months/Years switch these assertions are about — and it
+   * is also a section of their PROFILE now, because Tim asked for *"their
+   * training history (calendar)"* on it. Both are `ownCalendar()`: one function,
+   * five doors, which is the whole reason that function exists. */
+  {
+    const prof = await mount(FriendView('u1'));
+    for (let i = 0; i < 12; i++) await settle();
+    ok(Boolean(prof.querySelector('.me-cal .cal-modes')),
+       '🚨 their PROFILE carries their training history, drawn by the same ownCalendar() as mine');
+    ok(/days published/.test(prof.textContent.replace(/\s+/g, ' ')),
+       '⚠️ counting days PUBLISHED, not days trained — the rename is what makes a bounded figure '
+       + 'honest, and it travels with the calendar rather than being written twice');
+  }
+
+  const fr = await mount(FriendDataView('u1'));
   for (let i = 0; i < 12; i++) await settle();
   const tabBtn = (label) => [...fr.querySelectorAll('.segmented .seg')]
     .find((b) => b.textContent === label);
@@ -9323,7 +10151,7 @@ ok(!data.querySelector('.rep-target'),
   }
   {
     // Theirs is on Months from section 6; put it on Years so the two differ.
-    const back = await mount(FriendView('u1'));
+    const back = await mount(FriendDataView('u1'));
     for (let i = 0; i < 12; i++) await settle();
     [...back.querySelectorAll('.segmented .seg')].find((b) => b.textContent === 'Calendar').click();
     for (let i = 0; i < 6; i++) await settle();
@@ -9344,6 +10172,340 @@ ok(!data.querySelector('.rep-target'),
   }
 
   Object.assign(social, keep);
+}
+
+/* ==================================================================
+ * AN EMPTY MONTH COLLAPSES, AND SIX MONTHS EARN A BAR CHART — 2026-09-16
+ *
+ * Tim: *"when you go in the months display, if a month has no recordings in it,
+ * just say the month and say no recordings, don't show an entire month of empty
+ * boxes. Additionally, if the user has more than 5 months of recordings in it,
+ * show a bar chart that has the months as the x axis and the number of days
+ * workouts recorded in that month as the y axis."*
+ *
+ * ⚠️ RUN LAST, and it clears the store on the way in and out. `calMode` is
+ * module state that every calendar block in this file reads, so this one leaves
+ * it on Years — the default — exactly as the friend block above does.
+ * ================================================================== */
+{
+  const { todayISO } = await import(BASE + 'store.js');
+  sessionStorage.removeItem('ftrack:v1:demo');
+  await store.clearAll();
+
+  const TODAY = todayISO();
+  // Day 5 of the month `n` months back. ⚠️ Built from integers through
+  // `new Date(y, m, d)` and never parsed from a string — the rule year-grid.js
+  // states, for the reason it states: `new Date('2026-03-01')` is UTC midnight
+  // and lands in February west of Greenwich.
+  const monthBack = (n) => {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() - n, 5);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-05`;
+  };
+  const monthName = (n) => {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() - n, 5);
+    return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()];
+  };
+  const sameMonth = (n, day) => monthBack(n).slice(0, 8) + String(day).padStart(2, '0');
+
+  const w = await store.saveWorkout({ name: 'Chart test', exercises: [] });
+  const log = async (date) => store.saveSession({
+    workoutId: w.id, workoutName: 'Chart test', date, entries: [],
+  });
+  const segs = (screen) => [...screen.querySelectorAll('.cal-modes .seg')];
+  const toMonths = async (screen) => {
+    segs(screen).find((b) => b.textContent === 'Months').click();
+    for (let i = 0; i < 3; i++) await settle();
+  };
+
+  /* ---- 1. an empty month is one line, and a full one still has its grid ---- */
+  {
+    await log(TODAY);
+    await log(monthBack(2));
+    const screen = await mount(CalendarView());
+    await toMonths(screen);
+
+    const blocks = [...screen.querySelectorAll('.cal-month')];
+    const empties = blocks.filter((b) => b.classList.contains('is-empty'));
+    ok(empties.length > 0 && empties.every((b) => !b.querySelector('.cal-cell')),
+       `🚨 a month with nothing recorded draws NO day boxes at all (${empties.length} collapsed, `
+       + `${empties.reduce((n, b) => n + b.querySelectorAll('.cal-cell').length, 0)} cells between them) `
+       + '— Tim: "don\'t show an entire month of empty boxes"');
+    ok(empties.every((b) => /No recordings/.test(b.textContent)),
+       'and says "No recordings" instead');
+    ok(empties.every((b) => /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b \d{4}/
+      .test(b.querySelector('.cal-title').textContent)),
+       '⚠️ while still NAMING the month and its year — Tim asked for the month to be said, not for '
+       + 'the month to be dropped: a month that is not drawn reads as a month that does not exist');
+    /* ⚠️ THE OTHER HALF, and without it "collapse every month" would pass every
+       line above. A month that HAS something is untouched: its day boxes, its
+       weekday strip and the workout's name in the cell are all still there. */
+    {
+      const full = blocks.filter((b) => !b.classList.contains('is-empty'));
+      ok(full.length === 2,
+         `🚨 and exactly the two months that HAVE something are still drawn in full (${full.length})`);
+      ok(full.every((b) => b.querySelectorAll('.cal-cell').length >= 28 && b.querySelector('.cal-dows')),
+         'each with its day boxes and its weekday strip');
+      ok(full.some((b) => /Chart test/.test(b.textContent)),
+         '⚠️ and the workout still names itself in the cell — the collapse may not cost the months '
+         + 'that survive it anything');
+    }
+    /* 🚨 A COLLAPSED MONTH IS STILL A LANDING TARGET, and this is the assertion
+       the whole change turns on. `landOnCurrentMonth` finds its month by
+       `[data-current-month]` and pads `lastElementChild`; a collapsed section
+       that dropped either would silently stop the Months tap landing — which is
+       the 2026-09-12 fix, undone by the 2026-09-16 one. Structure only: jsdom
+       lays nothing out, so `data-landed` is the record of what the scroller was
+       AIMED at (see the Calendar block for what a browser still has to show). */
+    {
+      const current = screen.querySelector('.cal-month[data-current-month]');
+      ok(current && current.dataset.landed === 'true' && !current.nextElementSibling,
+         '🚨 the current month is still the LAST block and the scroller was still aimed at it');
+    }
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+    await store.clearAll();
+  }
+
+  /* ---- 2. AND THE CURRENT MONTH COLLAPSES LIKE ANY OTHER, still landing ----
+     The 1st of a month is the ordinary case here, not an edge one: nothing is
+     recorded yet and the month somebody lands on is the empty one. If the
+     collapsed section had lost `data-current-month` this is where it would
+     show. */
+  {
+    await log(monthBack(1));
+    await log(monthBack(3));
+    const screen = await mount(CalendarView());
+    await toMonths(screen);
+    const current = screen.querySelector('.cal-month[data-current-month]');
+    ok(current && current.classList.contains('is-empty') && /No recordings/.test(current.textContent),
+       '🚨 an empty CURRENT month collapses too — no special case, and no month of blank boxes on '
+       + 'the 1st');
+    ok(current && current.dataset.landed === 'true',
+       '⚠️ and the tap still lands on it, collapsed — the month you are in is still the month you '
+       + 'are shown');
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+    await store.clearAll();
+  }
+
+  /* ---- 3. FIVE months of recordings is not enough for a chart ----
+     Tim's threshold is "more than 5", so five is the case that must NOT draw.
+     Asserted before the six-month case, because "the chart appears" is
+     satisfiable by a chart that always appears. */
+  {
+    for (const n of [0, 1, 2, 3, 4]) await log(monthBack(n));
+    const screen = await mount(CalendarView());
+    await toMonths(screen);
+    ok(!screen.querySelector('.mchart'),
+       '🛑 five months of recordings draws NO bar chart — Tim: "more than 5 months"');
+    ok(screen.querySelectorAll('.cal-month').length > 0,
+       'and the months themselves are still there, so the absence is the chart and not the screen');
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+    await store.clearAll();
+  }
+
+  /* ---- 4. SIX months draws it, and it draws the right thing ---- */
+  {
+    // Six months WITH something, and a deliberate hole at two months back so a
+    // gap has something to be. Two days in month 5 — one of them logged twice —
+    // so the y-axis maximum is 2 and "days, not sessions" has a case.
+    for (const n of [0, 1, 3, 4, 5, 6]) await log(monthBack(n));
+    await log(sameMonth(5, 6));
+    await log(monthBack(5));
+
+    const screen = await mount(CalendarView());
+    await toMonths(screen);
+
+    const chart = screen.querySelector('.mchart');
+    ok(Boolean(chart), '🚨 six months of recordings draws the bar chart');
+    ok(chart && /DAYS TRAINED EACH MONTH/i.test(chart.textContent),
+       'under a heading naming what the y-axis counts');
+
+    const slots = [...chart.querySelectorAll('.mchart-bars .mchart-slot')];
+    /* ⚠️ SEVEN COLUMNS FOR SIX MONTHS OF TRAINING. The x-axis is TIME, evenly
+       spaced, so the hole two months back has to occupy its own place: dropping
+       it would put three-months-ago next to one-month-ago and draw a
+       continuous run over a history that stopped. */
+    ok(slots.length === 7,
+       `🚨 seven columns — the six months with something PLUS the empty one between them, because `
+       + `the x-axis is time and a gap has to read as a gap (${slots.length})`);
+    const zeros = [...chart.querySelectorAll('.mchart-bar.is-zero')];
+    ok(zeros.length === 1,
+       `⚠️ exactly one of them is a ZERO column rather than a missing one (${zeros.length})`);
+    ok(slots[4] && slots[4].querySelector('.mchart-bar.is-zero'),
+       '🚨 and it is in the right PLACE — fifth of seven, which is two months back — so the gap '
+       + 'sits where the silence actually was');
+
+    /* ⚠️ LEADING EMPTY MONTHS ARE TRIMMED. `monthRange` always reaches back
+       twelve months, so without the trim this chart would open on five zero
+       columns before the first thing ever recorded — which is exactly the "a
+       year of nothing before you reach anything" Tim reported on 2026-09-12,
+       redrawn as a chart. Twelve columns would mean the trim is gone. */
+    ok(slots.length < 12,
+       `⚠️ and the months BEFORE the first recording are not drawn at all — there was no history `
+       + `yet, so they are not a gap in one (${slots.length} columns, not 12)`);
+
+    /* 🚨 THE Y-AXIS COUNTS DAYS, NOT SESSIONS — the same rule `daysLabel` states
+       over the year grid, and the reason is the same: a day with two workouts is
+       ONE square there, so it has to be one unit of bar here or the chart stops
+       describing the picture underneath it. Month 5 holds three sessions across
+       two days; the maximum is 2. */
+    const ticks = [...chart.querySelectorAll('.mchart-tick')].map((t) => t.textContent);
+    ok(ticks.join('|') === '2|0',
+       `🚨 the y-axis tops out at 2 — month five holds THREE sessions on TWO days, and the axis `
+       + `counts the days (${ticks.join('|')})`);
+
+    /* 🚨 ONE role="img" WITH THE WHOLE READING ON IT — the shape year-grid.js
+       settled on, and the reason there is no number printed over every bar. */
+    const plot = chart.querySelector('.mchart-plot');
+    const label = (plot && plot.getAttribute('aria-label')) || '';
+    ok(plot && plot.getAttribute('role') === 'img',
+       '🚨 the plot is a single picture with one label, not seven focus stops announcing a number '
+       + 'with no scale beside it');
+    ok(new RegExp(`${monthName(2)}: 0`).test(label),
+       `🚨 and the reading names the empty month and its zero (looking for "${monthName(2)}: 0") — `
+       + 'the exact figures live here, which is what lets the bars carry no numerals');
+    /* ⚠️ THE YEAR IS OPTIONAL IN THIS PATTERN, and that is the reading's own
+       rule rather than slack in the assertion: the reading prints a year only
+       where the year CHANGES, exactly as the visible axis labels it. An earlier
+       version of this line demanded "Apr 2026: 2" and failed against a correct
+       chart — the assertion was wrong, not the code. */
+    ok(new RegExp(`${monthName(5)}( \\d{4})?: 2`).test(label),
+       `⚠️ and the two-day month reads 2 (looking for "${monthName(5)}: 2")`);
+    ok((label.match(/: \d/g) || []).length === 7,
+       `⚠️ with one figure per column and no column left out (${(label.match(/: \d/g) || []).length})`);
+
+    /* 🛑 NO VERDICT AND NO TREND (Rule 6). It reports what was recorded; whether
+       that is good, improving or slipping is not something this app knows. */
+    ok(!/\b(best|worst|improv|better|worse|slipp|streak|trend|on track|behind)\b/i.test(chart.textContent),
+       '🛑 and it passes no verdict of any kind — no best month, no trend, no arrow');
+    ok(!chart.querySelector('svg') && !chart.querySelector('.mchart-trend'),
+       '🛑 nor draws a trend line');
+
+    /* ⚠️ IT IS A READING OF THE MONTHS VIEW, so it goes when the months go.
+       Years already shows the whole history at a glance; a second summary over
+       it would be two pictures of one claim. */
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+    ok(!screen.querySelector('.mchart'),
+       '🚨 and it is a MONTHS-view chart — switching to Years takes it away with the month blocks, '
+       + 'because Years is already a picture of the whole history');
+    segs(screen).find((b) => b.textContent === 'Months').click();
+    for (let i = 0; i < 3; i++) await settle();
+    ok(Boolean(screen.querySelector('.mchart')),
+       'and comes back with them, painted in place rather than rebuilt around');
+
+    /* ⚠️ AND IT SITS ABOVE THE MONTHS, which is the only position from which it
+       is a summary of the list rather than a second header on the screen. */
+    const host = screen.querySelector('.pane-scroll');
+    ok(host && host.firstElementChild && host.firstElementChild.classList.contains('mchart'),
+       '⚠️ above the months rather than under them');
+    ok(host && [...host.children].filter((c) => c.classList.contains('cal-month')).length > 0
+       && host.lastElementChild.classList.contains('cal-month'),
+       '⚠️ and the LAST child is still a month, so `landOnCurrentMonth` still has a month to pad');
+
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+  }
+  await store.clearAll();
+}
+
+/* ==================================================================
+ * AND ON A FRIEND'S CALENDAR THE Y-AXIS SAYS PUBLISHED — 2026-09-16
+ *
+ * 🚨 The third place this rule is applied in this file, not the first:
+ * `publishedDaysLabel` and "N days published" beside each year already say it.
+ * Their document holds their most recent sixty sessions, so a bar of 12 is
+ * twelve days they SHARED and the whole chart is bounded by sixty however much
+ * they trained — a count of publishing printed under the name of training
+ * (direction.md §3.1).
+ * ================================================================== */
+{
+  const { FriendDataView } = await import(BASE + 'views-social.js');
+  const { social, todayISO } = await import(BASE + 'store.js');
+  sessionStorage.removeItem('ftrack:v1:demo');
+
+  const keep = {
+    state: social.state, friend: social.friend, invites: social.invites,
+    handoffs: social.handoffs, requests: social.requests,
+    healConnectionName: social.healConnectionName,
+    processDisconnects: social.processDisconnects,
+    processAcceptedRequests: social.processAcceptedRequests,
+  };
+  social.invites = async () => [];
+  social.handoffs = async () => [];
+  social.requests = async () => [];
+  social.healConnectionName = async () => null;
+  social.processDisconnects = async () => 0;
+  social.processAcceptedRequests = async () => 0;
+  social.state = async () => ({
+    available: true, reason: null, user: { uid: 'me' }, uid: 'me', name: 'Tim',
+    shareBodyWeight: false, visibility: 'private',
+    connections: [{ uid: 'u2', name: 'Autumn', since: '2026-08-01' }],
+  });
+
+  const monthBack = (n) => {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() - n, 5);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-05`;
+  };
+  // Seven months with something: over five, so their page earns a chart too.
+  const dates = [todayISO(), ...[1, 2, 3, 4, 5, 6].map(monthBack)];
+  social.friend = async () => ({
+    audience: 'friends',
+    doc: {
+      audience: 'friends', isPublic: false,
+      profile: { name: 'Autumn' },
+      activity: dates.map((date, i) => ({
+        id: `mc${i}`, date, name: 'Pull', startedAt: `${date}T09:00:00.000Z`,
+        entries: [{ exerciseId: 'lat-pulldown', name: 'Lat Pulldown',
+          sets: [{ weight: 120, reps: 10 }] }],
+      })),
+      benchmarks: [],
+      strength: { muscles: [], grid: {}, defaultCompare: 'lifters|male|own|own' },
+    },
+  });
+
+  const fr = await mount(FriendDataView('u2'));
+  for (let i = 0; i < 12; i++) await settle();
+  [...fr.querySelectorAll('.segmented .seg')].find((b) => b.textContent === 'Calendar').click();
+  for (let i = 0; i < 6; i++) await settle();
+  [...fr.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months').click();
+  for (let i = 0; i < 4; i++) await settle();
+
+  const chart = fr.querySelector('.mchart');
+  ok(Boolean(chart), 'a friend with seven months of published sessions gets the chart too');
+  ok(chart && /DAYS PUBLISHED EACH MONTH/i.test(chart.textContent),
+     '🚨 and its y-axis counts what they PUBLISHED — sixty sessions is a window, so a bar drawn '
+     + 'under the name of training would be a count of one quantity wearing the name of another');
+  {
+    const plotNode = chart.querySelector('.mchart-plot');
+    const label = plotNode ? plotNode.getAttribute('aria-label') : '';
+    ok(/published/.test(label) && !/trained/.test(label),
+       '⚠️ including the reading a screen reader is given — the visible heading and the accessible '
+       + 'name are the same claim, or one of them is a lie');
+  }
+  /* 🚨 THE GUARD THAT CANNOT BE FOOLED, and it is the shape the friend block
+     above already uses: the words appear NOWHERE on their page, so wiring the
+     owner's wording back in by accident is caught wherever it happens. */
+  ok(!/days trained|day trained/.test(fr.textContent.replace(/\s+/g, ' ')),
+     '🚨 and "days trained" still appears nowhere at all on their page, chart included');
+  /* ⚠️ Their cells were inert before this change and still are — a chart drawn
+     above them must not have handed the collapse a reason to build buttons. */
+  {
+    const cells = [...fr.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
+    ok(cells.length > 0 && cells.every((c) => c.tagName.toLowerCase() !== 'button'),
+       `⚠️ and not one of their day cells became a button (${cells.length} cells)`);
+  }
+  [...fr.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years').click();
+  await settle();
+
+  Object.assign(social, keep);
+  await store.clearAll();
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

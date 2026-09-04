@@ -14,6 +14,10 @@ import {
  * muscle-evidence.js in through strength-observations.js, so this names a module
  * that is loaded either way. It is here for one job — the custom-exercise sheet
  * must not offer a stand-in that converts nothing (see standInOptions). */
+import {
+  WEEK, CYCLE, REST, MIN_CYCLE_DAYS, MAX_CYCLE_DAYS,
+  newSchedule, normalizeSchedule, resizeSchedule, slotLabel, slotCount,
+} from './schedule.js';
 import { contributionsFor } from './muscle-evidence.js';
 import { alternativesFor } from './exercise-families.js';
 import { sessionStats, setsLabel } from './session-stats.js';
@@ -756,6 +760,132 @@ export async function RecordChooserView() {
   });
 }
 
+/* ================================================================== *
+ * A system opens and closes — the one mechanism, used by both screens
+ * ================================================================== */
+
+/* Tim, 2026-09-16: *"In the workouts section as well as the record section, it
+ * shows the list of systems you have as well as the workouts within each of
+ * them. I want you to be able to click on the system in order to close or open
+ * the display of the workouts within them in both sections."*
+ *
+ * ⚠️ ONE MECHANISM FOR BOTH SCREENS, which is the whole reason this is a helper
+ * rather than a `<details>` written out twice fifty lines apart. Two
+ * implementations of one disclosure is precisely the drift this project keeps
+ * having to write down — "one calendar, four doors" is the same lesson — and
+ * the drift is invisible until somebody puts the two screens side by side.
+ *
+ * ⚠️ `<details>`/`<summary>`, the disclosure this app already uses: the Research
+ * topics (`.rt-topic`) and "Other lifts" on Profile (`.me-other`). It is
+ * keyboard-operable, it announces itself as collapsed or expanded to a screen
+ * reader, and it keeps working with no script at all. None of that is behaviour
+ * we have to write, and none of it is behaviour we can forget to write.
+ *
+ * ⚠️ NOTHING ANIMATES ITS HEIGHT, deliberately. The Record picker is one tap
+ * from a workout in a gym (D4) and the MOTION rules allow exactly one thing to
+ * move on that path: a press answering back. The chevron turning IS that press
+ * answering back — `--t-fast`, the same 100ms `.me-other-chev` already uses —
+ * and the rows appear at once, so no tap ever waits on a transition. A sliding
+ * height would also have to be JS-driven on a native `<details>`, which is how
+ * a disclosure ends up with a state its own element disagrees with.
+ *
+ * ⚠️ A CLOSED `<details>` STILL REPORTS A BOX FOR ITS CONTENTS in the audit's
+ * Chrome — it hides them with `content-visibility`, not `display: none`. So
+ * anything checking "are the workouts hidden" must read `details.open` (or
+ * `checkVisibility()`), never a bounding rect. Recorded because a rect-based
+ * check here would pass while the screen was plainly wrong.
+ */
+
+/* ⚠️ TWO MEMORIES, NOT ONE, AND THIS PROJECT HAS ALREADY PAID FOR THAT LESSON.
+ * `calMode` in views-data.js is shared by its four doors on purpose, because it
+ * answers "how I read a calendar" — a preference about a picture, and the same
+ * preference wherever the picture is drawn. This is not that question. Which
+ * programmes I have folded away while browsing my library says nothing about
+ * which I want in front of me mid-gym, and the Record picker is an ACTION
+ * screen while the Workouts tab is a destination. `friendCalMode` exists as a
+ * separate variable for exactly this reason: a mutation check proved that one
+ * shared memory let one screen contaminate the other.
+ *
+ * ⚠️ AND THEY REMEMBER WHAT IS CLOSED, NEVER WHAT IS OPEN. That single choice
+ * is what makes "open" the default without seeding anything: a system nobody
+ * has touched is not in the set, a system created ten seconds ago is not in the
+ * set, and a fresh install starts with two empty sets. A set of OPEN ids would
+ * have to be filled in before the first paint, from data the view has only just
+ * finished loading, and would silently fold away every system added afterwards.
+ *
+ * They survive leaving the screen and coming back, for the same reason
+ * `calMode` and `volDays` do: somebody who folded away four of their five
+ * programmes did it because they run one of them, and re-opening all five on
+ * the next visit would undo that choice every single time. They do not survive
+ * a reload, which is the right floor — this is a reading position, not a
+ * setting, and nothing is lost by starting a fresh session showing everything.
+ */
+const closedOnWorkouts = new Set();
+const closedOnRecord = new Set();
+
+/* 🚨 OPEN IS THE DEFAULT ON BOTH SCREENS, AND IT IS NOT A COIN TOSS.
+ *
+ * The one-system case decides it. Most people have one programme (the Record
+ * picker's own comment says so, and it is why that screen groups rather than
+ * nests), and a person with one system who arrives to find it collapsed has
+ * been handed a closed door to their own workouts — the app showing them a
+ * heading and hiding everything it exists to show.
+ *
+ * The first-run case says the same thing from the other end: somebody who has
+ * just loaded a ready-made programme arrives here to see what is in it, and
+ * "install to first logged set in five taps" (2026-08-21) does not survive a
+ * sixth tap being added to unfold the list.
+ *
+ * And Record settles it beyond argument. That screen is an ACTION, not a
+ * destination — it is the one screen in this app where the point is to leave it
+ * immediately, with a phone in one hand in a gym. Collapsing it by default
+ * would add a tap to the most consequential path in the product to save a
+ * scroll on a screen most people never scroll.
+ *
+ * So the fold is something a person CHOOSES, one system at a time, and the two
+ * sets above are the record of those choices and nothing else.
+ */
+
+/**
+ * A system's workouts, behind a disclosure its own row opens and closes.
+ *
+ * Everything the row already carried is passed straight through in `summary`
+ * and rendered untouched — the rating badge on the Workouts tab, the programme
+ * name on Record. This helper adds a chevron and takes nothing away.
+ *
+ * @param {object}      o
+ * @param {Set<string>} o.memory   the screen's own record of what is folded.
+ * @param {string}      o.id       the system id — its key in that memory.
+ * @param {string}      o.cls      the classes the row wore before it was a
+ *                                 summary, so it still looks like itself.
+ * @param {Node|Node[]} o.summary  what the row says. Untouched.
+ * @param {Node|Node[]} o.body     the workouts inside it.
+ */
+function systemGroup({ memory, id, cls, summary, body }) {
+  const node = el('details', { class: 'sys-group', open: !memory.has(id), dataset: { sys: id } },
+    el('summary', { class: cls },
+      summary,
+      // The chevron this app already has, TURNED rather than swapped for a
+      // second glyph. `.me-other` does the same thing, so one rotation means
+      // "this is open" in all three places that disclose anything — and the
+      // rotation is the only difference between "go and look at that" and "this
+      // unfolds here", which is a difference a still picture cannot carry.
+      el('span', { class: 'sys-chev' }, chevron()),
+    ),
+    body,
+  );
+
+  /* ⚠️ THE MEMORY IS WRITTEN FROM `toggle`, NOT FROM A CLICK ON THE SUMMARY.
+   * A `<details>` also opens from the keyboard, from find-in-page, and from a
+   * screen reader's own expand — a click listener would miss all three, and the
+   * memory would then disagree with the screen until the next re-render put the
+   * disagreement on display. `toggle` fires however it moved. */
+  node.addEventListener('toggle', () => {
+    if (node.open) memory.delete(id); else memory.add(id);
+  });
+  return node;
+}
+
 export async function StartPickerView({ tab = false } = {}) {
   const [systems, workouts, sessions] = await Promise.all([
     store.getSystems(), store.getWorkouts(), store.getSessions(),
@@ -851,10 +981,29 @@ export async function StartPickerView({ tab = false } = {}) {
     ? [
         ...suggestion,
         el('div', { class: 'section-label', text: next ? 'Or start any workout' : 'Start a workout' }),
-        ...groups.flatMap((g) => [
-          el('div', { class: 'sys-head', text: g.sys.name }),
-          el('div', { class: 'list' }, g.items.map(row)),
-        ]),
+        // ⚠️ THE HEADING IS THE CONTROL NOW (2026-09-16) — see systemGroup
+        // above. It was a `<div class="sys-head">` with the programme's name in
+        // it and nothing else; it is a `<summary>` with the same class, the
+        // same name and the same type, so everything the 2026-08-25 note
+        // demanded of it still holds. What it gains is `.row`: the app's own
+        // 46px target and its own press-back, both already written, so a
+        // heading that is now tappable is a heading that looks tappable.
+        //
+        // ⚠️ `.row-main` around the name, not a bare text node, so the chevron
+        // is pushed to the far edge of the row rather than sitting against the
+        // last letter. `.row-main` sets no type of its own, so the heading's
+        // 15px/700 still comes down from `.sys-head` — and the summary's
+        // textContent is still exactly the system's name, which is what makes
+        // it a legitimate accessible name for the control.
+        ...groups.map((g) => systemGroup({
+          memory: closedOnRecord,
+          id: g.sys.id,
+          cls: 'sys-head row',
+          summary: el('div', { class: 'row-main', text: g.sys.name }),
+          // Untouched: the same rows, in the same order, each still starting a
+          // session and still carrying its `~N min`.
+          body: el('div', { class: 'list' }, g.items.map(row)),
+        })),
       ]
     : [
         // ⚠️ On an empty account this screen must not be a dead end. The
@@ -897,10 +1046,14 @@ export async function StartPickerView({ tab = false } = {}) {
 //
 // The top-level tab lists systems now, not workouts. Everything that used to be
 // reachable in one tap still is, because a system with one workout shows that
-// workout's name in its subtitle and the row goes straight into the system.
+// workout's name in its subtitle — ~~and the row goes straight into the
+// system~~: since 2026-09-16 the row UNFOLDS, and every workout in the
+// programme is a row of its own under it, one tap from here. `#/system/<id>` is
+// the last row inside the group. See systemGroup() for why the tap changed.
 export async function WorkoutsView() {
   const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
-  const countIn = (id) => workouts.filter((w) => w.systemId === id).length;
+  // ~~`countIn`~~ — the row needs the workouts themselves now, not a count of
+  // them, so each system filters once and reads both off the one array.
   const ratings = await rateOwnSystems(systems, workouts);
 
   return screenShell({
@@ -918,9 +1071,14 @@ export async function WorkoutsView() {
     ],
     scroll: systems.length
       ? el('div', { class: 'list' }, systems.map((sys) => {
-          const n = countIn(sys.id);
-          const names = workouts.filter((w) => w.systemId === sys.id).map((w) => w.name);
-          return el('button', { class: 'row row-rated', onClick: () => go('#/system/' + sys.id) },
+          const mine = workouts.filter((w) => w.systemId === sys.id);
+          const n = mine.length;
+          const names = mine.map((w) => w.name);
+
+          // Unchanged, and it has to be: this is what the row says about
+          // itself, and the rating badge is the four numbers Tim asked to have
+          // on the list rather than only inside the programme.
+          const says = [
             el('div', { class: 'row-main' },
               el('div', { class: 'row-title wrap', text: sys.name }),
               // `.wrap`, for the same reason as the Explore list: the rating
@@ -931,12 +1089,74 @@ export async function WorkoutsView() {
                 // The workout names ARE the useful subtitle — "3 workouts" says
                 // nothing you could not guess, "Push · Pull · Legs" tells you
                 // what the programme is.
+                //
+                // ⚠️ IT STAYS ON THE ROW EVEN WHEN THE GROUP IS OPEN, and the
+                // near-duplication with the rows below is deliberate. It is a
+                // PREVIEW — up to four names, then "· …" — while the rows are
+                // the detail, each with its exercise and set counts. Swapping
+                // it for "3 workouts" on open would mean the row's identity
+                // line changes meaning under the finger that just tapped it,
+                // and it would leave a collapsed row saying less than it says
+                // today, which is the one thing this change must not do.
                 ? names.slice(0, 4).join(' · ') + (names.length > 4 ? ' · …' : '')
                 : 'No workouts yet' }),
             ),
             ratingBadge(ratings.get(sys.id)),
-            chevron(),
-          );
+          ];
+
+          /* ⚠️ AN EMPTY SYSTEM IS NOT A DISCLOSURE, IT IS STILL A LINK. There is
+           * nothing under it to unfold, and a chevron that turns to reveal
+           * nothing is a control that lies about having something. So a
+           * programme with no workouts in it is exactly the row it has always
+           * been, going exactly where it has always gone — which is also the
+           * only place you can add the workouts it is missing. */
+          if (!n) {
+            return el('button', { class: 'row row-rated', onClick: () => go('#/system/' + sys.id) },
+              says, chevron());
+          }
+
+          /* Tim, 2026-09-16: *"I want you to be able to click on the system in
+           * order to close or open the display of the workouts within them."*
+           *
+           * ⚠️ THE WORKOUTS ARE REAL ROWS HERE NOW. They existed on this screen
+           * only as names in the subtitle, and a disclosure that unfolds to
+           * reveal the line you were already reading would be theatre. They are
+           * the same rows the system screen shows — same wording, same order,
+           * same `#/workout/<id>` — because a workout must not describe itself
+           * two ways in two places.
+           *
+           * 🚨 AND THE WAY INTO THE SYSTEM ITSELF SURVIVES, as the last row in
+           * the group. The summary opens and closes now, so it cannot also
+           * navigate; `#/system/<id>` is where Edit, Notes, New workout and the
+           * full rating live, and the Workouts tab is its front door (the Goals
+           * screen links there too, but nobody finds a programme by going to
+           * Goals). Dropping the route rather than moving it would have been a
+           * feature that quietly deleted a screen. */
+          return systemGroup({
+            memory: closedOnWorkouts,
+            id: sys.id,
+            cls: 'row row-rated',
+            summary: says,
+            body: el('div', { class: 'list' },
+              mine.map((w) => el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
+                el('div', { class: 'row-main' },
+                  el('div', { class: 'row-title', text: w.name }),
+                  el('div', { class: 'row-sub', text:
+                    `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
+                    + (w.isBenchmark ? ' · benchmark' : '') }),
+                ),
+                chevron(),
+              )),
+              el('button', { class: 'row', onClick: () => go('#/system/' + sys.id) },
+                el('div', { class: 'row-main' },
+                  el('div', { class: 'row-title', text: 'Open this system' }),
+                  el('div', { class: 'row-sub wrap', text:
+                    'Add a workout, edit the programme, read how it rates' }),
+                ),
+                chevron(),
+              ),
+            ),
+          });
         }))
       : emptyState('No systems yet',
           'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
@@ -1581,6 +1801,88 @@ export async function SystemRouteView(param) {
   return SystemDetailView(id);
 }
 
+/**
+ * The plan, as boxes — 2026-09-16, Tim: *"If the workout system does have this
+ * daily planner then show it as boxes at the top of the workout system when you
+ * click on it in the 'workouts' section."*
+ *
+ * Returns null when the system has no plan, which is the ordinary case and is
+ * why every system that had no schedule yesterday looks exactly the same today.
+ *
+ * ⚠️ EVERY SLOT IS DRAWN, INCLUDING THE EMPTY ONES. A plan with Thursday missing
+ * is not the same picture as a plan with six days in it: "Thu — Rest" is the
+ * information, and a grid that silently skips its rest days makes a 6-day split
+ * look like a 6-day WEEK. That is the whole of "rest days visibly empty rather
+ * than missing".
+ *
+ * ⚠️ REST AND UNSET ARE DIFFERENT WORDS, on purpose. `Rest` is something the
+ * user chose; `—` is a day nothing has been said about — including a day whose
+ * workout was deleted out from under it (store.deleteWorkout empties the slot
+ * rather than resting it). Printing "Rest" for both would be the app inventing a
+ * rest day on somebody's behalf, which is Rule 6 in one word.
+ *
+ * ⚠️ A SLOT NAMING A WORKOUT THAT IS GONE READS AS UNSET RATHER THAN THROWING.
+ * The store repairs the row on deletion, so this should not happen — but a
+ * restored backup, a half-written row, or a plan written before that repair
+ * existed can all still arrive here, and "a foreign key is only valid while the
+ * rest of that set still exists" is a lesson this project has already paid for
+ * once (dropOrphanGroups). Falling back is cheap; a blank screen is not.
+ *
+ * 🛑 NOTHING HERE ASKS WHAT DAY IT IS. The plan does not decide what the app
+ * suggests next — Tim chose display-only — so there is no "today" ring, no "day
+ * 3 of 4", and no verdict about whether the week was followed (Rule 6). The ?
+ * says so, because a reader is entitled to assume the opposite.
+ */
+function planBoxes(schedule, workouts) {
+  const plan = normalizeSchedule(schedule);
+  if (!plan) return null;
+
+  const nameById = new Map(workouts.map((w) => [w.id, w.name]));
+  const heading = plan.kind === WEEK ? 'Weekly plan' : `${plan.slots.length}-day cycle`;
+
+  return el('div', { class: 'plan' },
+    el('div', { class: 'help-line' },
+      el('div', { class: 'section-label', text: heading }),
+      helpDot(
+        'A note to yourself about how this programme is meant to run. '
+        + 'The app does not use it: Home and Record still offer whichever workout '
+        + 'you have gone longest without doing, exactly as they did before, and '
+        + 'nothing here checks whether you followed it.',
+        { label: 'What does this plan do?', title: heading },
+      ),
+    ),
+    el('div', { class: 'plan-grid' }, plan.slots.map((slot, i) => {
+      const short = slotLabel(plan.kind, i);
+      const long = slotLabel(plan.kind, i, true);
+      const name = slot === REST ? null : nameById.get(slot) || null;
+      const state = slot === REST ? 'Rest' : (name || '—');
+      return el('div', {
+        class: 'plan-day',
+        /* ⚠️ `role="img"` WITH THE WHOLE BOX AS ONE PHRASE, which is exactly what
+         * an inert `.cal-cell` in js/views-data.js already does — the same
+         * problem, so not a second answer to it. The role makes the subtree
+         * presentational, so the two spans need no aria-hidden of their own and
+         * cannot drift out of step with the label.
+         *
+         * Read as two nodes, a grid says "Mon" and "Push" as unrelated things:
+         * the adjacency IS the meaning and speech has no adjacency. And `—` is
+         * not a word, so the empty day has to say so in words. */
+        role: 'img',
+        'aria-label': `${long}: ${slot === REST ? 'rest' : (name || 'nothing planned')}`,
+      },
+        el('span', { class: 'plan-dow', text: short }),
+        el('span', {
+          class: 'plan-slot' + (slot === REST ? ' is-rest' : (name ? '' : ' is-none')),
+          text: state,
+        }),
+      );
+    })),
+    plan.kind === CYCLE
+      ? el('div', { class: 'field-help', text: `Repeats every ${plural(plan.slots.length, 'day')}.` })
+      : null,
+  );
+}
+
 async function SystemDetailView(id) {
   const existing = await store.getSystem(id);
   if (!existing) {
@@ -1598,6 +1900,16 @@ async function SystemDetailView(id) {
     // The pencil, not a "Settings" or a "…". It names the one thing it does.
     actions: [iconBtn('edit', 'Edit this system', () => go('#/system/' + id + '/edit'))],
     scroll: [
+      // ⚠️ THE PLAN GOES ABOVE THE WORKOUTS, AND ONLY WHEN THERE IS ONE.
+      // The note below says the workouts come first, and it was written when
+      // there was nothing else that could reasonably be above them. Tim asked
+      // for these boxes "at the top of the workout system when you click on it",
+      // and a plan IS the shape of the programme — it names every workout in the
+      // list underneath it and puts each one on a day. A system with no plan is
+      // untouched: planBoxes() returns null and the workouts are still the first
+      // thing in the pane, which is what the position test in
+      // tests/render.test.mjs pins.
+      planBoxes(existing.schedule, workouts),
       // The workouts FIRST. They are why anybody opens a programme, and on a
       // phone "first" is the only position that means anything.
       el('div', { class: 'section-label', text: workouts.length
@@ -1655,6 +1967,131 @@ async function SystemEditorView(id) {
   });
   notesInput.value = draft.notes || '';
 
+  /* ── The plan, and where it is edited ────────────────────────────────────
+   * It goes on the FORM rather than on the screen the boxes are drawn on,
+   * because that is the split Tim chose on 2026-08-21 and this is a second
+   * chance to get it wrong the same way: `#/system/<id>` reads, the pencil
+   * edits. A row of nine selects on the reading screen would rebuild exactly
+   * the 468px-of-form problem the split was measured to fix.
+   *
+   * ⚠️ NOTHING PROMPTS FOR ONE. The kind starts at "No plan" and a system that
+   * has never had one shows a single closed select — no nag, no empty week of
+   * boxes waiting to be filled in, nothing on the reading screen at all. The
+   * plan is optional and an optional thing that asks is not optional.
+   *
+   * ⚠️ A FRESH COPY, NOT THE ROW'S OWN. normalizeSchedule() allocates, so the
+   * draft cannot write through into whatever the store handed back — the read
+   * cache shares row objects between callers by design (§0.12) and an abandoned
+   * edit that had already reached them would be a change nobody saved.
+   */
+  draft.schedule = normalizeSchedule(existing && existing.schedule);
+  const planBody = el('div', { class: 'plan-edit' });
+  /* ⚠️ TWO CONTAINERS, AND THE SECOND ONE IS WHY. Changing the KIND changes the
+   * whole shape of this section, so it rebuilds everything; changing the LENGTH
+   * changes only how many day rows there are. Rebuilding the section for a
+   * length change would replace the +/− stepper the finger is on — the node
+   * holding focus is destroyed, so a keyboard user gets exactly one press
+   * before focus falls back to the body and a second press is impossible. The
+   * rows live in their own box and only they are redrawn. */
+  const planRows = el('div', { class: 'list' });
+
+  function renderPlanEditor() {
+    const plan = draft.schedule;
+    const kindSelect = el('select', {
+      class: 'input', 'aria-label': 'Kind of plan',
+      onChange: (e) => {
+        const v = e.target.value;
+        draft.schedule = v ? newSchedule(v, v === CYCLE ? MIN_CYCLE_DAYS + 1 : undefined) : null;
+        renderPlanEditor();
+      },
+    },
+      el('option', { value: '', text: 'No plan' }),
+      el('option', { value: WEEK, text: 'Days of the week' }),
+      el('option', { value: CYCLE, text: 'Days of a cycle' }),
+    );
+    kindSelect.value = plan ? plan.kind : '';
+
+    const parts = [el('div', { class: 'field' },
+      el('label', { text: 'Plan' }), kindSelect,
+      el('div', { class: 'field-help', text: plan
+        ? 'Shown as boxes at the top of this system. It does not change what the app suggests next.'
+        : 'Optional. Lay this programme out over a week, or over a cycle that repeats.' }),
+    )];
+
+    if (plan && plan.kind === CYCLE) {
+      // ⚠️ `.plan-len`, not the builder's `.builder-controls` — that one carries
+      // `grid-area: ctl`, which means nothing outside the builder's own grid and
+      // would be a dead declaration waiting to be read as load-bearing. The
+      // LABEL's typography is shared, because it is the same kind of caption.
+      parts.push(el('div', { class: 'plan-len' },
+        el('span', { class: 'builder-control-label', text: 'Days in the cycle' }),
+        miniStepper({
+          value: plan.slots.length, min: MIN_CYCLE_DAYS, max: MAX_CYCLE_DAYS,
+          // Singular: miniStepper builds "One more <label>" / "One fewer
+          // <label>", and the buttons are what a screen reader actually lands on.
+          label: 'day in the cycle',
+          onChange: (v) => {
+            // 🚨 `draft.schedule`, NOT the `plan` this closure was built with.
+            // resizeSchedule() returns a NEW object, and this handler outlives
+            // several of them — it is created once and pressed many times. Read
+            // from the captured one and every press after the first resizes the
+            // plan as it was when the section was drawn, so growing from three
+            // days to five and back to four silently threw away everything typed
+            // in between. Caught by driving the stepper twice; one press looked
+            // perfect.
+            draft.schedule = resizeSchedule(draft.schedule, slotCount(CYCLE, v));
+            // ⚠️ Shortening throws the tail away and does not remember it. See
+            // resizeSchedule() — a plan that quietly disagrees with its own
+            // boxes is worse than one that lost a day you can retype.
+            renderPlanRows();
+          },
+        }),
+      ));
+    }
+
+    if (plan) {
+      parts.push(!workouts.length
+        ? el('div', { class: 'field-help', text:
+            'This system has no workouts yet, so every day can only be Rest. '
+            + 'Add a workout and come back.' })
+        : null);
+      parts.push(planRows);
+    }
+
+    setChildren(planBody, ...parts.filter(Boolean));
+    renderPlanRows();
+  }
+
+  function renderPlanRows() {
+    const plan = draft.schedule;
+    if (!plan) { setChildren(planRows); return; }
+    setChildren(planRows, ...plan.slots.map((slot, i) => {
+      const sel = el('select', {
+        class: 'input',
+        'aria-label': slotLabel(plan.kind, i, true),
+        onChange: (e) => { plan.slots[i] = e.target.value || null; },
+      },
+        // ⚠️ THREE CHOICES, NOT TWO. "Rest" and "Nothing planned" are separate
+        // options for the same reason the boxes print two different words for
+        // them: one is a decision, the other is the absence of one.
+        el('option', { value: '', text: 'Nothing planned' }),
+        el('option', { value: REST, text: 'Rest' }),
+        ...workouts.map((w) => el('option', { value: w.id, text: w.name })),
+      );
+      // Set after building: a value matching no option is ignored by the DOM and
+      // the select falls back to its first, which is the honest outcome for a
+      // slot naming a workout that has since been deleted. The slot is corrected
+      // to match, so saving cannot write the dangling id back.
+      sel.value = slot || '';
+      if (slot && sel.value !== slot) plan.slots[i] = null;
+      return el('div', { class: 'plan-row' },
+        el('span', { class: 'plan-row-day', text: slotLabel(plan.kind, i) }),
+        sel,
+      );
+    }));
+  }
+  if (!isNew) renderPlanEditor();
+
   async function save() {
     if (!draft.name.trim()) { toast('Give your system a name first'); nameInput.focus(); return; }
     const saved = await store.saveSystem({ ...draft, name: draft.name.trim() });
@@ -1689,6 +2126,10 @@ async function SystemEditorView(id) {
     scroll: [
       el('div', { class: 'field' }, el('label', { text: 'System name' }), nameInput),
       el('div', { class: 'field' }, el('label', { text: 'Notes' }), notesInput),
+      // Below the name and the notes, above the danger zone. A plan is a thing
+      // about the programme rather than a thing that identifies it, and it must
+      // not sit between somebody and the Delete they came here for.
+      isNew ? null : planBody,
       isNew
         ? el('div', { class: 'field-help', text: 'Name it first, then you can add workouts to it.' })
         : el('div', { class: 'danger-zone' },

@@ -725,6 +725,14 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   margin-bottom: -4px;
 }
 .pane-scroll > .section-label + .sys-head { margin-top: 0; }
+/* ⚠️ The programme heading is a <summary> inside a `.sys-group` since
+   2026-09-16, so the two rules above reach it one level deeper. The first keeps
+   it from floating between two groups directly under the section label; the
+   second drops the -4px that used to pull the list up across the pane's `gap` —
+   inside the <details> there is no gap to pull across, and the summary's own
+   `.row` padding is the space below the heading now. */
+.pane-scroll > .section-label + .sys-group > .sys-head { margin-top: 0; }
+.sys-group > .sys-head { margin-bottom: 0; }
 
 /* ⚠️ "Start", not a chevron. Everywhere else in this app a chevron means go and
    look at that; on the Record screen the same row BEGINS A SESSION, and Tim
@@ -831,6 +839,92 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    instructions someone has to read, not a caption. */
 .preset-notes { display: flex; flex-direction: column; gap: 8px; }
 .preset-notes p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+
+/* ── A system's weekly plan, as boxes (2026-09-16) ────────────────────────
+   Tim: *"If the workout system does have this daily planner then show it as
+   boxes at the top of the workout system when you click on it."*
+
+   🚨 "BOXES" AND RULE 2 ("no boxes") ARE NOT IN CONFLICT HERE, and it is worth
+   saying which one won. Rule 2 forbids a bordered CARD used to group things
+   that spacing could have grouped — a box drawn around content to say "these
+   belong together". A day slot is not that: the box IS the day, the way
+   `.cal-cell` is a date on the calendar. So this borrows the calendar's answer
+   exactly — a `--rule-soft` fill, a 6px radius, and NO border anywhere.
+
+   🚨 IT WRAPS; IT DOES NOT SCROLL SIDEWAYS. A row of 14 boxes is the case that
+   breaks a phone, and the two ways out were a horizontal scroller (like
+   `.chips-scroll`) or a wrapping grid. The scroller loses: a week you cannot
+   see all of is not a plan, it is a filmstrip, and the whole point of the boxes
+   is taking in the shape of the programme at a glance. `auto-fill` with a 92px
+   floor gives 3 columns in the 332px a 360px screen leaves after `--pad` — so
+   14 days is 5 rows and 7 days is 3, both entirely within the pane's own
+   vertical scroll, and NOTHING is horizontally scrollable (Rule 1). A wide
+   screen fills the same rule out to a full week across.
+
+   ⚠️ min-width: 0 on the grid, for the reason `.research-scroll` needed it: it
+   is a flex item in `.pane-scroll`'s column, and without it a long workout name
+   sets the floor and pushes the grid past the viewport. The name wraps and, if
+   a single word cannot, breaks — a plan that overflows its box sideways is the
+   fault this whole layout exists to avoid. */
+.plan { display: flex; flex-direction: column; gap: 6px; }
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+.plan-day {
+  min-width: 0;
+  border-radius: 6px;
+  padding: 5px 7px 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--rule-soft);
+}
+/* Same caption voice, and the same measured reason, as `.cal-day`: --rule-soft
+   is the worst background this app puts small text on, so the day label takes
+   the readable step rather than --ink-faint. */
+.plan-dow {
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  line-height: 1.2;
+}
+.plan-slot {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+/* Rest is a real answer, so it is legible; it is just not a workout, so it is
+   not the loudest thing in the box. An UNSET day is quieter still and is an em
+   dash rather than a word, because there is no word for it that would not be
+   the app guessing what somebody meant. */
+.plan-slot.is-rest { font-weight: 550; color: var(--ink-soft); }
+.plan-slot.is-none { font-weight: 550; color: var(--ink-faint); }
+
+/* ── and the form behind the pencil that builds one ──────────────────────── */
+.plan-edit { display: flex; flex-direction: column; gap: var(--gap); }
+.plan-len { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* One row per day: the label holds a fixed column so the selects line up, and
+   `1 1 0` on the select is what lets it shrink instead of pushing the row wide
+   at 360px. The label is the SAME short token the box will show — `Mon`,
+   `Day 14` — so the form and the boxes name each day identically; the select
+   carries the full name for speech. `Day 14` is the widest of them and 52px
+   holds it at this size. */
+.plan-row { display: flex; align-items: center; gap: 8px; }
+.plan-row-day {
+  flex: none;
+  width: 52px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.plan-row .input { flex: 1 1 0; min-width: 0; }
 
 /* Whether a programme is really the named person's is the ONE thing on this
    screen that must not be skimmed past, and `.chart-caption.warn` — a 12px
@@ -2152,6 +2246,157 @@ select.input {
 .cal-cell.has-workout { background: var(--accent-dim); }
 .cal-cell.has-benchmark-only { background: var(--good-dim); }
 
+/* 🆕 A MONTH WITH NOTHING RECORDED IS ONE LINE — 2026-09-16, Tim: *"if a month
+   has no recordings in it, just say the month and say no recordings, don't show
+   an entire month of empty boxes."*
+
+   The section is still a `.cal-month` and still carries `data-current-month`
+   when it is this month — `landOnCurrentMonth` finds its target by that
+   attribute — so what changes is only that the head becomes the whole section
+   and lays itself out as a row rather than as a stack over a grid.
+
+   ⚠️ `.cal-month-head` is `position: sticky`. On a collapsed month that is a
+   no-op rather than a bug: a sticky element cannot travel outside its own
+   containing block, and here the head IS the section. */
+.cal-month.is-empty .cal-month-head {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cal-none {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+/* ==========================================================================
+   THE MONTH BAR CHART — 2026-09-16, Tim: *"if the user has more than 5 months
+   of recordings in it, show a bar chart that has the months as the x axis and
+   the number of days workouts recorded in that month as the y axis."*
+
+   Hand-rolled in HTML/CSS, like every other chart here (handbook §"Charts are
+   hand-rolled"). The reasoning — Months only, the y-axis wording on a friend's
+   page, why a zero month draws no stub, why 36 bars scroll rather than squeeze
+   — is above `monthsChart()` in js/views-data.js and is not repeated here.
+
+   ⚠️ THE SLOT IS 22px + 3px SO TWELVE MONTHS FIT AT 360px WITHOUT SCROLLING:
+   12 × 22 + 11 × 3 = 297px against roughly 300px of pane once the y-axis
+   (~18px) and its gap are taken off a 332px content box. Thirteen months and up
+   scroll sideways inside `.mchart-scroll` — Rule 1 forbids the WINDOW scrolling,
+   not a wide picture scrolling in its own box.
+
+   🚨 `min-width: 0` ON THE SCROLLER IS THE LOAD-BEARING LINE, and it is the
+   `.research-scroll` lesson written down again: `.pane-scroll` is
+   `overflow-x: hidden`, so a flex child that refuses to shrink below its content
+   does not scroll — it bleeds into a clipped region no gesture can reach.
+   ========================================================================== */
+
+.mchart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  /* The plot's height. Bounded at both ends: this sits above a whole list of
+     months, so it may not eat the screen on a tall phone, and it may not
+     collapse to a strip of colour on a short one. */
+  --mchart-h: clamp(84px, 13dvh, 132px);
+}
+
+.mchart-body { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+
+/* ⚠️ THE SCALE SITS OUTSIDE THE SCROLLER. Inside it, the maximum would scroll
+   away from the bars it measures the moment anybody looked at last year — a
+   chart whose axis can leave the screen is a chart of unlabelled rectangles.
+   The two ticks are centred ON the two hairlines rather than sitting between
+   them, which is what the translate is for. */
+.mchart-y {
+  flex: none;
+  height: var(--mchart-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.mchart-tick { font-size: 9.5px; line-height: 1; color: var(--ink-faint); }
+.mchart-tick:first-child { transform: translateY(-50%); }
+.mchart-tick:last-child  { transform: translateY(50%); }
+
+.mchart-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* Same treatment `.segmented` gets: the bar is a phone gesture, and a visible
+     scrollbar under the months would read as a second control. */
+  scrollbar-width: none;
+}
+.mchart-scroll::-webkit-scrollbar { display: none; }
+
+/* `width: max-content` rather than a percentage: the columns are a fixed size
+   by design, so the plot is exactly as wide as its data and the scroller has
+   something real to scroll. */
+.mchart-plot { display: flex; flex-direction: column; gap: 3px; width: max-content; }
+
+/* ⚠️ SOLID HAIRLINES, NEVER DASHED (dataviz anti-patterns): a dashed rule reads
+   as a threshold or a projection when it is only a grid. Two lines and no more
+   — the top of the scale and the floor. The floor runs the full width of the
+   plot, which is what makes a zero month read as a column standing on nothing
+   rather than as a month that was left out. */
+.mchart-bars {
+  height: var(--mchart-h);
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.mchart-labels { display: flex; gap: 3px; }
+
+.mchart-slot {
+  flex: 0 0 22px;
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* ⚠️ The slot must STRETCH to the row's height, not hug its bar: a percentage
+   height resolves against a definite one, and a bar inside an auto-height slot
+   silently renders at zero. Pushing the bar down is the slot's job, not the
+   row's. */
+.mchart-bars .mchart-slot { justify-content: flex-end; }
+
+/* ⚠️ 14px IN A 22px SLOT — a thin mark with 8px of ground between neighbours,
+   well past the 2px surface gap the guidance asks for, and no border around it:
+   bars are separated by the gap, never by an outline. `--accent` is the colour a
+   trained day already wears on `.yr-cell.on` and `.cal-tag.w`, so the chart
+   introduces no new meaning; validated (7.74:1 dark / 4.52:1 light against
+   --ground, against the 3:1 a non-text mark needs). */
+.mchart-bar {
+  width: 14px;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent);
+}
+/* A zero month is an empty column over the baseline. NOT a 2px stub: `--rule`
+   is 1.29:1 on `--ground` and cannot be seen, and anything visible enough to be
+   seen reads as a small quantity rather than as none. */
+.mchart-bar.is-zero { height: 0; min-height: 0; }
+
+.mchart-x { font-size: 10px; line-height: 13px; color: var(--ink-faint); }
+/* The year is printed only where it changes, and one step less quiet than the
+   month names so a year boundary is findable in a 36-column run. The height is
+   fixed so the empty ones still hold their row and the month names stay level
+   with the bars above them. */
+.mchart-yr {
+  height: 11px;
+  font-size: 9.5px;
+  line-height: 11px;
+  font-weight: 750;
+  color: var(--ink-soft);
+}
+
 .legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--ink-faint); justify-content: center; }
 .legend span { display: flex; align-items: center; gap: 5px; }
 .legend i { width: 8px; height: 8px; border-radius: 2px; display: block; }
@@ -3377,6 +3622,28 @@ a.seg {
 .vol-detail-wrap > * { overflow: hidden; min-height: 0; }
 .vol-detail-wrap.is-open { grid-template-rows: minmax(0, 1fr); opacity: 1; }
 
+/* ---- a system opens and closes (2026-09-16) --------------------------- */
+/* Tim: *"In the workouts section as well as the record section... I want you to
+   be able to click on the system in order to close or open the display of the
+   workouts within them in both sections."*
+
+   ⚠️ THE HEIGHT DOES NOT ANIMATE, AND THAT IS THE RULE RATHER THAN AN OMISSION.
+   The Record picker is one tap from a workout in a gym (D4), and Rule 7 allows
+   exactly one thing to move on the logging path: a press answering back. The
+   chevron turning IS that press answering back — the same `--t-fast` turn
+   `.me-other-chev` already uses — and the rows appear at once, so nothing
+   between a tap and a session waits on a transition. A sliding height on a
+   native `<details>` also has to be JS-driven, which is how a disclosure ends
+   up with a state its own element disagrees with.
+
+   The summary itself needs no target rule: it wears `.row` (46px, the app's own
+   press-back) on the Workouts tab and `.sys-head .row` on Record, so the 44px
+   floor is met by a class that was already there. */
+.sys-group > summary { list-style: none; cursor: pointer; }
+.sys-group > summary::-webkit-details-marker { display: none; }
+.sys-chev { flex: none; display: flex; transition: transform var(--t-fast) var(--ease-out); }
+.sys-group[open] > summary .sys-chev { transform: rotate(90deg); }
+
 /* ---- a bar grows to its number ---------------------------------------- */
 /* Only when the screen is built or its window changes — the number really did
    just change, and the growth is what says by how much. It does NOT replay
@@ -3977,6 +4244,32 @@ a.seg {
   background: var(--raised); color: var(--ink-soft);
   display: grid; place-items: center; overflow: hidden;
 }
+/* 🆕 A FRIEND'S PROFILE — 2026-09-16. Tim asked for their picture *"big at the
+   top"*, and this is the same circle at a bigger radius rather than a second
+   head. ⚠️ 96px is the largest that keeps the head under a third of a 360×640
+   viewport's content area, so their name, both figures and the first section
+   are all still above the fold on the smallest phone this app supports —
+   measured, because a face big enough to push the stats off the screen would
+   answer his ask by breaking the thing the ask was about. */
+.me-face.is-lg { width: 96px; height: 96px; }
+
+/* "View data" — the panel door, in the top-right corner of their profile.
+   ⚠️ `flex: none` so a long display name in the heading beside it cannot
+   squeeze the button into its own label; the heading is what shrinks, and it
+   already carries `min-width: 0` for exactly that.
+   ⚠️ NO SIZING HERE, deliberately: it is a `.btn.small`, which already carries
+   the invisible 44px hit target from the block near the top of this file — the
+   painted control is 34px of ink and the finger gets the full box. A height
+   rule here would be a second opinion about a target size that has already been
+   measured once. Driven at 390×844: 82 × 34 painted at x=294, clear of the
+   heading and inside the safe area. */
+.topbar .topbar-btn { flex: none; }
+
+/* A section that fills in after the screen has painted. `display: contents` so
+   an empty one costs nothing — `.me-body` is a flex column with a gap, and a
+   real wrapper would leave a hole either side of a section that never arrived
+   (the friend profile's best lifts and calendar both arrive late). */
+.me-slot { display: contents; }
 .me-who { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 /* Their name, at the size a name deserves on the screen that is about them.
    `overflow-wrap` because a display name is 60 characters of free text and one

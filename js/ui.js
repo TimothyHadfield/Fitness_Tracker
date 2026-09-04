@@ -1286,6 +1286,80 @@ export function markRoute() {
   try { h.replaceState({ ...(state || {}), navIndex: lastIndex }, ''); } catch (_) {}
 }
 
+/* ==========================================================================
+   🚨 HOW DEEP INTO SOMEBODY ELSE'S FRIENDS THIS READER HAS WALKED — 2026-09-16,
+   and it exists to serve TIM'S EXPLICIT OVERRIDE OF RULE 8.
+
+   *"allow the user to click on the friend's 'workouts' button and 'friends'
+   button to view that friend's friend's and that friend's workouts, and so on
+   if they want. However, if you go back after going inside a frined's friend,
+   it doesn't go back to your friend, it goes back to your main profile menu."*
+
+   ⚠️ RULE 8 IS RIGHT ABOUT EVERYTHING ELSE AND WRONG ABOUT THIS ONE WALK.
+   friend → their friend → their friend is four taps deep before anybody
+   notices, and history would make the way out four taps back. His answer is
+   that one tap goes home. `screenShell`'s `backExact` is the existing opt-out
+   for an arrow that is not a back at all, and `views-social.js` uses it.
+
+   🚨 IT IS STAMPED ON THE HISTORY ENTRY, NOT COUNTED — the same mechanism and
+   the same reason as `markRoute()` directly above. A counter cannot tell a
+   forward navigation from the browser's own back button: both arrive as one
+   `hashchange` with nothing to separate them, so a counter drifts the first
+   time somebody uses the OS gesture and drifts silently. Depth is a property of
+   a PLACE in the visit, not of the journey, so it belongs on the entry — and an
+   entry that has been visited already knows its own depth whichever direction
+   it is reached from.
+
+   ⚠️ A COLD ARRIVAL IS DEPTH 1, WHICH IS THE CASE MOST OF THESE GO WRONG ON. A
+   deep link, a reload, a shared `#/friend/<uid>`, a tap from my own friends
+   list — none of them is "inside another friend", and none of them has a
+   previous render to read. `trailUid` is null then, so the first branch below
+   cannot fire, and the arrow behaves exactly as it always has.
+
+   ⚠️ THE SAME PERSON'S OWN SUB-SCREENS DO NOT COUNT. Opening their workouts,
+   their data panel or one of their sessions is still THEM, so the depth is
+   carried rather than incremented — otherwise walking down into a friend's own
+   workout and back would strand the reader at `#/me`.
+   ========================================================================== */
+
+/** The friend whose page the previous render drew, and how deep it was. */
+let trailUid = null;
+let trailDepth = 0;
+/** This render's depth, for the view to read while it builds itself. */
+let currentDepth = 0;
+
+/**
+ * Called once per render by the router, with the uid of the friend whose page
+ * is being drawn or `null` for every other route.
+ *
+ * @returns {number} 1 for a friend reached from anywhere that is not another
+ *   friend's page; 2 or more for one reached from inside another friend.
+ */
+export function markFriendTrail(uid) {
+  if (!uid) { trailUid = null; trailDepth = 0; currentDepth = 0; return 0; }
+
+  const h = hist();
+  const state = (h && h.state) || null;
+  let depth;
+  if (state && typeof state.friendDepth === 'number' && state.friendDepth > 0) {
+    depth = state.friendDepth;
+  } else {
+    depth = trailUid === null ? 1 : trailUid === uid ? (trailDepth || 1) : trailDepth + 1;
+    // `replaceState`, like markRoute: the entry already exists — the hash change
+    // made it — and this only writes down what it is.
+    if (h) {
+      try { h.replaceState({ ...(state || {}), friendDepth: depth }, ''); } catch (_) {}
+    }
+  }
+  trailUid = uid;
+  trailDepth = depth;
+  currentDepth = depth;
+  return depth;
+}
+
+/** How deep the page being rendered right now is. 0 when it is not a friend. */
+export function friendTrailDepth() { return currentDepth; }
+
 /** True when there is a screen of ours behind this one. */
 export function canGoBack() {
   const h = hist();

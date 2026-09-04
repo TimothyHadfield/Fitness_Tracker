@@ -63,6 +63,18 @@ import { ownCalendar } from './views-data.js';
 import { rankedLifts } from './profile-ranking.js';
 import { comparisonLabel } from './strength-standards.js';
 import * as units from './units.js';
+/* 🆕 THE SECTIONS THEMSELVES MOVED OUT ON 2026-09-16, and nothing about this
+ * screen changed when they did. Tim asked for a friend's page to show *"their
+ * profile display, like how they see it for themselves"* — the literal reading
+ * of which is that both pages call the same builders. `js/profile-shape.js` is
+ * where the head, the tiles, the body block, the best-lift rows and the
+ * calendar block now live; what stays here is where MY numbers come from,
+ * which is the half that is genuinely mine. See that file's header for the line
+ * between the two, and for why the row data is built per-subject rather than by
+ * one function with a `friend` flag in it. */
+import {
+  profileHead, statTile, statTileFlat, statRow, bodyBlock, bestLiftsBlock, calendarBlock,
+} from './profile-shape.js';
 import {
   el, screenShell, emptyState, chevron, setChildren, personFace, icon,
   // ⚠️ `helpDot` LEFT WITH THE SECOND COUNT on 2026-09-09. The one thing this
@@ -93,14 +105,6 @@ const go = (hash) => { location.hash = hash; };
  * is the whole of what Tim asked to stop.
  */
 const PUBLIC_NOTE = 'Your account is public, so people can see your training without being friends.';
-
-/** One tappable figure. The number is the point, so it is the big thing. */
-function statTile(label, value, href) {
-  return el('a', { class: 'me-stat', href },
-    el('span', { class: 'me-stat-n', text: String(value) }),
-    el('span', { class: 'me-stat-l', text: label }),
-  );
-}
 
 /* ------------------------------------------------------------------ *
  * The profile itself
@@ -159,27 +163,23 @@ async function fill(body) {
   const name = state.name || settings.displayName || '';
 
   setChildren(body,
-    el('div', { class: 'me-head' },
-      el('span', { class: 'me-face' }, personFace(settings.avatar, 44)),
-      el('div', { class: 'me-who' },
-        el('div', { class: 'me-name', text: name || 'No display name yet' }),
-        // ⚠️ Says what to do about it rather than leaving a blank. The name is
-        // set on the Account screen now, not here — this screen never writes.
-        name ? null : el('a', { class: 'text-link', href: '#/account',
-          text: 'Add one on your account' }),
-      ),
-    ),
+    profileHead({
+      avatar: settings.avatar,
+      name: name || 'No display name yet',
+      // ⚠️ Says what to do about it rather than leaving a blank. The name is
+      // set on the Account screen now, not here — this screen never writes.
+      under: name ? null : el('a', { class: 'text-link', href: '#/account',
+        text: 'Add one on your account' }),
+    }),
 
-    el('div', { class: 'me-stats' },
+    statRow(
       statTile('Workouts', workouts, '#/me/workouts'),
       // 🔒 Off the cloud it is a DASH and not a link — local, anonymous, offline
       // and demo have no graph, and 0 would be a claim where the truth is an
       // absence. Unchanged by the rename; it was the right call for two numbers
       // and it is the right call for one.
       connections === null
-        ? el('span', { class: 'me-stat is-off' },
-            el('span', { class: 'me-stat-n', text: '—' }),
-            el('span', { class: 'me-stat-l', text: 'Friends' }))
+        ? statTileFlat('Friends', null, { off: true })
         : statTile('Friends', connections.length, '#/me/friends'),
     ),
 
@@ -239,26 +239,20 @@ function bodySection(profile) {
     ? `Add your ${profile.missing.join(' and ')} to rank your muscle groups`
     : null;
 
-  return el('div', { class: 'me-section' },
-    el('div', { class: 'section-label', text: 'Your body' }),
-    el('div', { class: 'list' },
-      el('a', { class: 'row', href: '#/profile' },
-        el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: facts.length ? facts.join(' · ') : 'Your body' }),
-          el('div', { class: 'row-sub wrap', text: missing
-            // ⚠️ The DATE of the last weigh-in, because the number above it is
-            // that day's rather than today's — the same distinction
-            // `BODY_WEIGHT_FRACTION` makes when it reads the weight from the
-            // date of the set. A stale weigh-in is a known gap (§9) and the
-            // honest version of it here is simply saying when it was.
-            || (profile.bodyWeightDate
-              ? `Last weighed ${relativeDay(profile.bodyWeightDate)}`
-              : 'Gender, birth year and body weight') }),
-        ),
-        el('span', { class: 'row-chev' }, chevron()),
-      ),
-    ),
-  );
+  return bodyBlock({
+    label: 'Your body',
+    facts,
+    // ⚠️ The DATE of the last weigh-in, because the number above it is that
+    // day's rather than today's — the same distinction `BODY_WEIGHT_FRACTION`
+    // makes when it reads the weight from the date of the set. A stale weigh-in
+    // is a known gap (§9) and the honest version of it here is saying when.
+    sub: missing
+      || (profile.bodyWeightDate
+        ? `Last weighed ${relativeDay(profile.bodyWeightDate)}`
+        : 'Gender, birth year and body weight'),
+    href: '#/profile',
+    empty: 'Your body',
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -370,104 +364,20 @@ function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }) {
   // ⚠️ `r.profile`, never the raw one: it is the overlay `withAssumptions()`
   // built, and the label reads what it assumed off it.
   const label = comparisonLabel(r.profile);
-  const otherCount = r.other.length + r.repsOnly.length;
 
-  return el('div', { class: 'me-bests' },
-    el('div', { class: 'section-label', text: 'Your best lifts' }),
-    el('div', { class: 'list' }, ...r.core.map(liftRow)),
-
+  return bestLiftsBlock({
+    label: 'Your best lifts',
+    core: r.core,
+    other: r.other,
+    repsOnly: r.repsOnly,
     // 🚨 ONE sentence carrying three things: that every figure is an estimate,
     // which group the colours were computed against, and — when the app had to
     // guess a sex or a body weight — what it guessed. `label.assumed` is the
     // muscle map's own wording, so two screens cannot describe one assumption
     // two ways.
-    el('div', { class: 'field-help', text:
-      `Estimated one-rep maxes, coloured by level ${label.main} · ${label.sub}.`
-      + (label.assumed ? ` ${label.assumed}` : '') }),
-
-    otherCount
-      ? el('details', { class: 'me-other' },
-          el('summary', { class: 'me-other-sum' },
-            el('span', { class: 'me-other-title', text: 'Other lifts' }),
-            el('span', { class: 'me-other-n', text: String(otherCount) }),
-            el('span', { class: 'me-other-chev' }, chevron()),
-          ),
-          el('div', { class: 'list' },
-            ...r.other.map(liftRow),
-            // Reps-only work — pull-ups with no weigh-in, push-ups — has a true
-            // best and no honest pound figure. Listed plainly, uncoloured.
-            ...r.repsOnly.map((l) => el('div', { class: 'row me-best' },
-              el('div', { class: 'row-main' },
-                el('div', { class: 'row-title', text: l.name }),
-                el('div', { class: 'row-sub wrap', text: daysText(l) }),
-              ),
-              el('div', { class: 'me-best-nums' },
-                el('span', { class: 'me-best-top', text: `${l.reps} reps` }),
-                el('span', { class: 'me-best-est', text: 'measured, not ranked' }),
-              ),
-            )),
-          ),
-        )
-      : null,
-  );
-}
-
-/* Why a core lift has no number, in the reader's words. The keys come from
- * profile-ranking.js; the sentences live here so the module stays wordless. */
-const NO_NUMBER = {
-  'no-evidence':   'Nothing recorded for this muscle yet',
-  'stand-in-only': 'Only a stand-in rates this muscle — record the lift, or a close one',
-  'no-conversion': 'No published way to convert this one',
-  'no-standard':   'No standard to rank it against',
-};
-
-function liftRow(l) {
-  // `level` null WITH a percentile is "below Beginner" — plain ink, no chip,
-  // because inventing an eighth level is what `lv-text-below` refuses to do.
-  const lvKey = l.level ? l.level.key : (l.percentile !== null ? 'below' : null);
-  const lvName = l.level ? l.level.name : (l.percentile !== null ? 'Below Beginner' : null);
-
-  return el('div', { class: 'row me-best' + (l.oneRM === null ? ' is-none' : '') },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: l.name }),
-      el('div', { class: 'row-sub wrap', text: subText(l) }),
-    ),
-    el('div', { class: 'me-best-nums' },
-      l.oneRM === null
-        // No number: say why, in the number's slot, so the row is not a hole.
-        ? el('span', { class: 'me-best-none', text: NO_NUMBER[l.why] || 'No estimate' })
-        : el('span', { class: 'me-best-top' + (lvKey ? ` lv-text-${lvKey}` : ''),
-            text: units.withUnit(Math.round(l.shown)) + (l.perSide ? '/side' : '') }),
-      // The confidence in words under the number — Tim's ask — with the
-      // level's NAME beside it so the colour is never the only carrier.
-      l.oneRM === null ? null
-        : el('span', { class: 'me-best-est', text:
-            `${l.band.name} confidence` + (lvName ? ` · ${lvName}` : ' · not ranked') }),
-    ),
-  );
-}
-
-/* The sub-line: what the number rests on. A recorded row names the SET it was
- * modelled from — Rule 5's measured anchor on the row; a converted row names
- * what it was converted from and says the lift was never recorded. */
-function subText(l) {
-  if (l.source === 'recorded' && l.best) {
-    const set = l.best.kind === 'reps'
-      ? `${l.best.reps} reps`
-      : `${units.withUnit(l.best.weight)}${l.perSide ? '/side' : ''}${l.best.reps ? ` × ${l.best.reps}` : ''}`
-        + (l.bodyIncluded ? ' added' : '');
-    return `${set} · ${daysText(l)}`;
-  }
-  if (l.source === 'converted') {
-    return `Estimated from ${l.from.join(', ')}` + (l.days ? ` · ${daysText(l)}` : ' · never recorded')
-      + (l.bodyIncluded ? ' · body weight included' : '');
-  }
-  return l.days ? daysText(l) : 'Not trained yet';
-}
-
-function daysText(l) {
-  return `${l.days} ${l.days === 1 ? 'day' : 'days'}`
-    + (l.lastDate ? ` · last ${fmtDateShort(l.lastDate)}` : '');
+    caption: `Estimated one-rep maxes, coloured by level ${label.main} · ${label.sub}.`
+      + (label.assumed ? ` ${label.assumed}` : ''),
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -520,16 +430,8 @@ function daysText(l) {
  * opened from here still lands somewhere that stands up on its own.
  * ------------------------------------------------------------------ */
 function calendarSection(activity) {
-  const host = el('div', { class: 'me-cal-host' });
   // `land: false` — the arrival only; a tap on Months lands. See the header.
-  const cal = ownCalendar(activity, todayISO(), { land: false });
-  // Painted after the node exists, exactly as the other three doors do it.
-  queueMicrotask(() => cal.paint(host));
-  return el('div', { class: 'me-cal' },
-    el('div', { class: 'section-label', text: 'Training history' }),
-    cal.top,
-    host,
-  );
+  return calendarBlock(ownCalendar(activity, todayISO(), { land: false }));
 }
 
 const OFFLINE_COUNTS = {
@@ -576,15 +478,43 @@ export async function MePeopleView() {
         el('a', { class: 'btn primary', href: '#/find', text: 'Add a friend' })));
       return;
     }
-    setChildren(body, ...people.map((p) => el('a', {
-      class: 'row', href: `#/friend/${encodeURIComponent(p.uid)}`,
-    },
-      el('span', { class: 'row-face' }, personFace(p.avatar, 20)),
-      el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: p.name || 'Someone' }),
-      ),
-      el('span', { class: 'row-chev' }, chevron()),
-    )));
+    setChildren(body, ...people.map((p) => {
+      /* 🚨 THE FACE ARRIVES AFTER THE ROW, AND UNTIL 2026-09-16 IT NEVER
+       * ARRIVED AT ALL. Tim: *"in the profile section, if you click on frineds,
+       * the friend's profile icon does not show their image that is normally
+       * showed."* This read `personFace(p.avatar, 20)` — and a row of
+       * `social.state().connections` is `{ uid, name, since }`. `normalizeGraph()`
+       * has never carried an avatar and should not: a photo is a fact about the
+       * person, published in THEIR document, and a copy of it in my graph would
+       * be a copy that goes stale the day they change it. `p.avatar` was
+       * therefore always `undefined`, `safeAvatar()` correctly refused it, and
+       * every row on this screen showed the default humanoid.
+       *
+       * ⚠️ SO IT IS READ FROM THE DOCUMENT, PER PERSON, AFTER THE LIST PAINTS —
+       * the identical shape the Friends screen has used since 2026-08-26 and
+       * for the identical reason: their photo costs a read each, and this app
+       * has already been reported once for a friends list that sat blank while
+       * round trips finished. The list paints from the graph immediately; the
+       * pictures land when they land; a friend who cannot be read keeps the
+       * glyph and nothing is said about it, because that is what every account
+       * without a photo looks like anyway. */
+      const faceSlot = el('span', { class: 'row-face' }, personFace(null, 20));
+      social.friend(p.uid)
+        .then(({ doc }) => {
+          const avatar = doc && doc.profile ? doc.profile.avatar : null;
+          if (avatar && faceSlot.isConnected) setChildren(faceSlot, personFace(avatar, 20));
+        })
+        .catch(() => {});
+      return el('a', {
+        class: 'row', href: `#/friend/${encodeURIComponent(p.uid)}`,
+      },
+        faceSlot,
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: p.name || 'Someone' }),
+        ),
+        el('span', { class: 'row-chev' }, chevron()),
+      );
+    }));
   })().catch(() => {
     setChildren(body, emptyState('Could not load this list',
       'The connection dropped. It will be here when it is back.'));

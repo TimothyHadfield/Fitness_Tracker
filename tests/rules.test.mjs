@@ -75,13 +75,25 @@ const invite = (db, uid, token) => doc(db, 'users', uid, 'invites', token);
  * the rules read to grant a signed-in stranger a read, so it is derived from the
  * audience here exactly as js/social.js derives it — a fixture that could set it
  * independently would be testing a document the app cannot produce. */
+/* 🚨 `connections` IS IN THE FIXTURE BECAUSE IT IS IN THE DOCUMENT — 2026-09-16,
+ * and the omission it replaces is the point. `validProjection()` pins the shape
+ * with `hasOnly`, so a key the rules do not name has EVERY publish denied; a
+ * fixture built without the field would have run green through exactly that,
+ * while the real app could not publish at all. A projection fixture that is
+ * thinner than the wire is the `sets: []` fault in another costume, and it has
+ * cost this project a shipped bug once already (the expired-invite Timestamp).
+ * If js/social.js grows a field, it belongs here the same day. */
 const projection = (audience, viewers, extra = {}) => ({
   audience,
   isPublic: audience === 'public',
   viewers,
-  profile: { name: 'Tim' },
+  // Gender and age ride inside `profile` and so are covered by the same
+  // `hasOnly` on the parent — nested keys are not shape-checked by the rules,
+  // which is why js/social.js's assertAudienceClean() checks them instead.
+  profile: { name: 'Tim', gender: 'male', age: 31 },
   publishedAt: '2026-08-17T12:00:00.000Z',
   activity: [{ id: 's1', date: '2026-08-15', name: 'Push' }],
+  connections: [{ uid: ALEX, name: 'Alex' }],
   ...extra,
 });
 
@@ -277,6 +289,25 @@ await denied(setDoc(shared(asTim, TIM, 'friends'),
 await denied(setDoc(shared(asTim, TIM, 'friends'),
   { ...projection('friends', [ALEX]), activity: Array.from({ length: 61 }, () => ({ date: '2026-08-01' })) }),
   'more than 60 activity entries is refused');
+
+/* 🆕 THE FRIENDS LIST IN THE DOCUMENT — 2026-09-16, so a friend's page can offer
+ * their friends and let a reader walk on. Three assertions, and the third is the
+ * one that is easy to leave out: the key is OPTIONAL on the wire. Every account
+ * published before this shipped has a document without it, and those documents
+ * still have to be writable — a rule demanding the key would refuse the very
+ * republish that adds it. */
+await denied(setDoc(shared(asTim, TIM, 'friends'),
+  { ...projection('friends', [ALEX]), connections: 'alex' }),
+  'connections must be a list, not a string');
+await denied(setDoc(shared(asTim, TIM, 'friends'),
+  { ...projection('friends', [ALEX]),
+    connections: Array.from({ length: 501 }, (_, i) => ({ uid: `u${i}`, name: '' })) }),
+  'more than 500 connections is refused, the same ceiling viewers has');
+await allowed(setDoc(shared(asTim, TIM, 'friends'),
+  { audience: 'friends', isPublic: false, viewers: [ALEX], profile: { name: 'Tim' },
+    publishedAt: '2026-08-17T12:00:00.000Z', activity: [] }),
+  '⚠️ AND A DOCUMENT WITH NO connections KEY AT ALL IS STILL ACCEPTED — an account '
+  + 'that has not opened the app since this shipped must still be able to publish');
 
 console.log('\n--- 🚨 BODY WEIGHT IS NOT IN A PUBLIC DOCUMENT, ON THE WIRE ---\n');
 

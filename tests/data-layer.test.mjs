@@ -4601,6 +4601,112 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ================= a system's weekly plan (2026-09-16) ================= */
+/* Tim asked for optional scheduling on a system: seven weekday slots, or N
+   repeating cycle days, each holding one of that system's workouts or Rest.
+   🛑 DISPLAY ONLY — he was asked directly whether it should decide what the app
+   suggests next and said no, so nothing here may end up wired into
+   js/next-workout.js. */
+{
+  const { store: st } = await import('../js/store.js');
+  const {
+    WEEK, CYCLE, REST, MIN_CYCLE_DAYS, MAX_CYCLE_DAYS,
+    newSchedule, normalizeSchedule, resizeSchedule, pruneSchedule, slotLabel,
+  } = await import('../js/schedule.js');
+  const id = (n) => byName(n).id;
+
+  /* ---- the shape, on its own ---- */
+  ok(newSchedule(WEEK).slots.length === 7 && newSchedule(WEEK).slots.every((s) => s === null),
+     'a new weekly plan is seven slots and every one of them is unset');
+  ok(newSchedule(CYCLE, 4).slots.length === 4, 'a new cycle is as long as it was asked to be');
+  ok(newSchedule(CYCLE, 99).slots.length === MAX_CYCLE_DAYS
+     && newSchedule(CYCLE, 1).slots.length === MIN_CYCLE_DAYS,
+     `a cycle is clamped to ${MIN_CYCLE_DAYS}–${MAX_CYCLE_DAYS} days — 14 is the top of Tim's own examples`);
+  ok(slotLabel(WEEK, 0) === 'Mon' && slotLabel(WEEK, 0, true) === 'Monday'
+     && slotLabel(WEEK, 6) === 'Sun',
+     '⚠️ the week runs Monday to Sunday, and it is NOT locale-derived — a plan whose first column moved '
+     + 'because of a browser setting would disagree with the one its author typed');
+  ok(slotLabel(CYCLE, 0) === 'Day 1' && slotLabel(CYCLE, 13) === 'Day 14',
+     'and a cycle counts from Day 1, because day one of a rotation is not any particular weekday');
+
+  /* ---- ABSENT means no plan, and that is what keeps it optional ---- */
+  ok(normalizeSchedule(undefined) === null && normalizeSchedule(null) === null,
+     '⚠️ no plan normalises to null rather than to a blank week — "a system without a schedule is '
+     + 'completely unchanged" is the whole of the optional, and an empty seven boxes is a prompt');
+  ok(normalizeSchedule({ kind: 'fortnight', slots: [] }) === null,
+     'a plan of some third kind is not a plan');
+  ok(normalizeSchedule({ kind: WEEK, slots: ['a', 'b'] }).slots.length === 7,
+     'a weekly plan is seven slots however many were stored');
+  ok(normalizeSchedule({ kind: WEEK, slots: [1, {}, true, '', '  ', 'w-real'] }).slots
+       .filter((s) => s !== null).join() === 'w-real',
+     'and anything in a slot that is not a workout id or Rest normalises to nothing');
+
+  /* ---- growing and shrinking a cycle ---- */
+  ok(resizeSchedule({ kind: CYCLE, slots: ['a', 'b'] }, 4).slots.join() === 'a,b,,',
+     'growing a cycle pads with unset days rather than repeating what is there');
+  ok(resizeSchedule({ kind: CYCLE, slots: ['a', 'b', 'c', 'd'] }, 2).slots.join() === 'a,b',
+     '⚠️ and shrinking DISCARDS the tail rather than hiding it — a plan that remembers days its own '
+     + 'boxes do not show is a plan that disagrees with itself');
+
+  /* ---- it survives a round trip through the store ---- */
+  await st.clearAll();
+  const sys = await st.saveSystem({ name: 'PPL' });
+  const push = await st.saveWorkout({ name: 'Push', systemId: sys.id, exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 3 }] });
+  const pull = await st.saveWorkout({ name: 'Pull', systemId: sys.id, exercises: [{ exerciseId: id('Barbell Row'), sets: 3 }] });
+  const legs = await st.saveWorkout({ name: 'Legs', systemId: sys.id, exercises: [{ exerciseId: id('Back Squat'), sets: 3 }] });
+
+  await st.saveSystem({ ...sys, schedule: { kind: CYCLE, slots: [push.id, pull.id, legs.id, REST] } });
+  ok((await st.getSystem(sys.id)).schedule.slots.join() === [push.id, pull.id, legs.id, REST].join(),
+     '🚨 a saved plan comes back off the row — normalizeSystem() SPREADS the system, unlike '
+     + 'normalizeWorkout()’s field-by-field rebuild of an exercise, so a new field is not lost on read');
+  ok(JSON.parse(localStorage.getItem('ftrack:v1:systems'))
+       .find((r) => r.id === sys.id).schedule.slots[3] === REST,
+     'and it is really on disk, not only in the object the store handed back');
+
+  await st.saveSystem({ ...sys, schedule: { kind: 'moon-phase', slots: ['x'] } });
+  ok(!('schedule' in (await st.getSystem(sys.id))),
+     '⚠️ but a malformed plan is DROPPED on read rather than handed to a view — the spread would '
+     + 'carry any junk on the row straight to the screen, which is why the field is named in '
+     + 'normalizeSystem() at all');
+
+  /* ---- a slot is a foreign key, and deleting a workout repairs it ---- */
+  await st.saveSystem({ ...sys, schedule: { kind: WEEK,
+    slots: [push.id, pull.id, legs.id, REST, push.id, null, REST] } });
+  await st.deleteWorkout(pull.id);
+  const after = await st.getSystem(sys.id);
+  ok(after.schedule.slots[1] === null,
+     '🚨 deleting a workout EMPTIES the day that named it — the dropOrphanGroups() lesson one '
+     + 'collection up: a foreign key is only valid while the rest of that set still exists');
+  ok(after.schedule.slots[1] !== REST,
+     '🛑 and does NOT turn it into a rest day. The user planned something and it is gone, which is not '
+     + 'them choosing to rest — inventing a rest day on somebody’s behalf is Rule 6 in one word');
+  ok(after.schedule.slots[0] === push.id && after.schedule.slots[3] === REST
+     && after.schedule.slots[4] === push.id,
+     'and every other day, Rest days included, is left exactly as it was');
+  ok(JSON.parse(localStorage.getItem('ftrack:v1:systems'))
+       .find((r) => r.id === sys.id).schedule.slots[1] === null,
+     '⚠️ the repair is WRITTEN, not applied on read — a backup taken afterwards would otherwise carry '
+     + 'the dangling id');
+  ok(pruneSchedule({ kind: WEEK, slots: [push.id, REST, null] }, new Set([push.id])).dropped === 0,
+     'and a plan with nothing dead in it reports nothing dropped, so the ordinary delete writes '
+     + 'the systems collection not at all');
+
+  /* ---- deleting the system needs no repair: D22 takes the plan with it ---- */
+  await st.deleteSystem(sys.id);
+  ok(!(await st.getSystem(sys.id)),
+     'deleting a system takes its plan down with the row that holds it (D22 — no other system’s plan '
+     + 'could have named a workout that lived in this one)');
+
+  /* ---- a system copied from Explore simply has none ---- */
+  const { presetById } = await import('../js/preset-systems.js');
+  const { system: copied } = await st.addPresetSystem(presetById('preset-ppl'));
+  ok(!('schedule' in copied),
+     '⚠️ a ready-made system carries NO plan rather than a broken one — presets do not describe days '
+     + 'of the week, and inventing one would be the app writing somebody’s programme for them');
+
+  await st.clearAll();
+}
+
 /* ================= ready-made systems ================= */
 {
   const { store: st } = await import('../js/store.js');
