@@ -107,6 +107,12 @@ opt-out and its second user after the finish screen. ⚠️ **Depth is stamped o
 navigation from the browser's own back button, which is the trap `markRoute()` was written to avoid.
 A cold arrival at a friend is depth 1; their own sub-screens do not deepen it.
 
+🔄 **THAT VERSION LASTED HOURS — READ §H2 BEFORE TRUSTING THE PARAGRAPH ABOVE.** Tim reported a case
+depth could not cover (closing their data panel and pressing back), the rule became **unconditional**,
+and the mechanism described above was deleted the same day it was written. The paragraph is kept as
+written because the reasoning in it is still right about *counters versus stamps* — it was the rule
+it served that turned out to be too narrow, not the mechanism it chose.
+
 ⚠️ **Two deliberate reversals, both recorded rather than done quietly.** A friend with no photo now
 gets the person glyph, where 2026-08-31 skipped the block entirely — that was right when the page was
 a list under a title bar carrying their name, and wrong on a profile, where the face has a slot and
