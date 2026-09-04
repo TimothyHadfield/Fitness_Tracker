@@ -54,6 +54,7 @@ const SHELL = [
   './js/strength-standards.js',
   './js/strength-estimate.js',
   './js/muscle-evidence.js',
+  './js/ratio-sigma.js',
   './js/set-e1rm.js',
   './js/rep-decrement.js',
   './js/model-version.js',

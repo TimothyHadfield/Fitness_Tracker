@@ -2456,34 +2456,45 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * The lifter is still one coherent person — everything Novice to Proficient
    * around Intermediate — and no muscle changed by more than the model change
    * that explains it. */
+  /* 🔄 RE-BASELINED TWICE ON 2026-09-15, AND BOTH MOVES ARE THE MODEL CHANGING
+   * ON PURPOSE RATHER THAN A DICE RE-ROLL.
+   *
+   * FIRST, the ratio pass: two entries the sexless walk here can see. Seated
+   * Calf Raise became a pair ({ m: 0.66, f: 0.75 }) so its mean went 0.66 →
+   * 0.705, and Bulgarian Split Squat became { m: 0.50, f: 0.56 } so its mean
+   * went 0.50 → 0.53. Nothing else in the demo's evidence moved.
+   *
+   * SECOND, precision weighting (plan §6.4): the blend is inverse-variance now,
+   * so every muscle is led by the flattest, best-published conversion it has —
+   * in practice its own KEY LIFT wherever one was trained, at σ 0.050. The
+   * whole table moves −2.3 % to +2.8 %:
+   *
+   *     Back 171.2 → 167.3   Biceps 100.0 → 99.8    Calves 224.4 → 225.0
+   *     Chest 214.0 → 212.9  Core unchanged          Forearms 94.3 → 94.7
+   *     Glutes unchanged     Hamstrings 247.8 → 248.5  Quads 263.2 → 266.2
+   *     Shoulders 144.1 → 147.1  Traps 265.6 → 272.9  Triceps 163.5 → 161.4
+   *
+   * ⚠️ EVERY CONFIDENCE IS UNCHANGED TO FOUR PLACES, and that is by design, not
+   * luck: `depth`, `agreement` and the quality term still read `evidenceWeight`,
+   * whose scale the fitted 1.5 in `depth` belongs to. Only the blend moved. If a
+   * confidence figure ever moves in the same commit as these, something reached
+   * further than it was meant to.
+   *
+   * The lifter is still one coherent person and no muscle changed by more than
+   * the model change that explains it. */
   const GOLDEN = [
-    ['Back', 720, 171.2171, 0.8246, 212, 4],
-    ['Biceps', 904, 99.9714, 0.7680, 125, 2],
-    /* 🔄 MOVED 2026-09-15, ONE ENTRY, NAMED: Seated Calf Raise became a pair
-     * ({ m: 0.66, f: 0.75 }; SL gives 0.659 / 0.746 and the single 0.66 was
-     * 12 % low for a woman). This walk passes NO sex, so it resolves to the
-     * mean, 0.705 — the estimate divides by the ratio, so it falls 227.17 →
-     * 224.41, and confidence RISES 0.8512 → 0.8807 because the two calf
-     * exercises now agree more closely. Standing Calf Raise is the key lift at
-     * 1.00 and did not move. No other golden row changed. */
-    ['Calves', 332, 224.4120, 0.8807, 84, 2],
-    ['Chest', 465, 213.9877, 0.9044, 130, 2],
+    ['Back', 720, 167.3161, 0.8246, 212, 4],
+    ['Biceps', 904, 99.8499, 0.7680, 125, 2],
+    ['Calves', 332, 225.0012, 0.8807, 84, 2],
+    ['Chest', 465, 212.9457, 0.9044, 130, 2],
     ['Core', 66, 97.5418, 0.2891, 22, 1],
-    ['Forearms', 904, 94.2935, 0.6006, 273, 5],
+    ['Forearms', 904, 94.6849, 0.6006, 273, 5],
     ['Glutes', 630, 311.0534, 0.8488, 64, 1],
-    ['Hamstrings', 882, 247.8476, 0.8524, 146, 3],
-    /* 🔄 MOVED 2026-09-15, ONE ENTRY, NAMED: Bulgarian Split Squat became a
-     * pair ({ m: 0.50, f: 0.56 }; SL 0.503 / 0.558), so the sexless mean it
-     * resolves to here is 0.53 rather than 0.50. It holds a seat in the demo's
-     * top three, and the estimate divides by the ratio: 264.18 → 263.18,
-     * confidence 0.9248 → 0.9016. Back Squat (key lift, 1.00), Leg Press
-     * (1.835) and Leg Extension (0.78) are untouched. ⚠️ As a MAN — the demo's
-     * own sex, and the app's path — this reads 265.71 and the male ratio is
-     * unchanged at 0.50; see the sexed block below the table. */
-    ['Quads', 567, 263.1765, 0.9016, 171, 4],
-    ['Shoulders', 1080, 144.0826, 0.6903, 192, 4],
-    ['Traps', 529, 265.5756, 0.5797, 148, 3],
-    ['Triceps', 1100, 163.4989, 0.5481, 125, 2],
+    ['Hamstrings', 882, 248.5222, 0.8524, 146, 3],
+    ['Quads', 567, 266.2301, 0.9016, 171, 4],
+    ['Shoulders', 1080, 147.0894, 0.6903, 192, 4],
+    ['Traps', 529, 272.9047, 0.5797, 148, 3],
+    ['Triceps', 1100, 161.4063, 0.5481, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -2525,10 +2536,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * measuring the mean-of-both-sexes path that only a profile with no sex takes.
    *
    * Kept as it is — a sexless walk is a real case and the table is a long
-   * baseline — with the app's own path pinned here beside it. ⚠️ The demo's
-   * REAL reading did not move in the 2026-09-15 pass at all: its Seated Calf
-   * Raise male side is unchanged at 0.66, and 227.17 is what the golden row
-   * said before. What moved was only the mean. */
+   * baseline — with the app's own path pinned here beside it. */
   {
     const sexed = (sex) => {
       const { byMuscle: bm } = buildObservations({ ...args, sex });
@@ -2537,8 +2545,8 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     };
     const asMan = sexed('male'), asWoman = sexed('female');
     const noSex = rateMuscle(byMuscle.get('Calves') || [], 'Calves').estimate;
-    ok(near(asMan, 227.1731, 0.0001),
-       `🚨 walked as the man he is, the demo's Calves reads what it always did (${asMan.toFixed(4)})`);
+    ok(near(asMan, 228.2721, 0.0001),
+       `🚨 the app's own path — the demo lifter walked as the man he is (${asMan.toFixed(4)})`);
     ok(!near(asMan, noSex, 0.0001) && !near(asWoman, noSex, 0.0001) && asWoman < noSex,
        `⚠️ and the three paths genuinely differ — male ${asMan.toFixed(2)}, no sex `
        + `${noSex.toFixed(2)}, female ${asWoman.toFixed(2)} — so the sex reaches the ratio rather `
@@ -3488,6 +3496,62 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
          '⚠️ and only the offending set — the good sets logged beside it that day still count');
     }
 
+    /* 7. σ PER RATIO ENTRY, AND THE PRECISION-WEIGHTED BLEND (plan §6.4).
+     *
+     *    🚨 THESE ARE ORDERING ASSERTIONS ON PURPOSE, and the reason is worth
+     *    reading before adding a figure to them. The simulator cannot arbitrate
+     *    this change: `tools/strength-sim.mjs` draws each exercise's personal
+     *    ratio departure as `RATIO_ERROR_AT_Q0 × (1 − q)`, a function of the
+     *    very number σ replaces, so scoring a σ-weighted rating against it
+     *    would be marking the new scheme with the old scheme's answer key. What
+     *    can be asserted is what the construction claims. */
+    {
+      const { RATIO_DRIFT } = await import('../js/ratio-sigma.js');
+      const sig = (o) => me.sigmaFor(o);
+      const obs = (name, extra) => ({
+        exerciseName: name, quality: 0.5, kind: 'direct', ratio: 0.8, ...extra,
+      });
+      // The published drift, straight out of the generated table.
+      ok(RATIO_DRIFT.get('Machine Curl') < RATIO_DRIFT.get('Reverse Curl'),
+         '🚨 a machine curl\'s ratio holds across the strength range where a reverse curl\'s '
+         + `doubles — 0.016 against 0.354, measured, not judged`);
+
+      const keyLift = obs('Barbell Bench Press', { ratio: 1, quality: 1 });
+      ok(sig(keyLift) <= 0.05 + 1e-9,
+         '🚨 THE KEY LIFT CARRIES NO CONVERSION UNCERTAINTY — its ratio is 1.00 by construction, '
+         + `so it gets the sourcing floor and nothing else (${sig(keyLift).toFixed(3)})`);
+      ok(sig(obs('Machine Curl')) < sig(obs('Reverse Curl')),
+         'a flat published ratio is more certain than one that drifts, all else equal');
+      ok(sig(obs('Machine Curl')) > RATIO_DRIFT.get('Machine Curl'),
+         '⚠️ but a machine is never trusted on drift alone — gearing varies by brand and no '
+         + 'published table can see it, which is the doubt `q` was carrying');
+      ok(sig(obs('Lat Pulldown', { kind: 'fallback' })) > sig(obs('Lat Pulldown')),
+         'and a cross-muscle stand-in is two conversions, so it is less certain than one');
+      const unknown = sig(obs('Not A Real Exercise', { quality: 0.25 }));
+      ok(unknown > sig(obs('Machine Curl')) && unknown <= 0.5,
+         `⚠️ an entry with no published page falls back to the q bridge rather than to a guess `
+         + `(${unknown.toFixed(3)})`);
+
+      /* 🚨 AND THE PROPERTY THE WHOLE CHANGE EXISTS FOR: between two readings
+       * that disagree, the one whose conversion is better established moves the
+       * answer more. Same reps, same day, same everything but the exercise. */
+      const day0 = new Date(Date.UTC(2026, 8, 2)).toISOString().slice(0, 10);
+      const pair = (nameA, nameB) => me.rateMuscle([
+        { estimate: 200, rawE1rm: 200, quality: 0.5, kind: 'direct', ratio: 0.8, reps: 5,
+          weight: 160, loadType: 'total', date: day0, ageDays: 1, isBenchmark: false,
+          exerciseId: 'a', exerciseName: nameA, priorVolume: 0, fatigueFactor: 1 },
+        { estimate: 300, rawE1rm: 300, quality: 0.5, kind: 'direct', ratio: 0.8, reps: 5,
+          weight: 240, loadType: 'total', date: day0, ageDays: 1, isBenchmark: false,
+          exerciseId: 'b', exerciseName: nameB, priorVolume: 0, fatigueFactor: 1 },
+      ], 'Chest');
+      const flatIsLow = pair('Machine Curl', 'Reverse Curl');       // 200 is the certain one
+      const flatIsHigh = pair('Reverse Curl', 'Machine Curl');      // 300 is the certain one
+      ok(flatIsLow.estimate < flatIsHigh.estimate,
+         `🚨 the same two numbers land differently depending on WHICH is better established `
+         + `(${flatIsLow.estimate.toFixed(1)} vs ${flatIsHigh.estimate.toFixed(1)}) — under the old `
+         + `quality-weighted blend these were identical, because both entries are q 0.5`);
+    }
+
     /* 6. THE SCREEN IS MUSCLE-WIDE, AND UNTIL 2026-09-15 THE MODULE'S OWN
      *    COMMENT SAID IT WAS NOT.
      *
@@ -4310,11 +4374,32 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   const freshFirst = await rateOrder([ent('Lat Pulldown', 140, 8), AP, DR]);
   ok(!/cleaner reading/.test(freshFirst.hint || ''),
      'and the hint is silent when the leading reading was taken fresh');
-  // Measured 2026-08-24: doing that pulldown first at a weight he could actually
-  // use is worth ~60 lb, where every re-weighting scheme measured was worth
-  // under 5. A fatigued set is MISSING information, not corrupted information.
-  ok(freshFirst.estimate > asDone.estimate + 40,
-     `one fresh reading is worth far more than the discount ever is `
+  /* 🔄 THE MAGNITUDE MOVED ON 2026-09-15 AND THE REASON IS THE INTERESTING PART.
+   *
+   * Measured 2026-08-24: doing that pulldown first at a weight he could actually
+   * use was worth **~60 lb**, where every re-weighting scheme was worth under 5
+   * — "a fatigued set is MISSING information, not corrupted information", and
+   * the advice that came out of it was to do the lift fresh once.
+   *
+   * Under precision weighting it is worth **4.4 lb** (199.8 → 204.2), and that
+   * is not the fatigue term weakening. It is the rating no longer resting on the
+   * weakest conversion in the session: σ for his three readings is 0.069
+   * (dumbbell row), 0.118 (pulldown) and 0.307 (assisted pull-up), so the row —
+   * a flat, well-published ratio — now carries 212 of the ~295 total weight
+   * where `q` gave it 0.60 of 1.44.
+   *
+   * 🚨 WHICH IS THE ORIGINAL COMPLAINT, FIXED FROM THE OTHER END. What Tim
+   * reported was that adding the fatigued third exercise dragged his Back from
+   * 212 to 145. It now reads **199.8** on the same session, because the assisted
+   * pull-up — the one entry in this file whose conversion rests on an
+   * unstandardised machine linkage — contributes 4 % instead of 20 %. **Order
+   * matters less because the answer depends less on the reading order was
+   * distorting.**
+   *
+   * So the assertion keeps the DIRECTION, which is the property the feature
+   * controls, and the magnitude is recorded above as the measurement it is. */
+  ok(freshFirst.estimate > asDone.estimate,
+     `one fresh reading still reads higher than the same one taken tired `
      + `(${Math.round(asDone.estimate)} -> ${Math.round(freshFirst.estimate)})`);
 
   /* ---------- a benchmark stands alone ---------- */

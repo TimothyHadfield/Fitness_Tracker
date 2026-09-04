@@ -23,7 +23,14 @@ not recommended, and he did not name it.
   published number went **38 → 85**; pairs 51 → 62; eight of the ten were a female side that had
   never been paired. Three are refused rather than corrected because their published page is a
   different implement, and the refusals are written into the table. `docs/history.md` 2026-09-15 §I.
-- **§6.4 σ per entry** and inverse-variance aggregation; **§6.5 personal ratios**.
+- ✅ **§6.4 σ per entry and inverse-variance aggregation — DONE 2026-09-15.** The measured half is
+  `js/ratio-sigma.js` (generated); the terms a published table cannot see — sourcing, machine gearing,
+  the cross-muscle hop — are in `sigmaFor()`. The blend swaps `quality` for `1/σ²` and **nothing
+  else**: `depth`, `agreement` and the candidate sort still read `evidenceWeight`, whose scale the
+  fitted 1.5 in `depth` belongs to. 🛑 **Not validated against a human, and the simulator cannot do it
+  — it draws its ratio error as a function of `q`.** ⏸️ What §6.4 still proposes and did NOT ship:
+  confidence's quality term as `exp(−σ_post)`, and the ± band on `estimateOneRM`.
+- ⏸️ **§6.5 personal ratios.**
 - **The fall limit** — §3.1's window shipped, `estimateAt`'s 2 %/week limit did not, so a rating
   steps when a set ages out of the window rather than declining smoothly.
 

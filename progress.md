@@ -95,28 +95,41 @@ write-up: `docs/history.md`, 2026-09-15.
    session named as the most valuable one missing. Killing the decrement now fails five assertions
    with the right symptom (set 2 repeating set 1's sentence). ⚠️ **The first mutation I tried was a
    §0.14 miss** — it landed in the file and not on the path.
-12. 🆕 **THE RATIO TABLE RE-DERIVED (plan §6.3), AND THE CHECK COULD NOT READ IT.** The 2026-09-13
-   spot-check predates D31: with no sex a pair resolves to the MEAN, so it compared one mean against
-   each sex's own median and reported **18 entries over 10 % out**. Resolving each ratio at the sex
-   it is compared against gives the real figure: **10**. ✅ **Inside 5 % of the published number went
-   38 → 85 of 105**; pairs 51 → 62.
-13. 🚨 **EIGHT OF THOSE TEN WERE ONE FAULT**: the male side already right to 1 %, the female side
-   8–15 % out — entries the last round never paired, so **a woman was handed a man's conversion**.
-   The dumbbell biceps family is four of them on its own. Four more were single numbers that were
-   simply low (Pause Squat, Safety Bar Squat, and two calf raises).
-14. 🚨 **AND A SPLIT, THE MACHINE LATERAL RAISE'S SHAPE AGAIN**: a **Smith Machine Shrug** was scored
-   on the **plate-machine** shrug page, 18–21 % high, because `/Machine Shrug/` matches the name.
-   ⚠️ **Its comment had outlived its own number twice** — it justified the routing by a 1.00 the
-   entry had not carried since 2026-09-13.
-15. 🛑 **THREE ARE REFUSED RATHER THAN CORRECTED AND THE REFUSAL IS WRITTEN INTO THE TABLE**: the
-   Single-Leg RDL, the Sumo Squat and the Cable Lateral Raise all have a published page for a
-   DIFFERENT implement. The cable one reads 106 % high and **the code is right** — read as one stack
-   it agrees with their own dumbbell page.
-16. 🚨 **THE GOLDEN TABLE WALKS WITHOUT A SEX AND THE APP NEVER DOES.** `store.js` passes one; the
-   pin did not, so since D31 it has measured a path only a profile with no sex takes. Two rows
-   re-baselined, each attributed to one entry by name. ✅ **The demo lifter's own (male) numbers did
-   not move at all**, and the three paths are now pinned to differ.
-17. 🛑 **THE FALL LIMIT WAS NOT BUILT, AND THE NOTE CALLING IT "HALF OF DECISION (a)" WAS WRONG** —
+12. 🆕 **THE RATIO TABLE RE-DERIVED (§6.3), AND THE CHECK COULD NOT READ IT.** The 2026-09-13
+   spot-check predates D31 — with no sex a pair resolves to the MEAN — so it compared one mean
+   against each sex's own median and cried **18 entries over 10 % out**. Sex-aware, the real figure
+   is **10**. ✅ **Inside 5 % of the published number: 38 → 85 of 105**; pairs 51 → 62.
+13. 🚨 **EIGHT OF THE TEN WERE ONE FAULT** — male side right to 1 %, female side 8–15 % out, on
+   entries never paired, so **a woman was handed a man's conversion** (the dumbbell biceps family is
+   four on its own). 🚨 **Plus a split of the machine-lateral-raise shape**: a Smith Machine Shrug
+   scored on the **plate-machine** page, ~20 % high, its comment defending the routing by a number
+   the entry had not carried for two sessions. 🛑 **Three are REFUSED and the refusal is in the
+   table** — their published page is a different implement, and the cable lateral raise reads 106 %
+   high while **the code is right**.
+14. 🚨 **THE GOLDEN TABLE WALKS WITHOUT A SEX AND THE APP NEVER DOES** — `store.js` passes one, so
+   since D31 the pin has measured a path only a profile with no sex takes. Pinned beside it now.
+15. 🆕 **σ PER RATIO ENTRY AND A PRECISION-WEIGHTED BLEND (§6.4) — `js/ratio-sigma.js`, generated.**
+   σ_drift is how far an entry's ratio moves between the novice and advanced rows of the published
+   table: one that holds transfers to a stranger, one that doubles does not. **106 entries,
+   0.006–0.392, agreeing with `q` only at r = 0.63** — a machine curl is judged 0.35 and drifts
+   0.016, a reverse curl judged 0.40 and drifts 0.354, so **gearing survives as its own term**.
+16. 🚨 **THE FIRST VERSION MADE THE KEY LIFT THE LEAST TRUSTED EVIDENCE A MUSCLE HAD** — ratio 1.00
+   by construction, so it fell to the default σ and a barbell bench went from 58 % of its own Chest
+   rating to 4 %. **Caught by measuring the weight shares before shipping, not by a test.**
+17. ✅ **The blend swaps ONE factor** (`quality` → `1/σ²`) and 🛑 **does not touch `depth`,
+   `agreement` or the candidate sort** — `depth`'s fitted 1.5 belongs to the old scale. **Every
+   confidence is unchanged to four places**, which is the check that it stayed put; estimates move
+   −2.3 % to +2.8 %.
+18. ⚠️ **A TEST CAUGHT THE CONSEQUENCE AND IT IS NOT A REGRESSION**: Tim's back session, where doing
+   the pulldown fresh was worth ~60 lb, now measures 4.4 — the rating no longer rests on the assisted
+   pull-up (σ 0.307, 4 % of the weight where `q` gave it 20 %). 🚨 **That is his original complaint
+   fixed from the other end** — the session that read 145 now reads 199.8 beside a 212 dumbbell row.
+19. 🛑 **NOT VALIDATED AGAINST A HUMAN, AND THE SIMULATOR CANNOT DO IT** — it draws its ratio error
+   as a function of `q`, the number σ replaces. Ordering properties are asserted instead, mutation-
+   checked both ways. ✅ **And the pulled standards are in the repo at last**
+   (`tools/strength-level-data.mjs`); they were in a temp scratchpad and the table cannot be
+   re-derived without them.
+20. 🛑 **THE FALL LIMIT WAS NOT BUILT, AND THE NOTE CALLING IT "HALF OF DECISION (a)" WAS WRONG** —
    plan §3.1 offered a window **or** a smoothed series, and the window shipped. Wiring `estimateAt()`
    means replaying each exercise as a series: every rating moves, the golden table re-baselines and
    hysteresis has to come with it. **A design change and a re-baseline — Tim's.** The comment that
@@ -171,16 +184,11 @@ that would settle it needs **Tim's export**, which he has not given.
 number. Full write-up: `docs/history.md`, 2026-09-12. Same chat session as -11; Tim rapid-fired five
 asks and said *"you should be deploying many sub-agents"*, and three ran at once.
 
-- **Years-first calendars on every door**, Months landing on the current month. 🚩 **Still visual and
-  still Tim's**: the Profile tab's Months/Years pill never gets `wireSegmented`, so it repaints
-  instead of sliding.
-- **A set locks when you move on from it** — only a RECORDED set, a drop locks with its set, per
-  person. 🚩 **Flagged, unchanged**: fill-on-open copies set 1 into set 2, so going back to set 1
-  locks the copy.
-- **The exercises drag follows the finger** (▲▼ removed, the grip takes the arrow keys), and
-  **Record covers the tab bar** — two faults under it, both only a browser could show.
-- **Your best lifts became ranked.** ⚠️ **Its per-side arithmetic was `e1rm(total)` and 2026-09-14
-  reversed that to `2 × e1rm(per hand)`** — the convention the curve was fitted in (D30).
+- **Years-first calendars on every door**, **a set locks when you move on from it**, **the exercises
+  drag follows the finger**, **Record covers the tab bar**, and **your best lifts became ranked**.
+  🚩 **Two of these are still flagged for Tim and unchanged**: the Profile tab's Months/Years pill
+  never gets `wireSegmented` (it repaints instead of sliding), and fill-on-open copies set 1 into
+  set 2, so going back to set 1 locks the copy.
 - 🔒 **THREE AGENTS AT ONCE ON DISJOINT FILES HELD**, and the standing instructions it produced (an
   isolated copy at HEAD for a green run; one agent owns `tests/`) are in the sub-agent entry below.
 

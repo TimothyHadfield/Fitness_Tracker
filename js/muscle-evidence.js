@@ -63,6 +63,7 @@ import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor, standInFor } from './exercises.js';
 import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
+import { RATIO_DRIFT } from './ratio-sigma.js';
 
 /* ------------------------------------------------------------------ *
  * Load
@@ -1782,6 +1783,76 @@ function dayNumberOf(iso) {
 // territory and always was.
 const QUARANTINE_MIN_RATIO = 2.0;
 
+/* ── σ PER RATIO ENTRY (2026-09-15, plan §6.4) ────────────────────────────────
+ *
+ * `q` says "believe this much" and is a judgement. σ is the same claim with a
+ * derivation behind it, and the two halves come from different places:
+ *
+ *   MEASURED — `RATIO_DRIFT` in js/ratio-sigma.js: how much an entry's ratio
+ *   moves between the novice and advanced rows of the published table. A ratio
+ *   that holds across the strength range transfers to a stranger; one that
+ *   doubles does not, and applying a single number to everybody is exactly that
+ *   uncertain.
+ *
+ *   NOT MEASURABLE FROM THE TABLE — the three terms below. **Gearing is the
+ *   important one**: every row of a machine's published page is the same
+ *   population on the same machines, so the drift cannot see that another gym's
+ *   lever arm is different. That is precisely the doubt `q` was carrying at
+ *   0.35–0.45 for machines, and it survives as its own term rather than being
+ *   deleted because a drift came out flat. A machine curl drifts 0.016 — the
+ *   flattest ratio in the file — and is still not a barbell curl.
+ *
+ * 🚨 A KEY LIFT HAS NO CONVERSION UNCERTAINTY AT ALL, and the first version of
+ * this missed it: its ratio is 1.00 by construction, so with the table's default
+ * σ it came out the LEAST trusted evidence a muscle had — a barbell bench went
+ * from 58 % of its own Chest rating to 4 %. It gets the sourcing floor and
+ * nothing else.
+ *
+ * ⚠️ NONE OF THIS IS VALIDATED AGAINST A HUMAN and the simulator cannot do it:
+ * `tools/strength-sim.mjs` draws each exercise's personal ratio departure as a
+ * function of `q` itself (`RATIO_ERROR_AT_Q0 * (1 - q)`), so measuring a
+ * σ-weighted rating against it would be marking the new scheme's homework with
+ * the old scheme's answer key. What is asserted instead is the ORDERING the
+ * construction implies. §6.1's backtest is still the only thing that would
+ * settle it. */
+const SIGMA_SOURCE = 0.05;     // any published page, before its own drift
+const SIGMA_GEARING = 0.10;    // brand leverage, which no published table can see
+const SIGMA_CROSS = 0.12;      // one extra hop through a cross-muscle stand-in
+const SIGMA_MAX = 0.50;        // the bridge is clamped rather than allowed to run away
+
+// ⚠️ BY NAME, like the ratio table itself, and for the same reason: an
+// observation carries no equipment field, and threading one through four
+// modules to reach this line would be a bigger change than the term is worth.
+const GEARED = /Machine|Cable|Pec Deck|Pulldown|Smith|Assisted|Lever|Hack Squat|Leg Press|Leg Curl|Leg Extension|Pushdown/i;
+
+/**
+ * How uncertain is this observation's CONVERSION — in log space, so it reads as
+ * a fractional error on the estimate.
+ *
+ * The `q` bridge (plan §6.4: `q = exp(−σ/0.25)`, inverted here) covers every
+ * entry with no published page, so nothing loses its meaning in the change.
+ */
+export function sigmaFor(o) {
+  if (!o) return SIGMA_MAX;
+  const q = Number(o.quality);
+  const bridge = q > 0 ? Math.min(SIGMA_MAX, Math.max(SIGMA_SOURCE, -0.25 * Math.log(q))) : SIGMA_MAX;
+  const drift = RATIO_DRIFT.get(o.exerciseName);
+  const geared = GEARED.test(String(o.exerciseName || '')) ? SIGMA_GEARING : 0;
+
+  // A stand-in or cross-muscle contribution is two conversions, not one.
+  const cross = o.kind === 'fallback' || o.standInName ? SIGMA_CROSS : 0;
+
+  // The key lift itself: ratio 1.00 by construction, nothing converted.
+  const isKeyLift = o.kind === 'direct' && !o.standInName
+    && Number(o.ratio) === 1 && q === 1;
+  const base = isKeyLift
+    ? SIGMA_SOURCE
+    : (Number.isFinite(drift)
+      ? Math.sqrt(drift * drift + SIGMA_SOURCE * SIGMA_SOURCE + geared * geared)
+      : bridge);
+  return Math.min(SIGMA_MAX, Math.sqrt(base * base + cross * cross));
+}
+
 // How far back a representative may come from before the seat widens. 84 days
 // is `strength-estimate.js`'s own window, and 180 its first widening — the two
 // numbers were fitted there against lag and flap rate, so reusing them keeps
@@ -2303,7 +2374,32 @@ export function rateMuscle(observations, muscle = null) {
   // three barely touches it (measured: 343 % bias, unchanged). That is a
   // different failure needing a different mechanism — a sequential per-exercise
   // walk, which rateMuscle() does not do. §15.3.
-  const estimate = robustAggregate(used.map((u) => ({ x: u.estimate, w: u.evidenceWeight })));
+  /* ── ⚠️ AND THE BLEND IS PRECISION-WEIGHTED SINCE 2026-09-15 (plan §6.4) ────
+   *
+   * `evidenceWeight` answers "how much is this worth listening to" and carries
+   * `quality` — a judgement — as its credibility factor. For deciding how much
+   * each reading should MOVE the number, the honest weight is inverse variance:
+   * a conversion whose published ratio holds across the strength range pins the
+   * answer more tightly than one that doubles from novice to advanced, and
+   * `sigmaFor()` is that in one number.
+   *
+   * So this swaps exactly one factor — `quality` out, `1/σ²` in — and leaves
+   * every other term (rep factor, recency, fatigue, the benchmark bonus)
+   * untouched, which is why `evidenceWeight / quality` appears rather than a
+   * freshly built weight that could drift from it.
+   *
+   * 🛑 IT IS DELIBERATELY NOT USED FOR `depth`, `agreement` OR THE CANDIDATE
+   * SORT, and that is not an oversight. `depth` is `1 − exp(−Σw / 1.5)`, whose
+   * 1.5 is fitted to the scale `evidenceWeight` has today; 1/σ² runs to 400 at
+   * the floor, so dropping it in there would saturate depth to 1.0 for
+   * everybody and quietly delete a term. Re-fitting that constant needs a
+   * harness that can arbitrate between the two schemes, and the one this
+   * project has cannot (see `sigmaFor()`). **One change, measured, rather than
+   * four at once.** */
+  const estimate = robustAggregate(used.map((u) => {
+    const sigma = sigmaFor(u);
+    return { x: u.estimate, w: (u.evidenceWeight / u.quality) / (sigma * sigma) };
+  }));
   if (!(estimate > 0)) return null;
 
   return {
