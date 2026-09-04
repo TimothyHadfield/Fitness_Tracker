@@ -2232,3 +2232,50 @@ notes that describe work it didn't do.
 **Still to do, and none of it is urgent:** the backtest against your own benchmarks needs an export
 of your data — that's the one that would tell us how accurate any of this actually is. And a full
 re-derivation of all the ratios rather than the worst twenty-five.
+
+---
+
+## 2026-09-15 — what the interrupted agents left, then the ratio table
+
+**You asked** whether last session's interrupted agents had left anything to finish, and they had —
+more than the notes admitted.
+
+**The accessibility audit had already run.** The notes said it produced nothing; in fact 4.5 MB of
+its output was sitting in the dead session's scratchpad, unread, because the agent was killed between
+writing the results and reading them. Clean sweep: 272 screens, no contrast failures, no overflow, no
+unnamed controls, at four widths. I re-ran it against the current code too, since the original run
+predated the last commit.
+
+**A comment in the ranking code said the opposite of what the code does.** The typo screen claims it
+only ever compares a lift against its own past. It doesn't — it compares every exercise for a muscle
+in one series. So a genuine heavy bench test, logged among light flies, gets set aside. I fixed the
+comment rather than the code, because on real training the safety margin is wide (the widest
+disagreement between two exercises of one muscle is 1.12×, and it takes 2× to trigger). The
+alternative fix would let a mistyped number on a brand-new exercise straight through, so which error
+you prefer is your call.
+
+**A tool had been reporting "22 figures outside tolerance" through a green suite** since the rebuild,
+and the obvious reading of that was wrong: 16 of the 22 were checking sentences that had been
+reworded away. Behind them were four places still claiming the estimator's constants were chosen to
+minimise one thing when the measurements say another.
+
+**Then you picked the ratio work.** Re-deriving the whole table found the *check* was broken before
+the table was — it couldn't read the sex-specific ratios we added last session, so it reported 18
+entries badly wrong when the real number was 10. Eight of those ten were the same fault: the male
+figure right and the female figure 8–15 % out, on entries that never got a sex pair. Agreement with
+the published source went from 38 entries to 85 out of 105.
+
+**And then σ.** Every ratio now carries a measured uncertainty — how much it drifts between the
+novice and advanced rows of the published table — and readings are blended by how precisely each one
+pins the answer, instead of by a judgement. Your muscle map moved between −2.3 % and +2.8 %. One
+side-effect worth knowing: your old back-session complaint (the tired third exercise dragging Back
+from 212 to 145) now reads 199.8, because the assisted pull-up — the least trustworthy conversion in
+the file — carries a fifth of the weight it used to.
+
+**Six things are waiting on you**, three of which put a new sentence on a screen: the quarantine
+trade-off above, the fall limit, a freshness note that has never rendered at all, a dead line on the
+Data tab, Goals printing a percentage that can disagree with itself, and one measurement that
+contradicts a claim in two places. They are listed at the top of `progress.md`.
+
+**Not started, and ranked first if you want it:** nobody has ever walked this app with a keyboard,
+run a screen reader against it, or tested it at larger text.
