@@ -2341,3 +2341,24 @@ before you ever recorded anything aren't drawn at all. On a friend's calendar it
 One thing I left for you: on the 1st of a month with nothing in it yet, the months view lands on that
 one-line row with a screen of empty space under it. That space is the "open on the current month" fix
 you asked for doing its job — capping it would stop it landing — so I didn't touch it.
+
+**Three fixes off your reports, minutes after that went up.**
+
+**A friend's "view data" lost its Calendar tab** — four tabs now, since their calendar is on their
+profile. Along the way: `#/friend/<id>/calendar` had never actually worked (it read "that workout is
+not here"); it opens their profile now.
+
+**The months view stops at your first and last recording.** No more empty months before you started.
+One consequence you should know: if your last workout was months ago, the current month isn't drawn
+at all, so the calendar opens on the most recent month you actually trained in. Say the word if
+you'd rather it always ran through to today.
+
+**Back from someone's profile always goes to your own profile now**, whatever you were on before —
+which is what fixes the thing you hit, where closing their data panel and pressing back put you
+straight back into the panel. The earlier version of that rule only applied when you were inside a
+friend's friend, and it could never have caught your case: the app was correctly going back to the
+screen you were on, and the screen you were on was the panel you'd just closed. Their workouts and
+friends lists still go back to that person; only their profile jumps home.
+
+One thing I fixed in my own notes while doing it: the docs claimed the Data tab has six segments
+including Calendar. That's been wrong since the calendar moved to Profile on the 10th.

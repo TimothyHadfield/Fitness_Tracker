@@ -4,7 +4,9 @@ import { store, demo, warmReadCache, social, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
-  markRoute, markFriendTrail, parkScreen, releaseGhost, takeRiseRequest,
+  // 🔄 `markFriendTrail` was imported here until 2026-09-16 — see the note where
+  // it used to be called, in `render()`.
+  markRoute, parkScreen, releaseGhost, takeRiseRequest,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -170,6 +172,30 @@ const FRIEND_DATA_TABS = {
   data: null, volume: 'volume', graph: 'trend', muscles: 'muscles', bars: 'compare',
 };
 
+/* 🆕 `#/friend/<uid>/calendar` LANDS ON THEIR PROFILE — 2026-09-16, when the
+ * Calendar segment left their data panel (Tim: *"because calendar is now shown
+ * in the profile menu, remove it as a tab in the 'view data' section when
+ * looking at another person's information"*).
+ *
+ * 🚨 WHAT THIS ADDRESS DID BEFORE TODAY IS THE REASON IT IS HERE. `calendar` was
+ * never in the map above — it was a TAB with no route — so the lookup fell
+ * through to the session branch and `#/friend/u1/calendar` resolved to "that
+ * workout is not here". Nothing is being rescued; a link that reads exactly like
+ * the four that ARE reserved is being made to answer, and `muscles` and `bars`
+ * were reserved this morning on precisely that argument.
+ *
+ * ⚠️ IT GOES TO THE PROFILE RATHER THAN TO THE PANEL, because that is where the
+ * calendar now IS. Sending it to the panel would open four tabs none of which is
+ * a calendar — an address landing on a screen that does not hold the thing it
+ * names — and sending it to the panel's default tab would be worse still,
+ * silently. The profile is one screen further out and has the thing.
+ *
+ * 🛑 IT IS DELIBERATELY NOT A THIRD BRANCH IN THAT MAP. `FRIEND_DATA_TABS` means
+ * "these open the data panel, on this tab"; `null` inside it already means "the
+ * panel, no particular tab", so a second falsy value meaning "not the panel at
+ * all" would make the lookup below answer two different questions. */
+const FRIEND_PROFILE_SEGMENTS = ['calendar'];
+
 function parse(hash) {
   const clean = (hash || '').replace(/^#\/?/, '');
   const [name, ...rest] = clean.split('/');
@@ -267,13 +293,18 @@ async function resolve(route) {
        *
        * 🔄 AND THEY OPEN THE **PANEL** SINCE 2026-09-16, not the page. Tim's
        * `#/friend/<uid>` is a profile now and the tabs live behind its "View
-       * data" button, so every one of these addresses lands on the same five
-       * segments it always did — one screen further in than it used to be, and
-       * with a down arrow back to the profile rather than a back arrow off the
-       * site. `muscles` and `bars` join the reserved list: they are the two
-       * remaining tab keys, they read exactly like the two that were already
-       * reserved, and leaving them unreserved meant a link somebody could
-       * reasonably type resolved to "that workout is not here".
+       * data" button, so every one of these addresses lands on the tab it always
+       * did — one screen further in than it used to be, and with a down arrow
+       * back to the profile rather than a back arrow off the site. `muscles` and
+       * `bars` join the reserved list: they are the two remaining tab keys, they
+       * read exactly like the two that were already reserved, and leaving them
+       * unreserved meant a link somebody could reasonably type resolved to "that
+       * workout is not here".
+       *
+       * 🔄 THE PANEL IS FOUR TABS LATER THE SAME DAY — Calendar left it for
+       * their profile — and NONE of these four addresses moved, which is the
+       * point of listing them by name: the segment that went was the one with no
+       * address, and it has one now (`FRIEND_PROFILE_SEGMENTS`, above).
        *
        * ⚠️ RESERVED SECOND SEGMENTS ARE CHECKED BEFORE THE SESSION BRANCH,
        * because a session id is opaque. Ids are generated, so a workout called
@@ -282,6 +313,8 @@ async function resolve(route) {
       const uid = decodeURIComponent(fuid || '');
       if (sid === 'friends') return FriendPeopleView(uid);
       if (sid === 'workouts') return FriendWorkoutsView(uid);
+      // Their calendar is a section of their profile now — see the note above.
+      if (FRIEND_PROFILE_SEGMENTS.includes(sid)) return FriendView(uid);
       const tab = FRIEND_DATA_TABS[sid];
       if (tab !== undefined) return FriendDataView(uid, tab);
       return sid
@@ -349,22 +382,22 @@ async function render() {
   // than to a hard-coded parent. See markRoute() in ui.js.
   markRoute();
 
-  /* 🆕 AND HOW DEEP INTO SOMEBODY ELSE'S FRIENDS THIS IS — 2026-09-16, for
-   * Tim's override of Rule 8: a friend reached from inside ANOTHER friend goes
-   * back to `#/me` rather than to the intermediate person. See
-   * `markFriendTrail()` in ui.js for why it is stamped on the history entry
-   * rather than counted, and `friendBackFor()` in views-social.js for the arrow.
+  /* 🔄 ~~AND HOW DEEP INTO SOMEBODY ELSE'S FRIENDS THIS IS — `markFriendTrail()`
+   * on every route, for Tim's override of Rule 8~~ — THE CALL IS GONE, LATER THE
+   * SAME DAY. His second report: *"when I go into a user's 'view data' section,
+   * then close to go into their main profile display, and then go 'back', it
+   * takes me back into the data section … Fix this so it takes the user to their
+   * own profile display whenever they go 'back' from another user's main profile
+   * display, no matter where they were prior to that."*
    *
-   * ⚠️ CALLED ON EVERY ROUTE, with `null` for the ones that are not a friend —
-   * that null is what RESETS the trail, so walking out to Home and back in
-   * through my own friends list starts again at depth 1.
+   * 🚨 THE ARROW IS UNCONDITIONAL NOW, so there is nothing left for a depth to
+   * decide (`friendBackFor()` in views-social.js). A stamping call kept "in case"
+   * is the standing fault this project keeps writing warnings about: a mechanism
+   * that outlives its reason reads to the next person as load-bearing.
    *
-   * ⚠️ ALL of `#/friend/<uid>/…` counts as the SAME person: their workouts,
-   * their friends list, their data panel and one of their sessions are all
-   * still them, so the depth is carried across them rather than incremented. */
-  markFriendTrail(route.name === 'friend'
-    ? decodeURIComponent((route.param || '').split('/')[0] || '')
-    : null);
+   * ⚠️ `markFriendTrail()` AND `friendTrailDepth()` IN `js/ui.js` NOW HAVE NO
+   * CALLER AT ALL and should go with this — flagged to the integrator rather
+   * than done here, because that file is not this change's to edit. */
 
   /* 🚨 RECORD RISES OVER WHAT YOU WERE LOOKING AT — 2026-09-09, Tim: *"I want the
    * screen to pull up the record section from the bottom (which covers over the

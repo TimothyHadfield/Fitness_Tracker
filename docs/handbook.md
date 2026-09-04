@@ -1057,14 +1057,23 @@ link still lands somewhere sensible instead of stepping off the site.
   variable. ⚠️ A counter cannot tell a forward navigation from the browser's own back button — both
   arrive as one `hashchange` — so it drifts the first time somebody uses the OS gesture, silently.
 - 🆕 **AND TIM OVERRULED THIS RULE ONCE, ON PURPOSE — 2026-09-16, so nobody "fixes" it later.**
-  *"if you go back after going inside a frined's friend, it doesn't go back to your friend, it goes
-  back to your main profile menu."* A friend reached from **inside** another friend (depth ≥ 2) goes
-  back to `#/me` rather than through history. ⚠️ **The depth is STAMPED on the history entry**
-  (`markFriendTrail()`, beside `markRoute()` below) rather than counted, for the reason the next
-  bullet gives: a counter cannot tell a forward navigation from the browser's own back button. A
-  cold arrival at a friend — a deep link, a reload, a tap from your own friends list — is depth 1
-  and behaves normally, and a friend's own workouts, friends, data panel and sessions do not deepen
-  it.
+  **The back arrow on `#/friend/<uid>` always lands on `#/me`**, whatever route arrived at it:
+  *"it takes the user to their own profile display whenever they go 'back' from another user's main
+  profile display, no matter where they were prior to that."* `backExact: true`, and this is its
+  second user after the finish screen.
+  ⚠️ **IT WAS BUILT NARROWER FIRST AND THE NARROW VERSION HAD A BUG HE FOUND IN MINUTES**, which is
+  the part worth keeping. The first version applied only to a friend reached from *inside another
+  friend*, and carried a depth stamped on the history entry to tell that case apart. Then: *"when I
+  go into a user's 'view data' section, then close to go into their main profile display, and then
+  go 'back', it takes me back into the data section."* History was doing exactly what Rule 8 says —
+  handing back the panel just closed — and no amount of depth could have known that the entry behind
+  this screen was a screen the reader had already dismissed.
+  🔒 **The depth mechanism was DELETED rather than left standing** (`markFriendTrail()` /
+  `friendTrailDepth()`, gone from `js/ui.js` the same day they were written). A counter nothing reads
+  is worse than no counter: the next person finds it, believes it is load-bearing, and writes around
+  it. ⚠️ **Only the profile itself is unconditional** — their workouts, their friends and one of
+  their sessions are sub-screens *of that friend* and still go back to them, and the data panel's
+  **down** arrow still puts the panel down onto their profile.
 - **`backExact: true` is the opt-out, and there are exactly two users of it**: the finish screen, whose
   arrow means *"go and edit what you just recorded"* rather than *back*. History would be actively
   wrong there — that screen is drawn by replacing `#app` without changing the hash, so the entry

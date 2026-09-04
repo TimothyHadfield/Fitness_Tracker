@@ -763,13 +763,35 @@ ok(fb.prefersRedirect() === false, 'no window (headless) means no redirect prefe
     settingsSrc.indexOf('];', settingsSrc.indexOf('const DATA_TABS = [')));
   ok(!/'calendar'/.test(dataTabsBlock),
      '🚨 the calendar is NOT a segment of your own Data screen — it moved to Profile');
-  /* 🔒 And the vacuity guard for that: a friend's page still HAS one, so the
+  /* 🔄 ~~And the vacuity guard for that: a friend's page still HAS one, so the
      assertion above is reading the right list. Without this, deleting
-     `FRIEND_TABS` entirely would leave it green. */
-  const friendTabsBlock = settingsSrc.slice(settingsSrc.indexOf('const FRIEND_TABS = ['),
-    settingsSrc.indexOf(';', settingsSrc.indexOf('const FRIEND_TABS = [')));
-  ok(/'calendar'/.test(friendTabsBlock),
-     "⚠️ while a friend's page keeps theirs — their page is the only door to it");
+     `FRIEND_TABS` entirely would leave it green.~~
+
+     🔄 THE GUARD HAD TO BE RE-ANCHORED ON 2026-09-16, because the fact it was
+     anchored to stopped being true: Tim removed the Calendar tab from a friend's
+     data panel (*"because calendar is now shown in the profile menu"*), so
+     `FRIEND_TABS` carries no `'calendar'` either and the old line asserts
+     something the app deliberately no longer does.
+
+     🔒 IT IS RE-ANCHORED RATHER THAN DELETED, because the risk it was written
+     against is untouched: `dataTabsBlock` is cut out with two `indexOf` calls,
+     and a rename would make both return -1 and hand the assertion above an empty
+     string it would pass against for ever. So the guard now asks whether the
+     slice really is the list — it must contain the segments that ARE in it. That
+     is a stronger check than the old one and does not depend on any other list's
+     contents.
+
+     🚨 AND THE SAME CLAIM IS NOW MADE ABOUT BOTH SUBJECTS, which is what the
+     2026-09-16 change means: neither screen offers a second door to a calendar
+     that lives on a profile. */
+  ok(/'muscles'/.test(dataTabsBlock) && /'research'/.test(dataTabsBlock),
+     '🔒 …and the slice really is that list rather than an empty string a renamed constant would '
+     + 'hand back — the assertion above must be able to fail');
+  const friendTabsLine = settingsSrc.slice(settingsSrc.indexOf('const FRIEND_TABS ='),
+    settingsSrc.indexOf(';', settingsSrc.indexOf('const FRIEND_TABS =')));
+  ok(friendTabsLine.includes('FRIEND_TABS') && !/'calendar'/.test(friendTabsLine),
+     "🔄 and a FRIEND's list has no calendar segment either since 2026-09-16 — their calendar is a "
+     + 'section of their profile, and the panel is pulled up over that profile');
   // And it can be got out of again.
   const goalsSrc = readFileSync(new URL('../js/views-goals.js', import.meta.url), 'utf8');
   /* 🔄 THE FALLBACK IS `#/me` SINCE 2026-09-11 — it points at the screen that

@@ -310,10 +310,53 @@ been a half-built feature deployed to Pages.
   kg reader gets a doubly-rounded estimate (`docs/strength-accuracy-plan.md` §2.7 says round in the
   unit it is read in). Neither is in the scope of anything Tim asked for.
 
+### H2. 🚨 Three corrections he reported within minutes of the push — and one of them was a rule I had written that morning
+
+The three shipped features met a real user in about the time it takes Pages to rebuild, and each
+report was sharper than the thing it corrected.
+
+1. **"Because calendar is now shown in the profile menu, remove it as a tab in the 'view data'
+   section."** Right, and it was the 2026-09-10 "two doors" decision reaching the other subject: the
+   calendar left the *owner's* Data tab that day for exactly this reason, and the friend panel had
+   simply inherited a copy. Four tabs now. ⚠️ **And it turned up a link that had never worked**:
+   `#/friend/<uid>/calendar` was never a reserved segment, so it fell through to the session branch
+   and read *"that workout is not here"*. It lands on their profile now.
+2. **"Don't show any months that were before or after the first and last recording. Right now it
+   shows 10 months of emptyness before the user's first recording."** The collapse built that
+   morning made each of those months one line instead of a grid — which made ten of them survivable
+   rather than absent, and answered the wrong half of the problem. 🚨 **The consequence was taken
+   deliberately**: when the last recording is months old the **current month is no longer drawn at
+   all**, so `landOnCurrentMonth()` falls back to the most recent month drawn. That is the
+   2026-09-12 landing, kept working in a case that did not exist when it was written. ⚠️ **And the
+   chart's own separate trim was deleted in favour of one range computed once** — two things
+   trimming independently is a drift waiting to happen.
+3. 🚨 **"When I go into a user's 'view data' section, then close to go into their main profile
+   display, and then go 'back', it takes me back into the data section."** THIS IS THE ONE WORTH
+   READING TWICE. That morning's override of Rule 8 was **depth-based**: a friend reached from inside
+   another friend went back to `#/me`, anything else went through history. It was a careful mechanism
+   — the depth stamped on the history entry rather than counted, precisely because a counter cannot
+   tell a forward navigation from the browser's own back button — and **no amount of depth could have
+   fixed this bug**, because the entry behind the profile was a panel the reader had already
+   dismissed. History was doing exactly what Rule 8 promises.
+   **His rule is simpler and covers both**: the arrow on a friend's profile always lands on `#/me`,
+   whatever route arrived at it.
+   🔒 **So the depth mechanism was DELETED the same day it was written** — `markFriendTrail()` and
+   `friendTrailDepth()` are gone from `js/ui.js`, with a note where they were saying why. **A
+   mechanism that outlives its reason reads as load-bearing to the next person**, and this project has
+   already paid for that lesson in the other direction (§9's "a rule guarded by its weakest reason").
+   ⚠️ Only the profile is unconditional: their workouts, their friends and one of their sessions still
+   go back to that friend, and the panel's down arrow still puts it down onto their profile.
+
+⚠️ **And a stale row in `docs/state.md` fell out of job 1**: the Data row still claimed **six**
+segments including Calendar, and had been wrong since 2026-09-10. Nobody caught it in six days
+because every other word in the row was true, and it was found this time only by an agent checking
+the constant rather than reading the prose. *A row that contradicts the code is a bug in that file* —
+this is what one looks like from the inside.
+
 ### I. The numbers
 
-**5,168 assertions across the nineteen suites that need no Chrome** (from 4,944), every one green:
-`data-layer` 2,140 · `render` 1,515 · `goals` 278 · `social` 203 · `bodyweight` 187 · `a11y` 137 ·
+**5,187 assertions across the nineteen suites that need no Chrome** (from 4,944), every one green:
+`data-layer` 2,141 · `render` 1,534 · `goals` 278 · `social` 203 · `bodyweight` 187 · `a11y` 137 ·
 and the thirteen smaller ones unchanged. **`rules` is 221 on the emulator** (from 218) and **the
 rules are deployed**. `sw-update` needs Chrome and is unchanged. Across the five agents: **41
 mutations, each proved to have landed on code**, and the one that did not is written up in §E2.

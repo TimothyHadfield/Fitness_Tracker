@@ -33,9 +33,11 @@ import {
   // itself falling. See `parkScreen()`'s header for the two faults that only a
   // browser could show, and for why nothing is parked where nothing can move.
   parkScreen, requestRise,
-  // How far into somebody else's friends this reader has walked. Tim's explicit
-  // override of Rule 8 — see `friendBackFor()` below.
-  friendTrailDepth,
+  /* 🔄 ~~`friendTrailDepth` — how far into somebody else's friends this reader
+   * has walked~~ NOT IMPORTED SINCE 2026-09-16. The arrow on a friend's profile
+   * is unconditional now (Tim's second report that day), so nothing here asks
+   * how deep the walk was. See `friendBackFor()` below; the stamping half in
+   * `ui.js` has no reader left. */
 } from './ui.js';
 /* 🆕 A FRIEND'S PAGE IS A PROFILE SINCE 2026-09-16, and it is the SAME profile
  * `#/me` is. Tim: *"I want you to view their profile display, like how they see
@@ -752,7 +754,7 @@ export async function FriendView(uid) {
    * was defensible while it listed workouts and is not now that it carries the
    * body map, the volume, the graphs and the way into the compare screen. */
   const pre = await friendDoc(uid);
-  if (pre.demo) return friendScreen(uid, pre, back);
+  if (pre.demo) return friendScreen(uid, pre);
 
   let state;
   try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
@@ -791,7 +793,7 @@ export async function FriendView(uid) {
   if (isFriend && (!conn.name || conn.name === 'Friend')) {
     social.healConnectionName(uid).catch(() => {});
   }
-  return friendProfileScreen({ uid, name, seen, conn, isFriend, state, back });
+  return friendProfileScreen({ uid, name, seen, conn, isFriend, state });
 }
 
 /* ================================================================== *
@@ -821,12 +823,39 @@ export async function FriendView(uid) {
  * subject. Research is eleven topics about training in general, identical on
  * everybody's screen, so on somebody else's page it is a tab that is not about
  * them — Tim's reason, and it has been the rule here since 2026-09-05. Saying
- * which five this screen wants, out loud, is what makes the reason readable at
- * the call site instead of hidden inside `GraphView`.
+ * which this screen wants, out loud, is what makes the reason readable at the
+ * call site instead of hidden inside `GraphView` — and it is what let Calendar
+ * leave this panel on 2026-09-16 by deleting one word from one list.
  * ================================================================== */
 
-/** The five segments a friend's data screen shows. Research is not among them. */
-const FRIEND_SEGMENTS = ['muscles', 'volume', 'trend', 'compare', 'calendar'];
+/* 🔄 ~~The five segments a friend's data screen shows. Research is not among
+ * them.~~ FOUR SINCE 2026-09-16 — CALENDAR LEFT THIS PANEL THE SAME DAY THEIR
+ * PROFILE GAINED IT. Tim: *"because calendar is now shown in the profile menu,
+ * remove it as a tab in the 'view data' section when looking at another
+ * person's information."*
+ *
+ * 🚨 IT IS A SECOND DOOR ONTO ONE THING, WHICH IS THE FAULT AND NOT THE COST.
+ * Their training history is a section of `#/friend/<uid>` now, drawn by the same
+ * `ownCalendar()` this segment drew — so the panel's Calendar tab and the
+ * profile's Training history were the same calendar of the same person, one tap
+ * apart, each with its own Months/Years memory to leave in a different state.
+ * Nothing is lost by removing it: the profile is the screen this panel is pulled
+ * up over, and the down arrow is already on it.
+ *
+ * ⚠️ THE TWO EXCLUSIONS ARE NOT THE SAME KIND OF EXCLUSION, and both are Tim's.
+ * Research is left off because its CONTENT is not about this person (eleven
+ * topics identical on everybody's screen). Calendar is left off because its
+ * content is about them and is already on the screen underneath. Stating them
+ * together in one list is what `opts.segments` is for — the caller with the
+ * reasons says what it wants, rather than `GraphView` inferring a set from
+ * having been handed somebody else's rows.
+ *
+ * 🛑 MY OWN DATA TAB IS UNTOUCHED, and it turns out to have made this move
+ * already: `DATA_TABS` has held no Calendar entry since 2026-09-10, when the
+ * calendar went to Profile and a second door onto it from Data was closed for
+ * exactly the reason being applied here. This is that decision reaching the
+ * other subject six days later. Nothing in this file touches `DATA_TABS`. */
+const FRIEND_SEGMENTS = ['muscles', 'volume', 'trend', 'compare'];
 
 export async function FriendDataView(uid, tab) {
   /* The panel slides away over the profile the router is drawing underneath it;
@@ -923,7 +952,7 @@ async function musclesParts({ uid, name, seen }) {
 }
 
 /* ------------------------------------------------------------------ *
- * 🚨 THE BACK ARROW INSIDE SOMEBODY ELSE'S FRIENDS — TIM'S OVERRIDE OF RULE 8,
+ * 🚨 THE BACK ARROW ON SOMEBODY ELSE'S PROFILE — TIM'S OVERRIDE OF RULE 8,
  * AND IT IS WRITTEN DOWN HERE AS ONE.
  *
  * Tim, 2026-09-16: *"allow the user to click on the friend's 'workouts' button
@@ -932,23 +961,44 @@ async function musclesParts({ uid, name, seen }) {
  * a frined's friend, it doesn't go back to your friend, it goes back to your
  * main profile menu."*
  *
- * ⚠️ RULE 8 SAYS THE ARROW GOES THROUGH HISTORY, and it is right about
- * everything except this. Walking friend → their friend → their friend is a
- * walk somebody can take four steps down without meaning to, and history would
- * make the way out four taps. His instruction is that one tap gets you home.
- * `backExact: true` is the existing opt-out for an arrow that is not a back —
- * until today the finish screen was its only user, and this is the second.
+ * 🔄 AND IT IS UNCONDITIONAL SINCE LATER THE SAME DAY, on his second report:
+ * *"when I go into a user's 'view data' section, then close to go into their
+ * main profile display, and then go 'back', it takes me back into the data
+ * section, rather than my own profile display … Fix this so it takes the user to
+ * their own profile display whenever they go 'back' from another user's main
+ * profile display, no matter where they were prior to that."*
  *
- * 🚨 A COLD ARRIVAL IS DEPTH 1 AND BEHAVES NORMALLY. A deep link, a reload, a
- * tap from my own friends list, a shared `#/friend/<uid>` — none of those is
- * "inside another friend", and an arrow that jumped to `#/me` from one would be
- * moving somebody sideways for no reason they could see. The depth is stamped
- * on the history entry rather than counted (`markFriendTrail()` in ui.js): a
- * counter cannot tell a forward navigation from the browser's own back button,
- * which is the trap `markRoute()` was written to avoid and the same one here.
- * ------------------------------------------------------------------ */
-function friendBackFor(fallback) {
-  if (friendTrailDepth() < 2) return { back: fallback, backExact: false };
+ * 🚨 WHAT THE DEPTH RULE MISSED IS THAT DEPTH 1 HAS A HISTORY TOO. The panel's
+ * down arrow is a NAVIGATION — it pushes `#/friend/<uid>` on top of
+ * `#/friend/<uid>/data` — so the entry behind a depth-1 profile is the panel the
+ * reader had just put away, and Rule 8's arrow dutifully reopened it. The same
+ * shape catches the Home feed (a friend's session, then their name) and any
+ * other route that reaches a profile from something of theirs. Depth was the
+ * wrong axis: it measured how many PEOPLE deep the walk was, and the complaint
+ * is about how many SCREENS.
+ *
+ * ⚠️ RULE 8 SAYS THE ARROW GOES THROUGH HISTORY, and it is right about
+ * everything except this one screen. Walking friend → their friend → their
+ * friend, or profile → data → profile, is a walk somebody takes several steps
+ * down without meaning to, and history makes the way out one tap per step. His
+ * instruction is that one tap gets you home, from anywhere.
+ * `backExact: true` is the existing opt-out for an arrow that is not a back —
+ * the finish screen was its first user, and this is the second.
+ *
+ * 🛑 IT IS THE PROFILE ONLY. Their workouts list, their friends list and one of
+ * their sessions are sub-screens OF THAT FRIEND, so their arrows still land on
+ * that friend's profile — which is this screen, which then goes home. Making
+ * those jump to `#/me` too would take the reader two screens for one tap and
+ * lose the person they were reading.
+ *
+ * 🛑 AND THE PANEL'S ARROW IS UNAFFECTED: `down` means "put this away" and still
+ * lands on this friend's profile. This rule is about what the NEXT tap does.
+ *
+ * ⚠️ THE `fallback` PARAMETER IS GONE WITH THE CONDITION. It was `#/social` —
+ * the list a cold arrival came from — and a fallback that can never be reached
+ * is a branch the next reader has to disprove. `#/me` carries the friends list
+ * anyway, so the destination is one screen from where it used to be. */
+function friendBackFor() {
   return { back: () => { location.hash = '#/me'; }, backExact: true };
 }
 
@@ -989,7 +1039,7 @@ function viewDataButton(uid) {
  * the thumb. The same shape Home's feed, the Friends list and `#/me` all use,
  * and for the same reported reason.
  */
-function friendProfileScreen({ uid, name, seen, conn, isFriend, state, back, demo = false }) {
+function friendProfileScreen({ uid, name, seen, conn, isFriend, state, demo = false }) {
   const body = el('div', { class: 'me-body' });
   const doc = seen.doc;
   /* The panel is offered wherever there is anything to put in it. With no map
@@ -999,7 +1049,12 @@ function friendProfileScreen({ uid, name, seen, conn, isFriend, state, back, dem
     (doc.strength && doc.strength.muscles && doc.strength.muscles.length)
     || (doc.activity && doc.activity.length)));
 
-  const arrow = friendBackFor(back);
+  /* ⚠️ NO `back` PARAMETER SINCE 2026-09-16 — this screen's arrow has one
+   * destination and takes no fallback (see `friendBackFor`). `FriendView` still
+   * keeps a `back` of its own for the "not connected" and "unavailable" shells,
+   * which are not this profile: those are a refusal to draw a page, and Rule 8's
+   * ordinary arrow is right for them. */
+  const arrow = friendBackFor();
   const screen = screenShell({
     title: name,
     // ⚠️ SAY WHICH DOCUMENT THIS IS, because the two are different promises. A
@@ -1446,10 +1501,11 @@ function relationshipFooter({ uid, conn, isFriend, state, demo }) {
  * this passes `friendBody()`, which reads the published grid instead.
  *
  * 🔄 IT TAKES `down` RATHER THAN `back` SINCE 2026-09-16 — see `FriendDataView`.
- * And it names its five segments out loud rather than letting `GraphView` infer
- * them from having been given rows: Research is excluded for a reason about
- * CONTENT (it is the same eleven topics on everybody's screen) rather than a
- * reason about subjects, and a reason belongs at the call site that has it.
+ * And it names its segments out loud rather than letting `GraphView` infer them
+ * from having been given rows: Research is excluded for a reason about CONTENT
+ * (it is the same eleven topics on everybody's screen) and Calendar for a reason
+ * about POSITION (it is on the profile this panel covers), and a reason belongs
+ * at the call site that has it. See `FRIEND_SEGMENTS`.
  */
 async function dataScreenFor({ uid, name, doc, back, down, tab, parts }) {
   const { GraphView } = await import('./views-data.js');
@@ -1491,10 +1547,10 @@ async function dataScreenFor({ uid, name, doc, back, down, tab, parts }) {
  * `friendProfileScreen()` draws both, and `demo: true` is the only difference —
  * so the layout physically cannot fall behind again.
  */
-async function friendScreen(uid, pre, back) {
+async function friendScreen(uid, pre) {
   return friendProfileScreen({
     uid, name: pre.name, seen: pre.seen, conn: null, isFriend: false,
-    state: pre.state, back, demo: true,
+    state: pre.state, demo: true,
   });
 }
 

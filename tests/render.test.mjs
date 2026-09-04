@@ -7037,22 +7037,33 @@ ok(!data.querySelector('.rep-target'),
 
     ok([...fr.querySelectorAll('a')].some((a) => /Compare/.test(a.textContent)),
        '🚨 and a Compare button sits on their map');
-    /* 🚨 THEIR DATA IS TABS NOW, NOT ROWS UNDER THE BODY — 2026-09-05. Tim:
-     * *"I want it to look nearly exactly like how a user views their own data
-     * section, but with the 'research' tab replaced with that user's 'calendar'
-     * data."*
+    /* 🚨 THEIR DATA IS TABS, NOT ROWS UNDER THE BODY — 2026-09-05. Tim: *"I want
+     * it to look nearly exactly like how a user views their own data section."*
      *
-     * ⚠️ THE ABSENCE OF **Research** IS HALF THE ASSERTION. It is the one Data
-     * tab that is identical on everybody's screen — eleven topics about training
-     * in general — so leaving it here would be a tab on somebody's page that is
-     * not about them. Calendar takes its slot, in place, so the four tabs a
-     * person already knows do not move. */
+     * 🔄 FOUR OF THEM SINCE 2026-09-16, ~~five with Calendar where Research is on
+     * yours~~. Tim: *"because calendar is now shown in the profile menu, remove
+     * it as a tab in the 'view data' section when looking at another person's
+     * information."* Their calendar became a section of their PROFILE earlier the
+     * same day, and this segment was then a second door onto the same
+     * `ownCalendar()` one tap away — with its own Months/Years memory to leave in
+     * a different state from the one underneath it.
+     *
+     * ⚠️ TWO ABSENCES, TWO DIFFERENT REASONS, AND THE PAIR IS THE ASSERTION.
+     * Research is missing because its CONTENT is not about this person (eleven
+     * topics identical on everybody's screen); Calendar is missing because its
+     * content IS about them and is already on the screen this panel was pulled up
+     * over. Asserting the exact list rather than two `!includes` is what catches
+     * a segment quietly coming back in either direction. */
     const tabLabels = [...fr.querySelectorAll('.segmented .seg')].map((b) => b.textContent);
-    ok(tabLabels.join('|') === 'Muscles|Volume|Graph|Bars|Calendar',
-       `🚨 their page carries the Data tab bar, with Calendar where Research is on yours (${tabLabels.join('|')})`);
+    ok(tabLabels.join('|') === 'Muscles|Volume|Graph|Bars',
+       `🚨 their data panel carries exactly four tabs (${tabLabels.join('|')})`);
     ok(!tabLabels.includes('Research'),
-       '⚠️ and NOT Research — it is the same on every screen, so on a friend\'s page it would be '
+       '⚠️ NOT Research — it is the same on every screen, so on a friend\'s page it would be '
        + 'a tab that is not about them');
+    ok(!tabLabels.includes('Calendar'),
+       '🚨 and NOT Calendar — it is on their profile, which is the screen this panel is pulled up '
+       + 'over, and two doors onto one calendar is the drift "one calendar, five doors" exists to '
+       + 'prevent');
 
     /* Recent workouts stayed under the body rather than becoming a sixth tab —
      * Tim: *"keep the 'recent workouts' display below that user's body view as
@@ -7077,48 +7088,60 @@ ok(!data.querySelector('.rep-target'),
     ok(/sets a week|Weekly sets|sets\b/i.test(fr.textContent),
        'their Volume tab draws the weekly-sets screen');
 
-    tabBtn('Calendar').click();
-    await settle(); await settle();
-    const calText = fr.textContent;
-    ok(/most recent sixty sessions/.test(calText),
-       '🚨 their Calendar says it is a WINDOW rather than a history — sixty published sessions, so '
-       + 'an empty month may mean they rested or may mean it fell off the end');
-    /* 🔄 THEIR CALENDAR OPENS ON YEARS SINCE 2026-09-12 — Tim: *"make the year
-       display the default for the calendar in all scenarios (including viewing
-       a friend's calendar)"*. ⚠️ THIS IS THE FIRST FRIEND CALENDAR THIS FILE
-       PAINTS, so it is the one assertion reading `friendCalMode`'s INITIAL
-       value; the friend block at the end of the file asserts the same opening,
-       but by then it is reading what this block restores before it leaves.
-       Mutation-checked 2026-09-12: flipping the declaration back to 'months'
-       fails this line. */
-    const theirSeg = (label) => [...fr.querySelectorAll('.cal-modes .seg')]
-      .find((b) => b.textContent === label);
-    ok(fr.querySelectorAll('.yr-grid').length > 0 && !fr.querySelector('.cal-month')
-       && theirSeg('Years').getAttribute('aria-selected') === 'true',
-       '🚨 and it opens on YEARS, like every other door — the sixty-session caveat is on the screen '
-       + 'in that view, which is where it is needed; opening one tap away from it was a hedge');
+    /* 🔄 AND THEIR CALENDAR IS ASSERTED ON THEIR PROFILE, NOT HERE — 2026-09-16.
+       Every line below is the one this block already made about the panel's
+       Calendar segment; the segment is gone and the calendar is not, so the
+       assertions follow it to the door it actually has rather than being
+       deleted with the tab.
 
-    /* ⚠️ AND ITS DAYS GO NOWHERE — in Months, which is now the tap away.
-       `#/day/<iso>` is MY training for that date; linking there from their
-       calendar would open the right day for the wrong person and look like it
-       had worked. */
-    theirSeg('Months').click();
-    await settle();
-    const calCells = [...fr.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
-    ok(calCells.length > 0, 'and, on Months, it draws day cells');
-    ok(calCells.every((c) => c.tagName.toLowerCase() !== 'button'),
-       '🚨 none of which is a button — there is no screen for one of their days, and a control that '
-       + 'does nothing takes focus and is announced as a control');
-    /* Same mechanism as my own calendar: the pane on their page is the Data
-       pane, `land` is on, and the tap aims it at the current month. Structure
-       only — see the Calendar block for what a browser still has to show. */
-    ok(Boolean(fr.querySelector('.cal-month[data-current-month][data-landed]')),
-       '🚨 and tapping Months aimed the scroller at the CURRENT month on their page too');
-    /* ⚠️ PUT THEIR SWITCH BACK ON YEARS, the default, before leaving:
-       `friendCalMode` is module state and the last block in this file asserts
-       their page opens on it. */
-    theirSeg('Years').click();
-    await settle();
+       ⚠️ A FRESH MOUNT, not the `prof` above. Their calendar fills into a slot
+       AFTER the profile paints and the fill is guarded on `calSlot.isConnected`
+       — mounting the panel detached that node, so the earlier reference would be
+       a profile whose calendar can never arrive. */
+    {
+      const cal = await mount(FriendView('u1'));
+      for (let i = 0; i < 14; i++) await settle();
+      const calText = cal.textContent;
+      ok(/most recent sixty sessions/.test(calText),
+         '🚨 their calendar says it is a WINDOW rather than a history — sixty published sessions, '
+         + 'so an empty month may mean they rested or may mean it fell off the end');
+      /* 🔄 THEIR CALENDAR OPENS ON YEARS SINCE 2026-09-12 — Tim: *"make the year
+         display the default for the calendar in all scenarios (including viewing
+         a friend's calendar)"*. ⚠️ THIS IS THE FIRST FRIEND CALENDAR THIS FILE
+         PAINTS, so it is the one assertion reading `friendCalMode`'s INITIAL
+         value; the friend block at the end of the file asserts the same opening,
+         but by then it is reading what this block restores before it leaves. */
+      const theirSeg = (label) => [...cal.querySelectorAll('.cal-modes .seg')]
+        .find((b) => b.textContent === label);
+      ok(cal.querySelectorAll('.yr-grid').length > 0 && !cal.querySelector('.cal-month')
+         && theirSeg('Years').getAttribute('aria-selected') === 'true',
+         '🚨 and it opens on YEARS, like every other door — the sixty-session caveat is on the '
+         + 'screen in that view, which is where it is needed');
+
+      /* ⚠️ AND ITS DAYS GO NOWHERE — in Months, which is the tap away.
+         `#/day/<iso>` is MY training for that date; linking there from their
+         calendar would open the right day for the wrong person and look like it
+         had worked. */
+      theirSeg('Months').click();
+      for (let i = 0; i < 3; i++) await settle();
+      const calCells = [...cal.querySelectorAll('.cal-cell')].filter((c) => !c.classList.contains('blank'));
+      ok(calCells.length > 0, 'and, on Months, it draws day cells');
+      ok(calCells.every((c) => c.tagName.toLowerCase() !== 'button'),
+         '🚨 none of which is a button — there is no screen for one of their days, and a control '
+         + 'that does nothing takes focus and is announced as a control');
+      /* 🔄 THE TAP STILL LANDS, ON THE PROFILE'S OWN PANE — `land: false` is the
+         ARRIVAL only, and it always was. Their document holds a session dated
+         today, so the current month is inside the range the months are now
+         trimmed to and this is the unchanged case. Structure only — see the
+         Calendar block for what a browser still has to show. */
+      ok(Boolean(cal.querySelector('.cal-month[data-current-month][data-landed]')),
+         '🚨 and tapping Months aimed the scroller at the CURRENT month on their profile');
+      /* ⚠️ PUT THEIR SWITCH BACK ON YEARS, the default, before leaving:
+         `friendCalMode` is module state and the last block in this file asserts
+         their page opens on it. */
+      theirSeg('Years').click();
+      await settle();
+    }
 
     /* 🚨 AND BROWSING THEIR TABS MUST NOT MOVE MINE. `graphMode` is module state
      * — the tab my own Data screen opens on — and a friend's page keeping its
@@ -7554,7 +7577,9 @@ ok(!data.querySelector('.rep-target'),
   const { FriendView, FriendDataView, FriendPeopleView, FriendWorkoutsView } =
     await import(BASE + 'views-social.js');
   const { GraphView } = await import(BASE + 'views-data.js');
-  const { markFriendTrail, friendTrailDepth } = await import(BASE + 'ui.js');
+  /* 🔄 ~~`markFriendTrail, friendTrailDepth` from ui.js~~ NOT IMPORTED SINCE
+     2026-09-16 — see section 7, where the depth rule they served was replaced by
+     an unconditional one and both functions lost their last reader. */
   const { social, store, todayISO } = await import(BASE + 'store.js');
   sessionStorage.removeItem('ftrack:v1:demo');
   await store.clearAll();
@@ -7857,6 +7882,32 @@ ok(!data.querySelector('.rep-target'),
          + 'lands on their profile whatever route arrived at it, where a back arrow on a cold '
          + 'open would step off the site');
     }
+
+    /* 🆕 AND `#/friend/<uid>/calendar` IS RESERVED SINCE 2026-09-16, ONTO THEIR
+       PROFILE — not onto the panel. The segment left the panel that day, and
+       this address was never in `FRIEND_DATA_TABS`: it fell through to the
+       session branch and resolved to "that workout is not here". So nothing is
+       being rescued; a link that reads exactly like the four above is being made
+       to answer, which is the argument `muscles` and `bars` were reserved on
+       this morning.
+
+       ⚠️ THE ROUTE ITSELF CANNOT BE DRIVEN HERE — `js/app.js` boots on import —
+       so what is pinned is the half a test CAN see and the half that could
+       actually be wrong: that the screen the address is mapped to is the one
+       holding a calendar, and the panel is not. An address landing on four tabs
+       none of which is a calendar is the failure this guards. */
+    {
+      const prof = await mount(FriendView('u1'));
+      for (let i = 0; i < 14; i++) await settle();
+      ok(Boolean(prof.querySelector('.me-cal .cal-modes')),
+         '🚨 #/friend/<uid>/calendar is mapped to their PROFILE, which is the screen that holds '
+         + 'their calendar');
+      const panel = await mount(FriendDataView('u1'));
+      for (let i = 0; i < 12; i++) await settle();
+      ok(!panel.querySelector('.cal-modes'),
+         '⚠️ and the panel it used to open no longer holds one at all, which is why the address '
+         + 'may not be pointed there');
+    }
   }
 
   /* ---- 6. the segments are an explicit ask, not an inference ---- *
@@ -7889,43 +7940,81 @@ ok(!data.querySelector('.rep-target'),
    * its second user after the finish screen. It is written down as an override
    * so the next person to read Rule 8 does not "fix" it.
    *
-   * ⚠️ THE DEPTH IS STAMPED ON THE HISTORY ENTRY, NOT COUNTED — a counter cannot
-   * tell a forward navigation from the browser's own back button, which is the
-   * trap markRoute() was written to avoid. These drive the stamping function
-   * itself, because that is where the trap is. */
+   * 🔄 AND IT IS UNCONDITIONAL SINCE LATER THE SAME DAY, ~~depth 1 behaved
+   * normally and only depth ≥ 2 jumped home~~. Tim's second report: *"when I go
+   * into a user's 'view data' section, then close to go into their main profile
+   * display, and then go 'back', it takes me back into the data section, rather
+   * than my own profile display … Fix this so it takes the user to their own
+   * profile display whenever they go 'back' from another user's main profile
+   * display, no matter where they were prior to that."*
+   *
+   * 🚨 WHY THE DEPTH RULE WAS THE WRONG AXIS, and it is the point of the four
+   * cases below. Depth measured how many PEOPLE deep the walk was; the fault is
+   * how many SCREENS. The panel's down arrow NAVIGATES to `#/friend/<uid>`, so
+   * the entry behind a depth-1 profile is the panel just put away — and the old
+   * arrow dutifully reopened it. The Home feed does the same through a session.
+   *
+   * ⚠️ THESE DRIVE THE ARROW, NOT A HELPER. The depth-stamping functions in
+   * `ui.js` were what the old version of this section drove, and they have no
+   * caller left anywhere in the app — so a test that still exercised them would
+   * be the only thing keeping them alive, which is the shape of a mechanism
+   * outliving its reason. What is asserted now is the thing a reader taps. */
   {
-    markFriendTrail(null);
+    const backBtn = (screen) => screen.querySelector('.topbar .icon-btn[aria-label="Back"]');
+    social.friend = async () => ({ audience: 'friends', doc: hersDoc() });
 
-    history.replaceState({}, '', '#/friend/a');
-    ok(markFriendTrail('a') === 1,
-       '🔒 a friend reached from anywhere that is not another friend is depth 1 — a deep link, a '
-       + 'reload, a tap from my own friends list');
+    /* Each entry is the route somebody was on BEFORE the profile. `navIndex`
+       is what `markRoute()` writes and what `canGoBack()` reads, so a non-zero
+       one is the state in which Rule 8's arrow would go through history — which
+       is exactly what must not happen here. */
+    const ARRIVALS = [
+      ['#/friend/u1/data', 'their data panel, put away with the down arrow — Tim\'s own report'],
+      ['#/friend/u9', 'inside another friend, the walk the override was written for'],
+      ['#/home', 'the Home feed'],
+      ['#/me/friends', 'my own friends list'],
+    ];
+    for (const [from, what] of ARRIVALS) {
+      history.replaceState({ navIndex: 3 }, '', from);
+      const prof = await mount(FriendView('u1'));
+      for (let i = 0; i < 12; i++) await settle();
+      const b = backBtn(prof);
+      ok(Boolean(b), `their profile carries a back arrow, arriving from ${what}`);
+      b.click();
+      await settle();
+      ok(globalThis.location.hash === '#/me',
+         `🚨 and it lands on #/me, not on ${from} — "no matter where they were prior to that" `
+         + `(${globalThis.location.hash})`);
+    }
 
-    history.replaceState({}, '', '#/friend/a/workouts');
-    ok(markFriendTrail('a') === 1,
-       '⚠️ and their own workouts, friends, data panel and sessions do not deepen it — walking '
-       + 'into a friend\'s own workout and back must not strand the reader at #/me');
+    /* 🔒 A COLD ARRIVAL TOO, which is the case a history-reading arrow gets
+       right by accident: with nothing behind it, Rule 8 would fall back to
+       `#/social`. The destination is `#/me` either way now, so this pins the
+       rule rather than the fallback. */
+    history.replaceState({ navIndex: 0 }, '', '#/friend/u1');
+    {
+      const prof = await mount(FriendView('u1'));
+      for (let i = 0; i < 12; i++) await settle();
+      backBtn(prof).click();
+      await settle();
+      ok(globalThis.location.hash === '#/me',
+         '🔒 and a cold-opened profile — a deep link, a reload — goes to #/me as well, rather than '
+         + 'to the #/social fallback it used to have');
+    }
 
-    history.replaceState({}, '', '#/friend/b');
-    ok(markFriendTrail('b') === 2,
-       '🚨 a friend reached from INSIDE another friend is depth 2, which is what sends the arrow '
-       + 'to #/me instead of to the intermediate person');
-    ok(friendTrailDepth() === 2, 'and the view can read it while it builds itself');
-
-    // 🔒 THE TRAP: coming BACK to that entry must READ the same depth, not count again.
-    const stamped = history.state;
-    ok(stamped && stamped.friendDepth === 2, 'the depth really is on the entry, not in a variable');
-    history.replaceState({}, '', '#/home');
-    markFriendTrail(null);
-    history.replaceState(stamped, '', '#/friend/b');
-    ok(markFriendTrail('b') === 2,
-       '🔒 and an entry that has been visited already knows its own depth, whichever direction it '
-       + 'is reached from — the whole reason this is a stamp and not a counter');
-
-    markFriendTrail(null);
-    ok(friendTrailDepth() === 0,
-       '⚠️ walking out to another tab resets the trail, so coming back in through my own friends '
-       + 'list starts at depth 1 again');
+    /* 🛑 THE SUB-SCREENS ARE NOT THE PROFILE AND DO NOT MOVE. Their workouts and
+       their friends list are screens OF THAT FRIEND; sending those home too
+       would cost the reader the person they were reading for one tap they did
+       not ask for. Rule 8's ordinary arrow is right for them. */
+    history.replaceState({ navIndex: 3 }, '', '#/friend/u1');
+    {
+      const wk = await mount(FriendWorkoutsView('u1'));
+      for (let i = 0; i < 10; i++) await settle();
+      backBtn(wk).click();
+      await settle();
+      ok(globalThis.location.hash !== '#/me',
+         `🛑 their workouts list does NOT jump home — it is a screen of THAT friend, and its arrow `
+         + `still goes back to them (${globalThis.location.hash})`);
+    }
     history.replaceState({}, '', '#/home');
   }
 
@@ -9179,11 +9268,34 @@ ok(!data.querySelector('.rep-target'),
     meSeg('Months').click();
     await settle();
     {
-      const current = me.querySelector('.cal-month[data-current-month]');
-      ok(current && current.dataset.landed === 'true',
-         '🚨 tapping Months aims the Profile pane at the CURRENT month — the same `landOnCurrentMonth` '
-         + 'the Calendar screen uses, on the pane it used to be told never to touch');
-      ok(current && !current.nextElementSibling,
+      /* 🔄 AND THIS FIXTURE IS THE CASE THE 2026-09-16 TRIM CREATED, which is
+         why the two assertions below changed shape rather than being deleted.
+         Its four sessions are dated 2026-08-11 to 08-14 and the months now stop
+         at the last recording, so the CURRENT month is not drawn at all — there
+         is nothing in it, and a month after the last recording is not a gap in a
+         history, it is the future. The landing therefore has no
+         `[data-current-month]` to aim at.
+
+         🛑 WHAT MAY NOT HAPPEN IS THE LANDING QUIETLY STOPPING. That is Tim's
+         2026-09-12 fix, and a missing target that simply returned would leave
+         the Profile pane wherever the reader had scrolled it — the switch is
+         mid-page here, so a tap on Months would paint the months and move
+         nothing. It lands on the most recent month DRAWN instead, which by
+         construction of the range is a month with training in it. */
+      const months = [...me.querySelectorAll('.cal-month')];
+      const landed = me.querySelector('.cal-month[data-landed]');
+      ok(!me.querySelector('.cal-month[data-current-month]'),
+         '🔄 nothing was recorded this month, so the current month is not drawn — the months stop '
+         + 'at the last recording (Tim: "don\'t show any months that were before or after the first '
+         + 'and last recording")');
+      ok(landed && landed === months[months.length - 1],
+         '🚨 so tapping Months aims the Profile pane at the most recent month DRAWN — the landing '
+         + 'may not silently stop working because the month it used to aim at is no longer there');
+      ok(landed && /August/.test(landed.querySelector('.cal-title').textContent)
+         && !landed.classList.contains('is-empty'),
+         '⚠️ and that month is August, the month of their last session — the last month drawn always '
+         + 'HAS something in it, so the pane never comes to rest on a "No recordings" row');
+      ok(landed && !landed.nextElementSibling,
          '⚠️ which is the last block, so the earlier months are above it: scroll UP');
     }
     // Back to the default before leaving: `calMode` is module memory and the
@@ -9947,12 +10059,15 @@ ok(!data.querySelector('.rep-target'),
        + 'honest, and it travels with the calendar rather than being written twice');
   }
 
-  const fr = await mount(FriendDataView('u1'));
-  for (let i = 0; i < 12; i++) await settle();
-  const tabBtn = (label) => [...fr.querySelectorAll('.segmented .seg')]
-    .find((b) => b.textContent === label);
-  tabBtn('Calendar').click();
-  for (let i = 0; i < 6; i++) await settle();
+  /* 🔄 ONE DOOR SINCE LATER ON 2026-09-16, ~~two~~. Tim: *"because calendar is
+   * now shown in the profile menu, remove it as a tab in the 'view data' section
+   * when looking at another person's information."* Every assertion below is the
+   * one this block already made — the switch, both views, the count that says
+   * "published", the inert cells, the landing — read at the door that still
+   * exists. Nothing was weakened to make the move: the door changed, the claims
+   * did not. */
+  const fr = await mount(FriendView('u1'));
+  for (let i = 0; i < 14; i++) await settle();
 
   const calSeg = (label) => [...fr.querySelectorAll('.cal-modes .segmented .seg')]
     .find((b) => b.textContent === label);
@@ -10146,15 +10261,29 @@ ok(!data.querySelector('.rep-target'),
     // Now move MINE to Months, so the two memories differ the other way round.
     [...mine.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months').click();
     await settle();
-    ok(Boolean(mine.querySelector('.cal-month[data-current-month][data-landed]')),
-       'and tapping Months on my own Calendar screen lands on the current month, as it always has');
+    /* 🔄 THE WHOLE RULE RATHER THAN ONE OF ITS TWO CASES — 2026-09-16. Until
+       today the months always ran to today, so "it landed" and "it landed on the
+       current month" were the same sentence; the months now stop at the last
+       recording, and which of the two this fixture exercises depends on whether
+       the store this block inherits happens to hold something dated this month.
+       Asserting the RULE — the current month when it is drawn, the most recent
+       month drawn when it is not — pins both branches and cannot go quietly
+       vacuous when the fixture above it changes. */
+    {
+      const blocks = [...mine.querySelectorAll('.cal-month')];
+      const cur = mine.querySelector('.cal-month[data-current-month]');
+      const landed = mine.querySelector('.cal-month[data-landed]');
+      ok(landed && landed === (cur || blocks[blocks.length - 1]),
+         `and tapping Months on my own Calendar screen lands — on the current month when it is `
+         + `drawn, on the most recent month drawn when it is not (current month drawn: ${Boolean(cur)})`);
+      ok(landed && !landed.nextElementSibling,
+         '⚠️ and either way it is the LAST block, so earlier months are reached by scrolling up');
+    }
   }
   {
     // Theirs is on Months from section 6; put it on Years so the two differ.
-    const back = await mount(FriendDataView('u1'));
-    for (let i = 0; i < 12; i++) await settle();
-    [...back.querySelectorAll('.segmented .seg')].find((b) => b.textContent === 'Calendar').click();
-    for (let i = 0; i < 6; i++) await settle();
+    const back = await mount(FriendView('u1'));
+    for (let i = 0; i < 14; i++) await settle();
     [...back.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Years').click();
     await settle();
   }
@@ -10269,23 +10398,80 @@ ok(!data.querySelector('.rep-target'),
     await store.clearAll();
   }
 
-  /* ---- 2. AND THE CURRENT MONTH COLLAPSES LIKE ANY OTHER, still landing ----
-     The 1st of a month is the ordinary case here, not an edge one: nothing is
-     recorded yet and the month somebody lands on is the empty one. If the
-     collapsed section had lost `data-current-month` this is where it would
-     show. */
+  /* ---- 2. 🔄 THE MONTHS STOP AT THE LAST RECORDING, AND THE LANDING FOLLOWS ----
+     ~~AND THE CURRENT MONTH COLLAPSES LIKE ANY OTHER, still landing. The 1st of
+     a month is the ordinary case here, not an edge one: nothing is recorded yet
+     and the month somebody lands on is the empty one.~~
+
+     🔄 REWRITTEN 2026-09-16 BECAUSE THE CASE IT DESCRIBED NO LONGER EXISTS, and
+     that is the change rather than a gap in it. Tim: *"don't show any months
+     that were before or after the first and last recording."* The range ends at
+     the last recording, so a current month with nothing in it is not drawn —
+     which retires the flagged "on the 1st of an empty month you land on a
+     one-line row over a screenful of padding" outright, since the row is not
+     there to land on.
+
+     🚨 THE RISK THE TRIM CREATED IS WHAT THIS BLOCK NOW PINS. `landOnCurrentMonth`
+     aimed at `[data-current-month]`, and with that section absent a plain
+     `return` would leave the scroller wherever it was — silently undoing Tim's
+     2026-09-12 landing. It aims at the most recent month drawn instead. */
   {
     await log(monthBack(1));
     await log(monthBack(3));
     const screen = await mount(CalendarView());
     await toMonths(screen);
-    const current = screen.querySelector('.cal-month[data-current-month]');
-    ok(current && current.classList.contains('is-empty') && /No recordings/.test(current.textContent),
-       '🚨 an empty CURRENT month collapses too — no special case, and no month of blank boxes on '
-       + 'the 1st');
-    ok(current && current.dataset.landed === 'true',
-       '⚠️ and the tap still lands on it, collapsed — the month you are in is still the month you '
-       + 'are shown');
+    const blocks = [...screen.querySelectorAll('.cal-month')];
+    ok(!screen.querySelector('.cal-month[data-current-month]'),
+       '🚨 nothing was recorded this month, so THIS MONTH IS NOT DRAWN — a month after the last '
+       + 'recording is not a gap in a history');
+    ok(blocks.length === 3,
+       `🚨 and exactly three months are drawn — three months back through one month back, ends `
+       + `inclusive (${blocks.length})`);
+    ok(blocks[1] && blocks[1].classList.contains('is-empty'),
+       '⚠️ with the month BETWEEN them still collapsed and still there: an interior empty month is '
+       + 'a real silence in a real history, which is what the one-line row was built for');
+    const landed = screen.querySelector('.cal-month[data-landed]');
+    ok(landed && landed === blocks[blocks.length - 1],
+       '🚨 and the tap lands on the most recent month DRAWN — the landing may not stop working '
+       + 'because the month it used to aim at is no longer on the page (Tim, 2026-09-12: "the '
+       + 'current month should be the one that is being viewed to start")');
+    ok(landed && !landed.classList.contains('is-empty'),
+       '⚠️ which has training in it by construction — the last month drawn is the month of the last '
+       + 'recording, so the pane never comes to rest on a "No recordings" row');
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+    await store.clearAll();
+  }
+
+  /* ---- 2b. 🆕 NO RECORDINGS AT ALL, AND ONE RECORDING — 2026-09-16 ----
+     The two ends of the trim, and neither existed before it: the months used to
+     run twelve back from today whatever the store held. */
+  {
+    const screen = await mount(CalendarView());
+    await toMonths(screen);
+    ok(!screen.querySelector('.cal-month'),
+       '🚨 a fresh account draws NO month blocks — there is no first recording and no last, so '
+       + 'there is no range');
+    ok(Boolean(screen.querySelector('.empty .empty-title')),
+       '🚨 and gets an empty state rather than a blank pane — a month of empty boxes is the thing '
+       + 'Tim asked to remove, and nothing at all reads as a screen that failed');
+    ok(/fills in as you train|fills in its day/i.test(screen.textContent),
+       '⚠️ saying what would fill it, in the app\'s own words');
+    ok(!screen.querySelector('.mchart'),
+       '⚠️ and no chart over it — five months of recordings is the floor and this has none');
+    segs(screen).find((b) => b.textContent === 'Years').click();
+    await settle();
+  }
+  {
+    await log(monthBack(4));
+    const screen = await mount(CalendarView());
+    await toMonths(screen);
+    const blocks = [...screen.querySelectorAll('.cal-month')];
+    ok(blocks.length === 1 && !blocks[0].classList.contains('is-empty'),
+       `🚨 ONE recording draws exactly one month — first and last are the same month, and the four `
+       + `months of nothing between it and today are not part of the history (${blocks.length})`);
+    ok(blocks[0] && blocks[0].dataset.landed === 'true',
+       '⚠️ and the landing aims at it, being the only month there is');
     segs(screen).find((b) => b.textContent === 'Years').click();
     await settle();
     await store.clearAll();
@@ -10340,14 +10526,40 @@ ok(!data.querySelector('.rep-target'),
        '🚨 and it is in the right PLACE — fifth of seven, which is two months back — so the gap '
        + 'sits where the silence actually was');
 
-    /* ⚠️ LEADING EMPTY MONTHS ARE TRIMMED. `monthRange` always reaches back
-       twelve months, so without the trim this chart would open on five zero
-       columns before the first thing ever recorded — which is exactly the "a
-       year of nothing before you reach anything" Tim reported on 2026-09-12,
-       redrawn as a chart. Twelve columns would mean the trim is gone. */
-    ok(slots.length < 12,
-       `⚠️ and the months BEFORE the first recording are not drawn at all — there was no history `
-       + `yet, so they are not a gap in one (${slots.length} columns, not 12)`);
+    /* 🔄 LEADING EMPTY MONTHS ARE TRIMMED, AND SINCE 2026-09-16 THE LIST BELOW
+       IS TRIMMED WITH THEM — ~~`monthRange` always reaches back twelve months,
+       so without the trim this chart would open on five zero columns before the
+       first thing ever recorded~~. The reason is unchanged and was first written
+       down on the chart: months before the first recording are not a gap in
+       training, there was no history yet. What changed is WHO trims — the range
+       is computed once and handed to both. */
+    /* 🛑 ~~`ok(slots.length < 12, 'the months BEFORE the first recording are not
+       drawn at all … (N columns, not 12)')`~~ DROPPED 2026-09-16, and dropped
+       rather than rewritten. It read "fewer than the twelve `monthRange` always
+       reaches back", and `monthRange` does not reach back twelve months any
+       more — the bound is gone, so the number 12 in it means nothing. Under a
+       mutation that widened the range by five months it "failed" only because 12
+       is not < 12, and its own message read "(12 columns, not 12)". The claim it
+       was making is pinned exactly, and by construction, three assertions above
+       (seven columns for a seven-month range) and in sections 2 and 2b (exactly
+       three months, exactly one month). An assertion that no longer says what it
+       claims to say is worse than no assertion. */
+    /* 🚨 ONE RANGE, NOT TWO THAT AGREE TODAY. Until 2026-09-16 the chart trimmed
+       its own leading months while the list drew every month it was given; the
+       moment those two rules differed by a month, the chart's left-hand column
+       would name a month with no row under it. Asserting COLUMN-FOR-BLOCK is the
+       only shape of check that catches them drifting apart, and it is why the
+       trim moved into `monthRange` rather than being copied. */
+    ok(slots.length === screen.querySelectorAll('.cal-month').length,
+       `🚨 and there is exactly one column per month block underneath — one range, computed once `
+       + `(${slots.length} columns, ${screen.querySelectorAll('.cal-month').length} months)`);
+    {
+      const firstBlock = screen.querySelector('.cal-month .cal-title');
+      const label = (chart.querySelector('.mchart-plot').getAttribute('aria-label') || '');
+      ok(firstBlock && new RegExp(`, ${firstBlock.textContent} to `).test(label),
+         `⚠️ and the chart's reading OPENS on the same month the list opens on `
+         + `(${firstBlock && firstBlock.textContent})`);
+    }
 
     /* 🚨 THE Y-AXIS COUNTS DAYS, NOT SESSIONS — the same rule `daysLabel` states
        over the year grid, and the reason is the same: a day with two workouts is
@@ -10425,7 +10637,7 @@ ok(!data.querySelector('.rep-target'),
  * (direction.md §3.1).
  * ================================================================== */
 {
-  const { FriendDataView } = await import(BASE + 'views-social.js');
+  const { FriendView } = await import(BASE + 'views-social.js');
   const { social, todayISO } = await import(BASE + 'store.js');
   sessionStorage.removeItem('ftrack:v1:demo');
 
@@ -10470,10 +10682,13 @@ ok(!data.querySelector('.rep-target'),
     },
   });
 
-  const fr = await mount(FriendDataView('u2'));
-  for (let i = 0; i < 12; i++) await settle();
-  [...fr.querySelectorAll('.segmented .seg')].find((b) => b.textContent === 'Calendar').click();
-  for (let i = 0; i < 6; i++) await settle();
+  /* 🔄 REACHED THROUGH THEIR PROFILE SINCE 2026-09-16 — the Calendar segment
+     left their data panel the same day (Tim: *"because calendar is now shown in
+     the profile menu, remove it as a tab in the 'view data' section"*). The
+     chart is a reading of the Months view wherever the Months view is, so the
+     assertions are unchanged and only the route to them moved. */
+  const fr = await mount(FriendView('u2'));
+  for (let i = 0; i < 14; i++) await settle();
   [...fr.querySelectorAll('.cal-modes .seg')].find((b) => b.textContent === 'Months').click();
   for (let i = 0; i < 4; i++) await settle();
 

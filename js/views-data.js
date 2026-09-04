@@ -93,22 +93,56 @@ const dayGap = (a, b) =>
  * Calendar
  * ================================================================== */
 
-// Months run as one continuous vertical scroll rather than paging with arrows.
-// The range covers at least the last 12 months, extended back to the earliest
-// thing recorded, and opens scrolled to the current month.
-function monthRange(activity) {
-  const now = new Date();
-  const endIdx = now.getFullYear() * 12 + now.getMonth();
-  let startIdx = endIdx - 11;
-
-  const dates = [...activity.keys()].sort();
-  if (dates.length) {
-    const [y, m] = dates[0].split('-').map(Number);
-    startIdx = Math.min(startIdx, y * 12 + (m - 1));
-  }
-
+/**
+ * Months run as one continuous vertical scroll rather than paging with arrows.
+ *
+ * 🔄 ~~The range covers at least the last 12 months, extended back to the
+ * earliest thing recorded~~ IT IS THE FIRST RECORDING'S MONTH THROUGH THE
+ * LAST'S — 2026-09-16. Tim: *"with the months note, don't show any months that
+ * were before or after the first and last recording. Right now it shows 10
+ * months of emptyness before the user's first recording."*
+ *
+ * 🚨 THE COLLAPSE MADE THE COST VISIBLE RATHER THAN CREATING IT. Twelve months
+ * of blank grids was ~350px of nothing each; collapsed, the same ten months are
+ * ten one-line rows — cheaper, and now unmistakably a list of nothings. Somebody
+ * who started training in July met ten rows saying "No recordings" before
+ * anything they had done. A month before the first recording is not a gap in a
+ * training history; there was no history yet to have a gap in — the argument
+ * `monthsChart` has been making about its own leading columns since the morning.
+ *
+ * ⚠️ INTERIOR EMPTY MONTHS STAY, and that is the whole distinction. A month
+ * between two months that hold something is a real silence in a real history,
+ * and it is exactly what the one-line collapse was built for. Only the ends move.
+ *
+ * 🚨 IT IS BUILT FROM THE COUNTS, NOT FROM THE ACTIVITY KEYS, so there is ONE
+ * range and one predicate for the whole view. `activeDaysByMonth` decides what a
+ * recording is (a session or a benchmark — the grid's own test); the list, the
+ * collapse and the bar chart above them all read this same map. Built from
+ * `activity.keys()` instead, a date whose record holds neither would open the
+ * range on a month that then drew itself as "No recordings" — the first month of
+ * the calendar being an empty one, which is the reported fault back again.
+ *
+ * ⚠️ AND IT NO LONGER READS THE CLOCK. The old range ended at `new Date()`; the
+ * ends are now facts about the data, so the only clock in this screen is the
+ * `today` the caller passes — one source of "now" per render rather than two
+ * that can disagree across midnight.
+ *
+ * @param {Map} counts  'YYYY-MM' → active days, from `activeDaysByMonth`.
+ * @returns {Array} `{year, month}` first-to-last, or EMPTY when nothing is
+ *   recorded at all. See `paint` for what an empty range draws.
+ */
+function monthRange(counts) {
+  const keys = [...counts.keys()].sort();
+  if (!keys.length) return [];
+  // 'YYYY-MM' sorts lexically in date order, which is why the key is padded.
+  const idx = (key) => {
+    const [y, m] = key.split('-').map(Number);
+    return y * 12 + (m - 1);
+  };
   const out = [];
-  for (let i = startIdx; i <= endIdx; i++) out.push({ year: Math.floor(i / 12), month: i % 12 });
+  for (let i = idx(keys[0]); i <= idx(keys[keys.length - 1]); i++) {
+    out.push({ year: Math.floor(i / 12), month: i % 12 });
+  }
   return out;
 }
 
@@ -335,14 +369,21 @@ function monthBlock(year, month, activity, today, onDay = null, activeDays = nul
  * month label under it like every other — present, placed, and unmistakably
  * nothing. The exact figure is in the picture's reading either way.
  *
- * ⚠️ LEADING EMPTY MONTHS ARE TRIMMED; TRAILING ONES ARE NOT. `monthRange`
- * always reaches back at least twelve months, so somebody who started in June
- * would otherwise open on nine zero columns before their first recording —
- * which is precisely the "a year of nothing before you get to anything" Tim
- * reported on 2026-09-12, redrawn as a chart. Months before the first thing
- * recorded are not a gap in training; there was no history yet. The CURRENT
- * month stays even at zero, because "this month so far" is a reading somebody
- * came for and its absence would be read as the chart being out of date.
+ * 🔄 ~~LEADING EMPTY MONTHS ARE TRIMMED HERE; TRAILING ONES ARE NOT~~ — SINCE
+ * 2026-09-16 BOTH ENDS ARE TRIMMED AND `monthRange` DOES IT, for the list and
+ * the chart at once. The reason is unchanged and was first written down here:
+ * `monthRange` used to reach back at least twelve months, so somebody who
+ * started in June opened on nine zero columns before their first recording —
+ * precisely the "a year of nothing before you get to anything" Tim reported on
+ * 2026-09-12, redrawn as a chart. Months before the first thing recorded are not
+ * a gap in training; there was no history yet.
+ *
+ * 🛑 WHAT DID NOT SURVIVE IS THE EXCEPTION FOR THE CURRENT MONTH — *"'this month
+ * so far' is a reading somebody came for"*. That held while the range ran to
+ * today whatever happened; Tim's 2026-09-16 ask is that it runs to the last
+ * recording, so a current month with nothing in it is on neither picture. Making
+ * this one keep a trailing zero column would put a bar over a month the list
+ * below it does not draw, which is worse than the reading it saves.
  *
  * ⚠️ 36 BARS AT 360px: THE PLOT SCROLLS SIDEWAYS INSIDE ITS OWN BOX AND OPENS AT
  * THE RIGHT-HAND END. Rule 1 forbids the window scrolling, not a wide picture
@@ -389,9 +430,26 @@ const CHART_MIN_MONTHS = 5;
 function monthsChart(months, counts, friend) {
   const at = (m) => counts.get(monthKey(m)) || 0;
 
-  const first = months.findIndex((m) => at(m) > 0);
-  if (first < 0) return null;
-  const span = months.slice(first);
+  /* 🔄 ~~`const first = months.findIndex((m) => at(m) > 0)` and a slice from
+   * it~~ — THE TRIM MOVED INTO `monthRange` ON 2026-09-16 AND THIS DRAWS THE
+   * RANGE IT IS GIVEN. The list underneath now stops at the first and last
+   * recording too (Tim's ask), so a second trim here would be a second answer to
+   * one question: the moment the two rules differed by a month, the chart's
+   * left-hand column would name a month the list below it does not draw. One
+   * range, computed once, passed to both.
+   *
+   * ⚠️ THE OLD REASONING IS NOT STRUCK, IT IS RELOCATED — leading empty months
+   * are still not drawn, and still for the reason this function first argued
+   * (there was no history yet to have a gap in). What changed is who trims.
+   *
+   * 🛑 AND THE OLD EXCEPTION IS GONE WITH IT: *"the CURRENT month stays even at
+   * zero, because 'this month so far' is a reading somebody came for."* It was a
+   * true statement about a range that always ran to today. The range runs to the
+   * last recording now, so a current month with nothing in it is not drawn on
+   * EITHER picture — and a chart that kept a trailing zero column the list below
+   * it had no row for would be the same drift the paragraph above forbids. */
+  const span = months;
+  if (!span.length) return null;
   if (span.filter((m) => at(m) > 0).length <= CHART_MIN_MONTHS) return null;
 
   const max = Math.max(...span.map(at));
@@ -650,11 +708,16 @@ export function ownCalendar(activity, today, opts = {}) {
   const friend = Boolean(opts.friend);
   const who = opts.who || 'They';
   const land = opts.land !== false;
-  const months = monthRange(activity);
   // 🆕 2026-09-16. Counted once for the whole calendar rather than per paint:
   // the answer cannot change while this object is alive, and both the collapsed
   // rows and the chart above them have to be counting the same thing.
+  //
+  // 🔄 AND THE RANGE IS NOW DERIVED FROM IT rather than from the activity map —
+  // one predicate decides what a recording is, and the two ends of the list, the
+  // collapse of each row and the chart's columns are all answers from it. Order
+  // matters here: the counts have to exist before the range can be asked for.
   const monthCounts = activeDaysByMonth(activity);
+  const months = monthRange(monthCounts);
 
   const readMode = () => (friend ? friendCalMode : calMode);
   const writeMode = (m) => { if (friend) friendCalMode = m; else calMode = m; };
@@ -825,6 +888,31 @@ export function ownCalendar(activity, today, opts = {}) {
        * scroller was written to absorb (it measures against the pane's own
        * rect rather than through `offsetTop`), and the padding still lands on
        * the last month rather than on the chart. */
+      /* 🆕 NO RECORDINGS AT ALL, SO NO RANGE — 2026-09-16, and this case is
+       * created by the trim rather than uncovered by it. The months used to run
+       * from a year ago to today whatever the store held, so a fresh account met
+       * twelve month blocks; the range is now the first recording through the
+       * last, and somebody with no recordings has neither.
+       *
+       * 🚨 AN EMPTY STATE RATHER THAN A BARE MONTH OF BOXES, and rather than
+       * nothing. Drawing this month alone would be a screen of empty squares
+       * saying nothing, which is the shape of the thing Tim asked to remove;
+       * drawing nothing at all is a blank pane that reads as a screen that
+       * failed. `emptyState()` is the app's own answer and Years already gives
+       * exactly this reader exactly this sentence — so the two views agree on
+       * what an empty history looks like instead of disagreeing.
+       *
+       * ⚠️ IT IS THE SAME WORDS AS YEARS, INCLUDING THE FRIEND VARIANT, because
+       * the reader is the same person one tap away. "A year fits on one screen"
+       * is Years' own line and is left out of it; what this promises is what
+       * Months does — a month fills in as you train. */
+      if (!months.length) {
+        setChildren(host, friend
+          ? emptyState('Nothing to draw yet', `${who} has not published any sessions you can read.`)
+          : emptyState('No training recorded yet',
+            'Every workout you finish fills in its day here, month by month.'));
+        return;
+      }
       setChildren(host,
         monthsChart(months, monthCounts, friend),
         ...months.map(({ year, month }) => monthBlock(
@@ -868,6 +956,37 @@ export async function CalendarView() {
  *   itself on the Calendar tab, the `.graph-host` inside it on the Data screen.
  *   `closest()` starts at the element itself, so one call resolves both.
  */
+/* 🚨 AND THE CURRENT MONTH MAY NOT BE ON THE SCREEN AT ALL SINCE 2026-09-16,
+ * WHICH IS THE WHOLE RISK IN THAT DAY'S TRIM. The months now stop at the last
+ * recording (Tim's ask), so somebody who last trained in June is shown June and
+ * nothing after it — and this function's target, the section carrying
+ * `data-current-month`, is simply not drawn.
+ *
+ * 🛑 THAT MAY NOT BE ALLOWED TO MEAN "THE LANDING QUIETLY STOPS". The landing is
+ * Tim's own fix from 2026-09-12 — *"the current month should be the one that is
+ * being viewed to start, and then the viewer can scroll up for earlier months"* —
+ * and a `return` on a missing target would leave the pane wherever the previous
+ * view happened to have it: on the Data screen and on Profile that is a scroller
+ * somebody else set, so a tap on Months would land in the middle of a stranger's
+ * scroll position and read as a bug rather than as an absence.
+ *
+ * ⚠️ SO THE FALLBACK IS THE MOST RECENT MONTH DRAWN, and it is the same request
+ * answered against the range that exists: "start me where the history is". The
+ * last month drawn always HAS something in it — it is the month of the last
+ * recording, by construction of `monthRange` — so this lands on training rather
+ * than on a collapsed row, and earlier months are still reached by scrolling up.
+ *
+ * 🔒 `data-landed` GOES ON WHICHEVER OF THE TWO WAS AIMED AT, never on the
+ * current month as a matter of course. jsdom lays nothing out, so that attribute
+ * is the only record a test has of where the scroller was pointed; a stamp that
+ * always named the current month would be a claim about a section that is not on
+ * the page. The section it sits on is the answer to "what did this land on".
+ *
+ * ⚠️ THE NAME IS KEPT. It still lands on the current month wherever the current
+ * month is drawn, which is every calendar that has anything recorded this month,
+ * and renaming it would strand five comments and a docs row that call it by
+ * name — the fallback is a second case of one behaviour, not a second
+ * behaviour. */
 function landOnCurrentMonth(container) {
 
   // Land on the current month once the screen is in the document.
@@ -887,7 +1006,13 @@ function landOnCurrentMonth(container) {
   // half a screen of void under December for the sake of August.
   setTimeout(() => {
     const pane = container.closest ? container.closest('.pane-scroll') : null;
-    const current = container.querySelector('[data-current-month]');
+    // The current month when it is drawn; the most recent month drawn when it
+    // is not. `.cal-month` rather than `lastElementChild` because the chart is a
+    // child of this container too — and the empty-range case has neither, which
+    // is what the null check below is for.
+    const drawn = container.querySelectorAll('.cal-month');
+    const current = container.querySelector('[data-current-month]')
+      || drawn[drawn.length - 1] || null;
     if (!pane || !current) return;
 
     // ⚠️ THE LAST MONTH, not the pane's last child. On the Data screen the pane
@@ -1012,25 +1137,32 @@ function landOnCurrentMonth(container) {
 const DATA_TABS = [['muscles', 'Muscles'], ['volume', 'Volume'], ['trend', 'Graph'],
   ['compare', 'Bars'], ['research', 'Research']];
 
-/* 🚨 A FRIEND'S FIFTH TAB IS THEIR CALENDAR, NOT RESEARCH — Tim, 2026-09-05:
- * *"with the 'research' tab replaced with that user's 'calendar' data."*
+/* 🔄 ~~A FRIEND'S FIFTH TAB IS THEIR CALENDAR, NOT RESEARCH — Tim, 2026-09-05:
+ * *"with the 'research' tab replaced with that user's 'calendar' data."* … the
+ * swap is the right way round … the position is kept … `slice(0, 4)` is
+ * load-bearing now that my own list ends in Calendar too.~~
  *
- * ⚠️ AND THE SWAP IS THE RIGHT WAY ROUND. Research is eleven topics about
- * training in general — identical on everybody's screen — so on a friend's page
- * it would be five tabs of which one is not about them at all. A calendar IS
- * about them, and their sessions are already in the document their page reads,
- * so it costs no extra read.
+ * 🔄 SOMEBODY ELSE'S DEFAULT IS THE FIRST FOUR AND NOTHING ELSE — 2026-09-16.
+ * Tim: *"because calendar is now shown in the profile menu, remove it as a tab
+ * in the 'view data' section when looking at another person's information."*
+ * Their calendar is a section of their profile now, so the segment was a second
+ * door onto one thing rather than a fifth subject.
  *
- * ⚠️ THE POSITION IS KEPT. Swapping in place rather than appending means the
- * four tabs somebody already knows do not move when they open another person's
- * page: the muscle map is still first, the calendar is where Research was.
+ * ⚠️ RESEARCH IS STILL OUT, and for the argument the struck text made: eleven
+ * topics about training in general, identical on everybody's screen, so on
+ * somebody else's page it is a tab that is not about them. That is why this is
+ * `slice(0, 4)` rather than `DATA_TABS` with one entry removed.
  *
- * 🚨 `slice(0, 4)` IS LOAD-BEARING NOW THAT MY OWN LIST ENDS IN CALENDAR TOO
- * (2026-09-08). Taking the whole list and swapping Research out would give a
- * friend's page two Calendar segments — the fifth from the swap and the sixth
- * from mine — both selecting the same mode, which is the "two ways in light two
- * things at once" fault from the other direction. Five stays five. */
-const FRIEND_TABS = [...DATA_TABS.slice(0, 4), ['calendar', 'Calendar']];
+ * ⚠️ IT IS A DEFAULT WITH NO CALLER TODAY and is kept on purpose, which is the
+ * opposite call from the one made about `markFriendTrail` the same day. The
+ * friend panel names its segments explicitly (`FRIEND_SEGMENTS` in
+ * views-social.js), so nothing reaches this — but this is what `GraphView`
+ * falls back to when it is handed somebody else's rows and told nothing else,
+ * and a fallback that drew MY six tabs over THEIR training would put Research
+ * and a second calendar on a stranger's screen. A dead branch that answers a
+ * question correctly is not the same object as a mechanism kept past its
+ * reason. */
+const FRIEND_TABS = DATA_TABS.slice(0, 4);
 
 /* 🆕 EVERY SEGMENT THIS SCREEN CAN DRAW, BY KEY — 2026-09-16, so a caller can
  * ASK for a set of tabs instead of being inferred into one.
@@ -1046,7 +1178,17 @@ const FRIEND_TABS = [...DATA_TABS.slice(0, 4), ['calendar', 'Calendar']];
  *
  * ⚠️ ORDER COMES FROM THE CALLER'S LIST, not from this map — a caller asking
  * for a set of tabs is entitled to their order, and reading it out of an object
- * would silently impose this file's. */
+ * would silently impose this file's.
+ *
+ * ⚠️ `calendar` IS IN THIS MAP AND IN NOBODY'S LIST SINCE 2026-09-16 — it left
+ * `DATA_TABS` on 2026-09-10 and `FRIEND_TABS` today, both times because the
+ * calendar had become a section of a profile and a segment would be a second
+ * door onto it. It stays HERE because this map is "every segment this screen can
+ * draw", which is a different statement from "every segment somebody is
+ * currently shown": `renderCalendarPane` is whole, tested and one word away, and
+ * the calendar has moved four times in a month. Its pane is unreachable until a
+ * caller asks for it by name, which is the honest state and is written down
+ * rather than left to be discovered. */
 const TAB_LABEL = {
   muscles: 'Muscles', volume: 'Volume', trend: 'Graph', compare: 'Bars',
   research: 'Research', calendar: 'Calendar',
