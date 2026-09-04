@@ -271,6 +271,31 @@
     weaker than its own sentence, and it is worth ruling in rather than out — **a mutation check
     tests the tests, and both of its failure modes are informative.**
 
+15. **🚨 A MEASUREMENT THAT IS ALWAYS RED IS A MEASUREMENT NOBODY READS — 2026-09-15.**
+    `tools/strength-fit.mjs` exists so a session can re-derive the estimator's constants instead of
+    trusting the comments about them, and it ended every run with *"⚠️ 22 figure(s) outside
+    tolerance — a comment has drifted from the tool."* It had said so since the 2026-09-14 rebuild,
+    through a fully green suite, and the session that produced it read the line and moved on.
+
+    ⚠️ **THE FIRST READING OF IT WAS WRONG, AND THE WRONG READING IS THE INSTRUCTIVE PART.** "22
+    comments have drifted" was the obvious inference and it was false: `provenance()` compares each
+    figure against a **numeric literal hand-copied into the tool**, and nothing parses the comments.
+    So a ✗ can mean a drifted comment, a drifted copy of one, or — as 16 of the 22 turned out to be
+    — **a figure whose comment was reworded away entirely**, leaving the tool checking a sentence
+    that no longer exists. **Before acting on a ✗, grep the file for the quoted number.**
+
+    🔒 **AND THE GUARD IT NAMED DID NOT EXIST.** The tool's header claimed
+    `tests/strength-estimate.test.mjs` had pinned the provenance block "since 2026-09-13"; grep that
+    file for `provenance` and there is nothing. **A header that names its own guard is not evidence
+    the guard exists** — the same shape as §0.14, one level up: there, a mutation that never landed;
+    here, a test that was never written.
+
+    ⚠️ **What made it worth the hour: chasing the 22 turned up four stale CLAIMS behind them** —
+    three DEFAULTS comments and the module's own headline paragraph still saying the constants were
+    chosen to minimise flap rate, which the sweeps have never supported and which
+    `tools/strength-fit.mjs`'s header had already been corrected about on 2026-09-13. **A correction
+    pass that reaches one file and not the file it is about leaves the louder copy standing.**
+
 ---
 
 ## 1. Working agreement
@@ -1374,7 +1399,7 @@ several of the sentences underneath are now the record of a fixed problem rather
 |---|---|
 | the conversion ratios are estimates and some are shaky | still true, and ~25 of the shakiest were corrected against Strength Level; a quarter of the table now carries a sex (D31). Machines are still the weak case |
 | a stale weigh-in gets no penalty | **fixed** — a carried-forward weigh-in decays with the gap, floored at the same 0.70 a backward-carried one gets |
-| the plausibility ceiling quarantines an observation | it was **built and never called** until 2026-09-14; §9 read as though it had shipped. It runs now, narrowed twice (per set rather than per day, and only when the reading also stands at twice the best other one) |
+| the plausibility ceiling quarantines an observation | it was **built and never called** until 2026-09-14; §9 read as though it had shipped. It runs now, narrowed twice (per set rather than per day, and only when the reading also stands at twice the best other one). 🚨 **And on 2026-09-15 the screen turned out to be MUSCLE-WIDE, not per exercise** — `screenDaily()` sorts every (exercise, day) row into one running series, so a lift is flagged against OTHER lifts in box numbers. `muscle-evidence.js` said the opposite in a comment. **The 2.0× rule is therefore the whole safety argument rather than a refinement of one**, and it is stated in converted estimates where exercises are comparable: measured on the demo year, the worst cross-exercise disagreement inside a muscle is 1.12×, so ordinary training has half the headroom it would need to trip it. ⚠️ **What is left is a decision, not a bug**: a first heavy test on a muscle whose other work is much lighter can cross 2.0× honestly and is then held for one session (measured: kept at 1.99×, set aside at 2.01×). Screening per exercise would fix that and would let a ×10 slip on a brand-new exercise through, because a first reading has no past to fail against |
 | percentile placement leans on the e1RM formula | still true, and now stated in the band: `uBase` widened to 0.13 because the ±12 % was a Marzagão-conditional claim |
 | high-rep extrapolation is not fixed | **partly** — the rating now prefers sets at ≤ 8 reps where they exist, so the longest set no longer leads by default |
 | ~~a missing weigh-in widens the comparison~~ | **FALSE, and it always was.** "Any body weight" resolves to the reference weight; the screen says "as if 180 lb" now |

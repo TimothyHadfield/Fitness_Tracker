@@ -56,10 +56,25 @@
 // re-runs the sweeps and prints the tables. Where a constant could NOT be
 // honestly fitted the comment says so outright and names what it would take.
 //
-// The quantity optimised is FLAP RATE — how often the displayed level changes
-// while true strength did not — because that is the failure Tim actually
-// reported ("mostly accurate and not all over the place"), and because bias and
-// RMSE can both be made to look good by an estimator that never moves.
+// 🚨 WHAT WAS ACTUALLY OPTIMISED, AND THIS HEADER SAID SOMETHING ELSE UNTIL
+// 2026-09-15. It said "the quantity optimised is FLAP RATE — how often the
+// displayed level changes while true strength did not". The sweeps have never
+// supported that: on flap rate alone they favour a window of 84 days, a
+// half-life of 56 and best-of-1, and none of those shipped.
+//
+// The shipped 42 / 28 / 3 were chosen on BIAS, LAG AND COVERAGE together —
+// bias under 1 %, lag inside a fortnight, the band covering ~95 % — with flap
+// rate WATCHED rather than minimised, and then taken under half a flap per
+// lifter-year by `hysteresis`, which is a DISPLAY rule and not an estimator
+// constant. Flap rate is what hysteresis is fitted against; it is not what the
+// estimator was.
+//
+// ⚠️ Flap rate still matters, and it is still the failure Tim reported
+// ("mostly accurate and not all over the place") — that is why hysteresis
+// exists. What changed is the claim about where it was spent.
+// `tools/strength-fit.mjs`'s header was corrected to this on 2026-09-13 and
+// said the DEFAULTS comments below had been corrected with it. Three of them
+// had not, and neither had this paragraph; all four say it now.
 
 import { e1rm, isRankableSet, MAX_EVIDENCE_REPS } from './e1rm.js';
 
@@ -113,22 +128,38 @@ export const DEFAULTS = Object.freeze({
 
   /* — §5 the window ————————————————————————————————————————————————— */
   // 42 days, widening to 84 then 180 when fewer than 3 daily values are in it.
-  // Fitted: 28 days lags a genuine build by 6 more days for no gain in flap
-  // rate; 84 days as the FIRST window raises lag by 11 days. 42 is the flat
-  // part of the curve.
+  // ⚠️ FITTED ON BIAS, LAG AND COVERAGE — not on flap rate, which this comment
+  // claimed until 2026-09-15 and which the sweep has never supported (see the
+  // header of tools/strength-fit.mjs, which says so about all three of these
+  // constants). Measured: 28 days is the less biased (−0.12 % against 0.67 %)
+  // and lags a genuine build 2 days longer, 15.4 against 13.4; 84 days buys
+  // half a day of lag and halves the flap rate, and pays 1.72 % bias and the
+  // worst RMSE in the sweep, 4.98 % against 4.66 %. 42 is the lowest RMSE and
+  // the widest window that keeps bias under 1 %.
   windowDays: 42,
   widenTo: [84, 180],
   minDaily: 3,
 
   // Recency half-life inside the window. Swept 14/21/28/42/56 — see
-  // tools/strength-fit.mjs. 28 was the joint best on flap rate and within
-  // 0.2 pp of the best RMSE; shorter half-lives chase noise, longer ones lag.
+  // tools/strength-fit.mjs. ⚠️ THE JUSTIFICATION IS LEVEL LAG, not flap rate:
+  // this said "28 was the joint best on flap rate" until 2026-09-15 and the
+  // sweep says flaps fall monotonically with the half-life (4.10 → 3.86), so
+  // 28 was never the best on it. What 28 IS: the longest half-life before the
+  // level lag steps from 16.1 days to 20.8 — a colour on the body map taking
+  // five more days to move — and it is inside 0.01 pp of the best RMSE.
+  // Shorter half-lives chase noise, longer ones lag.
   halfLifeDays: 28,
 
   // Best-of-N. N = 1 is a plain maximum, which lets one mistyped number define
-  // a lifter forever; N = 5 flattens genuine peaks. Measured, N = 3 was the
-  // best flap rate of 1/2/3/4/5 and it is also the one that can be explained in
-  // one sentence, which this app requires of anything it ships.
+  // a lifter forever; N = 5 flattens genuine peaks. ⚠️ AND N = 3 IS THE WORST
+  // OF THE FIVE ON FLAP RATE, which this comment claimed it was the best of
+  // until 2026-09-15. The real case for it is the same three quantities the
+  // other two constants were chosen on: at N = 3 bias is 0.67 %, lag 13.4 days
+  // and coverage 97.9 %. N = 1 has the fewest flaps and a ±21 % band that
+  // covers 100 % of everything by being useless; N = 4 and 5 beat it on RMSE
+  // and lag 19 and 23 days, with coverage falling under 96 %. It is also the
+  // one that can be explained in one sentence, which this app requires of
+  // anything it ships.
   topN: 3,
 
   /* — bounding what one observation may do ——————————————————————————— */
@@ -221,14 +252,30 @@ export const DEFAULTS = Object.freeze({
   // appear on screen.
   //
   //     hysteresis   flaps/yr   days to show a real level change
-  //         0          3.67                15.0
-  //         0.25       0.38                23.2
-  //         0.50       0.00                32.5
+  //         0          3.90                16.1
+  //         0.25       0.19                29.4
+  //         0.50       0.00                38.6
   //
-  // 0.38 flaps a year is one spurious colour change every three years for
-  // somebody sitting exactly on a boundary — and that ensemble is the worst
-  // case by construction; an ordinary lifter flaps zero times at any of these.
-  // Buying the last 0.38 costs nine more days of silence when something
+  // 0.19 flaps a year is one spurious colour change every five years for
+  // somebody sitting exactly on a boundary.
+  //
+  // 🚩 THIS SAID "AND THAT ENSEMBLE IS THE WORST CASE BY CONSTRUCTION; AN
+  // ORDINARY LIFTER FLAPS ZERO TIMES AT ANY OF THESE" UNTIL 2026-09-15, AND THE
+  // SUITE'S OWN PRINTED LINE SAYS OTHERWISE: `tests/strength-estimate.test.mjs`
+  // reports **0.75 (ordinary) against 0.19 (on a level boundary)** — four times
+  // as many, the opposite ordering, on the run that asserts the 0.19. Nothing
+  // in `provenance()` measures the ordinary number, which is why a sentence
+  // this wrong sat under a green suite.
+  //
+  // ⚠️ WHAT IS NOT KNOWN IS WHY, AND IT IS NOT GUESSED AT HERE. A flap is a
+  // displayed level changing while true strength did not; an ordinary lifter's
+  // truth does move, so the two ensembles may not be counting the same thing,
+  // and if they are, "worst case by construction" is the wrong frame for the
+  // number hysteresis was fitted against. Either way the 0.25 still clears the
+  // shipping rule on the ensemble it was fitted on. 🛑 Raised with Tim rather
+  // than resolved by whoever noticed it.
+  //
+  // Buying the last 0.19 costs nine more days of silence when something
   // genuinely happened, and a goal in this app is twelve weeks long, so a month
   // of not noticing is a third of it. The shipping rule is therefore "under
   // half a flap per lifter-year, then minimise lag", and 0.25 is what it picks.

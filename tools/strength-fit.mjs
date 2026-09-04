@@ -5,9 +5,21 @@
 // DEV-ONLY, and slow (~40 s). Every number written into DEFAULTS in
 // js/strength-estimate.js came out of a table printed here, so that a later
 // session can re-derive it rather than trust it. Nothing here is a test — the
-// assertions on these outcomes live in tests/strength-estimate.test.mjs, and
-// since 2026-09-13 that file pins the PROVENANCE block at the bottom of this
-// one: every figure a DEFAULTS comment quotes, recomputed by `provenance()`.
+// assertions on these outcomes live in tests/strength-estimate.test.mjs.
+//
+// 🚨 AND NOTHING PINS THE PROVENANCE BLOCK. This header claimed until 2026-09-15
+// that tests/strength-estimate.test.mjs pinned it "since 2026-09-13"; grep that
+// file for `provenance` and there is nothing. That is precisely how it came to
+// print "22 figure(s) outside tolerance" through a fully green suite for a
+// session and a half — the guard it named does not exist.
+//
+// ⚠️ AND READ WHAT `quoted` ACTUALLY IS BEFORE BELIEVING A ✗. Every `quoted`
+// value in `provenance()` is a NUMERIC LITERAL IN THIS FILE, hand-copied from a
+// DEFAULTS comment. Nothing parses the comments. So a ✗ means "this file's copy
+// disagrees with a fresh run", which can be a drifted comment, a drifted copy,
+// or a figure whose comment was reworded away entirely — on 2026-09-15, 16 of
+// the 22 were the last of those: the numbers appear nowhere in
+// js/strength-estimate.js any more. **Check which before you edit either side.**
 //
 // ⚠️ WHAT WAS ACTUALLY OPTIMISED, STATED HONESTLY (2026-09-13). Until today this
 // header said "the quantity being minimised is flap rate". That is not what the
@@ -300,13 +312,18 @@ export function provenance(opts = {}) {
   const entry = (constant, value, figures) => entries.push({ constant, value, figures });
   const fig = (name, quoted, computed, tol) => ({ name, quoted, computed, tol });
 
-  // positionDecay — "removing it moved RMSE by 0.1 pp and flaps 0.43 → 0.38"
+  // positionDecay — "removing it moved RMSE by 0.1 pp and flap rate not at all"
+  //
+  // ⚠️ THE TWO FLAP FIGURES WERE 0.43 → 0.38 UNTIL 2026-09-15 AND THE COMMENT
+  // NEVER SAID THAT. It says the flap rate does not move, so what belongs here
+  // is the DIFFERENCE, which is what the sentence claims. Both sides now
+  // compute 0.19048, so the old pair was flagging a comment that was right.
   {
     const off = on(P({ positionDecay: 1 }));
     entry('positionDecay', DEFAULTS.positionDecay, [
       fig('RMSE change when removed (pp)', 0.0, Math.abs(off.rmse - base.rmse) * 100, 0.1),
-      fig('flaps/yr with it removed', 0.43, flapsPerYear(P({ positionDecay: 1 })), 0.05),
-      fig('flaps/yr as shipped', 0.38, baseEdge.flaps / baseEdge.lifters, 0.05),
+      fig('flap-rate change when removed ("not at all")', 0.0,
+        Math.abs(flapsPerYear(P({ positionDecay: 1 })) - baseEdge.flaps / baseEdge.lifters), 0.05),
     ]);
   }
 
@@ -316,14 +333,20 @@ export function provenance(opts = {}) {
     const w42 = on(P({ ...OFF, windowDays: 42 }));
     const w84 = on(P({ ...OFF, windowDays: 84 }));
     entry('windowDays', DEFAULTS.windowDays, [
-      fig('lag at 28 (days)', 14.8, w28.lagDays, 0.3),
-      fig('lag at 42 (days)', 12.1, w42.lagDays, 0.3),
-      fig('lag at 84 (days)', 11.7, w84.lagDays, 0.3),
-      fig('bias at 28', -0.0009, w28.bias, 0.002),
-      fig('bias at 84', 0.0171, w84.bias, 0.002),
-      fig('coverage at 28', 0.9456, w28.coverage, 0.005),
-      fig('flaps/yr at 84 (fewest)', 2.10, flapsPerYear(P({ ...OFF, windowDays: 84 })), 0.1),
-      fig('flaps/yr at 42', 3.67, flapsPerYear(P({ ...OFF, windowDays: 42 })), 0.1),
+      // ⚠️ RE-COPIED 2026-09-15 from the rewritten comment, which argues from
+      // bias, lag and RMSE rather than from flap rate. `coverage at 28` went
+      // with the sentence that quoted it; the flap pair became the ratio the
+      // comment actually claims ("halves the flap rate").
+      fig('lag at 28 (days)', 15.4, w28.lagDays, 0.3),
+      fig('lag at 42 (days)', 13.4, w42.lagDays, 0.3),
+      fig('lag at 84 (days)', 12.8, w84.lagDays, 0.3),
+      fig('bias at 28', -0.0012, w28.bias, 0.002),
+      fig('bias at 42', 0.0067, w42.bias, 0.002),
+      fig('bias at 84', 0.0172, w84.bias, 0.002),
+      fig('RMSE at 42', 0.0466, w42.rmse, 0.002),
+      fig('RMSE at 84 (worst in the sweep)', 0.0498, w84.rmse, 0.002),
+      fig('flaps at 84 ÷ flaps at 42 ("halves it")', 0.5,
+        flapsPerYear(P({ ...OFF, windowDays: 84 })) / flapsPerYear(P({ ...OFF, windowDays: 42 })), 0.1),
     ]);
   }
 
@@ -333,28 +356,40 @@ export function provenance(opts = {}) {
     for (const h of [14, 21, 28, 42, 56]) hl[h] = { flaps: flapsPerYear(P({ ...OFF, halfLifeDays: h })), s: on(P({ ...OFF, halfLifeDays: h })) };
     const rmses = Object.values(hl).map((x) => x.s.rmse);
     entry('halfLifeDays', DEFAULTS.halfLifeDays, [
-      fig('flaps/yr at 14', 4.14, hl[14].flaps, 0.1),
-      fig('flaps/yr at 28', 3.67, hl[28].flaps, 0.1),
-      fig('flaps/yr at 56 (fewest)', 3.14, hl[56].flaps, 0.1),
+      // ⚠️ RE-COPIED 2026-09-15. The comment argues from LEVEL lag now — the
+      // half-life at which a colour on the body map starts taking five more
+      // days to move — so the plain lag figures went with the sentence that
+      // quoted them, and 28's flap rate with the claim that it was the best.
+      fig('flaps/yr at 14', 4.10, hl[14].flaps, 0.1),
+      fig('flaps/yr at 56 (fewest)', 3.86, hl[56].flaps, 0.1),
       fig('RMSE spread across 14–56 (pp)', 0.06, (Math.max(...rmses) - Math.min(...rmses)) * 100, 0.05),
-      fig('lag at 28 (days)', 12.1, hl[28].s.lagDays, 0.3),
-      fig('lag at 56 (days)', 13.1, hl[56].s.lagDays, 0.3),
+      fig('RMSE at 28 above the best of the sweep (pp)', 0.01,
+        (hl[28].s.rmse - Math.min(...rmses)) * 100, 0.02),
+      fig('level lag at 28 (days)', 16.1, hl[28].s.levelLagDays, 0.5),
+      fig('level lag at 42 (days)', 20.8, hl[42].s.levelLagDays, 0.5),
     ]);
   }
 
   // topN — flaps 1..5, and what N = 1 costs on bias / band / a slipped digit
   {
     const n1 = on(P({ ...OFF, topN: 1 }));
+    const n4 = on(P({ ...OFF, topN: 4 }));
     const n5 = on(P({ ...OFF, topN: 5 }));
     const slip = lifters.map((l) => withTypo(l, { day: 150, kind: 'digit' }));
     entry('topN', DEFAULTS.topN, [
-      fig('flaps/yr at N=1 (fewest)', 2.86, flapsPerYear(P({ ...OFF, topN: 1 })), 0.1),
-      fig('flaps/yr at N=3', 3.67, flapsPerYear(P({ ...OFF, topN: 3 })), 0.1),
-      fig('flaps/yr at N=5', 2.90, flapsPerYear(P({ ...OFF, topN: 5 })), 0.1),
+      // ⚠️ RE-COPIED 2026-09-15. The comment no longer claims N = 3 is the best
+      // on flap rate — it is the worst of the five — so the flap figures went
+      // with that sentence and what is checked now is the case that replaced
+      // it: bias, lag and coverage at N = 3, and what N = 1 and N = 5 cost.
+      fig('bias at N=3', 0.0067, base.bias, 0.003),
+      fig('lag at N=3 (days)', 13.4, base.lagDays, 0.3),
+      fig('coverage at N=3', 0.979, base.coverage, 0.005),
       fig('bias at N=1', 0.0272, n1.bias, 0.003),
-      fig('mean band at N=1', 0.177, n1.meanU, 0.005),
-      fig('lag at N=5 (days)', 22.0, n5.lagDays, 0.5),
-      fig('coverage at N=5', 0.917, n5.coverage, 0.005),
+      fig('mean band at N=1 (±21 %)', 0.21, n1.meanU, 0.01),
+      fig('coverage at N=1 (100 %, by being useless)', 1.0, n1.coverage, 0.005),
+      fig('lag at N=4 (days)', 19.1, n4.lagDays, 0.5),
+      fig('lag at N=5 (days)', 22.6, n5.lagDays, 0.5),
+      fig('coverage at N=5 (comment: under 96 %)', 0.942, n5.coverage, 0.005),
       fig('+50 lb slip bias at N=1', 0.0686, on(P({ topN: 1 }), slip).bias, 0.005),
       fig('+50 lb slip bias at N=3', 0.0288, on(P({ topN: 3 }), slip).bias, 0.005),
     ]);
@@ -423,12 +458,16 @@ export function provenance(opts = {}) {
     const rows = {};
     for (const h of [0, 0.25, 0.5]) rows[h] = { flaps: flapsPerYear(P({ hysteresis: h })), lag: on(P({ hysteresis: h })).levelLagDays };
     entry('hysteresis', DEFAULTS.hysteresis, [
-      fig('flaps/yr at 0', 3.67, rows[0].flaps, 0.1),
-      fig('flaps/yr at 0.25', 0.38, rows[0.25].flaps, 0.05),
+      // ⚠️ These six were re-copied from the DEFAULTS comment on 2026-09-15,
+      // after the strength rebuild moved the simulator and the comment was
+      // brought back in line with it. They are the comment's numbers, not this
+      // run's — that is the whole point of the check.
+      fig('flaps/yr at 0', 3.90, rows[0].flaps, 0.1),
+      fig('flaps/yr at 0.25', 0.19, rows[0.25].flaps, 0.05),
       fig('flaps/yr at 0.5', 0.00, rows[0.5].flaps, 0.05),
-      fig('level lag at 0 (days)', 15.0, rows[0].lag, 0.5),
-      fig('level lag at 0.25 (days)', 23.2, rows[0.25].lag, 0.5),
-      fig('level lag at 0.5 (days)', 32.5, rows[0.5].lag, 0.5),
+      fig('level lag at 0 (days)', 16.1, rows[0].lag, 0.5),
+      fig('level lag at 0.25 (days)', 29.4, rows[0.25].lag, 0.5),
+      fig('level lag at 0.5 (days)', 38.6, rows[0.5].lag, 0.5),
     ]);
   }
 
@@ -451,11 +490,22 @@ export function provenance(opts = {}) {
     ]);
   }
 
-  // The headline the module header quotes.
-  entry('headline', null, [
+  /* 🚨 THIS ENTRY IS NOT A COMMENT CHECK AND WAS LABELLED AS ONE UNTIL
+   * 2026-09-15 ("the headline the module header quotes"). js/strength-estimate.js
+   * quotes none of these three — grep it for 12.1, 4.63 or 0.68 and there is
+   * nothing. It is the tool's own BASELINE RECORD: the three numbers the whole
+   * fit was judged on, kept so that a later run notices the model moving under
+   * it even when no comment mentions them.
+   *
+   * ⚠️ Which means a ✗ here means something different from a ✗ anywhere else in
+   * this block — not "a comment drifted" but "the model moved". `lag (days)`
+   * has been ✗ since the 2026-09-14 rebuild for exactly that reason, and it is
+   * kept rather than re-copied so the next reader is told. Bias and RMSE
+   * survived the rebuild inside tolerance. */
+  entry('headline (the tool\'s own baseline, not a comment)', null, [
     fig('bias', 0.0068, base.bias, 0.002),
     fig('RMSE', 0.0463, base.rmse, 0.002),
-    fig('lag (days)', 12.1, base.lagDays, 0.3),
+    fig('lag (days) — moved in the 2026-09-14 rebuild', 12.1, base.lagDays, 0.3),
   ]);
 
   return { entries };

@@ -2510,6 +2510,35 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(byMuscle.get('Chest').some((o) => o.priorVolume > 0),
      'sets that came late in a session carry what the muscle had already taken');
 
+  /* 🚨 THE QUARANTINE MUST STAY SILENT ON A REAL YEAR, and this is the only
+   * place that can say so — every other assertion about it is a fixture built
+   * to make it fire. The screen itself is muscle-wide (it flags a lift against
+   * OTHER lifts, in box numbers), so the thing keeping an honest reading in is
+   * the 2.0x rule, stated in converted estimates. Measure the headroom rather
+   * than assume it: if a ratio correction ever pushes one exercise of a muscle
+   * past twice another, this fails BEFORE a user is told their real lift was
+   * set aside. Worst on this year today: 1.12x, Shoulders. */
+  let quarantinedAnywhere = 0, worstSpread = 0, worstSpreadMuscle = '';
+  for (const [muscle, obs] of byMuscle) {
+    quarantinedAnywhere += (rateMuscle(obs, muscle).quarantined || []).length;
+    const perEx = new Map();
+    for (const o of obs) {
+      const v = Number(o.estimate) || 0;
+      if (!perEx.has(o.exerciseId) || v > perEx.get(o.exerciseId)) perEx.set(o.exerciseId, v);
+    }
+    const vals = [...perEx.values()].sort((a, b) => b - a);
+    if (vals.length > 1 && vals[1] > 0 && vals[0] / vals[1] > worstSpread) {
+      worstSpread = vals[0] / vals[1];
+      worstSpreadMuscle = muscle;
+    }
+  }
+  ok(quarantinedAnywhere === 0,
+     `🚨 a year of ordinary training has nothing set aside (${quarantinedAnywhere} held back)`);
+  ok(worstSpread < 1.5,
+     `and the widest cross-exercise disagreement inside a muscle is ${worstSpread.toFixed(2)}x `
+     + `(${worstSpreadMuscle}) — comfortably under the 2.0x the quarantine needs, which is the `
+     + `margin that assertion above is resting on`);
+
   // Pure, in the sense that matters: same rows in, same numbers out, and the
   // clock is not one of the inputs.
   const again = buildObservations(args);
@@ -3378,6 +3407,73 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       const rs = me.rateMuscle(sameDay, 'Chest');
       ok(rs.quarantined.length === 1 && rs.quarantined[0].weight === 2050,
          '⚠️ and only the offending set — the good sets logged beside it that day still count');
+    }
+
+    /* 6. THE SCREEN IS MUSCLE-WIDE, AND UNTIL 2026-09-15 THE MODULE'S OWN
+     *    COMMENT SAID IT WAS NOT.
+     *
+     *    `screenDaily()` sorts every (exercise, day) row into ONE running
+     *    series, so a lift is flagged against OTHER lifts, in box numbers.
+     *    Block 5 above cannot see this: every fixture in it is one exercise,
+     *    which is exactly the shape that made the wrong comment survive.
+     *
+     *    🚨 So the 2.0x rule is the whole safety argument rather than a
+     *    refinement of one, and these assertions pin it from both sides. The
+     *    ratio is in CONVERTED estimates, where exercises are comparable; the
+     *    demo year's worst cross-exercise disagreement is 1.12x, so ordinary
+     *    training has about half the headroom it needs to trip this. */
+    {
+      // Two exercises on one muscle, so `estimate` has to be settable apart
+      // from the box number — that gap IS the thing under test.
+      const day2 = (n) => new Date(Date.UTC(2026, 8, 3) - n * 86400000).toISOString().slice(0, 10);
+      const mkx = (dayAgo, weight, reps, exerciseId, exerciseName, estimate, isBenchmark) => {
+        const raw = e1rm(weight, reps);
+        return {
+          estimate, rawE1rm: raw, quality: 1, kind: 'direct', via: null,
+          standInName: null, ratio: estimate / raw, reps, weight, loadType: 'total',
+          date: day2(dayAgo), ageDays: dayAgo, isBenchmark: Boolean(isBenchmark),
+          exerciseId, exerciseName, priorVolume: 0, fatigueFactor: 1,
+        };
+      };
+      const fliesAt = (estimate) => {
+        const rows = [];
+        for (let i = 0; i < 10; i++) rows.push(mkx(70 - i * 7, 40, 12, 'fly', 'Dumbbell Fly', estimate));
+        return rows;
+      };
+      const benchTest = mkx(1, 315, 3, 'bench', 'Barbell Bench Press', 343, true);
+
+      const alone = me.rateMuscle([benchTest], 'Chest');
+      ok(alone.quarantined.length === 0,
+         'a single heavy bench test on its own is never held back — nothing to fail against');
+
+      const crossed = me.rateMuscle([...fliesAt(150), benchTest], 'Chest');
+      ok(crossed.quarantined.length === 1 && crossed.quarantined[0].exerciseId === 'bench',
+         `🚨 but the SAME set is held back once light flies are logged beside it — the flag comes `
+         + `from another exercise's series, which the old comment said could not happen `
+         + `(${crossed.quarantined.map((q) => q.exerciseName).join() || 'none'})`);
+
+      /* ⚠️ THE BOUNDARY, from both sides, because a threshold asserted from one
+       * side is a threshold nobody has measured. 343/172 = 1.99x and 343/171 =
+       * 2.01x, so these two fixtures differ by ONE POUND of converted estimate
+       * and must disagree. */
+      ok(me.rateMuscle([...fliesAt(172), benchTest], 'Chest').quarantined.length === 0,
+         'at 1.99x the reading stands — this is the winsoriser\'s territory and always was');
+      ok(me.rateMuscle([...fliesAt(171), benchTest], 'Chest').quarantined.length === 1,
+         '⚠️ and at 2.01x it is set aside, one pound of converted estimate later');
+
+      /* 🚨 AND THE COST OF BEING WRONG IS ONE SESSION OF PATIENCE, NOT A LOST
+       * LIFT. A second day agreeing releases it — including a day that was
+       * itself flagged, because two independent days agreeing IS the
+       * corroboration. Without this a lifter who genuinely jumps has both
+       * sessions held under by each other for ever. */
+      const twice = me.rateMuscle(
+        [...fliesAt(150), benchTest, mkx(8, 315, 3, 'bench', 'Barbell Bench Press', 343, true)],
+        'Chest');
+      ok(twice.quarantined.length === 0,
+         '🚨 the same test done twice a week apart is released, and the muscle reads it');
+      ok(twice.estimate > crossed.estimate,
+         `and the rating moves with it — held back it read ${crossed.estimate.toFixed(0)}, `
+         + `released ${twice.estimate.toFixed(0)}`);
     }
   }
 

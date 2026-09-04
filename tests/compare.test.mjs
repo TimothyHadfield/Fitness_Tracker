@@ -376,5 +376,92 @@ ok(metricOf(noIds, 'e1rm').theirs !== null,
      'and the sentence says the app looked for a conversion rather than that you never did the lift');
 }
 
+/* ================================================================== *
+ * 9. UNITS — a row says what KIND of number it holds, never a suffix
+ *
+ * docs/strength-accuracy-plan.md §2.7, 2026-09-13. The two load rows used to
+ * carry `unit: 'lb'` and the screen printed it verbatim, so a reader in
+ * kilograms was shown a pounds figure with a pounds label — on the one screen
+ * where the number beside it belongs to somebody else, and where being out by
+ * 2.2× is the difference between a friend who out-lifts you and one you out-lift
+ * twice over.
+ *
+ * A row now says what KIND of number it holds: 'weight' (stored pounds, which
+ * the screen converts through units.js), 'reps' or 'sets' (counts, printed as
+ * they stand). This module has no idea what the reader's unit is and must not
+ * pretend to.
+ * ================================================================== */
+
+const KINDS_OF_NUMBER = ['weight', 'reps', 'sets'];
+const everyResult = [windowed, widened, gate, perSide, bw, bwLong, oneSided, mineOutside,
+  noOverlap, lightTier, empty, noLibrary, noIds];
+const everyRow = everyResult.flatMap((r) => r.metrics);
+
+ok(metricOf(windowed, 'e1rm').unit === 'weight' && metricOf(windowed, 'top-weight').unit === 'weight',
+  'both load-bearing rows say they hold a WEIGHT — pounds as stored, for the screen to convert');
+ok(metricOf(bw, 'top-reps').unit === 'reps',
+  'most reps in a set is typed as the count it is, not as a weight the screen would then convert');
+ok(metricOf(windowed, 'sets').unit === 'sets',
+  'and sets logged likewise — a converted set count would be nonsense in any unit');
+ok(everyRow.length > 10 && everyRow.every((m) => KINDS_OF_NUMBER.includes(m.unit)),
+  `every row of every result carries one of those three kinds and nothing else (${everyRow.length} `
+  + 'rows, across thirteen comparisons)');
+ok(!everyRow.some((m) => /^(lb|lbs|kg|kgs)$/i.test(String(m.unit))),
+  '🚨 not one of them carries a printable suffix — this is the assertion that fails the moment '
+  + '`unit: \'lb\'` goes back in, which is exactly how the bug shipped the first time');
+
+/* ⚠️ THE SAME RULE APPLIED TO THE MODULE'S OWN PROSE, because a caveat is read
+   off the same sheet as the numbers it explains. The per-side caveat said "a
+   50 lb dumbbell in each hand counts as 100 lb" until 2026-09-13: on a screen
+   whose every figure converts to the reader's unit, that was the one pounds
+   number a kilogram reader saw, and it was the one explaining the arithmetic. */
+const namesAUnit = [];
+(function walkText(node, path) {
+  if (typeof node === 'string') {
+    if (/\b(lbs?|kgs?|pounds?|kilos|kilograms?)\b/i.test(node)) namesAUnit.push(`${path}: ${node}`);
+    return;
+  }
+  if (node === null || typeof node !== 'object') return;
+  for (const [k, v] of Object.entries(node)) {
+    walkText(v, Array.isArray(node) ? `${path}[${k}]` : (path ? `${path}.${k}` : k));
+  }
+})(everyResult, '');
+ok(namesAUnit.length === 0,
+  `and no sentence in a header, a note, a caveat or a message names a unit either — doubling is the `
+  + `point and doubling needs no unit to state (${namesAUnit.join(' | ') || 'none found'})`);
+
+/* ---- the numbers are POUNDS, whatever the reader has chosen ---- */
+
+const { setUnits, units, toDisplay } = await import('../js/units.js');
+const inPounds = compareExercise({
+  mine: MY_OLD_PR, theirs: THEIR_RECENT, exerciseId: BENCH.id, exercise: BENCH,
+});
+setUnits('kg');
+const inKilos = compareExercise({
+  mine: MY_OLD_PR, theirs: THEIR_RECENT, exerciseId: BENCH.id, exercise: BENCH,
+});
+
+ok(JSON.stringify(inKilos) === JSON.stringify(inPounds),
+  '⚠️ switching the reader to kilograms does not change one byte of the result — the conversion '
+  + 'belongs at the edge of the screen, and doing it here as well would do it twice');
+ok(metricOf(inKilos, 'top-weight').mine === 185,
+  'the heaviest set is still 185, the POUNDS that were stored — a kg reader sees 84 because the '
+  + 'view converts it, not because this module handed over a different number');
+// ⚠️ VACUITY GUARD. If setUnits() were not actually being read the assertion
+// above would hold trivially, so something has to visibly answer in kilograms.
+ok(units() === 'kg' && Math.round(toDisplay(185)) === 84,
+  'and the unit really was switched — units.js reads 185 lb as 84 kg — so the two runs above are a '
+  + 'result rather than an unread setting');
+setUnits('lbs');
+
+// The refusal at the level of the module rather than the call, the same shape
+// tests/goals.test.mjs uses on progression.js: it cannot print the reader's unit
+// because it cannot see it.
+const compareSource = await import('node:fs')
+  .then((fs) => fs.readFileSync(new URL('../js/compare.js', import.meta.url), 'utf8'));
+ok(!/from '\.\/units\.js'/.test(compareSource),
+  'js/compare.js imports units.js not at all — it cannot know what the reader reads in, which is '
+  + 'why a row names a kind of number and leaves the printing to somebody who does');
+
 console.log(fails ? `\n${fails} failed` : '\nall passed');
 process.exit(fails ? 1 : 0);

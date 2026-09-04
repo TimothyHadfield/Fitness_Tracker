@@ -25,9 +25,11 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-14 (same chat session as -13) — **the strength maths audited, then REBUILT
-on Tim's go-ahead**: ~25 ratio corrections, a sex axis, one 1RM convention, a rating that can fall,
-captions from your own set that fade across a run of sets, and the typo quarantine finally wired.
+**Last updated:** 2026-09-15 — **the interrupted agents' leftovers, found and finished**: the
+accessibility audit had already run and nobody had read it, the quarantine's comment said the
+opposite of its code, and `strength-fit` had been printing "22 figures outside tolerance" through a
+green suite. Four stale claims corrected, three test gaps closed, **nothing about the app's behaviour
+changed.**
 
 🛑 **"CATCH UP WITH PROGRESS.MD" MEANS READ AND REPORT. IT IS NOT A GO-AHEAD FOR ANYTHING.** Tim,
 2026-09-11, having caught a session already building: *"When I tell you to catch up with progress.md,
@@ -40,6 +42,49 @@ lines what changed and what is open, **then stop.**
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Open work 29 closed on 2026-09-11; **Open
 work 30's plan was approved and its Phases 0–3 are BUILT** (2026-09-14). Every other item on the
 list is either Tim's, pinned, or parked.
+
+## What changed on 2026-09-15, in one line each
+
+**What Tim asked for:** *"catch up with progress.md"* → *"They should've left you something to finish
+up. Did they not? Did they actually finish everything? Check it out and see."* → a ranked answer to
+*"should we keep working?"* → **"Okay keep working on what you're confident about now."** Full
+write-up: `docs/history.md`, 2026-09-15.
+
+1. ✅ **THE ACCESSIBILITY AUDIT HAD ALREADY RUN AND THE NOTES SAID IT HAD NOT.** 4.5 MB of raw output
+   was sitting in the dead session's scratchpad, unread. Summarised, then **re-run against the
+   shipped code** (the first run predated `d973fd1`): **272 routes, 23,335 text nodes, zero contrast
+   failures, zero overflow, zero unnamed controls** at 360/390/880/1280. 🚨 **Four of the five new
+   lines are not in it and cannot be** — the demo never reaches them.
+2. 🚨 **THE QUARANTINE'S COMMENT SAID THE OPPOSITE OF ITS CODE.** It claimed the typo screen compares
+   a lift only against its own past; `screenDaily()` runs ONE series over every exercise of a muscle.
+   Measured: a genuine 315 × 3 bench test among light flies is **set aside**, the same set alone is
+   kept, done twice it is released. 🛑 **The comment was fixed and the code was not** — screening per
+   exercise would let a ×10 slip on a brand-new exercise through, and that trade is Tim's.
+3. ✅ **The 2.0× rule is the whole safety argument, and it has room**: worst cross-exercise
+   disagreement on the demo year is **1.12×**, boundary measured at **1.99× kept / 2.01× set aside**.
+   Eight assertions, mutation-checked both ways — at 1.0× the demo year starts holding real sets back.
+4. 🚨 **`strength-fit` HAD BEEN PRINTING "22 FIGURES OUTSIDE TOLERANCE" SINCE THE REBUILD.** ⚠️ **And
+   the obvious reading of that was wrong** — `provenance()` compares against literals hand-copied
+   into the tool, not against the comments, so **16 of the 22 quoted sentences that had been reworded
+   away.** 🔒 The guard its header named (a test pinning the block) **does not exist**. Now 22 → 1,
+   and the one left is labelled as the tool's own baseline rather than a comment check.
+5. 🔄 **FOUR STALE CLAIMS BEHIND THE 22, ALL THE SAME ONE**: three DEFAULTS comments and the module's
+   headline paragraph still said the constants were chosen to minimise **flap rate**. The tool's
+   header was corrected on 2026-09-13 and said the comments had been corrected with it; they had not.
+   `windowDays`, `halfLifeDays` and `topN` now carry the measured bias/lag/coverage case instead —
+   **N = 3 is the worst of the five on flap rate**, not the best.
+6. 🚩 **ONE CLAIM FLAGGED RATHER THAN FIXED, because it is a question**: the comment and the plan say
+   *"an ordinary lifter flaps zero times at any of these"* and the suite prints **0.75 (ordinary)
+   against 0.19 (on a boundary)** — the opposite ordering, unmeasured by anything.
+7. ✅ **GOALS AND COMPARE GOT THE TESTS THEY SHIPPED WITHOUT** — +38 and +10. The load-bearing one:
+   **a goal with no model stamp reads as CHANGED**, because every goal saved before 2026-09-13 has
+   none. Plus a field-by-field sweep that only the target weight and the stamp may move on a
+   re-freeze, and 121 calendar-shifted goals proving **nothing reads the deadline**.
+8. 🚩 **A REAL DEFECT FOUND AND LEFT, pinned so a change is deliberate**: `views-goals.js` prints
+   `+N%` from the frozen `gainPct`, which can now disagree with the re-frozen target on the same
+   screen ("Steady +2 %" over a 220 → 244 lb goal).
+9. ✅ **No orphans this time** — all 43 exports the rebuild added have callers, so there is no repeat
+   of `resolveRatio()`.
 
 ## What changed on 2026-09-14, in one line each
 
@@ -170,71 +215,31 @@ left five of ten collections and every `shared/*` document; `createAccountPurge(
 Months/Years. **The Profile/Data split began** — Data = what it MEANS, Profile = what you DID.
 🔒 Durable halves: `docs/state.md`'s Profile and Data rows, `docs/direction.md` §4b.
 
-## 2026-09-09 — COLLAPSED TO A POINTER, 2026-09-12
+## 2026-09-09 — CUT TO ONE LINE, 2026-09-15
 
-⚠️ Three passes, each with its own dated section in `docs/history.md` (2026-09-09, first through
-third). **What Tim asked for:** a friend's profile is *"a mess"* on a laptop and their map is
-compared *"against people like YOU, not people like THEM"* → the "Compared to" menu *"really doesn't
-need any words at all"* → Record should *"feel more like a button that actually activates
-something"* → *"just combine the 2 and call them 'friends'"*.
+⚠️ **The routine maintenance.** Three passes; full write-ups in `docs/history.md`, 2026-09-09.
+A friend's page got a laptop layout and **their map is read against people like THEM** (🔒 the lesson
+that stays: the bug survived because every fixture was male, and the fixture is female now), the
+"Compared to" sheet went wordless, **Record rises from the bottom**, and the wordiness was measured
+then cut on three more screens. **Open work 28 closed the cheap way.** 🔒 Durable halves are in
+`docs/state.md` and the handbook.
 
-- **A friend's page got a laptop layout** and **their map is read against people like THEM**.
-  🔒 `docs/state.md`, Friends row. ⚠️ **The lesson worth keeping**: the bug survived because every
-  fixture was male — with one body, the right and wrong answers are the same string for half the
-  population. The fixture is female now.
-- **The "Compared to" sheet is wordless** and **the pronouns follow the body**. 🔒 `docs/state.md`,
-  Muscles row. **Record rises from the bottom** (🛑 `down`, not a back arrow — it lands on Home);
-  🔄 superseded on -10 and -12. **Open work 28 closed the cheap way.**
-- **The wordiness measured then cut**: transcribed systems' restated warnings (~240 words), the
-  Goals weights block (182 → 30), one paragraph off Research (its teaching content carved out by
-  name). 🚨 A test caught the Golden Six's warning had never carried its own disclaimer; it does now,
-  and the assertions read the text a reader meets with a **sub-five-word** shared-run cap. 🛑 The
-  Goals safety claim and the lay-off refusal moved word for word.
-- ⚠️ **The audit swept phone widths only** — fixed the next day (four widths).
+## 2026-09-08 — CUT TO ONE LINE, 2026-09-15
 
-## 2026-09-08 — COLLAPSED TO A POINTER, 2026-09-11
+⚠️ **The routine maintenance.** Three passes; full write-ups in `docs/history.md`, 2026-09-08. The nav
+was restructured (Profile became the fifth tab, Calendar went back into Data), "Left on this device"
+became automatic, **Open work 26 closed** (~20× on the read pattern), the wordiness reached six
+screens, and **an agent ran `git stash` mid-flight** — the standing instruction that came out of that
+is in the standing instructions below and stays. 🔒 Every durable half is in `docs/state.md` and the
+handbook already.
 
-⚠️ **The routine maintenance, not a loss** — this file reached **155 KB of its 160 KB budget** and the
-rule below is that the write-up lives in `docs/history.md` while only the summary lives here, so the
-oldest summaries go once the day is no longer what a fresh session orients on. Three passes, each with
-its own dated section in the history. **What Tim asked for, in order:** the profile menu is *"really
-wordy and complex"* (with a Hevy screenshot) → asked what was next, picked the read pattern and more
-wordiness → **restructured the layout**, opening with *"deploy many sub-agents"*.
+## 2026-09-07 — CUT TO ONE LINE, 2026-09-15
 
-- **The nav was restructured**: the fifth tab became **Profile (`#/me`)** and Calendar went back into
-  Data — where the sixth segment did not fit, measured at **58.86px past the right edge** at 360px,
-  which is why `.segmented` scrolls. 🔒 Durable half: the **Profile**, **Data** and **Calendar** rows
-  in `docs/state.md`. ⚠️ **Calendar's fourth move followed on 2026-09-10** and it is on Profile now.
-- **"Left on this device" went and the upload became automatic** — `absorbThisDevice()`, on the paths
-  that **CREATE** an account and never on sign-in. 🔒 Durable half: `docs/state.md`, "Creating an
-  account absorbs this device", and §4's `store.js` block.
-- 💷 **Open work 26 closed — opening the app stopped re-downloading a training history.** ~20× at
-  every scale. 🚨 **The first version used a millisecond cursor with `>=` and a test caught it**;
-  that whole story is Open work 26's row below, which stays.
-- **The wordiness went to six screens**, every refusal left on the screen. 🔒 Durable half: Design
-  Rule 9 in the handbook and the 2026-09-07 measurement block below.
-- ⚠️ **An agent ran `git stash` mid-flight** and briefly reverted three other writers' files. 🔒 The
-  standing instruction it produced — **no agent may run any git command that changes the working
-  tree** — is in the standing instructions and stays there.
-- **1,090 render assertions, 1,911 data-layer** on the day.
-
-## 2026-09-07 — COLLAPSED TO A POINTER, 2026-09-10
-
-⚠️ **Same routine maintenance as the two blocks below.** Four passes; each has its own dated section
-in `docs/history.md`. **What Tim asked for, in order:** leave a workout and come back to it → the
-screen after a workout finishes, plus *"how would that change storage"* about photos → a bin on the
-bar → the app's wordiness → the bumpy muscle outlines.
-
-- **Leaving a workout open.** The draft had always survived; **there was no way back**, and the app
-  looked exactly as though it had thrown the workout away. The ✕ became a **▾**, a bar above the nav
-  advertises the open workout on every screen, and **starting a second workout no longer deletes the
-  first**. 🔒 `docs/state.md`, "Leaving a workout open".
-- **Finish opens a save screen rather than saving.** 🔒 `docs/state.md`, "The save screen".
-- 🆕 **Design Rule 9 came out of that day — the "?" holds WHY, never WHAT.** 🔒 `docs/handbook.md` §5.
-- **The muscle outlines were bumpy because the MASK was, not the trace.** `smooth_fills()` low-passes
-  each fill per connected component before tracing. 🔒 `docs/handbook.md` §4, `tools/build-body-art.py`.
-- **Photos were costed.** 🔒 Now superseded by the fuller block in **START HERE**, where Tim paused
-  them on 2026-09-10.
+⚠️ **The routine maintenance.** Four passes; full write-ups in `docs/history.md`, 2026-09-07. Leaving
+a workout open (the ▾, the bar above the nav, and a second workout no longer deleting the first),
+Finish opening a save screen rather than saving, **Design Rule 9** (the "?" holds WHY, never WHAT),
+the bumpy muscle outlines traced from a smoothed mask, and photos costed. 🔒 Durable halves are in
+`docs/state.md` and `docs/handbook.md` §4/§5; photos are in **START HERE**, where Tim paused them.
 
 🚨 **THE ONE THING THAT STAYS HERE, because `docs/direction.md` §4.1 points at it by name — THE
 WORDINESS MEASUREMENT, 2026-09-07:** **18,631 user-facing words, 304 sentences over 15 words, 63
@@ -471,38 +476,31 @@ deadline. 🛑 **He reads none of these notes — they are for you.**
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
 **Everything is committed and pushed, the working tree is clean, and every runnable suite was green
-at the end of 2026-09-14** — **3,489 assertions across EIGHTEEN no-Chrome suites** and **1,333
-render**. ⚠️ **The 218 rules assertions were last run on 2026-09-10** (emulator, §0.9) and nothing
-since has touched `firestore.rules`.
+at the end of 2026-09-15.** ⚠️ **The 218 rules assertions were last run on 2026-09-10** (emulator,
+§0.9) and nothing since has touched `firestore.rules`.
 
-## 🛑 READ THIS BEFORE PICKING ANYTHING UP — where 2026-09-14 actually stopped
+## ✅ THE 2026-09-14 HANDOVER IS CLOSED — what the killed agents actually left
 
-**Tim ended the session with:** *"stop working now. Prepare md files for chat reset. Make sure the
-new chat is ready to pick off exactly what you're doing right now."* So this block is that handover,
-and **the honest answer is that the build finished but two follow-up jobs were cut off mid-flight.**
+**That block used to say two follow-up jobs were cut off mid-flight. Both were chased on 2026-09-15
+and the first of them was not what it looked like.** Full write-up: `docs/history.md`, 2026-09-15.
 
-🚨 **TWO AGENTS WERE STOPPED BY ME, DELIBERATELY, AND THEIR OUTPUT WAS NEVER READ:**
+1. ✅ ~~**The accessibility audit never ran.**~~ **IT HAD RUN, AND 4.5 MB OF ITS OUTPUT WAS SITTING
+   IN THE DEAD SESSION'S SCRATCHPAD** — the agent was killed between writing the JSON and reading it,
+   so the notes recorded "produced nothing" when what happened was "produced everything, read
+   nothing". 🔒 **The lesson: an agent killed after its work lands still leaves the work.** Look in
+   its scratchpad before assuming. Summarised, then **re-run against the shipped code**, because the
+   original run predated `d973fd1`: **272 routes, 23,335 text nodes, 0 contrast / 0 overflow /
+   0 unnamed** at 360/390/880/1280. ⚠️ **Four of the five new lines are NOT in that sweep and cannot
+   be** — the demo account never reaches the Data tab's two captions or the muscle panel's two, so
+   only jsdom can own them.
+2. 🛑 **The views agent's REPORT is unrecoverable** — only a probe script survives. Its code IS in
+   (`d973fd1`) and **its four failing assertions were resolved properly**: rewritten with the
+   reasoning and the mutation guards INVERTED, not weakened, which was checked in the diff on
+   2026-09-15. Nothing further to do here.
 
-1. **The accessibility audit never ran.** It was launched and killed before it produced anything.
-   🚨 **THE STRENGTH WORK CHANGED USER-FACING TEXT ON FIVE SCREENS** — the runner's captions are
-   LONGER now (a range plus a "from your 215 lbs × 3" clause), the muscle panel has two new lines,
-   the Data tab has a new dropped-sets caption, Goals may show a stale-model notice, and every
-   estimate rounds differently. **Longer text is the overflow risk and none of it has been measured
-   at any width.** Running `tools/a11y-audit.mjs` at 360/390/880/1280 is the first thing worth doing.
-   ⚠️ **Check the node count before reading anything else** — the last good sweep was 272 routes /
-   23,327 text nodes / 0 / 0 / 0, and a stale server reports a clean zero.
-2. **The views agent's REPORT was never read.** Its code work IS in (commit `d973fd1`, green, and I
-   reviewed the diff myself), but it was killed during its mutation checks, so **its mutation
-   evidence and its "what I decided not to do / near-misses" section are lost.** ⚠️ This project has
-   twice had an agent's near-miss note turn out to be the most valuable thing it produced. Its
-   scratchpad is `…\6036fccc-…\scratchpad\views2\` if that session is still on disk.
-
-⚠️ **AND ONE THING I CHOSE NOT TO DO, so nobody re-derives the decision:** `tests/render.test.mjs`
-has **no assertion for the per-set fatigue caption** (the "maybe 6–9 on this set (8–13 fresh)" half).
-The own-set half IS asserted and mutation-checked. The fatigue half is covered at module level by
-`tests/rep-decrement.test.mjs` (57 assertions) but never through a mounted screen, so **the wiring
-between them is unowned** — the failure it would catch is the caption silently never applying the
-multiplier. That is the single most valuable test to write next.
+⚠️ **AND THE FATIGUE-CAPTION WIRING** — the "maybe 6–9 on this set (8–13 fresh)" half — is covered at
+module level by `tests/rep-decrement.test.mjs` (57 assertions) and was still unasserted through a
+mounted screen at the start of 2026-09-15. See that day's history entry for where it landed.
 
 🚩 **AND THE DEMO ACCOUNT NARROWED TO ONE LEVEL** — see item 11 of 2026-09-14 above. Eleven of its
 twelve muscles now read Novice. The numbers are right; the demo just shows less of the ramp than it

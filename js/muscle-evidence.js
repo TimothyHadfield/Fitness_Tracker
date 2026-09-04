@@ -1887,13 +1887,33 @@ export function rateMuscle(observations, muscle = null) {
    * and two genuine consecutive PRs release each other (the release pass takes
    * a quarantined day as a witness for exactly that reason).
    *
-   * ⚠️ THE CURRENCY IS PER EXERCISE AND THAT IS ALL IT NEEDS TO BE. `dailyValues`
-   * recomputes x from the logged weight, so a per-side or body-weight lift is
-   * screened in the box number rather than in total load. Within one exercise
-   * that is a constant factor, and a typo is a factor of ten — the screen
-   * compares a lift against its own past, never against another lift, so the
-   * scale cancels. It would matter if this number reached a rating; it does
-   * not. Only the (exercise, date) verdict comes back out. */
+   * 🚨 THE SCREEN IS MUSCLE-WIDE, NOT PER EXERCISE, AND THIS COMMENT CLAIMED
+   * THE OPPOSITE UNTIL 2026-09-15. It said "the screen compares a lift against
+   * its own past, never against another lift, so the scale cancels", and the
+   * code has never done that: `dailyValues()` emits one row per (exercise,
+   * day) and `screenDaily()` sorts ALL of them into ONE running series. So a
+   * lift is screened against other lifts, in BOX numbers rather than converted
+   * ones — a 250 lb bench arriving after a history of 40 lb flies clears the
+   * ceiling by miles and is flagged. Measured, not reasoned.
+   *
+   * 🚨 WHICH MAKES THE 2.0x RULE BELOW THE WHOLE SAFETY ARGUMENT RATHER THAN A
+   * REFINEMENT OF ONE. It is stated in CONVERTED estimates, where exercises are
+   * comparable by construction, and that is what stops the flag becoming a
+   * verdict. Measured on the demo year: the worst cross-exercise disagreement
+   * inside a muscle is 1.12x (Shoulders) and every other muscle sits between
+   * 1.00 and 1.09, so ordinary training has about half the headroom it would
+   * need to trip this. The `sets left out` line on the panel is the other half
+   * — nothing is deleted and the reader is told.
+   *
+   * ⚠️ WHAT IS LEFT, STATED RATHER THAN QUIETLY FIXED: a first heavy test on a
+   * muscle whose other work is much lighter can cross 2.0x honestly, and is
+   * then held until a second day agrees (measured at the boundary: kept at
+   * 1.99x, set aside at 2.01x). Screening each exercise against its own past
+   * would fix that — and would let a x10 slip on a BRAND-NEW exercise straight
+   * through, because a first reading has no past to fail against. That is a
+   * judged threshold whose error runs BOTH ways, which this file does not get
+   * to decide on its own; the same standing as the warm-up question in
+   * `docs/social-plan.md` §12.16. Tim has been told. */
   let quarantined = [];
   try {
     const screened = screenDaily(dailyValues(admissible.map((o) => ({

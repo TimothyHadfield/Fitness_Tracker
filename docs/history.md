@@ -17,6 +17,170 @@
 
 ---
 
+## 2026-09-15 — WHAT THE KILLED AGENTS ACTUALLY LEFT, AND FOUR CLAIMS THAT WERE NOT TRUE
+
+**What Tim asked for**, in order: *"catch up with progress.md"* (read and reported, nothing started)
+→ *"I definently interupted many agents from working last session because I needed to reset the
+context. They should've left you something to finish up. Did they not? Did they actually finish
+everything? Check it out and see."* → *"So do you believe everything is as good as it can get or
+should we keep working?"* (a ranked answer given) → **"Okay keep working on what you're confident
+about now."**
+
+### A. The audit had run, and `progress.md` said it had not
+
+The 2026-09-14 notes recorded the accessibility audit as *"launched and killed before it produced
+anything"*. **Its raw output was on disk the whole time** — 4.5 MB in the old session's scratchpad,
+272 routes, never summarised, because the agent was killed between writing the JSON and reading it.
+Summarised now: **272 route-instances, 23,335 text nodes, 9,368 controls, zero contrast failures,
+zero overflow, zero unnamed controls** at 360 / 390 / 880 / 1280. The node count is healthy, which is
+the check that a stale server has not produced a clean-looking zero (§0 and the audit's own row).
+
+⚠️ **But it had audited the code as it stood BEFORE the last commit.** `d973fd1` changed
+`js/compare.js`, `js/views-data.js` and `js/views-social.js` after that run, and a second run against
+the shipped code was launched and killed inside a minute (`run2.log` is empty). **Re-run today
+against a copy byte-identical to HEAD: the same 272 / 23,335 / 0 / 0 / 0.** Diffing the two runs, the
+only text that differs anywhere is the live-session timer ticking — so the last commit changed no
+rendered text in the demo, which is why the numbers are identical.
+
+🚨 **Four of the five new user-facing states are NOT in that sweep and cannot be**, because the demo
+account never reaches them: the Data tab's *"…sets left out that way"* and *"Estimates above 15 reps
+are unreliable."*, and the muscle panel's set-aside and freshness lines. Only the runner's caption
+renders (*"82% of your estimated max (from your 275 × 3)"*, measured at 360px, no overflow). **jsdom
+is the only thing that can own the other four**, which is why they became today's test work.
+
+### B. The typo quarantine: the comment said the opposite of the code
+
+`js/muscle-evidence.js` claimed, in the block that wires the quarantine:
+
+> *"THE CURRENCY IS PER EXERCISE AND THAT IS ALL IT NEEDS TO BE … the screen compares a lift against
+> its own past, never against another lift, so the scale cancels."*
+
+**It never has.** `dailyValues()` emits one row per (exercise, day) and `screenDaily()` sorts all of
+them into ONE running series, in box numbers. Run rather than reasoned — a genuine 315 × 3 bench test
+in a chest history of light flies is **set aside**, and the muscle reads 150 instead of 343; the same
+set on its own is kept; done twice a week apart it is released.
+
+🚨 **So the 2.0× rule is the whole safety argument rather than a refinement of one**, and it is stated
+in CONVERTED estimates, where exercises are comparable by construction. **Measured on the demo year:
+the worst cross-exercise disagreement inside a muscle is 1.12× (Shoulders), every other muscle
+1.00–1.09.** Ordinary training has about half the headroom it would need to trip this, and the
+boundary is exactly where the constant says: **kept at 1.99×, set aside at 2.01×**, one pound of
+converted estimate apart.
+
+🛑 **THE CODE WAS NOT CHANGED AND THE COMMENT WAS.** Screening each exercise against its own past
+would fix the false positive and would let a ×10 slip on a **brand-new** exercise straight through,
+because a first reading has no past to fail against — a judged threshold whose error runs both ways,
+which is Tim's call under the same rule as the warm-up question. He has been told.
+
+Six new assertions in `tests/data-layer.test.mjs` pin the behaviour from both sides, plus two on the
+demo year: **nothing set aside on a real year**, and the cross-exercise spread stays under 1.5×, so
+if a future ratio correction pushes one exercise past twice another **the suite says so before a user
+is told their real lift was set aside.**
+
+🔒 **Mutation-checked in both directions, with the mutated line printed first** (§0.14):
+`QUARANTINE_MIN_RATIO` 2.0 → **10.0** flips the ×10 slip, the cross-exercise flag and the 2.01×
+boundary; 2.0 → **1.0** flips the 1.99× side and — the one worth having — **the demo-year guard,
+which reports 2 readings held back on a year of ordinary training.** That guard is therefore a
+measurement rather than a restatement of today's answer.
+
+### C. `tools/strength-fit.mjs` had been printing "22 figures outside tolerance" and nobody read it
+
+The tool that re-derives the estimator's constants ended every run with *"⚠️ 22 figure(s) outside
+tolerance — a comment has drifted from the tool."* Clean before the 2026-09-14 rebuild; the agents'
+own saved run at 12:45 that day shows the same 22, and it was never acted on.
+
+🚨 **The obvious reading of that line was wrong, and this session made it too before checking.**
+`provenance()` compares each figure against a **numeric literal hand-copied into the tool**; nothing
+parses the comments. Of the 22: **6 were genuinely drifted comments** (the hysteresis table),
+**16 quoted figures that appear nowhere in `js/strength-estimate.js` at all** — comments reworded
+away, leaving the tool checking sentences that no longer exist.
+
+🔒 **And the guard the tool named did not exist.** Its header claimed
+`tests/strength-estimate.test.mjs` had pinned the provenance block *"since 2026-09-13"*; grep that
+file for `provenance` and there is nothing. That is how 22 mismatches sat under a fully green suite.
+
+**Now: 22 → 1.** The six hysteresis figures were corrected in the DEFAULTS comment and re-copied into
+the tool; the sixteen ghosts were repointed at what the comments actually say now (bias, lag, RMSE
+and level lag rather than flap rate) or deleted with the sentence that quoted them. **The one left is
+deliberate and labelled**: the `headline` entry is the tool's own baseline record rather than a
+comment check, and its lag figure moved in the rebuild — kept red on purpose, with the entry now
+saying so, because that ✗ means "the model moved" and not "a comment drifted".
+
+### D. Four stale CLAIMS behind the 22, and this is the part worth carrying
+
+Chasing the numbers turned up the reason they had drifted: **`tools/strength-fit.mjs`'s header was
+corrected on 2026-09-13 to say the constants were chosen on bias, lag and coverage rather than by
+minimising flap rate — and it said the DEFAULTS comments had been corrected with it. Three of them
+had not, and neither had the module's own headline paragraph.** All four now say it, with the
+measurements:
+
+- **`windowDays: 42`** — said 28 lags "6 more days for no gain in flap rate" and 84 "raises lag by
+  11 days". Measured: 28 lags **2** more days (15.4 vs 13.4) and is the *less* biased (−0.12 % vs
+  0.67 %); 84 **lowers** lag to 12.8 and halves the flap rate, at 1.72 % bias and the worst RMSE in
+  the sweep (4.98 % vs 4.66 %).
+- **`halfLifeDays: 28`** — said it was "the joint best on flap rate". Flaps fall monotonically with
+  the half-life (4.10 → 3.86), so it never was. What 28 **is**: the longest half-life before level
+  lag steps 16.1 → 20.8 days.
+- **`topN: 3`** — said "N = 3 was the best flap rate of 1/2/3/4/5". It is the **worst** of the five.
+  The real case is bias 0.67 %, lag 13.4 d, coverage 97.9 %; N=1 has the fewest flaps and a ±21 %
+  band that covers everything by being useless, N=4/5 beat it on RMSE and lag 19 and 23 days.
+- **The module header** — *"The quantity optimised is FLAP RATE"*, the loudest copy of the claim, in
+  the file the sweeps are about.
+
+🚩 **AND ONE CLAIM IS FLAGGED RATHER THAN FIXED, because it is a question and not a wording error.**
+Both the comment and `docs/strength-estimate-plan.md` say *"an ordinary lifter flaps zero times at
+any of these"*, and the suite's own printed line says **0.75 (ordinary) against 0.19 (on a level
+boundary)** — four times as many, the opposite ordering, on the run that asserts the 0.19. Nothing in
+`provenance()` measures the ordinary number. Why is not guessed at here: a flap is a displayed level
+changing while true strength did not, and an ordinary lifter's truth does move, so the two ensembles
+may not be counting the same thing. If they are, *"worst case by construction"* is the wrong frame
+for the number hysteresis was fitted against. **The 0.25 still clears the shipping rule on the
+ensemble it was fitted on.** Recorded on the constant and in the plan; Tim's call.
+
+### E. Coverage for the slices that shipped without any
+
+Three workers on disjoint files, the standing arrangement (one file each, no git command that changes
+the tree, no commits, an isolated copy for a green run).
+
+- **`tests/goals.test.mjs` +38 assertions.** `js/goals.js` gained 82 lines in the rebuild and this
+  file was never touched: `modelChangedSince()`, `refreezeGoal()` and `goalSourceRefusal()` shipped
+  with **no test anywhere**. 🚨 The load-bearing one is that **a MISSING stamp reads as CHANGED** —
+  every goal saved before 2026-09-13 has none, and treating the absence as "probably fine" would
+  leave exactly the goals the mechanism exists for unflagged. Plus: only `targetWeight` and
+  `modelVersion` may move on a re-freeze (a field-by-field sweep), and **nothing reads the deadline**
+  — 121 calendar-shifted goals, none of which move the target, which is `docs/goals-plan.md` §3.1,
+  the only thing in this app that could cause physical harm.
+- **`tests/compare.test.mjs` +10.** `js/compare.js` changed what a row's `unit` means (the KIND of
+  number, never a printable suffix) so a kilogram reader stops being shown pounds; the file had **no
+  reference to units at all**. Now: every row typed, no suffix anywhere in any string the screen
+  prints, the result byte-identical in kg and lb, and `compare.js` importing nothing from `units.js`.
+- ⚠️ **A mutation that caught a fixture rather than the code.** Recomputing `ambition` inside
+  `refreezeGoal()` passed every assertion, because the fixture was Committed under both the old and
+  new gain. A second goal was added that straddles the band, and the discriminating fact asserted
+  outright so the fixture cannot silently stop straddling.
+
+### F. What was found and NOT fixed
+
+- 🚩 **`js/views-goals.js:812` prints `+N%` from the frozen `gainPct`**, and its own comment says the
+  two numbers behind it are frozen so it "cannot disagree with what was set". `refreezeGoal()` moves
+  `targetWeight`, so after a re-freeze the card can read "Steady +2 %" beside a hero showing a 244 lb
+  target over a 220 lb start. Cosmetic, both numbers on one screen, and the fix is a choice between
+  two defensible answers — pinned as current behaviour so a change has to be deliberate.
+- 🛑 **The views agent's report from 2026-09-14 is unrecoverable.** Only its probe script survives;
+  its code is in `d973fd1` and its four failing assertions were resolved properly — rewritten with
+  the reasoning and the mutation guards **inverted**, not weakened, which was checked in the diff.
+- ⚠️ **`docs/strength-estimate-plan.md`'s headline block is a pre-rebuild snapshot**, annotated
+  rather than overwritten: bias 0.67 %, RMSE 4.66 %, lag 13.4 d, coverage 97.9 % at ±14.5 %, flaps
+  0.19, **level lag 23.2 → 29.4 days**.
+
+### G. What was checked and was fine
+
+**No orphans this time.** All 43 exports added by the rebuild were checked for callers — every one
+has at least one, so there is no repeat of the `resolveRatio()` failure. The ten that are exported
+but used only inside their own file are used there.
+
+---
+
 ## 2026-09-14 — THE STRENGTH MATHS REBUILT, AND A SESSION LIMIT KILLED NINE AGENTS MID-FLIGHT
 
 ⚠️ **Same chat session as 2026-09-13**; the audit's plan was approved in it and built immediately.

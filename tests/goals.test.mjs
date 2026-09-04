@@ -36,7 +36,9 @@ const {
   AMBITIONS, ambitionFor, ambitionByKey, requirementsFor, candidateGoals, buildGoal,
   goalProgress, stallReasons, rankSystems, addDays, daysBetween, parseDay, formatDay,
   HORIZON_WEEKS, MINUTES_PER_SET, SLEEP_LINE, EFFORT_LINE,
+  modelChangedSince, refreezeGoal, goalSourceRefusal,
 } = await import('../js/goals.js');
+const { MODEL_VERSION } = await import('../js/model-version.js');
 const {
   LOAD_BAND, ISOLATION_MAX, LAYOFF_DAYS, REP_BANDS, repRangeFor, trainingRange,
   isCompound, loadCeiling,
@@ -279,6 +281,215 @@ const lightTarget = weightForPercentile(65, 'Chest', { ...PROFILE, bodyWeight: 1
 const heavyTarget = weightForPercentile(65, 'Chest', { ...PROFILE, bodyWeight: 200 });
 ok(heavyTarget > lightTarget + 5,
    'the weight behind a level genuinely moves with body weight — which is why it is frozen');
+
+/* ================================================================== *
+ * ⚠️ A FROZEN WEIGHT REMEMBERS THE MODEL IT WAS FROZEN UNDER
+ *
+ * docs/strength-accuracy-plan.md §2.9, 2026-09-13. The target is frozen in
+ * POUNDS, and pounds do not carry the ratio table, the medians and the spreads
+ * they were computed from. When those change — and on 2026-09-13 all three did
+ * — two things go quietly wrong at once: the frozen weight no longer means the
+ * level it was named for, and "gained N lb" reports the REVISION as training,
+ * because the start was rated one way and today is rated another.
+ *
+ * Neither is visible from the goal itself, which is the whole reason the stamp
+ * exists. So the assertions below are mostly about the ABSENCE of one.
+ * ================================================================== */
+
+ok(freshGoal.modelVersion === MODEL_VERSION,
+   `a goal is stamped with the model its target was computed under (${MODEL_VERSION})`);
+ok(modelChangedSince(freshGoal) === false,
+   'and a goal built today reads as unchanged, so nobody is nagged about a target frozen a second ago');
+
+/* 🚨 THE ONE MOST WORTH HAVING, because the failure is silent AND it flatters.
+   Every goal saved before 2026-09-13 carries no stamp at all, and every one of
+   them was computed under an older model. Read as "unknown, probably fine", the
+   absence would leave exactly the goals this feature exists for unflagged — and
+   those are the goals whose progress screen is quietly reporting a change in the
+   ratio table as twelve weeks of training. */
+const unstampedGoal = { ...freshGoal };
+delete unstampedGoal.modelVersion;
+ok(modelChangedSince(unstampedGoal) === true,
+   '🚨 a goal with NO stamp reads as CHANGED, never as unknown — it was frozen before stamping '
+   + 'existed, which is the same thing as an older model');
+for (const missing of [undefined, null, '']) {
+  ok(modelChangedSince({ ...freshGoal, modelVersion: missing }) === true,
+     `and so does a stamp that is present but empty (${JSON.stringify(missing)}) — a half-written `
+     + 'goal is not evidence that the model held still');
+}
+ok(modelChangedSince({ ...freshGoal, modelVersion: '2026-09-12a' }) === true,
+   'a stamp from the day before the correction reads as changed');
+ok(modelChangedSince({ ...freshGoal, modelVersion: 'something-else-entirely' }) === true,
+   'and so does one this build has never heard of — the question is "is it today\'s model", which '
+   + 'a version comparison could not answer and does not try to');
+ok(modelChangedSince(null) === false && modelChangedSince(undefined) === false,
+   'with no goal at all there is nothing to flag, rather than a notice on an empty screen');
+
+/* ---- re-freezing: the target and the stamp, and NOTHING else ---- */
+
+const todaysTarget = weightForPercentile(65, 'Chest', PROFILE);
+const oldGoal = { ...freshGoal, modelVersion: '2026-09-12a' };
+const refrozen = refreezeGoal(oldGoal, PROFILE, { comparison: 'men who lift' });
+const refrozenPlain = refreezeGoal(oldGoal, PROFILE);
+
+ok(near(refrozen.targetWeight, todaysTarget, 1e-9),
+   `the target is recomputed under today's model (${Math.round(refrozen.targetWeight)} lb for `
+   + 'Proficient, against the 225 that was frozen)');
+ok(refrozen.targetWeight !== oldGoal.targetWeight,
+   'and it genuinely moved — so everything below is not asserting that two identical objects match');
+ok(refrozen.modelVersion === MODEL_VERSION && modelChangedSince(refrozen) === false,
+   'the stamp moves with it, so the notice does not fire again on a goal that was just re-set');
+
+// ⚠️ THE GOAL YOU AGREED TO IS STILL THE GOAL YOU AGREED TO. Named one at a
+// time, because each of these has its own reason to be frozen, and then swept
+// over every field so a key added later cannot start moving unnoticed.
+ok(refrozen.targetLevel === oldGoal.targetLevel
+   && refrozen.targetLevelName === oldGoal.targetLevelName
+   && refrozen.targetPercentile === oldGoal.targetPercentile,
+   'the LEVEL and the percentile behind it come through untouched — it is still a Proficient goal, '
+   + 'and what changed is only that Proficient is once again the weight that clears Proficient');
+ok(refrozen.startDate === oldGoal.startDate && refrozen.endDate === oldGoal.endDate,
+   'the start date and the DEADLINE are copied through, so re-setting the target never buys time');
+ok(refrozen.startWeight === oldGoal.startWeight
+   && refrozen.startPercentile === oldGoal.startPercentile
+   && refrozen.startLevel === oldGoal.startLevel,
+   'and the start weight stays put — a re-freeze is not a fresh measurement of the lifter');
+ok(refrozen.ambition === oldGoal.ambition,
+   'the ambition is frozen too, which is what keeps the requirements the ones it was set with');
+ok(JSON.stringify(requirementsFor(refrozen.ambition, { bodyWeight: 180 }))
+   === JSON.stringify(requirementsFor(oldGoal.ambition, { bodyWeight: 180 })),
+   'so what the goal ASKS OF YOU is byte-identical after a re-freeze — sets, sessions, minutes, '
+   + 'protein and all');
+
+const movedByRefreeze = Object.keys(oldGoal).filter((k) => oldGoal[k] !== refrozenPlain[k]);
+ok(movedByRefreeze.join(', ') === 'targetWeight, modelVersion',
+   `⚠️ swept over every field of the goal, ONLY the target weight and the stamp move `
+   + `(${movedByRefreeze.join(', ') || 'nothing at all'})`);
+
+/* ⚠️ A GOAL WHOSE BAND WOULD CHANGE, because the one above cannot see it. The
+   goal above starts at 200 and asks for 225, and re-freezing it to 244 leaves it
+   Committed either way — so a re-freeze that quietly recomputed the ambition
+   from the new target would have passed every assertion so far. This one is
+   built to straddle: a short step at the time it was set, a much bigger one
+   against today's weight. The ambition it was AGREED at has to survive that,
+   because the ambition is what the requirements are read from. */
+const narrowGoal = {
+  ...buildGoal({
+    muscle: 'Chest', level, targetWeight: 225, startWeight: 220,
+    startPercentile: 62, startLevelKey: 'intermediate', startDate: '2026-08-19',
+    liftName: 'Barbell Bench Press',
+  }),
+  modelVersion: '2026-09-12a',
+};
+const narrowRefrozen = refreezeGoal(narrowGoal, PROFILE);
+ok(narrowGoal.ambition === 'steady'
+   && ambitionFor(narrowRefrozen.targetWeight / narrowGoal.startWeight - 1).key !== 'steady',
+   'the fixture straddles a band: 220 to 225 is Steady, and 220 to today\'s Proficient weight is not');
+ok(narrowRefrozen.ambition === 'steady' && narrowRefrozen.gainPct === narrowGoal.gainPct,
+   '⚠️ and the re-frozen goal is STILL Steady, reaching the +2.3 % it was agreed at — a re-freeze '
+   + 'that recomputed the band would silently move a lifter from 4–6 hard sets a week to 7–10, '
+   + 'which is the requirements changing under somebody who only tapped "re-set the target"');
+ok(Object.keys(narrowGoal).filter((k) => narrowGoal[k] !== narrowRefrozen[k]).join(', ')
+   === 'targetWeight, modelVersion',
+   'and that goal moves the same two fields and no others');
+ok(refrozen.comparison === 'men who lift' && refrozenPlain.comparison === oldGoal.comparison,
+   'the caller may re-stamp the comparison group the new weight was computed against, and only that '
+   + '— the screen must never name a group the weight was not computed against');
+
+/* ⚠️ AND NOTHING IN HERE READS THE DEADLINE. docs/goals-plan.md §3.1: load that
+   follows a calendar pushes hardest at exactly the wrong moment, and this is the
+   one failure mode in the app that could cause physical harm rather than merely
+   be wrong on a screen. A re-freeze is the newest place a clock could get in,
+   because it is the only thing that moves a frozen number at all. */
+const dueLater = { ...oldGoal };
+const overdue = {
+  ...oldGoal,
+  startDate: addDays(oldGoal.startDate, -77),
+  endDate: addDays(oldGoal.endDate, -77),
+};
+ok(daysBetween(overdue.endDate, dueLater.endDate) === 77,
+   'the pair below are eleven weeks apart on the calendar — one of them ran out weeks ago');
+ok(refreezeGoal(dueLater, PROFILE).targetWeight === refreezeGoal(overdue, PROFILE).targetWeight,
+   '⚠️ and two goals with identical numbers and deadlines eleven weeks apart re-freeze to exactly '
+   + 'the same weight — running out of time makes nothing heavier');
+
+const baselineTarget = refrozenPlain.targetWeight;
+let deadlineMoved = 0;
+let deadlineCalls = 0;
+for (let shift = -420; shift <= 420; shift += 7) {
+  const shifted = {
+    ...oldGoal,
+    startDate: addDays(oldGoal.startDate, shift),
+    endDate: addDays(oldGoal.endDate, shift),
+  };
+  const r = refreezeGoal(shifted, PROFILE);
+  deadlineCalls++;
+  if (!r || r.targetWeight !== baselineTarget) deadlineMoved++;
+}
+ok(deadlineMoved === 0,
+   `⚠️ over ${deadlineCalls} goals whose whole calendar is slid a year either side of today, the `
+   + 're-frozen target never moves by one byte');
+for (const noDeadline of [null, undefined, '', 'not-a-date']) {
+  ok(refreezeGoal({ ...oldGoal, endDate: noDeadline }, PROFILE).targetWeight === baselineTarget,
+     `and an unusable deadline (${JSON.stringify(noDeadline)}) changes nothing either — it is not a `
+     + 'field this function reads at all');
+}
+
+// ⚠️ VACUITY GUARD, the shape this file uses everywhere: things that DO move the
+// answer, so the refusal above cannot be passing by looking in the wrong place.
+ok(refreezeGoal(oldGoal, { ...PROFILE, bodyWeight: 230 }).targetWeight !== baselineTarget,
+   'the body weight the level is computed against DOES move it, so the sweep is not a constant');
+ok(refreezeGoal({ ...oldGoal, targetPercentile: 90 }, PROFILE).targetWeight > baselineTarget,
+   'and so does which level the goal is for — a harder level is a heavier weight');
+
+/* ---- it refuses rather than half-refreezing ---- */
+
+ok(refreezeGoal(oldGoal, { gender: 'male', age: 30 }) === null,
+   'a profile with no body weight yields no weight, so the answer is null rather than half a goal '
+   + 'carrying a new stamp over an old target');
+ok(refreezeGoal(oldGoal, {}) === null && refreezeGoal(oldGoal, undefined) === null,
+   'and so does an empty profile, or none at all');
+ok(refreezeGoal(null, PROFILE) === null, 'no goal at all is null too, rather than a bare object');
+ok(refreezeGoal({ ...oldGoal, muscle: 'Nothing anybody trains' }, PROFILE) === null,
+   'and a muscle the standards do not cover — every path that cannot produce a weight produces '
+   + 'nothing, so a caller cannot re-stamp a goal it failed to recompute');
+ok(oldGoal.targetWeight === 225 && oldGoal.modelVersion === '2026-09-12a',
+   'the goal handed in is never mutated — a new object comes back, so a refused re-freeze leaves '
+   + 'the stored goal exactly as it was');
+
+/* ================================================================== *
+ * ⚠️ A GOAL MAY NOT START FROM A GUESS
+ *
+ * A fallback rating is inferred from the big lifts that also work a muscle,
+ * capped at Fair confidence, and the map says so beside it. A goal freezes a
+ * start weight off that number and then measures twelve weeks of training
+ * against it — so freezing a guess makes every later figure a comparison with a
+ * guess. The picker already refuses an assumed sex or body weight for the same
+ * reason; this is the same refusal one layer down.
+ * ================================================================== */
+
+const inferredByKind = goalSourceRefusal({ kind: 'fallback', estimate: 200 });
+const inferredByBasis = goalSourceRefusal({ basis: 'fallback', estimate: 200 });
+const nothingYet = goalSourceRefusal(null);
+
+ok(goalSourceRefusal({ kind: 'direct', basis: 'direct', estimate: 200 }) === null,
+   'a muscle rated from work on the muscle ITSELF may start a goal — the refusal is not a blanket one');
+ok(typeof inferredByKind === 'string' && inferredByKind.length > 20,
+   '⚠️ a stand-in rating may not: it is a guess about a muscle nobody has trained directly, and a '
+   + 'start weight frozen off a guess makes every figure after it a comparison with a guess');
+ok(inferredByBasis === inferredByKind,
+   'and it is refused whether the rating spells the stand-in `kind` or `basis` — one sentence, both '
+   + 'spellings, because a rating that named it the other way would sail straight through');
+ok(/directly/.test(inferredByKind),
+   'the sentence says what to do about it — log something that trains the muscle directly');
+ok(typeof nothingYet === 'string' && nothingYet !== inferredByKind,
+   'and "nothing recorded yet" is its OWN sentence rather than the stand-in one, because the two '
+   + 'send a person to different places');
+ok(goalSourceRefusal(undefined) === nothingYet,
+   'a missing rating is the same case as a null one');
+ok([inferredByKind, nothingYet].every((s) => /\.$/.test(s)),
+   'both refusals are sentences the screen can print, which is why this returns words and not a '
+   + 'boolean the view would have to invent words for');
 
 /* ================================================================== *
  * Choosing a goal

@@ -25,6 +25,13 @@
 > **band coverage 95.2 %** at a mean band of **±12.2 %** · **flap rate 0.38 per lifter-year** for
 > somebody sitting exactly on a level boundary, the worst case by construction.
 >
+> 🔄 **THOSE FIVE ARE A SNAPSHOT FROM BEFORE THE 2026-09-14 REBUILD AND FOUR OF THEM MOVED.** Kept
+> rather than overwritten, because this section is the record of what was measured when the plan was
+> written. Re-run 2026-09-15 (`node tools/strength-fit.mjs`): **bias +0.67 %** · **RMSE 4.66 %** ·
+> **lag 13.4 days** · **band coverage 97.9 %** at a mean band of **±14.5 %** — the band widened on
+> purpose, `uBase` went to 0.13 because the ±12 % was a Marzagão-conditional claim — and **flap rate
+> 0.19 per lifter-year**, half what it was. ⚠️ **Level lag moved most: 23.2 → 29.4 days.**
+>
 > **§11 is rewritten with what it found. §12's table is marked. §15 is new** — what this says
 > `js/muscle-evidence.js` should change, with the numbers behind it. **§16 is new** — what is still
 > not verified, which is more than the numbers above suggest.
@@ -271,14 +278,22 @@ rules fix it:
 >
 > | hysteresis | flaps per lifter-year (on a boundary) | days to show a genuine level change |
 > |---|---|---|
-> | 0 | 3.67 | 15.0 |
-> | **0.25** | **0.38** | **23.2** |
-> | 0.5 | 0.00 | 32.5 |
+> | 0 | 3.67 → **3.90** | 15.0 → **16.1** |
+> | **0.25** | **0.38 → 0.19** | **23.2 → 29.4** |
+> | 0.5 | 0.00 | 32.5 → **38.6** |
 >
-> 0.38 flaps a year is one spurious colour change every three years for the worst case by
-> construction; an ordinary lifter flaps zero times at any of these. Buying the last 0.38 costs nine
-> more days of silence when something genuinely happened, and a goal in this app is twelve weeks
-> long. The shipping rule adopted is **"under half a flap per lifter-year, then minimise lag"**.
+> 🔄 **The second figure in each cell is the 2026-09-15 re-run, after the rebuild moved the model.**
+> The DEFAULTS comment in `js/strength-estimate.js` carries the new ones; this table keeps both
+> because the argument below was made on the old.
+>
+> ~~0.38 flaps a year is one spurious colour change every three years~~ **0.19 is one every five
+> years** for the worst case by construction; an ordinary lifter flaps zero times at any of these.
+> ⚠️ **That last clause is worth re-checking rather than re-quoting** — `tests/strength-estimate.test.mjs`
+> now prints 0.75 flaps/lifter-year for an ordinary lifter against 0.19 for a boundary one, which is
+> the opposite ordering and nothing measures it in the provenance block. Buying the last 0.19 still
+> costs nine more days of silence when something genuinely happened (29.4 → 38.6), and a goal in this
+> app is twelve weeks long. The shipping rule adopted is **"under half a flap per lifter-year, then
+> minimise lag"**.
 >
 > **The band's own constants.** `uBase = 0.10` is fitted to coverage — the ±u band contains the true
 > 1RM 95.2 % of the time — not to how confident it looks. `uStalePerWeek = 0.004` past the window,
