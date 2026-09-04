@@ -83,8 +83,18 @@ write-up: `docs/history.md`, 2026-09-15.
 8. 🚩 **A REAL DEFECT FOUND AND LEFT, pinned so a change is deliberate**: `views-goals.js` prints
    `+N%` from the frozen `gainPct`, which can now disagree with the re-frozen target on the same
    screen ("Steady +2 %" over a 220 → 244 lb goal).
-9. ✅ **No orphans this time** — all 43 exports the rebuild added have callers, so there is no repeat
-   of `resolveRatio()`.
+9. 🚨 **THE MUSCLE PANEL'S FRESHNESS NOTE HAS NEVER RENDERED — not "never in the demo", never.**
+   `freshnessLine()` has no caller: the pane computes the answer correctly and passes it as a
+   **seventh** argument to `detail()`, which takes six, so it is dropped silently. 🛑 **Not fixed —
+   it puts a new sentence on a screen.** ⚠️ **And I reported "no orphans" before finding it**: that
+   check read EXPORTS, and this is module-internal. **An orphan check over exports is half a check.**
+10. 🚩 **AND A SECOND DEAD LINE**: the Data tab's *"Estimates above 15 reps are unreliable."* needs a
+   target of 16+, and `MAX_TARGET_REPS` dropped to 15 the day the sentence was written. The reader
+   always meets the other branch. 🛑 Two ways to fix it, both his.
+11. ✅ **RENDER 1,333 → 1,360**, including **the fatigue caption's wiring** — the test the last
+   session named as the most valuable one missing. Killing the decrement now fails five assertions
+   with the right symptom (set 2 repeating set 1's sentence). ⚠️ **The first mutation I tried was a
+   §0.14 miss** — it landed in the file and not on the path.
 
 ## What changed on 2026-09-14, in one line each
 
@@ -147,27 +157,13 @@ another exercise … start exploring fatigue … Don't do any building … Make 
 and deploy you later. Feel free to make as many sub-agents as you want."* Full write-up:
 `docs/history.md`, 2026-09-13.
 
-1. 🛑 **NOTHING BUILT.** Seven read-only agents ran the app's own modules under `node`; every
-   finding is tagged RUN / SOURCE / REASONED. **`docs/strength-accuracy-plan.md` is the analysis and
-   the phased plan**; `docs/research.md` §16 is the literature; a published page is what Tim reviews.
-2. 🚨 **The formula, the mixture, the derived ratios and the fatigue tiers are SOUND. The errors are
-   around them**: four paths score an assisted lift on the help number (more help = a PB); D5 is not
-   enforced on the Data tab; ~25 reasoned/carried ratio entries are >10 % off, three by 3×+ (Machine
-   Lateral Raise → Elite off a 100 lb stack); a muscle's number never falls and the window, fall
-   limit, band, hysteresis and typo screen in `strength-estimate.js` have **no caller**; "any body
-   weight" is exactly 180 lb; the runner caption calls a two-day-old benchmark "above your max";
-   women's σ is ≈ 0.45 not 0.32 (a female Beginner reads 0.25th percentile); goals carry no
-   ratio/standards stamp, so **any fix reads as progress until that ships first**.
-3. 🆕 **Fatigue: the literature says no to a load multiplier in the rating (still) and YES to the
-   caption** — reps at a fixed load fall proportionally each set (≈ 0.72 / 0.55 / 0.45 at 2 min), so
-   "maybe 8" can become "8, then 6, then 4" with a constant that only lowers. Five items graded and
-   costed; the RIR tap stated, not recommended. Measure Tim's own decrement first.
-4. ⚠️ **The ±4.6 % accuracy claim is conditional on the curve** — the simulator's truth IS the curve;
-   with the lab rep curve as truth the bias is +7.9 %. The backtest (§6.1 of the plan) needs **Tim's
-   export** and is the first validation item. `research.md` §2's Nuzzo table has three wrong cells
-   (two independent reads: 9.8 at 80 %, 3.3 at 95 %, 19.6 at 60 %) — verify before editing.
-5. 🔒 **Fourteen decisions are his** (plan §4), each with a recommendation. 🛑 Do not start any
-   phase until he names it.
+🛑 **NOTHING WAS BUILT THAT DAY** — seven read-only agents, every finding tagged RUN / SOURCE /
+REASONED, and the deliverable is **`docs/strength-accuracy-plan.md`** (the analysis and the phased
+plan) plus `docs/research.md` §16 (the literature). ⚠️ **The findings are no longer the current
+state** — Open work 30's row below says what was built off them on 2026-09-14 and what was not.
+🔒 **The two that outlived the build**: the ±4.6 % accuracy claim is conditional on the curve (the
+simulator's truth IS the curve; with the lab rep curve as truth the bias is +7.9 %), and the backtest
+that would settle it needs **Tim's export**, which he has not given.
 
 ## 2026-09-12 — COLLAPSED TO A POINTER, 2026-09-14
 
@@ -498,9 +494,15 @@ and the first of them was not what it looked like.** Full write-up: `docs/histor
    reasoning and the mutation guards INVERTED, not weakened, which was checked in the diff on
    2026-09-15. Nothing further to do here.
 
-⚠️ **AND THE FATIGUE-CAPTION WIRING** — the "maybe 6–9 on this set (8–13 fresh)" half — is covered at
-module level by `tests/rep-decrement.test.mjs` (57 assertions) and was still unasserted through a
-mounted screen at the start of 2026-09-15. See that day's history entry for where it landed.
+✅ **AND THE FATIGUE-CAPTION WIRING IS OWNED NOW** — the test the 2026-09-14 handover called the
+single most valuable one missing. `tests/render.test.mjs` is **1,360** and killing the decrement on
+its real path fails five assertions with the right symptom.
+
+🚩 **TWO USER-FACING LINES DO NOT RENDER AND BOTH ARE TIM'S CALL** (2026-09-15, neither touched):
+the muscle panel's **freshness note** has no caller at all — `detail()` is handed a seventh argument
+and takes six — and the Data tab's **"Estimates above 15 reps are unreliable."** needs a rep target
+of 16, which `MAX_TARGET_REPS = 15` makes unreachable. Each is roughly a one-line fix; each puts
+words on a screen.
 
 🚩 **AND THE DEMO ACCOUNT NARROWED TO ONE LEVEL** — see item 11 of 2026-09-14 above. Eleven of its
 twelve muscles now read Novice. The numbers are right; the demo just shows less of the ramp than it

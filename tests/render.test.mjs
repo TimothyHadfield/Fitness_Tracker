@@ -6365,6 +6365,136 @@ ok(!data.querySelector('.rep-target'),
 }
 
 /* ================================================================== *
+ * 🚨 THE FATIGUE THE REP CAPTION CARRIES, ON THE SCREEN — 2026-09-14
+ *
+ * rep-decrement.js has 57 module-level assertions of its own and NOTHING
+ * asserted the multiplier ever reached a screen. That is the failure this block
+ * exists for: the caption printing "maybe 9–15 to failure" identically on set 1
+ * and set 4 — which is what it did until 2026-09-13 — while the module beneath
+ * it went on computing a perfectly good 0.72 that no reader ever saw.
+ *
+ * ⚠️ THE FRESH FIGURE STAYS ON SCREEN, and that is half the feature rather than
+ * a decoration. A number that only ever falls, with nothing beside it, reads as
+ * the app changing its mind about you between sets; "(12 fresh)" is what makes
+ * the smaller number read as fatigue.
+ *
+ * ⚠️ AND IT IS ASSERTED AS A NUMBER, NOT ONLY AS A SHAPE. Every multiplier in
+ * the table is ≤ 1 (rep-decrement.js rule 1: a wrong constant may only make the
+ * caption easier to beat, never harder), so the later band must not sit ABOVE
+ * the fresh figure printed beside it. A regex that only looked for "fresh)"
+ * would pass with the arithmetic inverted.
+ *
+ * ⚠️ A WEIGHT CHANGE ENDS THE RUN. `leadingRun()` is the boundary the module
+ * cares about — a back-off set is a fresh effort, not a fatigued one — so the
+ * last part of this block changes the load on set 3 and asserts the note goes
+ * away entirely rather than merely getting smaller.
+ * ================================================================== */
+{
+  const { store, clearReadCache } = await import(BASE + 'store.js');
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+
+  const bp = byName('Barbell Bench Press');
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-08-01');
+  /* ⚠️ THE REST TARGET IS PINNED, because it chooses the column. 0 is the
+     default — timer off, "unknown" — and rep-decrement.js answers that with the
+     two-minute column [1, 0.72, 0.55, 0.45]. Pinning it means this block is
+     reading one known column rather than whatever a previous block left in
+     `settings`, and 0 keeps it the column a real user with the timer off gets. */
+  await store.saveSettings({ restTarget: 0 });
+  /* Two single-set sessions, so the lifter has an OWN best set (the caption
+     prefers it over the muscle rating) and NO run of three at one load — which
+     means `personalDecrement()` contributes nothing and the multipliers are the
+     published column exactly. A fixture with three-set sessions would blend, and
+     the numbers below would then depend on the shrinkage weight as well. */
+  await store.importAll({
+    sessions: [
+      { id: 'fatigue-1', date: '2026-08-10', workoutName: 'Push',
+        entries: [{ exerciseId: bp.id, exerciseName: bp.name, sets: [{ weight: 185, reps: 5 }] }] },
+      { id: 'fatigue-2', date: '2026-08-17', workoutName: 'Push',
+        entries: [{ exerciseId: bp.id, exerciseName: bp.name, sets: [{ weight: 185, reps: 5 }] }] },
+    ],
+  });
+  clearReadCache('seeded a bench history directly through importAll');
+
+  const w = await store.saveWorkout({
+    name: 'Fatigue day', exercises: [{ exerciseId: bp.id, sets: 3, notes: '' }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const capsOf = () => [...s.querySelectorAll('.set-open .step-est')];
+  // The ratings and own-history walks are not awaited by the screen; poll.
+  for (let i = 0; i < 120 && !capsOf().some((c) => c.textContent.trim()); i++) await settle();
+  const repCap = () => (capsOf()[1] ? capsOf()[1].textContent.replace(/\s+/g, ' ').trim() : '');
+  const type = async (field, value) => {
+    const inputs = [...s.querySelectorAll('.set-open .step-value')];
+    inputs[field === 'weight' ? 0 : 1].value = String(value);
+    inputs[field === 'weight' ? 0 : 1]
+      .dispatchEvent(new window.Event('blur', { bubbles: true }));
+    for (let k = 0; k < 8; k++) await settle();
+  };
+  const openSet = async (i) => {
+    [...s.querySelectorAll('.set-list .set-pick')][i].click();
+    for (let k = 0; k < 8; k++) await settle();
+  };
+  // "maybe 6–11 to failure on this set (12 fresh)" → [6, 11, 12].
+  const band = (t) => {
+    const m = t.match(/maybe (\d+)(?:–(\d+))?\+? to failure(?: on this set \((\d+) fresh\))?/);
+    return m ? { low: Number(m[1]), high: Number(m[2] || m[1]), fresh: m[3] ? Number(m[3]) : null } : null;
+  };
+
+  // 165 lb against a 185 × 5 own best is ~79 % — squarely inside the rep table,
+  // so the caption has a real band rather than the "15+" ceiling.
+  await type('weight', 165);
+  await type('reps', 8);
+  const cap1 = repCap();
+  ok(/maybe \d+–\d+ to failure$/.test(cap1),
+     `set 1 of the run is the fresh prediction and says nothing about fatigue (${cap1})`);
+
+  await openSet(1);
+  await type('weight', 165);
+  await type('reps', 8);
+  const cap2 = repCap();
+  ok(cap2 !== cap1,
+     `🚨 set 2 at the SAME weight does not repeat set 1's sentence — the decrement reaches the `
+     + `screen (set 1 "${cap1}", set 2 "${cap2}")`);
+  ok(/ on this set \(\d+ fresh\)$/.test(cap2),
+     `⚠️ and the fresh figure is still printed beside it, so the smaller number reads as fatigue `
+     + `rather than as the app changing its mind (${cap2})`);
+  const b1 = band(cap1);
+  const b2 = band(cap2);
+  ok(Boolean(b1 && b2 && b2.fresh),
+     'both captions parse as a rep band, and set 2 carries the fresh figure');
+  ok(b2 && b2.high <= b2.fresh && b2.low < b2.fresh,
+     `🚨 and the fatigued band sits BELOW the fresh figure beside it — every multiplier in the `
+     + `table is ≤ 1, so this direction is the whole safety argument (${cap2})`);
+
+  await openSet(2);
+  await type('weight', 165);
+  await type('reps', 8);
+  const cap3 = repCap();
+  const b3 = band(cap3);
+  ok(b3 && b2 && b3.high < b2.high && b3.low <= b2.low,
+     `⚠️ set 3 falls further still — the caption reads the set's PLACE in the run, not a single `
+     + `"is this set 1?" flag (set 2 "${cap2}", set 3 "${cap3}")`);
+  ok(b3 && b3.fresh === b2.fresh,
+     `and the fresh figure beside it is unchanged, because the load has not changed (${cap3})`);
+
+  /* 🚨 THE BOUNDARY THE MODULE CARES ABOUT. A back-off — any change of load —
+     ends the run, so set 3 at a different weight is a FRESH effort again and the
+     note must disappear rather than shrink. `leadingRun()` is what measures it. */
+  await type('weight', 175);
+  const cap4 = repCap();
+  ok(/maybe \d+/.test(cap4) && !/fresh\)/.test(cap4),
+     `🚨 changing the weight on set 3 ends the run and takes the fatigue note with it — a fresh `
+     + `load is a fresh effort (${cap4})`);
+
+  localStorage.removeItem(DRAFT);
+  await store.clearAll();
+}
+
+/* ================================================================== *
  * 🚨 PRIVATE OR PUBLIC, A FRIEND'S MUSCLE PANEL, AND TWO BODIES SIDE BY SIDE
  *   — 2026-09-03
  *
@@ -7197,6 +7327,231 @@ ok(!data.querySelector('.rep-target'),
      + 'see reads as broken, which is the argument historyForPerson() already makes one screen over');
   ok(/nothing you have recorded|closely enough/i.test(rt),
      'and gives the reason rather than just announcing the absence');
+
+  await store.clearAll();
+}
+
+/* ================================================================== *
+ * 🚨 WHAT THE DATA TAB REFUSED TO READ, SAID OUT LOUD — 2026-09-14
+ *   (docs/strength-accuracy-plan.md §2.2, decision l)
+ *
+ * D5 — no maximum is inferred from a set above 15 reps — was enforced in the
+ * store on 2026-09-13 and NOT on this tab until the same day. A 135 × 25
+ * burnout set was restated as a 258 lb max and beat a real 205 × 5 on the
+ * bests list and on the chart.
+ *
+ * 🚨 THE FIX IS ONLY HALF A FIX WITHOUT THE SENTENCE. A lifter who logged three
+ * sets and sees two points reads it as data loss, not as a rule — so the
+ * refusal has to be named, and the one thing they can do about it (take a
+ * heavier set to a lower rep count) is what the wording implies. Both
+ * sentences below are on screens nothing has ever asserted, and neither is
+ * reachable in the demo account.
+ *
+ * ⚠️ IT IS PLACED HERE, AFTER THE LAST BLOCK THAT MOUNTS GraphView, AND THE
+ * REASON IS MODULE STATE. `targetReps` in views-data.js is keyed by
+ * exercise|source and outlives a `clearAll()`, and the last thing this block
+ * does is walk the rep target to its ceiling. Running before another Graph
+ * block would hand that block a 15-rep target it never asked for.
+ * ================================================================== */
+{
+  const { GraphView } = await import(BASE + 'views-data.js');
+  const { store, clearReadCache } = await import(BASE + 'store.js');
+  const text = (n) => n.textContent.replace(/\s+/g, ' ');
+
+  await store.clearAll();
+  await store.saveSettings({ units: 'lbs' });
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-08-01');   // ONE weigh-in: no body-weight line
+
+  const bp = byName('Barbell Bench Press');
+  const day = (id, date, top, burnout) => ({
+    id, date, workoutName: 'Push',
+    entries: [{ exerciseId: bp.id, exerciseName: bp.name,
+      sets: [{ weight: 185, reps: top }, { weight: 135, reps: burnout }] }],
+  });
+
+  /* ---- 1. the bests list, where a lift has only ONE recorded day ----
+     One day means no line can be drawn, so the Graph tab falls through to
+     `bestsPane()` — which is the screen this sentence lives on. */
+  await store.importAll({ sessions: [day('drop-1', '2026-08-20', 5, 25)] });
+  clearReadCache('seeded one day with a burnout set');
+  let d = await mount(GraphView());
+  [...d.querySelectorAll('.seg')].find((b) => b.textContent === 'Graph').click();
+  for (let i = 0; i < 20; i++) await settle();
+  const one = text(d);
+
+  ok(/Sets over 15 reps are not used for a max/.test(one),
+     `🚨 the bests list SAYS a set was left out, rather than silently dropping it (${one.slice(-220)})`);
+  ok(/sets left out that way\./.test(one),
+     '⚠️ and it ends by naming how many lifts it happened to — the reader who remembers logging '
+     + 'that set is owed the count, not just the rule');
+  ok(/One lift has sets left out that way\./.test(one),
+     'in the singular, because exactly one lift here has one');
+  /* 🚨 THE VACUITY GUARD, AND IT IS THE BUG ITSELF. The sentence would be worth
+     nothing if the 25-rep set had still won the row: the whole reason it is
+     printed is that 135 × 25 no longer stands where 185 × 5 belongs. */
+  ok(/185 × 5/.test(one) && !/135 × 25/.test(one),
+     '🚨 and the row itself is the 185 × 5, not the 135 × 25 that used to out-rank it');
+
+  /* ---- 2. the chart, where the same refusal gets its own caption ----
+     A second day makes the lift chartable, so the bests list is gone and the
+     dropped sets are reported under the line instead. Two different sentences
+     on two different screens; the audit found neither. */
+  await store.importAll({
+    sessions: [day('drop-1', '2026-08-20', 5, 25), day('drop-2', '2026-08-27', 5, 22)],
+  });
+  clearReadCache('seeded a second day so the lift charts');
+  d = await mount(GraphView());
+  for (let i = 0; i < 20; i++) await settle();
+  const chart = text(d);
+  ok(Boolean(d.querySelector('svg.chart')) && !/sets left out that way/.test(chart),
+     'with two days the lift charts, so the bests list — and its sentence — are gone');
+  ok(/2 sets over 15 reps aren't used here\./.test(chart),
+     `🚨 and the CHART carries its own count of what it would not plot (${chart.slice(-200)})`);
+  ok(!/Estimates get looser above 10 reps\./.test(chart),
+     '⚠️ and at the default 5-rep target there is no confidence warning — the two captions are '
+     + 'about different things, and the audit found the target warning standing in for both');
+
+  /* ---- 3. the rep target has the same ceiling as the evidence gate ----
+     🚨 MAX_TARGET_REPS WAS 20 AND IS 15 (decision l): the chart could be set to
+     a rep count the app refuses to read a maximum from, so every real set was
+     being restated at a target the curve is not trusted at. The stepper is
+     where a reader meets that ceiling, so this walks it into the wall. */
+  const stepUp = () => [...d.querySelectorAll('.mini-stepper .mini-btn')][1];
+  for (let k = 0; k < 20; k++) { stepUp().click(); for (let i = 0; i < 4; i++) await settle(); }
+  const maxed = text(d);
+  ok(d.querySelector('.mini-value').textContent === '15',
+     `🚨 the rep target stops at 15 — the same number D5 refuses to read a maximum past, so the `
+     + `chart can never be drawn at a rep count the evidence gate would reject `
+     + `(${d.querySelector('.mini-value').textContent})`);
+  ok(/Estimates get looser above 10 reps\./.test(maxed),
+     `⚠️ and above 10 the chart says so, in the reader's own words (${maxed.slice(-200)})`);
+  /* ⚠️ THE OTHER HALF OF THAT SENTENCE IS UNREACHABLE, AND THIS IS WHERE IT
+     WOULD SHOW UP. `renderNormalized()` also carries "Estimates above 15 reps
+     are unreliable." for `repConfidence(target) === 'poor'`, which needs a
+     target of 16 or more — and `clampReps()` and the stepper both stop at 15.
+     Asserted as the ceiling holding rather than as the branch being dead: if
+     MAX_TARGET_REPS ever goes back to 20, the assertion above fails and this
+     one starts finding the sentence. Reported to Tim, 2026-09-14. */
+  ok(!/above 15 reps are unreliable/.test(maxed),
+     'and it is never the harsher wording, because the target cannot get above 15 to earn it');
+
+  // Put the target back where it was found: `targetReps` outlives clearAll().
+  const stepDown = () => [...d.querySelectorAll('.mini-stepper .mini-btn')][0];
+  for (let k = 0; k < 20; k++) { stepDown().click(); for (let i = 0; i < 4; i++) await settle(); }
+  await store.clearAll();
+}
+
+/* ================================================================== *
+ * 🚨 WHAT THE MUSCLE PANEL SETS ASIDE, AND WHAT IT KNOWS ABOUT FRESHNESS
+ *   — 2026-09-14 (docs/strength-accuracy-plan.md §3.2, Tim's decision b)
+ *
+ * `screenDaily()` was fitted and measured on 2026-08-19 and then never called,
+ * so one mistyped set rated a chest 1,958 lb, Elite, at "Good" confidence. The
+ * quarantine that fixes it shipped on 2026-09-13 with the module-level tests in
+ * data-layer.test.mjs and NOTHING asserting that the panel says so — and a
+ * quarantine nobody is told about is indistinguishable from the app losing the
+ * set. Not reachable in the demo year either: it quarantines nothing (that is
+ * asserted over there), which is the point of the demo and the reason this
+ * fixture has to be built by hand.
+ *
+ * ⚠️ THE WORDING IS THE FEATURE. The app cannot tell a mistyped 1,800 from a
+ * genuine jump, so the sentence says what it DID, says the set still counts if
+ * it happens again, and leaves the judgement with the person who was there.
+ * "Repeat it and it counts" is asserted for that reason and not as decoration:
+ * without it the line is the app calling a lifter careless.
+ * ================================================================== */
+{
+  const { GraphView } = await import(BASE + 'views-data.js');
+  const { store, clearReadCache, todayISO } = await import(BASE + 'store.js');
+  const text = (n) => n.textContent.replace(/\s+/g, ' ');
+  await store.clearAll();
+  await store.saveSettings({ units: 'lbs' });
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-06-01');
+  const bp = byName('Barbell Bench Press');
+  const sq = byName('Back Squat');
+  const back = (n) => {
+    const d = new Date(todayISO() + 'T12:00:00');
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  };
+  const sess = (id, date, ex, weight) => ({
+    id, date, workoutName: 'W',
+    entries: [{ exerciseId: ex.id, exerciseName: ex.name, sets: [{ weight, reps: 5 }] }],
+  });
+  await store.importAll({ sessions: [
+    sess('q1', back(28), bp, 200), sess('q2', back(21), bp, 205),
+    sess('q3', back(14), bp, 205), sess('q4', back(7), bp, 210),
+    sess('q5', back(0), bp, 2050),
+    sess('s1', back(30), sq, 300), sess('s2', back(2), sq, 315),
+  ] });
+  clearReadCache('probe3');
+  const d = await mount(GraphView());
+  [...d.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles').click();
+  for (let i = 0; i < 30; i++) await settle();
+  const tapMuscle = async (name) => {
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const open = d.querySelector('.muscle-detail');
+      if (open && open.textContent.startsWith(name)) return open;
+      const r = [...d.querySelectorAll('.body-region')]
+        .find((x) => (x.getAttribute('aria-label') || '').startsWith(name + ' '));
+      if (r) r.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      for (let i = 0; i < 10; i++) await settle();
+    }
+    return d.querySelector('.muscle-detail');
+  };
+  const chestPanel = text(await tapMuscle('Chest'));
+
+  ok(/Set aside for now: /.test(chestPanel),
+     `🚨 the panel NAMES the set it held back — a quarantine nobody is told about reads as the app `
+     + `losing a set (${chestPanel.slice(0, 200)})`);
+  ok(/Set aside for now: 2050 × 5/.test(chestPanel),
+     '⚠️ by its weight and reps, so the reader can tell WHICH set it means — a generic "one set was '
+     + 'ignored" would be unanswerable');
+  ok(/it is far enough above everything else here that it looks like a typo\./.test(chestPanel),
+     'and says why, in the singular for one set');
+  ok(/Repeat it and it counts\./.test(chestPanel),
+     '🚨 and leaves the judgement with the person who was there — the app cannot tell a mistyped '
+     + '2,050 from a jump, so it withholds rather than accuses, and says what would change its mind');
+
+  /* 🚨 THE VACUITY GUARD, AND IT IS THE ORIGINAL BUG. The sentence is worth
+     nothing on its own: what has to be true beside it is that the 2,050 did not
+     reach the number. A 2,050 × 5 chest converts to something north of 2,000 lb
+     and took this muscle to Elite at "high confidence". */
+  const est = Number((d.querySelector('.muscle-est').textContent.match(/[\d.]+/) || [0])[0]);
+  ok(est > 100 && est < 500,
+     `🚨 and the big number is still a bench press rather than the typo — ${est} lbs, not the `
+     + `four figures the un-screened 2050 × 5 produced`);
+  ok(!/Elite/.test(chestPanel),
+     'and the level with it — one slip used to promote a muscle to the top of the scale');
+
+  /* ---- freshness: the data is there; the SENTENCE is not ----
+   *
+   * 🚨 A DEFECT IN CODE THIS BLOCK MAY NOT TOUCH, REPORTED TO TIM 2026-09-14.
+   * `freshnessLine()` in views-muscles.js has NO CALLER. `muscleGroupsPane()`
+   * computes `recent` and passes `recent.get(selected)` as a SEVENTH argument
+   * to `detail()` — which declares six parameters — so the note that a muscle
+   * trained inside 24 h (48 h for legs) reads a little low is computed, handed
+   * over, and dropped on the floor. Verified on this fixture: the chest was
+   * trained TODAY and the panel above says nothing about it.
+   *
+   * ⚠️ SO THIS ASSERTS THE HALF THAT IS WIRED, and it is deliberately not an
+   * assertion that the sentence is absent — pinning a bug in place is not the
+   * same as testing it. `recentDirectWork()` is exported, is what the missing
+   * line would read, and carries the whole of the 24 h / 48 h rule. When
+   * somebody joins the wire, the panel assertions are what they should add. */
+  const { recentDirectWork } = await import(BASE + 'views-muscles.js');
+  const recent = recentDirectWork(await store.getSessions(), await store.getExerciseMap(), todayISO());
+  ok(recent.get('Chest') === 0,
+     `⚠️ the pane knows the chest was trained TODAY (${recent.get('Chest')})`);
+  ok(recent.get('Quads') === 2,
+     `⚠️ and that the quads were trained two days ago — inside the 48 h a leg day gets, where the `
+     + `upper body gets 24 (${recent.get('Quads')})`);
+  ok(!recent.has('Triceps'),
+     '🚨 and that a bench press did NOT train the triceps for this purpose — the half-set is real '
+     + 'volume but it is not the muscle being trained that day, which is volume-map.js\'s word '
+     + '"direct" and not a new one');
 
   await store.clearAll();
 }

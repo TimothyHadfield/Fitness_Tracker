@@ -173,11 +173,63 @@ the tree, no commits, an isolated copy for a green run).
   rather than overwritten: bias 0.67 %, RMSE 4.66 %, lag 13.4 d, coverage 97.9 % at ±14.5 %, flaps
   0.19, **level lag 23.2 → 29.4 days**.
 
-### G. What was checked and was fine
+### G. THE ORPHAN CHECK SAID "NONE" AND MISSED ONE, BECAUSE IT ONLY LOOKED AT EXPORTS
 
-**No orphans this time.** All 43 exports added by the rebuild were checked for callers — every one
-has at least one, so there is no repeat of the `resolveRatio()` failure. The ten that are exported
-but used only inside their own file are used there.
+**Written down as the correction it is.** All 43 exports the rebuild added were checked for callers
+and every one has at least one — so the report went out saying "no orphans this time, no repeat of
+`resolveRatio()`". **That was the wrong check.** `resolveRatio()` was exported and so would have been
+caught; **a module-internal function would not**, and one of those is exactly what was sitting there:
+
+🚨 **`freshnessLine()` in `js/views-muscles.js` HAS NO CALLER AND THE FRESHNESS NOTE NEVER RENDERS —
+not "never in the demo", never at all.** `muscleGroupsPane()` computes `recentDirectWork()` correctly
+(the 24 h / 48 h split, direct work only — all of it right) and passes the answer as a **seventh**
+argument to `detail()`, which takes **six** parameters. The seventh is dropped on the floor, silently,
+because that is what JavaScript does. Found by the agent writing the test for it, when the sentence
+it was asserting never appeared.
+
+🔒 **THE RULE: AN ORPHAN CHECK OVER EXPORTS IS HALF A CHECK.** Look for functions nothing calls, not
+for exports nothing imports. And ⚠️ **an extra argument at a call site is invisible in this language**
+— the same silence as the `{m, f}` ratio failing a `> 0` guard.
+
+**And a second dead thing, in the other direction.** `js/views-data.js:1477` prints *"Estimates above
+15 reps are unreliable."* only when `repConfidence(target) === 'poor'`, which needs `target >= 16` —
+and `MAX_TARGET_REPS` dropped from 20 to **15** on 2026-09-13, the same day the sentence was written.
+The reader always meets the other branch instead. Proved by restoring the 20, which puts the sentence
+on screen immediately.
+
+🛑 **NEITHER WAS FIXED.** Both put words on a screen, and Tim points at screens. The one-line wiring
+and the two ways to resolve the dead branch are written down for him.
+
+### H. The render coverage, and the test that was owed
+
+**`tests/render.test.mjs` 1,333 → 1,360.** The three states the audit structurally cannot reach:
+
+- 🆕 **THE FATIGUE CAPTION'S WIRING — the most valuable missing test in the project, and it is
+  written.** `js/rep-decrement.js` had 57 module-level assertions and **nothing asserted the
+  multiplier ever reached the screen**. Now: set 1 reads *"maybe 9–15 to failure"*, set 2 *"maybe
+  6–11 to failure on this set (12 fresh)"*, set 3 *"maybe 5–8 …"*, and changing the load to 175 drops
+  the note entirely, because a weight change is a fresh effort.
+- **The Data tab's dropped-sets caption**, with the D5 ceiling itself asserted — the chart can never
+  be drawn at a rep count D5 would reject.
+- **The muscle panel's set-aside line**, which renders in full: *"Set aside for now: 2050 × 5 — it is
+  far enough above everything else here that it looks like a typo. Repeat it and it counts."*
+
+🔒 **Mutation evidence, independently reproduced rather than taken on trust — and the first attempt
+was a §0.14 miss.** Making `setIndexMultiplier()` return 1 changed nothing, which looked like a weak
+test and was not: `blendedMultipliers()` reads `restColumn()` directly and never calls it, so the
+mutation landed in the file and not on the path. Returning `[1,1,1,1]` from `blendedMultipliers()`
+instead fails five assertions with exactly the right symptom — *"set 2 repeats set 1's sentence"*.
+
+⚠️ **One near-miss from that agent worth keeping**: its bests-list vacuity guard survived a first
+mutation because `setE1rm()` enforces D5 a **second** time, so the assertion looked mutation-proof
+when it was merely unreachable by that mutation. Both gates had to be disabled to flip it — which
+then reproduced the historic bug verbatim, `135 × 25 → ~258 lbs max`.
+
+🚩 **And one thing it flagged rather than asserted**: the caption prints a band for this set and a
+single midpoint for fresh (*"maybe 6–11 to failure on this set (12 fresh)"*), where the plan's
+example had a band on both sides. The gate that decides whether to print the note compares midpoints,
+so a load whose midpoint rounds to itself while the band moves would print a shifted band with no
+note beside it. Not asserted either way.
 
 ---
 
