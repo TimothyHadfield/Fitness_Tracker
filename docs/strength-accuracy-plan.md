@@ -17,8 +17,12 @@ not recommended, and he did not name it.
 
 - **§6.1 the backtest** — designed in full, not built. It needs **Tim's own export** (decision n),
   which has not been given. It is the only thing that turns "internally consistent" into "accurate".
-- **§6.3 the systematic re-derivation** of all ~105 ratios (~2 days, mostly transcription). What
-  landed is the ~25 entries that were more than 10 % off, not a re-derivation of the table.
+- ✅ **§6.3 the systematic re-derivation — DONE 2026-09-15.** All 105 comparable entries checked
+  against Strength Level, **after fixing the check itself**: it predated D31 and read a `{m, f}` pair
+  as its mean, so it reported 18 entries over 10 % out when the true figure was 10. Inside 5 % of the
+  published number went **38 → 85**; pairs 51 → 62; eight of the ten were a female side that had
+  never been paired. Three are refused rather than corrected because their published page is a
+  different implement, and the refusals are written into the table. `docs/history.md` 2026-09-15 §I.
 - **§6.4 σ per entry** and inverse-variance aggregation; **§6.5 personal ratios**.
 - **The fall limit** — §3.1's window shipped, `estimateAt`'s 2 %/week limit did not, so a rating
   steps when a set ages out of the window rather than declining smoothly.

@@ -2459,13 +2459,28 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   const GOLDEN = [
     ['Back', 720, 171.2171, 0.8246, 212, 4],
     ['Biceps', 904, 99.9714, 0.7680, 125, 2],
-    ['Calves', 332, 227.1731, 0.8512, 84, 2],
+    /* 🔄 MOVED 2026-09-15, ONE ENTRY, NAMED: Seated Calf Raise became a pair
+     * ({ m: 0.66, f: 0.75 }; SL gives 0.659 / 0.746 and the single 0.66 was
+     * 12 % low for a woman). This walk passes NO sex, so it resolves to the
+     * mean, 0.705 — the estimate divides by the ratio, so it falls 227.17 →
+     * 224.41, and confidence RISES 0.8512 → 0.8807 because the two calf
+     * exercises now agree more closely. Standing Calf Raise is the key lift at
+     * 1.00 and did not move. No other golden row changed. */
+    ['Calves', 332, 224.4120, 0.8807, 84, 2],
     ['Chest', 465, 213.9877, 0.9044, 130, 2],
     ['Core', 66, 97.5418, 0.2891, 22, 1],
     ['Forearms', 904, 94.2935, 0.6006, 273, 5],
     ['Glutes', 630, 311.0534, 0.8488, 64, 1],
     ['Hamstrings', 882, 247.8476, 0.8524, 146, 3],
-    ['Quads', 567, 264.1769, 0.9248, 171, 4],
+    /* 🔄 MOVED 2026-09-15, ONE ENTRY, NAMED: Bulgarian Split Squat became a
+     * pair ({ m: 0.50, f: 0.56 }; SL 0.503 / 0.558), so the sexless mean it
+     * resolves to here is 0.53 rather than 0.50. It holds a seat in the demo's
+     * top three, and the estimate divides by the ratio: 264.18 → 263.18,
+     * confidence 0.9248 → 0.9016. Back Squat (key lift, 1.00), Leg Press
+     * (1.835) and Leg Extension (0.78) are untouched. ⚠️ As a MAN — the demo's
+     * own sex, and the app's path — this reads 265.71 and the male ratio is
+     * unchanged at 0.50; see the sexed block below the table. */
+    ['Quads', 567, 263.1765, 0.9016, 171, 4],
     ['Shoulders', 1080, 144.0826, 0.6903, 192, 4],
     ['Traps', 529, 265.5756, 0.5797, 148, 3],
     ['Triceps', 1100, 163.4989, 0.5481, 125, 2],
@@ -2501,6 +2516,34 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   }
   ok(goldenOk,
      `every muscle scores exactly what it scored before the walk moved out of store.js${goldenOk ? '' : ' — ' + firstBad}`);
+
+  /* 🚨 THE GOLDEN TABLE ABOVE WALKS WITHOUT A SEX, AND THE APP NEVER DOES —
+   * found 2026-09-15 while re-baselining Calves. `store.js:3483` passes `sex`
+   * into `buildObservations`, and the demo account is male, so every paired
+   * ratio (a quarter of the table since D31) resolves to a DIFFERENT number in
+   * the app than in the pin that exists to catch ratio regressions. The pin was
+   * measuring the mean-of-both-sexes path that only a profile with no sex takes.
+   *
+   * Kept as it is — a sexless walk is a real case and the table is a long
+   * baseline — with the app's own path pinned here beside it. ⚠️ The demo's
+   * REAL reading did not move in the 2026-09-15 pass at all: its Seated Calf
+   * Raise male side is unchanged at 0.66, and 227.17 is what the golden row
+   * said before. What moved was only the mean. */
+  {
+    const sexed = (sex) => {
+      const { byMuscle: bm } = buildObservations({ ...args, sex });
+      const r = rateMuscle(bm.get('Calves') || [], 'Calves');
+      return r ? r.estimate : null;
+    };
+    const asMan = sexed('male'), asWoman = sexed('female');
+    const noSex = rateMuscle(byMuscle.get('Calves') || [], 'Calves').estimate;
+    ok(near(asMan, 227.1731, 0.0001),
+       `🚨 walked as the man he is, the demo's Calves reads what it always did (${asMan.toFixed(4)})`);
+    ok(!near(asMan, noSex, 0.0001) && !near(asWoman, noSex, 0.0001) && asWoman < noSex,
+       `⚠️ and the three paths genuinely differ — male ${asMan.toFixed(2)}, no sex `
+       + `${noSex.toFixed(2)}, female ${asWoman.toFixed(2)} — so the sex reaches the ratio rather `
+       + `than being accepted and dropped`);
+  }
 
   // Vacuity guard: the table above would pass just as well over a walk that had
   // quietly stopped reading sessions, if the numbers had been captured from one.
@@ -3103,7 +3146,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       ['Deadlift', 'Back', 1.76, 'male'], ['Deadlift', 'Back', 2.02, 'female'],
       ['Sumo Deadlift', 'Back', 1.97, 'male'], ['Sumo Deadlift', 'Back', 2.17, 'female'],
       ['Rack Pull', 'Back', 2.10, 'male'], ['Rack Pull', 'Back', 2.54, 'female'],
-      ['Good Morning', 'Back', 0.95],
+      ['Good Morning', 'Back', 0.96, 'male'], ['Good Morning', 'Back', 1.04, 'female'],
       ['Leg Press', 'Quads', 1.73, 'male'], ['Leg Press', 'Quads', 1.94, 'female'],
       ['Leg Extension', 'Quads', 0.78],
       ['Lying Leg Curl', 'Hamstrings', 0.53],
@@ -3123,7 +3166,8 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       ['Machine Lateral Raise', 'Shoulders', 0.97, 'male'], ['Machine Lateral Raise', 'Shoulders', 0.84, 'female'],
       ['Lateral Raise', 'Shoulders', 0.53],
       ['Hammer Curl', 'Biceps', 1.04],
-      ['Concentration Curl', 'Biceps', 0.92], // was 0.62 — the family's biggest flatter
+      // was 0.62 — the family's biggest flatter; paired 2026-09-15
+      ['Concentration Curl', 'Biceps', 0.92, 'male'], ['Concentration Curl', 'Biceps', 1.02, 'female'],
       ['Preacher Curl', 'Biceps', 0.96],
       ['Cable Curl', 'Biceps', 1.11],
       ['Machine Curl', 'Biceps', 1.23, 'male'], ['Machine Curl', 'Biceps', 1.09, 'female'],
@@ -3132,10 +3176,42 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       ['Overhead Dumbbell Extension', 'Triceps', 0.24, 'male'],
       ['Dumbbell Shrug', 'Traps', 0.70],      // the third counter-direction entry
       ['Machine Shrug', 'Traps', 1.16, 'male'], ['Machine Shrug', 'Traps', 1.33, 'female'],
-      ['Seated Calf Raise', 'Calves', 0.66],
+      ['Seated Calf Raise', 'Calves', 0.66, 'male'], ['Seated Calf Raise', 'Calves', 0.75, 'female'],
       ['Reverse Wrist Curl', 'Forearms', 0.92],
       ['Straight-Arm Pulldown', 'Back', 0.61, 'male'], ['Straight-Arm Pulldown', 'Back', 0.69, 'female'],
       ['Barbell Lunge', 'Quads', 0.62, 'male'], ['Barbell Lunge', 'Quads', 0.68, 'female'],
+
+      /* 🆕 THE 2026-09-15 PASS — the entries the 2026-09-13 round left behind.
+       * It corrected the ~25 worst; a sex-aware re-run of the same comparison
+       * (male ratio against the male page, female against the female one, which
+       * the old check could not do because it read a pair as its mean) found
+       * fourteen more where the MALE side was already right to within 1 % and
+       * the female side was 8-15 % out. Every one below is a woman being handed
+       * a man's conversion, and the estimate DIVIDES by it. */
+      ['Front Raise', 'Shoulders', 0.54, 'male'], ['Front Raise', 'Shoulders', 0.60, 'female'],
+      ['Rear Delt Fly', 'Shoulders', 0.56, 'male'], ['Rear Delt Fly', 'Shoulders', 0.63, 'female'],
+      ['Behind-the-Neck Press', 'Shoulders', 0.97, 'male'], ['Behind-the-Neck Press', 'Shoulders', 1.06, 'female'],
+      ['Dumbbell Curl', 'Biceps', 0.94, 'male'], ['Dumbbell Curl', 'Biceps', 1.03, 'female'],
+      ['Incline Dumbbell Curl', 'Biceps', 0.85, 'male'], ['Incline Dumbbell Curl', 'Biceps', 0.94, 'female'],
+      ['Zottman Curl', 'Biceps', 0.79, 'male'], ['Zottman Curl', 'Biceps', 0.87, 'female'],
+      ['Bulgarian Split Squat', 'Quads', 0.50, 'male'], ['Bulgarian Split Squat', 'Quads', 0.56, 'female'],
+      ['Trap Bar Shrug', 'Traps', 1.04, 'male'], ['Trap Bar Shrug', 'Traps', 1.20, 'female'],
+
+      /* 🚨 AND ONE SPLIT, WHICH IS THE SAME SHAPE AS THE MACHINE LATERAL RAISE.
+       * A Smith machine shrug was being scored on the PLATE-MACHINE shrug page
+       * — 18 % male / 21 % female high — because /Machine Shrug/ matches its
+       * name. Strength Level publish both; the Smith page gives 0.99 / 1.10.
+       * The rule has to sit BEFORE the machine one or the name is caught by the
+       * wrong rule again, which is what the ordering block below asserts. */
+      ['Smith Machine Shrug', 'Traps', 0.99, 'male'], ['Smith Machine Shrug', 'Traps', 1.10, 'female'],
+
+      /* And four singles the sexes agree on within 3 %, where the number itself
+       * was simply low: a safety bar is not a 5 % penalty on a back squat, and
+       * a paused squat is not a 10 % one. */
+      ['Pause Squat', 'Quads', 0.99],
+      ['Safety Bar Squat', 'Quads', 1.05],
+      ['Leg Press Calf Raise', 'Calves', 1.47],
+      ['Dumbbell Calf Raise', 'Calves', 0.52],
     ];
     for (const [name, muscle, want, sex] of pinned) {
       const got = ratioOf(name, muscle, sex);
@@ -3192,10 +3268,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     // the sweep. A revert of any of these three flips its own line.
     ok(ratioOf('Lateral Raise', 'Shoulders') === 0.53,
        'lateral raise 0.53 — SL 12/22/37/55/76 doubled over OHP, median of five');
-    ok(ratioOf('Front Raise', 'Shoulders') === 0.54,
-       'front raise 0.54 — SL 10/22/38/60/86');
-    ok(ratioOf('Rear Delt Fly', 'Shoulders') === 0.56,
-       'rear delt fly 0.56 — SL 8/20/39/64/94');
+    // ⚠️ Both of these grew a female side on 2026-09-15, so they are read AT a
+    // sex — without one the resolver returns the mean of the pair and this
+    // assertion would be measuring neither published number.
+    ok(ratioOf('Front Raise', 'Shoulders', 'male') === 0.54,
+       'front raise 0.54 for a man — SL 10/22/38/60/86');
+    ok(ratioOf('Rear Delt Fly', 'Shoulders', 'male') === 0.56,
+       'rear delt fly 0.56 for a man — SL 8/20/39/64/94');
     // ⚠️ The ordering that has to survive: a raise is still a fraction of a
     // press, which is what stops 40 lb of lateral raise reading as a big press.
     lt('Lateral Raise', 'Shoulders', 'Overhead Press', 'Shoulders',
@@ -3788,7 +3867,11 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(near(ratio('Dumbbell Bench Press', 'Chest'), 0.81), 'a dumbbell bench converts at 0.81 of a barbell bench');
   ok(near(ratio('Dumbbell Shoulder Press', 'Shoulders'), 1.01),
      '⚠️ and a dumbbell shoulder press ABOVE 1.00 — two dumbbells outweigh the bar most people press');
-  ok(near(ratio('Dumbbell Curl', 'Biceps'), 0.94), 'and a dumbbell curl at 0.94 of a barbell curl');
+  // Paired 2026-09-15, so read at a sex rather than at the mean of the two.
+  ok(near(ratio('Dumbbell Curl', 'Biceps', 'male'), 0.94),
+     'and a man\'s dumbbell curl at 0.94 of his barbell curl');
+  ok(near(ratio('Dumbbell Curl', 'Biceps', 'female'), 1.03),
+     '⚠️ where a woman\'s is 1.03 — the whole dumbbell biceps family runs ~10 % higher for women');
 
   /* ⚠️ THE LAST FOUR NAMES ON 0h, DERIVED 2026-08-28. Same technique, same
      population, same 180 lb male. All three that could be derived had been

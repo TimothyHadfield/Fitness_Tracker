@@ -723,7 +723,8 @@ const RATIOS = {
     // drift is the widest of the barbell entries (novices barely load it,
     // strong lifters treat it as a real pull), so q goes DOWN a step even
     // though the median is now sourced.
-    [/Good Morning/, 0.95, 0.30],
+    // Paired 2026-09-15: 0.955 male / 1.041 female.
+    [/Good Morning/, { m: 0.96, f: 1.04 }, 0.30],
     [/Reverse Hyperextension/, 0.55, 0.25],
   ],
   Quads: [ // key: Back Squat
@@ -731,9 +732,13 @@ const RATIOS = {
     [/^High-Bar Squat$/, 0.98, 0.85],
     [/^Low-Bar Squat$/, 1.04, 0.85],
     [/^Box Squat$/, { m: 1.16, f: 1.15 }, 0.70],
-    [/^Pause Squat$/, 0.90, 0.75],
+    // Raised 2026-09-15: SL gives 0.990 male / 0.994 female — the sexes agree,
+    // so it stays a single number, but 0.90 was 9 % low for both.
+    [/^Pause Squat$/, 0.99, 0.75],
     [/^Front Squat$/, 0.83, 0.75],
-    [/^Safety Bar Squat$/, 0.95, 0.65],
+    // Raised 2026-09-15: 1.040 male / 1.067 female. A safety bar is not the
+    // 5 % penalty on a back squat this assumed; it is roughly par.
+    [/^Safety Bar Squat$/, 1.05, 0.65],
     [/^Zercher Squat$/, { m: 0.85, f: 0.81 }, 0.50],
     // ⚠️ The Smith squat runs the OTHER way — 1.05 was over-crediting the bar,
     // not under. SL: 0.89 male, 0.84 female.
@@ -777,7 +782,8 @@ const RATIOS = {
     // split squat or lunge is the same movement with the load on the back — what
     // changes is how much you can hold, not the fraction of a squat it
     // represents, and the load is what gets logged either way.
-    [/Bulgarian Split Squat|Split Squat/, 0.50, 0.40],
+    // Paired 2026-09-15: 0.503 male / 0.558 female.
+    [/Bulgarian Split Squat|Split Squat/, { m: 0.50, f: 0.56 }, 0.40],
     /* ⚠️ SPLIT 2026-09-13. The 0.45 was derived from SL's DUMBBELL lunge (two
      * bells, doubled) and the family then applied it to a BARBELL lunge, whose
      * own page gives 0.62 male / 0.68 female — a 28 % flattery on a 135 x 8.
@@ -799,6 +805,13 @@ const RATIOS = {
     // Back (1.81 against a 1.76 conventional pull, in the other direction
     // because that one is a floor pull).
     [/Deficit Romanian Deadlift/, 0.95, 0.35],
+    /* 🛑 NOT DERIVABLE FROM STRENGTH LEVEL'S PAGE, CHECKED 2026-09-15 — and the
+     * check is recorded so nobody "corrects" this against it a third time.
+     * Their single-leg RDL standards are for a BARBELL; this library's is a
+     * DUMBBELL lift logged per side and doubled. Dividing a doubled per-hand
+     * load by a barbell population is precisely the mistake the spider curl
+     * entry refuses, and it would read 13 % low for a woman while looking like
+     * a fix. Stays reasoned and labelled until a dumbbell table exists. */
     [/Single-Leg Romanian Deadlift/, 0.45, 0.35],
     // 2026-08-26 sweep: SL lying leg curl 68/103/148/201/259 over RDL →
     // 0.46/0.50/0.53/0.55/0.57, median 0.53. Was 0.45 — flattering ~18 %.
@@ -833,6 +846,12 @@ const RATIOS = {
     // glute bridge page publishes REP standards, not 1RM — checked
     // 2026-08-26, not derivable.
     [/Glute Bridge/, 0.83, 0.40],
+    /* 🛑 SAME REFUSAL, SAME DATE. Strength Level's sumo squat page is the
+     * BARBELL powerlifting stance (their median is 0.70 of a back squat); this
+     * library's Sumo Squat is a dumbbell held in two hands, FORCE_TOTAL — a
+     * different exercise wearing the same name, which is why the raw comparison
+     * reads 36 % low. ⚠️ Do not "fix" it to 0.70: that would treat one goblet-
+     * style dumbbell as a loaded barbell and inflate every set logged on it. */
     [/Sumo Squat/, 0.45, 0.30],
     /* 🚨 CORRECTED 2026-09-13, AND THESE WERE THE WORST TWO ENTRIES IN THE
      * TABLE. Both were "reasoned" numbers with no published standard behind
@@ -864,7 +883,9 @@ const RATIOS = {
     // one than 1.00 allowed.
     [/^Seated Barbell Overhead Press$/, { m: 1.14, f: 1.00 }, 0.85],
     [/^Push Press$/, { m: 1.27, f: 1.41 }, 0.65],
-    [/^Behind-the-Neck Press$/, 0.90, 0.55],
+    // Paired and raised 2026-09-15: SL over OHP is 0.971 male / 1.057 female;
+    // 0.90 was low for a man and 15 % low for a woman.
+    [/^Behind-the-Neck Press$/, { m: 0.97, f: 1.06 }, 0.55],
     [/^Z Press$/, 0.85, 0.50],
     [/Smith Machine Overhead Press/, 1.05, 0.45],
     // 2026-08-26 sweep: SL machine shoulder press 67/112/172/244/325 over
@@ -991,8 +1012,19 @@ const RATIOS = {
      * between conventions IS a ratio change, which is why the note at the top
      * of this table says so. It sits before /Lateral Raise/. */
     [/Machine Lateral Raise/, { m: 0.97, f: 0.84 }, 0.30],
+    /* ⚠️ THE CABLE VERSION IS CAUGHT HERE AND THE 0.53 IS RIGHT FOR IT — checked
+     * 2026-09-15, because a raw comparison says it is 106 % too high and it is
+     * not. Strength Level's cable lateral raise page (7/18/36/59/87 at 180 lb
+     * male) carries NO equipment note, and the app logs this one FORCE_PER_SIDE
+     * and doubles it. Read as one stack, 36 lb becomes 72 lb of total load —
+     * which lands on their own DUMBBELL page's 37 lb per hand almost exactly.
+     * Read as both arms it would mean people are half as strong on a cable as
+     * on dumbbells, which is not a thing. 🛑 REASONED, not sourced: the page
+     * does not say, and this is the reading the two pages agree under. */
     [/Lateral Raise/, 0.53, 0.25],
-    [/Front Raise/, 0.54, 0.25],
+    // Paired 2026-09-15: SL over OHP gives 0.543 male / 0.600 female, a 10 %
+    // gap, so the single 0.54 was a male number being read to women.
+    [/Front Raise/, { m: 0.54, f: 0.60 }, 0.25],
     /* ⚠️ SPLIT 2026-09-13, same shape as the lateral raise and the other way
      * round. The dumbbell rear delt fly's 0.56 was being applied to a REVERSE
      * PEC DECK's single stack, which under-credits it by about half — SL's
@@ -1002,7 +1034,8 @@ const RATIOS = {
      * by the ratio and 0.56 was less than half of 1.07. At the derived number
      * the same set is ~18th. */
     [/Reverse Pec Deck|Machine Rear Delt Fly/, { m: 1.07, f: 0.94 }, 0.35],
-    [/Rear Delt Fly/, 0.56, 0.22],
+    // Paired 2026-09-15: 0.557 male / 0.629 female over OHP, a 13 % gap.
+    [/Rear Delt Fly/, { m: 0.56, f: 0.63 }, 0.22],
     // Cable and machine versions carry the derived number for the movement
     // they copy — the leverage is not the dumbbell's and nothing is published
     // for them, so they are labelled rather than separately claimed.
@@ -1042,10 +1075,14 @@ const RATIOS = {
     [/Hammer Curl/, 1.04, 0.55],
     // SL 22/32/44/58/74 ×2 → 0.90/0.88/0.85/0.83/0.82, median 0.85 (was 0.72).
     // The only curl whose drift runs DOWNWARD with strength.
-    [/Incline Dumbbell Curl/, 0.85, 0.45],
+    // 🆕 PAIRED 2026-09-15: 0.846 male / 0.943 female. The dumbbell biceps
+    // family is where the 2026-09-13 pass stopped, and it is the family with
+    // the most consistent gap — a woman's dumbbell curl is worth ~10 % more of
+    // her barbell curl than a man's is of his, on every variant below.
+    [/Incline Dumbbell Curl/, { m: 0.85, f: 0.94 }, 0.45],
     // SL 20/33/48/67/88 ×2 → 0.82/0.90/0.92/0.96/0.98, median 0.92 (was 0.62
     // — the family's biggest flatter).
-    [/Concentration Curl/, 0.92, 0.40],
+    [/Concentration Curl/, { m: 0.92, f: 1.02 }, 0.40],
     // ⚠️ REASONED, AND NOW CLOSED AS NOT DERIVABLE RATHER THAN LEFT OPEN.
     // Re-checked 2026-08-28, the last name on 0h's list: SL's spider curl
     // standards are 29/50/78/111/149 and the page's own equipment note is
@@ -1060,7 +1097,7 @@ const RATIOS = {
     // SL 11/23/41/64/90 ×2 → 0.45/0.63/0.79/0.91/1.00, median 0.79 (was
     // 0.72). The widest drift of any dumbbell lift in the file — the rotation
     // gates novices hard — so q drops a step despite the sourced median.
-    [/Zottman Curl/, 0.79, 0.30],
+    [/Zottman Curl/, { m: 0.79, f: 0.87 }, 0.30],
     // Carried across the corrected cable-curl anchor (× 1.11/0.95).
     [/Bayesian Cable Curl/, 0.93, 0.35],
     // SL cable curl 44/75/115/164/218 → 0.90/1.03/1.11/1.17/1.21, median
@@ -1082,7 +1119,10 @@ const RATIOS = {
     // is left alone rather than scaled on top of a number nobody measured. The
     // rest of the dumbbell biceps entries are unchanged for the same reason and
     // stay open in 0h.
-    [/Dumbbell Curl/, 0.94, 0.55],
+    // Paired 2026-09-15: 0.942 male / 1.026 female — the anchor of the family
+    // corrected above, so the pair belongs here rather than only on the
+    // variants carried off it.
+    [/Dumbbell Curl/, { m: 0.94, f: 1.03 }, 0.55],
   ],
   Triceps: [ // key: Close-Grip Bench Press
     [/^Close-Grip Bench Press$/, 1.00, 1.00],
@@ -1151,7 +1191,8 @@ const RATIOS = {
   Traps: [ // key: Barbell Shrug
     [/^Barbell Shrug$/, 1.00, 1.00],
     // Reasoned — no published trap-bar shrug standard (checked 2026-08-26).
-    [/^Trap Bar Shrug$/, 1.05, 0.75],
+    // Paired 2026-09-15: 1.042 male / 1.203 female, a 15 % gap.
+    [/^Trap Bar Shrug$/, { m: 1.04, f: 1.20 }, 0.75],
     // 2026-08-26 sweep, the third entry that ran the OTHER way: SL dumbbell
     // shrug per dumbbell 38/64/99/141/188, doubled, over barbell shrug
     // 121/192/284/394/515 → 0.63/0.67/0.70/0.72/0.73, median 0.70. The
@@ -1159,8 +1200,12 @@ const RATIOS = {
     // traps, is what caps a dumbbell shrug, and the reasoned number assumed
     // the two moved together.
     //
-    // ── added 2026-08-31 with the library sweep. All carried off the barbell
-    //    shrug; Strength Level publish no shrug variants beyond the two above.
+    // ── added 2026-08-31 with the library sweep. ⚠️ THE LINE THAT USED TO SIT
+    //    HERE — "Strength Level publish no shrug variants beyond the two above"
+    //    — WAS FALSE and was acted on for a fortnight: they publish dumbbell,
+    //    machine, Smith, cable and hex-bar shrug pages, and four of the rules
+    //    below now carry numbers derived from them. Only the two behind-the-back
+    //    and snatch-grip entries are still carried rather than derived.
     // Behind the back the bar rests against the glutes over a shorter range.
     [/Behind-the-Back Barbell Shrug/, 0.90, 0.35],
     // A snatch grip is wider and starts lower, for the same reason it is weaker
@@ -1174,8 +1219,22 @@ const RATIOS = {
     [/Dumbbell Shrug/, 0.70, 0.60],
     // Both reasoned — no published standard for either (checked 2026-08-26).
     [/Cable Shrug/, { m: 0.81, f: 0.83 }, 0.50],
-    // "Smith Machine Shrug" is caught here on purpose: a fixed bar shrug is a
-    // barbell shrug, which is what the 1.00 says.
+    /* 🚨 SPLIT 2026-09-15, AND THE COMMENT THAT USED TO BE HERE HAD OUTLIVED
+     * ITS OWN NUMBER TWICE. It read: *"Smith Machine Shrug is caught here on
+     * purpose: a fixed bar shrug is a barbell shrug, which is what the 1.00
+     * says"* — and the entry had not said 1.00 since 2026-09-13, when it was
+     * corrected to the MACHINE shrug page. So a Smith shrug was deliberately
+     * routed to a rule that had stopped describing it: a plate-loaded machine
+     * moves more than a fixed bar, and it was reading 18 % male / 21 % female
+     * high.
+     *
+     * Strength Level publish BOTH pages. Smith: 131/197/280/378/485 male over
+     * the barbell shrug's 121/192/284/394/515 → median 0.986; 1.101 female.
+     * The machine page keeps its own numbers below. ⚠️ Ordering matters and the
+     * name demands it — /Machine Shrug/ matches "Smith Machine Shrug" too, so
+     * this rule has to sit first, the same discipline the incline dumbbell
+     * shrug and the machine lateral raise already follow. */
+    [/Smith Machine Shrug/, { m: 0.99, f: 1.10 }, 0.50],
     // Corrected 2026-09-13 — the "no published standard" note was stale; the
     // machine shrug page gives 1.16 male / 1.33 female.
     [/Machine Shrug/, { m: 1.16, f: 1.33 }, 0.45],
@@ -1193,14 +1252,18 @@ const RATIOS = {
     // 110/198/317/463/629 → 0.65/0.65/0.66/0.67/0.67, median 0.66 — the
     // second-flattest derivation in the file, so q RISES a step: this ratio
     // really is a population constant.
-    [/^Seated Calf Raise$/, 0.66, 0.65],
+    // Paired 2026-09-15: 0.659 male / 0.746 female, a 13 % gap.
+    [/^Seated Calf Raise$/, { m: 0.66, f: 0.75 }, 0.65],
     [/Smith Machine Calf Raise/, 1.00, 0.45],
     // A bar on the back over a block: the same load path as the Smith version
     // with the balance to manage yourself, so a small discount. Carried.
     [/Barbell Calf Raise/, 0.95, 0.35],
-    [/Leg Press Calf Raise/, 1.35, 0.35],
+    // Raised 2026-09-15: 1.451 male / 1.487 female; the sexes agree within
+    // 3 %, so one number, but 1.35 was ~8 % low for both.
+    [/Leg Press Calf Raise/, 1.47, 0.35],
     [/Donkey Calf Raise/, 1.05, 0.35],
-    [/Dumbbell Calf Raise/, 0.55, 0.35],
+    // Trimmed 2026-09-15: 0.524 male / 0.508 female.
+    [/Dumbbell Calf Raise/, 0.52, 0.35],
   ],
   Forearms: [ // key: Wrist Curl
     [/^Wrist Curl$/, 1.00, 1.00],
@@ -2089,11 +2152,20 @@ export function rateMuscle(observations, muscle = null) {
    *    300-day-old bench benchmark out-ranked a fresh 260x5 that was never even
    *    a candidate.
    *
-   *    🛑 THIS IS HALF OF DECISION (a). The other half — `estimateAt()`'s
-   *    2 %/week fall limit, so the number declines smoothly rather than stepping
-   *    when a set ages out of the window — is NOT wired. `strength-estimate.js`
-   *    holds it, fitted and tested, and `docs/strength-accuracy-plan.md` §3.1
-   *    is the entry that stays open until it is.
+   *    🛑 THIS IS NOT "HALF OF DECISION (a)", WHICH IS WHAT THIS COMMENT SAID
+   *    UNTIL 2026-09-15 — AND THE WORDING SENT A SESSION OFF TO FINISH IT.
+   *    `docs/strength-accuracy-plan.md` §3.1 offered decision (a) as a CHOICE of
+   *    two: *(a)* a windowed representative here, or *(b)* wire `estimateAt()`
+   *    per exercise so the map is a smoothed series with the fall limit and
+   *    hysteresis. **(a) is what shipped.** The fall limit is not a missing half
+   *    of it; it is the other option, and taking it means replacing the seat
+   *    rule below with a replayed per-exercise series — every rating moves, the
+   *    golden table re-baselines, and hysteresis has to come with it or the map
+   *    flickers. ⚠️ **A design change and a re-baseline, which are Tim's.**
+   *
+   *    What is true and worth keeping: the number STEPS when a set ages out of
+   *    the window rather than declining, and `strength-estimate.js` holds the
+   *    2 %/week limit fitted and tested against exactly that.
    *
    * 2. ⚠️ HEAVY SETS FIRST, NOT LONG ONES (decision i). Where an exercise has
    *    any set at LOW_REP_PREFERENCE reps or fewer inside the chosen window,

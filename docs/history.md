@@ -200,6 +200,80 @@ on screen immediately.
 🛑 **NEITHER WAS FIXED.** Both put words on a screen, and Tim points at screens. The one-line wiring
 and the two ways to resolve the dead branch are written down for him.
 
+### I. THE RATIO TABLE, RE-DERIVED — and the check that could not read it
+
+**Tim, having been given a ranked answer to "what's next":** *"Okay start working on that now if you
+feel you're completely ready to start."* The ranked answer put the fall limit first and the ratio
+re-derivation second. **The fall limit was checked first and is not what the notes said it was** —
+see J below — so this is the second item.
+
+🚨 **THE FIRST THING WAS THAT THE MEASUREMENT WAS WRONG, NOT THE TABLE.** Agent C's 2026-09-13
+spot-check compares every code ratio against Strength Level; re-running it today reported **18 entries
+more than 10 % out**, which would have meant the 2026-09-14 correction round had barely helped. It had.
+The script predates **D31**: `contributionsFor()` takes a sex, a quarter of the table is now `{m, f}`
+pairs, and **with no sex the resolver returns the MEAN of the two** — so the script compared one mean
+against each sex's own median and printed two equal-and-opposite deltas. Pull-Up "+14 % male / −11 %
+female" is not a broken entry; it is a correctly paired one seen through a check that cannot read
+pairs. **Resolving each ratio AT the sex it is compared against drops the real figure to 10.**
+
+**Then the ten, and they were one fault wearing nine faces.** In eight of them the MALE side was
+already right to within 1 % and the female side was 8–15 % out — entries the 2026-09-14 round never
+paired. A woman was being handed a man's conversion, and the estimate divides by it. Paired against
+Strength Level's own pages: Front Raise (0.54 / 0.60), Rear Delt Fly (0.56 / 0.63), Behind-the-Neck
+Press (0.97 / 1.06, and low for a man too), Dumbbell Curl (0.94 / 1.03), Incline Dumbbell Curl (0.85
+/ 0.94), Concentration Curl (0.92 / 1.02), Zottman Curl (0.79 / 0.87), Bulgarian Split Squat (0.50 /
+0.56), Good Morning (0.96 / 1.04), Trap Bar Shrug (1.04 / 1.20), Seated Calf Raise (0.66 / 0.75).
+⚠️ **The whole dumbbell biceps family runs ~10 % higher for women**, which is why it is four entries
+rather than one. Four more were single numbers that were simply low, where the sexes agree within
+3 %: Pause Squat 0.90 → 0.99, Safety Bar Squat 0.95 → 1.05, Leg Press Calf Raise 1.35 → 1.47,
+Dumbbell Calf Raise 0.55 → 0.52.
+
+🚨 **AND ONE SPLIT, THE SAME SHAPE AS THE MACHINE LATERAL RAISE.** A **Smith Machine Shrug** was
+being scored on the **plate-machine shrug** page — 18 % male, 21 % female high — because
+`/Machine Shrug/` matches its name. Strength Level publish both pages; the Smith one gives 0.99 /
+1.10. ⚠️ **The comment above that rule had outlived its own number twice**: it said the Smith shrug
+was caught there deliberately because *"a fixed bar shrug is a barbell shrug, which is what the 1.00
+says"* — and the entry had not said 1.00 since 2026-09-13. **A name deliberately routed to a rule
+that had stopped describing it.** The same block's *"Strength Level publish no shrug variants beyond
+the two above"* was false as well; they publish five.
+
+🛑 **THREE ARE REFUSED RATHER THAN CORRECTED, AND THE REFUSAL IS RECORDED SO IT IS NOT RE-TRIED.**
+Their published page is a different implement from the app's exercise: **Single-Leg RDL** (their
+standards are a barbell, this library's is a per-side dumbbell doubled), **Sumo Squat** (their barbell
+powerlifting stance at 0.70 of a squat, against a two-handed dumbbell here) and **Cable Lateral
+Raise**, where the raw comparison says 106 % too high and the code is right — their page carries no
+equipment note, and read as ONE stack its 36 lb doubles to 72, landing on their own dumbbell page's
+37 lb per hand. Read as both arms it would mean people are half as strong on a cable as on dumbbells.
+**Reasoned, not sourced, and labelled as such** — the spider curl precedent.
+
+**Result: 105 entries compared, inside 5 % of the published figure went 38 → 85**, 5–10 % is 17, and
+the three above are the only ones past 10 %. Pairs 51 → 62.
+
+🚨 **AND THE GOLDEN TABLE WALKS WITHOUT A SEX, WHICH THE APP NEVER DOES.** Found while re-baselining:
+`store.js` passes `sex` into `buildObservations()`, the demo account is male, and the regression pin
+that exists to catch ratio changes passes nothing — so since D31 it has been measuring the
+mean-of-both-sexes path that only a profile with no sex takes. **Two rows moved and both are
+attributed by name**: Calves 227.17 → 224.41 (Seated Calf Raise's mean, 0.66 → 0.705) and Quads
+264.18 → 263.18 (Bulgarian Split Squat's mean, 0.50 → 0.53). ✅ **As the man he is, the demo lifter's
+numbers did not move at all** — both male sides were already right — and that is now pinned beside
+the table, with the three paths asserted to differ so a sex that is accepted and dropped fails.
+
+### J. THE FALL LIMIT IS NOT A MISSING HALF, AND THE COMMENT SAYING SO SENT ME AT IT
+
+**Checked before building, and it is the reason nothing was built.** `progress.md` and
+`muscle-evidence.js` both described `estimateAt()`'s 2 %/week fall limit as *"half of decision (a)"*,
+unwired — which reads as a job somebody dropped. `docs/strength-accuracy-plan.md` §3.1 offered
+decision (a) as a **choice of two**: a windowed representative, **or** wiring `estimateAt()` per
+exercise so the map becomes a smoothed series with the fall limit and hysteresis. **The window is
+what shipped.** The fall limit is the other option, not the other half.
+
+⚠️ **And taking it is not a wiring job.** `estimateAt()` needs a `prev` — a previous value and its day
+— which `rateMuscle()` has no memory of; the honest version replays each exercise's history as a
+series and hands the seat to the smoothed value. **Every rating moves, the golden table re-baselines,
+and hysteresis has to ship with it or the map flickers.** A design change and a re-baseline, both of
+which this project puts on Tim. 🛑 **Recorded on the constant, and the misleading comment corrected,
+because it is what made it look small.**
+
 ### H. The render coverage, and the test that was owed
 
 **`tests/render.test.mjs` 1,333 → 1,360.** The three states the audit structurally cannot reach:
