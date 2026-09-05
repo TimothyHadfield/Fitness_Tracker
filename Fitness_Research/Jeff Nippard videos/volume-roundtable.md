@@ -21,7 +21,7 @@ He defined **recovery** [16:23] as return to baseline (cortisol normalising), re
 
 His evidence [33:40]: a study on **weightlifters** where a moderate-volume group out-gained a high-volume group in strength, though the high group still progressed. For hypertrophy, **Wernbom 2007** (systematic review) showed higher hypertrophy in the **40–70 reps per session** range than above it.
 
-**Norton [34:41–43:21]** predicted everyone would agree. Adaptation requires stress, so any honest MED converges on MRV. He stressed MRV changes drastically year 1 to year 10 and even month to month, and that a beginner told to squat four times weekly lacks the *skill* to survive it. He knows of **no research showing chronic overreaching causes actual muscle loss** (as opposed to strength loss) [36:44].
+**Norton [34:41–43:21]** predicted everyone would agree. Adaptation requires stress, so any honest MED converges on MRV. MRV changes drastically year 1 to year 10 and even month to month, and a beginner told to squat four times weekly lacks the *skill* to survive it. He knows of **no research showing chronic overreaching causes actual muscle loss** (as opposed to strength loss) [36:44].
 
 **Norton's asymptote graph [39:50]:** genetic potential is an asymptote, not a ceiling. MRV rides the curve up faster and flattens earlier; MED climbs slower, arrives later; both reach the same place. He errs toward MED — speaking mid-injury, having tweaked a hip on one slightly shifted rep with an unfamiliar bar, costing 6–12 months [44:21].
 
@@ -76,7 +76,7 @@ Helms' counter [67:30]: the lifter can't distinguish 0.4 from 0.5, so give them 
 
 **Norton:** shorter rest buys reps, longer rest buys load; the literature doesn't settle it; if time-limited, obviously shorten.
 
-**Helms [73:38]:** not all volume is equal — 20% of 1RM is a different stimulus from 90%, and high-percentage volume is harder to recover from. Hence **max recoverable training stress**. On rest [98:12]: rest as long as the movement needs — ~90s on a lateral raise, 5–7 minutes for a set of five squats at RPE 9. He holds **mechanical tension and progressive tension overload** as dominant for hypertrophy, explicitly noting **Brad Schoenfeld would disagree**, and that metabolite accumulation mostly compensates for bad training.
+**Helms [73:38]:** not all volume is equal — 20% of 1RM is a different stimulus from 90%, and high-percentage volume is harder to recover from; hence **max recoverable training stress**. On rest [98:12]: rest as long as the movement needs — ~90s on a lateral raise, 5–7 minutes for a set of five squats at RPE 9. He holds **mechanical tension and progressive tension overload** as dominant for hypertrophy, explicitly noting **Brad Schoenfeld would disagree**, and that metabolite accumulation mostly compensates for bad training.
 
 **Nuckols' two corrections [100:17]:** (1) at equated sets, much lighter loads grow people about as well — in **Schoenfeld's** trained-subject study the **25–35RM group matched the 8–12RM group**, but several subjects vomited and nobody really does five hard sets of 30 squats; (2) invoking **Andrew Vigotsky**, EMG only captures electrical activity at an instant — with falling activation thresholds and motor unit cycling, full recruitment can still occur across a fatiguing light set.
 
@@ -108,10 +108,9 @@ Helms' counter [67:30]: the lifter can't distinguish 0.4 from 0.5, so give them 
 - Calibrate on **strength maintenance through accumulation**: rising = undertrained, falling sharply = overshot.
 - Log sets in **intensity bands** (<60% / 65–85% / >85%). Use tonnage only within a narrow rep band.
 - Expect lower tolerance in hamstrings, erectors, lower back; higher in delts and biceps.
-- Rest to recover (~90s isolation, 5+ min heavy compounds). Don't chase metabolic fatigue as a strategy.
+- Rest to recover (~90s isolation, 5+ min heavy compounds); don't chase metabolic fatigue as a strategy.
 - Build on **sets of 5–15 in compounds**; use high-rep/metabolite work as a periodic accessory, not a foundation.
-- In a deficit, hold volume early, cut it as recovery markers deteriorate.
-- Periodically test upward — some lifters under-dose for years assuming they can't recover from more.
+- In a deficit, hold volume early, cut it as recovery markers deteriorate. And periodically test upward — some lifters under-dose for years assuming they can't recover from more.
 
 ## Caveats & unknowns
 
