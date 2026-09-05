@@ -12,22 +12,22 @@
 - **Rest at least 1 minute between sets.** Any split works if it lets you train hard, get enough volume and recover.
 
 ## Chapter 1 — tension is king
-[00:00] Tension is universally recognised as the primary driver of growth: the force muscles experience stretching and contracting under load. Think of each fibre as a rope in a tug of war — the pulling is tension, which triggers a biochemical signalling cascade telling the muscle to grow. The remaining four principles are all ways to maximise it.
+[00:00] Tension is universally recognised as the primary driver of growth: the force muscles experience stretching and contracting under load. Think of each fibre as a rope in a tug of war — the pulling is tension, which triggers a biochemical signalling cascade telling the muscle to grow ([Wackerhage 2019](https://pubmed.ncbi.nlm.nih.gov/30335577/)). The remaining four principles are all ways to maximise it.
 
 ## Chapter 2 — bodybuilding technique
 [01:00] Distinct from powerlifting technique and from how most people lift. Three boxes:
 
-**Tempo.** A controlled **2-4 second negative**. Research shows the eccentric is very likely more important for growth than the concentric, yet most people lift as if the reverse were true — rushing the weight up and dumping it down, especially as fatigue sets in late in a set. That is exactly backwards: the last reps of a set are the most hypertrophic and the negative is the most important part of each rep, so control matters most on the final reps. Newer research indicates slow eccentrics should be **paired with fast, forceful concentrics**. On a hack squat: control, control, control down, then explode up. On lateral raises: resist on the way down, drive the dumbbells up and out forcefully.
+**Tempo.** A controlled **2-4 second negative**. Research shows the eccentric is very likely more important for growth than the concentric ([Schoenfeld 2017](https://pubmed.ncbi.nlm.nih.gov/28486337/)), yet most people lift as if the reverse were true — rushing the weight up and dumping it down, especially as fatigue sets in late in a set. That is exactly backwards: the last reps of a set are the most hypertrophic and the negative is the most important part of each rep, so control matters most on the final reps. Newer research indicates slow eccentrics should be **paired with fast, forceful concentrics** ([Wilk 2021](https://pubmed.ncbi.nlm.nih.gov/34043184/)). On a hack squat: control, control, control down, then explode up. On lateral raises: resist on the way down, drive the dumbbells up and out forcefully.
 
 **Range of motion.** Usually full: at least parallel and ideally slightly below on squat patterns, dumbbells all the way down on presses until a deep pec stretch, full up and down on pull-ups. But recent studies show full ROM isn't always superior — partial reps can beat it **when done in the stretched portion**. The stretched half is more hypertrophic than the squeezed half: the bottom half of a cable curl outweighs the top half, the bottom half of a squat outweighs the top. So full ROM isn't strictly required, but **sufficient stretch is**. If you can't feel a deep stretch at the bottom, go deeper; if depth causes pain, address the mobility deficit or pick a different exercise that reaches the stretch — it matters that much.
 
 **Momentum control.** Excessive cheating moves weight without loading the target muscle. Curling while swinging back and forth shifts tension from the biceps to the lower back. Keep momentum in check so the target muscle receives most of the tension.
 
 ## Chapter 3 — effort
-[03:33] Research consistently shows most people don't push sets hard enough. The typical lifter making no visible progress year after year has usually not maxed out their natural potential — they simply aren't training close enough to failure.
+[03:33] Research consistently shows most people don't push sets hard enough ([Steele 2022](https://pubmed.ncbi.nlm.nih.gov/35790622/)). The typical lifter making no visible progress year after year has usually not maxed out their natural potential — they simply aren't training close enough to failure.
 
 Two conflicting meta-analyses:
-- The newer one plots muscle growth against reps in reserve from 0 (failure) out to 22, and finds growth increases as you approach failure, with a notable spike going from 2 RIR to 0 RIR. Failure advocates use it to argue every set should go to failure.
+- The newer one plots muscle growth against reps in reserve from 0 (failure) out to 22, and finds growth increases as you approach failure, with a notable spike going from 2 RIR to 0 RIR ([Refalo 2023](https://link.springer.com/article/10.1007/s40279-022-01784-y)). Failure advocates use it to argue every set should go to failure.
 - A **2022 meta-analysis pooling 15 studies** with slightly different inclusion criteria concluded there is no evidence that training to momentary muscular failure is superior to non-failure training for hypertrophy.
 
 Depending on which studies you include and how you run the statistics, you can conclude either. Jeff's practical resolution: **2-3 sets on most exercises, 1-2 reps in reserve on the first one or two sets, last set to failure.** Going to failure on every set leaves you too fatigued by the last set, costing reps and total volume — and volume also matters for growth, up to a point.
@@ -58,7 +58,7 @@ Free weights still have advantages: accessibility, better strength carryover, an
 ## Lesser variables
 [12:14] **Training split** is just organisation. Full body, upper/lower, push/pull/legs and modified body-part splits all work provided the split fits your schedule, lets you push sets hard, accumulate enough volume, and recover between sessions.
 
-**Rest periods** matter somewhat: **at least 1 minute between sets** is generally better than less. Don't rush through a workout — it limits between-set recovery.
+**Rest periods** matter somewhat: **at least 1 minute between sets** is generally better than less ([Grgic 2017](https://pubmed.ncbi.nlm.nih.gov/28641044/)). Don't rush through a workout — it limits between-set recovery.
 
 **Specialised techniques** — long-length partials, myo-reps, drop sets — can help drive progress beyond the beginner stage.
 

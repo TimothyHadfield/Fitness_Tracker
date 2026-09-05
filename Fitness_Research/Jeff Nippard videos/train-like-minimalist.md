@@ -35,7 +35,7 @@ One set of curls to failure takes ~30 seconds and puts you near 64% of your week
 1. **Push harder — his most important tip.** Lower quantity demands higher quality; the lower the volume, the higher the intensity must go. Most sets at **RPE 10 (failure)** or **RPE ~9**.
 2. **Drop sets.** Brad Schoenfeld's hypertrophy textbook suggests they add volume without meaningfully extending sessions. After failure, **cut the load 25–50%** and go to failure again with **no rest**. High-tension reps, because the muscle already failed once.
 3. **Sensible (non-competing) supersets.** A 2020 study found performance **dropped** when supersetted exercises trained the same muscles ([Weakley 2020](https://pubmed.ncbi.nlm.nih.gov/28796130/)) — so bench press with flyes is a mistake. Pair non-overlapping movements: **bench press with dumbbell row**. Pairings can be arbitrary — **leg press with lateral raises** is fine.
-4. **Attack rest, gradually.** Nippard timed a push day: **70 minutes total, 14 spent lifting, 56 resting** — ~20% work, 80% rest. He expects most people to be at least 50% rest. But cutting rest outright hurts hypertrophy, so the standard **1–4 minutes** stands; instead taper — **2 minutes in week 1, minus 15 seconds each week, down to 1 minute**, as cardiovascular endurance improves.
+4. **Attack rest, gradually.** Nippard timed a push day: **70 minutes total, 14 spent lifting, 56 resting** — ~20% work, 80% rest. He expects most people to be at least 50% rest. But cutting rest outright hurts hypertrophy ([Grgic 2017](https://pubmed.ncbi.nlm.nih.gov/28641044/)), so the standard **1–4 minutes** stands; instead taper — **2 minutes in week 1, minus 15 seconds each week, down to 1 minute**, as cardiovascular endurance improves.
 
 **Bonus — cut the warm-up.** In a crunch: **3–5 minutes treadmill**, a few dynamic stretches, straight in. Then pick exercises needing fewer warm-up sets — barbell back squat needs **4–5** before 2–4 working sets, a **machine hack squat needs 2**.
 
@@ -44,8 +44,8 @@ One set of curls to failure takes ~30 seconds and puts you near 64% of your week
 - Session template: short general warm-up → machine-biased selection → non-competing supersets → drop set on the last set → rest tapered down over weeks.
 
 ## Caveats & unknowns
-- **Nippard flags the main limitation himself:** the 64%/84% figures come from a meta-analysis of 15 studies, mostly on **untrained or "recreationally trained"** subjects. **Only two used properly trained lifters.**
-- Of those two: one *(captioned "the ray of paper" — name uncertain)* found no difference between 3 sets and 1 set per session to failure; **Ostrowski** *(captioned "alstroski")* found no statistically significant difference between 3, 6 or 12 sets per week, all to failure. **But there were non-significant trends favouring higher volume.**
+- **Nippard flags the main limitation himself:** the 64%/84% figures come from a meta-analysis of 15 studies ([Schoenfeld 2017](https://pubmed.ncbi.nlm.nih.gov/27433992/)), mostly on **untrained or "recreationally trained"** subjects. **Only two used properly trained lifters.**
+- Of those two: **Rhea** *(captioned "the ray of paper")* found no difference between 3 sets and 1 set per session to failure ([Rhea 2002](https://pubmed.ncbi.nlm.nih.gov/12423180/)); **Ostrowski** *(captioned "alstroski")* found no statistically significant difference between 3, 6 or 12 sets per week, all to failure. **But there were non-significant trends favouring higher volume.**
 - These are **averages** — some people get more than 64% from 1–4 sets, some less.
 - **More training experience generally requires more volume** to progress at the same rate; the claim is only that measurable progress is still possible on much less. Dorian Yates's results also came with pharmaceutical assistance.
 - Nippard isn't arguing against maximalism — he prefers 1–2 hours a day himself. Minimalism is for constrained periods and for people whose lives aren't built around lifting.
@@ -86,4 +86,4 @@ Sources as listed by Nippard in the video description.
 
 **Motivation Research**
 
-- Hoare E et al. 2017. Exploring Motivation and Barriers to Physical Activity among Active and Inactive Australian Adults. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29910407/) doi:[10.
+- Hoare E et al. 2017. Exploring Motivation and Barriers to Physical Activity among Active and Inactive Australian Adults. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29910407/) doi:[10.3390/sports5030047](https://doi.org/10.3390/sports5030047)

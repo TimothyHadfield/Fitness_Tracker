@@ -33,7 +33,7 @@ Nippard adds that the latest evidence suggests hitting the hardest part of the r
 ## Joint-level biomechanics
 [07:48] Bar ROM is not joint ROM. With conventional, the knees start much less bent and go through relatively little knee extension — more like a half squat. With sumo the starting knee angle is far deeper, producing a **larger knee extension ROM**, so the quads work harder.
 
-From a 2D view, conventional appears to use more hip ROM. But the hip is a ball-and-socket joint moving in three dimensions, so it needs 3D analysis. **Escamilla and colleagues** ran a 3D kinematic study and found **no significant difference in hip extension demands between sumo and conventional at any point in the range**. This is likely why EMG research shows **no difference in hamstring or glute activation** between the two.
+From a 2D view, conventional appears to use more hip ROM. But the hip is a ball-and-socket joint moving in three dimensions, so it needs 3D analysis. **Escamilla and colleagues** ran a 3D kinematic study and found **no significant difference in hip extension demands between sumo and conventional at any point in the range** ([Escamilla 2000](https://pubmed.ncbi.nlm.nih.gov/10912892/)). This is likely why EMG research shows **no difference in hamstring or glute activation** between the two ([Escamilla 2002](https://pubmed.ncbi.nlm.nih.gov/11932579/)).
 
 The only real differences: quads work somewhat harder in sumo; spinal erectors work somewhat harder in conventional. That erector loading may explain why conventional *feels* subjectively harder — but "feels harder because your back is loaded more" is not evidence that it's objectively harder in terms of biomechanics, relative intensity, or total muscle activation.
 

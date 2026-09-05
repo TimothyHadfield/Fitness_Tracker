@@ -30,12 +30,12 @@ Most of the adaptive component comes from **non-exercise activity thermogenesis*
 
 NEAT is also wildly individual:
 - A 2014 paper found NEAT can differ by **up to 2,000 kcal/day** between two people of the same body composition, sex and age.
-- Levine and colleagues (1999) overfed subjects **~1,000 kcal/day above maintenance for 8 weeks**; fat gain ranged from **0.79 lb to 9.3 lb** — more than a tenfold spread on an identical surplus. The authors attributed much of it to individual differences in NEAT.
+- Levine and colleagues (1999) overfed subjects **~1,000 kcal/day above maintenance for 8 weeks**; fat gain ranged from **0.79 lb to 9.3 lb** — more than a tenfold spread on an identical surplus. The authors attributed much of it to individual differences in NEAT ([Levine 1999](https://www.ncbi.nlm.nih.gov/pubmed/9880251)).
 
-A 2013 paper titled "weight loss, weight management and adaptive thermogenesis" found NEAT down-regulates **more the faster and harder you diet** — aggressive crash dieting makes the body more energy-efficient, cutting expenditure and blunting the very loss you were chasing [07:37].
+A 2013 paper titled "weight loss, weight management and adaptive thermogenesis" ([Camps 2013](https://www.ncbi.nlm.nih.gov/pubmed/23535105)) found NEAT down-regulates **more the faster and harder you diet** — aggressive crash dieting makes the body more energy-efficient, cutting expenditure and blunting the very loss you were chasing [07:37].
 
 ## The two better explanations for a stall
-1. **Under-reporting intake.** A 2006 study (researcher name garbled in the captions — sounds like "Mahabir"; treat as uncertain) had 65 women keep a 7-day food log and found they **under-reported intake by 37% on average** — logging 1,600 kcal while eating around 2,500 [08:39]. This finding replicates repeatedly. It's often unintentional: eating out, forgetting earlier items.
+1. **Under-reporting intake.** A 2006 study ([Mahabir 2006](https://www.ncbi.nlm.nih.gov/pubmed/16391574)) had 65 women keep a 7-day food log and found they **under-reported intake by 37% on average** — logging 1,600 kcal while eating around 2,500 [08:39]. This finding replicates repeatedly. It's often unintentional: eating out, forgetting earlier items.
 2. **Water retention.** Stress, poor sleep, menstrual cycle, very high fibre intake can mask real fat loss on the scale. These changes are acute; stay patient and the retention typically releases as a sudden "whoosh" — 3-4 lb dropping at once after a month of apparent stall [09:39].
 
 ## Practical application
@@ -46,7 +46,7 @@ A 2013 paper titled "weight loss, weight management and adaptive thermogenesis" 
 - Judge progress over weeks, not days — water shifts hide real fat loss for surprisingly long stretches.
 
 ## Caveats & unknowns
-- The 2006 under-reporting researcher's name is garbled in the auto-captions; the finding (37% under-reporting in 65 women logging 7 days) is what to keep.
+- The 2006 under-reporting study is Mahabir and colleagues, confirmed against the video's own reference list; the finding (37% under-reporting in 65 women logging 7 days) is what to keep.
 - The Minnesota subjects were lean men in an extreme, non-representative protocol; adaptation magnitude in ordinary dieters will differ.
 - NEAT's between-person variability means individual response to any given deficit is hard to predict in advance.
 

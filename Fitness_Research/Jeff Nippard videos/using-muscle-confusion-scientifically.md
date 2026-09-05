@@ -34,7 +34,7 @@ Jeff's argument rests on two points.
 
 **Proximity to failure as a safety net.** He describes mounting data suggesting it may be more important to exert yourself close to failure than to hit a specific load ([Burd 2012](http://www.ncbi.nlm.nih.gov/pubmed/22533517)). Training near failure recruits the full spectrum of motor units and sufficiently activates the molecular pathways signalling hypertrophy. He is explicit about the caveat: training to failure is *not* required for growth — you can clearly hypertrophy a muscle without it ([Nóbrega 2016](https://pubmed.ncbi.nlm.nih.gov/26858654/)). But when you know you aren't presenting an overload stimulus, going close to failure covers you.
 
-**The other two hypertrophy determinants.** Overload maxes out the *mechanical tension* component. But muscle damage and metabolic stress are also determinants of hypertrophy, and neither is as tightly bound to progressive tension overload. So on a few random, hard sessions, the tension that isn't optimised may be partly compensated for by larger damage and metabolic contributions.
+**The other two hypertrophy determinants.** Overload maxes out the *mechanical tension* component. But muscle damage and metabolic stress are also determinants of hypertrophy ([Schoenfeld 2010](http://www.ncbi.nlm.nih.gov/pubmed/20847704)), and neither is as tightly bound to progressive tension overload. So on a few random, hard sessions, the tension that isn't optimised may be partly compensated for by larger damage and metabolic contributions.
 
 ## Practical application
 - Fix your core lifts for the duration of a training phase and chase weight/reps/sets on them. That's the engine.

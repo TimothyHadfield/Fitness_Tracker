@@ -19,12 +19,12 @@ Two problems with that story:
 2. **The mechanism runs the wrong way.** Premature growth-plate closure from loading has only been shown to occur where a genuine bone fracture happened. Fractures of that kind come mainly from contact sports (football, hockey), not from controlled resistance training.
 
 ## What the evidence actually says [01:36]
-The 2014 international consensus position statement on youth resistance training — drawing on 243 scientific references and endorsed by essentially every relevant regulatory body, including the American Academy of Pediatrics and the NSCA — concluded that fears resistance training injures the growth plates of youths are not supported by scientific reports or clinical observation. It went further: the mechanical stress placed on developing growth plates by resistance exercise, or by high-strain sports such as gymnastics and weightlifting, may be *beneficial* for bone formation.
+The 2014 international consensus position statement on youth resistance training — drawing on 243 scientific references and endorsed by essentially every relevant regulatory body, including the American Academy of Pediatrics and the NSCA — concluded that fears resistance training injures the growth plates of youths are not supported by scientific reports or clinical observation ([Lloyd 2014](https://www.ncbi.nlm.nih.gov/pubmed/24055781)). It went further: the mechanical stress placed on developing growth plates by resistance exercise, or by high-strain sports such as gymnastics and weightlifting, may be *beneficial* for bone formation.
 
-A more mechanistically focused review in *Sports Medicine* notes that high loads play a critical role in bone mass acquisition during and before puberty. Under the **mechanostat theory** of bone formation (the auto-captions garble this as "Makino stat" / "mccanna stat" — mechanostat is the near-certain intended term, and the reviewers' names are not given in the transcript), tensile, compressive, shear, bending and torsional stresses applied to bone during sport trigger osteogenic — bone-building — responses during growth.
+A more mechanistically focused review in *Sports Medicine* notes that high loads play a critical role in bone mass acquisition during and before puberty ([Vicente-Rodríguez 2006](https://www.ncbi.nlm.nih.gov/pubmed/16796394)). Under the **mechanostat theory** of bone formation (the auto-captions garble this as "Makino stat" / "mccanna stat" — mechanostat is the near-certain intended term), tensile, compressive, shear, bending and torsional stresses applied to bone during sport trigger osteogenic — bone-building — responses during growth.
 
 ## Additional benefits for young lifters [02:37]
-Beyond being safe, youth resistance training has been shown to help with:
+Beyond being safe, youth resistance training has been shown to help with ([Faigenbaum 2010](https://pubmed.ncbi.nlm.nih.gov/19945973/)):
 - Bone health
 - Injury prevention
 - General strength
@@ -41,7 +41,7 @@ Nippard also makes a behavioural argument: getting kids lifting early helps buil
 ## Caveats & unknowns
 - The safety verdict is conditional on supervision and technique. The consensus statement is not a licence for unsupervised maximal lifting by untrained kids.
 - The original 1964 observation is epidemiological and cannot establish causation in either direction.
-- Nippard names no individual researchers here; the claims rest on the 2014 consensus statement and an unnamed *Sports Medicine* review. He treats this topic as effectively settled within the scientific community, with converging evidence and near-unanimous agreement.
+- Nippard names no individual researchers here; the claims rest on the 2014 consensus statement and a *Sports Medicine* review he does not name on camera. He treats this topic as effectively settled within the scientific community, with converging evidence and near-unanimous agreement.
 
 ## References
 

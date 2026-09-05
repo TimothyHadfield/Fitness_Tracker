@@ -15,8 +15,8 @@ No direct research on the question, but four inferences:
 
 1. **Pre-trained from daily life.** The calves are worked any time you walk, run or stand still, so they may already be closer to their genetic ceiling when you start training them — meaning less of the "newbie effect". Not true stubbornness, just a higher starting point.
 2. **Skeleton and insertion.** Someone with small ankles and high-inserting calves will probably always have smaller-looking calves than someone with thick ankles and low insertions. That doesn't stop them growing — it just means the endpoint is relative to the start, which is true of every muscle.
-3. **Fibre composition.** The **soleus**, which lies underneath the gastrocnemius but is actually *larger* in cross-sectional area, is **70-96% type I (slow twitch)** by various estimates. Slow twitch fibres are repeatedly shown to be less hypertrophic in response to high-intensity training. This applies to the soleus only, not the gastroc.
-4. **Androgen receptor density** may be lower in the calves — some research supports this — which could explain acute resistance to growth even though they will grow given enough time.
+3. **Fibre composition.** The **soleus**, which lies underneath the gastrocnemius but is actually *larger* in cross-sectional area ([Albracht 2008](https://www.ncbi.nlm.nih.gov/pubmed/18555257)), is **70-96% type I (slow twitch)** by various estimates. Slow twitch fibres are repeatedly shown to be less hypertrophic in response to high-intensity training. This applies to the soleus only, not the gastroc.
+4. **Androgen receptor density** may be lower in the calves — some research supports this ([Kadi 2000](https://www.ncbi.nlm.nih.gov/pubmed/10664066)) — which could explain acute resistance to growth even though they will grow given enough time.
 
 ## The workout
 
@@ -44,7 +44,7 @@ A 2000 book by **Boeckh-Behrens and Buskies** (*name reconstructed from garbled 
 **4. Seated calf raise — soleus isolation.** [06:36]
 With the knee bent, the gastrocnemius is much less active. The gastroc crosses both the ankle and the knee; a bent knee shortens it at the knee so it can't shorten (contract) as much at the ankle — **active insufficiency**. The soleus takes the brunt.
 
-Since the soleus is predominantly slow twitch, he prefers **15-20 reps** with the same slow controlled tempo. The evidence is genuinely mixed: a 2007 paper (name garbled — *uncertain*) and a paper by Mitchell et al. both found slow twitch fibres more responsive to higher reps, but a later **2012** paper found them *less* responsive to high reps. His theoretical case for high reps anyway: by the **size principle**, slow twitch motor units are recruited first and stay active longest in a higher-rep set, so they accumulate more fatigue and possibly a larger hypertrophic stimulus.
+Since the soleus is predominantly slow twitch, he prefers **15-20 reps** with the same slow controlled tempo. The evidence is genuinely mixed: a 2007 paper by Netreba and colleagues ([Netreba 2007](https://www.ncbi.nlm.nih.gov/pubmed/17465271)) and a paper by Mitchell et al. ([Mitchell 2012](https://pubmed.ncbi.nlm.nih.gov/22518835/)) both found slow twitch fibres more responsive to higher reps, but a later **2012** paper found them *less* responsive to high reps ([Schuenke 2012](http://link.springer.com/article/10.1007%2Fs00421-012-2339-3)). His theoretical case for high reps anyway: by the **size principle**, slow twitch motor units are recruited first and stay active longest in a higher-rep set, so they accumulate more fatigue and possibly a larger hypertrophic stimulus.
 
 ## Practical application
 - 5-10 min StairMaster before calves, every time.

@@ -19,7 +19,7 @@ Rep distribution: 11% at 0-3 reps, 40% at 4-7, 40% at 8-12, 9% above 13 reps.
 
 ## Three weaknesses
 
-**Technique — grade B.** [01:32] Jeff's own published study on optimal hypertrophy technique found two things matter most: (1) a range of motion that puts the muscle in a **deep stretch**, and (2) a **controlled negative**. Sulek gets a B− on ROM — incline presses stopping 3-4 inches off the chest, preacher curls cutting out the bottom quarter where the biceps are most stretched. Two studies on the preacher curl specifically show the bottom half is the most anabolic portion; Jeff now stays in the bottom half for the whole set. Eccentric control gets a B+: usually good, but too many free-falling reps, particularly near failure where activation is highest.
+**Technique — grade B.** [01:32] Jeff's own published study on optimal hypertrophy technique found two things matter most: (1) a range of motion that puts the muscle in a **deep stretch**, and (2) a **controlled negative**. Sulek gets a B− on ROM — incline presses stopping 3-4 inches off the chest, preacher curls cutting out the bottom quarter where the biceps are most stretched. Two studies on the preacher curl specifically show the bottom half is the most anabolic portion ([Pedrosa 2023](https://pubmed.ncbi.nlm.nih.gov/36828324/), [Sato 2021](https://pubmed.ncbi.nlm.nih.gov/34616309/)); Jeff now stays in the bottom half for the whole set. Eccentric control gets a B+: usually good, but too many free-falling reps, particularly near failure where activation is highest.
 
 **No program structure — grade C+.** [03:04] Sulek improvises workouts in the car and often changes them mid-session. The problem is not variety itself but that random exercise swapping means when you return to a lift you repeat the same weight and reps. Jeff names this as the number one cause of people becoming "lifetime intermediates" after the newbie phase. He does credit swapping an exercise out for pain or genuine boredom — Sulek converted a chest day into a back day on 8 January after his chest tightened, which Jeff calls a smart call.
 
@@ -44,7 +44,7 @@ Rep distribution: 11% at 0-3 reps, 40% at 4-7, 40% at 8-12, 9% above 13 reps.
 - Prefer push/pull/legs, upper/lower or full body over a bro split for even volume distribution.
 
 ## Caveats & unknowns
-Sulek may be tracking off camera — Jeff never heard it mentioned but can't rule it out. Anabolic enhancement changes the picture: it functions like a second newbie phase where almost any training works, and research shows muscle can be built on drugs without training at all, so Sulek's results don't validate his methods. It is also possible that lifters at his level of development tolerate more per-session volume than average. And whether his injuries come from failure training, the loads, or something else is unresolved.
+Sulek may be tracking off camera — Jeff never heard it mentioned but can't rule it out. Anabolic enhancement changes the picture: it functions like a second newbie phase where almost any training works, and research shows muscle can be built on drugs without training at all ([Bhasin 1996](https://pubmed.ncbi.nlm.nih.gov/8637535/)), so Sulek's results don't validate his methods. It is also possible that lifters at his level of development tolerate more per-session volume than average. And whether his injuries come from failure training, the loads, or something else is unresolved.
 
 ## References
 

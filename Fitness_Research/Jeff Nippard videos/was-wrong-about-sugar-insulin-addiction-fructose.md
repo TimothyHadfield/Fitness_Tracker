@@ -15,19 +15,19 @@ Insulin's job is to move glucose out of the blood into muscle, liver and fat cel
 
 Three reasons Nippard rejects the mechanistic argument:
 
-**a) Sugar isn't special.** Any carbohydrate triggers insulin release, and so does protein. In the study he cites, a high-protein/low-carb meal and a high-carb/low-protein meal produced very similar insulin responses; the high-protein condition was slightly higher, though not statistically significantly so. The point is especially relevant for real-world **mixed meals**, where insulin response is blunted anyway. Nobody eats meals of pure table sugar.
+**a) Sugar isn't special.** Any carbohydrate triggers insulin release, and so does protein. In the study he cites, a high-protein/low-carb meal and a high-carb/low-protein meal produced very similar insulin responses; the high-protein condition was slightly higher, though not statistically significantly so ([Boelsma 2010](https://www.ncbi.nlm.nih.gov/pubmed/20060863)). The point is especially relevant for real-world **mixed meals**, where insulin response is blunted anyway. Nobody eats meals of pure table sugar.
 
 **b) The elevation is transient.** A high-sugar diet doesn't chronically elevate insulin. After a meal, insulin rises and lipogenesis dominates; between meals, insulin falls and lipolysis exceeds lipogenesis. At net caloric balance of zero these cancel out over 24 hours. In a deficit, the insulin lows outweigh the highs and **net fat balance is negative** — you lose fat.
 
 **c) Insulin isn't the only fat-storage hormone.** On a zero-sugar, zero-carbohydrate diet you can still get fat if calories are high enough, partly via **acylation-stimulating protein (ASP)** (transcript garbles this as "a solution stimulating hormone"), which shuttles dietary fat directly into fat cells. Pinning fat gain on insulin is therefore misplaced — overconsumption in general, of which sugar is one part, is the issue.
 
 ## 2. Is sugar addictive? [05:07]
-More accurate to say sugar has **addictive-*like*** qualities than that it is addictive the way heroin or cocaine are.
+More accurate to say sugar has **addictive-*like*** qualities than that it is addictive the way heroin or cocaine are ([Westwater 2016](https://pubmed.ncbi.nlm.nih.gov/27372453/)).
 
 Common-sense observation: people don't raid the bag of table sugar for a fix. Sugar is over-eaten in the context of **whole food products** that taste good, look appealing and smell good — a general sensory overload, or **hyper-palatability**. Heroin is uniquely addictive in a way that doesn't depend on how it tastes.
 
 The rodent evidence people cite — sugar lighting up the same dopamine centres as cocaine — is undercut by two other rodent findings:
-- **Knock out the taste buds** and rodents stop overeating sugar, implying taste is the driver.
+- **Knock out the taste buds** and rodents stop overeating sugar, implying taste is the driver ([Glendinning 2012](https://www.ncbi.nlm.nih.gov/pubmed/22683548)).
 - **Devaluation:** pair sugar with something that makes rats sick and they become averse to it. Do the same with cocaine or heroin and rats **keep consuming it despite being made sick** — that is what true addiction looks like.
 
 Nippard is not saying overconsumption isn't real. "There's always room for dessert" happens for a reason. But the driver is the sheer availability of highly processed, hyper-palatable food, not a unique property of sugar.
@@ -37,7 +37,7 @@ High insulin sensitivity — cells responding well to insulin and clearing gluco
 
 Partly, at the individual level. Someone drinking two litres of Pepsi a day is overconsuming, and dropping that soft drink would improve their insulin sensitivity. Nobody disputes that.
 
-But insulin sensitivity, like diabetes, is **multifactorial**: strong genetic factors, exercise habits, and the overall diet. Research matching groups under **isocaloric** conditions found **no difference in insulin sensitivity across six weeks** between very high sucrose and low sucrose diets in healthy subjects. Overconsumption is the main problem; sugar is a player in it but not the central cause.
+But insulin sensitivity, like diabetes, is **multifactorial**: strong genetic factors, exercise habits, and the overall diet. Research matching groups under **isocaloric** conditions found **no difference in insulin sensitivity across six weeks** between very high sucrose and low sucrose diets in healthy subjects ([Black 2006](https://www.ncbi.nlm.nih.gov/pubmed/17130505)). Overconsumption is the main problem; sugar is a player in it but not the central cause.
 
 ## 4. Is fructose uniquely bad? [11:54]
 The argument: glucose is metabolised by essentially every tissue, whereas fructose is metabolised almost exclusively in the liver — which invites comparison to liver-detoxified substances like alcohol, and the label "toxic".

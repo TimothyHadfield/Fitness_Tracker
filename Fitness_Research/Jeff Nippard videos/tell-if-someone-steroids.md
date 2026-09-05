@@ -54,7 +54,7 @@ Hussein's current FFMI: **22.8** — entirely normal. Nippard's conclusion: he c
 - **Ronnie Coleman at peak:** 5'11", 290 lb, 5% body fat → **FFMI 38.5**. Eight-time Mr. Olympia. He and his coaches say he was natural at 27, and given what he became, most of the bodybuilding world believes it.
 
 ## The genetics study
-342 women and 243 men (585 total) ran the **exact same** 12-week bicep training program, with growth measured by MRI. Most gained about 20%. A few gained nothing at all. A few gained **40, 50, even 55%**. That sample is 0.00007% of the world population and it still contained outliers — so outliers like Julian Fitzgerald in a population of 8 billion aren't surprising, they're guaranteed. Nippard's analogy: the range in muscle-growth potential is like the range in height. We don't accuse an 8'3" man of taking growth hormone.
+342 women and 243 men (585 total) ran the **exact same** 12-week bicep training program, with growth measured by MRI ([Hubal 2005](https://pubmed.ncbi.nlm.nih.gov/15947721/)). Most gained about 20%. A few gained nothing at all. A few gained **40, 50, even 55%**. That sample is 0.00007% of the world population and it still contained outliers — so outliers like Julian Fitzgerald in a population of 8 billion aren't surprising, they're guaranteed. Nippard's analogy: the range in muscle-growth potential is like the range in height. We don't accuse an 8'3" man of taking growth hormone.
 
 ## Practical application
 Calculate your FFMI: (bodyweight − fat mass) ÷ height in metres squared.
@@ -85,4 +85,4 @@ Sources as listed by Nippard in the video description.
 
 - Coin A et al. 2008. Fat-free mass and fat mass reference values by dual-energy X-ray absorptiometry (DEXA) in a 20-80 year-old Italian population. *Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/18206273/) doi:[10.1016/j.clnu.2007.10.008](https://doi.org/10.1016/j.clnu.2007.10.008)
 
-- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exer
+- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15947721/)

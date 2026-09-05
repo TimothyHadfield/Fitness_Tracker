@@ -27,16 +27,16 @@ A study in obese patients on a 14-day fast reported large weight loss **without*
 The **largest systematic review, covering 40 studies** [02:02] ([Seimon 2015](https://www.ncbi.nlm.nih.gov/pubmed/26384657)), concluded that although intermittent fasting suppressed hunger better than continuous calorie restriction, this advantage did not produce significantly better body composition or weight loss. The authors' verdict: fasting is a **valid but not superior** option compared to continuous energy restriction.
 
 ## Muscle loss and metabolism myths
-- A **2006 paper** found that **40 hours of fasting** did not significantly alter negative regulators of muscle mass and caused no significant muscle atrophy [02:33].
+- A **2006 paper** found that **40 hours of fasting** did not significantly alter negative regulators of muscle mass and caused no significant muscle atrophy [02:33] ([Larsen 2006](https://www.ncbi.nlm.nih.gov/pubmed/16931880)).
 - A **24 h fast reduces liver glycogen by less than half**, and muscle glycogen is completely spared.
 - The ketone bodies typically produced during alternate-day fasting themselves spare skeletal muscle from breakdown.
 - **Metabolism:** the thermic effect of food rises after a meal in proportion to that meal's calorie content, not to meal frequency. Metabolic rate changes come from changes in total daily intake, not meal timing. Six meals a day does not "speed up" metabolism, and fasting does not slow it down.
 
 ## The strongest argument against fasting
-A **2013 study** compared identical total whey protein delivered three ways: **4 × 20 g, 2 × 40 g, and 8 × 10 g** [03:35]. Anabolic signalling was greatest with the **4 × 20 g** pattern. From a muscle protein synthesis standpoint, spreading protein fairly evenly across roughly **four meals per day** looks best for anabolism — which a compressed eating window makes harder.
+A **2013 study** compared identical total whey protein delivered three ways: **4 × 20 g, 2 × 40 g, and 8 × 10 g** [03:35]. Anabolic signalling was greatest with the **4 × 20 g** pattern ([Areta 2013](https://pubmed.ncbi.nlm.nih.gov/23459753/)). From a muscle protein synthesis standpoint, spreading protein fairly evenly across roughly **four meals per day** looks best for anabolism — which a compressed eating window makes harder.
 
 ## Psychological considerations
-Research from **Potti and colleagues** (name uncertain — likely garbled by auto-captions) found intermittent fasting reduced depression and binge eating. Against that, the **Canadian Paediatric Society classifies fasting and meal-skipping as unhealthy strategies for adolescents**, so it is not an appropriate approach for children or teenagers.
+Research from **Hoddy and colleagues** ([Hoddy 2015](https://www.ncbi.nlm.nih.gov/pubmed/25943396/)) found intermittent fasting reduced depression and binge eating. Against that, the **Canadian Paediatric Society classifies fasting and meal-skipping as unhealthy strategies for adolescents** ([Canadian Paediatric Society 2004](https://www.ncbi.nlm.nih.gov/pubmed/19657417/)), so it is not an appropriate approach for children or teenagers.
 
 ## Practical application
 - If you like it, use it — but expect it to work because it controls calories, not because fasting has a special metabolic advantage.
@@ -51,7 +51,7 @@ Research from **Potti and colleagues** (name uncertain — likely garbled by aut
 - The impressive fasting benefits that are independent of calorie restriction come overwhelmingly from **rodent** studies and have not been replicated in humans.
 - Human trials to date have been short; long-term effects are unknown.
 - The mechanism behind fasting's health effects (the hormesis/preconditioning theory) is not established.
-- Several study details here come from a short, older (2017) video and rely on auto-captions — the "Potti" citation in particular should be verified before it's repeated.
+- Several study details here come from a short, older (2017) video and rely on auto-captions; the name garbled by the captions as "Potti" has been resolved to Hoddy et al. 2015, but other unattributed details are still worth checking before they're repeated.
 
 ## References
 

@@ -12,17 +12,17 @@
 - General rule, per **Dr Eric Helms**: even the best supplements (creatine, caffeine) make a very small difference. Be a **late adopter** — wait a year or two for more studies.
 
 ## 1. Testosterone boosters
-[00:00] A **2020 study** took the five best-selling test boosters on Amazon and analysed their ingredients for effectiveness.
+[00:00] A **2020 study** took the five best-selling test boosters on Amazon and analysed their ingredients for effectiveness ([Balasubramanian 2019](https://pubmed.ncbi.nlm.nih.gov/30770069/)).
 
 - **Three of the five didn't disclose ingredient amounts** at all, hiding behind a proprietary blend — an immediate red flag, since a dusting of an ingredient still satisfies the label.
 - Of the ingredients present (horny goat weed, boron, ashwagandha, fenugreek and similar), **half had zero human studies showing any positive effect.**
 - Three ingredients had one or two positive studies but more research showing no effect: **saw palmetto and boron each had 2 positive studies against 6 showing nothing.**
-- **Fenugreek** had 4 positive studies and 3 indeterminate. The Examine database states that although there is limited evidence for an increase in testosterone, more evidence than not denies such an increase.
+- **Fenugreek** had 4 positive studies and 3 indeterminate. The Examine database states that although there is limited evidence for an increase in testosterone, more evidence than not denies such an increase ([Examine.com](https://examine.com/supplements/fenugreek/)).
 - **Ashwagandha** looked most promising. Nippard is aware of more positive studies than the paper cited and personally takes **600 mg per day** — but mainly for cortisol, stress and general health, treating any testosterone effect as a bonus.
 
-**Scale matters.** A study of subjects injecting **600 mg of testosterone enanthate** saw levels go from **630 to 2,370 ng/dL — a 1,740% increase.** Ashwagandha, the most promising natural option, raised testosterone by **96 ng/dL.** That could still be worth considering for someone with genuinely low testosterone who wants to avoid steroid side effects, but it is not in the same universe.
+**Scale matters.** A study of subjects injecting **600 mg of testosterone enanthate** saw levels go from **630 to 2,370 ng/dL — a 1,740% increase** ([Bhasin 2001](https://pubmed.ncbi.nlm.nih.gov/11701431/)). Ashwagandha, the most promising natural option, raised testosterone by **96 ng/dL.** That could still be worth considering for someone with genuinely low testosterone who wants to avoid steroid side effects, but it is not in the same universe.
 
-**Better ways to support testosterone:** 7-8 hours of sleep nightly, maintaining a healthy body weight, enough total dietary fat, and correcting micronutrient deficiencies — particularly **zinc, magnesium and vitamin D**. As the MASS research review put it, if your testosterone is normal or high, no supplement currently marketed as a test booster is likely to do anything meaningful.
+**Better ways to support testosterone:** 7-8 hours of sleep nightly, maintaining a healthy body weight, enough total dietary fat, and correcting micronutrient deficiencies — particularly **zinc, magnesium and vitamin D**. As the MASS research review put it, if your testosterone is normal or high, no supplement currently marketed as a test booster is likely to do anything meaningful ([MASS Research Review](https://www.massmember.com/products/mass-subscription/categories/4527583/posts/15426503)).
 
 **Why the 4.5-star reviews?** The five products averaged 4.5/5 on Amazon. Positive reviews don't indicate efficacy — placebo plus behaviour change. People who buy a supplement usually also start training harder and eating better, then credit the pills.
 
@@ -63,7 +63,7 @@ Caffeine is still worth taking pre-training — **not as a fat burner but becaus
 ## 5. Beta-alanine
 [10:12] Beta-alanine almost certainly works — just not for typical resistance training. It buffers muscle acidity so the muscle can keep working longer. But **acidity is probably not the limiting factor for sets lasting under ~30 seconds**; lactic acid needs time to accumulate, and a normal 8-12 rep set is over too quickly.
 
-A **2012 meta-analysis** found beta-alanine was only effective for **exercise lasting 1-4 minutes**, with no effect below 60 seconds. Practically, **sets under about 20-30 reps are unlikely to benefit.**
+A **2012 meta-analysis** found beta-alanine was only effective for **exercise lasting 1-4 minutes**, with no effect below 60 seconds ([Hobson 2012](https://www.ncbi.nlm.nih.gov/pubmed/22270875)). Practically, **sets under about 20-30 reps are unlikely to benefit.**
 
 It is genuinely useful for endurance training, very high-rep work, and circuit-style sessions mixing resistance and cardio. But most muscle-building training sits in the **6-15 rep range**, where beta-alanine does nothing.
 

@@ -11,25 +11,25 @@
 
 ## Why warm up
 
-**Injury prevention [00:01].** A 2006 review (Fradkin et al., *name garbled in captions — uncertain*) looked at five studies; three found warming up reduced injuries. The two null studies both leaned heavily on stretching, and one had a poor **68% compliance** rate in the warm-up group. The three positive studies focused on exercise to raise core temperature and didn't have compliance problems. The review's author came out in favour of warming up.
+**Injury prevention [00:01].** A 2006 review (Fradkin et al.) looked at five studies; three found warming up reduced injuries. The two null studies both leaned heavily on stretching, and one had a poor **68% compliance** rate in the warm-up group. The three positive studies focused on exercise to raise core temperature and didn't have compliance problems. The review's author came out in favour of warming up.
 
-**Performance [02:36].** A large systematic review and meta-analysis of **32 high-quality studies** found warming up improved performance in **79%** of criteria examined. **17%** of warm-ups actually hurt performance — but those were typically warm-ups unsuited to the sport, or too vigorous/tiring. Mechanisms: faster nerve impulse conduction to muscle, greater sensitivity of nerve receptors, more blood flow and nutrient delivery during training. Nippard adds subjective benefits — alertness, psychological readiness, better mood (plausibly endorphins).
+**Performance [02:36].** A large systematic review and meta-analysis of **32 high-quality studies** found warming up improved performance in **79%** of criteria examined ([Fradkin 2010](https://www.ncbi.nlm.nih.gov/pubmed/19996770)). **17%** of warm-ups actually hurt performance — but those were typically warm-ups unsuited to the sport, or too vigorous/tiring. Mechanisms: faster nerve impulse conduction to muscle, greater sensitivity of nerve receptors, more blood flow and nutrient delivery during training. Nippard adds subjective benefits — alertness, psychological readiness, better mood (plausibly endorphins) ([Guszkowska 2004](https://www.ncbi.nlm.nih.gov/pubmed/15518309)).
 
 ## How much temperature, how long
 - A 1980 recommendation (Dear, *name uncertain*) was to raise rectal temperature by **1-2°C**.
 - A more practical 1966 suggestion: exercise **until light to mild sweating** under normal ambient conditions. Time to reach that varies with conditioning.
-- A 2013 study found a **15-minute** low-intensity warm-up beat a **5-minute** one for leg press 1RM — but the difference was only **3-4%**. Nippard opts for **10 minutes** since he rarely tests 1RMs.
+- A 2013 study found a **15-minute** low-intensity warm-up beat a **5-minute** one for leg press 1RM ([Barroso 2013](https://www.ncbi.nlm.nih.gov/pubmed/22692116)) — but the difference was only **3-4%**. Nippard opts for **10 minutes** since he rarely tests 1RMs.
 - His compromise for the shorter duration: moderate-intensity interval work — **30 seconds jogging alternated with 2 minutes walking** until 10 minutes are up.
-- Target zone from Barroso et al. (*name uncertain*): **55-60% of max heart rate**, about **100-120 bpm** for a 20-30 year old.
-- Some coaches advise against treadmill work on lower body days (higher impact; some research shows more interference with resistance training). Nippard doesn't notice this personally and uses the treadmill because he enjoys it.
+- Target zone from Barroso et al.: **55-60% of max heart rate**, about **100-120 bpm** for a 20-30 year old.
+- Some coaches advise against treadmill work on lower body days (higher impact; some research shows more interference with resistance training — [Wilson 2012](https://www.ncbi.nlm.nih.gov/pubmed/22002517)). Nippard doesn't notice this personally and uses the treadmill because he enjoys it.
 - Shortcuts if time-pressed — warm baggy clothing, heat up the car on the way — but you lose the performance benefits of the actual warm-up.
 
 ## Mobility and stretching [03:38]
 Defining mobility simply as the ability to move through a given range of motion, and assuming the goal is basic physique/strength movements (not gymnastics or Olympic lifting), a general warm-up covers most bases. Specific immobilities deserve specific drills, prescribed per individual and per diagnosis — not blanket-prescribed. The protocol below is **general and preventative, not individual or prescriptive**.
 
-In a large review on the topic, **static stretching produced numerous performance impairments** while **dynamic stretching had no effect or improved performance**. Two important qualifiers: static stretches lasting **under 30 seconds per muscle** don't seem to impair performance, especially in advanced trainees; and **order matters** — doing static stretching first, then dynamic stretching immediately after, appears to cancel the negative effect.
+In a large review on the topic, **static stretching produced numerous performance impairments** while **dynamic stretching had no effect or improved performance** ([Behm 2011](https://www.ncbi.nlm.nih.gov/pubmed/21373870)). Two important qualifiers: static stretches lasting **under 30 seconds per muscle** don't seem to impair performance, especially in advanced trainees; and **order matters** — doing static stretching first, then dynamic stretching immediately after, appears to cancel the negative effect.
 
-**Foam rolling** improves range of motion without decreasing muscular activation or force, so it's a useful tool for tight areas. **20-30 seconds** of rolling per focus area is enough in most cases.
+**Foam rolling** improves range of motion without decreasing muscular activation or force ([MacDonald 2013](https://www.ncbi.nlm.nih.gov/pubmed/22580977)), so it's a useful tool for tight areas. **20-30 seconds** of rolling per focus area is enough in most cases.
 
 ## The three-stage warm-up
 
@@ -46,7 +46,7 @@ In a large review on the topic, **static stretching produced numerous performanc
 - Some research suggests warming up isn't strictly necessary at all — the injury-prevention effect size is small.
 - 17% of warm-ups in the meta-analysis reduced performance, usually when too long, too hard, or mismatched to the activity.
 - Several researcher names were mangled by the auto-captions and are flagged above; verify before citing.
-- The interference of treadmill work on lower body training is asserted from "some research" without a named source.
+- The interference of treadmill work on lower body training is asserted from "some research" without a source named on camera.
 
 ## References
 

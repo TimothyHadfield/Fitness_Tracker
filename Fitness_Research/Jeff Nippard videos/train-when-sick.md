@@ -47,6 +47,13 @@ Decision sequence:
 
 ## References
 
+> **These references do not belong to this video.** Nippard's description for the
+> training-when-sick video carries the reference list from an unrelated video on a
+> completely different subject — one of its own headings names a technique that has
+> nothing to do with training or illness. He appears to have pasted the wrong list in.
+> They are reproduced below because they are what he published, but **nothing in the note
+> above is sourced from them**, and no claim here should be read as supported by them.
+
 Sources as listed by Nippard in the video description.
 
 **Scientific References**

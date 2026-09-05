@@ -13,7 +13,7 @@
 ## The session
 
 **1. Plate-loaded neck curl — 3 × 20+ reps (superset with #2)**
-Placed first deliberately. He cites a 2005 paper (among several) showing that fatigue accumulated from early exercises reduces performance on later ones, whether the early work was a small or large muscle group. So whatever you want to prioritise goes at the front.
+Placed first deliberately. He cites a 2005 paper (among several) showing that fatigue accumulated from early exercises reduces performance on later ones, whether the early work was a small or large muscle group ([Simão 2005](https://www.ncbi.nlm.nih.gov/pubmed/15705026)). So whatever you want to prioritise goes at the front.
 
 Use a towel or pad to protect the forehead, and centre the plate directly on the forehead. Start with a 5 or 10 lb plate; most people reach a 35 or 45 lb plate within a few months of consistent neck work. Because you should not be loading the cervical spine heavily, neck work lives in higher rep ranges — which means you need to get reasonably close to failure to accumulate enough effective reps. He autoregulates: somewhere between 20-30 reps, stopping with 1-2 reps left in the tank at good form.
 
@@ -21,7 +21,7 @@ Use a towel or pad to protect the forehead, and centre the plate directly on the
 Superset with the neck curl for time. A harness makes extension work far easier than trying to balance plates on the back of your head, and makes home neck training practical. Useful, not mandatory. (He discloses the harness brand was a channel sponsor.)
 
 **3. Trap bar shrug — 3 × 8-10**
-Substitute: snatch-grip shrug at 1.5-2× shoulder width. The trap bar pushes the arms slightly outward, putting the shoulder in more abduction. Per anatomical data from Johnson and colleagues, the upper trap fibres do not run vertically — they run much closer to horizontal. So cue shrugging **up and in**, as if trying to touch your shoulders to your ears, rather than straight up and down. A wider grip or trap bar makes this easier to achieve.
+Substitute: snatch-grip shrug at 1.5-2× shoulder width. The trap bar pushes the arms slightly outward, putting the shoulder in more abduction. Per anatomical data from Johnson and colleagues, the upper trap fibres do not run vertically — they run much closer to horizontal ([Johnson 1994](https://www.ncbi.nlm.nih.gov/pubmed/23916077)). So cue shrugging **up and in**, as if trying to touch your shoulders to your ears, rather than straight up and down. A wider grip or trap bar makes this easier to achieve.
 
 Volume guidance, credited to a blog post by Dr. Mike Israetel (captions garble the name): most intermediates can make good trap gains with no direct trap work at all, but most people respond best to an average of **12-20 sets per week**. He also notes Israetel's tip that following shrugs with upright rows destroys the traps — hence the next exercise.
 
@@ -31,7 +31,7 @@ He defends the upright row: the best evidence indicates it is safe and effective
 **5. Close-grip incline barbell bench press — 3 × 10-12**
 Biomechanical data show the upper pecs have notably good leverage for shoulder flexion. Closer grips emphasise shoulder flexion over shoulder adduction, so there are biomechanical grounds for a close grip biasing the upper chest. It also loads the triceps long head.
 
-Cues: strong mind-muscle connection with the upper pecs, feeling them pull apart on the eccentric; press up and *back toward your face* to genuinely produce shoulder flexion. Retract and depress the shoulder blades with only a slight arch — an exaggerated arch flattens the pressing angle and shifts emphasis away from the upper pecs. Caveat: if a more arched position lets you overload better or more safely, that's probably not worth splitting hairs over, since total upper-pec activation is fairly similar across roughly 0-56 degrees of incline. Incline is a gradient, not an on/off switch.
+Cues: strong mind-muscle connection with the upper pecs, feeling them pull apart on the eccentric; press up and *back toward your face* to genuinely produce shoulder flexion. Retract and depress the shoulder blades with only a slight arch — an exaggerated arch flattens the pressing angle and shifts emphasis away from the upper pecs. Caveat: if a more arched position lets you overload better or more safely, that's probably not worth splitting hairs over, since total upper-pec activation is fairly similar across roughly 0-56 degrees of incline ([Trebs 2010](https://www.ncbi.nlm.nih.gov/pubmed/20512064)). Incline is a gradient, not an on/off switch.
 
 **6. Incline dumbbell modified seal row — 3 × 10-12**
 He likes the traditional seal row because the bench forces the line of pull perpendicular to the torso, maximising lat range of motion and loading the mid traps through scapular retraction — but it is awkward to set up. This version (credited to bodybuilding coach Matt Jensen) uses an incline bench: pad the top with towels, position the top edge around the bottom of your chest, and put plates under your heels if you can't get the right position.

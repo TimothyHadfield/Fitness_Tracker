@@ -20,7 +20,7 @@
 
 [01:33] **2006, Campbell and colleagues, University of Florida.** 45 weight-trained men randomized to four groups: three took different potentially anabolic supplements (including an ecdysteroid group — not turkesterone specifically, but a structurally similar compound in the same class), one took a placebo. Subjects were blinded, which matters because expectation alone can improve results. Training was a 4 day/week upper-lower split for 8 weeks. Results: **no difference in fat-free mass or 1RM strength** between any group, and **no differences in free testosterone, total testosterone, or testosterone:cortisol ratio**. Body composition was measured by DEXA.
 
-[02:33] **2018, International Society of Sports Nutrition.** A joint review of supplement recommendations concluded firmly that ecdysterones, including turkesterone, are **not recommended** for increasing training adaptations or performance.
+[02:33] **2018, International Society of Sports Nutrition.** A joint review of supplement recommendations concluded firmly that ecdysterones, including turkesterone, are **not recommended** for increasing training adaptations or performance ([Kerksick 2018](https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y)).
 
 [03:04] **2019, the study the hype rests on.** 46 men with about one year of training experience, 10-week training program, given either placebo or a Peak Ecdysone supplement "labeled to contain 100 mg of ecdysterone." The ecdysterone groups did show significantly better muscle gains than placebo. EC1 took 2 pills/day; EC2 took 8 pills/day.
 

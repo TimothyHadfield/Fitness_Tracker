@@ -5,7 +5,7 @@
 
 ## Bottom line
 - Failure training costs far more fatigue than stopping short, even when total volume is matched — performance and muscle-damage markers stay suppressed roughly twice as long.
-- A 2016 meta-analysis found no meaningful strength or hypertrophy advantage for failure vs. non-failure, regardless of exercise type (isolation vs. compound) or training experience.
+- A 2016 meta-analysis found no meaningful strength or hypertrophy advantage for failure vs. non-failure, regardless of exercise type (isolation vs. compound) or training experience ([Davies 2016](https://link.springer.com/article/10.1007%2Fs40279-016-0509-x)).
 - Since gains look similar but recovery is worse, failure should be used sparingly rather than as the default on every set.
 - MASS's recommendation: reserve failure for isolation exercises, and only on the last set of the last exercise for a given body part.
 - Brad Schoenfeld's angle: failure can be periodised — intensity-focused blocks with more failure sets, alternating with volume-focused blocks that stop short.
@@ -16,7 +16,7 @@
 **For failure:** you need to reach failure, or get sufficiently close, to recruit the full spectrum of motor units and stimulate the larger, higher-threshold fibres. Stopping too far short leaves growth on the table.
 
 ## The 2017 acute study [06:42]
-Ten trained young men, averaging **eight years** of training experience — unusually well-trained for exercise science. Crossover design (every subject did all three protocols) with **three-to-four-week washout periods** between them. Smith machine bench press and Smith machine squat.
+Ten trained young men, averaging **eight years** of training experience — unusually well-trained for exercise science. Crossover design (every subject did all three protocols) with **three-to-four-week washout periods** between them ([Morán-Navarro 2017](https://www.ncbi.nlm.nih.gov/pubmed/28965198)). Smith machine bench press and Smith machine squat.
 
 Three protocols:
 - **High volume to failure:** 3 sets of 10 reps with a 10RM (every set to failure, RPE 10).
