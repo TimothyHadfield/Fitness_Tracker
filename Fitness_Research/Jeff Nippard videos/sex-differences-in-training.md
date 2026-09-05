@@ -19,7 +19,7 @@
 [01:32] The answer depends on who you ask.
 
 - **Menno Henselmans** (interviewed for the video) argues men and women have essentially the **exact same relative growth potential**, citing most research.
-- A **2001 study** on sex differences in response to strength training found **no difference in muscle gained after 6 months**, and there is other similar research.
+- A **2001 study** on sex differences in response to strength training found **no difference in muscle gained after 6 months** ([Roth 2001](https://www.ncbi.nlm.nih.gov/pubmed/11890579)), and there is other similar research.
 - Conflicting evidence exists: one paper found men gained **about twice as much muscle** as women over a six-month strength training intervention.
 - **Lyle McDonald** suggests women can expect roughly **half** the muscle gain of men.
 
@@ -28,12 +28,12 @@ Jeff's synthesis: women likely fall somewhere between **50 and 100% of male hype
 [02:33] On strength: men are stronger in absolute terms, but **97% of that difference is attributable to muscle mass alone**. Match a man and a woman for muscle mass and they will likely have similar strength. This is the general pattern — differences usually reduce to muscle mass and body fat, not sex per se.
 
 ## Difference 1 — Hormones and recovery
-[02:33] Women can have about **9× more estrogen** than men, and estrogen benefits not only metabolic health and glucose handling but **muscular repair and protection against catabolism**.
+[02:33] Women can have about **9× more estrogen** than men, and estrogen benefits not only metabolic health and glucose handling but **muscular repair and protection against catabolism** ([influence of sex and estrogen on musculotendinous protein turnover](http://journals.lww.com/acsm-essr/Abstract/2014/10000/Influence_of_Sex_and_Estrogen_on_Musculotendinous.7.aspx)).
 
-Training implication: women **recover from more work**, so they can do **more sets and reps per workout and more workouts per week**. Since training volume is tightly correlated with size and strength gains, all else equal **women should do more volume than men** to maximise results.
+Training implication: women **recover from more work**, so they can do **more sets and reps per workout and more workouts per week**. Since training volume is tightly correlated with size and strength gains ([Schoenfeld 2017](https://www.ncbi.nlm.nih.gov/pubmed/27433992)), all else equal **women should do more volume than men** to maximise results.
 
 ## Difference 2 — Fatigability
-[03:04] Why women fatigue less is complex — muscle-level, hormonal and nervous-system factors all contribute, and more research is needed. Two documented contributors:
+[03:04] Why women fatigue less is complex — muscle-level, hormonal and nervous-system factors all contribute, and more research is needed ([Hunter 2014](https://www.ncbi.nlm.nih.gov/pubmed/24433272)). Two documented contributors:
 
 - **Better blood flow and muscle perfusion**, so fatigue-inducing metabolites clear out faster.
 - A **greater proportional area of slow type I fibres**, which are better suited to endurance work.
@@ -41,7 +41,7 @@ Training implication: women **recover from more work**, so they can do **more se
 Net results:
 - Women handle **higher reps** better than men.
 - Women can do **more reps at a given intensity** (percentage of 1RM) than men.
-- Women can likely get away with **shorter rest periods** between sets.
+- Women can likely get away with **shorter rest periods** between sets ([Judge 2010](https://www.ncbi.nlm.nih.gov/pubmed/20625191)).
 
 ## Difference 3 — Explosiveness and tempo
 [04:06] The flip side: women are **less suited to explosive training**. If you play to strengths, men benefit from **more explosive tempos with a forceful concentric**, while women may do better with a **slower tempo**.

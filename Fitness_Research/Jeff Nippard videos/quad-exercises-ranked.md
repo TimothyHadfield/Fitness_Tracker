@@ -7,15 +7,15 @@
 - Best exercise overall: the **hack squat**. The pendulum squat feels better to him but few gyms have one; if there's no hack squat, use the **high-bar back squat**.
 - Worst: the **bosu ball squat** — the ankle does the stabilizing and the quads get almost no tension. Squat-plus-press combos and jump squats also go to F tier for hypertrophy.
 - S tier: barbell back squat, hack squat, pendulum squat, Smith machine squat, Bulgarian split squat.
-- Squat patterns under-train the **rectus femoris**, so include a leg extension — ideally with the **seat set back**.
-- Free weights and machines build muscle roughly equally, as long as you take sets close to failure.
+- Squat patterns under-train the **rectus femoris**, so include a leg extension ([Zabaleta-Korta 2021](https://pubmed.ncbi.nlm.nih.gov/34743671/)) — ideally with the **seat set back**.
+- Free weights and machines build muscle roughly equally, as long as you take sets close to failure ([Haugen 2023](https://pubmed.ncbi.nlm.nih.gov/37582807/)).
 
 ## Criteria and anatomy
 Three boxes: high quad tension especially in the stretch; feels good (no knee pain, smooth resistance); simple progression by adding weight or a rep weekly.
 
-Four heads: **vastus medialis** (the teardrop, inside), **vastus intermedius** (middle, deep), **vastus lateralis** (outside), and **rectus femoris** (long, flat, on top). A recent anatomy paper suggested a possible fifth head — no training implications either way.
+Four heads: **vastus medialis** (the teardrop, inside), **vastus intermedius** (middle, deep), **vastus lateralis** (outside), and **rectus femoris** (long, flat, on top). A recent anatomy paper suggested a possible fifth head ([Grob 2016](https://pubmed.ncbi.nlm.nih.gov/26732825/)) — no training implications either way.
 
-All four extend the knee. Only the rectus femoris also performs **hip flexion**. On squats it shortens at the hip while lengthening at the knee, so its overall length barely changes — this is why squats hit it less. Studies still show decent rectus femoris growth from squats, and one non-squat exercise in the program removes the concern entirely.
+All four extend the knee. Only the rectus femoris also performs **hip flexion**. On squats it shortens at the hip while lengthening at the knee, so its overall length barely changes — this is why squats hit it less. Studies still show decent rectus femoris growth from squats ([Kojic 2022](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9737272/)), and one non-squat exercise in the program removes the concern entirely.
 
 ## The rankings
 
@@ -28,7 +28,7 @@ All four extend the knee. Only the rectus femoris also performs **hip flexion**.
 
 **A tier**
 - **Front squat** — the front-loaded bar forces an upright torso, increasing the moment arm at the knee and shifting more tension to the quads. Counter-argument that the upper back becomes the limiter he mostly rejects unless you go very heavy. Use a two-finger, cross-arm or strap grip, keep elbows up, squat between the legs, stand with a tall chest. Held at A only because many people find the bar position awkward — bump it to S if it's comfortable for you.
-- **Low-bar back squat** — bar 2–3 inches lower on the rear delts. Research shows you can load more weight but tension shifts from quads toward glutes. Still very high quad activity at reasonable depth.
+- **Low-bar back squat** — bar 2–3 inches lower on the rear delts. Research shows you can load more weight but tension shifts from quads toward glutes ([Glassbrook 2019](https://pubmed.ncbi.nlm.nih.gov/28195975/)). Still very high quad activity at reasonable depth.
 - **45° leg press** — high quad tension, feels good, good overload. Held at A because many machines won't let you go as deep as a squat; aim to get **calves to glutes**.
 - **Leg extension** — hips are fixed, so unlike squat patterns the rectus femoris actually stretches and contracts: the first exercise where **all four heads** are highly engaged. A brand new study found significantly more overall quad growth and especially more rectus femoris growth with the **seat set back**, likely from training the rectus femoris at a longer length. A staple on his leg days. The "bad for your knees" claim is thoroughly debunked, though go easy if you already have knee pain.
 - **Reverse Nordic** — same movement pattern as a leg extension but more accessible (no machine) and a much deeper quad stretch. Very hard for beginners and awkward to load, so overload is mostly adding reps or depth. Drop it a tier or two if it feels wrong to you.

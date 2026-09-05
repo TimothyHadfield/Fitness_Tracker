@@ -23,7 +23,7 @@ The brachioradialis is active in normal supinated curls, but because it sits on 
 - Crush all eight fingers into the base of the hands as hard as is comfortable.
 - Elbows pinned at the sides; curl to maximum elbow flexion, lower under control.
 - Some lifters get a better mind-muscle connection with the wrist in **slight extension or slight flexion** — worth experimenting.
-- **Marineau (Marinean) et al.**: peak brachioradialis torque occurs at **100-120° of elbow flexion**, while peak biceps torque is nearer **80°**. This implies **top-half partial reps** bias the brachioradialis over the biceps.
+- **Marineau (Marinean) et al.**: peak brachioradialis torque occurs at **100-120° of elbow flexion**, while peak biceps torque is nearer **80°** ([Murray 1995](https://www.ncbi.nlm.nih.gov/pubmed/7775488)). This implies **top-half partial reps** bias the brachioradialis over the biceps.
 - **Intensity technique**: after **12-15 full reps**, extend the set with top-half-range reverse curls.
 - Common errors: excess momentum, and letting the bar sit in the hand/on the thumbs (not wrong, but easier and less forearm work).
 

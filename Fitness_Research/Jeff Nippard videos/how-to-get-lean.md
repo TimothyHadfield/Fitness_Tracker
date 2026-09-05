@@ -32,7 +32,7 @@ The real argument for food quality is adherence: mostly single-ingredient foods 
 ## Psychology and habits (Sohee Lee)
 [08:08] Lee's master's thesis was on eating-behaviour psychology. Common failure pattern: people want to hear "cut out dairy, go keto, do intermittent fasting" — none of which are *wrong*, but none of which are *required*. They pick the plan that looks perfect on paper instead of the one that fits their actual lifestyle, over-rely on early motivation, underestimate the difficulty, quit at two or three weeks, and move to the next thing ("shiny object syndrome").
 
-The fix is habits over willpower. Research shows self-control is very useful for *forming* habits but is a poor long-term strategy; the defining feature of a habit is that it requires no cognitive effort. Practical version — **choice architecture / "designing for laziness":**
+The fix is habits over willpower. Research shows self-control is very useful for *forming* habits but is a poor long-term strategy ([de Ridder 2012](https://pubmed.ncbi.nlm.nih.gov/21878607/)); the defining feature of a habit is that it requires no cognitive effort. Practical version — **choice architecture / "designing for laziness":**
 - Put calorie-dense foods somewhere annoying (top of the pantry, back of a cupboard).
 - Move a visible bowl of sweets into an opaque container, a drawer, or across the room — intake drops substantially without conscious effort.
 

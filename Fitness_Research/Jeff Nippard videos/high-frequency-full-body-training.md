@@ -14,13 +14,13 @@
 Menno Henselmans' argument: optimal frequency differs by training status. After a training bout, muscle protein synthesis rises and the muscle becomes more sensitive to amino acids. That elevation lasts around **two days in novices** but returns near baseline after roughly **12 hours in well-trained lifters**. So in advanced trainees, more frequent sessions mean more MPS spikes.
 
 Objections he flags:
-- Those studies measured **mixed** muscle protein synthesis, which is less relevant to contractile tissue than **myofibrillar** MPS.
-- A 2014 group argued acute protein synthesis doesn't correlate with hypertrophy at all. Another protein researcher he asked disagreed; he thinks the literature overall favours MPS predicting hypertrophy — but the theory is unsettled.
+- Those studies measured **mixed** muscle protein synthesis, which is less relevant to contractile tissue than **myofibrillar** MPS ([Damas 2015](https://www.ncbi.nlm.nih.gov/pubmed/25739559)).
+- A 2014 group argued acute protein synthesis doesn't correlate with hypertrophy at all ([Mitchell 2014](https://www.ncbi.nlm.nih.gov/pubmed/24586775)). Another protein researcher he asked disagreed; he thinks the literature overall favours MPS predicting hypertrophy — but the theory is unsettled.
 
 ## The frequency studies [02:34]
 **The Norwegian Frequency Project (2012).** Designed to give the Norwegian national powerlifting team an edge, never fully published — presented at conferences with one abstract circulating online. Highly trained lifters were split into full body **3 days/week** vs full body **6 days/week**, with everything else including weekly volume equated. After **15 weeks**, the 6-day group gained roughly twice as much: **10% total increase in the lifts versus 5%**, plus significantly more muscle. Caveat: not peer reviewed, so treat with some scepticism.
 
-**The replication attempt.** A different team retried it using **early intermediate** lifters over only **6 weeks** instead of 15, and found nothing — similar strength and size gains between 3x and 6x. Read charitably: both frequencies work, and the null result is consistent with frequency benefits being larger in more experienced lifters.
+**The replication attempt.** A different team retried it using **early intermediate** lifters over only **6 weeks** instead of 15, and found nothing — similar strength and size gains between 3x and 6x ([Colquhoun 2018](https://www.ncbi.nlm.nih.gov/pubmed/29324578)). Read charitably: both frequencies work, and the null result is consistent with frequency benefits being larger in more experienced lifters.
 
 **The volume-equating problem [03:36].** These studies always equate weekly volume between groups; in the real world they wouldn't be equated, because higher frequencies tend to allow **higher volumes**. Many experts argue the studies therefore fail to test the single greatest benefit of high frequency — accumulating more high-quality volume.
 
@@ -28,11 +28,11 @@ Eric Helms, in his own words in the video, framed it as volume spread: doing leg
 
 ## Volume, intensity, recovery — the three variables [05:07]
 
-**Volume.** Consensus is **10–20 working sets per muscle per week**. But per-session volume matters too: newer data suggests a per-workout ceiling around **5–10 sets per muscle**, after which additional sets risk becoming wasted/junk volume for hypertrophy. Spreading weekly volume across more sessions keeps every set inside the productive zone.
+**Volume.** Consensus is **10–20 working sets per muscle per week**. But per-session volume matters too: newer data suggests a per-workout ceiling around **5–10 sets per muscle**, after which additional sets risk becoming wasted/junk volume for hypertrophy ([Barbalho 2020](https://www.ncbi.nlm.nih.gov/pubmed/31188644)). Spreading weekly volume across more sessions keeps every set inside the productive zone.
 
 **Intensity.** Counter to expectation, quality goes up, not down. Hitting only **one exercise per muscle per day** allows full focus on that exercise, and the low per-session volume means faster recovery between days. His example: on day three of his lower-body work he does only **3 sets of leg press and 4 sets of calves** — executed far better than the same leg presses would be after squats and lunges on a traditional leg day. Never having to grind through a full leg day removes the point late in a session where performance degrades regardless of motivation.
 
-**Recovery [06:38].** The common objection is that 24 hours between sessions isn't enough. His answer: you're not repeating a full chest day daily — you're fractionating one. By week two or three the **repeated bout effect** kicks in, the body adapts and recovers faster, and soreness largely disappears. That's a good thing, since soreness impedes performance. Done sensibly, a high-frequency split should improve recovery capacity rather than impair it.
+**Recovery [06:38].** The common objection is that 24 hours between sessions isn't enough. His answer: you're not repeating a full chest day daily — you're fractionating one. By week two or three the **repeated bout effect** kicks in, the body adapts and recovers faster, and soreness largely disappears ([McHugh 2003](https://www.ncbi.nlm.nih.gov/pubmed/12641640)). That's a good thing, since soreness impedes performance. Done sensibly, a high-frequency split should improve recovery capacity rather than impair it.
 
 ## Concerns to manage [07:38]
 - Because there's less recovery time between sessions, **stop short of failure for the first few weeks** — RPE **7–8** rather than the usual **8–9**. Move back toward failure once the repeated bout effect has kicked in.

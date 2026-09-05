@@ -12,16 +12,16 @@
 - Supplements are a small piece of the puzzle — genetics, nutrition, training and consistency matter far more.
 
 ## Whey protein
-[00:31] Whey is one of the two proteins in cow's milk, making up about **20%** of the total; the other **80%** is casein, itself a potent muscle builder whose slow digestion arguably makes it the better choice before bed. The whey-vs-casein debate is unsettled, but a **mixture of fast and slow proteins appears best**, even post-workout where rapid delivery would seem to favour whey alone. In *The Protein Book*, **Lyle McDonald** recommends a whey/casein mix to combine whey's effect on muscle protein synthesis with casein's effect on limiting breakdown. Practically: **mix whey with milk rather than water**, or use a whey+casein blend.
+[00:31] Whey is one of the two proteins in cow's milk, making up about **20%** of the total; the other **80%** is casein, itself a potent muscle builder whose slow digestion arguably makes it the better choice before bed. The whey-vs-casein debate is unsettled, but a **mixture of fast and slow proteins appears best**, even post-workout where rapid delivery would seem to favour whey alone ([Kanda 2016](https://www.ncbi.nlm.nih.gov/pubmed/27271661)). In *The Protein Book*, **Lyle McDonald** recommends a whey/casein mix to combine whey's effect on muscle protein synthesis with casein's effect on limiting breakdown. Practically: **mix whey with milk rather than water**, or use a whey+casein blend.
 
 **Dose.** Protein researcher **Stu Phillips** has been cited recommending **0.7–0.8 g per pound per day when bulking** and **0.9–1.1 g per pound when cutting**. Simplified: **1 g per pound** covers essentially every well-trained, reasonably lean lifter. Whey's real value is convenience in hitting that total.
 
-**Safety.** Research shows whey does not harm the liver or kidneys except where damage already exists — a position supported by the **World Health Organization** and the **Institute of Medicine**. With adequate calcium and vitamin D (whey is a good calcium source), higher protein has no negative effect on bone health and may improve it.
+**Safety.** Research shows whey does not harm the liver or kidneys except where damage already exists — a position supported by the **World Health Organization** and the **Institute of Medicine**. With adequate calcium and vitamin D (whey is a good calcium source), higher protein has no negative effect on bone health and may improve it ([Zhu 2011](https://www.ncbi.nlm.nih.gov/pubmed/21590739)).
 
 ## Caffeine
 [02:33] A CNS stimulant from the seeds of *Coffea* plants and the most widely consumed psychoactive drug on earth. It's worth supplementing because it **increases power output and training volume while suppressing fatigue**.
 
-**Key study.** A **2012 study on 16 rugby players** split them into a **4 mg/kg caffeine** group and a placebo group, and further into sleep-deprived and well-rested subgroups. Findings:
+**Key study.** A **2012 study on 16 rugby players** ([Cook 2012](https://www.ncbi.nlm.nih.gov/pubmed/22349085)) split them into a **4 mg/kg caffeine** group and a placebo group, and further into sleep-deprived and well-rested subgroups. Findings:
 - Sleep deprivation impaired performance **only in the placebo group** — caffeine essentially negated the effect of lost sleep.
 - Caffeine also **increased loads used in the non-deprived group**, so it helps even when you're sleeping well.
 - The authors noted an **increase in testosterone** with caffeine, a finding that recurs across several lines of research.
@@ -30,21 +30,21 @@
 
 **Tolerance and cycling.** Caffeine tolerance builds readily and has been described as **insurmountable** — raising the dose won't restore the effect. The fix is cycling: **3–7 days off every 1–2 months** with daily use, with **larger daily doses requiring longer off-cycles**. Quitting cold turkey can cause withdrawal headaches, which is why some people reserve caffeine for sessions where they really need it (e.g. when sleep-deprived).
 
-**L-theanine.** Appears to enhance caffeine's effects on alertness and focus. One rat study found theanine could **partially reverse caffeine-induced sleep reduction** — useful if caffeine wrecks your sleep.
+**L-theanine.** Appears to enhance caffeine's effects on alertness and focus. One rat study found theanine could **partially reverse caffeine-induced sleep reduction** ([Jang 2012](https://www.ncbi.nlm.nih.gov/pubmed/22285321)) — useful if caffeine wrecks your sleep.
 
 **Safety.** Generally recognised as safe, but **a single tablespoon of pure caffeine powder can be a lethal dose**. Avoid intakes near **1 g/day** to steer clear of caffeinism. Nippard personally stays **below 500 mg/day**, which he acknowledges is already high for the general population.
 
 ## Citrulline malate
 [05:05] "Pump" products aim to increase vascularity via vasodilation, usually by raising nitric oxide, which signals the smooth muscle in arteries and veins to relax. Supplemented **L-citrulline is converted to arginine in the kidneys**, and the cycle gives off a nitric oxide molecule. Because citrulline is **better absorbed in the gut than arginine**, taking citrulline counterintuitively produces **higher arginine levels than taking arginine does** — and without arginine's diarrhoea.
 
-**Key study (2010).** Subjects performed as many reps as possible on the bench press across **eight sets**. Citrulline malate produced **more reps per set on every set after set two**, and the effect **grew with each additional set** — so the benefit scales with training volume. **100% of the 41 subjects responded positively on set 8.** The same paper found a **significant reduction in muscle soreness at 24 and 48 hours post-exercise**, which the authors attributed to citrulline's ability to buffer acidic metabolites like lactate and ammonia.
+**Key study (2010).** Subjects performed as many reps as possible on the bench press across **eight sets** ([Pérez-Guisado 2010](https://www.ncbi.nlm.nih.gov/pubmed/20386132)). Citrulline malate produced **more reps per set on every set after set two**, and the effect **grew with each additional set** — so the benefit scales with training volume. **100% of the 41 subjects responded positively on set 8.** The same paper found a **significant reduction in muscle soreness at 24 and 48 hours post-exercise**, which the authors attributed to citrulline's ability to buffer acidic metabolites like lactate and ammonia.
 
 **Dose:** **4–10 g citrulline malate ~1 hour before training**. Inorganic nitrate looks promising for the same purpose but needs more research; a starting point is **500–1,000 mg one hour before training**.
 
 ## Multivitamin
 [06:38] Hitting micronutrient requirements from food alone isn't always achievable, especially for athletes and especially in a caloric deficit.
-- A study of nationally ranked pre-contest bodybuilders found the women consumed **0% of the RDA for vitamin D** and only **52% for calcium**, while also falling short on zinc, copper, chromium and others.
-- Earlier similar research described junior women competitors as **"remarkably deficient" in calcium** — likely because many women cut dairy believing it drives fat loss, which is both wrong and a genuine **osteoporosis risk** if those nutrients aren't replaced elsewhere.
+- A study of nationally ranked pre-contest bodybuilders found the women consumed **0% of the RDA for vitamin D** and only **52% for calcium**, while also falling short on zinc, copper, chromium and others ([Kleiner 1994](https://www.ncbi.nlm.nih.gov/pubmed/8167655)).
+- Earlier similar research described junior women competitors as **"remarkably deficient" in calcium** ([Kleiner 1990](https://www.ncbi.nlm.nih.gov/pubmed/2365938)) — likely because many women cut dairy believing it drives fat loss, which is both wrong and a genuine **osteoporosis risk** if those nutrients aren't replaced elsewhere.
 - Research by **Misner et al.** on **14 endurance athletes** found that food alone failed to meet minimum RDA micronutrient requirements in **every single subject**.
 
 Always max out whole-food options first, but recognise food alone often doesn't get the job done in practice. **Dose: one athlete-formulated multivitamin per day, especially when in a deficit.**
@@ -54,7 +54,7 @@ Always max out whole-food options first, but recognise food alone often doesn't 
 
 **Mechanism.** Creatine enables more ATP production when energy demands are high. It draws water into the muscle by osmosis but **doesn't cause water retention elsewhere**, giving a fuller, tighter look rather than a bloated one. It may not build muscle directly, but by improving gym performance it means more weight lifted, more tension on the muscle and a larger growth stimulus — which is why long-term use is associated with more muscle growth.
 
-**No loading, no cycling.** Unlike caffeine, the body doesn't build tolerance. A **2003 study found 21 consecutive months of supplementation caused no ill health effects**.
+**No loading, no cycling.** Unlike caffeine, the body doesn't build tolerance. A **2003 study found 21 consecutive months of supplementation caused no ill health effects** ([Kreider 2003](https://www.ncbi.nlm.nih.gov/pubmed/12701816)).
 
 **Non-responders.** It's been hypothesised that creatine non-responders exist, with one paper estimating as much as **30% of people**. People who already eat a lot of meat, and older trainees, are more likely to be non-responsive. Given the breadth of evidence and creatine's low cost, self-experimentation is worth it — **gaining weight over the first few weeks (with diet and training controlled) is a good sign it's working for you.**
 

@@ -32,7 +32,7 @@ Their model:
 Important caveat: **this study was done in mice.** Eight years on it was still the prevailing model.
 
 ## The 2018 human epigenetics study
-[03:34] The first human study on the mechanism of muscle memory (covered in the MASS research review) used a protocol of **7 weeks training → 7 weeks off → 7 weeks training**. It found **changes at the level of DNA stayed in place** through the seven-week break. These **epigenetic modifications** are responsible for driving new muscle protein production — so the "memory" is written more or less literally into the DNA of your muscle cells.
+[03:34] The first human study on the mechanism of muscle memory ([Seaborne 2018](https://doi.org/10.1038/s41598-018-20287-3), covered in the MASS research review) used a protocol of **7 weeks training → 7 weeks off → 7 weeks training**. It found **changes at the level of DNA stayed in place** through the seven-week break. These **epigenetic modifications** are responsible for driving new muscle protein production — so the "memory" is written more or less literally into the DNA of your muscle cells.
 
 [04:06] The study confirms these changes last **at least seven weeks**. It cannot say how long they last in total, but it's plausible they persist for **years**, enhancing responsiveness to retraining after very long layoffs. So someone who lifted in high school, stopped, and restarts in their 40s may still bounce back faster because of that early training.
 
@@ -60,4 +60,8 @@ Sources as listed by Nippard in the video description.
 
 **Scientific References**
 
-- <https://www.nature.com/articles/s41598-018-20287-3>
+- Seaborne RA et al. 2018. Human Skeletal Muscle Possesses an Epigenetic Memory of Hypertrophy. *Scientific Reports*. [Nature](https://www.nature.com/articles/s41598-018-20287-3) doi:[10.1038/s41598-018-20287-3](https://doi.org/10.1038/s41598-018-20287-3)
+
+Two studies described in the note above are **not** in Nippard's reference list and remain
+unverified here: the 2010 Oslo myonuclei study (mice) and the Ogasawara 2012 periodic-training
+study.

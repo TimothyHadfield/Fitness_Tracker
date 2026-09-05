@@ -17,19 +17,19 @@
 - **Person C (diet break):** continuous deficit for weeks 1–4, then two full weeks at maintenance (2,500 kcal), repeating.
 
 ## Why calorie balance isn't the whole story
-[01:32] The reflexive objection — "same net deficit, same result" — implies balance is the *only* variable, which is false. **Garthe and colleagues** put one group on a faster diet and one on a slower diet; both lost the same weight, but **the slower group lost more fat and retained more muscle**. The same deficit applied differently produces a different physique.
+[01:32] The reflexive objection — "same net deficit, same result" — implies balance is the *only* variable, which is false. **Garthe and colleagues** put one group on a faster diet and one on a slower diet; both lost the same weight, but **the slower group lost more fat and retained more muscle** ([Garthe 2011](https://pubmed.ncbi.nlm.nih.gov/21558571/)). The same deficit applied differently produces a different physique.
 
 ## Refeeds
 [02:34] Refeeds evolved from bodybuilders' cheat meals/days, done weekly or fortnightly to "boost metabolism" or preserve sanity. The problem with a classic cheat day is straightforward: it can push weekly intake high enough to erase the deficit entirely and stall fat loss. Most coaches Nippard knows no longer prescribe them.
 
 The proposed replacement is the 24-hour refeed — calories to maintenance or slightly above for one day rather than eating everything in sight. But **24 hours is likely too short**:
-- Research suggests it takes **at least 48 hours (2–3 days)** to see any increase in metabolic rate.
+- Research suggests it takes **at least 48 hours (2–3 days)** to see any increase in metabolic rate ([Dirlewanger 2000](https://pubmed.ncbi.nlm.nih.gov/11126336/)).
 - Full glycogen replenishment from a depleted state requires **up to 10 g carbohydrate per kg body weight** — for an 80 kg lifter, that's **up to 800 g of carbs**. Far more practical as **two consecutive days at ~400 g** than one day at 800 g.
 
 **Applied example:** Nippard's physique client Pat, 185 lb, runs 270 g carbs on five low days and 400 g carbs on two consecutive refeed days, averaging **2,600 kcal/day**, losing about **1 lb per week** while still gaining strength and holding a full look. The refeed is deliberately timed **one to two days before the highest-volume training session** of the week.
 
 ### The Campbell 2020 study
-[05:05] Until 2020 there wasn't a single study on refeeds in trained lifters. Bill Campbell's team split **27 trained men and women** across 7 weeks on an upper/lower split:
+[05:05] Until 2020 there wasn't a single study on refeeds in trained lifters. Bill Campbell's team split **27 trained men and women** across 7 weeks on an upper/lower split ([Campbell 2020](https://pubmed.ncbi.nlm.nih.gov/33467235/)):
 - Group 1: continuous **25% below maintenance**.
 - Group 2: **35% below maintenance for 5 days, then 2 days at maintenance**.
 Both groups matched on average weekly deficit; refeeds were the only difference.
@@ -41,9 +41,9 @@ Nippard's read: refeeds are not a fat-burning trick, they're a **muscle-retentio
 ## Diet breaks
 [06:06] Usually **at least two weeks**, often longer. Top natural bodybuilding coaches have largely abandoned the traditional 10–12 week contest prep (effectively a crash diet) in favour of much slower diets interspersed with **2–4 week diet breaks**, especially when pushing into very low body fat.
 
-**2003 study (the accidental one):** three groups — continuous dieting for 20 weeks; one long 6-week break in the middle; three evenly spaced 2-week breaks. During breaks, subjects simply ate freely with no instruction. The researchers included the breaks *expecting to induce weight regain* — it didn't happen. **All three groups lost the same amount of weight**, which sparked the idea that prescribed breaks might help long-term.
+**2003 study (the accidental one):** three groups — continuous dieting for 20 weeks; one long 6-week break in the middle; three evenly spaced 2-week breaks. During breaks, subjects simply ate freely with no instruction. The researchers included the breaks *expecting to induce weight regain* — it didn't happen. **All three groups lost the same amount of weight**, which sparked the idea that prescribed breaks might help long-term ([Wing & Jeffery 2003](https://pubmed.ncbi.nlm.nih.gov/12582226/)).
 
-**Byrne et al. 2017:** 16 weeks continuous vs. a 2-weeks-deficit / 2-weeks-maintenance alternating pattern. Because the researchers matched *total time in deficit*, the diet-break group's intervention ran **30 weeks instead of 16**. Results:
+**Byrne et al. 2017:** 16 weeks continuous vs. a 2-weeks-deficit / 2-weeks-maintenance alternating pattern. Because the researchers matched *total time in deficit*, the diet-break group's intervention ran **30 weeks instead of 16** ([Byrne 2018](https://pubmed.ncbi.nlm.nih.gov/28925405/)). Results:
 - Diet-break group lost **50% more fat**.
 - Resting energy expenditure was **preserved twice as well** — both groups' metabolisms slowed initially, but the break group rebounded so that by week 16 they had significantly faster metabolisms.
 - The diet-break group also **maintained their fat loss better at a 6-month follow-up**.
@@ -51,7 +51,7 @@ The only cost was that the diet took about twice as long — arguably a feature,
 
 Nippard's own explanation for the durable results: the diet-break subjects got repeated **practice at eating at maintenance**. The continuous group dieted the entire time and then had no experience, conscious or otherwise, of how to hold their weight once the study ended.
 
-**February 2021 study:** the important test, because Byrne's subjects were **non-exercising obese men**. After 12 weeks in trained/active subjects, the diet-break and continuous groups showed **the same fat loss, the same muscle retention and no difference in metabolic slowdown**. But not nothing: **all psychological outcomes favoured diet breaks** — lower hunger, lower desire to eat, greater diet satisfaction — which plausibly translates to better adherence and long-run success.
+**February 2021 study:** the important test, because Byrne's subjects were **non-exercising obese men**. After 12 weeks in trained/active subjects, the diet-break and continuous groups showed **the same fat loss, the same muscle retention and no difference in metabolic slowdown** ([Peos 2021](https://pubmed.ncbi.nlm.nih.gov/33587549/)). But not nothing: **all psychological outcomes favoured diet breaks** — lower hunger, lower desire to eat, greater diet satisfaction — which plausibly translates to better adherence and long-run success.
 
 Nippard raises the reverse possibility too: the spectacular Byrne results may partly *be* an adherence effect, since obese subjects who found the diet-break protocol easier would have stuck to it better, producing what looked like physiological superiority.
 

@@ -4,11 +4,11 @@
 **Topic:** Technique
 
 ## Bottom line
-- The standard plank is **too easy** to be a strong stimulus (Guinness record: 8 hours, 1 minute). Two modifications from **Schoenfeld's 2014 study** fix that: **move the elbows forward to eye level** and **squeeze the glutes into posterior pelvic tilt**.
+- The standard plank is **too easy** to be a strong stimulus (Guinness record: 8 hours, 1 minute). Two modifications from **Schoenfeld's 2014 study** ([Schoenfeld 2014](https://www.ncbi.nlm.nih.gov/pubmed/25325773)) fix that: **move the elbows forward to eye level** and **squeeze the glutes into posterior pelvic tilt**.
 - Programming: **3 sets of 20-40 second holds.** When that gets easy, don't add time — make the position harder.
 - Progress the plank by **elbows forward → elbows closer together → pull elbows toward toes and toes toward elbows**, not by extending duration or stacking plates.
 - A complete core program needs three patterns: **weighted spinal flexion** (crunches), **anti-rotation** (half-kneeling Pallof press), and **anti-extension** (plank).
-- The **ab wheel rollout** beat crunches, supine double leg thrusts and side bridges for rectus abdominis activation (Escamilla/Yudice-style 2008 study). Progress it by **increasing range of motion**, not load.
+- The **ab wheel rollout** beat crunches, supine double leg thrusts and side bridges for rectus abdominis activation (Escamilla/Yudice-style 2008 study, [Youdas 2008](https://www.ncbi.nlm.nih.gov/pubmed/18978615)). Progress it by **increasing range of motion**, not load.
 
 ## What the plank actually trains [00:03]
 The plank is **anti-extension**: the core contracts isometrically to hold a neutral spine. Relax and the midsection drops and the lumbar spine extends — so the **rectus abdominis**, **transverse abdominis (TVA)** and **obliques** all fire to prevent hyperextension.
@@ -36,7 +36,7 @@ Planks can also drive **hypertrophy**, but only if **progressive overload** is g
 - **Schoenfeld 2014** found the same: the traditional front plank is not outstanding for core activation.
 
 ## The two Schoenfeld modifications [03:37]
-Both produced **significantly more activation of upper abs, lower abs and external obliques**:
+Both produced **significantly more activation of upper abs, lower abs and external obliques** ([Schoenfeld 2014](https://www.ncbi.nlm.nih.gov/pubmed/25325773)):
 1. **Extend the lever arm** — walk the elbows forward until they're at **eye level**. This increases hip-to-elbow distance, so the abs must contract harder to resist spinal extension.
 2. **Squeeze the glutes hard into posterior pelvic tilt** — the opposite of a "bikini pose" anterior tilt. Per the paper this creates **force coupling between the hip extensors (glutes and hamstrings) and the abdominal musculature**, strongly influencing core activity.
 
@@ -45,7 +45,7 @@ Hold this version for the same **20-40 seconds x 3 sets**. Once you top that out
 4. **Simultaneously pull the elbows toward the toes and the toes toward the elbows.** The natural tendency is for the hips to pike up; keeping the glutes squeezed in posterior tilt holds them down. Nippard notes that with all cues applied at once he starts shaking within **10-20 seconds**.
 
 ## Ab wheel rollout [05:07]
-- A **2008 study from Yudice (Escamilla) and colleagues** tested four ab exercises — crunch, supine double leg thrust, side bridge and the ab wheel — and the **ab wheel came out on top for the rectus abdominis**.
+- A **2008 study from Yudice (Escamilla) and colleagues** tested four ab exercises — crunch, supine double leg thrust, side bridge and the ab wheel — and the **ab wheel came out on top for the rectus abdominis** ([Youdas 2008](https://www.ncbi.nlm.nih.gov/pubmed/18978615)).
 - Conceptually it's a **dynamic, long-lever plank**: the abs resist the spine extending as the wheel travels out.
 - **Progress by range of motion**, not weight. Stop the rollout at the point where you can no longer hold a neutral lumbar spine, and extend that distance gradually across a training cycle.
 - It's an advanced exercise; a short starting ROM is normal. **Neutral spine always beats going all the way down.**

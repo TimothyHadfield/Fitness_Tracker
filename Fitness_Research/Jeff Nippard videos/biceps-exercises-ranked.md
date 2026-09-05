@@ -7,7 +7,7 @@
 - Best single biceps exercise: the **face-away (Bayesian) cable curl**. Closest runner-up: the **45° preacher curl**. Both belong in a biceps routine.
 - Worst: the **waiter curl** (F tier) — wrist strain, awkward, no overload path.
 - What separates tiers: high tension *in the stretched position*, comfort (no elbow/wrist pain), and a simple way to add weight or reps.
-- High tension in a decent stretch beats a huge stretch with no tension — this is why preacher curls out-grew incline curls in a head-to-head study.
+- High tension in a decent stretch beats a huge stretch with no tension — this is why preacher curls out-grew incline curls in a head-to-head study ([Zabaleta-Korta 2023](https://pubmed.ncbi.nlm.nih.gov/37559762/)).
 - For biceps **peak**, hammer curls are his #1 pick (brachialis-driven), and face-away cable curls are the long-head must-include.
 
 ## Ranking criteria and anatomy
@@ -21,13 +21,13 @@ Biceps functions: elbow flexion and **supination** (turning palm up). Cue for su
 
 **S tier**
 - **Face-away (Bayesian) cable curl** — arms behind the torso means maximum stretch plus even cable tension. Set cable around hand height, step forward 1–2 steps, curl both arms simultaneously (or one at a time on a single stack). Must-include for the long head / peak.
-- **45° preacher curl** — angling the upper arm pulls tension into the stretched position; elbows locked so cheating is near impossible. A study comparing preacher vs incline curls found **significantly more distal biceps growth** (near the elbow) with preacher curls, most likely because incline gives a big stretch but almost no tension there.
+- **45° preacher curl** — angling the upper arm pulls tension into the stretched position; elbows locked so cheating is near impossible. A study comparing preacher vs incline curls found **significantly more distal biceps growth** (near the elbow) with preacher curls ([Zabaleta-Korta 2023](https://pubmed.ncbi.nlm.nih.gov/37559762/)), most likely because incline gives a big stretch but almost no tension there.
 - **Machine preacher curl** — locked in; he does these weekly and often works only the bottom half of the range to emphasize the stretch.
 - **Hammer-grip preacher curl** — bracing hammer curls on a preacher bench fixes the resistance profile of standing hammer curls.
 
 **A tier**
 - **EZ-bar curl** — curved handles ease wrist torque; he uses the outer grip. The angled grip takes you partly out of supination, shifting some work to brachialis/brachioradialis — counter it by driving through the pinkies. Great as the heavy free-weight movement in the **6–8 rep range**. Optimization-wise a B, bumped for convenience and overload.
-- **Standing dumbbell curl** (low A) — zero tension at full stretch, but convenient and lets you fix side-to-side asymmetries. Do both arms at once; **alternating** is likely slightly worse because of the long unloaded rest between reps (reasoning from Goto et al.).
+- **Standing dumbbell curl** (low A) — zero tension at full stretch, but convenient and lets you fix side-to-side asymmetries. Do both arms at once; **alternating** is likely slightly worse because of the long unloaded rest between reps (reasoning from [Goto et al. 2005](https://pubmed.ncbi.nlm.nih.gov/15947720/)).
 - **Incline curl** (low A) — solid lengthened-biased option, fast setup, but demoted since the preacher-curl study.
 - **Lying dumbbell curl** — an extreme incline curl (seen in Dr. Mike's arm routine); huge stretch high near the shoulder, and more tension in the stretched start than an incline curl. Skip if you have shoulder issues.
 - **90°-angle face-away cable variation** (unnamed) — cable perpendicular to the forearm at peak stretch, so maximum tension where the muscle is longest. He feels it's S tier but held it at A pending more time using it.

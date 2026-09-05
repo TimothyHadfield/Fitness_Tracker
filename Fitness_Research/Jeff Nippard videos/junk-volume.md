@@ -20,12 +20,12 @@ The distinction matters: Nippard still endorses **10-20 sets per muscle per week
 [04:36] Doing fewer than six sets per muscle per session is perfectly fine if weekly volume adds up — e.g. 3-4 sets of curl variations on Monday, Wednesday and Friday gives ~10 solid weekly biceps sets.
 
 ### The bro-split implication
-[05:08] Twenty chest sets on a Monday chest day means at least half is junk for most people. Ten sets Monday plus ten Thursday cuts the junk and should produce better progress. The latest research shows bro splits work fine **when weekly volume is matched** — but going intermediate→advanced or advanced→elite requires raising weekly volume, and stacking those extra sets on one day makes them junkier. At that point distribute sets across the week (upper/lower, push-pull-legs, full body, or a hybrid).
+[05:08] Twenty chest sets on a Monday chest day means at least half is junk for most people. Ten sets Monday plus ten Thursday cuts the junk and should produce better progress. The latest research shows bro splits work fine **when weekly volume is matched** ([Hamarsland 2021](https://pubmed.ncbi.nlm.nih.gov/35069251/)) — but going intermediate→advanced or advanced→elite requires raising weekly volume, and stacking those extra sets on one day makes them junkier. At that point distribute sets across the week (upper/lower, push-pull-legs, full body, or a hybrid).
 
 ## Type 2: Easy sets
 [06:08] Nippard calls this the most common and most pernicious type in commercial gyms. Research shows that left to their own devices, most lifters don't train hard enough to maximise growth past the newbie phase.
 
-In the study cited, people picked a weight they'd normally use for 10 reps on the bench press and were then told to do as many reps as possible:
+In the study cited, people picked a weight they'd normally use for 10 reps on the bench press and were then told to do as many reps as possible ([Barbosa-Netto 2021](https://pubmed.ncbi.nlm.nih.gov/29112055/)):
 - **22%** got 10-12 reps — roughly where you want to be.
 - **31%** got 13-15 reps, i.e. leaving 3-5 in the tank. Not junk, but not great; this can stall you in the early-intermediate stage.
 - **47%** got 16-20+ reps, leaving **6-10 or more reps in reserve**. That is junk volume — you'll never pass the intermediate stage training this way.
@@ -33,7 +33,7 @@ In the study cited, people picked a weight they'd normally use for 10 reps on th
 [07:08] Practical rule: most hypertrophy work should be **0-3 reps from failure**, and it's smart to take some sets all the way. Dr. Schoenfeld recommends taking the last set for each muscle to failure; Dr. Israetel recommends taking the last week of a mesocycle to failure.
 
 ## Type 3: Ultra-high-rep sets
-[07:39] Sets of roughly **40-50+ reps** aren't useless, but they're far from optimal. You can train too light even when going to failure; the cutoff appears to be around **20% of 1RM**. If you're regularly doing 50+ rep sets, add weight and get **below ~30 reps**.
+[07:39] Sets of roughly **40-50+ reps** aren't useless, but they're far from optimal. You can train too light even when going to failure; the cutoff appears to be around **20% of 1RM** ([Lasevicius 2018](https://pubmed.ncbi.nlm.nih.gov/29564973/)). If you're regularly doing 50+ rep sets, add weight and get **below ~30 reps**.
 
 The bigger problem is the cost side: ultra-high-rep work creates a huge recovery demand for no added hypertrophic stimulus. It makes you very sore, impairs later sessions, and compromises results despite you working harder.
 

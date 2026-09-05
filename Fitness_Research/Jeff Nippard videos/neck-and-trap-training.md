@@ -18,13 +18,13 @@
 - These all function as a unit, not in isolation.
 
 ## Compounds do not build the neck [02:02]
-**Conley et al., University of Georgia** — 22 men, 12 weeks, split into two groups:
+**Conley et al., University of Georgia** ([Conley 1997](https://www.ncbi.nlm.nih.gov/pubmed/9189733)) — 22 men, 12 weeks, split into two groups:
 - Both did a periodized **4-day/week** program including squat, RDL, mid-thigh deadlifts, bent rows, shrugs, at **3-10 reps for 3-5 sets**.
 - One group additionally did **3 sets of 10 head extensions weekly** (described as nine weekly sets of direct neck work).
 - MRI results: the compound-only group showed **zero increase in neck cross-sectional area**. The neck-extension group gained **13%**.
 - Authors' conclusion: the isometric stabilisation demand of conventional resistance exercise is not intense enough to drive neck hypertrophy.
 
-Counterpoint: EMG work (Sundstrup et al.) found splenius and trap muscles both exceeding **90% of MVC** during a lateral raise taken to failure — so the neck is highly *activated* indirectly, even if that didn't translate to growth in Conley's trial.
+Counterpoint: EMG work (Sundstrup et al.) found splenius and trap muscles both exceeding **90% of MVC** during a lateral raise taken to failure ([Sundstrup 2012](https://www.ncbi.nlm.nih.gov/pubmed/21986694)) — so the neck is highly *activated* indirectly, even if that didn't translate to growth in Conley's trial.
 
 ## Training the neck [03:33]
 - **Extension**: plate-loaded neck extensions or partner-assisted extensions, **2-3x/week**. A head harness makes loading easier; a towel works at home.
@@ -33,20 +33,20 @@ Counterpoint: EMG work (Sundstrup et al.) found splenius and trap muscles both e
 - **Lateral flexion** is optional — the SCM wraps around the side of the head, so forward-flexion work covers the side dimension too. A few plate-loaded lateral neck curls won't hurt; don't go heavy, since the neck is weaker in lateral flexion.
 - **Rotation** can be trained but the equipment is hard to find. **Neck bridges** work for athletes but Nippard prefers loaded bodybuilding-style movements over contorted positions.
 
-Supporting evidence: **Ackland et al. 2010** moment-arm analysis found the **SCM had the greatest flexion and lateral bending capacity** — so target it to build the neck from the front and side. A **2006 study on Navy recruits** training flexion, lateral flexion and extension **3x/week** produced large strength gains and a **1.4 cm average neck circumference increase**, though this did not reach statistical significance (n=10).
+Supporting evidence: **Ackland et al. 2010** moment-arm analysis found the **SCM had the greatest flexion and lateral bending capacity** ([Ackland 2011](https://www.ncbi.nlm.nih.gov/pubmed/21074159)) — so target it to build the neck from the front and side. A **2006 study on Navy recruits** training flexion, lateral flexion and extension **3x/week** produced large strength gains and a **1.4 cm average neck circumference increase** ([Taylor 2006](https://www.ncbi.nlm.nih.gov/pubmed/17086765)), though this did not reach statistical significance (n=10).
 
 ## Training the traps [05:34]
 - **Deadlifts**: EMG (Carbat et al.) showed upper trap activity of **97% at knee passage vs 88% off the floor** — so **rack pulls / top-half deadlifts** may better target the traps. **Beggs** found heavier loads activate the upper traps more. Mixed grip showed no significant left/right trap difference, but Beggs cautioned this can't be extrapolated across the whole muscle given the small electrode area, and suggested **double overhand grip** to prevent asymmetries — with straps, chalk, gloves or hook grip when grip limits you.
 - **Deadlifts alone likely aren't enough** — other research indicates **eccentric muscle actions are required to maximise hypertrophy**, and deadlift trap work is isometric.
-- **Shrug arm angle**: a landmark **1994 study by Johnson et al.** found that given upper-trap fibre orientation, they can't effectively elevate the scapula with the arm neutral — implying shrugs should be done with at least **30° of arm abduction**. **Pizzari et al. 2013** found a dumbbell shrug at **30° abduction** activated the upper traps better than a traditional shrug. Limitation: both conditions used the same absolute load, and the abducted version may simply be harder — relative loading might change the result. The anatomical case still stands.
+- **Shrug arm angle**: a landmark **1994 study by Johnson et al.** found that given upper-trap fibre orientation, they can't effectively elevate the scapula with the arm neutral — implying shrugs should be done with at least **30° of arm abduction**. **Pizzari et al. 2013** found a dumbbell shrug at **30° abduction** activated the upper traps better than a traditional shrug ([Pizzari 2014](https://www.ncbi.nlm.nih.gov/pubmed/24342452)). Limitation: both conditions used the same absolute load, and the abducted version may simply be harder — relative loading might change the result. The anatomical case still stands.
 - **Overhead / monkey shrugs** (proposed by physio Adam Meakins) work in practice, but a **2016 Journal of Manual Therapy** paper found the same (high) upper trap activity in traditional and overhead shrugs — no special overhead benefit despite the theory.
 - **Lying rope shrug** — Nippard's own variation: lie down and shrug down and back on a rope while actively pulling it apart.
-- **Upright row**: one study had it outperforming the seated cable row, barbell row and lat pulldown for activation. A **2x shoulder-width grip** increased upper and mid trap activation vs narrow and shoulder-width grips. Keep **elbow elevation below shoulder height** to avoid impingement.
+- **Upright row**: one study had it outperforming the seated cable row, barbell row and lat pulldown for activation. A **2x shoulder-width grip** increased upper and mid trap activation vs narrow and shoulder-width grips ([McAllister 2013](https://www.ncbi.nlm.nih.gov/pubmed/22362088)). Keep **elbow elevation below shoulder height** to avoid impingement.
 - **Rope face pulls** with scapular retraction load the traps in a different plane — an extra growth stimulus.
 - **Rows** are well established for the mid traps. **Lehman et al. 2004** found **no significant difference in mid-trap activation between seated rows with and without deliberate scapular retraction** — the row hits the mid traps regardless of scapular cueing.
 
 ## Volume and frequency [09:08]
-- **Neck: at least 2x/week**; 3x/week is supported by research; once a week beats not at all. Higher frequency with **less volume per session** exploits the repeated bout effect and keeps neck soreness manageable.
+- **Neck: at least 2x/week**; 3x/week is supported by research ([Pollock 1993](https://www.ncbi.nlm.nih.gov/pubmed/8215860)); once a week beats not at all. Higher frequency with **less volume per session** exploits the repeated bout effect and keeps neck soreness manageable.
 - **Neck dose: 40-70 reps per session**, using both a flexion and an extension exercise (Helms).
 - **Traps: 2-3x/week.** Heavy deadlifts **no more than 1x/week** for recovery and safety, if at all.
 - Watch total volume — back and shoulder work carries over heavily to the traps.

@@ -4,7 +4,7 @@
 **Topic:** Exercise Selection
 
 ## Bottom line
-- Best exercise overall: the **overhead cable triceps extension**. A 2023 study found overhead extensions produced roughly **40% more triceps growth than press-downs**.
+- Best exercise overall: the **overhead cable triceps extension**. A 2023 study found overhead extensions produced roughly **40% more triceps growth than press-downs** ([Maeo 2023](https://pubmed.ncbi.nlm.nih.gov/35819335/)).
 - Worst: the **dumbbell kickback** — zero tension where the triceps are stretched (though he thinks it's over-hated online).
 - Pressing alone will not maximize the triceps, especially the long head. Do direct isolation work.
 - Hit the triceps from **at least two or three shoulder angles**: one overhead, one with arms at the sides (press-down), and ideally one with arms behind the torso (cable kickback).
@@ -22,7 +22,7 @@ Three heads. **Lateral** head gives the arm its outer sweep, **medial** head run
 ## The rankings
 
 **S tier**
-- **Overhead cable extension (bar)** — arms overhead puts the long head under deep stretch *and* the cable gives high tension there. Backed by the 2023 study showing ~40% more growth than press-downs. His best of the best.
+- **Overhead cable extension (bar)** — arms overhead puts the long head under deep stretch *and* the cable gives high tension there. Backed by the 2023 study showing ~40% more growth than press-downs ([Maeo 2023](https://pubmed.ncbi.nlm.nih.gov/35819335/)). His best of the best.
 - **EZ-bar skull crusher** — very high tension at deep stretch, especially if you **arc the bar back behind your head** rather than stopping at the forehead. EZ bar spares the wrists; easy to overload. Fix the uneven tension curve by starting with elbows angled slightly back instead of straight up, which pre-loads the fibers. His favorite free-weight triceps exercise.
 
 **A tier**

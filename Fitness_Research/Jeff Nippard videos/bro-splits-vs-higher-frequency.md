@@ -28,10 +28,10 @@ Discipline is a limited resource, like attention. Spending it on things that pro
 
 ## The frequency evidence, examined [05:41]
 
-**Schoenfeld, Ogborn & Krieger meta-analysis (10 studies).** Conclusion: 2x/week promotes superior hypertrophy vs 1x/week; whether **3x beats 2x remains undetermined**; and training a muscle once per week still promoted robust hypertrophy and remains a viable design. The same paper explicitly acknowledges the split-routine argument — that lower per-muscle frequency permits higher volume per muscle group while maintaining intensity of effort and recovery — and states it remains to be determined whether that is an effective strategy.
+**Schoenfeld, Ogborn & Krieger meta-analysis (10 studies).** Conclusion: 2x/week promotes superior hypertrophy vs 1x/week; whether **3x beats 2x remains undetermined**; and training a muscle once per week still promoted robust hypertrophy and remains a viable design ([Schoenfeld 2016](http://www.ncbi.nlm.nih.gov/pubmed/27102172)). The same paper explicitly acknowledges the split-routine argument — that lower per-muscle frequency permits higher volume per muscle group while maintaining intensity of effort and recovery — and states it remains to be determined whether that is an effective strategy.
 
 The paper also notes that **relatively few trials** showed a preferential effect of any one frequency. Only two significant studies were highlighted:
-- **McLester et al.** — 3 days/week vs 1 day/week: 8% vs 1% gain in lean body mass. **But subjects performed only three sets per muscle per week.** Three total sets for shoulders is nothing like real-world programming; unsurprising that spreading such a tiny dose out helped.
+- **McLester et al.** — 3 days/week vs 1 day/week: 8% vs 1% gain in lean body mass ([McLester](https://www.researchgate.net/publication/232186690_Comparison_of_1_Day_and_3_Days_Per_Week_of_Equal-Volume_Resistance_Training_in_Experienced_Subjects)). **But subjects performed only three sets per muscle per week.** Three total sets for shoulders is nothing like real-world programming; unsurprising that spreading such a tiny dose out helped.
 - **Schoenfeld et al.** — a difference appeared **only in the biceps**. Thickness changes in the triceps and vastus lateralis were comparable between groups.
 
 The remaining studies found comparable effects across frequencies of 1–3x/week.
@@ -40,7 +40,7 @@ The remaining studies found comparable effects across frequencies of 1–3x/week
 - *Untrained subjects* (4 studies): higher frequency unlikely to be superior for hypertrophy; one study actually favoured the **lower** frequency.
 - *Trained subjects* (3 studies): only one reported a benefit of higher volume-matched frequency — and that one was McLester again. Their own summary table rates research quantity as "few studies" and confidence as **low**.
 
-**Wernbom et al. 2007 [11:18].** Recommends 2–3x/week per muscle, but almost none of the underlying studies matched for volume — so the higher-frequency groups were often simply doing double or triple the work. The one volume-equated study showing a frequency effect was, again, McLester.
+**Wernbom et al. 2007 [11:18].** Recommends 2–3x/week per muscle ([Wernbom 2007](http://www.ncbi.nlm.nih.gov/pubmed/17326698)), but almost none of the underlying studies matched for volume — so the higher-frequency groups were often simply doing double or triple the work. The one volume-equated study showing a frequency effect was, again, McLester.
 
 ## His own split adjustment [12:49]
 The classic bro split leaves seven full days between hits on a muscle. His version: a large bolus of volume for a muscle, a rest day, a smaller hit of volume, a rest day, then the big bolus again — every 5–6 days, with a top-up in between. That small hit counts, because even **one all-out set to failure** is enough to activate the mechanisms that stimulate muscle protein synthesis. To be safe he uses about **4 sets with one taken to failure** for the top-up.

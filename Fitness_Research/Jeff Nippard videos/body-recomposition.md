@@ -12,7 +12,7 @@
 
 ## Why recomp works at all [00:00]
 
-The "you must bulk then cut" doctrine comes from old bodybuilding lore about needing a massive surplus. A **2013 study from Garthe and colleagues** overfed subjects by **600 extra calories per day** and found they did **not** gain significantly more muscle but gained **over three times the fat mass** — nearly all the extra bulk arrived as fat.
+The "you must bulk then cut" doctrine comes from old bodybuilding lore about needing a massive surplus. A **2013 study from Garthe and colleagues** overfed subjects by **600 extra calories per day** and found they did **not** gain significantly more muscle but gained **over three times the fat mass** — nearly all the extra bulk arrived as fat ([Garthe 2013](https://www.ncbi.nlm.nih.gov/pubmed/23679146)).
 
 Jeff is not anti-bulking (he ran a big bulk himself). If you want maximum muscle and strength as fast as possible, a larger surplus is the way — but the faster gain comes bundled with more fat, and many people do not want that trade. It is not an inevitability, because fat and muscle are separate systems.
 
@@ -20,7 +20,7 @@ Jeff is not anti-bulking (he ran a big bulk himself). If you want maximum muscle
 
 1. **New lifters** — the most primed for growth you will ever be; calories can be pulled from stored fat to fuel muscle building on basic progressive training and a reasonable diet.
 2. **Overweight individuals** — huge energy reserves in body fat mean you can be in a deficit and still have plenty of fuel for building.
-3. **Detrained individuals** — people who were previously jacked and stopped for injury or life; the **muscle memory effect** makes rapid rebuilding, and therefore recomp, common.
+3. **Detrained individuals** — people who were previously jacked and stopped for injury or life; the **muscle memory effect** ([Bruusgaard 2010](https://www.ncbi.nlm.nih.gov/pubmed/20713720)) makes rapid rebuilding, and therefore recomp, common.
 4. **Anabolic steroid users** — rapid muscle building lets the body tap fat stores.
 5. **The sub-optimised trainee** — Jeff's added fifth category: anyone who counts as intermediate or advanced by training age but has not truly been putting in the effort in training or nutrition. You can be years into the gym and still functionally a newbie if you have not trained hard or smart.
 
@@ -48,7 +48,7 @@ The only group for whom recomp is impractical: **truly advanced trainees with al
 
 ## Sleep [07:39]
 
-The single most underrated factor for transforming a physique. **Wang and colleagues, 2018:** 36 subjects in a caloric deficit split into two groups; one slept **one hour less on five nights per week** (allowed an extra hour on weekends to catch up). After **8 weeks**, total weight loss was the same in both groups — but the **well-slept group lost 83% of their weight as fat**, while the **sleep-restricted group lost 85% of their weight as lean mass.**
+The single most underrated factor for transforming a physique. **Wang and colleagues, 2018:** 36 subjects in a caloric deficit split into two groups; one slept **one hour less on five nights per week** (allowed an extra hour on weekends to catch up). After **8 weeks**, total weight loss was the same in both groups — but the **well-slept group lost 83% of their weight as fat**, while the **sleep-restricted group lost 85% of their weight as lean mass** ([Wang 2018](https://www.ncbi.nlm.nih.gov/pubmed/29438540)).
 
 Jeff's caveat: these subjects were not weight training, so lifting would likely have flattened the difference somewhat — but not nearly enough to erase an effect that large.
 
@@ -58,8 +58,8 @@ There is no supplement that causes recomposition. A few help.
 
 **Tier one:**
 - **Protein powder** — makes hitting the daily total easier, usable at any time of day. Especially important for vegan lifters; he recommends "vegan whey," a **rice and pea blend** offering a full amino acid spectrum and high leucine. A **casein source before bed** may have merit.
-- **Creatine — 3 to 5 g of monohydrate per day.** By far the most studied supplement on the market, cheap, minimal side effect risk. An obvious choice.
-- **Caffeine** — increases strength, prolongs time to fatigue, increases acute fat oxidation. Unlike creatine it is subject to tolerance, so reserve it for your heaviest or most demanding sessions, or cycle off periodically to resensitise.
+- **Creatine — 3 to 5 g of monohydrate per day.** By far the most studied supplement on the market, cheap, minimal side effect risk ([Jäger 2011](https://www.ncbi.nlm.nih.gov/pubmed/21424716)). An obvious choice.
+- **Caffeine** — increases strength, prolongs time to fatigue ([Burke 2008](https://www.ncbi.nlm.nih.gov/pubmed/19088794)), increases acute fat oxidation ([Kurobe 2017](https://www.ncbi.nlm.nih.gov/pubmed/26189608)). Unlike creatine it is subject to tolerance, so reserve it for your heaviest or most demanding sessions, or cycle off periodically to resensitise.
 
 Peri-workout nutrition (nutrient timing around the session) is another optimisation lever, though he points elsewhere for the detail.
 

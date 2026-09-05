@@ -8,7 +8,7 @@
 - **Worst: the plate press** — an influencer novelty with no upside.
 - Only two other movements reach S tier: the **seated cable pec fly** (his favourite isolation lift) and, effectively, the machine press category.
 - Ranking criteria: (1) **big stretch under high tension** — fail this and it's automatic F tier; (2) **feels good** — no pain, smooth resistance profile, good pump and mind-muscle connection; (3) **simple progression** — you can add weight or reps.
-- Incline and flat bench are interchangeable enough that incline is arguably the better default: a recent study found incline produced **the same mid and lower pec growth as flat, plus more upper pec growth.**
+- Incline and flat bench are interchangeable enough that incline is arguably the better default: a recent study found incline produced **the same mid and lower pec growth as flat, plus more upper pec growth** ([Chaves 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7449336/)).
 
 ## The full ranking
 
@@ -18,7 +18,7 @@
 
 ### A tier
 - **Barbell bench press** [01:32] — high pec tension provided you bring the bar all the way to the chest, very easy to overload, and he credits most of his own pec development to it. Would have been S tier for him personally; dropped because the barbell stops on the rib cage so the stretch isn't as deep as dumbbells, some people get cranky shoulders (usually from using too much weight), and not everyone gets as much pec activation from it.
-- **Incline bench press** [02:02] — same upsides as flat with more upper pec emphasis. A recent study found it matched flat bench for mid and lower pec growth while beating it for upper pec growth. Very close to S tier.
+- **Incline bench press** [02:02] — same upsides as flat with more upper pec emphasis. A recent study found it matched flat bench for mid and lower pec growth while beating it for upper pec growth ([Chaves 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7449336/)). Very close to S tier.
 - **Flat dumbbell press** [03:34] — deeper stretch than the barbell since the dumbbells travel past the rib cage, great pump, and fewer shoulder issues because ego is less involved. Knocked from S tier because strong lifters max out the rack (usually 100 lb) and heavy dumbbells get awkward to handle.
 - **Incline dumbbell press** — identical to the above with more upper pec emphasis.
 - **Dips** [05:04] — possibly the best compound for a deep pec stretch, high tension, and many progression routes (reduce assistance, add reps, slow the negative, then add a weight belt). Docked from S tier because the feel isn't the smoothest and some people's shoulders get cranky. Still worth including.
@@ -41,7 +41,7 @@
 - **Floor press** [13:15] — excellent for bench lockout strength and smashing the triceps, and he programs it in strength and power blocks, but the limited range never fully stretches the pecs. Just okay for hypertrophy.
 
 ### D tier
-- **Dumbbell pullover** [01:01] — biomechanics and activation data say the pecs do contribute alongside lats and triceps, but he feels nothing in his pecs, virtually every client says the same, and top bodybuilders don't program it on chest day. A much better lat exercise than a chest exercise.
+- **Dumbbell pullover** [01:01] — biomechanics and activation data say the pecs do contribute alongside lats and triceps ([Muyor 2022](https://www.mdpi.com/2076-3417/12/21/11138)), but he feels nothing in his pecs, virtually every client says the same, and top bodybuilders don't program it on chest day. A much better lat exercise than a chest exercise.
 - **Plyometric push-ups** [06:36] — poor for maximising tension in the negative and the stretch. If you want explosive work, use an explosive tempo on a loaded lift like the bench press instead.
 
 ### F tier

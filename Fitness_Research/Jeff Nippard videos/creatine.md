@@ -4,7 +4,7 @@
 **Topic:** Supplements
 
 ## Bottom line
-- Use plain **creatine monohydrate**. Variants (HCl, ethyl ester) lack comparable evidence and cost more.
+- Use plain **creatine monohydrate**. Variants (HCl, ethyl ester) lack comparable evidence and cost more ([Jäger 2011](https://www.ncbi.nlm.nih.gov/pubmed/21424716)).
 - **Load 20-25 g/day for one week**, then maintain at **5 g/day**. Or skip the load and just take 5 g/day — you reach the same saturation, it just takes up to a month.
 - Timing barely matters. Take it whenever you'll remember; saturation is what counts.
 - No need to cycle off. 21 straight months of supplementation showed no ill health effects.
@@ -16,36 +16,36 @@
 [01:32] The body runs three energy systems: aerobic (slow, glucose and fat, long duration), anaerobic (glucose, hard efforts of 30 s to 2 min), and the **phosphagen system**, which regenerates ATP extremely fast using creatine phosphate stored in muscle. Anything short and maximal — a sprint, a heavy bench set — leans on the phosphagen system, so more stored creatine phosphate means more available fast ATP.
 
 ## Saturation and dosing
-[02:03] Per an **International Society of Sports Nutrition position stand**, a normal diet supplies 1-2 g creatine/day and leaves muscle stores only **60-80% saturated**. Supplementation raises stores by **20-40%**.
+[02:03] Per an **International Society of Sports Nutrition position stand**, a normal diet supplies 1-2 g creatine/day and leaves muscle stores only **60-80% saturated**. Supplementation raises stores by **20-40%** ([Kreider 2017](https://www.ncbi.nlm.nih.gov/pubmed/28615996)).
 
 - **Fast route:** 20-25 g/day for 1 week → saturated within that week, benefits immediately. Then 5 g/day forever.
 - **Slow route:** 5 g/day from the start → same endpoint, but up to a month to get there.
 - Loading makes most sense if you're starting for the first time or coming back after a long break.
 
 ## Timing
-[02:35] A **2013 paper** suggested post-workout creatine beat pre-workout for fat-free mass and bench press strength, but the differences were small and it has not been replicated. Many other studies show saturation is reached fine with any time of day.
+[02:35] A **2013 paper** suggested post-workout creatine beat pre-workout for fat-free mass and bench press strength ([Antonio 2013](https://www.ncbi.nlm.nih.gov/pubmed/23919405)), but the differences were small and it has not been replicated. Many other studies show saturation is reached fine with any time of day.
 
 ## Performance and hypertrophy effects
-[03:06] A **2003 review of ~300 studies** put the effect at a **5-15% increase in maximal strength and power**.
+[03:06] A **2003 review of ~300 studies** put the effect at a **5-15% increase in maximal strength and power** ([Kreider 2003](https://www.ncbi.nlm.nih.gov/pubmed/12701815)).
 
-A landmark paper from **Volek and colleagues** found that even in subjects with **six years of training experience**, creatine produced **30% more total reps across five sets** with a moderate load taken to failure. Given how tightly training volume tracks hypertrophy, more work performed should mean more muscle over time.
+A landmark paper from **Volek and colleagues** found that even in subjects with **six years of training experience**, creatine produced **30% more total reps across five sets** with a moderate load taken to failure ([Volek 1997](https://www.ncbi.nlm.nih.gov/pubmed/9216554)). Given how tightly training volume tracks hypertrophy, more work performed should mean more muscle over time.
 
 [03:38] Creatine causes **intramuscular** water retention — held inside the muscle, not under the skin. This is not a downside: increased fibre diameter may itself add to growth via cell-swelling mechanisms.
 
 ## Non-responders
-[04:08] Roughly **20-30%** of people appear not to respond at all. **High meat consumers** and **older trainees** are the most likely non-responders. Given the breadth of positive evidence, the low cost and the near-absent side effect risk, supplementing anyway is still the sensible bet.
+[04:08] Roughly **20-30%** of people appear not to respond at all ([Syrotuik 2004](https://www.ncbi.nlm.nih.gov/pubmed/15320650)). **High meat consumers** and **older trainees** are the most likely non-responders. Given the breadth of positive evidence, the low cost and the near-absent side effect risk, supplementing anyway is still the sensible bet.
 
 ## Cycling, caffeine, and safety
 [04:38] No tolerance develops, unlike caffeine, so there is no reason to cycle off. A **2003 study** found **21 consecutive months** of supplementation caused no adverse health effects.
 
-Creatine + caffeine: a **1996 paper** speculated an inhibitory interaction, but it had only **nine subjects** and was statistically underpowered. Three subsequent studies found the opposite — a synergistic effect. Not a concern.
+Creatine + caffeine: a **1996 paper** speculated an inhibitory interaction ([Vandenberghe 1996](https://www.ncbi.nlm.nih.gov/pubmed/8929583)), but it had only **nine subjects** and was statistically underpowered. Three subsequent studies found the opposite — a synergistic effect. Not a concern.
 
 ## Hair loss and DHT
-[05:09] Whether creatine causes male pattern baldness has **never been directly investigated**. The origin of the concern is a **2009 study on rugby players**: 5 g/day for two weeks raised **DHT by 40%**.
+[05:09] Whether creatine causes male pattern baldness has **never been directly investigated**. The origin of the concern is a **2009 study on rugby players**: 5 g/day for two weeks raised **DHT by 40%** ([van der Merwe 2009](https://www.ncbi.nlm.nih.gov/pubmed/19741313)).
 
 Context that cuts against panic:
-- Weight training on its own also raises DHT.
-- DHT appears to matter for hair loss mainly in men with a **genetic predisposition or family history**.
+- Weight training on its own also raises DHT ([Hawkins 2008](https://www.ncbi.nlm.nih.gov/pubmed/18202581)).
+- DHT appears to matter for hair loss mainly in men with a **genetic predisposition or family history** ([Bang 2004](https://www.ncbi.nlm.nih.gov/pubmed/14757277)).
 
 If you are in that group, be more cautious, or consider stacking with finasteride, which reduces testosterone-to-DHT conversion.
 

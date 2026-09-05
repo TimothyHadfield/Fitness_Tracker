@@ -13,8 +13,8 @@
 ## Why warm up [00:00]
 Two purposes: reducing injury risk, and increasing strength performance in the session (which may indirectly improve size gains over time).
 
-- **Injury:** a systematic review by Fradkin and colleagues examined five studies on warming up and injury reduction. Three of five showed reduced injury risk. The two that showed no benefit had warm-ups weighted toward stretching rather than raising core body temperature — implying that literally warming the body up is the key factor. People who spend half their gym time on elaborate mobility drills may not be preventing much extra injury.
-- **Performance:** a paper by McGowan and colleagues outlined the established benefits of a higher body temperature, including increased muscle metabolism and better phosphocreatine and ATP utilisation, leading to better power output.
+- **Injury:** a systematic review by Fradkin and colleagues ([Fradkin 2010](https://www.ncbi.nlm.nih.gov/pubmed/19996770)) examined five studies on warming up and injury reduction. Three of five showed reduced injury risk. The two that showed no benefit had warm-ups weighted toward stretching rather than raising core body temperature — implying that literally warming the body up is the key factor. People who spend half their gym time on elaborate mobility drills may not be preventing much extra injury.
+- **Performance:** a paper by McGowan and colleagues ([McGowan 2015](https://www.ncbi.nlm.nih.gov/pubmed/26400696)) outlined the established benefits of a higher body temperature, including increased muscle metabolism and better phosphocreatine and ATP utilisation, leading to better power output.
 - **Psychological:** rehearsing the workout mentally and running through the cues for the muscle you're about to train primes you to lift.
 
 ## Phase 1 — General warm-up [01:31]
@@ -27,7 +27,7 @@ Goal: loosen the muscles and take the joints through the range of motion the ses
 
 **Lower body foam rolling (2-3 min).** Focus on tight, active muscles. He notes foam rolling is somewhat overhyped, but has been shown to reduce soreness and improve range of motion without hurting strength performance — a modality with potential benefit and no obvious downside is worth doing if you have the time. His routine: ~15-20 seconds on the quads; upper and lower back with the abs flexed (don't let the lower back loosely hyperextend over the roller — keeping the abs tight loosens the whole back better); inner thighs and adductors; then cross the leg over the knee to stretch the glutes and piriformis before rolling them. A lacrosse ball works for very tight hamstrings or glutes.
 
-**Lower body dynamic stretching.** Dynamic stretching has been shown to improve performance in several studies, unlike static stretching, which has been associated with performance detriments — though static stretching is probably not as bad as once thought: the negative effect only seems to matter for intense holds longer than about 30 seconds per muscle. His sequence:
+**Lower body dynamic stretching.** Dynamic stretching has been shown to improve performance in several studies, unlike static stretching, which has been associated with performance detriments — though static stretching is probably not as bad as once thought: the negative effect only seems to matter for intense holds longer than about 30 seconds per muscle ([Yamaguchi 2005](https://www.ncbi.nlm.nih.gov/pubmed/16095425)). His sequence:
 - A few light walking lunges
 - 10-12 leg swings front to back (hamstrings)
 - 10-12 leg swings side to side (hip adductors and groin)

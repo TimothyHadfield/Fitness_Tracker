@@ -6,7 +6,7 @@
 ## Bottom line
 - Hamstring work should roughly **match quad volume** in a complete lower-body program — it matters for injury prevention and athletic performance, not just looks.
 - You need **both** hip-extension exercises (deadlift variations) and **knee-flexion** exercises (leg curls). Deadlifting alone is not enough.
-- **Squats are a bad hamstring exercise** — a 2009 EMG paper (Ebben et al.) ranked the squat worst of six movements tested for hamstring activation.
+- **Squats are a bad hamstring exercise** — a 2009 EMG paper (Ebben et al.) ranked the squat worst of six movements tested for hamstring activation ([Ebben 2009](https://www.ncbi.nlm.nih.gov/pubmed/19417230)).
 - Hamstrings are **not** fast-twitch dominant — newer, better-methodology data shows a fairly even type I / type II mix, so use both heavy and high reps.
 - Cap hamstring volume at **under 20 sets per week** (per Dr. Mike Israetel, this is where recovery problems usually start).
 
@@ -38,9 +38,9 @@ These likely work well because the hamstrings hold the hips extended isometrical
 He has no strong preference between **lying and seated leg curls** — EMG activation is similar — so use whichever you feel best, or rotate both.
 
 ## Regional targeting
-**Foot position on leg curls** shifts which region works hardest (data from Lynn & Costigan): **toes pointed out (external rotation)** biases the **lateral** hamstrings, **toes pointed in** biases the **medial** hamstrings. Memory cue: point your toes toward the region you want to hit.
+**Foot position on leg curls** shifts which region works hardest (data from Lynn & Costigan, [Lynn 2009](https://www.ncbi.nlm.nih.gov/pubmed/18331800)): **toes pointed out (external rotation)** biases the **lateral** hamstrings, **toes pointed in** biases the **medial** hamstrings. Memory cue: point your toes toward the region you want to hit.
 
-A **2015 paper from Schoenfeld and colleagues** found the **lying leg curl beat the stiff-leg deadlift for distal (lower) hamstring activation**, with no significant difference between the two for proximal (upper) activation. Combined with the biceps femoris short head's lack of a hip attachment, this is the case for including a dedicated knee-flexion exercise rather than only deadlifting.
+A **2015 paper from Schoenfeld and colleagues** found the **lying leg curl beat the stiff-leg deadlift for distal (lower) hamstring activation**, with no significant difference between the two for proximal (upper) activation ([Schoenfeld 2015](https://www.ncbi.nlm.nih.gov/pubmed/24978835)). Combined with the biceps femoris short head's lack of a hip attachment, this is the case for including a dedicated knee-flexion exercise rather than only deadlifting.
 
 ## Practical application
 **Recommended program — hamstrings twice per week, on lower-body days:**

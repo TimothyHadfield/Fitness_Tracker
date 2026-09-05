@@ -34,10 +34,10 @@ Cheat reps: some are fine and may eke out extra gains, but **the vast majority o
 
 He favours **varying movements** for novelty. Keep core free-weight patterns (squats, rows) in continuously — take them out for months and your kinematics degrade; a machine can be dropped for six months and picked back up with no deficit.
 
-**Squats aren't mandatory.** From a purely quad-specific standpoint he'd be confident there isn't much difference between squats and leg press over years; squats simply recruit far more additional musculature. Fonseca et al. found rotating squat / leg press / lunge in 2-week blocks produced greater growth in the vastus medialis and rectus femoris than squats alone.
+**Squats aren't mandatory.** From a purely quad-specific standpoint he'd be confident there isn't much difference between squats and leg press over years; squats simply recruit far more additional musculature. Fonseca et al. found rotating squat / leg press / lunge in 2-week blocks produced greater growth in the vastus medialis and rectus femoris than squats alone ([Fonseca 2014](https://www.ncbi.nlm.nih.gov/pubmed/24832974)).
 
 ## The volume study
-[50:19] Three groups, 8 weeks: **6-9, 18-27, and 30-45 sets per muscle per week**. Hypertrophy increased with volume; the highest group gained most in biceps and quads. Context that defuses the "absurd" number: the highest group trained a little over **3 hours a week**, about an hour per session, three times a week; the lowest group trained roughly 13 minutes per session. The study tested a threshold *for a given muscle*, not what total-body volume should be.
+[50:19] Three groups, 8 weeks: **6-9, 18-27, and 30-45 sets per muscle per week** ([Schoenfeld 2019](https://www.ncbi.nlm.nih.gov/pubmed/30153194)). Hypertrophy increased with volume; the highest group gained most in biceps and quads. Context that defuses the "absurd" number: the highest group trained a little over **3 hours a week**, about an hour per session, three times a week; the lowest group trained roughly 13 minutes per session. The study tested a threshold *for a given muscle*, not what total-body volume should be.
 
 - No threshold was found, but he still expects an inverted-U/hormetic curve to appear eventually.
 - Lower-body muscles responded better to high volume than upper body — possibly because no single-joint movements were used.

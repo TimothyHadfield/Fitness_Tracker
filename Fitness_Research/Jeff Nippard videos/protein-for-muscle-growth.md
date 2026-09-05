@@ -12,11 +12,11 @@
 
 ## Daily intake targets
 
-**General health (not lifters).** WHO recommends 0.8 g/kg (0.36 g/lb) — about 65 g for an 80 kg / 180 lb person. Easy to hit on a Western diet, but it ignores resistance training and is not enough to support, let alone maximise, muscle growth.
+**General health (not lifters).** WHO recommends 0.8 g/kg (0.36 g/lb) — about 65 g for an 80 kg / 180 lb person. Easy to hit on a Western diet, but it ignores resistance training and is not enough to support, let alone maximise, muscle growth ([Phillips 2016](https://pubmed.ncbi.nlm.nih.gov/26960445/)).
 
-**Bulking — 1.6 to 2.2 g/kg (0.7 to 1.0 g/lb).** You need less when bulking because a well-fed body has carbs and fat to burn first and is unlikely to break down muscle for fuel. For 80 kg / 180 lb that is **125-180 g/day**. The old "1 g per pound" rule sits at the top of this range.
+**Bulking — 1.6 to 2.2 g/kg (0.7 to 1.0 g/lb)** ([Morton 2018](https://pubmed.ncbi.nlm.nih.gov/28698222/)). You need less when bulking because a well-fed body has carbs and fat to burn first and is unlikely to break down muscle for fuel. For 80 kg / 180 lb that is **125-180 g/day**. The old "1 g per pound" rule sits at the top of this range.
 
-**Cutting — 1.8 to 2.7 g/kg (0.8 to 1.2 g/lb).** In a deficit you have fewer calories coming in and less body fat and glycogen in reserve, so the body is far more likely to strip muscle tissue for energy. Here "1 g per pound" lands mid-range. Go to the **upper end if already very lean and training hard**; the **lower end is plenty if you carry more fat and train recreationally**.
+**Cutting — 1.8 to 2.7 g/kg (0.8 to 1.2 g/lb)** ([Hector & Phillips 2018](https://pubmed.ncbi.nlm.nih.gov/29182451/)). In a deficit you have fewer calories coming in and less body fat and glycogen in reserve, so the body is far more likely to strip muscle tissue for energy. Here "1 g per pound" lands mid-range. Go to the **upper end if already very lean and training hard**; the **lower end is plenty if you carry more fat and train recreationally**.
 
 **Recomp — same as bulking, possibly a little higher.** At maintenance the muscle-loss risk is low provided training is on point. Nudge higher if you are in a slight deficit or more advanced.
 
@@ -28,7 +28,7 @@ Absorption is a red herring: the gut can absorb an enormous amount, far more tha
 
 - Early research: 20-25 g maxes out the anabolic response. Jeff is sceptical of this figure.
 - Anecdotally, intermittent fasters eating 50-100 g per meal in one or two meals get visibly muscular — implausible that most of it is wasted.
-- A 2016 study found **higher MPS from 40 g of whey vs 20 g** after a full-body workout.
+- A 2016 study found **higher MPS from 40 g of whey vs 20 g** after a full-body workout ([Macnaughton 2016](https://pubmed.ncbi.nlm.nih.gov/27511985/)).
 - Another 2016 study found **greater MPS from a beef meal with 70 g protein vs 35 g**.
 
 Conclusion: the usable per-meal ceiling is unclear but higher than once thought, and clearly far less important than the daily total. Most experts still favour **3-5 meals** for digestion and for keeping MPS elevated across the day. Two meals or six will still build muscle if the daily target is hit — just possibly not optimally.
@@ -43,14 +43,14 @@ Leucine is the trigger for mTOR, which triggers new muscle growth. **~3 g of leu
 
 Animal sources beat plant sources on leucine, especially per calorie — but that gap largely closes with **vegan protein powders (soy, pea, brown rice isolates), which also deliver 3 g leucine for under 200 calories**.
 
-Leucine sparks growth but the other eight essential amino acids (EAAs) are needed to actually build the tissue; the DIAAS score ranks sources on EAA content, with dairy and animal proteins on top. Crucial caveat: these tables assume proteins eaten in isolation. In reality people combine foods and will almost certainly get enough leucine and EAAs simply by hitting total daily protein. That is also why **leucine, BCAA and EAA supplements are usually unnecessary** when total protein is adequate.
+Leucine sparks growth but the other eight essential amino acids (EAAs) are needed to actually build the tissue; the DIAAS score ranks sources on EAA content, with dairy and animal proteins on top ([Mathai 2017](https://pubmed.ncbi.nlm.nih.gov/28382889/)). Crucial caveat: these tables assume proteins eaten in isolation. In reality people combine foods and will almost certainly get enough leucine and EAAs simply by hitting total daily protein. That is also why **leucine, BCAA and EAA supplements are usually unnecessary** when total protein is adequate.
 
 ## Timing [07:16]
 
-- The "protein within 30 minutes or the session is wasted" idea was debunked years ago. As long as **pre- and post-workout meals fall within roughly 4-6 hours of each other**, the anabolic response is maximised.
+- The "protein within 30 minutes or the session is wasted" idea was debunked years ago. As long as **pre- and post-workout meals fall within roughly 4-6 hours of each other**, the anabolic response is maximised ([Schoenfeld & Aragon 2018](https://pubmed.ncbi.nlm.nih.gov/30702982/)).
 - Exception: if you **train fasted**, get protein in as soon as you can afterwards.
 - **Pre-sleep protein** is the more interesting, less discussed lever. Work by Jorn Trommelen and Luc van Loon frames pre-sleep as an important feeding opportunity and suggests **~40 g before the overnight fast** to raise overnight MPS. This is what Jeff personally aims for.
-- Counterpoint: two longitudinal studies comparing slow-digesting casein before bed vs in the morning found **no significant difference after 8-10 weeks** — but both had subjects on very high total protein (~2 g/kg, ~1 g/lb), again showing that timing details fade when the daily total is high.
+- Counterpoint: two longitudinal studies comparing slow-digesting casein before bed vs in the morning found **no significant difference after 8-10 weeks** ([Joy 2018](https://pubmed.ncbi.nlm.nih.gov/29764464/), [Antonio 2017](https://pubmed.ncbi.nlm.nih.gov/28515842/)) — but both had subjects on very high total protein (~2 g/kg, ~1 g/lb), again showing that timing details fade when the daily total is high.
 
 ## Safety [08:17]
 

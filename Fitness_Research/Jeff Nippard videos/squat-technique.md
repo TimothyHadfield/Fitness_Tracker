@@ -15,7 +15,7 @@ The squat is simultaneous hip extension and knee extension.
 - **Hip extension:** glutes primarily, with help from adductor magnus. Hamstrings can extend the hip but contribute little here — the knee is bent, so their length barely changes through the range of motion.
 - **Knee extension:** quadriceps.
 - **Isometric lumbar extension:** spinal erectors.
-- **Abs are not highly active** despite the common belief. EMG shows low abdominal activity, which makes sense — the abs do spinal flexion and anti-extension, and neither happens in a squat.
+- **Abs are not highly active** despite the common belief. EMG shows low abdominal activity ([Aspe 2014](https://www.ncbi.nlm.nih.gov/pubmed/24662228)), which makes sense — the abs do spinal flexion and anti-extension, and neither happens in a squat.
 
 Because it spans multiple joints and large muscle masses, the squat is highly conducive to progressive overload.
 

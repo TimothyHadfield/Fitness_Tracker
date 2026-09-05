@@ -13,7 +13,7 @@
 ## Does periodization actually work? [01:02]
 A review of 15 studies found 13 showed a positive effect of periodizing training on strength and hypertrophy. The two null studies were both short and used untrained subjects — beginners respond to almost any non-ridiculous program, so they're poor tests.
 
-The caveat: it may not be periodization *per se* doing the work. A 2012 review by John Kiely argued that because of logistical constraints, studies compare "regularly varied training" against "minimal or no variation." What they demonstrate is that **variation** matters, not that periodization models are the optimal way of delivering it. On the current literature, periodization as a specific methodology isn't strongly evidence-based; variety is.
+The caveat: it may not be periodization *per se* doing the work. A 2012 review by John Kiely argued that because of logistical constraints, studies compare "regularly varied training" against "minimal or no variation." What they demonstrate is that **variation** matters, not that periodization models are the optimal way of delivering it ([Kiely 2012](https://www.researchgate.net/publication/230756715_Periodization_paradigms_in_the_21st_century_Evidence-led_or_tradition-driven)). On the current literature, periodization as a specific methodology isn't strongly evidence-based; variety is.
 
 Limit on that: if you vary too frequently, or swing too violently between extremes, your adaptive capacity gets spread too thin and gains suffer. Controlled, methodical variation only.
 
@@ -24,7 +24,7 @@ Intensity increases, volume decreases over time. The original 1950s model from R
 - **Progression-scheme example (6–8 rep range):** week 1 = 100 lb for 3x8; week 2 = 105 lb for 3x7; and so on. Volume drops within the block, but at the end of the block you restart the progression with heavier loads — so across the macro picture total volume actually rises.
 
 ## Reverse linear periodization [05:37]
-Volume increases, intensity decreases. Most head-to-head studies favour standard linear over reverse linear, but reverse linear has specific uses — mainly building work capacity / muscular endurance.
+Volume increases, intensity decreases. Most head-to-head studies favour standard linear over reverse linear ([Prestes 2009](http://www.ncbi.nlm.nih.gov/pubmed/19057409)), but reverse linear has specific uses — mainly building work capacity / muscular endurance.
 
 Example squat work-capacity block, all at RPE 9:
 - Week 1: 3x4–6
@@ -51,7 +51,7 @@ Repeat the same structure in weeks 2 and 3, adding weight within each rep range 
 ## Conjugate periodization [11:17]
 Two premises: (1) different qualities are developed concurrently — e.g. max effort bench on day 1, dynamic/speed work with bands and chains on day 2; (2) **exercise variation matters**.
 
-Study cited: Fonseca et al. (2014) — one group did only squats; the other did squats plus deadlifts, lunges and leg press. The squat-only group grew only some heads of the quadriceps; the varied-exercise group grew **all four heads**. Practical read: for symmetrical, proportional development, don't run a minimalist one-exercise-per-muscle program.
+Study cited: Fonseca et al. (2014) — one group did only squats; the other did squats plus deadlifts, lunges and leg press. The squat-only group grew only some heads of the quadriceps; the varied-exercise group grew **all four heads** ([Fonseca 2014](http://www.ncbi.nlm.nih.gov/pubmed/24832974)). Practical read: for symmetrical, proportional development, don't run a minimalist one-exercise-per-muscle program.
 
 ## Block periodization [13:21]
 Built on **training residuals** — an adaptation persists for a while after you stop training it hard. So focus a block (roughly 1–2 months) on one quality or body part, then drop it to maintenance while a different target gets the focus.

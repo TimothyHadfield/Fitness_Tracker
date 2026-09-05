@@ -26,9 +26,9 @@ Recent literature has undermined the hypertrophy row of this table.
 - Greater strength — both **bench press 1RM and squat 1RM** — in the 3-minute group.
 - **No difference** in muscular endurance.
 
-A clear win for the longer rest period.
+A clear win for the longer rest period ([Schoenfeld 2016](https://www.ncbi.nlm.nih.gov/pubmed/26605807)).
 
-**Grgic and colleagues, 2017 meta-analysis.** Pooled six studies on rest intervals and found that **resting more than one minute beat resting less than one minute**. The main proposed rationale: longer rest lets you perform more total volume. Effects also depend on the specific exercise and how hard you're exerting yourself on it.
+**Grgic and colleagues, 2017 meta-analysis.** Pooled six studies on rest intervals and found that **resting more than one minute beat resting less than one minute** ([Grgic 2017](https://www.ncbi.nlm.nih.gov/pubmed/28641044)). The main proposed rationale: longer rest lets you perform more total volume. Effects also depend on the specific exercise and how hard you're exerting yourself on it.
 
 ## Why rest matters: the two functions
 [06:07]

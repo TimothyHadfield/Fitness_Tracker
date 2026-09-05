@@ -11,9 +11,9 @@
 - Use deliberate tempo prescriptions only when you have a specific goal: power, eccentric overload, technique repair, or metabolic stress.
 
 ## What the research says
-[01:32] Schoenfeld, Ogburn and Krieger (2014) ran a meta-analysis pooling studies across different lifting tempos. Across the range from **0.5 s per rep up to 8 s per rep**, hypertrophy was statistically equivalent. An 8-second rep might be a 4 s eccentric plus a 4 s concentric — that grew muscle about as well as very fast reps did.
+[01:32] Schoenfeld, Ogburn and Krieger (2014) ran a meta-analysis pooling studies across different lifting tempos ([Schoenfeld 2015](https://www.ncbi.nlm.nih.gov/pubmed/25601394)). Across the range from **0.5 s per rep up to 8 s per rep**, hypertrophy was statistically equivalent. An 8-second rep might be a 4 s eccentric plus a 4 s concentric — that grew muscle about as well as very fast reps did.
 
-[02:34] The one clear finding against tempo extremes: reps lasting **over 10 seconds** were worse for growth. The likely mechanism is load reduction — super-slow positives and negatives force the weight down so far that the tensile stimulus falls off.
+[02:34] The one clear finding against tempo extremes: reps lasting **over 10 seconds** were worse for growth ([Schoenfeld 2015](https://www.ncbi.nlm.nih.gov/pubmed/25601394)). The likely mechanism is load reduction — super-slow positives and negatives force the weight down so far that the tensile stimulus falls off.
 
 The practical implication is permission to be creative. Since a wide band of tempos works, tempo becomes a tool you can vary by exercise and by training goal rather than a number you must obey.
 

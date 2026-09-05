@@ -14,7 +14,7 @@
 
 Your body does not care about building muscle, it cares about not starving. Without surplus energy it prioritises glucose for organs and powering the immune system over the evolutionarily non-urgent business of getting jacked. You **can** build muscle at maintenance or in a deficit if you train hard — it is just lower on the priority list. In a surplus, the body knows starvation is not a threat and can allocate energy to growth.
 
-**Supporting study:** one group maingained on ~**2,500 kcal/day**, another bulked on ~**4,300 kcal/day**, both on the same 8-week training plan. The **bulking group gained significantly more fat-free mass** — and, surprisingly, **no fat at all**. Jeff attributes the zero fat gain to the subjects being new lifters; in studies on more experienced subjects, bulking still produces more muscle but also more fat.
+**Supporting study:** one group maingained on ~**2,500 kcal/day**, another bulked on ~**4,300 kcal/day**, both on the same 8-week training plan. The **bulking group gained significantly more fat-free mass** — and, surprisingly, **no fat at all** ([Rozenek 2002](https://pubmed.ncbi.nlm.nih.gov/12094125/)). Jeff attributes the zero fat gain to the subjects being new lifters; in studies on more experienced subjects, bulking still produces more muscle but also more fat.
 
 ## Rate of gain [03:36]
 
@@ -38,7 +38,7 @@ If you do not know your maintenance: **multiply bodyweight in pounds by 14 to 18
 
 ## Macros [06:11]
 
-**Protein: 0.7 to 1 g per lb of bodyweight is plenty when bulking.** Jeff at 180 lb eats about **170 g/day**.
+**Protein: 0.7 to 1 g per lb of bodyweight is plenty when bulking** ([Morton 2018](https://pubmed.ncbi.nlm.nih.gov/28698222/)). Jeff at 180 lb eats about **170 g/day**.
 
 **Fat: 20-30% of total calories.** Too little dietary fat can lower testosterone; too much drives excess fat gain. Contrary to low-carb advocates, **dietary fat is more easily stored as body fat than carbohydrate is** — fat is already fat, whereas carbs must go through a fairly arduous biochemical conversion before being stored as fat. He is against both high-fat and low-fat bulks. On 3,000 kcal that is **65-100 g fat per day**; he lands around **80 g**.
 
@@ -47,7 +47,7 @@ If you do not know your maintenance: **multiply bodyweight in pounds by 14 to 18
 ## A day of bulking food [07:12]
 
 Illustrative of how the macros land in practice.
-- ~7:30 am: energy drink or coffee (coffee is the healthier option — antioxidants and a large body of health evidence; energy drinks fine in moderation).
+- ~7:30 am: energy drink or coffee (coffee is the healthier option — antioxidants and a large body of health evidence ([Poole 2017](https://pubmed.ncbi.nlm.nih.gov/29167102/)); energy drinks fine in moderation).
 - ~10:00 am breakfast: 1 cup egg whites + 1 whole egg scrambled with turkey bacon, mushrooms, onions, spinach, 15 g shredded cheese; 60 g oats with almond milk and 100 g blueberries. Most supplements taken here. Busy mornings: protein shake with oats.
 - 1:00 pm pre-workout meal: 100 g lean ground turkey, jasmine rice, Greek yogurt, shredded cheese, sriracha, a kiwi, 100 g blackberries. Pre-workout supplement after, training about an hour later.
 - Post-training: protein shake and a banana.
@@ -82,7 +82,7 @@ Basics:
 - **Caffeine, ~200 mg pre-workout**, as long as it does not disrupt sleep.
 
 What he added on this bulk:
-- **Fish oil — 6 capsules each morning, giving 2 g combined EPA + DHA.** More omega-3s is one of the easiest wins for heart health, inflammation, brain function and anxiety.
+- **Fish oil — 6 capsules each morning, giving 2 g combined EPA + DHA.** More omega-3s is one of the easiest wins for heart health ([Khan 2021](https://pubmed.ncbi.nlm.nih.gov/34505026/)), inflammation ([Kavyani 2022](https://pubmed.ncbi.nlm.nih.gov/35914448/)), brain function and anxiety ([Su 2018](https://pubmed.ncbi.nlm.nih.gov/30646157/)).
 - **Magnesium before bed** — low magnesium is associated with low testosterone and poor sleep.
 - **Vitamin D** — he gets little sunlight; low vitamin D is also linked to low testosterone.
 - **Basic multivitamin** in the morning, with **600 mg ashwagandha root** — though he explicitly says there is **not yet enough safety data on ashwagandha** for him to recommend it broadly.

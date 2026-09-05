@@ -40,7 +40,7 @@
 | Egyptian cable lateral raise | last set myo-reps | 12 reps to RPE 9–10, then rest a couple of breaths and hit 4 more, repeating until 4 reps aren't possible |
 | Cable triceps kickback | 2x20–30 | Strict 1 sec up / 1 sec down |
 
-**On tempo:** research shows tempo doesn't matter much for hypertrophy provided you control the weight. He monitors it on high-rep sets only, because form degrades late in long sets.
+**On tempo:** research shows tempo doesn't matter much for hypertrophy provided you control the weight ([Schoenfeld 2015](https://pubmed.ncbi.nlm.nih.gov/25601394/)). He monitors it on high-rep sets only, because form degrades late in long sets.
 
 **On side delts:** easily neglected on a powerbuilding approach, hence extra stimulus on the exercises that do hit them.
 

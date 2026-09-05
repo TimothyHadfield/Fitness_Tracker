@@ -16,7 +16,7 @@
 ## Argument 2: partials keep constant tension
 [02:01] The much better argument. Rather than halving the range, constant-tension advocates stop just shy of lockout, cutting out the top and bottom of each rep so the muscle never gets a mini-rest.
 
-A **2017 study** compared skull crushers through a full range vs. a half range restricted to the middle of the lift. The full-range group got a brief tension break at the top; the partial group kept the triceps engaged from start to finish. After **8 weeks** in decently trained subjects, the **partial group grew roughly twice as much**.
+A **2017 study** compared skull crushers through a full range vs. a half range restricted to the middle of the lift. The full-range group got a brief tension break at the top; the partial group kept the triceps engaged from start to finish. After **8 weeks** in decently trained subjects, the **partial group grew roughly twice as much** ([Goto 2019](https://pubmed.ncbi.nlm.nih.gov/31034463/)).
 
 Caveats Jeff attaches: the partial group may simply have been getting closer to failure, and this is the **only one of the six ROM studies to favour partials** — probably because a single-joint free-weight isolation exercise is uniquely helped by constant tension. The advantage likely does **not** transfer to cables and machines, which already supply near-constant tension; there it makes more sense to emphasise a full stretch and full squeeze.
 
@@ -24,11 +24,11 @@ Caveats Jeff attaches: the partial group may simply have been getting closer to 
 [04:02] Jeff isn't convinced it's even true historically — classic-era lifters like Arnold and Ed Corney used full ROM with lockouts on many lifts. Even granting that modern pros favour partials, anecdotes lack the control of studies: you can't separate the partials from genetics, nutrition, drugs or other training variables. He's open to the idea that partials suit that population, but where better evidence exists it outranks anecdote.
 
 ## What the research actually shows
-[04:32] A recent systematic review covered all six available ROM-and-hypertrophy studies:
+[04:32] A recent systematic review covered all six available ROM-and-hypertrophy studies ([Schoenfeld 2020](https://pubmed.ncbi.nlm.nih.gov/32030125/)):
 - **All four lower-body studies favoured full range of motion.**
 - Upper-body results conflicted: one found **no difference** between full-range curls and active-tension (partial) curls; the other was the skull crusher study favouring partials.
 
-**Bloomquist et al.** compared heavier partial squats to lighter deep squats. Despite the lighter load, **deep squats produced much more growth at every measurement site across the entire quadriceps.**
+**Bloomquist et al.** compared heavier partial squats to lighter deep squats. Despite the lighter load, **deep squats produced much more growth at every measurement site across the entire quadriceps** ([Bloomquist 2013](https://pubmed.ncbi.nlm.nih.gov/23604798/)).
 
 ## How deep is deep enough
 [06:03] There's no benefit to pushing ROM past your comfortable limits — some people's skeletons won't allow an ultra-deep squat without heavy lumbar rounding. A MASS review piece noted that **as long as you reach the hardest part of the lift, you're probably maximising the hypertrophic effect.** Since the squat is hardest around parallel, **squatting to just below parallel is likely as good, or nearly as good, as ass-to-grass for quad growth.** Avoid the "more is always better" trap.

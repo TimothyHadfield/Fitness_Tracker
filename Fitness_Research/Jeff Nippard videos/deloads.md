@@ -41,7 +41,7 @@ Frame it as a **technique week**, not a step backwards — some coaches literall
 ## How often: proactive vs reactive [04:34]
 - **Proactive:** schedule every **4–8 weeks**. More advanced lifters need them more often, because harder training generates more fatigue.
 - **Reactive (autoregulated):** deload only when you feel you need one. The logic is fair — why interrupt a run of great progress on a schedule?
-- His preference is **proactive**, because it's genuinely hard to sense when a deload is due. Not all soft tissues and tendons are well innervated, so joint stress accumulates unnoticed; things feel fine right up until something tweaks. He'd only use the reactive approach with a very mature lifter who knows their body extremely well.
+- His preference is **proactive**, because it's genuinely hard to sense when a deload is due. Not all soft tissues and tendons are well innervated ([Ackermann 2016](https://pubmed.ncbi.nlm.nih.gov/27535247/)), so joint stress accumulates unnoticed; things feel fine right up until something tweaks. He'd only use the reactive approach with a very mature lifter who knows their body extremely well.
 
 ## Who doesn't need one [05:35]
 - **Early beginners (first year):** not generating enough fatigue to warrant a formal deload. Progress comes from learning technique and learning what training hard actually means. From the late-beginner / early-intermediate stage — roughly 1–2 years in — deloads start making sense.

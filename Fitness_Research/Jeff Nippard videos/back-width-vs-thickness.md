@@ -16,11 +16,11 @@ Back width appearance comes from two things: **lat development** and **waist cir
 ## The pulldown grip evidence [01:02]
 Three EMG studies, each fixing the previous one's flaw:
 
-1. **Signorile et al. 2002** — compared close-grip pulldowns (neutral and supinated) against wide-grip pulldowns to the front and behind the neck. **Wide grips won for mean lat activation, with wide-grip-to-the-front best.** *Flaw:* the narrow conditions also changed wrist position, so the lower activation may have been the neutral/reverse grip rather than the narrow width.
+1. **Signorile et al. 2002** — compared close-grip pulldowns (neutral and supinated) against wide-grip pulldowns to the front and behind the neck. **Wide grips won for mean lat activation, with wide-grip-to-the-front best** ([Signorile 2002](https://www.ncbi.nlm.nih.gov/pubmed/12423182)). *Flaw:* the narrow conditions also changed wrist position, so the lower activation may have been the neutral/reverse grip rather than the narrow width.
 
-2. **Lusk et al. 2010** — held wrist position constant while varying width: wide pronated, wide supinated, narrow pronated, narrow supinated. **Width didn't matter; both pronated grips significantly beat both supinated grips.** *Flaw:* absolute rather than relative loading — the overhand grips may have won because you can't move as much weight with them, putting subjects closer to failure.
+2. **Lusk et al. 2010** — held wrist position constant while varying width: wide pronated, wide supinated, narrow pronated, narrow supinated. **Width didn't matter; both pronated grips significantly beat both supinated grips** ([Lusk 2010](https://www.ncbi.nlm.nih.gov/pubmed/20543740)). *Flaw:* absolute rather than relative loading — the overhand grips may have won because you can't move as much weight with them, putting subjects closer to failure.
 
-3. **Andersen et al. 2014** — three overhand widths (narrow, medium, wide) with **relative loading**. **Medium grip came out on top**: higher 6RM strength than wide grip, significantly higher concentric biceps activation, and a **trend** toward higher lat activation.
+3. **Andersen et al. 2014** — three overhand widths (narrow, medium, wide) with **relative loading**. **Medium grip came out on top**: higher 6RM strength than wide grip, significantly higher concentric biceps activation, and a **trend** toward higher lat activation ([Andersen 2014](https://www.ncbi.nlm.nih.gov/pubmed/24662157)).
 
 Nippard's read: a **slight edge to a medium overhand grip at about 1.5x shoulder width, pulled to the front of the neck**. But EMG reports group averages, so he treats it as a first approximation only and turns to biomechanics.
 
@@ -30,7 +30,7 @@ Nippard's read: a **slight edge to a medium overhand grip at about 1.5x shoulder
 - The lats do both. But **rowing exercises (dumbbell rows, cable rows, machine rows) already hit the lats through shoulder extension**, so from a programming standpoint your pulldowns and pull-ups are better spent training the lats through **shoulder adduction** — i.e. a **wider pronated grip most of the time**.
 
 ## The width/thickness split is overstated [04:08]
-The common belief that wide grips only build width and narrow grips only build thickness is wrong. The Andersen paper's whole-movement activation figure shows **both the lats and the traps are highly active in the pulldown regardless of grip position**. Any grip from **1x to 2x shoulder width**, taken through a full ROM with controlled technique, will improve both width and thickness.
+The common belief that wide grips only build width and narrow grips only build thickness is wrong. The Andersen paper's whole-movement activation figure shows **both the lats and the traps are highly active in the pulldown regardless of grip position** ([Andersen 2014](https://www.ncbi.nlm.nih.gov/pubmed/24662157)). Any grip from **1x to 2x shoulder width**, taken through a full ROM with controlled technique, will improve both width and thickness.
 
 ## Rows [04:38]
 - **Lehman et al.**: the **seated row outperformed the lat pulldown for both lat and trap activation** — so a row is essential if you want a back that's both wider and thicker.

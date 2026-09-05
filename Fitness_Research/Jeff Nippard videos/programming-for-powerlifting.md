@@ -35,7 +35,7 @@ Two beginner priorities:
 ## Specificity, and lifting heavy for strength
 [07:48] Specificity: to get better at squat, bench and deadlift, do a lot of squatting, benching and deadlifting.
 
-There is a real distinction between strength and hypertrophy adaptations. In a **2014 paper by Schoenfeld et al.**, a bodybuilding-style group (**3 sets of 10**) was compared to a powerlifting-style group (**7 sets of 3**). **Hypertrophy was roughly equal**, but the powerlifting-style group **gained significantly more strength**. The lesson: you must lift heavy to maximise strength.
+There is a real distinction between strength and hypertrophy adaptations. In a **2014 paper by Schoenfeld et al.**, a bodybuilding-style group (**3 sets of 10**) was compared to a powerlifting-style group (**7 sets of 3**). **Hypertrophy was roughly equal**, but the powerlifting-style group **gained significantly more strength** ([Schoenfeld 2014](https://www.ncbi.nlm.nih.gov/pubmed/24714538)). The lesson: you must lift heavy to maximise strength.
 
 Because much early strength gain comes from **motor learning**, beginners need frequent practice. Jeff's sweet spot: **each lift 2-3× per week**, provided you aren't taking many or any sets to failure.
 

@@ -11,9 +11,9 @@
 - Fasted cardio does not improve fat loss. Do cardio whenever adherence is best.
 
 ## Why cardio is still worth doing
-[00:00] Cardiorespiratory fitness is a major predictor of all-cause mortality and cardiovascular disease — a **2009 meta-analysis** showed nearly every study favouring high over low cardio fitness for both all-cause mortality and coronary/cardiovascular disease.
+[00:00] Cardiorespiratory fitness is a major predictor of all-cause mortality and cardiovascular disease — a **2009 meta-analysis** showed nearly every study favouring high over low cardio fitness for both all-cause mortality and coronary/cardiovascular disease ([Kodama 2009](https://pubmed.ncbi.nlm.nih.gov/19454641/)).
 
-It also supports training: better work capacity and faster between-set recovery, so you can actually complete your prescribed volume. And physical activity is a key factor in **long-term weight maintenance** — more active people are more successful at keeping weight off post-diet.
+It also supports training: better work capacity and faster between-set recovery, so you can actually complete your prescribed volume. And physical activity is a key factor in **long-term weight maintenance** — more active people are more successful at keeping weight off post-diet ([Thomas 2014](https://pubmed.ncbi.nlm.nih.gov/24355667/)).
 
 ## Mistake 1 — Treating cardio as equal to diet
 [01:32] The calorie arithmetic is brutal. At **170 lb / 77 kg**, burning 1,000 calories takes roughly **3 hours of brisk walking** — calories you could eat in under a minute.
@@ -27,27 +27,27 @@ Two explanations:
 Caveat: if you're genuinely regulating your diet, compensatory eating won't fully offset cardio, and NEAT reduction will never be so large that cardio makes you gain weight. The point is diminishing returns as you lean harder on cardio.
 
 ## Mistake 2 — Bad cardio timing around lifting
-[04:36] The **interference effect** is real but overblown. A **2017 systematic review and meta-analysis on concurrent training (13 studies)** found placing cardio immediately *before* weights significantly worsened 1RM strength improvements, and that strength training is compromised for **at least 6-8 hours** after endurance training. Those authors suggested separating endurance and resistance work by **24 hours** where realistic.
+[04:36] The **interference effect** is real but overblown. A **2017 systematic review and meta-analysis on concurrent training (13 studies)** found placing cardio immediately *before* weights significantly worsened 1RM strength improvements, and that strength training is compromised for **at least 6-8 hours** after endurance training ([Murlasits 2018](https://pubmed.ncbi.nlm.nih.gov/28783467/)). Those authors suggested separating endurance and resistance work by **24 hours** where realistic.
 
-A **2021 meta-analysis** found concurrent training had **no impact on strength in untrained and moderately trained** people but **significantly impaired strength in well-trained** individuals — interference is an advanced-lifter problem.
+A **2021 meta-analysis** found concurrent training had **no impact on strength in untrained and moderately trained** people but **significantly impaired strength in well-trained** individuals ([Petré 2021](https://pubmed.ncbi.nlm.nih.gov/33751469/)) — interference is an advanced-lifter problem.
 
-A **5-10 minute warm-up** on a StairMaster or similar machine is fine and has been shown to improve subsequent lifting performance. Anything longer than ~10 minutes counts as a formal cardio session and belongs after weights or at a separate time.
+A **5-10 minute warm-up** on a StairMaster or similar machine is fine and has been shown to improve subsequent lifting performance ([Fradkin 2010](https://pubmed.ncbi.nlm.nih.gov/19996770/)). Anything longer than ~10 minutes counts as a formal cardio session and belongs after weights or at a separate time.
 
 ## Mistake 3 — The high-intensity trap
 [06:39] Definitions: **LISS/MISS** is steady-pace work (incline treadmill, StairMaster). **HIIT** is ~20-30 s all-out, 2-3 min easy, repeated for five or six intervals.
 
-The **afterburn (EPOC)** argument doesn't hold up. One study found that even after **80 minutes at 80% max heart rate**, afterburn added only **80 extra calories**. A more recent systematic review concluded afterburn is unlikely to account for any greater fat loss potential.
+The **afterburn (EPOC)** argument doesn't hold up. One study found that even after **80 minutes at 80% max heart rate**, afterburn added only **80 extra calories** ([LaForgia 2006](https://pubmed.ncbi.nlm.nih.gov/17101527/)). A more recent systematic review concluded afterburn is unlikely to account for any greater fat loss potential ([Keating 2017](https://pubmed.ncbi.nlm.nih.gov/28513103/)).
 
 Legitimate HIIT upsides: **time efficiency** (same calories in as little as **40% of the time**) and less boredom for some people.
 Downsides: greater interference with lifting, longer recovery, and partial redundancy — moderate-to-high-rep lifting is physiologically similar (20-30 s hard, 2-3 min rest, repeat). Jeff pushes back slightly, saying HIIT does raise heart rate and challenge the cardiovascular system more than typical lifting — but it still narrows HIIT's unique value.
 
 ## Mistake 4 — Too much cardio overall
-[08:44] From an **NSCA meta-analysis on the interference effect**: hypertrophy dropped off around the **3-4 sessions/week** mark, though the correlation was weak — muscle doesn't evaporate above that. Negative correlations also appeared between hypertrophy, strength and power and the **daily duration** of endurance work, with more interference above **30 minutes per day**.
+[08:44] From an **NSCA meta-analysis on the interference effect**: hypertrophy dropped off around the **3-4 sessions/week** mark, though the correlation was weak — muscle doesn't evaporate above that. Negative correlations also appeared between hypertrophy, strength and power and the **daily duration** of endurance work, with more interference above **30 minutes per day** ([Wilson 2012](https://pubmed.ncbi.nlm.nih.gov/22002517/)).
 
 These numbers can't be read in a vacuum — walking the dog is not the same stimulus as sprint work.
 
 ## Mistake 5 — Banking on fasted cardio
-[09:14] Burning more fat *during* a session doesn't mean losing more fat overall. A **2011 study** found that burning more fat during cardio meant burning less fat over the following 24 hours. A systematic review found fasted exercise did not influence weight loss or changes in lean and fat mass, and that a **meaningful caloric deficit matters far more** than fed vs fasted.
+[09:14] Burning more fat *during* a session doesn't mean losing more fat overall. A **2011 study** found that burning more fat during cardio meant burning less fat over the following 24 hours ([Paoli 2011](https://pubmed.ncbi.nlm.nih.gov/21411835/)). A systematic review found fasted exercise did not influence weight loss or changes in lean and fat mass, and that a **meaningful caloric deficit matters far more** than fed vs fasted.
 
 A review by **Escalante and Barakat** on competitive physique athletes acknowledged no conclusive evidence for fasted cardio's superiority, but noted the research hasn't been done in physique competitors and left open whether it helps in the **final stages** of contest prep. They also suggested **protein-enhanced cardio (~25 g protein beforehand)** might have a slight edge in some advanced cases.
 
@@ -63,7 +63,7 @@ A review by **Escalante and Barakat** on competitive physique athletes acknowled
 - Which metabolic component drives the compensation is not settled; NEAT is the leading suspect.
 - The 3-4 day/week hypertrophy drop-off is a weak correlation and a trend to note, not a hard limit.
 - Fasted cardio in very lean physique competitors is genuinely unstudied — the question stays open.
-- Interference severity depends on the duration and intensity of the endurance work, so blanket rules are approximations.
+- Interference severity depends on the duration and intensity of the endurance work, so blanket rules are approximations ([Fyfe 2014](https://pubmed.ncbi.nlm.nih.gov/24728927/)).
 
 ## References
 
