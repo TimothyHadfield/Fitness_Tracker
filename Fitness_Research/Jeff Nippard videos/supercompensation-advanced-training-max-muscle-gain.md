@@ -5,7 +5,7 @@
 
 ## Bottom line
 - Supercompensation = fitness dips during hard training (**overreaching**), returns to baseline during recovery, then **overshoots** — the gains show up after you back off, not during.
-- A 2019 Norwegian study is the **first evidence of delayed hypertrophic supercompensation**: muscle fibre size dropped during training and grew most **10 days after** the final training block.
+- A 2019 Norwegian study is the **first evidence of delayed hypertrophic supercompensation**: muscle fibre size dropped during training and grew most **10 days after** the final training block ([Bjørnsen 2019](https://www.ncbi.nlm.nih.gov/pubmed/30543499)).
 - The finding is not solid yet — biopsy and ultrasound results disagreed, the sample was 13 untrained subjects, and it needs replication.
 - **Beginners should not intentionally overreach.** Intermediate/advanced lifters can consider a high-volume push followed by a deload or low-volume phase to "realise" the gains.
 - Watch for the overreaching/overtraining line: soreness, joint pain, poor sleep, low mood, dropping performance.
@@ -18,7 +18,7 @@ Plot fitness (or performance) against time across a hard 8-week program:
 2. **Recovery phase** — muscles, tendons and immune system recover and fitness climbs back to baseline.
 3. **Supercompensation** — the body overshoots baseline and you collect delayed gains.
 
-**Overtraining** is when you never enter the recovery phase and the downward trend just continues. This usually only happens to beginners taking on too much, though intermediates and advanced lifters can reach it by ignoring warning signals.
+**Overtraining** is when you never enter the recovery phase and the downward trend just continues ([Halson 2004](https://www.ncbi.nlm.nih.gov/pubmed/15571428)). This usually only happens to beginners taking on too much, though intermediates and advanced lifters can reach it by ignoring warning signals.
 
 Training status changes how this plays out:
 - **Beginners:** more or less linear progress workout to workout; no need to think about overreaching at all.
@@ -33,7 +33,7 @@ In a podcast the year before, **Dr. Mike Israetel** and **Dr. Eric Helms** both 
 
 ## The Norwegian study [04:34]
 
-Published April 2019, covered in the MASS Research Review (Helms and Greg Nuckols discussed it there). Title, roughly: *delayed myonuclear addition, myofiber hypertrophy and increases in strength with high-frequency, low-load blood flow restricted training to volitional failure*. Individual researchers are not named in the video.
+Published April 2019, covered in the MASS Research Review (Helms and Greg Nuckols discussed it there). Title, roughly: *delayed myonuclear addition, myofiber hypertrophy and increases in strength with high-frequency, low-load blood flow restricted training to volitional failure* ([Bjørnsen 2019](https://www.ncbi.nlm.nih.gov/pubmed/30543499)). Individual researchers are not named in the video.
 
 **Design:**
 - **16 untrained** subjects; **13 completed** (3 dropped out, one showed signs of rhabdomyolysis).

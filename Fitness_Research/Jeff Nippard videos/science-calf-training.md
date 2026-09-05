@@ -65,8 +65,8 @@ Since the soleus is predominantly slow twitch, he prefers **15-20 reps** with th
 Sources as listed by Nippard in the video description.
 
 - Kadi F et al. 2000. The expression of androgen receptors in human neck and limb muscles: effects of training and self-administration of androgenic-anabolic steroids. *Histochem Cell Biol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10664066) doi:[10.1007/s004180050003](https://doi.org/10.1007/s004180050003)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3404827/>
+- Mitchell CJ et al. 2012. Resistance exercise load does not determine training-mediated hypertrophic gains in young men. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22518835/) doi:[10.1152/japplphysiol.00307.2012](https://doi.org/10.1152/japplphysiol.00307.2012)
 - Netreba AI et al. 2007. Physiological effects of using the low intensity strength training without relaxation in single-joint and multi-joint movements. *Ross Fiziol Zh Im I M Sechenova*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17465271)
-- <http://link.springer.com/article/10.1007%2Fs00421-012-2339-3>
+- Schuenke et al. 2012. Early-phase muscular adaptations in response to slow-speed versus traditional resistance-training regimens. *European Journal of Applied Physiology*. <http://link.springer.com/article/10.1007%2Fs00421-012-2339-3> doi:[10.1007/s00421-012-2339-3](https://doi.org/10.1007/s00421-012-2339-3)
 - Albracht K et al. 2008. Assessment of muscle volume and physiological cross-sectional area of the human triceps surae muscle in vivo. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18555257) doi:[10.1016/j.jbiomech.2008.04.020](https://doi.org/10.1016/j.jbiomech.2008.04.020)
 - Thorstensson A et al. 1976. Effect of strength training on enzyme activities and fibre characteristics in human skeletal muscle. *Acta Physiol Scand*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/179278) doi:[10.1111/j.1748-1716.1976.tb10207.x](https://doi.org/10.1111/j.1748-1716.1976.tb10207.x)

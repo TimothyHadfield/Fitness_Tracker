@@ -88,4 +88,4 @@ Sources as listed by Nippard in the video description.
 
 **Fiber Type**
 
-- <http://onlinelibrary.wiley.com/doi/10.1111/sms.12786/full>
+- Evangelidis et al. 2017. The functional significance of hamstrings composition: is it really a “fast” muscle group?. *Scandinavian Journal of Medicine &amp; Science in Sports*. <http://onlinelibrary.wiley.com/doi/10.1111/sms.12786/full> doi:[10.1111/sms.12786](https://doi.org/10.1111/sms.12786)

@@ -5,7 +5,7 @@
 
 ## Bottom line
 - Jeff ran bear mode for ~8 months, going from **160 lb lean to 183 lb bulked** (23 lb gained) at 5'5".
-- The research Eric Helms cited (Garthe and colleagues — auto-captions render this "Garth") found an extra **~600 kcal/day** in elite athletes training 4x/week produced **no significant extra muscle but over 3x the fat gain**.
+- The research Eric Helms cited (Garthe and colleagues) found an extra **~600 kcal/day** in elite athletes training 4x/week produced **no significant extra muscle but over 3x the fat gain** ([Garthe 2013](https://www.tandfonline.com/doi/full/10.1080/17461391.2011.643923)).
 - Nutrition is **permissive** to training, not causative: overfeeding cannot force a muscle to grow. Training is the initiating event.
 - Real benefits: more strength (more overload), no hunger or cravings, better psychological stability, looking bigger in clothes.
 - Real costs: looking smaller with the shirt off, worse work capacity and conditioning, and a longer or harsher cut later — which risks losing more muscle than you gained.
@@ -22,7 +22,7 @@ Jeff's case for bear mode: all else equal, a bigger body lifts bigger weights �
 
 **Eric Helms challenged this** [03:04]:
 - Nutrition is **permissive** to weight training. You can't force-feed gains. Nutrition alone will make you gain weight, most of it fat. Training is the initiating event that induces skeletal muscle to grow; that tension stimulus is then *supported* by nutrition — and that support does not require a huge surplus.
-- **Garthe and colleagues:** elite athletes on a 4-day/week training program, one group overfed by ~600 kcal/day on average. The overfed group gained **no significantly greater muscle mass** but gained **over three times the fat mass**. Essentially all the extra bulking weight was fat.
+- **Garthe and colleagues:** elite athletes on a 4-day/week training program, one group overfed by ~600 kcal/day on average. The overfed group gained **no significantly greater muscle mass** but gained **over three times the fat mass** ([Garthe 2013](https://www.tandfonline.com/doi/full/10.1080/17461391.2011.643923)). Essentially all the extra bulking weight was fat.
 
 Jeff's caveat: this was a single study over 8-12 weeks; more meaningful differences might emerge over longer timeframes — or might not.
 
@@ -49,7 +49,7 @@ For a committed bear mode adherent this may not matter, since the goal was never
 
 ## Caveats & unknowns
 - The Garthe study is one 8-12 week trial in elite athletes; longer-term differences are unknown.
-- Researcher name is garbled in the auto-captions ("Garth") — most likely Garthe et al., but treat the spelling as uncertain.
+- The researcher name is garbled in the auto-captions ("Garth"); it is confirmed as Garthe et al. 2013 by the video description's own reference list.
 - Jeff showed on-screen general recommendations for bear mode vs. lean bulk setups that are not spoken in the transcript and so aren't captured here.
 
 ## References
@@ -58,4 +58,4 @@ Sources as listed by Nippard in the video description.
 
 **SOURCES**
 
-- <https://www.tandfonline.com/doi/full/10.1080/17461391.2011.643923>
+- Garthe et al. 2013. Effect of nutritional intervention on body composition and performance in elite athletes. *European Journal of Sport Science*. <https://www.tandfonline.com/doi/full/10.1080/17461391.2011.643923> doi:[10.1080/17461391.2011.643923](https://doi.org/10.1080/17461391.2011.643923)

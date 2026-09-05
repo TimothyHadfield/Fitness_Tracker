@@ -5,7 +5,7 @@
 
 ## Bottom line
 - Open with an undulating 8 / 5 / 15 on close-grip incline barbell bench — the set of 8 grooves the pattern and calibrates the heavy set of 5, then the 15 is pump work. Rest 3-4 min between the 8 and the 5.
-- An 8-week hypertrophy study found incline bench grew the **upper** pecs significantly more than flat, with no difference at the mid or lower pecs.
+- An 8-week hypertrophy study found incline bench grew the **upper** pecs significantly more than flat, with no difference at the mid or lower pecs ([Chaves 2020](https://pubmed.ncbi.nlm.nih.gov/32922646/)).
 - Machine shoulder press 3x10-12: RPE 9 on the first two sets, last set to true failure.
 - Internally rotate the shoulder on plate front raises to recruit side delt fibers instead of hammering already-overdeveloped front delts.
 - Finish with one all-out AMRAP set (diamond push-ups) — nothing left to interfere with, so give it everything.
@@ -24,7 +24,7 @@
 ## Close-grip incline bench press [00:00]
 The undulating structure exists for a reason: incline bench is not a well-oiled movement for most people, so the moderate set of 8 finds the groove and tells you how much to add for the heavier set of 5. **Rest at least 3-4 minutes between those two sets** so the pecs can actually go up in weight. After the 5, the overloading work is finished, and the final set of 15 is smooth mind-muscle-connection pump work where load doesn't matter. Warm-up sets precede the first working set.
 
-**Incline vs flat evidence [01:00]:** there is now a long-term study measuring pec hypertrophy after 8 weeks of flat vs incline benching. Lower pecs: no significant difference. Mid pecs: no significant difference. Upper pecs: **significantly more growth in the incline group.** So prioritizing incline pressing makes sense for upper pec growth. You could argue incline is simply the better overall chest builder given equal growth elsewhere, but Nippard cautions this was a single study on 47 untrained subjects, so no sweeping generalizations.
+**Incline vs flat evidence [01:00]:** there is now a long-term study measuring pec hypertrophy after 8 weeks of flat vs incline benching. Lower pecs: no significant difference. Mid pecs: no significant difference. Upper pecs: **significantly more growth in the incline group.** So prioritizing incline pressing makes sense for upper pec growth. You could argue incline is simply the better overall chest builder given equal growth elsewhere, but Nippard cautions this was a single study on 47 untrained subjects, so no sweeping generalizations ([Chaves 2020](https://pubmed.ncbi.nlm.nih.gov/32922646/)).
 
 **Technique:** grip just outside shoulder width, which shifts further emphasis to the upper pecs. Bring the bar to the highest contact point on your upper chest, press straight up or up and slightly back. The common error is touching too low and pressing out in front of you — keep the bar roughly stacked in a straight line with the shoulder joint, or you limit the load and add shoulder strain. He tucks slightly on the descent and flares on the press; anywhere from 0 to about 30 degrees of tuck is fine and hits most pec fibers similarly.
 
@@ -70,4 +70,4 @@ The incline-vs-flat study is one trial on 47 untrained subjects, so he supports 
 
 Sources as listed by Nippard in the video description.
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7449336/>
+- Chaves SFN et al. 2020. Effects of Horizontal and Incline Bench Press on Neuromuscular Adaptations in Untrained Young Men. *Int J Exerc Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32922646/) doi:[10.70252/FDNB1158](https://doi.org/10.70252/FDNB1158)

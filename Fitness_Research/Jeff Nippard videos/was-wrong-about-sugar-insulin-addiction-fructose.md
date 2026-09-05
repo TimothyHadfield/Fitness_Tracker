@@ -68,7 +68,7 @@ Sources as listed by Nippard in the video description.
 
 - Boelsma E et al. 2010. Measures of postprandial wellness after single intake of two protein-carbohydrate meals. *Appetite*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20060863) doi:[10.1016/j.appet.2009.12.014](https://doi.org/10.1016/j.appet.2009.12.014)
 - Black RN et al. 2006. Effect of eucaloric high- and low-sucrose diets with identical macronutrient profile on insulin resistance and vascular risk: a randomized controlled trial. *Diabetes*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17130505) doi:[10.2337/db06-0220](https://doi.org/10.2337/db06-0220)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5174153/>
+- Westwater ML et al. 2016. Sugar addiction: the state of the science. *Eur J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27372453/) doi:[10.1007/s00394-016-1229-6](https://doi.org/10.1007/s00394-016-1229-6)
 - Glendinning JI et al. 2012. The role of T1r3 and Trpm5 in carbohydrate-induced obesity in mice. *Physiol Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22683548) doi:[10.1016/j.physbeh.2012.05.023](https://doi.org/10.1016/j.physbeh.2012.05.023)
 
 **Further Reading**

@@ -4,7 +4,7 @@
 **Topic:** Programming
 
 ## Bottom line
-- Lifting does not stunt growth. A 2014 international consensus position stand found no scientific evidence that resistance training harms linear growth in childhood or adolescence or reduces adult height.
+- Lifting does not stunt growth. A 2014 international consensus position stand found no scientific evidence that resistance training harms linear growth in childhood or adolescence or reduces adult height ([Lloyd 2014](https://www.ncbi.nlm.nih.gov/pubmed/24055781)).
 - The opposite risk is real: failing to do moderate-to-vigorous weight-bearing activity during growth may predispose someone to long-term bone health problems.
 - Injury risk is the more legitimate concern, and it is a supervision and ego problem, not an age problem.
 - For teenagers, technique mastery outranks volume, intensity, and progressive overload — at least initially.
@@ -14,7 +14,7 @@
 The standard worries about teenage lifting are (1) stunted height or growth potential and (2) injury risk. Nippard thinks most people get the first one backwards and underrate the second's actual cause.
 
 ## Stunted growth: the evidence
-A 2014 international consensus position stand, published under a large number of organisational and regulatory bodies, concluded:
+A 2014 international consensus position stand, published under a large number of organisational and regulatory bodies ([Lloyd 2014](https://www.ncbi.nlm.nih.gov/pubmed/24055781)), concluded:
 
 - Failure to participate in moderate-to-vigorous weight-bearing physical activity during these stages of growth may predispose individuals to long-term bone health implications — i.e. *avoiding* external resistance during developing years may itself be harmful.
 - No scientific evidence indicates that resistance training has an adverse effect on linear growth during childhood or adolescence, or reduces eventual adult height.

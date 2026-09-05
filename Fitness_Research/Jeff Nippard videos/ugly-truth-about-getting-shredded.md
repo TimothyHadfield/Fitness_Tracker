@@ -16,14 +16,14 @@
 
 **2. You may still not be happy with how you look.** Confidence and body image improve as people get leaner — but only up to a point. Once past beach lean and into shredded territory, a switch tends to flip: people fixate on every remaining bit of fat and lose objectivity. It is common to only appreciate how lean you were months later, looking back at photos.
 
-**3. The health cost is real, even natural.** [02:03] A **2013 case study** followed a natural male bodybuilder through **26 weeks** of dieting. He lost **30 lb**, going from **14.8% to 4.5% body fat by DEXA**, and stepped on stage with visible glute striations and no low-back fat. The physiological damage:
+**3. The health cost is real, even natural.** [02:03] A **2013 case study** ([Rossow 2013](https://pubmed.ncbi.nlm.nih.gov/23412685/)) followed a natural male bodybuilder through **26 weeks** of dieting. He lost **30 lb**, going from **14.8% to 4.5% body fat by DEXA**, and stepped on stage with visible glute striations and no low-back fat. The physiological damage:
 - **Testosterone fell from 922 ng/dL to 227 ng/dL** — from about as high as naturals get down to a clinically low level, comparable to a man in his 80s or 90s.
 - **Ghrelin up, leptin down** — constant, punishing hunger.
 - **Cortisol doubled.**
 - **Total mood disturbance rose 617%.**
 - Severe sleep disruption is another very common effect — the body actively resists sleep because it wants you to eat first. Nippard calls this one of the most brutal parts.
 
-**Women face the same effects plus menstrual disruption**, with downstream consequences including infertility and bone mineral loss. A case study of a natural figure competitor found she **still had not regained her period 1.5 years after the show**. Recovery varies: another study found **72% of bikini and figure competitors combined had their period back within 3-4 months.** Some of that variability likely reflects the different leanness required for bikini versus figure, and whether the competitor was willing to regain healthy body weight.
+**Women face the same effects plus menstrual disruption**, with downstream consequences including infertility and bone mineral loss. A case study of a natural figure competitor found she **still had not regained her period 1.5 years after the show** ([Halliday 2016](https://pubmed.ncbi.nlm.nih.gov/27879627/)). Recovery varies: another study found **72% of bikini and figure competitors combined had their period back within 3-4 months** ([Hulmi 2016](https://pubmed.ncbi.nlm.nih.gov/28119632/)). Some of that variability likely reflects the different leanness required for bikini versus figure, and whether the competitor was willing to regain healthy body weight.
 
 **Odd side effects.** Competitors are commonly told they smell of ammonia or nail polish — energy balance is so negative that the body burns protein for fuel, producing ammonia excreted in sweat and urine. Food behaviour gets strange too: watching Food Network compulsively, hoarding junk food, and finding genuinely unappetising things appealing.
 
@@ -60,8 +60,8 @@ Sources as listed by Nippard in the video description.
 **Side Effects of Staying Too Lean**
 
 - Rossow LM et al. 2013. Natural bodybuilding competition preparation and recovery: a 12-month case study. *Int J Sports Physiol Perform*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23412685/) doi:[10.1123/ijspp.8.5.582](https://doi.org/10.1123/ijspp.8.5.582)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5133123/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5222856/>
+- Halliday TM et al. 2016. Dietary Intake, Body Composition, and Menstrual Cycle Changes during Competition Preparation and Recovery in a Drug-Free Figure Competitor: A Case Study. *Nutrients*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27879627/) doi:[10.3390/nu8110740](https://doi.org/10.3390/nu8110740)
+- Hulmi JJ et al. 2016. The Effects of Intensive Weight Reduction on Body Composition and Serum Hormones in Female Fitness Competitors. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28119632/) doi:[10.3389/fphys.2016.00689](https://doi.org/10.3389/fphys.2016.00689)
 
 **Dual Intervention Model**
 

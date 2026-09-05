@@ -5,7 +5,7 @@
 
 ## Bottom line
 - Weekly volume and hypertrophy follow a dose-response curve up to a point, with diminishing returns for most people somewhere around **10-20 hard sets per muscle per week**.
-- A study by Barbalho and colleagues found the *opposite* — 5 sets/week beat 10, 15 and 20, and the 20-set group actually lost pec size — but the design crammed every set into a single weekly session, all taken to failure.
+- A study by Barbalho and colleagues found the *opposite* — 5 sets/week beat 10, 15 and 20, and the 20-set group actually lost pec size — but the design crammed every set into a single weekly session, all taken to failure ([Barbalho 2020](https://www.ncbi.nlm.nih.gov/pubmed/31188644)).
 - The likely explanation is a **per-session** volume ceiling, possibly around 5 sets per muscle per workout, on top of the weekly one.
 - Volume is only "junk" when effort is too low, or when it's piled into one session and overwhelms recovery.
 - His preferred setup: moderate-to-high weekly volume, spread over 2+ sessions per muscle, at 1-3 reps in reserve with occasional failure.
@@ -16,7 +16,7 @@ A 2017 meta-analysis pooling 34 treatment groups across 15 studies established a
 Jeff Cavaliere's argument, which Nippard partly endorses, is that fixation on volume has let some trainees stop exerting themselves — optimising set counts as a way of avoiding hard effort.
 
 ## The Barbalho study
-40 young men with at least 3 years of training experience, split into four groups doing 5, 10, 15 or 20 sets per muscle per week. Same compound exercises for every group; the only variable was set count. Push/pull/legs, but only **three days per week**, so each muscle was hit once weekly (push Monday, pull Thursday, legs Friday) — effectively a bro split. All sets were taken to failure. After six months, the 5-set group grew the most and the 20-set group grew the least, with the 20-set group losing some pec size.
+40 young men with at least 3 years of training experience, split into four groups doing 5, 10, 15 or 20 sets per muscle per week. Same compound exercises for every group; the only variable was set count. Push/pull/legs, but only **three days per week**, so each muscle was hit once weekly (push Monday, pull Thursday, legs Friday) — effectively a bro split. All sets were taken to failure. After six months, the 5-set group grew the most and the 20-set group grew the least, with the 20-set group losing some pec size ([Barbalho 2020](https://www.ncbi.nlm.nih.gov/pubmed/31188644)).
 
 Two things reconcile this with the existing model:
 

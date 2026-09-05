@@ -100,10 +100,10 @@ Sources as listed by Nippard in the video description.
 - Hayes LD & Morse CI 2010. The effects of progressive dehydration on strength and power: is there a dose response?. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19908058) doi:[10.1007/s00421-009-1288-y](https://doi.org/10.1007/s00421-009-1288-y)
 - Millard-Stafford M et al. 2012. Thirst and hydration status in everyday life. *Nutr Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23121351) doi:[10.1111/j.1753-4887.2012.00527.x](https://doi.org/10.1111/j.1753-4887.2012.00527.x)
 - Charrière N et al. 2015. Water-induced thermogenesis and fat oxidation: a reassessment. *Nutr Diabetes*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26690288) doi:[10.1038/nutd.2015.41](https://doi.org/10.1038/nutd.2015.41)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2908954/>
+- Popkin BM et al. 2010. Water, hydration, and health. *Nutr Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20646222/) doi:[10.1111/j.1753-4887.2010.00304.x](https://doi.org/10.1111/j.1753-4887.2010.00304.x)
 - Jéquier E & Constant F 2010. Water as an essential nutrient: the physiological basis of hydration. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19724292) doi:[10.1038/ejcn.2009.111](https://doi.org/10.1038/ejcn.2009.111)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5143456/>
+- Mullie P et al. 2016. Daily milk consumption and all-cause mortality, coronary heart disease and stroke: a systematic review and meta-analysis of observational cohort studies. *BMC Public Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27927192/) doi:[10.1186/s12889-016-3889-9](https://doi.org/10.1186/s12889-016-3889-9)
 - Alexander DD et al. 2016. Dairy consumption and CVD: a systematic review and meta-analysis. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26786887) doi:[10.1017/S0007114515005000](https://doi.org/10.1017/S0007114515005000)
 - de Goede J et al. 2016. Dairy Consumption and Risk of Stroke: A Systematic Review and Updated Dose-Response Meta-Analysis of Prospective Cohort Studies. *J Am Heart Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27207960) doi:[10.1161/JAHA.115.002787](https://doi.org/10.1161/JAHA.115.002787)
 - Lu L et al. 2016. Long-term association between dairy consumption and risk of childhood obesity: a systematic review and meta-analysis of prospective cohort studies. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26862005) doi:[10.1038/ejcn.2015.226](https://doi.org/10.1038/ejcn.2015.226)

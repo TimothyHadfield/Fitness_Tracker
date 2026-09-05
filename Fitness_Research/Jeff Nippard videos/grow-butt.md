@@ -77,7 +77,7 @@ Sources as listed by Nippard in the video description.
 **The Science-Based Glute Workout**
 
 - Lynn SK & Noffal GJ 2012. Lower extremity biomechanics during a regular and counterbalanced squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22076098) doi:[10.1519/JSC.0b013e31823f8c2d](https://doi.org/10.1519/JSC.0b013e31823f8c2d)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4242956/>
+- Kang MH et al. 2014. Effects of Shoulder Flexion Loaded by an Elastic Tubing Band on EMG Activity of the Gluteal Muscles during Squat Exercises. *J Phys Ther Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25435701/) doi:[10.1589/jpts.26.1787](https://doi.org/10.1589/jpts.26.1787)
 - Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
 - <https://www.ncbi.nlm.nih.gov/m/pubmed/19130646/>
 - Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26214739) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)

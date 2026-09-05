@@ -83,18 +83,18 @@ Exactly how much steroids shorten lifespan can't be stated precisely — the 202
 Sources as listed by Nippard in the video description.
 
 - Nunes JP et al. 2017. Creatine supplementation elicits greater muscle hypertrophy in upper than lower limbs and trunk in resistance-trained men. *Nutr Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29214923/) doi:[10.1177/0260106017737013](https://doi.org/10.1177/0260106017737013)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5679696>
+- Chilibeck PD et al. 2017. Effect of creatine supplementation during resistance training on lean tissue mass and muscular strength in older adults: a meta-analysis. *Open Access J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29138605/) doi:[10.2147/OAJSM.S123529](https://doi.org/10.2147/OAJSM.S123529)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3104052/>
+- Brennan BP et al. 2011. Human growth hormone abuse in male weightlifters. *Am J Addict*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21175915/) doi:[10.1111/j.1521-0391.2010.00093.x](https://doi.org/10.1111/j.1521-0391.2010.00093.x)
 - <https://journals.lww.com/cjsportsmed/Abstract/1995/10000/Fat_Free_Mass_Index_in_Users_and_Nonusers_of.3.aspx>
 
-- <https://www.frontiersin.org/journals/endocrinology/articles/10.3389/fendo.2022.1059473/full>
+- Bond et al. 2022. Anabolic–androgenic steroids: How do they work and what are the risks?. *Frontiers in Endocrinology*. <https://www.frontiersin.org/journals/endocrinology/articles/10.3389/fendo.2022.1059473/full> doi:[10.3389/fendo.2022.1059473](https://doi.org/10.3389/fendo.2022.1059473)
 
 - Bjørnebekk A et al. 2021. Long-term Anabolic-Androgenic Steroid Use Is Associated With Deviant Brain Aging. *Biol Psychiatry Cogn Neurosci Neuroimaging*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33811018) doi:[10.1016/j.bpsc.2021.01.001](https://doi.org/10.1016/j.bpsc.2021.01.001)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9580689>
+- Smit DL et al. 2021. Anabolic Androgenic Steroids Induce Reversible Left Ventricular Hypertrophy and Cardiac Dysfunction. Echocardiography Results of the HAARLEM Study. *Front Reprod Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36304014/) doi:[10.3389/frph.2021.732318](https://doi.org/10.3389/frph.2021.732318)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4988681/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10620455/>
+- Rasmussen JJ et al. 2016. Former Abusers of Anabolic Androgenic Steroids Exhibit Decreased Testosterone Levels and Hypogonadal Symptoms Years after Cessation: A Case-Control Study. *PLoS One*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27532478/) doi:[10.1371/journal.pone.0161208](https://doi.org/10.1371/journal.pone.0161208)
+- Solanki P et al. 2023. Physical, psychological and biochemical recovery from anabolic steroid-induced hypogonadism: a scoping review. *Endocr Connect*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37855241/) doi:[10.1530/EC-23-0358](https://doi.org/10.1530/EC-23-0358)
 
 - Horwitz H et al. 2019. Health consequences of androgenic anabolic steroid use. *J Intern Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30460728/) doi:[10.1111/joim.12850](https://doi.org/10.1111/joim.12850)

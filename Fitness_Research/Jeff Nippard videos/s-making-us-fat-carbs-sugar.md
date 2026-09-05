@@ -29,7 +29,7 @@ On consensus: within obesity research from an energy-balance and neuroscience pe
 
 This is not because fat itself burns much — heavier people carry **more lean mass**, which is metabolically active, so they sit at a new equilibrium eating more and burning more. Restrict a person eating 30% more by 30% and they lose fat.
 
-**Overfeeding carb vs fat gives the same result.** Overfeed with only carbohydrate or only fat and you see the same fat gain; underfeed and you see similar fat loss. The strongest evidence is a **meta-analysis by Kevin Hall** of ~20 metabolic ward studies, where every morsel is controlled. Holding calories constant, carb vs fat made almost no difference. There was a small but statistically significant difference **favouring carbohydrate** (slightly less fat gain), too small to matter practically.
+**Overfeeding carb vs fat gives the same result.** Overfeed with only carbohydrate or only fat and you see the same fat gain; underfeed and you see similar fat loss. The strongest evidence is a **meta-analysis by Kevin Hall** of ~20 metabolic ward studies ([Hall 2017](https://pubmed.ncbi.nlm.nih.gov/28193517/)), where every morsel is controlled. Holding calories constant, carb vs fat made almost no difference. There was a small but statistically significant difference **favouring carbohydrate** (slightly less fat gain), too small to matter practically.
 
 **So is a calorie a calorie?** "To a close approximation," yes — not identical in every scenario, but for practical purposes the same. Macronutrients still matter in real life, but the **mechanism is calorie intake**: low-carb and low-fat diets both work by reducing spontaneous intake.
 
@@ -45,7 +45,7 @@ Not everyone gains the same fat from the same surplus. Some burn off most of the
 
 **The thermostat model.** Body fatness runs on a negative feedback loop, like a home thermostat. Lose fat and the **starvation response** kicks in: hunger rises, satiety takes more food, cravings increase, food-cue reactivity increases, metabolic rate falls. Gain fat quickly and there's a defence in the other direction — but it's **weaker and far more variable between individuals**. Almost everyone defends against fat loss; only some defend well against fat gain.
 
-**Free-living data.** The **DIETFITS study from Chris Gardner's group at Stanford** compared low-carb vs low-fat, neither calorie-controlled, both built on whole unrefined foods. At one year: **low-fat lost ~12 lb, low-carb ~13 lb** — nowhere near statistically significant. But the **individual spread was huge and looked identical on both diets**; a few lost enormous amounts, a few gained. Individual variation dwarfs the average difference between interventions. Whether that reflects biology, adherence or life circumstances is unknown, though Guyenet suspects some biology is involved.
+**Free-living data.** The **DIETFITS study from Chris Gardner's group at Stanford** ([DIETFITS](https://jamanetwork.com/journals/jama/fullarticle/2673150)) compared low-carb vs low-fat, neither calorie-controlled, both built on whole unrefined foods. At one year: **low-fat lost ~12 lb, low-carb ~13 lb** — nowhere near statistically significant. But the **individual spread was huge and looked identical on both diets**; a few lost enormous amounts, a few gained. Individual variation dwarfs the average difference between interventions. Whether that reflects biology, adherence or life circumstances is unknown, though Guyenet suspects some biology is involved.
 
 ## Sugar [47:23]
 
@@ -90,4 +90,4 @@ Sources as listed by Nippard in the video description.
 
 **The Hall Meta-Analysis (Calorie A Calorie Study)**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5568065/>
+- Hall KD & Guo J 2017. Obesity Energetics: Body Weight Regulation and the Effects of Diet Composition. *Gastroenterology*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28193517/) doi:[10.1053/j.gastro.2017.01.052](https://doi.org/10.1053/j.gastro.2017.01.052)

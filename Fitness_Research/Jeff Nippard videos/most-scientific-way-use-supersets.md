@@ -21,7 +21,7 @@ Both save time by cutting rest periods. Grouped supersets are additionally promo
 
 Covered in that month's issue of MASS (Monthly Applications in Strength Sport), which referenced over 50 peer-reviewed articles that issue.
 
-- **20 trained men** — familiar with weight training but not competitive lifters.
+- **20 trained men** — familiar with weight training but not competitive lifters ([Brentano 2017](https://www.ncbi.nlm.nih.gov/pubmed/27243916)).
 - A **single training session** each.
 - **Grouped condition:** 5 sets of leg press and leg extension back to back, ~10 reps **to failure**, no rest between any sets. Then 3 minutes rest, then the same for bench press and pec deck.
 - **Separated condition:** same volume, but bench press was supersetted with leg extensions (5 sets), 3 minutes rest, then leg press with pec deck.
@@ -36,7 +36,7 @@ Covered in that month's issue of MASS (Monthly Applications in Strength Sport), 
 
 ## Practical application
 
-1. **Only superset because you're short on time.** Otherwise rest **3-5 minutes** between sets, per the current hypertrophy data.
+1. **Only superset because you're short on time.** Otherwise rest **3-5 minutes** between sets, per the current hypertrophy data ([Schoenfeld 2016](https://www.ncbi.nlm.nih.gov/pubmed/26605807)).
 2. **When time-limited, use separated supersets.** They preserve training quality and don't blunt recovery for as long.
 3. **Avoid grouped supersets on high-frequency programs.** Up to 5 days of elevated muscle damage will degrade performance in later sessions that week.
 4. **Grouped supersets have a place on low-frequency programs**, where you're resting a long time between bouts for the same muscle anyway, so the recovery cost matters less. Greg (in the MASS piece) also raises occasional use as a **shock microcycle** — if you want to blast a muscle group, grouped supersets demonstrably create more muscle damage.

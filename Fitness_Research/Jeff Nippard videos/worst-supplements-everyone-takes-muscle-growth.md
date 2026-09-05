@@ -86,21 +86,21 @@ Sources as listed by Nippard in the video description.
 
 **Testosterone Boosters**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6407704/>
+- Balasubramanian A et al. 2019. Testosterone Imposters: An Analysis of Popular Online Testosterone Boosting Supplements. *J Sex Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30770069/) doi:[10.1016/j.jsxm.2018.12.008](https://doi.org/10.1016/j.jsxm.2018.12.008)
 - Examine.com — <https://examine.com/supplements/fenugreek/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6750292/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3863556/>
+- Lopresti AL et al. 2019. An investigation into the stress-relieving and pharmacological actions of an ashwagandha (Withania somnifera) extract: A randomized, double-blind, placebo-controlled study. *Medicine (Baltimore)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31517876/) doi:[10.1097/MD.0000000000017186](https://doi.org/10.1097/MD.0000000000017186)
+- Ambiye VR et al. 2013. Clinical Evaluation of the Spermatogenic Activity of the Root Extract of Ashwagandha (Withania somnifera) in Oligospermic Males: A Pilot Study. *Evid Based Complement Alternat Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24371462/) doi:[10.1155/2013/571420](https://doi.org/10.1155/2013/571420)
 - Bhasin S et al. 2001. Testosterone dose-response relationships in healthy young men. *Am J Physiol Endocrinol Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11701431/) doi:[10.1152/ajpendo.2001.281.6.E1172](https://doi.org/10.1152/ajpendo.2001.281.6.E1172)
 - Wankhede S et al. 2015. Examining the effect of Withania somnifera supplementation on muscle strength and recovery: a randomized controlled trial. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26609282/) doi:[10.1186/s12970-015-0104-9](https://doi.org/10.1186/s12970-015-0104-9)
 
 **Natural Ways to Boost Testosterone**
 
-- <https://www.tandfonline.com/doi/full/10.1186/1550-2783-11-20>
+- Helms et al. 2014. Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation. *Journal of the International Society of Sports Nutrition*. <https://www.tandfonline.com/doi/full/10.1186/1550-2783-11-20> doi:[10.1186/1550-2783-11-20](https://doi.org/10.1186/1550-2783-11-20)
 - MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/4527583/posts/15426503>
 
 **Turkesterone**
 
-- <https://www.journals.uchicago.edu/doi/10.2307/1540550>
+- SLÁMA & HODKOVÁ 1975. INSECT HORMONES AND BIOANALOGUES: THEIR EFFECT ON RESPIRATORY METABOLISM IN <i>DERMESTES VULPINUS</i> L. (COLEOPTERA). *The Biological Bulletin*. <https://www.journals.uchicago.edu/doi/10.2307/1540550> doi:[10.2307/1540550](https://doi.org/10.2307/1540550)
 - Syrov VN 1984. Mechanism of the anabolic action of phytoecdisteroids in mammals. *Nauchnye Doki Vyss Shkoly Biol Nauki*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/6525371/)
 - Sláma K et al. 1996. Insect hormones in vertebrates: anabolic effects of 20-hydroxyecdysone in Japanese quail. *Experientia*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8698114/) doi:[10.1007/BF01925578](https://doi.org/10.1007/BF01925578)
 - ResearchGate — <https://www.researchgate.net/publication/333322619>

@@ -56,12 +56,12 @@ Sources as listed by Nippard in the video description.
 
 **Other Animal Research**
 
-- <https://www.journals.uchicago.edu/doi/10.2307/1540550>
+- SLÁMA & HODKOVÁ 1975. INSECT HORMONES AND BIOANALOGUES: THEIR EFFECT ON RESPIRATORY METABOLISM IN <i>DERMESTES VULPINUS</i> L. (COLEOPTERA). *The Biological Bulletin*. <https://www.journals.uchicago.edu/doi/10.2307/1540550> doi:[10.2307/1540550](https://doi.org/10.2307/1540550)
 - Syrov VN 1984. Mechanism of the anabolic action of phytoecdisteroids in mammals. *Nauchnye Doki Vyss Shkoly Biol Nauki*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/6525371/)
 - Sláma K et al. 1996. Insect hormones in vertebrates: anabolic effects of 20-hydroxyecdysone in Japanese quail. *Experientia*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8698114/) doi:[10.1007/BF01925578](https://doi.org/10.1007/BF01925578)
 
 **Human Research**
 
 - ResearchGate — <https://www.researchgate.net/publication/26492102>
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y>
+- Kerksick et al. 2018. ISSN exercise &amp; sports nutrition review update: research &amp; recommendations. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y> doi:[10.1186/s12970-018-0242-y](https://doi.org/10.1186/s12970-018-0242-y)
 - ResearchGate — <https://www.researchgate.net/publication/333322619>

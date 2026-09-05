@@ -13,10 +13,10 @@
 ## Where somatotypes came from [00:00]
 American psychologist William Sheldon published *The Varieties of Human Physique* in 1940, proposing three somatotypes: ectomorph (thinness), endomorph (fatness), mesomorph (muscularity). He examined 4,000 photographs of University of Chicago students and rated each on a 1-7 scale for each type.
 
-Crucially, none of this had anything to do with diet or training. Sheldon was looking for associations between body type and personality, intelligence, "moral worth" and future achievement. His work has been discredited by the scientific community, and Jeff notes it looks in retrospect to have been influenced by the eugenics pseudoscience current at the time.
+Crucially, none of this had anything to do with diet or training. Sheldon was looking for associations between body type and personality, intelligence, "moral worth" and future achievement. His work has been discredited by the scientific community, and Jeff notes it looks in retrospect to have been influenced by the eugenics pseudoscience current at the time ([Vertinsky 2007](https://www.ncbi.nlm.nih.gov/pubmed/18447308)).
 
 ## Why the classification fails in practice [01:32]
-**The sport-selection exception.** Some data out of Russia suggests somatotyping can help predict athletic success in specific sports — e.g. basketball depends on jumping, so mesomorphic individuals may be better suited. Jeff accepts this but argues it's near-trivial (of course limb lengths and body measurements suit people to different sports) and irrelevant to how the categories are actually used in fitness.
+**The sport-selection exception.** Some data out of Russia suggests somatotyping can help predict athletic success in specific sports — e.g. basketball depends on jumping, so mesomorphic individuals may be better suited ([Gutnik 2015](https://www.ncbi.nlm.nih.gov/pubmed/26424190)). Jeff accepts this but argues it's near-trivial (of course limb lengths and body measurements suit people to different sports) and irrelevant to how the categories are actually used in fitness.
 
 **It implies body types are fixed.** They aren't. Example: 3DMJ natural bodybuilder Alberto Nunez at his bulked weight of 250 lb reads as a pure endomorph; at or near stage condition he reads as meso or ectomorph — and he diets on very high carbohydrate intakes.
 
@@ -25,10 +25,10 @@ Crucially, none of this had anything to do with diet or training. Sheldon was lo
 ## The real variation is genetic [03:03]
 Jeff is careful not to dismiss individual differences — they are large and real, just not captured by three boxes.
 
-- **Muscle gain.** A 2005 study put 585 untrained subjects on the identical arm training program for 12 weeks. Biceps cross-sectional area change ranged from about -5% in the worst responder to about +55% in the best.
+- **Muscle gain.** A 2005 study put 585 untrained subjects on the identical arm training program for 12 weeks. Biceps cross-sectional area change ranged from about -5% in the worst responder to about +55% in the best ([Hubal 2005](https://www.ncbi.nlm.nih.gov/pubmed/15947721)).
 - **Fat loss and hunger.** Some people find it much easier to get and stay lean, most likely because of genetically influenced differences in how hunger is regulated in the brain and in hormones such as leptin.
 - **Resting metabolic rate.** Differences between individuals of the same body weight are *not* nearly as large as once believed.
-- **NEAT.** Non-exercise activity thermogenesis — fidgeting, foot tapping, head bobbing — varies enormously. A study from Levine and colleagues overfed subjects by 1000 kcal/day for 8 weeks: fat gain ranged from 0.3 kg (~0.8 lb) to 4.2 kg (~9 lb), and NEAT changes ranged from -98 kcal/day (some subjects moved *less*) to +692 kcal/day. Some subjects nearly entirely offset the 1000 extra calories by subconsciously moving more.
+- **NEAT.** Non-exercise activity thermogenesis — fidgeting, foot tapping, head bobbing — varies enormously. A study from Levine and colleagues ([Levine 1999](https://www.ncbi.nlm.nih.gov/pubmed/9880251)) overfed subjects by 1000 kcal/day for 8 weeks: fat gain ranged from 0.3 kg (~0.8 lb) to 4.2 kg (~9 lb), and NEAT changes ranged from -98 kcal/day (some subjects moved *less*) to +692 kcal/day. Some subjects nearly entirely offset the 1000 extra calories by subconsciously moving more.
 
 These differences, plus genetic differences in bone structure, largely explain why some people look like endomorphs and others like meso- or ectomorphs.
 

@@ -47,5 +47,5 @@ Sources as listed by Nippard in the video description.
 
 **Here are the studies I was talking about**
 
-- <https://www.frontiersin.org/articles/10.3389/fphys.2017.00985/full>
+- Vigotsky et al. 2018. Interpreting Signal Amplitudes in Surface Electromyography Studies in Sport and Rehabilitation Sciences. *Frontiers in Physiology*. <https://www.frontiersin.org/articles/10.3389/fphys.2017.00985/full> doi:[10.3389/fphys.2017.00985](https://doi.org/10.3389/fphys.2017.00985)
 - Mitchell CJ et al. 2014. Acute post-exercise myofibrillar protein synthesis is not correlated with resistance training-induced muscle hypertrophy in young men. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24586775) doi:[10.1371/journal.pone.0089431](https://doi.org/10.1371/journal.pone.0089431)

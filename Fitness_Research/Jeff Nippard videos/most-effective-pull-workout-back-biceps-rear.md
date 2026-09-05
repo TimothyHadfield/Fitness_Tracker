@@ -68,7 +68,7 @@ Technique: pull the tension out of the bar before lifting rather than walking up
 - "Pre-activation" isn't an established term in the literature; the supporting evidence comes from glute research and is extrapolated to the lats.
 - No research exists on the Meadows row itself — the rationale is biomechanical inference plus adjacent row studies.
 - Grip-width effects on lat recruitment show large individual variability, so any single recommendation is weak.
-- Two cited surnames (the 2010 pulldown grip study; the seated-row EMG study) are garbled or imprecise in the auto-captions and should be verified.
+- One cited surname (the seated-row EMG study) is garbled or imprecise in the auto-captions and should be verified.
 
 ## References
 
@@ -80,7 +80,7 @@ Sources as listed by Nippard in the video description.
 - Schoenfeld B et al. 2013. Effect of hand position on EMG activity of the posterior shoulder musculature during a horizontal abduction exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23302754) doi:[10.1519/JSC.0b013e318281e1e9](https://doi.org/10.1519/JSC.0b013e318281e1e9)
 - Fisher BE et al. 2016. Evidence of altered corticomotor excitability following targeted activation of gluteus maximus training in healthy individuals. *Neuroreport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26981714) doi:[10.1097/WNR.0000000000000556](https://doi.org/10.1097/WNR.0000000000000556)
 - Schoenfeld BJ et al. 2015. Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25601394) doi:[10.1007/s40279-015-0304-0](https://doi.org/10.1007/s40279-015-0304-0)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Lehman GJ et al. 2004. Variations in muscle activation levels during traditional latissimus dorsi weight training exercises: An experimental study. *Dyn Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15228624/) doi:[10.1186/1476-5918-3-4](https://doi.org/10.1186/1476-5918-3-4)
 - Lusk SJ et al. 2010. Grip width and forearm orientation effects on muscle activity during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20543740) doi:[10.1519/JSC.0b013e3181ddb0ab](https://doi.org/10.1519/JSC.0b013e3181ddb0ab)
 
 **Helpful Resources and Attribution Credits**

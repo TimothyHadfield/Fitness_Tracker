@@ -88,7 +88,7 @@ Sources as listed by Nippard in the video description.
 **Total Daily Protein Target**
 
 - Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5828430/>
+- Schoenfeld BJ & Aragon AA 2018. How much protein can the body use in a single meal for muscle-building? Implications for daily protein distribution. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29497353/) doi:[10.1186/s12970-018-0215-1](https://doi.org/10.1186/s12970-018-0215-1)
 
 **Training Intensity**
 

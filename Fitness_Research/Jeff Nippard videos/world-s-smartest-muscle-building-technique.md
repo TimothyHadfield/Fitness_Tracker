@@ -17,11 +17,11 @@
 [01:32] The emerging picture is that it is the stretched portion of the range that drives growth, not full ROM per se.
 
 - Long-length vs short-length partials: 8 studies, 7 favour long-length, 1 found no difference, none favour short-length.
-- Full ROM vs long-length partials: 5 studies, 4 favour long-length partials, 1 found no difference, none favour full ROM. In the study finding no difference, the partial group used only **10% of the full range** — half the subjects were doing tenth-reps in the stretched position and still matched the full-ROM group.
+- Full ROM vs long-length partials: 5 studies, 4 favour long-length partials, 1 found no difference, none favour full ROM. In the study finding no difference, the partial group used only **10% of the full range** — half the subjects were doing tenth-reps in the stretched position and still matched the full-ROM group ([Werkhausen 2021](https://pubmed.ncbi.nlm.nih.gov/33465838/)).
 
 [02:32] Jeff spoke to **Dr Milo Wolf**, the leading researcher on the topic, who has trained exclusively with lengthened partials for all his hypertrophy work for 9-10 months. Both are careful not to oversell: Wolf frames the expected improvement as **5-10% over full ROM** — worth having if maximising hypertrophy is the goal, but not groundbreaking.
 
-Mechanistically this fits stretch-mediated hypertrophy, known for years: the classic quail study where loaded stretch of the wing produced dramatic growth, plus human studies showing training at long muscle lengths is effective.
+Mechanistically this fits stretch-mediated hypertrophy, known for years: the classic quail study where loaded stretch of the wing produced dramatic growth ([Antonio 1993](https://pubmed.ncbi.nlm.nih.gov/8226539/)), plus human studies showing training at long muscle lengths is effective.
 
 ## Application 1 — extending the last set past failure
 [03:33] Reserved mainly for **back and hamstrings**, because both have far more capacity left once full-ROM failure is reached.

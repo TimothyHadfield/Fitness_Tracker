@@ -14,7 +14,7 @@
 A 1-10 rating of how hard a set was. RPE 8 = you believe two more reps were available. RPE 10 = you could not have completed another rep with good form. It answers the question sets-and-reps can't: *how hard should this set be?* "As hard as possible" or "harder than last time" isn't a usable instruction.
 
 ## Criticism 1: fine for intermediates, useless for beginners
-[01:31] Nippard concedes RPE is uncontroversially useful for intermediate/advanced lifters — it's near-universal in drug-tested powerlifting. The beginner objection is that novices misjudge it. There's real evidence for that worry: a **2017 study** asked subjects to take their usual 10-rep weight to true failure, and **47% managed 16 or more reps**.
+[01:31] Nippard concedes RPE is uncontroversially useful for intermediate/advanced lifters — it's near-universal in drug-tested powerlifting. The beginner objection is that novices misjudge it. There's real evidence for that worry: a **2017 study** asked subjects to take their usual 10-rep weight to true failure, and **47% managed 16 or more reps** ([Barbosa-Netto 2021](https://pubmed.ncbi.nlm.nih.gov/29112055/)).
 
 His counter: that finding shows most gym-goers under-push, not that the tool is broken. Nobody wakes up one day as an intermediate with accurate RPE — you learn it by reflecting on sets. Mike Israetel's point, quoted here: even if beginners misjudge RPE it barely matters, because the intensity threshold for a beginner is so low. Novices progress best on excellent technique and small incremental strength gains, *not* on training close to failure. You earn the right to train near failure once technique is solid.
 
@@ -29,7 +29,7 @@ His counter: that finding shows most gym-goers under-push, not that the tool is 
 On subject training status: many studies do recruit trained lifters, and most people overestimate how advanced they are. Nothing fundamental changes physiologically between beginner and intermediate — the rate of progress just slows. Studying beginners is actually useful because effects are detectable in 8 weeks; in near-genetic-ceiling pro naturals, no study could detect a difference in a reasonable timeframe. Science is a tool alongside coaching experience, not a replacement for it.
 
 ## Criticism 4: RPE isn't accurate anyway
-[09:35] A recent study (lead author's name is garbled in the captions, so not stated here) had 10 well-trained lifters call out when they hit RPE 6 (4 reps left) and RPE 9 on squat, bench and deadlift. Average error: **1 rep at RPE 6, 0.6 reps at RPE 9**. Since bodybuilding rarely uses RPE 6, the RPE 9 result is the relevant one — experienced lifters know when they're one rep out. Accuracy also improves with practice.
+[09:35] A recent study (lead author's name is garbled in the captions, so not stated here) had 10 well-trained lifters call out when they hit RPE 6 (4 reps left) and RPE 9 on squat, bench and deadlift. Average error: **1 rep at RPE 6, 0.6 reps at RPE 9**. Since bodybuilding rarely uses RPE 6, the RPE 9 result is the relevant one — experienced lifters know when they're one rep out. Accuracy also improves with practice ([Steele 2017](https://pubmed.ncbi.nlm.nih.gov/29204323/)).
 
 ## Criticism 5: it's too much information
 [10:36] The criticism he sympathises with most. But RPE is intuitive — you're just asking how many more reps were available, and assuming beginners can't handle a 1-10 scale is patronising. Judge the individual's training IQ and appetite for detail. For a low-interest client, skip the jargon and just ask: "On a scale of one to ten, how hard was that? Could you have pushed harder? Did your technique slip?" After technique, applying appropriate effort is the most important thing to learn in the gym.
@@ -51,6 +51,6 @@ Sources as listed by Nippard in the video description.
 
 - Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29112055/) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)
 - ResearchGate — <https://www.researchgate.net/publication/327454079>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5712461/>
+- Steele J et al. 2017. Ability to predict repetitions to momentary failure is not perfectly accurate, though improves with resistance training experience. *PeerJ*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29204323/) doi:[10.7717/peerj.4105](https://doi.org/10.7717/peerj.4105)
 
 - ResearchGate — <https://www.researchgate.net/publication/331718773>

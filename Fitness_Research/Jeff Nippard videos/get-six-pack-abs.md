@@ -67,7 +67,7 @@ There is **no research supporting ultra-high-rep ab training**. The abs are roug
 Sources as listed by Nippard in the video description.
 
 - Andersson EA et al. 1997. Abdominal and hip flexor muscle activation during various training exercises. *Eur J Appl Physiol Occup Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9118976) doi:[10.1007/s004210050135](https://doi.org/10.1007/s004210050135)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC385260/>
+- Hildenbrand K & Noble L 2004. Abdominal Muscle Activity While Performing Trunk-Flexion Exercises Using the Ab Roller, ABslide, FitBall, and Conventionally Performed Trunk Curls. *J Athl Train*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15085210/)
 - Youdas JW et al. 2008. An electromyographic analysis of the Ab-Slide exercise, abdominal crunch, supine double leg thrust, and side bridge in healthy young adults: implications for rehabilitation professionals. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18978615) doi:[10.1519/JSC.0b013e31818745bf](https://doi.org/10.1519/JSC.0b013e31818745bf)
 - Schoenfeld BJ et al. 2014. An electromyographic comparison of a modified version of the plank with a long lever and posterior tilt versus the traditional plank exercise. *Sports Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25325773) doi:[10.1080/14763141.2014.942355](https://doi.org/10.1080/14763141.2014.942355)
 - Willardson JM et al. 2009. Effect of surface stability on core muscle activity for dynamic resistance exercises. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19417231) doi:[10.1123/ijspp.4.1.97](https://doi.org/10.1123/ijspp.4.1.97)
@@ -80,6 +80,6 @@ Sources as listed by Nippard in the video description.
 - Moraes AC et al. 2009. EMG activation of abdominal muscles in the crunch exercise performed with different external loads. *Phys Ther Sport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19376473) doi:[10.1016/j.ptsp.2009.01.001](https://doi.org/10.1016/j.ptsp.2009.01.001)
 - Gottschall JS et al. 2013. Integration core exercises elicit greater muscle activation than isolation exercises. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22580983) doi:[10.1519/JSC.0b013e31825c2cc7](https://doi.org/10.1519/JSC.0b013e31825c2cc7)
 - McGill S et al. 2015. Muscle activity and spine load during anterior chain whole body linkage exercises: the body saw, hanging leg raise and walkout from a push-up. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25111163) doi:[10.1080/02640414.2014.946437](https://doi.org/10.1080/02640414.2014.946437)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC155519/>
+- Konrad P et al. 2001. Neuromuscular Evaluation of Trunk-Training Exercises. *J Athl Train*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12937449/)
 - Stevens VK et al. 2008. The effect of increasing resistance on trunk muscle activity during extension and flexion exercises on training devices. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17196829) doi:[10.1016/j.jelekin.2006.10.009](https://doi.org/10.1016/j.jelekin.2006.10.009)
 - ResearchGate — <https://www.researchgate.net/publication/232156729_To_Crunch_or_Not_to_Crunch_An_Evidence-Based_Examination_of_Spinal_Flexion_Exercises_Their_Potential_Risks_and_Their_Applicability_to_Program_Design>

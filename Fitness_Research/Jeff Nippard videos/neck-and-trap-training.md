@@ -86,4 +86,4 @@ Sources as listed by Nippard in the video description.
 - Conley MS et al. 1997. Specificity of resistance training responses in neck muscle size and strength. *Eur J Appl Physiol Occup Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9189733) doi:[10.1007/s004210050186](https://doi.org/10.1007/s004210050186)
 - Ekstrom RA et al. 2003. Surface electromyographic analysis of exercises for the trapezius and serratus anterior muscles. *J Orthop Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12774999) doi:[10.2519/jospt.2003.33.5.247](https://doi.org/10.2519/jospt.2003.33.5.247)
 - Schoenfeld's blog — <http://www.lookgreatnaked.com/articles/upright_row_implications_for_preventing_subacromial_impingement.pdf>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Lehman GJ et al. 2004. Variations in muscle activation levels during traditional latissimus dorsi weight training exercises: An experimental study. *Dyn Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15228624/) doi:[10.1186/1476-5918-3-4](https://doi.org/10.1186/1476-5918-3-4)

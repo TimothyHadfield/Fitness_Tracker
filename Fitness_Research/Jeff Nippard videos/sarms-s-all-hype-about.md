@@ -21,13 +21,13 @@ Testing analyses back this up. Products labelled as containing a given SARM have
 - contain a combination of the labelled compound and something else,
 - contain the right ingredient but at a **dose that didn't match the label**.
 
-**The source [02:01]:** a 2017 investigation published in the *Journal of the American Medical Association*. Researchers bought 44 products marketed as SARMs off the internet and ran lab analysis. **Only 52% of the 44 products contained a single SARM.** Some results were extreme — one product claiming 10 mg of a substance actually contained only 0.1 to 1 mg.
+**The source [02:01]:** a 2017 investigation published in the *Journal of the American Medical Association* ([JAMA 2017](https://jamanetwork.com/journals/jama/fullarticle/2664459)). Researchers bought 44 products marketed as SARMs off the internet and ran lab analysis. **Only 52% of the 44 products contained a single SARM.** Some results were extreme — one product claiming 10 mg of a substance actually contained only 0.1 to 1 mg.
 
 ## The safety-data argument [01:01]
 Carpenter is sceptical of people who cite safety data for SARMs and then use **doses higher than those used in the research studies that generated the data**. The safety evidence, such as it is, does not transfer to recreational dosing.
 
 ## Do they work? [03:02]
-Carpenter doesn't class SARMs as the "holy grail" they're marketed as. He finds it genuinely interesting that they have medical literature and are under investigation for medical purposes — but his position is that even if a compound has an **anti-catabolic** effect and is being investigated for **muscle-wasting disorders**, it doesn't follow that taking a much larger dose converts it into a powerful anabolic. Nippard adds that from his own quick scan of the literature there isn't much high-quality evidence supporting SARMs for muscle building.
+Carpenter doesn't class SARMs as the "holy grail" they're marketed as. He finds it genuinely interesting that they have medical literature and are under investigation for medical purposes — but his position is that even if a compound has an **anti-catabolic** effect and is being investigated for **muscle-wasting disorders** ([Bhasin 2009](https://pubmed.ncbi.nlm.nih.gov/19357508/)), it doesn't follow that taking a much larger dose converts it into a powerful anabolic. Nippard adds that from his own quick scan of the literature there isn't much high-quality evidence supporting SARMs for muscle building.
 
 ## Why they're everywhere [03:33]
 Marketing. Companies are selling them and largely getting away with it, and "legal steroids" is an easy pitch — search the term and you get a flood of sellers promising the holy grail. The appeal: steroid-like anabolism you can buy at a supplement shop without injecting anything.
@@ -58,5 +58,5 @@ Sources as listed by Nippard in the video description.
 
 **SOURCES**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2907129/>
+- Bhasin S & Jasuja R 2009. Selective androgen receptor modulators as function promoting therapies. *Curr Opin Clin Nutr Metab Care*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19357508/) doi:[10.1097/MCO.0b013e32832a3d79](https://doi.org/10.1097/MCO.0b013e32832a3d79)
 - <https://jamanetwork.com/journals/jama/fullarticle/2664459>

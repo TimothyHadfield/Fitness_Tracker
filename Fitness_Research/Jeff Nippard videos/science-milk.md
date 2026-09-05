@@ -18,12 +18,12 @@
 **Lactose intolerance.** This one is legitimate: 65-75% of people have some lactose intolerance, experiencing bloating or diarrhoea from milk. Prevalence depends heavily on ancestry — most common among Asian populations, least common among Europeans. Jeff frames this as an argument for monitoring your individual response to foods rather than an argument against dairy generally.
 
 ## Mortality and cardiovascular disease [02:05]
-A meta-analysis published in 2017 covering 29 studies and over 700,000 participants found no associations between dairy and milk consumption and all-cause mortality, coronary heart disease, or cardiovascular disease — consistent with several other meta-analyses.
+A meta-analysis published in 2017 covering 29 studies and over 700,000 participants found no associations between dairy and milk consumption and all-cause mortality, coronary heart disease, or cardiovascular disease ([Guo 2017](https://www.ncbi.nlm.nih.gov/pubmed/28374228)) — consistent with several other meta-analyses.
 
-**The funding problem.** That study was funded by the Global Dairy Platform and the Dairy Council. Jeff treats funding bias as a serious issue in science (especially pharmaceutical funding). You could accept the authors' declaration and the peer reviewers' judgement that the funders had no role in study design or data collection — but funding bias should still prompt you to check independently funded work for replication. It replicates: a 2015 meta-analysis with no funding conflicts of interest found the same absence of association between milk consumption and mortality.
+**The funding problem.** That study was funded by the Global Dairy Platform and the Dairy Council. Jeff treats funding bias as a serious issue in science (especially pharmaceutical funding). You could accept the authors' declaration and the peer reviewers' judgement that the funders had no role in study design or data collection — but funding bias should still prompt you to check independently funded work for replication. It replicates: a 2015 meta-analysis with no funding conflicts of interest found the same absence of association between milk consumption and mortality ([Larsson 2015](https://www.ncbi.nlm.nih.gov/pubmed/26378576)).
 
 ## Cancer [03:35]
-A 2016 review examined essentially every dairy-related health outcome. Across the outcomes:
+A 2016 review examined essentially every dairy-related health outcome ([Thorning 2016](https://www.ncbi.nlm.nih.gov/pubmed/27882862)). Across the outcomes:
 
 - Four different cancers were positively impacted by dairy intake.
 - A number of other outcomes, including mortality and three further cancers, were neutral.
@@ -34,7 +34,7 @@ The authors concluded that the protective effect of milk and dairy on common, se
 **Important limitation:** all of this data is correlational. Confounders may skew results — for instance, people who drink more milk may simply have more nutritious diets overall.
 
 ## Acne [05:05]
-Data here is thin. A 2017 systematic report concluded that milk and high-glycemic-burden foods are the best candidates for food-triggered acne, but that it is not currently possible to set out evidence-based nutritional recommendations for preventing acne. A later paper (2018) also found a positive relationship between dairy consumption and acne occurrence — but this did not apply to yogurt or cheese.
+Data here is thin. A 2017 systematic report concluded that milk and high-glycemic-burden foods are the best candidates for food-triggered acne, but that it is not currently possible to set out evidence-based nutritional recommendations for preventing acne ([Fiedler 2017](https://www.ncbi.nlm.nih.gov/pubmed/27136757)). A later paper (2018) also found a positive relationship between dairy consumption and acne occurrence — but this did not apply to yogurt or cheese ([Aghasi 2019](https://www.ncbi.nlm.nih.gov/pubmed/29778512)).
 
 ## Practical application
 - If you tolerate dairy, treat milk as a nutritious beverage worth including — high in protein, calcium, potassium, vitamin A and B12, with benefits for muscle mass and satiety.
@@ -57,7 +57,7 @@ Sources as listed by Nippard in the video description.
 - Aghasi M et al. 2019. Dairy intake and acne development: A meta-analysis of observational studies. *Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29778512) doi:[10.1016/j.clnu.2018.04.015](https://doi.org/10.1016/j.clnu.2018.04.015)
 - Fiedler F et al. 2017. Acne and Nutrition: A Systematic Review. *Acta Derm Venereol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27136757) doi:[10.2340/00015555-2450](https://doi.org/10.2340/00015555-2450)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5143456/>
+- Mullie P et al. 2016. Daily milk consumption and all-cause mortality, coronary heart disease and stroke: a systematic review and meta-analysis of observational cohort studies. *BMC Public Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27927192/) doi:[10.1186/s12889-016-3889-9](https://doi.org/10.1186/s12889-016-3889-9)
 - Alexander DD et al. 2016. Dairy consumption and CVD: a systematic review and meta-analysis. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26786887) doi:[10.1017/S0007114515005000](https://doi.org/10.1017/S0007114515005000)
 - de Goede J et al. 2016. Dairy Consumption and Risk of Stroke: A Systematic Review and Updated Dose-Response Meta-Analysis of Prospective Cohort Studies. *J Am Heart Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27207960) doi:[10.1161/JAHA.115.002787](https://doi.org/10.1161/JAHA.115.002787)
 - Lu L et al. 2016. Long-term association between dairy consumption and risk of childhood obesity: a systematic review and meta-analysis of prospective cohort studies. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26862005) doi:[10.1038/ejcn.2015.226](https://doi.org/10.1038/ejcn.2015.226)

@@ -83,4 +83,4 @@ Sources as listed by Nippard in the video description.
 - ResearchGate — <https://www.researchgate.net/publication/380457955>
 
 - ResearchGate — <https://www.researchgate.net/publication/365127382>
-- <https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1494323/full>
+- Larsen et al. 2025. Resistance training beyond momentary failure: the effects of past-failure partials on muscle hypertrophy in the gastrocnemius. *Frontiers in Psychology*. <https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1494323/full> doi:[10.3389/fpsyg.2025.1494323](https://doi.org/10.3389/fpsyg.2025.1494323)

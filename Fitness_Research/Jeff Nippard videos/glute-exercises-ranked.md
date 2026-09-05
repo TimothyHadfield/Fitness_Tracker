@@ -78,12 +78,12 @@ Sources as listed by Nippard in the video description.
 **Timestamps**
 
 - Kassiano W et al. 2024. Addition of the Barbell Hip Thrust Elicits Greater Increases in Gluteus Maximus Muscle Thickness in Untrained Young Women. *Int J Strength Cond*. Not indexed in PubMed; open access at journal.iusca.org.
-- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
+- Plotkin et al. 2023. Hip thrust and back squat training elicit similar gluteus muscle hypertrophy and transfer similarly to the deadlift. *Frontiers in Physiology*. <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full> doi:[10.3389/fphys.2023.1279170](https://doi.org/10.3389/fphys.2023.1279170)
 - Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26214739/) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)
 - <https://journals.lww.com/nsca-jscr/fulltext/2018/03000/gluteus_maximus_and_hamstring_activation_during.2.aspx>
 - <https://journals.lww.com/nsca-jscr/fulltext/2019/10000/comparison_between_back_squat,_romanian_deadlift,.1.aspx>
 
-- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
+- Plotkin et al. 2023. Hip thrust and back squat training elicit similar gluteus muscle hypertrophy and transfer similarly to the deadlift. *Frontiers in Physiology*. <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full> doi:[10.3389/fphys.2023.1279170](https://doi.org/10.3389/fphys.2023.1279170)
 
 - Kubo K et al. 2019. Effects of squat training with different depths on lower limb muscle volumes. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31230110/) doi:[10.1007/s00421-019-04181-y](https://doi.org/10.1007/s00421-019-04181-y)
 

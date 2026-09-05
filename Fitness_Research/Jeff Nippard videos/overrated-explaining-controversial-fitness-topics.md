@@ -75,4 +75,4 @@ Sources as listed by Nippard in the video description.
 - Doherty R et al. 2019. Sleep and Nutrition Interactions: Implications for Athletes. *Nutrients*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30979048/) doi:[10.3390/nu11040822](https://doi.org/10.3390/nu11040822)
 - Stonehouse W et al. 2013. Kiwifruit: our daily prescription for health. *Can J Physiol Pharmacol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23746068/) doi:[10.1139/cjpp-2012-0303](https://doi.org/10.1139/cjpp-2012-0303)
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>
+- Kreider et al. 2017. International Society of Sports Nutrition position stand: safety and efficacy of creatine supplementation in exercise, sport, and medicine. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z> doi:[10.1186/s12970-017-0173-z](https://doi.org/10.1186/s12970-017-0173-z)

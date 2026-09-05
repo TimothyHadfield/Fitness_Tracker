@@ -18,9 +18,9 @@ Three papers, taken together, define the optimal setup.
 
 **Lusk et al., 2009** — four conditions: wide pronated, wide supinated, narrow pronated, narrow supinated. (Auto-captions render the name as "Lal"; likely Lusk — treat as uncertain.) Finding: **regardless of grip width, the pronated/overhand grip produced more lat activation** than supinated. Conclusion: overhand beats underhand for the lats.
 
-**Signorile et al., 2002** — compared several pulldown variations: in front of the neck, behind the neck, neutral grip, and others. Finding: the **wide grip to the front of the neck** was best for lat EMG. Conclusion: pulling in front of the neck beats behind the neck.
+**Signorile et al., 2002** — compared several pulldown variations: in front of the neck, behind the neck, neutral grip, and others. Finding: the **wide grip to the front of the neck** was best for lat EMG ([Signorile 2002](https://www.researchgate.net/publication/11043619_A_Comparative_Electromyographical_Investigation_of_Muscle_Utilization_Patterns_Using_Various_Hand_Positions_During_the_Lat_Pull-down)). Conclusion: pulling in front of the neck beats behind the neck.
 
-**Andersen et al., 2014** — three pronated grip widths defined by **biacromial distance** (the distance from the outer edge of one shoulder to the outer edge of the other): 1×, 1.5×, and 2×. Findings:
+**Andersen et al., 2014** — three pronated grip widths defined by **biacromial distance** (the distance from the outer edge of one shoulder to the outer edge of the other): 1×, 1.5×, and 2× ([Andersen 2014](http://www.ncbi.nlm.nih.gov/pubmed/24662157)). Findings:
 - All three widths were **similar on the concentric**.
 - **1.5× and 2× were best on the eccentric** for lat activation.
 - **Biceps were most activated at 1.5×.**
@@ -84,6 +84,6 @@ Sources as listed by Nippard in the video description.
 **Studies Referenced**
 
 - ResearchGate — <https://www.researchgate.net/publication/11043619_A_Comparative_Electromyographical_Investigation_of_Muscle_Utilization_Patterns_Using_Various_Hand_Positions_During_the_Lat_Pull-down>
-- <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Lehman GJ et al. 2004. Variations in muscle activation levels during traditional latissimus dorsi weight training exercises: An experimental study. *Dyn Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15228624/) doi:[10.1186/1476-5918-3-4](https://doi.org/10.1186/1476-5918-3-4)
 - Andersen V et al. 2014. Effects of grip width on muscle strength and activation in the lat pull-down. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/24662157) doi:[10.1097/JSC.0000000000000232](https://doi.org/10.1097/JSC.0000000000000232)
 - Bhatt CR et al. 2013. Variation in the insertion of the latissimus dorsi & its clinical importance. *J Orthop*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/24403744) doi:[10.1016/j.jor.2013.01.002](https://doi.org/10.1016/j.jor.2013.01.002)

@@ -31,28 +31,28 @@
 ## Why bench press [01:02]
 Four reasons Jeff anchors push day on the bench (he built to a 370 lb paused bench at 165 lb bodyweight):
 1. Highly conducive to progressive overload — easy to add weight or reps incrementally.
-2. **Akagi et al., 2014** (name garbled in captions as "aogan") found bench 1RM strength tightly correlated with pec major size. Correlation isn't causation, but a second study (researcher name garbled, "oasa") found that when the bench press was the *only* exercise in a program, pec thickness rose almost perfectly in tandem with bench strength.
+2. **Akagi et al., 2014** found bench 1RM strength tightly correlated with pec major size ([Akagi 2014](https://www.ncbi.nlm.nih.gov/pubmed/24169471)). Correlation isn't causation, but a second study (researcher name garbled, "oasa") found that when the bench press was the *only* exercise in a program, pec thickness rose almost perfectly in tandem with bench strength.
 3. Best carryover to other pressing movements — a strong bench makes you strong on dumbbell and machine presses, but not necessarily vice versa, since the barbell bench is more technique-driven.
 4. Recruits a lot of muscle: chest plus substantial delt and triceps involvement.
 
 ## Bench technique
 - **Arch:** a powerlifting-style arch is neither dangerous nor cheating as long as glutes and upper back stay on the bench and feet stay on the floor. The objection that it turns the lift into a decline press is EMG-supported, but decline pressing may actually be the better overall pec builder — EMG data (researcher names badly garbled: "bohack, bear hens and busies") showed the decline press activated more upper *and* lower pec musculature. The loads weren't relative, so heavier weights may explain the result — which is arguably the point: overloading with heavier weight gives a greater tension stimulus. There are no separate "upper" and "lower chest" muscles, only regions of the pec.
 - For non-powerlifters, use a **more conservative arch**: safer shoulder position, some leg drive, still more total weight moved.
-- **Grip width:** Barnett et al. (captions: "barnetta toal") showed that on decline, flat and incline presses a **narrow grip** produced more clavicular (upper) pec activation. Trade-off: you can't handle as much load close-grip, so less overall tension on the pec. Practical solution — vary grip across the week, e.g. heavy wide-grip on one push day, lighter close-grip on the other.
+- **Grip width:** Barnett et al. showed that on decline, flat and incline presses a **narrow grip** produced more clavicular (upper) pec activation ([Barnett 1995](https://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx)). Trade-off: you can't handle as much load close-grip, so less overall tension on the pec. Practical solution — vary grip across the week, e.g. heavy wide-grip on one push day, lighter close-grip on the other.
 - **Elbows:** bodybuilders often flare, which makes biomechanical sense, but Jeff avoids an extreme flare — with a barbell it puts the shoulder in a vulnerable position and he moves more weight with a slight tuck and a press up-and-back. Aim **between an extreme tuck and an extreme flare** for safety and effectiveness.
 
 ## Incline cable fly [06:10]
 Goal here is isolation, with emphasis on the clavicular (upper) pec fibres.
-- **Trebs et al., 2010** found a **44° bench angle** slightly better than higher or lower angles for upper pec activation — so ~45° for most people.
+- **Trebs et al., 2010** found a **44° bench angle** slightly better than higher or lower angles for upper pec activation ([Trebs 2010](https://www.ncbi.nlm.nih.gov/pubmed/20512064)) — so ~45° for most people.
 - Extend the range of motion past the normal stopping point and **cross your hands over**, which shortens the pec fibres and gives a strong contraction, especially in the inner/medial pec. This also compensates for the shortened ROM of arched benching.
 - Cables over dumbbells: dumbbells' circular resistance path puts peak tension at the bottom (great stretch) but essentially none at the top. Cables keep tension consistent.
 
 ## Shoulders [07:43]
 - Bench pressing already hits the delts hard, especially the front delt. But **Botton et al.** (captions: "button") found the **vertical shoulder press** was the top exercise of eight tested — bench press included — for anterior delt activation, and it also significantly outperformed the flat bench for **lateral** delts. Isolation exercises still ranked highest overall for side delts.
-- **Saeterbakken and Fimland, 2015** (captions: "seder back and Nal") compared standing and seated barbell presses against standing and seated dumbbell presses: the **standing dumbbell press** came out on top for side delt activation, and also showed the most EMG activation for anterior and posterior delts. You can't load it as heavily — but the heavy press is already covered by the bench, so optimising activation is the right trade here.
+- **Saeterbakken and Fimland, 2013** compared standing and seated barbell presses against standing and seated dumbbell presses: the **standing dumbbell press** came out on top for side delt activation, and also showed the most EMG activation for anterior and posterior delts ([Saeterbakken 2013](https://www.ncbi.nlm.nih.gov/pubmed/23096062)). You can't load it as heavily — but the heavy press is already covered by the bench, so optimising activation is the right trade here.
 
 ## Egyptian lateral raise [08:45]
-Leaning away in the direction of the raise is based on **McMahon et al., 1995** (name uncertain from captions), which suggested the **side deltoid takes over near the top** of the ROM while the **rotator cuff works more near the bottom**. Leaning away starts the arm at roughly **15-30° of abduction**, skipping the rotator-cuff-dominant portion and loading the side delt from rep one. Performing them between the legs keeps the motion in the **scapular plane**, so the line of pull matches the orientation of the side delt fibres — ideal for generating tension.
+Leaning away in the direction of the raise is based on **McMahon et al., 1995**, which suggested the **side deltoid takes over near the top** of the ROM while the **rotator cuff works more near the bottom** ([McMahon 1995](https://www.ncbi.nlm.nih.gov/pubmed/7552678)). Leaning away starts the arm at roughly **15-30° of abduction**, skipping the rotator-cuff-dominant portion and loading the side delt from rep one. Performing them between the legs keeps the motion in the **scapular plane**, so the line of pull matches the orientation of the side delt fibres — ideal for generating tension.
 
 ## Triceps
 Bench and standing dumbbell press already load the triceps heavily, so isolation work isn't *required* for growth — but it is highly recommended for optimising it. Structure it as:
@@ -77,7 +77,7 @@ Sources as listed by Nippard in the video description.
 **Scientific References**
 
 - Akagi R et al. 2014. Relationship of pectoralis major muscle size with bench press and bench throw performances. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24169471) doi:[10.1519/JSC.0000000000000306](https://doi.org/10.1519/JSC.0000000000000306)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/>
+- Ogasawara R et al. 2012. Time course for arm and chest muscle thickness changes following bench press training. *Interv Med Appl Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24265879/) doi:[10.1556/IMAS.4.2012.4.7](https://doi.org/10.1556/IMAS.4.2012.4.7)
 - <https://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx>
 - Trebs AA et al. 2010. An electromyography analysis of 3 muscles surrounding the shoulder joint during the performance of a chest press exercise at several angles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20512064) doi:[10.1519/JSC.0b013e3181ddfae7](https://doi.org/10.1519/JSC.0b013e3181ddfae7)
 - ResearchGate — <https://www.researchgate.net/publication/44639244_An_Electromyography_Analysis_of_3_Muscles_Surrounding_the_Shoulder_Joint_During_the_Performance_of_a_Chest_Press_Exercise_at_Several_Angles>

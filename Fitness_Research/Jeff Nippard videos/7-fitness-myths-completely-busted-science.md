@@ -90,7 +90,7 @@ Sources as listed by Nippard in the video description.
 - Aragon AA et al. 2017. International society of sports nutrition position stand: diets and body composition. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28630601) doi:[10.1186/s12970-017-0174-y](https://doi.org/10.1186/s12970-017-0174-y)
 
 - <https://www.sciencedirect.com/science/article/pii/S0889157517300418>
-- <https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2824>
+- Rickman et al. 2007. Nutritional comparison of fresh, frozen, and canned fruits and vegetables II. Vitamin A and carotenoids, vitamin E, minerals and fiber. *Journal of the Science of Food and Agriculture*. <https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2824> doi:[10.1002/jsfa.2824](https://doi.org/10.1002/jsfa.2824)
 
 - Fry AC et al. 2003. Effect of knee position on hip and knee torques during the barbell squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/14636100) doi:[10.1519/1533-4287(2003)017<0629:eokpoh>2.0.co;2](https://doi.org/10.1519/1533-4287(2003)017<0629:eokpoh>2.0.co;2)
 - List R et al. 2013. Kinematics of the trunk and the lower extremities during restricted and unrestricted squats. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22990570) doi:[10.1519/JSC.0b013e3182736034](https://doi.org/10.1519/JSC.0b013e3182736034)

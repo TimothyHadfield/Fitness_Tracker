@@ -62,7 +62,7 @@ Sources as listed by Nippard in the video description.
 
 **Overtraining Syndrome**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3435910/>
+- Kreher JB & Schwartz JB 2012. Overtraining syndrome: a practical guide. *Sports Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23016079/) doi:[10.1177/1941738111434406](https://doi.org/10.1177/1941738111434406)
 
 **Mechanisms of Overtraining (Volume and Intensity)**
 
@@ -79,11 +79,11 @@ Sources as listed by Nippard in the video description.
 
 **Effectiveness of the Self-Survey**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4789708/>
+- Saw AE et al. 2016. Monitoring the athlete training response: subjective self-reported measures trump commonly used objective measures: a systematic review. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26423706/) doi:[10.1136/bjsports-2015-094758](https://doi.org/10.1136/bjsports-2015-094758)
 
 **Heart Rate Variability and Recovery**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4840584/>
+- Dong JG 2016. The role of heart rate variability in sports physiology. *Exp Ther Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27168768/) doi:[10.3892/etm.2016.3104](https://doi.org/10.3892/etm.2016.3104)
 
 **Full Training Break (Periodic vs Continuous)**
 

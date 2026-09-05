@@ -74,5 +74,5 @@ Sources as listed by Nippard in the video description.
 
 - Lidborg LH et al. 2022. A meta-analysis of the association between male dimorphism and fitness outcomes in humans. *Elife*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35179485/) doi:[10.7554/eLife.65031](https://doi.org/10.7554/eLife.65031)
 
-- <https://link.springer.com/article/10.1023/A:1025894203368>
-- <https://link.springer.com/article/10.1007/s10508-023-02767-4>
+- Urbaniak & Kilmann 2003. Physical Attractiveness and the “Nice Guy Paradox”: Do Nice Guys Really Finish Last?. *Sex Roles*. <https://link.springer.com/article/10.1023/A:1025894203368> doi:[10.1023/a:1025894203368](https://doi.org/10.1023/a:1025894203368)
+- Takayanagi et al. 2024. What Do Different People Look for in a Partner? Effects of Sex, Sexual Orientation, and Mating Strategies on Partner Preferences. *Archives of Sexual Behavior*. <https://link.springer.com/article/10.1007/s10508-023-02767-4> doi:[10.1007/s10508-023-02767-4](https://doi.org/10.1007/s10508-023-02767-4)

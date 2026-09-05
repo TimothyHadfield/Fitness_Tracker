@@ -4,7 +4,7 @@
 **Topic:** Technique
 
 ## Bottom line
-- Rows build both width and thickness — shoulder extension (lats) plus scapular retraction (mid traps), supported by research showing high lat *and* trap activation.
+- Rows build both width and thickness — shoulder extension (lats) plus scapular retraction (mid traps), supported by research showing high lat *and* trap activation ([Lehman 2004](https://pubmed.ncbi.nlm.nih.gov/15228624/)).
 - The dumbbell row has a poor resistance curve: no tension at the bottom where you're strongest, maximum tension at the top where you're weakest. You fail because of the top, not because the lats are fatigued.
 - A **moderate amount of torso rotation** to generate momentum at the bottom fixes that curve and makes the exercise more effective — an idea Greg Nuckols raised in MASS.
 - Torso should sit **0-20 degrees above parallel** to the floor; staying upright allows heavier loads but badly cuts lat range of motion.
@@ -62,4 +62,4 @@ Sources as listed by Nippard in the video description.
 
 **SOURCES**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Lehman GJ et al. 2004. Variations in muscle activation levels during traditional latissimus dorsi weight training exercises: An experimental study. *Dyn Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15228624/) doi:[10.1186/1476-5918-3-4](https://doi.org/10.1186/1476-5918-3-4)

@@ -74,7 +74,7 @@ Sources as listed by Nippard in the video description.
 
 **Calories In Calories Out**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4603544/>
+- Hall KD et al. 2015. Calorie for Calorie, Dietary Fat Restriction Results in More Body Fat Loss than Carbohydrate Restriction in People with Obesity. *Cell Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26278052/) doi:[10.1016/j.cmet.2015.07.021](https://doi.org/10.1016/j.cmet.2015.07.021)
 - Bray GA et al. 2015. Effect of protein overfeeding on energy expenditure measured in a metabolic chamber. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25733634/) doi:[10.3945/ajcn.114.091769](https://doi.org/10.3945/ajcn.114.091769)
 
 **Rise in Obesity**
@@ -87,5 +87,5 @@ Sources as listed by Nippard in the video description.
 - Swinburn BA et al. 2011. The global obesity pandemic: shaped by global drivers and local environments. *Lancet*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21872749/) doi:[10.1016/S0140-6736(11)60813-1](https://doi.org/10.1016/S0140-6736(11)60813-1)
 - Sun M et al. 2018. Meta-analysis on shift work and risks of specific obesity types. *Obes Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28975706/) doi:[10.1111/obr.12621](https://doi.org/10.1111/obr.12621)
 - Zhou Q et al. 2019. Dose-response association between sleep duration and obesity risk: a systematic review and meta-analysis of prospective cohort studies. *Sleep Breath*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30941582/) doi:[10.1007/s11325-019-01824-4](https://doi.org/10.1007/s11325-019-01824-4)
-- <https://onlinelibrary.wiley.com/doi/full/10.1038/oby.2010.241>
+- Wardle et al. 2011. Stress and Adiposity: A Meta‐Analysis of Longitudinal Studies. *Obesity*. <https://onlinelibrary.wiley.com/doi/full/10.1038/oby.2010.241> doi:[10.1038/oby.2010.241](https://doi.org/10.1038/oby.2010.241)
 - <https://jamanetwork.com/journals/jamapsychiatry/fullarticle/210608>

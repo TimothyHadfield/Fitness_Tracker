@@ -79,5 +79,5 @@ Sources as listed by Nippard in the video description.
 
 - Duplanty AA et al. 2017. Effect of Acute Alcohol Ingestion on Resistance Exercise-Induced mTORC1 Signaling in Human Muscle. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27135475) doi:[10.1519/JSC.0000000000001468](https://doi.org/10.1519/JSC.0000000000001468)
 - Steiner JL & Lang CH 2014. Alcohol impairs skeletal muscle protein synthesis and mTOR signaling in a time-dependent manner following electrically stimulated muscle contraction. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25257868) doi:[10.1152/japplphysiol.00180.2014](https://doi.org/10.1152/japplphysiol.00180.2014)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2651172/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3922864/>
+- Lang CH et al. 2009. Alcohol-induced decrease in muscle protein synthesis associated with increased binding of mTOR and raptor: Comparable effects in young and mature rats. *Nutr Metab (Lond)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19154606/) doi:[10.1186/1743-7075-6-4](https://doi.org/10.1186/1743-7075-6-4)
+- Parr EB et al. 2014. Alcohol ingestion impairs maximal post-exercise rates of myofibrillar protein synthesis following a single bout of concurrent training. *PLoS One*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24533082/) doi:[10.1371/journal.pone.0088384](https://doi.org/10.1371/journal.pone.0088384)

@@ -37,7 +37,7 @@ Cable low and pull low-to-high on set one; cable at shoulder height and pull str
 Most people neglect low-rep biceps work and only chase the pump. Treat this like a bench or deadlift: track load, ensure weight or reps climb week to week. A little hip drive to start the bar is acceptable if the negative is controlled on every rep.
 
 ## 6. Bottom-half preacher curl — 2 × 10-12
-Partials in the stretched position only. Justified by a 2021 study from Sadle (name as spoken in the captions — spelling uncertain) and colleagues: 30-32 subjects split into a group curling only 0-50° of elbow flexion, a group curling only 80-130°, and a non-training control. After five weeks the bottom-half group gained more than twice the muscle thickness of the top-half group, indicating the lengthened portion of the preacher curl is the more hypertrophic half. The authors also cited a wider body of literature supporting long-muscle-length training.
+Partials in the stretched position only. Justified by a 2021 study from Sato and colleagues ([Sato 2021](https://pubmed.ncbi.nlm.nih.gov/34616309/)): 30-32 subjects split into a group curling only 0-50° of elbow flexion, a group curling only 80-130°, and a non-training control. After five weeks the bottom-half group gained more than twice the muscle thickness of the top-half group, indicating the lengthened portion of the preacher curl is the more hypertrophic half. The authors also cited a wider body of literature supporting long-muscle-length training.
 
 He does these one arm at a time, starting with the weaker arm and matching reps with the stronger one, which limits asymmetry and lets him focus tension on one biceps.
 
@@ -50,7 +50,7 @@ He does these one arm at a time, starting with the weaker arm and matching reps 
 ## Caveats & unknowns
 - No longitudinal evidence that pullovers grow lats; his case rests on stretch sensation and soreness, which he explicitly says are weak individual proxies.
 - Feeder sets can add fatigue before the working set — he restricts them to exercises where grooving matters more than maximum load.
-- The preacher-curl study is five weeks with a small sample; the researcher's name is garbled in the auto-captions.
+- The preacher-curl study is five weeks with a small sample.
 
 ## References
 

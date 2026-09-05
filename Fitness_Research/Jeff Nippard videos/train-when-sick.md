@@ -53,10 +53,10 @@ Sources as listed by Nippard in the video description.
 
 - Corty EW & Guardiani JM 2008. Canadian and American sex therapists' perceptions of normal and abnormal ejaculatory latencies: how long should intercourse last?. *J Sex Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18331255) doi:[10.1111/j.1743-6109.2008.00797.x](https://doi.org/10.1111/j.1743-6109.2008.00797.x)
 - Burri A et al. 2014. Female partner's perception of premature ejaculation and its impact on relationship breakups, relationship quality, and sexual satisfaction. *J Sex Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24774717) doi:[10.1111/jsm.12551](https://doi.org/10.1111/jsm.12551)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4003840/>
+- Pastore AL et al. 2014. Pelvic floor muscle rehabilitation for patients with lifelong premature ejaculation: a novel therapeutic approach. *Ther Adv Urol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24883105/) doi:[10.1177/1756287214523329](https://doi.org/10.1177/1756287214523329)
 - Frühauf S et al. 2013. Efficacy of psychological interventions for sexual dysfunction: a systematic review and meta-analysis. *Arch Sex Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23559141) doi:[10.1007/s10508-012-0062-0](https://doi.org/10.1007/s10508-012-0062-0)
 - de Carufel F & Trudel G 2006. Effects of a new functional-sexological treatment for premature ejaculation. *J Sex Marital Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16418103) doi:[10.1080/00926230500442292](https://doi.org/10.1080/00926230500442292)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4599555/>
+- Cooper K et al. 2015. Behavioral Therapies for Management of Premature Ejaculation: A Systematic Review. *Sex Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26468381/) doi:[10.1002/sm2.65](https://doi.org/10.1002/sm2.65)
 - Melnik T et al. 2011. Psychosocial interventions for premature ejaculation. *Cochrane Database Syst Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21833964) doi:[10.1002/14651858.CD008195.pub2](https://doi.org/10.1002/14651858.CD008195.pub2)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5001981/>
+- Althof SE 2016. Psychosexual therapy for premature ejaculation. *Transl Androl Urol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27652220/) doi:[10.21037/tau.2016.05.15](https://doi.org/10.21037/tau.2016.05.15)
 - Cooper K et al. 2015. Interventions to treat premature ejaculation: a systematic review short report. *Health Technol Assess*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25768099) doi:[10.3310/hta19210](https://doi.org/10.3310/hta19210)

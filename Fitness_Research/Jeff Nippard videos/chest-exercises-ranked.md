@@ -71,4 +71,4 @@
 Sources as listed by Nippard in the video description.
 
 - <https://www.mdpi.com/2076-3417/12/21/11138>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7449336/>
+- Chaves SFN et al. 2020. Effects of Horizontal and Incline Bench Press on Neuromuscular Adaptations in Untrained Young Men. *Int J Exerc Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32922646/) doi:[10.70252/FDNB1158](https://doi.org/10.70252/FDNB1158)

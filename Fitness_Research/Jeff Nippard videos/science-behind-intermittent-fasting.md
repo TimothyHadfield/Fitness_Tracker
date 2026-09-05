@@ -14,17 +14,17 @@
 Alternate-day fasting alternates full eating days with fasting days. Time-restricted feeding compresses all food into a 4-8 h window. In practice most people run some version of the **LeanGains protocol** popularised by Martin Berkhan: a 16 h fast with an 8 h eating window, with the window arranged around the training session.
 
 ## Animal data vs human data
-Rodent work is where fasting looks spectacular: better weight loss, improved cardiovascular health, neuroprotection, reduced cancer risk and extended lifespan — and many of these effects appear **independent of calorie restriction alone**. The proposed mechanism is hormesis: intermittent food deprivation acts as a mild preconditioning stress that builds resistance to larger stresses later, analogous to immune exposure.
+Rodent work is where fasting looks spectacular: better weight loss, improved cardiovascular health, neuroprotection, reduced cancer risk and extended lifespan ([Goodrick 1990](https://www.ncbi.nlm.nih.gov/pubmed/2402168)) — and many of these effects appear **independent of calorie restriction alone**. The proposed mechanism is hormesis: intermittent food deprivation acts as a mild preconditioning stress that builds resistance to larger stresses later, analogous to immune exposure.
 
 Human results are more modest [01:02]:
-- Two studies on **obese** subjects doing alternate-day fasting for 8-10 weeks showed weight loss, reduced blood pressure and lowered cholesterol.
+- Two studies on **obese** subjects doing alternate-day fasting for 8-10 weeks showed weight loss, reduced blood pressure and lowered cholesterol ([Varady 2009](https://www.ncbi.nlm.nih.gov/pubmed/19793855), [Johnson 2007](https://www.ncbi.nlm.nih.gov/pubmed/17291990)).
 - Two comparable studies on **lean** subjects showed weight maintenance instead — suggesting the approach suits obese populations better than lean ones.
 - These were short trials, so long-term outcomes are unknown.
 
 ## Hunger
-A study in obese patients on a 14-day fast reported large weight loss **without** an increase in hunger [01:32]. This appetite-blunting effect recurs across the literature; hunger is heavily conditioned by when you're accustomed to eating, so expect an adjustment period when first switching, after which a consistent eating pattern controls hunger regardless of meal frequency.
+A study in obese patients on a 14-day fast reported large weight loss **without** an increase in hunger [01:32] ([Duncan 1962](https://pubmed.ncbi.nlm.nih.gov/14047310/)). This appetite-blunting effect recurs across the literature; hunger is heavily conditioned by when you're accustomed to eating, so expect an adjustment period when first switching, after which a consistent eating pattern controls hunger regardless of meal frequency.
 
-The **largest systematic review, covering 40 studies** [02:02], concluded that although intermittent fasting suppressed hunger better than continuous calorie restriction, this advantage did not produce significantly better body composition or weight loss. The authors' verdict: fasting is a **valid but not superior** option compared to continuous energy restriction.
+The **largest systematic review, covering 40 studies** [02:02] ([Seimon 2015](https://www.ncbi.nlm.nih.gov/pubmed/26384657)), concluded that although intermittent fasting suppressed hunger better than continuous calorie restriction, this advantage did not produce significantly better body composition or weight loss. The authors' verdict: fasting is a **valid but not superior** option compared to continuous energy restriction.
 
 ## Muscle loss and metabolism myths
 - A **2006 paper** found that **40 hours of fasting** did not significantly alter negative regulators of muscle mass and caused no significant muscle atrophy [02:33].
@@ -70,7 +70,7 @@ Sources as listed by Nippard in the video description.
 
 **IF and Hunger**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2249073/>
+- DUNCAN GG 1962. INTERMITTENT FASTS IN THE CORRECTION AND CONTROL OF INTRACTABLE OBESITY. *Trans Am Clin Climatol Assoc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/14047310/)
 
 - Seimon RV et al. 2015. Do intermittent diets provide physiological benefits over continuous diets for weight loss? A systematic review of clinical trials. *Mol Cell Endocrinol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26384657) doi:[10.1016/j.mce.2015.09.014](https://doi.org/10.1016/j.mce.2015.09.014)
 
@@ -82,7 +82,7 @@ Sources as listed by Nippard in the video description.
 
 **MPS Study Favouring 4 Meals**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3650697/>
+- Areta JL et al. 2013. Timing and distribution of protein ingestion during prolonged recovery from resistance exercise alters myofibrillar protein synthesis. *J Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23459753/) doi:[10.1113/jphysiol.2012.244897](https://doi.org/10.1113/jphysiol.2012.244897)
 
 - Hoddy KK et al. 2015. Safety of alternate day fasting and effect on disordered eating behaviors. *Nutr J*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25943396/) doi:[10.1186/s12937-015-0029-9](https://doi.org/10.1186/s12937-015-0029-9)
 - 2004. Dieting in adolescence. *Paediatr Child Health*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19657417/) doi:[10.1093/pch/9.7.487](https://doi.org/10.1093/pch/9.7.487)

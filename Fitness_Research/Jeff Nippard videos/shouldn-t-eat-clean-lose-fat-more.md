@@ -83,7 +83,7 @@ Sources as listed by Nippard in the video description.
 **Clean Eating and Disordered Eating**
 
 - Stewart TM et al. 2002. Rigid vs. flexible dieting: association with eating disorder symptoms in nonobese women. *Appetite*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11883916/) doi:[10.1006/appe.2001.0445](https://doi.org/10.1006/appe.2001.0445)
-- <https://onlinelibrary.wiley.com/doi/abs/10.1002/eat.23232>
+- Linardon et al. 2020. Interactions between different eating patterns on recurrent binge‐eating behavior: A machine learning approach. *International Journal of Eating Disorders*. <https://onlinelibrary.wiley.com/doi/abs/10.1002/eat.23232> doi:[10.1002/eat.23232](https://doi.org/10.1002/eat.23232)
 - Smith CF et al. 1999. Flexible vs. Rigid dieting strategies: relationship with adverse behavioral outcomes. *Appetite*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/10336790/) doi:[10.1006/appe.1998.0204](https://doi.org/10.1006/appe.1998.0204)
 
 **Clean Eating can be Unhealthy**

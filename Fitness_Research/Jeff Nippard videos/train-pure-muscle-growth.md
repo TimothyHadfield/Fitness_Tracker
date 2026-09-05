@@ -76,10 +76,10 @@ Sources as listed by Nippard in the video description.
 
 - Schoenfeld BJ et al. 2017. Hypertrophic Effects of Concentric vs. Eccentric Muscle Actions: A Systematic Review and Meta-analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28486337/) doi:[10.1519/JSC.0000000000001983](https://doi.org/10.1519/JSC.0000000000001983)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8310485/>
+- Wilk M et al. 2021. The Influence of Movement Tempo During Resistance Training on Muscular Strength and Hypertrophy Responses: A Review. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34043184/) doi:[10.1007/s40279-021-01465-2](https://doi.org/10.1007/s40279-021-01465-2)
 
 - Steele J et al. 2022. Are Trainees Lifting Heavy Enough? Self-Selected Loads in Resistance Exercise: A Scoping Review and Exploratory Meta-analysis. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35790622/) doi:[10.1007/s40279-022-01717-9](https://doi.org/10.1007/s40279-022-01717-9)
-- <https://link.springer.com/article/10.1007/s40279-022-01784-y>
+- Refalo et al. 2023. Influence of Resistance Training Proximity-to-Failure on Skeletal Muscle Hypertrophy: A Systematic Review with Meta-analysis. *Sports Medicine*. <https://link.springer.com/article/10.1007/s40279-022-01784-y> doi:[10.1007/s40279-022-01784-y](https://doi.org/10.1007/s40279-022-01784-y)
 
 - Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>
 

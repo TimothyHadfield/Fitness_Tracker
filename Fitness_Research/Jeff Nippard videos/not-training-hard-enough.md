@@ -59,4 +59,4 @@ Sources as listed by Nippard in the video description.
 **Scientific References**
 
 - Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29112055) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5712461/>
+- Steele J et al. 2017. Ability to predict repetitions to momentary failure is not perfectly accurate, though improves with resistance training experience. *PeerJ*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29204323/) doi:[10.7717/peerj.4105](https://doi.org/10.7717/peerj.4105)

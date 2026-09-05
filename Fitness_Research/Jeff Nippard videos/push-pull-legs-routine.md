@@ -110,6 +110,6 @@ Sources as listed by Nippard in the video description.
 
 **Sources**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7969179/>
+- Maeo S et al. 2021. Greater Hamstrings Muscle Hypertrophy but Similar Damage Protection after Training at Long versus Short Muscle Lengths. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33009197/) doi:[10.1249/MSS.0000000000002523](https://doi.org/10.1249/MSS.0000000000002523)
 - McMahon G et al. 2014. Muscular adaptations and insulin-like growth factor-1 responses to resistance training are stretch-mediated. *Muscle Nerve*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23625461/) doi:[10.1002/mus.23884](https://doi.org/10.1002/mus.23884)
 - Schoenfeld BJ et al. 2015. Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25601394/) doi:[10.1007/s40279-015-0304-0](https://doi.org/10.1007/s40279-015-0304-0)

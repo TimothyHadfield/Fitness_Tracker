@@ -65,7 +65,7 @@ Sources as listed by Nippard in the video description.
 
 **Training at long muscle lengths**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6977096/>
+- Schoenfeld BJ & Grgic J 2020. Effects of range of motion on muscle development during resistance training interventions: A systematic review. *SAGE Open Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32030125/) doi:[10.1177/2050312120901559](https://doi.org/10.1177/2050312120901559)
 
 **Incline Bench (Upper Chest) Study**
 

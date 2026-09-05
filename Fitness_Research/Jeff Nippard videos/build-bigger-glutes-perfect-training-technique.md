@@ -62,5 +62,5 @@ Sources as listed by Nippard in the video description.
 
 **SOURCES**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5758546/#B39>
+- Vigotsky AD et al. 2017. Interpreting Signal Amplitudes in Surface Electromyography Studies in Sport and Rehabilitation Sciences. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29354060/) doi:[10.3389/fphys.2017.00985](https://doi.org/10.3389/fphys.2017.00985)
 - Farina D et al. 2010. Decoding the neural drive to muscles from the surface electromyogram. *Clin Neurophysiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20444646) doi:[10.1016/j.clinph.2009.10.040](https://doi.org/10.1016/j.clinph.2009.10.040)

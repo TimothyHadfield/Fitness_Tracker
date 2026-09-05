@@ -25,13 +25,13 @@ Research puts men's natural maximum at 20-40 lb (9-18 kg) of gained muscle and w
 
 ## What the steroid studies show
 
-**Bhasin et al., 1996 [04:04]** — 43 subjects, four groups, 10 weeks, 600 mg testosterone per week:
+**Bhasin et al., 1996 [04:04]** — 43 subjects, four groups, 10 weeks, 600 mg testosterone per week ([Bhasin 1996](https://pubmed.ncbi.nlm.nih.gov/8637535/)):
 - No training, no steroids: negligible
 - Trained natural: **+4.4 lb** muscle
 - Trained + steroids: **+13.4 lb** — more than triple the natural trained group
 - Steroids, no training at all: **+7 lb** — over 1.5x the natural trained group, without lifting
 
-**The 2001 dose-response follow-up [06:34]** — same research group, 61 subjects, five doses (25, 50, 125, 300 or 600 mg/week) for 20 weeks, no lifting. Muscle gain scaled with dose: the lowest dose added just under 1 lb; the 600 mg group added roughly **20 lb in 20 weeks — one pound of muscle per week, on average, without training.**
+**The 2001 dose-response follow-up [06:34]** — same research group, 61 subjects, five doses (25, 50, 125, 300 or 600 mg/week) for 20 weeks, no lifting ([Bhasin 2001](https://pubmed.ncbi.nlm.nih.gov/11701431/)). Muscle gain scaled with dose: the lowest dose added just under 1 lb; the 600 mg group added roughly **20 lb in 20 weeks — one pound of muscle per week, on average, without training.**
 
 Individual response varied enormously in that trial: the worst responder gained 9 lb over 20 weeks, the best 31 lb.
 
@@ -50,7 +50,7 @@ So the 600 mg used in the famous studies is high by TRT standards but moderate-t
 - **Chris Bumstead** — reigning Classic Physique Mr. Olympia. Started at 14 weighing 170 lb at 6'1", reached 225 lb by 19 while natural (a 55 lb increase; Nippard believes the before/after images predate his documented first cycle). Enhanced, he now sits at 264 lb off-season at similar body fat — about **40 lb added**. Notably he built most of his mass naturally, which suggests he is not running huge doses and could grow considerably more by raising them. Mostly this illustrates the power of genetics.
 
 ## The genetics point [10:10]
-Response to natural training varies widely — some gain very little, some a great deal, most land in the middle — and response to anabolics varies just as much. The 2001 study's spread (9 lb to 31 lb in 20 weeks without lifting) makes the point.
+Response to natural training varies widely — some gain very little, some a great deal, most land in the middle ([Hubal 2005](https://pubmed.ncbi.nlm.nih.gov/15947721/)) — and response to anabolics varies just as much. The 2001 study's spread (9 lb to 31 lb in 20 weeks without lifting) makes the point.
 
 ## Side effects [11:11]
 From the NIH list: well-established elevated risk of high blood pressure, blood clots, heart attack, stroke and artery damage in regular users; plus gynecomastia, balding, acne, abscesses and oily skin. Moderate controlled dosing with regular hormonal monitoring by a physician mitigates some of this, but it remains a health gamble.

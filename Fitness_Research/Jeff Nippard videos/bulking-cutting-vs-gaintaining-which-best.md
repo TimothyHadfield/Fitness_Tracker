@@ -77,4 +77,4 @@ Sources as listed by Nippard in the video description.
 **SOURCES**
 
 - Kistler BM et al. 2014. Case study: Natural bodybuilding contest preparation. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24901578) doi:[10.1123/ijsnem.2014-0016](https://doi.org/10.1123/ijsnem.2014-0016)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2376744/>
+- Hall KD 2008. What is the required energy deficit per unit weight loss?. *Int J Obes (Lond)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17848938/) doi:[10.1038/sj.ijo.0803720](https://doi.org/10.1038/sj.ijo.0803720)

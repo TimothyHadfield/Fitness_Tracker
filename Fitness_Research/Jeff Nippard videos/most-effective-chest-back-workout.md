@@ -11,7 +11,7 @@
 - This is day 4 of an upper/lower split; Nippard states the volume across the two upper days is enough for beginners and most intermediates on a four-day split.
 
 ## Bench press — 3 sets of 6 [00:32]
-His pick if forced to choose one overall pec mass builder. Per the Strength & Conditioning Research database, long-term studies show a program consisting of bench press alone produces considerable chest hypertrophy, and a **2012 study** found bench press 1RM and pec muscle thickness increased in near-perfect tandem across **24 weeks** — a stronger bench and bigger pecs go together.
+His pick if forced to choose one overall pec mass builder. Per the Strength & Conditioning Research database, long-term studies show a program consisting of bench press alone produces considerable chest hypertrophy, and a **2012 study** found bench press 1RM and pec muscle thickness increased in near-perfect tandem across **24 weeks** — a stronger bench and bigger pecs go together ([Ogasawara 2012](https://pubmed.ncbi.nlm.nih.gov/24265879/)).
 
 Because the earlier upper day used a **closer grip with less arch** to bias upper pecs and triceps, this day uses a **bigger arch and wider grip** to bias the sternal head of the mid pecs. The whole pec is highly active in both; it's regional emphasis only.
 
@@ -22,7 +22,7 @@ Because the earlier upper day used a **closer grip with less arch** to bias uppe
 ## Weighted wide-grip pull-up — 3 sets of 8 + 2 forced negatives [02:33]
 Perform 8 normal reps with a full stretch at the bottom and chin clearly over the bar at the top. Then use a box to jump above the bar and lower slowly for **2 forced eccentrics** (or have a partner assist the concentric while you take the negative).
 
-Rationale, from a paper by **Dr. Brad Schoenfeld**: because a muscle isn't fully fatigued by concentric training, heavy negatives may cause greater motor unit fatigue and so add hypertrophic stimulus.
+Rationale, from a paper by **Dr. Brad Schoenfeld**: because a muscle isn't fully fatigued by concentric training, heavy negatives may cause greater motor unit fatigue and so add hypertrophic stimulus ([Schoenfeld 2011](https://journals.lww.com/nsca-scj/Fulltext/2011/08000/The_Use_of_Specialized_Training_Techniques_to.11.aspx)).
 
 **Scaling.** If you can't do 8 clean weighted reps, start with bodyweight. If that's still too hard, use the assisted pull-up machine for the 8 reps and then do the 2 forced negatives unassisted via the jump method. On every rep, including the forced ones, feel a strong lat stretch and mind-muscle connection on the eccentric.
 
@@ -62,7 +62,7 @@ Technique cues: no resting between reps, keep hands and forearms as loose as pos
 - Advanced lifters can add a third weekly upper session targeting a specific weak point.
 
 ## Caveats & unknowns
-The bench-only hypertrophy claim and the 2012 bench/pec-thickness study come via the Strength & Conditioning Research database summary rather than direct citation; the rep-speed finding is reported via a Stronger by Science write-up of a 2014 paper, and neither paper's authors are named in the video. The forced-negative rationale from Schoenfeld is described as "may elicit" additional stimulus, not as an established effect.
+The bench-only hypertrophy claim and the 2012 bench/pec-thickness study come via the Strength & Conditioning Research database summary rather than direct citation, though the 2012 study is listed in the video description as Ogasawara et al.; the rep-speed finding is reported via a Stronger by Science write-up of a 2014 paper whose authors are named nowhere. The forced-negative rationale from Schoenfeld is described as "may elicit" additional stimulus, not as an established effect.
 
 ## References
 
@@ -70,5 +70,5 @@ Sources as listed by Nippard in the video description.
 
 **Scientific References**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/>
+- Ogasawara R et al. 2012. Time course for arm and chest muscle thickness changes following bench press training. *Interv Med Appl Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24265879/) doi:[10.1556/IMAS.4.2012.4.7](https://doi.org/10.1556/IMAS.4.2012.4.7)
 - <https://journals.lww.com/nsca-scj/Fulltext/2011/08000/The_Use_of_Specialized_Training_Techniques_to.11.aspx>

@@ -60,10 +60,10 @@ Sources as listed by Nippard in the video description.
 
 **In This Video**
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>
+- Kreider et al. 2017. International Society of Sports Nutrition position stand: safety and efficacy of creatine supplementation in exercise, sport, and medicine. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z> doi:[10.1186/s12970-017-0173-z](https://doi.org/10.1186/s12970-017-0173-z)
 
 - Kruszewski M et al. 2022. Effects of Multi-Ingredient Pre-Workout Supplement and Caffeine on Bench Press Performance: A Single-Blind Cross-Over Study. *Nutrients*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35565718/) doi:[10.3390/nu14091750](https://doi.org/10.3390/nu14091750)
 
 - ResearchGate — <https://www.researchgate.net/publication/227635579>
 
-- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2018.00403/full>
+- Dupuy et al. 2018. An Evidence-Based Approach for Choosing Post-exercise Recovery Techniques to Reduce Markers of Muscle Damage, Soreness, Fatigue, and Inflammation: A Systematic Review With Meta-Analysis. *Frontiers in Physiology*. <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2018.00403/full> doi:[10.3389/fphys.2018.00403](https://doi.org/10.3389/fphys.2018.00403)

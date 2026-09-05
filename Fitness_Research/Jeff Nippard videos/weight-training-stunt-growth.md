@@ -51,7 +51,7 @@ Sources as listed by Nippard in the video description.
 
 - Lloyd RS et al. 2014. Position statement on youth resistance training: the 2014 International Consensus. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24055781) doi:[10.1136/bjsports-2013-092952](https://doi.org/10.1136/bjsports-2013-092952)
 - Vicente-Rodríguez G 2006. How does exercise affect bone development during growth?. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16796394) doi:[10.2165/00007256-200636070-00002](https://doi.org/10.2165/00007256-200636070-00002)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3483033/>
+- Faigenbaum AD & Myer GD 2010. Resistance training among young athletes: safety, efficacy and injury prevention effects. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19945973/) doi:[10.1136/bjsm.2009.068098](https://doi.org/10.1136/bjsm.2009.068098)
 
 **Other Suggested Reading and Resources**
 

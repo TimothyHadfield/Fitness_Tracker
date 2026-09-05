@@ -13,10 +13,10 @@
 ## The two camps
 [00:31] Bodybuilders have argued for decades that deliberately isolating and squeezing the target muscle activates it harder and drives growth. The academic counter-position is that if you take the load through a full range of motion the muscles must fire anyway, so you're better off thinking about how your body moves in space and executing the lift properly.
 
-Before this study, the evidence leaned toward the academics. A 15-year review of attentional focus found external focus beat internal focus more or less across the board for stability, balance, endurance, and force production in sport-specific contexts. The muscle-focused research that existed was all acute — EMG activation and single-session performance. Nobody had run a long-term study asking which focus style produces more size and strength.
+Before this study, the evidence leaned toward the academics. A 15-year review of attentional focus found external focus beat internal focus more or less across the board for stability, balance, endurance, and force production in sport-specific contexts. The muscle-focused research that existed was all acute — EMG activation and single-session performance ([Snyder 2012](https://www.ncbi.nlm.nih.gov/pubmed/22076100)). Nobody had run a long-term study asking which focus style produces more size and strength.
 
 ## The 2018 study
-[02:04] Out of Brad Schoenfeld's lab, reviewed by Greg Nuckols in MASS.
+[02:04] Out of Brad Schoenfeld's lab ([Schoenfeld 2018](https://www.ncbi.nlm.nih.gov/pubmed/29533715)), reviewed by Greg Nuckols in MASS.
 
 - 27 college-aged men, randomly assigned to an internal focus group (told to squeeze the muscle) or an external focus group (told to focus on getting the weight up).
 - 8 weeks, 4 sets of 8-12 reps, on standing barbell curl and leg extension only.

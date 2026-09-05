@@ -80,12 +80,12 @@ Sources as listed by Nippard in the video description.
 - Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
 - Hector AJ & Phillips SM 2018. Protein Recommendations for Weight Loss in Elite Athletes: A Focus on Body Composition and Performance. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29182451/) doi:[10.1123/ijsnem.2017-0273](https://doi.org/10.1123/ijsnem.2017-0273)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5828430/>
+- Schoenfeld BJ & Aragon AA 2018. How much protein can the body use in a single meal for muscle-building? Implications for daily protein distribution. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29497353/) doi:[10.1186/s12970-018-0215-1](https://doi.org/10.1186/s12970-018-0215-1)
 
 - Moore DR et al. 2009. Ingested protein dose response of muscle and albumin protein synthesis after resistance exercise in young men. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19056590/) doi:[10.3945/ajcn.2008.26401](https://doi.org/10.3945/ajcn.2008.26401)
 - Witard OC et al. 2014. Myofibrillar muscle protein synthesis rates subsequent to a meal in response to increasing doses of whey protein at rest and after resistance exercise. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24257722/) doi:[10.3945/ajcn.112.055517](https://doi.org/10.3945/ajcn.112.055517)
 - Macnaughton LS et al. 2016. The response of muscle protein synthesis following whole-body resistance exercise is greater following 40 g than 20 g of ingested whey protein. *Physiol Rep*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27511985/) doi:[10.14814/phy2.12893](https://doi.org/10.14814/phy2.12893)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4675798/>
+- Kim IY et al. 2016. The anabolic response to a meal containing different amounts of protein is not limited by the maximal stimulation of protein synthesis in healthy young adults. *Am J Physiol Endocrinol Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26530155/) doi:[10.1152/ajpendo.00365.2015](https://doi.org/10.1152/ajpendo.00365.2015)
 
 **Protein Quality**
 
@@ -104,4 +104,4 @@ Sources as listed by Nippard in the video description.
 
 **Protein Safety**
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8>
+- Jäger et al. 2017. International Society of Sports Nutrition Position Stand: protein and exercise. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8> doi:[10.1186/s12970-017-0177-8](https://doi.org/10.1186/s12970-017-0177-8)

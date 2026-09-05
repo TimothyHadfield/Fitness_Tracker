@@ -65,6 +65,14 @@ Sequence for an arm or lat imbalance:
 
 ## References
 
+> **These references do not belong to this video.** Nippard's description for the
+> muscle-imbalance video carries a creatine reference list — three groups of creatine
+> studies with no bearing on asymmetries, imbalances or unilateral training. It appears
+> he pasted the wrong list in. They are reproduced below because they are what he
+> published, but **nothing in the note above is sourced from them**, and no claim in this
+> note should be taken as supported by them. Of 235 videos with reference lists, this is
+> the only one where the sources and the subject don't match.
+
 Sources as listed by Nippard in the video description.
 
 **Pre vs Post Workout Creatine**

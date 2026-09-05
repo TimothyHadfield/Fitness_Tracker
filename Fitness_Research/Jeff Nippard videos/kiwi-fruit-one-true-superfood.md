@@ -61,4 +61,4 @@ Sources as listed by Nippard in the video description.
 
 - Stonehouse W et al. 2013. Kiwifruit: our daily prescription for health. *Can J Physiol Pharmacol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23746068) doi:[10.1139/cjpp-2012-0303](https://doi.org/10.1139/cjpp-2012-0303)
 - Lin HH et al. 2011. Effect of kiwifruit consumption on sleep quality in adults with sleep problems. *Asia Pac J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21669584)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4153016/>
+- Carr AC et al. 2013. Mood improvement in young adult males following supplementation with gold kiwifruit, a high-vitamin C food. *J Nutr Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25191573/) doi:[10.1017/jns.2013.12](https://doi.org/10.1017/jns.2013.12)

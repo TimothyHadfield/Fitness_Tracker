@@ -6,7 +6,7 @@
 ## Bottom line
 - The 30–60 minute window is far too narrow. The realistic window is roughly **4–6 hours around the training session**, not 45 minutes after it.
 - Resistance training elevates muscle protein synthesis for **at least 24–48 hours**; heightened sensitivity to amino acids peaks over about **2.5–3 hours**.
-- Total daily protein intake dominates. Meta-analysis showed the apparent timing effect vanished once total daily protein was equated.
+- Total daily protein intake dominates. Meta-analysis showed the apparent timing effect vanished once total daily protein was equated ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/24299050)).
 - Timing matters more if you trained fasted or last ate 2–3 hours pre-workout — then get protein in within about an hour.
 - Post-workout carbs for hypertrophy purposes: essentially irrelevant. Not a myth fully "busted," but the on/off-switch framing is wrong.
 
@@ -14,18 +14,18 @@
 Bodybuilders reasoned that since training creates micro-tears, you should flip the anabolic switch as fast as possible. Taken to the extreme, missing the hour window supposedly wasted the whole workout.
 
 This was not purely bro science. It entered the peer-reviewed literature:
-- **Lemon and colleagues (2002)** described a limited "window of opportunity" for post-workout anabolism.
-- **Ivy and Ferguson (2013)**, in the *American Journal of Lifestyle Medicine*, made a large case for nutrient timing — carbs plus protein in the minutes after exercise, with glucose and amino acids initiating the shift to an anabolic state. They recommended getting post-workout nutrients in **within 45 minutes**, citing 134 papers.
+- **Lemon and colleagues (2002)** described a limited "window of opportunity" for post-workout anabolism ([Lemon 2002](https://www.ncbi.nlm.nih.gov/pubmed/12831698)).
+- **Ivy and Ferguson (2013)**, in the *American Journal of Lifestyle Medicine*, made a large case for nutrient timing — carbs plus protein in the minutes after exercise, with glucose and amino acids initiating the shift to an anabolic state. They recommended getting post-workout nutrients in **within 45 minutes**, citing 134 papers ([Ivy 2013](http://journals.sagepub.com/doi/abs/10.1177/1559827613502444?journalCode=ajla)).
 
 ## Where it went wrong [01:34]
-The same year, **Schoenfeld, Aragon and Krieger** published a meta-analysis of 20 studies meeting strict inclusion criteria. Headline result: a small-to-moderate effect of protein timing on lean mass. But a **sub-analysis showed the hypertrophy differences — including many studies in the Ivy review — could be explained entirely by differences in total daily protein intake.** The post-workout groups in those trials were simply eating more protein overall. The authors concluded the data refutes the belief that immediate pre/post-workout timing is critical to muscular adaptation.
+The same year, **Schoenfeld, Aragon and Krieger** published a meta-analysis of 20 studies meeting strict inclusion criteria. Headline result: a small-to-moderate effect of protein timing on lean mass. But a **sub-analysis showed the hypertrophy differences — including many studies in the Ivy review — could be explained entirely by differences in total daily protein intake.** The post-workout groups in those trials were simply eating more protein overall. The authors concluded the data refutes the belief that immediate pre/post-workout timing is critical to muscular adaptation ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/24299050)).
 
 ## How long the window actually is
 - Since **1997** we have known weight training alone produces long-lasting elevation of muscle protein synthesis for **at least 48 hours**.
-- A **2014 review out of McMaster University** shows the same prolonged elevation, with the initial spike in sensitivity to amino acids lasting roughly **2.5–3 hours** — far broader than 45 minutes.
-- **Schoenfeld (2017)** notes the interval may be "several hours or perhaps more" depending on when the pre-workout meal was eaten. If amino acids are still circulating from that meal, post-workout timing is obviously less urgent. Hence the proposed **4–6 hour window centred on the session**.
+- A **2014 review out of McMaster University** shows the same prolonged elevation, with the initial spike in sensitivity to amino acids lasting roughly **2.5–3 hours** — far broader than 45 minutes ([Phillips 2014](https://pubmed.ncbi.nlm.nih.gov/24791918/)).
+- **Schoenfeld (2017)** notes the interval may be "several hours or perhaps more" depending on when the pre-workout meal was eaten ([Schoenfeld 2017](https://pubmed.ncbi.nlm.nih.gov/28070459/)). If amino acids are still circulating from that meal, post-workout timing is obviously less urgent. Hence the proposed **4–6 hour window centred on the session**.
 - Worked example [03:36]: eat one hour pre-workout, train for an hour — you still have three or four hours afterwards to hit the window.
-- The **2017 ISSN position stand** recommends post-exercise protein **immediately to 2 hours** after training, while noting the pragmatic rule is to eat as soon as convenient, since delaying offers no benefit.
+- The **2017 ISSN position stand** recommends post-exercise protein **immediately to 2 hours** after training, while noting the pragmatic rule is to eat as soon as convenient, since delaying offers no benefit ([Kerksick 2017](https://www.ncbi.nlm.nih.gov/pubmed/28919842)).
 
 ## Carbohydrate timing [05:10]
 Jeff skips the large literature here and gives the short version: if the goal is muscle, post-workout carb timing barely matters.
@@ -53,9 +53,9 @@ Sources as listed by Nippard in the video description.
 **Scientific References**
 
 - Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window?. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23360586) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5214805/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4008813/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3381813/>
+- Schoenfeld BJ et al. 2017. Pre- versus post-exercise protein intake has similar effects on muscular adaptations. *PeerJ*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28070459/) doi:[10.7717/peerj.2825](https://doi.org/10.7717/peerj.2825)
+- Phillips SM 2014. A brief review of critical processes in exercise-induced muscular hypertrophy. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24791918/) doi:[10.1007/s40279-014-0152-3](https://doi.org/10.1007/s40279-014-0152-3)
+- Atherton PJ & Smith K 2012. Muscle protein synthesis in response to nutrition and exercise. *J Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22289911/) doi:[10.1113/jphysiol.2011.225003](https://doi.org/10.1113/jphysiol.2011.225003)
 - Kerksick CM et al. 2017. International society of sports nutrition position stand: nutrient timing. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28919842) doi:[10.1186/s12970-017-0189-4](https://doi.org/10.1186/s12970-017-0189-4)
 - Schoenfeld BJ et al. 2013. The effect of protein timing on muscle strength and hypertrophy: a meta-analysis. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24299050) doi:[10.1186/1550-2783-10-53](https://doi.org/10.1186/1550-2783-10-53)
 - <http://journals.sagepub.com/doi/abs/10.1177/1559827613502444?journalCode=ajla>

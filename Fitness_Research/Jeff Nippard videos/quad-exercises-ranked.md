@@ -69,7 +69,7 @@ Sources as listed by Nippard in the video description.
 
 - Grob K et al. 2016. A newly discovered muscle: The tensor of the vastus intermedius. *Clin Anat*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26732825/) doi:[10.1002/ca.22680](https://doi.org/10.1002/ca.22680)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9737272/>
+- Kojic F et al. 2022. Does Back Squat Exercise Lead to Regional Hypertrophy among Quadriceps Femoris Muscles?. *Int J Environ Res Public Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36498298/) doi:[10.3390/ijerph192316226](https://doi.org/10.3390/ijerph192316226)
 
 - Glassbrook DJ et al. 2019. The High-Bar and Low-Bar Back-Squats: A Biomechanical Analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28195975/) doi:[10.1519/JSC.0000000000001836](https://doi.org/10.1519/JSC.0000000000001836)
 

@@ -26,15 +26,15 @@ Swap exercises 1 and 2 if chest, not shoulders, is your weak point. Nippard alte
 
 ## Technique notes
 
-**Overhead press [00:32]** — Dumbbell shoulder presses show higher activation, but he prefers the barbell for pure strength: easier, steadier progressive overload and strength carryover to other lifts. A belt raises intra-abdominal pressure and improves force transfer, letting you move more load and put more tension on the delts. Tuck the glutes, get the hips under the bar, press up and slightly back so the bar path is a straight vertical line viewed from the side.
+**Overhead press [00:32]** — Dumbbell shoulder presses show higher activation ([Saeterbakken 2013](https://www.ncbi.nlm.nih.gov/pubmed/23096062)), but he prefers the barbell for pure strength: easier, steadier progressive overload and strength carryover to other lifts. A belt raises intra-abdominal pressure and improves force transfer, letting you move more load and put more tension on the delts. Tuck the glutes, get the hips under the bar, press up and slightly back so the bar path is a straight vertical line viewed from the side.
 
-**Close-grip bench [01:33]** — Contrast with the first push day's wide-grip, heavy, big-arch powerlifting bench. Here: lighter, slower, moderate arch for a greater range of motion, which may matter for hypertrophy. Research shows a close grip produces greater clavicular (upper) pec activity than a wide grip, so if the upper chest lags, bring grip in to roughly shoulder width at least once a week.
+**Close-grip bench [01:33]** — Contrast with the first push day's wide-grip, heavy, big-arch powerlifting bench. Here: lighter, slower, moderate arch for a greater range of motion, which may matter for hypertrophy. Research shows a close grip produces greater clavicular (upper) pec activity than a wide grip ([Barnett 1995](https://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx)), so if the upper chest lags, bring grip in to roughly shoulder width at least once a week.
 
 **Incline dumbbell fly [02:04]** — Marked optional; presses alone will grow the pecs for most people. If forced to pick one fly he'd take the cable fly for its more consistent resistance curve, but the dumbbell version gives a far stronger loaded stretch at the bottom, and stretch is itself a plausible hypertrophy driver. Combining different loading modalities across the week is the point.
 
-On bench angle: EMG data (researcher name garbled in the captions, sounds like "Trebs" — treat as uncertain) put peak upper-pec activation at a ~44-degree incline, hence the usual 45-degree advice. But a newer study on *dumbbell flyes specifically* found no upper-pec activation difference between flat and incline, with flat holding a slight edge — because as the incline rises the anterior delt takes over. He still uses incline personally for the mind-muscle connection, pointing the thumbs toward each other and squeezing the upper pecs. Mind-muscle connection has recently gained peer-reviewed support as a hypertrophy enhancer.
+On bench angle: EMG data from Trebs and colleagues put peak upper-pec activation at a ~44-degree incline ([Trebs 2010](https://www.ncbi.nlm.nih.gov/pubmed/20512064)), hence the usual 45-degree advice. But a newer study on *dumbbell flyes specifically* found no upper-pec activation difference between flat and incline, with flat holding a slight edge — because as the incline rises the anterior delt takes over. He still uses incline personally for the mind-muscle connection, pointing the thumbs toward each other and squeezing the upper pecs. Mind-muscle connection has recently gained peer-reviewed support as a hypertrophy enhancer ([Schoenfeld 2018](https://www.researchgate.net/publication/323740477_Differential_effects_of_attentional_focus_strategies_during_long-term_resistance_training)).
 
-**Rope upright row [04:07]** — Treated as a side-delt movement. Impingement risk is acknowledged in the literature, but so is the fact that the upright row may be the only open-chain multi-joint exercise that targets the middle deltoid. Mitigate risk by keeping the elbows below shoulder height, and stop if it hurts during or after. Cue: initiate by driving the elbows *out* — think pulling the rope apart, not pulling it up — so you get shoulder abduction rather than traps and biceps. McAllister and colleagues found a wide grip (2× shoulder width) produced more lateral deltoid activation; you can't go that wide on a rope, so driving out mimics it.
+**Rope upright row [04:07]** — Treated as a side-delt movement. Impingement risk is acknowledged in the literature, but so is the fact that the upright row may be the only open-chain multi-joint exercise that targets the middle deltoid. Mitigate risk by keeping the elbows below shoulder height, and stop if it hurts during or after. Cue: initiate by driving the elbows *out* — think pulling the rope apart, not pulling it up — so you get shoulder abduction rather than traps and biceps. McAllister and colleagues found a wide grip (2× shoulder width) produced more lateral deltoid activation ([McAllister 2013](https://www.ncbi.nlm.nih.gov/pubmed/22362088)); you can't go that wide on a rope, so driving out mimics it.
 
 **Banded lateral raise [05:38]** — Supersetted for time efficiency and metabolic stress. The band loads the top of the range hardest, unlike the cables used on the first push day. He considers the Egyptian / lean-away cable lateral raise the biomechanically optimal version, but rotates resistance curves across the week. Side delts are small, tolerate a lot of volume, and respond reliably to it — overtraining isn't a real concern here.
 
@@ -53,7 +53,7 @@ On bench angle: EMG data (researcher name garbled in the captions, sounds like "
 - The activation (EMG) studies cited are acute measures, not hypertrophy outcomes.
 - The incline-vs-flat fly finding contradicts the general 45-degree incline advice; he keeps incline anyway on feel, which is a preference, not an evidence-backed call.
 - Upright row impingement risk is real for some people; the elbow-height guideline is a mitigation, not a guarantee.
-- One captioned researcher name for the bench-angle EMG data is garbled and should not be cited without checking the source.
+- The captioned researcher name for the bench-angle EMG data was garbled; it resolves to Trebs et al. 2010.
 
 ## References
 
@@ -61,7 +61,7 @@ Sources as listed by Nippard in the video description.
 
 **Scientific References**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1508143/>
+- Lehman GJ et al. 2006. Shoulder muscle EMG activity during push up variations on and off a Swiss ball. *Dyn Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/16762080/) doi:[10.1186/1476-5918-5-7](https://doi.org/10.1186/1476-5918-5-7)
 - ResearchGate — <https://www.researchgate.net/publication/321342593_Electromyography_of_Dumbbell_Fly_Exercise_Using_Different_Planes_and_Labile_Surfaces>
 - ResearchGate — <https://www.researchgate.net/publication/232210633_The_Upright_Row_Implications_for_Preventing_Subacromial_Impingement>
 - McAllister MJ et al. 2013. Effect of grip width on electromyographic activity during the upright row. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22362088) doi:[10.1519/JSC.0b013e31824f23ad](https://doi.org/10.1519/JSC.0b013e31824f23ad)

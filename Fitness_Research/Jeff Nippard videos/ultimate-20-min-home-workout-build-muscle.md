@@ -11,7 +11,7 @@
 - Don't rest between most sets. Rest only when consecutive cards hit the same body part, or when you draw an ace. Run these 3-5 times a week.
 
 ## Why randomise
-[00:00] A 2019 study split subjects into a randomised program (varying reps and exercises) and a fixed program (same reps, same exercises) for eight weeks. Muscle thickness and strength were no different between groups, but the randomised group showed a greater increase in motivation to train. When motivation is the binding constraint, variety buys consistency.
+[00:00] A 2019 study ([Baz-Valle 2019](https://www.ncbi.nlm.nih.gov/pubmed/31881066)) split subjects into a randomised program (varying reps and exercises) and a fixed program (same reps, same exercises) for eight weeks. Muscle thickness and strength were no different between groups, but the randomised group showed a greater increase in motivation to train. When motivation is the binding constraint, variety buys consistency.
 
 ## The rules
 - Shuffle, deal 20 cards face down. More volume needed? Deal more cards, at roughly one minute per card.
@@ -34,7 +34,7 @@ Five minutes of light cardio to raise core temperature and break out of at-home 
 - **Ace → 2 minutes rest.**
 
 ## Rest periods
-[06:05] Best available research says resting longer than one minute between sets for the same body part beats resting under a minute. On this format, though, consecutive cards usually hit different body parts, so legs recover during push sets. Resting between every set at home invites distraction and lost momentum. So: rest only if you genuinely need it between sets hitting the same body part (two cards of the same suit back to back), or when an ace comes up. The continuous pace adds a conditioning component and builds strength endurance for higher-volume gym training later.
+[06:05] Best available research says resting longer than one minute between sets for the same body part beats resting under a minute ([Grgic 2017](https://www.ncbi.nlm.nih.gov/pubmed/28641044)). On this format, though, consecutive cards usually hit different body parts, so legs recover during push sets. Resting between every set at home invites distraction and lost momentum. So: rest only if you genuinely need it between sets hitting the same body part (two cards of the same suit back to back), or when an ace comes up. The continuous pace adds a conditioning component and builds strength endurance for higher-volume gym training later.
 
 ## Progressive overload
 [07:37] Methodical overload — going from 4 to 6 reps on a squat — is impractical with limited equipment and low motivation. You could add a magazine to the backpack, a cup of water to the jug or one push-up per week, and that would work, but most people won't sustain it. This format is a deliberate temporary substitute: randomness for enjoyment and motivation, balanced by structure from good technique, mind-muscle connection and appropriate exertion via intraset feedback.

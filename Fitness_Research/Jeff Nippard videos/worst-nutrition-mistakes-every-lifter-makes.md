@@ -13,7 +13,7 @@
 ## Mistake 1: thinking you can force-feed muscle growth [00:00]
 People see pro bodybuilders on 5,000+ calorie diets and assume eating big is what makes you big. Bodybuilding anecdotes are unreliable — pros have world-class genetics, a decade-plus of training, and almost always large doses of anabolic steroids, so you cannot separate the eating from the other factors.
 
-**The evidence [00:30]:** a 2013 study from Garthe and colleagues split 47 elite athletes into a large-surplus and a small-surplus group, both on the same weight training program for 10 weeks. The large-surplus group ate **621 more calories per day on average**. Results: they gained more total weight, and a tiny bit more lean mass that **did not reach statistical significance** — but they gained substantially more fat. Extra calories bought fat, not muscle. A 2019 study corroborated the findings.
+**The evidence [00:30]:** a 2013 study from Garthe and colleagues split 47 elite athletes into a large-surplus and a small-surplus group, both on the same weight training program for 10 weeks. The large-surplus group ate **621 more calories per day on average**. Results: they gained more total weight, and a tiny bit more lean mass that **did not reach statistical significance** — but they gained substantially more fat ([Garthe 2013](https://pubmed.ncbi.nlm.nih.gov/23679146/)). Extra calories bought fat, not muscle. A 2019 study corroborated the findings ([Ribeiro 2019](https://pubmed.ncbi.nlm.nih.gov/31915482/)).
 
 This is why experts describe nutrition as **permissive**: your diet permits growth, training causes it. The analogy: training is the blueprint and construction crew, nutrition supplies the building blocks. Extra blocks beyond what the crew can use just pile up at the site as fat.
 
@@ -27,16 +27,16 @@ He does not condemn aggressive bulks outright — despite the short-term Garthe 
 ## Mistake 2: overrating supplements [03:03]
 Creatine, caffeine and protein powder are the shortlist that actually work for building muscle — but even these are commonly overestimated.
 
-**Creatine [03:34]:** one of the most researched and efficacious supplements on the market, but most studies show roughly a **2-3 lb increase in lean mass**. An eight-week training study found the creatine group gained 1.1 kg (2.2 lb) more lean mass than placebo. A systematic review pooling 22 studies in older subjects found creatine added 1.4 kg (~3 lb) more lean mass than placebo, across trials ranging from 7 weeks to a full year. That is a real, solid effect at a cheap price point — worth taking — but compare it to a bodybuilding steroid cycle adding 10-20 lb of lean mass in a month or two, and calibrate expectations accordingly.
+**Creatine [03:34]:** one of the most researched and efficacious supplements on the market ([Kreider 2017](https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z)), but most studies show roughly a **2-3 lb increase in lean mass**. An eight-week training study found the creatine group gained 1.1 kg (2.2 lb) more lean mass than placebo ([Nunes 2017](https://pubmed.ncbi.nlm.nih.gov/29214923/)). A systematic review pooling 22 studies in older subjects found creatine added 1.4 kg (~3 lb) more lean mass than placebo, across trials ranging from 7 weeks to a full year ([Chilibeck 2017](https://pubmed.ncbi.nlm.nih.gov/29138605/)). That is a real, solid effect at a cheap price point — worth taking — but compare it to a bodybuilding steroid cycle adding 10-20 lb of lean mass in a month or two, and calibrate expectations accordingly.
 
-**Caffeine [04:37]:** well-supported for strength, power and muscular endurance, and it reliably gives a mental boost before training. But the research on caffeine and muscle growth specifically is not exciting. Its biggest effect may be behavioral — if caffeine is the only thing getting you off the couch and through the gym doors, it matters enormously; if you were going to train anyway, the direct muscle effect is nothing astronomical.
+**Caffeine [04:37]:** well-supported for strength, power and muscular endurance ([Guest 2021](https://jissn.biomedcentral.com/articles/10.1186/s12970-020-00383-4)), and it reliably gives a mental boost before training ([Jodra 2020](https://pubmed.ncbi.nlm.nih.gov/31900166/)). But the research on caffeine and muscle growth specifically is not exciting. Its biggest effect may be behavioral — if caffeine is the only thing getting you off the couch and through the gym doors, it matters enormously; if you were going to train anyway, the direct muscle effect is nothing astronomical.
 
 **Protein powder [05:08]:** large literature supporting it, very convenient for hitting daily protein targets. But if you already hit your protein target from whole foods, adding protein powder provides no extra gains. It is a convenient high-quality food, not magic.
 
 He takes all three and recommends them to any serious lifter who can budget them. Everything further down the supplement list gets progressively less promising.
 
 ## Mistake 3: thinking you need very high protein [05:40]
-A stance he has revised downward over the past few years based on new research. The intuition — muscle is made of protein, so more protein means more muscle — fails because the effect of protein on growth is an order of magnitude smaller than the effect of training. Eating protein gives short-lived blips in muscle protein synthesis; training gives a long, prolonged elevation, and that elevation drives new growth.
+A stance he has revised downward over the past few years based on new research. The intuition — muscle is made of protein, so more protein means more muscle — fails because the effect of protein on growth is an order of magnitude smaller than the effect of training. Eating protein gives short-lived blips in muscle protein synthesis; training gives a long, prolonged elevation, and that elevation drives new growth ([Phillips 2014](https://pubmed.ncbi.nlm.nih.gov/24791918/)).
 
 **Targets [06:10]:**
 - In a caloric surplus: **0.7-1.0 g per lb bodyweight (1.6-2.2 g/kg)**. He puts most people in the middle. Going above the range does not produce more gains.
@@ -66,27 +66,27 @@ Sources as listed by Nippard in the video description.
 **Overfeeding Studies**
 
 - Garthe I et al. 2013. Effect of nutritional intervention on body composition and performance in elite athletes. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23679146/) doi:[10.1080/17461391.2011.643923](https://doi.org/10.1080/17461391.2011.643923)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6942464/>
+- Ribeiro AS et al. 2019. Effects of Different Dietary Energy Intake Following Resistance Training on Muscle Mass and Body Fat in Bodybuilders: A Pilot Study. *J Hum Kinet*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31915482/) doi:[10.2478/hukin-2019-0038](https://doi.org/10.2478/hukin-2019-0038)
 
 **Creatine**
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>
+- Kreider et al. 2017. International Society of Sports Nutrition position stand: safety and efficacy of creatine supplementation in exercise, sport, and medicine. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z> doi:[10.1186/s12970-017-0173-z](https://doi.org/10.1186/s12970-017-0173-z)
 - Nunes JP et al. 2017. Creatine supplementation elicits greater muscle hypertrophy in upper than lower limbs and trunk in resistance-trained men. *Nutr Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29214923/) doi:[10.1177/0260106017737013](https://doi.org/10.1177/0260106017737013)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5679696/>
+- Chilibeck PD et al. 2017. Effect of creatine supplementation during resistance training on lean tissue mass and muscular strength in older adults: a meta-analysis. *Open Access J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29138605/) doi:[10.2147/OAJSM.S123529](https://doi.org/10.2147/OAJSM.S123529)
 
 **Caffeine**
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-020-00383-4>
+- Guest et al. 2021. International society of sports nutrition position stand: caffeine and exercise performance. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-020-00383-4> doi:[10.1186/s12970-020-00383-4](https://doi.org/10.1186/s12970-020-00383-4)
 - Jodra P et al. 2020. Effects of caffeine supplementation on physical performance and mood dimensions in elite and trained-recreational athletes. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31900166/) doi:[10.1186/s12970-019-0332-5](https://doi.org/10.1186/s12970-019-0332-5)
 
 **Protein**
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4008813/>
+- Jäger et al. 2017. International Society of Sports Nutrition Position Stand: protein and exercise. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8> doi:[10.1186/s12970-017-0177-8](https://doi.org/10.1186/s12970-017-0177-8)
+- Phillips SM 2014. A brief review of critical processes in exercise-induced muscular hypertrophy. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24791918/) doi:[10.1007/s40279-014-0152-3](https://doi.org/10.1007/s40279-014-0152-3)
 - Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
 
 **Meal Frequency**
 
 - Schwingshackl L et al. 2020. Impact of Meal Frequency on Anthropometric Outcomes: A Systematic Review and Network Meta-Analysis of Randomized Controlled Trials. *Adv Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32437566/) doi:[10.1093/advances/nmaa056](https://doi.org/10.1093/advances/nmaa056)
 - Taguchi M et al. 2021. Increasing Meal Frequency in Isoenergetic Conditions Does Not Affect Body Composition Change and Appetite During Weight Gain in Japanese Athletes. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33361498/) doi:[10.1123/ijsnem.2020-0139](https://doi.org/10.1123/ijsnem.2020-0139)
-- Yasuda J et al. 2020. Evenly Distributed Protein Intake over 3 Meals Augments Resistance Exercise-Induced Muscle Hypertrophy in Healthy Young Men. *J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32321161/) doi:[10.1093/jn/nxaa101](https://doi.org/10.1093/jn/nxaa101)
+- Yasuda J et al. 2020. Evenly Distributed Protein Intake over 3 Meals Augments Resistance Exercise-Induced Muscle Hypertrophy in Healthy Young Men. *J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32321161/) d

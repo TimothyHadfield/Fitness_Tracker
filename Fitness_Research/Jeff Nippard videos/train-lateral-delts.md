@@ -31,7 +31,7 @@ The handles on many machine presses force the elbows **more out in front of you*
 - **Externally rotate slightly at the top**, where the movement starts to involve transverse abduction — remember, in transverse abduction the side delt is more active when externally rotated.
 
 ## Cheating on lateral raises: Arandjelović 2012 [04:41]
-A **2012 paper by Arandjelović** examined how applying **external momentum (cheating)** affects peak torque and what he termed the **total hypertrophy stimulus** for lateral raises. Note the design: it was a **computer-based simulation** of the exercise, not subjects performing it, using anthropometric measures plus data from previous muscle-recruitment work.
+A **2012 paper by Arandjelović** examined how applying **external momentum (cheating)** affects peak torque and what he termed the **total hypertrophy stimulus** for lateral raises ([Arandjelović 2013](http://www.ncbi.nlm.nih.gov/pubmed/22615008)). Note the design: it was a **computer-based simulation** of the exercise, not subjects performing it, using anthropometric measures plus data from previous muscle-recruitment work.
 
 Findings and reasoning:
 - **Moderate momentum at the beginning of each rep** allows **heavier loads** and **better overload of the muscle in biomechanically advantageous positions**.

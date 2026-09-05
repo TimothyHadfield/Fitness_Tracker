@@ -30,7 +30,7 @@ Jeff's own approach at the time. The mechanics:
 **Arrow notation [05:05]:** after each set he logs an arrow — up means the weight was too light, increase next time; sideways means it was right, repeat it on the first set next week; down means it was too heavy and form got loose, back it off. Functionally close to an RPE rating, but it hands you a direction rather than a number.
 
 ## Autoregulated load selection [06:05]
-He also uses a test-set method (described as the "DAP system" in the audio — the mechanics match **APRE-style autoregulation**; the acronym is likely garbled in the captions). After warm-ups, take one set to concentric failure with a load you estimate is your working-range max for the day. Then adjust:
+He also uses a test-set method — **DAPRE** (Daily Adjustable Progressive Resistance Exercise), rendered as "DAP system" by the auto-captions but confirmed by the heading "For more on DAPRE" in Nippard's own video description. After warm-ups, take one set to concentric failure with a load you estimate is your working-range max for the day. Then adjust:
 
 - Target 6-8 reps, got **10** → you underestimated yourself; **add ~10%** for the working sets.
 - Target 6-8 reps, got only **4-5** → **drop the load 5-10%** and run the working sets to failure with the adjusted weight.
@@ -64,4 +64,7 @@ Sources as listed by Nippard in the video description.
 
 **For more on DAPRE**
 
-- Barthel W & Markwardt F 1975. Aggregation of blood platelets by adrenaline and its uptake. *Biochem Pharmacol*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/20) doi:[10.1016/0006-2952(75)90415-3](https://doi.org/10.1016/0006-2952(75)90415-3)
+- *No usable citation.* The only link under this heading in Nippard's description is
+  malformed — `ncbi.nlm.nih.gov/pubmed/20`, which is not a real reference but resolves to
+  PubMed record 20, an unrelated 1975 paper on blood platelet aggregation. The intended
+  source for DAPRE is not recoverable from what he published.

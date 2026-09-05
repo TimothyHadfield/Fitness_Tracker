@@ -23,7 +23,7 @@ Answer: consult the hierarchy of evidence. Higher tiers of the pyramid are more 
 
 Applying it to the meal-frequency case:
 - An online opinion piece claiming grazing is better for fat loss and muscle gain sits at the very bottom of the pyramid. It cited a single study (Bernadot et al. — name as spoken; spelling uncertain from captions) which is likely a randomised controlled study; he could not access the full text to confirm blinding, and gave the authors the benefit of the doubt.
-- A systematic review of 25 studies sits at the very top. It concluded there is strong evidence of no association between eating frequency and weight, and limited evidence suggesting no association between body composition and eating frequency.
+- A systematic review of 25 studies sits at the very top. It concluded there is strong evidence of no association between eating frequency and weight, and limited evidence suggesting no association between body composition and eating frequency ([Palmer 2009](https://doi.org/10.1111/j.1753-4887.2009.00204.x)).
 
 The review outranks the cherry-picked single study, which he notes didn't even control calorie content between experimental and control groups [06:22].
 
@@ -40,7 +40,7 @@ He closes on the wording itself [06:53]: science doesn't aim to prove. Researche
 
 ## Caveats & unknowns
 - He could not access the full text of the meal-frequency RCT and therefore could not verify blinding.
-- Neither cited study's authors are clearly named in the auto-captions beyond "Bernadot et al."; treat the spelling as uncertain.
+- The systematic review is identified from the video description as Palmer et al. 2009. The single RCT's authors are not clearly named in the auto-captions beyond "Bernadot et al."; treat that spelling as uncertain.
 - This is a 2014 video; the specific meal-frequency literature has moved on, though the reasoning about evidence hierarchy has not.
 
 ## References
@@ -49,4 +49,4 @@ Sources as listed by Nippard in the video description.
 
 **Steve Novella on the bad reporting of epigenetics**
 
-- <http://onlinelibrary.wiley.com/doi/10.1111/j.1753-4887.2009.00204.x/full>
+- Palmer et al. 2009. Association between eating frequency, weight, and health. *Nutrition Reviews*. <http://onlinelibrary.wiley.com/doi/10.1111/j.1753-4887.2009.00204.x/full> doi:[10.1111/j.1753-4887.2009.00204.x](https://doi.org/10.1111/j.1753-4887.2009.00204.x)

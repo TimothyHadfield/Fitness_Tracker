@@ -60,4 +60,4 @@ Sources as listed by Nippard in the video description.
 
 - Schoenfeld BJ et al. 2014. Effects of different volume-equated resistance training loading strategies on muscular adaptations in well-trained men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24714538) doi:[10.1519/JSC.0000000000000480](https://doi.org/10.1519/JSC.0000000000000480)
 - Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29533715) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)
-- <https://www.tandfonline.com/doi/abs/10.1080/1750984X.2012.723728>
+- Wulf 2013. Attentional focus and motor learning: a review of 15 years. *International Review of Sport and Exercise Psychology*. <https://www.tandfonline.com/doi/abs/10.1080/1750984X.2012.723728> doi:[10.1080/1750984x.2012.723728](https://doi.org/10.1080/1750984x.2012.723728)

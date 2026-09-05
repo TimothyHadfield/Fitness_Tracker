@@ -57,7 +57,7 @@ Metabolism varies substantially, so the calorie and macro formulas will run high
 
 Sources as listed by Nippard in the video description.
 
-- <https://onlinelibrary.wiley.com/doi/full/10.1111/obr.13218>
+- Morze et al. 2021. Impact of different training modalities on anthropometric outcomes in patients with obesity: A systematic review and network meta‐analysis. *Obesity Reviews*. <https://onlinelibrary.wiley.com/doi/full/10.1111/obr.13218> doi:[10.1111/obr.13218](https://doi.org/10.1111/obr.13218)
 - Schoenfeld BJ & Aragon AA 2018. Is There a Postworkout Anabolic Window of Opportunity for Nutrient Consumption? Clearing up Controversies. *J Orthop Sports Phys Ther*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30702982/) doi:[10.2519/jospt.2018.0615](https://doi.org/10.2519/jospt.2018.0615)
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1555605/>
+- Kreider et al. 2017. International Society of Sports Nutrition position stand: safety and efficacy of creatine supplementation in exercise, sport, and medicine. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z> doi:[10.1186/s12970-017-0173-z](https://doi.org/10.1186/s12970-017-0173-z)
+- Kruger J et al. 2006. Dietary and physical activity behaviors among adults successful at weight loss maintenance. *Int J Behav Nutr Phys Act*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/16854220/) doi:[10.1186/1479-5868-3-17](https://doi.org/10.1186/1479-5868-3-17)

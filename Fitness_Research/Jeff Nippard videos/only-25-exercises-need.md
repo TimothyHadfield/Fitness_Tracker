@@ -82,10 +82,10 @@ Sources as listed by Nippard in the video description.
 - Ylinen J et al. 2010. Effect of neck exercises on cervicogenic headache: a randomized controlled trial. *J Rehabil Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20461336/) doi:[10.2340/16501977-0527](https://doi.org/10.2340/16501977-0527)
 - <https://link.springer.com/content/pdf/10.1186/1471-2474-12-205.pdf>
 - <https://bjsm.bmj.com/content/59/15/1027>
-- <https://link.springer.com/article/10.1007/s004210050186>
+- Conley et al. 1997. Specificity of resistance training responses in neck muscle size and strength. *European Journal of Applied Physiology*. <https://link.springer.com/article/10.1007/s004210050186> doi:[10.1007/s004210050186](https://doi.org/10.1007/s004210050186)
 
 - Kassiano W et al. 2024. Addition of the Barbell Hip Thrust Elicits Greater Increases in Gluteus Maximus Muscle Thickness in Untrained Young Women. *Int J Strength Cond*. Not indexed in PubMed; open access at journal.iusca.org.
-- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
+- Plotkin et al. 2023. Hip thrust and back squat training elicit similar gluteus muscle hypertrophy and transfer similarly to the deadlift. *Frontiers in Physiology*. <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full> doi:[10.3389/fphys.2023.1279170](https://doi.org/10.3389/fphys.2023.1279170)
 - <https://journals.lww.com/nsca-jscr/fulltext/2018/03000/gluteus_maximus_and_hamstring_activation_during.2.aspx>
 - <https://journals.lww.com/nsca-jscr/fulltext/2019/10000/comparison_between_back_squat,_romanian_deadlift,.1.aspx>
 

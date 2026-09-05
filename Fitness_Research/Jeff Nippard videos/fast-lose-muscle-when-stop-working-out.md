@@ -47,7 +47,7 @@ Sources as listed by Nippard in the video description.
 
 **Muscle Protein Synthesis**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3381813/>
+- Atherton PJ & Smith K 2012. Muscle protein synthesis in response to nutrition and exercise. *J Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22289911/) doi:[10.1113/jphysiol.2011.225003](https://doi.org/10.1113/jphysiol.2011.225003)
 - Wall BT et al. 2013. Skeletal muscle atrophy during short-term disuse: implications for age-related sarcopenia. *Ageing Res Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23948422) doi:[10.1016/j.arr.2013.07.003](https://doi.org/10.1016/j.arr.2013.07.003)
 
 **Muscle Loss with Bed Rest**

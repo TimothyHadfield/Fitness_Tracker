@@ -56,7 +56,7 @@ Sources as listed by Nippard in the video description.
 **Scientific References**
 
 - Moore DR et al. 2009. Ingested protein dose response of muscle and albumin protein synthesis after resistance exercise in young men. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19056590) doi:[10.3945/ajcn.2008.26401](https://doi.org/10.3945/ajcn.2008.26401)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4558471/>
+- Morton RW et al. 2015. Nutritional interventions to augment resistance training-induced skeletal muscle hypertrophy. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26388782/) doi:[10.3389/fphys.2015.00245](https://doi.org/10.3389/fphys.2015.00245)
 - Symons TB et al. 2009. A moderate serving of high-quality protein maximally stimulates skeletal muscle protein synthesis in young and elderly subjects. *J Am Diet Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19699838) doi:[10.1016/j.jada.2009.06.369](https://doi.org/10.1016/j.jada.2009.06.369)
 - Macnaughton LS et al. 2016. The response of muscle protein synthesis following whole-body resistance exercise is greater following 40 g than 20 g of ingested whey protein. *Physiol Rep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27511985) doi:[10.14814/phy2.12893](https://doi.org/10.14814/phy2.12893)
 - Stote KS et al. 2007. A controlled trial of reduced meal frequency without caloric restriction in healthy, normal-weight, middle-aged adults. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17413096) doi:[10.1093/ajcn/85.4.981](https://doi.org/10.1093/ajcn/85.4.981)

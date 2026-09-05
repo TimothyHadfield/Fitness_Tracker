@@ -78,14 +78,14 @@ Sources as listed by Nippard in the video description.
 
 - Shams-White MM et al. 2017. Dietary protein and bone health: a systematic review and meta-analysis from the National Osteoporosis Foundation. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28404575) doi:[10.3945/ajcn.116.145110](https://doi.org/10.3945/ajcn.116.145110)
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3577439/>
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4008813/>
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window?. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23360586/) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)
+- Phillips SM 2014. A brief review of critical processes in exercise-induced muscular hypertrophy. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24791918/) doi:[10.1007/s40279-014-0152-3](https://doi.org/10.1007/s40279-014-0152-3)
 
 - ResearchGate — <https://www.researchgate.net/publication/281995415_Sugars_and_Health_Controversies_What_Does_the_Science_Say>
 
 - Lloyd RS et al. 2014. Position statement on youth resistance training: the 2014 International Consensus. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24055781) doi:[10.1136/bjsports-2013-092952](https://doi.org/10.1136/bjsports-2013-092952)
 
-- <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0215-1>
+- Schoenfeld & Aragon 2018. How much protein can the body use in a single meal for muscle-building? Implications for daily protein distribution. *Journal of the International Society of Sports Nutrition*. <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0215-1> doi:[10.1186/s12970-018-0215-1](https://doi.org/10.1186/s12970-018-0215-1)
 - Soeters MR et al. 2009. Intermittent fasting does not affect whole-body glucose, lipid, or protein metabolism. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19776143) doi:[10.3945/ajcn.2008.27327](https://doi.org/10.3945/ajcn.2008.27327)
 - Symons TB et al. 2009. A moderate serving of high-quality protein maximally stimulates skeletal muscle protein synthesis in young and elderly subjects. *J Am Diet Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19699838) doi:[10.1016/j.jada.2009.06.369](https://doi.org/10.1016/j.jada.2009.06.369)
 

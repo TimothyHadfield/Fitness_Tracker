@@ -13,14 +13,14 @@
 Both pieces are summaries by **Eric Helms** from the June 2017 issue of MASS (Monthly Applications in Strength Sport).
 
 ## Peri-workout whey in a deficit [00:00]
-A 2017 paper on **16 trained young males in a caloric deficit**, split into two groups:
+A 2017 paper on **16 trained young males in a caloric deficit** ([Dudgeon 2017](https://www.ncbi.nlm.nih.gov/pubmed/28415067)), split into two groups:
 - **Protein group:** 28 g whey pre-workout and 28 g post-workout
 - **Carb group:** 28 g carbs pre- and post-workout
 
 **Result:** body fat was lost **only in the protein group**, while the carb group **lost lean body mass**.
 
 ### Why this is surprising
-Previous research on protein sparing muscle in a deficit compared a genuinely high intake (~2.3 g/kg) to a low one (~1 g/kg). Here, both groups were already high:
+Previous research on protein sparing muscle in a deficit compared a genuinely high intake (~2.3 g/kg) to a low one (~1 g/kg) ([Mettler 2010](https://www.ncbi.nlm.nih.gov/pubmed/19927027)). Here, both groups were already high:
 - Carb group: **~2.6 g/kg bodyweight**
 - Protein group: **~3.0 g/kg bodyweight**
 
@@ -40,7 +40,7 @@ A 2017 paper by **Trexler and colleagues** followed **15 natural bodybuilding, p
 
 **Finding 3 — Testosterone recovery is non-linear.** Testosterone predictably craters during contest prep and rose over the 4-6 weeks as weight and fat were regained. The counterintuitive part: the **magnitude of testosterone recovery was *smaller* in men who gained more fat**. There appears to be a competing mechanism — regain too much or too fast and the testosterone rebound is impaired. Regain too slowly and it also fails to recover as quickly as it could.
 
-Supporting this, Helms cites **2014 research** in which men fed a **1,200 calorie surplus for 4 weeks saw testosterone *decrease***.
+Supporting this, Helms cites **2014 research** in which men fed a **1,200 calorie surplus for 4 weeks saw testosterone *decrease*** ([Sato 2014](https://www.ncbi.nlm.nih.gov/pubmed/24792219)).
 
 ## Practical application
 - **Cutting while trained:** place protein deliberately in the pre- and post-workout meals rather than relying on daily total alone. ~28 g whey either side of training is the tested dose.
@@ -58,7 +58,7 @@ Supporting this, Helms cites **2014 research** in which men fed a **1,200 calori
 Sources as listed by Nippard in the video description.
 
 - Sato K et al. 2014. Serum sex steroids and steroidogenesis-related enzyme expression in skeletal muscle during experimental weight gain in men. *Diabetes Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24792219) doi:[10.1016/j.diabet.2014.03.006](https://doi.org/10.1016/j.diabet.2014.03.006)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4155766/>
+- Mori H 2014. Effect of timing of protein and carbohydrate intake after resistance exercise on nitrogen balance in trained and untrained young men. *J Physiol Anthropol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25096224/) doi:[10.1186/1880-6805-33-24](https://doi.org/10.1186/1880-6805-33-24)
 - Mettler S et al. 2010. Increased protein intake reduces lean body mass loss during weight loss in athletes. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19927027) doi:[10.1249/MSS.0b013e3181b2ef8e](https://doi.org/10.1249/MSS.0b013e3181b2ef8e)
 - <https://www.ncbi.nlm.nih.gov//pubmed/28422530/>
 - Dudgeon WD et al. 2017. Effect of Whey Protein in Conjunction With a Caloric-Restricted Diet and Resistance Training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28415067) doi:[10.1519/JSC.0000000000001196](https://doi.org/10.1519/JSC.0000000000001196)

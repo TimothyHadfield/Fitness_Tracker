@@ -63,7 +63,7 @@ Sources as listed by Nippard in the video description.
 
 **Muscular potential for women**
 
-- <https://journals.physiology.org/doi/full/10.1152/jappl.2000.89.1.81>
+- Janssen et al. 2000. Skeletal muscle mass and distribution in 468 men and women aged 18–88 yr. *Journal of Applied Physiology*. <https://journals.physiology.org/doi/full/10.1152/jappl.2000.89.1.81> doi:[10.1152/jappl.2000.89.1.81](https://doi.org/10.1152/jappl.2000.89.1.81)
 
 **Daily protein intake**
 
@@ -72,7 +72,7 @@ Sources as listed by Nippard in the video description.
 
 **Dropsets**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8473065/>
+- Varović D et al. 2021. Drop-Set Training Elicits Differential Increases in Non-Uniform Hypertrophy of the Quadriceps in Leg Extension Exercise. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34564324/) doi:[10.3390/sports9090119](https://doi.org/10.3390/sports9090119)
 - ResearchGate — <https://www.researchgate.net/publication/322133680_Can_Drop_Set_Training_Enhance_Muscle_Growth>
 
 **Eccentric stuff**

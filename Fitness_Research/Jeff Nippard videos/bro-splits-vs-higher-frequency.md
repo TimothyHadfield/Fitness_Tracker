@@ -67,6 +67,6 @@ Sources as listed by Nippard in the video description.
 **SOURCES**
 
 - ResearchGate — <https://www.researchgate.net/publication/232186690_Comparison_of_1_Day_and_3_Days_Per_Week_of_Equal-Volume_Resistance_Training_in_Experienced_Subjects>
-- <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2918506/>
+- Burd NA et al. 2010. Low-load high volume resistance exercise stimulates muscle protein synthesis more than high-load low volume resistance exercise in young men. *PLoS One*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20711498/) doi:[10.1371/journal.pone.0012033](https://doi.org/10.1371/journal.pone.0012033)
 - Schoenfeld BJ et al. 2016. Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/27102172) doi:[10.1007/s40279-016-0543-8](https://doi.org/10.1007/s40279-016-0543-8)
 - Wernbom M et al. 2007. The influence of frequency, intensity, volume and mode of strength training on whole muscle cross-sectional area in humans. *Sports Med*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/17326698) doi:[10.2165/00007256-200737030-00004](https://doi.org/10.2165/00007256-200737030-00004)

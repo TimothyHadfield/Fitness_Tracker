@@ -13,7 +13,7 @@
 ## Why people assume fresh is better
 The belief runs on a simple chain: fresh means less processed, and less processed means healthier. But while highly refined foods do contribute to calorie overconsumption and to displacing nutrient-dense foods, processing has also improved population health — it provides accessible nutrition for infants, the elderly and pregnant women, and enrichment/fortification can sharply reduce nutrient deficiencies compared with relying on naturally occurring nutrients alone.
 
-Data from Weaver and colleagues shows that in the US, canned and frozen fruits and vegetables collectively contribute *more* to total nutrient intake than fresh ones — likely a function of convenience and affordability rather than superior per-gram nutrition.
+Data from Weaver and colleagues ([Weaver 2014](https://academic.oup.com/ajcn/article/99/6/1525/4577499)) shows that in the US, canned and frozen fruits and vegetables collectively contribute *more* to total nutrient intake than fresh ones — likely a function of convenience and affordability rather than superior per-gram nutrition.
 
 ## Levels of processing [01:35]
 - **Minimal:** washing and packaging produce.
@@ -35,7 +35,7 @@ That same 2017 study compared three groups: fresh, frozen, and **fresh-stored** 
 
 The authors' summary: the majority of comparisons yielded no significant difference, and where differences were significant, five days of refrigerated storage was consistently associated with lower nutrient concentration. Their conclusion was that the findings do not support the common perception that fresh produce is nutritionally superior to frozen.
 
-A 2007 review reached the same place, noting that nutrient losses during fresh storage may be larger than consumers realise, that freezing and canning can preserve nutrient value, and that canned, frozen and fresh produce should all continue to be included in dietary guidelines.
+A 2007 review reached the same place, noting that nutrient losses during fresh storage may be larger than consumers realise, that freezing and canning can preserve nutrient value, and that canned, frozen and fresh produce should all continue to be included in dietary guidelines ([Rickman 2007](https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2825)).
 
 ## Why "fresh" isn't one category [02:37]
 Fresh produce varies enormously by itself. Something picked at a farmers' market or roadside stand is not the same as something picked, trucked, then shelved in a grocery store. All else equal, longer transport and storage times mean worse nutrient quality — but even that rule is muddied by the specific crop, soil quality, season, weather, growing methods, ripeness at harvest, and post-harvest handling. A Harvard nutrition report puts it as: vitamin and mineral content depends on decisions and practices all along the food system, from seed to table, whether that system is local or global.
@@ -58,6 +58,6 @@ Sources as listed by Nippard in the video description.
 
 **Scientific References**
 
-- <https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2825>
+- Rickman et al. 2007. Nutritional comparison of fresh, frozen and canned fruits and vegetables. Part 1. Vitamins C and B and phenolic compounds. *Journal of the Science of Food and Agriculture*. <https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2825> doi:[10.1002/jsfa.2825](https://doi.org/10.1002/jsfa.2825)
 - <https://academic.oup.com/ajcn/article/99/6/1525/4577499>
 - Examine.com — <https://examine.com/nutrition/fresh-vs-frozen-vs-canned-vegetables/>

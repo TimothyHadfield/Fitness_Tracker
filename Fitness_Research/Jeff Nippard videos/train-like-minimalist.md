@@ -5,8 +5,8 @@
 
 ## Bottom line
 - **1–4 sets per muscle per week returns ~64% of the gains** from 10+ sets. **5–9 sets returns ~84%.** Steep early returns, long flat tail.
-- **Strength needs almost nothing:** one heavy set, 1–3×/week. A 2017 meta-analysis (nine studies) found **81% of strength gains came from just 1–4 sets per exercise per week**.
-- **Health needs even less:** a 2022 systematic review (16 studies) found **30–60 minutes of lifting per week** enough for "maximum risk reduction" on mortality, cardiovascular disease, cancer and diabetes.
+- **Strength needs almost nothing:** one heavy set, 1–3×/week. A 2017 meta-analysis (nine studies) found **81% of strength gains came from just 1–4 sets per exercise per week** ([Ralston 2017](https://pubmed.ncbi.nlm.nih.gov/28755103/)).
+- **Health needs even less:** a 2022 systematic review (16 studies) found **30–60 minutes of lifting per week** enough for "maximum risk reduction" on mortality, cardiovascular disease, cancer and diabetes ([Momma 2022](https://pubmed.ncbi.nlm.nih.gov/35228201/)).
 - Low volume only works at high quality — **most sets to failure (RPE 10) or within a rep of it (RPE ~9)**.
 - Four time levers: drop sets, non-competing supersets, gradually shortened rest, shorter warm-ups via machine selection.
 
@@ -19,7 +19,7 @@ Standard advice is ~10 sets per muscle per week, split across at least two sessi
 | 5–9 | ~84% |
 | 10+ | 100% (reference) |
 
-One set of curls to failure takes ~30 seconds and puts you near 64% of your weekly bicep gains. **Maintenance is cheaper still:** Bickel and colleagues found subjects held muscle mass for **eight months** after cutting volume to **one-ninth of baseline**.
+One set of curls to failure takes ~30 seconds and puts you near 64% of your weekly bicep gains. **Maintenance is cheaper still:** Bickel and colleagues found subjects held muscle mass for **eight months** after cutting volume to **one-ninth of baseline** ([Bickel 2011](https://pubmed.ncbi.nlm.nih.gov/21131862/)).
 
 ## The programmes
 **Strength focus.** Squat 2 days/week, **one heavy working set of 1–3 reps** per day. Optionally **1–2 lighter back-off sets**, which research shows boosts strength a little further. The driver is exposure to heavy load, ideally **1–5 reps**. Nippard's own current setup while prioritising bodybuilding: **squat and deadlift once per week each**, high effort, relatively heavy.
@@ -34,7 +34,7 @@ One set of curls to failure takes ~30 seconds and puts you near 64% of your week
 ## Four efficiency strategies
 1. **Push harder — his most important tip.** Lower quantity demands higher quality; the lower the volume, the higher the intensity must go. Most sets at **RPE 10 (failure)** or **RPE ~9**.
 2. **Drop sets.** Brad Schoenfeld's hypertrophy textbook suggests they add volume without meaningfully extending sessions. After failure, **cut the load 25–50%** and go to failure again with **no rest**. High-tension reps, because the muscle already failed once.
-3. **Sensible (non-competing) supersets.** A 2020 study found performance **dropped** when supersetted exercises trained the same muscles — so bench press with flyes is a mistake. Pair non-overlapping movements: **bench press with dumbbell row**. Pairings can be arbitrary — **leg press with lateral raises** is fine.
+3. **Sensible (non-competing) supersets.** A 2020 study found performance **dropped** when supersetted exercises trained the same muscles ([Weakley 2020](https://pubmed.ncbi.nlm.nih.gov/28796130/)) — so bench press with flyes is a mistake. Pair non-overlapping movements: **bench press with dumbbell row**. Pairings can be arbitrary — **leg press with lateral raises** is fine.
 4. **Attack rest, gradually.** Nippard timed a push day: **70 minutes total, 14 spent lifting, 56 resting** — ~20% work, 80% rest. He expects most people to be at least 50% rest. But cutting rest outright hurts hypertrophy, so the standard **1–4 minutes** stands; instead taper — **2 minutes in week 1, minus 15 seconds each week, down to 1 minute**, as cardiovascular endurance improves.
 
 **Bonus — cut the warm-up.** In a crunch: **3–5 minutes treadmill**, a few dynamic stretches, straight in. Then pick exercises needing fewer warm-up sets — barbell back squat needs **4–5** before 2–4 working sets, a **machine hack squat needs 2**.
@@ -86,4 +86,4 @@ Sources as listed by Nippard in the video description.
 
 **Motivation Research**
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5968958/>
+- Hoare E et al. 2017. Exploring Motivation and Barriers to Physical Activity among Active and Inactive Australian Adults. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29910407/) doi:[10.

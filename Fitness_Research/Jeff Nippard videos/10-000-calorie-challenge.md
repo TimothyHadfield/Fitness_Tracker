@@ -46,7 +46,7 @@ Yes, essentially. Absorption is limited by the transporters in the small intesti
 
 Sources as listed by Nippard in the video description.
 
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3302369/>
+- Hall KD et al. 2012. Energy balance and its components: implications for body weight regulation. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22434603/) doi:[10.3945/ajcn.112.036350](https://doi.org/10.3945/ajcn.112.036350)
 - Horton TJ et al. 1995. Fat and carbohydrate overfeeding in humans: different effects on energy storage. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7598063) doi:[10.1093/ajcn/62.1.19](https://doi.org/10.1093/ajcn/62.1.19)
 - Lammert O et al. 2000. Effects of isoenergetic overfeeding of either carbohydrate or fat in young men. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11029975)
 - Levine JA et al. 1999. Role of nonexercise activity thermogenesis in resistance to fat gain in humans. *Science*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9880251) doi:[10.1126/science.283.5399.212](https://doi.org/10.1126/science.283.5399.212)

@@ -68,14 +68,14 @@ Sources as listed by Nippard in the video description.
 - Fukunaga T et al. 1992. Physiological cross-sectional area of human leg muscles based on magnetic resonance imaging. *J Orthop Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1403308) doi:[10.1002/jor.1100100623](https://doi.org/10.1002/jor.1100100623)
 - Fry AC 2004. The role of resistance exercise intensity on muscle fibre adaptations. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15335243) doi:[10.2165/00007256-200434100-00004](https://doi.org/10.2165/00007256-200434100-00004)
 - Hébert-Losier K et al. 2012. Influence of knee flexion angle and age on triceps surae muscle activity during heel raises. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22190157) doi:[10.1519/JSC.0b013e31824435cf](https://doi.org/10.1519/JSC.0b013e31824435cf)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5758546/pdf/fphys-08-00985.pdf>
+- Vigotsky AD et al. 2017. Interpreting Signal Amplitudes in Surface Electromyography Studies in Sport and Rehabilitation Sciences. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29354060/) doi:[10.3389/fphys.2017.00985](https://doi.org/10.3389/fphys.2017.00985)
 - Miyamoto N & Oda S 2003. Mechanomyographic and electromyographic responses of the triceps surae during maximal voluntary contractions. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12932419) doi:[10.1016/s1050-6411(03)00058-0](https://doi.org/10.1016/s1050-6411(03)00058-0)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5380866/>
+- Cibulka M et al. 2017. VARIATION IN MEDIAL AND LATERAL GASTROCNEMIUS MUSCLE ACTIVITY WITH FOOT POSITION. *Int J Sports Phys Ther*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28515978/)
 - ResearchGate — <https://www.researchgate.net/publication/320537097_Does_feet_position_alter_triceps_surae_EMG_record_during_heel-raise_exercises_in_leg_press_machine>
 - Akuzawa H et al. 2017. The influence of foot position on lower leg muscle activity during a heel raise exercise measured with fine-wire and surface EMG. *Phys Ther Sport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28950148) doi:[10.1016/j.ptsp.2017.08.077](https://doi.org/10.1016/j.ptsp.2017.08.077)
 - Riemann BL et al. 2011. Medial and lateral gastrocnemius activation differences during heel-raise exercise with three different foot positions. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20581696) doi:[10.1519/JSC.0b013e3181cc22b8](https://doi.org/10.1519/JSC.0b013e3181cc22b8)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3404827/>
-- <https://link.springer.com/article/10.1007%2Fs00421-012-2339-3>
+- Mitchell CJ et al. 2012. Resistance exercise load does not determine training-mediated hypertrophic gains in young men. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22518835/) doi:[10.1152/japplphysiol.00307.2012](https://doi.org/10.1152/japplphysiol.00307.2012)
+- Schuenke et al. 2012. Early-phase muscular adaptations in response to slow-speed versus traditional resistance-training regimens. *European Journal of Applied Physiology*. <https://link.springer.com/article/10.1007%2Fs00421-012-2339-3> doi:[10.1007/s00421-012-2339-3](https://doi.org/10.1007/s00421-012-2339-3)
 - Wernbom M et al. 2007. The influence of frequency, intensity, volume and mode of strength training on whole muscle cross-sectional area in humans. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17326698) doi:[10.2165/00007256-200737030-00004](https://doi.org/10.2165/00007256-200737030-00004)
 
 **Helpful Resources and Attribution Credits**

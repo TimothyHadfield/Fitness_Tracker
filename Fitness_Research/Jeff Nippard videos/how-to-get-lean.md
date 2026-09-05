@@ -81,5 +81,5 @@ Sources as listed by Nippard in the video description.
 
 - ResearchGate — <https://www.researchgate.net/profile/Eric_Helms>
 - de Ridder DT et al. 2012. Taking stock of self-control: a meta-analysis of how trait self-control relates to a wide range of behaviors. *Pers Soc Psychol Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21878607/) doi:[10.1177/1088868311418749](https://doi.org/10.1177/1088868311418749)
-- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4672063/>
+- Koritzky G et al. 2015. The Biggest Loser Thinks Long-Term: Recency as a Predictor of Success in Weight Management. *Front Psychol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26696930/) doi:[10.3389/fpsyg.2015.01864](https://doi.org/10.3389/fpsyg.2015.01864)
 - ResearchGate — <https://www.researchgate.net/profile/Eric_Trexler>
