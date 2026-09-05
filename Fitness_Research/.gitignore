@@ -1,0 +1,8 @@
+# Intermediate artifacts. Both are rebuildable from tools/, and neither should be
+# republished here - the notes are our own words, the raw material is not ours.
+transcripts/
+sources/*/fulltext/
+
+# Kept: sources/*/index.json and assignments.tsv. They are small, they record
+# exactly which documents were ingested and under which licence, and they make a
+# rebuild reproducible.

@@ -57,6 +57,12 @@ Long-term data cited: athletes up to 5 years, infants with creatine synthesis de
 
 **Conflicts of interest.** The extract we hold carries no competing-interests statement. Overlapping authors (Kreider, Stout, Ziegenfuss, Lopez, Kalman) disclosed substantial supplement-industry ties in the ISSN's [2013 HMB stand](https://pubmed.ncbi.nlm.nih.gov/23374455/) six years later.
 
+## Disclosures and funding
+
+**No competing-interests or funding statement is retrievable for this article at all** — not from the PubMed Central record and not from the captured full text, which runs from the abstract to the conclusion and stops. This is common for the older BMC-era papers in this corpus, and its absence should not be read as an absence of ties: overlapping authors (Kreider, Stout, Ziegenfuss, Lopez, Kalman) declared substantial supplement-industry relationships in the ISSN's [2013 HMB stand](https://pubmed.ncbi.nlm.nih.gov/23374455/) six years later, and Kreider's own [2017 creatine update](creatine-2017.md) discloses that it was prepared at the request of, and with support from, a supplement-industry trade association.
+
+**What to look at instead.** The pattern this document does make visible is self-reference, set out in the section above: the loading protocol is sourced to a book and a book chapter by members of this author group, the retention comparisons to a non-PubMed-indexed online journal edited within the same network, the responder split to a textbook chapter, and the injury-reduction argument to non-randomised observation in college football programmes the authors ran. That is a stand citing its own members' unreviewable work for its central dosing advice, and it is checkable from the reference list without any declaration at all.
+
 ## References
 
 Numbered as in the 2007 article.

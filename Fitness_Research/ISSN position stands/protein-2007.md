@@ -86,7 +86,15 @@ It also notes, correctly, that whole proteins and quality protein powders are al
 
 **Overreach.** The BCAA dosing recommendation. Specific numbers (≥45 mg/kg/day leucine in 2:1:1) are given on the basis of one narrative review's suggestion, with the human performance evidence explicitly described as discrepant and the strongest supporting work explicitly described as animal. The document then concedes whole food already supplies 25% BCAA. The recommendation should not have been made in this form, and by 2017 the society had stopped making it.
 
-**Disclosure.** The paper declares: *"The author(s) declare that they have no competing interests."* This is worth reading against the author list — several authors were at the time active in the sports supplement industry, and the ISSN itself is substantially industry-funded. A blanket no-competing-interests declaration on a document that recommends buying whey/casein blends and BCAA products is a weak disclosure by modern standards.
+**Disclosure.** The paper declares: *"The author(s) declare that they have no competing interests."* What that blanket line is worth on a document recommending whey/casein blends and BCAA products is discussed under *Disclosures and funding* below.
+
+## Disclosures and funding
+
+**What the document declares.** One sentence: "The author(s) declare that they have no competing interests." No funding statement appears in the record. There are no per-author entries and no companies named — standard for BMC-era papers of this vintage, and thin by any modern measure.
+
+**Is any declared tie material?** None is declared, so there is nothing to assess, and that absence is the finding. This is a document that recommends buying supplemental whey and casein and, in its BCAA section, specific amino-acid products; it is published by a society that is substantially industry-funded; and several of its authors declare extensive supplement-industry relationships on later ISSN stands in this same library. A blanket no-competing-interests line on that document is a weak disclosure. It is not evidence of misconduct and it was normal practice in 2007. It simply means the record cannot tell you the thing you would want to know, and absence of a declaration should not be read as absence of ties.
+
+**Read it against the conclusions.** The core claim — that active people need more protein than 0.8 g/kg — is robust, independently replicated and untouched by any of this. The product-shaped parts are where the missing disclosure matters: the whey/casein blend recommendation, and the BCAA advice that quietly disappeared from later editions.
 
 ## References
 

@@ -105,6 +105,14 @@ Nothing in this stand supports cycling off caffeine. It does not mention the pra
 
 **Stale on doping.** The stand writes that "the International Olympic Committee mandates an allowable limit of 12 μg of caffeine per ml of urine," which had ceased to be true in 2004 when caffeine came off the prohibited list. It does mention WADA's monitoring programme two sentences later, so the document contradicts itself within one paragraph.
 
+## Disclosures and funding
+
+**What the document declares.** Very little, in the manner of its era. The competing-interests statement reads in full: "The authors declare that they have no competing interests." No funding statement appears in the record. There are no per-author entries and no companies named.
+
+**Is any declared tie material?** None is declared, so there is nothing to weigh. Whether that reflects the authors' actual position in 2010 or the disclosure norms of BMC journals at the time cannot be settled from the document itself. What can be said is that several of these authors declare extensive supplement-industry relationships on later ISSN stands in this library, including the 2013 HMB stand and the 2015 beta-alanine stand. A blanket one-line declaration should not be read as evidence that no ties existed.
+
+**The independence limitation is the one already noted.** The claim that caffeine improves strength performance in women rests on an unpublished master's thesis authored by this stand's own first author. That is not a conflict of interest and no disclosure statement would catch it, but it is the point at which the document is least independent of the people who wrote it. The dose-response, hydration and coffee-versus-anhydrous conclusions draw on a wide independent literature and are unaffected.
+
 ## References
 
 Numbered as in the source article.

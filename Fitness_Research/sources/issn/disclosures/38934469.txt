@@ -1,0 +1,23 @@
+# International society of sports nutrition position stand: ketogenic diets
+PMID 38934469
+
+## Acknowledgments
+AcknowledgmentsThe authors would like to thank Chris Masterjohn and Victoria LaFont for their feedback on the draft manuscript.
+
+## Disclosure statement
+Disclosure statementAll authors declare that they have no competing interests concerning this Position Paper.BIC has received grants and contracts to conduct research on dietary supplements; has served as a paid consultant for industry; has received honoraria for speaking at conferences and writing lay articles about sports nutrition ingredients and topics; is a member of the International Protein Board that disseminates knowledge on protein and protein products; has served as an expert witness on behalf of the plaintiff and defense in cases involving dietary supplements; and receives compensation for writing and providing educational services related to exercise and nutrition-related topics. AL has served as a paid consultant in the supplement industry and receives compensation for writing educational materials related to general health and nutrition. TMS and CJM are shareholders in and are on the scientific advisory board of Outplay Inc., which researches transdermal drug and nutrient delivery. JAR is on the scientific advisory board of Applied Behavior Systems Ltd. STS has served as a paid scientific expert in the supplement industry but has no COIs regarding this paper; she has no financial conflict of interest with ketogenic diets or ketone-related products. SMA has received grants to research dietary supplements, served as a paid consultant for industry, and received honoraria for speaking at conferences about sports nutrition ingredients and topics. DD is an inventor on USF patents related to applications of therapeutic ketosis, advisor to Levels Health, and co-owner of Ketone Technologies LLC, which does research, consulting and public speaking events. JRS has received grants and contracts to research dietary supplements, served as a paid consultant for industry, and received honoraria for speaking at conferences and writing lay articles about sports nutrition ingredients and topics. CMK has received funding from nutrition studies to conduct scientific studies related to exercise and nutrition and currently serves in a consulting and advisory capacity for different dietary supplement brands or manufacturers that sell products related to items discussed in this paper. He has not received any funding from these companies as part of this work. RBK has conducted grant and contract-funded research on nutritional supplements awarded to the universities he has been affiliated with, received an honorarium for making scientific presentations, and served as a paid scientific expert. He has no financial conflict of interest with ketogenic diets or ketone-related products. MJO has received grants and contracts from companies that manufacture dietary supplements and has been appointed to the scientific advisory board of some exercise and nutrition companies. JA is the CEO of the International Society of Sports Nutrition, a 501c3 nonprofit, which receives grant support from a variety of companies in the sports nutrition category.
+
+## Authors’ contributions
+Authors’ contributionsAL, JAR, TS, SS, and CM were responsible for drafting the manuscript and incorporating critical feedback and revisions suggested by the ISSN Research Committee coauthors. All coauthors were equally responsible for reviewing, editing, and providing feedback for submission of the final draft. All authors read and approved the final manuscript.
+
+## Availability of data and materials
+Availability of data and materialsRaw data and R code used to make Figures 3 and 4 are publicly available at https://osf.io/mfa2q/
+
+## Ethics approval and consent to participate
+Ethics approval and consent to participateThis paper was reviewed by the International Society of Sports Nutrition Research Committee and represents the official position of the Society.
+
+## Supplementary material
+Supplementary materialSupplemental data for this article can be accessed online at https://doi.org/10.1080/15502783.2024.2368167.
+
+## funding-group
+Position Paper was not This Position Paper was not funded.

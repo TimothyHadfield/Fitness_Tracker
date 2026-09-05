@@ -16,6 +16,26 @@ The first source is Jeff Nippard, chosen because he acts as a library himself �
 summarises the research well and, crucially, **lists his sources in his video
 descriptions**. That last fact is the single most important thing in this whole project.
 
+It is now a **multi-source** library. [README.md](README.md) is the top-level index.
+Sources were chosen by measurement, not reputation — eighteen candidate channels were probed
+for catalogue size, length, captions and whether descriptions carry resolvable reference
+links, with Nippard as a control to prove the detector worked. See "Choosing a new source"
+near the bottom of this file for what that probe found and which sources are off-limits.
+
+### The four-chunk build (Tim asked for this to be resumable across chats)
+
+1. **Foundations + ISSN** — DONE. Folder structure, generalised tooling, the two YouTube
+   caption fetches, and the ISSN position stands complete end to end.
+2. **Menno Henselmans** — transcripts and descriptions already fetched (159/160). References
+   are in the descriptions; the existing pipeline runs nearly unmodified.
+3. **House of Hypertrophy** — transcripts already fetched (169/172). Needs a new extractor:
+   135 of 169 descriptions carry reference links directly, and 58 link out to per-video
+   reference pages on houseofhypertrophy.com. Both venues need merging.
+4. **Barbell Medicine + integration** — ~206 free articles with inline PubMed links; skip the
+   audio entirely. Then the cross-source layer.
+
+Squat University is a later pass, at Tim's request.
+
 ## What Tim asked for, in his own framing
 
 - Start from YouTube videos. He assumed I couldn't read them; I can, via captions.
@@ -218,14 +238,82 @@ thinnest area in the library.
 
 ---
 
+## Lessons from the non-video pipeline (ISSN)
+
+Journal sources are **much cheaper than YouTube and much higher quality**, and the difference
+is bigger than expected. Worth reaching for before another creator.
+
+- **PMC hands back everything in one call.** Full text and a structured `<ref-list>` with each
+  reference's own PMID and DOI. No caption fetch, no reference extraction, no resolver step.
+  The ISSN corpus yielded **5,192 unique references at 94% resolvable** — two and a half times
+  the Nippard bibliography — essentially for free.
+- **The inline `[n]` markers survive into the text**, and they index the reference list. That
+  gives a claim-to-paper link that is exact rather than inferred, which is far better than
+  anything a video description can support. **But verify the mapping per document** — in the
+  2023 energy drinks stand the offset drifts by up to three, so `[135]` is not reference 135.
+  A max-marker-versus-reference-count check catches this in seconds; run it before trusting.
+- **Competing-interest and funding statements live in `<back>`, not `<body>`.** Easy to miss,
+  and for supplement stands it is exactly the material you need. `tools/fetch_issn_disclosures.py`
+  pulls it separately.
+- **ElementTree only supports `//` at the start of an XPath.** `.//back//ack` silently matches
+  nothing. Walk the children instead.
+- **Older BMC-era XML concatenates reference fields without separators.** Build citations from
+  the `<element-citation>` sub-elements rather than flattening, or you get
+  "MetzlJDSmallELCreatine use among young athletesPediatrics2001".
+- **PubMed will not phrase-match some organisation names.** `"International Society of Sports
+  Nutrition"[Title]` returns zero; the unquoted terms return 34. Query loosely, filter titles
+  afterwards.
+- **NCBI answers 429 readily.** Back off and retry; don't assume a failure is a missing record.
+
+## Reading a consensus document critically
+
+The ISSN pass turned up a pattern that generalises to any expert body, and it changed how the
+notes are written: **the numbered position statement is frequently firmer than the evidence
+review directly above it.** Several stands describe a literature as "equivocal" or "largely
+null" and then assert a benefit in the headline. When they disagree, trust the body.
+
+So every note in that folder carries two mandatory sections — `Strength of the evidence` and
+`Disclosures and funding` — and the agents were told explicitly that under-linking beats a
+wrong attribution and that they should say plainly when a document overreaches. They found
+real problems: a citation pointing to a paper on seasonal reproduction in vertebrates, an
+unremoved peer-reviewer comment in a published table, a stand citing a paper titled "does not
+alter…" as evidence that it does, and a disclosure statement declaring no conflicts sitting
+directly above a conflict-of-interest section listing share ownership in the product category.
+
+Self-citation is the bigger and less visible problem, because it is not a declarable conflict.
+Check whether a document's authors wrote the studies it rests on.
+
 ## If you're starting another creator
 
-1. `yt-dlp --flat-playlist --print "%(id)s\t%(duration)s\t%(title)s"` on their `/videos`
-   page to get the catalogue.
-2. **Check one description for a reference list before anything else.** If they don't cite
+1. `tools/fetch_channel.py <channel-url> <outdir>` does the catalogue and the fetch in one
+   resumable pass, and saves the **description alongside every transcript** — one yt-dlp call
+   gets both, since the info.json carries the description. Re-run it with `--delay 6` to sweep
+   up the failures; that recovered 29 of 33 on the last run.
+2. **Check descriptions for a reference list before anything else.** If they don't cite
    sources, this becomes a much smaller project — notes only, no citation layer.
 3. Classify the catalogue by hand. It's judgement work and worth doing carefully; a bad
    inclusion list wastes an enormous amount of downstream agent time.
 4. Then run the pipeline above.
 
 Put each creator in their own folder, mirroring `Jeff Nippard videos/`.
+
+## Choosing a new source
+
+Measure, don't assume. The probe that selected the current sources checked catalogue size,
+median length, caption availability and reference links in a sample of descriptions, with
+Nippard as a control (he scored 6/6 with a mean of 14 links, which proved the detector).
+
+Two findings worth carrying forward:
+
+- **A description scan under-counts.** Three strong sources keep Nippard-grade grouped
+  reference lists somewhere else entirely — House of Hypertrophy on per-video pages on his own
+  site, Barbell Medicine in per-episode Google Docs, Andy Galpin in a "Scientific Articles"
+  block on performpodcast.com. Check the creator's website before rejecting them.
+- **Some excellent sources are off-limits and you should not spend time on them.** Stronger By
+  Science forbids automated collection in its terms and blocks AI crawlers by name in
+  robots.txt; MASS is subscriber-licensed; Examine is personal-use-only; Chris Beardsley is
+  paywalled. Read and link to these, but do not ingest them. Renaissance Periodization's terms
+  grant an unnamed Creative Commons licence — permissive but ambiguous, worth confirming.
+
+Prefer scripted 8–26 minute videos. Conversational podcasts at a 50-minute-plus median cost
+several times as much per note for less extractable content.

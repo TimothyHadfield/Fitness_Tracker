@@ -1,0 +1,29 @@
+# International Society of Sports Nutrition Position Stand: Probiotics
+PMID 31864419
+
+## Abbreviations
+AbbreviationsAEAdverse eventsANVISANational Health Surveillance Agency BrazilATPAdenosine triphosphateBCAAsBranched-chain amino acidsBMIBody mass indexBUNBlood urea nitrogenCD14Cluster of differentiation factor-14CFUColony forming unitsCLAConjugated linoleic acidCLRC-type lectin receptorCRNCouncil for Responsible NutritionCRPC-Reactive proteinEFSAEuropean Food Safety AuthorityFAOFood and Agricultural OrganizationFDAFood and Drug AdministrationFOSHUFoods for Specific Health UsesGIGastrointestinalGPRG-Protein couple receptorHIVHuman immunodeficiency virusHPAHypothalamic-pituitary-adrenal axisIBDInflammatory bowel diseaseICRInstitute of Cancer ResearchIgAImmunoglobulin AIL-1βInterleukin-1betaIL-6Interleukin-6IOCInternational Olympic CommitteeIPAInternational Probiotic AssociationISSNInternational Society of Sports NutritionLPSLipopolysaccharideMHLWMinistry of Health and WelfareNK-κβNuclear factor kappa betaNODNucleotide-binding oligomerization domainPAGPhenylacetylglutaminePAMPPathogen associated molecular patternPCRPolymerase chain reactionPPRPattern recognition receptorsRNA SeqRNA sequencingSFCAShort chain fatty acidTLRToll-like receptorTMAOTrimethylamine N-oxideTNF-αTumor necrosis factor-alphaTregRegulatory T cellsURTIUpper respiratory tract infectionVO2Volume of oxygen utilizationWGOWorld Gastroenterology OrganizationWHOWorld Health Organization
+
+## fn-group
+Publisher’s NoteSpringer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.
+
+## ack
+The authors would like to thank the participants and researchers who contributed works cited in this paper.
+
+## Author contributions
+Author contributionsRJ, AEM, KCC, CMK prepared and compiled the draft for review and editing by coauthors. All other co-authors reviewed, edited, and approved the draft, and the final manuscript.
+
+## Funding
+FundingThis position stand was commissioned by the Editors of the Journal of the International Society of Sports Nutrition. The authors received no remuneration for writing and/or reviewing this position stand.
+
+## Availability of data and materials
+Availability of data and materialsNot applicable.
+
+## Ethics approval and consent to participate
+Ethics approval and consent to participateThis paper was reviewed by the International Society of Sports Nutrition Research Committee and represents the official position of the Society.
+
+## Consent for publication
+Consent for publicationNot applicable.
+
+## Competing interests
+Competing interestsAM, ASR, KB, LB, and SDW declare no competing interests. RJ has received grants to evaluate the efficacy and safety of probiotics, serves on scientific advisory boards, and has served as an expert witness, legal and scientific consultant. AEM and KCC are employed by Isagenix, a company selling branded probiotics products. CMK has previously received external funding to conduct research studies involving nutritional supplements and is currently conducting studies involving prebiotics and probiotics. MP has received grants to evaluate the efficacy and safety of probiotics, and has served as a scientific consultant. JRT reports no conflicts of interest regarding the material or paper presented. JRT has previously received grants to evaluate the efficacy of various nutritional supplements including probiotics. ML conducts industry sponsored studies and serves as a scientific consultant to the Juice Plus+ Company. MG reports no conflicts of interest regarding the material or paper presented. MG has previously received external funding to conduct research studies involving nutritional supplements including probiotics. DBP reports no conflicts of interest regarding the material or paper presented, and has received grants to evaluate the effectiveness of probiotic supplementation in athletes. BIC serves on the scientific advisory board of Dymatize (Post Holdings). SMA reports no conflicts of interest related to the material presented in this paper. He has conducted industry sponsored studies at the universities he has been affiliated with and has occasionally served as an expert witness and scientific consultant. RBK reports no conflicts of interest related to the material presented in this paper. He has conducted industry sponsored studies at the universities he has been affiliated with and occasionally serves as a scientific and legal consultant related to exercise and nutrition intervention studies. CJW is employed by Jamieson Labs, a company selling branded probiotics products. MPa is employed by Biolab research Srl, performing research & development activities for Probiotical SpA, a leading probiotic supplier. DSK works for a Contract Research Organization (Nutrasource) that has received funding from the probiotic industry for clinical trials and serves on the Scientific Advisory Board for Dymatize (Post Holdings). JS is a co-founder of FitBiomics, a company identifying, researching and commercializing new probiotic strains. JAT is employed by the International Probiotic Association and further consults within the probiotic and microbiome industries. JA is the CEO of the International Society of Sports Nutrition.
