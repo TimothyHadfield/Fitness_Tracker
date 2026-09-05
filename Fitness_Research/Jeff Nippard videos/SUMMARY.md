@@ -482,7 +482,10 @@ Not hedging — these are places where the library contains contradictory findin
 
 **Training**
 - **The volume ceiling.** Pelland 2024 says 43 sets; Fisher and Steele say 10; Barbalho found 5
-  beating 20. No mechanism reconciles them.
+  beating 20. No mechanism reconciles them. **Correction, added later from other sources in
+  this library: the Barbalho papers were retracted for implausible data**, so the low-volume
+  leg of this dispute is weaker than the Nippard videos present it. Treat any "5 beats 20"
+  claim sourced to Barbalho as withdrawn.
 - **3× versus 2× weekly frequency**, and the novelty confound sitting inside every frequency study.
 - **How close to failure.** Credible experts span **0–7 RIR** and two meta-analyses conflict.
 - **Whether the per-session ceiling exists at all.** Quoted as 5, 5–10, 6–8 and ~10 across four

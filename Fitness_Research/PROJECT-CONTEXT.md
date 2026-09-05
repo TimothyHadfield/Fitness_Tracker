@@ -113,6 +113,12 @@ an explicit section on where that source departs from the others.
 - The Nippard "Known problems in this library" list at the bottom of
   `Jeff Nippard videos/SUMMARY.md` is still unfixed — a citation that doesn't support its
   claim, misleading filenames, one study rendered three ways.
+- **A cross-source correction was applied this session and may need more.** Two sources
+  independently reported that the **Barbalho volume papers were retracted for implausible
+  data**. Those papers are one of the three legs of the volume-ceiling dispute the library
+  records, and the Nippard videos predate the retraction and do not mention it. The Nippard
+  summaries now carry the correction inline. Watch for the same pattern elsewhere: the older
+  a source is, the more likely it rests on work that has since been withdrawn.
 - `tools/extract_refs_desc.py` has had its host allowlist widened twice after agents found
   missed links (Elsevier resolver URLs especially). If a new source turns up links it misses,
   widen it again rather than accepting the loss.

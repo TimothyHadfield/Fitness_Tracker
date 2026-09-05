@@ -83,7 +83,9 @@ was about to "blow the idea of an upper limit out of the water" — **20–30 se
 Schoenfeld's 2019 study found growth still climbing at **30–45 sets/muscle/week**, which Schoenfeld
 himself reads as a **~4-week specialisation block for a lagging muscle**, not a year-round dose. Against
 that, Fisher and Steele's 24-week trial in women found **5–10 sets** maxed it out, and Barbalho found
-**5 sets/week beat 10, 15 and 20** ([volume killing gains](workout-volume-killing-gains.md)). The newest
+**5 sets/week beat 10, 15 and 20** ([volume killing gains](workout-volume-killing-gains.md)) — though
+**the Barbalho papers were subsequently retracted for implausible data**, which the Nippard videos
+predate and do not mention, so discount that result. The newest
 figure is **Pelland 2024**, 35 studies, dose-response holding from **4 to 43 sets per muscle per week**
 ([cut sets in half](cut-number-sets-half.md)). His reconciliation: the conflicting studies mostly differ
 in **how the sets were spread across the week**.
@@ -530,7 +532,8 @@ week, no extreme chronotypes, and the effect is small next to consistency.
 ### What is genuinely unsettled
 
 - **Where the volume ceiling is.** Pelland 2024 says the response holds to 43 sets; Fisher and Steele say
-  10 tops an inverted U; Barbalho says 5 beats 20. Nobody has tested high volume for the **whole body**,
+  10 tops an inverted U; Barbalho says 5 beats 20 — but **the Barbalho papers were later
+  retracted for implausible data**, so that leg should be discounted. Nobody has tested high volume for the **whole body**,
   in a **deficit**, past **12 weeks**.
 - **Whether 3×/week beats 2×** — and the best pro-frequency study used three sets per muscle per week.
 - **The novelty confound** in every frequency study, conceded by Krieger, Schoenfeld and Nippard alike.
