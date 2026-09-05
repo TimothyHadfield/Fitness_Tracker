@@ -42,3 +42,13 @@ The natural physiological range runs roughly **300 to 1000 ng/dL**. Reasoning th
 - Nippard explicitly says he doesn't know how much within-range testosterone change is needed for physique-level effects — the literature hasn't answered it.
 - The Bolivian population's name is garbled in the auto-captions and is not reproduced here.
 - The 48% and 20% figures come from the viewer's framing of the 2013 paper; Nippard doesn't dispute them but argues they don't generalise.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Trumble BC et al. 2013. Age-independent increases in male salivary testosterone during horticultural activity among Tsimane forager-farmers. *Evol Hum Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24187482) doi:[10.1016/j.evolhumbehav.2013.06.002](https://doi.org/10.1016/j.evolhumbehav.2013.06.002)
+- Schoenfeld BJ 2013. Postexercise hypertrophic adaptations: a reexamination of the hormone hypothesis and its applicability to resistance training program design. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23442269) doi:[10.1519/JSC.0b013e31828ddd53](https://doi.org/10.1519/JSC.0b013e31828ddd53)
+- Morton RW et al. 2018. Muscle Androgen Receptor Content but Not Systemic Hormones Is Associated With Resistance Training-Induced Skeletal Muscle Hypertrophy in Healthy, Young Men. *Front Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30356739) doi:[10.3389/fphys.2018.01373](https://doi.org/10.3389/fphys.2018.01373)

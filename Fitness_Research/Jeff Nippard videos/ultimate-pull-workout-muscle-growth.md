@@ -51,3 +51,11 @@ He does these one arm at a time, starting with the weaker arm and matching reps 
 - No longitudinal evidence that pullovers grow lats; his case rests on stretch sensation and soreness, which he explicitly says are weak individual proxies.
 - Feeder sets can add fatigue before the working set — he restricts them to exercises where grooving matters more than maximum load.
 - The preacher-curl study is five weeks with a small sample; the researcher's name is garbled in the auto-captions.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Bicep ROM Study**
+
+- Sato S et al. 2021. Elbow Joint Angles in Elbow Flexor Unilateral Resistance Exercise Training Determine Its Effects on Muscle Strength and Thickness of Trained and Non-trained Arms. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34616309/) doi:[10.3389/fphys.2021.734509](https://doi.org/10.3389/fphys.2021.734509)

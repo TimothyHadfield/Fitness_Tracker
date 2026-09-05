@@ -67,4 +67,4 @@ Shins half an inch behind the bar, feet straight and slightly inside shoulder wi
 
 ## References
 
-Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

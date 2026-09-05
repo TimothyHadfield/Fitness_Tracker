@@ -46,3 +46,11 @@ Nippard normally emphasises training volume, intensity, and progressive overload
 - The position stand is described but the authors are not named in the video.
 - No specific set, rep, frequency, or load prescriptions are given for youth training.
 - The advice to deprioritise volume and intensity is framed as an initial phase, with no stated timeline for when a teenager should transition to normal progressive overload programming.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Lloyd RS et al. 2014. Position statement on youth resistance training: the 2014 International Consensus. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24055781) doi:[10.1136/bjsports-2013-092952](https://doi.org/10.1136/bjsports-2013-092952)

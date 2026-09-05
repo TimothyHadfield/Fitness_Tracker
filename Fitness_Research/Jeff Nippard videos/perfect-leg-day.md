@@ -62,3 +62,12 @@ Run this as the second leg day of a push/pull/legs week (it pairs with a lower-r
 
 ## Caveats & unknowns
 The seated calf raise recommendation is explicitly provisional: the soleus data undercuts the rationale, and the decisive standing-vs-seated hypertrophy study does not exist yet. The active-range cue on glute ham raises he calls a minor preference, not a big deal.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Calf Stuff**
+
+- Schoenfeld BJ et al. 2020. Do the anatomical and physiological properties of a muscle determine its adaptive response to different loading protocols?. *Physiol Rep*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32342648/) doi:[10.14814/phy2.14427](https://doi.org/10.14814/phy2.14427)
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/3057398/posts/10357805>

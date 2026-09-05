@@ -47,3 +47,16 @@ Jeff's argument rests on two points.
 - The mechanistic case rests on the three-determinant model of hypertrophy (tension, damage, metabolic stress) — the muscle-damage component in particular has since been heavily questioned, and this is a 2016 video.
 - Jeff refers to "literature to support" the staleness/plateau claim and to "mounting data" on training near failure without naming specific papers; treat both as his read of the evidence rather than a cited finding.
 - The free-training-week protocol is a personal recommendation and his own experience, not a tested intervention with a defined frequency or duration.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Resources**
+
+- Todd JS et al. 2012. Thomas L. DeLorme and the science of progressive resistance exercise. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/22592167) doi:[10.1519/JSC.0b013e31825adcb4](https://doi.org/10.1519/JSC.0b013e31825adcb4)
+- ResearchGate — <https://www.researchgate.net/publication/230756715_Periodization_Paradigms_in_the_21st_Century_Evidence-Led_or_Tradition-Driven>
+- Rhea MR & Alderman BL 2004. A meta-analysis of periodized versus nonperiodized strength and power training programs. *Res Q Exerc Sport*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/15673040) doi:[10.1080/02701367.2004.10609174](https://doi.org/10.1080/02701367.2004.10609174)
+- Burd NA et al. 2012. Bigger weights may not beget bigger muscles: evidence from acute muscle protein synthetic responses after resistance exercise. *Appl Physiol Nutr Metab*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/22533517) doi:[10.1139/h2012-022](https://doi.org/10.1139/h2012-022)
+- <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4731492/>
+- Schoenfeld BJ 2010. The mechanisms of muscle hypertrophy and their application to resistance training. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/20847704) doi:[10.1519/JSC.0b013e3181e840f3](https://doi.org/10.1519/JSC.0b013e3181e840f3)

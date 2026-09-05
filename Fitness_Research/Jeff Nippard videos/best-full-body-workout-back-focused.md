@@ -55,3 +55,13 @@ Take these to failure — the heavy back work is done, so recovery interference 
 
 ## Caveats & unknowns
 The 2019 inter-set stretching study reached statistical significance only for the quads and for the pooled muscle data — the 50% figure should not be treated as settled. Barakat's follow-up was unpublished at the time of filming. There is no scientific consensus on how much metabolic stress actually contributes to hypertrophy. The upright row may still cause discomfort for some individuals regardless of the evidence base. Elevated fatigue in the first week or two of back-to-back back training is expected and shouldn't be read as overtraining.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Evangelista AL et al. 2019. Interset Stretching vs. Traditional Strength Training: Effects on Muscle Strength and Size in Untrained Individuals. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30688865) doi:[10.1519/JSC.0000000000003036](https://doi.org/10.1519/JSC.0000000000003036)
+- Schoenfeld BJ 2013. Potential mechanisms for a role of metabolic stress in hypertrophic adaptations to resistance training. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23338987) doi:[10.1007/s40279-013-0017-1](https://doi.org/10.1007/s40279-013-0017-1)
+- ResearchGate — <https://www.researchgate.net/publication/232210633_The_Upright_Row_Implications_for_Preventing_Subacromial_Impingement>

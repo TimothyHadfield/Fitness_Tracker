@@ -39,3 +39,17 @@ Burning more fat *during* a session doesn't mean losing more fat over 24 hours.
 - Trials are short (4-6 weeks) with small samples; a longer study could in principle separate the groups, though Jeff doesn't expect it.
 - Subjects were mostly not very lean; effects in leaner athletes are untested.
 - This video only covers fat loss. Metabolic and hormonal differences, and whether fasted training affects lean mass gain or retention, were not addressed.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Schoenfeld BJ et al. 2014. Body composition changes associated with fasted versus non-fasted aerobic exercise. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25429252) doi:[10.1186/s12970-014-0054-7](https://doi.org/10.1186/s12970-014-0054-7)
+- <https://www.nsca.com/education/articles/does_cardio_after_an_overnight_fast_maximize_fat_loss/>
+- <http://www.mdpi.com/2411-5142/2/4/43>
+- Paoli A et al. 2011. Exercising fasting or fed to enhance fat loss? Influence of food intake on respiratory ratio and excess postexercise oxygen consumption after a bout of endurance training. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21411835) doi:[10.1123/ijsnem.21.1.48](https://doi.org/10.1123/ijsnem.21.1.48)
+- Ahlborg G & Felig P 1976. Influence of glucose ingestion on fuel-hormone response during prolonged exercise. *J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/993155) doi:[10.1152/jappl.1976.41.5.683](https://doi.org/10.1152/jappl.1976.41.5.683)
+- Horowitz JF et al. 1997. Lipolytic suppression following carbohydrate ingestion limits fat oxidation during exercise. *Am J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9357807) doi:[10.1152/ajpendo.1997.273.4.E768](https://doi.org/10.1152/ajpendo.1997.273.4.E768)
+- Hansen K et al. 2005. The effects of exercise on the storage and oxidation of dietary fat. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15896087) doi:[10.2165/00007256-200535050-00001](https://doi.org/10.2165/00007256-200535050-00001)

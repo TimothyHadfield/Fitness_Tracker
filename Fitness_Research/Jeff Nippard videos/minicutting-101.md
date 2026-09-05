@@ -50,3 +50,7 @@ An idea he attributes to Lyle McDonald (and credits Lyle McDonald and Lane Norto
 - The 2008 hormone study's subjects were already very lean, so the 6-week hunger plateau may not generalise to someone starting at 12-15%.
 - The pound targets (5-10 lb) are round numbers and scale with bodyweight.
 - He is emphatic that mini cutting doesn't "kill gains" and that elite naturals stay lean year-round and still progress — the concern is specifically about newer lifters wasting their highest-growth-potential years bouncing between phases without a plan.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -49,3 +49,15 @@ Since high-quality genetic testing is still in its infancy, the way to find your
 - Somatotyping may have limited legitimate use in predicting suitability for particular sports.
 - The mechanisms behind individual response variation (hunger regulation, leptin, NEAT) are described at a high level; the video doesn't establish how to measure or manipulate them.
 - Genetic testing may eventually make individualisation more precise, but as of 2018 it wasn't there.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Gutnik B et al. 2015. Body physique and dominant somatotype in elite and low-profile athletes with different specializations. *Medicina (Kaunas)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26424190) doi:[10.1016/j.medici.2015.07.003](https://doi.org/10.1016/j.medici.2015.07.003)
+- Vertinsky P 2007. Physique as destiny: William H. Sheldon, Barbara Honeyman Heath and the struggle for hegemony in the science of somatotyping. *Can Bull Med Hist*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18447308) doi:[10.3138/cbmh.24.2.291](https://doi.org/10.3138/cbmh.24.2.291)
+- Levine JA et al. 1999. Role of nonexercise activity thermogenesis in resistance to fat gain in humans. *Science*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9880251) doi:[10.1126/science.283.5399.212](https://doi.org/10.1126/science.283.5399.212)
+- ResearchGate — <https://www.researchgate.net/publication/322142687_Somatotype_diet_and_nutritional_status_of_women>
+- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15947721)

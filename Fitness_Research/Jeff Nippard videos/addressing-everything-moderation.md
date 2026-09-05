@@ -47,3 +47,7 @@ He is not saying moderation talk is always wrong. Many things really are best us
 - The 20% junk-food figure is explicitly self-reported and arbitrary, with no supporting data.
 - "Junk food" is undefined, by his own admission, which limits how precisely any such guideline can be applied.
 - This is a claim about how to frame advice, not an empirical finding about outcomes; no evidence is presented that inclusive framing produces better adherence.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

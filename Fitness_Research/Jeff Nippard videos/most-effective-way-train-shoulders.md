@@ -70,3 +70,19 @@ Frequency of at least 2x/week is backed by the current training-frequency litera
 - Upright rows carry documented impingement risk when performed with the elbows above shoulder height.
 - The 16-22 set recommendation is an expert opinion applied to intermediate/advanced lifters, not a directly tested dose-response finding, and double counting across side/rear delt exercises makes it easy to overshoot.
 - Video is from 2017; frequency and volume literature has moved since.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Schick EE et al. 2010. A comparison of muscle activation between a Smith machine and free weight bench press. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20093960) doi:[10.1519/JSC.0b013e3181cc2237](https://doi.org/10.1519/JSC.0b013e3181cc2237)
+- <http://onlinelibrary.wiley.com/doi/10.1111/sae.12010/abstract>
+- Trebs AA et al. 2010. An electromyography analysis of 3 muscles surrounding the shoulder joint during the performance of a chest press exercise at several angles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20512064) doi:[10.1519/JSC.0b013e3181ddfae7](https://doi.org/10.1519/JSC.0b013e3181ddfae7)
+- ResearchGate — <https://www.researchgate.net/publication/232217991_Effects_of_Variations_of_the_Bench_Press_Exercise_on_the_EMG_Activity_of_Five_Shoulder_Muscles>
+- McAllister MJ et al. 2013. Effect of grip width on electromyographic activity during the upright row. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22362088) doi:[10.1519/JSC.0b013e31824f23ad](https://doi.org/10.1519/JSC.0b013e31824f23ad)
+- Schoenfeld B et al. 2013. Effect of hand position on EMG activity of the posterior shoulder musculature during a horizontal abduction exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23302754) doi:[10.1519/JSC.0b013e318281e1e9](https://doi.org/10.1519/JSC.0b013e318281e1e9)
+- Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23096062) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)
+- Srinivasan RC et al. 2007. Fiber type composition and maximum shortening velocity of muscles crossing the human shoulder. *Clin Anat*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16795030) doi:[10.1002/ca.20349](https://doi.org/10.1002/ca.20349)
+- Lauver JD et al. 2016. Influence of bench angle on upper extremity muscular activation during bench press exercise. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25799093) doi:[10.1080/17461391.2015.1022605](https://doi.org/10.1080/17461391.2015.1022605)
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/articles/upright_row_implications_for_preventing_subacromial_impingement.pdf>
+- McMahon PJ et al. 1995. Shoulder muscle forces and tendon excursions during glenohumeral abduction in the scapular plane. *J Shoulder Elbow Surg*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7552678) doi:[10.1016/s1058-2746(05)80052-7](https://doi.org/10.1016/s1058-2746(05)80052-7)

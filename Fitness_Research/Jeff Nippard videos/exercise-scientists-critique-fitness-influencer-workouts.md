@@ -54,3 +54,13 @@ Response to steroids is highly individual, like response to training. Expecting 
 
 ## Caveats & unknowns
 Ronnie's actual recoverable volume is unknowable — the 25-set figure is an invented example. The very-high-volume findings come from short training blocks; long-term applicability is unclear. There is no study comparing strict to loose technique, and no long-term hypertrophy study on back training at all, so most exercise-selection claims are inference. Whether chronic cold exposure has real benefits when other variables are equalised is genuinely unsettled — Mike says he just hasn't seen convincing literature yet.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Here are two things you might find helpful**
+
+- Travison TG et al. 2017. Harmonized Reference Ranges for Circulating Testosterone Levels in Men of Four Cohort Studies in the United States and Europe. *J Clin Endocrinol Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28324103/) doi:[10.1210/jc.2016-2935](https://doi.org/10.1210/jc.2016-2935)
+
+- Benoît S et al. 2024. Hot But Not Cold Water Immersion Mitigates the Decline in Rate of Force Development Following Exercise-Induced Muscle Damage. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/38967392/) doi:[10.1249/MSS.0000000000003513](https://doi.org/10.1249/MSS.0000000000003513)

@@ -48,3 +48,13 @@ Ranked 10 (least objectionable) to 1 (least favourite).
 - He stresses that with enough biomechanics and anatomy knowledge you can build a case against literally any exercise, so this list is about priorities, not prohibitions.
 - If one of these works for you, he says keep it — modify it, substitute it, or continue as-is.
 - Cheat rows and deep squats both have legitimate contexts (bodybuilding tradition, powerlifting rules).
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Finding Ideal Squat Depth Resources**
+
+- Signorile JF et al. 2002. A comparative electromyographical investigation of muscle utilization patterns using various hand positions during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12423182)
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/articles/is_functional_training_really_functional.pdf>
+- Behm DG et al. 2010. Canadian Society for Exercise Physiology position stand: The use of instability to train the core in athletic and nonathletic conditioning. *Appl Physiol Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20130673) doi:[10.1139/H09-128](https://doi.org/10.1139/H09-128)

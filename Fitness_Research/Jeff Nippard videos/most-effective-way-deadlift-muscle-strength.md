@@ -65,3 +65,7 @@ Let the plates come to a **full dead stop** on the floor between reps — no bou
 - The Escamilla citation's co-author name is garbled in the auto-captions and is not reliable as written.
 - The alternated-grip bicep-tear risk is explicitly anecdotal, not from data.
 - Whether to resist the eccentric is a coaching judgement call, not a settled question — Jeff and many powerlifting coaches differ.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

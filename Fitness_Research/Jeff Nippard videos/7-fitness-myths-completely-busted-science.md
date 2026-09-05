@@ -72,3 +72,34 @@ Bottom line: moderate alcohol is unlikely to cause significant fat gain or muscl
 
 ## Caveats & unknowns
 Nippard notes explicitly that the level of truth in any of these is context dependent. This is a compressed recap that skips detail from the full-length originals. Two researcher names are garbled in the auto-captions ("birkin" for Burke, "Siller" for Siler) — treat those spellings as uncertain. The alcohol sex-difference finding rests on a single study.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Peake JM et al. 2017. The effects of cold water immersion and active recovery on inflammation and cell stress responses in human skeletal muscle after resistance exercise. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27704555) doi:[10.1113/JP272881](https://doi.org/10.1113/JP272881)
+- Roberts LA et al. 2015. Post-exercise cold water immersion attenuates acute anabolic signalling and long-term adaptations in muscle to strength training. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26174323) doi:[10.1113/JP270570](https://doi.org/10.1113/JP270570)
+
+- Keating SE et al. 2017. A systematic review and meta-analysis of interval training versus moderate-intensity continuous training on body adiposity. *Obes Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28513103) doi:[10.1111/obr.12536](https://doi.org/10.1111/obr.12536)
+
+- Johnston BC et al. 2014. Comparison of weight loss among named diet programs in overweight and obese adults: a meta-analysis. *JAMA*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25182101) doi:[10.1001/jama.2014.10397](https://doi.org/10.1001/jama.2014.10397)
+- Bueno NB et al. 2013. Very-low-carbohydrate ketogenic diet v. low-fat diet for long-term weight loss: a meta-analysis of randomised controlled trials. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23651522) doi:[10.1017/S0007114513000548](https://doi.org/10.1017/S0007114513000548)
+- Burke LM 2015. Re-Examining High-Fat Diets for Sports Performance: Did We Call the 'Nail in the Coffin' Too Soon?. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26553488) doi:[10.1007/s40279-015-0393-9](https://doi.org/10.1007/s40279-015-0393-9)
+- Aragon AA et al. 2017. International society of sports nutrition position stand: diets and body composition. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28630601) doi:[10.1186/s12970-017-0174-y](https://doi.org/10.1186/s12970-017-0174-y)
+
+- <https://www.sciencedirect.com/science/article/pii/S0889157517300418>
+- <https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2824>
+
+- Fry AC et al. 2003. Effect of knee position on hip and knee torques during the barbell squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/14636100) doi:[10.1519/1533-4287(2003)017<0629:eokpoh>2.0.co;2](https://doi.org/10.1519/1533-4287(2003)017<0629:eokpoh>2.0.co;2)
+- List R et al. 2013. Kinematics of the trunk and the lower extremities during restricted and unrestricted squats. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22990570) doi:[10.1519/JSC.0b013e3182736034](https://doi.org/10.1519/JSC.0b013e3182736034)
+
+- Shishehbor F et al. 2017. Vinegar consumption can attenuate postprandial glucose and insulin responses; a systematic review and meta-analysis of clinical trials. *Diabetes Res Clin Pract*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28292654) doi:[10.1016/j.diabres.2017.01.021](https://doi.org/10.1016/j.diabres.2017.01.021)
+- Darzi J et al. 2014. Influence of the tolerability of vinegar as an oral source of short-chain fatty acids on appetite control and food intake. *Int J Obes (Lond)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23979220) doi:[10.1038/ijo.2013.157](https://doi.org/10.1038/ijo.2013.157)
+- Kondo T et al. 2009. Vinegar intake reduces body weight, body fat mass, and serum triglyceride levels in obese Japanese subjects. *Biosci Biotechnol Biochem*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19661687) doi:[10.1271/bbb.90231](https://doi.org/10.1271/bbb.90231)
+- Mandel L 2005. Dental erosion due to wine consumption. *J Am Dent Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15693499) doi:[10.14219/jada.archive.2005.0029](https://doi.org/10.14219/jada.archive.2005.0029)
+
+- Siler SQ et al. 1999. De novo lipogenesis, lipid kinetics, and whole-body lipid balances in humans after acute alcohol consumption. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10539756) doi:[10.1093/ajcn/70.5.928](https://doi.org/10.1093/ajcn/70.5.928)
+- Parr EB et al. 2014. Alcohol ingestion impairs maximal post-exercise rates of myofibrillar protein synthesis following a single bout of concurrent training. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24533082) doi:[10.1371/journal.pone.0088384](https://doi.org/10.1371/journal.pone.0088384)
+- Duplanty AA et al. 2017. Effect of Acute Alcohol Ingestion on Resistance Exercise-Induced mTORC1 Signaling in Human Muscle. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27135475) doi:[10.1519/JSC.0000000000001468](https://doi.org/10.1519/JSC.0000000000001468)

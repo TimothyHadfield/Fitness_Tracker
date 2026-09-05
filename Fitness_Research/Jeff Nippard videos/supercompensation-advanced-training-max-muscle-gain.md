@@ -61,3 +61,15 @@ Published April 2019, covered in the MASS Research Review (Helms and Greg Nuckol
 - One study, in untrained subjects, using an unusual BFR protocol at extreme frequency — generalising to trained lifters doing normal loaded training is a leap.
 - Biopsy and ultrasound findings conflicted within the same study.
 - Nippard explicitly says he is **not comfortable broadly recommending overreaching cycles to force supercompensation** at this point.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Main study discussed**
+
+- Bjørnsen T et al. 2019. Delayed myonuclear addition, myofiber hypertrophy, and increases in strength with high-frequency low-load blood flow restricted training to volitional failure. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30543499) doi:[10.1152/japplphysiol.00397.2018](https://doi.org/10.1152/japplphysiol.00397.2018)
+
+**Other works cited**
+
+- Halson SL & Jeukendrup AE 2004. Does overtraining exist? An analysis of overreaching and overtraining research. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15571428) doi:[10.2165/00007256-200434140-00003](https://doi.org/10.2165/00007256-200434140-00003)

@@ -63,3 +63,7 @@ On grip and posture manipulation generally: Nippard isn't a fan of tweaking grip
 ## Caveats & unknowns
 - The EMG data is a single solo experiment by one researcher (Contreras, 2010); EMG activation is not a direct proxy for hypertrophy.
 - Optimal depth is individual — "slightly below 90 degrees" for some, and anyone with shoulder issues should not force upper-arm-parallel depth.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

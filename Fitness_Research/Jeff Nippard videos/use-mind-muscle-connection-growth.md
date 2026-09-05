@@ -42,3 +42,16 @@ Results: significantly more biceps hypertrophy in the internal focus group — o
 
 ## Caveats & unknowns
 One study, 27 untrained subjects, eight weeks, two exercises. Whether the biceps effect generalises to trained lifters, to other muscles, or to compound movements is unresolved. Whether lower-body internal focus becomes effective with training experience is Nippard's inference, not a finding. This was a new research area at the time of the video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Main study discussed**
+
+- Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29533715) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)
+
+**Others**
+
+- ResearchGate — <https://www.researchgate.net/publication/271992035_Attentional_focus_and_motor_learning_A_review_of_15_years>
+- Snyder BJ & Fry WR 2012. Effect of verbal instruction on muscle activity during the bench press exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22076100) doi:[10.1519/JSC.0b013e31823f8d11](https://doi.org/10.1519/JSC.0b013e31823f8d11)

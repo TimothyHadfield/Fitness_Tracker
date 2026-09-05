@@ -49,3 +49,7 @@ Curls: ~15-20 reps, then a cluster to finish.
 - No research is cited; the whole video is applied practice and coaching cues from one natural pro bodybuilder.
 - Cluster work is presented as a time-efficiency and fatigue-management tool, not as demonstrably superior to straight sets.
 - The transcript's auto-captions garble several exchanges during the sets, so some incidental cues may be missing.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

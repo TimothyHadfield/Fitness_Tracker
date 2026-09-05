@@ -51,3 +51,11 @@ For a committed bear mode adherent this may not matter, since the goal was never
 - The Garthe study is one 8-12 week trial in elite athletes; longer-term differences are unknown.
 - Researcher name is garbled in the auto-captions ("Garth") — most likely Garthe et al., but treat the spelling as uncertain.
 - Jeff showed on-screen general recommendations for bear mode vs. lean bulk setups that are not spoken in the transcript and so aren't captured here.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://www.tandfonline.com/doi/full/10.1080/17461391.2011.643923>

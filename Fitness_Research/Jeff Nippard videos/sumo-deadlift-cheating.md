@@ -46,3 +46,19 @@ The only real differences: quads work somewhat harder in sumo; spinal erectors w
 - Why sumo suits lighter lifters is theorized (mobility, limb proportions, height) rather than established.
 - Female competition data is less clear-cut than male data.
 - The ROM measurements are two anecdotal cases (Nippard and a tall gym-goer), not a study.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**ROM**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2286003/posts/7716578>
+
+**Biomechanics**
+
+- Escamilla RF et al. 2000. A three-dimensional biomechanical analysis of sumo and conventional style deadlifts. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/10912892/) doi:[10.1097/00005768-200007000-00013](https://doi.org/10.1097/00005768-200007000-00013)
+
+**EMG Research**
+
+- Escamilla RF et al. 2002. An electromyographic analysis of sumo and conventional style deadlifts. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11932579/) doi:[10.1097/00005768-200204000-00019](https://doi.org/10.1097/00005768-200204000-00019)

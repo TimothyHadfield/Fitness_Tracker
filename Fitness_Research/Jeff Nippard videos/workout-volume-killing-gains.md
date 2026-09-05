@@ -45,3 +45,12 @@ The logic behind preferring the fourth: pulling back slightly on effort costs al
 - The ~5-set per-session ceiling comes from rodent MPS data, and Nippard explicitly frames it as an assumption "for the sake of argument."
 - Barbalho's subjects were nominally experienced but strength data suggests they weren't, limiting generalisation to advanced lifters.
 - He acknowledges the topic is complex and the video may raise as many questions as it answers.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
+- Peterson MD et al. 2005. Applications of the dose-response for muscular strength development: a review of meta-analytic efficacy and reliability for designing training prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16287373) doi:[10.1519/R-16874.1](https://doi.org/10.1519/R-16874.1)

@@ -53,3 +53,20 @@ Notably, Dr Wolf had been training with **lengthened partials exclusively for a 
 
 ## Caveats & unknowns
 This is one 8-week study; a single null result shouldn't overturn nine prior studies favouring the stretched position. Effects may be exercise-specific and muscle-specific. The subject pool was experienced lifters, so the beginner literature still stands on its own. Jeff is an author on the study, which is a conflict of interest worth noting, though he had the results withheld from him until all statistics were finalised.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**In This Video**
+
+- Kassiano W et al. 2023. Greater Gastrocnemius Muscle Hypertrophy After Partial Range of Motion Training Performed at Long Muscle Lengths. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37015016/) doi:[10.1519/JSC.0000000000004460](https://doi.org/10.1519/JSC.0000000000004460)
+- Sato S et al. 2021. Elbow Joint Angles in Elbow Flexor Unilateral Resistance Exercise Training Determine Its Effects on Muscle Strength and Thickness of Trained and Non-trained Arms. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34616309/) doi:[10.3389/fphys.2021.734509](https://doi.org/10.3389/fphys.2021.734509)
+- McMahon G et al. 2014. Muscular adaptations and insulin-like growth factor-1 responses to resistance training are stretch-mediated. *Muscle Nerve*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23625461/) doi:[10.1002/mus.23884](https://doi.org/10.1002/mus.23884)
+- Pedrosa GF et al. 2023. Training in the Initial Range of Motion Promotes Greater Muscle Adaptations Than at Final in the Arm Curl. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36828324/) doi:[10.3390/sports11020039](https://doi.org/10.3390/sports11020039)
+- Pedrosa GF et al. 2022. Partial range of motion training elicits favorable improvements in muscular adaptations when carried out at long muscle lengths. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33977835/) doi:[10.1080/17461391.2021.1927199](https://doi.org/10.1080/17461391.2021.1927199)
+
+- Kassiano W et al. 2023. Greater Gastrocnemius Muscle Hypertrophy After Partial Range of Motion Training Performed at Long Muscle Lengths. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37015016/) doi:[10.1519/JSC.0000000000004460](https://doi.org/10.1519/JSC.0000000000004460)
+- Werkhausen A et al. 2021. Adaptations to explosive resistance training with partial range of motion are not inferior to full range of motion. *Scand J Med Sci Sports*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33465838/) doi:[10.1111/sms.13921](https://doi.org/10.1111/sms.13921)
+- Pedrosa GF et al. 2022. Partial range of motion training elicits favorable improvements in muscular adaptations when carried out at long muscle lengths. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33977835/) doi:[10.1080/17461391.2021.1927199](https://doi.org/10.1080/17461391.2021.1927199)
+- Goto M et al. 2019. Partial Range of Motion Exercise Is Effective for Facilitating Muscle Hypertrophy and Function Through Sustained Intramuscular Hypoxia in Young Trained Men. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31034463/) doi:[10.1519/JSC.0000000000002051](https://doi.org/10.1519/JSC.0000000000002051)

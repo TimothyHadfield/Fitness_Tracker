@@ -51,3 +51,38 @@ Nippard's own preference: **2x per week** — one heavy strength day in the **4-
 - Volume and frequency numbers come from Israetel's practical recommendations, not from a single trial; individual recovery capacity varies.
 - Nippard notes he personally squats little due to a previous injury, and that for hypertrophy there are no mandatory exercises.
 - 2017 video — the evidence base on depth, volume and exercise selection has moved on since.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Cadaveric Studies**
+
+- Woodley SJ et al. 2012. Articularis genus: an anatomic and MRI study in cadavers. *J Bone Joint Surg Am*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22218383) doi:[10.2106/JBJS.K.00157](https://doi.org/10.2106/JBJS.K.00157)
+- Grob K et al. 2016. A newly discovered muscle: The tensor of the vastus intermedius. *Clin Anat*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26732825) doi:[10.1002/ca.22680](https://doi.org/10.1002/ca.22680)
+
+**Front Squats**
+
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- Yavuz HU et al. 2015. Kinematic and EMG activities during front and back squat variations in maximum loads. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25630691) doi:[10.1080/02640414.2014.984240](https://doi.org/10.1080/02640414.2014.984240)
+
+**Squat Depth**
+
+- Bloomquist K et al. 2013. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23604798) doi:[10.1007/s00421-013-2642-7](https://doi.org/10.1007/s00421-013-2642-7)
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+
+**Squat Stance Width**
+
+- McCaw ST & Melrose DR 1999. Stance width and bar load effects on leg muscle activity during the parallel squat. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10188748) doi:[10.1097/00005768-199903000-00012](https://doi.org/10.1097/00005768-199903000-00012)
+- Paoli A et al. 2009. The effect of stance width on the electromyographical activity of eight superficial thigh muscles during back squat with different bar loads. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19130646) doi:[10.1519/jsc.0b013e3181876811](https://doi.org/10.1519/jsc.0b013e3181876811)
+- Escamilla RF et al. 2001. A three-dimensional biomechanical analysis of the squat during varying stance widths. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11404665) doi:[10.1097/00005768-200106000-00019](https://doi.org/10.1097/00005768-200106000-00019)
+- Ebben WP et al. 2009. Muscle activation during lower body resistance training. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18975260) doi:[10.1055/s-2008-1038785](https://doi.org/10.1055/s-2008-1038785)
+
+**EMG Activation on Lunges, Step Ups, Extensions, etc**
+
+- Ebben WP et al. 2009. Muscle activation during lower body resistance training. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18975260) doi:[10.1055/s-2008-1038785](https://doi.org/10.1055/s-2008-1038785)
+
+**Leg Extensions and Foot Position**
+
+- Stoutenberg M et al. 2005. The impact of foot position on electromyographical activity of the superficial quadriceps muscles during leg extension. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16437818) doi:[10.1519/r-16364.1](https://doi.org/10.1519/r-16364.1)
+- ResearchGate — <https://www.researchgate.net/publication/232217996_An_Electromyographical_Comparison_of_the_Squat_and_Knee_Extension_Exercises>

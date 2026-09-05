@@ -54,3 +54,12 @@ He dismisses the "train in the morning for growth hormone" argument: manipulatin
 - No extreme chronotypes were included, so the finding doesn't generalise to strong morning or night types.
 - The morning/evening difference only emerged after 12 weeks, and the mechanism is unconfirmed speculation.
 - The effect is described as "slightly better" — small relative to consistency and program quality.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Studies referenced**
+
+- Küüsmaa-Schildt M et al. 2017. Neuromuscular Adaptations to Combined Strength and Endurance Training: Order and Time-of-Day. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28704882) doi:[10.1055/s-0043-101376](https://doi.org/10.1055/s-0043-101376)
+- Küüsmaa M et al. 2016. Effects of morning versus evening combined strength and endurance training on physical performance, muscle hypertrophy, and serum hormone concentrations. *Appl Physiol Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27863207) doi:[10.1139/apnm-2016-0271](https://doi.org/10.1139/apnm-2016-0271)

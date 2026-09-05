@@ -95,3 +95,7 @@ The mechanism for body composition is indirect: what limits gains isn't grams of
 - Several names are garbled by the auto-captions: the fashionable stimulant discussed at [10:17] ("ton tea", most plausibly TeaCrine/theacrine) and the two tendon peptides, which Patel could not name on air. Treat these as unverified.
 - Patel repeatedly flags his own placebo susceptibility with nootropics and declines to endorse home-capping in his Examine.com capacity.
 - The vitamin D recommendation is explicitly Patel's reasoning from mechanism and trial-design limitations, not from direct muscle-gain evidence, which he concedes is weak.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

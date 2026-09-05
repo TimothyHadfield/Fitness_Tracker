@@ -67,3 +67,33 @@ Combine both movement patterns: a 2013 study found the **leg curl** slightly bet
 - Butt wink safety thresholds are genuinely unknown.
 - Whether high reps preferentially develop slow-twitch fibres is theoretical rather than established.
 - One cited author name is garbled by the captions and shouldn't be quoted without verification.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Warm Up**
+
+- Fradkin AJ et al. 2006. Does warming up prevent injury in sport? The evidence from randomised controlled trials?. *J Sci Med Sport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16679062) doi:[10.1016/j.jsams.2006.03.026](https://doi.org/10.1016/j.jsams.2006.03.026)
+
+**Squat**
+
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- Glassbrook DJ et al. 2017. A Review of the Biomechanical Differences Between the High-Bar and Low-Bar Back-Squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28570490) doi:[10.1519/JSC.0000000000002007](https://doi.org/10.1519/JSC.0000000000002007)
+- <https://www.ncbi.nlm.nih.gov/m/pubmed/7741618/>
+- Bloomquist K et al. 2013. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23604798) doi:[10.1007/s00421-013-2642-7](https://doi.org/10.1007/s00421-013-2642-7)
+- Caterisano A et al. 2002. The effect of back squat depth on the EMG activity of 4 superficial hip and thigh muscles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12173958)
+- McCaw ST & Melrose DR 1999. Stance width and bar load effects on leg muscle activity during the parallel squat. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10188748) doi:[10.1097/00005768-199903000-00012](https://doi.org/10.1097/00005768-199903000-00012)
+
+**RDL**
+
+- Ebben WP 2009. Hamstring activation during lower body resistance training exercises. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19417230) doi:[10.1123/ijspp.4.1.84](https://doi.org/10.1123/ijspp.4.1.84)
+- Zebis MK et al. 2013. Kettlebell swing targets semitendinosus and supine leg curl targets biceps femoris: an EMG study with rehabilitation implications. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22736206) doi:[10.1136/bjsports-2011-090281](https://doi.org/10.1136/bjsports-2011-090281)
+
+**Lunge**
+
+- Ebben WP et al. 2009. Muscle activation during lower body resistance training. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18975260) doi:[10.1055/s-2008-1038785](https://doi.org/10.1055/s-2008-1038785)
+
+**Leg Extension**
+
+- Stoutenberg M et al. 2005. The impact of foot position on electromyographical activity of the superficial quadriceps muscles during leg extension. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16437818) doi:[10.1519/r-16364.1](https://doi.org/10.1519/r-16364.1)

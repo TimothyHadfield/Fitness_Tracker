@@ -41,3 +41,14 @@ Yes, essentially. Absorption is limited by the transporters in the small intesti
 - The Levine NEAT data was collected over 8 weeks of chronic overfeeding; how much NEAT actually rises within a single 12-hour window is unknown, which is why the estimate is deliberately conservative.
 - The Horton et al. design used *pure* carb or *pure* fat surpluses; a real-world mixed day is being interpolated, not measured.
 - No body composition measurement was done — this is arithmetic, not a DEXA result.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3302369/>
+- Horton TJ et al. 1995. Fat and carbohydrate overfeeding in humans: different effects on energy storage. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7598063) doi:[10.1093/ajcn/62.1.19](https://doi.org/10.1093/ajcn/62.1.19)
+- Lammert O et al. 2000. Effects of isoenergetic overfeeding of either carbohydrate or fat in young men. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11029975)
+- Levine JA et al. 1999. Role of nonexercise activity thermogenesis in resistance to fat gain in humans. *Science*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9880251) doi:[10.1126/science.283.5399.212](https://doi.org/10.1126/science.283.5399.212)
+- Kolaczynski JW et al. 1996. Response of leptin to short-term and prolonged overfeeding in humans. *J Clin Endocrinol Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8923877) doi:[10.1210/jcem.81.11.8923877](https://doi.org/10.1210/jcem.81.11.8923877)
+- Duchman SM et al. 1997. Upper limit for intestinal absorption of a dilute glucose solution in men at rest. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9107630) doi:[10.1097/00005768-199704000-00009](https://doi.org/10.1097/00005768-199704000-00009)

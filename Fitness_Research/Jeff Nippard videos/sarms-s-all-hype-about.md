@@ -51,3 +51,12 @@ Carpenter's summarising principle: if something promises to do something physiol
 - The discussion is deliberately general — no specific compound (ostarine, LGD-4033, etc.), dosing, or side-effect profile is covered.
 - The video is from 2018; the evidence base and legal status may have moved since.
 - The transcript garbles "SARMs" as "Psalms"/"sums"/"serums" throughout; the JAMA figures above are the reliable numbers in it.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2907129/>
+- <https://jamanetwork.com/journals/jama/fullarticle/2664459>

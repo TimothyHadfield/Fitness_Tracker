@@ -54,3 +54,18 @@ On bench angle: EMG data (researcher name garbled in the captions, sounds like "
 - The incline-vs-flat fly finding contradicts the general 45-degree incline advice; he keeps incline anyway on feel, which is a preference, not an evidence-backed call.
 - Upright row impingement risk is real for some people; the elbow-height guideline is a mitigation, not a guarantee.
 - One captioned researcher name for the bench-angle EMG data is garbled and should not be cited without checking the source.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1508143/>
+- ResearchGate — <https://www.researchgate.net/publication/321342593_Electromyography_of_Dumbbell_Fly_Exercise_Using_Different_Planes_and_Labile_Surfaces>
+- ResearchGate — <https://www.researchgate.net/publication/232210633_The_Upright_Row_Implications_for_Preventing_Subacromial_Impingement>
+- McAllister MJ et al. 2013. Effect of grip width on electromyographic activity during the upright row. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22362088) doi:[10.1519/JSC.0b013e31824f23ad](https://doi.org/10.1519/JSC.0b013e31824f23ad)
+- Trebs AA et al. 2010. An electromyography analysis of 3 muscles surrounding the shoulder joint during the performance of a chest press exercise at several angles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20512064) doi:[10.1519/JSC.0b013e3181ddfae7](https://doi.org/10.1519/JSC.0b013e3181ddfae7)
+- <https://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx>
+- Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23096062) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)
+- ResearchGate — <https://www.researchgate.net/publication/323740477_Differential_effects_of_attentional_focus_strategies_during_long-term_resistance_training>

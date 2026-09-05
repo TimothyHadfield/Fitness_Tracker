@@ -58,3 +58,14 @@ The most recent and comprehensive meta-analysis on frequency concluded **2× per
 - Optimal incline angle is presented as individual — 45° is a starting point, not a settled figure.
 - Whether 3+ sessions per week beats 2 is explicitly stated as unresolved.
 - Weekly set volume is not prescribed here; it is deferred to his program.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Akagi R et al. 2014. Relationship of pectoralis major muscle size with bench press and bench throw performances. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24169471) doi:[10.1519/JSC.0000000000000306](https://doi.org/10.1519/JSC.0000000000000306)
+- Schick EE et al. 2010. A comparison of muscle activation between a Smith machine and free weight bench press. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20093960) doi:[10.1519/JSC.0b013e3181cc2237](https://doi.org/10.1519/JSC.0b013e3181cc2237)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/>
+- Trebs AA et al. 2010. An electromyography analysis of 3 muscles surrounding the shoulder joint during the performance of a chest press exercise at several angles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20512064) doi:[10.1519/JSC.0b013e3181ddfae7](https://doi.org/10.1519/JSC.0b013e3181ddfae7)
+- Schoenfeld BJ 2010. The mechanisms of muscle hypertrophy and their application to resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20847704) doi:[10.1519/JSC.0b013e3181e840f3](https://doi.org/10.1519/JSC.0b013e3181e840f3)
+- Schoenfeld BJ et al. 2016. Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27102172) doi:[10.1007/s40279-016-0543-8](https://doi.org/10.1007/s40279-016-0543-8)

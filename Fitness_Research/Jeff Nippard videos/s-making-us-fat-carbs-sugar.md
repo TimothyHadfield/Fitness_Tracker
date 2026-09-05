@@ -79,3 +79,15 @@ Guyenet does not dismiss calorie counting — it works for many in the fitness c
 - Why some people burn off a surplus and others store it is largely unexplained beyond genetics and fitness level.
 - Whether food "addiction" meets the clinical definition remains controversial.
 - The sugar-down/obesity-up correlation is suggestive, not ironclad, and doesn't rule out sugar as one contributing factor.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**The DIETFITS Study**
+
+- <https://jamanetwork.com/journals/jama/fullarticle/2673150>
+
+**The Hall Meta-Analysis (Calorie A Calorie Study)**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5568065/>

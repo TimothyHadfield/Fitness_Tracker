@@ -55,3 +55,12 @@ Excellent complement: trains each arm individually (correcting asymmetries), and
 - The wide-grip long-head bias is explicitly Jeff's speculation, not evidence.
 - The 13% EMG figure comes from "one source" that isn't named in the transcript.
 - The Schoenfeld mind-muscle study is described only as an 8-week trial; no further detail given.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Schoenfeld's blog — <https://www.lookgreatnaked.com/blog/the-science-of-biceps-training/>
+- Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29533715) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)

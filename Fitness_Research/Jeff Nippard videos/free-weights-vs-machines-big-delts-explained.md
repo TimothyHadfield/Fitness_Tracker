@@ -63,3 +63,14 @@ On **one-arm dumbbell upright rows vs rope upright rows**: the dumbbell gives mo
 - The three free-weight-vs-machine studies **disagree**, and the outlier used a different press direction (vertical vs horizontal) and different loads — the discrepancy is not resolved.
 - Three of the six researcher names are garbled by the auto-captions (the 2015 incline paper, the 1994 press paper, the 2009 curl paper) — verify before citing.
 - The claim that machine press handles force greater front-delt bias is his reasoning, not a tested finding.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- <http://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx>
+- ResearchGate — <https://www.researchgate.net/publication/44639244_An_Electromyography_Analysis_of_3_Muscles_Surrounding_the_Shoulder_Joint_During_the_Performance_of_a_Chest_Press_Exercise_at_Several_Angles>
+- Lauver JD et al. 2016. Influence of bench angle on upper extremity muscular activation during bench press exercise. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25799093) doi:[10.1080/17461391.2015.1022605](https://doi.org/10.1080/17461391.2015.1022605)
+- Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23096062) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)
+- Schick EE et al. 2010. A comparison of muscle activation between a Smith machine and free weight bench press. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20093960) doi:[10.1519/JSC.0b013e3181cc2237](https://doi.org/10.1519/JSC.0b013e3181cc2237)
+- <http://journals.lww.com/nsca-jscr/Abstract/1994/11000/A_Comparison_of_Muscle_Activity_Between_a_Free.11.aspx>

@@ -80,3 +80,11 @@ Practical use:
 - The volume dose-response ceiling is unknown.
 - The motor-unit-recruitment rationale for drop sets is mechanistic theory, untested in training studies.
 - No studies on flexibility and hypertrophy that Jeff was aware of.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- ResearchGate — <https://www.researchgate.net/profile/Brad_Schoenfeld/publication/322133680_Can_Drop_Set_Training_Enhance_Muscle_Growth/links/5a48ec34458515f6b0581437/Can-Drop-Set-Training-Enhance-Muscle-Growth.pdf>

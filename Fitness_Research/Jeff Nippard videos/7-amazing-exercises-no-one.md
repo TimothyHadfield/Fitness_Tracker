@@ -76,3 +76,18 @@ Not better than barbell deadlifts, but easier to recover from, and the added sta
 - The spinal decompression benefit of dead hangs has mixed scientific evidence; the shoulder-mobility rationale is stronger.
 - He explicitly does not claim the Zottman variation or the deep rear delt stretch will dramatically increase gains — the framing is "not leaving gains on the table," not "double your growth."
 - Dumbbell lateral raises still work fine per recent research; the Y raise is a preference-driven improvement, not a correction of something broken.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Spinal Decompression Research**
+
+- ResearchGate — <https://www.researchgate.net/publication/376578891>
+- ResearchGate — <https://www.researchgate.net/publication/334463028>
+- Wegner I et al. 2013. Traction for low-back pain with or without sciatica. *Cochrane Database Syst Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23959683/) doi:[10.1002/14651858.CD003010.pub5](https://doi.org/10.1002/14651858.CD003010.pub5)
+- ResearchGate — <https://www.researchgate.net/publication/337039256>
+
+**Rows vs Curls**
+
+- Mannarino P et al. 2021. Single-Joint Exercise Results in Higher Hypertrophy of Elbow Flexors Than Multijoint Exercise. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31268995/) doi:[10.1519/JSC.0000000000003234](https://doi.org/10.1519/JSC.0000000000003234)

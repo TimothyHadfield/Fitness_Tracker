@@ -46,3 +46,7 @@ A fly is primarily **horizontal shoulder adduction** — bringing the arm across
 - Bench and dip drive chest size; add cable flies only to fill a volume or weak-point gap, placed at the end of the session.
 - 3 sets, 15-20 reps, cables set low for upper chest, scapulae locked, external rotation at the stretch and internal rotation at the finish.
 - Rotate cable height across sets to vary emphasis; save 21s for a finisher.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

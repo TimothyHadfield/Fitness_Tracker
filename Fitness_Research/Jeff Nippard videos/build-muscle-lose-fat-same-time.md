@@ -46,3 +46,12 @@ Ride the window as long as it lasts, but expect a point where fat gain starts ou
 - The 2015 recomp study was short (8 weeks) with imperfect body composition measurement.
 - The elite athlete study may have been confounded by relative inexperience with resistance training, and the effect concentrated in women.
 - The recomp window in advanced lifters is transient by nature — it cannot be a permanent programming strategy.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Antonio J et al. 2015. A high protein diet (3.4 g/kg/d) combined with a heavy resistance training program improves body composition in healthy trained men and women--a follow-up investigation. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26500462) doi:[10.1186/s12970-015-0100-0](https://doi.org/10.1186/s12970-015-0100-0)
+- Garthe I et al. 2013. Effect of nutritional intervention on body composition and performance in elite athletes. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23679146) doi:[10.1080/17461391.2011.643923](https://doi.org/10.1080/17461391.2011.643923)
+- Garthe I et al. 2011. Effect of two different weight-loss rates on body composition and strength and power-related performance in elite athletes. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21558571) doi:[10.1123/ijsnem.21.2.97](https://doi.org/10.1123/ijsnem.21.2.97)
+- Helms ER et al. 2014. A systematic review of dietary protein during caloric restriction in resistance trained lean athletes: a case for higher intakes. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24092765) doi:[10.1123/ijsnem.2013-0054](https://doi.org/10.1123/ijsnem.2013-0054)

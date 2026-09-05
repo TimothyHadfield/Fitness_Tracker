@@ -59,3 +59,14 @@ Since the soleus is predominantly slow twitch, he prefers **15-20 reps** with th
 - Whether type I fibres actually respond better to light weight and high reps is **unresolved** — he cites papers on both sides and says the jury is out; his high-rep soleus preference is theoretical (size principle), not demonstrated.
 - The donkey calf raise ranking comes from a 2000 EMG book whose authors' names were garbled in the captions; verify before citing.
 - Splitting calves into two sessions is qualified as individual and dependent on your whole routine.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Kadi F et al. 2000. The expression of androgen receptors in human neck and limb muscles: effects of training and self-administration of androgenic-anabolic steroids. *Histochem Cell Biol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10664066) doi:[10.1007/s004180050003](https://doi.org/10.1007/s004180050003)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3404827/>
+- Netreba AI et al. 2007. Physiological effects of using the low intensity strength training without relaxation in single-joint and multi-joint movements. *Ross Fiziol Zh Im I M Sechenova*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17465271)
+- <http://link.springer.com/article/10.1007%2Fs00421-012-2339-3>
+- Albracht K et al. 2008. Assessment of muscle volume and physiological cross-sectional area of the human triceps surae muscle in vivo. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18555257) doi:[10.1016/j.jbiomech.2008.04.020](https://doi.org/10.1016/j.jbiomech.2008.04.020)
+- Thorstensson A et al. 1976. Effect of strength training on enzyme activities and fibre characteristics in human skeletal muscle. *Acta Physiol Scand*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/179278) doi:[10.1111/j.1748-1716.1976.tb10207.x](https://doi.org/10.1111/j.1748-1716.1976.tb10207.x)

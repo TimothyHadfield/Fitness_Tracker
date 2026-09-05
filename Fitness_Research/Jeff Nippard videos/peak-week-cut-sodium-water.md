@@ -95,3 +95,7 @@ The safety framing he closes on: people are taking diuretics and being hospitali
 - There is no established practical method for selectively increasing cutaneous transpiration — the tanning-bed and sunlight observations are personal anecdote.
 - Dermal thickness may vary between individuals and possibly genetically; the 0.5-3 mm figures are the commonly cited literature range.
 - Everything here excludes enhanced athletes, whose water retention profile differs because of anabolics and growth hormone.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

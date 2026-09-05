@@ -53,3 +53,31 @@ Not cleanly busted either way. Alcohol in moderation with calories controlled is
 - The sex differences come from small samples (the 2017 study used 10 men and 9 women).
 - The emergency-room testosterone data is observational, drawn from intoxicated patients, not a controlled dosing trial.
 - One study's lead author is uncertain from the auto-captions.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://academic.oup.com/ajcn/article/79/5/899S/4690223>
+
+**Fat Oxidation + Alcohol Consumption**
+
+- Siler SQ et al. 1999. De novo lipogenesis, lipid kinetics, and whole-body lipid balances in humans after acute alcohol consumption. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10539756) doi:[10.1093/ajcn/70.5.928](https://doi.org/10.1093/ajcn/70.5.928)
+
+**Alcohol and Appetite**
+
+- Yeomans MR 2010. Alcohol, appetite and energy balance: is alcohol intake a risk factor for obesity?. *Physiol Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20096714) doi:[10.1016/j.physbeh.2010.01.012](https://doi.org/10.1016/j.physbeh.2010.01.012)
+
+**Alcohol and Testosterone**
+
+- Sarkola T & Eriksson CJ 2003. Testosterone increases in men after a low dose of alcohol. *Alcohol Clin Exp Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12711931) doi:[10.1097/01.ALC.0000060526.43976.68](https://doi.org/10.1097/01.ALC.0000060526.43976.68)
+- Frias J et al. 2002. Effects of acute alcohol intoxication on pituitary-gonadal axis hormones, pituitary-adrenal axis hormones, beta-endorphin and prolactin in human adults of both sexes. *Alcohol Alcohol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11912073) doi:[10.1093/alcalc/37.2.169](https://doi.org/10.1093/alcalc/37.2.169)
+
+**Alcohol and Muscle Protein Synthesis**
+
+- Duplanty AA et al. 2017. Effect of Acute Alcohol Ingestion on Resistance Exercise-Induced mTORC1 Signaling in Human Muscle. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27135475) doi:[10.1519/JSC.0000000000001468](https://doi.org/10.1519/JSC.0000000000001468)
+- Steiner JL & Lang CH 2014. Alcohol impairs skeletal muscle protein synthesis and mTOR signaling in a time-dependent manner following electrically stimulated muscle contraction. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25257868) doi:[10.1152/japplphysiol.00180.2014](https://doi.org/10.1152/japplphysiol.00180.2014)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2651172/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3922864/>

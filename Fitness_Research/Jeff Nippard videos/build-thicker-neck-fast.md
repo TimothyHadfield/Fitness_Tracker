@@ -66,3 +66,7 @@ Jeff considers them largely redundant if you're already doing the above, but ack
 - The head harness segment is a sponsored recommendation — he states explicitly that no gear is mandatory.
 - The concussion-prevention claim is presented as an accepted rationale in athletic S&C rather than backed by a named study here.
 - Heavier neck loading than the 10–30 rep guidance is possible for some (the 90 lb example) but is deliberately not recommended for general trainees.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

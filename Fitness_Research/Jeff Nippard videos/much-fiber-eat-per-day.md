@@ -43,3 +43,7 @@ Calculate 10% of your carb target, floor it at 20 g, then fill it with whole foo
 - Satiety research is subjective and methodologically difficult; the null results are not conclusive.
 - Fiber is not essential, unlike vitamin C — the case for eating it is health benefits, not deficiency avoidance.
 - This is a 2014 video, and the viscous-fiber ranking is based on his own searches, not a formal database review.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

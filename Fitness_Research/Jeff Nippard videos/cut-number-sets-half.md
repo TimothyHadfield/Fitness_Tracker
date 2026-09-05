@@ -64,3 +64,38 @@ He reports that on high-volume workouts his attention taper mid-session — more
 - The volume meta-analyses genuinely do show more volume equals more growth on average — he is not claiming the research is wrong, only that its context (single muscles, maintenance calories, short duration) limits the application.
 - Whether low volume matches high volume over a year or more is still unknown.
 - He publicly reversed his previous position that training volume should not change when you start cutting.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Training Volume Guidelines**
+
+- ResearchGate — <https://www.researchgate.net/publication/353932034>
+- <https://journals.lww.com/nsca-scj/fulltext/2018/08000/evidence_based_guidelines_for_resistance_training.11.aspx>
+
+- Sooneste H et al. 2013. Effects of training volume on strength and hypertrophy in young men. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23249767/) doi:[10.1519/JSC.0b013e3182679215](https://doi.org/10.1519/JSC.0b013e3182679215)
+- Radaelli R et al. 2014. Time course of low- and high-volume strength training on neuromuscular adaptations and muscle quality in older women. *Age (Dordr)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24414336/) doi:[10.1007/s11357-013-9611-2](https://doi.org/10.1007/s11357-013-9611-2)
+- Schoenfeld BJ et al. 2019. Resistance Training Volume Enhances Muscle Hypertrophy but Not Strength in Trained Men. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30153194/) doi:[10.1249/MSS.0000000000001764](https://doi.org/10.1249/MSS.0000000000001764)
+- Rønnestad BR et al. 2007. Dissimilar effects of one- and three-set strength training on strength and muscle mass gains in upper and lower body in untrained subjects. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17313291/) doi:[10.1519/00124278-200702000-00028](https://doi.org/10.1519/00124278-200702000-00028)
+- Radaelli R et al. 2015. Dose-response of 1, 3, and 5 sets of resistance exercise on strength, local muscular endurance, and hypertrophy. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25546444/) doi:[10.1519/JSC.0000000000000758](https://doi.org/10.1519/JSC.0000000000000758)
+
+**2010 Volume Meta-Analysis**
+
+- Krieger JW 2010. Single vs. multiple sets of resistance exercise for muscle hypertrophy: a meta-analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20300012/) doi:[10.1519/JSC.0b013e3181d4d436](https://doi.org/10.1519/JSC.0b013e3181d4d436)
+
+**2016 Volume Meta-Analysis**
+
+- Schoenfeld BJ et al. 2017. Dose-response relationship between weekly resistance training volume and increases in muscle mass: A systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27433992/) doi:[10.1080/02640414.2016.1210197](https://doi.org/10.1080/02640414.2016.1210197)
+
+**Maintenance Volume Study**
+
+- Bickel CS et al. 2011. Exercise dosing to retain resistance training adaptations in young and older adults. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21131862/) doi:[10.1249/MSS.0b013e318207c15d](https://doi.org/10.1249/MSS.0b013e318207c15d)
+
+**2025 Low Volume Study**
+
+- Hermann T et al. 2025. Without Fail: Muscular Adaptations in Single-Set Resistance Training Performed to Failure or with Repetitions-in-Reserve. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/40249908/) doi:[10.1249/MSS.0000000000003728](https://doi.org/10.1249/MSS.0000000000003728)
+
+**2023 Proximity to Failure Meta-Analysis**
+
+- ResearchGate — <https://www.researchgate.net/publication/370837310>

@@ -47,3 +47,17 @@ Most of this work is animal research. It's a direction for future study, not a p
 
 ## Caveats & unknowns
 The nutritional-component research (citrus pectin, olestra) is mostly animal data with large gaps before anything resembling an evidence-based toxin elimination plan could exist. Populations with genuine high-level heavy metal or POP exposure are a different clinical question from the general public and aren't addressed here.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**The Klien & Kiat study**
+
+- ResearchGate — <https://www.researchgate.net/publication/269769478_Detox_diets_for_toxin_elimination_and_weight_management_A_critical_review_of_the_evidence>
+
+**Other works**
+
+- <https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/hexachlorobenzene>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1229349/pdf/cmaj_158_11_1422.pdf>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2600061/>

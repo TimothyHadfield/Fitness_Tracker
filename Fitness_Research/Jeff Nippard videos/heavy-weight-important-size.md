@@ -67,3 +67,11 @@ Hyping yourself up isn't bro science. There's real research on **music, positive
 - Whether the eccentric is truly the more anabolic contraction is **not fully established** in the literature.
 - The 20-30% of 1RM lower threshold comes from one 2018 study.
 - Whether a hype ritual helps is highly individual, and the ammonia salt evidence is weak.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Lasevicius T et al. 2018. Effects of different intensities of resistance training with equated volume load on muscle strength and hypertrophy. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29564973) doi:[10.1080/17461391.2018.1450898](https://doi.org/10.1080/17461391.2018.1450898)

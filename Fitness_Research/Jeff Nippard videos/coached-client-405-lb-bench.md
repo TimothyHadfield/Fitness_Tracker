@@ -51,3 +51,7 @@ Set up your warm-ups identically to your top set. Try a belt, wrist wraps, heele
 - The moderate-tuck recommendation is for raw strength — he considers the flared bodybuilding style fine for hypertrophy.
 - Radu Antonio's micro-injury account is described as a theory, not evidence.
 - Pat's surplus, program and technique changes were concurrent, so the 405 lb result can't be attributed to any single factor.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

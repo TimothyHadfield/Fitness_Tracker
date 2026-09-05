@@ -39,3 +39,7 @@ In a guest lecture for Brad Schoenfeld's exercise science class, Nippard ranked 
 - This is a single anecdotal case, not evidence about population-level risk; rhabdo from lifting is rare.
 - Nippard notes he isn't sure a formal diagnosis was recorded beyond the doctors saying "rhabdo."
 - No specific medical guidance on prevention, monitoring markers (e.g. CK), or return-to-training protocol is offered in the video.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

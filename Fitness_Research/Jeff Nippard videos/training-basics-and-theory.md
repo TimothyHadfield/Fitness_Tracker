@@ -77,4 +77,4 @@ Without overload you won't optimise growth — this is the core flaw in "muscle 
 
 ## References
 
-Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

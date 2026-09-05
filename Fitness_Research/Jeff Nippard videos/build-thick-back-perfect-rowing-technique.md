@@ -55,3 +55,7 @@ Upper chest against the top of an **incline bench** (padded with a towel or knee
 - Aim toward just under bodyweight for reps as a long-term strength target.
 - Rotate elbow angle within 45-65 degrees depending on whether you want more trap or more lat emphasis.
 - Swap in the Helms row at 12-15 reps if form breaks down, and add direct erector work if you use it as a full replacement.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

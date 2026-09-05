@@ -53,3 +53,14 @@ Run 3-5 full body sessions a week. Each session: warm up with light cardio, then
 
 ## Caveats & unknowns
 The no-load training evidence he cites was demonstrated in the biceps; extension to other muscle groups is his inference. He offers no rep prescriptions deliberately, since proximity to failure is the variable that matters. Nippard notes he is not an infectious disease expert and defers to public health authorities on COVID-19 itself.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Goldberg EL et al. 2019. Ketogenic diet activates protective γδ T cell responses against influenza virus infection. *Sci Immunol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31732517) doi:[10.1126/sciimmunol.aav2026](https://doi.org/10.1126/sciimmunol.aav2026)
+- Examine.com — <https://examine.com/topics/coronavirus/>
+- Ogasawara R et al. 2013. Comparison of muscle hypertrophy following 6-month of continuous and periodic strength training. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23053130) doi:[10.1007/s00421-012-2511-9](https://doi.org/10.1007/s00421-012-2511-9)
+- Counts BR et al. 2016. The acute and chronic effects of "NO LOAD" resistance training. *Physiol Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27329807) doi:[10.1016/j.physbeh.2016.06.024](https://doi.org/10.1016/j.physbeh.2016.06.024)

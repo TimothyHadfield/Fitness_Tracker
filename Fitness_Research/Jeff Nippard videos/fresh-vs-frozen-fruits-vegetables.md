@@ -51,3 +51,13 @@ Fresh produce varies enormously by itself. Something picked at a farmers' market
 - Cooking method is not covered in this video and can meaningfully change nutrient retention.
 - The nutrient differences reported are specific to particular food/nutrient pairings and don't generalise into a rule for all produce.
 - Researcher surname for the 2017 analysis is garbled in the auto-captions and should be verified.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://onlinelibrary.wiley.com/doi/abs/10.1002/jsfa.2825>
+- <https://academic.oup.com/ajcn/article/99/6/1525/4577499>
+- Examine.com — <https://examine.com/nutrition/fresh-vs-frozen-vs-canned-vegetables/>

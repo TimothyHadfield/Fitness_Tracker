@@ -44,3 +44,7 @@
 
 ## Caveats & unknowns
 This is an experience-based tips video with no studies cited — the recommendations are practical heuristics rather than evidence claims. The frequency-preserving and effort-substitution advice lines up with his usual reading of the hypertrophy literature, but no data is presented here that shortened travel blocks maintain muscle equally well.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

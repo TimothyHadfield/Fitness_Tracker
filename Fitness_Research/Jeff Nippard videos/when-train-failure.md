@@ -49,3 +49,12 @@ Volume-matched, failure training produced significantly more fatigue and longer-
 - The MASS reviewer is referred to only as "Eric" in the auto-captions (almost certainly one of the MASS authors, but the surname is never stated — treat the attribution as uncertain).
 - Jeff explicitly withholds his own position, noting the scientific community is split.
 - The Schoenfeld periodisation point comes from an unreleased interview and is described as an informal remark, not a study finding.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SCIENTIFIC REFERENCES**
+
+- Morán-Navarro R et al. 2017. Time course of recovery following resistance training leading or not to failure. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28965198) doi:[10.1007/s00421-017-3725-7](https://doi.org/10.1007/s00421-017-3725-7)
+- <https://link.springer.com/article/10.1007%2Fs40279-016-0509-x>

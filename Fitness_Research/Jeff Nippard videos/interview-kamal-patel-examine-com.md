@@ -90,3 +90,7 @@ His example of unknown genetic variation [24:56]: a study released days before t
 - Recorded April 2016. The microbiome literature, the EPA-only drug trial (subsequently REDUCE-IT) and omega-6 evidence have all moved since.
 - Details he flags as uncertain himself: Lovaza's manufacturer ("Pfizer, I think"); his adipose percentages ("let's say something like 50/30/20 — it's definitely less polyunsaturated than that"); the aspartame human sample ("four or seven").
 - The 18%/50 g figure and ~5% baseline are as stated; the 5% → 5.9% arithmetic is Nippard's.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -64,3 +64,17 @@ Rationale: work from Barbell (name likely garbled in the captions — treat as u
 - The eccentric-vs-concentric hypertrophy advantage and the metabolic-stress pathway are both areas where the evidence is suggestive rather than settled.
 - Foam rolling evidence is explicitly mixed; Jeff includes it on personal preference.
 - The "Barbell and colleagues 2001" citation is almost certainly a caption mangling of a researcher's name — verify before relying on it.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Behm DG & Chaouachi A 2011. A review of the acute effects of static and dynamic stretching on performance. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21373870) doi:[10.1007/s00421-011-1879-2](https://doi.org/10.1007/s00421-011-1879-2)
+- Schroeder AN & Best TM 2015. Is self myofascial release an effective preexercise and recovery strategy? A literature review. *Curr Sports Med Rep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25968853) doi:[10.1249/JSR.0000000000000148](https://doi.org/10.1249/JSR.0000000000000148)
+- ResearchGate — <https://www.researchgate.net/publication/232131783_The_Use_of_Specialized_Training_Techniques_to_Maximize_Muscle_Hypertrophy>
+- Fisher J, Steele J & Smith D 2013. Evidence-Based Resistance Training Recommendations for Muscular Hypertrophy. *Medicina Sportiva*. Not indexed in PubMed. doi:[10.5604/17342260.1081302](https://doi.org/10.5604/17342260.1081302)
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- Worrell TW et al. 2001. Influence of joint position on electromyographic and torque generation during maximal voluntary isometric contractions of the hamstrings and gluteus maximus muscles. *J Orthop Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11767248) doi:[10.2519/jospt.2001.31.12.730](https://doi.org/10.2519/jospt.2001.31.12.730)
+- Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26214739) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)

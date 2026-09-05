@@ -53,3 +53,11 @@ Use a moderate range, around **8-15 reps**. Loading heavier usually kills range 
 ## Caveats & unknowns
 - Programming variables like trap frequency and total volume, plus the contribution of deadlifts and rack pulls, are not covered here — Nippard points to his separate neck and traps "Science Explained" video.
 - The 1994 abduction study is cited without a named author in the transcript.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Johnson G et al. 1994. Anatomy and actions of the trapezius muscle. *Clin Biomech (Bristol)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23916077) doi:[10.1016/0268-0033(94)90057-4](https://doi.org/10.1016/0268-0033(94)90057-4)

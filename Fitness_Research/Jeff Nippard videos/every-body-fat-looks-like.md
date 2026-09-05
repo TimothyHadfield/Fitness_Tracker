@@ -66,3 +66,20 @@ Two subjects from the shoot (a 5.5% competitor and a 9% subject) had a viral alt
 - Genetic set range dominates. Two people at the same height, weight and body fat can have very different metabolisms and very different experiences of the same number.
 - Falling outside the ACSM ranges does not automatically make someone unhealthy.
 - Single-digit body fat for men and sub-15% for women are short-term states, not goals — he does not recommend them without a specific reason and a post-diet plan.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**DEXA Accuracy**
+
+- Borga M et al. 2018. Advanced body composition assessment: from body mass index to body composition profiling. *J Investig Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29581385/) doi:[10.1136/jim-2018-000722](https://doi.org/10.1136/jim-2018-000722)
+- Messina C et al. 2020. Body composition with dual energy X-ray absorptiometry: from basics to new tools. *Quant Imaging Med Surg*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32742961/) doi:[10.21037/qims.2020.03.02](https://doi.org/10.21037/qims.2020.03.02)
+
+**NHANES 2017-2018 Study**
+
+- Liu B et al. 2021. Trends in obesity and adiposity measures by race or ethnicity among adults in the United States 2011-18: population based study. *BMJ*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33727242/) doi:[10.1136/bmj.n365](https://doi.org/10.1136/bmj.n365)
+
+**Body Fat Ranges Research**
+
+- <https://www.sciencedirect.com/science/article/pii/S0002916523026990>

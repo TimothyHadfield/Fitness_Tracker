@@ -99,3 +99,7 @@ Corollary: limit muscle loss on the diet (sufficient protein, resistance trainin
 - He'd change his opinion on metabolic damage given human data, and a physiological "crack" in some individuals is conceivable. Drug effects on thyroid and the gonadal axis are outside his expertise. MPS-to-hypertrophy translation is unresolved and he declines a confident answer.
 - Names garbled by auto-captions, flagged as uncertain: "Dr LaVine" (almost certainly James Levine), "liel" (almost certainly Rudolph Leibel), "wor bomb" (Wernbom), "hakan" (Häkkinen), "Mike tare" (Mike Tuchscherer), "Martin Burkin" (Martin Berkhan), "Scott ael" (probably Scott Abel), "shonfeld" (Schoenfeld), "meno henselman" (Menno Henselmans).
 - Recorded April 2016; several of his caveats ("I haven't kept up with that literature") are time-stamped to then.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

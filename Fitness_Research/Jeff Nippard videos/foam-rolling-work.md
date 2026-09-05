@@ -39,3 +39,19 @@ Jeff leans toward the earlier studies for lifters, since 10x10 squats resembles 
 - Soreness ratings are subjective; some scales used in this literature are poorly constructed.
 - No good evidence that rolling beats or adds meaningfully to a dynamic warm-up and cool-down — the studies mostly compared rolling to *nothing*.
 - More high-quality research is needed before firm conclusions. Verdict: "not busted", but not special either.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Cheatham SW et al. 2015. THE EFFECTS OF SELF-MYOFASCIAL RELEASE USING A FOAM ROLL OR ROLLER MASSAGER ON JOINT RANGE OF MOTION, MUSCLE RECOVERY, AND PERFORMANCE: A SYSTEMATIC REVIEW. *Int J Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26618062)
+- Beardsley C & Škarabot J 2015. Effects of self-myofascial release: A systematic review. *J Bodyw Mov Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26592233) doi:[10.1016/j.jbmt.2015.08.007](https://doi.org/10.1016/j.jbmt.2015.08.007)
+- DʼAmico AP & Gillis J 2019. Influence of Foam Rolling on Recovery From Exercise-Induced Muscle Damage. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28902111) doi:[10.1519/JSC.0000000000002240](https://doi.org/10.1519/JSC.0000000000002240)
+- Jay K et al. 2014. Specific and cross over effects of massage for muscle soreness: randomized controlled trial. *Int J Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24567859)
+- Pearcey GE et al. 2015. Foam rolling for delayed-onset muscle soreness and recovery of dynamic performance measures. *J Athl Train*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25415413) doi:[10.4085/1062-6050-50.1.01](https://doi.org/10.4085/1062-6050-50.1.01)
+- Macdonald GZ et al. 2014. Foam rolling as a recovery tool after an intense bout of physical activity. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24343353) doi:[10.1249/MSS.0b013e3182a123db](https://doi.org/10.1249/MSS.0b013e3182a123db)
+- Rey E et al. 2019. Effects of Foam Rolling as a Recovery Tool in Professional Soccer Players. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29016479) doi:[10.1519/JSC.0000000000002277](https://doi.org/10.1519/JSC.0000000000002277)
+- Vigotsky AD et al. 2015. Acute effects of anterior thigh foam rolling on hip angle, knee angle, and rectus femoris length in the modified Thomas test. *PeerJ*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26421244) doi:[10.7717/peerj.1281](https://doi.org/10.7717/peerj.1281)
+- Schroeder AN & Best TM 2015. Is self myofascial release an effective preexercise and recovery strategy? A literature review. *Curr Sports Med Rep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25968853) doi:[10.1249/JSR.0000000000000148](https://doi.org/10.1249/JSR.0000000000000148)

@@ -73,3 +73,7 @@ His case for the slow phase:
 - His client cases are self-reported intake; he calls the "lost 10 lb going up to 350 g carbs" case one of the biggest outliers he has seen.
 - Little data on refeeds or diet breaks as competitors actually use them — existing work is mostly intermittent calorie restriction (severe deficit two days, maintenance five).
 - **Uncertain names from auto-captions:** "Alfred Dulu"/"Doo" (almost certainly Abdul Dulloo); "Brown Lell" (likely Brownell); "Scott Ael" (likely Scott Abel); "Dr. Corey Probes," quoted for "self-control is fatiguing"; "Dr. Megan Clabunde," an eating disorder specialist Norton interviewed. Captions also mangle Norton ("Elaine"), Fitschen ("Fitchen"), Henselmans ("Menow"), Bayesian Bodybuilding ("Beijian").
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

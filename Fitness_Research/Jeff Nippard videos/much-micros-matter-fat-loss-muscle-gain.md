@@ -51,3 +51,7 @@ So if your diet is bad enough to produce these deficiencies, then yes, food choi
 - The Cliff Wilson claim is coaching experience, not controlled data.
 - The metabolic ward studies on individual carb/fat response are referenced but not named.
 - No specific micronutrient doses or supplement protocols are given.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -85,3 +85,7 @@ Helms notes totals converge more than they sound: 2 g × 2 on top of a diet alre
 - Theobald's enhanced protocols involve prescription drugs and are reported, not endorsed; he flags loop diuretics as potentially lethal.
 - Garbled names flagged as uncertain: the diuretic ("DIY"/"diai," likely Dyazide), "Dan Dukan" (likely Dan Duchaine), "skip Lor" (likely Skip Hill), "Brad Lumis" (likely Brad Loomis), "wbf" (likely WNBF).
 - Recorded 2016; consensus on water and sodium manipulation has moved since.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

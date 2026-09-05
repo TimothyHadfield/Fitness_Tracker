@@ -68,3 +68,13 @@ Apart from cable, band and machine variations, Jeff doesn't think there's much o
 - Whether the dumbbell's inconsistent resistance curve matters for hypertrophy is unclear.
 - The pinky-up internal rotation cue carries a possible impingement risk per research Jeff references but does not name.
 - Greg Nuckols' multi-rotation suggestion is offered as an idea worth trying, not an evidenced protocol.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- McMahon PJ et al. 1995. Shoulder muscle forces and tendon excursions during glenohumeral abduction in the scapular plane. *J Shoulder Elbow Surg*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7552678) doi:[10.1016/s1058-2746(05)80052-7](https://doi.org/10.1016/s1058-2746(05)80052-7)
+- Solem-Bertoft E et al. 1993. The influence of scapular retraction and protraction on the width of the subacromial space. An MRI study. *Clin Orthop Relat Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8222458)
+- Jobe FW & Moynes DR 1982. Delineation of diagnostic criteria and a rehabilitation program for rotator cuff injuries. *Am J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7180952) doi:[10.1177/036354658201000602](https://doi.org/10.1177/036354658201000602)

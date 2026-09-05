@@ -47,3 +47,7 @@ Two more posterior muscles, both originating on the cervical vertebrae:
 - The video is framed as the **setup for a 6-month self-experiment (n=1)**, and he says outright he doesn't know whether the 15-inch target is possible. **No follow-up results are in this video.**
 - Auto-caption garbling of anatomical terms was heavy ("stero CL mastoid", "spenis capitus", "master wave process"); names above are the standard corrected spellings.
 - No discussion of safety, contraindications, loading progression, or neck-training risk.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

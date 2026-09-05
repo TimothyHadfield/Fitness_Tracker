@@ -63,3 +63,12 @@ Technique cues: no resting between reps, keep hands and forearms as loose as pos
 
 ## Caveats & unknowns
 The bench-only hypertrophy claim and the 2012 bench/pec-thickness study come via the Strength & Conditioning Research database summary rather than direct citation; the rep-speed finding is reported via a Stronger by Science write-up of a 2014 paper, and neither paper's authors are named in the video. The forced-negative rationale from Schoenfeld is described as "may elicit" additional stimulus, not as an established effect.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/>
+- <https://journals.lww.com/nsca-scj/Fulltext/2011/08000/The_Use_of_Specialized_Training_Techniques_to.11.aspx>

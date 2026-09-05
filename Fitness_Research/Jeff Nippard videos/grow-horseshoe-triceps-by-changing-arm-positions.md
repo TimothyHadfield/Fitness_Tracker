@@ -47,3 +47,7 @@ Test it yourself: bring your arm from in front of you to behind you and feel the
 
 ## Caveats & unknowns
 EMG data disagree on whether flexed positions really bias the long head and extended positions the lateral head, so the "use variety" recommendation is a hedge against that uncertainty rather than a proven targeting protocol. The claim that ~90 degrees of shoulder flexion is optimal for long-head activation comes from the Strength & Conditioning Research database summary, not a named individual study.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

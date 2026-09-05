@@ -54,3 +54,19 @@ Build a chest session around a heavy overloading press (bench, or a good machine
 - The rankings are Nippard's own and weighted partly by personal enjoyment — his #8 could legitimately be your #1.
 - Research on weighted stretching is described as inconsistent, though long-muscle-length training itself has convincing support.
 - Machine quality and fit vary enormously; a machine that doesn't suit your body may not deserve its high rank for you.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Weighted Stretch Training**
+
+- Nunes JP et al. 2020. Does stretch training induce muscle hypertrophy in humans? A review of the literature. *Clin Physiol Funct Imaging*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31984621/) doi:[10.1111/cpf.12622](https://doi.org/10.1111/cpf.12622)
+
+**Training at long muscle lengths**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6977096/>
+
+**Incline Bench (Upper Chest) Study**
+
+- Chaves SFN et al. 2020. Effects of Horizontal and Incline Bench Press on Neuromuscular Adaptations in Untrained Young Men. *Int J Exerc Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32922646/) doi:[10.70252/FDNB1158](https://doi.org/10.70252/FDNB1158)

@@ -51,3 +51,12 @@ Combining the two: of the six-rep gap in the main study, roughly three reps come
 - Findings are bench press specific in trained-but-not-advanced men; behaviour on other lifts may differ.
 - Even the video's demo subject, coached and watched, likely stopped short of genuine failure — reinforcing how hard true failure is to reach.
 - The video is built on a review article by **Eric Helms** in MASS.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29112055) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5712461/>

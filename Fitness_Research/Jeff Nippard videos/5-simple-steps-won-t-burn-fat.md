@@ -55,3 +55,12 @@ The video was triggered by Hyman's post that "too many people are counting calor
 - Several studies are cited by year and journal only, without author names.
 - The 78-police-officer carb-timing study is presented as a counter-example rather than as a strong recommendation — Nippard explicitly calls it noise relative to energy balance.
 - The antioxidant position is that evidence is currently insufficient, not that antioxidants are useless.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Buchholz AC & Schoeller DA 2004. Is a calorie a calorie?. *Am J Clin Nutr*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/15113737) doi:[10.1093/ajcn/79.5.899S](https://doi.org/10.1093/ajcn/79.5.899S)
+- Sofer S et al. 2011. Greater weight loss and hormonal changes after 6 months diet with carbohydrates eaten mostly at dinner. *Obesity (Silver Spring)*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/21475137) doi:[10.1038/oby.2011.48](https://doi.org/10.1038/oby.2011.48)
+- Dhurandhar EJ et al. 2014. The effectiveness of breakfast recommendations on weight loss: a randomized controlled trial. *Am J Clin Nutr*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/24898236) doi:[10.3945/ajcn.114.089573](https://doi.org/10.3945/ajcn.114.089573)
+- Examine.com — <http://examine.com/supplements/Green+Tea+Catechins/>

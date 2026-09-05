@@ -47,3 +47,17 @@ In a large review on the topic, **static stretching produced numerous performanc
 - 17% of warm-ups in the meta-analysis reduced performance, usually when too long, too hard, or mismatched to the activity.
 - Several researcher names were mangled by the auto-captions and are flagged above; verify before citing.
 - The interference of treadmill work on lower body training is asserted from "some research" without a named source.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Upper Body**
+
+- Barroso R et al. 2013. The effects of different intensities and durations of the general warm-up on leg press 1RM. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22692116) doi:[10.1519/JSC.0b013e3182606cd9](https://doi.org/10.1519/JSC.0b013e3182606cd9)
+- Fradkin AJ et al. 2010. Effects of warming-up on physical performance: a systematic review with meta-analysis. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19996770) doi:[10.1519/JSC.0b013e3181c643a0](https://doi.org/10.1519/JSC.0b013e3181c643a0)
+- Shellock FG & Prentice WE 1985. Warming-up and stretching for improved physical performance and prevention of sports-related injuries. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/3849057) doi:[10.2165/00007256-198502040-00004](https://doi.org/10.2165/00007256-198502040-00004)
+- Behm DG & Chaouachi A 2011. A review of the acute effects of static and dynamic stretching on performance. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21373870) doi:[10.1007/s00421-011-1879-2](https://doi.org/10.1007/s00421-011-1879-2)
+- MacDonald GZ et al. 2013. An acute bout of self-myofascial release increases range of motion without a subsequent decrease in muscle activation or force. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22580977) doi:[10.1519/JSC.0b013e31825c2bc1](https://doi.org/10.1519/JSC.0b013e31825c2bc1)
+- Guszkowska M 2004. Effects of exercise on anxiety, depression and mood. *Psychiatr Pol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15518309)
+- Wilson JM et al. 2012. Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22002517) doi:[10.1519/JSC.0b013e31823a3e2d](https://doi.org/10.1519/JSC.0b013e31823a3e2d)

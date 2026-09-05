@@ -121,3 +121,7 @@ Helms' counter [67:30]: the lifter can't distinguish 0.4 from 0.5, so give them 
 - Volume-tolerance-by-muscle claims are coaching observation plus a plausible stretch-position mechanism, not tested findings.
 - **Caption name uncertainty:** "Preger 2009" is almost certainly **Krieger 2009** (flagged uncertain); "worb bomb/warn bomb" = **Wernbom** (2007); "Brad Shanfield" = **Brad Schoenfeld**; "Andrew Vagotssky" = **Andrew Vigotsky**; "Menow Henselman's" = **Menno Henselmans**; "Lyall McDonald" = **Lyle McDonald**; "String Theory" = Nuckols' site **Strength Theory**.
 - Nuckols' segment (~[54:00]–[61:00]) is visual; the numeric points above are the substance, but the video is needed to see the curves.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

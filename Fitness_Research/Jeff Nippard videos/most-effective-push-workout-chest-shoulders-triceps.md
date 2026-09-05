@@ -69,3 +69,17 @@ Not strictly a push movement, but included for postural support and to prevent o
 - Much of the exercise selection rests on **EMG activation** data, which is a proxy for, not a measure of, hypertrophy.
 - Several researcher names are badly garbled in the auto-captions and should be verified before citing.
 - The decline/arch EMG study did not use relative loading, so its result may reflect heavier absolute loads rather than superior mechanics.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Akagi R et al. 2014. Relationship of pectoralis major muscle size with bench press and bench throw performances. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24169471) doi:[10.1519/JSC.0000000000000306](https://doi.org/10.1519/JSC.0000000000000306)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/>
+- <https://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx>
+- Trebs AA et al. 2010. An electromyography analysis of 3 muscles surrounding the shoulder joint during the performance of a chest press exercise at several angles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20512064) doi:[10.1519/JSC.0b013e3181ddfae7](https://doi.org/10.1519/JSC.0b013e3181ddfae7)
+- ResearchGate — <https://www.researchgate.net/publication/44639244_An_Electromyography_Analysis_of_3_Muscles_Surrounding_the_Shoulder_Joint_During_the_Performance_of_a_Chest_Press_Exercise_at_Several_Angles>
+- Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23096062) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)
+- McMahon PJ et al. 1995. Shoulder muscle forces and tendon excursions during glenohumeral abduction in the scapular plane. *J Shoulder Elbow Surg*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7552678) doi:[10.1016/s1058-2746(05)80052-7](https://doi.org/10.1016/s1058-2746(05)80052-7)

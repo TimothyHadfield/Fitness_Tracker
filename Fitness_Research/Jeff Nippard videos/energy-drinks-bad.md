@@ -55,3 +55,11 @@ The actual active ingredient, and it works — strong evidence for increased ale
 - Ingredient *interactions* haven't been well studied. Examine notes a possible sugar-caffeine interaction that acutely raises cardiac workload; the evidence is weak, and severity would scale with dose and health status.
 - Whether the residual risk is acceptable is partly a personal risk-tolerance call, not purely an evidence one.
 - 2018 video; market and formulation data are dated (energy drink market cited at $12 billion US, projected to double by 2025).
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Examine.com — <https://examine.com/nutrition/are-energy-drinks-bad-for-you/>
+- Reay JL et al. 2010. Panax ginseng (G115) improves aspects of working memory performance and subjective ratings of calmness in healthy young adults. *Hum Psychopharmacol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20737519) doi:[10.1002/hup.1138](https://doi.org/10.1002/hup.1138)
+- Lee NH & Son CG 2011. Systematic review of randomized controlled trials evaluating the efficacy and safety of ginseng. *J Acupunct Meridian Stud*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21704950) doi:[10.1016/S2005-2901(11)60013-7](https://doi.org/10.1016/S2005-2901(11)60013-7)

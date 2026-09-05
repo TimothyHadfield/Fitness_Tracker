@@ -47,3 +47,18 @@ Growth from a set taken to failure is very similar to one leaving 1-2 reps in th
 
 ## Caveats & unknowns
 The meta-analysis showing frequency doesn't matter at equated volume sits awkwardly beside the MPS-timecourse argument for higher frequency; his resolution is that frequency matters mainly because it makes higher weekly volume and better per-set performance achievable. The 2015 low- vs high-load study and the three spot-reduction studies are not named by author in the video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Spot reduction references here**
+
+- Gwinup G et al. 1971. Thickness of subcutaneous fat and activity of underlying muscles. *Ann Intern Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/5552114) doi:[10.7326/0003-4819-74-3-408](https://doi.org/10.7326/0003-4819-74-3-408)
+- Vispute SS et al. 2011. The effect of abdominal exercise on abdominal fat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21804427) doi:[10.1519/JSC.0b013e3181fb4a46](https://doi.org/10.1519/JSC.0b013e3181fb4a46)
+- Kostek MA et al. 2007. Subcutaneous fat alterations resulting from an upper-body resistance training program. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17596787) doi:[10.1249/mss.0b0138058a5cb](https://doi.org/10.1249/mss.0b0138058a5cb)
+- Ramírez-Campillo R et al. 2013. Regional fat changes induced by localized muscle endurance resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23222084) doi:[10.1519/JSC.0b013e31827e8681](https://doi.org/10.1519/JSC.0b013e31827e8681)
+- Scotto di Palumbo A et al. 2017. Effect of combined resistance and endurance exercise training on regional fat loss. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28497942) doi:[10.23736/S0022-4707.16.06358-1](https://doi.org/10.23736/S0022-4707.16.06358-1)
+
+- Barbalho M et al. 2019. Evidence for an Upper Threshold for Resistance Training Volume in Trained Women. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30779716) doi:[10.1249/MSS.0000000000001818](https://doi.org/10.1249/MSS.0000000000001818)
+- Schoenfeld BJ et al. 2019. How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30558493) doi:[10.1080/02640414.2018.1555906](https://doi.org/10.1080/02640414.2018.1555906)

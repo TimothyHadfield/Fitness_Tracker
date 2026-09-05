@@ -51,3 +51,21 @@ Result: the cycling group gained more muscle mass and more strength than the col
 - The mechanism by which cold reduces soreness is unknown.
 - Timing was not examined here: cold applied hours away from training may not carry the same adaptation cost as cold applied immediately post-session.
 - Video is from 2018; newer work exists.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- ResearchGate — <https://www.researchgate.net/publication/305212577_Recovery_From_Exercise-Induced_Muscle_Damage_Cold_Water_Immersion_Versus_Whole_Body_Cryotherapy>
+- Urso ML 2013. Anti-inflammatory interventions and skeletal muscle injury: benefit or detriment?. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23539314) doi:[10.1152/japplphysiol.00036.2013](https://doi.org/10.1152/japplphysiol.00036.2013)
+- Leeder J et al. 2012. Cold water immersion and recovery from strenuous exercise: a meta-analysis. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21947816) doi:[10.1136/bjsports-2011-090061](https://doi.org/10.1136/bjsports-2011-090061)
+- Bleakley C et al. 2012. Cold-water immersion (cryotherapy) for preventing and treating muscle soreness after exercise. *Cochrane Database Syst Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22336838) doi:[10.1002/14651858.CD008262.pub2](https://doi.org/10.1002/14651858.CD008262.pub2)
+- Peake JM 2017. Cryotherapy: Are we freezing the benefits of exercise?. *Temperature (Austin)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28944266) doi:[10.1080/23328940.2017.1304194](https://doi.org/10.1080/23328940.2017.1304194)
+- Poppendieck W et al. 2013. Cooling and performance recovery of trained athletes: a meta-analytical review. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23434565) doi:[10.1123/ijspp.8.3.227](https://doi.org/10.1123/ijspp.8.3.227)
+- Roberts LA et al. 2015. Post-exercise cold water immersion attenuates acute anabolic signalling and long-term adaptations in muscle to strength training. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26174323) doi:[10.1113/JP270570](https://doi.org/10.1113/JP270570)
+- Cheng AJ et al. 2017. Post-exercise recovery of contractile function and endurance in humans and mice is accelerated by heating and slowed by cooling skeletal muscle. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28980321) doi:[10.1113/JP274870](https://doi.org/10.1113/JP274870)
+- <http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0139028>
+- Peake JM et al. 2017. The effects of cold water immersion and active recovery on inflammation and cell stress responses in human skeletal muscle after resistance exercise. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27704555) doi:[10.1113/JP272881](https://doi.org/10.1113/JP272881)
+- Rose C et al. 2017. Whole-body Cryotherapy as a Recovery Technique after Exercise: A Review of the Literature. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29161748) doi:[10.1055/s-0043-114861](https://doi.org/10.1055/s-0043-114861)

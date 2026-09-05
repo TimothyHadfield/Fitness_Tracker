@@ -57,3 +57,11 @@ He credits **Eric Helms (3DMJ)** with a more detailed treatment and summarizes t
 - This is a 2015 video reflecting Jeff's personal practice and reasoning; no studies are cited beyond a pointer to Eric Helms's video.
 - The autoregulation acronym is garbled in the auto-captions; the percentages and logic above are as stated, the name is not reliable.
 - Not every block needs more volume than the last — that is the point about non-linear macro planning, and it means "add something every week" applies within a mesocycle, not forever.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**For more on DAPRE**
+
+- Barthel W & Markwardt F 1975. Aggregation of blood platelets by adrenaline and its uptake. *Biochem Pharmacol*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/20) doi:[10.1016/0006-2952(75)90415-3](https://doi.org/10.1016/0006-2952(75)90415-3)

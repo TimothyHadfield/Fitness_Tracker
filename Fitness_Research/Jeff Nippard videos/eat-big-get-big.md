@@ -49,3 +49,18 @@ The deeper problem is emphasis. "Eat big" implies calories cause growth. They do
 - The optimal protein intake for body recomposition specifically is not well established; Jeff's willingness to exceed 1 g/lb there is judgment, not settled data.
 - The 20–40 g per-meal cap varies by study and has more nuance than a single number (meal composition, total daily intake, training status).
 - The 2011 paper Jeff prefers over the newer 1.6 g/kg estimate is not named in the transcript.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Garthe I et al. 2013. Effect of nutritional intervention on body composition and performance in elite athletes. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23679146) doi:[10.1080/17461391.2011.643923](https://doi.org/10.1080/17461391.2011.643923)
+- Gorissen SH et al. 2014. Carbohydrate coingestion delays dietary protein digestion and absorption but does not modulate postprandial muscle protein accretion. *J Clin Endocrinol Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24628553) doi:[10.1210/jc.2013-3970](https://doi.org/10.1210/jc.2013-3970)
+- Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28698222) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
+- Parkin JA et al. 1997. Muscle glycogen storage following prolonged exercise: effect of timing of ingestion of high glycemic index food. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9044226) doi:[10.1097/00005768-199702000-00009](https://doi.org/10.1097/00005768-199702000-00009)
+- Phillips SM & Van Loon LJ 2011. Dietary protein for athletes: from requirements to optimum adaptation. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22150425) doi:[10.1080/02640414.2011.619204](https://doi.org/10.1080/02640414.2011.619204)
+- ResearchGate — <https://www.researchgate.net/publication/331071618_Effects_of_different_dietary_energy_intake_following_resistance_training_on_muscle_mass_and_body_fat_in_bodybuilders_a_pilot_study>
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0215-1>
+- Trommelen J et al. 2015. MECHANISMS IN ENDOCRINOLOGY: Exogenous insulin does not increase muscle protein synthesis rate when administered systemically: a systematic review. *Eur J Endocrinol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25646407) doi:[10.1530/EJE-14-0902](https://doi.org/10.1530/EJE-14-0902)

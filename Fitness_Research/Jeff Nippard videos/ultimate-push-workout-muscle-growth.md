@@ -51,3 +51,18 @@ Bench 1×3-5 (near max) → Larson press 2×10 @75% → Arnold press 3×8-10 →
 - Whether the extreme end range of the press-around actually matters for hypertrophy has, as far as Nippard knows, never been directly studied — but he sees no downside as long as the stretch isn't sacrificed.
 - Which shoulder position best targets which triceps region is not established, and there are likely individual differences; his recommendation is simply to rotate several arm positions over time.
 - Elbow flare on the bench is uncomfortable for some shoulders; stay tucked if so.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Inter-set Stretching**
+
+- Evangelista AL et al. 2019. Interset Stretching vs. Traditional Strength Training: Effects on Muscle Strength and Size in Untrained Individuals. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30688865/) doi:[10.1519/JSC.0000000000003036](https://doi.org/10.1519/JSC.0000000000003036)
+- <https://www.frontiersin.org/articles/10.3389/fspor.2022.1035190/full>
+- Ferreira-Júnior JB et al. 2021. Effects of Static and Dynamic Stretching Performed Before Resistance Training on Muscle Adaptations in Untrained Men. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31567839/) doi:[10.1519/JSC.0000000000003283](https://doi.org/10.1519/JSC.0000000000003283)
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/1825026/posts/6130243>
+
+**Shoulder Anatomy**
+
+- Brown JM et al. 2007. Muscles within muscles: Coordination of 19 muscle segments within three shoulder muscles during isometric motor tasks. *J Electromyogr Kinesiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/16458022/) doi:[10.1016/j.jelekin.2005.10.007](https://doi.org/10.1016/j.jelekin.2005.10.007)

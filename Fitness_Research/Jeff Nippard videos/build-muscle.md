@@ -80,3 +80,45 @@ Practically: apply progressive tension increases to the muscle. Lift with consis
 - Frequency findings are mixed; the recommendation of 2×/week is a preference layered on top of ambiguous evidence.
 - The volume sweet spot varies individually and must be found experimentally.
 - A footnote in the video's description qualifies the rest-period/metabolic-stress point.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Total Daily Protein Target**
+
+- Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5828430/>
+
+**Training Intensity**
+
+- Lasevicius T et al. 2018. Effects of different intensities of resistance training with equated volume load on muscle strength and hypertrophy. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29564973/) doi:[10.1080/17461391.2018.1450898](https://doi.org/10.1080/17461391.2018.1450898)
+
+**Training Frequency**
+
+- Schoenfeld BJ et al. 2019. How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30558493/) doi:[10.1080/02640414.2018.1555906](https://doi.org/10.1080/02640414.2018.1555906)
+
+**Mechanisms of Muscle Hypertrophy**
+
+- Schoenfeld BJ 2010. The mechanisms of muscle hypertrophy and their application to resistance training. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20847704/) doi:[10.1519/JSC.0b013e3181e840f3](https://doi.org/10.1519/JSC.0b013e3181e840f3)
+
+**Muscle Damage**
+
+- Wackerhage H et al. 2019. Stimuli and sensors that initiate skeletal muscle hypertrophy following resistance exercise. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30335577/) doi:[10.1152/japplphysiol.00685.2018](https://doi.org/10.1152/japplphysiol.00685.2018)
+- Damas F et al. 2018. The development of skeletal muscle hypertrophy through resistance training: the role of muscle damage and muscle protein synthesis. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29282529/) doi:[10.1007/s00421-017-3792-9](https://doi.org/10.1007/s00421-017-3792-9)
+
+**Blood Flow Restriction**
+
+- Nyakayiru J et al. 2019. Blood Flow Restriction Only Increases Myofibrillar Protein Synthesis with Exercise. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30694972/) doi:[10.1249/MSS.0000000000001899](https://doi.org/10.1249/MSS.0000000000001899)
+
+**Costameres**
+
+- Ervasti JM 2003. Costameres: the Achilles' heel of Herculean muscle. *J Biol Chem*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12556452/) doi:[10.1074/jbc.R200021200](https://doi.org/10.1074/jbc.R200021200)
+
+**Filamins**
+
+- <https://www.mdpi.com/2411-5142/1/1/90>
+
+**Hypertrophy Stimuli and Sensors**
+
+- Wackerhage H et al. 2019. Stimuli and sensors that initiate skeletal muscle hypertrophy following resistance exercise. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30335577/) doi:[10.1152/japplphysiol.00685.2018](https://doi.org/10.1152/japplphysiol.00685.2018)

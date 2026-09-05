@@ -62,3 +62,7 @@ On the volume-vs-proximity-to-failure debate, his answer is that the truth **mus
 
 ## Caveats & unknowns
 The experts disagree on emphasis: Israetel avoids failure early in a block, Meadows and Cohen use failure deliberately, Helms argues the optimum must sit in the middle. Helms explicitly notes the continuum is broad enough that both camps produce champions, so precision here probably matters less than consistency. Fibre-level "delayed growth" between 1 and 0 RIR is described as hypothetical. Recovery-timeline rules of thumb are painted with a broad brush and vary by individual and by training frequency. Cohen's high-intensity prescription is explicitly for people chasing maximum strength or size, not general health.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

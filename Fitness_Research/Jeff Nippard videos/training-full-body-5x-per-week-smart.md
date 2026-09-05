@@ -57,3 +57,7 @@ Asked at the seminar, essentially nobody trains neck directly. Helms puts the ne
 
 ## Caveats & unknowns
 Helms is explicit that this is highly individual — over a year of trial to find the right exercises, distribution across days and mesocycle versions — and much of the video is his personal contest-prep experience rather than a general prescription. He is also explicit that the MPS-frequency rationale is weakly evidenced. The claim that no per-session volume threshold exists is an inference from frequency literature, not a direct test. No studies are named individually; the "10-20 sets" figure is quoted approximately from the training-volume literature.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -41,3 +41,11 @@ From a guest lecture clip: one way to organise training is **block periodisation
 - All of the regional findings are **EMG activation data**, not hypertrophy outcomes — greater activation is a proxy, not proof of greater regional growth.
 - The medial/lateral exercise comparisons are **directly contradictory across studies**; only the foot-position finding is presented as reasonably consistent.
 - The 2013 medial/lateral paper's author name is garbled in the auto-captions and should be verified before citing.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Schoenfeld BJ et al. 2015. Regional differences in muscle activation during hamstrings exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24978835) doi:[10.1519/JSC.0000000000000598](https://doi.org/10.1519/JSC.0000000000000598)
+- Lynn SK & Costigan PA 2009. Changes in the medial-lateral hamstring activation ratio with foot rotation during lower limb exercise. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18331800) doi:[10.1016/j.jelekin.2008.01.007](https://doi.org/10.1016/j.jelekin.2008.01.007)
+- Zebis MK et al. 2013. Kettlebell swing targets semitendinosus and supine leg curl targets biceps femoris: an EMG study with rehabilitation implications. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22736206) doi:[10.1136/bjsports-2011-090281](https://doi.org/10.1136/bjsports-2011-090281)

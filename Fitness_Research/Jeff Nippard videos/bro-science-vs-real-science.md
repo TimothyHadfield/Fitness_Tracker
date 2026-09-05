@@ -65,3 +65,14 @@ Contreras hopes the tension-only camp (Beardsley, Hansel/Menno — names garbled
 - Contreras notes Steele and Fisher's lab has repeatedly produced low-volume/high-effort findings — he attributes no bad intent but flags the pattern.
 - Nobody has explained the mechanism for 20 sets being *worse* than 10 over 6 months.
 - Whether metabolic stress and muscle damage independently drive growth, or merely accompany tension, is unresolved; no clean study design exists to separate them.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://www.physiology.org/doi/abs/10.1152/japplphysiol.00685.2018>
+- ResearchGate — <https://www.researchgate.net/publication/328502454_Evidence_for_an_Upper_Threshold_for_Resistance_Training_Volume_in_Trained_Women>
+- Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29533715) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)
+- Schoenfeld BJ et al. 2019. Resistance Training Volume Enhances Muscle Hypertrophy but Not Strength in Trained Men. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30153194) doi:[10.1249/MSS.0000000000001764](https://doi.org/10.1249/MSS.0000000000001764)

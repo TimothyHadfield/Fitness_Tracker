@@ -48,3 +48,11 @@ Counterpoint in Wilson's favour: the dumbbell lateral raise is multi-joint-free,
 - The wider-grip/long-head speculation and the upright row's superiority are opinion, not tested.
 - The upright row involves more joints and heavier loads, so it costs more recovery and may aggravate some shoulders — a real point in the lateral raise's favour.
 - The whole "pick one exercise" framing is artificial; in practice you fill gaps as needed rather than minimising.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Fonseca RM et al. 2014. Changes in exercises are more effective than in loading schemes to improve muscle strength. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24832974) doi:[10.1519/JSC.0000000000000539](https://doi.org/10.1519/JSC.0000000000000539)

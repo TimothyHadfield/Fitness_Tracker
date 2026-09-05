@@ -62,3 +62,18 @@ Nippard's framing: muscle growth potential varies as widely as height. We don't 
 - A single blood test can't rule out past use — someone could have cycled and come off.
 - Nippard's own delt development he attributes substantially to genetics (his mother has notable shoulders at 60, lifetime natural), not just training.
 - The androgen receptor density claim about traps explains why traps are a *statistical* signal, not proof in any individual case.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Androgen Receptors in Traps**
+
+- Kadi F et al. 2000. The expression of androgen receptors in human neck and limb muscles: effects of training and self-administration of androgenic-anabolic steroids. *Histochem Cell Biol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/10664066/) doi:[10.1007/s004180050003](https://doi.org/10.1007/s004180050003)
+
+**Normal Testosterone Range**
+
+- Zhu A et al. 2022. What Is a Normal Testosterone Level for Young Men? Rethinking the 300 ng/dL Cutoff for Testosterone Deficiency in Men 20-44 Years Old. *J Urol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36282060/) doi:[10.1097/JU.0000000000002928](https://doi.org/10.1097/JU.0000000000002928)
+- Ma H et al. 2024. Percent body fat was negatively correlated with Testosterone levels in male. *PLoS One*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/38170701/) doi:[10.1371/journal.pone.0294567](https://doi.org/10.1371/journal.pone.0294567)
+
+- Morton RW et al. 2018. Muscle Androgen Receptor Content but Not Systemic Hormones Is Associated With Resistance Training-Induced Skeletal Muscle Hypertrophy in Healthy, Young Men. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30356739/) doi:[10.3389/fphys.2018.01373](https://doi.org/10.3389/fphys.2018.01373)

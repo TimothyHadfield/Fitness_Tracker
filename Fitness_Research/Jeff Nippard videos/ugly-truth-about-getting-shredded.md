@@ -52,3 +52,19 @@ The range differs hugely between people — one person might sit fine at 6%, ano
 - Body-fat ranges are individual, so no universal percentage target is given — the boundaries quoted (8-9% / 25%) are Nippard's own.
 - The dramatic hormonal figures come from single-subject case studies, not controlled trials; the period-recovery data show wide variation between individuals.
 - Set point / dual intervention point is a model, not a settled mechanism.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Side Effects of Staying Too Lean**
+
+- Rossow LM et al. 2013. Natural bodybuilding competition preparation and recovery: a 12-month case study. *Int J Sports Physiol Perform*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23412685/) doi:[10.1123/ijspp.8.5.582](https://doi.org/10.1123/ijspp.8.5.582)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5133123/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5222856/>
+
+**Dual Intervention Model**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2150809186/posts/2159651372>
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2150592792>

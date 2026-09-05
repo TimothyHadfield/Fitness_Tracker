@@ -46,3 +46,7 @@
 - Several studies are referenced only by year and topic in the transcript, so exact citations should be verified before reuse.
 - Nippard's characterisation of Lustig as a cherry-picker is his assessment of a scientist's body of work, not a finding.
 - This is a 2014 video reviewing pre-2014 literature; the fructose and cardiometabolic-health evidence base has grown since.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

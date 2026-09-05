@@ -53,3 +53,7 @@ The personal reason. Eating the foods bodybuilders historically eat — chicken 
 - Entirely a personal-experience video from Jeff's pro debut prep; the flexible-vs-rigid research and food-cue-responsiveness work are described but **no studies or researchers are named**.
 - The claim that pre-workout nutrition matters more as you get leaner is presented as reasoning, not as a tested finding.
 - Adherence is individual: for a person who spirals under restriction, a fixed plan is the worse tool. The whole argument turns on knowing which type you are.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

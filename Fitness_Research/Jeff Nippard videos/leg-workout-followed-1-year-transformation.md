@@ -69,3 +69,18 @@ Run leg curls first as a primer for every squat session. Keep 1-2 heavy overload
 - The 170% leg extension seat-position figure comes from a single 2024 study; researchers unnamed.
 - The rectus femoris study ran only five weeks.
 - Pendulum squat availability is limited; substitutions are explicitly permitted.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Maeo S et al. 2021. Greater Hamstrings Muscle Hypertrophy but Similar Damage Protection after Training at Long versus Short Muscle Lengths. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33009197/) doi:[10.1249/MSS.0000000000002523](https://doi.org/10.1249/MSS.0000000000002523)
+
+- Kassiano W et al. 2022. Does Varying Resistance Exercises Promote Superior Muscle Hypertrophy and Strength Gains? A Systematic Review. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35438660/) doi:[10.1519/JSC.0000000000004258](https://doi.org/10.1519/JSC.0000000000004258)
+
+- ResearchGate — <https://www.researchgate.net/publication/351577491>
+
+- ResearchGate — <https://www.researchgate.net/publication/380457955>
+
+- ResearchGate — <https://www.researchgate.net/publication/365127382>
+- <https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1494323/full>

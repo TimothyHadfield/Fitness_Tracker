@@ -65,3 +65,9 @@ This is designed as one of two push days per week and deliberately leaves gaps t
 
 ## Caveats & unknowns
 The incline-vs-flat study is one trial on 47 untrained subjects, so he supports using incline for upper pec growth but not the broader claim that incline is simply superior. Constant tension is not claimed to be inherently special — he uses it as an attentional focus tool.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7449336/>

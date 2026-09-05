@@ -62,3 +62,12 @@ Reasonable substitute, especially for beginners — lat activation is virtually 
 - The "Doma 2013" attribution comes from auto-captions and may be misspelled — verify before citing.
 - The Massey 2016 study found only a mid-trap difference between grips, so grip choice matters less than consistency and ROM.
 - These are EMG/activation findings, not direct hypertrophy trials.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- ResearchGate — <https://www.researchgate.net/publication/311091421_Electromyographic_analysis_of_muscle_activation_during_pull-up_variations>
+- Doma K et al. 2013. Kinematic and electromyographic comparisons between chin-ups and lat-pull down exercises. *Sports Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24245055) doi:[10.1080/14763141.2012.760204](https://doi.org/10.1080/14763141.2012.760204)

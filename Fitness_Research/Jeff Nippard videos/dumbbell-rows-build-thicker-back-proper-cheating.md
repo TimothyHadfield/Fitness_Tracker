@@ -55,3 +55,11 @@ The point of the momentum is to even out the lats' strength curve, not to move m
 - "Moderate" cheating isn't quantified; the boundary between it and a bro row is judgment-based.
 - The momentum argument comes from a MASS research review discussion rather than a direct trial comparing strict and cheated rows for hypertrophy.
 - His 80-100 lb reference is personal, not a target for everyone.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>

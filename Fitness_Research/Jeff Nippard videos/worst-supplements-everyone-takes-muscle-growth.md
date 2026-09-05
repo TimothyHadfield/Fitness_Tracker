@@ -79,3 +79,43 @@ It is genuinely useful for endurance training, very high-rep work, and circuit-s
 - Simply tallying positive versus negative studies ignores study quality; Nippard offers it only as a general lay of the land.
 - Fenugreek may be worth watching for future research, and ashwagandha may yet prove to raise testosterone modestly.
 - The turkesterone lab tests come from a company that sells competing supplements, and detection chemistry for ecdysteroids is genuinely contested.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Testosterone Boosters**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6407704/>
+- Examine.com — <https://examine.com/supplements/fenugreek/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6750292/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3863556/>
+- Bhasin S et al. 2001. Testosterone dose-response relationships in healthy young men. *Am J Physiol Endocrinol Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11701431/) doi:[10.1152/ajpendo.2001.281.6.E1172](https://doi.org/10.1152/ajpendo.2001.281.6.E1172)
+- Wankhede S et al. 2015. Examining the effect of Withania somnifera supplementation on muscle strength and recovery: a randomized controlled trial. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26609282/) doi:[10.1186/s12970-015-0104-9](https://doi.org/10.1186/s12970-015-0104-9)
+
+**Natural Ways to Boost Testosterone**
+
+- <https://www.tandfonline.com/doi/full/10.1186/1550-2783-11-20>
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/4527583/posts/15426503>
+
+**Turkesterone**
+
+- <https://www.journals.uchicago.edu/doi/10.2307/1540550>
+- Syrov VN 1984. Mechanism of the anabolic action of phytoecdisteroids in mammals. *Nauchnye Doki Vyss Shkoly Biol Nauki*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/6525371/)
+- Sláma K et al. 1996. Insect hormones in vertebrates: anabolic effects of 20-hydroxyecdysone in Japanese quail. *Experientia*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8698114/) doi:[10.1007/BF01925578](https://doi.org/10.1007/BF01925578)
+- ResearchGate — <https://www.researchgate.net/publication/333322619>
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/1458811/posts/4926958>
+
+**BCAAs**
+
+- <https://www.sciencedirect.com/science/article/abs/pii/S0765159721002008>
+- <https://journals.humankinetics.com/view/journals/ijsnem/31/3/article-p292.xml>
+
+**Fat Burners**
+
+- ResearchGate — <https://www.researchgate.net/publication/348516682>
+
+**Beta-Alanine**
+
+- Hobson RM et al. 2012. Effects of β-alanine supplementation on exercise performance: a meta-analysis. *Amino Acids*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22270875) doi:[10.1007/s00726-011-1200-z](https://doi.org/10.1007/s00726-011-1200-z)
+- ResearchGate — <https://www.researchgate.net/publication/310617184>

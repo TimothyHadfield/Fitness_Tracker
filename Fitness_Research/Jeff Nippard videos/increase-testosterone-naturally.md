@@ -90,3 +90,49 @@ Also: de-stress (meditation, relaxation) and avoid excessive alcohol, which redu
 - Relationship-status and testosterone findings are correlational and the causal direction is unresolved.
 - Individually, the natural levers here are small. The argument is that stacking several of them may add up to something worthwhile — not that any one is transformative.
 - The 1996 NEJM injection study used a supraphysiological dose and a poorly optimised training programme; it establishes that exogenous testosterone works, not that natural manipulation does.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Fry AC & Lohnes CA 2010. Acute testosterone and cortisol responses to high power resistance exercise. *Fiziol Cheloveka*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20803956)
+- West DW & Phillips SM 2010. Anabolic processes in human skeletal muscle: restoring the identities of growth hormone and testosterone. *Phys Sportsmed*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20959702) doi:[10.3810/psm.2010.10.1814](https://doi.org/10.3810/psm.2010.10.1814)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5278890/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3371329/>
+- Condorelli RA et al. 2015. Chronic consumption of alcohol and sperm parameters: our experience and the main evidences. *Andrologia*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24766499) doi:[10.1111/and.12284](https://doi.org/10.1111/and.12284)
+- Hamilton-Reeves JM et al. 2010. Clinical studies show no effects of soy protein or isoflavones on reproductive hormones in men: results of a meta-analysis. *Fertil Steril*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19524224) doi:[10.1016/j.fertnstert.2009.04.038](https://doi.org/10.1016/j.fertnstert.2009.04.038)
+- Leproult R & Van Cauter E 2011. Effect of 1 week of sleep restriction on testosterone levels in young healthy men. *JAMA*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21632481) doi:[10.1001/jama.2011.710](https://doi.org/10.1001/jama.2011.710)
+- Mendelson JH et al. 1978. Effects of alcohol on plasma testosterone and luteinizing hormone levels. *Alcohol Clin Exp Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/356646) doi:[10.1111/j.1530-0277.1978.tb05808.x](https://doi.org/10.1111/j.1530-0277.1978.tb05808.x)
+- Willoughby DS & Taylor L 2004. Effects of sequential bouts of resistance exercise on androgen receptor expression. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15354030) doi:[10.1249/01.mss.0000139795.83030.d1](https://doi.org/10.1249/01.mss.0000139795.83030.d1)
+- West DW et al. 2010. Elevations in ostensibly anabolic hormones with resistance exercise enhance neither training-induced muscle hypertrophy nor strength of the elbow flexors. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19910330) doi:[10.1152/japplphysiol.01147.2009](https://doi.org/10.1152/japplphysiol.01147.2009)
+- Wankhede S et al. 2015. Examining the effect of Withania somnifera supplementation on muscle strength and recovery: a randomized controlled trial. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26609282) doi:[10.1186/s12970-015-0104-9](https://doi.org/10.1186/s12970-015-0104-9)
+- Travison TG et al. 2017. Harmonized Reference Ranges for Circulating Testosterone Levels in Men of Four Cohort Studies in the United States and Europe. *J Clin Endocrinol Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28324103) doi:[10.1210/jc.2016-2935](https://doi.org/10.1210/jc.2016-2935)
+- Ahtiainen JP et al. 2011. Heavy resistance exercise training and skeletal muscle androgen receptor expression in younger and older men. *Steroids*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21070797) doi:[10.1016/j.steroids.2010.10.012](https://doi.org/10.1016/j.steroids.2010.10.012)
+- Henning PC et al. 2014. High protein diets do not attenuate decrements in testosterone and IGF-I during energy deficit. *Metabolism*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24641883) doi:[10.1016/j.metabol.2014.02.007](https://doi.org/10.1016/j.metabol.2014.02.007)
+- Kraemer WJ et al. 1990. Hormonal and growth factor responses to heavy resistance exercise protocols. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/2262468) doi:[10.1152/jappl.1990.69.4.1442](https://doi.org/10.1152/jappl.1990.69.4.1442)
+- Kraemer WJ & Ratamess NA 2005. Hormonal responses and adaptations to resistance exercise and training. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15831061) doi:[10.2165/00007256-200535040-00004](https://doi.org/10.2165/00007256-200535040-00004)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3402517/>
+- Dabbs JM Jr & Mohammed S 1992. Male and female salivary testosterone concentrations before and after sexual activity. *Physiol Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1529008) doi:[10.1016/0031-9384(92)90453-9](https://doi.org/10.1016/0031-9384(92)90453-9)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4858168/>
+- van Anders SM et al. 2007. Multiple partners are associated with higher testosterone in North American men and women. *Horm Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17316638) doi:[10.1016/j.yhbeh.2007.01.002](https://doi.org/10.1016/j.yhbeh.2007.01.002)
+- Rossow LM et al. 2013. Natural bodybuilding competition preparation and recovery: a 12-month case study. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23412685) doi:[10.1123/ijspp.8.5.582](https://doi.org/10.1123/ijspp.8.5.582)
+- Rosa C et al. 2015. Order effects of combined strength and endurance training on testosterone, cortisol, growth hormone, and IGF-1 binding protein 3 in concurrently trained men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25028991) doi:[10.1519/JSC.0000000000000610](https://doi.org/10.1519/JSC.0000000000000610)
+- Jones TW et al. 2016. Performance and Endocrine Responses to Differing Ratios of Concurrent Strength and Endurance Training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26907840) doi:[10.1519/JSC.0000000000001135](https://doi.org/10.1519/JSC.0000000000001135)
+- Rønnestad BR et al. 2011. Physiological elevation of endogenous hormones results in superior strength training adaptation. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21327794) doi:[10.1007/s00421-011-1860-0](https://doi.org/10.1007/s00421-011-1860-0)
+- Schoenfeld BJ 2013. Postexercise hypertrophic adaptations: a reexamination of the hormone hypothesis and its applicability to resistance training program design. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23442269) doi:[10.1519/JSC.0b013e31828ddd53](https://doi.org/10.1519/JSC.0b013e31828ddd53)
+- Karila TA et al. 2008. Rapid weight loss decreases serum testosterone. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18516767) doi:[10.1055/s-2008-1038604](https://doi.org/10.1055/s-2008-1038604)
+- Fry AC & Kraemer WJ 1997. Resistance exercise overtraining and overreaching. Neuroendocrine responses. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9068095) doi:[10.2165/00007256-199723020-00004](https://doi.org/10.2165/00007256-199723020-00004)
+- West DW et al. 2009. Resistance exercise-induced increases in putative anabolic hormones do not enhance muscle protein synthesis or intracellular signalling in young men. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19736298) doi:[10.1113/jphysiol.2009.177220](https://doi.org/10.1113/jphysiol.2009.177220)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1724841/>
+- Cote KA et al. 2013. Sleep deprivation lowers reactive aggression and testosterone in men. *Biol Psychol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23046906) doi:[10.1016/j.biopsycho.2012.09.011](https://doi.org/10.1016/j.biopsycho.2012.09.011)
+- Messina M 2010. Soybean isoflavone exposure does not have feminizing effects on men: a critical examination of the clinical evidence. *Fertil Steril*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20378106) doi:[10.1016/j.fertnstert.2010.03.002](https://doi.org/10.1016/j.fertnstert.2010.03.002)
+- Bedgood D et al. 2014. Testosterone and social evaluative stress: the moderating role of basal cortisol. *Psychoneuroendocrinology*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25001960) doi:[10.1016/j.psyneuen.2014.05.007](https://doi.org/10.1016/j.psyneuen.2014.05.007)
+- Bhasin S et al. 2001. Testosterone dose-response relationships in healthy young men. *Am J Physiol Endocrinol Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11701431) doi:[10.1152/ajpendo.2001.281.6.E1172](https://doi.org/10.1152/ajpendo.2001.281.6.E1172)
+- Shaner AA et al. 2014. The acute hormonal response to free weight and machine weight resistance exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24276305) doi:[10.1519/JSC.0000000000000317](https://doi.org/10.1519/JSC.0000000000000317)
+- Bhasin S et al. 1996. The effects of supraphysiologic doses of testosterone on muscle size and strength in normal men. *N Engl J Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8637535) doi:[10.1056/NEJM199607043350101](https://doi.org/10.1056/NEJM199607043350101)
+
+**RESOURCES I FOUND HELPFUL WHEN MAKING THE VIDEO**
+
+- Examine.com — <https://examine.com/nutrition/does-ejaculation-affect-testosterone-levels/>
+- Examine.com — <https://examine.com/nutrition/is-saturated-fat-bad-for-me/>
+- Examine.com — <https://examine.com/nutrition/how-can-i-increase-testosterone-naturally/>

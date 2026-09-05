@@ -56,3 +56,13 @@ Many believe leg extensions are dangerous due to shear forces and ACL stress. Dr
 
 ## Caveats & unknowns
 Schoenfeld's position is an interview opinion informed by evidence, not a trial. Ideal seat angle is individual and self-experimented. Toe-position EMG differences are activation data, not measured hypertrophy.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- Stoutenberg M et al. 2005. The impact of foot position on electromyographical activity of the superficial quadriceps muscles during leg extension. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16437818) doi:[10.1519/r-16364.1](https://doi.org/10.1519/r-16364.1)
+- <https://journals.lww.com/nsca-jscr/abstract/1994/08000/an_electromyographical_comparison_of_the_squat_and.9.aspx>

@@ -40,3 +40,12 @@ His conclusion is that a decent theoretical basis remains for treating EMG as a 
 - Whether the milk-vs-soy comparison genuinely supports an MPS–hypertrophy link is contestable, since the synthesis and hypertrophy findings come from separate studies.
 - The paper does not claim EMG is invalid as a methodology — only that the interpretive leap to long-term hypertrophy is unsupported.
 - Roughly half this video is expo/travel vlog footage with no training content.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Here are the studies I was talking about**
+
+- <https://www.frontiersin.org/articles/10.3389/fphys.2017.00985/full>
+- Mitchell CJ et al. 2014. Acute post-exercise myofibrillar protein synthesis is not correlated with resistance training-induced muscle hypertrophy in young men. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24586775) doi:[10.1371/journal.pone.0089431](https://doi.org/10.1371/journal.pone.0089431)

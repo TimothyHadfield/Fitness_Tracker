@@ -68,3 +68,7 @@ Being explosive through the concentric is fine — but once you hit lockout, mai
 - This is the third part of a deadlift miniseries; the conventional and sumo setup tutorials cover the fundamentals assumed here.
 - Nippard notes there are many more errors than these four.
 - The "rounded back is stronger" point comes from Contreras' biomechanics book, not a named trial, and the safe amount of lower back flexion under load remains a debated area.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

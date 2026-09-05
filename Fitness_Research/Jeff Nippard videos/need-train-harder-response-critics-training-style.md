@@ -48,3 +48,19 @@ His read: this shows that untrained-to-effort lifters left to their own devices 
 - The elite-bodybuilder survey is anecdote gathered over Instagram DMs, not data; he presents it only to refute the claim that everyone at the top trains to failure.
 - The leg extension study was brand new at the time and its trend favouring non-failure was not a clear effect.
 - He openly concedes the personal critique may have merit — filming while training had been eroding his own session intensity.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**New study on failure**
+
+- Lacerda LT et al. 2020. Is Performing Repetitions to Failure Less Important Than Volume for Muscle Hypertrophy and Strength?. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31809457) doi:[10.1519/JSC.0000000000003438](https://doi.org/10.1519/JSC.0000000000003438)
+
+**Study on steroids and muscle growth**
+
+- Bhasin S et al. 1996. The effects of supraphysiologic doses of testosterone on muscle size and strength in normal men. *N Engl J Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8637535) doi:[10.1056/NEJM199607043350101](https://doi.org/10.1056/NEJM199607043350101)
+
+**Bench Press/RIR Study**
+
+- Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29112055) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)

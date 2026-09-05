@@ -49,3 +49,16 @@ Keep the exercise list and rep targets fixed; adjust only how the volume is dist
 - The overhead-extension-vs-pressdown finding rests on a single 2022 study; Nippard explicitly says not to put too much stock in it, and recommends it mainly because it costs nothing to prefer.
 - Flaring the elbows on the dumbbell press is optional and should be dropped if shoulders complain.
 - The larger-than-usual lateral raise ROM is a personal preference, not a requirement — failure is what drives recruitment.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Overhead Triceps Extension Research**
+
+- Maeo S et al. 2023. Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35819335/) doi:[10.1080/17461391.2022.2100279](https://doi.org/10.1080/17461391.2022.2100279)
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2151295402/posts/2161731393>
+
+**Hamstring Curl Study**
+
+- Maeo S et al. 2021. Greater Hamstrings Muscle Hypertrophy but Similar Damage Protection after Training at Long versus Short Muscle Lengths. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33009197/) doi:[10.1249/MSS.0000000000002523](https://doi.org/10.1249/MSS.0000000000002523)

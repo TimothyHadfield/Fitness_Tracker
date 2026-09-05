@@ -48,3 +48,17 @@ Hits pecs, delts and triceps in one movement, which is efficient recovery-wise. 
 
 ## Caveats & unknowns
 This is written for intermediate to advanced lifters. With only a year or two of training experience, run a three-day-per-week full-body program instead. The five-day full-body structure only works if fatigue is managed exercise by exercise; the same exercise choices would be unnecessary compromises on a 2-3x/week split, where he says heavy weighted pull-ups on the same day as squats would be perfectly fine.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Caterisano A et al. 2002. The effect of back squat depth on the EMG activity of 4 superficial hip and thigh muscles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12173958)
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- Bloomquist K et al. 2013. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23604798) doi:[10.1007/s00421-013-2642-7](https://doi.org/10.1007/s00421-013-2642-7)
+- Grgic J et al. 2017. The effects of short versus long inter-set rest intervals in resistance training on measures of muscle hypertrophy: A systematic review. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28641044) doi:[10.1080/17461391.2017.1340524](https://doi.org/10.1080/17461391.2017.1340524)
+- <https://journals.lww.com/nsca-jscr/Abstract/1995/11000/Effects_of_Variations_of_the_Bench_Press_Exercise.3.aspx>
+- Schick EE et al. 2010. A comparison of muscle activation between a Smith machine and free weight bench press. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20093960) doi:[10.1519/JSC.0b013e3181cc2237](https://doi.org/10.1519/JSC.0b013e3181cc2237)
+- Aspe RR & Swinton PA 2014. Electromyographic and kinetic comparison of the back squat and overhead squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24662228) doi:[10.1519/JSC.0000000000000462](https://doi.org/10.1519/JSC.0000000000000462)

@@ -99,3 +99,7 @@ A friendly discussion, but four real divergences:
 - The **post-diet period had no intervention** and **salivary leptin didn't work**. Training was uncontrolled, though reported minutes matched. She acknowledged this is less stringent than some would like; her lab (Dr Campbell's) is explicitly real-world-outcome oriented.
 - The study compared **meal plan vs macros**, not the rigid-vs-flexible *mindset* construct the older literature measures. Different questions; don't pool them.
 - **Caption name uncertainty:** "Weston Hofer" is almost certainly **Westenhoefer**; "Adrien mule" almost certainly **Adrian Meule**; "Dr Bartholomew, University of Texas" unverified; "SOI Lee's ebook" likely **Sohee Lee**; "Joseph AO" likely **Joseph Agu**; "Paul Rella" (the on-campus show) and "Mari wal" (Cliff Wilson's client) unresolved. Conlin's advisor is given only as **Dr Campbell**.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

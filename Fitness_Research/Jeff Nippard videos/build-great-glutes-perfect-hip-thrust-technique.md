@@ -59,3 +59,11 @@ Jeff isn't sure a truly equivalent substitute exists.
 - The twin case study is a single-pair, six-week case study — suggestive rather than conclusive.
 - The tension-at-lockout explanation for the hip thrust's advantage is Jeff's proposed mechanism, not a tested finding.
 - Foot placement fixes for quad-dominant feel are individual and require trial and error.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26214739) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)

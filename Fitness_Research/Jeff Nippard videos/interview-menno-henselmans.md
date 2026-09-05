@@ -177,3 +177,7 @@ Menno's model, referring to his own presentation/article "Workout nutrition does
 - Menno's one-pound-per-year figure is **n=1 self-measurement by calipers**, however carefully controlled.
 - His high-frequency prescriptions come largely from **coaching observation** (his own and Børge Fagerli's) ahead of controlled trials, and he is candid that the elite examples had exceptional recovery circumstances.
 - **Name flags from auto-captions:** the Norwegian recovery researcher rendered "to Rastat"/"Tulsat" is most likely **Truls Raastad**; "Berg/Burger Fagerly" is **Børge Fagerli**; "John Kylie" is **John Kiely**; "Greg/rack Knuckles" is **Greg Nuckols**; "Brad Showfeld/Sheld/Shenfeld" is **Brad Schoenfeld**; "Big Remy" is likely **Big Ramy**; "Eric Elms/Helen's" is **Eric Helms**; "Ripto" is **Rippetoe**; the military-study author rendered **"HKA"** and the clients **"Nina Ross"** and **"Sikfar Garforce"** could not be resolved and are left as-is.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

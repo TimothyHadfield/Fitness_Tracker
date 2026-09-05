@@ -67,3 +67,26 @@ Use a 2-4s negative and an explosive concentric on everything. Reach a genuine d
 
 ## Caveats & unknowns
 The failure literature is genuinely conflicting — the two meta-analyses reach opposite conclusions from overlapping evidence, and Jeff's 1-2 RIR / last set to failure prescription is a judgment call bridging them. Volume matters "up to a point" but the video defers the specifics to an on-screen summary. Machine superiority over free weights is only "some evidence in some cases," and free weights retain advantages in accessibility, strength carryover and stabiliser activation. The whole framework is explicitly for pure hypertrophy — not for anyone training for strength.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Wackerhage H et al. 2019. Stimuli and sensors that initiate skeletal muscle hypertrophy following resistance exercise. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30335577/) doi:[10.1152/japplphysiol.00685.2018](https://doi.org/10.1152/japplphysiol.00685.2018)
+
+- Schoenfeld BJ et al. 2017. Hypertrophic Effects of Concentric vs. Eccentric Muscle Actions: A Systematic Review and Meta-analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28486337/) doi:[10.1519/JSC.0000000000001983](https://doi.org/10.1519/JSC.0000000000001983)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8310485/>
+
+- Steele J et al. 2022. Are Trainees Lifting Heavy Enough? Self-Selected Loads in Resistance Exercise: A Scoping Review and Exploratory Meta-analysis. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35790622/) doi:[10.1007/s40279-022-01717-9](https://doi.org/10.1007/s40279-022-01717-9)
+- <https://link.springer.com/article/10.1007/s40279-022-01784-y>
+
+- Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>
+
+- ResearchGate — <https://www.researchgate.net/publication/323740477>
+
+- <https://journals.lww.com/acsm-msse/Abstract/9900/Free_Weight_and_Machine_Based_Training_Are_Equally.336.aspx>
+- Earp JE et al. 2023. Differing hypertrophy patterns from open and closed kinetic chain training affect quadriceps femoris center of mass and moment of inertia. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36998986/) doi:[10.3389/fphys.2023.1074705](https://doi.org/10.3389/fphys.2023.1074705)
+- Haugen ME et al. 2023. Effect of free-weight vs. machine-based strength training on maximal strength, hypertrophy and jump performance - a systematic review and meta-analysis. *BMC Sports Sci Med Rehabil*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37582807/) doi:[10.1186/s13102-023-00713-4](https://doi.org/10.1186/s13102-023-00713-4)
+
+- Grgic J et al. 2017. The effects of short versus long inter-set rest intervals in resistance training on measures of muscle hypertrophy: A systematic review. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28641044/) doi:[10.1080/17461391.2017.1340524](https://doi.org/10.1080/17461391.2017.1340524)

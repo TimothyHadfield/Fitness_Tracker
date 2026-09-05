@@ -58,3 +58,11 @@ Run this as the fifth full-body day of the week with delts front-loaded. Track w
 
 ## Caveats & unknowns
 The stretch-vs-contraction damage distinction is offered as a general principle, and he explicitly says it "probably doesn't make a huge difference" for something like a lateral raise. The bent-leg/straight-leg calf rotation rests on "likely" different muscle emphasis. Swapping leg curls for glute ham raises depends on your posterior chain being recovered from the day-4 deadlifts.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**A Disclaimer About EMG Research**
+
+- Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23096062/) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)

@@ -61,3 +61,13 @@ Borrowing again from Dr Eric Helms: cardio should not be the primary vehicle for
 - The proposed mechanisms behind that result (appetite blunting, greater self-driven effort) are Nippard's hypotheses, not tested findings.
 - Choice ultimately comes down to individual recovery capacity and preference.
 - One cited 2017 meta-analysis author name is garbled in the captions and should be verified.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- LaForgia J et al. 2006. Effects of exercise intensity and duration on the excess post-exercise oxygen consumption. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17101527) doi:[10.1080/02640410600552064](https://doi.org/10.1080/02640410600552064)
+- Keating SE et al. 2017. A systematic review and meta-analysis of interval training versus moderate-intensity continuous training on body adiposity. *Obes Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28513103) doi:[10.1111/obr.12536](https://doi.org/10.1111/obr.12536)
+- Wewege M et al. 2017. The effects of high-intensity interval training vs. moderate-intensity continuous training on body composition in overweight and obese adults: a systematic review and meta-analysis. *Obes Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28401638) doi:[10.1111/obr.12532](https://doi.org/10.1111/obr.12532)

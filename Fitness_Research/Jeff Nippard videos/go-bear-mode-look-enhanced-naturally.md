@@ -73,3 +73,7 @@ Alex credits this hypothesis to "Mei Jin of Team 3D Alpha" (name uncertain — a
 - Maxing out year-round at 100% carries injury risk; recovery capacity is highly individual, and Alex's own defence is essentially "I rotate variations and only train twice a week."
 - **Sleep apnea and neck size:** the association exists in football players, but those athletes are heavily drug-assisted, weigh 250-300 lb, and may simply have fatty necks — the studies don't separate muscle from fat. Alex reports knowing men with 19-inch necks for 30 years with no issues, and argues a natural won't exceed ~20 inches anyway. He rates **bridging as the highest-risk neck exercise**; standard flexion/extension without ego lifting he considers low risk, but concedes the cervical disc question is genuinely unknown.
 - Alex's spinal-flexion training suggestion (contra Stuart McGill) is explicitly flagged as debatable — take with a grain of salt.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

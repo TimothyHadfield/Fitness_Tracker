@@ -61,3 +61,14 @@ As an advanced technique, moderate cheating on the concentric is acceptable **pr
 
 ## Caveats & unknowns
 Nothing beyond his own hedging: grip choice for emphasising different back regions is covered in his separate width-vs-thickness video, and lean-back preference is partly individual.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Mind-Muscle Connection study**
+
+- <https://www.tandfonline.com/doi/full/10.1080/17461391.2018.1447020>
+
+- Signorile JF et al. 2002. A comparative electromyographical investigation of muscle utilization patterns using various hand positions during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12423182)
+- Andersen V et al. 2014. Effects of grip width on muscle strength and activation in the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24662157) doi:[10.1097/JSC.0000000000000232](https://doi.org/10.1097/JSC.0000000000000232)

@@ -62,3 +62,20 @@ Lats and traps appear predominantly **type II (fast twitch) dominant** — may r
 - No activation data exists for grip variations on rows — that recommendation is inference plus coaching experience.
 - Specific volume and set recommendations are described as individual; the video points to a paid program for them.
 - One researcher name ("Signorile") is garbled in the captions and should be verified before citing.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Snyder BJ & Leech JR 2009. Voluntary increase in latissimus dorsi muscle activity during the lat pull-down following expert instruction. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19826307) doi:[10.1519/JSC.0b013e3181bb7213](https://doi.org/10.1519/JSC.0b013e3181bb7213)
+- Doma K et al. 2013. Kinematic and electromyographic comparisons between chin-ups and lat-pull down exercises. *Sports Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24245055) doi:[10.1080/14763141.2012.760204](https://doi.org/10.1080/14763141.2012.760204)
+- ResearchGate — <https://www.researchgate.net/publication/273714919_Comparative_electromyographical_investigation_of_the_biceps_brachii_latissimus_dorsi_and_trapezius_muscles_during_five_pull_exercises>
+- Sperandei S et al. 2009. Electromyographic analysis of three different types of lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19855327) doi:[10.1519/JSC.0b013e3181b8d30a](https://doi.org/10.1519/JSC.0b013e3181b8d30a)
+- Signorile JF et al. 2002. A comparative electromyographical investigation of muscle utilization patterns using various hand positions during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12423182)
+- Andersen V et al. 2014. Effects of grip width on muscle strength and activation in the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24662157) doi:[10.1097/JSC.0000000000000232](https://doi.org/10.1097/JSC.0000000000000232)
+- Lusk SJ et al. 2010. Grip width and forearm orientation effects on muscle activity during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20543740) doi:[10.1519/JSC.0b013e3181ddb0ab](https://doi.org/10.1519/JSC.0b013e3181ddb0ab)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Fenwick CM et al. 2009. Comparison of different rowing exercises: trunk muscle activation and lumbar spine motion, load, and stiffness. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19197209) doi:[10.1519/JSC.0b013e3181942019](https://doi.org/10.1519/JSC.0b013e3181942019)
+- <http://www.sciencedirect.com/science/article/pii/0268003394900574>

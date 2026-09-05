@@ -20,3 +20,9 @@
 
 ## Practical application
 No recommendations are made in this video. It sets up the reasoning covered in the follow-up.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Schoenfeld B et al. 2013. Effect of hand position on EMG activity of the posterior shoulder musculature during a horizontal abduction exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23302754) doi:[10.1519/JSC.0b013e318281e1e9](https://doi.org/10.1519/JSC.0b013e318281e1e9)

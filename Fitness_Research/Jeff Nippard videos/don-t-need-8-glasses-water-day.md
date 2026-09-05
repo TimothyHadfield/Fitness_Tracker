@@ -55,3 +55,19 @@ Water *does* help weight loss, but through mundane mechanisms: swapping calorie-
 - The 2015 dehydration meta-analysis author name is mangled in the captions and should be verified before citing.
 - The daily-urination guideline is a heuristic from Lyle McDonald, not a research-derived threshold.
 - "Drink to thirst" assumes a healthy adult; medical conditions and heat/altitude extremes are outside the scope of the video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Cotter JD et al. 2014. Are we being drowned in hydration advice? Thirsty for more?. *Extrem Physiol Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25356197) doi:[10.1186/2046-7648-3-18](https://doi.org/10.1186/2046-7648-3-18)
+- Savoie FA et al. 2015. Effect of Hypohydration on Muscle Endurance, Strength, Anaerobic Power and Capacity and Vertical Jumping Ability: A Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26178327) doi:[10.1007/s40279-015-0349-0](https://doi.org/10.1007/s40279-015-0349-0)
+- Murray B 2007. Hydration and physical performance. *J Am Coll Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17921463) doi:[10.1080/07315724.2007.10719656](https://doi.org/10.1080/07315724.2007.10719656)
+- Campbell SM 2007. Hydration needs throughout the lifespan. *J Am Coll Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17921469) doi:[10.1080/07315724.2007.10719662](https://doi.org/10.1080/07315724.2007.10719662)
+- Hayes LD & Morse CI 2010. The effects of progressive dehydration on strength and power: is there a dose response?. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19908058) doi:[10.1007/s00421-009-1288-y](https://doi.org/10.1007/s00421-009-1288-y)
+- Millard-Stafford M et al. 2012. Thirst and hydration status in everyday life. *Nutr Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23121351) doi:[10.1111/j.1753-4887.2012.00527.x](https://doi.org/10.1111/j.1753-4887.2012.00527.x)
+- Charrière N et al. 2015. Water-induced thermogenesis and fat oxidation: a reassessment. *Nutr Diabetes*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26690288) doi:[10.1038/nutd.2015.41](https://doi.org/10.1038/nutd.2015.41)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2908954/>
+- Jéquier E & Constant F 2010. Water as an essential nutrient: the physiological basis of hydration. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19724292) doi:[10.1038/ejcn.2009.111](https://doi.org/10.1038/ejcn.2009.111)

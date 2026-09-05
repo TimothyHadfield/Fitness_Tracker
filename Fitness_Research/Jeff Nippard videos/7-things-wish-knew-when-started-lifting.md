@@ -49,3 +49,11 @@ New trainees are the most primed for growth they will ever be. He commonly sees 
 
 ## Caveats & unknowns
 The 12-week biceps/triceps training study's lead author name is garbled in the captions and is not stated reliably here. The 59% best-responder figure is reported as it appears in the video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- ResearchGate — <https://www.researchgate.net/publication/7794282_Variability_in_muscle_size_and_strength_gain_after_unilateral_resistance_training>

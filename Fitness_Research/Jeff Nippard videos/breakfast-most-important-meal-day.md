@@ -51,3 +51,17 @@ Skipping breakfast could plausibly reduce intake of certain vitamins and mineral
 ## Caveats & unknowns
 - Meal-timing and MPS research was still developing at the time of the video; the exact cost of a very narrow eating window is not pinned down.
 - The observational health data on breakfast is heavily confounded by healthy-user effects and cannot establish causation.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Betts JA et al. 2011. Bath Breakfast Project (BBP)--examining the role of extended daily fasting in human energy balance and associated health outcomes: study protocol for a randomised controlled trial ISRCTN31521726. *Trials*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21740575) doi:[10.1186/1745-6215-12-172](https://doi.org/10.1186/1745-6215-12-172)
+- Mekary RA et al. 2012. Eating patterns and type 2 diabetes risk in men: breakfast omission, eating frequency, and snacking. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22456660) doi:[10.3945/ajcn.111.028209](https://doi.org/10.3945/ajcn.111.028209)
+- Clayton DJ et al. 2015. Effect of Breakfast Omission on Energy Intake and Evening Exercise Performance. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25970668) doi:[10.1249/MSS.0000000000000702](https://doi.org/10.1249/MSS.0000000000000702)
+- Betts JA et al. 2016. Is breakfast the most important meal of the day?. *Proc Nutr Soc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27292940) doi:[10.1017/S0029665116000318](https://doi.org/10.1017/S0029665116000318)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4763497/>
+- Dhurandhar EJ et al. 2014. The effectiveness of breakfast recommendations on weight loss: a randomized controlled trial. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24898236) doi:[10.3945/ajcn.114.089573](https://doi.org/10.3945/ajcn.114.089573)
+- Kant AK & Graubard BI 2015. Within-person comparison of eating behaviors, time of eating, and dietary intake on days with and without breakfast: NHANES 2005-2010. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26178722) doi:[10.3945/ajcn.115.110262](https://doi.org/10.3945/ajcn.115.110262)

@@ -69,3 +69,12 @@ The unanswered question he'd like tested: a **12-month study**, one group doing 
 - The 9,400 kcal/kg figure is an average that changes with body composition; the 3,500 kcal/lb rule is a rough approximation only.
 - No data establishes how overweight you need to be for fat stores to fuel recomposition; Jeff says so explicitly.
 - The attribution of gaintaining to Norton and Nunez is offered with an explicit "I may be recalling this incorrectly," and one article contributor's name is uncertain from the captions.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Kistler BM et al. 2014. Case study: Natural bodybuilding contest preparation. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24901578) doi:[10.1123/ijsnem.2014-0016](https://doi.org/10.1123/ijsnem.2014-0016)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2376744/>

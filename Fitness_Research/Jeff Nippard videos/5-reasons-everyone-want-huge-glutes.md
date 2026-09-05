@@ -48,3 +48,20 @@ From *Sapiens* (Yuval Noah Harari): humans evolved unusually large glutes, and t
 - This is an off-the-cuff walk-and-talk video: the arguments are mechanistic and observational, with few named studies. Several claims (MMA striking, powerlifter physiques) are anecdote or hearsay, and Jeff presents them as such.
 - Knee valgus causation and danger are genuinely contested.
 - The evolutionary chicken-and-egg question is unresolved.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://www.sciencedirect.com/science/article/pii/S1090513815000185>
+- <https://link.springer.com/article/10.1007%2FBF02436430>
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- ResearchGate — <https://www.researchgate.net/publication/232187055_A_Comparison_of_the_Various_Methods_Used_To_Enhance_Sprint_Speed>
+- ResearchGate — <https://www.researchgate.net/publication/325362852_Activation_of_the_Gluteus_Maximus_During_Performance_of_the_Back_Squat_Split_Squat_and_Barbell_Hip_Thrust_and_the_Relationship_With_Maximal_Sprinting>
+- Alkjaer T et al. 2012. Computational modeling of a forward lunge: towards a better understanding of the function of the cruciate ligaments. *J Anat*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23057673) doi:[10.1111/j.1469-7580.2012.01569.x](https://doi.org/10.1111/j.1469-7580.2012.01569.x)
+- Cochrane DJ & Barnes MJ 2015. Muscle Activation and Onset Times of Hip Extensors during Various Loads of a Closed Kinetic Chain Exercise. *Res Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25656945) doi:[10.1080/15438627.2015.1005299](https://doi.org/10.1080/15438627.2015.1005299)
+- <https://journals.lww.com/acsm-healthfitness/fulltext/2017/07000/Posterior_Chain_Exercises_for_Prevention_and.13.aspx>
+- Homan KJ et al. 2013. The influence of hip strength on gluteal activity and lower extremity kinematics. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23246034) doi:[10.1016/j.jelekin.2012.11.009](https://doi.org/10.1016/j.jelekin.2012.11.009)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4739044/>

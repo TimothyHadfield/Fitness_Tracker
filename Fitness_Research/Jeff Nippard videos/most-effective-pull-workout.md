@@ -74,3 +74,18 @@ A mechanical drop set in two positions:
 - Enhanced eccentrics improved activation and work capacity but did not out-perform the control for muscle mass in a ten-week study.
 - The pre-exhaustion rationale for the biceps tri-set is described as theoretical ("in theory", "in concept") rather than directly tested.
 - The Pisar-Ian shrug citation is a likely caption mangling; verify before relying on it.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Augustsson J et al. 2003. Effect of pre-exhaustion exercise on lower-extremity muscle activation during a leg press exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12741886) doi:[10.1519/1533-4287(2003)017<0411:eopeol>2.0.co;2](https://doi.org/10.1519/1533-4287(2003)017<0411:eopeol>2.0.co;2)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4847223/>
+- Pizzari T et al. 2014. Modifying a shrug exercise can facilitate the upward rotator muscles of the scapula. *Clin Biomech (Bristol)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24342452) doi:[10.1016/j.clinbiomech.2013.11.011](https://doi.org/10.1016/j.clinbiomech.2013.11.011)
+- Anderson CE et al. 2008. The effects of combining elastic and free weight resistance on strength and power in athletes. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18550975/) doi:[10.1519/JSC.0b013e3181634d1e](https://doi.org/10.1519/JSC.0b013e3181634d1e)
+- Doma K et al. 2013. Kinematic and electromyographic comparisons between chin-ups and lat-pull down exercises. *Sports Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24245055) doi:[10.1080/14763141.2012.760204](https://doi.org/10.1080/14763141.2012.760204)
+- ResearchGate — <https://www.researchgate.net/publication/323740477_Differential_effects_of_attentional_focus_strategies_during_long-term_resistance_training>
+- Schoenfeld BJ et al. 2016. Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27102172) doi:[10.1007/s40279-016-0543-8](https://doi.org/10.1007/s40279-016-0543-8)
+- <https://journals.lww.com/nsca-scj/Fulltext/2011/08000/The_Use_of_Specialized_Training_Techniques_to.11.aspx>

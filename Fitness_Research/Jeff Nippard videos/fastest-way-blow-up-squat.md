@@ -67,3 +67,12 @@ The principle: as you advance, PR signposts get less frequent but must not disap
 - The wider-stance recommendation depends on anthropometry and may not apply to you; he had not yet tested it on himself at the time of filming.
 - The 5% belt figure is his own estimate; the knee sleeve figure comes from coaching experience plus one new study.
 - The audience poll on bar position may be skewed by his own high-bar demo video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- Glassbrook DJ et al. 2019. The High-Bar and Low-Bar Back-Squats: A Biomechanical Analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28195975/) doi:[10.1519/JSC.0000000000001836](https://doi.org/10.1519/JSC.0000000000001836)
+- Machek SB et al. 2021. Neoprene Knee Sleeves of Varying Tightness Augment Barbell Squat One Repetition Maximum Performance Without Improving Other Indices of Muscular Strength, Power, or Endurance. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33201154/) doi:[10.1519/JSC.0000000000003869](https://doi.org/10.1519/JSC.0000000000003869)

@@ -42,3 +42,17 @@ Nippard also makes a behavioural argument: getting kids lifting early helps buil
 - The safety verdict is conditional on supervision and technique. The consensus statement is not a licence for unsupervised maximal lifting by untrained kids.
 - The original 1964 observation is epidemiological and cannot establish causation in either direction.
 - Nippard names no individual researchers here; the claims rest on the 2014 consensus statement and an unnamed *Sports Medicine* review. He treats this topic as effectively settled within the scientific community, with converging evidence and near-unanimous agreement.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Lloyd RS et al. 2014. Position statement on youth resistance training: the 2014 International Consensus. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24055781) doi:[10.1136/bjsports-2013-092952](https://doi.org/10.1136/bjsports-2013-092952)
+- Vicente-Rodríguez G 2006. How does exercise affect bone development during growth?. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16796394) doi:[10.2165/00007256-200636070-00002](https://doi.org/10.2165/00007256-200636070-00002)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3483033/>
+
+**Other Suggested Reading and Resources**
+
+- Behringer M et al. 2010. Effects of resistance training in children and adolescents: a meta-analysis. *Pediatrics*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20974785) doi:[10.1542/peds.2010-0445](https://doi.org/10.1542/peds.2010-0445)

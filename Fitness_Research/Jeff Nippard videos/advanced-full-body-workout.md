@@ -85,3 +85,7 @@ Both had grip limitations. Time-efficient method: after the last set of RDLs (or
 
 ## Caveats & unknowns
 Much of the reasoning here is mechanistic rather than directly tested — the cross-bridge, titin, sarcomerogenesis and pathway-signalling arguments are explanations for exercise choices, not evidence that these specific variations outgrow standard ones. The high-rep/low-rep signalling study is attributed only vaguely in the captions and is not reliably named. Menno explicitly caveats that his heavy RDL style suits his own structure and that the choice depends on individual leverages. The chest press was run at unusually high reps only because of an elbow issue.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -53,3 +53,9 @@ Findings and reasoning:
 - The Arandjelović study is a **computer simulation with modelled inputs, not a training or EMG study on live subjects** — treat the momentum recommendation as a mechanistic argument, not an outcome finding.
 - The claim about machine press handle position biasing front over side delt is **explicitly acknowledged as unsupported by data**.
 - The rotation cues are based on function and fibre-line reasoning; no specific EMG studies are cited for them in this video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Arandjelović O 2013. Does cheating pay: the role of externally supplied momentum on muscular force in resistance exercise. *Eur J Appl Physiol*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/22615008) doi:[10.1007/s00421-012-2420-y](https://doi.org/10.1007/s00421-012-2420-y)

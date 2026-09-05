@@ -61,3 +61,13 @@ The whole session is six exercises and roughly 16 working sets. Progress the pul
 
 ## Caveats & unknowns
 No hypertrophy study compares the lat pull-in with the lat pulldown, so that choice is preference. The overhead curl long-head bias rests on lab EMG observation of two lifters, not a training study. EMG activation patterns are highly individual, which is precisely why he recommends experimenting rather than prescribing.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Schoenfeld B et al. 2013. Effect of hand position on EMG activity of the posterior shoulder musculature during a horizontal abduction exercise. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23302754/) doi:[10.1519/JSC.0b013e318281e1e9](https://doi.org/10.1519/JSC.0b013e318281e1e9)
+
+**EMG Limitations**
+
+- ResearchGate — <https://www.researchgate.net/publication/357720922>

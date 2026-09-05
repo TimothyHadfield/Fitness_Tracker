@@ -51,3 +51,7 @@ His closing example: someone says "IIFYM doesn't work because eating donuts all 
 ## Caveats & unknowns
 - His overall verdict is that **GMOs currently on the market have been shown to be safe and there's no reason to avoid them** — with the explicit acknowledgement that you *could* genetically modify something to be toxic. Safety is a property of the specific tested product, not of the modification process.
 - No specific studies or safety datasets are cited by name; the video is an argument about reasoning, not an evidence review.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -49,3 +49,7 @@ In *The Stubborn Fat Solution*, Lyle McDonald offers a **mechanistic** (not tria
 - Fat oxidation measurements can't distinguish intramuscular triglyceride use from adipose breakdown.
 - The nitrogen-loss finding has no established tissue source and no demonstrated long-term consequence.
 - Performance effects at maximal or near-maximal intensities were not addressed.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

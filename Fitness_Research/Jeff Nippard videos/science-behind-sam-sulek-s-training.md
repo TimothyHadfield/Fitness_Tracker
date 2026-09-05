@@ -45,3 +45,20 @@ Rep distribution: 11% at 0-3 reps, 40% at 4-7, 40% at 8-12, 9% above 13 reps.
 
 ## Caveats & unknowns
 Sulek may be tracking off camera — Jeff never heard it mentioned but can't rule it out. Anabolic enhancement changes the picture: it functions like a second newbie phase where almost any training works, and research shows muscle can be built on drugs without training at all, so Sulek's results don't validate his methods. It is also possible that lifters at his level of development tolerate more per-session volume than average. And whether his injuries come from failure training, the loads, or something else is unresolved.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- <https://www.mdpi.com/2411-5142/9/1/9>
+
+- Pedrosa GF et al. 2023. Training in the Initial Range of Motion Promotes Greater Muscle Adaptations Than at Final in the Arm Curl. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36828324/) doi:[10.3390/sports11020039](https://doi.org/10.3390/sports11020039)
+- Sato S et al. 2021. Elbow Joint Angles in Elbow Flexor Unilateral Resistance Exercise Training Determine Its Effects on Muscle Strength and Thickness of Trained and Non-trained Arms. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34616309/) doi:[10.3389/fphys.2021.734509](https://doi.org/10.3389/fphys.2021.734509)
+
+- Bhasin S et al. 1996. The effects of supraphysiologic doses of testosterone on muscle size and strength in normal men. *N Engl J Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8637535/) doi:[10.1056/NEJM199607043350101](https://doi.org/10.1056/NEJM199607043350101)
+
+- ResearchGate — <https://www.researchgate.net/publication/344398880>
+
+**Junk Volume**
+
+- Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>

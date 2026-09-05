@@ -61,3 +61,30 @@ Busted. The credible glucose and insulin benefits aren't unique to apple cider v
 - The weight-loss evidence rests on a single study with obese subjects, self-reported intake, a small effect, and complete regain at follow-up.
 - No research exists isolating the mother's effects.
 - Whether the glucose benefit translates to meaningful health outcomes in healthy people is unaddressed.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Weight Loss**
+
+- Kohn JB 2015. Is vinegar an effective treatment for glycemic control or weight loss?. *J Acad Nutr Diet*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26115563) doi:[10.1016/j.jand.2015.05.010](https://doi.org/10.1016/j.jand.2015.05.010)
+- Kondo T et al. 2009. Vinegar intake reduces body weight, body fat mass, and serum triglyceride levels in obese Japanese subjects. *Biosci Biotechnol Biochem*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19661687) doi:[10.1271/bbb.90231](https://doi.org/10.1271/bbb.90231)
+
+**Glucose Control/ Insulin Sensitivity**
+
+- Petsiou EI et al. 2014. Effect and mechanisms of action of vinegar on glucose metabolism, lipid profile, and body weight. *Nutr Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25168916) doi:[10.1111/nure.12125](https://doi.org/10.1111/nure.12125)
+- Johnston CS et al. 2010. Examination of the antiglycemic properties of vinegar in healthy adults. *Ann Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20068289) doi:[10.1159/000272133](https://doi.org/10.1159/000272133)
+- Shishehbor F et al. 2017. Vinegar consumption can attenuate postprandial glucose and insulin responses; a systematic review and meta-analysis of clinical trials. *Diabetes Res Clin Pract*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28292654) doi:[10.1016/j.diabres.2017.01.021](https://doi.org/10.1016/j.diabres.2017.01.021)
+
+**Appetite and Satiety**
+
+- Darzi J et al. 2014. Influence of the tolerability of vinegar as an oral source of short-chain fatty acids on appetite control and food intake. *Int J Obes (Lond)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23979220) doi:[10.1038/ijo.2013.157](https://doi.org/10.1038/ijo.2013.157)
+
+**Tooth Whitening**
+
+- Mandel L 2005. Dental erosion due to wine consumption. *J Am Dent Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15693499) doi:[10.14219/jada.archive.2005.0029](https://doi.org/10.14219/jada.archive.2005.0029)
+
+**HELPFUL RESOURCES**
+
+- Examine.com — <https://examine.com/nutrition/does-vinegar-increase-metabolism/>

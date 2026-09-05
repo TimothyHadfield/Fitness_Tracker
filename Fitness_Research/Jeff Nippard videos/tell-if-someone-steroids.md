@@ -72,3 +72,17 @@ Some people will exceed these without drugs, but for most this is around the nat
 - The Kouri cutoff of 25 comes from only 74 natural subjects; the historical and athletic data show it is a strong trend, not a physical law.
 - You can never prove an individual is natural. The most that can be said is whether a physique is *possible* naturally.
 - Some pre-1952 physiques could theoretically have had Soviet-era access to testosterone, though this is very unlikely for American lifters.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Nieschlag E & Nieschlag S 2019. ENDOCRINE HISTORY: The history of discovery, synthesis and development of testosterone for clinical use. *Eur J Endocrinol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30959485/) doi:[10.1530/EJE-19-0071](https://doi.org/10.1530/EJE-19-0071)
+- <https://jamanetwork.com/journals/jama/article-abstract/271109>
+
+- Kouri EM et al. 1995. Fat-free mass index in users and nonusers of anabolic-androgenic steroids. *Clin J Sport Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/7496846/) doi:[10.1097/00042752-199510000-00003](https://doi.org/10.1097/00042752-199510000-00003)
+- Trexler ET et al. 2017. Fat-Free Mass Index in NCAA Division I and II Collegiate American Football Players. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27930454/) doi:[10.1519/JSC.0000000000001737](https://doi.org/10.1519/JSC.0000000000001737)
+
+- Coin A et al. 2008. Fat-free mass and fat mass reference values by dual-energy X-ray absorptiometry (DEXA) in a 20-80 year-old Italian population. *Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/18206273/) doi:[10.1016/j.clnu.2007.10.008](https://doi.org/10.1016/j.clnu.2007.10.008)
+
+- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15947721/)

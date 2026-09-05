@@ -69,3 +69,20 @@ Technique: pull the tension out of the bar before lifting rather than walking up
 - No research exists on the Meadows row itself — the rationale is biomechanical inference plus adjacent row studies.
 - Grip-width effects on lat recruitment show large individual variability, so any single recommendation is weak.
 - Two cited surnames (the 2010 pulldown grip study; the seated-row EMG study) are garbled or imprecise in the auto-captions and should be verified.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29533715) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)
+- Schoenfeld B et al. 2013. Effect of hand position on EMG activity of the posterior shoulder musculature during a horizontal abduction exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23302754) doi:[10.1519/JSC.0b013e318281e1e9](https://doi.org/10.1519/JSC.0b013e318281e1e9)
+- Fisher BE et al. 2016. Evidence of altered corticomotor excitability following targeted activation of gluteus maximus training in healthy individuals. *Neuroreport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26981714) doi:[10.1097/WNR.0000000000000556](https://doi.org/10.1097/WNR.0000000000000556)
+- Schoenfeld BJ et al. 2015. Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25601394) doi:[10.1007/s40279-015-0304-0](https://doi.org/10.1007/s40279-015-0304-0)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Lusk SJ et al. 2010. Grip width and forearm orientation effects on muscle activity during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20543740) doi:[10.1519/JSC.0b013e3181ddb0ab](https://doi.org/10.1519/JSC.0b013e3181ddb0ab)
+
+**Helpful Resources and Attribution Credits**
+
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/blog/how-fast-should-you-lift-to-maximize-muscle-growth/>

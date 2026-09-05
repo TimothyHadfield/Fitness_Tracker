@@ -61,3 +61,11 @@ For any lagging muscle:
 - The volume and frequency numbers are Jeff's practical rules of thumb, not direct study outputs; individual tolerance varies with advancement.
 - No specific studies are named in this segment — the pre-exhaustion and frequency claims are described generically.
 - Intensity techniques remain contested within the evidence-based community precisely because of the fatigue-vs-volume tradeoff.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Augustsson J et al. 2003. Effect of pre-exhaustion exercise on lower-extremity muscle activation during a leg press exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12741886) doi:[10.1519/1533-4287(2003)017<0411:eopeol>2.0.co;2](https://doi.org/10.1519/1533-4287(2003)017<0411:eopeol>2.0.co;2)

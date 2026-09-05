@@ -46,3 +46,7 @@ Unknown. Nippard speculates it could relate to blood flow and nutrient delivery,
 - No known mechanism.
 - The supporting calf study was never published; the dramatic 1993 result was in quail, not humans.
 - Whether there is a point of diminishing or negative returns from higher stretching volume is untested — Nippard's limited protocol is a precaution, not an evidence-based dose.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -47,3 +47,7 @@ He also rates it for building raw deadlift strength, especially if you tend to m
 ## Caveats & unknowns
 - The torque-curve claim comes from a biomechanics text, not a direct training comparison; no hypertrophy study is cited for the exercise itself.
 - Requires a 45-degree hyperextension bench, which not every gym has.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

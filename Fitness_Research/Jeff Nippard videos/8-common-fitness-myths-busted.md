@@ -76,3 +76,45 @@ The core problem: somatotype classifications imply you can't change your body co
 
 ## Caveats & unknowns
 Spot reduction is explicitly left open — the supportive study is small, recent, and contradicts prior work; the confounding 30 minutes of post-training cycling makes the mechanism ambiguous. The mind-muscle connection research was new at the time and the quad null result is unresolved. This is a compressed recap; each myth has a full-length original video with the detail.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Betts JA et al. 2014. The causal role of breakfast in energy balance and health: a randomized controlled trial in lean adults. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24898233) doi:[10.3945/ajcn.114.083402](https://doi.org/10.3945/ajcn.114.083402)
+
+- Gwinup G et al. 1971. Thickness of subcutaneous fat and activity of underlying muscles. *Ann Intern Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/5552114) doi:[10.7326/0003-4819-74-3-408](https://doi.org/10.7326/0003-4819-74-3-408)
+- Kostek MA et al. 2007. Subcutaneous fat alterations resulting from an upper-body resistance training program. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17596787) doi:[10.1249/mss.0b0138058a5cb](https://doi.org/10.1249/mss.0b0138058a5cb)
+- Ramírez-Campillo R et al. 2013. Regional fat changes induced by localized muscle endurance resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23222084) doi:[10.1519/JSC.0b013e31827e8681](https://doi.org/10.1519/JSC.0b013e31827e8681)
+- Scotto di Palumbo A et al. 2017. Effect of combined resistance and endurance exercise training on regional fat loss. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28497942) doi:[10.23736/S0022-4707.16.06358-1](https://doi.org/10.23736/S0022-4707.16.06358-1)
+
+- ResearchGate — <https://www.researchgate.net/publication/281938190_Are_folates_carotenoids_and_vitamin_C_affected_by_cooking_Four_domestic_procedures_are_compared_on_a_large_diversity_of_frozen_vegetables>
+- ResearchGate — <https://www.researchgate.net/publication/284786193_A_review_of_the_impact_of_preparation_and_cooking_on_the_nutritional_quality_of_vegetables_and_legumes>
+
+- Cotter JD et al. 2014. Are we being drowned in hydration advice? Thirsty for more?. *Extrem Physiol Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25356197) doi:[10.1186/2046-7648-3-18](https://doi.org/10.1186/2046-7648-3-18)
+- Savoie FA et al. 2015. Effect of Hypohydration on Muscle Endurance, Strength, Anaerobic Power and Capacity and Vertical Jumping Ability: A Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26178327) doi:[10.1007/s40279-015-0349-0](https://doi.org/10.1007/s40279-015-0349-0)
+- Murray B 2007. Hydration and physical performance. *J Am Coll Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17921463) doi:[10.1080/07315724.2007.10719656](https://doi.org/10.1080/07315724.2007.10719656)
+- Campbell SM 2007. Hydration needs throughout the lifespan. *J Am Coll Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17921469) doi:[10.1080/07315724.2007.10719662](https://doi.org/10.1080/07315724.2007.10719662)
+- Hayes LD & Morse CI 2010. The effects of progressive dehydration on strength and power: is there a dose response?. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19908058) doi:[10.1007/s00421-009-1288-y](https://doi.org/10.1007/s00421-009-1288-y)
+- Millard-Stafford M et al. 2012. Thirst and hydration status in everyday life. *Nutr Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23121351) doi:[10.1111/j.1753-4887.2012.00527.x](https://doi.org/10.1111/j.1753-4887.2012.00527.x)
+- Charrière N et al. 2015. Water-induced thermogenesis and fat oxidation: a reassessment. *Nutr Diabetes*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26690288) doi:[10.1038/nutd.2015.41](https://doi.org/10.1038/nutd.2015.41)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2908954/>
+- Jéquier E & Constant F 2010. Water as an essential nutrient: the physiological basis of hydration. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19724292) doi:[10.1038/ejcn.2009.111](https://doi.org/10.1038/ejcn.2009.111)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5143456/>
+- Alexander DD et al. 2016. Dairy consumption and CVD: a systematic review and meta-analysis. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26786887) doi:[10.1017/S0007114515005000](https://doi.org/10.1017/S0007114515005000)
+- de Goede J et al. 2016. Dairy Consumption and Risk of Stroke: A Systematic Review and Updated Dose-Response Meta-Analysis of Prospective Cohort Studies. *J Am Heart Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27207960) doi:[10.1161/JAHA.115.002787](https://doi.org/10.1161/JAHA.115.002787)
+- Lu L et al. 2016. Long-term association between dairy consumption and risk of childhood obesity: a systematic review and meta-analysis of prospective cohort studies. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26862005) doi:[10.1038/ejcn.2015.226](https://doi.org/10.1038/ejcn.2015.226)
+- Guo J et al. 2017. Milk and dairy consumption and risk of cardiovascular diseases and all-cause mortality: dose-response meta-analysis of prospective cohort studies. *Eur J Epidemiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28374228) doi:[10.1007/s10654-017-0243-1](https://doi.org/10.1007/s10654-017-0243-1)
+- Thorning TK et al. 2016. Milk and dairy products: good or bad for human health? An assessment of the totality of scientific evidence. *Food Nutr Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27882862) doi:[10.3402/fnr.v60.32527](https://doi.org/10.3402/fnr.v60.32527)
+- Larsson SC et al. 2015. Milk Consumption and Mortality from All Causes, Cardiovascular Disease, and Cancer: A Systematic Review and Meta-Analysis. *Nutrients*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26378576) doi:[10.3390/nu7095363](https://doi.org/10.3390/nu7095363)
+- Drouin-Chartier JP et al. 2016. Systematic Review of the Association between Dairy Product Consumption and Risk of Cardiovascular-Related Clinical Outcomes. *Adv Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28140321) doi:[10.3945/an.115.011403](https://doi.org/10.3945/an.115.011403)
+
+- Vertinsky P 2007. Physique as destiny: William H. Sheldon, Barbara Honeyman Heath and the struggle for hegemony in the science of somatotyping. *Can Bull Med Hist*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18447308) doi:[10.3138/cbmh.24.2.291](https://doi.org/10.3138/cbmh.24.2.291)
+- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15947721)
+
+- ResearchGate — <https://www.researchgate.net/publication/269769478_Detox_diets_for_toxin_elimination_and_weight_management_A_critical_review_of_the_evidence>
+
+- Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29533715) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)

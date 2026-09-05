@@ -58,3 +58,35 @@ Set calories by goal (5-10% surplus for a lean bulk, 10-20% if you accept fat ga
 
 ## Caveats & unknowns
 The Garthe study was 10 weeks and short-term; Nippard's coaching experience contradicts it on long-term strength gains from aggressive bulking. The 2020 meal-frequency finding did not reach statistical significance. Creatine's lean-mass numbers come partly from a review of older subjects.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Overfeeding Studies**
+
+- Garthe I et al. 2013. Effect of nutritional intervention on body composition and performance in elite athletes. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23679146/) doi:[10.1080/17461391.2011.643923](https://doi.org/10.1080/17461391.2011.643923)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6942464/>
+
+**Creatine**
+
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>
+- Nunes JP et al. 2017. Creatine supplementation elicits greater muscle hypertrophy in upper than lower limbs and trunk in resistance-trained men. *Nutr Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29214923/) doi:[10.1177/0260106017737013](https://doi.org/10.1177/0260106017737013)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5679696/>
+
+**Caffeine**
+
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-020-00383-4>
+- Jodra P et al. 2020. Effects of caffeine supplementation on physical performance and mood dimensions in elite and trained-recreational athletes. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31900166/) doi:[10.1186/s12970-019-0332-5](https://doi.org/10.1186/s12970-019-0332-5)
+
+**Protein**
+
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4008813/>
+- Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
+
+**Meal Frequency**
+
+- Schwingshackl L et al. 2020. Impact of Meal Frequency on Anthropometric Outcomes: A Systematic Review and Network Meta-Analysis of Randomized Controlled Trials. *Adv Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32437566/) doi:[10.1093/advances/nmaa056](https://doi.org/10.1093/advances/nmaa056)
+- Taguchi M et al. 2021. Increasing Meal Frequency in Isoenergetic Conditions Does Not Affect Body Composition Change and Appetite During Weight Gain in Japanese Athletes. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33361498/) doi:[10.1123/ijsnem.2020-0139](https://doi.org/10.1123/ijsnem.2020-0139)
+- Yasuda J et al. 2020. Evenly Distributed Protein Intake over 3 Meals Augments Resistance Exercise-Induced Muscle Hypertrophy in Healthy Young Men. *J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32321161/) doi:[10.1093/jn/nxaa101](https://doi.org/10.1093/jn/nxaa101)

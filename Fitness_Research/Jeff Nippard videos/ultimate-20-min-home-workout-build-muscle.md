@@ -44,3 +44,12 @@ Warm up 5 minutes cardio plus dynamic stretching. Deal 20 cards, run them straig
 
 ## Caveats & unknowns
 The randomisation study found no strength or hypertrophy advantage — only a motivation advantage. Nippard explicitly frames the card workout as a temporary solution for restricted-equipment periods, not a replacement for progressive-overload programming.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Baz-Valle E et al. 2019. The effects of exercise variation in muscle thickness, maximal strength and motivation in resistance trained men. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31881066) doi:[10.1371/journal.pone.0226989](https://doi.org/10.1371/journal.pone.0226989)
+- Grgic J et al. 2017. The effects of short versus long inter-set rest intervals in resistance training on measures of muscle hypertrophy: A systematic review. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28641044) doi:[10.1080/17461391.2017.1340524](https://doi.org/10.1080/17461391.2017.1340524)

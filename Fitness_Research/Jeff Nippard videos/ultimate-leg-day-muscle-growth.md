@@ -48,3 +48,16 @@ Run it in order: squat 1×2-4 → paused squat 2×5 → RDL 3×8-10 → walking 
 - EMG-based foot-rotation advice for the hamstrings is unproven for hypertrophy; the calf version has direct long-term evidence and can be stated with more confidence.
 - The glute squeeze at RDL lockout probably does little mechanically — it is a cue that helps some people find the muscle.
 - Substituting hack squats or Bulgarians is fine only if strength on the squat is not a goal.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Hamstring Curl Studies**
+
+- Maeo S et al. 2021. Greater Hamstrings Muscle Hypertrophy but Similar Damage Protection after Training at Long versus Short Muscle Lengths. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33009197/) doi:[10.1249/MSS.0000000000002523](https://doi.org/10.1249/MSS.0000000000002523)
+- Beuchat A & Maffiuletti NA 2019. Foot rotation influences the activity of medial and lateral hamstrings during conventional rehabilitation exercises in patients following anterior cruciate ligament reconstruction. *Phys Ther Sport*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31277009/) doi:[10.1016/j.ptsp.2019.06.010](https://doi.org/10.1016/j.ptsp.2019.06.010)
+
+**Calf Raise Foot Positioning Study**
+
+- Nunes JP et al. 2020. Different Foot Positioning During Calf Training to Induce Portion-Specific Gastrocnemius Muscle Hypertrophy. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32735428/) doi:[10.1519/JSC.0000000000003674](https://doi.org/10.1519/JSC.0000000000003674)

@@ -52,3 +52,14 @@ Supporting this, Helms cites **2014 research** in which men fed a **1,200 calori
 - The whey study had only 16 subjects; the timing explanation is Helms's hypothesis, not a demonstrated mechanism.
 - The Trexler study followed 15 athletes for only 4-6 weeks — a short window on a long recovery process.
 - The exact "how fast is too fast, how slow is too slow" thresholds for post-contest weight regain are not given here.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Sato K et al. 2014. Serum sex steroids and steroidogenesis-related enzyme expression in skeletal muscle during experimental weight gain in men. *Diabetes Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24792219) doi:[10.1016/j.diabet.2014.03.006](https://doi.org/10.1016/j.diabet.2014.03.006)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4155766/>
+- Mettler S et al. 2010. Increased protein intake reduces lean body mass loss during weight loss in athletes. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19927027) doi:[10.1249/MSS.0b013e3181b2ef8e](https://doi.org/10.1249/MSS.0b013e3181b2ef8e)
+- <https://www.ncbi.nlm.nih.gov//pubmed/28422530/>
+- Dudgeon WD et al. 2017. Effect of Whey Protein in Conjunction With a Caloric-Restricted Diet and Resistance Training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28415067) doi:[10.1519/JSC.0000000000001196](https://doi.org/10.1519/JSC.0000000000001196)
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window?. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23360586) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)

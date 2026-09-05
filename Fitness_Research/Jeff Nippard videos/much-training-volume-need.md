@@ -43,3 +43,12 @@ Krieger's suggested use for high volume is a specialization block: push one lagg
 - Findings are averages — individual recovery capacity, exercise selection, training age and life stress all shift where your own ceiling sits.
 - Higher volume raises injury exposure, which can cost more training time than the extra gains are worth.
 - Researcher name Dan Ogborn is inferred from garbled auto-captions; verify before citing.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Schoenfeld BJ et al. 2017. Dose-response relationship between weekly resistance training volume and increases in muscle mass: A systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27433992) doi:[10.1080/02640414.2016.1210197](https://doi.org/10.1080/02640414.2016.1210197)
+- <http://www.mdpi.com/2075-4663/6/1/7>

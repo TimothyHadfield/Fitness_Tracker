@@ -55,3 +55,12 @@ Five steps: (1) mix rep ranges — heavy because strength is specific, lighter t
 
 ## Caveats & unknowns
 The rep-range-doesn't-matter-for-size conclusion holds only when sets are taken sufficiently close to failure, and breaks down below roughly 30% 1RM. Individual and study-to-study variation in the hypertrophy data is real; the claim is that no *systematic* rep-range effect appears. The mechanical-tension vs metabolic-stress split is presented as a plausible mechanism rather than settled fact.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- Lasevicius T et al. 2018. Effects of different intensities of resistance training with equated volume load on muscle strength and hypertrophy. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29564973/) doi:[10.1080/17461391.2018.1450898](https://doi.org/10.1080/17461391.2018.1450898)
+- Schoenfeld BJ et al. 2014. Effects of different volume-equated resistance training loading strategies on muscular adaptations in well-trained men. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24714538/) doi:[10.1519/JSC.0000000000000480](https://doi.org/10.1519/JSC.0000000000000480)

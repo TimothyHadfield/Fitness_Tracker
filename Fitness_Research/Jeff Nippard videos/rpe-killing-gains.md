@@ -42,3 +42,15 @@ On subject training status: many studies do recruit trained lifters, and most pe
 
 ## Caveats & unknowns
 Beginner accuracy genuinely is lower, and Nippard doesn't dispute the 2017 data showing widespread under-exertion — he disputes the conclusion drawn from it. The RPE-6 accuracy result (1 rep off) is worse than the RPE-9 result, so far-from-failure ratings are less reliable. Failure training isn't dismissed; it has a place, just not as the default.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29112055/) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)
+- ResearchGate — <https://www.researchgate.net/publication/327454079>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5712461/>
+
+- ResearchGate — <https://www.researchgate.net/publication/331718773>

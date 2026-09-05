@@ -53,3 +53,16 @@ Compounding this: people are notoriously bad at estimating meal calories, and **
 - Breakfast skipping backfires for people who overcompensate later.
 - The Urban 2016 attribution is caption-garbled and should be checked.
 - None of the four tips are necessary for fat loss; they are behavioural aids, not requirements.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- ResearchGate — <https://www.researchgate.net/publication/223679624_The_resolution_solution_Longitudinal_examination_of_New_Year's_change_attempts>
+- Johnston BC et al. 2014. Comparison of weight loss among named diet programs in overweight and obese adults: a meta-analysis. *JAMA*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25182101) doi:[10.1001/jama.2014.10397](https://doi.org/10.1001/jama.2014.10397)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6004924/>
+- Urban LE et al. 2016. Energy Contents of Frequently Ordered Restaurant Meals and Comparison with Human Energy Requirements and U.S. Department of Agriculture Database Information: A Multisite Randomized Study. *J Acad Nutr Diet*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26803805) doi:[10.1016/j.jand.2015.11.009](https://doi.org/10.1016/j.jand.2015.11.009)
+- Zijlstra N et al. 2008. The effect of viscosity on ad libitum food intake. *Int J Obes (Lond)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18071342) doi:[10.1038/sj.ijo.0803776](https://doi.org/10.1038/sj.ijo.0803776)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3662831/>

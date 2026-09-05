@@ -49,3 +49,15 @@ A 2013 paper titled "weight loss, weight management and adaptive thermogenesis" 
 - The 2006 under-reporting researcher's name is garbled in the auto-captions; the finding (37% under-reporting in 65 women logging 7 days) is what to keep.
 - The Minnesota subjects were lean men in an extreme, non-representative protocol; adaptation magnitude in ordinary dieters will differ.
 - NEAT's between-person variability means individual response to any given deficit is hard to predict in advance.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Müller MJ & Bosy-Westphal A 2013. Adaptive thermogenesis with weight loss in humans. *Obesity (Silver Spring)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23404923) doi:[10.1002/oby.20027](https://doi.org/10.1002/oby.20027)
+- <https://www.ncbi.nlm.nih.gov/books/NBK279077/>
+- Levine JA et al. 1999. Role of nonexercise activity thermogenesis in resistance to fat gain in humans. *Science*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9880251) doi:[10.1126/science.283.5399.212](https://doi.org/10.1126/science.283.5399.212)
+- Camps SG et al. 2013. Weight loss, weight maintenance, and adaptive thermogenesis. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23535105) doi:[10.3945/ajcn.112.050310](https://doi.org/10.3945/ajcn.112.050310)
+- Mahabir S et al. 2006. Calorie intake misreporting by diet record and food frequency questionnaire compared to doubly labeled water among postmenopausal women. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16391574) doi:[10.1038/sj.ejcn.1602359](https://doi.org/10.1038/sj.ejcn.1602359)

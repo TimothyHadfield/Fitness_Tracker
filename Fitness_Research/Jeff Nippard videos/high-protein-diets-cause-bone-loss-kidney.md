@@ -43,3 +43,14 @@ The evidence against:
 - This video does not establish an optimal or upper protein intake — Jeff flags "how much protein you really need and how much is too much" as a separate future video.
 - The kidney-disease exception is genuine, not a myth.
 - Evidence cited is short-to-medium term for the calcium isotope work; very long-term skeletal outcomes are not addressed in detail.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Shams-White MM et al. 2017. Dietary protein and bone health: a systematic review and meta-analysis from the National Osteoporosis Foundation. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28404575) doi:[10.3945/ajcn.116.145110](https://doi.org/10.3945/ajcn.116.145110)
+- Phillips SM et al. 2016. Protein "requirements" beyond the RDA: implications for optimizing health. *Appl Physiol Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26960445) doi:[10.1139/apnm-2015-0550](https://doi.org/10.1139/apnm-2015-0550)
+- Fenton TR et al. 2009. Meta-analysis of the effect of the acid-ash hypothesis of osteoporosis on calcium balance. *J Bone Miner Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19419322) doi:[10.1359/jbmr.090515](https://doi.org/10.1359/jbmr.090515)
+- Darling AL et al. 2009. Dietary protein and bone health: a systematic review and meta-analysis. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19889822) doi:[10.3945/ajcn.2009.27799](https://doi.org/10.3945/ajcn.2009.27799)

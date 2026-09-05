@@ -56,3 +56,30 @@ Note: at the advanced stage you may need a more aggressive caloric surplus to bu
 - All rates assume natural training and that most other variables are already handled well.
 - Optimal frequency is individual; not everyone responds better to higher frequencies.
 - Recomposition and gaining in a deficit both become progressively less feasible with training age.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Muscular potential for women**
+
+- <https://journals.physiology.org/doi/full/10.1152/jappl.2000.89.1.81>
+
+**Daily protein intake**
+
+- Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
+- Phillips SM et al. 2016. Protein "requirements" beyond the RDA: implications for optimizing health. *Appl Physiol Nutr Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26960445/) doi:[10.1139/apnm-2015-0550](https://doi.org/10.1139/apnm-2015-0550)
+
+**Dropsets**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8473065/>
+- ResearchGate — <https://www.researchgate.net/publication/322133680_Can_Drop_Set_Training_Enhance_Muscle_Growth>
+
+**Eccentric stuff**
+
+- Roig M et al. 2009. The effects of eccentric versus concentric resistance training on muscle strength and mass in healthy adults: a systematic review with meta-analysis. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/18981046/) doi:[10.1136/bjsm.2008.051417](https://doi.org/10.1136/bjsm.2008.051417)
+- Douglas J et al. 2017. Chronic Adaptations to Eccentric Training: A Systematic Review. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27647157/) doi:[10.1007/s40279-016-0628-4](https://doi.org/10.1007/s40279-016-0628-4)
+
+**Specialization Phases and Volume**
+
+- Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>

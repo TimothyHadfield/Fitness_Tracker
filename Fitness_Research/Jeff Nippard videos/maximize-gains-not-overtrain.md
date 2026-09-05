@@ -56,3 +56,36 @@ Deloads serve two purposes: preventing overuse injury, and resensitising the bod
 - This guidance targets **advanced trainees**, who must overreach more regularly to progress. **Beginners** can usually progress linearly without deliberate overreaching or deloads.
 - Overtraining is not the only cause of a stall: **program monotony** (never varying the plan) can stunt progress, and sometimes the actual fix is pushing harder, not resting more.
 - The researcher name behind the 6-days-per-week 1RM squat study was garbled in the captions (heard as "Fry") — verify before citing.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Overtraining Syndrome**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3435910/>
+
+**Mechanisms of Overtraining (Volume and Intensity)**
+
+- Schoenfeld BJ 2010. The mechanisms of muscle hypertrophy and their application to resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20847704) doi:[10.1519/JSC.0b013e3181e840f3](https://doi.org/10.1519/JSC.0b013e3181e840f3)
+- Fry AC et al. 1994. Performance decrements with high-intensity resistance exercise overtraining. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7808252)
+
+**The 3x10 vs 7x3 Study**
+
+- Schoenfeld BJ et al. 2014. Effects of different volume-equated resistance training loading strategies on muscular adaptations in well-trained men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24714538) doi:[10.1519/JSC.0000000000000480](https://doi.org/10.1519/JSC.0000000000000480)
+
+**Volume Recommendations**
+
+- Helms ER et al. 2015. Recommendations for natural bodybuilding contest preparation: resistance and cardiovascular training. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24998610)
+
+**Effectiveness of the Self-Survey**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4789708/>
+
+**Heart Rate Variability and Recovery**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4840584/>
+
+**Full Training Break (Periodic vs Continuous)**
+
+- Ogasawara R et al. 2011. Effects of periodic and continued resistance training on muscle CSA and strength in previously untrained men. *Clin Physiol Funct Imaging*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21771261) doi:[10.1111/j.1475-097X.2011.01031.x](https://doi.org/10.1111/j.1475-097X.2011.01031.x)

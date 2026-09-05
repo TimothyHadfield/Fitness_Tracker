@@ -64,3 +64,11 @@ Turning a rear delt movement into a row by retracting too much. Rear delts need 
 - The Schoenfeld grip finding was not universal — individual responses to neutral vs. pronated grips differed.
 - EMG activation is a proxy for stimulus, not a direct measure of hypertrophy.
 - No set counts or weekly frequency are prescribed in this video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Schoenfeld B et al. 2013. Effect of hand position on EMG activity of the posterior shoulder musculature during a horizontal abduction exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23302754) doi:[10.1519/JSC.0b013e318281e1e9](https://doi.org/10.1519/JSC.0b013e318281e1e9)

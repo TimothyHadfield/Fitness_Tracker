@@ -45,3 +45,18 @@ Jeff skips the large literature here and gives the short version: if the goal is
 - Jeff explicitly says this myth is **not fully busted** — it depends on training status and goals.
 - The exact width of the window depends on individual pre-workout meal size and composition, which no study pins down precisely.
 - His better mental model: not an on/off switch but a **dial**. Good dosing and timing turns it further up, but mistimed or slightly under-dosed protein still gets the dial most of the way up.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window?. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23360586) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5214805/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4008813/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3381813/>
+- Kerksick CM et al. 2017. International society of sports nutrition position stand: nutrient timing. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28919842) doi:[10.1186/s12970-017-0189-4](https://doi.org/10.1186/s12970-017-0189-4)
+- Schoenfeld BJ et al. 2013. The effect of protein timing on muscle strength and hypertrophy: a meta-analysis. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24299050) doi:[10.1186/1550-2783-10-53](https://doi.org/10.1186/1550-2783-10-53)
+- <http://journals.sagepub.com/doi/abs/10.1177/1559827613502444?journalCode=ajla>
+- Lemon PW et al. 2002. The role of protein and amino acid supplements in the athlete's diet: does type or timing of ingestion matter?. *Curr Sports Med Rep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12831698) doi:[10.1249/00149619-200208000-00005](https://doi.org/10.1249/00149619-200208000-00005)

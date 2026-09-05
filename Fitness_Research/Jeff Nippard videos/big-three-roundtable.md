@@ -112,3 +112,7 @@ His description of what it actually costs [39:26]: **four hours in a sauna at ~1
 - **The intuitive weight-cutting approach carries real risk.** Cauchi's own description — 4 hours of sauna, 18 hours without water, near-collapse — is presented candidly as unglamorous and painful, not as a template.
 - **Name flags from auto-captions:** the Arnold competitors Gibbs mentions are rendered "Kelly Branson and leay nordon" — most likely **Kelly Branton and Layne Norton**, uncertain. The crying IPF lifter is given only as "George". The track-and-field anecdote's team and decade are explicitly uncertain in Cauchi's own telling. "Robin" (a previous podcast guest) is unidentified.
 - Totals and bodyweights are quoted conversationally: Gibbs is described as totalling ~830 kg and sitting at 86–88 kg (peak 88, heaviest ever ~90); Hancott is 5'9" in the 74 kg class training at ~77 kg. Treat as approximate.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

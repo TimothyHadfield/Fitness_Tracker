@@ -54,3 +54,11 @@ Purpose: get comfortable handling heavy weight regularly and build confidence wi
 
 ## Caveats & unknowns
 Max-legal grip width isn't comfortable or appropriate for everyone — shoulder comfort limits it. Very high bench frequency (4-5x/week) requires careful volume and intensity management. Much of the video's material is drawn from the Stronger By Science bench press guide.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Zourdos MC et al. 2016. Modified Daily Undulating Periodization Model Produces Greater Performance Than a Traditional Configuration in Powerlifters. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26332783) doi:[10.1519/JSC.0000000000001165](https://doi.org/10.1519/JSC.0000000000001165)

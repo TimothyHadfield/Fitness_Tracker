@@ -38,3 +38,12 @@ Run the session in order as listed. Alternate deadlift rep schemes weekly (5s / 
 
 ## Caveats & unknowns
 Sumo vs conventional hypertrophy differences are described as small; stance choice is individual and best settled by testing. The Contreras EMG work was a single solo experiment, and EMG activation is not a direct measure of growth. The whole setup assumes familiarity with his high-frequency full body rationale.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Escamilla RF et al. 2002. An electromyographic analysis of sumo and conventional style deadlifts. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11932579/) doi:[10.1097/00005768-200204000-00019](https://doi.org/10.1097/00005768-200204000-00019)
+- Fonseca RM et al. 2014. Changes in exercises are more effective than in loading schemes to improve muscle strength. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24832974/) doi:[10.1519/JSC.0000000000000539](https://doi.org/10.1519/JSC.0000000000000539)

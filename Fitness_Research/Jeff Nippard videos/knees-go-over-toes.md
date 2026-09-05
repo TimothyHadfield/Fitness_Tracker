@@ -46,3 +46,17 @@ Everything beyond that is individual anatomy. Forward lean is driven mostly by f
 - Recommendations apply to healthy, regularly active people. Anyone already dealing with knee pain should get assessed by a qualified professional rather than self-prescribing.
 - The original 1972 paper had only 12 subjects and poor methodological control; the "excessive" threshold for forward knee travel is never quantified.
 - Researcher names in the 2003 and follow-up citations are garbled by the auto-captions and should be verified before being repeated.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://link.springer.com/chapter/10.1007/978-1-349-02612-8_7>
+- Hartmann H et al. 2013. Analysis of the load on the knee joint and vertebral column with changes in squatting depth and weight load. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23821469) doi:[10.1007/s40279-013-0073-6](https://doi.org/10.1007/s40279-013-0073-6)
+- Fry AC et al. 2003. Effect of knee position on hip and knee torques during the barbell squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/14636100) doi:[10.1519/1533-4287(2003)017<0629:eokpoh>2.0.co;2](https://doi.org/10.1519/1533-4287(2003)017<0629:eokpoh>2.0.co;2)
+
+**Helpful Resources**
+
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/blog/knees-past-toes-during-the-squat/>

@@ -39,3 +39,12 @@ The practical resolution is that intensity of effort and volume trade off agains
 - This is a short Q&A answer with no specific set/rep prescriptions or study citations beyond naming the researchers involved.
 - The claim that training style drives the "grainy" bodybuilding look is untested and confounded by drug protocols and genetics.
 - No guidance is given on how long each block should last — only that cycling them intelligently over a calendar year is the aim.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- ResearchGate — <https://www.researchgate.net/publication/228830087_Evidence-Based_Resistance_Training_Recommendations>
+- Schoenfeld BJ et al. 2017. Dose-response relationship between weekly resistance training volume and increases in muscle mass: a systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27433992/) doi:[10.1080/02640414.2016.1210197](https://doi.org/10.1080/02640414.2016.1210197)

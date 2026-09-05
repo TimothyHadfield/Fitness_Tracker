@@ -59,4 +59,4 @@ Elite is not available to everyone, and he's explicit that reaching it may deman
 
 ## References
 
-Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

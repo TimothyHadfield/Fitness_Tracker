@@ -50,3 +50,7 @@ The sequence: hold the dumbbells in front, **set the hips back** with a slight k
 - The foot-position advice on RDLs is presented as individual — "it ultimately comes down to where you feel it best," not a general recommendation.
 - No sets, rest periods, or weekly frequency are given, and the session was constrained by limited hotel-gym equipment and a hard time cut-off.
 - Nippard notes his own calf training science video was old at the time of filming and due to be redone, so treat the calf cues as coaching preference rather than a summary of the evidence.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

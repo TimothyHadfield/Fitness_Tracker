@@ -52,3 +52,37 @@ Research from **Potti and colleagues** (name uncertain — likely garbled by aut
 - Human trials to date have been short; long-term effects are unknown.
 - The mechanism behind fasting's health effects (the hormesis/preconditioning theory) is not established.
 - Several study details here come from a short, older (2017) video and rely on auto-captions — the "Potti" citation in particular should be verified before it's repeated.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Wan R et al. 2003. Intermittent food deprivation improves cardiovascular and neuroendocrine responses to stress in rats. *J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12771340) doi:[10.1093/jn/133.6.1921](https://doi.org/10.1093/jn/133.6.1921)
+- Ahmet I et al. 2005. Cardioprotection by intermittent fasting in rats. *Circulation*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16275865) doi:[10.1161/CIRCULATIONAHA.105.563817](https://doi.org/10.1161/CIRCULATIONAHA.105.563817)
+- Goodrick CL et al. 1990. Effects of intermittent feeding upon body weight and lifespan in inbred mice: interaction of genotype and age. *Mech Ageing Dev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/2402168) doi:[10.1016/0047-6374(90)90107-q](https://doi.org/10.1016/0047-6374(90)90107-q)
+
+- Varady KA et al. 2009. Short-term modified alternate-day fasting: a novel dietary strategy for weight loss and cardioprotection in obese adults. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19793855) doi:[10.3945/ajcn.2009.28380](https://doi.org/10.3945/ajcn.2009.28380)
+- Johnson JB et al. 2007. Alternate day calorie restriction improves clinical findings and reduces markers of oxidative stress and inflammation in overweight adults with moderate asthma. *Free Radic Biol Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17291990) doi:[10.1016/j.freeradbiomed.2006.12.005](https://doi.org/10.1016/j.freeradbiomed.2006.12.005)
+
+- Halberg N et al. 2005. Effect of intermittent fasting and refeeding on insulin action in healthy men. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16051710) doi:[10.1152/japplphysiol.00683.2005](https://doi.org/10.1152/japplphysiol.00683.2005)
+
+**IF and Hunger**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2249073/>
+
+- Seimon RV et al. 2015. Do intermittent diets provide physiological benefits over continuous diets for weight loss? A systematic review of clinical trials. *Mol Cell Endocrinol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26384657) doi:[10.1016/j.mce.2015.09.014](https://doi.org/10.1016/j.mce.2015.09.014)
+
+- Awad S et al. 2010. The effects of fasting and refeeding with a 'metabolic preconditioning' drink on substrate reserves and mononuclear cell mitochondrial function. *Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20138692) doi:[10.1016/j.clnu.2010.01.009](https://doi.org/10.1016/j.clnu.2010.01.009)
+- Larsen AE et al. 2006. Actions of short-term fasting on human skeletal muscle myogenic and atrogenic gene expression. *Ann Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16931880) doi:[10.1159/000095354](https://doi.org/10.1159/000095354)
+
+- Verboeket-van de Venne WP et al. 1993. Effect of the pattern of food intake on human energy metabolism. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8399092) doi:[10.1079/bjn19930108](https://doi.org/10.1079/bjn19930108)
+- Bellisle F et al. 1997. Meal frequency and energy balance. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9155494) doi:[10.1079/bjn19970104](https://doi.org/10.1079/bjn19970104)
+
+**MPS Study Favouring 4 Meals**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3650697/>
+
+- Hoddy KK et al. 2015. Safety of alternate day fasting and effect on disordered eating behaviors. *Nutr J*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25943396/) doi:[10.1186/s12937-015-0029-9](https://doi.org/10.1186/s12937-015-0029-9)
+- 2004. Dieting in adolescence. *Paediatr Child Health*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19657417/) doi:[10.1093/pch/9.7.487](https://doi.org/10.1093/pch/9.7.487)

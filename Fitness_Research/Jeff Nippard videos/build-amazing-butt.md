@@ -67,3 +67,17 @@ Research points to **periodic variation** as the key factor, so the routine shou
 - The hip thrust findings showed meaningful **individual variation** (2 of 13 subjects responded better to non-traditional variations), so test the variants on yourself.
 - The researcher name in the 2014 abduction/internal-rotation study is garbled in the captions and is flagged as uncertain; the 2013 prone hip extension study was not attributed by name.
 - The recovery-time categories come from **Brett Contreras' practical framework**, not from a cited trial.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SCIENTIFIC REFERENCES**
+
+- Lee JH et al. 2014. Different hip rotations influence hip abductor muscles activity during isometric side-lying hip abduction in subjects with gluteus medius weakness. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24560168) doi:[10.1016/j.jelekin.2014.01.008](https://doi.org/10.1016/j.jelekin.2014.01.008)
+- Németh G & Ohlsén H 1985. In vivo moment arm lengths for hip extensor muscles at different angles of hip flexion. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/3988782) doi:[10.1016/0021-9290(85)90005-3](https://doi.org/10.1016/0021-9290(85)90005-3)
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude for the Barbell, Band, and American Hip Thrust Variations. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26695353) doi:[10.1123/jab.2015-0091](https://doi.org/10.1123/jab.2015-0091)
+- Kang SY et al. 2013. Activation of the gluteus maximus and hamstring muscles during prone hip extension with knee flexion in three hip abduction positions. *Man Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23312068) doi:[10.1016/j.math.2012.11.006](https://doi.org/10.1016/j.math.2012.11.006)
+- Lee JH et al. 2013. Effects of different hip rotations on gluteus medius and tensor fasciae latae muscle activity during isometric side-lying hip abduction. *J Sport Rehabil*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23921296) doi:[10.1123/jsr.22.4.301](https://doi.org/10.1123/jsr.22.4.301)
+- Fisher BE et al. 2016. Evidence of altered corticomotor excitability following targeted activation of gluteus maximus training in healthy individuals. *Neuroreport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26981714) doi:[10.1097/WNR.0000000000000556](https://doi.org/10.1097/WNR.0000000000000556)
+- Schoenfeld BJ et al. 2016. Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27102172) doi:[10.1007/s40279-016-0543-8](https://doi.org/10.1007/s40279-016-0543-8)

@@ -47,3 +47,21 @@ Data here is thin. A 2017 systematic report concluded that milk and high-glycemi
 - The largest mortality meta-analysis is dairy-industry funded; its independent replication is the reason to trust the finding, not the study alone.
 - Prostate cancer is the one signal pointing the wrong way, and it is dataset-dependent.
 - Acne evidence is described as extremely limited.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Aghasi M et al. 2019. Dairy intake and acne development: A meta-analysis of observational studies. *Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29778512) doi:[10.1016/j.clnu.2018.04.015](https://doi.org/10.1016/j.clnu.2018.04.015)
+- Fiedler F et al. 2017. Acne and Nutrition: A Systematic Review. *Acta Derm Venereol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27136757) doi:[10.2340/00015555-2450](https://doi.org/10.2340/00015555-2450)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5143456/>
+- Alexander DD et al. 2016. Dairy consumption and CVD: a systematic review and meta-analysis. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26786887) doi:[10.1017/S0007114515005000](https://doi.org/10.1017/S0007114515005000)
+- de Goede J et al. 2016. Dairy Consumption and Risk of Stroke: A Systematic Review and Updated Dose-Response Meta-Analysis of Prospective Cohort Studies. *J Am Heart Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27207960) doi:[10.1161/JAHA.115.002787](https://doi.org/10.1161/JAHA.115.002787)
+- Lu L et al. 2016. Long-term association between dairy consumption and risk of childhood obesity: a systematic review and meta-analysis of prospective cohort studies. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26862005) doi:[10.1038/ejcn.2015.226](https://doi.org/10.1038/ejcn.2015.226)
+- Guo J et al. 2017. Milk and dairy consumption and risk of cardiovascular diseases and all-cause mortality: dose-response meta-analysis of prospective cohort studies. *Eur J Epidemiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28374228) doi:[10.1007/s10654-017-0243-1](https://doi.org/10.1007/s10654-017-0243-1)
+- Thorning TK et al. 2016. Milk and dairy products: good or bad for human health? An assessment of the totality of scientific evidence. *Food Nutr Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27882862) doi:[10.3402/fnr.v60.32527](https://doi.org/10.3402/fnr.v60.32527)
+- Larsson SC et al. 2015. Milk Consumption and Mortality from All Causes, Cardiovascular Disease, and Cancer: A Systematic Review and Meta-Analysis. *Nutrients*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26378576) doi:[10.3390/nu7095363](https://doi.org/10.3390/nu7095363)
+- Drouin-Chartier JP et al. 2016. Systematic Review of the Association between Dairy Product Consumption and Risk of Cardiovascular-Related Clinical Outcomes. *Adv Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28140321) doi:[10.3945/an.115.011403](https://doi.org/10.3945/an.115.011403)

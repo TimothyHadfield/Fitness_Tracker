@@ -59,3 +59,19 @@ The argument: glucose is metabolised by essentially every tissue, whereas fructo
 - He recalls the ~100–150 g fructose dose ceiling with a "I think", so treat that number as approximate.
 - The six-week isocaloric insulin-sensitivity finding is in **healthy** subjects; it says nothing about already insulin-resistant or diabetic populations, or about longer timeframes.
 - ASP's name is garbled in the auto-captions; acylation-stimulating protein is the near-certain intended term.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Boelsma E et al. 2010. Measures of postprandial wellness after single intake of two protein-carbohydrate meals. *Appetite*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20060863) doi:[10.1016/j.appet.2009.12.014](https://doi.org/10.1016/j.appet.2009.12.014)
+- Black RN et al. 2006. Effect of eucaloric high- and low-sucrose diets with identical macronutrient profile on insulin resistance and vascular risk: a randomized controlled trial. *Diabetes*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17130505) doi:[10.2337/db06-0220](https://doi.org/10.2337/db06-0220)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5174153/>
+- Glendinning JI et al. 2012. The role of T1r3 and Trpm5 in carbohydrate-induced obesity in mice. *Physiol Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22683548) doi:[10.1016/j.physbeh.2012.05.023](https://doi.org/10.1016/j.physbeh.2012.05.023)
+
+**Further Reading**
+
+- Weightology (paywalled) — <https://weightology.net/no-youre-not-addicted-to-sugar/>
+- Weightology (paywalled) — <https://weightology.net/insulin-an-undeserved-bad-reputation/>

@@ -40,3 +40,9 @@ The article argues crunching may beat static exercises like planks for several r
 - This note summarises a single review article's position; the underlying human evidence base on flexion-based ab training and long-term spinal health is thin in both directions.
 - The pig-spine studies aren't *wrong* about their own model — the objection is about extrapolation, not fabrication.
 - Individual pathology matters. Someone with an existing disc issue is a different case from a healthy trainee, and this material doesn't address that population.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- ResearchGate — <https://www.researchgate.net/publication/232156729_To_Crunch_or_Not_to_Crunch_An_Evidence-Based_Examination_of_Spinal_Flexion_Exercises_Their_Potential_Risks_and_Their_Applicability_to_Program_Design>

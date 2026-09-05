@@ -62,3 +62,22 @@ Sequence for an arm or lat imbalance:
 - The neural explanation for asymmetry is Jeff's opinion, not a cited finding.
 - "Pre-activation" carry-over is supported for glutes-before-squats; extending it to lats, pecs and biceps is his own reasoning.
 - Nothing here changes muscle shape or insertion points.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Pre vs Post Workout Creatine**
+
+- Antonio J & Ciccone V 2013. The effects of pre versus post workout supplementation of creatine monohydrate on body composition and strength. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23919405) doi:[10.1186/1550-2783-10-36](https://doi.org/10.1186/1550-2783-10-36)
+
+**Creatine and Hair Loss**
+
+- Bang HJ et al. 2004. Comparative studies on level of androgens in hair and plasma with premature male-pattern baldness. *J Dermatol Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/14757277) doi:[10.1016/j.jdermsci.2003.11.005](https://doi.org/10.1016/j.jdermsci.2003.11.005)
+
+**Creatine and Caffeine**
+
+- Vandenberghe K et al. 1996. Caffeine counteracts the ergogenic action of muscle creatine loading. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8929583) doi:[10.1152/jappl.1996.80.2.452](https://doi.org/10.1152/jappl.1996.80.2.452)
+- Lee CL et al. 2011. Effect of caffeine ingestion after creatine supplementation on intermittent high-intensity sprint performance. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21207054) doi:[10.1007/s00421-010-1792-0](https://doi.org/10.1007/s00421-010-1792-0)
+- Doherty M et al. 2002. Caffeine is ergogenic after supplementation of oral creatine monohydrate. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12439084) doi:[10.1097/00005768-200211000-00015](https://doi.org/10.1097/00005768-200211000-00015)
+- ResearchGate — <https://www.researchgate.net/publication/224860282_Effect_of_creatine_plus_caffeine_supplements_on_time_to_exhaustion_during_an_incremental_maximum_exercise>

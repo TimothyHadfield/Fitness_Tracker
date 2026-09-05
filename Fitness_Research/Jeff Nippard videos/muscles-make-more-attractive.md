@@ -67,3 +67,12 @@ Jeff's read on the "nice guys finish last" myth: what women picture when they im
 
 ## Caveats & unknowns
 Everything from the survey is correlational and self-reported, from a self-selected fitness audience — not a representative population. Age is an unresolved confound in the strength-partner relationship, and steroid use is Jeff's speculation for the top-end spikes rather than measured data. Lifetime partner count is a poor proxy for romantic happiness, which is why he adds the satisfaction and relationship-status data. Correlation cannot separate muscle from the confidence that often accompanies it.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Lidborg LH et al. 2022. A meta-analysis of the association between male dimorphism and fitness outcomes in humans. *Elife*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35179485/) doi:[10.7554/eLife.65031](https://doi.org/10.7554/eLife.65031)
+
+- <https://link.springer.com/article/10.1023/A:1025894203368>
+- <https://link.springer.com/article/10.1007/s10508-023-02767-4>

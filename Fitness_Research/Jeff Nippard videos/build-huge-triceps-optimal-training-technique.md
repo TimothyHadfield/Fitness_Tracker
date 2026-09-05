@@ -62,3 +62,7 @@ Advantages: trains each side individually, helping prevent strength and size asy
 - The 2017 constant-tension study may be confounded by differing relative loads between groups; Nippard reports it with that caveat rather than as settled.
 - The "90 degrees of shoulder flexion" optimum for long-head activation is cited without a named study.
 - Some elbow flare is individual — the instruction is comfort and consistency, not a fixed angle.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

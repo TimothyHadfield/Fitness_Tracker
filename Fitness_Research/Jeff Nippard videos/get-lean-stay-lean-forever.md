@@ -60,3 +60,19 @@ Then treat maintenance as a **dynamic range**, not a fixed number — you might 
 - The 2020 systematic review and the Biggest Loser follow-up are described by finding only — no authors are named in the transcript, so no citation attribution is possible here.
 - Reverse dieting is dismissed here without the supporting detail; Jeff flags a dedicated future video on it.
 - Sponsor content (MacroFactor app, which Jeff part-owns) omitted.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Biggest Loser Study**
+
+- Fothergill E et al. 2016. Persistent metabolic adaptation 6 years after "The Biggest Loser" competition. *Obesity (Silver Spring)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27136388/) doi:[10.1002/oby.21538](https://doi.org/10.1002/oby.21538)
+
+**Weight Loss Maintenance Paper**
+
+- Nordmo M et al. 2020. The challenge of keeping it off, a descriptive systematic review of high-quality, follow-up studies of obesity treatments. *Obes Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31675146/) doi:[10.1111/obr.12949](https://doi.org/10.1111/obr.12949)
+
+**Self-Monitoring Weight**
+
+- Butryn ML et al. 2007. Consistent self-monitoring of weight: a key component of successful weight loss maintenance. *Obesity (Silver Spring)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/18198319/) doi:[10.1038/oby.2007.368](https://doi.org/10.1038/oby.2007.368)

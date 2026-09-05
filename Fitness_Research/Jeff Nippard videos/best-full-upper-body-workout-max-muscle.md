@@ -69,3 +69,12 @@ Full session in order:
 - This is a generalised version of a specific programme; the underlying programme carries more detailed progression, periodisation and week-to-week variation.
 - The Doma and McMahon citations come through the auto-captions imperfectly and should be verified before being quoted.
 - EMG activation is a proxy for stimulus, not a direct measure of hypertrophy.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Doma K et al. 2013. Kinematic and electromyographic comparisons between chin-ups and lat-pull down exercises. *Sports Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24245055) doi:[10.1080/14763141.2012.760204](https://doi.org/10.1080/14763141.2012.760204)
+- McMahon PJ et al. 1995. Shoulder muscle forces and tendon excursions during glenohumeral abduction in the scapular plane. *J Shoulder Elbow Surg*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7552678) doi:[10.1016/s1058-2746(05)80052-7](https://doi.org/10.1016/s1058-2746(05)80052-7)

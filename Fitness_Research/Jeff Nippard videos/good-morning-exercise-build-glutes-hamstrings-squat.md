@@ -55,3 +55,7 @@ Use it as an RDL substitute when you also want squat carryover, or as squat assi
 
 ## Caveats & unknowns
 No studies are cited in this video; the reasoning is biomechanical. The depth recommendation is explicitly individual and mobility-limited, and Nippard notes he personally restricts his own range because of an existing lower back injury.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

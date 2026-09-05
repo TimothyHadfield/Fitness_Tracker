@@ -37,3 +37,12 @@ Under two years training: train hard at home, chase closeness to failure, and st
 
 ## Caveats & unknowns
 The 3-4 month maintenance window for less experienced lifters is his projection, not a measured result. The advanced-lifter advice is explicitly his opinion, not a research finding — he hedges that high-rep bodyweight work "might not" be enough. The one-ninth volume study's duration and generalisability to trained lifters is not fully specified here.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Ogasawara R et al. 2013. Comparison of muscle hypertrophy following 6-month of continuous and periodic strength training. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23053130) doi:[10.1007/s00421-012-2511-9](https://doi.org/10.1007/s00421-012-2511-9)
+- Bickel CS et al. 2011. Exercise dosing to retain resistance training adaptations in young and older adults. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21131862) doi:[10.1249/MSS.0b013e318207c15d](https://doi.org/10.1249/MSS.0b013e318207c15d)

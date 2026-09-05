@@ -62,3 +62,30 @@ A paper by Mosher et al. (captions: "Moser") found **400 mg of beetroot nitrates
 - The blood-pressure/LDL/insulin-sensitivity blueberry findings are attributed only to "other research" with no named authors.
 - The 400 mg beetroot nitrate finding is a single study on bench press volume; it is not a general performance guarantee.
 - "Superfood" framing aside, none of these substitutes for total diet quality and energy balance.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Examine.com — <https://examine.com/nutrition/4-science-based-superfoods-you-should-be-eating/?utm_source=newsletter&utm_campaign=insiders-021617&utm_medium=insiders>
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5890122/#B71>
+- <https://www.sciencedirect.com/topics/food-science/anthocyanins>
+- <https://www.sciencedirect.com/topics/food-science/phenolic-compound>
+- Krikorian R et al. 2010. Blueberry supplementation improves memory in older adults. *J Agric Food Chem*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20047325) doi:[10.1021/jf9029332](https://doi.org/10.1021/jf9029332)
+- <https://www.frontiersin.org/articles/10.3389/fphar.2018.00078/full>
+- Bowtell JL et al. 2017. Enhanced task-related brain activation and resting perfusion in healthy older adults after chronic blueberry supplementation. *Appl Physiol Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28249119) doi:[10.1139/apnm-2016-0550](https://doi.org/10.1139/apnm-2016-0550)
+- Basu A et al. 2010. Blueberries decrease cardiovascular risk factors in obese men and women with metabolic syndrome. *J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20660279) doi:[10.3945/jn.110.124701](https://doi.org/10.3945/jn.110.124701)
+
+- Nantz MP et al. 2012. Supplementation with aged garlic extract improves both NK and γδ-T cell function and reduces the severity of cold and flu symptoms: a randomized, double-blind, placebo-controlled nutrition intervention. *Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22280901) doi:[10.1016/j.clnu.2011.11.019](https://doi.org/10.1016/j.clnu.2011.11.019)
+- Ried K et al. 2013. Effect of garlic on serum lipids: an updated meta-analysis. *Nutr Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23590705) doi:[10.1111/nure.12012](https://doi.org/10.1111/nure.12012)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6267416/>
+
+- Examine.com — <https://examine.com/supplements/zinc/>
+
+- Mosher SL et al. 2016. Ingestion of a Nitric Oxide Enhancing Supplement Improves Resistance Exercise Performance. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27050244) doi:[10.1519/JSC.0000000000001437](https://doi.org/10.1519/JSC.0000000000001437)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3575935/>
+- Siervo M et al. 2013. Inorganic nitrate and beetroot juice supplementation reduces blood pressure in adults: a systematic review and meta-analysis. *J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23596162) doi:[10.3945/jn.112.170233](https://doi.org/10.3945/jn.112.170233)

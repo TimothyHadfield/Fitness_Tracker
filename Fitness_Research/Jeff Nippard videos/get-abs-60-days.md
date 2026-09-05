@@ -52,3 +52,12 @@ Twice a week: 3x10-12 weighted crunches and 3x10-20 leg raises, last set of each
 
 ## Caveats & unknowns
 Metabolism varies substantially, so the calorie and macro formulas will run high for some and low for others — adjust from real-world rate of loss. Diet-break responses differ person to person. Ab shape is fixed genetically. Whether caffeine's thermogenic effect meaningfully changes long-term fat loss is not established.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- <https://onlinelibrary.wiley.com/doi/full/10.1111/obr.13218>
+- Schoenfeld BJ & Aragon AA 2018. Is There a Postworkout Anabolic Window of Opportunity for Nutrient Consumption? Clearing up Controversies. *J Orthop Sports Phys Ther*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30702982/) doi:[10.2519/jospt.2018.0615](https://doi.org/10.2519/jospt.2018.0615)
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1555605/>

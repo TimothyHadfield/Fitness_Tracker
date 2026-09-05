@@ -58,3 +58,23 @@ Include at least one wrist flexion and one wrist extension movement.
 ## Caveats & unknowns
 - The 2004 baseball study was 12 weeks, measured strength not size, and only one measure hit statistical significance.
 - Optimal volume is individual; the 2-3 exercises / 2-3 sets figure is a general starting point.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**The Brachioradialis**
+
+- Boland MR et al. 2008. The function of brachioradialis. *J Hand Surg Am*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19084189) doi:[10.1016/j.jhsa.2008.07.019](https://doi.org/10.1016/j.jhsa.2008.07.019)
+
+**Forearm Training Frequency**
+
+- Boyes NG et al. 2017. Cross-education after high-frequency versus low-frequency volume-matched handgrip training. *Muscle Nerve*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28249351) doi:[10.1002/mus.25637](https://doi.org/10.1002/mus.25637)
+
+**The 12 Week Baseball Study**
+
+- Szymanski DJ et al. 2004. Effect of 12 weeks of wrist and forearm training on high school baseball players. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15320673) doi:[10.1519/13703.1](https://doi.org/10.1519/13703.1)
+
+**Moment Arms**
+
+- Murray WM et al. 1995. Variation of muscle moment arms with elbow and forearm position. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7775488) doi:[10.1016/0021-9290(94)00114-j](https://doi.org/10.1016/0021-9290(94)00114-j)

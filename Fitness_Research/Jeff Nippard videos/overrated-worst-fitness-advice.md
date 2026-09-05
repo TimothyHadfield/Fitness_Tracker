@@ -61,3 +61,13 @@ Don't chase failure on every set — know what it feels like, take some sets the
 
 ## Caveats & unknowns
 The failure literature is openly conflicting and the two men reach different emphases from the same meta-regression; its pro-failure result appears to be moderated by volume, effort, training status and frequency, which is itself a subgroup interpretation. Soreness as a hypertrophy signal is contested — Mike argues mechanism, Jeff argues it is a poor proxy. Recomping's ceiling (about a year) is Mike's estimate, not a cited finding. Mike is enhanced, which he discloses.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Schoenfeld BJ et al. 2019. How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30558493/) doi:[10.1080/02640414.2018.1555906](https://doi.org/10.1080/02640414.2018.1555906)
+
+- McGlynn ND et al. 2022. Association of Low- and No-Calorie Sweetened Beverages as a Replacement for Sugar-Sweetened Beverages With Body Weight and Cardiometabolic Risk: A Systematic Review and Meta-analysis. *JAMA Netw Open*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35285920/) doi:[10.1001/jamanetworkopen.2022.2092](https://doi.org/10.1001/jamanetworkopen.2022.2092)
+
+- Fyfe JJ et al. 2019. Cold water immersion attenuates anabolic signaling and skeletal muscle fiber hypertrophy, but not strength gain, following whole-body resistance training. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31513450/) doi:[10.1152/japplphysiol.00127.2019](https://doi.org/10.1152/japplphysiol.00127.2019)

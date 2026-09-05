@@ -53,3 +53,11 @@ A **2013 study by McAllister et al.** found a **wide grip produced more lateral 
 ## Practical application
 - Rope or barbell upright row, grip 1-1.5x shoulder width, 8-12 reps, elbows leading out and up, stopping at shoulder height.
 - Pair it with an overhead press for overall shoulder strength and lateral raises for isolated side-delt work — the upright row sits between the two.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- ResearchGate — <https://www.researchgate.net/publication/232210633_The_Upright_Row_Implications_for_Preventing_Subacromial_Impingement>

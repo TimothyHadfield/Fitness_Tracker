@@ -55,3 +55,12 @@ Donkey kickbacks set up on a lying leg curl or Smith machine are reasonable, but
 - The 2005 pain/muscle-excitation citation is garbled in the auto-captions; the finding as stated is that pain inhibits muscle excitation, but the researcher's name should be verified.
 - No study is cited comparing the kickback's hypertrophy outcome against other glute exercises — the case for it here is mechanical and practical, not trial-based.
 - The lateral-swing upper-glute cue is presented as theoretical, and Nippard explicitly deprioritises it below comfort and connection.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5758546/#B39>
+- Farina D et al. 2010. Decoding the neural drive to muscles from the surface electromyogram. *Clin Neurophysiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20444646) doi:[10.1016/j.clinph.2009.10.040](https://doi.org/10.1016/j.clinph.2009.10.040)

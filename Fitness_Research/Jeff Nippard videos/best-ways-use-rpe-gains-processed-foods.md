@@ -95,3 +95,7 @@ Nippard isn't a fan of IF for maximising the 24-hour anabolic response — mecha
 
 ## Caveats & unknowns
 The biceps study surname is garbled in the auto-captions and should not be cited without checking. The alcohol review's recovery measures may not generalise to hypertrophy training. The sodium bicarbonate evidence is nearly all endurance-based. The muscle confusion study ran only 8 weeks — nothing is known about longer timescales.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

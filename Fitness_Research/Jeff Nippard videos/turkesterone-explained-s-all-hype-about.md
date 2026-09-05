@@ -49,3 +49,19 @@ That leaves two plausible explanations: something in the pills that wasn't teste
 - Nippard and Trexler explicitly do not claim the 2019 result *was* a false positive — there is no way to know. The point is the findings don't add up.
 - Absence of evidence isn't proof of no effect; Nippard says he'd change his position and take it if convincing evidence emerges, assuming no side effects.
 - Nothing in the video addresses safety or side effects — the case against it is efficacy, not harm.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Other Animal Research**
+
+- <https://www.journals.uchicago.edu/doi/10.2307/1540550>
+- Syrov VN 1984. Mechanism of the anabolic action of phytoecdisteroids in mammals. *Nauchnye Doki Vyss Shkoly Biol Nauki*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/6525371/)
+- Sláma K et al. 1996. Insect hormones in vertebrates: anabolic effects of 20-hydroxyecdysone in Japanese quail. *Experientia*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8698114/) doi:[10.1007/BF01925578](https://doi.org/10.1007/BF01925578)
+
+**Human Research**
+
+- ResearchGate — <https://www.researchgate.net/publication/26492102>
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y>
+- ResearchGate — <https://www.researchgate.net/publication/333322619>

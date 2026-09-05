@@ -48,3 +48,11 @@ A 2015 study from Contreras and colleagues found the front squat delivers a simi
 ## Caveats & unknowns
 - The Contreras 2015 comparison shows a similar stimulus, not a superior one — the front squat's edge is mostly in its transfer to squat weak points and lower absolute loading, not raw hypertrophy.
 - The claim that lighter loading "might reduce injury risk over time" is offered as a reasonable inference, not a demonstrated finding.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)

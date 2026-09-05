@@ -41,3 +41,7 @@ His example: a study where one group chews Juicy Fruit gum and another chews spe
 ## Caveats & unknowns
 - These three criteria are explicitly a rough ballpark; Nippard notes there is much more to critical appraisal than this.
 - No specific researchers or trials are cited beyond the MASS article series itself.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

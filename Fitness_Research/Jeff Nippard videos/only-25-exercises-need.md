@@ -72,3 +72,29 @@
 - Several rankings (lat pullover, glute drive) are held down by gym equipment availability, not effectiveness.
 - Dips can irritate shoulders with high frequency.
 - Lunge recommendations come from his coaching experience, not research.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Kinoshita M et al. 2023. Triceps surae muscle hypertrophy is greater after standing versus seated calf-raise training. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/38156065/) doi:[10.3389/fphys.2023.1272106](https://doi.org/10.3389/fphys.2023.1272106)
+
+- Ylinen J et al. 2010. Effect of neck exercises on cervicogenic headache: a randomized controlled trial. *J Rehabil Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20461336/) doi:[10.2340/16501977-0527](https://doi.org/10.2340/16501977-0527)
+- <https://link.springer.com/content/pdf/10.1186/1471-2474-12-205.pdf>
+- <https://bjsm.bmj.com/content/59/15/1027>
+- <https://link.springer.com/article/10.1007/s004210050186>
+
+- Kassiano W et al. 2024. Addition of the Barbell Hip Thrust Elicits Greater Increases in Gluteus Maximus Muscle Thickness in Untrained Young Women. *Int J Strength Cond*. Not indexed in PubMed; open access at journal.iusca.org.
+- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
+- <https://journals.lww.com/nsca-jscr/fulltext/2018/03000/gluteus_maximus_and_hamstring_activation_during.2.aspx>
+- <https://journals.lww.com/nsca-jscr/fulltext/2019/10000/comparison_between_back_squat,_romanian_deadlift,.1.aspx>
+
+- Nigro F et al. 2024. Feasibility of utilizing pectoral muscle thickness as a predictor for one repetition maximum bench press in trained men. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/39552386/) doi:[10.1080/02640414.2024.2430855](https://doi.org/10.1080/02640414.2024.2430855)
+
+- <https://www.sciencedirect.com/science/article/abs/pii/S1286011523000693?via%3Dihub>
+
+- Maeo S et al. 2023. Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35819335/) doi:[10.1080/17461391.2022.2100279](https://doi.org/10.1080/17461391.2022.2100279)
+
+- Larsen S et al. 2025. Dumbbell versus cable lateral raises for lateral deltoid hypertrophy: an experimental study. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/40692697/) doi:[10.3389/fphys.2025.1611468](https://doi.org/10.3389/fphys.2025.1611468)
+
+- Janssen I et al. 2000. Skeletal muscle mass and distribution in 468 men and women aged 18-88 yr. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/10904038/) doi:[10.1152/jappl.2000.89.1.81](https://doi.org/10.1152/jappl.2000.89.1.81)

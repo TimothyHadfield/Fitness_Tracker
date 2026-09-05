@@ -55,3 +55,7 @@ Frankfurt's argument is that this is a **greater threat than lying**. A liar at 
 - The name behind the five standards is garbled in the auto-captions ("Steven Nolla"); Steven Novella is the likely referent but this is not certain from the transcript.
 - This is a 2015 methodology video with no empirical claims about training or nutrition to verify; it is an argument about how to reason, not a summary of findings.
 - Jeff's grading of the community on each of the five standards is his subjective assessment, offered as such.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

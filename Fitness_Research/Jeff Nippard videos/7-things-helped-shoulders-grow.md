@@ -69,3 +69,14 @@ Restructure rather than add: same weekly set total spread across 3-4 days. Run o
 - Fast shoulder recovery is his coaching anecdote, not data.
 - The 6-8 set effective-volume cap is an estimate; the 2025 meta-analysis puts it as high as 11.
 - Cadaver segment anatomy establishes structure, not that training the in-between planes produces more growth.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>
+
+- ResearchGate — <https://www.researchgate.net/publication/351538891>
+- <https://journals.lww.com/nsca-jscr/fulltext/2023/09000/greater_gastrocnemius_muscle_hypertrophy_after.3.aspx>
+
+- Sakoma Y et al. 2011. Anatomical and functional segments of the deltoid muscle. *J Anat*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21118198/) doi:[10.1111/j.1469-7580.2010.01325.x](https://doi.org/10.1111/j.1469-7580.2010.01325.x)

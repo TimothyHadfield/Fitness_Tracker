@@ -54,3 +54,7 @@ Nippard closes by drawing a line he wants kept clear. Everything above concerns 
 - The male peaks-and-valleys vs. female staircase distinction is presented from coaching observation, with no study cited.
 - 3,600 calories per pound of fat is a standard working approximation, not an exact physiological constant.
 - No guidance is offered on how long a stall must persist before it counts as a stall rather than noise — it is deferred to the individual coach.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

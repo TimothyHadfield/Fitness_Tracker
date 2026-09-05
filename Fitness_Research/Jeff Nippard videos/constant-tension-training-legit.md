@@ -51,3 +51,12 @@ Summarised by **Greg Nuckols** from a 2017 paper by **Goto and colleagues** (nam
 - The cryotherapy/CWI study used only 10 men and measured a single training bout — nothing is known about repeated use over time.
 - The constant-tension result is a single 8-week study on one exercise. The near-twofold difference is impressive but the confound (relative load / training effort from standardised cadence) is unresolved.
 - The researcher name for the constant-tension paper is garbled in the auto-captions; treat the spelling as uncertain.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Abaïdia AE et al. 2017. Recovery From Exercise-Induced Muscle Damage: Cold-Water Immersion Versus Whole-Body Cryotherapy. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27396361) doi:[10.1123/ijspp.2016-0186](https://doi.org/10.1123/ijspp.2016-0186)
+- Peake JM et al. 2017. The effects of cold water immersion and active recovery on inflammation and cell stress responses in human skeletal muscle after resistance exercise. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27704555) doi:[10.1113/JP272881](https://doi.org/10.1113/JP272881)
+- <https://www.ncbi.nlm.nih.gov/pubmed/?term=26174323>
+- <http://journals.lww.com/nsca-jscr/Abstract/publishahead/Partial_range_of_motion_exercise_is_effective_for.95936.aspx>

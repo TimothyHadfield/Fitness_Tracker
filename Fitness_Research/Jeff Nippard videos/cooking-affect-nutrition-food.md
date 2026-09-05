@@ -43,3 +43,12 @@ A separate 2015 review concluded **steaming** is the best method for maintaining
 - The steaming-is-best review covered only five foods and was heavily influenced by broccoli.
 - Only a handful of nutrients were tracked (folate, carotenoids, vitamin C); minerals, polyphenols and others weren't covered.
 - This is a companion to Jeff's earlier fresh-vs-frozen myth-bust video.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- ResearchGate — <https://www.researchgate.net/publication/281938190_Are_folates_carotenoids_and_vitamin_C_affected_by_cooking_Four_domestic_procedures_are_compared_on_a_large_diversity_of_frozen_vegetables>
+- ResearchGate — <https://www.researchgate.net/publication/284786193_A_review_of_the_impact_of_preparation_and_cooking_on_the_nutritional_quality_of_vegetables_and_legumes>

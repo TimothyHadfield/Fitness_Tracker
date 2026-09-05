@@ -42,3 +42,11 @@ He closes on the wording itself [06:53]: science doesn't aim to prove. Researche
 - He could not access the full text of the meal-frequency RCT and therefore could not verify blinding.
 - Neither cited study's authors are clearly named in the auto-captions beyond "Bernadot et al."; treat the spelling as uncertain.
 - This is a 2014 video; the specific meal-frequency literature has moved on, though the reasoning about evidence hierarchy has not.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Steve Novella on the bad reporting of epigenetics**
+
+- <http://onlinelibrary.wiley.com/doi/10.1111/j.1753-4887.2009.00204.x/full>

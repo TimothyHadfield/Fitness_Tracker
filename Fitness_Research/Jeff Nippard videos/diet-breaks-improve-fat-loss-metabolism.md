@@ -46,3 +46,12 @@ The dieting period was longer in group 2 precisely so total deficit could be equ
 - Only two studies exist on this question (2003 and 2017); the evidence base is thin.
 - The mechanism for the fat loss difference despite matched total deficit is not fully explained beyond the metabolic-rate sparing.
 - The video is based on an article by **Eric Helms** in MASS.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Wing RR & Jeffery RW 2003. Prescribed "breaks" as a means to disrupt weight control efforts. *Obes Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12582226) doi:[10.1038/oby.2003.43](https://doi.org/10.1038/oby.2003.43)
+- Byrne NM et al. 2018. Intermittent energy restriction improves weight loss efficiency in obese men: the MATADOR study. *Int J Obes (Lond)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28925405) doi:[10.1038/ijo.2017.206](https://doi.org/10.1038/ijo.2017.206)

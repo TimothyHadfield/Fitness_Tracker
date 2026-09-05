@@ -40,3 +40,50 @@ For anyone under 60 with limited equipment: bodyweight workouts training each mu
 
 ## Caveats & unknowns
 The bed-rest data comes from untrained subjects. The two-month 50% loss figure comes from near-novices; the trained response is unclear. Whether short-term "loss" is contractile tissue or glycogen and water is unresolved. Older lifters may need more than the minimal maintenance volume. The myonuclear vs epigenetic basis of muscle memory is an open debate.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Muscle Protein Synthesis**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3381813/>
+- Wall BT et al. 2013. Skeletal muscle atrophy during short-term disuse: implications for age-related sarcopenia. *Ageing Res Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23948422) doi:[10.1016/j.arr.2013.07.003](https://doi.org/10.1016/j.arr.2013.07.003)
+
+**Muscle Loss with Bed Rest**
+
+- Dirks ML et al. 2014. Skeletal muscle disuse atrophy is not attenuated by dietary protein supplementation in healthy older men. *J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24919692) doi:[10.3945/jn.114.194217](https://doi.org/10.3945/jn.114.194217)
+
+**Muscle Loss with Detraining (2 weeks off)**
+
+- Hwang PS et al. 2017. Resistance Training-Induced Elevations in Muscular Strength in Trained Men Are Maintained After 2 Weeks of Detraining and Not Differentially Affected by Whey Protein Supplementation. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28328712) doi:[10.1519/JSC.0000000000001807](https://doi.org/10.1519/JSC.0000000000001807)
+- Ochi E et al. 2018. Higher Training Frequency Is Important for Gaining Muscular Strength Under Volume-Matched Training. *Front Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30013480) doi:[10.3389/fphys.2018.00744](https://doi.org/10.3389/fphys.2018.00744)
+- Ogasawara R et al. 2011. Effects of periodic and continued resistance training on muscle CSA and strength in previously untrained men. *Clin Physiol Funct Imaging*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21771261) doi:[10.1111/j.1475-097X.2011.01031.x](https://doi.org/10.1111/j.1475-097X.2011.01031.x)
+- ResearchGate — <https://www.researchgate.net/publication/228830087>
+- ResearchGate — <https://www.researchgate.net/publication/232229816>
+
+**Muscle Loss with Detraining (2 months off)**
+
+- Léger B et al. 2006. Akt signalling through GSK-3beta, mTOR and Foxo1 is involved in human skeletal muscle hypertrophy and atrophy. *J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16916907) doi:[10.1113/jphysiol.2006.116715](https://doi.org/10.1113/jphysiol.2006.116715)
+
+**Reduced Training Volume**
+
+- Bickel CS et al. 2011. Exercise dosing to retain resistance training adaptations in young and older adults. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21131862) doi:[10.1249/MSS.0b013e318207c15d](https://doi.org/10.1249/MSS.0b013e318207c15d)
+
+**Diet**
+
+- Aragon AA & Schoenfeld BJ 2020. Magnitude and Composition of the Energy Surplus for Maximizing Muscle Hypertrophy: Implications for Bodybuilding and Physique Athletes. *Strength Cond J*. Not indexed in PubMed. doi:[10.1519/SSC.0000000000000539](https://doi.org/10.1519/SSC.0000000000000539)
+
+**Age**
+
+- Bell KE et al. 2016. Muscle Disuse as a Pivotal Problem in Sarcopenia-related Muscle Loss and Dysfunction. *J Frailty Aging*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26980367) doi:[10.14283/jfa.2016.78](https://doi.org/10.14283/jfa.2016.78)
+- Bickel CS et al. 2011. Exercise dosing to retain resistance training adaptations in young and older adults. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21131862) doi:[10.1249/MSS.0b013e318207c15d](https://doi.org/10.1249/MSS.0b013e318207c15d)
+- ResearchGate — <https://www.researchgate.net/publication/312510309>
+- ResearchGate — <https://www.researchgate.net/publication/327211242>
+- Beaudart C et al. 2017. Nutrition and physical activity in the prevention and treatment of sarcopenia: systematic review. *Osteoporos Int*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28251287) doi:[10.1007/s00198-017-3980-9](https://doi.org/10.1007/s00198-017-3980-9)
+
+**Muscle Memory**
+
+- ResearchGate — <https://www.researchgate.net/publication/45660034>
+- Snijders T et al. 2019. Muscle mass and strength gains following 6 months of resistance type exercise training are only partly preserved within one year with autonomous exercise continuation in older adults. *Exp Gerontol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30978433) doi:[10.1016/j.exger.2019.04.002](https://doi.org/10.1016/j.exger.2019.04.002)
+- Seaborne RA et al. 2018. Human Skeletal Muscle Possesses an Epigenetic Memory of Hypertrophy. *Sci Rep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29382913) doi:[10.1038/s41598-018-20287-3](https://doi.org/10.1038/s41598-018-20287-3)

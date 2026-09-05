@@ -38,3 +38,7 @@ He also keeps the day because it is low-cost and he enjoys it. He treats it almo
 - Nothing here is evidence-based; the RCT he describes is hypothetical and, as of the video, had not been run. He is explicit that it is his opinion.
 - No volume, rep range or exercise prescriptions are given for the arm day itself.
 - This is an early (2016) video and reflects his competitive-bodybuilding context — the weak-point logic assumes you have judged feedback or a clear visual imbalance to act on.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

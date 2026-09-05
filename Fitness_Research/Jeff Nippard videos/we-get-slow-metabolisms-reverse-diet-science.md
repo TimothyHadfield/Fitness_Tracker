@@ -76,3 +76,11 @@ A third rare case: an elite physique athlete at their muscular ceiling who compe
 - The "maintain intensity, sacrifice volume" principle is extrapolated from other sports contexts; Trexler explicitly calls the analogy non-scientific for hypertrophy specifically.
 - Rodent evidence for "fat cell memory" was raised but has not, as far as either speaker knew, been shown in humans.
 - The MATADOR study's favourable outcomes are inseparable from the doubled time investment.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Eric's Research Gate**
+
+- ResearchGate — <https://www.researchgate.net/profile/Eric_Trexler>

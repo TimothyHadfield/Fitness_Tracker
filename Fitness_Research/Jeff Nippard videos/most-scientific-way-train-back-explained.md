@@ -76,3 +76,14 @@ A back session built from this video's logic:
 - The 11° lean-back finding is second-hand: Jeff cites an article that referenced the paper, not the paper itself.
 - The full-range lateral raise carries impingement risk and comes from a secondhand attribution chain (Ian McCarthy → possibly Menno Henselmans).
 - The chest-supported incline shrug is Jeff's own invention with no supporting data.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Studies Referenced**
+
+- ResearchGate — <https://www.researchgate.net/publication/11043619_A_Comparative_Electromyographical_Investigation_of_Muscle_Utilization_Patterns_Using_Various_Hand_Positions_During_the_Lat_Pull-down>
+- <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>
+- Andersen V et al. 2014. Effects of grip width on muscle strength and activation in the lat pull-down. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/24662157) doi:[10.1097/JSC.0000000000000232](https://doi.org/10.1097/JSC.0000000000000232)
+- Bhatt CR et al. 2013. Variation in the insertion of the latissimus dorsi & its clinical importance. *J Orthop*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/24403744) doi:[10.1016/j.jor.2013.01.002](https://doi.org/10.1016/j.jor.2013.01.002)

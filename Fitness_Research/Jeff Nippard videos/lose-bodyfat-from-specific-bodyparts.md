@@ -36,3 +36,15 @@ Covered in MASS Research Review, where Dr Eric Helms suggested that local muscul
 - The positive result rests on one study with a small sample; the three negative studies each had their own limitations (observational, or too little total fat loss).
 - The negative studies used single-limb designs while the positive one used upper-vs-lower-body splits plus post-workout cardio — so they are not testing quite the same thing, and the cardio component may be the deciding variable.
 - Nippard's stated position is uncertainty rather than endorsement: "we just can't say for sure."
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Gwinup G et al. 1971. Thickness of subcutaneous fat and activity of underlying muscles. *Ann Intern Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/5552114) doi:[10.7326/0003-4819-74-3-408](https://doi.org/10.7326/0003-4819-74-3-408)
+- Vispute SS et al. 2011. The effect of abdominal exercise on abdominal fat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21804427) doi:[10.1519/JSC.0b013e3181fb4a46](https://doi.org/10.1519/JSC.0b013e3181fb4a46)
+- Kostek MA et al. 2007. Subcutaneous fat alterations resulting from an upper-body resistance training program. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17596787) doi:[10.1249/mss.0b0138058a5cb](https://doi.org/10.1249/mss.0b0138058a5cb)
+- Ramírez-Campillo R et al. 2013. Regional fat changes induced by localized muscle endurance resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23222084) doi:[10.1519/JSC.0b013e31827e8681](https://doi.org/10.1519/JSC.0b013e31827e8681)
+- Scotto di Palumbo A et al. 2017. Effect of combined resistance and endurance exercise training on regional fat loss. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28497942) doi:[10.23736/S0022-4707.16.06358-1](https://doi.org/10.23736/S0022-4707.16.06358-1)

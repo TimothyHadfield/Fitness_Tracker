@@ -46,3 +46,24 @@ Calves done on the leg press for convenience — with a straight leg the biomech
 - Accentuated eccentrics have not demonstrated a clear hypertrophy advantage in research; the case for them here is practical (better targeting at lighter loads), not evidence of superiority.
 - Drop-set evidence is still unsettled per Schoenfeld.
 - Lunge drop sets are advanced; scale to bodyweight drops while acclimating.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Warm Up**
+
+- Fradkin AJ et al. 2006. Does warming up prevent injury in sport? The evidence from randomised controlled trials?. *J Sci Med Sport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16679062) doi:[10.1016/j.jsams.2006.03.026](https://doi.org/10.1016/j.jsams.2006.03.026)
+
+**Lunge**
+
+- Ebben WP et al. 2009. Muscle activation during lower body resistance training. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18975260) doi:[10.1055/s-2008-1038785](https://doi.org/10.1055/s-2008-1038785)
+
+**Leg Extension**
+
+- Stoutenberg M et al. 2005. The impact of foot position on electromyographical activity of the superficial quadriceps muscles during leg extension. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16437818) doi:[10.1519/r-16364.1](https://doi.org/10.1519/r-16364.1)
+
+**Other studies**
+
+- ResearchGate — <https://www.researchgate.net/publication/322133680_Can_Drop_Set_Training_Enhance_Muscle_Growth>
+- McCaw ST & Melrose DR 1999. Stance width and bar load effects on leg muscle activity during the parallel squat. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10188748) doi:[10.1097/00005768-199903000-00012](https://doi.org/10.1097/00005768-199903000-00012)

@@ -69,3 +69,19 @@ Sample glute session:
 - The claim that single-leg hip thrusts recruit more glute medius or different glute regions is Nippard's own speculation, explicitly flagged as such.
 - Two researcher names (the 2001 hip-extension study and the 2009 wide-stance study) were garbled by the auto-captions; treat as uncertain.
 - No set/rep prescriptions are given for the main lifts in this video beyond the high-rep abduction finisher.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**The Science-Based Glute Workout**
+
+- Lynn SK & Noffal GJ 2012. Lower extremity biomechanics during a regular and counterbalanced squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22076098) doi:[10.1519/JSC.0b013e31823f8c2d](https://doi.org/10.1519/JSC.0b013e31823f8c2d)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4242956/>
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+- <https://www.ncbi.nlm.nih.gov/m/pubmed/19130646/>
+- Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26214739) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)
+- Caterisano A et al. 2002. The effect of back squat depth on the EMG activity of 4 superficial hip and thigh muscles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12173958)
+- Kang MH et al. 2014. Effects of Shoulder Flexion Loaded by an Elastic Tubing Band on EMG Activity of the Gluteal Muscles during Squat Exercises. *J Phys Ther Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25435701) doi:[10.1589/jpts.26.1787](https://doi.org/10.1589/jpts.26.1787)
+- Isear JA Jr et al. 1997. EMG analysis of lower extremity muscle recruitment patterns during an unloaded squat. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9107637) doi:[10.1097/00005768-199704000-00016](https://doi.org/10.1097/00005768-199704000-00016)
+- Worrell TW et al. 2001. Influence of joint position on electromyographic and torque generation during maximal voluntary isometric contractions of the hamstrings and gluteus maximus muscles. *J Orthop Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11767248) doi:[10.2519/jospt.2001.31.12.730](https://doi.org/10.2519/jospt.2001.31.12.730)

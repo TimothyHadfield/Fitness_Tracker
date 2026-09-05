@@ -139,3 +139,7 @@ Nippard's proposed template: **hip extension movement first, finish with a coupl
 - The good morning's injury-prevention benefit is an **extrapolation** from stretch magnitude and from eccentric-training research, not a demonstrated outcome.
 - The hip thrust hamstring data was unpublished at the time of recording.
 - Vigotsky disputes the calculations in the one study on hamstring length change during the squat.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -54,3 +54,21 @@ So protein **partially but not fully rescues** the effect. His judgement: a ~24%
 - Most of the MPS evidence base is rodent work; only one high-quality human study is cited.
 - The recovery and testosterone effects are strongly dose-dependent, and "moderate intoxication" is not precisely defined.
 - "A calorie is a calorie" is presented as a useful heuristic rather than a hard rule.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- Lang CH et al. 2009. Alcohol-induced decrease in muscle protein synthesis associated with increased binding of mTOR and raptor: Comparable effects in young and mature rats. *Nutr Metab (Lond)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19154606) doi:[10.1186/1743-7075-6-4](https://doi.org/10.1186/1743-7075-6-4)
+- Schoeller DA & Buchholz AC 2005. Energetics of obesity and weight control: does diet composition matter?. *J Am Diet Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15867892) doi:[10.1016/j.jada.2005.02.025](https://doi.org/10.1016/j.jada.2005.02.025)
+- Siler SQ et al. 1999. De novo lipogenesis, lipid kinetics, and whole-body lipid balances in humans after acute alcohol consumption. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10539756) doi:[10.1093/ajcn/70.5.928](https://doi.org/10.1093/ajcn/70.5.928)
+- Koziris LP et al. 2000. Effect of acute postexercise ethanol intoxication on the neuroendocrine response to resistance exercise. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10642377) doi:[10.1152/jappl.2000.88.1.165](https://doi.org/10.1152/jappl.2000.88.1.165)
+- Sierksma A et al. 2004. Effect of moderate alcohol consumption on plasma dehydroepiandrosterone sulfate, testosterone, and estradiol levels in middle-aged men and postmenopausal women: a diet-controlled intervention study. *Alcohol Clin Exp Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15166654) doi:[10.1097/01.alc.0000125356.70824.81](https://doi.org/10.1097/01.alc.0000125356.70824.81)
+- Välimäki M et al. 1990. The pulsatile secretion of gonadotropins and growth hormone, and the biological activity of luteinizing hormone in men acutely intoxicated with ethanol. *Alcohol Clin Exp Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/2128439) doi:[10.1111/j.1530-0277.1990.tb01840.x](https://doi.org/10.1111/j.1530-0277.1990.tb01840.x)
+- Vingren JL et al. 2013. Postresistance exercise ethanol ingestion and acute testosterone bioavailability. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23470309) doi:[10.1249/MSS.0b013e31828d3767](https://doi.org/10.1249/MSS.0b013e31828d3767)
+- Murphy AP et al. 2013. The effect of post-match alcohol ingestion on recovery from competitive rugby league matches. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22836602) doi:[10.1519/JSC.0b013e318267a5e9](https://doi.org/10.1519/JSC.0b013e318267a5e9)
+- Barnes MJ et al. 2012. The effects of acute alcohol consumption on recovery from a simulated rugby match. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22168345?dopt=Abstract) doi:[10.1080/02640414.2011.637949](https://doi.org/10.1080/02640414.2011.637949)
+- Barnes MJ et al. 2011. A low dose of alcohol does not impact skeletal muscle performance after exercise-induced muscle damage. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20878178?dopt=Abstract) doi:[10.1007/s00421-010-1655-8](https://doi.org/10.1007/s00421-010-1655-8)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4233249/>

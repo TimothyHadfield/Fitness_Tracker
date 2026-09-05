@@ -61,3 +61,7 @@ But the cost is time spent feeling terrible. Fast regain gives you a short windo
 - Framed almost entirely around post-contest bodybuilders. Someone finishing an ordinary fat-loss phase has far less accumulated deficit and less reason for an aggressive surplus.
 - The 10%-in-four-months cap is offered as a general heuristic, not a validated number.
 - He explicitly flags that inexperienced competitors may not hold the cap without more structure, and that disordered fear of food or uncontrolled binging is outside a coach's scope.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

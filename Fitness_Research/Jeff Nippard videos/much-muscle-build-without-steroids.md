@@ -60,3 +60,19 @@ If you are considering enhancing, max out your natural potential first — that 
 
 ## Caveats & unknowns
 Nippard frames this as neither pro- nor anti-steroid — he thinks people should be able to do what they want with their own bodies, provided they understand the tradeoff. The natty status of any modern natural bodybuilder will always attract skepticism given steroid availability. The Bumstead pre-cycle timeline rests on coach statements and photo dating, not hard proof.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Fat-Free Mass Index in Steroid and Non-Steroid Users**
+
+- Kouri EM et al. 1995. Fat-free mass index in users and nonusers of anabolic-androgenic steroids. *Clin J Sport Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/7496846/) doi:[10.1097/00042752-199510000-00003](https://doi.org/10.1097/00042752-199510000-00003)
+
+**History of Anabolic Steroid Usage**
+
+- Bhasin S et al. 1996. The effects of supraphysiologic doses of testosterone on muscle size and strength in normal men. *N Engl J Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8637535/) doi:[10.1056/NEJM199607043350101](https://doi.org/10.1056/NEJM199607043350101)
+- Bhasin S et al. 2001. Testosterone dose-response relationships in healthy young men. *Am J Physiol Endocrinol Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11701431/) doi:[10.1152/ajpendo.2001.281.6.E1172](https://doi.org/10.1152/ajpendo.2001.281.6.E1172)
+- Woodhouse LJ et al. 2003. Development of models to predict anabolic response to testosterone administration in healthy young men. *Am J Physiol Endocrinol Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12517741/) doi:[10.1152/ajpendo.00536.2002](https://doi.org/10.1152/ajpendo.00536.2002)
+
+- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15947721/)

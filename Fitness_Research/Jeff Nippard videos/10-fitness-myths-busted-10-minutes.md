@@ -69,3 +69,36 @@ Counterpoint: intermittent fasting research suggests you can still maximise musc
 
 ## Caveats & unknowns
 This is a rapid recap; Nippard explicitly notes he skipped detail and that several of these "myths" contain real truth in some circumstances — they're rarely binary. The captions garble at least one researcher name (myth 6). Per-meal protein figures come from a single then-new paper.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Shams-White MM et al. 2017. Dietary protein and bone health: a systematic review and meta-analysis from the National Osteoporosis Foundation. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28404575) doi:[10.3945/ajcn.116.145110](https://doi.org/10.3945/ajcn.116.145110)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3577439/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4008813/>
+
+- ResearchGate — <https://www.researchgate.net/publication/281995415_Sugars_and_Health_Controversies_What_Does_the_Science_Say>
+
+- Lloyd RS et al. 2014. Position statement on youth resistance training: the 2014 International Consensus. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24055781) doi:[10.1136/bjsports-2013-092952](https://doi.org/10.1136/bjsports-2013-092952)
+
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0215-1>
+- Soeters MR et al. 2009. Intermittent fasting does not affect whole-body glucose, lipid, or protein metabolism. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19776143) doi:[10.3945/ajcn.2008.27327](https://doi.org/10.3945/ajcn.2008.27327)
+- Symons TB et al. 2009. A moderate serving of high-quality protein maximally stimulates skeletal muscle protein synthesis in young and elderly subjects. *J Am Diet Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19699838) doi:[10.1016/j.jada.2009.06.369](https://doi.org/10.1016/j.jada.2009.06.369)
+
+- Paoli A et al. 2011. Exercising fasting or fed to enhance fat loss? Influence of food intake on respiratory ratio and excess postexercise oxygen consumption after a bout of endurance training. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21411835) doi:[10.1123/ijsnem.21.1.48](https://doi.org/10.1123/ijsnem.21.1.48)
+- ResearchGate — <https://www.researchgate.net/publication/321307397_Effect_of_Overnight_Fasted_Exercise_on_Weight_Loss_and_Body_Composition_A_Systematic_Review_and_Meta-Analysis>
+
+- Zhang K et al. 2002. Sleeping metabolic rate in relation to body mass index and body composition. *Int J Obes Relat Metab Disord*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11896493) doi:[10.1038/sj.ijo.0801922](https://doi.org/10.1038/sj.ijo.0801922)
+
+- Beardsley C & Škarabot J 2015. Effects of self-myofascial release: A systematic review. *J Bodyw Mov Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26592233) doi:[10.1016/j.jbmt.2015.08.007](https://doi.org/10.1016/j.jbmt.2015.08.007)
+- Pearcey GE et al. 2015. Foam rolling for delayed-onset muscle soreness and recovery of dynamic performance measures. *J Athl Train*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25415413) doi:[10.4085/1062-6050-50.1.01](https://doi.org/10.4085/1062-6050-50.1.01)
+- Rey E et al. 2019. Effects of Foam Rolling as a Recovery Tool in Professional Soccer Players. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29016479) doi:[10.1519/JSC.0000000000002277](https://doi.org/10.1519/JSC.0000000000002277)
+- Vigotsky AD et al. 2015. Acute effects of anterior thigh foam rolling on hip angle, knee angle, and rectus femoris length in the modified Thomas test. *PeerJ*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26421244) doi:[10.7717/peerj.1281](https://doi.org/10.7717/peerj.1281)
+
+- Examine.com — <https://examine.com/nutrition/are-energy-drinks-bad-for-you/>
+
+- Müller MJ et al. 2015. Metabolic adaptation to caloric restriction and subsequent refeeding: the Minnesota Starvation Experiment revisited. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26399868) doi:[10.3945/ajcn.115.109173](https://doi.org/10.3945/ajcn.115.109173)

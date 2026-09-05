@@ -68,3 +68,21 @@ Early keto weight loss is exaggerated by glycogen depletion and water loss; afte
 - Long-term data on keto for insulin sensitivity and cardiovascular health is thin in both directions.
 - Keto does have legitimate clinical applications — epilepsy and other neurological disorders, some cancers, certain skin conditions. Those are separate from its use by healthy people for body composition.
 - Most keto trials failed to control protein, which limits how much the outcome literature can say.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Levy RG et al. 2012. Ketogenic diet and other dietary treatments for epilepsy. *Cochrane Database Syst Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22419282) doi:[10.1002/14651858.CD001903.pub2](https://doi.org/10.1002/14651858.CD001903.pub2)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1126011/pdf/3261090.pdf>
+- Hall KD 2017. A review of the carbohydrate-insulin model of obesity. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28074888) doi:[10.1038/ejcn.2016.260](https://doi.org/10.1038/ejcn.2016.260)
+- Paoli A et al. 2013. Beyond weight loss: a review of the therapeutic uses of very-low-carbohydrate (ketogenic) diets. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23801097) doi:[10.1038/ejcn.2013.116](https://doi.org/10.1038/ejcn.2013.116)
+- Johnston CS et al. 2006. Ketogenic low-carbohydrate diets have no metabolic advantage over nonketogenic low-carbohydrate diets. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16685046) doi:[10.1093/ajcn/83.5.1055](https://doi.org/10.1093/ajcn/83.5.1055)
+- Johnston BC et al. 2014. Comparison of weight loss among named diet programs in overweight and obese adults: a meta-analysis. *JAMA*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25182101) doi:[10.1001/jama.2014.10397](https://doi.org/10.1001/jama.2014.10397)
+- Naude CE et al. 2014. Low carbohydrate versus isoenergetic balanced diets for reducing weight and cardiovascular risk: a systematic review and meta-analysis. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25007189) doi:[10.1371/journal.pone.0100652](https://doi.org/10.1371/journal.pone.0100652)
+- Bueno NB et al. 2013. Very-low-carbohydrate ketogenic diet v. low-fat diet for long-term weight loss: a meta-analysis of randomised controlled trials. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23651522) doi:[10.1017/S0007114513000548](https://doi.org/10.1017/S0007114513000548)
+- Soenen S et al. 2012. Relatively high-protein or 'low-carb' energy-restricted diets for body weight loss and body weight maintenance?. *Physiol Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22935440) doi:[10.1016/j.physbeh.2012.08.004](https://doi.org/10.1016/j.physbeh.2012.08.004)
+- Mansoor N et al. 2016. Effects of low-carbohydrate diets v. low-fat diets on body weight and cardiovascular risk factors: a meta-analysis of randomised controlled trials. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26768850) doi:[10.1017/S0007114515004699](https://doi.org/10.1017/S0007114515004699)
+- Aragon AA et al. 2017. International society of sports nutrition position stand: diets and body composition. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28630601) doi:[10.1186/s12970-017-0174-y](https://doi.org/10.1186/s12970-017-0174-y)

@@ -74,3 +74,16 @@ Then audit your own recovery. Still progressing week to week on a linear program
 
 ## Caveats & unknowns
 The hamstring 60/40 figure comes from a single study. The soleus recommendation is explicitly hedged — it's the only place he thinks the fibre-type theory earns any merit. Strength maintenance during a cut doesn't apply to contest-lean dieters or heavy lifters dropping multiple weight classes. Exercise safety comes down to individual biomechanics and self-experimentation. His mask observations are personal and specific to low-rep compound training; he defers to a linked article by Dr Carl Juneau for the actual science.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Creatine**
+
+- ResearchGate — <https://www.researchgate.net/publication/317612254>
+
+**Concurrent Training**
+
+- Wilson JM et al. 2012. Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22002517/) doi:[10.1519/JSC.0b013e31823a3e2d](https://doi.org/10.1519/JSC.0b013e31823a3e2d)
+- Murlasits Z et al. 2018. The physiological effects of concurrent strength and endurance training sequence: A systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28783467/) doi:[10.1080/02640414.2017.1364405](https://doi.org/10.1080/02640414.2017.1364405)

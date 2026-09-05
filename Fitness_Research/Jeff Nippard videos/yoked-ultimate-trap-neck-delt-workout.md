@@ -57,3 +57,14 @@ Roughly 15-20 reps, but he doesn't count — he stops when he thinks he could ge
 - The 2017 constant-tension triceps study had possible loading confounds between groups.
 - Trap volume guidance comes from a coach's blog post, not a controlled trial.
 - Upright rows still carry impingement risk for some lifters; cap elbow height at shoulder height if barbell-based.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Trebs AA et al. 2010. An electromyography analysis of 3 muscles surrounding the shoulder joint during the performance of a chest press exercise at several angles. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20512064) doi:[10.1519/JSC.0b013e3181ddfae7](https://doi.org/10.1519/JSC.0b013e3181ddfae7)
+- Simão R et al. 2005. Influence of exercise order on the number of repetitions performed and perceived exertion during resistance exercises. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15705026) doi:[10.1519/1533-4287(2005)19<152:IOEOOT>2.0.CO;2](https://doi.org/10.1519/1533-4287(2005)19<152:IOEOOT>2.0.CO;2)
+- Johnson G et al. 1994. Anatomy and actions of the trapezius muscle. *Clin Biomech (Bristol)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23916077) doi:[10.1016/0268-0033(94)90057-4](https://doi.org/10.1016/0268-0033(94)90057-4)
+- ResearchGate — <https://www.researchgate.net/publication/232210633_The_Upright_Row_Implications_for_Preventing_Subacromial_Impingement>

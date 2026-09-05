@@ -44,3 +44,15 @@ So evening insulin sensitivity isn't uniquely poor — sensitivity simply peaks 
 ## Caveats & unknowns
 - The meta-analysis rests on only 5 trials, and four of them individually trended toward smaller evening meals — the aggregate just wasn't significant.
 - Shift workers and people with night eating syndrome were deliberately excluded, so conclusions may not transfer to them.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Seale JL & Conway JM 1999. Relationship between overnight energy expenditure and BMR measured in a room-sized calorimeter. *Eur J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10099943) doi:[10.1038/sj.ejcn.1600685](https://doi.org/10.1038/sj.ejcn.1600685)
+- Katayose Y et al. 2009. Metabolic rate and fuel utilization during sleep assessed by whole-body indirect calorimetry. *Metabolism*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19394978) doi:[10.1016/j.metabol.2009.02.025](https://doi.org/10.1016/j.metabol.2009.02.025)
+- Biston P et al. 1996. Diurnal variations in cardiovascular function and glucose regulation in normotensive humans. *Hypertension*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8901836) doi:[10.1161/01.hyp.28.5.863](https://doi.org/10.1161/01.hyp.28.5.863)
+- Zhang K et al. 2002. Sleeping metabolic rate in relation to body mass index and body composition. *Int J Obes Relat Metab Disord*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11896493) doi:[10.1038/sj.ijo.0801922](https://doi.org/10.1038/sj.ijo.0801922)
+- Fong M et al. 2017. Are large dinners associated with excess weight, and does eating a smaller dinner achieve greater weight loss? A systematic review and meta-analysis. *Br J Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28967343) doi:[10.1017/S0007114517002550](https://doi.org/10.1017/S0007114517002550)

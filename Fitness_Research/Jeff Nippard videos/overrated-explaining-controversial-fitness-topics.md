@@ -67,3 +67,12 @@ Take creatine monohydrate (cheapest form), consider ashwagandha, skip everything
 
 ## Caveats & unknowns
 Both admit bias on sumo deadlifts (both pull sumo). BCAA effects on soreness may not be independent of total protein intake. The full-ROM disagreement is really about framing — they agree on the underlying mechanics. Norton's "kiwi is overrated" is a blanket policy on single foods, not a specific criticism.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Doherty R et al. 2019. Sleep and Nutrition Interactions: Implications for Athletes. *Nutrients*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30979048/) doi:[10.3390/nu11040822](https://doi.org/10.3390/nu11040822)
+- Stonehouse W et al. 2013. Kiwifruit: our daily prescription for health. *Can J Physiol Pharmacol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23746068/) doi:[10.1139/cjpp-2012-0303](https://doi.org/10.1139/cjpp-2012-0303)
+
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z>

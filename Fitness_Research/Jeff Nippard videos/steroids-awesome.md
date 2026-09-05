@@ -77,3 +77,24 @@ His argument to anyone who thinks they've hit their natural limit: most people h
 
 ## Caveats & unknowns
 Exactly how much steroids shorten lifespan can't be stated precisely — the 2024 cohort study establishes excess mortality but not the magnitude of life shortening, and everything is dose-dependent. Response varies enormously with genetics and dose. Aggression is real as intrusive thought content but rarely produces violence. The brain-age and intelligence findings are observational. Mike Israetel is himself an enhanced user and says so.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Nunes JP et al. 2017. Creatine supplementation elicits greater muscle hypertrophy in upper than lower limbs and trunk in resistance-trained men. *Nutr Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29214923/) doi:[10.1177/0260106017737013](https://doi.org/10.1177/0260106017737013)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5679696>
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3104052/>
+- <https://journals.lww.com/cjsportsmed/Abstract/1995/10000/Fat_Free_Mass_Index_in_Users_and_Nonusers_of.3.aspx>
+
+- <https://www.frontiersin.org/journals/endocrinology/articles/10.3389/fendo.2022.1059473/full>
+
+- Bjørnebekk A et al. 2021. Long-term Anabolic-Androgenic Steroid Use Is Associated With Deviant Brain Aging. *Biol Psychiatry Cogn Neurosci Neuroimaging*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33811018) doi:[10.1016/j.bpsc.2021.01.001](https://doi.org/10.1016/j.bpsc.2021.01.001)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9580689>
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4988681/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10620455/>
+
+- Horwitz H et al. 2019. Health consequences of androgenic anabolic steroid use. *J Intern Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30460728/) doi:[10.1111/joim.12850](https://doi.org/10.1111/joim.12850)

@@ -42,3 +42,11 @@ Bias delt volume heavily toward side delts. One front-delt movement (machine pre
 
 ## Caveats & unknowns
 The 70-90% side delt figure is Mike's opinion, not a study finding. The German bodybuilder study is observational and from the 1990s. Mike acknowledges "some nuances" to the 45-135° claim on front raises. Extending range past the normal endpoint is presented as safe only if pain-free — joint pain is the signal to stop. Jeff and Mike differ in style: Mike pauses hard in the stretch position and uses much lighter loads, Jeff is more of a constant-tension lifter.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Side Delt Study**
+
+- Brown JM et al. 2007. Muscles within muscles: Coordination of 19 muscle segments within three shoulder muscles during isometric motor tasks. *J Electromyogr Kinesiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/16458022/) doi:[10.1016/j.jelekin.2005.10.007](https://doi.org/10.1016/j.jelekin.2005.10.007)

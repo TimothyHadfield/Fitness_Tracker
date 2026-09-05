@@ -45,3 +45,39 @@ Nippard's own read: he's unconvinced genuine non-responders exist. Putting every
 - The miR-378 finding is a correlation from a small high/low responder subgroup — not actionable yet.
 - Heritability estimates for muscle size (50-80%) are wide because few studies adequately control training and diet.
 - "Non-responder" status may be an artefact of a single fixed protocol rather than a real biological category.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Study Showing Huge Variability in Arm Training Response**
+
+- Hubal MJ et al. 2005. Variability in muscle size and strength gain after unilateral resistance training. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15947721)
+
+**The "Soy vs. Whey" Study**
+
+- Hartman JW et al. 2007. Consumption of fat-free fluid milk after resistance exercise promotes greater lean mass accretion than does consumption of soy or carbohydrate in young, novice, male weightlifters. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17684208) doi:[10.1093/ajcn/86.2.373](https://doi.org/10.1093/ajcn/86.2.373)
+
+**The Follow-Up Study Investigating High vs Low Responder MicroRNA Expression**
+
+- Davidsen PK et al. 2011. High responders to resistance exercise training demonstrate differential regulation of skeletal muscle microRNA expression. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21030674) doi:[10.1152/japplphysiol.00901.2010](https://doi.org/10.1152/japplphysiol.00901.2010)
+
+**Satellite Cells**
+
+- Davidsen PK et al. 2011. High responders to resistance exercise training demonstrate differential regulation of skeletal muscle microRNA expression. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21030674) doi:[10.1152/japplphysiol.00901.2010](https://doi.org/10.1152/japplphysiol.00901.2010)
+
+**Response to Overfeeding in Twins Study**
+
+- Bouchard C et al. 1990. The response to long-term overfeeding in identical twins. *N Engl J Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/2336074) doi:[10.1056/NEJM199005243222101](https://doi.org/10.1056/NEJM199005243222101)
+
+**Paper on Fat Distribution**
+
+- Schleinitz D et al. 2014. The genetics of fat distribution. *Diabetologia*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24632736) doi:[10.1007/s00125-014-3214-z](https://doi.org/10.1007/s00125-014-3214-z)
+
+**High and Low-Fat Phenotypes**
+
+- Blundell JE & Cooling J 1999. High-fat and low-fat (behavioural) phenotypes: biology or environment?. *Proc Nutr Soc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10817143) doi:[10.1017/s0029665199001056](https://doi.org/10.1017/s0029665199001056)
+
+**Lyle McDonald on Insulin Sensitivity**
+
+- Thom G & Lean M 2017. Is There an Optimal Diet for Weight Management and Metabolic Health?. *Gastroenterology*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28214525) doi:[10.1053/j.gastro.2017.01.056](https://doi.org/10.1053/j.gastro.2017.01.056)

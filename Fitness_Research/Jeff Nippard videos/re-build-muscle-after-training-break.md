@@ -46,3 +46,48 @@ Write the bridge before your first session. Weeks 1-2: light compounds at 50-60%
 
 ## Caveats & unknowns
 The half-the-time strength regain rule is a general heuristic and unreliable beyond about six months off. Bridge length depends on layoff length and is 2-4 weeks only. The sub-failure growth finding is from a single study over eight weeks and is explicitly framed as sufficient, not optimal, for the long term.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**MASS Article**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2286003/posts/7716575>
+
+**Muscle Memory**
+
+- Seaborne RA et al. 2018. Human Skeletal Muscle Possesses an Epigenetic Memory of Hypertrophy. *Sci Rep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29382913) doi:[10.1038/s41598-018-20287-3](https://doi.org/10.1038/s41598-018-20287-3)
+- Staron RS et al. 1991. Strength and skeletal muscle adaptations in heavy-resistance-trained women after detraining and retraining. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1827108) doi:[10.1152/jappl.1991.70.2.631](https://doi.org/10.1152/jappl.1991.70.2.631)
+- Snijders T et al. 2019. Muscle mass and strength gains following 6 months of resistance type exercise training are only partly preserved within one year with autonomous exercise continuation in older adults. *Exp Gerontol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30978433) doi:[10.1016/j.exger.2019.04.002](https://doi.org/10.1016/j.exger.2019.04.002)
+- Psilander N et al. 2019. Effects of training, detraining, and retraining on strength, hypertrophy, and myonuclear number in human skeletal muscle. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30991013) doi:[10.1152/japplphysiol.00917.2018](https://doi.org/10.1152/japplphysiol.00917.2018)
+- Murach KA et al. 2019. "Muscle memory" not mediated by myonuclear number? Secondary analysis of human detraining data. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31513448) doi:[10.1152/japplphysiol.00506.2019](https://doi.org/10.1152/japplphysiol.00506.2019)
+- ResearchGate — <https://www.researchgate.net/publication/45660034>
+- ResearchGate — <https://www.researchgate.net/publication/338056052>
+- Blocquiaux S et al. 2020. The effect of resistance training, detraining and retraining on muscle strength and power, myofibre size, satellite cells and myonuclei in older men. *Exp Gerontol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/32017951) doi:[10.1016/j.exger.2020.110860](https://doi.org/10.1016/j.exger.2020.110860)
+
+**Strength Loss**
+
+- McMaster DT et al. 2013. The development, retention and decay rates of strength and power in elite rugby union, rugby league and American football: a systematic review. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23529287) doi:[10.1007/s40279-013-0031-3](https://doi.org/10.1007/s40279-013-0031-3)
+- ResearchGate — <https://www.researchgate.net/publication/6123152>
+- Sakugawa RL et al. 2019. Effects of resistance training, detraining, and retraining on strength and functional capacity in elderly. *Aging Clin Exp Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29777475) doi:[10.1007/s40520-018-0970-5](https://doi.org/10.1007/s40520-018-0970-5)
+- Taaffe DR & Marcus R 1997. Dynamic muscle strength alterations to detraining and retraining in elderly men. *Clin Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9171971) doi:[10.1111/j.1365-2281.1997.tb00010.x](https://doi.org/10.1111/j.1365-2281.1997.tb00010.x)
+- Staron RS et al. 1991. Strength and skeletal muscle adaptations in heavy-resistance-trained women after detraining and retraining. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1827108) doi:[10.1152/jappl.1991.70.2.631](https://doi.org/10.1152/jappl.1991.70.2.631)
+
+**Proximity to Failure and Muscle Growth**
+
+- Lasevicius T et al. 2022. Muscle Failure Promotes Greater Muscle Hypertrophy in Low-Load but Not in High-Load Resistance Training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31895290) doi:[10.1519/JSC.0000000000003454](https://doi.org/10.1519/JSC.0000000000003454)
+- Pareja-Blanco F et al. 2017. Effects of velocity loss during resistance training on athletic performance, strength gains and muscle adaptations. *Scand J Med Sci Sports*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27038416) doi:[10.1111/sms.12678](https://doi.org/10.1111/sms.12678)
+
+**Proximity to Failure and Strength**
+
+- Folland JP et al. 2002. Fatigue is not a necessary stimulus for strength gains during resistance training. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12351337) doi:[10.1136/bjsm.36.5.370](https://doi.org/10.1136/bjsm.36.5.370)
+- Davies T et al. 2016. Effect of Training Leading to Repetition Failure on Muscular Strength: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26666744) doi:[10.1007/s40279-015-0451-3](https://doi.org/10.1007/s40279-015-0451-3)
+
+**Training Volume**
+
+- ResearchGate — <https://www.researchgate.net/publication/322023636>
+
+**Periodization**
+
+- Souza EO et al. 2014. Early adaptations to six weeks of non-periodized and periodized strength training regimens in recreational males. *J Sports Sci Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25177188)

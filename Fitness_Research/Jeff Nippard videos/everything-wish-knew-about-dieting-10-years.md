@@ -48,3 +48,13 @@ Two fixes. First, calculate calories and macros so you know what you're actually
 
 ## Caveats & unknowns
 Very low carbs and a deep deficit may be unavoidable for stage-level leanness, but he explicitly does not recommend that for general audiences. Everything here is framed around a physique-contest prep, not general health dieting. His final verdict on the old diet: **4/10** — credit for plenty of vegetables, adequate (if excessive) protein, and not being criminally low in carbs or calories; penalised for rigidity, too little fat, no pre-workout carbs, unnecessary fasted cardio, no fruit, and thin food variety.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://journals.lww.com/nsca-scj/fulltext/2011/02000/does_cardio_after_an_overnight_fast_maximize_fat.3.aspx>
+- <https://www.mdpi.com/2411-5142/2/4/43>
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window?. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23360586) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)

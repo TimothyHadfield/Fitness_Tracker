@@ -90,3 +90,7 @@ Genetics vs work: the best have both. Meadows has narrow clavicles, a wide pelvi
 - This is coaching experience and observation, not controlled research. Where research is invoked (Schoenfeld on cell swelling; velocity-based motor unit recruitment) it's mentioned in passing, not cited specifically.
 - Any drug discussion here is descriptive of what competitive bodybuilders do; both speakers stress there is no risk-free approach, only lower-risk approaches, and Jeff and Meadows both advise against use.
 - Audio glitches and static are noted in the recording; a few passages are hard to follow.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

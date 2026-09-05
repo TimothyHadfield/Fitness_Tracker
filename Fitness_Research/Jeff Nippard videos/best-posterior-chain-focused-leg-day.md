@@ -48,3 +48,17 @@ Rather than zero rest, take 30 seconds between every single set: 20 extensions, 
 - The auto-captions garble several researcher names (the deadlift lat-activation study, the 2017 low-bar study, the glute-activation study behind the constant-tension hip thrust, and the 2008 ab EMG study). The findings above are as stated in the video; verify the citations before quoting them.
 - Nippard says the constant-tension idea is supported by research that has not specifically studied the glutes — it is an extrapolation.
 - The workouts shown are not identical to those in his upper/lower program, only built on the same principles and similar volumes.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Worrell TW et al. 2001. Influence of joint position on electromyographic and torque generation during maximal voluntary isometric contractions of the hamstrings and gluteus maximus muscles. *J Orthop Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11767248) doi:[10.2519/jospt.2001.31.12.730](https://doi.org/10.2519/jospt.2001.31.12.730)
+- Youdas JW et al. 2008. An electromyographic analysis of the Ab-Slide exercise, abdominal crunch, supine double leg thrust, and side bridge in healthy young adults: implications for rehabilitation professionals. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18978615) doi:[10.1519/JSC.0b013e31818745bf](https://doi.org/10.1519/JSC.0b013e31818745bf)
+- Paoli A et al. 2009. The effect of stance width on the electromyographical activity of eight superficial thigh muscles during back squat with different bar loads. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19130646) doi:[10.1519/jsc.0b013e3181876811](https://doi.org/10.1519/jsc.0b013e3181876811)
+- Escamilla RF et al. 2002. An electromyographic analysis of sumo and conventional style deadlifts. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11932579) doi:[10.1097/00005768-200204000-00019](https://doi.org/10.1097/00005768-200204000-00019)
+- Glassbrook DJ et al. 2017. A Review of the Biomechanical Differences Between the High-Bar and Low-Bar Back-Squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28570490) doi:[10.1519/JSC.0000000000002007](https://doi.org/10.1519/JSC.0000000000002007)
+- Noe DA et al. 1992. Myoelectric activity and sequencing of selected trunk muscles during isokinetic lifting. *Spine (Phila Pa 1976)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1532462) doi:[10.1097/00007632-199202000-00018](https://doi.org/10.1097/00007632-199202000-00018)
+- Goto M et al. 2019. Partial Range of Motion Exercise Is Effective for Facilitating Muscle Hypertrophy and Function Through Sustained Intramuscular Hypoxia in Young Trained Men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31034463) doi:[10.1519/JSC.0000000000002051](https://doi.org/10.1519/JSC.0000000000002051)

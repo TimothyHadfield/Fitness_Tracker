@@ -47,3 +47,10 @@ Covered in that month's issue of MASS (Monthly Applications in Strength Sport), 
 - EMG activation is not a reliable proxy for hypertrophy.
 - The soreness difference wasn't statistically significant.
 - Creatine kinase remained elevated past the final measurement, so the true recovery cost of grouped supersets is unknown.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Brentano MA et al. 2017. Muscle Damage and Muscle Activity Induced by Strength Training Super-Sets in Physically Active Men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27243916) doi:[10.1519/JSC.0000000000001511](https://doi.org/10.1519/JSC.0000000000001511)
+- Schoenfeld BJ et al. 2016. Longer Interset Rest Periods Enhance Muscle Strength and Hypertrophy in Resistance-Trained Men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26605807) doi:[10.1519/JSC.0000000000001272](https://doi.org/10.1519/JSC.0000000000001272)

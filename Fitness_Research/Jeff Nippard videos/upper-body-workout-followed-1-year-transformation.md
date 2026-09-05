@@ -83,3 +83,11 @@ Run one heavy overloadable movement per pattern (incline barbell press, weighted
 - The Bahnjian vs. preacher curl study was small (15 subjects, 10 weeks) and found no significant difference; the exercise name is garbled in the captions.
 - Only the Chavez incline press study has named authors; the triceps and lateral raise studies are unnamed here.
 - Results are a single-subject year-long anecdote (n=1) around otherwise evidence-based choices; +2.7 lb lean mass by DEXA is within the noise range of the method.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- ResearchGate — <https://www.researchgate.net/publication/387157135>
+
+- ResearchGate — <https://www.researchgate.net/publication/388004281>

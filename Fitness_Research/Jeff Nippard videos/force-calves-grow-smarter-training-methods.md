@@ -55,3 +55,13 @@ There's merit in training across 6 to 20+ reps. The most recent evidence suggest
 ## Caveats & unknowns
 - The EMG data ranking donkey calf raises highest is described as "independent," not a named published trial, and EMG activation is not the same as growth.
 - The foot-position question is unresolved: the 2011 finding for toes-out and medial gastroc was not upheld by later studies.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Dahmane R et al. 2005. Spatial fiber type distribution in normal human muscle Histochemical and tensiomyographical evaluation. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16214493) doi:[10.1016/j.jbiomech.2004.10.020](https://doi.org/10.1016/j.jbiomech.2004.10.020)
+- ResearchGate — <https://www.researchgate.net/publication/319215001_The_influence_of_foot_position_on_lower_leg_muscle_activity_during_a_heel_raise_exercise_measured_with_fine-wire_and_surface_EMG>
+- Riemann BL et al. 2011. Medial and lateral gastrocnemius activation differences during heel-raise exercise with three different foot positions. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20581696) doi:[10.1519/JSC.0b013e3181cc22b8](https://doi.org/10.1519/JSC.0b013e3181cc22b8)

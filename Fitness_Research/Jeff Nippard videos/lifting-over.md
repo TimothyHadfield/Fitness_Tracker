@@ -65,3 +65,68 @@ His recommendations:
 
 ## Caveats & unknowns
 The volume meta-analysis's high-set findings come from 6–10 week studies; whether 30–42 sets/week holds up long term is unknown, which is why he keeps the recommendation at 8–20. No strict-vs-loose technique study exists yet (his is in progress). No direct hypertrophy study exists for back training at all. EMG's predictive value for hypertrophy is unestablished. And his overall framing: the best program is the one you'll stick to, not the most optimal one — occasional suboptimal-but-enjoyable workouts, cheat reps and dropped RPE discipline are not in conflict with smart training.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Slow Negatives**
+
+- ResearchGate — <https://www.researchgate.net/publication/348737511>
+- <https://journals.lww.com/nsca-jscr/fulltext/2021/03000/effects_of_prolonging_eccentric_phase_duration_in.12.aspx>
+- Androulakis Korakakis P et al. 2023. Optimizing Resistance Training Technique to Maximize Muscle Hypertrophy: A Narrative Review. *J Funct Morphol Kinesiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/38249086/) doi:[10.3390/jfmk9010009](https://doi.org/10.3390/jfmk9010009)
+
+- Kassiano W et al. 2023. Greater Gastrocnemius Muscle Hypertrophy After Partial Range of Motion Training Performed at Long Muscle Lengths. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37015016/) doi:[10.1519/JSC.0000000000004460](https://doi.org/10.1519/JSC.0000000000004460)
+- Bloomquist K et al. 2013. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23604798/) doi:[10.1007/s00421-013-2642-7](https://doi.org/10.1007/s00421-013-2642-7)
+- Kubo K et al. 2019. Effects of squat training with different depths on lower limb muscle volumes. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31230110/) doi:[10.1007/s00421-019-04181-y](https://doi.org/10.1007/s00421-019-04181-y)
+- Schoenfeld BJ et al. 2018. Differential effects of attentional focus strategies during long-term resistance training. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29533715/) doi:[10.1080/17461391.2018.1447020](https://doi.org/10.1080/17461391.2018.1447020)
+- Maeo S et al. 2023. Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35819335/) doi:[10.1080/17461391.2022.2100279](https://doi.org/10.1080/17461391.2022.2100279)
+- Maeo S et al. 2021. Greater Hamstrings Muscle Hypertrophy but Similar Damage Protection after Training at Long versus Short Muscle Lengths. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33009197/) doi:[10.1249/MSS.0000000000002523](https://doi.org/10.1249/MSS.0000000000002523)
+- Kinoshita M et al. 2023. Triceps surae muscle hypertrophy is greater after standing versus seated calf-raise training. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/38156065/) doi:[10.3389/fphys.2023.1272106](https://doi.org/10.3389/fphys.2023.1272106)
+- Nunes JP et al. 2020. Different Foot Positioning During Calf Training to Induce Portion-Specific Gastrocnemius Muscle Hypertrophy. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32735428/) doi:[10.1519/JSC.0000000000003674](https://doi.org/10.1519/JSC.0000000000003674)
+- Pedrosa GF et al. 2023. Training in the Initial Range of Motion Promotes Greater Muscle Adaptations Than at Final in the Arm Curl. *Sports (Basel)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/36828324/) doi:[10.3390/sports11020039](https://doi.org/10.3390/sports11020039)
+- Trahey KM et al. 2023. The Effect of Lifting Straps on Deadlift Performance in Females. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37729509/) doi:[10.1519/JSC.0000000000004494](https://doi.org/10.1519/JSC.0000000000004494)
+- Da Silva EM et al. 2008. Analysis of muscle activation during different leg press exercises at submaximum effort levels. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/18545207/) doi:[10.1519/JSC.0b013e3181739445](https://doi.org/10.1519/JSC.0b013e3181739445)
+- Paoli A et al. 2009. The effect of stance width on the electromyographical activity of eight superficial thigh muscles during back squat with different bar loads. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19130646) doi:[10.1519/jsc.0b013e3181876811](https://doi.org/10.1519/jsc.0b013e3181876811)
+- Arandjelović O 2013. Does cheating pay: the role of externally supplied momentum on muscular force in resistance exercise. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22615008/) doi:[10.1007/s00421-012-2420-y](https://doi.org/10.1007/s00421-012-2420-y)
+- <https://link.springer.com/article/10.1007/s11332-019-00595-5>
+- ResearchGate — <https://www.researchgate.net/publication/287975222>
+- Sinclair J et al. 2015. The influence of different footwear on 3-D kinematics and muscle activation during the barbell back squat in males. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25331484/) doi:[10.1080/17461391.2014.965752](https://doi.org/10.1080/17461391.2014.965752)
+- Valério DF et al. 2021. The effects of lifting straps in maximum strength, number of repetitions and muscle activation during lat pull-down. *Sports Biomech*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31198105/) doi:[10.1080/14763141.2019.1610490](https://doi.org/10.1080/14763141.2019.1610490)
+- Saeterbakken AH et al. 2021. The Effect of Grip Width on Muscle Strength and Electromyographic Activity in Bench Press among Novice- and Resistance-Trained Men. *Int J Environ Res Public Health*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34198674/) doi:[10.3390/ijerph18126444](https://doi.org/10.3390/ijerph18126444)
+- Schoenfeld BJ et al. 2015. Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25601394/) doi:[10.1007/s40279-015-0304-0](https://doi.org/10.1007/s40279-015-0304-0)
+
+**Squatting Deep**
+
+- Bloomquist K et al. 2013. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23604798/) doi:[10.1007/s00421-013-2642-7](https://doi.org/10.1007/s00421-013-2642-7)
+- Kubo K et al. 2019. Effects of squat training with different depths on lower limb muscle volumes. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31230110/) doi:[10.1007/s00421-019-04181-y](https://doi.org/10.1007/s00421-019-04181-y)
+
+**Lat Pulldown EMG and Biomechanics Research**
+
+- Lehman GJ et al. 2004. Variations in muscle activation levels during traditional latissimus dorsi weight training exercises: An experimental study. *Dyn Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15228624/) doi:[10.1186/1476-5918-3-4](https://doi.org/10.1186/1476-5918-3-4)
+- <https://journals.lww.com/nsca-scj/citation/1997/06000/analysis_of_the_lat_pulldown.6.aspx>
+
+**EMG as a Predictor of Hypertrophy**
+
+- Vigotsky AD et al. 2022. Longing for a Longitudinal Proxy: Acutely Measured Surface EMG Amplitude is not a Validated Predictor of Muscle Hypertrophy. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35006527/) doi:[10.1007/s40279-021-01619-2](https://doi.org/10.1007/s40279-021-01619-2)
+
+**Training Volume**
+
+- <https://journals.lww.com/nsca-jscr/fulltext/2017/11000/effects_of_a_modified_german_volume_training.21.aspx>
+- ResearchGate — <https://www.researchgate.net/publication/343323626>
+- Starkey DB et al. 1996. Effect of resistance training volume on strength and muscle thickness. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/8897390/) doi:[10.1097/00005768-199610000-00016](https://doi.org/10.1097/00005768-199610000-00016)
+- Rønnestad BR et al. 2007. Dissimilar effects of one- and three-set strength training on strength and muscle mass gains in upper and lower body in untrained subjects. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17313291/) doi:[10.1519/00124278-200702000-00028](https://doi.org/10.1519/00124278-200702000-00028)
+- Schoenfeld BJ et al. 2019. Resistance Training Volume Enhances Muscle Hypertrophy but Not Strength in Trained Men. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30153194/) doi:[10.1249/MSS.0000000000001764](https://doi.org/10.1249/MSS.0000000000001764)
+- ResearchGate — <https://www.researchgate.net/publication/336855244>
+- Radaelli R et al. 2015. Dose-response of 1, 3, and 5 sets of resistance exercise on strength, local muscular endurance, and hypertrophy. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25546444/) doi:[10.1519/JSC.0000000000000758](https://doi.org/10.1519/JSC.0000000000000758)
+- Aube D et al. 2022. Progressive Resistance Training Volume: Effects on Muscle Thickness, Mass, and Strength Adaptations in Resistance-Trained Individuals. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32058362/) doi:[10.1519/JSC.0000000000003524](https://doi.org/10.1519/JSC.0000000000003524)
+- Sooneste H et al. 2013. Effects of training volume on strength and hypertrophy in young men. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23249767/) doi:[10.1519/JSC.0b013e3182679215](https://doi.org/10.1519/JSC.0b013e3182679215)
+- Mitchell CJ et al. 2012. Resistance exercise load does not determine training-mediated hypertrophic gains in young men. *J Appl Physiol (1985)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22518835/) doi:[10.1152/japplphysiol.00307.2012](https://doi.org/10.1152/japplphysiol.00307.2012)
+- ResearchGate — <https://www.researchgate.net/publication/272831373>
+- ResearchGate — <https://www.researchgate.net/publication/363635223>
+- ResearchGate — <https://www.researchgate.net/publication/337827350>
+- ResearchGate — <https://www.researchgate.net/publication/374471904>
+- Bickel CS et al. 2011. Exercise dosing to retain resistance training adaptations in young and older adults. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21131862/) doi:[10.1249/MSS.0b013e318207c15d](https://doi.org/10.1249/MSS.0b013e318207c15d)
+- Heaselgrave SR et al. 2019. Dose-Response Relationship of Weekly Resistance-Training Volume and Frequency on Muscular Adaptations in Trained Men. *Int J Sports Physiol Perform*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30160627/) doi:[10.1123/ijspp.2018-0427](https://doi.org/10.1123/ijspp.2018-0427)
+- Barcelos C et al. 2018. High-frequency resistance training does not promote greater muscular adaptations compared to low frequencies in young untrained men. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29852092/) doi:[10.1080/17461391.2018.1476590](https://doi.org/10.1080/17461391.2018.1476590)
+- Van Vossel K et al. 2023. Can muscle typology explain the inter-individual variability in resistance training adaptations?. *J Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37038845/) doi:[10.1113/JP284442](https://doi.org/10.1113/JP284442)

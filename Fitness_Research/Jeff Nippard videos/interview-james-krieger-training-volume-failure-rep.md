@@ -140,3 +140,7 @@ Nippard's own audit of what powerlifting did to his physique [59:30]:
 - Krieger's 5–6x/week experiment was **six weeks old and self-experimental** — he explicitly refuses to draw conclusions from it.
 - Individual variance in response to volume is repeatedly flagged as large and genetic.
 - Name flags: **"McCluster"** is almost certainly *McLester*; the Ostrowski publication year is given as "1999 or 1998, I don't remember"; the powerlifter near-failure study and the Phillips-lab study are cited without full references.
+
+## References
+
+Nippard listed no citations in this video's description. Any studies named in the note above are as he spoke them on camera and have not been resolved to papers.

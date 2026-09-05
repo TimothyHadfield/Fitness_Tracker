@@ -53,3 +53,11 @@ Seated and standing dumbbell shoulder presses both work as substitutes or additi
 - The thumbless grip is only suggested for experienced lifters with stacked wrists.
 - The 2013 press-variation study is cited by year only; no author is named in the transcript.
 - The side-delt advantage of dumbbells may be partly offset by range-of-motion loss at heavier loads.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific Reference**
+
+- ResearchGate — <https://www.researchgate.net/publication/232699438_Effects_of_Body_Position_and_Loading_Modality_on_Muscle_Activity_and_Strength_in_Shoulder_Presses>

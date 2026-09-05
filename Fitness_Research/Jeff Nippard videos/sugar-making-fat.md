@@ -45,3 +45,25 @@ A 2013 review identifies three mechanisms:
 - Epidemiological evidence on both sides (including the Australian data) is a weak form of evidence.
 - The 100 g figure is an extrapolation from a fructose estimate, not a measured threshold.
 - Nippard's conclusion is that sugar does not appear to play a central causal role in obesity or type 2 diabetes — not that intake is irrelevant.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Further Recommended Reading/Watching**
+
+- Weightology (paywalled) — <https://weightology.net/no-youre-not-addicted-to-sugar/>
+- Weightology (paywalled) — <https://weightology.net/insulin-an-undeserved-bad-reputation/>
+
+**Scientific References**
+
+- Bray GA et al. 2004. Consumption of high-fructose corn syrup in beverages may play a role in the epidemic of obesity. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15051594) doi:[10.1093/ajcn/79.4.537](https://doi.org/10.1093/ajcn/79.4.537)
+- Barclay AW & Brand-Miller J 2011. The Australian paradox: a substantial decline in sugars intake over the same timeframe that overweight and obesity have increased. *Nutrients*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22254107) doi:[10.3390/nu3040491](https://doi.org/10.3390/nu3040491)
+- Malik VS et al. 2013. Sugar-sweetened beverages and weight gain in children and adults: a systematic review and meta-analysis. *Am J Clin Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23966427) doi:[10.3945/ajcn.113.058362](https://doi.org/10.3945/ajcn.113.058362)
+- <https://www.ncbi.nlm.nih.gov/pubmedhealth/PMH0051979/>
+- Kaiser KA et al. 2013. Will reducing sugar-sweetened beverage consumption reduce obesity? Evidence supporting conjecture is strong, but evidence when testing effect is weak. *Obes Rev*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23742715) doi:[10.1111/obr.12048](https://doi.org/10.1111/obr.12048)
+- Cozma AI et al. 2012. Effect of fructose on glycemic control in diabetes: a systematic review and meta-analysis of controlled feeding trials. *Diabetes Care*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22723585) doi:[10.2337/dc12-0073](https://doi.org/10.2337/dc12-0073)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4496733/>
+- Mandel N & Brannon D 2017. Sugar, perceived healthfulness, and satiety: When does a sugary preload lead people to eat more?. *Appetite*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28389137) doi:[10.1016/j.appet.2017.04.001](https://doi.org/10.1016/j.appet.2017.04.001)
+- <https://www.sciencedirect.com/science/article/pii/S0924224414002386>
+- Hall KD 2018. Did the Food Environment Cause the Obesity Epidemic?. *Obesity (Silver Spring)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29265772) doi:[10.1002/oby.22073](https://doi.org/10.1002/oby.22073)

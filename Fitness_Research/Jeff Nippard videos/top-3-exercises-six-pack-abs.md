@@ -68,3 +68,11 @@ Chosen because it trains the rectus abdominis through spinal flexion **and** bri
 
 ## Caveats & unknowns
 The EMG researchers' names are unreadable in the auto-captions. Contreras and Schoenfeld's position is that calling crunches injurious is *premature* in healthy individuals — not a clearance for heavy loading, which is why he caps crunch loading at moderate.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- <https://journals.lww.com/nsca-scj/Fulltext/2011/08000/To_Crunch_or_Not_to_Crunch__An_Evidence_Based.2.aspx>

@@ -54,3 +54,13 @@ So excessive strictness predicts failure, and the answer to a satiety-inhibiting
 - The 10-20% figure is Nippard's personal recommendation, not a research-derived threshold.
 - The rigid-vs-flexible-control studies are cross-sectional/associational in character; they establish a relationship with dieting success, not a proven cause.
 - Nippard explicitly states the mechanisms of human eating psychology are far from fully mapped.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Meule A et al. 2011. Food cravings mediate the relationship between rigid, but not flexible control of eating behavior and dieting success. *Appetite*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/21824503) doi:[10.1016/j.appet.2011.07.013](https://doi.org/10.1016/j.appet.2011.07.013)
+
+**2002 Study on Rigid Diets**
+
+- Stewart TM et al. 2002. Rigid vs. flexible dieting: association with eating disorder symptoms in nonobese women. *Appetite*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/11883916) doi:[10.1006/appe.2001.0445](https://doi.org/10.1006/appe.2001.0445)
