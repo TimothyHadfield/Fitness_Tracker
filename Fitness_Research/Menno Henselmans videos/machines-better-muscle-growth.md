@@ -6,19 +6,19 @@
 ## Bottom line
 - **Verdict: equivalent.** Machines and free weights build muscle equally well, and build strength equally well *on the exercise you test*.
 - Hernández-Belmonte 2023 ran an identical programme with one group on barbells and one on machines matching the movement trajectory. Growth was **similar in quads, pecs and abs** — every muscle measured. Strength gains were **modality-specific**: each group got better at what it trained.
-- The meta-analysis (Heidel, published 2022 though he refers to it as the 2021 meta) agrees across the whole literature: equal for hypertrophy, equal for exercise-specific strength.
-- **Free weights carry over slightly better.** Most effect sizes in the meta trended toward barbell strength transferring to machines more than the reverse, and there is some evidence of better transfer to sport-specific movements — but the difference is usually not statistically significant, and he calls it wildly overblown by the functional-training crowd.
-- **Joint discomfort tracks freedom of movement, not machine-vs-free.** What matters is whether the specific exercise suits your body structure.
+- The meta-analysis (Heidel, published 2022 though he calls it the 2021 meta) agrees across the literature: equal for hypertrophy, equal for exercise-specific strength.
+- **Free weights carry over slightly better.** Most effect sizes in the meta trended toward barbell strength transferring to machines more than the reverse, plus some evidence of better transfer to sport-specific movements — but the difference is usually non-significant, and he calls it wildly overblown by the functional-training crowd.
+- **Joint discomfort tracks freedom of movement, not machine-vs-free.** What matters is whether the exercise suits your body structure.
 
 ## Both camps are wrong
-Bodybuilding circles claim machines are superior because removing stabilisers lets you hammer the target muscle. The functional-training crowd claims machines are inferior for strength, worse for joints, maybe worse for growth. He calls the second an ideological stance rather than a fact-based one, and singles out heavy barbell squats having become a rite of passage for serious trainees.
+Bodybuilding circles claim machines are superior because removing stabilisers lets you hammer the target muscle. The functional-training crowd claims machines are inferior for strength, worse for joints, maybe worse for growth. He calls the second ideological rather than fact-based, and singles out heavy barbell squats having become a rite of passage.
 
 His mechanistic argument is a line from a Norwegian strength coach whose name the captions mangle past confident identification: muscle is "just a dumb piece of meat." It responds to mechanical tension and adapts. Kettlebell, machine, barbell, isolation, compound — the muscle does not know the difference.
 
 ## The joint discomfort question
 The 2023 study found joint discomfort **improved similarly** in both groups. That contrasts with Spennewyn 2008, which compared two *machine* setups — one with high freedom of movement, close to a free weight, one with fixed trajectories like most commercial-gym equipment. Discomfort was higher with the fixed trajectories.
 
-His reading: forcing the body along a path that does not match your anthropometry is not inherently harmful, but it is a risk, because it caps the volume you can tolerate on that movement. With freedom of movement the motor cortex can shift the trajectory slightly and move stress off a joint position starting to hurt. Hence a soft preference — **all else equal, choose exercises allowing high freedom of movement** — a variable that cuts across the machine/free-weight divide rather than aligning with it.
+His reading: a path that does not match your anthropometry is not inherently harmful but is a risk, because it caps the volume you can tolerate on that movement. With freedom of movement the motor cortex can shift the trajectory slightly and move stress off a joint position starting to hurt. Hence a soft preference — **all else equal, choose exercises allowing high freedom of movement** — a variable that cuts across the machine/free-weight divide rather than aligning with it.
 
 ## Where this sits against the rest of the library
 This agrees with the position already held here from Haugen 2023: machines versus free weights is a wash for hypertrophy when sets go close to failure. His additions are extending the equivalence to strength (with the exercise-specificity caveat) and reframing joint comfort as a freedom-of-movement question rather than an equipment-type one.

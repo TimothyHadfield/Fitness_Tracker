@@ -19,7 +19,7 @@ The physiological case for breaks and refeeds is leptin, which responds to **cum
 The "that's why the refeed is a high-carb weekend" counter doesn't hold either: the spike falls back as soon as you're in deficit again, and it isn't enough to just resume the deficit — you have to **undo the surplus** before fat loss resumes at the same rate, at which point leptin is back where it started. He extends the point to thyroid metabolism, which he calls extremely robust, and largely to blood sugar.
 
 ## The literature, in order
-**The earliest study** (he attributes it to Wing and Jeffery, though the name is uncertain from the audio) expected diet breaks to hurt adherence and found they didn't — but also found people struggled to get back into their dietary and training routines, which became somewhat detrimental over the longer term. He is irritated by what happened next: "not as bad as we feared" was read as "good," when the study actually showed diet breaks were **a waste of time**. Several subsequent studies found neutral effects.
+**The earliest study** (he attributes it to Wing and Jeffery, though the name is uncertain from the audio) expected diet breaks to hurt adherence and found they didn't — but also found people struggled to get back into their dietary and training routines, which became somewhat detrimental long-term. He is irritated by what happened next: "not as bad as we feared" was read as "good," when the study showed diet breaks were **a waste of time**.
 
 **MATADOR** is where it took off — two weeks of dieting alternating with two-week breaks, reporting superior fat loss and better maintenance of resting metabolic rate. His criticisms: the **RMR difference was not statistically significant**, and the authors applied an unspecified body-composition adjustment before reporting a benefit; **adherence control was poor**, the compliance criterion being merely not gaining weight while meant to be losing it; and the continuous group **plateaued around week seven**, which he attributes to obese male subjects who didn't want to be dieting and were doing it for the study. The break group pushed on longer and ended with more total fat loss — an **adherence effect in a population irrelevant to strength trainees**, not a metabolic one.
 
@@ -33,9 +33,9 @@ Two design improvements: **training volume was equated**, where previously both 
 **Result: no significant differences on essentially everything.** Two exceptions, both dismissed:
 
 1. The **home bioimpedance scales** showed the break group losing more lean mass. The lab-grade measurement didn't confirm it, so he puts no stock in it — but it certainly doesn't support the muscle-retention claim.
-2. The break group reported **lower disinhibition** — less of the impulsiveness that predicts snacking. But this was survey data; their **actual eating behaviour and adherence did not differ**. Across that many measures, one chance finding is likely.
+2. The break group reported **lower disinhibition** — less of the impulsiveness that predicts snacking. But this was survey data; their **actual eating behaviour and adherence did not differ**, and across that many measures one chance finding is likely.
 
-ICECAP found the same picture bar one difference: lower appetite in the break group, on **one of four appetite measures**, and not on actual energy intake. His study found no appetite differences at all.
+ICECAP found the same picture bar one difference: lower appetite in the break group, on **one of four appetite measures**, and not on energy intake. His study found no appetite differences at all.
 
 ## Where he lands
 Diet breaks achieve nothing, and you pay for the nothing: his break group spent **33% more total time on a diet**, ICECAP's 25% — time that could have gone into cutting further or into a bulk.

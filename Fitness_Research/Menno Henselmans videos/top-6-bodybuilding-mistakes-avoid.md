@@ -21,7 +21,7 @@ On frequency: volume-matched studies usually show no difference, because volume 
 **Note for the library:** ~11 sets per session is roughly double the six-set ceiling recorded here from Krieger via Nippard, and he explicitly denies a hard plateau. It also sits alongside his September 2025 junk-volume video, which argues weekly volume should be pushed toward 30–40+ sets with no research-derived ceiling at all.
 
 ## 2. Cheat meals
-[03:01] The intuition that a scheduled blowout protects adherence is, he says, exactly backwards. People with consistent diets across the week do far better at keeping weight off ([Gorin 2004](https://pubmed.ncbi.nlm.nih.gov/14647183/); [Racette 2008](https://pubmed.ncbi.nlm.nih.gov/18551108/); [Wing 2005](https://pubmed.ncbi.nlm.nih.gov/16002825/)). A recent scoping review concluded that normalising cheat meals as a reward "could be associated with the manifestation of eating disorder behaviours" ([Tsang 2025](https://doi.org/10.1093/nutrit/nuaf077)).
+[03:01] The intuition that a scheduled blowout protects adherence is exactly backwards. People with consistent diets across the week do far better at keeping weight off ([Gorin 2004](https://pubmed.ncbi.nlm.nih.gov/14647183/); [Racette 2008](https://pubmed.ncbi.nlm.nih.gov/18551108/); [Wing 2005](https://pubmed.ncbi.nlm.nih.gov/16002825/)). A recent scoping review concluded that normalising cheat meals as a reward "could be associated with the manifestation of eating disorder behaviours" ([Tsang 2025](https://doi.org/10.1093/nutrit/nuaf077)).
 
 His three mechanisms, drawn from his own book rather than the cited literature:
 1. **Forbidden-fruit effect** — labelling a food a "cheat" glorifies it and triggers dichotomous dietary restraint, the all-or-nothing mindset.
@@ -44,12 +44,12 @@ His named culprit is **white rice**, miscast as a health food. On the NRF9.3 nut
 **Flag:** the deficiency studies he lists run 1989–2018, are small, and mostly sample competitors pre-contest — not a year-round diet. The white rice case rests on two indices, neither referenced, and the leap from "deficiencies have been associated with" to reduced hypertrophy outruns the evidence.
 
 ## 6. Volume counting
-[10:16] "Legs" and "back" are not body parts. For the back he wants traps, lats, rear delts and erector spinae counted separately, and ideally heads within a muscle — short head of biceps, long head of triceps, and front/lateral/rear delts, which can have directly opposing functions.
+[10:16] "Legs" and "back" are not body parts. For the back he wants traps, lats, rear delts and erector spinae counted separately, and ideally heads within a muscle — short head of biceps, long head of triceps, and front/lateral/rear delts, which can have opposing functions.
 
 Then **fractional volume counting**: every exercise trains every muscle to some degree, so count partial credit. Dumbbell rows train the biceps about half as well as dumbbell curls, so four sets of rows count as roughly two biceps sets. He cites a recent meta-analysis finding fractional counting predicts hypertrophy significantly better than counting everything equally or counting only direct work.
 
 ## Why bodybuilders succeed anyway
-[12:21] Bodybuilders get the *big* things right; the six items above are optimisation details, where science beats anecdote. Above all of it sit **drugs** (required at IFBB Pro level for essentially everyone), **genetics** (sometimes more decisive than drugs — including the genes governing anabolic response to steroids), and **work ethic**. The most optimised programme loses to someone actually living the lifestyle.
+[12:21] Bodybuilders get the *big* things right; the six items above are optimisation details, where science beats anecdote. Above all of it sit **drugs** (required at IFBB Pro level for essentially everyone), **genetics** (sometimes more decisive than drugs, including the genes governing anabolic response to steroids), and **work ethic**.
 
 ## References
 
