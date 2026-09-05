@@ -17,7 +17,7 @@ Reaching your natural muscular potential takes years even if you do everything r
 
 The sharpest practical point is about using strength as a proxy. **Progress on a lift you recently added is mostly neural.** Program hoppers cycle through this indefinitely and never establish whether they built muscle. Two fixes: track **all-time PRs**, and keep a **witness lift** — a Zercher squat or leg press you don't normally train. If it improves without being trained, that's muscle.
 
-His own biggest failure: bulking and cutting too aggressively, so a full cycle ends at the same body composition it started at, which he sees mostly in men. The mirror error, mostly in women and in lean men attached to being lean, is **never bulking at all** — which past the beginner stage means maintenance, which means maintenance.
+His own biggest failure: bulking and cutting too aggressively, so a full cycle ends at the same body composition it started at. The mirror error, mostly in women and in lean men attached to being lean, is **never bulking at all** — which past the beginner stage means maintenance, which means maintenance.
 
 ## Meal frequency: an admitted 10-year mistake
 
@@ -29,7 +29,7 @@ His technical caveat is the good bit: the studies that *do* find benefits of hig
 
 ## Food choices over macros
 
-Beyond adequate protein, some fat and some fibre, the carb-to-fat split — 20%, 40%, even keto — doesn't much matter for a lifter training at moderate volume. What matters is the **two S's: satiated and satisfied.** Perfect macros while permanently hungry isn't sustainable, and neither is broccoli and protein shakes.
+Beyond adequate protein, fat and fibre, the carb-to-fat split — 20%, 40%, even keto — doesn't much matter for a lifter training at moderate volume. What matters is the **two S's: satiated and satisfied.** Perfect macros while permanently hungry isn't sustainable, and neither is broccoli and protein shakes.
 
 He goes further than most evidence-based coaches: for many people, **long-term macro tracking is not the way forward**. The endpoint is ad libitum eating from hunger signals, a skill best learned *after* developing calorie awareness by tracking. His own practice: no tracking except when bulking (too easy to dirty bulk, or to accidentally maintain) or in contest prep.
 

@@ -22,9 +22,9 @@ The distinction that matters: a bigger **rectus abdominis** mostly just makes th
 ## Who actually needs it
 [04:12] Most people don't need direct ab work — the rectus is already large enough to be visible at a reasonable training age with decent genetics. Abs really are made in the kitchen in that sense.
 
-But he pushes back on the evidence-based community's blanket "don't train abs" conclusion. It's right for someone already stocky with a thick, muscular waist. It's wrong for **hard gainers**, who get lean and find their abs present but small — a hollowed-out look rather than a shredded one.
+But he pushes back on the evidence-based community's blanket "don't train abs" conclusion. It's right for someone already stocky with a thick, muscular waist; it's wrong for **hard gainers**, who get lean and find their abs present but small — a hollowed-out look rather than a shredded one.
 
-[05:08] And the bro answer — "squats and deadlifts train your abs" — doesn't hold. The rectus contributes to intra-abdominal pressure during heavy spinal loading, but that is neither maximal activation nor high tension across a full range of motion.
+[05:08] And "squats and deadlifts train your abs" doesn't hold. The rectus contributes to intra-abdominal pressure during heavy spinal loading, but that is neither maximal activation nor high tension across a full range of motion.
 
 ## How to train them
 [05:33] For pure aesthetics: **crunches and reverse crunches**, staying in the sagittal plane. Rotational work and side bending recruit the obliques much more. You can't isolate the rectus entirely, but crunches give the best rectus-to-oblique ratio. (Core training for a sport like kickboxing is a different conversation.)

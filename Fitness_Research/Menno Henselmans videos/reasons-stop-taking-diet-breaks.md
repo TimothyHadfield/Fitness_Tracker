@@ -21,9 +21,9 @@ The "that's why the refeed is a high-carb weekend" counter doesn't hold either: 
 ## The literature, in order
 **The earliest study** (he attributes it to Wing and Jeffery, though the name is uncertain from the audio) expected diet breaks to hurt adherence and found they didn't — but also found people struggled to get back into their dietary and training routines, which became somewhat detrimental over the longer term. He is irritated by what happened next: "not as bad as we feared" was read as "good," when the study actually showed diet breaks were **a waste of time**. Several subsequent studies found neutral effects.
 
-**MATADOR** is where it took off — two weeks of dieting alternating with two-week breaks, reporting superior fat loss and better maintenance of resting metabolic rate. His criticisms: the **RMR difference was not statistically significant**, and the authors applied an unspecified body-composition adjustment before reporting a benefit; **adherence control was poor**, the compliance criterion being merely not gaining weight during a period when subjects were meant to be losing it; and the continuous group **plateaued around week seven**, which he attributes to obese male subjects who didn't want to be dieting and were doing it for the study. The break group pushed on longer and ended with more total fat loss — an **adherence effect in a population irrelevant to strength trainees**, not a metabolic one.
+**MATADOR** is where it took off — two weeks of dieting alternating with two-week breaks, reporting superior fat loss and better maintenance of resting metabolic rate. His criticisms: the **RMR difference was not statistically significant**, and the authors applied an unspecified body-composition adjustment before reporting a benefit; **adherence control was poor**, the compliance criterion being merely not gaining weight while meant to be losing it; and the continuous group **plateaued around week seven**, which he attributes to obese male subjects who didn't want to be dieting and were doing it for the study. The break group pushed on longer and ended with more total fat loss — an **adherence effect in a population irrelevant to strength trainees**, not a metabolic one.
 
-Then a couple more neutral studies that got no attention, and two similar trials run concurrently: **ICECAP** and his own.
+Then two more neutral studies that got no attention, and two similar trials run concurrently: **ICECAP** and his own.
 
 ## His own study
 Strength-trained women dieted either continuously or with breaks — one week off after every two weeks on, close to MATADOR's design but less extreme (he calls two-on-two-off nonsensical because nobody does it).
@@ -38,14 +38,14 @@ Two design improvements: **training volume was equated**, where previously both 
 ICECAP found the same picture bar one difference: lower appetite in the break group, on **one of four appetite measures**, and not on actual energy intake. His study found no appetite differences at all.
 
 ## Where he lands
-Diet breaks achieve nothing, and you pay for the nothing: his break group spent **33% more total time on a diet**, ICECAP's 25%. That time could have gone into cutting further or into a bulk.
+Diet breaks achieve nothing, and you pay for the nothing: his break group spent **33% more total time on a diet**, ICECAP's 25% — time that could have gone into cutting further or into a bulk.
 
-His alternative when someone feels they need a break: **diet more slowly.** The behavioural argument is the one he cares most about — wanting a break signals that the current approach is unsustainable, and a break doesn't address that. You come back to the same deficit doing the same things and get the same outcome. He calls it sticking your head in the sand, and diet breaks and refeeds wishful thinking that the body can be outsmarted, kept alive by being an easy sell.
+His alternative when someone feels they need a break: **diet more slowly.** The behavioural argument is the one he cares most about — wanting a break signals the current approach is unsustainable, and a break doesn't address that. You come back to the same deficit doing the same things and get the same outcome. He calls it sticking your head in the sand, and diet breaks and refeeds wishful thinking that the body can be outsmarted, kept alive by being an easy sell.
 
 ## How this sits against the library
-This library holds that diet breaks were quietly reframed — physiological win to psychological one — once Peos and colleagues found nothing physiological in trained lifters. Henselmans matches on the physiology and then **goes a step further**: he denies the psychological rescue too, since his trial measured hunger, ease of dieting and adherence directly and found nothing, and he reads the two positive psychological signals in the literature (his disinhibition result, ICECAP's single appetite measure) as self-report artefacts and likely type I errors.
+This library holds that diet breaks were quietly reframed — physiological win to psychological one — once Peos and colleagues found nothing physiological in trained lifters. Henselmans matches on the physiology and **goes a step further**: he denies the psychological rescue too, since his trial measured hunger, ease of dieting and adherence directly and found nothing, and he reads the two positive psychological signals in the literature (his disinhibition result, ICECAP's single appetite measure) as self-report artefacts and likely type I errors.
 
-That is a stronger claim than the library currently carries, resting on two trials plus his reading of nulls as genuine nulls — and he co-authored the study he uses as his main evidence.
+That is a stronger claim than the library carries, resting on two trials plus his reading of nulls as genuine nulls — and he co-authored the study he uses as his main evidence.
 
 ## References
 No sources given in the video description.

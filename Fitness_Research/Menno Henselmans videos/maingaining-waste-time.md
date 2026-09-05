@@ -8,10 +8,10 @@
 - Maingaining did what it claims: **+1 kg lean mass, −1.4 kg fat mass**. Positive recomposition in trained lifters is real.
 - The 10% deficit group **also gained ~1 kg fat-free mass**, with no significant difference between groups in squat 1RM, bench 1RM or total load progression — and lost **2.9 kg of fat**, roughly twice as much.
 - So the verdict is not that maingaining fails. It is that it is **half as time-efficient** for the same muscle outcome.
-- His recommendation: set the deficit (or surplus) by **body fat percentage and training age**. Overweight lifters can be aggressive; very lean, very muscular lifters in contest prep must be conservative. He rates this as one of the highest-leverage variables in any programme.
+- His recommendation: set the deficit (or surplus) by **body fat percentage and training age** — aggressive for overweight lifters, conservative for lean, muscular ones in contest prep. He rates this among the highest-leverage variables in any programme.
 
 ## The back-calculation
-The numbers as prescribed do not add up, and he says so. Using the metabolisable energy density of fat and lean mass, he reverse-engineered the **actual** deficits from the composition changes rather than trusting the prescribed ones:
+The numbers as prescribed do not add up, and he says so. Using the metabolisable energy density of fat and lean mass, he reverse-engineered the **actual** deficits from the composition changes:
 
 - "0% deficit" group → **~6%, or 147 kcal/day** below maintenance
 - "10% deficit" group → **~16%, or 375 kcal/day** below maintenance
@@ -24,7 +24,7 @@ Both groups were in a deficit. He treats this as a feature: people aiming for ma
 **"This is evidence for high protein intakes."** Also no. Both groups he discusses were high-protein. There was a lower-protein control group, but it differed in more than protein: no supervised training, no supervised nutrition, no guidance on meal frequency or fatty acid balance. Supervision alone is known to improve macro-tracking accuracy and gym effort. The confound is large enough that the study says nothing about protein.
 
 ## Where this sits against the rest of the library
-Our existing material on bulk/cut versus gaintaining notes that the **12-month comparison has never been run**. This does not close that gap: 10 weeks, measuring rate of fat loss rather than the long-run outcome of alternating phases versus sitting near maintenance year-round. Several participants were in the 20-something body fat range and the group included women — both raise the prior odds of recomposition, and he flags this himself.
+Our existing material on bulk/cut versus gaintaining notes that the **12-month comparison has never been run**. This does not close that gap: 10 weeks, measuring rate of fat loss rather than the long-run outcome of alternating phases. Several participants were in the 20-something body fat range and the group included women — both raise the prior odds of recomposition, as he flags himself.
 
 ## Overreach
 The title is stronger than the finding. The data show maingaining worked and was slower at fat loss over 10 weeks, which is not "a waste of time." He also cites a forthcoming study of his own, under peer review, in support of the deficit recommendation — that one cannot be checked.

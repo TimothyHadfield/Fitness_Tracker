@@ -4,11 +4,11 @@
 **Topic:** Training
 
 ## Bottom line
-- **Body part splits are suboptimal.** Productive volume per workout plateaus around **11 sets per muscle group**; strength gains plateau after just **3.5 sets per session**. Spread volume across the week.
-- **Cheat meals hurt adherence.** Dietary consistency predicts long-term weight maintenance; a new review links normalising cheat meals to disordered eating behaviour. Refeeds show no advantage either.
-- **High cardio volumes eat gains** via the interference effect. Cardio is a last resort after reducing intake, kept away from lifting sessions.
+- **Body part splits are suboptimal.** Productive volume per workout plateaus around **11 sets per muscle group**; strength gains plateau after just **3.5 sets per session**.
+- **Cheat meals hurt adherence.** Consistency predicts long-term weight maintenance; a new review links normalising cheat meals to disordered eating. Refeeds show no advantage either.
+- **High cardio volumes eat gains** via the interference effect. Cardio is a last resort after cutting intake, kept away from lifting.
 - **Mid-range partials are ego lifting.** Train full ROM at long muscle lengths.
-- **Bodybuilder diets are micronutrient-poor.** His target is white rice — near-empty calories; potatoes give the same tolerability with more nutrients and better satiety.
+- **Bodybuilder diets are micronutrient-poor.** His target is white rice; potatoes give the same tolerability with more nutrients and better satiety.
 - **Count volume fractionally.** "Back" and "legs" are not body parts; a dumbbell row counts as roughly half a biceps set.
 
 ## 1. Body part splits
