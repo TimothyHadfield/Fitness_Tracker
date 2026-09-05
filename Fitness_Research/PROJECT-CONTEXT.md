@@ -26,8 +26,11 @@ near the bottom of this file for what that probe found and which sources are off
 
 1. **Foundations + ISSN** — DONE. Folder structure, generalised tooling, the two YouTube
    caption fetches, and the ISSN position stands complete end to end.
-2. **Menno Henselmans** — transcripts and descriptions already fetched (159/160). References
-   are in the descriptions; the existing pipeline runs nearly unmodified.
+2. **Menno Henselmans** — DONE. 151 notes, 186,000 words, 535 resolved papers. Eight videos
+   excluded as personal or off-topic. The value of this source is disagreement: he takes a
+   position against the mainstream on caffeine cycling, protein in a deficit, rest-interval
+   floors, the effective-reps model, warm-ups and row selection, and the notes mark each clash
+   explicitly rather than smoothing it.
 3. **House of Hypertrophy** — transcripts already fetched (169/172). Needs a new extractor:
    135 of 169 descriptions carry reference links directly, and 58 link out to per-video
    reference pages on houseofhypertrophy.com. Both venues need merging.

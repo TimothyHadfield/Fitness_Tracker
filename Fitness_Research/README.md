@@ -12,8 +12,8 @@ evidence does not carry, the note says so rather than repeating it.
 | --- | --- | --- | --- |
 | [Jeff Nippard videos](Jeff%20Nippard%20videos/) | 279 videos, 2014-2026, from a creator who lists his sources in the description | 279 | Complete |
 | [ISSN position stands](ISSN%20position%20stands/) | The International Society of Sports Nutrition's 26 consensus position stands plus its comprehensive review update | 27 | Complete |
+| [Menno Henselmans videos](Menno%20Henselmans%20videos/) | 151 videos from a coach who argues against the evidence-based consensus more often than he agrees with it | 151 | Complete |
 | [House of Hypertrophy videos](House%20of%20Hypertrophy%20videos/) | Mechanism-focused hypertrophy research, more densely cited than any other creator found | - | In progress |
-| [Menno Henselmans videos](Menno%20Henselmans%20videos/) | Evidence-based training and supplement-industry critique | - | In progress |
 | [Barbell Medicine articles](Barbell%20Medicine%20articles/) | Physician-authored strength medicine: rehab, pain science, clinical questions | - | Planned |
 
 Squat University is a candidate for a later pass — the best subject-matter fit for injury
