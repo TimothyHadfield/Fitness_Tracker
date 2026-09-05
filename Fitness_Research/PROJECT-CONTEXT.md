@@ -50,14 +50,21 @@ descriptions**. That last fact is the single most important thing in this whole 
 - 647 PubMed IDs + 132 PMC/DOI records resolved to full citations with DOIs
 - `RESEARCH-CITATIONS.md` — master bibliography
 - Reference-mismatch audit complete (see "Bad data" below)
+- **The summary layer.** `SUMMARY.md` is a ~5,000-word top-level synthesis you read end to
+  end. Under it sit six domain summaries — `SUMMARY-programming.md`,
+  `SUMMARY-exercise-selection.md`, `SUMMARY-technique.md`, `SUMMARY-nutrition.md`,
+  `SUMMARY-supplements-and-physiology.md`, `SUMMARY-myths-and-evidence.md` — each
+  synthesising every note in its domain, ~59,000 words in total. `README.md` is a rebuilt
+  index of all 279 notes in six domains and 51 subsections. Every internal link is
+  verified; the partition was checked programmatically so no note is missing or
+  double-filed.
 
 **Not done — the remaining work:**
-- **The summary layer.** At 279 notes a single summary file doesn't work. The plan was:
-  `SUMMARY.md` as a top-level synthesis you read end to end, plus six domain summaries
-  (Programming & Volume, Exercise Selection, Technique, Nutrition, Supplements &
-  Physiology, Myths & Evidence), plus a rebuilt `README.md` index. The existing
-  `SUMMARY.md` and `README.md` still describe only the original 50 notes and are now
-  badly out of date.
+- **Fix the problems the summary pass surfaced.** They're listed in the "Known problems in
+  this library" section at the bottom of `SUMMARY.md`: a citation that doesn't support its
+  claim (Farina 2010 in the cable kickback note), several misleading filenames, one study
+  rendered with three different effect sizes across notes, and a set of caption-garbled
+  researcher names still marked uncertain.
 - 19 videos have no usable English captions and were never written. They're listed at the
   bottom of this file.
 
