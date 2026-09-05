@@ -49,7 +49,7 @@ These numbers can't be read in a vacuum — walking the dog is not the same stim
 ## Mistake 5 — Banking on fasted cardio
 [09:14] Burning more fat *during* a session doesn't mean losing more fat overall. A **2011 study** found that burning more fat during cardio meant burning less fat over the following 24 hours ([Paoli 2011](https://pubmed.ncbi.nlm.nih.gov/21411835/)). A systematic review found fasted exercise did not influence weight loss or changes in lean and fat mass, and that a **meaningful caloric deficit matters far more** than fed vs fasted.
 
-A review by **Escalante and Barakat** on competitive physique athletes acknowledged no conclusive evidence for fasted cardio's superiority, but noted the research hasn't been done in physique competitors and left open whether it helps in the **final stages** of contest prep. They also suggested **protein-enhanced cardio (~25 g protein beforehand)** might have a slight edge in some advanced cases.
+A review by **Escalante and Barakat** ([Escalante 2020](https://doi.org/10.1519/SSC.0000000000000565)) on competitive physique athletes acknowledged no conclusive evidence for fasted cardio's superiority, but noted the research hasn't been done in physique competitors and left open whether it helps in the **final stages** of contest prep. They also suggested **protein-enhanced cardio (~25 g protein beforehand)** might have a slight edge in some advanced cases.
 
 ## Practical application
 - Target fat loss of **0.5-1% of body weight per week**. Add cardio only as needed to hold that pace — if diet and lifting alone hit it, cardio isn't required.
@@ -108,5 +108,5 @@ Sources as listed by Nippard in the video description.
 
 - Paoli A et al. 2011. Exercising fasting or fed to enhance fat loss? Influence of food intake on respiratory ratio and excess postexercise oxygen consumption after a bout of endurance training. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21411835/) doi:[10.1123/ijsnem.21.1.48](https://doi.org/10.1123/ijsnem.21.1.48)
 - <https://www.mdpi.com/2411-5142/2/4/43>
-- ResearchGate — <https://www.researchgate.net/publication/341494761>
+- Escalante G & Barakat C 2020. Fasted Versus Nonfasted Aerobic Exercise on Body Composition: Considerations for Physique Athletes. *Strength Cond J*. Not indexed in PubMed. doi:[10.1519/SSC.0000000000000565](https://doi.org/10.1519/SSC.0000000000000565)
 - Schoenfeld BJ et al. 2014. Body composition changes associated with fasted versus non-fasted aerobic exercise. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25429252/) doi:[10.1186/s12970-014-0054-7](https://doi.org/10.1186/s12970-014-0054-7)

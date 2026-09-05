@@ -24,7 +24,7 @@
 
 The proposed replacement is the 24-hour refeed — calories to maintenance or slightly above for one day rather than eating everything in sight. But **24 hours is likely too short**:
 - Research suggests it takes **at least 48 hours (2–3 days)** to see any increase in metabolic rate ([Dirlewanger 2000](https://pubmed.ncbi.nlm.nih.gov/11126336/)).
-- Full glycogen replenishment from a depleted state requires **up to 10 g carbohydrate per kg body weight** — for an 80 kg lifter, that's **up to 800 g of carbs**. Far more practical as **two consecutive days at ~400 g** than one day at 800 g.
+- Full glycogen replenishment from a depleted state requires **up to 10 g carbohydrate per kg body weight** ([Bussau 2002](https://pubmed.ncbi.nlm.nih.gov/12111292/)) — for an 80 kg lifter, that's **up to 800 g of carbs**. Far more practical as **two consecutive days at ~400 g** than one day at 800 g.
 
 **Applied example:** Nippard's physique client Pat, 185 lb, runs 270 g carbs on five low days and 400 g carbs on two consecutive refeed days, averaging **2,600 kcal/day**, losing about **1 lb per week** while still gaining strength and holding a full look. The refeed is deliberately timed **one to two days before the highest-volume training session** of the week.
 
@@ -85,7 +85,7 @@ Sources as listed by Nippard in the video description.
 
 **Refeeding Effects on Glycogen**
 
-- ResearchGate — <https://www.researchgate.net/publication/11267836>
+- Bussau VA et al. 2002. Carbohydrate loading in human muscle: an improved 1 day protocol. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12111292/) doi:[10.1007/s00421-002-0621-5](https://doi.org/10.1007/s00421-002-0621-5)
 
 **First Bodybuilding Refeed Study**
 

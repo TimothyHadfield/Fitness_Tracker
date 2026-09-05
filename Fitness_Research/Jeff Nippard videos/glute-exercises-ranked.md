@@ -77,7 +77,7 @@ Sources as listed by Nippard in the video description.
 
 **Timestamps**
 
-- ResearchGate — <https://www.researchgate.net/publication/378797420>
+- Kassiano W et al. 2024. Addition of the Barbell Hip Thrust Elicits Greater Increases in Gluteus Maximus Muscle Thickness in Untrained Young Women. *Int J Strength Cond*. Not indexed in PubMed; open access at journal.iusca.org.
 - <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
 - Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26214739/) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)
 - <https://journals.lww.com/nsca-jscr/fulltext/2018/03000/gluteus_maximus_and_hamstring_activation_during.2.aspx>

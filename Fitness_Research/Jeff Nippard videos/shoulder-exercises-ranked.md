@@ -68,8 +68,8 @@ Three delt heads, treated almost as separate muscles: **anterior** (raises the a
 
 Sources as listed by Nippard in the video description.
 
-- ResearchGate — <https://www.researchgate.net/publication/369759056>
+- Kijkunasathian C et al. 2023. The preferable shoulder position can isolate supraspinatus activity superior to the classic empty can test: an electromyographic study. *BMC Musculoskelet Disord*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37013546/) doi:[10.1186/s12891-023-06372-3](https://doi.org/10.1186/s12891-023-06372-3)
 
-- ResearchGate — <https://www.researchgate.net/publication/381508497>
+- Wolf M et al. Does longer-muscle length resistance training cause greater longitudinal growth in humans? A systematic review. *Sports Med Health Sci*. Cited by Nippard as the SportRxiv preprint; since published. [PubMed](https://pubmed.ncbi.nlm.nih.gov/41646176/) doi:[10.1016/j.smhs.2025.03.001](https://doi.org/10.1016/j.smhs.2025.03.001)
 
 - Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23096062/) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)

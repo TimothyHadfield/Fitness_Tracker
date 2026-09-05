@@ -30,7 +30,7 @@ Expected composition: closer to a beginner (especially with good genetics), pote
 
 ## Setting calories [05:08]
 
-Do not dirty bulk. Those typically land **50-100% above maintenance**, which without serious anabolic assistance just produces rapid fat gain. Studies show a **5-10% surplus** is enough to supply the resources for new muscle tissue without pushing the excess into fat stores.
+Do not dirty bulk. Those typically land **50-100% above maintenance**, which without serious anabolic assistance just produces rapid fat gain. Studies show a **5-10% surplus** is enough to supply the resources for new muscle tissue without pushing the excess into fat stores ([Aragon & Schoenfeld 2020](https://doi.org/10.1519/SSC.0000000000000539)).
 
 Jeff's own numbers: maintenance **2,800 kcal/day**, bulking at **~3,000 kcal/day** (5-10% up), then adjusting up or down based on whether he is gaining too fast or too slow.
 
@@ -108,7 +108,7 @@ Sources as listed by Nippard in the video description.
 
 - Rozenek R et al. 2002. Effects of high-calorie supplements on body composition and muscular strength following resistance training. *J Sports Med Phys Fitness*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12094125/)
 
-- ResearchGate — <https://www.researchgate.net/publication/339573950>
+- Aragon AA & Schoenfeld BJ 2020. Magnitude and Composition of the Energy Surplus for Maximizing Muscle Hypertrophy: Implications for Bodybuilding and Physique Athletes. *Strength Cond J*. Not indexed in PubMed. doi:[10.1519/SSC.0000000000000539](https://doi.org/10.1519/SSC.0000000000000539)
 
 - Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
 

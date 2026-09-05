@@ -67,7 +67,7 @@ Sources as listed by Nippard in the video description.
 
 **Size and Strength Loss After 2-3 Weeks Off**
 
-- ResearchGate — <https://www.researchgate.net/publication/259390281>
+- Fisher J, Steele J & Smith D 2013. Evidence-Based Resistance Training Recommendations for Muscular Hypertrophy. *Medicina Sportiva*. Not indexed in PubMed. doi:[10.5604/17342260.1081302](https://doi.org/10.5604/17342260.1081302)
 
 **Tendon Innervation**
 

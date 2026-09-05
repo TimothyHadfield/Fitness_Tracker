@@ -149,7 +149,7 @@ reading list for that video rather than proof of any single sentence.
 
 - Paoli A et al. 2011. Exercising fasting or fed to enhance fat loss? Influence of food intake on respiratory ratio and excess postexercise oxygen consumption after a bout of endurance training. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21411835/) doi:[10.1123/ijsnem.21.1.48](https://doi.org/10.1123/ijsnem.21.1.48)
 - <https://www.mdpi.com/2411-5142/2/4/43>
-- ResearchGate — <https://www.researchgate.net/publication/341494761>
+- Escalante G & Barakat C 2020. Fasted Versus Nonfasted Aerobic Exercise on Body Composition: Considerations for Physique Athletes. *Strength Cond J*. Not indexed in PubMed. doi:[10.1519/SSC.0000000000000565](https://doi.org/10.1519/SSC.0000000000000565)
 - Schoenfeld BJ et al. 2014. Body composition changes associated with fasted versus non-fasted aerobic exercise. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25429252/) doi:[10.1186/s12970-014-0054-7](https://doi.org/10.1186/s12970-014-0054-7)
 
 ## [chest-exercises-ranked](chest-exercises-ranked.md)
@@ -203,7 +203,7 @@ reading list for that video rather than proof of any single sentence.
 
 **Size and Strength Loss After 2-3 Weeks Off**
 
-- ResearchGate — <https://www.researchgate.net/publication/259390281>
+- Fisher J, Steele J & Smith D 2013. Evidence-Based Resistance Training Recommendations for Muscular Hypertrophy. *Medicina Sportiva*. Not indexed in PubMed. doi:[10.5604/17342260.1081302](https://doi.org/10.5604/17342260.1081302)
 
 **Tendon Innervation**
 
@@ -219,7 +219,7 @@ reading list for that video rather than proof of any single sentence.
 
 **Timestamps**
 
-- ResearchGate — <https://www.researchgate.net/publication/378797420>
+- Kassiano W et al. 2024. Addition of the Barbell Hip Thrust Elicits Greater Increases in Gluteus Maximus Muscle Thickness in Untrained Young Women. *Int J Strength Cond*. Not indexed in PubMed; open access at journal.iusca.org.
 - <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
 - Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26214739/) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)
 - <https://journals.lww.com/nsca-jscr/fulltext/2018/03000/gluteus_maximus_and_hamstring_activation_during.2.aspx>
@@ -273,27 +273,27 @@ reading list for that video rather than proof of any single sentence.
 
 **Failure Definition**
 
-- ResearchGate — <https://www.researchgate.net/publication/312032590>
+- Steele J et al. 2017. Clarity in Reporting Terminology and Definitions of Set End Points in Resistance Training. *Muscle & Nerve*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28044366/) doi:[10.1002/mus.25557](https://doi.org/10.1002/mus.25557)
 
 **Rep Speed**
 
-- ResearchGate — <https://www.researchgate.net/publication/334751432>
-- ResearchGate — <https://www.researchgate.net/publication/327645692>
+- Varela-Olalla D et al. 2019. Rating of perceived exertion and velocity loss as variables for controlling the level of effort in the bench press exercise. *Sports Biomechanics*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31355706/) doi:[10.1080/14763141.2019.1640278](https://doi.org/10.1080/14763141.2019.1640278)
+- Rodríguez-Rosell D et al. 2020. Relationship Between Velocity Loss and Repetitions in Reserve in the Bench Press and Back Squat Exercises. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31045753/) doi:[10.1519/JSC.0000000000002881](https://doi.org/10.1519/JSC.0000000000002881)
 - MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/1458811/posts/4920139>
 
 **Review Article Supporting Training to Failure**
 
-- ResearchGate — <https://www.researchgate.net/publication/259390281>
+- Fisher J, Steele J & Smith D 2013. Evidence-Based Resistance Training Recommendations for Muscular Hypertrophy. *Medicina Sportiva*. Not indexed in PubMed. doi:[10.5604/17342260.1081302](https://doi.org/10.5604/17342260.1081302)
 
 **Training Volume Meta-Analyses**
 
-- ResearchGate — <https://www.researchgate.net/publication/305455324>
+- Schoenfeld BJ et al. 2017. Dose-response relationship between weekly resistance training volume and increases in muscle mass: a systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27433992/) doi:[10.1080/02640414.2016.1210197](https://doi.org/10.1080/02640414.2016.1210197)
 - Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>
 
 **Non-Failure vs Failure Training**
 
 - <https://www.sciencedirect.com/science/article/pii/S2095254621000077>
-- ResearchGate — <https://www.researchgate.net/publication/343885215>
+- Ramos-Campo DJ et al. 2021. Effects of resistance training intensity on the sleep quality and strength recovery in trained men: a randomized cross-over study. *Biol Sport*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33795917/) doi:[10.5114/biolsport.2020.97677](https://doi.org/10.5114/biolsport.2020.97677)
 
 **RPE and RIR**
 
@@ -304,7 +304,7 @@ reading list for that video rather than proof of any single sentence.
 
 - Rozenek R et al. 2002. Effects of high-calorie supplements on body composition and muscular strength following resistance training. *J Sports Med Phys Fitness*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12094125/)
 
-- ResearchGate — <https://www.researchgate.net/publication/339573950>
+- Aragon AA & Schoenfeld BJ 2020. Magnitude and Composition of the Energy Surplus for Maximizing Muscle Hypertrophy: Implications for Bodybuilding and Physique Athletes. *Strength Cond J*. Not indexed in PubMed. doi:[10.1519/SSC.0000000000000539](https://doi.org/10.1519/SSC.0000000000000539)
 
 - Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
 
@@ -427,7 +427,7 @@ reading list for that video rather than proof of any single sentence.
 
 **Nutrient Timing Revisited Review**
 
-- ResearchGate — <https://www.researchgate.net/publication/235381974>
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window? *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23360586/) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)
 
 **Additional Resources on Nutrient Timing**
 
@@ -537,7 +537,7 @@ reading list for that video rather than proof of any single sentence.
 
 **Refeeding Effects on Glycogen**
 
-- ResearchGate — <https://www.researchgate.net/publication/11267836>
+- Bussau VA et al. 2002. Carbohydrate loading in human muscle: an improved 1 day protocol. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12111292/) doi:[10.1007/s00421-002-0621-5](https://doi.org/10.1007/s00421-002-0621-5)
 
 **First Bodybuilding Refeed Study**
 
@@ -583,9 +583,9 @@ reading list for that video rather than proof of any single sentence.
 
 ## [shoulder-exercises-ranked](shoulder-exercises-ranked.md)
 
-- ResearchGate — <https://www.researchgate.net/publication/369759056>
+- Kijkunasathian C et al. 2023. The preferable shoulder position can isolate supraspinatus activity superior to the classic empty can test: an electromyographic study. *BMC Musculoskelet Disord*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37013546/) doi:[10.1186/s12891-023-06372-3](https://doi.org/10.1186/s12891-023-06372-3)
 
-- ResearchGate — <https://www.researchgate.net/publication/381508497>
+- Wolf M et al. Does longer-muscle length resistance training cause greater longitudinal growth in humans? A systematic review. *Sports Med Health Sci*. Cited by Nippard as the SportRxiv preprint; since published. [PubMed](https://pubmed.ncbi.nlm.nih.gov/41646176/) doi:[10.1016/j.smhs.2025.03.001](https://doi.org/10.1016/j.smhs.2025.03.001)
 
 - Saeterbakken AH & Fimland MS 2013. Effects of body position and loading modality on muscle activity and strength in shoulder presses. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23096062/) doi:[10.1519/JSC.0b013e318276b873](https://doi.org/10.1519/JSC.0b013e318276b873)
 

@@ -11,7 +11,7 @@
 - **Rep speed is the most objective cue available**: if the concentric doesn't slow at all near the end, you're probably not close to failure.
 
 ## Defining failure
-[01:03] Fischer and Steele: muscular failure is when, despite greatest effort, a person cannot meet the demands of the exercise, causing an involuntary set endpoint. You stop because the muscle can't produce enough force, not because it feels unpleasant.
+[01:03] Fischer and Steele ([Steele 2017](https://pubmed.ncbi.nlm.nih.gov/28044366/) — Steele is first author on the paper): muscular failure is when, despite greatest effort, a person cannot meet the demands of the exercise, causing an involuntary set endpoint. You stop because the muscle can't produce enough force, not because it feels unpleasant.
 
 Two coaching sub-definitions:
 - **Absolute failure** — you can't move the weight at all, even with altered form or other muscles helping.
@@ -27,9 +27,9 @@ Two coaching sub-definitions:
 How much slowdown you see is highly individual and exercise-dependent. But if reps don't slow at all, you're most likely not at failure; noticeable slowing means you're at least somewhat close.
 
 ## The volume argument against always training to failure
-[03:35] **Approach 1 — go to failure every set.** Simple, no risk of undershooting, and there is peer-reviewed support for maximising intensity of effort to recruit as many motor units and fibres as possible. But that recommendation always sits inside a **low-volume, single-set-to-failure** paradigm. It's a reasonable option for people very short on time who want stimulus per minute. It is not optimal long-term because it forces weekly volume down.
+[03:35] **Approach 1 — go to failure every set.** Simple, no risk of undershooting, and there is peer-reviewed support for maximising intensity of effort to recruit as many motor units and fibres as possible ([Fisher 2013](https://doi.org/10.5604/17342260.1081302)). But that recommendation always sits inside a **low-volume, single-set-to-failure** paradigm. It's a reasonable option for people very short on time who want stimulus per minute. It is not optimal long-term because it forces weekly volume down.
 
-[04:37] Krieger's meta-analysis: of 15 included studies, **11 fell on the higher-volume side** of the centre line — not the random scatter you'd expect if volume didn't matter. Broken down by sets per muscle per week: **≥10 sets beats 5-9 sets beats <5 sets**.
+[04:37] Krieger's meta-analysis: of 15 included studies, **11 fell on the higher-volume side** of the centre line — not the random scatter you'd expect if volume didn't matter. Broken down by sets per muscle per week: **≥10 sets beats 5-9 sets beats <5 sets**. (The volume meta-analysis he lists for this is [Schoenfeld 2017](https://pubmed.ncbi.nlm.nih.gov/27433992/), on which Krieger is a co-author.)
 
 [05:07] Gergich and colleagues' systematic review and meta-analysis (15 studies, ~400 participants) found **similar hypertrophy regardless of whether sets went to failure**. Other research shows the final two reps before failure are disproportionately fatiguing. Failure cost is exercise-dependent — failure on lateral raises is nowhere near as costly as failure on deadlifts — but per set, failure is clearly harder to recover from.
 
@@ -51,7 +51,7 @@ How far from failure you can be and still maximise growth is, in Nippard's words
 2. **Film a set and watch it back** — observe whether rep speed changes near the end. If it doesn't slow at all, you're not working as hard as it felt.
 
 ## Worked examples from the video
-- **Nippard's own set** (11 reps with Eric Helms, target RPE 8): rep 1 = 0.80 s, rep 2 = 0.90 s, rep 9 = 1.10 s, rep 10 = 1.13 s, last rep = 1.23 s → **28% velocity loss**. Plugged into the Rodríguez-Rosell squat data at ~70% 1RM, that's ~**3.5 RIR — an RPE 6-7, not 8**. He should have done another one or two reps.
+- **Nippard's own set** (11 reps with Eric Helms, target RPE 8): rep 1 = 0.80 s, rep 2 = 0.90 s, rep 9 = 1.10 s, rep 10 = 1.13 s, last rep = 1.23 s → **28% velocity loss**. Plugged into the [Rodríguez-Rosell 2020](https://pubmed.ncbi.nlm.nih.gov/31045753/) squat data at ~70% 1RM, that's ~**3.5 RIR — an RPE 6-7, not 8**. He should have done another one or two reps.
 - **Chris Bumstead (RPE 10)**: rep 5 = 1.27 s, rep 6 = 1.23 s, rep 7 = 1.9 s, rep 8 = 1.9 s, rep 9 = 2.5 s, last rep = **3.2 s**. A clean 0 RIR set. Nippard would save this exertion for the **last set of an exercise**, or stop two reps shy and push like this only in the **last week of a training phase**.
 - **John Meadows (1 RIR)**: explosive, consistent rep speed, then an abrupt wall on the last couple of reps — one more grinding rep available, no more. This is where **a good chunk of hypertrophy training should live**.
 - **Kai Greene (RPE 7-8)**: ~2-3 reps left based on bar speed — still a perfectly stimulative working set given the load.
@@ -88,27 +88,27 @@ Sources as listed by Nippard in the video description.
 
 **Failure Definition**
 
-- ResearchGate — <https://www.researchgate.net/publication/312032590>
+- Steele J et al. 2017. Clarity in Reporting Terminology and Definitions of Set End Points in Resistance Training. *Muscle & Nerve*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28044366/) doi:[10.1002/mus.25557](https://doi.org/10.1002/mus.25557)
 
 **Rep Speed**
 
-- ResearchGate — <https://www.researchgate.net/publication/334751432>
-- ResearchGate — <https://www.researchgate.net/publication/327645692>
+- Varela-Olalla D et al. 2019. Rating of perceived exertion and velocity loss as variables for controlling the level of effort in the bench press exercise. *Sports Biomechanics*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31355706/) doi:[10.1080/14763141.2019.1640278](https://doi.org/10.1080/14763141.2019.1640278)
+- Rodríguez-Rosell D et al. 2020. Relationship Between Velocity Loss and Repetitions in Reserve in the Bench Press and Back Squat Exercises. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31045753/) doi:[10.1519/JSC.0000000000002881](https://doi.org/10.1519/JSC.0000000000002881)
 - MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/1458811/posts/4920139>
 
 **Review Article Supporting Training to Failure**
 
-- ResearchGate — <https://www.researchgate.net/publication/259390281>
+- Fisher J, Steele J & Smith D 2013. Evidence-Based Resistance Training Recommendations for Muscular Hypertrophy. *Medicina Sportiva*. Not indexed in PubMed. doi:[10.5604/17342260.1081302](https://doi.org/10.5604/17342260.1081302)
 
 **Training Volume Meta-Analyses**
 
-- ResearchGate — <https://www.researchgate.net/publication/305455324>
+- Schoenfeld BJ et al. 2017. Dose-response relationship between weekly resistance training volume and increases in muscle mass: a systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27433992/) doi:[10.1080/02640414.2016.1210197](https://doi.org/10.1080/02640414.2016.1210197)
 - Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>
 
 **Non-Failure vs Failure Training**
 
 - <https://www.sciencedirect.com/science/article/pii/S2095254621000077>
-- ResearchGate — <https://www.researchgate.net/publication/343885215>
+- Ramos-Campo DJ et al. 2021. Effects of resistance training intensity on the sleep quality and strength recovery in trained men: a randomized cross-over study. *Biol Sport*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33795917/) doi:[10.5114/biolsport.2020.97677](https://doi.org/10.5114/biolsport.2020.97677)
 
 **RPE and RIR**
 

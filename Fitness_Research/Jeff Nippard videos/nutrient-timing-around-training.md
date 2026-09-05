@@ -11,7 +11,7 @@
 - Fat is the timing lever: less fat the closer the meal sits to the session, more fat the further away.
 
 ## How big is the window really?
-[00:00] Aragon and Schoenfeld's "Nutrient Timing Revisited" was widely read as killing the anabolic window entirely. Nippard argues the science crowd overcorrected: that same paper suggests pre- and post-exercise meals shouldn't be separated by more than **3–4 hours**, or **5–6 hours** after a large pre-workout meal. Split the difference and call the window **4–5 hours**.
+[00:00] Aragon and Schoenfeld's "Nutrient Timing Revisited" ([Aragon 2013](https://pubmed.ncbi.nlm.nih.gov/23360586/)) was widely read as killing the anabolic window entirely. Nippard argues the science crowd overcorrected: that same paper suggests pre- and post-exercise meals shouldn't be separated by more than **3–4 hours**, or **5–6 hours** after a large pre-workout meal. Split the difference and call the window **4–5 hours**.
 
 So timing matters, but it matters more for some people:
 - **Leaner lifters** — lower nutrient supply on board.
@@ -76,7 +76,7 @@ Sources as listed by Nippard in the video description.
 
 **Nutrient Timing Revisited Review**
 
-- ResearchGate — <https://www.researchgate.net/publication/235381974>
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window? *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23360586/) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)
 
 **Additional Resources on Nutrient Timing**
 
