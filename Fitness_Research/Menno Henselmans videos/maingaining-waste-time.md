@@ -16,12 +16,12 @@ The numbers as prescribed do not add up, and he says so. Using the metabolisable
 - "0% deficit" group → **~6%, or 147 kcal/day** below maintenance
 - "10% deficit" group → **~16%, or 375 kcal/day** below maintenance
 
-Both groups were in a deficit. He treats this as a feature: people aiming for maintenance almost always land in a modest surplus or deficit, so the trial's real comparison — small accidental deficit versus deliberate one — is what maingaining looks like in practice. His broader position, from this plus the wider deficit/surplus literature: near-maintenance is viable up to a point, but at **true** maintenance, especially for advanced lifters, very little happens in either direction.
+Both groups were in a deficit. He treats this as a feature: people aiming for maintenance almost always land slightly either side of it, so the trial's real comparison — accidental small deficit versus deliberate one — is what maingaining looks like in practice. His broader position: near-maintenance is viable up to a point, but at **true** maintenance, especially for advanced lifters, very little happens in either direction.
 
 ## Two misreadings he shuts down
 **"This invalidates calories in, calories out."** It does not. One group ate less, was in a larger deficit, and lost more fat — energy balance behaving as expected.
 
-**"This is evidence for high protein intakes."** Also no. Both groups he discusses were high-protein. There was a lower-protein control group, but it differed in more than protein: no supervised training, no supervised nutrition, no guidance on meal frequency or fatty acid balance. Supervision alone is known to improve macro-tracking accuracy and gym effort. The confound is large enough that the study says nothing about protein.
+**"This is evidence for high protein intakes."** Also no. Both groups he discusses were high-protein. There was a lower-protein control group, but it differed in more than protein: no supervised training or nutrition, no guidance on meal frequency or fatty acid balance. Supervision alone improves macro-tracking accuracy and gym effort. The confound is large enough that the study says nothing about protein.
 
 ## Where this sits against the rest of the library
 Our existing material on bulk/cut versus gaintaining notes that the **12-month comparison has never been run**. This does not close that gap: 10 weeks, measuring rate of fat loss rather than the long-run outcome of alternating phases. Several participants were in the 20-something body fat range and the group included women — both raise the prior odds of recomposition, as he flags himself.

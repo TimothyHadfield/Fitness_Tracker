@@ -5,25 +5,24 @@
 
 ## Bottom line
 - Squats deserve their reputation, but they **do not train the rectus femoris**. Leg extensions grow all four quad heads roughly equally, which makes them the more complete quad exercise — technically the reverse of the usual hierarchy.
-- The reason is biomechanical, not incidental. The rectus femoris is **biarticular**, crossing hip and knee. In the bottom of a squat, with the hip flexed, it cannot contribute to knee extension without simultaneously fighting the hip extension you need to stand up. Measured activity there is very low.
-- **No squat- or deadlift-pattern movement fixes this.** Fonseca 2014 compared equal volume of back squats alone against a mix of squats, leg presses, deadlifts and lunges. The varied group trended toward better rectus femoris growth, but still below vastus lateralis and vastus medialis.
-- Practical consequence: without a leg extension machine you need a **dedicated knee-extension or hip-flexor movement** for complete quad development. His preferred substitute is lying hip flexion.
+- The reason is biomechanical. The rectus femoris is **biarticular**, crossing hip and knee. In the bottom of a squat, with the hip flexed, it cannot contribute to knee extension without fighting the hip extension you need to stand up. Measured activity there is very low.
+- **No squat- or deadlift-pattern movement fixes this.** Fonseca 2014 compared equal volume of back squats alone against a mix of squats, leg presses, deadlifts and lunges. The varied group trended toward better rectus femoris growth, but still below vastus lateralis and medialis.
+- Without a leg extension machine you need a **dedicated knee-extension or hip-flexor movement** for complete quad development.
 - Squats and leg extensions **complement** rather than compete: open vs closed chain, different joint stresses, and leg extensions load the shortened position while squats let you go deep.
 
 ## What the rectus femoris is worth
 He is honest about the size of the prize. It is not the most important quad head — it gives neither the sweep nor the teardrop above the knee. It adds a meaty section down the middle of the thigh, and matters most for physique competitors lean enough to show separation there.
 
-## The range-of-motion complaint
-He calls it a tragedy that most leg extension machines do not allow full range of motion, since research consistently finds the more the quads are lengthened, the more they grow. This partly undercuts his own recommendation: the exercise he advocates is usually delivered by equipment that truncates the position where the growth stimulus is largest.
+He also calls it a tragedy that most leg extension machines do not allow full range of motion, since the more the quads are lengthened, the more they grow. That partly undercuts his own recommendation: the exercise he advocates is usually delivered by equipment truncating the position where the stimulus is largest.
 
 ## The home-gym substitute
-Without a leg extension, add a hip-flexor movement to the squat pattern. Hanging knee or leg raises work but do not load the rectus femoris at long muscle lengths. His preference is **lying hip flexion**, done on a **bench** rather than the floor so the legs can drop below horizontal for a stretch at the hip, then raised drawbridge-style using hip flexion only — no crunch, which would turn it into an ab exercise.
+Without a leg extension, add a hip-flexor movement to the squat pattern. Hanging knee or leg raises work but do not load the rectus femoris at long muscle lengths. His preference is **lying hip flexion** on a **bench** rather than the floor, so the legs can drop below horizontal for a stretch at the hip, then raised drawbridge-style using hip flexion only — no crunch, which would make it an ab exercise.
 
 ## Where this sits against the rest of the library
-This agrees with what we already hold: squat-only training produced no vastus medialis or rectus femoris growth in one trial, and the rectus femoris is a recognised gap in squat patterns. He goes further in two ways — he claims the shortfall is *only* rectus femoris, squats training the vasti fine, and he generalises the gap to all squat- and deadlift-pattern movements on the strength of Fonseca 2014.
+This agrees with what we already hold: squat-only training produced no vastus medialis or rectus femoris growth in one trial, and the rectus femoris is a recognised gap in squat patterns. He goes further in two ways — the shortfall is *only* rectus femoris, squats training the vasti fine, and the gap generalises to all squat- and deadlift-pattern movements on the strength of Fonseca 2014.
 
 ## Overreach
-The headline rests on a small stack: a mechanistic argument, EMG work (Ema 2016 on single- vs multi-joint quadriceps activation), and regional-hypertrophy trials. "Completely ineffective in many studies" for rectus femoris is a fair reading; "grow all heads roughly equally well" for leg extensions is stated more evenly than the regional-hypertrophy data support. The video gives a flat reference list, so the mapping of claim to paper is largely inferred.
+The headline rests on a small stack: a mechanistic argument, EMG work (Ema 2016), and regional-hypertrophy trials. "Completely ineffective in many studies" for rectus femoris is a fair reading; "grow all heads roughly equally well" for leg extensions is stated more evenly than the data support. The video gives a flat reference list, so the mapping of claim to paper is largely inferred.
 
 ## References
 Sources as listed by Henselmans in the video description.

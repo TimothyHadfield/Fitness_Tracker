@@ -16,7 +16,7 @@
 ## Why the hormonal rationale fails
 The physiological case for breaks and refeeds is leptin, which responds to **cumulative** energy balance — so the only way to raise it is to raise cumulative energy balance, the opposite of what a diet is for.
 
-The "that's why the refeed is a high-carb weekend" counter doesn't hold either: the spike falls back as soon as you're in deficit again, and it isn't enough to just resume the deficit — you have to **undo the surplus** before fat loss resumes at the same rate, at which point leptin is back where it started. He extends the point to thyroid metabolism, which he calls extremely robust, and largely to blood sugar.
+The "that's why the refeed is a high-carb weekend" counter doesn't hold either: the spike falls back as soon as you're in deficit again, and you have to **undo the surplus** before fat loss resumes at the same rate, at which point leptin is back where it started. He extends the point to thyroid metabolism, which he calls extremely robust, and largely to blood sugar.
 
 ## The literature, in order
 **The earliest study** (he attributes it to Wing and Jeffery, though the name is uncertain from the audio) expected diet breaks to hurt adherence and found they didn't — but also found people struggled to get back into their dietary and training routines, which became somewhat detrimental long-term. He is irritated by what happened next: "not as bad as we feared" was read as "good," when the study showed diet breaks were **a waste of time**.

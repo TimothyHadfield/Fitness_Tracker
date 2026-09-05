@@ -13,7 +13,7 @@
 - Spot reduction is **not a complete myth** — one 2017 study suggests it works under three conditions, but he treats it as a trick for one narrow population.
 
 ## The waist trade-off
-[01:12] The primary adaptation of a heavily trained muscle is that it gets bigger, and the abs are no exception. So the outcome of ab training isn't a slimmer waist — it's a thicker one. He notes many men's physique competitors now avoid ab work, and sometimes even squats and deadlifts, to protect a narrow waist; avoiding squats and deadlifts for this reason he calls misguided.
+[01:12] The primary adaptation of a heavily trained muscle is that it gets bigger, and the abs are no exception. So the outcome of ab training isn't a slimmer waist — it's a thicker one. Many men's physique competitors now avoid ab work, and sometimes even squats and deadlifts, to protect a narrow waist; the latter he calls misguided.
 
 His own case is offered as data: 30 inches when he started lifting, about 34 now while bulking, after years of core work, back-injury rehab, and kickboxing. He attributes much of that to the **spinal erectors**, which thicken the back rather than the front, plus the obliques. For him it was net positive because the rest of him grew faster.
 
@@ -46,7 +46,7 @@ But he argues a 2017 study found conditions under which localised fat loss does 
 
 The mechanism: **spot lipolysis is real and documented** — training an area raises local temperature, blood flow and substrate demand, mobilising fatty acids there. But fat distribution is largely genetically defended, so those fatty acids **re-esterify back into the same depot** unless cardio clears them first. In the study, biasing training toward the lower or upper body shifted the *ratio* of where fat was lost.
 
-His practical read is narrow. For most people it's useless: you usually don't want the body part in question more muscular. The one case he uses with clients is a **men's physique competitor already doing cardio** — do the ab work immediately before the cardio session. For anyone else, cardio straight after lifting costs strength and growth.
+His practical read is narrow: for most people it's useless, since you don't want the body part in question more muscular. The one case he uses with clients is a **men's physique competitor already doing cardio** — do the ab work immediately before the cardio session. For anyone else, cardio straight after lifting costs strength and growth.
 
 **Flag:** the entire second half rests on **one 2017 study**, and he speculates past it — saying the cardio and deficit conditions "probably aren't necessary," which the study cannot show. There's also an unresolved tension: he warns against cardio after lifting on interference grounds, then prescribes exactly that sequence for one group.
 
