@@ -11,6 +11,13 @@ current view.
 
 These are notes, not transcripts. If you want his exact words, watch the video.
 
+## Start here
+
+**[SUMMARY.md](SUMMARY.md)** — all 50 notes distilled into one file, organised by the decision
+you're actually making rather than by video. The hierarchy of what matters, a quick-reference
+table of every number, best exercise per muscle, and a closing section on where his views changed
+over the decade and where the evidence is genuinely unsettled.
+
 ## Fundamentals & programming
 
 | Note | Covers |
